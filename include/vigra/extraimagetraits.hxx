@@ -1,4 +1,6 @@
-
+/* Standard image traits for UINT16 and UINT32 images.
+ * Modifications by Pablo d'Angelo, as of 3 July 2004.
+ */
 #ifndef _VIGRA_IMPEX2_EXTRAIMAGETRAITS_HXX
 #define _VIGRA_IMPEX2_EXTRAIMAGETRAITS_HXX
 

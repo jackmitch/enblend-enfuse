@@ -19,6 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Pablo d'Angelo, as of 3 July 2004:
+ *  - Added import/export of UINT16 and UINT32 image types.
+ */
 
 /*!
   \file  impex.hxx

@@ -19,6 +19,13 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Pablo d'Angelo, as of 3 July 2004:
+ *  - Added UINT16 and UINT32 pixel types.
+ *  - Added support for obtaining extra bands beyond RGB.
+ *  - Added support for a position field that indicates the start of this
+ *    image relative to some global origin.
+ *  - Added support for x and y resolution fields.
+ */
 
 #include <iostream>
 #include <algorithm>

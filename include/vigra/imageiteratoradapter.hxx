@@ -19,7 +19,10 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
-
+/* Modifications by Andrew Mihal, 29 September 2004:
+ * These modifications are placed under the VIGRA license.
+ *  - Added default constructor for RowIterator.
+ */
 
 #ifndef VIGRA_IMAGEITERATORADAPTER_HXX
 #define VIGRA_IMAGEITERATORADAPTER_HXX

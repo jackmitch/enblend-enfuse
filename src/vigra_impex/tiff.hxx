@@ -19,6 +19,12 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Pablo d'Angelo, as of 3 July 2004:
+ *  - Added support for obtaining extra bands beyond RGB.
+ *  - Added support for a position field that indicates the start of this
+ *    image relative to some global origin.
+ *  - Added support for x and y resolution fields.
+ */
 
 #ifndef VIGRA_IMPEX2_TIFF_HXX
 #define VIGRA_IMPEX2_TIFF_HXX

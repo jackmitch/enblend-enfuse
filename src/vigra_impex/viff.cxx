@@ -19,6 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Pablo d'Angelo, as of 3 July 2004:
+ *  - Replaced size_t with unsigned int.
+ */
 
 #include <iostream>
 #include <fstream>
