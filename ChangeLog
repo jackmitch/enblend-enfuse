@@ -1,3 +1,22 @@
+2004-04-03 00:00  mihal
+
+	* src/: bounds.cc, enblend.h, io.cc, mask.cc, pyramid.cc: Fixed
+	  boundary condition problem when expanding masks and the ROI is
+	  tight.  Fixed bug in copyExcludedPixels when the whiteImage
+	  extended past the other side of the ROI.
+
+2004-04-02 22:51  mihal
+
+	* src/: bounds.cc, enblend.cc, enblend.h: Fixed a bug in calling
+	  fseek with SEEK_CUR when the goal is to move the file pointer
+	  backwards. Put some parentheses around the expression I was
+	  trying to negate. There is a signed/unsigned problem and the
+	  compiler behavior is different on different machines.
+
+2004-03-27 13:09  mihal
+
+	* ChangeLog: Checking in the changelog for 1.0 release.
+
 2004-03-27 13:01  mihal
 
 	* src/: enblend.cc, enblend.h, io.cc: Workaround for the fact that
