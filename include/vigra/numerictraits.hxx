@@ -382,7 +382,7 @@ struct NumericTraits<signed char>
         return ((v < SCHAR_MIN) ? SCHAR_MIN : (v > SCHAR_MAX) ? SCHAR_MAX : v);
     }
     static signed char fromRealPromote(RealPromote v) {
-        return ((v < 0.0) ? ((v < (float)SCHAR_MIN) ? SCHAR_MIN : static_cast<signed char>(v - 0.5)) :
+        return ((v < 0.0) ? ((v < (RealPromote)SCHAR_MIN) ? SCHAR_MIN : static_cast<signed char>(v - 0.5)) :
                 (v > SCHAR_MAX) ? SCHAR_MAX : static_cast<signed char>(v + 0.5));
     }
 };
@@ -417,7 +417,7 @@ struct NumericTraits<unsigned char>
         return ((v < 0) ? 0 : (v > UCHAR_MAX) ? UCHAR_MAX : v);
     }
     static unsigned char fromRealPromote(RealPromote const & v) {
-            return ((v < 0.0) ? 0 : ((v > (float)UCHAR_MAX) ? UCHAR_MAX : static_cast<unsigned char>(v + 0.5)));
+            return ((v < 0.0) ? 0 : ((v > (RealPromote)UCHAR_MAX) ? UCHAR_MAX : static_cast<unsigned char>(v + 0.5)));
     }
 };
 
@@ -453,8 +453,8 @@ struct NumericTraits<short int>
     }
     static short int fromRealPromote(RealPromote v) {
         return ((v < 0.0) ?
-                ((v < (float)SHRT_MIN) ? SHRT_MIN : static_cast<short int>(v - 0.5)) :
-                ((v > (float)SHRT_MAX) ? SHRT_MAX : static_cast<short int>(v + 0.5)));
+                ((v < (RealPromote)SHRT_MIN) ? SHRT_MIN : static_cast<short int>(v - 0.5)) :
+                ((v > (RealPromote)SHRT_MAX) ? SHRT_MAX : static_cast<short int>(v + 0.5)));
     }
 };
 
@@ -490,7 +490,7 @@ struct NumericTraits<short unsigned int>
     }
     static short unsigned int fromRealPromote(RealPromote v) {
             return ((v < 0.0) ?
-              0 : ((v > (float)USHRT_MAX) ? USHRT_MAX : static_cast<short unsigned int>(v + 0.5)));
+              0 : ((v > (RealPromote)USHRT_MAX) ? USHRT_MAX : static_cast<short unsigned int>(v + 0.5)));
     }
 };
 
@@ -523,8 +523,8 @@ struct NumericTraits<int>
     static int fromPromote(Promote v) { return v; }
     static int fromRealPromote(RealPromote v) {
         return ((v < 0.0) ?
-                ((v < (float)INT_MIN) ? INT_MIN : static_cast<int>(v - 0.5)) :
-                ((v > (float)INT_MAX) ? INT_MAX : static_cast<int>(v + 0.5)));
+                ((v < (RealPromote)INT_MIN) ? INT_MIN : static_cast<int>(v - 0.5)) :
+                ((v > (RealPromote)INT_MAX) ? INT_MAX : static_cast<int>(v + 0.5)));
     }
 };
 
@@ -557,7 +557,7 @@ struct NumericTraits<unsigned int>
     static unsigned int fromPromote(Promote v) { return v; }
     static unsigned int fromRealPromote(RealPromote v) {
             return ((v < 0.0) ? 0 :
-               ((v > (float)UINT_MAX) ?
+               ((v > (RealPromote)UINT_MAX) ?
                          UINT_MAX : static_cast<unsigned int>(v + 0.5)));
     }
 };
@@ -591,8 +591,8 @@ struct NumericTraits<long>
     static long fromPromote(Promote v) { return v; }
     static long fromRealPromote(RealPromote v) {
         return ((v < 0.0) ?
-                ((v < (float)LONG_MIN) ? LONG_MIN : static_cast<long>(v - 0.5)) :
-                ((v > (float)LONG_MAX) ? LONG_MAX : static_cast<long>(v + 0.5)));
+                ((v < (RealPromote)LONG_MIN) ? LONG_MIN : static_cast<long>(v - 0.5)) :
+                ((v > (RealPromote)LONG_MAX) ? LONG_MAX : static_cast<long>(v + 0.5)));
     }
 };
 
@@ -625,7 +625,7 @@ struct NumericTraits<unsigned long>
     static unsigned long fromPromote(Promote v) { return v; }
     static unsigned long fromRealPromote(RealPromote v) {
             return ((v < 0.0) ? 0 :
-               ((v > (float)ULONG_MAX) ?
+               ((v > (RealPromote)ULONG_MAX) ?
                             ULONG_MAX : static_cast<unsigned long>(v + 0.5)));
     }
 };
