@@ -114,6 +114,11 @@ void nearestFeatureTransform(bool wraparound,
     UIImage dnfLeft(w, h);
     #endif
 
+    // Data structures for initializing dnfColumn.
+    SrcValueType lastFeature[w];
+    bool foundFirstFeature[w];
+    unsigned int lastFeatureDeltaY[w];
+
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
@@ -121,41 +126,78 @@ void nearestFeatureTransform(bool wraparound,
         else cout << "Creating blend mask: 1/4";
         cout.flush();
     }
-    sx = src_upperleft;
+    for (int i = 0; i < w; i++) {
+        lastFeature[i] = sa(src_upperleft);
+        foundFirstFeature[i] = false;
+        lastFeatureDeltaY[i] = 0;
+    }
+    sy = src_upperleft;
     send = src_lowerright;
-    dnfcx = dnfColumn.upperLeft();
-    dx = dest_upperleft;
-    for (; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dx.x) {
-        sy = sx;
-        dnfcy = dnfcx;
-        dy = dx;
+    dnfcy = dnfColumn.upperLeft();
+    dy = dest_upperleft;
+    for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y) {
+        sx = sy;
+        dnfcx = dnfcy;
+        dx = dy;
 
-        // Color of the last feature pixel.
-        SrcValueType lastFeature = sa(src_upperleft);
-        bool foundFirstFeature = false;
-        unsigned int lastFeatureDeltaY = 0;
-
-        for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y, ++lastFeatureDeltaY) {
-            if (sa(sy)) {
+        for (int xIndex = 0; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dx.x, ++xIndex) {
+            if (sa(sx)) {
                 // Source pixel is a feature pixel.
-                lastFeature = sa(sy);
-                foundFirstFeature = true;
+                lastFeature[xIndex] = sa(sx);
+                foundFirstFeature[xIndex] = true;
                 // Distance to feature pixel = 0
-                *dnfcy = 0;
-                lastFeatureDeltaY = 0;
+                *dnfcx = 0;
+                lastFeatureDeltaY[xIndex] = 0;
                 // Nearest feature color = source feature color.
-                da.set(lastFeature, dy);
+                da.set(lastFeature[xIndex], dx);
             }
-            else if (foundFirstFeature) {
+            else if (foundFirstFeature[xIndex]) {
                 // Source pixel is not a feature.
-                *dnfcy = _nftDistance(lastFeatureDeltaY);
-                da.set(lastFeature, dy);
+                *dnfcx = _nftDistance(lastFeatureDeltaY[xIndex]);
+                da.set(lastFeature[xIndex], dx);
             }
             else {
-                *dnfcy = UINT_MAX;
+                *dnfcx = UINT_MAX;
             }
+            ++lastFeatureDeltaY[xIndex];
         }
     }
+
+    //sx = src_upperleft;
+    //send = src_lowerright;
+    //dnfcx = dnfColumn.upperLeft();
+    //dx = dest_upperleft;
+    //for (; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dx.x) {
+    //    sy = sx;
+    //    dnfcy = dnfcx;
+    //    dy = dx;
+
+    //    // Color of the last feature pixel.
+    //    SrcValueType lastFeature = sa(src_upperleft);
+    //    bool foundFirstFeature = false;
+    //    unsigned int lastFeatureDeltaY = 0;
+
+    //    for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y, ++lastFeatureDeltaY) {
+    //        if (sa(sy)) {
+    //            // Source pixel is a feature pixel.
+    //            lastFeature = sa(sy);
+    //            foundFirstFeature = true;
+    //            // Distance to feature pixel = 0
+    //            *dnfcy = 0;
+    //            lastFeatureDeltaY = 0;
+    //            // Nearest feature color = source feature color.
+    //            da.set(lastFeature, dy);
+    //        }
+    //        else if (foundFirstFeature) {
+    //            // Source pixel is not a feature.
+    //            *dnfcy = _nftDistance(lastFeatureDeltaY);
+    //            da.set(lastFeature, dy);
+    //        }
+    //        else {
+    //            *dnfcy = UINT_MAX;
+    //        }
+    //    }
+    //}
 
     // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
     // feature in the same column and below us.
@@ -166,50 +208,97 @@ void nearestFeatureTransform(bool wraparound,
         else cout << " 2/4";
         cout.flush();
     }
-    sx = src_lowerright;
+    for (int i = 0; i < w; i++) {
+        lastFeature[i] = sa(src_upperleft);
+        foundFirstFeature[i] = false;
+        lastFeatureDeltaY[i] = 0;
+    }
+    sy = src_lowerright;
     send = src_upperleft;
-    dnfcx = dnfColumn.lowerRight();
-    dx = dest_upperleft + (src_lowerright - src_upperleft);
-    for (; sx.x != send.x;) {
-        --sx.x;
-        --dnfcx.x;
-        --dx.x;
+    dnfcy = dnfColumn.lowerRight();
+    dy = dest_upperleft + (src_lowerright - src_upperleft);
+    for (; sy.y != send.y;) {
+        --sy.y;
+        --dnfcy.y;
+        --dy.y;
 
-        sy = sx;
-        dnfcy = dnfcx;
-        dy = dx;
+        sx = sy;
+        dnfcx = dnfcy;
+        dx = dy;
 
-        // Color of the last feature pixel.
-        SrcValueType lastFeature = sa(src_upperleft);
-        bool foundFirstFeature = false;
-        unsigned int lastFeatureDeltaY = 0;
+        for (int xIndex = w-1; sx.x != send.x; --xIndex) {
+            --sx.x;
+            --dnfcx.x;
+            --dx.x;
 
-        for (; sy.y != send.y; ++lastFeatureDeltaY) {
-            --sy.y;
-            --dnfcy.y;
-            --dy.y;
-
-            if (sa(sy)) {
+            if (sa(sx)) {
                 // Source pixel is a feature pixel.
-                lastFeature = sa(sy);
-                foundFirstFeature = true;
+                lastFeature[xIndex] = sa(sx);
+                foundFirstFeature[xIndex] = true;
                 // Distance to feature pixel = 0
-                *dnfcy = 0;
-                lastFeatureDeltaY = 0;
+                *dnfcx = 0;
+                lastFeatureDeltaY[xIndex] = 0;
                 // Nearest feature color = source feature color.
-                da.set(lastFeature, dy);
+                da.set(lastFeature[xIndex], dx);
             }
-            else if (foundFirstFeature) {
+            else if (foundFirstFeature[xIndex]) {
                 // Source pixel is not a feature
-                unsigned int distLastFeature = _nftDistance(lastFeatureDeltaY);
-                if (distLastFeature < *dnfcy) {
+                unsigned int distLastFeature = _nftDistance(lastFeatureDeltaY[xIndex]);
+                if (distLastFeature < *dnfcx) {
                     // Feature below us is closer than feature above us.
-                    *dnfcy = distLastFeature;
-                    da.set(lastFeature, dy);
+                    *dnfcx = distLastFeature;
+                    da.set(lastFeature[xIndex], dx);
                 }
             }
+
+            ++lastFeatureDeltaY[xIndex];
         }
     }
+
+    //sx = src_lowerright;
+    //send = src_upperleft;
+    //dnfcx = dnfColumn.lowerRight();
+    //dx = dest_upperleft + (src_lowerright - src_upperleft);
+    //for (; sx.x != send.x;) {
+    //    --sx.x;
+    //    --dnfcx.x;
+    //    --dx.x;
+
+    //    sy = sx;
+    //    dnfcy = dnfcx;
+    //    dy = dx;
+
+    //    // Color of the last feature pixel.
+    //    SrcValueType lastFeature = sa(src_upperleft);
+    //    bool foundFirstFeature = false;
+    //    unsigned int lastFeatureDeltaY = 0;
+
+    //    for (; sy.y != send.y; ++lastFeatureDeltaY) {
+    //        --sy.y;
+    //        --dnfcy.y;
+    //        --dy.y;
+
+    //        if (sa(sy)) {
+    //            // Source pixel is a feature pixel.
+    //            lastFeature = sa(sy);
+    //            foundFirstFeature = true;
+    //            // Distance to feature pixel = 0
+    //            *dnfcy = 0;
+    //            lastFeatureDeltaY = 0;
+    //            // Nearest feature color = source feature color.
+    //            da.set(lastFeature, dy);
+    //        }
+    //        else if (foundFirstFeature) {
+    //            // Source pixel is not a feature
+    //            unsigned int distLastFeature = _nftDistance(lastFeatureDeltaY);
+    //            if (distLastFeature < *dnfcy) {
+    //                // Feature below us is closer than feature above us.
+    //                *dnfcy = distLastFeature;
+    //                da.set(lastFeature, dy);
+    //            }
+    //        }
+    //    }
+    //}
 
     // Calculate dnfLeft for each pixel.
     if (Verbose > VERBOSE_NFT_MESSAGES) {

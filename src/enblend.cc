@@ -25,6 +25,7 @@
 #include <list>
 #include <vector>
 #include <getopt.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -118,7 +119,19 @@ void printUsageAndExit() {
     exit(1);
 }
 
+/** Make sure all cached file images get destroyed,
+ *  and hence the temporary files deleted,
+ *  if we are killed.
+ */
+void sigint_handler(int sig) {
+    CachedFileImageDirector::v().~CachedFileImageDirector();
+    signal(SIGINT, SIG_DFL);
+    kill(getpid(), SIGINT);
+}
+
 int main(int argc, char** argv) {
+
+    signal(SIGINT, sigint_handler);
 
     // The name of the output file.
     char *outputFileName = NULL;
