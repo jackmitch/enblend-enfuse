@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <boost/random.hpp>
+#include <math.h>
 
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
@@ -33,6 +34,7 @@
 using std::pair;
 using std::vector;
 
+using boost::uniform_01;
 using boost::uniform_int;
 using boost::variate_generator;
 using boost::mt19937;
@@ -83,7 +85,7 @@ public:
         return cost;
     }
 
-    void step(int stepSize);
+    int step(int stepSize, int minStepSize);
     void print() const;
 
 protected:
@@ -139,26 +141,46 @@ double AnnealConfiguration<DistanceCostImage, StitchCostImage>::evalSegmentCost(
     LineIterator<StitchIterator> lineS(sci->upperLeft() + pointA.second,
             sci->upperLeft() + pointB.second);
 
-    do {
         distanceCost += *lineD;
+    int lineLength = 0;
+    do {
+        //distanceCost += *lineD;
         if (*lineS > (NumericTraits<typename StitchCostImage::value_type>::max() / 16))
-            stitchCost += 1.0;
+            stitchCost += exp((6.0 * (*lineS / NumericTraits<typename StitchCostImage::value_type>::max())) - 1.0);
         ++lineD;
         ++lineS;
+        ++lineLength;
     } while (lineD != lineDEnd);
 
+    // Only lines exceeding a certain length are subject to penalty.
+    if (lineLength < 3) lineLength = 15;
+    else if (lineLength < 15) lineLength = 0;
+
     // Weighting
-    return stitchCost;
+    return (1.0 * stitchCost) + ((double)lineLength / 5.0) /*+ ((double)distanceCost / (1<<19))*/ ;
 };
 
 template <typename DistanceCostImage, typename StitchCostImage>
-void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize) {
+int AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int maxStepSize, int minStepSize) {
 
     // Choose a moveable point randomly.
     uniform_int<unsigned int> range(0, moveablePointIndices.size() - 1);
     variate_generator<mt19937, uniform_int<unsigned int> > rng(Twister, range);
+    unsigned int index = moveablePointIndices[rng()];
 
-    unsigned int index = rng();
+//vector<int> permutedMPIs;
+//for (unsigned int rng = 0; rng < moveablePointIndices.size(); rng++) {
+//    unsigned int index = moveablePointIndices[rng];
+//    vector<int>::iterator pos = permutedMPIs.begin();
+//    uniform_int<unsigned int> insertRange(0, permutedMPIs.size());
+//    variate_generator<mt19937&, uniform_int<unsigned int> > insertRNG(Twister, insertRange);
+//    pos += insertRNG();
+//    permutedMPIs.insert(pos, index);
+//}
+//
+//for (unsigned int rng = 0; rng < permutedMPIs.size(); rng++) {
+//unsigned int index = permutedMPIs[rng];
+
     unsigned int prev = (index + snake.size() - 1) % snake.size();
     //unsigned int next = (i + 1) % snake.size();
 
@@ -168,19 +190,26 @@ void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize)
     Point2D originalPoint = snake[index].second;
 
     double bestCostSoFar = NumericTraits<double>::max();
-    Point2D bestMoveSoFar;
-    double prevSegmentNewCost = 0.0;
-    double nextSegmentNewCost = 0.0;
+    Point2D bestMoveSoFar = snake[index].second;
+    double prevSegmentNewCost = segmentCost[prev];
+    double nextSegmentNewCost = segmentCost[index]; 
 
     //cout << "step considering moving point (" << originalPoint.x << ", " << originalPoint.y << ")" << endl;
     //cout << "original cost=" << cost << endl;
     //cout << "original segmentA=" << segmentCost[prev] << endl;
     //cout << "original segmentB=" << segmentCost[index] << endl;
+
+    // Limit the size of the neighborhood if we are close to the image edge.
+    int minDeltaX = std::max((1 - originalPoint.x), -maxStepSize);
+    int maxDeltaX = std::min((dci->width() - 2 - originalPoint.x), maxStepSize);
+    int minDeltaY = std::max((1 - originalPoint.y), -maxStepSize);
+    int maxDeltaY = std::min((dci->height() - 2 - originalPoint.y), maxStepSize);
+
     // Find the best move in the neighborhood.
     // visit neighborhood moves randomly - this leads to a truly random choice if there are
     // several possibilities with the same cost.
     vector<int> permutedXMoves;
-    for (int deltaX = -stepSize; deltaX <= stepSize; deltaX++) {
+    for (int deltaX = minDeltaX; deltaX <= maxDeltaX; deltaX++) {
         vector<int>::iterator pos = permutedXMoves.begin();
         uniform_int<unsigned int> insertRange(0, permutedXMoves.size());
         variate_generator<mt19937&, uniform_int<unsigned int> > insertRNG(Twister, insertRange);
@@ -192,7 +221,7 @@ void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize)
         int deltaX = permutedXMoves[deltaXIndex];
 
         vector<int> permutedYMoves;
-        for (int deltaY = -stepSize; deltaY <= stepSize; deltaY++) {
+        for (int deltaY = minDeltaY; deltaY <= maxDeltaY; deltaY++) {
             vector<int>::iterator pos = permutedYMoves.begin();
             uniform_int<unsigned int> insertRange(0, permutedYMoves.size());
             variate_generator<mt19937&, uniform_int<unsigned int> > insertRNG(Twister, insertRange);
@@ -205,6 +234,9 @@ void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize)
 
             // This is not really a move - skip it.
             if (deltaX == 0 && deltaY == 0) continue;
+
+            // Check for minStepSize (chessboard metric)
+            if ((abs(deltaX) + abs(deltaY)) < minStepSize) continue;
 
             snake[index].second = originalPoint + Diff2D(deltaX, deltaY);
             double psCost = evalSegmentCost(prev);
@@ -233,8 +265,8 @@ void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize)
     //cout << "new cost=" << cost << endl;
     //cout << "new segmentA=" << segmentCost[prev] << endl;
     //cout << "new segmentB=" << segmentCost[index] << endl;
-
-    return;
+//}
+    return index;
 };
 
 template <typename DistanceCostImage, typename StitchCostImage>
@@ -255,18 +287,73 @@ void annealSnake(const DistanceCostImage* const dci,
 
     typedef AnnealConfiguration<DistanceCostImage, StitchCostImage> AnnealConfigurationType;
 
-    AnnealConfigurationType initConfig(dci, sci, *snake);
+    //vector<int> trials(snake->size(), 0);
 
-    for (int i = 0; i < 10; i++) {
-        cout << "initial cost = " << initConfig.getCost() << endl;
-        initConfig.step(4);
-        cout << "cost after one step = " << initConfig.getCost() << endl;
+    int stepsPerTemperature = 30000;
+
+    double initialTemperature = 0.30;
+    double coolingFactor = 0.90;
+    double finalTemperature = 0.05;
+    int stepSize = 15;
+    int initialMinStepSize = 13;
+    double minStepSizeCoolingFactor = 0.80;
+
+    uniform_01<mt19937> rng(Twister);
+
+    // The overall best solution found
+    // This starts out as the initial configuration.
+    AnnealConfigurationType bestConfig(dci, sci, *snake);
+    double bestCost = bestConfig.getCost();
+
+//for (unsigned int i = 0; i < 25; i++) {
+//    bestConfig.step(stepSize);
+//    cout << "prevCost=" << bestCost << " newCost=" << bestConfig.getCost() << endl;
+//    bestCost = bestConfig.getCost();
+//}
+
+    // The hill-climbing configuration
+    // This starts out as the initial configuration.
+    AnnealConfigurationType currentConfig(bestConfig);
+    double currentCost = currentConfig.getCost();
+
+    double currentTemperature = initialTemperature;
+    double minStepSize = initialMinStepSize;
+    while (currentTemperature > finalTemperature) {
+
+        for (int i = 0; i < stepsPerTemperature; i++) {
+            AnnealConfigurationType testConfig(currentConfig);
+            int indexMoved = testConfig.step(stepSize, (int)floor(minStepSize));
+            //trials[indexMoved]++;
+            double testCost = testConfig.getCost();
+
+            if (testCost <= bestCost) {
+                bestConfig = testConfig;
+                bestCost = testCost;
+            }
+
+            double percentDifference = (testCost - currentCost) / currentCost;
+            double acceptProbability = exp(-1.0 * percentDifference / currentTemperature);
+            bool accept = (rng() < acceptProbability);
+
+            if ((testCost < currentCost) || accept) {
+                currentConfig = testConfig;
+                currentCost = testCost;
+            }
+        }
+
+        cout << "temp=" << currentTemperature << " minStepSize=" << (int)floor(minStepSize) << " bestCost=" << bestCost << " currentCost=" << currentCost << endl;
+        currentTemperature *= coolingFactor;
+        minStepSize *= minStepSizeCoolingFactor;
     }
 
     // Copy result to input snake.
     snake->clear();
-    snake->insert(snake->end(), initConfig.getSnake().begin(), initConfig.getSnake().end());
+    snake->insert(snake->end(), bestConfig.getSnake().begin(), bestConfig.getSnake().end());
 
+    //cout << "move statistics:" << endl;
+    //for (unsigned int i = 0; i < snake->size(); i++) {
+    //    cout << "index " << i << " frozen=" << (*snake)[i].first << " moved=" << trials[i] << endl;
+    //}
 };
 
 } // namespace enblend
