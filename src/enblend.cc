@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        uint32 bitsPerSample = 0;
+        uint16 bitsPerSample = 0;
         TIFFGetField(inputTIFF, TIFFTAG_BITSPERSAMPLE, &bitsPerSample);
         if (bitsPerSample != 8) {
             cerr << "enblend: input TIFF file \""
