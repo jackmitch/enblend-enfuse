@@ -36,8 +36,6 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 
-using namespace std;
-
 using vigra::BImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
@@ -52,6 +50,8 @@ using vigra::transformImageIf;
 using vigra::functor::Arg1;
 using vigra::functor::ifThenElse;
 using vigra::functor::Param;
+
+namespace enblend {
 
 /** Calculate a blending mask between whiteImage and blackImage.
  */
@@ -118,15 +118,18 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
                     Param(NumericTraits<MaskPixelType>::max()),
                     Param(NumericTraits<MaskPixelType>::zero())));
 
-    char tmpFilename[] = ".enblend_mask_XXXXXX";
-    int tmpFD = mkstemp(tmpFilename);
+    //char tmpFilename[] = ".enblend_mask_XXXXXX";
+    char tmpFilename[] = "enblend_mask.tif";
+    //int tmpFD = mkstemp(tmpFilename);
     ImageExportInfo maskImageInfo(tmpFilename);
     maskImageInfo.setPosition(uBB.getUL());
     maskImageInfo.setFileType("TIFF");
-    exportImage(srcImageRange(mask), maskImageInfo);
-    close(tmpFD);
+    exportImage(srcImageRange(maskTransform), maskImageInfo);
+    //close(tmpFD);
 
     return new ImageImportInfo(tmpFilename);
 }
+
+} // namespace enblend
 
 #endif /* __MASK_H__ */

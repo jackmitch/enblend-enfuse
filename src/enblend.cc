@@ -35,7 +35,10 @@
 #include "vigra/impex.hxx"
 #include "vigra/stdimage.hxx"
 
-using namespace std;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::list;
 
 using vigra::BImage;
 using vigra::BRGBImage;
@@ -55,6 +58,9 @@ using vigra::UIImage;
 using vigra::UIRGBImage;
 using vigra::USImage;
 using vigra::USRGBImage;
+
+using enblend::blend;
+using enblend::EnblendROI;
 
 // Global values from command line parameters.
 int Verbose = 0;
@@ -319,25 +325,25 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     if (isColor) {
         if (strcmp(pixelType, "UINT8") == 0) {
-            enblend<BRGBImage, BImage, BImage, SImage>(
+            blend<BRGBImage, BImage, BImage, SImage>(
                     imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    enblend<SRGBImage, BImage, SImage, IImage>(
+        //    blend<SRGBImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    enblend<USRGBImage, BImage, SImage, IImage>(
+        //    blend<USRGBImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    enblend<IRGBImage, BImage, IImage, DImage>(
+        //    blend<IRGBImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    enblend<UIRGBImage, BImage, IImage, DImage>(
+        //    blend<UIRGBImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    enblend<FRGBImage, BImage, FImage, DImage>(
+        //    blend<FRGBImage, BImage, FImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    enblend<DRGBImage, BImage, DImage, DImage>(
+        //    blend<DRGBImage, BImage, DImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         } else {
             cerr << "enblend: pixel type \""
@@ -348,25 +354,25 @@ int main(int argc, char** argv) {
         }
     } else {
         //if (strcmp(pixelType, "UINT8") == 0) {
-        //    enblend<BImage, BImage, BImage, SImage>(
+        //    blend<BImage, BImage, BImage, SImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    enblend<SImage, BImage, SImage, IImage>(
+        //    blend<SImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    enblend<USImage, BImage, SImage, IImage>(
+        //    blend<USImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    enblend<IImage, BImage, IImage, DImage>(
+        //    blend<IImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    enblend<UIImage, BImage, IImage, DImage>(
+        //    blend<UIImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    enblend<FImage, BImage, FImage, DImage>(
+        //    blend<FImage, BImage, FImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    enblend<DImage, BImage, DImage, DImage>(
+        //    blend<DImage, BImage, DImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else {
             cerr << "enblend: pixel type \""

@@ -33,13 +33,17 @@
 #include "common.h"
 #include "vigra/impex.hxx"
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::list;
 
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 
+namespace enblend {
+
 template <typename ImageType, typename AlphaType, typename MaskType, typename PyramidType>
-void enblend(list<ImageImportInfo*> &imageInfoList,
+void blend(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
@@ -79,9 +83,14 @@ void enblend(list<ImageImportInfo*> &imageInfoList,
                 mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
                         inputUnion, uBB, iBB, overlap);
 
+        unlink(blackImageInfo->getFileName());
+        delete blackImageInfo;
     }
 
+    unlink(whiteImageInfo->getFileName());
     delete whiteImageInfo;
-}
+};
+
+} // namespace enblend
 
 #endif /* __ENBLEND_H__ */

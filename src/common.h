@@ -26,6 +26,8 @@
 
 #include "vigra_ext/ROI.h"
 
+namespace enblend {
+
 //typedef struct {
 //    uint8 r;
 //    uint8 g;
@@ -92,5 +94,7 @@ typedef vigra_ext::ROI<vigra::Diff2D> EnblendROI;
 //#define GetR(abgr)      ((abgr) & 0xff)
 //#define PACK(a, b, g, r)    (((r) & 0xff) | (((g) & 0xff) << 8) | (((b) & 0xff) << 16) | (((a) & 0xff) << 24))
 //#endif
+
+} // namespace enblend
 
 #endif /* __COMMON_H__ */

@@ -38,7 +38,9 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::list;
 
 using vigra::copyImageIf;
 using vigra::Diff2D;
@@ -51,6 +53,8 @@ using vigra::inspectImageIf;
 using vigra::NumericTraits;
 using vigra::Threshold;
 using vigra::transformImage;
+
+namespace enblend {
 
 /** Find images that don't overlap and assemble them into one image.
  *  Uses a greedy heuristic.
@@ -209,5 +213,7 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
     
     return new ImageImportInfo(tmpFilename);
 };
+
+} // namespace enblend
 
 #endif /* __ASSEMBLE_H__ */
