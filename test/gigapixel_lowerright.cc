@@ -15,50 +15,48 @@ using namespace vigra;
 bool GimpAssociatedAlphaHack = true;
 
 int main(void) {
-    CachedFileImageDirector::v().setAllocation(500 << 20);
+    CachedFileImageDirector::v().setAllocation(1500 << 20);
     CachedFileImageDirector::v().setBlockSize(2LL << 20);
 
-    USRGBCFImage uscf(40000, 5000);
-    //USRGBCFImage uscf(40000, 30000);
+    USRGBCFImage uscf(40000, 30000);
     //BRGBCFImage uscf(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 0, &uscf);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    typedef BCFImage::PixelType AlphaPixelType;
-    BCFImage a(40000, 5000);
-    //BCFImage a(40000, 30000);
-    //BCFImage a(40000, 25000);
+    initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 20000),
+            uscf.upperLeft() + Diff2D(40000, 30000)), 
+            RGBValue<unsigned short>(0xf000, 0xe000, 0x1000));
+    //initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 15000),
+    //        uscf.upperLeft() + Diff2D(40000, 25000)), 
+    //        RGBValue<unsigned char>(0xf0, 0xe0, 0x10));
     CachedFileImageDirector::v().printStats("uscf", 1, &uscf);
-    CachedFileImageDirector::v().printStats("a", 1, &a);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    ImageImportInfo inputImage("gigapixel_out.tif");
-    importImageAlpha(inputImage, destImage(uscf), destImage(a));
+    BCFImage a(40000, 30000);
+    //BCFImage a(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 2, &uscf);
     CachedFileImageDirector::v().printStats("a", 2, &a);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    {
-    FindBoundingRectangle unionRect;
-    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + a.size()),
-            srcImage(a), unionRect);
-        cout << "readback bounding box: valid="
-	     << unionRect.valid
-	     << " ("
-             << unionRect.upperLeft.x
-             << ", "
-             << unionRect.upperLeft.y
-             << ") -> ("
-             << unionRect.lowerRight.x
-             << ", "
-             << unionRect.lowerRight.y
-             << ")" << endl;
-    }
+    initImage(srcIterRange(a.upperLeft() + Diff2D(0, 20000),
+            a.upperLeft() + Diff2D(40000, 30000)), 
+            0xFF);
+    //initImage(srcIterRange(a.upperLeft() + Diff2D(0, 15000),
+    //        a.upperLeft() + Diff2D(40000, 25000)), 
+    //        0xFF);
     CachedFileImageDirector::v().printStats("uscf", 3, &uscf);
     CachedFileImageDirector::v().printStats("a", 3, &a);
+    CachedFileImageDirector::v().printStats();
+    CachedFileImageDirector::v().resetCacheMisses();
+
+    ImageExportInfo outputInfo("gigapixel_lowerright.tif");
+    outputInfo.setCompression("LZW");
+    exportImageAlpha(srcImageRange(uscf), srcImage(a), outputInfo);
+    CachedFileImageDirector::v().printStats("uscf", 4, &uscf);
+    CachedFileImageDirector::v().printStats("a", 4, &a);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
@@ -72,10 +70,10 @@ int main(void) {
     CachedFileImageDirector::v().resetCacheMisses();
 
     {
-	    typedef USRGBCFImage::Accessor USAccessor;
 	    typedef USRGBCFImage::traverser USTraverser;
-	    //typedef BRGBCFImage::Accessor USAccessor;
+	    typedef USRGBCFImage::Accessor USAccessor;
 	    //typedef BRGBCFImage::traverser USTraverser;
+	    //typedef BRGBCFImage::Accessor USAccessor;
 	    USAccessor sa = uscf.accessor();
 	    USAccessor da = small.accessor();
 	    USTraverser sy = uscf.upperLeft();
@@ -127,69 +125,13 @@ int main(void) {
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    //ImageExportInfo smallOutputInfo("readback_small.tif");
-    ImageExportInfo smallOutputInfo("gigapixel_out_small.tif");
+    ImageExportInfo smallOutputInfo("gigapixel_lowerright_small.tif");
+    smallOutputInfo.setCompression("LZW");
     exportImageAlpha(srcImageRange(small), srcImage(smalla), smallOutputInfo);
     CachedFileImageDirector::v().printStats("uscf", 9, &uscf);
     CachedFileImageDirector::v().printStats("a", 9, &a);
     CachedFileImageDirector::v().printStats("small", 9, &small);
     CachedFileImageDirector::v().printStats("smalla", 9, &smalla);
-    CachedFileImageDirector::v().printStats();
-    CachedFileImageDirector::v().resetCacheMisses();
-return 0;
-    //ImageExportInfo readbackAlpha("readback_smallalpha.tif");
-    //exportImage(srcImageRange(smalla), readbackAlpha);
-
-    {
-    FindBoundingRectangle unionRect;
-    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + a.size()),
-            srcImage(a), unionRect);
-        cout << "assembled bounding box: valid=" << unionRect.valid << " ("
-             << unionRect.upperLeft.x
-             << ", "
-             << unionRect.upperLeft.y
-             << ") -> ("
-             << unionRect.lowerRight.x
-             << ", "
-             << unionRect.lowerRight.y
-             << ")" << endl;
-    }
-
-    CachedFileImageDirector::v().printStats("uscf", 10, &uscf);
-    CachedFileImageDirector::v().printStats("a", 10, &a);
-    CachedFileImageDirector::v().printStats("small", 10, &small);
-    CachedFileImageDirector::v().printStats("smalla", 10, &smalla);
-    CachedFileImageDirector::v().printStats();
-    CachedFileImageDirector::v().resetCacheMisses();
-
-    transformImage(srcImageRange(a), destImage(a),
-            Threshold<AlphaPixelType, AlphaPixelType>(
-		    NumericTraits<AlphaPixelType>::max() / 2,
-		    NumericTraits<AlphaPixelType>::max(),
-		    NumericTraits<AlphaPixelType>::zero(),
-		    NumericTraits<AlphaPixelType>::max()
-	    )
-    );
-
-    {
-    FindBoundingRectangle unionRect;
-    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + a.size()),
-            srcImage(a), unionRect);
-        cout << "post-transform bounding box: valid=" << unionRect.valid << " ("
-             << unionRect.upperLeft.x
-             << ", "
-             << unionRect.upperLeft.y
-             << ") -> ("
-             << unionRect.lowerRight.x
-             << ", "
-             << unionRect.lowerRight.y
-             << ")" << endl;
-    }
-
-    CachedFileImageDirector::v().printStats("uscf", 11, &uscf);
-    CachedFileImageDirector::v().printStats("a", 11, &a);
-    CachedFileImageDirector::v().printStats("small", 11, &small);
-    CachedFileImageDirector::v().printStats("smalla", 11, &smalla);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 

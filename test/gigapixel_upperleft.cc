@@ -15,22 +15,18 @@ using namespace vigra;
 bool GimpAssociatedAlphaHack = true;
 
 int main(void) {
-    CachedFileImageDirector::v().setAllocation(500 << 20);
+    CachedFileImageDirector::v().setAllocation(1500 << 20);
     CachedFileImageDirector::v().setBlockSize(2LL << 20);
 
-    USRGBCFImage uscf(40000, 5000);
-    //USRGBCFImage uscf(40000, 30000);
+    USRGBCFImage uscf(40000, 30000);
     //BRGBCFImage uscf(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 0, &uscf);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 2000),
-            uscf.upperLeft() + Diff2D(40000, 4000)), 
+    initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 15000),
+            uscf.upperLeft() + Diff2D(40000, 25000)), 
             RGBValue<unsigned short>(0x1000, 0x2000, 0xf000));
-    //initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 15000),
-    //        uscf.upperLeft() + Diff2D(40000, 25000)), 
-    //        RGBValue<unsigned short>(0x1000, 0x2000, 0xf000));
     //initImage(srcIterRange(uscf.upperLeft() + Diff2D(0, 10000),
     //        uscf.upperLeft() + Diff2D(40000, 20000)), 
     //        RGBValue<unsigned char>(0x10, 0x20, 0xf0));
@@ -38,20 +34,16 @@ int main(void) {
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    BCFImage a(40000, 5000);
-    //BCFImage a(40000, 30000);
+    BCFImage a(40000, 30000);
     //BCFImage a(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 2, &uscf);
     CachedFileImageDirector::v().printStats("a", 2, &a);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
-    initImage(srcIterRange(a.upperLeft() + Diff2D(0, 2000),
-            a.upperLeft() + Diff2D(40000, 4000)), 
+    initImage(srcIterRange(a.upperLeft() + Diff2D(0, 15000),
+            a.upperLeft() + Diff2D(40000, 25000)), 
             0xFF);
-    //initImage(srcIterRange(a.upperLeft() + Diff2D(0, 15000),
-    //        a.upperLeft() + Diff2D(40000, 25000)), 
-    //        0xFF);
     //initImage(srcIterRange(a.upperLeft() + Diff2D(0, 10000),
     //        a.upperLeft() + Diff2D(40000, 20000)), 
     //        0xFF);
