@@ -137,6 +137,23 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, uBB, roiBB);
         bool wraparoundThisIteration = Wraparound && (roiBB.size().x == inputUnion.size().x);
 
+        // Estimate memory requirements for this blend iteration
+        if (Verbose > 0) {
+            // Maximum utilization is when all three pyramids have been built
+            // inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+            // + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
+            long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
+            long long roiBBPixels = roiBB.size().x * roiBB.size().y;
+            long long bytes =
+                    inputUnionPixels * (sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
+                    + (4/3) * roiBBPixels *
+                            (sizeof(MaskPyramidValueType) + 2*sizeof(ImagePyramidValueType));
+            long long mbytes = bytes / 1000000;
+            cout << "Estimated space required for this blend step: "
+                 << mbytes
+                 << "MB" << endl;
+        }
+
         // Create a version of roiBB relative to uBB upperleft corner.
         // This is to access roi within images of size uBB.
         // For example, the mask.
@@ -146,6 +163,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the blend mask.
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
                 uBB, wraparoundThisIteration);
+        // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
+        // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+
         //ImageExportInfo maskInfo("enblend_mask.tif");
         //maskInfo.setPosition(uBB.getUL());
         //exportImage(srcImageRange(*mask), maskInfo);
@@ -153,6 +174,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
                 numLevels, wraparoundThisIteration, roiBB_uBB.apply(srcImageRange(*mask)));
+        // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
         //for (unsigned int i = 0; i < (numLevels - 1); i++) {
         //    // Clear all levels except last.
@@ -198,6 +221,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // We no longer need the mask.
         delete mask;
+        // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
         // Build Laplacian pyramid from white image.
         vector<ImagePyramidType*> *whiteLP =
@@ -205,6 +229,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                         numLevels, wraparoundThisIteration,
                         roiBB.apply(srcImageRange(*(whitePair.first))),
                         roiBB.apply(maskImage(*(whitePair.second))));
+        // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         //for (unsigned int i = 0; i < numLevels; i++) {
         //    char filenameBuf[512];
@@ -216,6 +241,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // We no longer need the white rgb data.
         delete whitePair.first;
+        // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         // Build Laplacian pyramid from black image.
         vector<ImagePyramidType*> *blackLP =
@@ -223,6 +249,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                         numLevels, wraparoundThisIteration,
                         roiBB.apply(srcImageRange(*(blackPair.first))),
                         roiBB.apply(maskImage(*(blackPair.second))));
+        // Peak memory xsection is here!
+        // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Make the black image alpha equal to the union of the
         // white and black alpha channels.
@@ -232,6 +260,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // We no longer need the white alpha data.
         delete whitePair.second;
+        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
         blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
@@ -241,12 +270,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             delete (*maskGP)[i];
         }
         delete maskGP;
+        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
         // delete white pyramid
         for (unsigned int i = 0; i < whiteLP->size(); i++) {
             delete (*whiteLP)[i];
         }
         delete whiteLP;
+        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
 
         //for (unsigned int i = 0; i < (numLevels - 1); i++) {
         //    // Clear all levels except last.
@@ -276,15 +307,16 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                 roiBB.apply(maskImage(*(blackPair.second))),
                 roiBB.apply(destImage(*(blackPair.first))));
 
-        if (Verbose > 0) {
-            cout << "Checkpointing..." << endl;
-        }
-
         // delete black pyramid
         for (unsigned int i = 0; i < blackLP->size(); i++) {
             delete (*blackLP)[i];
         }
         delete blackLP;
+        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+
+        if (Verbose > 0) {
+            cout << "Checkpointing..." << endl;
+        }
 
         // Checkpoint results.
         exportImageAlpha(srcImageRange(*(blackPair.first)),

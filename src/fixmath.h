@@ -49,9 +49,6 @@ namespace enblend {
 template <typename SrcPixelType, typename PyramidPixelType, int SrcIntegerBits=1+8*sizeof(SrcPixelType), int FractionBits=8*sizeof(PyramidPixelType)-SrcIntegerBits>
 class ConvertScalarToPyramidFunctor {
 public:
-    typedef typename NumericTraits<SrcPixelType>::isIntegral SrcIsIntegral;
-    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
-
     ConvertScalarToPyramidFunctor() { }
 
     inline PyramidPixelType operator()(const SrcPixelType &v) const {
@@ -59,6 +56,8 @@ public:
     }
 
 protected:
+    typedef typename NumericTraits<SrcPixelType>::isIntegral SrcIsIntegral;
+    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
 
     // Convert an integral pixel type to an integral pyramid value type.
     inline PyramidPixelType doConvert(const SrcPixelType &v, VigraTrueType, VigraTrueType) const {
@@ -93,9 +92,6 @@ protected:
 template <typename DestPixelType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(DestPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
 class ConvertPyramidToScalarFunctor {
 public:
-    typedef typename NumericTraits<DestPixelType>::isIntegral DestIsIntegral;
-    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
-
     ConvertPyramidToScalarFunctor() { }
 
     inline DestPixelType operator()(const PyramidPixelType &v) const {
@@ -103,6 +99,8 @@ public:
     }
 
 protected:
+    typedef typename NumericTraits<DestPixelType>::isIntegral DestIsIntegral;
+    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
 
     // Convert an integral pyramid pixel to an integral image pixel.
     inline DestPixelType doConvert(const PyramidPixelType &v, VigraTrueType, VigraTrueType) const {
@@ -149,9 +147,66 @@ protected:
 
 };
 
+template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(SrcPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
+class ConvertVectorToPyramidFunctor {
+public:
+    ConvertVectorToPyramidFunctor() : cf() {}
+
+    inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        PyramidVectorType pv;
+        SrcVectorIterator svi = v.begin();
+        PyramidVectorIterator pvi = pv.begin();
+        for (; svi != v.end(); ++svi, ++pvi) {
+            *pvi = cf(*svi);
+        }
+        return pv;
+    }
+
+protected:
+    typedef ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType, IntegerBits, FractionBits> ConvertFunctorType;
+    typedef typename PyramidVectorType::iterator PyramidVectorIterator;
+    typedef typename SrcVectorType::const_iterator SrcVectorIterator;
+
+    ConvertFunctorType cf;
+};
+
+template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(DestPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
+class ConvertPyramidToVectorFunctor {
+public:
+    ConvertPyramidToVectorFunctor() : cf() {}
+
+    inline DestVectorType operator()(const PyramidVectorType &v) const {
+        DestVectorType dv;
+        PyramidVectorIterator pvi = v.begin();
+        DestVectorIterator dvi = dv.begin();
+        for (; pvi != v.end(); ++pvi, ++dvi) {
+            *dvi = cf(*pvi);
+        }
+        return dv;
+    }
+
+protected:
+    typedef ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, IntegerBits, FractionBits> ConvertFunctorType;
+    typedef typename PyramidVectorType::const_iterator PyramidVectorIterator;
+    typedef typename DestVectorType::iterator DestVectorIterator;
+
+    ConvertFunctorType cf;
+};
+
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToLabPyramidFunctor {
 public:
+    ConvertToLabPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
+        if (Verbose > 0) {
+            cout << "R'G'B' to L*a*b* color space conversion..." << endl;
+        }
+    }
+
+    inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        return convertFunctor(colorFunctor(v));
+    }
+
+protected:
     typedef RGBPrime2LabFunctor<SrcPixelType> ColorFunctorType;
     typedef typename ColorFunctorType::result_type ColorFunctorResultType;
     typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
@@ -162,23 +217,8 @@ public:
     //   -107.862  <= b <=  94.4758
     // Needs 8 integer bits
     // Needs 9 integer bits for pyramid math
-    typedef ConvertScalarToPyramidFunctor<ColorFunctorResultComponent, PyramidPixelType, 9> ConvertFunctorType;
+    typedef ConvertVectorToPyramidFunctor<ColorFunctorResultType, ColorFunctorResultComponent, PyramidVectorType, PyramidPixelType, 9> ConvertFunctorType;
 
-    ConvertToLabPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
-        if (Verbose > 0) {
-            cout << "R'G'B' to L*a*b* color space conversion..." << endl;
-        }
-    }
-
-    PyramidVectorType operator()(const SrcVectorType &v) const {
-        ColorFunctorResultType labVector = colorFunctor(v);
-        PyramidPixelType l = convertFunctor(labVector[0]);
-        PyramidPixelType a = convertFunctor(labVector[1]);
-        PyramidPixelType b = convertFunctor(labVector[2]);
-        return PyramidVectorType(l, a, b);
-    }
-
-protected:
     ColorFunctorType colorFunctor;
     ConvertFunctorType convertFunctor;
 };
@@ -186,37 +226,26 @@ protected:
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromLabPyramidFunctor {
 public:
-    typedef Lab2RGBPrimeFunctor<double> ColorFunctorType;
-    typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
-    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
-    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
-
-    // L*a*b* fixed-point pyramid uses 9 integer bits.
-    typedef ConvertPyramidToScalarFunctor<double, PyramidPixelType, 9> DoubleFunctorType;
-    typedef ConvertPyramidToScalarFunctor<DestPixelType, double, 9> DestFunctorType;
-
     ConvertFromLabPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {
         if (Verbose > 0) {
             cout << "L*a*b* to R'G'B' color space conversion..." << endl;
         }
     }
 
-    DestVectorType operator()(const PyramidVectorType &v) const {
-        double l = doubleFunctor(v.red());
-        double a = doubleFunctor(v.green());
-        double b = doubleFunctor(v.blue());
-
-        ColorFunctorArgumentType labVector(l, a, b);
-        ColorFunctorResultType rgbpVector = colorFunctor(labVector);
-
-        DestPixelType red = destFunctor(rgbpVector.red());
-        DestPixelType green = destFunctor(rgbpVector.green());
-        DestPixelType blue = destFunctor(rgbpVector.blue());
-
-        return DestVectorType(red, green, blue);
+    inline DestVectorType operator()(const PyramidVectorType &v) const {
+        return destFunctor(colorFunctor(doubleFunctor(v)));
     }
 
 protected:
+    typedef Lab2RGBPrimeFunctor<double> ColorFunctorType;
+    typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
+    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    // L*a*b* fixed-point pyramid uses 9 integer bits.
+    typedef ConvertPyramidToVectorFunctor<ColorFunctorArgumentType, double, PyramidVectorType, PyramidPixelType, 9> DoubleFunctorType;
+    typedef ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, ColorFunctorResultType, ColorFunctorResultComponent, 9> DestFunctorType;
+
     ColorFunctorType colorFunctor;
     DoubleFunctorType doubleFunctor;
     DestFunctorType destFunctor;
@@ -225,6 +254,17 @@ protected:
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToYPrimePbPrPyramidFunctor {
 public:
+    ConvertToYPrimePbPrPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
+        if (Verbose > 0) {
+            cout << "R'G'B' to Y'PbPr color space conversion..." << endl;
+        }
+    }
+
+    inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        return convertFunctor(colorFunctor(v));
+    }
+
+protected:
     typedef RGBPrime2YPrimePbPrFunctor<SrcPixelType> ColorFunctorType;
     typedef typename ColorFunctorType::result_type ColorFunctorResultType;
     typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
@@ -234,23 +274,8 @@ public:
     //   -0.5 <= Pb <= 0.5
     //   -0.5 <= Pr <= 0.5
     // Needs 2 integer bits for pyramid math
-    typedef ConvertScalarToPyramidFunctor<ColorFunctorResultComponent, PyramidPixelType, 2> ConvertFunctorType;
+    typedef ConvertVectorToPyramidFunctor<ColorFunctorResultType, ColorFunctorResultComponent, PyramidVectorType, PyramidPixelType, 2> ConvertFunctorType;
 
-    ConvertToYPrimePbPrPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
-        if (Verbose > 0) {
-            cout << "R'G'B' to Y'PbPr color space conversion..." << endl;
-        }
-    }
-
-    PyramidVectorType operator()(const SrcVectorType &v) const {
-        ColorFunctorResultType ypbprVector = colorFunctor(v);
-        PyramidPixelType y  = convertFunctor(ypbprVector[0]);
-        PyramidPixelType pb = convertFunctor(ypbprVector[1]);
-        PyramidPixelType pr = convertFunctor(ypbprVector[2]);
-        return PyramidVectorType(y, pb, pr);
-    }
-
-protected:
     ColorFunctorType colorFunctor;
     ConvertFunctorType convertFunctor;
 };
@@ -258,37 +283,26 @@ protected:
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromYPrimePbPrPyramidFunctor {
 public:
-    typedef YPrimePbPr2RGBPrimeFunctor<double> ColorFunctorType;
-    typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
-    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
-    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
-
-    // Y'PbPr fixed-point pyramid uses 2 integer bits.
-    typedef ConvertPyramidToScalarFunctor<double, PyramidPixelType, 2> DoubleFunctorType;
-    typedef ConvertPyramidToScalarFunctor<DestPixelType, double, 2> DestFunctorType;
-
     ConvertFromYPrimePbPrPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {
         if (Verbose > 0) {
             cout << "Y'PbPr to R'G'B' color space conversion..." << endl;
         }
     }
 
-    DestVectorType operator()(const PyramidVectorType &v) const {
-        double y  = doubleFunctor(v.red());
-        double pb = doubleFunctor(v.green());
-        double pr = doubleFunctor(v.blue());
-
-        ColorFunctorArgumentType ypbprVector(y, pb, pr);
-        ColorFunctorResultType rgbpVector = colorFunctor(ypbprVector);
-
-        DestPixelType red = destFunctor(rgbpVector.red());
-        DestPixelType green = destFunctor(rgbpVector.green());
-        DestPixelType blue = destFunctor(rgbpVector.blue());
-
-        return DestVectorType(red, green, blue);
+    inline DestVectorType operator()(const PyramidVectorType &v) const {
+        return destFunctor(colorFunctor(doubleFunctor(v)));
     }
 
 protected:
+    typedef YPrimePbPr2RGBPrimeFunctor<double> ColorFunctorType;
+    typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
+    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    // Y'PbPr fixed-point pyramid uses 2 integer bits.
+    typedef ConvertPyramidToVectorFunctor<ColorFunctorArgumentType, double, PyramidVectorType, PyramidPixelType, 2> DoubleFunctorType;
+    typedef ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, ColorFunctorResultType, ColorFunctorResultComponent, 2> DestFunctorType;
+
     ColorFunctorType colorFunctor;
     DoubleFunctorType doubleFunctor;
     DestFunctorType destFunctor;
@@ -297,25 +311,21 @@ protected:
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToRGBPyramidFunctor {
 public:
+    ConvertToRGBPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {}
+
+    inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        return convertFunctor(colorFunctor(v));
+    }
+
+protected:
     typedef RGBPrime2RGBFunctor<SrcPixelType, double> ColorFunctorType;
     typedef typename ColorFunctorType::result_type ColorFunctorResultType;
     typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
 
     // RGB components are the same range as R'G'B' components
     // Use default number of integer bits for pyramid math
-    typedef ConvertScalarToPyramidFunctor<ColorFunctorResultComponent, PyramidPixelType, 1+8*sizeof(SrcPixelType)> ConvertFunctorType;
+    typedef ConvertVectorToPyramidFunctor<ColorFunctorResultType, ColorFunctorResultComponent, PyramidVectorType, PyramidPixelType, 1+8*sizeof(SrcPixelType)> ConvertFunctorType;
 
-    ConvertToRGBPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {}
-
-    PyramidVectorType operator()(const SrcVectorType &v) const {
-        ColorFunctorResultType rgbVector = colorFunctor(v);
-        PyramidPixelType r = convertFunctor(rgbVector[0]);
-        PyramidPixelType g = convertFunctor(rgbVector[1]);
-        PyramidPixelType b = convertFunctor(rgbVector[2]);
-        return PyramidVectorType(r, g, b);
-    }
-
-protected:
     ColorFunctorType colorFunctor;
     ConvertFunctorType convertFunctor;
 };
@@ -323,6 +333,13 @@ protected:
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromRGBPyramidFunctor {
 public:
+    ConvertFromRGBPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {}
+
+    inline DestVectorType operator()(const PyramidVectorType &v) const {
+        return destFunctor(colorFunctor(doubleFunctor(v)));
+    }
+
+protected:
     typedef RGB2RGBPrimeFunctor<double, double> ColorFunctorType;
     typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
     typedef typename ColorFunctorType::result_type ColorFunctorResultType;
@@ -330,27 +347,9 @@ public:
 
     // RGB components are the same range as R'G'B' components
     // Use default number of integer bits for pyramid math
-    typedef ConvertPyramidToScalarFunctor<double, PyramidPixelType, 1+8*sizeof(DestPixelType)> DoubleFunctorType;
-    typedef ConvertPyramidToScalarFunctor<DestPixelType, double, 1+8*sizeof(DestPixelType)> DestFunctorType;
+    typedef ConvertPyramidToVectorFunctor<ColorFunctorArgumentType, double, PyramidVectorType, PyramidPixelType, 1+8*sizeof(DestPixelType)> DoubleFunctorType;
+    typedef ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, ColorFunctorResultType, ColorFunctorResultComponent, 1+8*sizeof(DestPixelType)> DestFunctorType;
 
-    ConvertFromRGBPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {}
-
-    DestVectorType operator()(const PyramidVectorType &v) const {
-        double r  = doubleFunctor(v.red());
-        double g = doubleFunctor(v.green());
-        double b = doubleFunctor(v.blue());
-
-        ColorFunctorArgumentType rgbVector(r, g, b);
-        ColorFunctorResultType rgbpVector = colorFunctor(rgbVector);
-
-        DestPixelType red = destFunctor(rgbpVector.red());
-        DestPixelType green = destFunctor(rgbpVector.green());
-        DestPixelType blue = destFunctor(rgbpVector.blue());
-
-        return DestVectorType(red, green, blue);
-    }
-
-protected:
     ColorFunctorType colorFunctor;
     DoubleFunctorType doubleFunctor;
     DestFunctorType destFunctor;
@@ -396,7 +395,7 @@ void copyToPyramidImage(
     } else {
         transformImage(src_upperleft, src_lowerright, sa,
                 dest_upperleft, da,
-                ConvertToRGBPyramidFunctor<SrcVectorType, SrcPixelType, PyramidVectorType, PyramidPixelType>());
+                ConvertVectorToPyramidFunctor<SrcVectorType, SrcPixelType, PyramidVectorType, PyramidPixelType>());
     }
 
 };
@@ -482,7 +481,7 @@ inline void copyFromPyramidImageIf(
         transformImageIf(src_upperleft, src_lowerright, sa,
                 mask_upperleft, ma,
                 dest_upperleft, da,
-                ConvertFromRGBPyramidFunctor<DestVectorType, DestPixelType, PyramidVectorType, PyramidPixelType>());
+                ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, PyramidVectorType, PyramidPixelType>());
     }
 
 };

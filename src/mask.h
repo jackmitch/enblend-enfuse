@@ -73,6 +73,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 1 = inside white image only.
     // 255 = inside black image only.
     BImage *maskInit = new BImage(uBB.size());
+    // mem xsection = BImage*ubb
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
     initImageIf(destImageRange(*maskInit),
@@ -89,13 +90,17 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
     BImage *maskTransform = new BImage(uBB.size());
+    // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
             srcImageRange(*maskInit),
             destImage(*maskTransform));
+    // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
 
     delete maskInit;
+    // mem xsection = BImage*ubb
 
     MaskType *mask = new MaskType(uBB.size());
+    // mem xsection = BImage*ubb + MaskType*ubb
 
     // Dump maskTransform into mask
     // maskTransform = 1, then mask = max value (white image)
@@ -107,6 +112,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
                     Param(NumericTraits<MaskPixelType>::zero())));
 
     delete maskTransform;
+    // mem xsection = MaskType*ubb
 
     //char tmpFilename[] = "enblend_mask.tif";
     //ImageImportInfo maskImageInfo(tmpFilename);
