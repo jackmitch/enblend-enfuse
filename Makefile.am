@@ -1,2 +1,2 @@
-EXTRA_DIST = VIGRA_LICENSE cross-configure.sh cross-make.sh
+EXTRA_DIST = VIGRA_LICENSE
 SUBDIRS = include doc src
