@@ -64,6 +64,7 @@ void readFromTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t itemsRead = fread(ptr, size, nmemb, stream);
     if (itemsRead < nmemb) {
         cerr << "enblend: error reading from temporary file." << endl;
+        perror("reason");
         exit(1);
     }
 }
@@ -76,6 +77,7 @@ void writeToTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t itemsWritten = fwrite(ptr, size, nmemb, stream);
     if (itemsWritten < nmemb) {
         cerr << "enblend: error writing to temporary file." << endl;
+        perror("reason");
         exit(1);
     }
 }
@@ -89,6 +91,7 @@ FILE *dumpToTmpfile(void *ptr, size_t size, size_t nmemb) {
     FILE *f = tmpfile();
     if (f == NULL) {
         cerr << "enblend: error opening temporary file." << endl;
+        perror("reason");
         exit(1);
     }
 
@@ -110,6 +113,7 @@ FILE *dumpPyramidToTmpfile(vector<LPPixel*> &v) {
     FILE *pyramidFile = tmpfile();
     if (pyramidFile == NULL) {
         cerr << "enblend: error opening temporary file." << endl;
+        perror("reason");
         exit(1);
     }
 
@@ -121,15 +125,25 @@ FILE *dumpPyramidToTmpfile(vector<LPPixel*> &v) {
 
     rewind(pyramidFile);
 
-return pyramidFile;
+    return pyramidFile;
 }
 
-/** Save a mask as a TIFF.
+/** Save a mask as a TIFF called mask.tif.
  */
 void saveMaskAsTIFF(MaskPixel *mask) {
+
     uint32 *image = (uint32*)calloc(OutputWidth * OutputHeight, sizeof(uint32));
+    if (image == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in saveMaskAsTIFF for image)" << endl;
+        exit(1);
+    }
 
     TIFF *outputTIFF = TIFFOpen("mask.tif", "w");
+    if (outputTIFF == NULL) {
+        cerr << "enblend: error opening TIFF file \"mask.tif\"" << endl;
+        exit(1);
+    }
 
     TIFFSetField(outputTIFF, TIFFTAG_ORIENTATION, 1);
     TIFFSetField(outputTIFF, TIFFTAG_SAMPLESPERPIXEL, 4);

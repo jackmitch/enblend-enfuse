@@ -40,8 +40,8 @@ extern uint32 ROILastY;
 
 /** Blend Laplacian pyramids whiteLP and blackLP using
  *  Gaussian pyramid maskGP.
+ *  blackLPFile and maskGPFile are roiWidth * roiHeight * LPPixel.
  *  The result is written back to whiteLP.
- *  This function only operates within the region-of-interest.
  */
 void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
 
@@ -52,11 +52,17 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
     rewind(blackLPFile);
     rewind(maskGPFile);
 
+    if (Verbose > 0) {
+        cout << "Blending layers:";
+        cout.flush();
+    }
+
     // Do each layer individually.
     for (uint32 layer = 0; layer < whiteLP.size(); layer++) {
 
         if (Verbose > 0) {
-            cout << "Blending layer " << layer << endl;
+            cout << " l" << layer;
+            cout.flush();
         }
 
         // Calculate the size of the layer.
@@ -66,14 +72,16 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
         // layerWidth-sized line for blackLPFile.
         LPPixel *blackLine = (LPPixel*)malloc(layerWidth * sizeof(LPPixel));
         if (blackLine == NULL) {
-            cerr << "enblend: out of memory in blend for blackLine" << endl;
+            cerr << endl
+                 << "enblend: out of memory (in blend for blackLine)" << endl;
             exit(1);
         }
 
         // layerWidth-sized line for maskGPFile.
         LPPixel *maskLine = (LPPixel*)malloc(layerWidth * sizeof(LPPixel));
         if (maskLine == NULL) {
-            cerr << "enblend: out of memory in blend for maskLine" << endl;
+            cerr << endl
+                 << "enblend: out of memory (in blend for maskLine)" << endl;
             exit(1);
         }
 
@@ -109,6 +117,10 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
         free(blackLine);
         free(maskLine);
 
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
     }
 
     return;

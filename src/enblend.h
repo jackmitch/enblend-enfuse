@@ -45,7 +45,7 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne);
 void blend(std::vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile);
 
 // bounds.cc
-void ubbBounds(FILE *i1, FILE *i2);
+void ubbBounds(FILE *uint32File1, FILE *uint32File2);
 uint32 roiBounds(FILE *maskFile);
 void copyExcludedPixels(FILE *dst, FILE *src);
 void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile);

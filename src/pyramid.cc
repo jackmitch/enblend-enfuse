@@ -66,7 +66,9 @@ uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue) {
     // Use internal LPPixel precision data type.
     int16 *f = (int16*)calloc(length, sizeof(int16));
     if (f == NULL) {
-        cerr << "enblend: out of memory in filterHalfWidth for f" << endl;
+        cerr << endl
+             << "enblend: out of memory (in filterHalfWidth for f)" << endl;
+        exit(1);
     }
 
     // input f(x) is the step function u(-x)
@@ -172,7 +174,8 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
 
     LPPixel *out = (LPPixel*)calloc(outW * outH, sizeof(LPPixel));
     if (out == NULL) {
-        cerr << "enblend: out of memory in reduce for out" << endl;
+        cerr << endl
+             << "enblend: out of memory (in reduce for out)" << endl;
         exit(1);
     }
 
@@ -243,22 +246,25 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
-    if (Verbose > 0) {
-        cout << "Generating Gaussian pyramid g0" << endl;
-    }
-
     // Allocate space for level 0.
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
-        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
+        cerr << endl
+             << "enblend: out of memory (in gaussianPyramidFile for g)" << endl;
         exit(1);
     }
 
     // Allocate space for a scanline.
     MaskPixel *line = (MaskPixel*)malloc(roiWidth * sizeof(MaskPixel));
     if (line == NULL) {
-        cerr << "enblend: out of memory in gaussianPyramid for line" << endl;
+        cerr << endl
+             << "enblend: out of memory (in gaussianPyramidFile for line)" << endl;
         exit(1);
+    }
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid: g0";
+        cout.flush();
     }
 
     // Make sure we're at the beginning of the file.
@@ -290,13 +296,18 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
     uint32 l = 1;
     while (l < levels) {
         if (Verbose > 0) {
-            cout << "Generating Gaussian pyramid g" << v.size() << endl;
+            cout << " g" << v.size();
+            cout.flush();
         }
 
         g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
         v.push_back(g);
 
         l++;
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
     }
 
     return dumpPyramidToTmpfile(v);
@@ -310,26 +321,28 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
     vector<LPPixel*> *v = new vector<LPPixel*>();
 
     // Only consider the region-of-interest within image.
-    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
-
-    if (Verbose > 0) {
-        cout << "Generating Gaussian pyramid g0" << endl;
-    }
 
     // Allocate space for level 0.
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
-        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
+        cerr << endl
+             << "enblend: out of memory (in gaussianPyramid for g)" << endl;
         exit(1);
     }
 
     // Allocate space for a scanline.
     uint32 *line = (uint32*)malloc(roiWidth * sizeof(uint32));
     if (line == NULL) {
-        cerr << "enblend: out of memory in gaussianPyramid for line" << endl;
+        cerr << endl
+             << "enblend: out of memory (in gaussianPyramid for line)" << endl;
         exit(1);
+    }
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid: g0";
+        cout.flush();
     }
 
     // Copy image region-of-interest verbatim into g.
@@ -358,13 +371,18 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
     uint32 l = 1;
     while (l < levels) {
         if (Verbose > 0) {
-            cout << "Generating Gaussian pyramid g" << v->size() << endl;
+            cout << " g" << v->size();
+            cout.flush();
         }
 
         g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
         v->push_back(g);
 
         l++;
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
     }
 
     return v;
@@ -382,15 +400,25 @@ vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels) {
     // First create a Gaussian pyramid.
     vector<LPPixel*> *gp = gaussianPyramid(imageFile, levels);
 
+    if (Verbose > 0) {
+        cout << "Generating Laplacian pyramid:";
+        cout.flush();
+    }
+
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
     for (uint32 l = 0; l < (levels-1); l++) {
         if (Verbose > 0) {
-            cout << "Generating Laplacian pyramid l" << l << endl;
+            cout << " l" << l;
+            cout.flush();
         }
         expand((*gp)[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
             (*gp)[l], roiWidth >> l, roiHeight >> l,
             false);
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
     }
 
     return gp;
@@ -418,15 +446,25 @@ void collapsePyramid(vector<LPPixel*> &p) {
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
+    if (Verbose > 0) {
+        cout << "Collapsing Laplacian pyramid:";
+        cout.flush();
+    }
+
     // For each level, add the expansion of the next level.
     // Work backwards from the smallest level to the largest.
     for (int l = (p.size()-2); l >= 0; l--) {
         if (Verbose > 0) {
-            cout << "Collapsing Laplacian pyramid l" << l << endl;
+            cout << " l" << l;
+            cout.flush();
         }
         expand(p[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
             p[l], roiWidth >> l, roiHeight >> l,
             true);
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
     }
 
     return;

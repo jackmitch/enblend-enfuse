@@ -91,7 +91,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // column.
     dist_t *dnfColumn = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfColumn == NULL) {
-        cerr << "nearestFeatureTransform: out of memory for dnfColumn" << endl;
+        cerr << endl
+             << "enblend: out of memory (in nearestFeatureTransform for dnfColumn)" << endl;
         exit(1);
     }
 
@@ -99,14 +100,15 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // column or any column to the left.
     dist_t *dnfLeft = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfLeft == NULL) {
-        cerr << "nearestFeatureTransform: out of memory for dnfLeft" << endl;
+        cerr << "enblend: out of memory (in nearestFeatureTransform for dnfLeft)" << endl;
         exit(1);
     }
 
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: top-down pass" << endl;
+        cout << "Creating blend mask: 1/4 ";
+        cout.flush();
     }
     MaskPixel *firstMaskP = mask;
     for (uint32 x = 0; x < ubbWidth; x++) {
@@ -150,7 +152,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // If this is smaller than the value caluclated in the top-down pass,
     // overwrite that value.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: bottom-up pass" << endl;
+        cout << "2/4 ";
+        cout.flush();
     }
     MaskPixel *lastMaskP = &mask[ubbPixels - 1];
     dist_t *lastDNFColumnP = &dnfColumn[ubbPixels - 1];
@@ -197,8 +200,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
 
     // Calculate dnfLeft for each pixel.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: left-right pass" << endl; //... ";
-        //cout.flush();
+        cout << "3/4 ";
+        cout.flush();
     }
     for (uint32 y = 0; y < ubbHeight; y++) {
         dist_t *dnfLeftP = &dnfLeft[y * ubbWidth];
@@ -271,8 +274,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // column or any column to the right. If this is smaller than dnfLeftP,
     // Then recolor the pixel to the color of the nearest feature to the right.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: right-left pass" << endl; //... ";
-        //cout.flush();
+        cout << "4/4 ";
+        cout.flush();
     }
     dist_t *lastDNFLeftP = &dnfLeft[ubbPixels - 1];
     for (uint32 y = 0; y < ubbHeight; y++) {
@@ -332,6 +335,10 @@ void nearestFeatureTransform(MaskPixel *mask) {
     //if (Verbose > 0) {
     //    cout << "max feature list size=" << maxListSize << endl;
     //}
+
+    if (Verbose > 0) {
+        cout << endl;
+    }
 
     free(dnfColumn);
     free(dnfLeft);

@@ -116,7 +116,8 @@ int main(int argc, char** argv) {
                 int len = strlen(optarg) + 1;
                 outputFileName = (char*)malloc(len * sizeof(char));
                 if (outputFileName == NULL) {
-                    cerr << "enblend: out of memory for outputFileName" << endl;
+                    cerr << endl
+                         << "enblend: out of memory (in main for outputFileName)" << endl;
                     exit(1);
                 }
                 strncpy(outputFileName, optarg, len);
@@ -208,9 +209,9 @@ int main(int argc, char** argv) {
             }			
 
             if (Verbose > 0) {
-                cout << "output size = "
+                cout << "Output image size: "
                      << OutputWidth
-                     << "x"
+                     << " x "
                      << OutputHeight << endl;
             }
         }
@@ -241,7 +242,8 @@ int main(int argc, char** argv) {
     // Scanline for copying whiteImageFile to outputTIFF.
     uint32 *line = (uint32*)malloc(OutputWidth * sizeof(uint32));
     if (line == NULL) {
-        cerr << "enblend: out of memory in main for line." << endl;
+        cerr << endl
+             << "enblend: out of memory (in main for line)" << endl;
         exit(1);
     }
 
@@ -257,6 +259,20 @@ int main(int argc, char** argv) {
         // Caluclate the union bounding box of whiteImage and blackImage.
         ubbBounds(whiteImageFile, blackImageFile);
 
+        // Estimate memory usage for this blend step.
+        if (Verbose > 0) {
+            // Max usage is in mask =
+            // ubbWidth * ubbHeight * MaskPixel
+            // + 2 * ubbWidth * ubbHeight * uint32
+            uint32 ubbPixels = (UBBLastY - UBBFirstY + 1) *
+                   (UBBLastX - UBBFirstX + 1);
+            long long bytes = ubbPixels * sizeof(MaskPixel)
+                    + 2 * ubbPixels * sizeof(uint32);
+            cout << "Estimated memory required for this blend step: "
+                 << (bytes / 1000000)
+                 << "MB" << endl;
+        }
+
         // Create the blend mask.
         FILE *maskFile = createMask(whiteImageFile, blackImageFile);
 
@@ -264,6 +280,21 @@ int main(int argc, char** argv) {
         uint32 levels = roiBounds(maskFile);
         if (MaximumLevels > 0) {
             levels = min(levels, (uint32)MaximumLevels);
+        }
+
+        // Estimate disk usage for this blend step.
+        if (Verbose > 0) {
+            // whiteImageFile = OutputWidth * OutputHeight * uint32
+            // blackImageFile = OutputWidth * OutputHeight * uint32
+            // maskFile = ubbWidth * ubbHeight * MaskPixel
+            // blackLPFile = 4/3 * roiWidth * roiHeight * LPPixel
+            // maskGPFile = 4/3 * roiWidth * roiHeight * LPPixel
+            long long bytes = (2 * OutputWidth * OutputHeight * sizeof(uint32))
+                    + ((UBBLastY - UBBFirstY + 1) * (UBBLastX - UBBFirstX + 1) * sizeof(MaskPixel))
+                    + ((ROILastY - ROIFirstY + 1) * (ROILastX - ROIFirstX + 1) * sizeof(LPPixel) * 8 / 3);
+            cout << "Estimated temporary disk space required for this blend step: "
+                 << (bytes / 1000000)
+                 << "MB" << endl;
         }
 
         // Copy parts of blackImage outside of ROI into whiteImage.
@@ -304,22 +335,16 @@ int main(int argc, char** argv) {
         }
         delete whiteLP;
 
-        // Checkpoint.
-        if (Verbose > 0) {
-            if (!inputFileNameList.empty()) {
-                cout << "Blend step complete - updating output file." << endl;
-            } else {
-                cout << "Writing output file." << endl;
-            }
-        }
+    }
 
-        // dump output scanlines.
-        rewind(whiteImageFile);
-        for (uint32 i = 0; i < OutputHeight; i++) {
-            readFromTmpfile(line, sizeof(uint32), OutputWidth, whiteImageFile);
-            TIFFWriteScanline(outputTIFF, line, i, 8);
-        }
-
+    // dump output scanlines.
+    if (Verbose > 0) {
+        cout << "Writing output file." << endl;
+    }
+    rewind(whiteImageFile);
+    for (uint32 i = 0; i < OutputHeight; i++) {
+        readFromTmpfile(line, sizeof(uint32), OutputWidth, whiteImageFile);
+        TIFFWriteScanline(outputTIFF, line, i, 8);
     }
 
     free(line);

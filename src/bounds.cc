@@ -47,26 +47,33 @@ extern uint32 ROILastY;
 /** Caluclate the union bounding box of these two images.
  *  Files are OutputWidth * OutputHeight * uint32.
  */
-void ubbBounds(FILE *i1, FILE *i2) {
+void ubbBounds(FILE *uint32File1, FILE *uint32File2) {
     UBBFirstX = OutputWidth - 1;
     UBBLastX = 0;
     UBBFirstY = OutputHeight - 1;
     UBBLastY = 0;
 
     uint32 *line1 = (uint32*)malloc(OutputWidth * sizeof(uint32));
+    if (line1 == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in ubbBounds for line1)" << endl;
+        exit(1);
+    }
+
     uint32 *line2 = (uint32*)malloc(OutputWidth * sizeof(uint32));
-    if (line1 == NULL || line2 == NULL) {
-        cerr << "enblend: out of memory in ubbBounds for scanline." << endl;
+    if (line2 == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in ubbBounds for line2)" << endl;
         exit(1);
     }
 
     // Make sure we're at the beginning of the files.
-    rewind(i1);
-    rewind(i2);
+    rewind(uint32File1);
+    rewind(uint32File2);
 
     for (uint32 y = 0; y < OutputHeight; y++) {
-        readFromTmpfile(line1, sizeof(uint32), OutputWidth, i1);
-        readFromTmpfile(line2, sizeof(uint32), OutputWidth, i2);
+        readFromTmpfile(line1, sizeof(uint32), OutputWidth, uint32File1);
+        readFromTmpfile(line2, sizeof(uint32), OutputWidth, uint32File2);
 
         uint32 *pixel1 = line1;
         uint32 *pixel2 = line2;
@@ -103,7 +110,6 @@ void ubbBounds(FILE *i1, FILE *i2) {
 uint32 roiBounds(FILE *maskFile) {
 
     uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
-    uint32 ubbHeight = UBBLastY - UBBFirstY + 1;
 
     // First calculate the bounding box of the transition line.
     int32 firstMulticolorRow = UBBLastY;
@@ -113,9 +119,16 @@ uint32 roiBounds(FILE *maskFile) {
 
     // Allocate memory for two rows.
     MaskPixel *firstRow = (MaskPixel*)malloc(ubbWidth * sizeof(MaskPixel));
+    if (firstRow == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in roiBounds for firstRow)" << endl;
+        exit(1);
+    }
+
     MaskPixel *row = (MaskPixel*)malloc(ubbWidth * sizeof(MaskPixel));
-    if (row == NULL || firstRow == NULL) {
-        cerr << "enblend: out of memory in roiBounds for rows." << endl;
+    if (row == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in roiBounds for row)" << endl;
         exit(1);
     }
 
@@ -210,7 +223,7 @@ uint32 roiBounds(FILE *maskFile) {
     }
 
     if (Verbose > 0) {
-        cout << "MaximumLevels = " << levels << endl;
+        cout << "Using " << levels << " blending levels" << endl;
         cout << "Region of Interest bounding box = ("
              << ROIFirstX << ", "
              << ROIFirstY << ") -> ("
@@ -219,7 +232,7 @@ uint32 roiBounds(FILE *maskFile) {
              << endl;
     }
 
-    if (levels == 1) {
+    if (levels == 1 && levels != (uint32)MaximumLevels) {
         cerr << "enblend: intersection of images is too small to make "
              << "more than one pyramid level."
              << endl;
@@ -237,9 +250,16 @@ void copyExcludedPixels(FILE *dst, FILE *src) {
     uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
 
     uint32 *srcLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    if (srcLine == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createMask for srcLine)" << endl;
+        exit(1);
+    }
+
     uint32 *dstLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
-    if (srcLine == NULL || dstLine == NULL) {
-        cerr << "enblend: out of memory in createMask for scanline." << endl;
+    if (dstLine == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createMask for dstLine)" << endl;
         exit(1);
     }
 
@@ -256,7 +276,7 @@ void copyExcludedPixels(FILE *dst, FILE *src) {
                     || y > ROILastY
                     || x < ROIFirstX
                     || x > ROILastX) {
-                if (TIFFGetA(*srcPixel)) {
+                if (TIFFGetA(*srcPixel) != 0 && TIFFGetA(*dstPixel) == 0) {
                     *dstPixel = *srcPixel;
                 }
             }
@@ -285,13 +305,15 @@ void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile) {
 
     uint32 *outputLine = (uint32*)malloc(roiWidth * sizeof(uint32));
     if (outputLine == NULL) {
-        cerr << "enblend: out of memory in copy for outputLine" << endl;
+        cerr << endl
+             << "enblend: out of memory in copy for outputLine" << endl;
         exit(1);
     }
 
     MaskPixel *maskLine = (MaskPixel*)malloc(roiWidth * sizeof(MaskPixel));
     if (maskLine == NULL) {
-        cerr << "enblend: out of memory in copy for maskLine" << endl;
+        cerr << endl
+             << "enblend: out of memory in copy for maskLine" << endl;
         exit(1);
     }
 

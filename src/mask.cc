@@ -49,14 +49,22 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
     MaskPixel *mask = (MaskPixel*)calloc(ubbWidth * ubbHeight,
             sizeof(MaskPixel));
     if (mask == NULL) {
-        cerr << "enblend: out of memory in mask for mask" << endl;
+        cerr << endl
+             << "enblend: out of memory (in createMask for mask)" << endl;
         exit(1);
     }
 
     uint32 *whiteLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    if (whiteLine == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createMask for whiteLine)" << endl;
+        exit(1);
+    }
+
     uint32 *blackLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
-    if (whiteLine == NULL || blackLine == NULL) {
-        cerr << "enblend: out of memory in createMask for scanline." << endl;
+    if (blackLine == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createMask for blackLine)" << endl;
         exit(1);
     }
 
@@ -76,7 +84,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
 
             if (*whitePixel == 0 && *blackPixel == 0) {
                 // Pixel is not in the union of the two images.
-                // Mark the pixel as thinnable.
+                // Mark the pixel as not a feature pixel.
                 maskPixel->r = 1;
             }
             else if (*whitePixel == 0) {
@@ -93,7 +101,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
             }
             else {
                 // Pixel is in both images.
-                // Mark the pixel as thinnable.
+                // Mark the pixel as not a feature pixel.
                 maskPixel->r = 1;
                 maskPixel->a = 255;
             }
@@ -108,7 +116,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
     free(blackLine);
 
     // Run the nearest feature transform on the mask inside the UBB.
-    // This will replace the thinnable pixels with either green or blue
+    // This will replace the not-a-feature pixels with either green or blue
     // based on how close each pixel is to a green or blue region.
     nearestFeatureTransform(mask);
 
@@ -117,7 +125,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
     // Remark all green pixels as black. These pixels are closer to
     // blackImage than whiteImage.
     // Remark remaining thinnable pixels as white.
-    // Do not change alpha channel - this stores the union of
+    // Do not change alpha channel - this stores the outline of the union of
     // whiteImage and blackImage.
     maskPixel = mask;
     for (uint32 i = 0; i < (ubbWidth * ubbHeight); i++) {
@@ -135,7 +143,8 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
         maskPixel++;
     }
 
-    saveMaskAsTIFF(mask);
+    //saveMaskAsTIFF(mask);
+
     // Dump mask to file.
     return dumpToTmpfile(mask, sizeof(MaskPixel), ubbWidth * ubbHeight);
 }

@@ -39,7 +39,7 @@ extern uint32 OutputHeight;
 /** Find images that don't overlap and assemble them into one image.
  *  Uses a greedy heuristic.
  *  Removes used images from given list of filenames.
- *  Returns an output-sized buffer created with _TIFFmalloc.
+ *  Returns a temporary file.
  */
 FILE *assemble(std::list<char*> &filenames, bool pickOne) {
 
@@ -47,14 +47,26 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
 
     uint32 *image = (uint32*)calloc(OutputWidth * OutputHeight, sizeof(uint32));
     if (image == NULL) {
-        cerr << "enblend: out of memory in assemble for image." << endl;
+        cerr << endl
+             << "enblend: out of memory (in assemble for image)" << endl;
         exit(1);
     }
 
     uint32 *scanline = (uint32*)calloc(OutputWidth, sizeof(uint32));
     if (scanline == NULL) {
-        cerr << "enblend: out of memory in assemble for scanline." << endl;
+        cerr << endl
+             << "enblend: out of memory (in assemble for scanline)" << endl;
         exit(1);
+    }
+
+    if (Verbose > 0) {
+        if (pickOne) {
+            cout << "Picking overlapping image: ";
+        }
+        else {
+            cout << "Combining non-overlapping images: ";
+        }
+        cout.flush();
     }
 
     // List of images we decide to assemble.
@@ -64,13 +76,10 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
     for (i = filenames.begin(); i != filenames.end(); i++) {
         char *filename = *i;
 
-        if (Verbose > 0) {
-            cout << "assemble: checking \"" << filename << "\"" << endl;
-        }
-
         TIFF *tiff = TIFFOpen(filename, "r");
         if (tiff == NULL) {
-            cerr << "enblend: error opening TIFF file \""
+            cerr << endl
+                 << "enblend: error opening TIFF file \""
                  << filename
                  << "\""
                  << endl;
@@ -96,6 +105,10 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
         }
 
         if (!overlapFound) {
+            if (Verbose > 0) {
+                cout << filename << " ";
+                cout.flush();
+            }
             // No overlap. Copy tiff into image.
             for (uint32 y = 0; y < OutputHeight; y++) {
                 TIFFReadScanline(tiff, scanline, y, 8);
@@ -120,20 +133,13 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
     free(scanline);
 
     if (Verbose > 0) {
-        cout << "assemble: combined";
+        cout << endl;
     }
 
     // Erase the filenames we used.
     list<list<char*>::iterator>::iterator r;
     for (r = toBeRemoved.begin(); r != toBeRemoved.end(); r++) {
-        if (Verbose > 0) {
-            cout << " " << **r;
-        }
         filenames.erase(*r);
-    }
-
-    if (Verbose > 0) {
-        cout << endl;
     }
 
     return dumpToTmpfile(image, sizeof(uint32), OutputWidth * OutputHeight);
