@@ -30,10 +30,13 @@
 #include <ext/hash_set>
 
 #include "common.h"
+#include "anneal.h"
 #include "nearest.h"
 
+#include "vigra/contourcirculator.hxx"
 #include "vigra/error.hxx"
 #include "vigra/functorexpression.hxx"
+#include "vigra/imageiteratoradapter.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
 #include "vigra/initimage.hxx"
@@ -45,6 +48,7 @@
 
 using __gnu_cxx::hash_set;
 
+using std::make_pair;
 using std::priority_queue;
 using std::vector;
 
@@ -54,6 +58,7 @@ using vigra::BImage;
 using vigra::BlueAccessor;
 using vigra::BRGBCFImage;
 using vigra::combineThreeImages;
+using vigra::CrackContourCirculator;
 using vigra::Diff2D;
 using vigra::exportImage;
 using vigra::FindMinMax;
@@ -61,10 +66,13 @@ using vigra::GreenAccessor;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
+using vigra::initImageBorder;
 using vigra::initImageIf;
 using vigra::inspectImage;
 using vigra::linearIntensityTransform;
+using vigra::LineIterator;
 using vigra::NumericTraits;
+using vigra::Point2D;
 using vigra::RedAccessor;
 using vigra::RGBToGrayAccessor;
 using vigra::RGBValue;
@@ -182,87 +190,261 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
          << "(" << iBB_uBB.getLR().x << ", " << iBB_uBB.getLR().y << ")" << endl;
 
     // Find points
-    hash_set<Diff2D> *entryExitPoints =
-            findTransitionLineEntryExitPoints(iBB_uBB.apply(srcImageRange(*mask)));
-    hash_set<Diff2D> entryExitPointsCopy(*entryExitPoints);
+    //hash_set<Diff2D> *entryExitPoints =
+    //        findTransitionLineEntryExitPoints(iBB_uBB.apply(srcImageRange(*mask)));
+    //hash_set<Diff2D> entryExitPointsCopy(*entryExitPoints);
 
-    // Calculate cost function in iBB_uBB
-    // Step 1: map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
-    FindMinMax<UIImage::value_type> minmax;
-    inspectImage(srcImageRange(*maskDistance), minmax);
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistance)),
-            linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
+    //// Calculate cost function in iBB_uBB
+    //// Step 1: map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
+    //FindMinMax<UIImage::value_type> minmax;
+    //inspectImage(srcImageRange(*maskDistance), minmax);
+    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //        iBB_uBB.apply(destImage(*maskDistance)),
+    //        linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
 
-    // Step N: min distance (feature) = 1<<20 mapped to infinite cost
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-                   iBB_uBB.apply(destImage(*maskDistance)),
-                   ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
-                              Param(NumericTraits<unsigned int>::max()),
-                              Arg1()));
+    //// Step N: min distance (feature) = 1<<20 mapped to infinite cost
+    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //               iBB_uBB.apply(destImage(*maskDistance)),
+    //               ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
+    //                          Param(NumericTraits<unsigned int>::max()),
+    //                          Arg1()));
 
-    // Debug: describe cost function as RGB image for visualization.
-    BRGBCFImage *maskDistanceB = new BRGBCFImage(uBB.size());
+    //// Debug: describe cost function as RGB image for visualization.
+    //BRGBCFImage *maskDistanceB = new BRGBCFImage(uBB.size());
 
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistanceB, BlueAccessor<typename BRGBCFImage::value_type>())),
-            linearRangeMapping(0, 1<<20, 0, 200));
+    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //        iBB_uBB.apply(destImage(*maskDistanceB, BlueAccessor<typename BRGBCFImage::value_type>())),
+    //        linearRangeMapping(0, 1<<20, 0, 200));
 
-    // Step 2: map pixel discrepancies to costs.
-    combineThreeImages(iBB.apply(srcImageRange(*whiteImage, RGBToGrayAccessor<typename ImageType::value_type>())),
-            iBB.apply(srcImage(*blackImage, RGBToGrayAccessor<typename ImageType::value_type>())),
-            iBB_uBB.apply(srcImage(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistance)),
-            Arg3() + (Param(1<<25) * (abs(Arg1() - Arg2()) / Param(255))));
+    //// Step 2: map pixel discrepancies to costs.
+    //combineThreeImages(iBB.apply(srcImageRange(*whiteImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+    //        iBB.apply(srcImage(*blackImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+    //        iBB_uBB.apply(srcImage(*maskDistance)),
+    //        iBB_uBB.apply(destImage(*maskDistance)),
+    //        Arg3() + (Param(1<<25) * (abs(Arg1() - Arg2()) / Param(255))));
 
-    // Map costs to 0-255 pixel range.
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
-            linearRangeMapping(0, 1<<25, 0, 255));
+    //// Map costs to 0-255 pixel range.
+    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //        iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
+    //        linearRangeMapping(0, 1<<25, 0, 255));
 
-    // Debug: infinite cost points mapped to 255 red pixel value.
-    combineTwoImages(iBB_uBB.apply(srcImageRange(*maskDistance)),
-                     iBB_uBB.apply(srcImage(*maskDistanceB)),
-                     iBB_uBB.apply(destImage(*maskDistanceB)),
-                     ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
-                                Param(RGBValue<unsigned char>(255,0,0)),
-                                Arg2()));
+    //// Debug: infinite cost points mapped to 255 red pixel value.
+    //combineTwoImages(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //                 iBB_uBB.apply(srcImage(*maskDistanceB)),
+    //                 iBB_uBB.apply(destImage(*maskDistanceB)),
+    //                 ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
+    //                            Param(RGBValue<unsigned char>(255,0,0)),
+    //                            Arg2()));
 
-    // Solve cost function
-    dijkstra(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
-            entryExitPoints);
+    //// Solve cost function
+    //dijkstra(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //        iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
+    //        entryExitPoints);
 
-    // Debug: combine cost visualization with mask.
-    BRGBCFImage *visualization = new BRGBCFImage(uBB.size());
-    transformImage(srcImageRange(*mask), destImage(*visualization),
-            ifThenElse(Arg1() == Param(0),
-                       Param(RGBValue<unsigned char>(0)),
-                       Param(RGBValue<unsigned char>(255))));
-    copyImage(iBB_uBB.apply(srcImageRange(*maskDistanceB)),
-            iBB_uBB.apply(destImage(*visualization)));
+    // Mask crack contains iBB surrounded by a 1-pixel black border.
+    MaskType *maskCrack = new MaskType(iBB.size() + Diff2D(2, 2));
+    copyImage(iBB_uBB.apply(srcImageRange(*mask)), destIter(maskCrack->upperLeft() + Diff2D(1, 1)));
 
-    // Debug: mark entry/exit points in red
-    for (hash_set<Diff2D>::iterator i = entryExitPointsCopy.begin(); i != entryExitPointsCopy.end(); ++i) {
-        Diff2D point = *i + iBB_uBB.getUL();
-        cout << "entry/exit point (" << point.x << ", " << point.y << ")" << endl;
-        (*visualization)[point] = RGBValue<unsigned char>(0xff, 0xff, 0x0);
+    vector<vector<pair<bool, Point2D> > *> snakes;
+    MaskIteratorType my = maskCrack->upperLeft() + Diff2D(1,1);
+    MaskIteratorType mbegin = my;
+    MaskIteratorType mend = maskCrack->lowerRight() + Diff2D(-1, -1);
+    for (; my.y != mend.y; ++my.y) {
+        MaskIteratorType mx = my;
+        MaskPixelType lastColor = NumericTraits<MaskPixelType>::zero();
+        for (; mx.x != mend.x; ++mx.x) {
+            if ((*mx == NumericTraits<MaskPixelType>::max())
+                    && (lastColor == NumericTraits<MaskPixelType>::zero())) {
+                // Previously un-visited white region.
+                // Create a snake
+                vector<pair<bool, Point2D> > *snake = new vector<pair<bool, Point2D> >();
+                snakes.push_back(snake);
+
+                // Iterate over copy of image, modifying original
+                MaskType *maskCrackCopy = new MaskType(*maskCrack);
+                MaskIteratorType ci = maskCrackCopy->upperLeft() + (mx - maskCrack->upperLeft());
+                CrackContourCirculator<MaskIteratorType> crack(ci);
+                CrackContourCirculator<MaskIteratorType> crackEnd(crack);
+                int distanceLastPoint = 0;
+                bool lastPointFrozen = false;
+                do {
+                    CrackContourCirculator<MaskIteratorType> crackThis = crack;
+                    CrackContourCirculator<MaskIteratorType> crackNext = ++crack;
+                    MaskIteratorType crackPoint = mx + *crackThis;
+                    MaskIteratorType crackNextPoint = mx + *crackNext;
+
+                    // Paint crackPoint.
+                    *crackPoint = NumericTraits<MaskPixelType>::max() / 2;
+
+                    //cout << "crackThis=(" << (*crackThis).x << ", " << (*crackThis).y << ") "
+                    //     << "crackNext=(" << (*crackNext).x << ", " << (*crackNext).y << ") ";
+
+                    // Check if current point is frozen.
+                    if ((crackPoint.x == mbegin.x)
+                            || (crackPoint.x == mend.x)
+                            || (crackPoint.y == mbegin.y)
+                            || (crackPoint.y == mend.y)) {
+                        if ((crackPoint.x == mbegin.x && crackPoint.y == mbegin.y)
+                                || (crackPoint.x == mend.x && crackPoint.y == mbegin.y)
+                                || (crackPoint.x == mbegin.x && crackPoint.y == mend.y)
+                                || (crackPoint.x == mend.x && crackPoint.y == mend.y)) {
+                            // Crack point is frozen on a corner.
+                            // Make a frozen point here.
+                            snake->push_back(make_pair(true, *crackThis + (mx - maskCrack->upperLeft())));
+                            distanceLastPoint = 0;
+                            //cout << "frozen reason 1" << endl;
+                        }
+                        else {
+                            // It is frozen on an edge.
+                            // This is a frozen point if the next point is not frozen.
+                            // or if the last point is not frozen.
+                            if (!lastPointFrozen
+                                    || ((crackNextPoint.x != mbegin.x)
+                                        && (crackNextPoint.x != mend.x)
+                                        && (crackNextPoint.y != mbegin.y)
+                                        && (crackNextPoint.y != mend.y))) {
+                                snake->push_back(make_pair(true, *crackThis + (mx - maskCrack->upperLeft())));
+                                distanceLastPoint = 0;
+                                //cout << "frozen reason 2" << endl;
+                            } else {
+                                //cout << "frozen but not marked" << endl;
+                            }
+                        }
+                        lastPointFrozen = true;
+                    }
+                    else {
+                        // Current point is not frozen.
+                        if ((distanceLastPoint % 10) == 0) {
+                            // Make non-frozen point if we are far enough away from last non-frozen point.
+                            snake->push_back(make_pair(false, *crackThis + (mx - maskCrack->upperLeft())));
+                            distanceLastPoint = 0;
+                            //cout << "unfrozen" << endl;
+                        } else {
+                            //cout << "unfrozen not marked" << endl;
+                        }
+                        lastPointFrozen = false;
+                    }
+                    distanceLastPoint++;
+                } while (crack != crackEnd);
+
+                delete maskCrackCopy;
+            }
+            lastColor = *mx;
+        }
     }
 
-    // Debug: write visualization out as tif
-    ImageExportInfo visualizationInfo("enblend_distance.tif");
-    visualizationInfo.setPosition(uBB.getUL());
-    exportImage(srcImageRange(*visualization), visualizationInfo);
-    delete maskDistanceB;
-    delete visualization;
 
-    delete entryExitPoints;
+    BRGBCFImage *maskCrackVisualize = new BRGBCFImage(iBB.size() + Diff2D(2, 2));
+    transformImage(srcImageRange(*maskCrack),
+            destImage(*maskCrackVisualize, RedAccessor<typename BRGBCFImage::value_type>()),
+            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+                               NumericTraits<MaskPixelType>::max(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    transformImage(srcImageRange(*maskCrack),
+            destImage(*maskCrackVisualize, GreenAccessor<typename BRGBCFImage::value_type>()),
+            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+                               NumericTraits<MaskPixelType>::max(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    transformImage(srcImageRange(*maskCrack),
+            destImage(*maskCrackVisualize, BlueAccessor<typename BRGBCFImage::value_type>()),
+            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+                               NumericTraits<MaskPixelType>::max(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+
+    // Visualize snakes
+    for (unsigned int i = 0; i < snakes.size(); i++) {
+        vector<pair<bool, Point2D> > *snake = snakes[i];
+        annealSnake<MaskType, MaskType>(NULL, NULL, snake);
+        for (unsigned int j = 0; j < snake->size(); j++) {
+            unsigned int next = (j+1) % snake->size();
+            pair<bool, Point2D> pointA = (*snake)[j];
+            pair<bool, Point2D> pointB = (*snake)[next];
+            LineIterator<typename BRGBCFImage::traverser> line(maskCrackVisualize->upperLeft() + pointA.second,
+                    maskCrackVisualize->upperLeft() + pointB.second);
+            LineIterator<typename BRGBCFImage::traverser> end(maskCrackVisualize->upperLeft() + pointB.second,
+                    maskCrackVisualize->upperLeft() + pointB.second);
+            for (; line != end; ++line) {
+                *line = RGBValue<unsigned char>(0, 0, 0xff);
+            }
+        }
+        for (unsigned int j = 0; j < snake->size(); j++) {
+            pair<bool, Point2D> point = (*snake)[j];
+            (*maskCrackVisualize)[point.second] = point.first ? RGBValue<unsigned char>(0xff, 0, 0) : RGBValue<unsigned char>(0, 0xff, 0);
+        }
+    }
+
+    ImageExportInfo maskCrackInfo("enblend_mask_crack.tif");
+    exportImage(srcImageRange(*maskCrackVisualize), maskCrackInfo);
+
+    delete maskCrackVisualize;
+    delete maskCrack;
+
+    // Delete all snakes.
+    for (unsigned int i = 0; i < snakes.size(); i++) {
+        delete snakes[i];
+    }
+
+    //// Debug: combine cost visualization with mask.
+    //BRGBCFImage *visualization = new BRGBCFImage(uBB.size());
+    //transformImage(srcImageRange(*mask), destImage(*visualization),
+    //        ifThenElse(Arg1() == Param(0),
+    //                   Param(RGBValue<unsigned char>(0)),
+    //                   Param(RGBValue<unsigned char>(255))));
+    //initImageBorder(destIterRange(visualization->upperLeft() + iBB_uBB.getUL() + Diff2D(-1, -1),
+    //                             visualization->upperLeft() + iBB_uBB.getLR() + Diff2D(1, 1)),
+    //                1, RGBValue<unsigned char>(0,0,0));
+    //copyImage(iBB_uBB.apply(srcImageRange(*maskDistanceB)),
+    //        iBB_uBB.apply(destImage(*visualization)));
+
+    //Diff2D point = *entryExitPointsCopy.begin() + iBB_uBB.getUL();
+    //CrackContourCirculator<typename BRGBCFImage::traverser> crack(visualization->upperLeft() + point);
+    //CrackContourCirculator<typename BRGBCFImage::traverser> crackend(crack);
+    //vector<Diff2D> snakePoints;
+    //unsigned int everyTenthPoint = 0;
+    //do {
+    //    //hash_set<Diff2D>::iterator topLocation = entryExitPointsCopy.find(*crack + point - iBB_uBB.getUL());
+    //    Diff2D crack_iBB_uBB = *crack + point - iBB_uBB.getUL();
+    //    if (topLocation == entryExitPointsCopy.end()) {
+    //        if ((everyTenthPoint % 10) == 0) snakePoints.push_back(*crack);
+    //        everyTenthPoint++;
+    //    } else {
+    //        // Special unmovable point
+    //        cout << "found special unmovable point." << endl;
+    //        snakePoints.push_back(*crack);
+    //        everyTenthPoint = 1;
+    //    }
+    //    //FIXME check if point is on iBB boundary. - make it unmovable.
+    //} while (++crack != crackend);
+    //for (unsigned int i = 0; i < snakePoints.size(); i++) {
+    //    (*visualization)[point + snakePoints[i]] = RGBValue<unsigned char>(0xff, 0, 0);
+    //}
+
+    // Debug: mark entry/exit points in yellow
+    //for (hash_set<Diff2D>::iterator i = entryExitPointsCopy.begin(); i != entryExitPointsCopy.end(); ++i) {
+    //    Diff2D point = *i + iBB_uBB.getUL();
+    //    cout << "entry/exit point (" << point.x << ", " << point.y << ")" << endl;
+    //    (*visualization)[point] = RGBValue<unsigned char>(0xff, 0xff, 0x0);
+    //}
+
+    //// Debug: write visualization out as tif
+    //ImageExportInfo visualizationInfo("enblend_distance.tif");
+    //visualizationInfo.setPosition(uBB.getUL());
+    //exportImage(srcImageRange(*visualization), visualizationInfo);
+    ////delete maskDistanceB;
+    //delete visualization;
+
+    
+    //delete entryExitPoints;
     delete maskDistance;
 
     return mask;
 };
 
-// Find the points where the transition line enters/leaves the iBB.
+// Find the (white) points where the transition line enters/leaves the iBB.
+// FIXME only white points are allowed. - these will become anchor points of the snake.
 template <class MaskImageIterator, class MaskAccessor>
 hash_set<Diff2D> *findTransitionLineEntryExitPoints(
         MaskImageIterator mask_upperleft,
