@@ -15,17 +15,19 @@ using namespace vigra;
 bool GimpAssociatedAlphaHack = true;
 
 int main(void) {
-    CachedFileImageDirector::v().setAllocation(1500 << 20);
+    CachedFileImageDirector::v().setAllocation(500 << 20);
     CachedFileImageDirector::v().setBlockSize(2LL << 20);
 
-    USRGBCFImage uscf(40000, 30000);
+    USRGBCFImage uscf(40000, 5000);
+    //USRGBCFImage uscf(40000, 30000);
     //BRGBCFImage uscf(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 0, &uscf);
     CachedFileImageDirector::v().printStats();
     CachedFileImageDirector::v().resetCacheMisses();
 
     typedef BCFImage::PixelType AlphaPixelType;
-    BCFImage a(40000, 30000);
+    BCFImage a(40000, 5000);
+    //BCFImage a(40000, 30000);
     //BCFImage a(40000, 25000);
     CachedFileImageDirector::v().printStats("uscf", 1, &uscf);
     CachedFileImageDirector::v().printStats("a", 1, &a);

@@ -276,7 +276,7 @@ void expand(bool add, bool wraparound,
             RealPixelType p(NumericTraits<RealPixelType>::zero());
             unsigned int totalContrib = 0;
 
-            if (destx & 1 == 1) {
+            if ((destx & 1) == 1) {
                 // This is an odd-numbered column.
                 for (int kx = 0; kx <= 1; kx++) {
                     // kx=0 -> W[-1]
@@ -296,7 +296,7 @@ void expand(bool add, bool wraparound,
                         if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
                     }
 
-                    if (desty & 1 == 1) {
+                    if ((desty & 1) == 1) {
                         // This is an odd-numbered row.
                         for (int ky = 0; ky <= 1; ky++) {
                             // ky=0 -> W[-1]
@@ -351,7 +351,7 @@ void expand(bool add, bool wraparound,
                         if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
                     }
 
-                    if (desty & 1 == 1) {
+                    if ((desty & 1) == 1) {
                         // This is an odd-numbered row.
                         for (int ky = 0; ky <= 1; ky++) {
                             // ky=0 -> W[-1]
@@ -405,13 +405,13 @@ void expand(bool add, bool wraparound,
             // Write back the result.
             da.set(NumericTraits<PixelType>::fromRealPromote(pMod), dx);
 
-            if (destx & 1 == 1) {
+            if ((destx & 1) == 1) {
                 sx.x++;
                 srcx++;
             }
         }
 
-        if (desty & 1 == 1) {
+        if ((desty & 1) == 1) {
             sy.y++;
             srcy++;
         }

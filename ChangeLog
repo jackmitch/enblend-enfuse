@@ -1,3 +1,30 @@
+2004-10-30 13:37  mihal
+
+	* src/vigra_impex/tiff.cxx: Modified tiff import to use scanline
+	  interface instead of strip interface.  PTStitcher does not set
+	  the rows/strip tag to a reasonable value and this will cause
+	  impex to run out of memory on large panoramas.
+
+2004-10-24 17:45  mihal
+
+	* configure.in, cross-configure.sh: Updated version to 2.1.
+	  Changed windows build to use unix version of libtiff.
+
+2004-10-24 17:39  mihal
+
+	* src/: enblend.cc, enblend.h, mask.h, pyramid.h: Made LZW not the
+	  default on windows.  Turned off TIFF warnings.
+
+2004-10-24 17:38  mihal
+
+	* include/vigra/numerictraits.hxx: Fixed a float accuracy-related
+	  bug in fromRealPromote.
+
+2004-10-16 22:33  mihal
+
+	* ChangeLog, NEWS, doc/enblend.1: Updated documentation for version
+	  2.0.
+
 2004-10-16 22:18  mihal
 
 	* Makefile.am, configure.in: Last tweaks to the configuration.
