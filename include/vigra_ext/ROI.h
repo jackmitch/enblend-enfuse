@@ -5,7 +5,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: ROI.h,v 1.1 2004-07-04 00:01:16 mihal Exp $
+ *  $Id: ROI.h,v 1.2 2004-09-26 20:23:58 mihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -127,6 +127,21 @@ public:
 	result.m_size = lrMax - ulMin;
     }
 
+    /** compare if two ROIs are equal.
+     *  @param other    The ROI to compare to
+     */
+    bool operator==(const ROI &other) const
+    {
+        return ((getUL() == other.getUL()) && (size() == other.size()));
+    }
+
+    /** inequality operator
+     *  @param other    The ROI to compare to
+     */
+    bool operator!=(const ROI &other) const
+    {
+        return !operator==(other);
+    }
 
     /** create iterators to iterate over this ROI
      *
