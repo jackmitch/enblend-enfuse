@@ -186,14 +186,14 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         }
     }
 
-    if (Verbose > 0) cout << endl;
+    if (Verbose > 0 && !OneAtATime) cout << endl;
 
     // Calculate bounding box of image.
     FindBoundingRectangle unionRect;
     inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
             srcImage(*imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
-    if (Verbose > 0) {
+    if (Verbose > 0 && !OneAtATime) {
         cout << "Combined union bounding box: ("
              << unionRect.upperLeft.x
              << ", "
