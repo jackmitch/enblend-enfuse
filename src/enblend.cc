@@ -31,6 +31,8 @@
 #include <tiffio.h>
 
 #include "enblend.h"
+#include "vigra_ext/ROI.h"
+#include "vigra/impex.hxx"
 
 using namespace std;
 
@@ -39,8 +41,10 @@ int Verbose = 0;
 int MaximumLevels = 0;
 bool OneAtATime = false;
 bool Wraparound = false;
+
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
+
 double StitchMismatchThreshold = 0.4;
 uint16 PlanarConfig;
 uint16 Photometric;
@@ -165,6 +169,98 @@ int main(int argc, char** argv) {
         printUsageAndExit();
     }
 
+    try {
+
+        // Check that all input images have the same parameters.
+        // Create the Info for the output file.
+        vigra::ImageExportInfo outputInfo =
+                vigra::ImageExportInfo(outputFileName);
+
+        bool isColor = false;
+        const char *pixelType = NULL;
+        vigra_ext::ROI<vigra::Diff2D> inputUnion;
+
+        listIterator = inputFileNameList.begin();
+        while (listIterator != inputFileNameList.end()) {
+
+            if (Verbose > 0) {
+                cout << "Checking input image \""
+                     << *listIterator
+                     << "\" ";
+            }
+
+            vigra::ImageImportInfo inputInfo =
+                    vigra::ImageImportInfo(*listIterator);
+
+            if (Verbose > 0) {
+                if (inputInfo.isColor()) cout << "color ";
+                cout << inputInfo.getPixelType() << " ";
+                cout << "position="
+                     << inputInfo.getPosition().x
+                     << "x"
+                     << inputInfo.getPosition().y
+                     << " ";
+                cout << "size="
+                     << inputInfo.width()
+                     << "x"
+                     << inputInfo.height()
+                     << endl;
+            }
+
+            if (inputInfo.numExtraBands() < 1) {
+                // Complain about lack of alpha channel.
+                cerr << "enblend: Input image does not have an alpha "
+                     << "channel. This is required to determine which pixels "
+                     << "contribute to the final image."
+                     << endl;
+                exit(1);
+            }
+
+            // Get input image's position and size.
+            vigra::Diff2D imageSize(inputInfo.width(), inputInfo.height());
+            vigra::Diff2D imagePos = inputInfo.getPosition();
+            vigra_ext::ROI<vigra::Diff2D> imageROI(imagePos, imageSize);
+
+            if (listIterator == inputFileNameList.begin()) {
+                // The first input tiff
+                inputUnion = imageROI;
+                isColor = inputInfo.isColor();
+                pixelType = inputInfo.getPixelType();
+                outputInfo.setPixelType(pixelType);
+            }
+            else {
+                inputUnion.unite(imageROI, inputUnion);
+
+                if (isColor != inputInfo.isColor()) {
+                }
+                if (strcmp(pixelType, inputInfo.getPixelType())) {
+                }
+            }
+
+            listIterator++;
+        }
+
+        if (Verbose > 0) {
+            // print inputUnion.
+        }
+
+        // We should probably test outputImage here.
+
+        // Switch on isColor
+        // Switch on pixelType
+        // Instantiate blender template and invoke.
+
+    }
+    catch (vigra::StdException & e) {
+        // catch any errors that might have occured and print their reason
+        cerr << endl << "enblend: error opening input file:"
+             << endl << e.what()
+             << endl;
+        exit(1);
+    }
+
+
+/*
     // Create output TIFF object.
     TIFF *outputTIFF = TIFFOpen(outputFileName, "w");
     if (outputTIFF == NULL) {
@@ -385,5 +481,6 @@ int main(int argc, char** argv) {
 
     free(outputFileName);
 
+*/
     return 0;
 }

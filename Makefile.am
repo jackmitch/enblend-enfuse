@@ -1,1 +1,2 @@
-SUBDIRS = doc src
+EXTRA_DIST = VIGRA_LICENSE
+SUBDIRS = include doc src
