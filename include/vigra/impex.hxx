@@ -21,6 +21,9 @@
 /************************************************************************/
 /* Modifications by Pablo d'Angelo, as of 3 July 2004:
  *  - Added import/export of UINT16 and UINT32 image types.
+ * Modifications by Andrew Mihal as of 14 October 2004:
+ *  - Moved some RowIterator declarations around to avoid using default ctors
+ *    (cachedfileimages do not have default ctors for row iterators).
  */
 
 /*!
@@ -93,7 +96,8 @@ namespace vigra
         const size_type num_bands = dec->getNumBands();
 
         SrcValueType const * scanline;
-        DstRowIterator xs;
+        // MIHAL no default constructor available for cachedfileimages.
+        DstRowIterator xs = ys.rowIterator();
 
         // iterate
         for( size_type y = 0; y < height; ++y, ++ys.y ) {
@@ -139,7 +143,8 @@ namespace vigra
         const size_type height = dec->getHeight();
 
         SrcValueType const * scanline;
-        DstRowIterator xs;
+        // MIHAL no default constructor available for cachedfileimages.
+        DstRowIterator xs = ys.rowIterator();
 
         for( size_type y = 0; y < height; ++y, ++ys.y ) {
             dec->nextScanline();
@@ -386,11 +391,12 @@ namespace vigra
         enc->setNumBands(num_bands);
         enc->finalizeSettings();
 
-        SrcRowIterator xs;
         DstValueType * scanline;
 
         // iterate
         ImageIterator ys(ul);
+        // MIHAL no default constructor available for cachedfileimages
+        SrcRowIterator xs = ys.rowIterator();
         for( size_type y = 0; y < height; ++y, ++ys.y ) {
             for( size_type b = 0; b < num_bands; ++b ) {
                 xs = ys.rowIterator();
@@ -441,11 +447,12 @@ namespace vigra
         enc->setNumBands(1);
         enc->finalizeSettings();
 
-        SrcRowIterator xs;
         DstValueType * scanline;
 
         // iterate
         ImageIterator ys(ul);
+        // MIHAL no default constructor available for cachedfileimages.
+        SrcRowIterator xs = ys.rowIterator();
         size_type y;
         for(  y = 0; y < height; ++y, ++ys.y ) {
             xs = ys.rowIterator();

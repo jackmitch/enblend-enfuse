@@ -312,9 +312,9 @@ class RowIterator : private IMAGE_ITERATOR
     {}
 
     // MIHAL
-    RowIterator()
-    : IMAGE_ITERATOR()
-    {}
+    //RowIterator()
+    //: IMAGE_ITERATOR()
+    //{}
 
         /** Assignment.
         */
