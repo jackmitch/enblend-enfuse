@@ -59,7 +59,8 @@ static const unsigned int W100[] = {25 - A100 / 2, 25, A100, 25, 25 - A100 / 2};
  */
 template <typename PixelType>
 unsigned int filterHalfWidth(const unsigned int levels) {
-    vigra_precondition(levels >= 1, "filterHalfWidth: levels must be >= 1.");
+    vigra_precondition((levels >= 1 && levels <= 30),
+            "filterHalfWidth: levels outside of range [1,30]");
 
     // This is the arithmetic half width.
     int halfWidth = (levels == 1) ? 0 : ((1 << (levels+1)) - 4);

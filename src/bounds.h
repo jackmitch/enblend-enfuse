@@ -112,7 +112,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         // of the iBB.
         // Calculate short dimension of iBB.
         unsigned int shortDimension = min(iBB.size().x, iBB.size().y);
-        while (levels < 32) {
+        while (levels < 30) {
             unsigned int extent = filterHalfWidth<PyramidPixelType>(levels + 1);
             if ((2 * extent) > shortDimension) {
                 // levels + 1 is too many levels.
