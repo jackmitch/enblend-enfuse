@@ -58,6 +58,7 @@ using vigra::BImage;
 using vigra::BlueAccessor;
 using vigra::BRGBCFImage;
 using vigra::combineThreeImages;
+using vigra::combineTwoImages;
 using vigra::CrackContourCirculator;
 using vigra::Diff2D;
 using vigra::exportImage;
@@ -189,25 +190,28 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
          << " -> "
          << "(" << iBB_uBB.getLR().x << ", " << iBB_uBB.getLR().y << ")" << endl;
 
-    // Find points
-    //hash_set<Diff2D> *entryExitPoints =
-    //        findTransitionLineEntryExitPoints(iBB_uBB.apply(srcImageRange(*mask)));
-    //hash_set<Diff2D> entryExitPointsCopy(*entryExitPoints);
+    // Map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
+    UIImage *distanceCostImage = new UIImage(iBB.size().x + 2, iBB.size().y + 2, NumericTraits<unsigned int>::max());
+    FindMinMax<UIImage::value_type> minmax;
+    inspectImage(iBB_uBB.apply(srcImageRange(*maskDistance)), minmax);
+    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+            destIter(distanceCostImage->upperLeft() + Diff2D(1,1)),
+            linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
+    transformImage(srcImageRange(*distanceCostImage),
+                   destImage(*distanceCostImage),
+                   ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
+                              Param(NumericTraits<unsigned int>::max()),
+                              Arg1()));
+    delete maskDistance;
 
-    //// Calculate cost function in iBB_uBB
-    //// Step 1: map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
-    //FindMinMax<UIImage::value_type> minmax;
-    //inspectImage(srcImageRange(*maskDistance), minmax);
-    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-    //        iBB_uBB.apply(destImage(*maskDistance)),
-    //        linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
+    // Map stitch mismatches to costs.
+    BImage *stitchCostImage = new BImage(iBB.size().x + 2, iBB.size().y + 2, NumericTraits<short>::max());
+    combineTwoImages(iBB.apply(srcImageRange(*whiteImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+            iBB.apply(srcImage(*blackImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+            destIter(stitchCostImage->upperLeft() + Diff2D(1,1)),
+            abs(Arg1() - Arg2()));
 
     //// Step N: min distance (feature) = 1<<20 mapped to infinite cost
-    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-    //               iBB_uBB.apply(destImage(*maskDistance)),
-    //               ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
-    //                          Param(NumericTraits<unsigned int>::max()),
-    //                          Arg1()));
 
     //// Debug: describe cost function as RGB image for visualization.
     //BRGBCFImage *maskDistanceB = new BRGBCFImage(uBB.size());
@@ -335,29 +339,38 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
 
 
     BRGBCFImage *maskCrackVisualize = new BRGBCFImage(iBB.size() + Diff2D(2, 2));
-    transformImage(srcImageRange(*maskCrack),
-            destImage(*maskCrackVisualize, RedAccessor<typename BRGBCFImage::value_type>()),
-            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
-                               NumericTraits<MaskPixelType>::max(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
-    transformImage(srcImageRange(*maskCrack),
-            destImage(*maskCrackVisualize, GreenAccessor<typename BRGBCFImage::value_type>()),
-            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
-                               NumericTraits<MaskPixelType>::max(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
-    transformImage(srcImageRange(*maskCrack),
-            destImage(*maskCrackVisualize, BlueAccessor<typename BRGBCFImage::value_type>()),
-            linearRangeMapping(NumericTraits<MaskPixelType>::min(),
-                               NumericTraits<MaskPixelType>::max(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
-                               NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    //transformImage(srcImageRange(*maskCrack),
+    //        destImage(*maskCrackVisualize, RedAccessor<typename BRGBCFImage::value_type>()),
+    //        linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+    //                           NumericTraits<MaskPixelType>::max(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    //transformImage(srcImageRange(*maskCrack),
+    //        destImage(*maskCrackVisualize, GreenAccessor<typename BRGBCFImage::value_type>()),
+    //        linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+    //                           NumericTraits<MaskPixelType>::max(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    //transformImage(srcImageRange(*maskCrack),
+    //        destImage(*maskCrackVisualize, BlueAccessor<typename BRGBCFImage::value_type>()),
+    //        linearRangeMapping(NumericTraits<MaskPixelType>::min(),
+    //                           NumericTraits<MaskPixelType>::max(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::min(),
+    //                           NumericTraits<typename BRGBCFImage::value_type::value_type>::max()));
+    transformImage(srcImageRange(*stitchCostImage),
+            destImage(*maskCrackVisualize, GreenAccessor<BRGBCFImage::value_type>()),
+            Arg1());
+    combineTwoImages(srcImageRange(*distanceCostImage),
+            srcImage(*maskCrackVisualize, RedAccessor<BRGBCFImage::value_type>()),
+            destImage(*maskCrackVisualize, RedAccessor<BRGBCFImage::value_type>()),
+            ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
+                    Param(0xff), Arg2()));
 
     // Visualize snakes
     for (unsigned int i = 0; i < snakes.size(); i++) {
         vector<pair<bool, Point2D> > *snake = snakes[i];
-        annealSnake<MaskType, MaskType>(NULL, NULL, snake);
+        // FIXME put cost function images here
+        annealSnake<UIImage, BImage>(distanceCostImage, stitchCostImage, snake);
         for (unsigned int j = 0; j < snake->size(); j++) {
             unsigned int next = (j+1) % snake->size();
             pair<bool, Point2D> pointA = (*snake)[j];
@@ -379,6 +392,8 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     ImageExportInfo maskCrackInfo("enblend_mask_crack.tif");
     exportImage(srcImageRange(*maskCrackVisualize), maskCrackInfo);
 
+    delete distanceCostImage;
+    delete stitchCostImage;
     delete maskCrackVisualize;
     delete maskCrack;
 
@@ -438,7 +453,6 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
 
     
     //delete entryExitPoints;
-    delete maskDistance;
 
     return mask;
 };

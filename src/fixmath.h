@@ -151,6 +151,7 @@ protected:
         // Only dither values within a certain range of the rounding cutoff point.
         if (vFraction > 0.25 && vFraction <= 0.75) {
             // Generate a random number between 0 and 0.5.
+            // FIXME this is not the right way to use twister
             double random = 0.5 * (double)Twister() / UINT_MAX;
             if ((vFraction - 0.25) >= random) {
                 return ceil(v);

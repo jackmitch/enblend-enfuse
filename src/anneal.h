@@ -24,15 +24,20 @@
 #include <config.h>
 #endif
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_siman.h>
 #include <vector>
+#include <boost/random.hpp>
 
 #include "vigra/diff2d.hxx"
+#include "vigra/iteratoradapter.hxx"
 
 using std::pair;
 using std::vector;
 
+using boost::uniform_int;
+using boost::variate_generator;
+using boost::mt19937;
+
+using vigra::LineIterator;
 using vigra::Point2D;
 
 namespace enblend {
@@ -43,62 +48,192 @@ public:
     typedef DistanceCostImage DistanceCostImageType;
     typedef StitchCostImage StitchCostImageType;
 
-    AnnealConfiguration()
-    : snake(), dci(NULL), sci(NULL) { }
-
     AnnealConfiguration(const DistanceCostImage *d,
             const StitchCostImage *s,
             const vector<pair<bool, Point2D> > &v)
-    : snake(v), dci(d), sci(s) { }
+    : cost(0.0), snake(v), segmentCost(v.size(), 0.0), moveablePointIndices(),
+      dci(d), sci(s) {
+        initSnakeCost();
+    }
 
     AnnealConfiguration(const AnnealConfiguration &c)
-    : snake(c.snake), dci(c.dci), sci(c.sci) { }
+    : cost(c.cost), snake(c.snake), segmentCost(c.segmentCost),
+      moveablePointIndices(c.moveablePointIndices), dci(c.dci), sci(c.sci) { }
 
     ~AnnealConfiguration() { }
 
     AnnealConfiguration& operator=(const AnnealConfiguration& c) {
+        cost = c.cost;
         snake.clear();
         snake.insert(snake.end(), c.snake.begin(), c.snake.end());
+        segmentCost.clear();
+        segmentCost.insert(segmentCost.end(), c.segmentCost.begin(), c.segmentCost.end());
+        moveablePointIndices.clear();
+        moveablePointIndices.insert(moveablePointIndices.end(), c.moveablePointIndices.begin(), c.moveablePointIndices.end());
         dci = c.dci;
         sci = c.sci;
         return *this;
     }
 
-    double eFunc() const;
-    void step(const gsl_rng *r, double step_size);
-    double operator-(const AnnealConfiguration& c) const;
-    void print() const;
-
     const vector<pair<bool, Point2D> >& getSnake() const {
         return snake;
     }
 
+    double getCost() const {
+        return cost;
+    }
+
+    void step(int stepSize);
+    void print() const;
+
 protected:
+
+    // Calculate cost of entire snake
+    void initSnakeCost();
+
+    // Calculate cost of segment between pointIndex and pointIndex+1
+    double evalSegmentCost(int pointIndex) const;
+
+    // Total snake cost and cost of each segment.
+    double cost;
     vector<pair<bool, Point2D> > snake;
+    vector<double> segmentCost;
+    vector<unsigned int> moveablePointIndices;
     const DistanceCostImage *dci;
     const StitchCostImage *sci;
 };
 
 template <typename DistanceCostImage, typename StitchCostImage>
-double AnnealConfiguration<DistanceCostImage, StitchCostImage>::eFunc() const {
-    return 0.0;
+void AnnealConfiguration<DistanceCostImage, StitchCostImage>::initSnakeCost() {
+    double c = 0.0;
+    for (unsigned int i = 0; i < snake.size(); i++) {
+        if (!snake[i].first) moveablePointIndices.push_back(i);
+        double d = evalSegmentCost(i);
+        segmentCost[i] = d;
+        c += d;
+    }
+    cost = c;
 };
 
 template <typename DistanceCostImage, typename StitchCostImage>
-void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(const gsl_rng *r, double step_size) {
-    for (unsigned int i = 0; i < snake.size(); i++) {
-        pair<bool, Point2D> p = snake[i];
-        if (!p.first) {
-            // Point is not frozen.
-            // FIXME do not allow point to leave dci bounds.
-            int deltaX = (int)floor((gsl_rng_uniform(r) * step_size) - (step_size / 2.0));
-            int deltaY = (int)floor((gsl_rng_uniform(r) * step_size) - (step_size / 2.0));
-            snake[i] = pair<bool, Point2D>(false, p.second + Diff2D(deltaX, deltaY));
+double AnnealConfiguration<DistanceCostImage, StitchCostImage>::evalSegmentCost(int pointIndex) const {
+    typedef typename DistanceCostImage::const_traverser DistanceIterator;
+    typedef typename StitchCostImage::const_traverser StitchIterator;
+
+    int nextPointIndex = (pointIndex + 1) % snake.size();
+    pair<bool, Point2D> pointA = snake[pointIndex];
+    pair<bool, Point2D> pointB = snake[nextPointIndex];
+
+    // If segment is between two frozen points, it has zero cost.
+    if (pointA.first && pointB.first) return 0.0;
+
+    // Total cost of snake according to dci
+    double distanceCost = 0.0;
+    // Total cost of snake according to sci
+    double stitchCost = 0.0;
+
+    LineIterator<DistanceIterator> lineD(dci->upperLeft() + pointA.second,
+            dci->upperLeft() + pointB.second);
+    LineIterator<DistanceIterator> lineDEnd(dci->upperLeft() + pointB.second,
+            dci->upperLeft() + pointB.second);
+    LineIterator<StitchIterator> lineS(sci->upperLeft() + pointA.second,
+            sci->upperLeft() + pointB.second);
+
+    do {
+        distanceCost += *lineD;
+        if (*lineS > (NumericTraits<typename StitchCostImage::value_type>::max() / 16))
+            stitchCost += 1.0;
+        ++lineD;
+        ++lineS;
+    } while (lineD != lineDEnd);
+
+    // Weighting
+    return stitchCost;
+};
+
+template <typename DistanceCostImage, typename StitchCostImage>
+void AnnealConfiguration<DistanceCostImage, StitchCostImage>::step(int stepSize) {
+
+    // Choose a moveable point randomly.
+    uniform_int<unsigned int> range(0, moveablePointIndices.size() - 1);
+    variate_generator<mt19937, uniform_int<unsigned int> > rng(Twister, range);
+
+    unsigned int index = rng();
+    unsigned int prev = (index + snake.size() - 1) % snake.size();
+    //unsigned int next = (i + 1) % snake.size();
+
+    //double prevSegmentPrevCost = segmentCost[prev];
+    //double nextSegmentPrevCost = segmentCost[next];
+
+    Point2D originalPoint = snake[index].second;
+
+    double bestCostSoFar = NumericTraits<double>::max();
+    Point2D bestMoveSoFar;
+    double prevSegmentNewCost = 0.0;
+    double nextSegmentNewCost = 0.0;
+
+    //cout << "step considering moving point (" << originalPoint.x << ", " << originalPoint.y << ")" << endl;
+    //cout << "original cost=" << cost << endl;
+    //cout << "original segmentA=" << segmentCost[prev] << endl;
+    //cout << "original segmentB=" << segmentCost[index] << endl;
+    // Find the best move in the neighborhood.
+    // visit neighborhood moves randomly - this leads to a truly random choice if there are
+    // several possibilities with the same cost.
+    vector<int> permutedXMoves;
+    for (int deltaX = -stepSize; deltaX <= stepSize; deltaX++) {
+        vector<int>::iterator pos = permutedXMoves.begin();
+        uniform_int<unsigned int> insertRange(0, permutedXMoves.size());
+        variate_generator<mt19937&, uniform_int<unsigned int> > insertRNG(Twister, insertRange);
+        pos += insertRNG();
+        permutedXMoves.insert(pos, deltaX);
+    }
+
+    for (unsigned int deltaXIndex = 0; deltaXIndex < permutedXMoves.size(); deltaXIndex++) {
+        int deltaX = permutedXMoves[deltaXIndex];
+
+        vector<int> permutedYMoves;
+        for (int deltaY = -stepSize; deltaY <= stepSize; deltaY++) {
+            vector<int>::iterator pos = permutedYMoves.begin();
+            uniform_int<unsigned int> insertRange(0, permutedYMoves.size());
+            variate_generator<mt19937&, uniform_int<unsigned int> > insertRNG(Twister, insertRange);
+            pos += insertRNG();
+            permutedYMoves.insert(pos, deltaY);
+        }
+
+        for (unsigned int deltaYIndex = 0; deltaYIndex < permutedYMoves.size(); deltaYIndex++) {
+            int deltaY = permutedYMoves[deltaYIndex];
+
+            // This is not really a move - skip it.
+            if (deltaX == 0 && deltaY == 0) continue;
+
+            snake[index].second = originalPoint + Diff2D(deltaX, deltaY);
+            double psCost = evalSegmentCost(prev);
+            double nsCost = evalSegmentCost(index);
+            double trialCost = psCost + nsCost;
+
+            //cout << "move to (" << deltaX << ", " << deltaY << ") has cost " << trialCost << endl;
+
+            if (trialCost < bestCostSoFar) {
+                bestMoveSoFar = snake[index].second;
+                bestCostSoFar = trialCost;
+                prevSegmentNewCost = psCost;
+                nextSegmentNewCost = nsCost;
+            }
         }
     }
-    //cout << "generated step:";
-    //print();
-    //cout << endl;
+
+    // Update configuration state.
+    snake[index].second = bestMoveSoFar;
+    cost = cost - segmentCost[prev] - segmentCost[index]
+            + prevSegmentNewCost + nextSegmentNewCost;
+    segmentCost[prev] = prevSegmentNewCost;
+    segmentCost[index] = nextSegmentNewCost;
+
+    //cout << "moving point to (" << bestMoveSoFar.x << ", " << bestMoveSoFar.y << ")" << endl;
+    //cout << "new cost=" << cost << endl;
+    //cout << "new segmentA=" << segmentCost[prev] << endl;
+    //cout << "new segmentB=" << segmentCost[index] << endl;
+
     return;
 };
 
@@ -114,99 +249,24 @@ void AnnealConfiguration<DistanceCostImage, StitchCostImage>::print() const {
 };
 
 template <typename DistanceCostImage, typename StitchCostImage>
-double AnnealConfiguration<DistanceCostImage, StitchCostImage>::operator-(const AnnealConfiguration &c) const {
-    cout << "operator-" << endl;
-    double totalDistance = 0.0;
-    for (unsigned int i = 0; i < snake.size(); i++) {
-        pair<bool, Point2D> p1 = snake[i];
-        pair<bool, Point2D> p2 = c.snake[i];
-        Diff2D diff = p1.second - p2.second;
-        totalDistance += diff.magnitude();
-    }
-    return totalDistance;
-};
-    
-template <typename AnnealConfigurationType>
-double snakeEFunc(void *xp) {
-    AnnealConfigurationType *ac = (AnnealConfigurationType*)xp;
-    return ac->eFunc();
-};
-
-template <typename AnnealConfigurationType>
-void snakeStep(const gsl_rng *r, void *xp, double step_size) {
-    AnnealConfigurationType *ac = (AnnealConfigurationType*)xp;
-    ac->step(r, step_size);
-};
-
-template <typename AnnealConfigurationType>
-double snakeMetric(void *xp, void *yp) {
-    AnnealConfigurationType *acx = (AnnealConfigurationType*)xp;
-    AnnealConfigurationType *acy = (AnnealConfigurationType*)yp;
-    return (*acx) - (*acy);
-};
-
-template <typename AnnealConfigurationType>
-void snakePrint(void *xp) {
-    AnnealConfigurationType *ac = (AnnealConfigurationType*)xp;
-    ac->print();
-};
-
-template <typename AnnealConfigurationType>
-void snakeCopy(void *source, void *dest) {
-    AnnealConfigurationType *acx = (AnnealConfigurationType*)source;
-    AnnealConfigurationType *acy = (AnnealConfigurationType*)dest;
-    (*acy) = (*acx);
-};
-
-template <typename AnnealConfigurationType>
-void *snakeCopyConstruct(void *xp) {
-    AnnealConfigurationType *ac = (AnnealConfigurationType*)xp;
-    return new AnnealConfigurationType(*ac);
-};
-
-template <typename AnnealConfigurationType>
-void snakeDestroy(void *xp) {
-    AnnealConfigurationType *ac = (AnnealConfigurationType*)xp;
-    delete ac;
-};
-
-template <typename DistanceCostImage, typename StitchCostImage>
 void annealSnake(const DistanceCostImage* const dci,
         const StitchCostImage* const sci,
         vector<pair<bool, Point2D> > *snake) {
 
     typedef AnnealConfiguration<DistanceCostImage, StitchCostImage> AnnealConfigurationType;
-    gsl_rng *rng = gsl_rng_alloc(gsl_rng_mt19937);
-    gsl_rng_default_seed++;
 
     AnnealConfigurationType initConfig(dci, sci, *snake);
 
-    int n_tries = 200;
-    int iters_fixed_T = 10;
-    double step_size  = 10.0;
-    double k = 1.0;
-    double t_initial = 10.0; //initConfig.eFunc() / 2.0;
-    double t_final = 0.1; //initConfig.eFunc() / 100.0;
-    double mu_t = 1.05;
-    
-    gsl_siman_params_t params = {n_tries, iters_fixed_T, step_size, k, t_initial, mu_t, t_final};
-
-    gsl_siman_solve(rng,
-            &initConfig,
-            snakeEFunc<AnnealConfigurationType>,
-            snakeStep<AnnealConfigurationType>,
-            snakeMetric<AnnealConfigurationType>,
-            snakePrint<AnnealConfigurationType>,
-            snakeCopy<AnnealConfigurationType>,
-            snakeCopyConstruct<AnnealConfigurationType>,
-            snakeDestroy<AnnealConfigurationType>,
-            0, params);
+    for (int i = 0; i < 10; i++) {
+        cout << "initial cost = " << initConfig.getCost() << endl;
+        initConfig.step(4);
+        cout << "cost after one step = " << initConfig.getCost() << endl;
+    }
 
     // Copy result to input snake.
     snake->clear();
     snake->insert(snake->end(), initConfig.getSnake().begin(), initConfig.getSnake().end());
 
-    gsl_rng_free(rng);
 };
 
 } // namespace enblend
