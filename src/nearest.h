@@ -88,13 +88,16 @@ inline dist_t _nftDistance(dist_t deltaY) {
  *  to that pixel.
  */
 template <class SrcImageIterator, class SrcAccessor,
-          class DestImageIterator, class DestAccessor>
+          class DestImageIterator, class DestAccessor,
+          class DistanceImageIterator, class DistanceAccessor>
 void nearestFeatureTransform(bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
         DestImageIterator dest_upperleft,
-        DestAccessor da) {
+        DestAccessor da,
+        DistanceImageIterator distance_upperleft,
+        DistanceAccessor distA) {
 
     #ifdef ENBLEND_CACHE_IMAGES
     typedef UICFImage::traverser DnfIterator;
@@ -105,7 +108,8 @@ void nearestFeatureTransform(bool wraparound,
 
     SrcImageIterator sx, sy, send, smidpoint;
     DnfIterator dnfcx, dnfcy;
-    DnfIterator dnflx, dnfly;
+    //DnfIterator dnflx, dnfly;
+    DistanceImageIterator dnflx, dnfly;
     DestImageIterator dx, dy;
 
     int w = src_lowerright.x - src_upperleft.x;
@@ -116,10 +120,10 @@ void nearestFeatureTransform(bool wraparound,
     UICFImage *dnfColumn = new UICFImage(w, h);
     // Distance to the nearest feature in the current column, or any
     // column to the left of this column.
-    UICFImage *dnfLeft = new UICFImage(w, h);
+    //UICFImage *dnfLeft = new UICFImage(w, h);
     #else
     UIImage *dnfColumn = new UIImage(w, h);
-    UIImage *dnfLeft = new UIImage(w, h);
+    //UIImage *dnfLeft = new UIImage(w, h);
     #endif
 
     // Data structures for initializing dnfColumn.
@@ -241,7 +245,8 @@ void nearestFeatureTransform(bool wraparound,
     send = src_lowerright;
     smidpoint = src_upperleft + Diff2D(w/2, h/2);
     dnfcy = dnfColumn->upperLeft();
-    dnfly = dnfLeft->upperLeft();
+    //dnfly = dnfLeft->upperLeft();
+    dnfly = distance_upperleft;
     dy = dest_upperleft;
     for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
 
@@ -328,7 +333,8 @@ void nearestFeatureTransform(bool wraparound,
     send = src_upperleft;
     smidpoint = src_upperleft + Diff2D(w/2, h/2);
     dnfcy = dnfColumn->lowerRight();
-    dnfly = dnfLeft->lowerRight();
+    //dnfly = dnfLeft->lowerRight();
+    dnfly = distance_upperleft + Diff2D(w, h);
     dy = dest_upperleft + (src_lowerright - src_upperleft);
     for (; sy.y != send.y;) {
         --sy.y;
@@ -397,6 +403,8 @@ void nearestFeatureTransform(bool wraparound,
 
                 // The closest feature on the right is potentialFeature.
                 if (*dnflx > distPotentialFeature) {
+                    // Following line only necessary for advanced mask generation.
+                    *dnflx = distPotentialFeature;
                     // Recolor dx.
                     da.set(dx(((*potentialFeature).x - dx.x), 0), dx);
                 }
@@ -405,7 +413,7 @@ void nearestFeatureTransform(bool wraparound,
     }
 
     delete dnfColumn;
-    delete dnfLeft;
+    //delete dnfLeft;
     delete [] lastFeature;
     delete [] foundFirstFeature;
     delete [] lastFeatureDeltaY;
@@ -419,14 +427,17 @@ void nearestFeatureTransform(bool wraparound,
 
 // Version using argument object factories.
 template <class SrcImageIterator, class SrcAccessor,
-          class DestImageIterator, class DestAccessor>
+          class DestImageIterator, class DestAccessor,
+          class DistanceImageIterator, class DistanceAccessor>
 inline void nearestFeatureTransform(bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-        pair<DestImageIterator, DestAccessor> dest) {
+        pair<DestImageIterator, DestAccessor> dest,
+        pair<DistanceImageIterator, DistanceAccessor> dist) {
 
     nearestFeatureTransform(wraparound,
             src.first, src.second, src.third,
-            dest.first, dest.second);
+            dest.first, dest.second,
+            dist.first, dist.second);
 
 };
 

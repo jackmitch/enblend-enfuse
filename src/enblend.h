@@ -72,7 +72,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion) {
 
     #ifdef ENBLEND_CACHE_IMAGES
-    typedef BCFImage MaskType;
+    // FIXME mask caching turned off
+    typedef BImage MaskType;
     typedef BCFImage AlphaType;
     #else
     typedef BImage MaskType;
@@ -239,7 +240,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                 (uBB.size().x == inputUnion.size().x);
         EnblendROI mBB;
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
-                uBB, wraparoundForMask, mBB);
+                iBB, uBB, wraparoundForMask, mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -252,17 +253,17 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats("blackAlpha", blackPair.second);
             v.printStats("whiteImage", whitePair.first);
             v.printStats("whiteAlpha", whitePair.second);
-            v.printStats("mask", mask);
+            //v.printStats("mask", mask);
             v.printStats();
             v.resetCacheMisses();
             cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
-        //ImageExportInfo maskInfo("enblend_mask.tif");
-        //maskInfo.setPosition(uBB.getUL());
-        //exportImage(srcImageRange(*mask), maskInfo);
-
+        ImageExportInfo maskInfo("enblend_mask.tif");
+        maskInfo.setPosition(uBB.getUL());
+        exportImage(srcImageRange(*mask), maskInfo);
+return;
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
         EnblendROI roiBB;
@@ -307,7 +308,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats("blackAlpha", blackPair.second);
             v.printStats("whiteImage", whitePair.first);
             v.printStats("whiteAlpha", whitePair.second);
-            v.printStats("mask", mask);
+            //v.printStats("mask", mask);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
                 v.printStats("maskGP", i, (*maskGP)[i]);
             }

@@ -182,7 +182,93 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
     }
 
     return allowableLevels;
-}
+};
+
+/** Find the bounding box of the mask transition line and put it in mBB.
+ */
+template <typename MaskImageIterator, typename MaskAccessor>
+void maskBounds(
+        MaskImageIterator mask_upperleft,
+        MaskImageIterator mask_lowerright,
+        MaskAccessor ma,
+        const EnblendROI &uBB,
+        EnblendROI &mBB) {
+
+    MaskImageIterator firstMulticolorColumn = mask_lowerright;
+    MaskImageIterator lastMulticolorColumn = mask_upperleft;
+    MaskImageIterator firstMulticolorRow = mask_lowerright;
+    MaskImageIterator lastMulticolorRow = mask_upperleft;
+
+    MaskImageIterator myPrev = mask_upperleft;
+    MaskImageIterator my = mask_upperleft + Diff2D(0,1);
+    MaskImageIterator mend = mask_lowerright;
+    for (; my.y != mend.y; ++my.y, ++myPrev.y) {
+        MaskImageIterator mxLeft = my;
+        MaskImageIterator mx = my + Diff2D(1,0);
+        MaskImageIterator mxUpLeft = myPrev;
+        MaskImageIterator mxUp = myPrev + Diff2D(1,0);
+
+        if (ma(mxUpLeft) != ma(mxLeft)) {
+            // Transition line is between mxUpLeft and mxLeft.
+            if (firstMulticolorRow.y > mxUpLeft.y) firstMulticolorRow = mxUpLeft;
+            if (lastMulticolorRow.y < mxLeft.y) lastMulticolorRow = mxLeft;
+        }
+
+        for (; mx.x != mend.x; ++mx.x, ++mxLeft.x, ++mxUp.x) {
+            if (ma(mxLeft) != ma(mx) || ma(mxUp) != ma(mx)) {
+                // Transition line is between mxLeft and mx and between mx and mxUp
+                if (firstMulticolorColumn.x > mxLeft.x) firstMulticolorColumn = mxLeft;
+                if (lastMulticolorColumn.x < mx.x) lastMulticolorColumn = mx;
+                if (firstMulticolorRow.y > mxUp.y) firstMulticolorRow = mxUp;
+                if (lastMulticolorRow.y < mx.y) lastMulticolorRow = mx;
+            }
+        }
+    }
+
+    // Check that mBB is well-defined.
+    if ((firstMulticolorColumn.x >= lastMulticolorColumn.x)
+            || (firstMulticolorRow.y >= lastMulticolorRow.y)) {
+        // No transition pixels were found in the mask at all.
+        // This means that one image has no contribution.
+        vigra_fail("Mask transition line bounding box undefined.");
+    }
+
+    // Move mBB lower right corner out one pixel, per VIGRA convention.
+    ++lastMulticolorColumn.x;
+    ++lastMulticolorRow.y;
+
+    // mBB is defined relative to the inputUnion origin.
+    mBB.setCorners(
+            uBB.getUL() + Diff2D(firstMulticolorColumn.x - mask_upperleft.x,
+                                 firstMulticolorRow.y - mask_upperleft.y),
+            uBB.getUL() + Diff2D(lastMulticolorColumn.x - mask_upperleft.x,
+                                 lastMulticolorRow.y - mask_upperleft.y));
+
+    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
+        cout << "Mask transition line bounding box: ("
+             << mBB.getUL().x
+             << ", "
+             << mBB.getUL().y
+             << ") -> ("
+             << mBB.getLR().x
+             << ", "
+             << mBB.getLR().y
+             << ")" << endl;
+    }
+
+    return;
+};
+
+// Version with argument object factories.
+template <typename MaskImageIterator, typename MaskAccessor>
+inline void maskBounds(
+        triple<MaskImageIterator, MaskImageIterator, MaskAccessor> mask,
+        const EnblendROI &uBB,
+        EnblendROI &mBB) {
+
+    maskBounds(mask.first, mask.second, mask.third, uBB, mBB);
+
+};
 
 } // namespace enblend
 

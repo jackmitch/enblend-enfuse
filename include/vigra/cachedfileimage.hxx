@@ -571,6 +571,10 @@ public:
     : Base(x, y, i)
     {}
 
+    CachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
+    : Base(rhs.x, rhs.y, rhs.i)
+    {}
+
     CachedFileImageIterator()
     : Base(0, 0, NULL)
     {}
