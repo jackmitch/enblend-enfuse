@@ -29,6 +29,10 @@
  * Modification by Andrew Mihal, 19 September 2004:
  *  - Added GimpAssociatedAlphaHack. Suppresses associated alpha warnings,
  *    and produces associated alpha images, when set.
+ * Modification by Andrew Mihal, 27 October 2004:
+ *  - Modified encoder to better estimate the number of rows per strip.
+ *  - Modified decoder to use the scanline interface - the strip-based
+ *    interface hogs memory when the rows/strip value is large.
  * Andrew Mihal's modifications are covered by the VIGRA license.
  */
 
@@ -118,6 +122,8 @@ namespace vigra {
         TIFF * tiff;
         tdata_t * stripbuffer;
         tstrip_t strip;
+        // mihal 27-10-2004: use scanline interface
+        unsigned int scanline;
 
         uint32 stripindex, stripheight;
         uint32 width, height;
@@ -138,6 +144,8 @@ namespace vigra {
         tiff = 0;
         stripbuffer = 0;
         strip = 0;
+        // mihal 27-10-2004: use scanline interface
+        scanline = 0;
         stripindex = 0;
         x_resolution = 0;
         y_resolution = 0;
@@ -279,8 +287,10 @@ namespace vigra {
         TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &height );
 
         // find out strip heights
-        if ( !TIFFGetField( tiff, TIFFTAG_ROWSPERSTRIP, &stripheight ) )
-            stripheight = height;
+        // mihal 27-10-2004: use scanline interface instead of strip interface
+        //if ( !TIFFGetField( tiff, TIFFTAG_ROWSPERSTRIP, &stripheight ) )
+        //    stripheight = height;
+        stripheight = 1;
 
         // get samples_per_pixel
         samples_per_pixel = 0;
@@ -465,7 +475,9 @@ namespace vigra {
         }
 
         // allocate data buffers
-        const unsigned int stripsize = TIFFStripSize(tiff);
+        // mihal 27-10-2004: use scanline interface instead of strip interface
+        //const unsigned int stripsize = TIFFStripSize(tiff);
+        const unsigned int stripsize = TIFFScanlineSize(tiff);
         if ( planarconfig == PLANARCONFIG_SEPARATE ) {
             stripbuffer = new tdata_t[samples_per_pixel];
             for( unsigned int i = 0; i < samples_per_pixel; ++i ) {
@@ -511,13 +523,21 @@ namespace vigra {
             stripindex = 0;
 
             if ( planarconfig == PLANARCONFIG_SEPARATE ) {
-                const tsize_t size = TIFFStripSize(tiff);
+                // mihal 27-10-2004: modified to use scanline interface
+                //const tsize_t size = TIFFStripSize(tiff);
+                const tsize_t size = TIFFScanlineSize(tiff);
                 for( unsigned int i = 0; i < samples_per_pixel; ++i )
-                    TIFFReadEncodedStrip( tiff, strip++, stripbuffer[i],
-                                          size );
+                    // mihal 27-10-2004: use scanline interface
+                    //TIFFReadEncodedStrip( tiff, strip++, stripbuffer[i],
+                    //                      size );
+                    TIFFReadScanline(tiff, stripbuffer[i], scanline++, size);
             } else {
-                const tsize_t size = TIFFStripSize(tiff);
-                TIFFReadEncodedStrip( tiff, strip++, stripbuffer[0], size );
+                // mihal 27-10-2004: modified to use scanline interface
+                //const tsize_t size = TIFFStripSize(tiff);
+                const tsize_t size = TIFFScanlineSize(tiff);
+                // mihal 27-10-2004: modified to use scanline interface
+                //TIFFReadEncodedStrip( tiff, strip++, stripbuffer[0], size );
+                TIFFReadScanline( tiff, stripbuffer[0], scanline++, size);
             }
 
             // XXX handle bilevel images
@@ -528,7 +548,9 @@ namespace vigra {
 
                 unsigned char * buf = static_cast< unsigned char * >
                     (stripbuffer[0]);
-                const unsigned int n = TIFFStripSize(tiff);
+                // mihal 27-10-2004: modified to use scanline interface
+                //const unsigned int n = TIFFStripSize(tiff);
+                const unsigned int n = TIFFScanlineSize(tiff);
 
                 // invert every pixel
                 for ( unsigned int i = 0; i < n; ++i ) {
@@ -694,8 +716,12 @@ namespace vigra {
         TIFFSetField( tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG );
         TIFFSetField( tiff, TIFFTAG_IMAGEWIDTH, width );
         TIFFSetField( tiff, TIFFTAG_IMAGELENGTH, height );
+        //FIXME TIFFDefaultStripSize tries for 8kb strips! Laughable!
+        // This will do a 1MB strip for 8-bit images,
+        // 2MB strip for 16-bit, and so forth.
+        unsigned int estimate = std::max(1UL, (1<<20) / (width * samples_per_pixel));
         TIFFSetField( tiff, TIFFTAG_ROWSPERSTRIP,
-                      stripheight = TIFFDefaultStripSize( tiff, 10 ) );
+                      stripheight = TIFFDefaultStripSize( tiff, estimate ) );
         TIFFSetField( tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT );
 
         TIFFSetField( tiff, TIFFTAG_COMPRESSION, tiffcomp );
