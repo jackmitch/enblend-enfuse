@@ -226,14 +226,14 @@ int main(int argc, char** argv) {
                  << endl;
         }
         uint32 maximumLevels = 1;
-        while (shortDimension > 8) {
-            shortDimension = shortDimension >> 1;
-            maximumLevels++;
-        }
+        //while (shortDimension > 8) {
+        //    shortDimension = shortDimension >> 1;
+        //    maximumLevels++;
+        //}
 
         // Build Laplacian pyramid from blackImage
-        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
-        savePyramid(*blackLP, "black");
+        //vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
+        //savePyramid(*blackLP, "black");
 
         // Free allocated memory.
         _TIFFfree(blackImage);
@@ -241,30 +241,31 @@ int main(int argc, char** argv) {
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
         savePyramid(*maskGP, "mask");
+        break;
 
         // Build Laplacian pyramid from whiteImage
-        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
-        savePyramid(*whiteLP, "white");
+        //vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
+        //savePyramid(*whiteLP, "white");
 
         // Blend pyramids
-        blend(*whiteLP, *blackLP, *maskGP);
+        //blend(*whiteLP, *blackLP, *maskGP);
 
         // Free allocated memory.
-        for (uint32 i = 0; i < maximumLevels; i++) {
-            free((*maskGP)[i]);
-            free((*blackLP)[i]);
-        }
-        delete maskGP;
-        delete blackLP;
+        //for (uint32 i = 0; i < maximumLevels; i++) {
+        //    free((*maskGP)[i]);
+        //    free((*blackLP)[i]);
+        //}
+        //delete maskGP;
+        //delete blackLP;
 
         // Collapse result back into whiteImage.
-        collapsePyramid(*whiteLP, whiteImage, mask);
+        //collapsePyramid(*whiteLP, whiteImage, mask);
 
-        free(mask);
-        for (uint32 i = 0; i < maximumLevels; i++) {
-            free((*whiteLP)[i]);
-        }
-        delete whiteLP;
+        //free(mask);
+        //for (uint32 i = 0; i < maximumLevels; i++) {
+        //    free((*whiteLP)[i]);
+        //}
+        //delete whiteLP;
 
     }
 

@@ -59,4 +59,7 @@ void savePyramid(std::vector<LPPixel*> &p, char *prefix);
 // thin.cc
 void thinMask(MaskPixel *mask);
 
+// nearest.cc
+void nearestFeatureTransform(MaskPixel *mask);
+
 #endif /* __ENBLEND_H__ */

@@ -106,7 +106,9 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
     // Run the thinning transform on the mask inside the ROI.
     // This will replace the thinnable pixels with either green or blue
     // based on how close each pixel is to a green or blue region.
-    thinMask(mask);
+    //thinMask(mask);
+    nearestFeatureTransform(mask);
+    return(mask);
 
     // Remark all blue pixels as white. These pixels are closer to
     // whiteImage than blackImage.
