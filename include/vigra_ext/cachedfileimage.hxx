@@ -36,6 +36,8 @@ using std::list;
 
 namespace vigra {
 
+template <class PIXELTYPE> class CachedFileImage;
+
 template <class Iterator>
 class CachedFileSequentialAccessIteratorPolicy
 {
@@ -48,38 +50,42 @@ public:
     typedef typename Iterator::pointer pointer;
     typedef typename Iterator::iterator_category iterator_category;
 
-    static void initialize(BaseType & d) {
-        width_ = d.i->width();
-        height_ = d.i->height();
-    }
+    static void initialize(BaseType & d) { }
 
     static reference dereference(BaseType const & d) {
         return *d;
     }
 
     static index_reference dereference(BaseType const & d, difference_type n) {
-        int dy = n / width_;
-        int dx = n % width_;
-        if (d.x + dx >= width_) {dy++; dx -= width_;};
-        else if (d.x + dx < 0) {dy--; dx += width_;};
+        int width = d.i->width();
+        int dy = n / width;
+        int dx = n % width;
+        if (d.x + dx >= width) {dy++; dx -= width;}
+        else if (d.x + dx < 0) {dy--; dx += width;}
         return d(dx, dy);
     }
 
     static bool equal(BaseType const & d1, BaseType const & d2) {
-        return d1 == d2;
+        int width1 = d1.i->width();
+        int width2 = d2.i->width();
+        return (d1.y*width1 + d1.x) == (d2.y*width2 + d2.x);
     }
 
     static bool less(BaseType const & d1, BaseType const & d2) {
-        return (d1.y*width_ + d1.x) < (d2.y*width_ + d2.x);
+        int width1 = d1.i->width();
+        int width2 = d2.i->width();
+        return (d1.y*width1 + d1.x) < (d2.y*width2 + d2.x);
     }
 
     static difference_type difference(BaseType const & d1, BaseType const & d2) {
-        return (d1.y*width_ + d1.x) - (d2.y*width_ + d2.x);
+        int width1 = d1.i->width();
+        int width2 = d2.i->width();
+        return (d1.y*width1 + d1.x) - (d2.y*width2 + d2.x);
     }
 
     static void increment(BaseType & d) {
         ++d.x;
-        if (d.x == width_) {
+        if (d.x == d.i->width()) {
             d.x = 0;
             ++d.y;
         }
@@ -88,33 +94,30 @@ public:
     static void decrement(BaseType & d) {
         --d.x;
         if (d.x < 0) {
-            d.x = width_ - 1;
+            d.x = d.i->width() - 1;
             --d.y;
         }
     }
 
     static void advance(BaseType & d, difference_type n) {
-        int dy = n / width_;
-        int dx = n % width_;
+        int width = d.i->width();
+        int dy = n / width;
+        int dx = n % width;
         d.x += dx;
         d.y += dy;
-        if (d.x >= width_) {++d.y; d.x -= width_;}
-        if (d.x < 0) {--dy.y; d.x += width_;}
+        if (d.x >= width) {++d.y; d.x -= width;}
+        if (d.x < 0) {--dy.y; d.x += width;}
     }
-
-private:
-    int width_;
-    int height_;
 
 };
 
-template <class IMAGEITERATOR, class PIXELTYPE, class REFERENCE, class POINTER>
+template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
 class CachedFileImageIteratorBase
 {
 public:
     typedef CachedFileImageIteratorBase<IMAGEITERATOR,
-            PIXELTYPE, REFERENCE, POINTER> self_type;
-    typedef CachedFileImage<PIXELTYPE> image_type;
+            IMAGETYPE, PIXELTYPE, REFERENCE, POINTER> self_type;
+    typedef IMAGETYPE image_type;
     typedef PIXELTYPE value_type;
     typedef PIXELTYPE PixelType;
     typedef REFERENCE reference;
@@ -190,11 +193,11 @@ public:
     }
 
     row_iterator rowIterator() const {
-        return row_iterator(*this);
+        return row_iterator(static_cast<IMAGEITERATOR const &>(*this));
     }
 
     column_iterator columnIterator() const {
-        return column_iterator(*this);
+        return column_iterator(static_cast<IMAGEITERATOR const &>(*this));
     }
 
 protected:
@@ -208,6 +211,7 @@ protected:
 template <class PIXELTYPE>
 class CachedFileImageIterator
 : public CachedFileImageIteratorBase<CachedFileImageIterator<PIXELTYPE>,
+                CachedFileImage<PIXELTYPE>,
                 PIXELTYPE, PIXELTYPE &, PIXELTYPE *>
 // FIXME this needs to be a weak_ptr    ^^^^^^^^^^^
 // in case someone uses the iterator to get a pointer to cached data.
@@ -215,6 +219,7 @@ class CachedFileImageIterator
 public:
 
     typedef CachedFileImageIteratorBase<CachedFileImageIterator,
+            CachedFileImage<PIXELTYPE>,
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *> Base;
 
     CachedFileImageIterator(int x, int y, CachedFileImage<PIXELTYPE> *i)
@@ -230,6 +235,7 @@ public:
 template <class PIXELTYPE>
 class ConstCachedFileImageIterator
 : public CachedFileImageIteratorBase<ConstCachedFileImageIterator<PIXELTYPE>,
+                const CachedFileImage<PIXELTYPE>,
                 PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *>
 // FIXME this needs to be a weak_ptr          ^^^^^^^^^^^^^^^^^
 // in case someone uses the iterator to get a pointer to cached data.
@@ -237,10 +243,11 @@ class ConstCachedFileImageIterator
 public:
 
     typedef CachedFileImageIteratorBase<ConstCachedFileImageIterator,
+            const CachedFileImage<PIXELTYPE>,
             PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *> Base;
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
-    ConstCachedFileImageIterator(int x, int y, CachedFileImage<PIXELTYPE> *i)
+    ConstCachedFileImageIterator(int x, int y, const CachedFileImage<PIXELTYPE> *i)
     : Base(x, y, i)
     {}
 
@@ -447,36 +454,43 @@ public:
 
 private:
 
+    PIXELTYPE initPixel;
+
     void deallocate();
 
     void initLineStartArray();
     
     // obtain a pointer to the beginning of a line.
-    PIXELTYPE * getLinePointer(int dy);
+    // split into two functions for efficiency.
+    // getLinePointer can then be inlined, and we only incur the function call overhead
+    // on cache misses.
+    PIXELTYPE * getLinePointer(int dy) const;
+    PIXELTYPE * getLinePointerCacheMiss(int dy) const;
 
     // Free space, if necessary, by swapping out a block of lines to the file.
-    void swapLeastRecentlyUsedBlock();
+    void swapLeastRecentlyUsedBlock() const;
 
     // Lazy creation of tmp file for swapping image data to disk
-    void initTmpfile();
+    void initTmpfile() const;
 
-    inline int lineToBlockNumber(int line) const {
-        return line / linesPerBlocksize_;
-    }
+    //inline int lineToBlockNumber(int line) const {
+    //    return line / linesPerBlocksize_;
+    //}
 
-    inline int blockToFirstLineNumber(int block) const {
-        return block * linesPerBlocksize_;
-    }
+    //inline int blockToFirstLineNumber(int block) const {
+    //    return block * linesPerBlocksize_;
+    //}
 
     void initMembers() {
+        initPixel = value_type();
         linesPerBlocksize_ = 0;
         blocksAllowed_ = 0;
-        blockLRU_ = NULL:
-        lines_ = NULL:
+        blockLRU_ = NULL;
+        lines_ = NULL;
         width_ = 0;
         height_ = 0;
-        tmpFile_ = NULL:
-        tmpFilename_ = NULL:
+        tmpFile_ = NULL;
+        tmpFilename_ = NULL;
     }
 
     // how many image lines are loaded in one fread
@@ -487,13 +501,13 @@ private:
     // lru replacement policy
     // most recently used block is at start of list.
     // least recently used block is at end of list.
-    list<int> *blockLRU_;
+    mutable list<int> *blockLRU_;
 
-    PIXELTYPE ** lines_;
+    mutable PIXELTYPE ** lines_;
     int width_, height_;
 
-    FILE *tmpFile_;
-    char *tmpFilename_;
+    mutable FILE *tmpFile_;
+    mutable char *tmpFilename_;
 };
 
 template <class PIXELTYPE>
@@ -523,7 +537,7 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initLineStartArray() {
 
     // Number of lines to load in one block.
-    linesPerBlocksize_ = ceil(CACHED_FILE_IMAGE_BLOCKSIZE / (width_ * sizeof(PIXELTYPE)));
+    linesPerBlocksize_ = (int)ceil(((double)CACHED_FILE_IMAGE_BLOCKSIZE) / (width_ * sizeof(PIXELTYPE)));
     // a block must be at least one line.
     linesPerBlocksize_ = max(1, linesPerBlocksize_);
 
@@ -532,7 +546,7 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     blocksAllowed_ = CACHED_FILE_IMAGE_CACHELINES;
 
     // Cap blocksAllowed_ at the actual number of blocks needed.
-    int blocksNeeded = ceil(height_ / linesPerBlocksize_);
+    int blocksNeeded = (int)ceil(((double)height_) / linesPerBlocksize_);
     blocksAllowed_ = min(blocksAllowed_, blocksNeeded);
 
     // Create the blockLRU list.
@@ -547,69 +561,93 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
         for (int subblock = 0; subblock < linesPerBlocksize_; subblock++, line++) {
             if (line < height_) {
                 lines_[line] = Allocator::allocate(width_);
+                std::uninitialized_fill_n(lines_[line], width_, initPixel);
             }
         }
     }
 
     // All remaining lines (if any) are null (swapped out)
     for (; line < height_; line++) {
-        lines_[line] = NULL:
+        lines_[line] = NULL;
     }
 
     return;
 };
 
 template <class PIXELTYPE>
-PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) {
-    int blockNumber = lineToBlockNumber(dy);
+inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
     PIXELTYPE *line = lines_[dy];
 
     // Check if line dy is swapped out.
     if (line == NULL) {
-        int firstLineInBlock = blockToFirstLineNumber(blockNumber);
-
-        // Make space for new block.
-        swapLeastRecentlyUsedBlock();
-
-        // Find the right spot in the file.
-        off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
-        if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
-            vigra_fail(strerror(errno));
-        }
-
-        // Allocate lines for new block.
-        for (int l = 0; l < linesPerBlocksize_; l++) {
-            int absoluteLineNumber = l + firstLineInBlock;
-            if (absoluteLineNumber >= height_) break;
-            lines_[absoluteLineNumber] = Allocator::allocate(width_);
-
-            // fill the line with data from the file.
-            if (fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_)
-                    < width_) {
-                vigra_fail("CachedFileImage: error reading from image backing file.\n");
-            }
-        }
-
-        // Mark this block as most recently used.
-        blockLRU_->push_front(blockNumber);
-
-        return lines_[dy];
+        return getLinePointerCacheMiss(dy);
     }
     else {
         // make blockNumber the least recently used block.
-        blockLRU_->remove(blockNumber);
-        blockLRU_->push_front(blockNumber);
+        // this remove function call really sucks
+        //blockLRU_->remove(blockNumber);
+        //blockLRU_->push_front(blockNumber);
         return line;
     }
 };
 
+template <class PIXELTYPE>
+PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
+    int blockNumber = dy / linesPerBlocksize_; // lineToBlockNumber(dy);
+    int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
+
+    // Make space for new block.
+    swapLeastRecentlyUsedBlock();
+    //cout << "swapping in block " << blockNumber << endl;
+
+    // Find the right spot in the file.
+    off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
+    if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
+        vigra_fail(strerror(errno));
+    }
+
+    // Allocate lines for new block.
+    for (int l = 0; l < linesPerBlocksize_; l++) {
+        int absoluteLineNumber = l + firstLineInBlock;
+        if (absoluteLineNumber >= height_) break;
+        lines_[absoluteLineNumber] = Allocator::allocate(width_);
+
+        // fill the line with data from the file.
+        int itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
+        if (itemsRead < width_) {
+            if (feof(tmpFile_) == 0) {
+                vigra_fail("CachedFileImage: error reading from image backing file.\n");
+            } else {
+                // Swap file has no data for this line.
+                // fill with initPixel.
+                std::uninitialized_fill_n(lines_[absoluteLineNumber] + itemsRead,
+                        width_ - itemsRead,
+                        initPixel);
+            }
+        }
+    }
+
+    // Mark this block as most recently used.
+    blockLRU_->push_front(blockNumber);
+
+    return lines_[dy];
+};
+
 
 template <class PIXELTYPE>
-void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() {
-    int block = blockLRU_->back();
+void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
+    int blockNumber = blockLRU_->back();
+
+    list<int>::iterator listIterator = blockLRU_->begin();
+    for(; listIterator != blockLRU_->end(); listIterator++) {
+        //cout << *listIterator << " ";
+    }
+    //cout << endl << "swapping out block " << blockNumber << endl;
+    //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
+
     blockLRU_->pop_back();
 
-    int firstLineInBlock = blockToFirstLineNumber(blockNumber);
+    int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
 
     // Lazy init the temp file.
     if (tmpFile_ == NULL) initTmpfile();
@@ -623,6 +661,7 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() {
     for (int l = 0; l < linesPerBlocksize_; l++) {
         int absoluteLineNumber = l + firstLineInBlock;
         if (absoluteLineNumber >= height_) break;
+        //cout << "swapping line " << absoluteLineNumber << endl;
         if (fwrite(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_)
                 != width_) {
             vigra_fail("CachedFileImage: error writing to image backing file.\n");
@@ -630,6 +669,8 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() {
         // Deallocate line
         PIXELTYPE *p = lines_[absoluteLineNumber];
         for (int column = 0; column <= width_; column++) {
+            //FIXME if pixel type is not a simple data type and this destructor actually does
+            // something, then we are in big trouble.
             (p[column]).~PIXELTYPE();
         }
         Allocator::deallocate(p);
@@ -638,7 +679,7 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() {
 };
 
 template <class PIXELTYPE>
-void CachedFileImage<PIXELTYPE>::initTmpfile() {
+void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
     int tmpFD = mkstemp(filenameTemplate);
@@ -677,6 +718,8 @@ CachedFileImage<PIXELTYPE>::operator=(const CachedFileImage<PIXELTYPE> & rhs) {
 template <class PIXELTYPE>
 CachedFileImage<PIXELTYPE> &
 CachedFileImage<PIXELTYPE>::init(value_type const & pixel) {
+    initPixel = pixel;
+
     iterator i = begin();
     iterator iend = end();
 
@@ -692,10 +735,12 @@ void CachedFileImage<PIXELTYPE>::resize(int width, int height, value_type const 
             "width and height must be >= 0.\n");
     deallocate();
     initMembers();
+    initPixel = d;
     width_ = width;
     height_ = height;
     initLineStartArray();
-    init(d);
+    //this should do a fast init.
+    //init(d);
 };
 
 template <class PIXELTYPE>
@@ -715,7 +760,7 @@ void CachedFileImage<PIXELTYPE>::resizeCopy(const CachedFileImage & rhs) {
 };
 
 template <class PIXELTYPE>
-void swap( CachedFileImage<PIXELTYPE>& rhs ) {
+void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
     if (&rhs != this) {
         std::swap(linesPerBlocksize_, rhs.linesPerBlocksize_);
         std::swap(blocksAllowed_, rhs.blocksAllowed_);
