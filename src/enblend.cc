@@ -369,6 +369,7 @@ int main(int argc, char** argv) {
 
     // Create the Info for the output file.
     ImageExportInfo outputImageInfo(outputFileName);
+    outputImageInfo.setCompression("LZW");
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
