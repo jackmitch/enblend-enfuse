@@ -13,13 +13,13 @@ AC_PROG_RANLIB
 AC_C_BIGENDIAN
 
 # Checks for libraries.
-AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
+#AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS([stdlib.h string.h])
-AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
+#AC_CHECK_HEADERS([stdlib.h string.h])
+#AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

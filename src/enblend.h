@@ -28,6 +28,7 @@
 #include <list>
 
 #include "assemble.h"
+#include "bounds.h"
 #include "mask.h"
 
 #include "common.h"
@@ -43,24 +44,27 @@ using vigra::ImageImportInfo;
 namespace enblend {
 
 template <typename ImageType, typename AlphaType, typename MaskType, typename PyramidType>
-void blend(list<ImageImportInfo*> &imageInfoList,
+void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
-    typedef typename ImageType::value_type image_value_type;
-    typedef typename AlphaType::value_type alpha_value_type;
-    typedef typename MaskType::value_type mask_value_type;
-    typedef typename PyramidType::value_type pyramid_value_type;
+    typedef typename ImageType::value_type ImageValueType;
+    typedef typename AlphaType::value_type AlphaValueType;
+    typedef typename MaskType::value_type MaskValueType;
+    typedef typename PyramidType::value_type PyramidValueType;
 
-    cout << "sizeof(image_value_type) = " << sizeof(image_value_type) << endl;
-    cout << "sizeof(alpha_value_type) = " << sizeof(alpha_value_type) << endl;
-    cout << "sizeof(mask_value_type) = " << sizeof(mask_value_type) << endl;
-    cout << "sizeof(pyramid_value_type) = " << sizeof(pyramid_value_type) << endl;
+    cout << "sizeof(ImageValueType) = " << sizeof(ImageValueType) << endl;
+    cout << "sizeof(AlphaValueType) = " << sizeof(AlphaValueType) << endl;
+    cout << "sizeof(MaskValueType) = " << sizeof(MaskValueType) << endl;
+    cout << "sizeof(PyramidValueType) = " << sizeof(PyramidValueType) << endl;
 
-    // Create the initial white image.
+    // Create the initial white image. This should go into outputImageInfo.
+    // This way the output file always contains the results of the last completed
+    // blend iteration.
     EnblendROI whiteBB;
     ImageImportInfo *whiteImageInfo =
-            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB,
+                    &outputImageInfo);
 
     // Main blending loop.
     while (!imageInfoList.empty()) {
@@ -78,16 +82,64 @@ void blend(list<ImageImportInfo*> &imageInfoList,
         EnblendROI iBB;
         bool overlap = whiteBB.intersect(blackBB, iBB);
 
-        // Create the blend mask.
+        // Calculate ROI bounds and number of levels from iBB.
+        // ROI bounds not to extend uBB.
+        EnblendROI roiBB;
+        unsigned int numLevels =
+                roiBounds<PyramidValueType, MaskValueType>(inputUnion, iBB, uBB, roiBB);
+
+        // Create the blend mask and the union mask.
         ImageImportInfo *maskImageInfo =
                 mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
                         inputUnion, uBB, iBB, overlap);
 
+        // Copy pixels inside blackBB and outside ROI into white image.
+
+        // Build Laplacian pyramid from blackImage.
+        //ImageImportInfo *blackLPInfo = 
+
+        // Now we no longer need the blackImage temp file, delete it.
         unlink(blackImageInfo->getFileName());
         delete blackImageInfo;
+
+        // Build Gaussian pyramid from mask.
+        //ImageImportInfo *maskGPInfo =
+
+        // We no longer need the maskImage temp file, delete it.
+        unlink(maskImageInfo->getFileName());
+        delete maskImageInfo;
+
+        // Build Laplacian pyramid from whiteImage
+        //vector<PyramidType*> *whiteLP =
+
+        // Blend pyramids
+
+        // We no longer need the blackLPInfo file or the maskGPInfo files.
+        // Delete them.
+        //unlink(blackLPInfo->getFileName());
+        //delete blackLPInfo;
+        //unlink(maskGPInfo->getFileName());
+        //delete maskGPInfo;
+
+        // Collapse result back into whiteImageInfo.
+        //collapsePyramid
+
+        // Copy result into whiteImageFile using unionMaskFile as a template.
+
+        // Done with unionMaskFile.
+
+        // done with whiteLP.
+        //for (unsigned int i = 0; i < whiteLP->size(); i++) {
+        //    delete whiteLP[i];
+        //}
+        //delete whiteLP;
+
+        // Now set whiteBB to uBB.
+        whiteBB = uBB;
     }
 
-    unlink(whiteImageInfo->getFileName());
+    // We no longer need whiteImageInfo.
+    // Final results are already in
     delete whiteImageInfo;
 };
 

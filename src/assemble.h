@@ -65,7 +65,8 @@ namespace enblend {
 template <typename ImageType, typename AlphaType>
 ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
-        EnblendROI &bb) {
+        EnblendROI &bb,
+        ImageExportInfo *exportInfo = NULL) {
 
     typedef typename AlphaType::PixelType AlphaPixelType;
     typedef typename AlphaType::Iterator AlphaIteratorType;
@@ -200,18 +201,29 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
              << ")" << endl;
     }
 
-    // Dump image+imageA to temp file.
-    // Return ImageImportInfo for that file.
-    char tmpFilename[] = ".enblend_assemble_XXXXXX";
-    int tmpFD = mkstemp(tmpFilename);
-    ImageExportInfo outputImageInfo(tmpFilename);
-    outputImageInfo.setFileType("TIFF");
-    exportImageAlpha(srcImageRange(image),
-            srcImage(imageA),
-            outputImageInfo);
-    close(tmpFD);
+    if (exportInfo) {
+        // Use the given exportInfo and return a
+        // corresponding ImageImportInfo.
+        exportImageAlpha(srcImageRange(image),
+                srcImage(imageA),
+                *exportInfo);
+        return new ImageImportInfo(exportInfo->getFileName());
+    }
+    else {
+        // Dump image+imageA to temp file.
+        // Return ImageImportInfo for that file.
+        char tmpFilename[] = ".enblend_assemble_XXXXXX";
+        int tmpFD = mkstemp(tmpFilename);
+        ImageExportInfo outputImageInfo(tmpFilename);
+        outputImageInfo.setFileType("TIFF");
+        exportImageAlpha(srcImageRange(image),
+                srcImage(imageA),
+                outputImageInfo);
+        close(tmpFD);
     
-    return new ImageImportInfo(tmpFilename);
+        return new ImageImportInfo(tmpFilename);
+    }
+
 };
 
 } // namespace enblend

@@ -118,14 +118,14 @@ void nearestFeatureTransform(SrcImageIterator src_upperleft,
         dy = dx;
 
         // Color of the last feature pixel.
-        SrcValueType lastFeature = sa(sy);
+        SrcValueType lastFeature = sa(src_upperleft);
         bool foundFirstFeature = false;
         unsigned int lastFeatureDeltaY = 0;
 
         for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y, ++lastFeatureDeltaY) {
             if (sa(sy)) {
                 // Source pixel is a feature pixel.
-                lastFeature = sa(src_upperleft);
+                lastFeature = sa(sy);
                 foundFirstFeature = true;
                 // Distance to feature pixel = 0
                 *dnfcy = 0;
@@ -143,7 +143,6 @@ void nearestFeatureTransform(SrcImageIterator src_upperleft,
             }
         }
     }
-
 
     // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
     // feature in the same column and below us.
@@ -265,7 +264,7 @@ void nearestFeatureTransform(SrcImageIterator src_upperleft,
             da.set(dx(((*potentialFeature).x - dnfcx.x), 0), dx);
         }
     }
-return;
+
     // Final pass: calculate the distance to the nearest feature in the same
     // column or any column to the right. If this is smaller than dnflx,
     // Then recolor the pixel to the color of the nearest feature to the right.

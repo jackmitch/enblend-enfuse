@@ -69,7 +69,7 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
     // 255 = inside black image only.
-    BImage maskInit(uBB.size());
+    BImage *maskInit = new BImage(uBB.size());
 
     ImageType *image = new ImageType(inputUnion.size());
     AlphaType *imageA = new AlphaType(inputUnion.size());
@@ -78,9 +78,10 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
     importImageAlpha(*whiteImageInfo,
             destImage(*image),
             destImage(*imageA));
+    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
-    initImageIf(destImageRange(maskInit),
+    initImageIf(destImageRange(*maskInit),
             maskIter(imageA->upperLeft() + uBB.getUL()),
             1);
 
@@ -91,32 +92,41 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
     // if whiteImage also contributes, this wraps around to zero.
-    transformImageIf(srcImageRange(maskInit),
+    transformImageIf(srcImageRange(*maskInit),
             maskIter(imageA->upperLeft() + uBB.getUL()),
-            destImage(maskInit),
+            destImage(*maskInit),
             linearIntensityTransform(1, 255));
 
-    // mem xsection = ImageType*os + AlphaType*os + BImage*uBB
+    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
     delete image;
     delete imageA;
+    // mem xsection = BImage * uBB
 
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
-    BImage maskTransform(uBB.size());
-    nearestFeatureTransform(srcImageRange(maskInit),
-            destImage(maskTransform));
+    BImage *maskTransform = new BImage(uBB.size());
+    // mem xsection = 2*BImage*uBB
+    nearestFeatureTransform(srcImageRange(*maskInit),
+            destImage(*maskTransform));
+    // mem xsection = 2*BImage*uBB + 2*UIImage*uBB
+
+    delete maskInit;
+    // mem xsection = BImage*uBB
 
     MaskType mask(uBB.size());
-    // mem xsection = 2 * BImage*uBB + MaskType*uBB
+    // mem xsection = BImage*uBB + MaskType*uBB
 
     // Dump maskInit into mask
-    // maskInit = 1 then mask = max value (white image)
-    // maskInit = other then mask = zero - (black image)
-    transformImage(srcImageRange(maskTransform),
+    // maskInit = 1, then mask = max value (white image)
+    // maskInit != 1, then mask = zero - (black image)
+    transformImage(srcImageRange(*maskTransform),
             destImage(mask),
             ifThenElse(Arg1() == Param(1),
                     Param(NumericTraits<MaskPixelType>::max()),
                     Param(NumericTraits<MaskPixelType>::zero())));
+
+    delete maskTransform;
+    // mem xsection = MaskType*uBB
 
     //char tmpFilename[] = ".enblend_mask_XXXXXX";
     char tmpFilename[] = "enblend_mask.tif";
@@ -124,7 +134,7 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
     ImageExportInfo maskImageInfo(tmpFilename);
     maskImageInfo.setPosition(uBB.getUL());
     maskImageInfo.setFileType("TIFF");
-    exportImage(srcImageRange(maskTransform), maskImageInfo);
+    exportImage(srcImageRange(mask), maskImageInfo);
     //close(tmpFD);
 
     return new ImageImportInfo(tmpFilename);

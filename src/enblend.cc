@@ -59,7 +59,7 @@ using vigra::UIRGBImage;
 using vigra::USImage;
 using vigra::USRGBImage;
 
-using enblend::blend;
+using enblend::enblendMain;
 using enblend::EnblendROI;
 
 // Global values from command line parameters.
@@ -69,23 +69,23 @@ bool OneAtATime = false;
 bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 
-uint32 OutputWidth = 0;
-uint32 OutputHeight = 0;
+//uint32 OutputWidth = 0;
+//uint32 OutputHeight = 0;
 
-uint16 PlanarConfig;
-uint16 Photometric;
+//uint16 PlanarConfig;
+//uint16 Photometric;
 
-// Union bounding box.
-uint32 UBBFirstX;
-uint32 UBBLastX;
-uint32 UBBFirstY;
-uint32 UBBLastY;
+//// Union bounding box.
+//uint32 UBBFirstX;
+//uint32 UBBLastX;
+//uint32 UBBFirstY;
+//uint32 UBBLastY;
 
-// The region of interest for pyramids.
-uint32 ROIFirstX;
-uint32 ROILastX;
-uint32 ROIFirstY;
-uint32 ROILastY;
+//// The region of interest for pyramids.
+//uint32 ROIFirstX;
+//uint32 ROILastX;
+//uint32 ROIFirstY;
+//uint32 ROILastY;
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {
@@ -325,25 +325,25 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     if (isColor) {
         if (strcmp(pixelType, "UINT8") == 0) {
-            blend<BRGBImage, BImage, BImage, SImage>(
+            enblendMain<BRGBImage, BImage, BImage, SImage>(
                     imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    blend<SRGBImage, BImage, SImage, IImage>(
+        //    enblendMain<SRGBImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    blend<USRGBImage, BImage, SImage, IImage>(
+        //    enblendMain<USRGBImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    blend<IRGBImage, BImage, IImage, DImage>(
+        //    enblendMain<IRGBImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    blend<UIRGBImage, BImage, IImage, DImage>(
+        //    enblendMain<UIRGBImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    blend<FRGBImage, BImage, FImage, DImage>(
+        //    enblendMain<FRGBImage, BImage, FImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    blend<DRGBImage, BImage, DImage, DImage>(
+        //    enblendMain<DRGBImage, BImage, DImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         } else {
             cerr << "enblend: pixel type \""
@@ -354,25 +354,25 @@ int main(int argc, char** argv) {
         }
     } else {
         //if (strcmp(pixelType, "UINT8") == 0) {
-        //    blend<BImage, BImage, BImage, SImage>(
+        //    enblendMain<BImage, BImage, BImage, SImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    blend<SImage, BImage, SImage, IImage>(
+        //    enblendMain<SImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    blend<USImage, BImage, SImage, IImage>(
+        //    enblendMain<USImage, BImage, SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    blend<IImage, BImage, IImage, DImage>(
+        //    enblendMain<IImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    blend<UIImage, BImage, IImage, DImage>(
+        //    enblendMain<UIImage, BImage, IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    blend<FImage, BImage, FImage, DImage>(
+        //    enblendMain<FImage, BImage, FImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    blend<DImage, BImage, DImage, DImage>(
+        //    enblendMain<DImage, BImage, DImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else {
             cerr << "enblend: pixel type \""
