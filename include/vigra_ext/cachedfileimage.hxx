@@ -118,7 +118,8 @@ public:
                 vigra_fail("CachedFileImageDirector::requestBlocksForNewImage(): "
                         "no blocks available and attempt to free blocks failed.");
             }
-            blocksAvailable--;
+            blocksAllocated = blocksAvailable;
+            blocksAvailable = 0;
         }
 
         // Register the new image.
@@ -431,7 +432,7 @@ public:
 
 protected:
 
-    CachedFileImageIteratorBase(int X, int Y, image_type *I) : x(X), y(Y), i(I) { }
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y), i(I) { }
 
     CachedFileImageIteratorBase() : x(0), y(0), i(NULL) { }
 
@@ -451,7 +452,7 @@ public:
             CachedFileImage<PIXELTYPE>,
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *> Base;
 
-    CachedFileImageIterator(int x, int y, CachedFileImage<PIXELTYPE> *i)
+    CachedFileImageIterator(const int x, const int y, CachedFileImage<PIXELTYPE> * const i)
     : Base(x, y, i)
     {}
 
@@ -476,7 +477,7 @@ public:
             PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *> Base;
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
-    ConstCachedFileImageIterator(int x, int y, const CachedFileImage<PIXELTYPE> *i)
+    ConstCachedFileImageIterator(const int x, const int y, const CachedFileImage<PIXELTYPE> * const i)
     : Base(x, y, i)
     {}
 
@@ -787,7 +788,7 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initLineStartArray() {
 
     // Number of lines to load in one block.
-    linesPerBlocksize_ = (int)ceil(
+    linesPerBlocksize_ = (int)floor(
             ((double)CachedFileImageDirector::v().getBlockSize())
             / (width_ * sizeof(PIXELTYPE)));
 
@@ -864,6 +865,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     for (int l = 0; l < linesPerBlocksize_; l++) {
         int absoluteLineNumber = l + firstLineInBlock;
         if (absoluteLineNumber >= height_) break;
+        //assert(lines_[absoluteLineNumber] == NULL);
         lines_[absoluteLineNumber] = Allocator::allocate(width_);
 
         // fill the line with data from the file.
