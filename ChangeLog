@@ -1,3 +1,77 @@
+2005-01-26 20:47  acmihal
+
+	* configure.in, cross-configure.sh, cross-make.sh, enblend.sln,
+	  include/vigra/cachedfileimage.hxx, src/enblend.vcproj,
+	  src/vigra_impex/vigra_impex.vcproj,
+	  src/win32helpers/win32config.h: Incremented version to 2.2-pre1.
+	  Replaced SetFilePointerEx calls with calls to SetFilePointer.
+	  Updated msvc project files.  Removed old gnuwin32 project files.
+
+2004-11-29 00:48  acmihal
+
+	* src/anneal.h: Tweaking the simulated annealing parameters.  This
+	  version is beginning to find a reasonable seam line solution.
+
+2004-11-24 00:15  acmihal
+
+	* src/: Makefile.am, anneal.h, fixmath.h, mask.h: More tests with
+	  an annealing-based solution to the active contour models.
+
+2004-11-21 01:23  acmihal
+
+	* src/: Makefile.am, anneal.h, mask.h: Experimenting with simulated
+	  annealing for solving active contours for mask generation.
+
+2004-11-21 01:22  acmihal
+
+	* include/vigra/pixelneighborhood.hxx: Added namespace quantifiers
+	  for compilation on gcc-3.4.
+
+2004-11-18 23:29  acmihal
+
+	* src/: enblend.h, mask.h: More experimentation with mask
+	  generation.
+
+2004-11-18 23:26  acmihal
+
+	* include/vigra_ext/ROI.h: Changed apply functions to be const.
+
+2004-11-18 01:24  acmihal
+
+	* configure.in, include/vigra/cachedfileimage.hxx, src/bounds.h,
+	  src/enblend.cc, src/enblend.h, src/mask.h, src/nearest.h: Started
+	  work on an advanced mask generation algorithm.
+
+2004-11-17 22:59  acmihal
+
+	* include/vigra/tiff.hxx, include/vigra_ext/tiffUtils.h,
+	  src/vigra_impex/tiff.cxx: Added return value tests for TIFFWrite*
+	  calls.  This should cause vigra to throw vigra_fail if there is a
+	  TIFF error.  For example, if the -z option is selected but
+	  libtiff does not support LZW.
+
+2004-11-14 23:19  acmihal
+
+	* ChangeLog, NEWS, READMEWIN: Checked in ChangeLog and NEWS for
+	  version 2.1.
+
+2004-11-14 22:48  acmihal
+
+	* Makefile.am, configure.in, src/Makefile.am,
+	  src/vigra_impex/Makefile.am, src/win32helpers/Makefile.am,
+	  src/win32helpers/win32config.h: Added win32helpers and VC++
+	  project files to the distribution.  Changed windows build version
+	  number to 2.1.
+
+2004-11-14 22:46  acmihal
+
+	* include/vigra/cachedfileimage.hxx, src/enblend.cc: Made io.h a
+	  conditional import for the windows build only.
+
+2004-11-14 22:39  acmihal
+
+	* doc/enblend.1: Added warning to not use feathering to man page.
+
 2004-11-13 16:13  jbeda
 
 	* enblend.sln, src/enblend.vcproj,

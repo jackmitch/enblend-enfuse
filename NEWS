@@ -112,3 +112,17 @@ November 15, 2004
       
     - Ported the source to compile natively on Win32 using MSVC.
 
+February 5, 2004
+    Released enblend-2.2
+
+    - This release fixes issues with the Windows version of Enblend.
+      If you are using Enblend on UNIX you do not need to upgrade.
+
+    - Replaced some system calls that are specific to Windows 2000 and XP
+      with more generic functions. This should get the Windows binary of
+      Enblend to run on pre-Win2K machines.
+
+    - The Windows binary of Enblend is now build with a version of libtiff
+      that includes support for all of the TIFF compression standards, such
+      as Deflate, LZW, JPEG, and Packbits. Nona/Hugin produces TIFF files
+      with the Deflate option.
