@@ -19,7 +19,7 @@ export CXX=i386-mingw32msvc-g++
 export LDFLAGS="-L/home/mihal/gnuwin32/cross-tools/lib -static -static-libgcc "
 export CXXFLAGS="-Wno-redundant-decls -D__GW32C__ -D__GW32__ -D_LARGEFILE_SOURCE=1 -D_LARGEFILE64_SOURCE=1 -D_FILE_OFFSET_BITS=64 -I/home/mihal/gnuwin32/cross-tools/include -I../include -I../../include -I/usr/local/include -idirafter /home/mihal/gnuwin32/cross-tools/include/glibc"
 export CPPFLAGS="-I/home/mihal/gnuwin32/cross-tools/include -I../include -I../../include -I/usr/local/include"
-export LIBS="-ljpeg -lz"
+export LIBS="-ljpeg -lz -lgw32c -lole32 -luuid"
 sh configure --target=$TARGET --host=i386-linux $*
 status=$?
 #rm -f "$cache"
