@@ -1,2 +1,23 @@
 March 4, 2004
-	Released enblend-0.9
+    Released enblend-0.9
+
+March 27, 2004
+    Released enblend-1.0
+
+    - Replaced erosive thinning algorithm for mask creation with a much faster
+      nearest feature transform.
+
+    - Reduced memory requirements. Enblend now swaps most of its data to disk
+      as temporary files. Enblend also calculates the region of pixels that
+      are involved in each blending step and only does math on those pixels,
+      improving speed and memory usage.
+
+    - Added options to limit the number of blending levels used.
+      This can reduce memory usage and improve speed, at a loss of quality.
+
+    - Added an option to blend around the -180/+180 degree boundary.
+      There is still an open issue as to how to handle the zenith and nadir.
+
+    - Added an option to blend the input images sequentially in the order
+      given on the command line. Sometimes the assembler can make poor choices
+      and seams will still be visible in the output.

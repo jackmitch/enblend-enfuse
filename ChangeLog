@@ -1,47 +1,146 @@
+2004-03-25 22:29  mihal
+
+	* Makefile.am, configure.in, missing, src/assemble.cc,
+	  src/blend.cc, src/bounds.cc, src/enblend.cc, src/enblend.h,
+	  src/io.cc, src/mask.cc, src/nearest.cc, src/pyramid.cc: Cleaned
+	  up the code and made the output messages easier to read.  Fixed a
+	  bug in copyExcludedPixels when the ROI does not encompass the
+	  entire image intersection region.
+
+2004-03-25 02:13  mihal
+
+	* src/: Makefile.am, assemble.cc, blend.cc, bounds.cc, enblend.cc,
+	  enblend.h, io.cc, mask.cc, nearest.cc, pyramid.cc: Most data
+	  structures are now swapped to temporary files.
+
+2004-03-23 00:40  mihal
+
+	* src/assemble.cc, src/bounds.cc, src/enblend.cc, src/enblend.h,
+	  doc/enblend.1: Added -s option to blend images sequentially.
+
+2004-03-22 22:07  mihal
+
+	* doc/enblend.1, src/bounds.cc, src/enblend.cc: Added command-line
+	  option to limit the number of pyramid levels used.
+
+2004-03-22 21:45  mihal
+
+	* src/: assemble.cc, enblend.cc, mask.cc, nearest.cc, pyramid.cc,
+	  thin.cc: Added associated alpha tag to output image.	Change
+	  malloc failed error messages to say out of memory instead.
+
+2004-03-21 18:54  mihal
+
+	* src/: Makefile.am, blend.cc, bounds.cc, enblend.cc, enblend.h,
+	  mask.cc, nearest.cc, pyramid.cc, thin.cc: Added pyramid ROI
+	  estimation based on filter half width.
+
+2004-03-19 19:11  mihal
+
+	* configure.in, src/Makefile.am: Updated configure.in to work with
+	  a modern version of autoconf.
+
+2004-03-15 00:18  mihal
+
+	* src/: enblend.cc, mask.cc, nearest.cc: Code cleanup.
+
+2004-03-14 17:54  mihal
+
+	* src/: Makefile.am, enblend.cc, enblend.h, mask.cc, nearest.cc:
+	  Added code for nearest feature transform - replaces thinning.
+
+2004-03-12 00:42  mihal
+
+	* TODO, src/enblend.cc, src/enblend.h, src/pyramid.cc: Added code
+	  to dump pyramids to files.
+
+2004-03-08 13:44  mihal
+
+	* Makefile.am, configure.in: Fixing the autoconf setup to deal with
+	  missing lrint.
+
+2004-03-08 01:06  mihal
+
+	* TODO: Added some TODO items based on user feedback.
+
+2004-03-08 00:53  mihal
+
+	* src/enblend.cc: Moved memory deallocation around.  This patch is
+	  from Max Lyons.
+
+2004-03-06 01:50  mihal
+
+	* ChangeLog, NEWS, doc/Makefile.am: Fixed doc install bug.  Updated
+	  ChangeLog for 0.9 release.
+
 2004-03-05 23:45  mihal
 
-	* Changed version to 0.9.
+	* AUTHORS, configure.in: Changed version to 0.9.
 
 2004-03-04 16:04  mihal
 
-	* Added documentation and demonstration tiffs.
+	* Makefile.am, NEWS, README, configure.in, demo/Makefile.am,
+	  demo/left.tif, demo/middle.tif, demo/right.tif, doc/.cvsignore,
+	  doc/Makefile.am, doc/enblend.1, src/blend.cc, src/enblend.cc,
+	  src/pyramid.cc: Added documentation and demonstration tiffs.
 
 2004-03-04 02:02  mihal
 
-	* Implemented pre-assembly of multiple tiffs.  General code
-	  cleanup.
+	* TODO, src/Makefile.am, src/assemble.cc, src/blend.cc,
+	  src/enblend.cc, src/enblend.h, src/mask.cc, src/pyramid.cc,
+	  src/thin.cc: Implemented pre-assembly of multiple tiffs.  General
+	  code cleanup.
 
 2004-03-03 00:48  mihal
 
-	* Implemented alpha masking in collapsePyramid.  Implemented
-	  extrapolation of transparent pixels in reduce and expand.
+	* src/: blend.cc, enblend.cc, enblend.h, mask.cc, pyramid.cc,
+	  thin.cc: Implemented alpha masking in collapsePyramid.
+	  Implemented extrapolation of transparent pixels in reduce and
+	  expand.
 
 2004-03-02 00:57  mihal
 
-	* Bugfixes for reduce and expand.  Fixed alpha channel in mask.
+	* .cvsignore, src/.cvsignore, src/Makefile.am, src/blend.cc,
+	  src/enblend.cc, src/mask.cc, src/pyramid.cc: Bugfixes for reduce
+	  and expand.  Fixed alpha channel in mask.
 
 2004-03-01 17:23  mihal
 
-	* Changed pyramids to use 16-bit ints to store data since there may
-	  be negative values in laplacian pyramid levels.
+	* src/: blend.cc, enblend.cc, enblend.h, pyramid.cc: Changed
+	  pyramids to use 16-bit ints to store data since there may be
+	  negative values in laplacian pyramid levels.
+
+2004-03-01 11:22  mihal
+
+	* .cvsignore, Makefile.in: Removed generated file from repository.
+
+2004-03-01 00:40  mihal
+
+	* .cvsignore, Makefile.am: Forgot to checkin this file.
 
 2004-03-01 00:32  mihal
 
-	* Added code for thinning, pyramid utilities, and blending.
-	  Debugging necessary.
+	* src/: Makefile.am, blend.cc, enblend.cc, enblend.h, mask.cc,
+	  pyramid.cc, thin.cc: Added code for thinning, pyramid utilities,
+	  and blending.  Debugging necessary.
 
 2004-02-28 01:53  mihal
 
-	* Added option parsing. Opens and checks the sizes of the input
-	  images.  Creates the output image and sets tiff header fields.
-	  Roughed out blending loop.  Started on mask creation function.
+	* ChangeLog, configure.in, src/Makefile.am, src/enblend.cc,
+	  src/enblend.h, src/mask.cc: Added option parsing. Opens and
+	  checks the sizes of the input images.  Creates the output image
+	  and sets tiff header fields.	Roughed out blending loop.  Started
+	  on mask creation function.
 
 2004-02-27 00:37  mihal
 
-	* libtiff experimentation - calculate xnor mask of two input
-	  images.
+	* ChangeLog, Makefile.in, configure.in, enblend.cc, src/.cvsignore,
+	  src/Makefile.am, src/enblend.cc: libtiff experimentation -
+	  calculate xnor mask of two input images.
 
 2004-02-23 22:51  mihal
 
-	* Initial checkin, autoconf skeleton.
+	* .cvsignore, AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.in,
+	  NEWS, README, configure.in, enblend.cc, install-sh, missing,
+	  mkinstalldirs: Initial checkin, autoconf skeleton.
 

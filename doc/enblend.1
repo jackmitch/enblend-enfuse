@@ -1,8 +1,8 @@
-.TH enblend 1 "March 4, 2004" "" ""
+.TH enblend 1 "March 25, 2004" "" ""
 .SH NAME
 enblend \- combine images using a multiresolution spline
 .SH SYNOPSIS
-.B enblend [-v] [-s] [-l num] -o output-file input-files...
+.B enblend [-v] [-s] [-w] [-l num] -o output-file input-files...
 .SH DESCRIPTION
 .B enblend
 overlays multiple TIFF images using the Burt & Adelson multiresolution spline.
@@ -34,10 +34,15 @@ Limit the number of levels used for pyramid blending. This trades off quality
 of results for faster execution time and lower memory usage. The default is
 to use as many levels as possible given the size of the overlap region.
 .IP -s
-Blend images one at a time. This overrides the default behavior which is
+Blend images one at a time, in the order specified on the command line.
+This overrides the default behavior which is
 to preassemble as many non-overlapping images as possible before blending.
-This saves memory, but may lead to inferior results because fewer pyramid
-levels may be used.
+Also, Enblend will not care if each new image overlaps the previous images or
+not. Use this when the default blending order makes bad choices and leaves
+seams in the output.
+.IP -w
+Blend around the -180/+180 boundary. Useful for full-360 panoramas.
+Currently there is still an issue at the zenith and nadir.
 .IP -v
 Verbose output.
 .IP "-o output-file"

@@ -1,13 +1,15 @@
-- Stitching discrepancy avoidance in mask creation
+- Nadir and Zenith in 360x360 panos.
 
-- Region-of-interest reduction by expanding top of mask pyramid and finding
-  transition zone bounding box.
+- Fix nearest feature transform to be aware of wraparound.
 
-- Deallocate memory sooner after it is not needed anymore instead of at the end
-  of each blend pass.
+- Allow users to provide their own blending masks. Have an option to write out
+  the mask that enblend calculates to a TIFF file.
 
-- Blend RGBA channels separately to save memory. Option or default?
+- Support multilayer TIFFs.
 
-- Make the pre-assembler smarter.
+- Support 16-bit TIFFs.
 
-- Make an RPM.
+- Stitching discrepancy avoidance in mask creation.
+
+- Make assemble smarter.
+

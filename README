@@ -44,21 +44,3 @@ make
 make install
 
 See INSTALL for more information.
-
-                        DEMONSTRATION
-
-There are three photographs of Piedmont, California in the demo subdirectory.
-Due to vignetting at the corners of the images, the color of the sky does not
-match up perfectly between the images.
-
-Stitch them together like this:
-
-enblend -v -o out.tif left.tif middle.tif right.tif
-
-The color across the sky should blend perfectly. Also note that in the original
-images, the stitcher was not able to perfectly align all of the houses on
-the hillside. Ad hoc blend techniques require lots of manual effort to
-prevent ghosting in these situations. The multiresolution spline can usually
-prevent this. You should not see any ghosting around the houses, especially
-around windows where there is an abrupt change from light to dark.
-
