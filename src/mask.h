@@ -173,8 +173,11 @@ MaskType *createMask(AlphaType *whiteAlpha,
     ++lastMulticolorRow.y;
 
     // mBB is defined relative to the inputUnion origin.
-    mBB.setCorners(uBB.getUL() + Diff2D(firstMulticolorColumn.x, firstMulticolorRow.y),
-            uBB.getUL() + Diff2D(lastMulticolorColumn.x, lastMulticolorRow.y));
+    mBB.setCorners(
+            uBB.getUL() + Diff2D(firstMulticolorColumn.x - mask->upperLeft().x,
+                                 firstMulticolorRow.y - mask->upperLeft().y),
+            uBB.getUL() + Diff2D(lastMulticolorColumn.x - mask->upperLeft().x,
+                                 lastMulticolorRow.y - mask->upperLeft().y));
 
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Mask transition line bounding box: ("

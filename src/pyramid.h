@@ -392,13 +392,18 @@ void expand(bool add, bool wraparound,
 
             // Get dest pixel at dx.
             RealPixelType pOrig = NumericTraits<PixelType>::toRealPromote(da(dx));
+            RealPixelType pMod;
 
             // Add or subtract p.
-            if (add) pOrig += p;
-            else pOrig -= p;
+            if (add) {
+                pMod = pOrig + p;
+            }
+            else {
+                pMod = pOrig - p;
+            }
 
             // Write back the result.
-            da.set(NumericTraits<PixelType>::fromRealPromote(pOrig), dx);
+            da.set(NumericTraits<PixelType>::fromRealPromote(pMod), dx);
 
             if (destx & 1 == 1) {
                 sx.x++;
@@ -674,7 +679,7 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraTrueType) {
     //}
     //collapsePyramid(false, v);
 
-    for (unsigned int i = 0; i < 1/*v->size()*/; i++) {
+    for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];
         snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
 
@@ -696,6 +701,12 @@ template <typename PyramidImageType>
 void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidValueType;
+
+    //for (unsigned int i = 0; i < (v->size() - 1); i++) {
+    //    // Clear all levels except last.
+    //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
+    //}
+    //collapsePyramid(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];

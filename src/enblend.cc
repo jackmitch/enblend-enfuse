@@ -50,12 +50,7 @@ bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseLabColor = false;
-
-#ifdef __GW32C__
-bool UseLZW = true;
-#else
 bool UseLZW = false;
-#endif
 
 #include "common.h"
 #include "enblend.h"
@@ -64,6 +59,7 @@ bool UseLZW = false;
 #include "vigra/stdimage.hxx"
 #include "vigra/stdcachedfileimage.hxx"
 
+#include <tiffio.h>
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -118,11 +114,7 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
-    #ifdef __GW32C__
-    cout << " -z                Use LZW compression (default)" << endl;
-    #else
     cout << " -z                Use LZW compression" << endl;
-    #endif
 
     cout << endl << "Extended options:" << endl;
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
@@ -155,6 +147,9 @@ void sigint_handler(int sig) {
 int main(int argc, char** argv) {
 
     signal(SIGINT, sigint_handler);
+
+    TIFFSetWarningHandler(NULL);
+    //TIFFSetErrorHandler(NULL);
 
     // The name of the output file.
     char *outputFileName = NULL;

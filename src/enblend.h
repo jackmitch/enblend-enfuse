@@ -395,6 +395,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #endif
         // Peak memory xsection is here!
         // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
+        //exportPyramid(blackLP, "enblend_black_lp");
 
         // Make the black image alpha equal to the union of the
         // white and black alpha channels.
