@@ -101,7 +101,8 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,
         const EnblendROI &mBB,
         const EnblendROI &uBB,
-        EnblendROI &roiBB) {
+        EnblendROI &roiBB,
+        bool wraparoundForMask) {
 
     unsigned int levels = 1;
 
@@ -134,6 +135,16 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
     unsigned int extent = filterHalfWidth<PyramidPixelType>(levels);
     Diff2D extentDiff(extent, extent);
     roiBB.setCorners(mBB.getUL() - extentDiff, mBB.getLR() + extentDiff);
+
+    if (wraparoundForMask &&
+            (roiBB.getUL().x < 0 || roiBB.getLR().x > uBB.getLR().x)) {
+        // If the ROI goes off either edge of the uBB,
+        // and the uBB is the full size of the output image,
+        // and the wraparound flag is specified,
+        // then make roiBB the full width of uBB.
+        roiBB.setCorners(Diff2D(0, roiBB.getUL().y),
+                Diff2D(uBB.getLR().x, roiBB.getLR().y));
+    }
 
     // ROI must not be bigger than uBB.
     uBB.intersect(roiBB, roiBB);

@@ -235,9 +235,11 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
 
         // Create the blend mask.
+        bool wraparoundForMask = Wraparound && 
+                (uBB.size().x == inputUnion.size().x);
         EnblendROI mBB;
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
-                uBB, (Wraparound && (uBB.size().x == inputUnion.size().x)), mBB);
+                uBB, wraparoundForMask, mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -257,15 +259,16 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
         #endif
 
-        //ImageExportInfo maskInfo("enblend_mask.tif");
-        //maskInfo.setPosition(uBB.getUL());
-        //exportImage(srcImageRange(*mask), maskInfo);
+        ImageExportInfo maskInfo("enblend_mask.tif");
+        maskInfo.setPosition(uBB.getUL());
+        exportImage(srcImageRange(*mask), maskInfo);
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
         EnblendROI roiBB;
-        unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB);
-        bool wraparoundThisIteration = Wraparound && (roiBB.size().x == inputUnion.size().x);
+        unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
+        bool wraparoundForBlend = Wraparound && (roiBB.size().x == inputUnion.size().x);
+        //cout << "Wraparound = " << wraparoundForBlend << endl;
 
         // Estimate memory requirements for this blend iteration
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
@@ -292,7 +295,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
-                numLevels, wraparoundThisIteration, roiBB_uBB.apply(srcImageRange(*mask)));
+                numLevels, wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
@@ -335,7 +338,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Laplacian pyramid from white image.
         vector<ImagePyramidType*> *whiteLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
-                        numLevels, wraparoundThisIteration,
+                        numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(whitePair.first))),
                         roiBB.apply(maskImage(*(whitePair.second))));
         #ifdef ENBLEND_CACHE_IMAGES
@@ -366,7 +369,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Laplacian pyramid from black image.
         vector<ImagePyramidType*> *blackLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
-                        numLevels, wraparoundThisIteration,
+                        numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(blackPair.first))),
                         roiBB.apply(maskImage(*(blackPair.second))));
         #ifdef ENBLEND_CACHE_IMAGES
@@ -445,7 +448,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //exportPyramid(blackLP, "enblend_blend_lp");
 
         // collapse black pyramid
-        collapsePyramid(wraparoundThisIteration, blackLP);
+        collapsePyramid(wraparoundForBlend, blackLP);
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
