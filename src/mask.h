@@ -35,7 +35,7 @@
 #include "vigra/initimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
-#include "vigra_ext/stdcachedfileimage.hxx"
+#include "vigra/stdcachedfileimage.hxx"
 
 using vigra::BCFImage;
 using vigra::BImage;

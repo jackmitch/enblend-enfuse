@@ -30,7 +30,7 @@
 #include <utility>
 
 #include "vigra/numerictraits.hxx"
-#include "vigra_ext/stdcachedfileimage.hxx"
+#include "vigra/stdcachedfileimage.hxx"
 
 using std::cerr;
 using std::cout;

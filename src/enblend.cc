@@ -36,10 +36,10 @@
 
 #include "vigra/impex.hxx"
 #include "vigra/stdimage.hxx"
-#include "vigra_ext/stdcachedfileimage.hxx"
+#include "vigra/stdcachedfileimage.hxx"
 
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::list;
 
@@ -157,7 +157,8 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
-                CachedFileImageDirector::v().setBlockSize((long long)kilobytes << 10);
+                CachedFileImageDirector::v().setBlockSize(
+                        (long long)kilobytes << 10);
                 break;
             }
             case 'c': {
@@ -189,7 +190,8 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
-                CachedFileImageDirector::v().setAllocation((long long)megabytes << 20);
+                CachedFileImageDirector::v().setAllocation(
+                        (long long)megabytes << 20);
                 break;
             }
             case 'o': {
@@ -285,7 +287,8 @@ int main(int argc, char** argv) {
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
         } catch (StdException& e) {
-            cerr << endl << "enblend: error opening input file:"
+            cerr << endl << "enblend: error opening input file \""
+                 << *inputFileNameIterator << "\":"
                  << endl << e.what()
                  << endl;
             exit(1);
@@ -316,7 +319,8 @@ int main(int argc, char** argv) {
 
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
-            cerr << "enblend: Input image does not have an alpha "
+            cerr << "enblend: Input image \""
+                 << *inputFileNameIterator << "\" does not have an alpha "
                  << "channel. This is required to determine which pixels "
                  << "contribute to the final image."
                  << endl;
@@ -339,7 +343,8 @@ int main(int argc, char** argv) {
             inputUnion.unite(imageROI, inputUnion);
 
             if (isColor != inputInfo->isColor()) {
-                cerr << "enblend: Input image is "
+                cerr << "enblend: Input image \""
+                     << *inputFileNameIterator << "\" is "
                      << (inputInfo->isColor() ? "color" : "grayscale")
                      << " but previous images are "
                      << (isColor ? "color" : "grayscale")
@@ -347,7 +352,8 @@ int main(int argc, char** argv) {
                 exit(1);
             }
             if (strcmp(pixelType, inputInfo->getPixelType())) {
-                cerr << "enblend: Input image has pixel type "
+                cerr << "enblend: Input image \""
+                     << *inputFileNameIterator << "\" has pixel type "
                      << inputInfo->getPixelType()
                      << " but previous images have pixel type "
                      << pixelType
@@ -421,9 +427,9 @@ int main(int argc, char** argv) {
             //    enblendMain<DRGBCFImage, DRGBCFImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
             } else {
-                cerr << "enblend: pixel type \""
+                cerr << "enblend: images with pixel type \""
                      << pixelType
-                     << "\" is not supported."
+                     << "\" are not supported."
                      << endl;
                 exit(1);
             }
@@ -450,9 +456,9 @@ int main(int argc, char** argv) {
             //    enblendMain<DCFImage, DCFImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else {
-                cerr << "enblend: pixel type \""
+                cerr << "enblend: images with pixel type \""
                      << pixelType
-                     << "\" is not supported."
+                     << "\" are not supported."
                      << endl;
                 exit(1);
             //}
@@ -481,9 +487,9 @@ int main(int argc, char** argv) {
             //    enblendMain<DRGBImage, DRGBImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
             } else {
-                cerr << "enblend: pixel type \""
+                cerr << "enblend: images with pixel type \""
                      << pixelType
-                     << "\" is not supported."
+                     << "\" are not supported."
                      << endl;
                 exit(1);
             }
@@ -510,34 +516,36 @@ int main(int argc, char** argv) {
             //    enblendMain<DImage, DImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else {
-                cerr << "enblend: pixel type \""
+                cerr << "enblend: images with pixel type \""
                      << pixelType
-                     << "\" is not supported."
+                     << "\" are not supported."
                      << endl;
                 exit(1);
             //}
         }
     #endif
+
+        // delete entries in imageInfoList, in case
+        // enblend loop returned early.
+        imageInfoIterator = imageInfoList.begin();
+        while (imageInfoIterator != imageInfoList.end()) {
+            delete *imageInfoIterator++;
+        }
+
+        delete[] outputFileName;
+
     } catch (std::bad_alloc& e) {
         cerr << endl << "enblend: out of memory"
              << endl << e.what()
              << endl;
         exit(1);
     } catch (StdException& e) {
-        cerr << endl << "enblend: vigra threw an exception:"
+        cerr << endl << "enblend: an exception occured"
              << endl << e.what()
              << endl;
         exit(1);
     }
 
-    // delete entries in imageInfoList, in case
-    // enblend loop returned early.
-    imageInfoIterator = imageInfoList.begin();
-    while (imageInfoIterator != imageInfoList.end()) {
-        delete *imageInfoIterator++;
-    }
-
-    delete[] outputFileName;
-
+    // Success.
     return 0;
 }

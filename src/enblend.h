@@ -28,6 +28,8 @@
 #include <list>
 #include <stdio.h>
 
+#include <boost/static_assert.hpp>
+
 #include "common.h"
 #include "assemble.h"
 #include "blend.h"
@@ -241,33 +243,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
         #endif
 
-        //for (unsigned int i = 0; i < (numLevels - 1); i++) {
-        //    // Clear all levels except last.
-        //    //ImagePyramidValueType zero = NumericTraits<ImagePyramidValueType>::zero();
-        //    initImage(destImageRange(*((*maskGP)[i])), NumericTraits<MaskPyramidValueType>::zero());
-        //}
-        //collapsePyramid(wraparoundThisIteration, maskGP);
-        //for (unsigned int i = 0; i < numLevels; i++) {
-        //    char filenameBuf[512];
-        //    snprintf(filenameBuf, 512, "enblend_mask_gp%04u.tif", i);
-        //    cout << filenameBuf << endl;
-        //    ImageExportInfo gpInfo(filenameBuf);
-        //    vigra::USImage usLabPyramid((*maskGP)[i]->width(), (*maskGP)[i]->height());
-        //    vigra::transformImage(srcImageRange(*((*maskGP)[i])), destImage(usLabPyramid),
-        //            vigra::linearRangeMapping(NumericTraits<MaskPyramidValueType>::min(),
-        //                                 NumericTraits<MaskPyramidValueType>::max(),
-        //                                 NumericTraits<unsigned short>::min(),
-        //                                 NumericTraits<unsigned short>::max()));
-        //    exportImage(srcImageRange(usLabPyramid), gpInfo);
-        //}
-
-        //for (unsigned int i = 0; i < numLevels; i++) {
-        //    char filenameBuf[512];
-        //    snprintf(filenameBuf, 512, "enblend_mask_gp%04u.tif", i);
-        //    cout << filenameBuf << endl;
-        //    ImageExportInfo mgpInfo(filenameBuf);
-        //    exportImage(srcImageRange(*((*maskGP)[i])), mgpInfo);
-        //}
+        //exportPyramid(maskGP, "enblend_mask_gp");
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
@@ -314,13 +290,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #endif
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
-        //for (unsigned int i = 0; i < numLevels; i++) {
-        //    char filenameBuf[512];
-        //    snprintf(filenameBuf, 512, "enblend_white_lp%04u.tif", i);
-        //    cout << filenameBuf << endl;
-        //    ImageExportInfo wlpInfo(filenameBuf);
-        //    exportImage(srcImageRange(*((*whiteLP)[i])), wlpInfo);
-        //}
+        //exportPyramid(whiteLP, "enblend_white_lp");
 
         // We no longer need the white rgb data.
         delete whitePair.first;
@@ -403,24 +373,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         delete whiteLP;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
 
-        //for (unsigned int i = 0; i < (numLevels - 1); i++) {
-        //    // Clear all levels except last.
-        //    //ImagePyramidValueType zero = NumericTraits<ImagePyramidValueType>::zero();
-        //    initImage(destImageRange(*((*blackLP)[i])), NumericTraits<ImagePyramidValueType>::zero());
-        //}
-        //for (unsigned int i = 0; i < numLevels; i++) {
-        //    char filenameBuf[512];
-        //    snprintf(filenameBuf, 512, "enblend_blend_lp%04u.tif", i);
-        //    cout << filenameBuf << endl;
-        //    ImageExportInfo lpInfo(filenameBuf);
-        //    vigra::USRGBImage usLabPyramid((*blackLP)[i]->width(), (*blackLP)[i]->height());
-        //    vigra::transformImage(srcImageRange(*((*blackLP)[i])), destImage(usLabPyramid),
-        //            vigra::linearRangeMapping(ImagePyramidValueType(NumericTraits<MaskPyramidValueType>::min()),
-        //                                 ImagePyramidValueType(NumericTraits<MaskPyramidValueType>::max()),
-        //                                 typename vigra::USRGBImage::value_type(NumericTraits<unsigned short>::min()),
-        //                                 typename vigra::USRGBImage::value_type(NumericTraits<unsigned short>::max())));
-        //    exportImage(srcImageRange(usLabPyramid), lpInfo);
-        //}
+        //exportPyramid(blackLP, "enblend_blend_lp");
 
         // collapse black pyramid
         collapsePyramid(wraparoundThisIteration, blackLP);
@@ -488,8 +441,6 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         VigraTrueType) {
 
     // ImagePyramidType::value_type is a scalar.
-    //typedef BasicImage<typename ImagePyramidType::value_type> MaskPyramidType;
-
     enblendMain<ImageType, ImagePyramidType, ImagePyramidType>(
             imageInfoList, outputImageInfo, inputUnion);
 }

@@ -24,19 +24,25 @@
 #include <config.h>
 #endif
 
-#include <assert.h>
 #include <vector>
 
 #include "vigra/convolution.hxx"
+#include "vigra/error.hxx"
+#include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
+#include "vigra/transformimage.hxx"
 
 #include "fixmath.h"
 
 using std::cout;
 using std::vector;
 
+using vigra::linearRangeMapping;
 using vigra::NumericTraits;
+using vigra::transformImage;
 using vigra::triple;
+using vigra::USImage;
+using vigra::USRGBImage;
 
 namespace enblend {
 
@@ -123,7 +129,8 @@ inline void reduce(bool wraparound,
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
-    assert(src_w > 1 && src_h > 1);
+    vigra_precondition(src_w > 1 && src_h > 1,
+            "src image too small in reduce");
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
@@ -219,7 +226,8 @@ inline void reduce(bool wraparound,
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
-    assert(src_w > 1 && src_h > 1);
+    vigra_precondition(src_w > 1 && src_h > 1,
+            "src image too small in reduce");
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
@@ -688,6 +696,65 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
     }
 
 };
+
+// Export a scalar pyramid as a set of UINT16 tiff files.
+template <typename PyramidImageType>
+void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraTrueType) {
+    typedef typename PyramidImageType::value_type PyramidValueType;
+
+    for (unsigned int i = 0; i < numLevels; i++) {
+        char filenameBuf[512];
+        snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
+
+        // Rescale the pyramid values to fit in UINT16.
+        USImage usPyramid((*v)[i]->width(), (*v)[i]->height());
+        transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                linearRangeMapping(NumericTraits<PyramidValueType>::min(),
+                                     NumericTraits<PyramidValueType>::max(),
+                                     NumericTraits<unsigned short>::min(),
+                                     NumericTraits<unsigned short>::max()));
+
+        ImageExportInfo info(filenameBuf);
+        exportImage(srcImageRange(usPyramid), info);
+    }
+};
+
+// Export a vector pyramid as a set of UINT16 tiff files.
+template <typename PyramidImageType>
+void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
+    typedef typename PyramidImageType::value_type PyramidVectorType;
+    typedef typename PyramidVectorType::value_type PyramidValueType;
+
+    for (unsigned int i = 0; i < numLevels; i++) {
+        char filenameBuf[512];
+        snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
+
+        // Rescale the pyramid values to fit in UINT16.
+        USRGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
+        transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
+                                   PyramidVectorType(NumericTraits<PyramidValueType>::max()),
+                                   typename USRGBImage::value_type(NumericTraits<unsigned short>::min()),
+                                   typename USRGBImage::value_type(NumericTraits<unsigned short>::max())));
+
+        ImageExportInfo info(filenameBuf);
+        exportImage(srcImageRange(usPyramid), Info);
+    }
+};
+
+// Export a pyramid as a set of UINT16 tiff files.
+template <typename PyramidImageType>
+void exportPyramid(vector<PyramidImageType*> *v, char *prefix) {
+    typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
+    exportPyramid(v, prefix, pyramid_is_scalar());
+};
+
+//for (unsigned int i = 0; i < (numLevels - 1); i++) {
+//    // Clear all levels except last.
+//    //ImagePyramidValueType zero = NumericTraits<ImagePyramidValueType>::zero();
+//    initImage(destImageRange(*((*maskGP)[i])), NumericTraits<MaskPyramidValueType>::zero());
+//}
+//collapsePyramid(wraparoundThisIteration, maskGP);
 
 } // namespace enblend
 
