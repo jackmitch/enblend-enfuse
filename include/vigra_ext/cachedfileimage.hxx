@@ -607,28 +607,34 @@ public:
     }
 
     reference operator[](difference_type const & d) {
-        return (getLinePointer(d.y))[d.x];
+        //cout << "dirty" << endl;
+        return (getLinePointerDirty(d.y))[d.x];
     }
 
     const_reference operator[](difference_type const & d) const {
+        //cout << "clean" << endl;
         return (getLinePointer(d.y))[d.x];
     }
 
     reference operator()(int dx, int dy) {
-        return (getLinePointer(dy))[dx];
+        //cout << "dirty" << endl;
+        return (getLinePointerDirty(dy))[dx];
     }
 
     const_reference operator()(int dx, int dy) const {
+        //cout << "clean" << endl;
         return (getLinePointer(dy))[dx];
     }
 
     // dangerous - needs to return a weak_ptr
     pointer operator[](int dy) {
-        return getLinePointer(dy);
+        //cout << "dirty" << endl;
+        return getLinePointerDirty(dy);
     }
 
     // dangerous - needs to return a weak_ptr
     const_pointer operator[](int dy) const {
+        //cout << "clean" << endl;
         return getLinePointer(dy);
     }
 
@@ -713,6 +719,7 @@ private:
     // getLinePointer can then be inlined, and we only incur the function call overhead
     // on cache misses.
     PIXELTYPE * getLinePointer(int dy) const;
+    PIXELTYPE * getLinePointerDirty(int dy);
     PIXELTYPE * getLinePointerCacheMiss(int dy) const;
 
     // Free space, if necessary, by swapping out a block of lines to the file.
@@ -736,6 +743,8 @@ private:
         blocksNeeded_ = 0;
         blockLRU_ = NULL;
         lines_ = NULL;
+        blockIsClean_ = NULL;
+        blockInFile_ = NULL;
         width_ = 0;
         height_ = 0;
         tmpFile_ = NULL;
@@ -754,6 +763,9 @@ private:
     mutable list<int> *blockLRU_;
 
     mutable PIXELTYPE ** lines_;
+    mutable bool * blockIsClean_;
+    mutable bool * blockInFile_;
+
     int width_, height_;
 
     mutable FILE *tmpFile_;
@@ -777,6 +789,8 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
         }
         delete[] lines_;
     }
+    delete[] blockIsClean_;
+    delete[] blockInFile_;
     if (tmpFile_ != NULL) {
         fclose(tmpFile_);
         unlink(tmpFilename_);
@@ -801,6 +815,14 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     blockLRU_ = new list<int>();
 
     lines_ = new PIXELTYPE*[height_];
+    blockIsClean_ = new bool[blocksNeeded_];
+    blockInFile_ = new bool[blocksNeeded_];
+
+    // Initialize blockIsClean / blockInFile vectors.
+    for (int block = 0; block < blocksNeeded_; block++) {
+        blockIsClean_[block] = true;
+        blockInFile_[block] = false;
+    }
 
     // Allocate mem for the first linesPerBlocksize_*blocksAllowed lines.
     int line = 0;
@@ -821,6 +843,19 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     }
 
     return;
+};
+
+template <class PIXELTYPE>
+inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(int dy) {
+    PIXELTYPE *line = lines_[dy];
+
+    // Check if line dy is swapped out.
+    if (line == NULL) line = getLinePointerCacheMiss(dy);
+
+    // Mark this block as dirty.
+    blockIsClean_[dy / linesPerBlocksize_] = false;
+
+    return line;
 };
 
 template <class PIXELTYPE>
@@ -855,36 +890,42 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     }
     //cout << "swapping in block " << blockNumber << endl;
 
-    // Find the right spot in the file.
-    off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
-    if (tmpFile_ != NULL && fseeko(tmpFile_, offset, SEEK_SET) != 0) {
-        vigra_fail(strerror(errno));
-    }
-
-    // Allocate lines for new block.
-    for (int l = 0; l < linesPerBlocksize_; l++) {
-        int absoluteLineNumber = l + firstLineInBlock;
-        if (absoluteLineNumber >= height_) break;
-        //assert(lines_[absoluteLineNumber] == NULL);
-        lines_[absoluteLineNumber] = Allocator::allocate(width_);
-
-        // fill the line with data from the file.
-        int itemsRead = 0;
-        if (tmpFile_ != NULL) {
-            itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
+    if (blockInFile_[blockNumber]) {
+        // Find the right spot in the file.
+        off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
+        if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
+            vigra_fail(strerror(errno));
         }
-        if (itemsRead < width_) {
-            if (tmpFile_ != NULL && feof(tmpFile_) == 0) {
+
+        // Allocate lines for new block.
+        for (int l = 0; l < linesPerBlocksize_; l++) {
+            int absoluteLineNumber = l + firstLineInBlock;
+            if (absoluteLineNumber >= height_) break;
+            lines_[absoluteLineNumber] = Allocator::allocate(width_);
+
+            // fill the line with data from the file.
+            int itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
+
+            if (itemsRead < width_) {
                 vigra_fail("CachedFileImage: error reading from image backing file.\n");
-            } else {
-                // Swap file has no data for this line.
-                // fill with initPixel.
-                std::uninitialized_fill_n(lines_[absoluteLineNumber] + itemsRead,
-                        width_ - itemsRead,
-                        initPixel);
             }
         }
     }
+    else {
+        // File does not have data for this block. Create new lines and fill them with initPixel.
+        // Allocate lines for new block.
+        for (int l = 0; l < linesPerBlocksize_; l++) {
+            int absoluteLineNumber = l + firstLineInBlock;
+            if (absoluteLineNumber >= height_) break;
+            lines_[absoluteLineNumber] = Allocator::allocate(width_);
+
+            // fill with initPixel.
+            std::uninitialized_fill_n(lines_[absoluteLineNumber], width_, initPixel);
+        }
+    }
+
+    // Mark this block as clean.
+    blockIsClean_[blockNumber] = true;
 
     // Mark this block as most recently used.
     blockLRU_->push_front(blockNumber);
@@ -909,34 +950,55 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
 
     blockLRU_->pop_back();
 
-    int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
+    int firstLineInBlock = blockNumber * linesPerBlocksize_;
 
-    // Lazy init the temp file.
-    if (tmpFile_ == NULL) initTmpfile();
+    // If block is dirty, swap it to the file.
+    if (!blockIsClean_[blockNumber]) {
+        blockInFile_[blockNumber] = true;
 
-    // Find the right spot in the file.
-    off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
-    if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
-        vigra_fail(strerror(errno));
+        // Lazy init the temp file.
+        if (tmpFile_ == NULL) initTmpfile();
+
+        // Find the right spot in the file.
+        off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
+        if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
+            vigra_fail(strerror(errno));
+        }
+
+        for (int l = 0; l < linesPerBlocksize_; l++) {
+            int absoluteLineNumber = l + firstLineInBlock;
+            if (absoluteLineNumber >= height_) break;
+            //cout << "swapping line " << absoluteLineNumber << endl;
+            if (fwrite(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_)
+                    != (unsigned int)width_) {
+                vigra_fail("CachedFileImage: error writing to image backing file.\n");
+            }
+            // Deallocate line
+            PIXELTYPE *p = lines_[absoluteLineNumber];
+            for (int column = 0; column <= width_; column++) {
+                //FIXME if pixel type is not a simple data type and this destructor actually does
+                // something, then we are in big trouble.
+                (p[column]).~PIXELTYPE();
+            }
+            Allocator::deallocate(p);
+            lines_[absoluteLineNumber] = NULL;
+        }
     }
-
-    for (int l = 0; l < linesPerBlocksize_; l++) {
-        int absoluteLineNumber = l + firstLineInBlock;
-        if (absoluteLineNumber >= height_) break;
-        //cout << "swapping line " << absoluteLineNumber << endl;
-        if (fwrite(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_)
-                != (unsigned int)width_) {
-            vigra_fail("CachedFileImage: error writing to image backing file.\n");
+    else {
+        // Block is clean - just deallocate it.
+        for (int l = 0; l < linesPerBlocksize_; l++) {
+            int absoluteLineNumber = l + firstLineInBlock;
+            if (absoluteLineNumber >= height_) break;
+            // Deallocate line
+            PIXELTYPE *p = lines_[absoluteLineNumber];
+            for (int column = 0; column <= width_; column++) {
+                //FIXME if pixel type is not a simple data type and this destructor actually does
+                // something, then we are in big trouble.
+                (p[column]).~PIXELTYPE();
+            }
+            Allocator::deallocate(p);
+            lines_[absoluteLineNumber] = NULL;
         }
-        // Deallocate line
-        PIXELTYPE *p = lines_[absoluteLineNumber];
-        for (int column = 0; column <= width_; column++) {
-            //FIXME if pixel type is not a simple data type and this destructor actually does
-            // something, then we are in big trouble.
-            (p[column]).~PIXELTYPE();
-        }
-        Allocator::deallocate(p);
-        lines_[absoluteLineNumber] = NULL;
     }
 
     blocksAllocated_--;
@@ -1032,6 +1094,8 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
         std::swap(blocksNeeded_, rhs.blocksNeeded_);
         std::swap(blockLRU_, rhs.blockLRU_);
         std::swap(lines_, rhs.lines_);
+        std::swap(blockIsClean_, rhs.blockIsClean_);
+        std::swap(blockInFile_, rhs.blockInFile_);
         std::swap(width_, rhs.width_);
         std::swap(height_, rhs.height_);
         std::swap(tmpFile_, rhs.tmpFile_);
