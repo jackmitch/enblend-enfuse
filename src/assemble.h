@@ -161,7 +161,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
                 // Copy src and srcA into image and imageA.
 
                 if (Verbose > 0) {
-                    cout << info->getFileName() << " ";
+                    cout << " " << info->getFileName();
                     cout.flush();
                 }
 

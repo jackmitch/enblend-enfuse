@@ -30,6 +30,7 @@
 
 #include "fixmath.h"
 
+#include "vigra/convolution.hxx"
 #include "vigra/numerictraits.hxx"
 
 using std::cout;
@@ -176,6 +177,7 @@ inline void reduce(bool wraparound,
 
         }
     }
+
 };
 
 template <typename SrcImageIterator, typename SrcAccessor,

@@ -63,6 +63,11 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     typedef typename MaskType::PixelType MaskPixelType;
 
+    //MaskType *fileMask = new MaskType(uBB.size());
+    //ImageImportInfo fileMaskInfo("enblend_mask.tif");
+    //importImage(fileMaskInfo, destImage(*fileMask));
+    //return fileMask;
+
     // Mask initializer pixel values:
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.

@@ -24,6 +24,9 @@
 #include <config.h>
 #endif
 
+#include <math.h>
+
+#include <boost/random/mersenne_twister.hpp>
 #include <boost/static_assert.hpp>
 #include "vigra/colorconversions.hxx"
 #include "vigra/numerictraits.hxx"
@@ -43,6 +46,32 @@ using vigra::VigraTrueType;
 //using vigra::YPrimeCbCr2RGBPrimeFunctor;
 
 namespace enblend {
+
+template <typename T>
+inline T& dither(T &v, VigraFalseType) {
+    return v;
+};
+
+template <typename T>
+inline T& dither(T &v, VigraTrueType) {
+    typedef typename NumericTraits<T>::RealPromote TReal;
+
+    TReal rv = NumericTraits<T>::toRealPromote(v);
+    TReal rvFraction = rv - floor(rv);
+
+    // Only dither values within a certain range of the rounding cutoff point.
+    if (rvFraction > 0.25 && rvFraction <= 0.75) {
+        // Generate a random number between 0 and 0.5.
+        double random = 0.5 * (double)Twister() / UINT_MAX;
+        if ((rvFraction - 0.25) >= random) {
+            v = ceil(v);
+        } else {
+            v = floor(v);
+        }
+    }
+
+    return v;
+};
 
 // Convert type T1 to fixed-point value stored in type T2.
 template <typename T1, typename T2>
@@ -294,6 +323,7 @@ inline void copyFromPyramidImageIf(
 
     typedef typename PyramidImageType::value_type PyramidPixelType;
     typedef typename DestImageType::value_type DestPixelType;
+    typedef typename NumericTraits<DestPixelType>::isIntegral DestPixelIsIntegral;
 
     typedef typename PyramidImageType::const_traverser SrcTraverser;
     typedef typename DestImageType::traverser DestTraverser;
@@ -312,6 +342,8 @@ inline void copyFromPyramidImageIf(
         for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
             if (ma(mx)) {
                 double p = convertFromPyramidMath<PyramidPixelType>(sa(sx));
+                //FIXME instead of doing fromRealPromote, do some dithering here.
+                p = dither(p, DestPixelIsIntegral());
                 da.set(NumericTraits<DestPixelType>::fromRealPromote(p), dx);
             }
         }
@@ -335,6 +367,7 @@ inline void copyFromPyramidImageIf(
     typedef typename PyramidVectorType::value_type PyramidPixelType;
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename DestVectorType::value_type DestPixelType;
+    typedef typename NumericTraits<DestPixelType>::isIntegral DestPixelIsIntegral;
 
     typedef typename PyramidVectorType::const_iterator PyramidVectorIterator;
     typedef typename DestVectorType::iterator DestVectorIterator;
@@ -362,14 +395,22 @@ inline void copyFromPyramidImageIf(
 
         for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
             if (ma(mx)) {
+                // Convert from fixed point to floating point
                 PyramidVectorType p = sa(sx);
                 double l = convertFromPyramidMath<PyramidPixelType>(p.red());
                 double a = convertFromPyramidMath<PyramidPixelType>(p.green());
                 double b = convertFromPyramidMath<PyramidPixelType>(p.blue());
                 ColorFunctorArgumentType labVector(l, a, b);
+
+                // Convert from L*a*b* color space back to gamma-corrected RGB.
                 ColorFunctorResultType rgbpVector = cf(labVector);
-                DestVectorType r = NumericTraits<DestVectorType>::fromRealPromote(rgbpVector);
-                da.set(r, dx);
+
+                // Convert from floating point to DestVectorType.
+                // If DestPixelType is integral, use dithering.
+                rgbpVector.setRed(dither(rgbpVector.red(), DestPixelIsIntegral()));
+                rgbpVector.setGreen(dither(rgbpVector.green(), DestPixelIsIntegral()));
+                rgbpVector.setBlue(dither(rgbpVector.blue(), DestPixelIsIntegral()));
+                da.set(NumericTraits<DestVectorType>::fromRealPromote(rgbpVector), dx);
 
                 //r = f(sa(sx));
                 //PyramidVectorType p = sa(sx);
@@ -429,13 +470,6 @@ inline void copyFromPyramidImageIf(
             dest.second,
             mask.first,
             mask.second);
-};
-
-template <typename DestImageType, typename PyramidImageType>
-inline void copyLabPyramid(
-        triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
-        pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
-
 };
 
 } // namespace enblend
