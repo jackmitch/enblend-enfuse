@@ -105,9 +105,6 @@ typedef CachedFileImage<RGBValue<unsigned int> > UIRGBCFImage;
 CFI_DEFINE_ITERATORTRAITS(RGBValue<int>, RGBAccessor, RGBAccessor)
 typedef CachedFileImage<RGBValue<int> > IRGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<int>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<int> > IRGBCFImage;
-
 CFI_DEFINE_ITERATORTRAITS(RGBValue<float>, RGBAccessor, RGBAccessor)
 typedef CachedFileImage<RGBValue<float> > FRGBCFImage;
 
