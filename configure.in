@@ -49,5 +49,6 @@ AC_CONFIG_FILES([Makefile
                  include/vigra/Makefile
                  include/vigra_ext/Makefile
                  src/Makefile
-                 src/vigra_impex/Makefile])
+                 src/vigra_impex/Makefile
+                 src/win32helpers/Makefile])
 AC_OUTPUT
