@@ -9,6 +9,8 @@ AC_PROG_CXX
 AC_PROG_CC
 #CXXFLAGS = 
 
+AC_C_BIGENDIAN
+
 # Checks for libraries.
 AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
 
