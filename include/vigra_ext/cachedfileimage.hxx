@@ -22,6 +22,7 @@
 #ifndef VIGRA_EXT_CACHEDFILEIMAGE_HXX
 #define VIGRA_EXT_CACHEDFILEIMAGE_HXX
 
+#include <assert.h>
 #include <errno.h>
 #include <iostream>
 #include <list>
@@ -33,11 +34,20 @@ using std::list;
 
 namespace vigra {
 
+class CachedFileImageBase {
+public:
+    virtual int numBlocksAllocated() const = 0;
+    virtual void swapOutBlock() const = 0;
+};
+
 template <class PIXELTYPE> class CachedFileImage;
 
+/** A singleton that manages memory for several CachedFileImages.
+ */
 class CachedFileImageDirector {
 public:
 
+    // Obtain a reference to the singleton.
     static CachedFileImageDirector &v() {
         static CachedFileImageDirector *instance = NULL;
         if (instance == NULL) {
@@ -46,48 +56,150 @@ public:
         return *instance;
     }
 
-    void setBlockSize(int bytes) {
-        blocksize = bytes;
+    // Set the number of bytes this director manages.
+    void setAllocation(long long bytes) {
+        // This may not be changed after images have been created.
+        assert(imageList.empty());
+        managedBytes = bytes;
+        // Recalculate the number of blocks available.
+        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
     }
 
+    // Set the cache block size. This is the minimum amount that is
+    // moved between the caches and the backing files.
+    void setBlockSize(int bytes) {
+        // This may not be changed after images have been created.
+        assert(imageList.empty());
+        blocksize = bytes;
+        // Recalculate the number of blocks available.
+        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
+    }
+
+    // Get the cache block size.
     int getBlockSize() {
         return blocksize;
     }
 
-    void setAllocation(long long bytes) {
-        managedBytes = bytes;
-        bytesAvailable = bytes;
+    // Request a certain number of blocks for a new image.
+    // Returns the number of blocks the new image may use.
+    int requestBlocksForNewImage(int blocks, CachedFileImageBase const * image) {
+        int blocksAllocated = 0;
+        if (blocksAvailable >= blocks) {
+            // Plenty of blocks available.
+            // Give the image all the blocks it wants.
+            blocksAllocated = blocks;
+            blocksAvailable -= blocks;
+        } else if (blocksAvailable > 0) {
+            // Not enough blocks available.
+            // Give the image as many blocks as are available.
+            blocksAllocated = blocksAvailable;
+            blocksAvailable = 0;
+        } else {
+            // Zero blocks available.
+            // Try to free a block by forcing another image to swap.
+            blocksAvailable += freeBlock();
+            if (blocksAvailable == 0) {
+                // Attempt to free a block was a failure.
+                vigra_fail("CachedFileImageDirector::requestBlocksForNewImage(): "
+                        "no blocks available and attempt to free blocks failed.");
+            }
+            blocksAvailable--;
+        }
+
+        // Register the new image.
+        // By placing it at the back, it is marked as the
+        // most-recently-swapped image.
+        imageList.push_back(image);
+
+        return blocksAllocated;
     }
 
-    long long requestBytes(long long request) {
-        bytesAvailable -= request;
-        return request;
+    // Unregister a CachedFileImage with the director and return its blocks
+    // to the pool.
+    void returnBlocksUnregisterImage(int blocks, CachedFileImageBase const * image) {
+        blocksAvailable += blocks;
+        imageList.remove(image);
     }
 
-    void returnBytes(long long bytes) {
-        bytesAvailable += bytes;
-    }
-
-    void incrementCacheMisses() {
+    // Tell the director that a cache miss has occured for this image.
+    // The director may decide to allocate more blocks to the image.
+    // If so it returns a nonzero number.
+    int registerCacheMiss(CachedFileImageBase const * image) {
         cacheMisses++;
+
+        // Remove image from list.
+        imageList.remove(image);
+
+        if (blocksAvailable == 0) {
+            // Try to free a block from an image that has not
+            // missed recently. If this fails then we just won't
+            // give the calling image more blocks.
+            blocksAvailable += freeBlock();
+        }
+
+        // Add image to back of list.
+        // This marks it most-recently-swapped
+        imageList.push_back(image);
+
+        if (blocksAvailable > 0) {
+            // There are more blocks available to give out.
+            // Give the image one more block.
+            blocksAvailable--;
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
+    // How many cache misses have occured in total.
     long long getCacheMisses() {
         return cacheMisses;
+    }
+
+    void resetCacheMisses() {
+        cacheMisses = 0LL;
     }
 
 protected:
     CachedFileImageDirector()
     : blocksize(1<<20),
       managedBytes(1LL<<30),
-      bytesAvailable(0),
-      cacheMisses(0)
-    {}
+      cacheMisses(0),
+      imageList()
+    {
+        // Recalculate the number of blocks available.
+        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
+    }
+
+    int freeBlock() {
+        // Try to free a block from an image.
+        // Check least-recently-missed images first.
+        list<CachedFileImageBase const *>::iterator i;
+        for (i = imageList.begin(); i != imageList.end(); i++) {
+            CachedFileImageBase const * image = *i;
+            if (image->numBlocksAllocated() > 0) {
+                // Image is currently using blocks.
+                image->swapOutBlock();
+                // Mark image as most-recently-swapped.
+                imageList.erase(i);
+                imageList.push_back(image);
+                return 1;
+            }
+        }
+
+        // No blocks could be freed from other images.
+        return 0;
+    }
 
     int blocksize;
     long long managedBytes;
-    long long bytesAvailable;
+    int blocksAvailable;
     long long cacheMisses;
+
+    // List of images.
+    // Front is least-recently-missed image
+    // Back is most-recently-missed image
+    list<CachedFileImageBase const *> imageList;
 
 };
 
@@ -325,8 +437,14 @@ public:
 
 template <class T> struct IteratorTraits;
 
+//class CachedFileImageBase {
+//public:
+//    virtual int numBlocksAllocated() const = 0;
+//    virtual void swapOutBlock() const = 0;
+//};
+
 template <class PIXELTYPE>
-class CachedFileImage {
+class CachedFileImage : public CachedFileImageBase {
 public:
 
     typedef PIXELTYPE value_type;
@@ -505,6 +623,14 @@ public:
         return ConstAccessor();
     }
 
+    int numBlocksAllocated() const {
+        return blocksAllocated_;
+    }
+
+    void swapOutBlock() const {
+        swapLeastRecentlyUsedBlock();
+    }
+
 private:
 
     PIXELTYPE initPixel;
@@ -537,7 +663,7 @@ private:
     void initMembers() {
         initPixel = value_type();
         linesPerBlocksize_ = 0;
-        blocksAllowed_ = 0;
+        blocksAllocated_ = 0;
         blockLRU_ = NULL;
         lines_ = NULL;
         width_ = 0;
@@ -548,8 +674,8 @@ private:
 
     // how many image lines are loaded in one fread
     int linesPerBlocksize_;
-    // how many blocks may exist in memory at one time
-    int blocksAllowed_;
+    // How many blocks are currently cached in memory.
+    mutable int blocksAllocated_;
 
     // lru replacement policy
     // most recently used block is at start of list.
@@ -565,7 +691,7 @@ private:
 
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::deallocate() {
-    CachedFileImageDirector::v().returnBytes(width_ * height_ * sizeof(PIXELTYPE));
+    CachedFileImageDirector::v().returnBlocksUnregisterImage(blocksAllocated_, this);
     delete blockLRU_;
     if (lines_ != NULL) {
         // Go through lines and delete any allocated memory there.
@@ -595,27 +721,21 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
             ((double)CachedFileImageDirector::v().getBlockSize())
             / (width_ * sizeof(PIXELTYPE)));
 
-    // FIXME some mechanism for determining how much of the image is going to be in memory.
-    // implement a CachedFileImageDirector
-    long long bytesAllowed = CachedFileImageDirector::v().requestBytes(
-            width_ * height_ * sizeof(PIXELTYPE));
-
-    blocksAllowed_ = (int)ceil(bytesAllowed
-            / (double)CachedFileImageDirector::v().getBlockSize());
-
-    // Cap blocksAllowed_ at the actual number of blocks needed.
     int blocksNeeded = (int)ceil(((double)height_) / linesPerBlocksize_);
-    blocksAllowed_ = min(blocksAllowed_, blocksNeeded);
+
+    int blocksAllowed = CachedFileImageDirector::v().requestBlocksForNewImage(
+            blocksNeeded, this);
 
     // Create the blockLRU list.
     blockLRU_ = new list<int>();
 
     lines_ = new PIXELTYPE*[height_];
 
-    // Allocate mem for the first linesPerBlocksize_*blocksAllowed_ lines.
+    // Allocate mem for the first linesPerBlocksize_*blocksAllowed lines.
     int line = 0;
-    for (int block = 0; block < blocksAllowed_; block++) {
+    for (int block = 0; block < blocksAllowed; block++) {
         blockLRU_->push_front(block);
+        blocksAllocated_++;
         for (int subblock = 0; subblock < linesPerBlocksize_; subblock++, line++) {
             if (line >= height_) break;
             lines_[line] = Allocator::allocate(width_);
@@ -651,12 +771,17 @@ inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
 
 template <class PIXELTYPE>
 PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
-    CachedFileImageDirector::v().incrementCacheMisses();
     int blockNumber = dy / linesPerBlocksize_; // lineToBlockNumber(dy);
     int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
 
-    // Make space for new block.
-    swapLeastRecentlyUsedBlock();
+    int moreBlocks = CachedFileImageDirector::v().registerCacheMiss(this);
+    if (moreBlocks == 0 && blocksAllocated_ == 0) {
+        vigra_fail("CachedFileImage::getLinePointerCacheMiss(): no blocks available "
+                " and attempt to free blocks failed.");
+    } else if (moreBlocks == 0) {
+        // Make space for new block.
+        swapLeastRecentlyUsedBlock();
+    }
     //cout << "swapping in block " << blockNumber << endl;
 
     // Find the right spot in the file.
@@ -688,6 +813,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     // Mark this block as most recently used.
     blockLRU_->push_front(blockNumber);
+    blocksAllocated_++;
 
     return lines_[dy];
 };
@@ -695,12 +821,14 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
+    if (blocksAllocated_ == 0) return;
+
     int blockNumber = blockLRU_->back();
 
-    list<int>::iterator listIterator = blockLRU_->begin();
-    for(; listIterator != blockLRU_->end(); listIterator++) {
-        //cout << *listIterator << " ";
-    }
+    //list<int>::iterator listIterator = blockLRU_->begin();
+    //for(; listIterator != blockLRU_->end(); listIterator++) {
+    //    cout << *listIterator << " ";
+    //}
     //cout << endl << "swapping out block " << blockNumber << endl;
     //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
 
@@ -735,6 +863,8 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
         Allocator::deallocate(p);
         lines_[absoluteLineNumber] = NULL;
     }
+
+    blocksAllocated_--;
 };
 
 template <class PIXELTYPE>
@@ -821,8 +951,9 @@ void CachedFileImage<PIXELTYPE>::resizeCopy(const CachedFileImage & rhs) {
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
     if (&rhs != this) {
+        std::swap(initPixel, rhs.initPixel);
         std::swap(linesPerBlocksize_, rhs.linesPerBlocksize_);
-        std::swap(blocksAllowed_, rhs.blocksAllowed_);
+        std::swap(blocksAllocated_, rhs.blocksAllocated_);
         std::swap(blockLRU_, rhs.blockLRU_);
         std::swap(lines_, rhs.lines_);
         std::swap(width_, rhs.width_);
