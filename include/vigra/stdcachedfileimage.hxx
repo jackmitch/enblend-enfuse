@@ -33,9 +33,9 @@ namespace vigra {
 #define CFI_DEFINE_ITERATORTRAITS(VALUETYPE, ACCESSOR, CONSTACCESSOR) \
     template<> \
     struct IteratorTraits< \
-        CachedFileImageIterator<VALUETYPE> > \
+        CachedFileImageIterator<VALUETYPE > > \
     { \
-        typedef CachedFileImageIterator<VALUETYPE> \
+        typedef CachedFileImageIterator<VALUETYPE > \
                                                      Iterator; \
         typedef Iterator                             iterator; \
         typedef iterator::iterator_category          iterator_category; \
@@ -51,10 +51,10 @@ namespace vigra {
     }; \
     template<> \
     struct IteratorTraits< \
-        ConstCachedFileImageIterator<VALUETYPE> > \
+        ConstCachedFileImageIterator<VALUETYPE > > \
     { \
         typedef \
-          ConstCachedFileImageIterator<VALUETYPE> \
+          ConstCachedFileImageIterator<VALUETYPE > \
                                                      Iterator; \
         typedef Iterator                             iterator; \
         typedef iterator::iterator_category          iterator_category; \

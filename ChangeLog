@@ -1,3 +1,29 @@
+2004-11-13 13:29 jbeda/mjz
+    * Ported to Win32.
+    * include/vigra/cachedfileimage.hxx: Fixed up to use native Win32 file
+      access APIs for 64bit addressing
+    * include/vigra/stdcachedfileimage.hxx: Fixed up macros so that nested
+      templates wouldn't cause compiler to see '>>'
+    * include/vigra/functoraccessor.h: commented out duplicate function
+      definitions.  This has to be a error that wasn't caught by other 
+      compilers
+    * src/enblend.cc: Introduced win32config.h.  Also bring in win32 right 
+      away with the right #defines above it. Adapt to proted getopt. Set
+      floating point options. Do file globbing explicitly on Windows
+      using _findfirst/_findnext.
+    * src/nearest.h: Removed use of variable sized arrays allocated on the 
+      stack by moving it to the heap.  This is a non-standard C++ feature
+      that isn't supported by MSVC
+    * src/vigra_impex/gif.cxx: Fixed up types and casting to explicitly
+      cast to smaller types.  This silences warning in MSVC.
+    * src/vigra_impex/imageinfo.cxx: Fixed up types.
+    * src/vigra_impex/tiff.cxx: Bring in windows.h with correct options.
+      Fixed up type casts. Removed use of variable sized stack arrays.
+    * src/win32helpers/getopt.c: Added windows port of getopt.
+    * src/win32helpers/win32config.h: Configuration options for windows.
+      NOTE: this has the version hardcoded in it.  When changing the
+      version number of the product this file should be changed also.
+
 2004-10-30 13:37  mihal
 
 	* src/vigra_impex/tiff.cxx: Modified tiff import to use scanline

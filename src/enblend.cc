@@ -21,6 +21,16 @@
 #include <config.h>
 #endif
 
+#ifdef _WIN32
+#include <win32helpers\win32config.h>
+
+// Make sure we bring in windows.h the right way
+#define NOMINMAX
+#define VC_EXTRALEAN 
+#include <windows.h>
+#undef DIFFERENCE
+#endif  //  _WIN32
+
 #ifdef __GW32C__
 #undef malloc
 #define BOOST_NO_STDC_NAMESPACE 1
@@ -29,11 +39,21 @@
 #include <iostream>
 #include <list>
 #include <vector>
+
+#ifndef _WIN32
 #include <getopt.h>
+#else
+extern "C" int getopt(int nargc, char** nargv, char* ostr);
+#endif
+
+extern "C" char *optarg;
+extern "C" int optind;
+
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tiffconf.h>
+#include <io.h>
 
 #include <boost/random/mersenne_twister.hpp>
 
@@ -136,7 +156,7 @@ void printUsageAndExit() {
  */
 void sigint_handler(int sig) {
     CachedFileImageDirector::v().~CachedFileImageDirector();
-    #ifndef __GW32C__
+    #if !defined(__GW32C__) && !defined(_WIN32)
     signal(SIGINT, SIG_DFL);
     kill(getpid(), SIGINT);
     #else
@@ -146,6 +166,10 @@ void sigint_handler(int sig) {
 
 int main(int argc, char** argv) {
 
+#ifdef _WIN32
+    _controlfp( _RC_UP, _MCW_RC );
+#endif
+    
     signal(SIGINT, sigint_handler);
 
     TIFFSetWarningHandler(NULL);
@@ -160,8 +184,6 @@ int main(int argc, char** argv) {
 
     // Parse command line.
     int c;
-    extern char *optarg;
-    extern int optind;
     while ((c = getopt(argc, argv, "ab:cghl:m:o:st:vwz")) != -1) {
         switch (c) {
             case 'a': {
@@ -277,7 +299,39 @@ int main(int argc, char** argv) {
     // Remaining parameters are input files.
     if (optind < argc) {
         while (optind < argc) {
+#ifdef _WIN32
+            // There has got to be an easier way...            
+            char drive[_MAX_DRIVE];
+            char dir[_MAX_DIR];
+            char fname[_MAX_FNAME];
+            char ext[_MAX_EXT];
+            char newFile[_MAX_PATH];
+
+            _splitpath(argv[optind], drive, dir, NULL, NULL);
+
+            struct _finddata_t finddata;
+            intptr_t findhandle;
+            int stop = 0;
+
+            findhandle = _findfirst(argv[optind], &finddata);
+            if (findhandle != -1) {
+                do {
+                    _splitpath(finddata.name, NULL, NULL, fname, ext);
+                    _makepath(newFile, drive, dir, fname, ext);
+                    
+                    // TODO (jbeda): This will leak -- the right way to 
+                    // fix this is to make this a list of std::string.  
+                    // I'll look into this after we get things working
+                    // on Win32
+                    inputFileNameList.push_back(strdup(newFile));
+                } while (_findnext(findhandle, &finddata) == 0);
+                _findclose(findhandle);
+            }
+
+            optind++;
+#else
             inputFileNameList.push_back(argv[optind++]);
+#endif
         }
     } else {
         cerr << "enblend: no input files specified." << endl;

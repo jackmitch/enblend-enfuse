@@ -37,6 +37,15 @@
  */
 
 #ifdef HasTIFF
+// NB (jbeda): tiffio.h is going to include this anyway.  Let's include
+// it now so that we can control how it comes in.  Namely, we want
+// to get our version that doesn't set the evil min/max macros.
+#if defined(_WIN32)
+#define VC_EXTRALEAN
+#define NOMINMAX
+#include <windows.h>
+#undef DIFFERENCE
+#endif
 
 #include "error.hxx"
 #include "tiff.hxx"
@@ -313,7 +322,7 @@ namespace vigra {
                 // MIHAL Sun Sep 19 18:00:54 PDT 2004
                 // Suppress warning when using workaround for
                 // Gimp and Cinepaint.
-		if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA
+                if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA
                         && !GimpAssociatedAlphaHack)
                 {
                     std::cerr << "WARNING: TIFFDecoderImpl::init(): associated alpha treated"
@@ -321,7 +330,7 @@ namespace vigra {
                 }
             }
         }
-	
+        
         // get photometric
         if ( !TIFFGetFieldDefaulted( tiff, TIFFTAG_PHOTOMETRIC,
                                      &photometric ) )
@@ -340,10 +349,10 @@ namespace vigra {
         }
         if ( photometric == PHOTOMETRIC_RGB )
         {
-	    if ( samples_per_pixel > 3 && extra_samples_per_pixel == 0 ) {
-	        // file probably lacks the extra_samples tag
-		extra_samples_per_pixel = samples_per_pixel - 3;
-	    }
+            if ( samples_per_pixel > 3 && extra_samples_per_pixel == 0 ) {
+                // file probably lacks the extra_samples tag
+                extra_samples_per_pixel = samples_per_pixel - 3;
+            }
             if ( samples_per_pixel - extra_samples_per_pixel != 3 )
                 vigra_fail("TIFFDecoderImpl::init():"
                            " Photometric tag does not fit the number of"
@@ -430,8 +439,8 @@ namespace vigra {
         while (cTag->name) {
             char * value;
             if ( !TIFFGetField( tiff, cTag->tag, &value )) {
-	      properties.insert(make_pair(std::string(cTag->name),
-					  ImageProperty(value)));
+              properties.insert(make_pair(std::string(cTag->name),
+                                          ImageProperty(value)));
             }
         }
 */
@@ -704,13 +713,13 @@ namespace vigra {
 
     void TIFFEncoderImpl::finalizeSettings()
     {
-	// decide if we should write Grey, or RGB files
-	// all additional channels are treated as extra samples
-	if (samples_per_pixel < 3) {
-	    extra_samples_per_pixel = samples_per_pixel - 1;
-	} else {
-	    extra_samples_per_pixel = samples_per_pixel - 3;
-	}
+        // decide if we should write Grey, or RGB files
+        // all additional channels are treated as extra samples
+        if (samples_per_pixel < 3) {
+            extra_samples_per_pixel = samples_per_pixel - 1;
+        } else {
+            extra_samples_per_pixel = samples_per_pixel - 3;
+        }
 
         // set some fields
         TIFFSetField( tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG );
@@ -719,7 +728,7 @@ namespace vigra {
         //FIXME TIFFDefaultStripSize tries for 8kb strips! Laughable!
         // This will do a 1MB strip for 8-bit images,
         // 2MB strip for 16-bit, and so forth.
-        unsigned int estimate = std::max(1UL, (1<<20) / (width * samples_per_pixel));
+        unsigned int estimate = std::max(1UL, static_cast<unsigned long>((1<<20) / (width * samples_per_pixel)));
         TIFFSetField( tiff, TIFFTAG_ROWSPERSTRIP,
                       stripheight = TIFFDefaultStripSize( tiff, estimate ) );
         TIFFSetField( tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT );
@@ -758,9 +767,9 @@ namespace vigra {
         }
         TIFFSetField( tiff, TIFFTAG_BITSPERSAMPLE, bits_per_sample );
 
-	if (extra_samples_per_pixel > 0) {
-	    uint16 types[extra_samples_per_pixel];
-	    for ( int i=0; i < extra_samples_per_pixel; i++ ) {
+        if (extra_samples_per_pixel > 0) {
+            uint16* types = new uint16[extra_samples_per_pixel];
+            for ( int i=0; i < extra_samples_per_pixel; i++ ) {
                 // MIHAL Sun Sep 19 18:00:54 PDT 2004
                 // Workaround for Gimp and Cinepaint.
                 // Cinepaint crashes trying to load unassociated alpha images.
@@ -771,10 +780,13 @@ namespace vigra {
                 } else {
                     types[i] = EXTRASAMPLE_UNASSALPHA;
                 }
-	    }
-	    TIFFSetField( tiff, TIFFTAG_EXTRASAMPLES, extra_samples_per_pixel,
-			  types );
-	}
+            }
+
+            TIFFSetField( tiff, TIFFTAG_EXTRASAMPLES, extra_samples_per_pixel,
+                          types );
+
+            delete [] types;
+        }
 
         // set photometric
         if ( samples_per_pixel - extra_samples_per_pixel == 1 )
@@ -782,24 +794,24 @@ namespace vigra {
         else if ( samples_per_pixel - extra_samples_per_pixel == 3 )
             TIFFSetField( tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB );
 
-	// set resolution
-	if ( x_resolution > 0) {
-	    TIFFSetField( tiff, TIFFTAG_XRESOLUTION, x_resolution );
-	}
-	if ( y_resolution > 0 ) {
-	    TIFFSetField( tiff, TIFFTAG_YRESOLUTION, y_resolution );
-	}
-	if (x_resolution > 0 || y_resolution > 0) {
-	    TIFFSetField( tiff, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH );
-	}
+        // set resolution
+        if ( x_resolution > 0) {
+            TIFFSetField( tiff, TIFFTAG_XRESOLUTION, x_resolution );
+        }
+        if ( y_resolution > 0 ) {
+            TIFFSetField( tiff, TIFFTAG_YRESOLUTION, y_resolution );
+        }
+        if (x_resolution > 0 || y_resolution > 0) {
+            TIFFSetField( tiff, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH );
+        }
 
-	// save position, if available
-	if (position.x > 0 && position.y > 0 &&
-	    x_resolution > 0 && y_resolution > 0)
-	{
-	    TIFFSetField( tiff, TIFFTAG_XPOSITION, position.x / x_resolution);
-	    TIFFSetField( tiff, TIFFTAG_YPOSITION, position.y / y_resolution);
-	}
+        // save position, if available
+        if (position.x > 0 && position.y > 0 &&
+            x_resolution > 0 && y_resolution > 0)
+        {
+            TIFFSetField( tiff, TIFFTAG_XPOSITION, position.x / x_resolution);
+            TIFFSetField( tiff, TIFFTAG_YPOSITION, position.y / y_resolution);
+        }
 
         // alloc memory
         stripbuffer = new tdata_t[1];
@@ -858,19 +870,19 @@ namespace vigra {
     void TIFFEncoder::setPosition( const vigra::Diff2D & pos )
     {
         VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
-	pimpl->position = pos;
+        pimpl->position = pos;
     }
 
     void TIFFEncoder::setXResolution( float xres )
     {
         VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
-	pimpl->x_resolution = xres;
+        pimpl->x_resolution = xres;
     }
 
     void TIFFEncoder::setYResolution( float yres )
     {
         VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
-	pimpl->y_resolution = yres;
+        pimpl->y_resolution = yres;
     }
 
     unsigned int TIFFEncoder::getOffset() const

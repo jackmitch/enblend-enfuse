@@ -78,7 +78,7 @@ void findImageSequence(const std::string &name_base,
     WIN32_FIND_DATA FileData;
 
     std::string base, path;
-    int split = name_base.rfind('/');
+    size_t split = name_base.rfind('/');
     if(split == -1)
     {
         path = ".";
@@ -86,7 +86,7 @@ void findImageSequence(const std::string &name_base,
     }
     else
     {
-        for(int i=0; i<split; ++i)
+        for(size_t i=0; i<split; ++i)
         {
             if(name_base[i] == '/')
                 path += '\\';

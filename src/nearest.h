@@ -125,9 +125,9 @@ void nearestFeatureTransform(bool wraparound,
     // Data structures for initializing dnfColumn.
     // These let us initialize all of the columns in one pass
     // over the rows of the image. Cache-friendly.
-    SrcValueType lastFeature[w];
-    bool foundFirstFeature[w];
-    unsigned int lastFeatureDeltaY[w];
+    SrcValueType* lastFeature = new SrcValueType[w];
+    bool* foundFirstFeature = new bool[w];
+    unsigned int* lastFeatureDeltaY = new unsigned int[w];
 
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.
@@ -406,6 +406,9 @@ void nearestFeatureTransform(bool wraparound,
 
     delete dnfColumn;
     delete dnfLeft;
+    delete [] lastFeature;
+    delete [] foundFirstFeature;
+    delete [] lastFeatureDeltaY;
 
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         cout << endl;

@@ -165,12 +165,18 @@ namespace {
                 b += entries[i][2];
             }
 
-            color[0] = r / entries.size();
-            color[1] = g / entries.size();
-            color[2] = b / entries.size();
+            //
+            //  r/g/b is the sum of all the uchar entries. entries.size
+            //  is the count; we compute the average here and can safely
+            //  cast this back to uchar
+            //
+            
+            color[0] = (unsigned char)(r / entries.size());
+            color[1] = (unsigned char)(g / entries.size());
+            color[2] = (unsigned char)(b / entries.size());
         }
 
-        int size() const
+        size_t size() const
         {
             return entries.size();
         }
@@ -180,9 +186,9 @@ namespace {
     void find_color_clusters(void_vector<unsigned char> & data,
             std::vector<ColorCluster> & clusters, void_vector<unsigned char> & colors)
     {
-        int count = clusters.size();
-        int size = data.size() / 3;
-        int i, current;
+        size_t count = clusters.size();
+        size_t size = data.size() / 3;
+        size_t i, current;
         for(i=0; i<size; ++i)
         {
             clusters[0].add(data.begin()+3*i);
@@ -190,7 +196,7 @@ namespace {
 
         for(current = 1; current < count; ++current)
         {
-            int largest_index = 0;
+            size_t largest_index = 0;
             for(i=1; i<current; ++i)
             {
                 if(clusters[largest_index] < clusters[i])
@@ -219,13 +225,12 @@ namespace {
     void find_color_indices(void_vector<unsigned char> & data,
            std::vector<ColorCluster> & clusters, void_vector<unsigned char> & indices)
     {
-        int count = clusters.size();
+        int count = (int)clusters.size();
         unsigned char * base = data.begin();
 
-        int i;
-        for(i=0; i<count; ++i)
+        for(int i=0; i<count; ++i)
         {
-            for(int j=0; j<clusters[i].size(); ++j)
+            for(size_t j=0; j<clusters[i].size(); ++j)
             {
                 int offset = (clusters[i].entries[j] - base) / 3;
                 indices[offset] = i;

@@ -28,7 +28,10 @@
 #include <list>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include "common.h"
 #include "vigra/copyimage.hxx"

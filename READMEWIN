@@ -1,0 +1,33 @@
+Instructions for building on Win32
+==================================
+
+Joe Beda -- http://www.eightypercent.net
+Last updated Nov. 11, 2003
+
+Requrements:
+* Microsoft Visual C++ 2003
+    - you can probably get away with the express version of 2k5
+    - The tools can be downloaded for free from:
+        http://msdn.microsoft.com/visualc/vctoolkit2003/
+        http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
+        However, you don't get a build system.  If you are interested
+        you can convert our build system to some other freeware build.
+* Boost - http://www.boost.org/
+    - Instructions for building here: http://www.boost.org/
+    - Use the vc7.1 target.
+* libtiff - http://www.remotesensing.org/libtiff/
+    - I've gotten it working using v3.7.0
+    - Instructions for building are here: 
+        http://www.remotesensing.org:16080/libtiff/build.html#PC
+* Let MSVC know about these libraries
+    - Go to Tools|Options|Projects|VC++ Directories
+    - Under "Include files" put in the directories for the boost and libtiff
+      include files.  For me this is "D:\Projects\Tools\include\boost-1_31"
+      and "D:\Projects\Tools\include\libtiff"
+    - Under "Library files" put in the directories for the boost and libtiff
+      library files.  For me this is "d:\projects\tools\lib"
+
+To Build:
+Start VS and load enblend.sln
+Hit Ctrl+Shift+B to build.
+Find the binary in enblend/src/Debug|Release

@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: FunctorAccessor.h,v 1.1 2004-07-12 23:29:31 mihal Exp $
+ *  $Id: FunctorAccessor.h,v 1.2 2004-11-13 23:54:16 jbeda Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -527,12 +527,18 @@ protected:
     }
 
     /** if scalar & vector image */
+    // TODO (jbeda): We need to figure out what is going on here.  How did this
+    // ever compile as it has the exact same footprint as the above method.
+    // My guess is that gcc doesn't give errors for template functions that
+    // are never compiled.  MSVC 7.1 does.
+    /*
     template <class V, class ITERATOR>
     void setComponentScalarIsScalar(V const & value, ITERATOR const & i, int idx,
 				    vigra::VigraTrueType) const
     {
 	vigra_fail("vector -> scalar, vector accessor not implemented");
     }
+    */
 
     /** if vector & scalar image */
     template <class V, class ITERATOR>
@@ -551,12 +557,18 @@ protected:
     }
 
     /** if vector & vector image */
+    // TODO (jbeda): We need to figure out what is going on here.  How did this
+    // ever compile as it has the exact same footprint as the above method.
+    // My guess is that gcc doesn't give errors for template functions that
+    // are never compiled.  MSVC 7.1 does.
+    /*
     template <class V, class ITERATOR>
     void setComponentVectorIsScalar(V const & value, ITERATOR const & i, int idx,
 				    vigra::VigraTrueType) const
     {
 	vigra_fail("vector -> vector, vector accessor not implemented");
     }
+    */
 
     Iter1 i1_;
     Acc1  a1_;

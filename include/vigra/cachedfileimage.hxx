@@ -27,7 +27,11 @@
 #include <iostream>
 #include <list>
 #include <stdio.h>
+#include <io.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #ifdef __GW32C__
 #define fseeko fseeko64
@@ -842,7 +846,11 @@ private:
         blockInFile_ = NULL;
         width_ = 0;
         height_ = 0;
+#ifdef _WIN32
+        hTempFile_ = INVALID_HANDLE_VALUE;
+#else
         tmpFile_ = NULL;
+#endif
         tmpFilename_ = NULL;
     }
 
@@ -876,7 +884,12 @@ private:
 
     int width_, height_;
 
+#ifdef _WIN32
+    mutable HANDLE hTempFile_;
+#else
     mutable FILE *tmpFile_;
+#endif
+
     mutable char *tmpFilename_;
 };
 
@@ -914,8 +927,13 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
     delete[] blockInFile_;
 
     // Close and delete the tmp file if it exists.
+#ifdef _WIN32
+    if (hTempFile_ != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTempFile_);
+#else
     if (tmpFile_ != NULL) {
         fclose(tmpFile_);
+#endif
         unlink(tmpFilename_);
     }
     delete[] tmpFilename_;
@@ -1063,16 +1081,38 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     if (blockInFile_[blockNumber]) {
         // Find the right spot in the file.
+#ifdef _WIN32
+        LONGLONG offset = (LONGLONG)width_
+                          * (LONGLONG)firstLineInBlock
+                          * (LONGLONG)sizeof(PIXELTYPE);
+        LARGE_INTEGER liOffset;
+        liOffset.QuadPart = offset;
+        if (0 == SetFilePointerEx(hTempFile_, liOffset, NULL, FILE_BEGIN)) {
+            // TODO (jbeda): format a real message here using FormatMessage 
+            // from GetLastError
+            vigra_fail("Unable to open temporary file");
+        }
+#else
         off_t offset = (off_t)width_
                 * (off_t)firstLineInBlock
-                * (off_t)sizeof(PIXELTYPE);
+                * (off_t)sizeof(PIXELTYPE); 
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
+#endif
         // Fill the block with data from the file.
         // FIXME: should use compression
+#ifdef _WIN32
+        DWORD bytesRead;
+        if (0 == ReadFile(hTempFile_, 
+                          blockStart, 
+                          sizeof(PIXELTYPE) * pixelsToRead, 
+                          &bytesRead, 
+                          NULL)) {
+#else
         int itemsRead = fread(blockStart, sizeof(PIXELTYPE), pixelsToRead, tmpFile_);
         if (itemsRead < pixelsToRead) {
+#endif
             vigra_fail("enblend: error reading from image swap file.\n");
         }
     }
@@ -1174,22 +1214,49 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         blockInFile_[blockNumber] = true;
 
         // Lazy init the temp file.
-        if (tmpFile_ == NULL) initTmpfile();
+#ifdef _WIN32
+        if (hTempFile_ == INVALID_HANDLE_VALUE)
+#else
+        if (tmpFile_ == NULL) 
+#endif
+            initTmpfile();
 
         // Find the right spot in the file.
+#ifdef _WIN32
+        LONGLONG offset = (LONGLONG)width_
+                          * (LONGLONG)firstLineInBlock
+                          * (LONGLONG)sizeof(PIXELTYPE);
+        LARGE_INTEGER liOffset;
+        liOffset.QuadPart = offset;
+        if (0 == SetFilePointerEx(hTempFile_, liOffset, NULL, FILE_BEGIN)) {
+            // TODO (jbeda): format a real message here using FormatMessage 
+            // from GetLastError
+            vigra_fail("Unable to open temporary file");
+        }
+#else
         off_t offset = (off_t)width_
                 * (off_t)firstLineInBlock
                 * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
+#endif
 
         int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_)
                 - firstLineInBlock;
         int pixelsToWrite = numLinesInBlock * width_;
         //FIXME this should use compression.
+#ifdef _WIN32
+        DWORD bytesWritten;
+        if (0 == WriteFile(hTempFile_, 
+                           blockStart, 
+                           sizeof(PIXELTYPE) * pixelsToWrite, 
+                           &bytesWritten, 
+                           NULL)) {
+#else
         int itemsWritten = fwrite(blockStart, sizeof(PIXELTYPE), pixelsToWrite, tmpFile_);
         if (itemsWritten < pixelsToWrite) {
+#endif
             vigra_fail("enblend: error writing to image swap file.\n");
         }
     }
@@ -1226,21 +1293,39 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
-    #ifdef HAVE_MKSTEMP
+#if defined(_WIN32) && defined(HAVE_MKSTEMP)
+#error "Win32 has mkstemp?"
+#endif
+
+#if defined(HAVE_MKSTEMP)
     int tmpFD = mkstemp(filenameTemplate);
     if (tmpFD < 0) {
         vigra_fail("enblend: unable to create image swap file.\n");
     }
     tmpFile_ = fdopen(tmpFD, "wb+");
-    #else
+#else // HAVE_MKSTEMP
     char *tmpReturn = mktemp(filenameTemplate);
     if (tmpReturn == NULL) {
         vigra_fail("enblend: unable to create image swap file.\n");
     }
+#ifdef _WIN32
+    hTempFile_ = CreateFileA(filenameTemplate,
+                             GENERIC_READ|GENERIC_WRITE,
+                             FILE_SHARE_READ, // share mode
+                             NULL, // security attributes
+                             CREATE_ALWAYS, // create mode
+                             FILE_FLAG_DELETE_ON_CLOSE, // file attributes
+                             NULL);
+#else // _WIN32
     tmpFile_ = fopen(filenameTemplate, "wb+");
-    #endif
+#endif // !_WIN32
+#endif // !HAVE_MKSTEMP
 
+#ifdef _WIN32
+    if (hTempFile_ == INVALID_HANDLE_VALUE) {
+#else
     if (tmpFile_ == NULL) {
+#endif
         vigra_fail(strerror(errno));
     }
 
@@ -1347,7 +1432,11 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
         std::swap(blockInFile_, rhs.blockInFile_);
         std::swap(width_, rhs.width_);
         std::swap(height_, rhs.height_);
+#ifdef _WIN32
+        std::swap(hTempFile_, rhs.hTempFile_);
+#else
         std::swap(tmpFile_, rhs.tmpFile_);
+#endif
         std::swap(tmpFilename_, rhs.tmpFilename_);
     }
 };
