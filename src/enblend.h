@@ -140,10 +140,29 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Union bounding box of whiteImage and blackImage.
         EnblendROI uBB;
         whiteBB.unite(blackBB, uBB);
+	cout << "union bounding box: ("
+             << uBB.getUL().x
+             << ", "
+             << uBB.getUL().y
+             << ") -> ("
+             << uBB.getLR().x
+             << ", "
+             << uBB.getLR().y
+             << ")" << endl;
 
         // Intersection bounding box of whiteImage and blackImage.
         EnblendROI iBB;
         whiteBB.intersect(blackBB, iBB);
+
+	cout << "intersect bounding box: ("
+             << iBB.getUL().x
+             << ", "
+             << iBB.getUL().y
+             << ") -> ("
+             << iBB.getLR().x
+             << ", "
+             << iBB.getLR().y
+             << ")" << endl;
 
         // Determine what kind of overlap we have.
         Overlap overlap = inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
@@ -208,7 +227,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the blend mask.
         EnblendROI mBB;
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
-                uBB, (uBB.size().x == inputUnion.size().x), mBB);
+                uBB, (Wraparound && (uBB.size().x == inputUnion.size().x)), mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -228,9 +247,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
         #endif
 
-        ImageExportInfo maskInfo("enblend_mask.tif");
-        maskInfo.setPosition(uBB.getUL());
-        exportImage(srcImageRange(*mask), maskInfo);
+        //ImageExportInfo maskInfo("enblend_mask.tif");
+        //maskInfo.setPosition(uBB.getUL());
+        //exportImage(srcImageRange(*mask), maskInfo);
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
