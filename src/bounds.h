@@ -34,6 +34,54 @@ using std::min;
 
 namespace enblend {
 
+template <typename SrcImageIterator, typename SrcAccessor>
+Overlap inspectOverlap(
+        SrcImageIterator src1_upperleft,
+        SrcImageIterator src1_lowerright,
+        SrcAccessor s1a,
+        SrcImageIterator src2_upperleft,
+        SrcAccessor s2a) {
+
+    SrcImageIterator s1y = src1_upperleft;
+    SrcImageIterator s2y = src2_upperleft;
+    SrcImageIterator send = src1_lowerright;
+
+    bool foundOverlap = false;
+    bool foundDistinctS2 = false;
+
+    for (; s1y.y != send.y; ++s1y.y, ++s2y.y) {
+
+        SrcImageIterator s1x = s1y;
+        SrcImageIterator s2x = s2y;
+
+        for (; s1x.x != send.x; ++s1x.x, ++s2x.x) {
+            if (s1a(s1x) && s2a(s2x)) {
+                foundOverlap = true;
+            } else if (s2a(s2x)) {
+                foundDistinctS2 = true;
+            }
+            if (foundOverlap && foundDistinctS2) {
+                return PartialOverlap;
+            }
+        }
+    }
+
+    if (foundOverlap) {
+        return CompleteOverlap;
+    } else {
+        return NoOverlap;
+    }
+
+};
+
+template <typename SrcImageIterator, typename SrcAccessor>
+Overlap inspectOverlap(
+        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+        pair<SrcImageIterator, SrcAccessor> src2) {
+    return inspectOverlap(src1.first, src1.second, src1.third,
+                          src2.first, src2.second);
+};
+
 template <typename PyramidPixelType>
 unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,
@@ -82,7 +130,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
             uBB.intersect(roiBB, roiBB);
         }
 
-        if (levels == (unsigned int)MaximumLevels) {
+        if (levels == MaximumLevels) {
             // Hit the user-specified level limit.
             break;
         }
@@ -118,7 +166,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
              << ")" << endl;
     }
 
-    if (levels == 1 && levels != (unsigned int)MaximumLevels) {
+    if (levels == 1 && levels != MaximumLevels) {
         cerr << "enblend: intersection of images is too small to make "
              << "more than one pyramid level."
              << endl;
