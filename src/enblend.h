@@ -51,6 +51,7 @@ void copyExcludedPixels(FILE *dst, FILE *src);
 void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile);
 
 // io.cc
+void closeTmpfile(FILE *f);
 void readFromTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
 void writeToTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
 FILE *dumpToTmpfile(void *ptr, size_t size, size_t nmemb);

@@ -292,8 +292,8 @@ int main(int argc, char** argv) {
             cerr << "enblend: some images are redundant and will not be "
                  << "blended. Try using the -s flag to blend the images "
                  << "in a custom order you specify." << endl;
-            fclose(blackImageFile);
-            fclose(maskFile);
+            closeTmpfile(blackImageFile);
+            closeTmpfile(maskFile);
             continue;
         }
         if (MaximumLevels > 0) {
@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
         FILE *blackLPFile = laplacianPyramidFile(blackImageFile, levels);
 
         // Done with blackImage temp file. It will be deleted.
-        fclose(blackImageFile);
+        closeTmpfile(blackImageFile);
 
         // Build Gaussian pyramid from mask.
         FILE *maskGPFile = gaussianPyramidFile(maskFile, levels);
@@ -335,8 +335,8 @@ int main(int argc, char** argv) {
         blend(*whiteLP, blackLPFile, maskGPFile);
 
         // Done with blackLP and maskGP temp files. They will be deleted.
-        fclose(blackLPFile);
-        fclose(maskGPFile);
+        closeTmpfile(blackLPFile);
+        closeTmpfile(maskGPFile);
 
         // Collapse result back into whiteImage.
         collapsePyramid(*whiteLP);
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
         copyROIToOutputWithMask((*whiteLP)[0], whiteImageFile, maskFile);
 
         // Done with maskFile temp file. It will be deleted.
-        fclose(maskFile);
+        closeTmpfile(maskFile);
 
         // Done with whiteLP.
         for (uint32 i = 0; i < levels; i++) {
@@ -377,7 +377,7 @@ int main(int argc, char** argv) {
     free(line);
 
     // close whiteImageFile.
-    fclose(whiteImageFile);
+    closeTmpfile(whiteImageFile);
 
     // close outputTIFF.
     TIFFClose(outputTIFF);

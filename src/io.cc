@@ -23,6 +23,9 @@
 
 #include <iostream>
 #include <list>
+#ifdef __GW32C__
+#include <map>
+#endif
 #include <vector>
 
 #include <getopt.h>
@@ -57,6 +60,29 @@ extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
 
+#ifdef __GW32C__
+map<FILE*, char*> FileToFilenameMap;
+#endif
+
+/** Close a temporary file, delete if necessary on GnuWin32 systems. */
+void closeTmpfile(FILE *f) {
+
+    fclose(f);
+
+#ifdef __GW32C__
+    // Delete the file on GnuWin32.
+    if (unlink(FileToFilenameMap[f]) < 0) {
+        cerr << "enblend: error deleting temporary file." << endl;
+        perror("reason");
+        exit(1);
+    }
+    free(FileToFilenameMap[f]);
+    FileToFilenameMap.erase(f);
+#endif
+
+    return;
+}
+
 /** Create a temporary file. */
 FILE *createTmpfile() {
 
@@ -86,12 +112,25 @@ FILE *createTmpfile() {
         exit(1);
     }
 
+#ifdef __GW32C__
+    int tmpFilenameLen = strlen(tmpFilename) + 1;
+    char *tmpFilenameCopy = (char*)malloc(tmpFilenameLen * sizeof(char));
+    if (tmpFilenameCopy == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createTmpfile for tmpFilenameCopy)"
+             << endl;
+        exit(1);
+    }
+    strncpy(tmpFilenameCopy, tmpFilename, tmpFilenameLen);
+    FileToFilenameMap[f] = tmpFilenameCopy;
+#else
     // Arrange to have the file deleted on close.
     if (unlink(tmpFilename) < 0) {
         cerr << "enblend: error deleting temporary file." << endl;
         perror("reason");
         exit(1);
     }
+#endif
 
     return f;
 }
