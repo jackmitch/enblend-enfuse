@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tiffio.h>
+#include <unistd.h>
 
 #include "enblend.h"
 
@@ -55,6 +56,33 @@ extern uint32 ROIFirstX;
 extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
+
+/** Create a temporary file. */
+FILE *createTmpfile() {
+
+    char tmpFilename[] = ".enblend_tmpXXXXXX";
+    int tmpFD = mkstemp(tmpFilename);
+    if (tmpFD < 0) {
+        cerr << "enblend: error creating temporary file." << endl;
+        exit(1);
+    }
+
+    FILE *f = fdopen(tmpFD, "wb+");
+    if (f == NULL) {
+        cerr << "enblend: error opening temporary file." << endl;
+        perror("reason");
+        exit(1);
+    }
+
+    // Arrange to have the file deleted on close.
+    if (unlink(tmpFilename) < 0) {
+        cerr << "enblend: error deleting temporary file." << endl;
+        perror("reason");
+        exit(1);
+    }
+
+    return f;
+}
 
 /** Read data from a temporary file.
  *  Puts size * nmemb bytes into ptr from the current file position.
@@ -88,15 +116,12 @@ void writeToTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream) {
  *  Frees ptr.
  */
 FILE *dumpToTmpfile(void *ptr, size_t size, size_t nmemb) {
-    FILE *f = tmpfile();
-    if (f == NULL) {
-        cerr << "enblend: error opening temporary file." << endl;
-        perror("reason");
-        exit(1);
-    }
+    FILE *f = createTmpfile();
 
     writeToTmpfile(ptr, size, nmemb, f);
     rewind(f);
+
+    free(ptr);
 
     return f;
 }
@@ -110,7 +135,7 @@ FILE *dumpPyramidToTmpfile(vector<LPPixel*> &v) {
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
     // Open output temporary file.
-    FILE *pyramidFile = tmpfile();
+    FILE *pyramidFile = createTmpfile();
     if (pyramidFile == NULL) {
         cerr << "enblend: error opening temporary file." << endl;
         perror("reason");
