@@ -94,8 +94,8 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
             for (uint32 x = 0; x < OutputWidth; x++) {
                 uint32 imagePixel = image[y * OutputWidth + x];
                 uint32 tiffPixel = scanline[x];
-                if (TIFFGetA(imagePixel) == 255
-                        && TIFFGetA(tiffPixel) == 255) {
+                if (GetA(imagePixel) == 255
+                        && GetA(tiffPixel) == 255) {
                     overlapFound = true;
                     break;
                 }
@@ -114,7 +114,7 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
                 TIFFReadScanline(tiff, scanline, y, 8);
 
                 for (uint32 x = 0; x < OutputWidth; x++) {
-                    if (TIFFGetA(scanline[x]) != 0) {
+                    if (GetA(scanline[x]) != 0) {
                         image[y * OutputWidth + x] = scanline[x];
                     }
                 }

@@ -82,8 +82,8 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
         uint32 *blackPixel = blackLine;
         for (uint32 x = 0; x < ubbWidth; x++) {
 
-            bool isInWhiteImage = (TIFFGetA(*whitePixel) == 255);
-            bool isInBlackImage = (TIFFGetA(*blackPixel) == 255);
+            bool isInWhiteImage = (GetA(*whitePixel) == 255);
+            bool isInBlackImage = (GetA(*blackPixel) == 255);
 
             if (!isInWhiteImage && !isInBlackImage) {
                 // Pixel is not in the union of the two images.

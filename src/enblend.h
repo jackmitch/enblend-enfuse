@@ -72,4 +72,19 @@ std::vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels);
 FILE *laplacianPyramidFile(FILE *imageFile, uint32 levels);
 void collapsePyramid(std::vector<LPPixel*> &p);
 
+// Macros for accessing 8-bit color fields in 32-bit words on different machines
+#ifdef WORDS_BIGENDIAN
+#define GetR(rgba)      (((rgba) >> 24) & 0xff)
+#define GetG(rgba)      (((rgba) >> 16) & 0xff)
+#define GetB(rgba)      (((rgba) >> 8) & 0xff)
+#define GetA(rgba)      ((rgba) & 0xff)
+#define PACK(a, b, g, r)    (((a) & 0xff) | (((b) & 0xff) << 8) | (((g) & 0xff) << 16) | (((r) & 0xff) << 24))
+#else
+#define GetA(abgr)      (((abgr) >> 24) & 0xff)
+#define GetB(abgr)      (((abgr) >> 16) & 0xff)
+#define GetG(abgr)      (((abgr) >> 8) & 0xff)
+#define GetR(abgr)      ((abgr) & 0xff)
+#define PACK(a, b, g, r)    (((r) & 0xff) | (((g) & 0xff) << 8) | (((b) & 0xff) << 16) | (((a) & 0xff) << 24))
+#endif
+
 #endif /* __ENBLEND_H__ */

@@ -387,11 +387,12 @@ void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile) {
                 roi->g = min(255, max(0, (int)roi->g));
                 roi->b = min(255, max(0, (int)roi->b));
 
-                *outputPixel =
-                        (roi->r & 0xFF)
-                        | ((roi->g & 0xFF) << 8)
-                        | ((roi->b & 0xFF) << 16)
-                        | (0xFF << 24);
+                //*outputPixel =
+                //        (roi->r & 0xFF)
+                //        | ((roi->g & 0xFF) << 8)
+                //        | ((roi->b & 0xFF) << 16)
+                //        | (0xFF << 24);
+                *outputPixel = PACK(0xFF, roi->b, roi->g, roi->r);
 
             }
             outputPixel++;

@@ -242,11 +242,12 @@ void saveMaskAsTIFF(MaskPixel *mask, char *filename) {
         for (uint32 x = 0; x < OutputWidth; x++) {
             if (y >= UBBFirstY && y <= UBBLastY
                      && x >= UBBFirstX && x <= UBBLastX) {
-                *imageP = 
-                        (maskP->r & 0xFF)
-                        | ((maskP->g & 0xFF) << 8)
-                        | ((maskP->b & 0xFF) << 16)
-                        | ((maskP->a & 0xFF) << 24);
+                //*imageP = 
+                //        (maskP->r & 0xFF)
+                //        | ((maskP->g & 0xFF) << 8)
+                //        | ((maskP->b & 0xFF) << 16)
+                //        | ((maskP->a & 0xFF) << 24);
+                *imageP = PACK(maskP->a, maskP->b, maskP->g, maskP->r);
                 maskP++;
             }
             else *imageP = 0;
@@ -354,11 +355,13 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
                 pixel->r = min(255, max(0, (int)abs(pixel->r)));
                 pixel->g = min(255, max(0, (int)abs(pixel->g)));
                 pixel->b = min(255, max(0, (int)abs(pixel->b)));
+                //image[y * OutputWidth + x] =
+                //        (pixel->r & 0xFF)
+                //        | ((pixel->g & 0xFF) << 8)
+                //        | ((pixel->b & 0xFF) << 16)
+                //        | (0xFF << 24);
                 image[y * OutputWidth + x] =
-                        (pixel->r & 0xFF)
-                        | ((pixel->g & 0xFF) << 8)
-                        | ((pixel->b & 0xFF) << 16)
-                        | (0xFF << 24);
+                            PACK(0xFF, pixel->b, pixel->g, pixel->r);
                 pixel++;
             }
         }

@@ -396,10 +396,10 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
 
         uint32 *pixel = line;
         for (uint32 x = 0; x < roiWidth; x++) {
-            gIndex->r = TIFFGetR(*pixel);
-            gIndex->g = TIFFGetG(*pixel);
-            gIndex->b = TIFFGetB(*pixel);
-            gIndex->a = TIFFGetA(*pixel);
+            gIndex->r = GetR(*pixel);
+            gIndex->g = GetG(*pixel);
+            gIndex->b = GetB(*pixel);
+            gIndex->a = GetA(*pixel);
             gIndex++;
             pixel++;
         }
