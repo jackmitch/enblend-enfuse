@@ -19,6 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Andrew Mihal 10 October 2004
+ *  Added a bugfix to MultiImageAccessor2::operator() from vigra 1.3.
+ */
  
 #ifndef VIGRA_ACCESSOR_HXX
 #define VIGRA_ACCESSOR_HXX
@@ -759,7 +762,10 @@ class MultiImageAccessor2
     template <class DIFFERENCE>
     value_type operator()(DIFFERENCE const & d) const
     { 
-        return std::make_pair(a1_(i1_, d), a2_(i2_, i.x, i.y)); 
+        // MIHAL Sun Oct 10 20:43:57 PDT 2004
+        // correction from vigra 1.3
+        //return std::make_pair(a1_(i1_, d), a2_(i2_, i.x, i.y)); 
+        return std::make_pair(a1_(i1_, d), a2_(i2_, d)); 
     }
     
         /** read the data item at an offset
