@@ -29,6 +29,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef __GW32C__
+#define fseeko fseeko64
+#undef malloc
+#endif
+
 #include <boost/static_assert.hpp>
 #include <boost/pool/pool.hpp>
 

@@ -21,6 +21,11 @@
 #include <config.h>
 #endif
 
+#ifdef __GW32C__
+#undef malloc
+#define BOOST_NO_STDC_NAMESPACE 1
+#endif
+
 #include <iostream>
 #include <list>
 #include <vector>
@@ -45,7 +50,12 @@ bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseLabColor = false;
+
+#ifdef __GW32C__
+bool UseLZW = true;
+#else
 bool UseLZW = false;
+#endif
 
 #include "common.h"
 #include "enblend.h"
@@ -108,7 +118,11 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
+    #ifdef __GW32C__
+    cout << " -z                Use LZW compression (default)" << endl;
+    #else
     cout << " -z                Use LZW compression" << endl;
+    #endif
 
     cout << endl << "Extended options:" << endl;
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
@@ -130,8 +144,12 @@ void printUsageAndExit() {
  */
 void sigint_handler(int sig) {
     CachedFileImageDirector::v().~CachedFileImageDirector();
+    #ifndef __GW32C__
     signal(SIGINT, SIG_DFL);
     kill(getpid(), SIGINT);
+    #else
+    exit(0);
+    #endif
 }
 
 int main(int argc, char** argv) {

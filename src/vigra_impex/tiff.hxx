@@ -24,12 +24,15 @@
  *  - Added support for a position field that indicates the start of this
  *    image relative to some global origin.
  *  - Added support for x and y resolution fields.
+ * Modifications by Andrew Mihal, as of 16 October 2004
+ *  - Added include for vigra/diff2d.hxx
  */
 
 #ifndef VIGRA_IMPEX2_TIFF_HXX
 #define VIGRA_IMPEX2_TIFF_HXX
 
 #include <vector>
+#include "vigra/diff2d.hxx"
 #include "vigra/codec.hxx"
 
 namespace vigra {
