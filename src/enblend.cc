@@ -22,67 +22,248 @@
 #endif
 
 #include <iostream>
+#include <list>
+
+#include <getopt.h>
+#include <string.h>
 #include <tiffio.h>
+
+#include "enblend.h"
 
 using namespace std;
 
+int Verbose = 0;
+uint32 OutputWidth = 0;
+uint32 OutputHeight = 0;
+
+/** Print the usage information and quit. */
+void printUsageAndExit() {
+    cout << "==== enblend, version " << VERSION << " ====" << endl;
+    cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
+    cout << endl;
+    cout << "Options:" << endl;
+    cout << " -o filename       Write output to file" << endl;
+    cout << " -v                Verbose" << endl;
+    cout << " -h                Print this help message" << endl;
+    exit(1);
+}
+
 int main(int argc, char** argv) {
-    cout << "Left image = " << argv[1] << endl;
-    cout << "Right image = " << argv[2] << endl;
 
-    TIFF* leftTif = TIFFOpen(argv[1], "r");
-    TIFF* rightTif = TIFFOpen(argv[2], "r");
-    TIFF* outTif = TIFFOpen("out.tif", "w");
+    // The name of the output file.
+    char *outputFileName = NULL;
 
-    uint32 w, h;
-    uint16 planarConfig;
-    uint16 photometric;
+    // List of input files.
+    list<char*> inputFileNameList;
+    list<char*>::iterator listIterator;
 
-    TIFFGetField(leftTif, TIFFTAG_PLANARCONFIG, &planarConfig);
-    TIFFGetField(leftTif, TIFFTAG_IMAGEWIDTH, &w);
-    TIFFGetField(leftTif, TIFFTAG_IMAGELENGTH, &h);
-    TIFFGetField(leftTif, TIFFTAG_PHOTOMETRIC, &photometric);
-
-    TIFFSetField(outTif, TIFFTAG_IMAGEWIDTH, w);
-    TIFFSetField(outTif, TIFFTAG_IMAGELENGTH, h);
-    TIFFSetField(outTif, TIFFTAG_PHOTOMETRIC, photometric);
-    TIFFSetField(outTif, TIFFTAG_PLANARCONFIG, planarConfig);
-    TIFFSetField(outTif, TIFFTAG_ORIENTATION, 1);
-    TIFFSetField(outTif, TIFFTAG_SAMPLESPERPIXEL, 4);
-    TIFFSetField(outTif, TIFFTAG_BITSPERSAMPLE, 8);
-
-    uint32* leftScanline;
-    uint32* rightScanline;
-    uint32* outScanline;
-
-    leftScanline = (uint32*)_TIFFmalloc(w * sizeof(uint32));
-    rightScanline = (uint32*)_TIFFmalloc(w * sizeof(uint32));
-    outScanline = (uint32*)_TIFFmalloc(w * sizeof(uint32));
-
-    cout << hex;
-
-    for (uint32 i = 0; i < h; i++) {
-        TIFFReadScanline(leftTif, leftScanline, i, 8);
-        TIFFReadScanline(rightTif, rightScanline, i, 8);
-        for (uint32 j = 0; j < w; j++) {
-            if ((TIFFGetA(leftScanline[j]) == 0xFF)
-                    ^ (TIFFGetA(rightScanline[j]) == 0xFF)) {
-                outScanline[j] = 0xFFFFFFFF; // white
+    // Parse command line.
+    int c;
+    extern char *optarg;
+    extern int optind;
+    while ((c = getopt(argc, argv, "o:vh")) != -1) {
+        switch (c) {
+            case 'h': {
+                printUsageAndExit();
+                break;
             }
-            else {
-                outScanline[j] = 0xFF000000; // black
+            case 'v': {
+                Verbose++;
+                break;
+            }
+            case 'o': {
+                if (outputFileName != NULL) {
+                    cerr << "enblend: more than one output file specified."
+                         << endl;
+                    printUsageAndExit();
+                    break;
+                }
+                int len = strlen(optarg) + 1;
+                outputFileName = (char*)malloc(len * sizeof(char));
+                if (outputFileName == NULL) {
+                    cerr << "enblend: malloc failed for outputFileName" << endl;
+                    exit(1);
+                }
+                strncpy(outputFileName, optarg, len);
+                break;
+            }
+            default: {
+                printUsageAndExit();
+                break;
             }
         }
-        TIFFWriteScanline(outTif, outScanline, i, 8);
     }
 
-    TIFFClose(leftTif);
-    TIFFClose(rightTif);
-    TIFFClose(outTif);
+    // Make sure mandatory output file name parameter given.
+    if (outputFileName == NULL) {
+        cerr << "enblend: no output file specified." << endl;
+        printUsageAndExit();
+    }
 
-    _TIFFfree(leftScanline);
-    _TIFFfree(rightScanline);
-    _TIFFfree(outScanline);
+    // Remaining parameters are input files.
+    if (optind < argc) {
+        while (optind < argc) {
+            inputFileNameList.push_back(argv[optind++]);
+        }
+    } else {
+        cerr << "enblend: no input files specified." << endl;
+        printUsageAndExit();
+    }
+
+    // Create output TIFF object.
+    TIFF *outputTIFF = TIFFOpen(outputFileName, "w");
+    if (outputTIFF == NULL) {
+        cerr << "enblend: error opening output TIFF file \""
+             << outputFileName
+             << "\"" << endl;
+        exit(1);
+    }
+
+    // Set basic parameters for output TIFF.
+    TIFFSetField(outputTIFF, TIFFTAG_ORIENTATION, 1);
+    TIFFSetField(outputTIFF, TIFFTAG_SAMPLESPERPIXEL, 4);
+    TIFFSetField(outputTIFF, TIFFTAG_BITSPERSAMPLE, 8);
+
+    // Give output tiff the same parameters as first input tiff.
+    // Check that all input tiffs are the same size.
+    listIterator = inputFileNameList.begin();
+    while (listIterator != inputFileNameList.end()) {
+        TIFF *inputTIFF = TIFFOpen(*listIterator, "r");
+
+        if (inputTIFF == NULL) {
+            // Error opening tiff.
+            cerr << "enblend: error opening input TIFF file \""
+                 << *listIterator
+                 << "\"" << endl;
+            exit(1);
+        }
+
+        if (listIterator == inputFileNameList.begin()) {
+            // The first input tiff
+            uint16 planarConfig;
+            uint16 photometric;
+
+            TIFFGetField(inputTIFF, TIFFTAG_PLANARCONFIG, &planarConfig);
+            TIFFGetField(inputTIFF, TIFFTAG_PHOTOMETRIC, &photometric);
+            TIFFGetField(inputTIFF, TIFFTAG_IMAGEWIDTH, &OutputWidth);
+            TIFFGetField(inputTIFF, TIFFTAG_IMAGELENGTH, &OutputHeight);
+
+            TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
+            TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
+            TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, photometric);
+            TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, planarConfig);
+
+            if (Verbose > 0) {
+                cout << "output size = "
+                     << OutputWidth
+                     << "x"
+                     << OutputHeight << endl;
+            }
+        }
+        else {
+            uint32 otherWidth;
+            uint32 otherHeight;
+            TIFFGetField(inputTIFF, TIFFTAG_IMAGEWIDTH, &otherWidth);
+            TIFFGetField(inputTIFF, TIFFTAG_IMAGELENGTH, &otherHeight);
+
+            if (otherWidth != OutputWidth || otherHeight != OutputHeight) {
+                cerr << "enblend: input TIFF \""
+                     << *listIterator
+                     << "\" size "
+                     << otherWidth << "x" << otherHeight
+                     << " is not the same size as the first TIFF \""
+                     << inputFileNameList.front()
+                     << "\" size "
+                     << OutputWidth << "x" << OutputHeight
+                     << endl;
+                exit(1);
+            }
+        }
+            
+        TIFFClose(inputTIFF);
+        listIterator++;
+    }
+
+    // Allocate memory for the output image.
+    uint32 *outputBuf = (uint32*)_TIFFmalloc(OutputWidth * OutputHeight * sizeof(uint32));
+    if (outputBuf == NULL) {
+        cerr << "enblend: malloc failed for outputBuf" << endl;
+        exit(1);
+    }
+
+    // Remove the first TIFF file name.
+    char *fileZeroName = inputFileNameList.front();
+    inputFileNameList.pop_front();
+
+    if (Verbose > 0) {
+        cout << "Starting with first image \""
+             << fileZeroName
+             << "\"" << endl;
+    }
+
+    TIFF *inputTIFF = TIFFOpen(fileZeroName, "r");
+    if (inputTIFF == NULL) {
+        // Error opening tiff.
+        cerr << "enblend: error opening input TIFF file \""
+             << fileZeroName
+             << "\"" << endl;
+        exit(1);
+    }
+
+    // The first TIFF gets copied directly into the output.
+    for (uint32 i = 0; i < OutputHeight; i++) {
+        TIFFReadScanline(inputTIFF,
+                &(outputBuf[i * OutputWidth]),
+                i,
+                8);
+    }
+
+    // Done with the first TIFF.
+    TIFFClose(inputTIFF);
+
+    //TODO: Sort the images in the list.
+
+    // Main blending loop
+    while (!inputFileNameList.empty()) {
+        char *inputFileName = inputFileNameList.front();
+        inputFileNameList.pop_front();
+
+        if (Verbose > 0) {
+            cout << "Next image: \"" << inputFileName << "\"" << endl;
+        }
+
+        inputTIFF = TIFFOpen(inputFileName, "r");
+        if (inputTIFF == NULL) {
+            // Error opening tiff.
+            cerr << "enblend: error opening input TIFF file \""
+                 << inputFileName
+                 << "\"" << endl;
+            exit(1);
+        }
+
+        // Create blend mask.
+        uint32 *mask = createMask(outputBuf, inputTIFF);
+
+        // blend into outputBuf.
+        outputBuf = mask;
+
+        TIFFClose(inputTIFF);
+
+        //_TIFFfree(mask);
+
+        //TODO: sort list again.
+    }
+
+    // dump output scanlines.
+    for (uint32 i = 0; i < OutputHeight; i++) {
+        TIFFWriteScanline(outputTIFF,
+                &(outputBuf[i * OutputWidth]),
+                i,
+                8);
+    }
+
+    // close outputTIFF.
+    TIFFClose(outputTIFF);
 
     return 0;
 }

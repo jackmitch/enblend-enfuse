@@ -1,6 +1,9 @@
+2004-02-27 00:37  mihal
+
+	* libtiff experimentation - calculate xnor mask of two input
+	  images.
+
 2004-02-23 22:51  mihal
 
-	* .cvsignore, AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.in,
-	  NEWS, README, configure.in, enblend.cc, install-sh, missing,
-	  mkinstalldirs: Initial checkin, autoconf skeleton.
+	* Initial checkin, autoconf skeleton.
 
