@@ -68,6 +68,7 @@ void printUsageAndExit() {
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -l number         Maximum number of levels to use" << endl;
     cout << " -s                Blend images one at a time" << endl;
+    cout << " -w                Blend across -180/+180 boundary" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
     exit(1);

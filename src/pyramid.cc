@@ -135,11 +135,9 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
 
                 inX = inX >> 1;
 
-                if (!wraparound) {
-                    // Boundary condition - replicate first and last column.
-                    if (inX >= (int32)inW) inX = (int32)inW - 1;
-                    if (inX < 0) inX = 0;
-                }
+                // Boundary condition - replicate first and last column.
+                if (inX >= (int32)inW) inX = (int32)inW - 1;
+                if (inX < 0) inX = 0;
 
                 //if (outW == (ROILastX - ROIFirstX + 1) && (outX == 0 || outX == outW - 1 || outX == outW - 2)) {
                 //    cout << "outX=" << outX << " inX=" << inX
@@ -147,10 +145,13 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
                 //}
 
                 for (int32 n = 0; n < 5; n++) {
-                    // Skip non-integral values of inY index.
-                    if (((int32)outY - (n-2)) & 1 == 1) continue;
 
-                    int32 inY = ((int32)outY - (n-2)) >> 1;
+                    int32 inY = (int32)outY - (n-2);
+
+                    // Skip non-integral values of inY index.
+                    if (inY & 1 == 1) continue;
+
+                    inY = inY >> 1;
 
                     // Boundary condition: replicate top and bottom rows.
                     if (inY >= (int32)inH) inY = inH - 1;
@@ -227,7 +228,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
                 for (int32 n = 0; n < 5; n++) {
                     int32 inY = 2 * (int32)outY + n - 2;
 
-                    // Boundary condition: replicate first and last column.
+                    // Boundary condition: replicate top and bottom rows.
                     if (inY >= (int32)h) inY = h - 1;
                     if (inY < 0) inY = 0;
 
