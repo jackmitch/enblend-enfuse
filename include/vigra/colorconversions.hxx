@@ -19,7 +19,11 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
- 
+/* Modifications by Andrew Mihal, 9 October 2004:
+ * These modifications are placed under the VIGRA license.
+ *  - XYZ2LabFunctor: Constants in arguments to pow cast to component_type to
+ *    prevent ambiguity with float pow() vs. double pow().
+ */
  
 #ifndef VIGRA_COLORCONVERSIONS_HXX
 #define VIGRA_COLORCONVERSIONS_HXX
@@ -884,9 +888,12 @@ class XYZ2LabFunctor
         */
     result_type operator()(TinyVector<T, 3> const & xyz) const
     {
-        component_type xgamma = VIGRA_CSTD::pow(xyz[0] / 0.950456, gamma_);
+        // MIHAL 9 October 2004
+        // Constants in arguments to pow cast to component_type to
+        // prevent ambiguity with float pow() vs. double pow().
+        component_type xgamma = VIGRA_CSTD::pow(xyz[0] / component_type(0.950456), gamma_);
         component_type ygamma = VIGRA_CSTD::pow(xyz[1], gamma_);
-        component_type zgamma = VIGRA_CSTD::pow(xyz[2] / 1.088754, gamma_);
+        component_type zgamma = VIGRA_CSTD::pow(xyz[2] / component_type(1.088754), gamma_);
         component_type L = xyz[1] < 0.008856 ?
                               903.3 * xyz[1] :
                               116.0 * ygamma - 16.0;
