@@ -1,5 +1,8 @@
-AC_INIT(enblend.cc)
+AC_INIT
+AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(enblend,0.1)
 AC_PROG_CXX
 AC_PROG_INSTALL
-AC_OUTPUT(Makefile)
+AC_STDC_HEADERS
+AC_HAVE_HEADERS(tiffio.h)
+AC_OUTPUT(Makefile src/Makefile)

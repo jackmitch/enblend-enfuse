@@ -1,0 +1,6 @@
+2004-02-23 22:51  mihal
+
+	* .cvsignore, AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.in,
+	  NEWS, README, configure.in, enblend.cc, install-sh, missing,
+	  mkinstalldirs: Initial checkin, autoconf skeleton.
+
