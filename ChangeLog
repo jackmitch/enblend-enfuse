@@ -1,3 +1,53 @@
+2004-03-27 13:01  mihal
+
+	* src/: enblend.cc, enblend.h, io.cc: Workaround for the fact that
+	  you can't unlink open files on GnuWin32.
+
+2004-03-27 00:28  mihal
+
+	* configure.in, src/io.cc: Configure test for systems that don't
+	  have mkstemp.
+
+2004-03-26 23:11  mihal
+
+	* AUTHORS, ChangeLog, NEWS, README, TODO, configure.in,
+	  doc/enblend.1: Changed version number to 1.0. Updated
+	  documentation.
+
+2004-03-26 23:08  mihal
+
+	* src/: assemble.cc, enblend.cc: Changed the behavior of the -s
+	  flag to sequentially blend images in the order given on the
+	  command line, regardless of overlap.
+
+2004-03-26 23:07  mihal
+
+	* src/bounds.cc: Free some memory earlier.
+
+2004-03-26 23:07  mihal
+
+	* src/io.cc: Moved temporary files to the current directory,
+	  because it may use multiple gigabytes in /tmp and not everyone
+	  has that much space.
+
+2004-03-26 18:05  mihal
+
+	* src/enblend.cc: Added a catch for non-8-bit TIFFs - print a
+	  useful message instead of just crashing.
+
+2004-03-26 17:50  mihal
+
+	* src/: enblend.cc, mask.cc, pyramid.cc: Fixed wraparound boundary
+	  condition in expand.	Enabled wraparound option in main.
+
+2004-03-26 16:48  mihal
+
+	* src/: assemble.cc, bounds.cc, enblend.cc, mask.cc, nearest.cc,
+	  pyramid.cc: Fixed corner cases where: Black image is entirely
+	  inside white image.  Transition line is horizontal or vertical.
+	  Input images have semitransparent pixels.  Distance calculation
+	  overflow in nearest feature transform.
+
 2004-03-25 22:29  mihal
 
 	* Makefile.am, configure.in, missing, src/assemble.cc,
