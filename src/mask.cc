@@ -140,7 +140,7 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
             mask[i] = WHITE;
         }
         else if (mask[i] == GREEN) {
-            mask[i] = BLACK;
+            mask[i] = TRANS;
         }
     }
 

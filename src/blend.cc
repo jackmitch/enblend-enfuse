@@ -70,25 +70,14 @@ void blend(std::vector<LPPixel*> *maskGP,
             double outAD = outPixel->a * outACoeff
                     + inPixel->a * (1.0 - outACoeff);
 
-            outPixel->r = lrint(outRD);
-            outPixel->g = lrint(outGD);
-            outPixel->b = lrint(outBD);
-            outPixel->a = lrint(outAD);
+            outPixel->r = (int16)lrint(outRD);
+            outPixel->g = (int16)lrint(outGD);
+            outPixel->b = (int16)lrint(outBD);
+            outPixel->a = (int16)lrint(outAD);
 
             maskPixel++;
             inPixel++;
             outPixel++;
-
-            //if (outRL > 255 || outGL > 255 || outBL > 255 || outAL > 255 || outRL < 0 || outGL < 0 || outBL < 0 || outAL < 0) {
-            //    cerr << "blend overflow level " << layer << " pixel " << index
-            //         << " r=" << outRL << " g=" << outGL << " b=" << outBL
-            //         << " a=" << outAL << endl;
-            //}
-
-            //*outPixel = (outRL & 0xFF)
-            //        | ((outGL & 0xFF) << 8)
-            //        | ((outBL & 0xFF) << 16)
-            //        | ((outAL & 0xFF) << 24);
 
         }
     }

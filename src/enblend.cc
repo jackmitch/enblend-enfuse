@@ -278,7 +278,6 @@ int main(int argc, char** argv) {
             shortDimension = shortDimension >> 1;
             maximumLevels++;
         }
-        maximumLevels = 3;
 
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskPyramid = gaussianPyramid(mask, maximumLevels);

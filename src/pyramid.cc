@@ -47,7 +47,7 @@ const double W[] = {0.25 - A / 2.0, 0.25, A, 0.25, 0.25 - A / 2.0};
  */
 void expand(LPPixel *in, uint32 inW, uint32 inH,
         LPPixel *out, uint32 outW, uint32 outH,
-        bool add) {
+        bool add, bool keepOut=true) {
 
     cerr << "in = " << in << " out = " << out << endl;
 
@@ -58,13 +58,19 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
             double outTmpB = 0.0;
             double outTmpA = 0.0;
             for (int m = 0; m < 5; m++) {
-                if ((outX - m) & 1 == 1) continue;
-                uint32 inX = abs((int32)outX - m) >> 1;
-                if (inX >= inW) inX -= (2 * (inX - inW) + 2);
+                if (((int32)outX - (m-2)) & 1 == 1) continue;
+                //uint32 inX = abs((int32)outX - (m-2)) >> 1;
+                //if (inX >= inW) inX -= (2 * (inX - inW) + 2);
+                int32 inX = ((int32)outX - (m-2)) >> 1;
+                if (inX >= (int32)inW) inX = inW - 1;
+                if (inX < 0) inX = 0;
                 for (int n = 0; n < 5; n++) {
-                    if ((outY - n) & 1 == 1) continue;
-                    uint32 inY = abs((int32)outY - n) >> 1;
-                    if (inY >= inH) inY -= (2 * (inY - inH) + 2);
+                    if (((int32)outY - (n-2)) & 1 == 1) continue;
+                    //uint32 inY = abs((int32)outY - (n-2)) >> 1;
+                    //if (inY >= inH) inY -= (2 * (inY - inH) + 2);
+                    int32 inY = ((int32)outY - (n-2)) >> 1;
+                    if (inY >= (int32)inH) inY = inH - 1;
+                    if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * inW + inX]);
                     outTmpR += W[m] * W[n] * inPixel->r;
@@ -74,54 +80,27 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
                 }
             }
 
-            if (add) {
-                out->r += (int16)lrint(outTmpR * 4.0);
-                out->g += (int16)lrint(outTmpG * 4.0);
-                out->b += (int16)lrint(outTmpB * 4.0);
-                out->a += (int16)lrint(outTmpA * 4.0);
+            if (keepOut) {
+                if (add) {
+                    out->r += (int16)lrint(outTmpR * 4.0);
+                    out->g += (int16)lrint(outTmpG * 4.0);
+                    out->b += (int16)lrint(outTmpB * 4.0);
+                    out->a += (int16)lrint(outTmpA * 4.0);
+                } else {
+                    out->r -= (int16)lrint(outTmpR * 4.0);
+                    out->g -= (int16)lrint(outTmpG * 4.0);
+                    out->b -= (int16)lrint(outTmpB * 4.0);
+                    out->a -= (int16)lrint(outTmpA * 4.0);
+                }
             } else {
-                out->r -= (int16)lrint(outTmpR * 4.0);
-                out->g -= (int16)lrint(outTmpG * 4.0);
-                out->b -= (int16)lrint(outTmpB * 4.0);
-                out->a -= (int16)lrint(outTmpA * 4.0);
+                out->r = (int16)lrint(outTmpR * 4.0);
+                out->g = (int16)lrint(outTmpG * 4.0);
+                out->b = (int16)lrint(outTmpB * 4.0);
+                out->a = (int16)lrint(outTmpA * 4.0);
             }
 
             out++;
 
-            //long outTmpRLong = lrint(outTmpR * 4.0);
-            //long outTmpGLong = lrint(outTmpG * 4.0);
-            //long outTmpBLong = lrint(outTmpB * 4.0);
-            //long outTmpALong = lrint(outTmpA * 4.0);
-            ////if (outTmpRLong > 255 || outTmpGLong > 255 || outTmpBLong > 255 || outTmpALong > 255 || outTmpRLong < 0 || outTmpGLong < 0 || outTmpBLong < 0 || outTmpALong < 0) {
-            ////    cerr << "expand overflow1 r=" << outTmpRLong
-            ////         << " b=" << outTmpBLong
-            ////         << " g=" << outTmpGLong
-            ////         << " a=" << outTmpALong << endl;
-            ////}
-
-            //if (add) {
-            //    outTmpRLong = TIFFGetR(out[outIndex]) + outTmpRLong;
-            //    outTmpGLong = TIFFGetG(out[outIndex]) + outTmpGLong;
-            //    outTmpBLong = TIFFGetB(out[outIndex]) + outTmpBLong;
-            //    outTmpALong = TIFFGetA(out[outIndex]) + outTmpALong;
-            //} else {
-            //    outTmpRLong = TIFFGetR(out[outIndex]) - outTmpRLong;
-            //    outTmpGLong = TIFFGetG(out[outIndex]) - outTmpGLong;
-            //    outTmpBLong = TIFFGetB(out[outIndex]) - outTmpBLong;
-            //    outTmpALong = TIFFGetA(out[outIndex]) - outTmpALong;
-            //}
-            ////if (outTmpRLong > 255 || outTmpGLong > 255 || outTmpBLong > 255 || outTmpALong > 255 || outTmpRLong < 0 || outTmpGLong < 0 || outTmpBLong < 0 || outTmpALong < 0) {
-            ////    cerr << "expand overflow2 r=" << outTmpRLong
-            ////         << " b=" << outTmpBLong
-            ////         << " g=" << outTmpGLong
-            ////         << " a=" << outTmpALong << endl;
-            ////}
-
-            //out[outIndex] = (outTmpRLong & 0xFF)
-            //        | ((outTmpGLong & 0xFF) << 8)
-            //        | ((outTmpBLong & 0xFF) << 16)
-            //        | ((outTmpALong & 0xFF) << 24);
-            //outIndex++;
         }
     }
 
@@ -147,12 +126,18 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
             double outTmpB = 0.0;
             double outTmpA = 0.0;
             for (int m = 0; m < 5; m++) {
-                uint32 inX = abs(2 * (int)outX + m - 2);
-                if (inX >= w) inX -= (2 * (inX - w) + 2);
+                //uint32 inX = abs(2 * (int)outX + m - 2);
+                //if (inX >= w) inX -= (2 * (inX - w) + 2);
+                int32 inX = 2 * (int32)outX + m - 2;
+                if (inX >= (int32)w) inX = w - 1;
+                if (inX < 0) inX = 0;
 
                 for (int n = 0; n < 5; n++) {
-                    uint32 inY = abs(2 * (int)outY + n - 2);
-                    if (inY >= h) inY -= (2 * (inY - h) + 2);
+                    //uint32 inY = abs(2 * (int)outY + n - 2);
+                    //if (inY >= h) inY -= (2 * (inY - h) + 2);
+                    int32 inY = 2 * (int32)outY + n - 2;
+                    if (inY >= (int32)h) inY = h - 1;
+                    if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * w + inX]);
                     outTmpR += W[m] * W[n] * inPixel->r;
@@ -168,17 +153,6 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
 
             outIndex++;
 
-            //if (outTmpRLong > 255 || outTmpGLong > 255 || outTmpBLong > 255 || outTmpALong > 255 || outTmpRLong < 0 || outTmpGLong < 0 || outTmpBLong < 0 || outTmpALong < 0) {
-            //    cerr << "reduce overflow r=" << outTmpRLong
-            //         << " b=" << outTmpBLong
-            //         << " g=" << outTmpGLong
-            //         << " a=" << outTmpALong << endl;
-            //}
-
-            //out[outY * outW + outX] = (outTmpRLong & 0xFF)
-            //        | ((outTmpGLong & 0xFF) << 8)
-            //        | ((outTmpBLong & 0xFF) << 16)
-            //        | ((outTmpALong & 0xFF) << 24);
         }
     }
 
@@ -297,10 +271,15 @@ void collapsePyramid(vector<LPPixel*> *p, uint32 *dest) {
             pixel->g = min(255, max(0, (int)pixel->g));
             pixel->b = min(255, max(0, (int)pixel->b));
             pixel->a = min(255, max(0, (int)pixel->a));
-            uint32 p = (pixel->r & 0xFF)
-                    | ((pixel->g & 0xFF) << 8)
-                    | ((pixel->b & 0xFF) << 16)
-                    | (0xFF << 24);
+            uint32 p;
+            //if (pixel->a != 255) {
+            //    p = TRANS;
+            //} else {
+                p = (pixel->r & 0xFF)
+                        | ((pixel->g & 0xFF) << 8)
+                        | ((pixel->b & 0xFF) << 16)
+                        | ((pixel->a & 0xFF) << 24);
+            //}
             dest[(j+ROIFirstY) * OutputWidth + (i+ROIFirstX)] = p;
             pixel++;
         }
