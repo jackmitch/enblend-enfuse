@@ -38,6 +38,7 @@ using namespace std;
 int Verbose = 0;
 int MaximumLevels = 0;
 bool OneAtATime = false;
+bool Wraparound = false;
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
 double StitchMismatchThreshold = 0.4;
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "sl:o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "wsl:o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -134,6 +135,10 @@ int main(int argc, char** argv) {
             }
             case 's': {
                 OneAtATime = true;
+                break;
+            }
+            case 'w': {
+                Wraparound = true;
                 break;
             }
             default: {
@@ -278,6 +283,16 @@ int main(int argc, char** argv) {
 
         // Calculate the ROI bounds and number of levels.
         uint32 levels = roiBounds(maskFile);
+        if (levels == 0) {
+            // Corner case - the mask indicates that blackImage has no
+            // contribution to the output.
+            cerr << "enblend: some images are redundant and will not be "
+                 << "blended. Try blending this image in multiple stages "
+                 << "with a subset of the images in each stage." << endl;
+            fclose(blackImageFile);
+            fclose(maskFile);
+            continue;
+        }
         if (MaximumLevels > 0) {
             levels = min(levels, (uint32)MaximumLevels);
         }

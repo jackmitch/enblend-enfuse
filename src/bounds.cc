@@ -29,6 +29,7 @@ using namespace std;
 
 extern int Verbose;
 extern int MaximumLevels;
+extern bool Wraparound;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
@@ -135,6 +136,8 @@ uint32 roiBounds(FILE *maskFile) {
     // Make sure we're at the beginning of the mask file.
     rewind(maskFile);
 
+    bool foundMulticolorRow = false;
+    bool foundMulticolorColumn = false;
     for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
         readFromTmpfile(row, sizeof(MaskPixel), ubbWidth, maskFile);
         if (y == UBBFirstY) {
@@ -149,22 +152,37 @@ uint32 roiBounds(FILE *maskFile) {
                 // Row y is a multicolor row.
                 firstMulticolorRow = min(firstMulticolorRow, (int32)y);
                 lastMulticolorRow = max(lastMulticolorRow, (int32)y);
+                foundMulticolorRow = true;
             }
             if (maskP->r != maskPFirst->r) {
                 // Column x is a multicolor column.
                 firstMulticolorColumn = min(firstMulticolorColumn, (int32)x);
                 lastMulticolorColumn = max(lastMulticolorColumn, (int32)x);
+                foundMulticolorColumn = true;
             }
             maskP++;
             maskPFirst++;
         }
     }
 
+    if (!foundMulticolorRow && !foundMulticolorColumn) {
+        // Sanity check for situation where there is no transition line
+        // this means one image has no contribution.
+        return 0;
+    }
+    else if (foundMulticolorRow && !foundMulticolorColumn) {
+        // The transition line is vertical.
+        firstMulticolorColumn = UBBFirstX;
+        lastMulticolorColumn = UBBLastX;
+    }
+    else if (foundMulticolorColumn && !foundMulticolorRow) {
+        // The transition line is horizontal.
+        firstMulticolorRow = UBBFirstY;
+        lastMulticolorRow = UBBLastY;
+    }
+
     free(row);
     free(firstRow);
-
-    // FIXME: sanity check for situation where there is no transition line
-    // this means one image has no contribution.
 
     if (Verbose > 0) {
         cout << "Transition line bounding box = ("
@@ -192,8 +210,19 @@ uint32 roiBounds(FILE *maskFile) {
         // the value.
         int32 extent = 2 * filterHalfWidth(levels - 1, 255);
 
-        ROIFirstX = max(firstMulticolorColumn - extent, (int32)UBBFirstX);
-        ROILastX = min((int32)UBBLastX, lastMulticolorColumn + extent);
+        if (Wraparound && ubbWidth == OutputWidth
+                && ((firstMulticolorColumn - extent < (int32)UBBFirstX)
+                        || (lastMulticolorColumn + extent > (int32)UBBLastX))) {
+            // If the image is a 360 pano,
+            // and the images in this blend step wrap around,
+            // and the transition line is within extent pixels of the edge,
+            // Then make the roi the full output width.
+            ROIFirstX = UBBFirstX;
+            ROILastX = UBBLastX;
+        } else {
+            ROIFirstX = max(firstMulticolorColumn - extent, (int32)UBBFirstX);
+            ROILastX = min((int32)UBBLastX, lastMulticolorColumn + extent);
+        }
         ROIFirstY = max(firstMulticolorRow - extent, (int32)UBBFirstY);
         ROILastY = min((int32)UBBLastY, lastMulticolorRow + extent);
 
@@ -276,7 +305,7 @@ void copyExcludedPixels(FILE *dst, FILE *src) {
                     || y > ROILastY
                     || x < ROIFirstX
                     || x > ROILastX) {
-                if (TIFFGetA(*srcPixel) != 0 && TIFFGetA(*dstPixel) == 0) {
+                if (TIFFGetA(*srcPixel) == 255 && TIFFGetA(*dstPixel) == 0) {
                     *dstPixel = *srcPixel;
                 }
             }

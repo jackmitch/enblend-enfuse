@@ -32,6 +32,7 @@
 using namespace std;
 
 extern int Verbose;
+extern bool Wraparound;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 extern uint16 PlanarConfig;
@@ -110,7 +111,7 @@ uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue) {
  */
 void expand(LPPixel *in, uint32 inW, uint32 inH,
         LPPixel *out, uint32 outW, uint32 outH,
-        bool add) {
+        bool add, bool wraparound) {
 
     for (uint32 outY = 0; outY < outH; outY++) {
         for (uint32 outX = 0; outX < outW; outX++) {
@@ -118,18 +119,34 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
             double r = 0.0;
             double g = 0.0;
             double b = 0.0;
+            uint32 totalContrib = 0;
 
-            for (int m = 0; m < 5; m++) {
+            for (int32 m = 0; m < 5; m++) {
+                int32 inX = (int32)outX - (m-2);
+
+                if (wraparound) {
+                    // Boundary condition - wrap around the image.
+                    if (inX < 0) inX = (int32)outW + inX;
+                    if (inX >= (int32)outW) inX = inX - (int32)outW;
+                }
+
                 // Skip non-integral values of inX index.
-                if (((int32)outX - (m-2)) & 1 == 1) continue;
+                if (inX & 1 == 1) continue;
 
-                int32 inX = ((int32)outX - (m-2)) >> 1;
+                inX = inX >> 1;
 
-                // Boundary condition: replicate first and last column.
-                if (inX >= (int32)inW) inX = inW - 1;
-                if (inX < 0) inX = 0;
+                if (!wraparound) {
+                    // Boundary condition - replicate first and last column.
+                    if (inX >= (int32)inW) inX = (int32)inW - 1;
+                    if (inX < 0) inX = 0;
+                }
 
-                for (int n = 0; n < 5; n++) {
+                //if (outW == (ROILastX - ROIFirstX + 1) && (outX == 0 || outX == outW - 1 || outX == outW - 2)) {
+                //    cout << "outX=" << outX << " inX=" << inX
+                //         << " m=" << m << " outW=" << outW << endl;
+                //}
+
+                for (int32 n = 0; n < 5; n++) {
                     // Skip non-integral values of inY index.
                     if (((int32)outY - (n-2)) & 1 == 1) continue;
 
@@ -144,17 +161,18 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
                     r += W[m] * W[n] * inPixel->r;
                     g += W[m] * W[n] * inPixel->g;
                     b += W[m] * W[n] * inPixel->b;
+                    totalContrib += W100[m] * W100[n];
                 }
             }
 
             if (add) {
-                out->r += (int16)rint(r * 4.0);
-                out->g += (int16)rint(g * 4.0);
-                out->b += (int16)rint(b * 4.0);
+                out->r += (int16)rint(r / (totalContrib / 10000.0));
+                out->g += (int16)rint(g / (totalContrib / 10000.0));
+                out->b += (int16)rint(b / (totalContrib / 10000.0));
             } else {
-                out->r -= (int16)rint(r * 4.0);
-                out->g -= (int16)rint(g * 4.0);
-                out->b -= (int16)rint(b * 4.0);
+                out->r -= (int16)rint(r / (totalContrib / 10000.0));
+                out->g -= (int16)rint(g / (totalContrib / 10000.0));
+                out->b -= (int16)rint(b / (totalContrib / 10000.0));
             }
 
             out++;
@@ -168,7 +186,7 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
 /** The Burt & Adelson Reduce operation.
  *  Allocates a new LPPixel array one quarter the size of in.
  */
-LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
+LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
     uint32 outW = w >> 1;
     uint32 outH = h >> 1;
 
@@ -188,14 +206,25 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
             double b = 0.0;
             uint32 noContrib = 10000;
 
-            for (int m = 0; m < 5; m++) {
+            for (int32 m = 0; m < 5; m++) {
                 int32 inX = 2 * (int32)outX + m - 2;
 
-                // Boundary condition: replicate first and last column.
-                if (inX >= (int32)w) inX = w - 1;
-                if (inX < 0) inX = 0;
+                if (wraparound) {
+                    // Boundary condition: wrap around the image.
+                    if (inX < 0) inX = (int32)w + inX;
+                    if (inX >= (int32)w) inX = inX - (int32)w;
+                } else {
+                    // Boundary condition: replicate first and last column.
+                    if (inX >= (int32)w) inX = w - 1;
+                    if (inX < 0) inX = 0;
+                }
 
-                for (int n = 0; n < 5; n++) {
+                //if (w == (ROILastX - ROIFirstX + 1) && (outX == 0 || outX == outW - 1)) {
+                //    cout << "r outX=" << outX << " inX=" << inX
+                //         << " m=" << m << " outW=" << outW << endl;
+                //}
+
+                for (int32 n = 0; n < 5; n++) {
                     int32 inY = 2 * (int32)outY + n - 2;
 
                     // Boundary condition: replicate first and last column.
@@ -292,6 +321,13 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
 
     v.push_back(g);
 
+    // If the user specified a 360 degree panorama, and the transition line
+    // is near the left or right edge, then enable the wraparound boundary
+    // condition.
+    // If the transition line is near the edge, then the roiWidth is set to
+    // the full output width in roiBounds.
+    bool wraparound = Wraparound && (roiWidth == OutputWidth);
+
     // Make remaining levels.
     uint32 l = 1;
     while (l < levels) {
@@ -300,7 +336,7 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
             cout.flush();
         }
 
-        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
+        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1), wraparound);
         v.push_back(g);
 
         l++;
@@ -367,6 +403,13 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
 
     v->push_back(g);
 
+    // If the user specified a 360 degree panorama, and the transition line
+    // is near the left or right edge, then enable the wraparound boundary
+    // condition.
+    // If the transition line is near the edge, then the roiWidth is set to
+    // the full output width in roiBounds.
+    bool wraparound = Wraparound && (roiWidth == OutputWidth);
+
     // Make remaining levels.
     uint32 l = 1;
     while (l < levels) {
@@ -375,7 +418,7 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
             cout.flush();
         }
 
-        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
+        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1), wraparound);
         v->push_back(g);
 
         l++;
@@ -405,6 +448,13 @@ vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels) {
         cout.flush();
     }
 
+    // If the user specified a 360 degree panorama, and the transition line
+    // is near the left or right edge, then enable the wraparound boundary
+    // condition.
+    // If the transition line is near the edge, then the roiWidth is set to
+    // the full output width in roiBounds.
+    bool wraparound = Wraparound && (roiWidth == OutputWidth);
+
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
     for (uint32 l = 0; l < (levels-1); l++) {
@@ -413,8 +463,9 @@ vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels) {
             cout.flush();
         }
         expand((*gp)[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
-            (*gp)[l], roiWidth >> l, roiHeight >> l,
-            false);
+                (*gp)[l], roiWidth >> l, roiHeight >> l,
+                false,
+                wraparound);
     }
 
     if (Verbose > 0) {
@@ -451,6 +502,13 @@ void collapsePyramid(vector<LPPixel*> &p) {
         cout.flush();
     }
 
+    // If the user specified a 360 degree panorama, and the transition line
+    // is near the left or right edge, then enable the wraparound boundary
+    // condition.
+    // If the transition line is near the edge, then the roiWidth is set to
+    // the full output width in roiBounds.
+    bool wraparound = Wraparound && (roiWidth == OutputWidth);
+
     // For each level, add the expansion of the next level.
     // Work backwards from the smallest level to the largest.
     for (int l = (p.size()-2); l >= 0; l--) {
@@ -459,8 +517,9 @@ void collapsePyramid(vector<LPPixel*> &p) {
             cout.flush();
         }
         expand(p[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
-            p[l], roiWidth >> l, roiHeight >> l,
-            true);
+                p[l], roiWidth >> l, roiHeight >> l,
+                true,
+                wraparound);
     }
 
     if (Verbose > 0) {
@@ -480,6 +539,13 @@ void savePyramid(vector<LPPixel*> &p, char *prefix) {
         LPPixel *level = (LPPixel*)calloc((roiWidth >> i) * (roiHeight >> i), sizeof(LPPixel));
         pCopy.push_back(level);
     }
+
+    // If the user specified a 360 degree panorama, and the transition line
+    // is near the left or right edge, then enable the wraparound boundary
+    // condition.
+    // If the transition line is near the edge, then the roiWidth is set to
+    // the full output width in roiBounds.
+    bool wraparound = Wraparound && (roiWidth == OutputWidth);
 
     for (unsigned int i = 0; i < p.size(); i++) {
         char buf[512];
@@ -503,8 +569,9 @@ void savePyramid(vector<LPPixel*> &p, char *prefix) {
         memcpy(pCopy[i], p[i], (roiWidth >> i) * (roiHeight >> i) * sizeof(LPPixel));
         for (int j = i-1; j >= 0; j--) {
             expand(pCopy[j + 1], roiWidth >> (j+1), roiHeight >> (j+1),
-                pCopy[j], roiWidth >> j, roiHeight >> j,
-                true);
+                    pCopy[j], roiWidth >> j, roiHeight >> j,
+                    true,
+                    wraparound);
         }
 
         LPPixel *pixel = pCopy[0];

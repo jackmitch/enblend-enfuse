@@ -29,6 +29,7 @@
 using namespace std;
 
 extern int Verbose;
+extern bool Wraparound;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
@@ -45,7 +46,7 @@ extern uint32 UBBLastY;
     #define DIST_MAX ((dist_t)-1)
     #define DIST_MIN 0
     inline dist_t distance(uint32 deltaX, dist_t *deltaY) {
-        return *deltaY + deltaX * deltaX;
+        return (*deltaY == DIST_MAX) ? DIST_MAX : *deltaY + deltaX * deltaX;
     }
     inline dist_t distance(uint32 deltaY) {
         return deltaY * deltaY;
@@ -67,7 +68,7 @@ extern uint32 UBBLastY;
     #define DIST_MAX ((dist_t)-1)
     #define DIST_MIN 0
     inline dist_t distance(uint32 deltaX, dist_t *deltaY) {
-        return deltaX + *deltaY;
+        return (*deltaY == DIST_MAX) ? DIST_MAX : deltaX + *deltaY;
     }
     inline dist_t distance(uint32 deltaY) {
         return deltaY;

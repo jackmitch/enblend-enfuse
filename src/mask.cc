@@ -82,18 +82,21 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
         uint32 *blackPixel = blackLine;
         for (uint32 x = 0; x < ubbWidth; x++) {
 
-            if (*whitePixel == 0 && *blackPixel == 0) {
+            bool isInWhiteImage = (TIFFGetA(*whitePixel) == 255);
+            bool isInBlackImage = (TIFFGetA(*blackPixel) == 255);
+
+            if (!isInWhiteImage && !isInBlackImage) {
                 // Pixel is not in the union of the two images.
                 // Mark the pixel as not a feature pixel.
                 maskPixel->r = 1;
             }
-            else if (*whitePixel == 0) {
+            else if (isInBlackImage && !isInWhiteImage) {
                 // Pixel is in blackImage but not whiteImage.
                 // Make the pixel green.
                 maskPixel->g = 255;
                 maskPixel->a = 255;
             }
-            else if (*blackPixel == 0) {
+            else if (isInWhiteImage && !isInBlackImage) {
                 // Pixel is in whiteImage but not blackImage.
                 // Make the pixel blue.
                 maskPixel->b = 255;
@@ -143,7 +146,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
         maskPixel++;
     }
 
-    //saveMaskAsTIFF(mask);
+    saveMaskAsTIFF(mask);
 
     // Dump mask to file.
     return dumpToTmpfile(mask, sizeof(MaskPixel), ubbWidth * ubbHeight);

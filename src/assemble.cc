@@ -94,8 +94,8 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
             for (uint32 x = 0; x < OutputWidth; x++) {
                 uint32 imagePixel = image[y * OutputWidth + x];
                 uint32 tiffPixel = scanline[x];
-                if (TIFFGetA(imagePixel) != 0
-                        && TIFFGetA(tiffPixel) != 0) {
+                if (TIFFGetA(imagePixel) == 255
+                        && TIFFGetA(tiffPixel) == 255) {
                     overlapFound = true;
                     break;
                 }
