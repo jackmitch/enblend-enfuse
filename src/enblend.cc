@@ -53,7 +53,10 @@ extern "C" int optind;
 #include <stdlib.h>
 #include <string.h>
 #include <tiffconf.h>
+
+#ifdef _WIN32
 #include <io.h>
+#endif
 
 #include <boost/random/mersenne_twister.hpp>
 

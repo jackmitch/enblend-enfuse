@@ -27,7 +27,10 @@
 #include <iostream>
 #include <list>
 #include <stdio.h>
+
+#ifdef _WIN32
 #include <io.h>
+#endif
 
 #ifndef _WIN32
 #include <unistd.h>
