@@ -41,7 +41,7 @@ extern uint32 OutputHeight;
  *  Removes used images from given list of filenames.
  *  Returns an output-sized buffer created with _TIFFmalloc.
  */
-uint32 *assemble(std::list<char*> &filenames) {
+uint32 *assemble(std::list<char*> &filenames, bool pickOne) {
 
     if (filenames.empty()) return NULL;
 
@@ -114,6 +114,9 @@ uint32 *assemble(std::list<char*> &filenames) {
         }
 
         TIFFClose(tiff);
+
+        // If we only want one image at a time, break.
+        if (!overlapFound && pickOne) break;
     }
 
     free(scanline);

@@ -37,6 +37,7 @@ using namespace std;
 // Global values from command line parameters.
 int Verbose = 0;
 int MaximumLevels = 0;
+bool OneAtATime = false;
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
 double StitchMismatchThreshold = 0.4;
@@ -65,6 +66,7 @@ void printUsageAndExit() {
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -l number         Maximum number of levels to use" << endl;
+    cout << " -s                Blend images one at a time" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
     exit(1);
@@ -83,7 +85,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "l:o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "sl:o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -127,6 +129,10 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
+                break;
+            }
+            case 's': {
+                OneAtATime = true;
                 break;
             }
             default: {
@@ -233,53 +239,77 @@ int main(int argc, char** argv) {
     }
 
     // Create the initial white image.
-    uint32 *whiteImage = assemble(inputFileNameList);
+    uint32 *whiteImage = assemble(inputFileNameList, false);
     // mem = 1 fullsize uint32
 
     // Main blending loop
     while (!inputFileNameList.empty()) {
 
+        // Write whiteImage to disk as output file.
+        // free whiteImage.
+        // mem = 0
+
         // Create the black image.
-        uint32 *blackImage = assemble(inputFileNameList);
-        // mem = 2 fullsize uint32
+        // write to disk as temp file.
+        // free blackImage.
+        uint32 *blackImage = assemble(inputFileNameList, OneAtATime);
+        // mem = 0
 
         // Create the blend mask.
+        // load blackImage and whiteImage from disk one row at a time.
         MaskPixel *mask = createMask(whiteImage, blackImage);
-        // mem = 2 fullsize uint32 + fullsize MaskPixel + 2 ubb uint32
-        // mem = 2 fullsize uint32 + fullsize MaskPixel
+        // maybe an extra-conservative nnt algo?
+        // mem = 1 ubb MaskPixel + 2 ubb uint32 distance matrices
+        // mem = 1 ubb MaskPixel
 
         // Calculate the ROI bounds and number of levels.
         uint32 levels = bounds(mask);
         if (MaximumLevels > 0) {
             levels = min(levels, (uint32)MaximumLevels);
         }
+        // write mask to disk as temp file.
+        // free mask.
+        // mem = 0
 
         // Copy parts of blackImage outside of ROI into whiteImage.
+        // work on blackImage and whiteImage from files one row at a time.
         copyExcludedPixels(whiteImage, blackImage);
+        // mem = 0.
 
         // Build Laplacian pyramid from blackImage
+        // load blackImage from disk one row at a time.
+        // dump result to disk.
         vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, levels);
-        // mem = 2 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
+        // mem = 4/3 roi LPPixel
+        // mem = 0
         //savePyramid(*blackLP, "black");
 
         // Free allocated memory.
+        // done with blackImage temp file.
         _TIFFfree(blackImage);
-        // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
+        // mem = 0
 
         // Build Gaussian pyramid from mask.
+        // load mask from disk one row at a time.
+        // dump result to disk.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, levels);
-        // mem = 1 fullsize uint32 + fullsize MaskPixel + 8/3 roi LPPixel
-        //savePyramid(*maskGP, "mask");
+        // mem = 4/3 roi LPPixel
+        // mem = 0
+        savePyramid(*maskGP, "mask");
 
         // Build Laplacian pyramid from whiteImage
+        // load whiteImage from disk one row at a time.
         vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, levels);
-        // mem = 1 fullsize uint32 + fullsize MaskPixel + 12/3 roi LPPixel
+        // mem = 4/3 roi LPPixel
         //savePyramid(*whiteLP, "white");
 
         // Blend pyramids
+        // store only whiteLP in memory.
+        // load blackLP and maskGP from disk one row at a time.
         blend(*whiteLP, *blackLP, *maskGP);
 
         // Free allocated memory.
+        // done with maskGP and blackLP temp files.
         for (uint32 i = 0; i < levels; i++) {
             free((*maskGP)[i]);
             free((*blackLP)[i]);
@@ -287,9 +317,12 @@ int main(int argc, char** argv) {
         delete maskGP;
         delete blackLP;
         // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
+        // should mem = 4/3 roi LPPixel
 
         // Collapse result back into whiteImage.
         collapsePyramid(*whiteLP, whiteImage, mask);
+        // copy whiteLP[0] into whiteImage on disk.
+        // can be done one row at a time, don't neet to load whiteImage or maskImage entirely.
 
         free(mask);
         // mem = 1 fullsize uint32 + 4/3 roi LPPixel
@@ -300,6 +333,8 @@ int main(int argc, char** argv) {
         // mem = 1 fullsize uint32
 
     }
+
+    // don't need to do any of this - whiteImage is already complete.
 
     if (Verbose > 0) {
         cout << "Writing output file." << endl;

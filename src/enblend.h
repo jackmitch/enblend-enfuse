@@ -39,7 +39,7 @@ typedef struct {
 } LPPixel;
 
 // assemble.cc
-uint32 *assemble(std::list<char*> &filenames);
+uint32 *assemble(std::list<char*> &filenames, bool pickOne);
 
 // blend.cc
 void blend(std::vector<LPPixel*> &whiteLP,

@@ -124,7 +124,7 @@ uint32 bounds(MaskPixel *mask) {
         uint32 shortDimension = min(ROILastY - ROIFirstY + 1,
                 ROILastX - ROIFirstX + 1);
 
-        if (levels >= MaximumLevels) {
+        if (levels == (uint32)MaximumLevels) {
             // Hit the user-specified level limit.
             break;
         }
