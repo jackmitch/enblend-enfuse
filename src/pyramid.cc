@@ -188,8 +188,8 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
  *  Allocates a new LPPixel array one quarter the size of in.
  */
 LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
-    uint32 outW = w >> 1;
-    uint32 outH = h >> 1;
+    uint32 outW = (w + 1) >> 1;
+    uint32 outH = (h + 1) >> 1;
 
     LPPixel *out = (LPPixel*)calloc(outW * outH, sizeof(LPPixel));
     if (out == NULL) {
@@ -208,7 +208,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
             uint32 noContrib = 10000;
 
             for (int32 m = 0; m < 5; m++) {
-                int32 inX = 2 * (int32)outX + m - 2;
+                int32 inX = (2 * (int32)outX) + (m - 2);
 
                 if (wraparound) {
                     // Boundary condition: wrap around the image.
@@ -226,7 +226,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
                 //}
 
                 for (int32 n = 0; n < 5; n++) {
-                    int32 inY = 2 * (int32)outY + n - 2;
+                    int32 inY = (2 * (int32)outY) + (n - 2);
 
                     // Boundary condition: replicate top and bottom rows.
                     if (inY >= (int32)h) inY = h - 1;
@@ -242,6 +242,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h, bool wraparound) {
                         g += W[m] * W[n] * inPixel->g;
                         b += W[m] * W[n] * inPixel->b;
                     }
+
                 }
             }
 
@@ -337,10 +338,12 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
             cout.flush();
         }
 
-        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1), wraparound);
+        g = reduce(g, roiWidth, roiHeight, wraparound);
         v.push_back(g);
 
         l++;
+        roiWidth = (roiWidth + 1) >> 1;
+        roiHeight = (roiHeight + 1) >> 1;
     }
 
     if (Verbose > 0) {
@@ -421,10 +424,12 @@ vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
             cout.flush();
         }
 
-        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1), wraparound);
+        g = reduce(g, roiWidth, roiHeight, wraparound);
         v->push_back(g);
 
         l++;
+        roiWidth = (roiWidth + 1) >> 1;
+        roiHeight = (roiHeight + 1) >> 1;
     }
 
     if (Verbose > 0) {
@@ -465,10 +470,17 @@ vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels) {
             cout << " l" << l;
             cout.flush();
         }
-        expand((*gp)[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
-                (*gp)[l], roiWidth >> l, roiHeight >> l,
+
+        uint32 nextWidth = (roiWidth + 1) >> 1;
+        uint32 nextHeight = (roiHeight + 1) >> 1;
+
+        expand((*gp)[l + 1], nextWidth, nextHeight,
+                (*gp)[l], roiWidth, roiHeight,
                 false,
                 wraparound);
+
+        roiWidth = nextWidth;
+        roiHeight = nextHeight;
     }
 
     if (Verbose > 0) {
@@ -500,17 +512,27 @@ void collapsePyramid(vector<LPPixel*> &p) {
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
-    if (Verbose > 0) {
-        cout << "Collapsing Laplacian pyramid:";
-        cout.flush();
-    }
-
     // If the user specified a 360 degree panorama, and the transition line
     // is near the left or right edge, then enable the wraparound boundary
     // condition.
     // If the transition line is near the edge, then the roiWidth is set to
     // the full output width in roiBounds.
     bool wraparound = Wraparound && (roiWidth == OutputWidth);
+
+    // Keep track of the dimensions of each layer.
+    vector<uint32> layerWidth;
+    vector<uint32> layerHeight;
+    for (int l = 0; l < (int)p.size(); l++) {
+        layerWidth.push_back(roiWidth);
+        layerHeight.push_back(roiHeight);
+        roiWidth = (roiWidth + 1) >> 1;
+        roiHeight = (roiHeight + 1) >> 1;
+    }
+
+    if (Verbose > 0) {
+        cout << "Collapsing Laplacian pyramid:";
+        cout.flush();
+    }
 
     // For each level, add the expansion of the next level.
     // Work backwards from the smallest level to the largest.
@@ -519,8 +541,8 @@ void collapsePyramid(vector<LPPixel*> &p) {
             cout << " l" << l;
             cout.flush();
         }
-        expand(p[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
-                p[l], roiWidth >> l, roiHeight >> l,
+        expand(p[l + 1], layerWidth[l+1], layerHeight[l+1],
+                p[l], layerWidth[l], layerHeight[l],
                 true,
                 wraparound);
     }

@@ -233,21 +233,27 @@ uint32 roiBounds(FILE *maskFile) {
         //        << lastExtentRow << ")"
         //        << endl;
 
-        // caluclate short dimension.
-        uint32 shortDimension = min(ROILastY - ROIFirstY + 1,
-                ROILastX - ROIFirstX + 1);
-
         if (levels == (uint32)MaximumLevels) {
             // Hit the user-specified level limit.
             break;
         }
-        else if ((shortDimension >> (levels - 1)) > 8) {
-            // Try another level.
-            levels++;
-        }
         else {
-            // quit - this is a good number of levels.
-            break;
+            // calculate short dimension.
+            uint32 shortDimension = min(ROILastY - ROIFirstY + 1,
+                    ROILastX - ROIFirstX + 1);
+
+            for (uint32 i = 1; i < levels; i++) {
+                shortDimension = (shortDimension + 1) >> 1;
+            }
+
+            if (shortDimension > 8) {
+                // Try another level.
+                levels++;
+            }
+            else {
+                // quit - this is a good number of levels.
+                break;
+            }
         }
     }
 

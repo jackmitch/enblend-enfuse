@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(enblend, 1.1, [mihal@eecs.berkeley.edu])
+AC_INIT(enblend, 1.2, [mihal@eecs.berkeley.edu])
 AC_CONFIG_SRCDIR([src/blend.cc])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])

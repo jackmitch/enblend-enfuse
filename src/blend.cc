@@ -57,6 +57,9 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
         cout.flush();
     }
 
+    uint32 layerWidth = roiWidth;
+    uint32 layerHeight = roiHeight;
+
     // Do each layer individually.
     for (uint32 layer = 0; layer < whiteLP.size(); layer++) {
 
@@ -64,10 +67,6 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
             cout << " l" << layer;
             cout.flush();
         }
-
-        // Calculate the size of the layer.
-        uint32 layerWidth = roiWidth >> layer;
-        uint32 layerHeight = roiHeight >> layer;
 
         // layerWidth-sized line for blackLPFile.
         LPPixel *blackLine = (LPPixel*)malloc(layerWidth * sizeof(LPPixel));
@@ -117,6 +116,9 @@ void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
         free(blackLine);
         free(maskLine);
 
+        // Calculate the size of the next layer.
+        layerWidth = (layerWidth + 1) >> 1;
+        layerHeight = (layerHeight + 1) >> 1;
     }
 
     if (Verbose > 0) {

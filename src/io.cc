@@ -194,9 +194,15 @@ FILE *dumpPyramidToTmpfile(vector<LPPixel*> &v) {
     }
 
     for (uint32 l = 0; l < v.size(); l++) {
-        uint32 lPixels = (roiWidth >> l) * (roiHeight >> l);
+        uint32 lPixels = roiWidth * roiHeight;
         writeToTmpfile(v[l], sizeof(LPPixel), lPixels, pyramidFile);
+
+        // Free memory from this layer.
         free(v[l]);
+
+        // Calculate size of next layer.
+        roiWidth = (roiWidth + 1) >> 1;
+        roiHeight = (roiHeight + 1) >> 1;
     }
 
     rewind(pyramidFile);
@@ -268,10 +274,16 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
+    // Keep track of the dimensions of each layer.
+    vector<uint32> layerWidth;
+    vector<uint32> layerHeight;
+
     // Make a copy of p.
     vector<LPPixel*> pCopy;
     for (uint32 i = 0; i < p.size(); i++) {
-        uint32 levelPixels = (roiWidth >> i) * (roiHeight >> i);
+        layerWidth.push_back(roiWidth);
+        layerHeight.push_back(roiHeight);
+        uint32 levelPixels = roiWidth * roiHeight;
         LPPixel *level = (LPPixel*)malloc(levelPixels * sizeof(LPPixel));
         if (level == NULL) {
             cerr << endl
@@ -281,6 +293,10 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
         }
         pCopy.push_back(level);
         memcpy(level, p[i], levelPixels * sizeof(LPPixel));
+
+        // Calculate size of next layer.
+        roiWidth = (roiWidth + 1) >> 1;
+        roiHeight = (roiHeight + 1) >> 1;
     }
 
     // Output image.
@@ -309,7 +325,7 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
 
         // clear levels up to i.
         for (uint32 j = 0; j < i; j++) {
-            uint32 jPixels = (roiWidth >> j) * (roiHeight >> j);
+            uint32 jPixels = layerWidth[j] * layerHeight[j];
             memset(pCopy[j], 0, jPixels * sizeof(LPPixel));
             pCopySubset.push_back(pCopy[j]);
         }
@@ -325,6 +341,8 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
         TIFFSetField(outputTIFF, TIFFTAG_BITSPERSAMPLE, 8);
         TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
         TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
+        //TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, layerWidth[i]);
+        //TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, layerHeight[i]);
         TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
         TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
 
@@ -345,12 +363,34 @@ void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
             }
         }
 
+        //LPPixel *pixel = pCopy[i];
+        //for (uint32 y = 0; y < layerHeight[i]; y++) {
+        //    for (uint32 x = 0; x < layerWidth[i]; x++) {
+        //        pixel->r = min(255, max(0, (int)abs(pixel->r)));
+        //        pixel->g = min(255, max(0, (int)abs(pixel->g)));
+        //        pixel->b = min(255, max(0, (int)abs(pixel->b)));
+        //        image[y * layerWidth[i] + x] =
+        //                (pixel->r & 0xFF)
+        //                | ((pixel->g & 0xFF) << 8)
+        //                | ((pixel->b & 0xFF) << 16)
+        //                | ((pixel->a & 0xFF) << 24);
+        //        pixel++;
+        //    }
+        //}
+
         for (uint32 line = 0; line < OutputHeight; line++) {
             TIFFWriteScanline(outputTIFF,
                     &(image[line * OutputWidth]),
                     line,
                     8);
         }
+
+        //for (uint32 line = 0; line < layerHeight[i]; line++) {
+        //    TIFFWriteScanline(outputTIFF,
+        //            &(image[line * layerWidth[i]]),
+        //            line,
+        //            8);
+        //}
 
         //TIFFWriteDirectory(outputTIFF);
         TIFFClose(outputTIFF);
