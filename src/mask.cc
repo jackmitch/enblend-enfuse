@@ -79,17 +79,17 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
             if (outPixel == 0 && inPixel == 0) {
                 // Pixel is not in the union of the two images.
                 // Make the mask pixel black.
-                mask[(i * OutputWidth) + j] = BLACK;
+                mask[(i * OutputWidth) + j] = 0x00000001;
             }
             else if (outPixel != 0 && inPixel == 0) {
                 // Pixel is in out only.
                 // Make the mask pixel blue.
-                mask[(i * OutputWidth) + j] = BLUE;
+                mask[(i * OutputWidth) + j] = 0xFF00FF00;
             }
             else if (outPixel == 0 && inPixel != 0) {
                 // Pixel is in input only.
                 // Make the mask pixel green.
-                mask[(i * OutputWidth) + j] = GREEN;
+                mask[(i * OutputWidth) + j] = 0xFFFF0000;
             }
             else {
                 // Pixel is in the intersection of the two images.
@@ -115,7 +115,7 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
                 */
 
                 // Make the mask pixel black.
-                mask[(i * OutputWidth) + j] = BLACK;
+                mask[(i * OutputWidth) + j] = 0xFF000001;
 
             }
         }
@@ -130,17 +130,27 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
     // Only needs to be done within region of interest.
     // Outside ROI make mask transparent.
     for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
-        uint32 x = i % OutputWidth;
-        uint32 y = i / OutputWidth;
-        if (x < ROIFirstX || x > ROILastX
-                || y < ROIFirstY || y > ROILastY) {
-            mask[i] = TRANS;
-        }
-        else if (mask[i] == BLUE) {
-            mask[i] = WHITE;
-        }
-        else if (mask[i] == GREEN) {
-            mask[i] = TRANS;
+        //uint32 x = i % OutputWidth;
+        //uint32 y = i / OutputWidth;
+        //if (x < ROIFirstX || x > ROILastX
+        //        || y < ROIFirstY || y > ROILastY) {
+        //    mask[i] = TRANS;
+        //}
+        //else if (mask[i] == BLUE) {
+        //    mask[i] = WHITE;
+        //}
+        //else if (mask[i] == GREEN) {
+        //    mask[i] = TRANS;
+        //}
+        if (mask[i] & 0x0000FF00) {
+            // White - pixel is near out
+            mask[i] |= 0x00FFFFFF;
+        } else if (mask[i] & 0x00FF0000) {
+            // Black - pixel is near in
+            mask[i] &= 0xFF000000;
+        } else {
+            // pixel was not remarked. Keep trans info, set to out - white.
+            mask[i] |= 0x00FFFFFF;
         }
     }
 

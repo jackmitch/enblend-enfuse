@@ -57,6 +57,7 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
             double outTmpG = 0.0;
             double outTmpB = 0.0;
             double outTmpA = 0.0;
+            double noContrib = 1.0;
             for (int m = 0; m < 5; m++) {
                 if (((int32)outX - (m-2)) & 1 == 1) continue;
                 //uint32 inX = abs((int32)outX - (m-2)) >> 1;
@@ -73,12 +74,21 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
                     if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * inW + inX]);
-                    outTmpR += W[m] * W[n] * inPixel->r;
-                    outTmpG += W[m] * W[n] * inPixel->g;
-                    outTmpB += W[m] * W[n] * inPixel->b;
-                    outTmpA += W[m] * W[n] * inPixel->a;
+                    if (inPixel->a != 255) {
+                        noContrib -= W[m] * W[n];
+                    } else {
+                        outTmpR += W[m] * W[n] * inPixel->r;
+                        outTmpG += W[m] * W[n] * inPixel->g;
+                        outTmpB += W[m] * W[n] * inPixel->b;
+                        outTmpA += W[m] * W[n] * inPixel->a;
+                    }
                 }
             }
+
+            outTmpR = (noContrib == 0) ? 0 : outTmpR / noContrib;
+            outTmpG = (noContrib == 0) ? 0 : outTmpG / noContrib;
+            outTmpB = (noContrib == 0) ? 0 : outTmpB / noContrib;
+            outTmpA = (noContrib == 0) ? 0 : outTmpA / noContrib;
 
             if (keepOut) {
                 if (add) {
@@ -125,6 +135,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
             double outTmpG = 0.0;
             double outTmpB = 0.0;
             double outTmpA = 0.0;
+            double noContrib = 1.0;
             for (int m = 0; m < 5; m++) {
                 //uint32 inX = abs(2 * (int)outX + m - 2);
                 //if (inX >= w) inX -= (2 * (inX - w) + 2);
@@ -140,12 +151,21 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
                     if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * w + inX]);
-                    outTmpR += W[m] * W[n] * inPixel->r;
-                    outTmpG += W[m] * W[n] * inPixel->g;
-                    outTmpB += W[m] * W[n] * inPixel->b;
-                    outTmpA += W[m] * W[n] * inPixel->a;
+
+                    if (inPixel->a != 255) {
+                        noContrib -= W[m] * W[n];
+                    } else {
+                        outTmpR += W[m] * W[n] * inPixel->r;
+                        outTmpG += W[m] * W[n] * inPixel->g;
+                        outTmpB += W[m] * W[n] * inPixel->b;
+                        outTmpA += W[m] * W[n] * inPixel->a;
+                    }
                 }
             }
+            outTmpR = (noContrib == 0) ? 0 : outTmpR / noContrib;
+            outTmpG = (noContrib == 0) ? 0 : outTmpG / noContrib;
+            outTmpB = (noContrib == 0) ? 0 : outTmpB / noContrib;
+            outTmpA = (noContrib == 0) ? 0 : outTmpA / noContrib;
             outIndex->r = (int16)lrint(outTmpR);
             outIndex->g = (int16)lrint(outTmpG);
             outIndex->b = (int16)lrint(outTmpB);
@@ -252,7 +272,7 @@ vector<LPPixel*> *laplacianPyramid(TIFF *image, int32 levels) {
 
 }
 
-void collapsePyramid(vector<LPPixel*> *p, uint32 *dest) {
+void collapsePyramid(vector<LPPixel*> *p, uint32 *dest, uint32 *mask) {
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
@@ -271,15 +291,17 @@ void collapsePyramid(vector<LPPixel*> *p, uint32 *dest) {
             pixel->g = min(255, max(0, (int)pixel->g));
             pixel->b = min(255, max(0, (int)pixel->b));
             pixel->a = min(255, max(0, (int)pixel->a));
+
+            uint32 maskP = mask[(j+ROIFirstY) * OutputWidth + (i+ROIFirstX)];
             uint32 p;
-            //if (pixel->a != 255) {
-            //    p = TRANS;
-            //} else {
+            if (TIFFGetA(maskP) != 255) {
+                p = TRANS;
+            } else {
                 p = (pixel->r & 0xFF)
                         | ((pixel->g & 0xFF) << 8)
                         | ((pixel->b & 0xFF) << 16)
                         | ((pixel->a & 0xFF) << 24);
-            //}
+            }
             dest[(j+ROIFirstY) * OutputWidth + (i+ROIFirstX)] = p;
             pixel++;
         }

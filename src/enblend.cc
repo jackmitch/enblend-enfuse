@@ -295,10 +295,11 @@ int main(int argc, char** argv) {
         blend(maskPyramid, inputLP, outputLP);
 
         // collapse result into outputBuf
-        collapsePyramid(outputLP, outputBuf);
+        collapsePyramid(outputLP, outputBuf, mask);
 
         TIFFClose(inputTIFF);
 
+        //outputBuf = mask;
         _TIFFfree(mask);
 
         for (int32 i = 0; i < maximumLevels; i++) {

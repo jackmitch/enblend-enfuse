@@ -37,7 +37,7 @@ void thinMask(uint32 *mask);
 std::vector<LPPixel*> *gaussianPyramid(uint32 *mask, int32 levels);
 std::vector<LPPixel*> *laplacianPyramid(uint32 *image, int32 levels);
 std::vector<LPPixel*> *laplacianPyramid(TIFF *image, int32 levels);
-void collapsePyramid(std::vector<LPPixel*> *p, uint32 *dest);
+void collapsePyramid(std::vector<LPPixel*> *p, uint32 *dest, uint32 *mask);
 
 void blend(std::vector<LPPixel*> *maskGP,
         std::vector<LPPixel*> *inputLP,

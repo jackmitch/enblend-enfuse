@@ -56,19 +56,16 @@ void blend(std::vector<LPPixel*> *maskGP,
         LPPixel *outPixel = (*outputLP)[layer];
 
         for (uint32 index = 0; index < (layerWidth * layerHeight); index++) {
-            double outRCoeff = maskPixel->r / 255.0;
-            double outGCoeff = maskPixel->g / 255.0;
-            double outBCoeff = maskPixel->b / 255.0;
-            double outACoeff = maskPixel->a / 255.0;
+            double outCoeff = maskPixel->r / 255.0;
 
-            double outRD = outPixel->r * outRCoeff
-                    + inPixel->r * (1.0 - outRCoeff);
-            double outGD = outPixel->g * outGCoeff
-                    + inPixel->g * (1.0 - outGCoeff);
-            double outBD = outPixel->b * outBCoeff
-                    + inPixel->b * (1.0 - outBCoeff);
-            double outAD = outPixel->a * outACoeff
-                    + inPixel->a * (1.0 - outACoeff);
+            double outRD = outPixel->r * outCoeff
+                    + inPixel->r * (1.0 - outCoeff);
+            double outGD = outPixel->g * outCoeff
+                    + inPixel->g * (1.0 - outCoeff);
+            double outBD = outPixel->b * outCoeff
+                    + inPixel->b * (1.0 - outCoeff);
+            double outAD = outPixel->a * outCoeff
+                    + inPixel->a * (1.0 - outCoeff);
 
             outPixel->r = (int16)lrint(outRD);
             outPixel->g = (int16)lrint(outGD);

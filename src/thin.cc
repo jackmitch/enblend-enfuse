@@ -141,10 +141,10 @@ void thinMask(uint32 *mask) {
             blackPixelsRemaining = 0;
 
             // Build initial previous scan buffer.
-            pMap = (mask[coord(ROIFirstX,ROIFirstY)] == BLACK) ? 0777 : 0776;
+            pMap = (mask[coord(ROIFirstX,ROIFirstY)] & 1) ? 0777 : 0776;
             for (x = ROIFirstX; x < ROILastX; x++) {
                 pMap = ((pMap << 1) & 0666)
-                        | ((mask[coord(x+1,ROIFirstY)] == BLACK) ? 0111 : 0110);
+                        | ((mask[coord(x+1,ROIFirstY)] & 1) ? 0111 : 0110);
                 qbMapArray[x-ROIFirstX] = pMap;
             }
             // Right edge pixel
@@ -156,7 +156,7 @@ void thinMask(uint32 *mask) {
                 // Calculate first pMap.
                 qMap = qbMapArray[0];
                 pMap = ((qMap << 2) & 0110) | 0666
-                        | ((mask[coord(ROIFirstX,y+1)] == BLACK) ? 0001 : 0000);
+                        | ((mask[coord(ROIFirstX,y+1)] & 1) ? 0001 : 0000);
 
                 // Process pixels across row.
                 for (x = ROIFirstX; x <= ROILastX ; x++) {
@@ -164,7 +164,7 @@ void thinMask(uint32 *mask) {
                     pMap = ((pMap << 1) & 0666) | ((qMap << 3) & 0110);
 
                     if (x != OutputWidth - 1) {
-                        pMap |= ((mask[coord(x+1,y+1)] == BLACK) ? 0001 : 0000);
+                        pMap |= ((mask[coord(x+1,y+1)] & 1) ? 0001 : 0000);
                     } else {
                         // Right edge.
                         pMap |= 0001;
@@ -176,8 +176,11 @@ void thinMask(uint32 *mask) {
                             && remarkTable[pMap]) {
                         // Modify pixel.
                         modifiedPixelCount++;
-                        mask[coord(x,y)] =
-                                mask[coord(x,y) + directionIndexOffset];
+                        // Remove black bit, do not change trans bits.
+                        mask[coord(x,y)] &= 0xFF000000;
+                        // Set color mark bit, do not change trans bits.
+                        mask[coord(x,y)] |= (0x00FFFFFF &
+                                mask[coord(x,y) + directionIndexOffset]);
                     }
                     else if ((pMap & 0020) != 0) {
                         blackPixelsRemaining++;
@@ -198,8 +201,13 @@ void thinMask(uint32 *mask) {
                         && remarkTable[pMap]) {
                     // Modify pixel.
                     modifiedPixelCount++;
-                    mask[coord(x,y)] =
-                            mask[coord(x,y) + directionIndexOffset];
+                    // Remove black bit, do not change trans bits.
+                    mask[coord(x,y)] &= 0xFF000000;
+                    // Set color mark bit, do not change trans bits.
+                    mask[coord(x,y)] |= (0x00FFFFFF &
+                            mask[coord(x,y) + directionIndexOffset]);
+                    //mask[coord(x,y)] =
+                    //        mask[coord(x,y) + directionIndexOffset];
                 }
                 else if ((pMap & 0020) != 0) {
                     blackPixelsRemaining++;
