@@ -49,8 +49,33 @@ void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
 
     cout << "max_alpha=" << (int)GetMaxAlpha<alpha_value_type>() << endl;
 
+    // Create the initial white image.
+    EnblendROI whiteBB;
     vigra::ImageImportInfo *whiteImageInfo =
-            assemble<ImageType, AlphaType>(imageInfoList, inputUnion);
+            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+
+    // Main blending loop.
+    while (!imageInfoList.empty()) {
+
+        // Create the black image.
+        EnblendROI blackBB;
+        vigra::ImageImportInfo *blackImageInfo =
+                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
+
+        // Union bounding box of whiteImage and blackImage.
+        EnblendROI uBB;
+        whiteBB.unite(blackBB, uBB);
+
+        // Intersection bounding box of whiteImage and blackImage.
+        EnblendROI iBB;
+        bool overlap = whiteBB.intersect(blackBB, iBB);
+
+        // Create the blend mask.
+        vigra::ImageImportInfo *maskImageInfo =
+                mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
+                        inputUnion, uBB, iBB);
+
+    }
 
     delete whiteImageInfo;
 }

@@ -31,6 +31,7 @@
 
 #include "common.h"
 #include "assemble.h"
+#include "mask.h"
 #include "enblend.h"
 
 #include "vigra/impex.hxx"
@@ -270,11 +271,17 @@ int main(int argc, char** argv) {
     // The size of the output image.
     if (Verbose > 0) {
         // print inputUnion.
+        vigra::Diff2D ul = inputUnion.getUL();
+        vigra::Diff2D lr = inputUnion.getLR();
         vigra::Diff2D outputImageSize = inputUnion.size();
         cout << "Output image size: "
+             << "(" << ul.x << ", " << ul.y << ") -> "
+             << "(" << lr.x << ", " << lr.y << ") = ("
              << outputImageSize.x
              << " x "
-             << outputImageSize.y << endl;
+             << outputImageSize.y
+             << ")"
+             << endl;
     }
 
     // Sanity check on the output image file.
