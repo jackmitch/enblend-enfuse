@@ -38,6 +38,8 @@ int Verbose = 0;
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
 double StitchMismatchThreshold = 0.4;
+uint16 PlanarConfig;
+uint16 Photometric;
 
 // The region of interest for the current operation.
 uint32 ROIFirstX;
@@ -162,18 +164,15 @@ int main(int argc, char** argv) {
 
         if (listIterator == inputFileNameList.begin()) {
             // The first input tiff
-            uint16 planarConfig;
-            uint16 photometric;
-
-            TIFFGetField(inputTIFF, TIFFTAG_PLANARCONFIG, &planarConfig);
-            TIFFGetField(inputTIFF, TIFFTAG_PHOTOMETRIC, &photometric);
+            TIFFGetField(inputTIFF, TIFFTAG_PLANARCONFIG, &PlanarConfig);
+            TIFFGetField(inputTIFF, TIFFTAG_PHOTOMETRIC, &Photometric);
             TIFFGetField(inputTIFF, TIFFTAG_IMAGEWIDTH, &OutputWidth);
             TIFFGetField(inputTIFF, TIFFTAG_IMAGELENGTH, &OutputHeight);
 
             TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
             TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
-            TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, photometric);
-            TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, planarConfig);
+            TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
+            TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
 
             if (Verbose > 0) {
                 cout << "output size = "
@@ -234,15 +233,18 @@ int main(int argc, char** argv) {
 
         // Build Laplacian pyramid from blackImage
         vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
+        savePyramid(*blackLP, "black");
 
         // Free allocated memory.
         _TIFFfree(blackImage);
 
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
+        savePyramid(*maskGP, "mask");
 
         // Build Laplacian pyramid from whiteImage
         vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
+        savePyramid(*whiteLP, "white");
 
         // Blend pyramids
         blend(*whiteLP, *blackLP, *maskGP);

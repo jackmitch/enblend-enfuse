@@ -6,4 +6,8 @@
 - Deallocate memory sooner after it is not needed anymore instead of at the end
   of each blend pass.
 
+- Blend RGBA channels separately to save memory. Option or default?
+
 - Make the pre-assembler smarter.
+
+- Make an RPM.

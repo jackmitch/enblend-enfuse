@@ -54,6 +54,7 @@ std::vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels);
 std::vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels);
 std::vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels);
 void collapsePyramid(std::vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask);
+void savePyramid(std::vector<LPPixel*> &p, char *prefix);
 
 // thin.cc
 void thinMask(MaskPixel *mask);
