@@ -5,7 +5,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: tiffUtils.h,v 1.1 2004-07-12 23:29:31 mihal Exp $
+ *  $Id: tiffUtils.h,v 1.2 2004-11-18 06:59:18 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -21,11 +21,15 @@
  *  License along with this software; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ *  Modifications by Andrew Mihal 17 November 2004
+ *   - Throw error if TIFFWrite* returns -1 (may indicate LZW is disabled)
+ *  Andrew Mihal's modifications are covered by the GPL.
  */
 
 #ifndef _TIFFUTILS_H
 #define _TIFFUTILS_H
 
+#include <vigra/error.hxx>
 #include <vigra/tiff.hxx>
 #include <vigra/transformimage.hxx>
 #include <vigra/functorexpression.hxx>
@@ -132,7 +136,11 @@ createScalarATiffImage(ImageIterator upperleft, ImageIterator lowerright,
                 *pg = a(xs);
                 *alpha = alphaA(xa);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra::vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -196,7 +204,11 @@ createRGBATiffImage(ImageIterator upperleft, ImageIterator lowerright,
                 *pb = a.blue(xs);
                 *alpha = alphaA(xa);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra::vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)

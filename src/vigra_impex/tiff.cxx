@@ -33,6 +33,8 @@
  *  - Modified encoder to better estimate the number of rows per strip.
  *  - Modified decoder to use the scanline interface - the strip-based
  *    interface hogs memory when the rows/strip value is large.
+ * Modification by Andrew Mihal, 17 November 2004:
+ *  - Throw error if TIFFWrite* returns -1 (may indicate LZW is disabled)
  * Andrew Mihal's modifications are covered by the VIGRA license.
  */
 
@@ -690,8 +692,12 @@ namespace vigra {
                 // write next strip
                 stripindex = 0;
 
-                TIFFWriteEncodedStrip( tiff, strip++, stripbuffer[0],
+                // MIHAL testing return value.
+                tsize_t rv = TIFFWriteEncodedStrip( tiff, strip++, stripbuffer[0],
                                        TIFFVStripSize( tiff, rows ) );
+                if (rv == -1) {
+                    vigra_fail("error in TIFFWriteEncodedStrip");
+                }
             }
         }
     };

@@ -19,7 +19,10 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
- 
+/* Modifications by Andrew Mihal, 17 November 2004
+ *  - Throw error if TIFFWrite* returns -1 (may indicate LZW is disabled)
+ * Andrew Mihal's modifications are covered by the VIGRA license.
+ */ 
 #ifndef VIGRA_TIFF_HXX
 #define VIGRA_TIFF_HXX
 
@@ -1168,7 +1171,11 @@ createBScalarTiffImage(ImageIterator upperleft, ImageIterator lowerright,
             {
                 p[x] = a(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1211,7 +1218,11 @@ createShortScalarTiffImage(ImageIterator upperleft, ImageIterator lowerright,
             {
                 p[x] = a(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1254,7 +1265,11 @@ createIScalarTiffImage(ImageIterator upperleft, ImageIterator lowerright,
             {
                 p[x] = a(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1297,7 +1312,11 @@ createFScalarTiffImage(ImageIterator upperleft, ImageIterator lowerright,
             {
                 p[x] = a(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1340,7 +1359,11 @@ createDScalarTiffImage(ImageIterator upperleft, ImageIterator lowerright,
             {
                 p[x] = a(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1527,7 +1550,11 @@ createBRGBTiffImage(RGBImageIterator upperleft, RGBImageIterator lowerright,
                 *pg = a.green(xs);
                 *pb = a.blue(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1575,7 +1602,11 @@ createShortRGBTiffImage(RGBImageIterator upperleft, RGBImageIterator lowerright,
                 *pg = a.green(xs);
                 *pb = a.blue(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1623,7 +1654,11 @@ createIRGBTiffImage(RGBImageIterator upperleft, RGBImageIterator lowerright,
                 *pg = a.green(xs);
                 *pb = a.blue(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1671,7 +1706,11 @@ createFRGBTiffImage(RGBImageIterator upperleft, RGBImageIterator lowerright,
                 *pg = a.green(xs);
                 *pb = a.blue(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
@@ -1719,7 +1758,11 @@ createDRGBTiffImage(RGBImageIterator upperleft, RGBImageIterator lowerright,
                 *pg = a.green(xs);
                 *pb = a.blue(xs);
             }
-            TIFFWriteScanline(tiff, buf, y);
+            // MIHAL testing return value.
+            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
+            if (rv == -1) {
+                vigra_fail("error in TIFFWriteScanline");
+            }
         }
     }
     catch(...)
