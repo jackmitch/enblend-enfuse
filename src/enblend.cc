@@ -31,6 +31,20 @@
 
 #include <boost/random/mersenne_twister.hpp>
 
+// Globals
+
+// Random number generator for dithering
+boost::mt19937 Twister;
+
+// Global values from command line parameters.
+int Verbose = 1;
+unsigned int ExactLevels = 0;
+bool OneAtATime = true;
+bool Wraparound = false;
+double StitchMismatchThreshold = 0.4;
+bool GimpAssociatedAlphaHack = false;
+bool UseLabColor = false;
+
 #include "common.h"
 #include "enblend.h"
 
@@ -79,18 +93,6 @@ using vigra::USRGBImage;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
-
-// Random number generator for dithering
-boost::mt19937 Twister;
-
-// Global values from command line parameters.
-int Verbose = 1;
-unsigned int ExactLevels = 0;
-bool OneAtATime = true;
-bool Wraparound = false;
-double StitchMismatchThreshold = 0.4;
-bool GimpAssociatedAlphaHack = false;
-bool UseLabColor = false;
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {

@@ -710,7 +710,7 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
                                    typename USRGBImage::value_type(NumericTraits<unsigned short>::max())));
 
         ImageExportInfo info(filenameBuf);
-        exportImage(srcImageRange(usPyramid), Info);
+        exportImage(srcImageRange(usPyramid), info);
     }
 };
 
