@@ -165,6 +165,9 @@ uint32 roiBounds(FILE *maskFile) {
         }
     }
 
+    free(row);
+    free(firstRow);
+
     if (!foundMulticolorRow && !foundMulticolorColumn) {
         // Sanity check for situation where there is no transition line
         // this means one image has no contribution.
@@ -180,9 +183,6 @@ uint32 roiBounds(FILE *maskFile) {
         firstMulticolorRow = UBBFirstY;
         lastMulticolorRow = UBBLastY;
     }
-
-    free(row);
-    free(firstRow);
 
     if (Verbose > 0) {
         cout << "Transition line bounding box = ("
