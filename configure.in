@@ -10,12 +10,12 @@ AC_PROG_CC
 #CXXFLAGS = 
 
 # Checks for libraries.
-AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_ERROR([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
+AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h])
-AC_CHECK_HEADER(tiffio.h,,AC_MSG_ERROR([libtiff-devel header files are required to compile enblend.]))
+AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -26,7 +26,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS([memset rint strchr strrchr])
+AC_CHECK_FUNCS([memset rint strchr strrchr mkstemp])
 
 AC_CONFIG_FILES([Makefile
                  doc/Makefile

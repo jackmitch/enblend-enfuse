@@ -61,6 +61,8 @@ extern uint32 ROILastY;
 FILE *createTmpfile() {
 
     char tmpFilename[] = ".enblend_tmpXXXXXX";
+
+#ifdef HAVE_MKSTEMP
     int tmpFD = mkstemp(tmpFilename);
     if (tmpFD < 0) {
         cerr << "enblend: error creating temporary file." << endl;
@@ -68,6 +70,16 @@ FILE *createTmpfile() {
     }
 
     FILE *f = fdopen(tmpFD, "wb+");
+#else
+    char *tmpReturn = mktemp(tmpFilename);
+    if (tmpReturn == NULL) {
+        cerr << "enblend: error creating temporary file." << endl;
+        exit(1);
+    }
+
+    FILE *f = fopen(tmpFilename, "wb+");
+#endif
+
     if (f == NULL) {
         cerr << "enblend: error opening temporary file." << endl;
         perror("reason");
