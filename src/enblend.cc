@@ -35,12 +35,14 @@
 
 #include "vigra/impex.hxx"
 #include "vigra/stdimage.hxx"
+#include "vigra_ext/cachedfileimage.hxx"
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::list;
 
+using vigra::CachedFileImageDirector;
 using vigra::BImage;
 using vigra::BRGBImage;
 using vigra::Diff2D;
@@ -98,18 +100,23 @@ void printUsageAndExit() {
     cout << "==== enblend, version " << VERSION << " ====" << endl;
     cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
     cout << endl;
-    cout << "Options:" << endl;
+    cout << "Common options:" << endl;
+    cout << " -a                Pre-assemble non-overlapping images" << endl;
+    cout << " -h                Print this help message" << endl;
+    cout << " -l number         Maximum number of levels to use" << endl;
     cout << " -o filename       Write output to file" << endl;
+    cout << " -v                Verbose" << endl;
+    cout << " -w                Blend across -180/+180 boundary" << endl;
+
+    cout << endl << "Extended options:" << endl;
+    cout << " -b kilobytes      Image cache block size (default=1MB)" << endl;
+    cout << " -c                Use CIE L*a*b* color space" << endl;
+    cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout << " -m megabytes      Use this much memory before going to disk (default=1GB)" << endl;
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
-    cout << " -a                Pre-assemble non-overlapping images" << endl;
-    cout << " -c                Use CIE L*a*b* color space" << endl;
-    cout << " -l number         Maximum number of levels to use" << endl;
+    // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
-    cout << " -w                Blend across -180/+180 boundary" << endl;
-    cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
-    cout << " -v                Verbose" << endl;
-    cout << " -h                Print this help message" << endl;
     exit(1);
 }
 
@@ -126,14 +133,75 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "cgawsl:o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "ab:cghl:m:o:st:vw")) != -1) {
         switch (c) {
+            case 'a': {
+                OneAtATime = false;
+                break;
+            }
+            case 'b': {
+                int kilobytes = atoi(optarg);
+                if (kilobytes < 1) {
+                    cerr << "enblend: cache block size must be 1 or more."
+                         << endl;
+                    printUsageAndExit();
+                }
+                CachedFileImageDirector::v().setBlockSize((long long)kilobytes << 10);
+                break;
+            }
+            case 'c': {
+                UseLabColor = true;
+                break;
+            }
+            case 'g': {
+                GimpAssociatedAlphaHack = true;
+                break;
+            }
             case 'h': {
                 printUsageAndExit();
                 break;
             }
-            case 'v': {
-                Verbose++;
+            case 'l': {
+                int levels = atoi(optarg);
+                if (levels < 1) {
+                    cerr << "enblend: levels must be 1 or more."
+                         << endl;
+                    printUsageAndExit();
+                }
+                MaximumLevels = (unsigned int)levels;
+                break;
+            }
+            case 'm': {
+                int megabytes = atoi(optarg);
+                if (megabytes < 1) {
+                    cerr << "enblend: memory limit must be 1 or more."
+                         << endl;
+                    printUsageAndExit();
+                }
+                CachedFileImageDirector::v().setAllocation((long long)megabytes << 20);
+                break;
+            }
+            case 'o': {
+                if (outputFileName != NULL) {
+                    cerr << "enblend: more than one output file specified."
+                         << endl;
+                    printUsageAndExit();
+                    break;
+                }
+                int len = strlen(optarg) + 1;
+                outputFileName = new char[len];
+                if (outputFileName == NULL) {
+                    cerr << endl
+                         << "enblend: out of memory (in main for outputFileName)" << endl;
+                    exit(1);
+                }
+                strncpy(outputFileName, optarg, len);
+                break;
+            }
+            case 's': {
+                // Deprecated sequential blending flag.
+                OneAtATime = true;
+                cerr << "enblend: the -s flag is deprecated." << endl;
                 break;
             }
             case 't': {
@@ -147,53 +215,12 @@ int main(int argc, char** argv) {
                 }
                 break;
             }
-            case 'o': {
-                if (outputFileName != NULL) {
-                    cerr << "enblend: more than one output file specified."
-                         << endl;
-                    printUsageAndExit();
-                    break;
-                }
-                int len = strlen(optarg) + 1;
-                outputFileName = (char*)malloc(len * sizeof(char));
-                if (outputFileName == NULL) {
-                    cerr << endl
-                         << "enblend: out of memory (in main for outputFileName)" << endl;
-                    exit(1);
-                }
-                strncpy(outputFileName, optarg, len);
-                break;
-            }
-            case 'l': {
-                int levels = atoi(optarg);
-                if (levels < 1) {
-                    cerr << "enblend: levels must be 1 or more."
-                         << endl;
-                    printUsageAndExit();
-                }
-                MaximumLevels = (unsigned int)levels;
-                break;
-            }
-            case 's': {
-                // Deprecated sequential blending flag.
-                OneAtATime = true;
-                cerr << "enblend: the -s flag is deprecated." << endl;
+            case 'v': {
+                Verbose++;
                 break;
             }
             case 'w': {
                 Wraparound = true;
-                break;
-            }
-            case 'a': {
-                OneAtATime = false;
-                break;
-            }
-            case 'g': {
-                GimpAssociatedAlphaHack = true;
-                break;
-            }
-            case 'c': {
-                UseLabColor = true;
                 break;
             }
             default: {
@@ -414,6 +441,11 @@ int main(int argc, char** argv) {
                 exit(1);
             //}
         }
+    } catch (std::bad_alloc& e) {
+        cerr << endl << "enblend: out of memory"
+             << endl << e.what()
+             << endl;
+        exit(1);
     } catch (StdException& e) {
         cerr << endl << "enblend: vigra threw an exception:"
              << endl << e.what()
@@ -427,6 +459,8 @@ int main(int argc, char** argv) {
     while (imageInfoIterator != imageInfoList.end()) {
         delete *imageInfoIterator++;
     }
+
+    delete[] outputFileName;
 
     return 0;
 }

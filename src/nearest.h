@@ -100,6 +100,7 @@ void nearestFeatureTransform(bool wraparound,
     int w = src_lowerright.x - src_upperleft.x;
     int h = src_lowerright.y - src_upperleft.y;
 
+    // This image will be iterated over columns.
     UIImage dnfColumn(w, h);
     UIImage dnfLeft(w, h);
 

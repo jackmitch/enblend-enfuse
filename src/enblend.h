@@ -148,7 +148,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                     inputUnionPixels * (sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
                     + (4/3) * roiBBPixels *
                             (sizeof(MaskPyramidValueType) + 2*sizeof(ImagePyramidValueType));
-            long long mbytes = bytes / 1000000;
+            int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for this blend step: "
                  << mbytes
                  << "MB" << endl;

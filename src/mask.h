@@ -72,6 +72,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
     // 255 = inside black image only.
+    // This image will be iterated over columns
     BImage *maskInit = new BImage(uBB.size());
     // mem xsection = BImage*ubb
 
@@ -89,6 +90,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
+    // This image will be iterated over columns
     BImage *maskTransform = new BImage(uBB.size());
     // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
