@@ -46,6 +46,7 @@ namespace vigra {
 /** Abstract base class for CachedFileImages. */
 class CachedFileImageBase {
 public:
+    virtual ~CachedFileImageBase() { }
     virtual int numBlocksAllocated() const = 0;
     virtual int numBlocksNeeded() const = 0;
     virtual void swapOutBlock() const = 0;
@@ -65,10 +66,11 @@ public:
         // temp backing files get deleted.
         if (!imageList.empty()) {
             cout << "Cleaning up temporary files." << endl;
-            list<CachedFileImageBase const *>::iterator i;
-            for (i = imageList.begin(); i != imageList.end(); i++) {
-                cout << "deleting image " << *i << endl;
-                delete *i;
+            while (!imageList.empty()) {
+                CachedFileImageBase const *image = imageList.front();
+                cout << "deleting image " << image << endl;
+                // Remember that this delete call modifies imageList.
+                delete image;
             }
         }
         delete pool;
@@ -136,18 +138,21 @@ public:
     // Request a certain number of blocks for a new image.
     // Returns the number of blocks the new image may use.
     int requestBlocksForNewImage(int blocks, CachedFileImageBase const * image) {
-        //cout << "director.requestBlocksForNewImage(blocks=" << blocks << " image=" << image << endl;
+        cout << "director.requestBlocksForNewImage(blocks=" << blocks << " image=" << image << endl;
         int blocksAllocated = 0;
-        if (blocksAvailable >= blocks) {
-            // Plenty of blocks available.
-            // Give the image all the blocks it wants.
-            blocksAllocated = blocks;
-            blocksAvailable -= blocks;
-        } else if (blocksAvailable > 0) {
-            // Not enough blocks available.
-            // Give the image as many blocks as are available.
-            blocksAllocated = blocksAvailable;
-            blocksAvailable = 0;
+        //if (blocksAvailable >= blocks) {
+        //    // Plenty of blocks available.
+        //    // Give the image all the blocks it wants.
+        //    blocksAllocated = blocks;
+        //    blocksAvailable -= blocks;
+        //} else if (blocksAvailable > 0) {
+        //    // Not enough blocks available.
+        //    // Give the image as many blocks as are available.
+        //    blocksAllocated = blocksAvailable;
+        //    blocksAvailable = 0;
+        if (blocksAvailable > 0) {
+            blocksAllocated = 1;
+            blocksAvailable--;
         } else {
             // Zero blocks available.
             // Try to free a block by forcing another image to swap.
@@ -181,7 +186,7 @@ public:
     void returnBlocksUnregisterImage(int blocks, CachedFileImageBase const * image) {
         blocksAvailable += blocks;
         imageList.remove(image);
-        //cout << "director.returnBlocks: blocks=" << blocks << " image=" << image << endl;
+        cout << "director.returnBlocks: blocks=" << blocks << " image=" << image << endl;
         //cout << "director.returnBlocks: blocksAvailable=" << blocksAvailable << endl;
         //cout << "director.returnBlocks: imageList=";
         //std::copy(imageList.begin(), imageList.end(), std::ostream_iterator<CachedFileImageBase const *>(cout, " "));
@@ -310,7 +315,9 @@ protected:
             //cout << "imageAllocation " << imageAllocation << endl;
             //cout << "candidateAllocation " << candidateAllocation << endl;
             //cout << "director.freeBlock candidate=" << candidate << " candidate_blocks=" << candidate->numBlocksAllocated() << " image_blocks=" << image->numBlocksAllocated() << endl;
-            if (candidate->numBlocksAllocated() > image->numBlocksAllocated()) {
+            // Don't try to break close ties - else if blocks cannot be divided up
+            // evenly the remainder will just get rotated around.
+            if (candidate->numBlocksAllocated() > (1+image->numBlocksAllocated())) {
                 cout << "director.freeBlock(image=" << image << ") candidate=" << candidate << " return 1" << endl;
                 candidate->swapOutBlock();
                 // mark candidate as most-recently-missed.
@@ -319,6 +326,16 @@ protected:
                 return 1;
             }
         }
+
+        // Try harder to get another block for image?
+        // Otherwise the thrash exception will be thrown.
+        //if (image->numBlocksAllocated() == 1 && image->numBlocksNeeded() > 1) {
+            // Look for images that have one block allocated and only need one
+            // block. Make them swap. Put donor to rear of list.
+        //}
+
+        // Try even harder?
+        // do the above and also turn off rotation constraint?
 
         cout << "director.freeBlock(image=" << image << ") return 0" << endl;
 
@@ -769,7 +786,7 @@ public:
     }
 
     void printBlockStats() const {
-        cout << "image " << this << " blocksAllocated=" << blocksAllocated_ << "/" << blocksNeeded_ << " blocksInMemory={";
+        cout << "image " << this << " blocksAllocated=" << blocksAllocated_ << "/" << blocksNeeded_ << " mrl=" << *mostRecentlyLoadedBlockIterator_ << " blocksInMemory={";
         std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
         cout << "}" << endl;
     }
@@ -822,6 +839,10 @@ private:
     // List of blocks in memory. 
     // Blocks are in sequential order.
     mutable list<int> *blocksInMemory_;
+
+    // An iterator that points to the most recently loaded block
+    // in the blocksInMemory_ list.
+    mutable list<int>::iterator mostRecentlyLoadedBlockIterator_;
 
     // Array of pointers to first pixel in each line.
     mutable PIXELTYPE ** lines_;
@@ -947,6 +968,8 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
+    mostRecentlyLoadedBlockIterator_ = blocksInMemory_->begin();
+
     return;
 };
 
@@ -993,6 +1016,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     int moreBlocks = CachedFileImageDirector::v().registerCacheMiss(this);
     if (moreBlocks == 0 && blocksAllocated_ == 0) {
+        //FIXME make this message understandable.
         vigra_fail("CachedFileImage::getLinePointerCacheMiss(): no blocks available "
                 " and attempt to free blocks failed.");
     } else if (moreBlocks == 0) {
@@ -1043,6 +1067,13 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
         if (*i > blockNumber) break;
     }
     blocksInMemory_->insert(i, blockNumber);
+    mostRecentlyLoadedBlockIterator_ = --i;
+    // Push mostRecentlyLoadedBlockIterator to the end of a sequential sequence
+    // of blocks in memory.
+    for (++i; i != blocksInMemory_->end(); ++i) {
+        if (*i == ++blockNumber) mostRecentlyLoadedBlockIterator_ = i;
+        else break;
+    }
 
     blocksAllocated_++;
 
@@ -1071,19 +1102,34 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
     //cout << endl;
 
     int blockNumber = 0;
-    if (blocksAllocated_ == 1) {
-        //vigra_fail("");
+    if (blocksAllocated_ == 1 && blocksNeeded_ > 1) {
+        // FIXME provide estimate on how many blocks are needed.
+        vigra_fail("enblend: Out of memory blocks. Try using the -m flag to increase the"
+                " amount of memory to use, or use the -b flag to decrease the block size");
         
-        blockNumber = blocksInMemory_->back();
-        blocksInMemory_->pop_back();
+        //blockNumber = blocksInMemory_->back();
+        //blocksInMemory_->pop_back();
 
     } else {
-        list<int>::iterator penultimate = --(blocksInMemory_->end());
-        blockNumber = *(--penultimate);
-        blocksInMemory_->erase(penultimate);
+        if (mostRecentlyLoadedBlockIterator_ == blocksInMemory_->begin()) {
+            // We're at the beginning of the image.
+            blockNumber = blocksInMemory_->back();
+            blocksInMemory_->pop_back();
+        } else {
+            // Try the block before mostRecentlyLoadedBlockIterator.
+            list<int>::iterator candidate = mostRecentlyLoadedBlockIterator_;
+            --candidate;
+            blockNumber = *candidate;
+            blocksInMemory_->erase(candidate);
+        }
+        //    candidate = blocksInMemory_.end();
+        //    candidate--;
+        //list<int>::iterator penultimate = --(blocksInMemory_->end());
+        //blockNumber = *(--penultimate);
+        //blocksInMemory_->erase(penultimate);
     }
 
-    //cout << "swapOutBlock after list remove: ";
+    //cout << "swapOutBlock after list remove block=" << blockNumber << ": ";
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
@@ -1253,6 +1299,7 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
         std::swap(blocksAllocated_, rhs.blocksAllocated_);
         std::swap(blocksNeeded_, rhs.blocksNeeded_);
         std::swap(blocksInMemory_, rhs.blocksInMemory_);
+        std::swap(mostRecentlyLoadedBlockIterator_, rhs.mostRecentlyLoadedBlockIterator_);
         std::swap(lines_, rhs.lines_);
         std::swap(blockIsClean_, rhs.blockIsClean_);
         std::swap(blockInFile_, rhs.blockInFile_);
