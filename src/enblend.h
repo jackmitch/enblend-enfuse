@@ -239,7 +239,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         bool wraparoundForMask = Wraparound && 
                 (uBB.size().x == inputUnion.size().x);
         EnblendROI mBB;
-        MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
+        MaskType *mask = createMask<ImageType, AlphaType, MaskType>(whitePair, blackPair,
                 iBB, uBB, wraparoundForMask, mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb

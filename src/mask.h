@@ -53,6 +53,7 @@ using vigra::BCFImage;
 using vigra::BImage;
 using vigra::BlueAccessor;
 using vigra::BRGBCFImage;
+using vigra::combineThreeImages;
 using vigra::Diff2D;
 using vigra::exportImage;
 using vigra::FindMinMax;
@@ -64,12 +65,16 @@ using vigra::initImageIf;
 using vigra::inspectImage;
 using vigra::linearIntensityTransform;
 using vigra::NumericTraits;
+using vigra::RedAccessor;
+using vigra::RGBToGrayAccessor;
+using vigra::RGBValue;
 using vigra::transformImage;
 using vigra::transformImageIf;
 using vigra::UIImage;
 
 using vigra::functor::Arg1;
 using vigra::functor::Arg2;
+using vigra::functor::Arg3;
 using vigra::functor::ifThenElse;
 using vigra::functor::Param;
 
@@ -88,9 +93,9 @@ namespace enblend {
 
 /** Calculate a blending mask between whiteImage and blackImage.
  */
-template <typename AlphaType, typename MaskType>
-MaskType *createMask(const AlphaType * const whiteAlpha,
-        const AlphaType * const blackAlpha,
+template <typename ImageType, typename AlphaType, typename MaskType>
+MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /*AlphaType * const whiteAlpha,*/
+        const pair<const ImageType*, const AlphaType*> blackPair, /*const AlphaType * const blackAlpha,*/
         const EnblendROI &iBB,
         const EnblendROI &uBB,
         const bool wraparound,
@@ -99,6 +104,11 @@ MaskType *createMask(const AlphaType * const whiteAlpha,
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
     typedef typename MaskType::Accessor MaskAccessor;
+
+    const ImageType *whiteImage = whitePair.first;
+    const AlphaType *whiteAlpha = whitePair.second;
+    const ImageType *blackImage = blackPair.first;
+    const AlphaType *blackAlpha = blackPair.second;
 
     //// Read mask from a file instead of calculating it.
     //MaskType *fileMask = new MaskType(uBB.size());
@@ -174,40 +184,77 @@ MaskType *createMask(const AlphaType * const whiteAlpha,
     // Find points
     hash_set<Diff2D> *entryExitPoints =
             findTransitionLineEntryExitPoints(iBB_uBB.apply(srcImageRange(*mask)));
+    hash_set<Diff2D> entryExitPointsCopy(*entryExitPoints);
 
-    // Debug: write mask cost function to output image file
+    // Calculate cost function in iBB_uBB
+    // Step 1: map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
     FindMinMax<UIImage::value_type> minmax;
     inspectImage(srcImageRange(*maskDistance), minmax);
     transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
             iBB_uBB.apply(destImage(*maskDistance)),
             linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
+
+    // Step N: min distance (feature) = 1<<20 mapped to infinite cost
+    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+                   iBB_uBB.apply(destImage(*maskDistance)),
+                   ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
+                              Param(NumericTraits<unsigned int>::max()),
+                              Arg1()));
+
+    // Debug: describe cost function as RGB image for visualization.
     BRGBCFImage *maskDistanceB = new BRGBCFImage(uBB.size());
+
+    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+            iBB_uBB.apply(destImage(*maskDistanceB, BlueAccessor<typename BRGBCFImage::value_type>())),
+            linearRangeMapping(0, 1<<20, 0, 200));
+
+    // Step 2: map pixel discrepancies to costs.
+    combineThreeImages(iBB.apply(srcImageRange(*whiteImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+            iBB.apply(srcImage(*blackImage, RGBToGrayAccessor<typename ImageType::value_type>())),
+            iBB_uBB.apply(srcImage(*maskDistance)),
+            iBB_uBB.apply(destImage(*maskDistance)),
+            Arg3() + (Param(1<<25) * (abs(Arg1() - Arg2()) / Param(255))));
+
+    // Map costs to 0-255 pixel range.
     transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
             iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
-            linearRangeMapping(0, 1<<20, 0, 200));
-    // Mark feature points as infinite cost (green=255)
-    combineTwoImages(iBB_uBB.apply(srcImageRange(*maskDistance)),
-                     iBB_uBB.apply(srcImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
-                     iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
-                     ifThenElse(Arg1() == Param((unsigned int)(1<<20)), Param((unsigned char)255), Arg2()));
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-                     iBB_uBB.apply(destImage(*maskDistance)),
-                    ifThenElse(Arg1() == Param((unsigned int)(1<<20)), Param(NumericTraits<unsigned int>::max()), Arg1()));
-    // Mark entry/exit points in red
-    for (hash_set<Diff2D>::iterator i = entryExitPoints->begin(); i != entryExitPoints->end(); ++i) {
-        Diff2D point = *i + iBB_uBB.getUL();
-        cout << "entry/exit point (" << point.x << ", " << point.y << ")" << endl;
-        ((*maskDistanceB)[point]).setRed(0xFF);
-    }
+            linearRangeMapping(0, 1<<25, 0, 255));
 
+    // Debug: infinite cost points mapped to 255 red pixel value.
+    combineTwoImages(iBB_uBB.apply(srcImageRange(*maskDistance)),
+                     iBB_uBB.apply(srcImage(*maskDistanceB)),
+                     iBB_uBB.apply(destImage(*maskDistanceB)),
+                     ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
+                                Param(RGBValue<unsigned char>(255,0,0)),
+                                Arg2()));
+
+    // Solve cost function
     dijkstra(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            iBB_uBB.apply(destImage(*maskDistanceB, BlueAccessor<typename BRGBCFImage::value_type>())),
+            iBB_uBB.apply(destImage(*maskDistanceB, GreenAccessor<typename BRGBCFImage::value_type>())),
             entryExitPoints);
 
-    ImageExportInfo maskDistanceUSInfo("enblend_distance.tif");
-    maskDistanceUSInfo.setPosition(uBB.getUL());
-    exportImage(srcImageRange(*maskDistanceB), maskDistanceUSInfo);
+    // Debug: combine cost visualization with mask.
+    BRGBCFImage *visualization = new BRGBCFImage(uBB.size());
+    transformImage(srcImageRange(*mask), destImage(*visualization),
+            ifThenElse(Arg1() == Param(0),
+                       Param(RGBValue<unsigned char>(0)),
+                       Param(RGBValue<unsigned char>(255))));
+    copyImage(iBB_uBB.apply(srcImageRange(*maskDistanceB)),
+            iBB_uBB.apply(destImage(*visualization)));
+
+    // Debug: mark entry/exit points in red
+    for (hash_set<Diff2D>::iterator i = entryExitPointsCopy.begin(); i != entryExitPointsCopy.end(); ++i) {
+        Diff2D point = *i + iBB_uBB.getUL();
+        cout << "entry/exit point (" << point.x << ", " << point.y << ")" << endl;
+        (*visualization)[point] = RGBValue<unsigned char>(0xff, 0xff, 0x0);
+    }
+
+    // Debug: write visualization out as tif
+    ImageExportInfo visualizationInfo("enblend_distance.tif");
+    visualizationInfo.setPosition(uBB.getUL());
+    exportImage(srcImageRange(*visualization), visualizationInfo);
     delete maskDistanceB;
+    delete visualization;
 
     delete entryExitPoints;
     delete maskDistance;
@@ -295,9 +342,10 @@ void dijkstra(CostImageIterator cost_upperleft,
         DestPathImageAccessor da,
         hash_set<Diff2D> *entryExitPoints) {
 
-    typedef typename CostAccessor::value_type CostType;
-    typedef BasicImage<CostType> CostImageType;
-    typedef priority_queue<Diff2D, vector<Diff2D>, dijkstra_compare<Diff2D, CostImageType> > PQ;
+    typedef typename CostAccessor::value_type InputCostType;
+    typedef float WorkingCostType;
+    typedef BasicImage<WorkingCostType> WorkingCostImageType;
+    typedef priority_queue<Diff2D, vector<Diff2D>, dijkstra_compare<Diff2D, WorkingCostImageType> > PQ;
 
     int w = cost_lowerright.x - cost_upperleft.x;
     int h = cost_lowerright.y - cost_upperleft.y;
@@ -313,8 +361,8 @@ void dijkstra(CostImageIterator cost_upperleft,
         const unsigned char neighborArray[] = {0xA, 8, 9, 1, 5, 4, 6, 2};
         const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
         BImage *pathNextHop = new BImage(w, h);
-        CostImageType *costSoFar = new CostImageType(w, h, NumericTraits<CostType>::max());
-        PQ *pq = new PQ(dijkstra_compare<Diff2D, CostImageType>(costSoFar));
+        WorkingCostImageType *costSoFar = new WorkingCostImageType(w, h, NumericTraits<WorkingCostType>::max());
+        PQ *pq = new PQ(dijkstra_compare<Diff2D, WorkingCostImageType>(costSoFar));
 
         // Set costSoFar to cost function at entry point
         (*costSoFar)[entryExitPoint] = ca(cost_upperleft + entryExitPoint);
@@ -326,7 +374,7 @@ void dijkstra(CostImageIterator cost_upperleft,
             Diff2D top = pq->top();
             pq->pop();
 
-            CostType costToTop = (*costSoFar)[top];
+            WorkingCostType costToTop = (*costSoFar)[top];
 
             //cout << "visiting top (" << top.x << ", " << top.y << ")"
             //     << " costToTop=" << costToTop << endl;
@@ -354,19 +402,19 @@ void dijkstra(CostImageIterator cost_upperleft,
                     // See if the neighbor has already been visited.
                     // If neighbor has maximal cost, it has not been visited.
                     // If so skip it.
-                    CostType neighborPreviousCost = (*costSoFar)[neighborPoint];
-                    if (neighborPreviousCost != NumericTraits<CostType>::max()) continue;
+                    WorkingCostType neighborPreviousCost = (*costSoFar)[neighborPoint];
+                    if (neighborPreviousCost != NumericTraits<WorkingCostType>::max()) continue;
 
-                    CostType neighborCost = ca(cost_upperleft + neighborPoint);
-                    if (neighborCost == NumericTraits<CostType>::max()) continue;
+                    WorkingCostType neighborCost = ca(cost_upperleft + neighborPoint);
+                    if (neighborCost == NumericTraits<InputCostType>::max()) continue;
 
                     //cout << "visiting neighbor (" << neighborPoint.x << ", " << neighborPoint.y << ")" << endl;
                     //cout << "neighborCost=" << neighborCost << " neighborPreviousCost=" << neighborPreviousCost << endl;
                     // Calculate new cost to neighbor (with saturating arithmetic)
-                    CostType newNeighborCost = neighborCost + costToTop;
-                    if (newNeighborCost < neighborCost) { // wraparound occured.
-                        newNeighborCost = NumericTraits<CostType>::max();
-                    }
+                    WorkingCostType newNeighborCost = neighborCost + costToTop;
+                    //if (newNeighborCost < neighborCost) { // wraparound occured.
+                    //    newNeighborCost = NumericTraits<CostType>::max();
+                    //}
                     if (newNeighborCost < neighborPreviousCost) {
                         // We have found the shortest path to neighbor.
                         (*costSoFar)[neighborPoint] = newNeighborCost;
