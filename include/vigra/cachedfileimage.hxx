@@ -1034,7 +1034,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     if (blockInFile_[blockNumber]) {
         // Find the right spot in the file.
-        off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
+        off_t offset = (off_t)width_ * (off_t)firstLineInBlock * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
@@ -1144,7 +1144,7 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         if (tmpFile_ == NULL) initTmpfile();
 
         // Find the right spot in the file.
-        off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
+        off_t offset = (off_t)width_ * (off_t)firstLineInBlock * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
