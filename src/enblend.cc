@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tiffconf.h>
 
 #include <boost/random/mersenne_twister.hpp>
 
@@ -44,6 +45,7 @@ bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseLabColor = false;
+bool UseLZW = false;
 
 #include "common.h"
 #include "enblend.h"
@@ -106,6 +108,7 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
+    cout << " -z                Use LZW compression" << endl;
 
     cout << endl << "Extended options:" << endl;
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
@@ -146,7 +149,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "ab:cghl:m:o:st:vw")) != -1) {
+    while ((c = getopt(argc, argv, "ab:cghl:m:o:st:vwz")) != -1) {
         switch (c) {
             case 'a': {
                 OneAtATime = false;
@@ -239,6 +242,10 @@ int main(int argc, char** argv) {
             }
             case 'w': {
                 Wraparound = true;
+                break;
+            }
+            case 'z': {
+                UseLZW = true;
                 break;
             }
             default: {
@@ -369,7 +376,7 @@ int main(int argc, char** argv) {
 
     // Create the Info for the output file.
     ImageExportInfo outputImageInfo(outputFileName);
-    outputImageInfo.setCompression("LZW");
+    if (UseLZW) outputImageInfo.setCompression("LZW");
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
