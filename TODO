@@ -2,3 +2,8 @@
 
 - Region-of-interest reduction by expanding top of mask pyramid and finding
   transition zone bounding box.
+
+- Deallocate memory sooner after it is not needed anymore instead of at the end
+  of each blend pass.
+
+- Make the pre-assembler smarter.
