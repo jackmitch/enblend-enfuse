@@ -717,7 +717,9 @@ namespace vigra {
 	if (extra_samples_per_pixel > 0) {
 	    uint16 types[extra_samples_per_pixel];
 	    for ( int i=0; i < extra_samples_per_pixel; i++ ) {
+                // MIHAL
 		types[i] = EXTRASAMPLE_UNASSALPHA;
+		//types[i] = EXTRASAMPLE_ASSOCALPHA;
 	    }
 	    TIFFSetField( tiff, TIFFTAG_EXTRASAMPLES, extra_samples_per_pixel,
 			  types );
