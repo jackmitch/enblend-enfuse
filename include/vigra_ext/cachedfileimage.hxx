@@ -67,7 +67,8 @@ public:
         assert(imageList.empty());
         managedBytes = bytes;
         // Recalculate the number of blocks available.
-        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
+        managedBlocks = (int)ceil(managedBytes / (double)blocksize);
+        blocksAvailable = managedBlocks;
     }
 
     // Set the cache block size. This is the minimum amount that is
@@ -77,12 +78,17 @@ public:
         assert(imageList.empty());
         blocksize = bytes;
         // Recalculate the number of blocks available.
-        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
+        managedBlocks = (int)ceil(managedBytes / (double)blocksize);
+        blocksAvailable = managedBlocks;
     }
 
     // Get the cache block size.
     int getBlockSize() {
         return blocksize;
+    }
+
+    int getManagedBlocks() {
+        return managedBlocks;
     }
 
     int getBlocksAvailable() {
@@ -128,6 +134,7 @@ public:
     // Unregister a CachedFileImage with the director and return its blocks
     // to the pool.
     void returnBlocksUnregisterImage(int blocks, CachedFileImageBase const * image) {
+        //cout << "returning " << blocks << " blocks" << endl;
         blocksAvailable += blocks;
         imageList.remove(image);
     }
@@ -180,10 +187,24 @@ public:
         }
     }
 
+    void printStats() {
+        cout << "Summary: cache misses="
+             << cacheMisses
+             << " blocks managed="
+             << managedBlocks
+             << " allocated="
+             << (managedBlocks - blocksAvailable)
+             << " free="
+             << blocksAvailable
+             << endl;
+    }
+
     void printStats(const char * imageName, const CachedFileImageBase * image) {
         cout << imageName << ":"
              << " cache misses=" << imageToMissMap[image]
              << " blocks allocated=" << image->numBlocksAllocated()
+             << " / " << image->numBlocksNeeded()
+             << " required"
              << endl;
     }
 
@@ -206,7 +227,8 @@ protected:
       imageToMissMap()
     {
         // Recalculate the number of blocks available.
-        blocksAvailable = (int)ceil(managedBytes / (double)blocksize);
+        managedBlocks = (int)ceil(managedBytes / (double)blocksize);
+        blocksAvailable = managedBlocks;
     }
 
     int freeBlock() {
@@ -231,6 +253,7 @@ protected:
 
     int blocksize;
     long long managedBytes;
+    int managedBlocks;
     int blocksAvailable;
     long long cacheMisses;
 
@@ -833,7 +856,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     // Find the right spot in the file.
     off_t offset = width_ * firstLineInBlock * sizeof(PIXELTYPE);
-    if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
+    if (tmpFile_ != NULL && fseeko(tmpFile_, offset, SEEK_SET) != 0) {
         vigra_fail(strerror(errno));
     }
 
@@ -844,9 +867,12 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
         lines_[absoluteLineNumber] = Allocator::allocate(width_);
 
         // fill the line with data from the file.
-        int itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
+        int itemsRead = 0;
+        if (tmpFile_ != NULL) {
+            itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
+        }
         if (itemsRead < width_) {
-            if (feof(tmpFile_) == 0) {
+            if (tmpFile_ != NULL && feof(tmpFile_) == 0) {
                 vigra_fail("CachedFileImage: error reading from image backing file.\n");
             } else {
                 // Swap file has no data for this line.
