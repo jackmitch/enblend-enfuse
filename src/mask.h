@@ -29,20 +29,20 @@
 #include "common.h"
 #include "nearest.h"
 
-#include "vigra_ext/stdcachedfileimage.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
 #include "vigra/initimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
+#include "vigra_ext/stdcachedfileimage.hxx"
 
 using vigra::BCFImage;
 using vigra::BImage;
+using vigra::exportImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
-using vigra::exportImage;
 using vigra::initImageIf;
 using vigra::linearIntensityTransform;
 using vigra::NumericTraits;
@@ -65,6 +65,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     typedef typename MaskType::PixelType MaskPixelType;
 
+    //// Read mask from a file instead of calculating it.
     //MaskType *fileMask = new MaskType(uBB.size());
     //ImageImportInfo fileMaskInfo("enblend_mask.tif");
     //importImage(fileMaskInfo, destImage(*fileMask));
@@ -74,7 +75,6 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
     // 255 = inside black image only.
-    // This image will be iterated over columns
     #ifdef ENBLEND_CACHE_IMAGES
     BCFImage *maskInit = new BCFImage(uBB.size());
     #else
@@ -94,9 +94,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
             destImage(*maskInit),
             linearIntensityTransform(1, 255));
 
-    // Do mask transform here.
-    // replaces 0 areas with either 1 or 255.
-    // This image will be iterated over columns
+    // Mask transform replaces 0 areas with either 1 or 255.
     #ifdef ENBLEND_CACHE_IMAGES
     BCFImage *maskTransform = new BCFImage(uBB.size());
     #else
@@ -126,26 +124,9 @@ MaskType *createMask(AlphaType *whiteAlpha,
     delete maskTransform;
     // mem xsection = MaskType*ubb
 
-    //char tmpFilename[] = "enblend_mask.tif";
-    //ImageImportInfo maskImageInfo(tmpFilename);
-    //importImage(maskImageInfo, destImage(*mask));
-
     return mask;
-
-    ////char tmpFilename[] = ".enblend_mask_XXXXXX";
-    //char tmpFilename[] = "enblend_mask.tif";
-    ////int tmpFD = mkstemp(tmpFilename);
-    //ImageExportInfo maskImageInfo(tmpFilename);
-    //maskImageInfo.setPosition(uBB.getUL());
-    //maskImageInfo.setFileType("TIFF");
-    //exportImage(srcImageRange(mask), maskImageInfo);
-    ////close(tmpFD);
-
-    //return new ImageImportInfo(tmpFilename);
 }
 
 } // namespace enblend
 
 #endif /* __MASK_H__ */
-    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
-    // mem xsection = 2*BImage*uBB + 2*UIImage*uBB

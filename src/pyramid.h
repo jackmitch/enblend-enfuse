@@ -26,7 +26,6 @@
 
 #include <assert.h>
 #include <vector>
-//#include <boost/static_assert.hpp>
 
 #include "vigra/convolution.hxx"
 #include "vigra/numerictraits.hxx"
@@ -35,11 +34,13 @@
 
 using std::cout;
 using std::vector;
+
 using vigra::NumericTraits;
 using vigra::triple;
 
 namespace enblend {
 
+// Pyramid filter coefficients.
 static const double A = 0.4;
 static const double W[] = {0.25 - A / 2.0, 0.25, A, 0.25, 0.25 - A / 2.0};
 static const unsigned int A100 = 40;
@@ -96,6 +97,9 @@ unsigned int filterHalfWidth(const unsigned int level) {
     return (length - 1);
 }
 
+/** The Burt & Adelson Reduce operation.
+ *  This version is for images with alpha channels.
+ */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,
         typename DestImageIterator, typename DestAccessor,
@@ -180,6 +184,7 @@ inline void reduce(bool wraparound,
 
 };
 
+// Version using argument object factories.
 template <typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,
         typename DestImageIterator, typename DestAccessor,
@@ -196,6 +201,9 @@ inline void reduce(bool wraparound,
             destMask.first, destMask.second, destMask.third);
 };
 
+/** The Burt & Adelson Reduce operation.
+ *  This version is for images that do not have alpha channels.
+ */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void reduce(bool wraparound,
@@ -255,6 +263,7 @@ inline void reduce(bool wraparound,
 
 };
 
+// Version using argument object factories.
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void reduce(bool wraparound,
@@ -265,6 +274,7 @@ inline void reduce(bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
+/** The Burt & Adelson Expand operation. */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 void expand(bool add, bool wraparound,
@@ -294,6 +304,7 @@ void expand(bool add, bool wraparound,
             unsigned int totalContrib = 0;
 
             if (destx & 1 == 1) {
+                // This is an odd-numbered column.
                 for (int kx = 0; kx <= 1; kx++) {
                     // kx=0 -> W[-1]
                     // kx=1 -> W[ 1]
@@ -313,6 +324,7 @@ void expand(bool add, bool wraparound,
                     }
 
                     if (desty & 1 == 1) {
+                        // This is an odd-numbered row.
                         for (int ky = 0; ky <= 1; ky++) {
                             // ky=0 -> W[-1]
                             // ky=1 -> W[ 1]
@@ -329,6 +341,7 @@ void expand(bool add, bool wraparound,
                         }
                     }
                     else {
+                        // This is an even-numbered row.
                         for (int ky = -1; ky <= 1; ky++) {
                             // ky=-1 -> W[-2]
                             // ky= 0 -> W[ 0]
@@ -347,6 +360,7 @@ void expand(bool add, bool wraparound,
                 }
             }
             else {
+                // This is an even-numbered column.
                 for (int kx = -1; kx <= 1; kx++) {
                     // kx=-1 -> W[-2]
                     // kx= 0 -> W[ 0]
@@ -365,6 +379,7 @@ void expand(bool add, bool wraparound,
                     }
 
                     if (desty & 1 == 1) {
+                        // This is an odd-numbered row.
                         for (int ky = 0; ky <= 1; ky++) {
                             // ky=0 -> W[-1]
                             // ky=1 -> W[ 1]
@@ -381,6 +396,7 @@ void expand(bool add, bool wraparound,
                         }
                     }
                     else {
+                        // This is an even-numbered row.
                         for (int ky = -1; ky <= 1; ky++) {
                             // ky=-1 -> W[-2]
                             // ky= 0 -> W[ 0]
@@ -425,6 +441,7 @@ void expand(bool add, bool wraparound,
 
 };
 
+// Version using argument object factories.
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void expand(bool add, bool wraparound,
@@ -435,6 +452,7 @@ inline void expand(bool add, bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
+/** Calculate the Gaussian pyramid for the given SrcImage/AlphaImage pair. */
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -508,6 +526,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 
 };
 
+// Version using argument object factories.
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -519,6 +538,7 @@ inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
             alpha.first, alpha.second);
 };
 
+/** Calculate the Gaussian pyramid for the given image (without an alpha channel). */
 template <typename SrcImageType, typename PyramidImageType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -575,6 +595,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     return gp;
 };
 
+// Version using argument object factories.
 template <typename SrcImageType, typename PyramidImageType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -584,6 +605,7 @@ inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
             src.first, src.second, src.third);
 };
 
+/** Calculate the Laplacian pyramid of the given SrcImage/AlphaImage pair. */
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
 vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -626,6 +648,7 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
     return gp;
 };
 
+// Version using argument object factories.
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
 inline vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -637,6 +660,7 @@ inline vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
             alpha.first, alpha.second);
 };
 
+/** Collapse the given Laplacian pyramid. */
 template <typename PyramidImageType>
 void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 

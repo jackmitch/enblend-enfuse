@@ -66,6 +66,9 @@ Overlap inspectOverlap(
                 foundDistinctS2 = true;
             }
             if (foundOverlap && foundDistinctS2) {
+                // If we have found a pixel where there is overlap,
+                // and also a pixel where src2 alone contributes,
+                // then we know it's PartialOverlap and we can quit.
                 return PartialOverlap;
             }
         }

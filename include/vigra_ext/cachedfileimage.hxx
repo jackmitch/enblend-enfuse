@@ -1121,6 +1121,9 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     if (tmpFile_ == NULL) {
         vigra_fail(strerror(errno));
     }
+    //if (setvbuf(tmpFile_, NULL, _IONBF, 0) != 0) {
+    //    vigra_fail(strerror(errno));
+    //}
 };
 
 template <class PIXELTYPE>

@@ -46,6 +46,13 @@ using vigra::YPrimePbPr2RGBPrimeFunctor;
 
 namespace enblend {
 
+/** A functor for converting scalar pixel values to the number representation used
+ *  for pyramids. These are either fixed-point integers or floating-point numberss.
+ *  For fixed-point integers, use the SrcIntegerBits to indicate how many bits are
+ *  necessary to represent the integer part of source pixel data.
+ *  One additional bit of range above the maximum range of the source pixels is
+ *  necessary for Laplacian pyramid calculations.
+ */
 template <typename SrcPixelType, typename PyramidPixelType, int SrcIntegerBits=1+8*sizeof(SrcPixelType), int FractionBits=8*sizeof(PyramidPixelType)-SrcIntegerBits>
 class ConvertScalarToPyramidFunctor {
 public:
@@ -80,15 +87,24 @@ protected:
     }
 
     inline PyramidPixelType convertDoubleToFixedPoint(const double &v) const {
+        // Shift v to get the appropriate number of fraction bits into the integer part,
+        // then fromRealPromote this value into the fixed-point type.
         return NumericTraits<PyramidPixelType>::fromRealPromote(v * (double)(1 << FractionBits));
     };
 
     inline PyramidPixelType convertIntegerToFixedPoint(const SrcPixelType &v) const {
+        // Shift v left to move the decimal point and set the fraction bits to zero.
         return (PyramidPixelType)v << FractionBits;
     };
 
 };
 
+/** A functor for converting numbers stored in the pyramid number representation back
+ *  into normal pixel values.
+ *  The IntegerBits parameter is supposed to match the corresponding parameter used in
+ *  the ConvertScalarToPyramidFunctor that originally coverted the pixels to the
+ *  pyramid representation.
+ */
 template <typename DestPixelType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(DestPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
 class ConvertPyramidToScalarFunctor {
 public:
@@ -125,6 +141,11 @@ protected:
         return v;
     }
 
+    // Dithering is used to fool the eye into seeing gradients that are finer
+    // than the precision of the pixel type.
+    // This prevents the occurence of cleanly-bordered regions in the output where
+    // the pixel values suddenly change from N to N+1.
+    // Such regions are especially objectionable in the green channel of 8-bit images.
     inline double dither(const double &v) const {
         double vFraction = v - floor(v);
         // Only dither values within a certain range of the rounding cutoff point.
@@ -147,6 +168,7 @@ protected:
 
 };
 
+/** Wrapper for vector pixel types. */
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(SrcPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
 class ConvertVectorToPyramidFunctor {
 public:
@@ -170,6 +192,7 @@ protected:
     ConvertFunctorType cf;
 };
 
+/** Wrapper for vector pixel types. */
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(DestPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
 class ConvertPyramidToVectorFunctor {
 public:
@@ -193,6 +216,7 @@ protected:
     ConvertFunctorType cf;
 };
 
+/** Convert image pixels into L*a*b* color space and the pyramid number format. */
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToLabPyramidFunctor {
 public:
@@ -223,6 +247,7 @@ protected:
     ConvertFunctorType convertFunctor;
 };
 
+/** Convert pyramid pixels in L*a*b* color space back into normal R'G'B' pixels. */
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromLabPyramidFunctor {
 public:
@@ -251,6 +276,7 @@ protected:
     DestFunctorType destFunctor;
 };
 
+/** Convert image pixels into Y'PbPr color space and the pyramid number format. */
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToYPrimePbPrPyramidFunctor {
 public:
@@ -280,6 +306,7 @@ protected:
     ConvertFunctorType convertFunctor;
 };
 
+/** Convert pyramid pixels in Y'PbPr color space back into normal R'G'B' pixels. */
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromYPrimePbPrPyramidFunctor {
 public:
@@ -308,6 +335,7 @@ protected:
     DestFunctorType destFunctor;
 };
 
+/** Convert image pixels into linear RGB color space and the pyramid number format. */
 template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertToRGBPyramidFunctor {
 public:
@@ -330,6 +358,7 @@ protected:
     ConvertFunctorType convertFunctor;
 };
 
+/** Convert pyramid pixels in linear RGB color space back into normal R'G'B' pixels. */
 template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
 class ConvertFromRGBPyramidFunctor {
 public:
@@ -355,7 +384,7 @@ protected:
     DestFunctorType destFunctor;
 };
 
-// copy scalar image to scalar fixed-point pyramid image.
+/** Copy a scalar image into a scalar pyramid image. */
 template <typename SrcImageType, typename PyramidImageType>
 void copyToPyramidImage(
         typename SrcImageType::const_traverser src_upperleft,
@@ -373,7 +402,9 @@ void copyToPyramidImage(
             ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType>());
 };
 
-// Copy vector image to vector fixed-point pyramid image.
+/** Copy a vector image into a vector pyramid image.
+ *  Uses an optional color space conversion.
+ */
 template <typename SrcImageType, typename PyramidImageType>
 void copyToPyramidImage(
         typename SrcImageType::const_traverser src_upperleft,
@@ -400,7 +431,7 @@ void copyToPyramidImage(
 
 };
 
-// Switch based on vector or scalar image types.
+// Compile-time switch based on scalar or vector image type.
 template <typename SrcImageType, typename PyramidImageType>
 inline void copyToPyramidImage(
         typename SrcImageType::const_traverser src_upperleft,
@@ -420,7 +451,7 @@ inline void copyToPyramidImage(
             src_is_scalar());
 };
 
-// Using argument object factory
+// Version using argument object factories.
 template <typename SrcImageType, typename PyramidImageType>
 inline void copyToPyramidImage(
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
@@ -433,7 +464,7 @@ inline void copyToPyramidImage(
             dest.second);
 };
 
-// copy scalar fixed-point pyramid image to scalar image.
+/** Copy a scalar pyramid image into a scalar image. */
 template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
 inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
@@ -455,7 +486,9 @@ inline void copyFromPyramidImageIf(
 
 };
 
-// copy vector fixed-point pyramid image to vector image.
+/** Copy a vector pyramid image into a vector image.
+ *  Uses an optional color space conversion.
+ */
 template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
 inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
@@ -486,7 +519,7 @@ inline void copyFromPyramidImageIf(
 
 };
 
-// Switch based on vector or scalar image types.
+// Compile-time switch based on scalar or vector image type.
 template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
 inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
@@ -510,7 +543,7 @@ inline void copyFromPyramidImageIf(
             src_is_scalar());
 };
 
-// Using argument object factory
+// Version using argument object factories.
 template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
 inline void copyFromPyramidImageIf(
         triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,

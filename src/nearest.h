@@ -32,8 +32,8 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra_ext/stdcachedfileimage.hxx"
 
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::pair;
 
@@ -44,6 +44,7 @@ using vigra::UIImage;
 
 namespace enblend {
 
+// The metric to use for calculating distances.
 #define EUCLIDEAN_METRIC
 
 template <typename dist_t>
@@ -81,6 +82,11 @@ inline dist_t _nftDistance(dist_t deltaY) {
     #endif
 };
 
+/** Compute the nearest feature transform.
+ *  A non-zero pixel in the src image is considered a feature.
+ *  Each pixel in the dest image is given the value of the nearest feature
+ *  to that pixel.
+ */
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 void nearestFeatureTransform(bool wraparound,
@@ -105,9 +111,11 @@ void nearestFeatureTransform(bool wraparound,
     int w = src_lowerright.x - src_upperleft.x;
     int h = src_lowerright.y - src_upperleft.y;
 
-    // This image will be iterated over columns.
     #ifdef ENBLEND_CACHE_IMAGES
+    // Distance to the nearest feature in the current column.
     UICFImage dnfColumn(w, h);
+    // Distance to the nearest feature in the current column, or any
+    // column to the left of this column.
     UICFImage dnfLeft(w, h);
     #else
     UIImage dnfColumn(w, h);
@@ -115,6 +123,8 @@ void nearestFeatureTransform(bool wraparound,
     #endif
 
     // Data structures for initializing dnfColumn.
+    // These let us initialize all of the columns in one pass
+    // over the rows of the image. Cache-friendly.
     SrcValueType lastFeature[w];
     bool foundFirstFeature[w];
     unsigned int lastFeatureDeltaY[w];
@@ -126,6 +136,7 @@ void nearestFeatureTransform(bool wraparound,
         else cout << "Creating blend mask: 1/4";
         cout.flush();
     }
+    // Initialization.
     for (int i = 0; i < w; i++) {
         lastFeature[i] = sa(src_upperleft);
         foundFirstFeature[i] = false;
@@ -163,42 +174,6 @@ void nearestFeatureTransform(bool wraparound,
         }
     }
 
-    //sx = src_upperleft;
-    //send = src_lowerright;
-    //dnfcx = dnfColumn.upperLeft();
-    //dx = dest_upperleft;
-    //for (; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dx.x) {
-    //    sy = sx;
-    //    dnfcy = dnfcx;
-    //    dy = dx;
-
-    //    // Color of the last feature pixel.
-    //    SrcValueType lastFeature = sa(src_upperleft);
-    //    bool foundFirstFeature = false;
-    //    unsigned int lastFeatureDeltaY = 0;
-
-    //    for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y, ++lastFeatureDeltaY) {
-    //        if (sa(sy)) {
-    //            // Source pixel is a feature pixel.
-    //            lastFeature = sa(sy);
-    //            foundFirstFeature = true;
-    //            // Distance to feature pixel = 0
-    //            *dnfcy = 0;
-    //            lastFeatureDeltaY = 0;
-    //            // Nearest feature color = source feature color.
-    //            da.set(lastFeature, dy);
-    //        }
-    //        else if (foundFirstFeature) {
-    //            // Source pixel is not a feature.
-    //            *dnfcy = _nftDistance(lastFeatureDeltaY);
-    //            da.set(lastFeature, dy);
-    //        }
-    //        else {
-    //            *dnfcy = UINT_MAX;
-    //        }
-    //    }
-    //}
-
     // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
     // feature in the same column and below us.
     // If this is smaller than the value caluclated in the top-down pass,
@@ -208,6 +183,7 @@ void nearestFeatureTransform(bool wraparound,
         else cout << " 2/4";
         cout.flush();
     }
+    // Initialization.
     for (int i = 0; i < w; i++) {
         lastFeature[i] = sa(src_upperleft);
         foundFirstFeature[i] = false;
@@ -255,51 +231,6 @@ void nearestFeatureTransform(bool wraparound,
         }
     }
 
-    //sx = src_lowerright;
-    //send = src_upperleft;
-    //dnfcx = dnfColumn.lowerRight();
-    //dx = dest_upperleft + (src_lowerright - src_upperleft);
-    //for (; sx.x != send.x;) {
-    //    --sx.x;
-    //    --dnfcx.x;
-    //    --dx.x;
-
-    //    sy = sx;
-    //    dnfcy = dnfcx;
-    //    dy = dx;
-
-    //    // Color of the last feature pixel.
-    //    SrcValueType lastFeature = sa(src_upperleft);
-    //    bool foundFirstFeature = false;
-    //    unsigned int lastFeatureDeltaY = 0;
-
-    //    for (; sy.y != send.y; ++lastFeatureDeltaY) {
-    //        --sy.y;
-    //        --dnfcy.y;
-    //        --dy.y;
-
-    //        if (sa(sy)) {
-    //            // Source pixel is a feature pixel.
-    //            lastFeature = sa(sy);
-    //            foundFirstFeature = true;
-    //            // Distance to feature pixel = 0
-    //            *dnfcy = 0;
-    //            lastFeatureDeltaY = 0;
-    //            // Nearest feature color = source feature color.
-    //            da.set(lastFeature, dy);
-    //        }
-    //        else if (foundFirstFeature) {
-    //            // Source pixel is not a feature
-    //            unsigned int distLastFeature = _nftDistance(lastFeatureDeltaY);
-    //            if (distLastFeature < *dnfcy) {
-    //                // Feature below us is closer than feature above us.
-    //                *dnfcy = distLastFeature;
-    //                da.set(lastFeature, dy);
-    //            }
-    //        }
-    //    }
-    //}
-
     // Calculate dnfLeft for each pixel.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) cout << " 3/6";
@@ -325,6 +256,9 @@ void nearestFeatureTransform(bool wraparound,
         // to the current dnflx.
         list<DnfIterator> potentialFeatureList;
 
+        // If wraparound is true, we must go across the row twice.
+        // This takes care of the case when the nearest feature is reached by
+        // wrapping around the image.
         for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
             sx = sy;
             dnfcx = dnfcy;
@@ -413,6 +347,9 @@ void nearestFeatureTransform(bool wraparound,
         // to the current dnflx.
         list<DnfIterator> potentialFeatureList;
 
+        // If wraparound is true, we must go across the row twice.
+        // This takes care of the case when the nearest feature is reached by
+        // wrapping around the image.
         for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
             sx = sy;
             dnfcx = dnfcy;
@@ -474,6 +411,7 @@ void nearestFeatureTransform(bool wraparound,
     return;
 };
 
+// Version using argument object factories.
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 inline void nearestFeatureTransform(bool wraparound,

@@ -39,8 +39,10 @@
 
 namespace enblend {
 
+/** The type used for regions-of-interest in Enblend. */
 typedef vigra_ext::ROI<vigra::Diff2D> EnblendROI;
 
+/** The different image overlap classifications. */
 enum Overlap {NoOverlap, PartialOverlap, CompleteOverlap};
 
 
