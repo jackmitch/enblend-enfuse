@@ -67,7 +67,7 @@ void printUsageAndExit() {
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -l number         Maximum number of levels to use" << endl;
-    cout << " -s                Blend images one at a time" << endl;
+    cout << " -s                Blend images one at a time, in the order given" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
@@ -255,16 +255,8 @@ int main(int argc, char** argv) {
         listIterator++;
     }
 
-    // Scanline for copying whiteImageFile to outputTIFF.
-    uint32 *line = (uint32*)malloc(OutputWidth * sizeof(uint32));
-    if (line == NULL) {
-        cerr << endl
-             << "enblend: out of memory (in main for line)" << endl;
-        exit(1);
-    }
-
     // Create the initial white image.
-    FILE *whiteImageFile = assemble(inputFileNameList, false);
+    FILE *whiteImageFile = assemble(inputFileNameList, OneAtATime);
 
     // Main blending loop
     while (!inputFileNameList.empty()) {
@@ -298,8 +290,8 @@ int main(int argc, char** argv) {
             // Corner case - the mask indicates that blackImage has no
             // contribution to the output.
             cerr << "enblend: some images are redundant and will not be "
-                 << "blended. Try blending this image in multiple stages "
-                 << "with a subset of the images in each stage." << endl;
+                 << "blended. Try using the -s flag to blend the images "
+                 << "in a custom order you specify." << endl;
             fclose(blackImageFile);
             fclose(maskFile);
             continue;
@@ -367,6 +359,15 @@ int main(int argc, char** argv) {
     if (Verbose > 0) {
         cout << "Writing output file." << endl;
     }
+
+    // Scanline for copying whiteImageFile to outputTIFF.
+    uint32 *line = (uint32*)malloc(OutputWidth * sizeof(uint32));
+    if (line == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in main for line)" << endl;
+        exit(1);
+    }
+
     rewind(whiteImageFile);
     for (uint32 i = 0; i < OutputHeight; i++) {
         readFromTmpfile(line, sizeof(uint32), OutputWidth, whiteImageFile);
@@ -380,6 +381,8 @@ int main(int argc, char** argv) {
 
     // close outputTIFF.
     TIFFClose(outputTIFF);
+
+    free(outputFileName);
 
     return 0;
 }

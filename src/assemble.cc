@@ -61,7 +61,7 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
 
     if (Verbose > 0) {
         if (pickOne) {
-            cout << "Picking overlapping image: ";
+            cout << "Loading next image: ";
         }
         else {
             cout << "Combining non-overlapping images: ";
@@ -104,7 +104,7 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
             if (overlapFound) break;
         }
 
-        if (!overlapFound) {
+        if (!overlapFound || pickOne) {
             if (Verbose > 0) {
                 cout << filename << " ";
                 cout.flush();
@@ -127,7 +127,7 @@ FILE *assemble(std::list<char*> &filenames, bool pickOne) {
         TIFFClose(tiff);
 
         // If we only want one image at a time, break.
-        if (!overlapFound && pickOne) break;
+        if (pickOne) break;
     }
 
     free(scanline);
