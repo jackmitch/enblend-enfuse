@@ -8,7 +8,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: impexalpha.hxx,v 1.1 2004-07-04 00:01:13 mihal Exp $
+ *  $Id: impexalpha.hxx,v 1.2 2004-09-30 06:45:32 mihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -102,7 +102,7 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
 
     typedef typename vigra::NumericTraits<image_type>::RealPromote ScaleType;
     ScaleType scale =  GetAlphaScaleFactor<image_type, alpha_type>::get();
-    std::cerr << " export alpha factor: " << scale << std::endl;
+    //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor, for reading from the mask image
     typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<image_type>,
@@ -143,7 +143,7 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
     // get the correction factor
     typedef typename vigra::NumericTraits<component_type>::RealPromote ScaleType;
     ScaleType scale =  GetAlphaScaleFactor<component_type, alpha_type>::get();
-    std::cerr << " export alpha factor: " << scale << std::endl;
+    //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
     typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<component_type>,
@@ -208,7 +208,7 @@ void importImageAlpha(vigra::ImageImportInfo const & info,
 
     // get the correction factor
     ScaleType scale = vigra::NumericTraits<ScaleType>::one()/GetAlphaScaleFactor<component_type, alpha_type>::get();
-    std::cerr << " import alpha factor: " << scale << std::endl;
+    //std::cerr << " import alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
     typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<ScaleType>,
@@ -269,7 +269,7 @@ void importImageAlpha(vigra::ImageImportInfo const & info,
     // get the correction factor
     ScaleType scale = vigra::NumericTraits<ScaleType>::one()/GetAlphaScaleFactor<image_type, alpha_type>::get();
 
-    std::cerr << " export alpha factor: " << scale << std::endl;
+    //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
     typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<ScaleType>,
