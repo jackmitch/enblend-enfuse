@@ -105,7 +105,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     // Mask off pixels that are not totally opaque.
     transformImage(srcImageRange(*imageA), destImage(*imageA),
             Threshold<AlphaPixelType, AlphaPixelType>(
-                    NumericTraits<AlphaPixelType>::max(),
+                    NumericTraits<AlphaPixelType>::max() / 2,
                     NumericTraits<AlphaPixelType>::max(),
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::max()
@@ -130,7 +130,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             // Mask off pixels that are not totally opaque.
             transformImage(srcImageRange(srcA), destImage(srcA),
                     Threshold<AlphaPixelType, AlphaPixelType>(
-                            NumericTraits<AlphaPixelType>::max(),
+                            NumericTraits<AlphaPixelType>::max() / 2,
                             NumericTraits<AlphaPixelType>::max(),
                             NumericTraits<AlphaPixelType>::zero(),
                             NumericTraits<AlphaPixelType>::max()
