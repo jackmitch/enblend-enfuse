@@ -65,7 +65,7 @@ public:
         // Make sure all image caches get destroyed and
         // temp backing files get deleted.
         if (!imageList.empty()) {
-            cout << "Cleaning up temporary files." << endl;
+            cout << endl << "Cleaning up temporary files." << endl;
             while (!imageList.empty()) {
                 CachedFileImageBase const *image = imageList.front();
                 //cout << "deleting image " << image << endl;
@@ -100,26 +100,32 @@ public:
     // Set the number of bytes this director manages.
     void setAllocation(long long bytes) {
         // This may not be changed after images have been created.
-        vigra_precondition(imageList.empty(), "CachedFileImageDirector: attempt to change allocation after images have already been created.");
+        vigra_precondition(imageList.empty(), "CachedFileImageDirector: "
+                "attempt to change allocation after images have already "
+                "been created.");
         managedBytes = bytes;
         // Recalculate the number of blocks available.
         managedBlocks = (int)ceil(managedBytes / (double)blocksize);
         blocksAvailable = managedBlocks;
-        //cout << "director.setAllocation:  managedBlocks=" << managedBlocks << " blocksAvailable=" << blocksAvailable << endl;
+        //cout << "director.setAllocation:  managedBlocks=" << managedBlocks
+        //     << " blocksAvailable=" << blocksAvailable << endl;
     }
 
     // Set the cache block size. This is the minimum amount that is
     // moved between the caches and the backing files.
     void setBlockSize(int bytes) {
         // This may not be changed after images have been created.
-        vigra_precondition(imageList.empty(), "CachedFileImageDirector: attempt to change block size after images have already been created.");
+        vigra_precondition(imageList.empty(), "CachedFileImageDirector: "
+                "attempt to change block size after images have already "
+                "been created.");
         blocksize = bytes;
         delete pool;
         pool = new boost::pool<>(blocksize);
         // Recalculate the number of blocks available.
         managedBlocks = (int)ceil(managedBytes / (double)blocksize);
         blocksAvailable = managedBlocks;
-        //cout << "director.setBlockSize:  managedBlocks=" << managedBlocks << " blocksAvailable=" << blocksAvailable << endl;
+        //cout << "director.setBlockSize:  managedBlocks=" << managedBlocks
+        //     << " blocksAvailable=" << blocksAvailable << endl;
     }
 
     // Get the cache block size.
@@ -138,18 +144,9 @@ public:
     // Request a certain number of blocks for a new image.
     // Returns the number of blocks the new image may use.
     int requestBlocksForNewImage(int blocks, CachedFileImageBase const * image) {
-        //cout << "director.requestBlocksForNewImage(blocks=" << blocks << " image=" << image << endl;
+        //cout << "director.requestBlocksForNewImage(blocks=" << blocks
+        //     << " image=" << image << endl;
         int blocksAllocated = 0;
-        //if (blocksAvailable >= blocks) {
-        //    // Plenty of blocks available.
-        //    // Give the image all the blocks it wants.
-        //    blocksAllocated = blocks;
-        //    blocksAvailable -= blocks;
-        //} else if (blocksAvailable > 0) {
-        //    // Not enough blocks available.
-        //    // Give the image as many blocks as are available.
-        //    blocksAllocated = blocksAvailable;
-        //    blocksAvailable = 0;
         if (blocksAvailable > 0) {
             blocksAllocated = 1;
             blocksAvailable--;
@@ -174,9 +171,11 @@ public:
         // Initialize the cache miss counter for this image.
         imageToMissMap[image] = 0LL;
 
-        //cout << "director.requestBlocksForNewImage: blocksAllocated=" << blocksAllocated << " blocksAvailable=" << blocksAvailable << endl;
+        //cout << "director.requestBlocksForNewImage: blocksAllocated="
+        //     << blocksAllocated << " blocksAvailable=" << blocksAvailable << endl;
         //cout << "director.imageList=";
-        //std::copy(imageList.begin(), imageList.end(), std::ostream_iterator<CachedFileImageBase const *>(cout, " "));
+        //std::copy(imageList.begin(), imageList.end(),
+        //        std::ostream_iterator<CachedFileImageBase const *>(cout, " "));
         //cout << endl;
 
         return blocksAllocated;
@@ -186,10 +185,13 @@ public:
     void returnBlocksUnregisterImage(int blocks, CachedFileImageBase const * image) {
         blocksAvailable += blocks;
         imageList.remove(image);
-        //cout << "director.returnBlocks: blocks=" << blocks << " image=" << image << endl;
-        //cout << "director.returnBlocks: blocksAvailable=" << blocksAvailable << endl;
+        //cout << "director.returnBlocks: blocks=" << blocks
+        //     << " image=" << image << endl;
+        //cout << "director.returnBlocks: blocksAvailable=" << blocksAvailable
+        //     << endl;
         //cout << "director.returnBlocks: imageList=";
-        //std::copy(imageList.begin(), imageList.end(), std::ostream_iterator<CachedFileImageBase const *>(cout, " "));
+        //std::copy(imageList.begin(), imageList.end(),
+        //        std::ostream_iterator<CachedFileImageBase const *>(cout, " "));
         //cout << endl;
     }
 
@@ -218,10 +220,12 @@ public:
             // There are more blocks available to give out.
             // Give the image one more block.
             blocksAvailable--;
-            //cout << "director.registerCacheMiss(image=" << image << ") blocksAvailable=" << blocksAvailable << " return 1" << endl;
+            //cout << "director.registerCacheMiss(image=" << image << ")"
+            //     << " blocksAvailable=" << blocksAvailable << " return 1" << endl;
             return 1;
         } else {
-            //cout << "director.registerCacheMiss(image=" << image << ") blocksAvailable=" << blocksAvailable << " return 0" << endl;
+            //cout << "director.registerCacheMiss(image=" << image << ")"
+            //     << " blocksAvailable=" << blocksAvailable << " return 0" << endl;
             return 0;
         }
     }
@@ -278,7 +282,8 @@ public:
              << endl;
     }
 
-    void postCacheMiss() {
+    // Print stats on all images.
+    void printAllBlockStats() {
         list<CachedFileImageBase const *>::iterator i;
         for (i = imageList.begin(); i != imageList.end(); i++) {
             (*i)->printBlockStats();
@@ -306,19 +311,18 @@ protected:
     int freeBlock(CachedFileImageBase const * image) {
         // Try to free a block from an image.
         // Check least-recently-missed images first.
-        //double imageAllocation = (double)image->numBlocksAllocated() / (double)image->numBlocksNeeded();
         list<CachedFileImageBase const *>::iterator i;
         for (i = imageList.begin(); i != imageList.end(); i++) {
             CachedFileImageBase const * candidate = *i;
-            //double candidateAllocation = (double)candidate->numBlocksAllocated() /
-            //        (double)candidate->numBlocksNeeded();
-            //cout << "imageAllocation " << imageAllocation << endl;
-            //cout << "candidateAllocation " << candidateAllocation << endl;
-            //cout << "director.freeBlock candidate=" << candidate << " candidate_blocks=" << candidate->numBlocksAllocated() << " image_blocks=" << image->numBlocksAllocated() << endl;
+            //cout << "director.freeBlock candidate=" << candidate
+            //     << " candidate_blocks=" << candidate->numBlocksAllocated()
+            //     << " image_blocks=" << image->numBlocksAllocated() << endl;
+
             // Don't try to break close ties - else if blocks cannot be divided up
             // evenly the remainder will just get rotated around.
             if (candidate->numBlocksAllocated() > (1+image->numBlocksAllocated())) {
-                //cout << "director.freeBlock(image=" << image << ") candidate=" << candidate << " return 1" << endl;
+                //cout << "director.freeBlock(image=" << image << ")"
+                //     << " candidate=" << candidate << " return 1" << endl;
                 candidate->swapOutBlock();
                 // mark candidate as most-recently-missed.
                 imageList.erase(i);
@@ -330,8 +334,8 @@ protected:
         // Try harder to get another block for image?
         // Otherwise the thrash exception will be thrown.
         //if (image->numBlocksAllocated() == 1 && image->numBlocksNeeded() > 1) {
-            // Look for images that have one block allocated and only need one
-            // block. Make them swap. Put donor to rear of list.
+        //    // Look for images that have one block allocated and only need one
+        //    // block. Make them swap. Put donor to rear of list.
         //}
 
         // Try even harder?
@@ -786,8 +790,15 @@ public:
     }
 
     void printBlockStats() const {
-        cout << "image " << this << " blocksAllocated=" << blocksAllocated_ << "/" << blocksNeeded_ << " mrl=" << *mostRecentlyLoadedBlockIterator_ << " blocksInMemory={";
-        std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+        cout << "image " << this
+             << " blocksAllocated=" << blocksAllocated_
+             << "/" << blocksNeeded_
+             << " mrl=" << *mostRecentlyLoadedBlockIterator_
+             << " blocksInMemory={";
+
+        std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+                std::ostream_iterator<int>(cout, " "));
+
         cout << "}" << endl;
     }
 
@@ -798,12 +809,13 @@ private:
 
     void deallocate();
 
+    // Init the cache data structures once we know the size of the image.
     void initLineStartArray();
     
     // obtain a pointer to the beginning of a line.
     // split into two functions for efficiency.
-    // getLinePointer can then be inlined, and we only incur the function call overhead
-    // on cache misses.
+    // getLinePointer can then be inlined, and we only incur the function
+    // call overhead on cache misses.
     PIXELTYPE * getLinePointer(int dy) const;
     PIXELTYPE * getLinePointerDirty(int dy);
     PIXELTYPE * getLinePointerCacheMiss(int dy) const;
@@ -880,7 +892,8 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
                 PIXELTYPE *p = lines_[line];
                 if (p != NULL) {
                     for (int column = 0; column < width_; column++) {
-                        //FIXME if pixel type is not a simple data type and this destructor actually does
+                        //FIXME if pixel type is not a simple data type
+                        // and this destructor actually does
                         // something, then we are in big trouble.
                         (p[column]).~PIXELTYPE();
                     }
@@ -920,12 +933,16 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
 
     blocksNeeded_ = (int)ceil(((double)height_) / linesPerBlocksize_);
 
-    //cout << "image.initLineStartArray this=" << this << " linesPerBlocksize=" << linesPerBlocksize_ << " blocksNeeded=" << blocksNeeded_ << endl;
+    //cout << "image.initLineStartArray this=" << this
+    //     << " linesPerBlocksize=" << linesPerBlocksize_
+    //     << " blocksNeeded=" << blocksNeeded_ << endl;
+
     // Request blocks from the director.
     int blocksAllowed = CachedFileImageDirector::v().requestBlocksForNewImage(
             blocksNeeded_, this);
 
-    //cout << "image.initLineStartArray this=" << this << " blocksAllowed=" << blocksAllowed << endl;
+    //cout << "image.initLineStartArray this=" << this
+    //     << " blocksAllowed=" << blocksAllowed << endl;
 
     // Create the blockLRU list.
     blocksInMemory_ = new list<int>();
@@ -965,7 +982,8 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     }
 
     //cout << "image.initLineStartArray this=" << this << " blocksInMemory=";
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
     mostRecentlyLoadedBlockIterator_ = blocksInMemory_->begin();
@@ -1008,40 +1026,49 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     int blockNumber = dy / linesPerBlocksize_;
     int firstLineInBlock = blockNumber * linesPerBlocksize_;
 
-    //cout << "image " << this << " cache miss: line=" << dy << " block=" << blockNumber << " firstLineInBlock=" << firstLineInBlock << " blocksAllocated=" << blocksAllocated_ << endl;
     //cout << "-------------------------------------------------------" << endl;
-    //cout << "image " << this << " cache miss: line=" << dy << " block=" << blockNumber << " firstLineInBlock=" << firstLineInBlock << " blocksAllocated=" << blocksAllocated_ << " blocksInMemory={";
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //cout << "image " << this << " cache miss:"
+    //     << " line=" << dy
+    //     << " block=" << blockNumber
+    //     << " firstLineInBlock=" << firstLineInBlock
+    //     << " blocksAllocated=" << blocksAllocated_
+    //     << " blocksInMemory={";
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << "}" << endl;
 
     int moreBlocks = CachedFileImageDirector::v().registerCacheMiss(this);
     if (moreBlocks == 0 && blocksAllocated_ == 0) {
-        //FIXME make this message understandable.
-        vigra_fail("CachedFileImage::getLinePointerCacheMiss(): no blocks available "
-                " and attempt to free blocks failed.");
+        vigra_fail("enblend: Out of memory blocks. Try using the -m flag to "
+                "increase the amount of memory to use, or use the -b flag to "
+                "decrease the block size\n"
+                "reason: cache miss, 0 blocks allocated, 0 blocks available.");
     } else if (moreBlocks == 0) {
         // Make space for new block.
         swapOutBlock();
     }
-    //cout << "swapping in block " << blockNumber << endl;
 
     // Allocate a block.
     PIXELTYPE* blockStart = (PIXELTYPE*)CachedFileImageDirector::v().allocateBlock();
 
     // The number of lines in the block and the number of pixels in the block.
-    int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_) - firstLineInBlock;
+    int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_)
+            - firstLineInBlock;
     int pixelsToRead = numLinesInBlock * width_;
 
     if (blockInFile_[blockNumber]) {
         // Find the right spot in the file.
-        off_t offset = (off_t)width_ * (off_t)firstLineInBlock * (off_t)sizeof(PIXELTYPE);
+        off_t offset = (off_t)width_
+                * (off_t)firstLineInBlock
+                * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
         // Fill the block with data from the file.
+        // FIXME: should use compression
         int itemsRead = fread(blockStart, sizeof(PIXELTYPE), pixelsToRead, tmpFile_);
         if (itemsRead < pixelsToRead) {
-            vigra_fail("CachedFileImage: error reading from image backing file.\n");
+            vigra_fail("enblend: error reading from image swap file.\n");
         }
     }
     else {
@@ -1061,15 +1088,15 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     blockIsClean_[blockNumber] = true;
 
     // Add this block to the list in the right spot.
-    //blocksInMemory_->push_front(blockNumber);
     list<int>::iterator i = blocksInMemory_->begin();
     for (; i != blocksInMemory_->end(); ++i) {
         if (*i > blockNumber) break;
     }
     blocksInMemory_->insert(i, blockNumber);
-    mostRecentlyLoadedBlockIterator_ = --i;
+
     // Push mostRecentlyLoadedBlockIterator to the end of a sequential sequence
     // of blocks in memory.
+    mostRecentlyLoadedBlockIterator_ = --i;
     for (++i; i != blocksInMemory_->end(); ++i) {
         if (*i == ++blockNumber) mostRecentlyLoadedBlockIterator_ = i;
         else break;
@@ -1077,10 +1104,13 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
     blocksAllocated_++;
 
-    //cout << "image.after-swap-in this=" << this << " blocksAllocated=" << blocksAllocated_ << " blocksInMemory=";
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //cout << "image.after-swap-in this=" << this
+    //     << " blocksAllocated=" << blocksAllocated_
+    //     << " blocksInMemory=";
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
-    //CachedFileImageDirector::v().postCacheMiss();
+    //CachedFileImageDirector::v().printAllBlockStats();
 
     return lines_[dy];
 };
@@ -1088,49 +1118,47 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 /** Swap a block out to disk. */
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
-    if (blocksAllocated_ == 0) vigra_fail("Attempt to free a block from an image that has no blocks.");
+    if (blocksAllocated_ == 0) {
+        vigra_fail("Attempt to free a block from an image that has no blocks.");
+    }
 
-    // Enblend iterates over images in 5-line sliding windows (in reduce).
-    // So the block least likely to be used next is the block before the
-    // last block currently in memory.
-    // If we only have one block, and we got to this point, then there is
-    // probably going to be thrashing.
-    // This means that there is only 1 block managed by the director, or that
-    // there are so many images the director can only assign 1 block per image.
-    //cout << "swapOutBlock image=" << this << " blocksAllocated=" << blocksAllocated_ << " block list before:";
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //cout << "swapOutBlock image=" << this
+    //     << " blocksAllocated=" << blocksAllocated_
+    //     << " block list before:";
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
+    // Choose a block to swap out.
     int blockNumber = 0;
     if (blocksAllocated_ == 1 && blocksNeeded_ > 1) {
-        // FIXME provide estimate on how many blocks are needed.
-        vigra_fail("enblend: Out of memory blocks. Try using the -m flag to increase the"
-                " amount of memory to use, or use the -b flag to decrease the block size");
-        
-        //blockNumber = blocksInMemory_->back();
-        //blocksInMemory_->pop_back();
-
+        // Never swap out our only block (if we need more than one).
+        // Enblend iterates over images in 5-line sliding windows (in reduce).
+        // This is to avoid thrashing.
+        vigra_fail("enblend: Out of memory blocks. Try using the -m flag to "
+                "increase the amount of memory to use, or use the -b flag to "
+                "decrease the block size\n"
+                "reason: probable thrash, 1 blocks allocated, 0 blocks available.");
     } else {
         if (mostRecentlyLoadedBlockIterator_ == blocksInMemory_->begin()) {
             // We're at the beginning of the image.
+            // The last block in memory is the one least likely to be used next.
             blockNumber = blocksInMemory_->back();
             blocksInMemory_->pop_back();
         } else {
             // Try the block before mostRecentlyLoadedBlockIterator.
+            // Keep the m-r-l block for the 5-line sliding window.
+            // The block just before that is least likely to be used next.
             list<int>::iterator candidate = mostRecentlyLoadedBlockIterator_;
             --candidate;
             blockNumber = *candidate;
             blocksInMemory_->erase(candidate);
         }
-        //    candidate = blocksInMemory_.end();
-        //    candidate--;
-        //list<int>::iterator penultimate = --(blocksInMemory_->end());
-        //blockNumber = *(--penultimate);
-        //blocksInMemory_->erase(penultimate);
     }
 
     //cout << "swapOutBlock after list remove block=" << blockNumber << ": ";
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
     int firstLineInBlock = blockNumber * linesPerBlocksize_;
@@ -1144,16 +1172,20 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         if (tmpFile_ == NULL) initTmpfile();
 
         // Find the right spot in the file.
-        off_t offset = (off_t)width_ * (off_t)firstLineInBlock * (off_t)sizeof(PIXELTYPE);
+        off_t offset = (off_t)width_
+                * (off_t)firstLineInBlock
+                * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
 
-        int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_) - firstLineInBlock;
+        int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_)
+                - firstLineInBlock;
         int pixelsToWrite = numLinesInBlock * width_;
+        //FIXME this should use compression.
         int itemsWritten = fwrite(blockStart, sizeof(PIXELTYPE), pixelsToWrite, tmpFile_);
         if (itemsWritten < pixelsToWrite) {
-            vigra_fail("CachedFileImage: error writing to image backing file.\n");
+            vigra_fail("enblend: error writing to image swap file.\n");
         }
     }
 
@@ -1163,7 +1195,8 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         if (absoluteLineNumber >= height_) break;
         PIXELTYPE *p = lines_[absoluteLineNumber];
         for (int column = 0; column <= width_; column++) {
-            //FIXME if pixel type is not a simple data type and this destructor actually does
+            //FIXME if pixel type is not a simple data type and
+            // this destructor actually does
             // something, then we are in big trouble.
             (p[column]).~PIXELTYPE();
         }
@@ -1175,8 +1208,11 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 
     blocksAllocated_--;
 
-    //cout << "swapOutBlock after swapout: blocksAllocated=" << blocksAllocated_ << " blocksInMemory="
-    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(), std::ostream_iterator<int>(cout, " "));
+    //cout << "swapOutBlock after swapout:"
+    //     << " blocksAllocated=" << blocksAllocated_
+    //     << " blocksInMemory="
+    //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
+    //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 };
 
@@ -1188,13 +1224,13 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     #ifdef HAVE_MKSTEMP
     int tmpFD = mkstemp(filenameTemplate);
     if (tmpFD < 0) {
-        vigra_fail("CachedFileImage: unable to create image backing file.\n");
+        vigra_fail("enblend: unable to create image swap file.\n");
     }
     tmpFile_ = fdopen(tmpFD, "wb+");
     #else
     char *tmpReturn = mktemp(filenameTemplate);
     if (tmpReturn == NULL) {
-        vigra_fail("CachedFileImage: unable to create image backing file.\n");
+        vigra_fail("enblend: unable to create image swap file.\n");
     }
     tmpFile_ = fopen(filenameTemplate, "wb+");
     #endif
@@ -1250,7 +1286,8 @@ CachedFileImage<PIXELTYPE>::init(value_type const & pixel) {
         PIXELTYPE *p = lines_[line];
         if (lines_[line] != NULL) {
             for (int column = 0; column <= width_; column++) {
-                //FIXME if pixel type is not a simple data type and this destructor actually does
+                //FIXME if pixel type is not a simple data type and this
+                // destructor actually does
                 // something, then we are in big trouble.
                 (p[column]).~PIXELTYPE();
             }
