@@ -46,6 +46,8 @@ namespace enblend {
 
 typedef vigra_ext::ROI<vigra::Diff2D> EnblendROI;
 
+enum Overlap {NoOverlap, PartialOverlap, CompleteOverlap};
+
 //// assemble.cc
 //FILE *assemble(std::list<char*> &filenames, bool pickOne);
 //
