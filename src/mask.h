@@ -35,13 +35,27 @@
 #include "vigra/transformimage.hxx"
 
 using namespace std;
-using namespace vigra::functor;
+
+using vigra::BImage;
+using vigra::ImageExportInfo;
+using vigra::ImageImportInfo;
+using vigra::importImageAlpha;
+using vigra::exportImage;
+using vigra::initImageIf;
+using vigra::linearIntensityTransform;
+using vigra::NumericTraits;
+using vigra::transformImage;
+using vigra::transformImageIf;
+
+using vigra::functor::Arg1;
+using vigra::functor::ifThenElse;
+using vigra::functor::Param;
 
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
-vigra::ImageImportInfo *mask(vigra::ImageImportInfo *whiteImageInfo,
-        vigra::ImageImportInfo *blackImageInfo,
+ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
+        ImageImportInfo *blackImageInfo,
         EnblendROI &inputUnion,
         EnblendROI &uBB,
         EnblendROI &iBB) {
@@ -53,31 +67,31 @@ vigra::ImageImportInfo *mask(vigra::ImageImportInfo *whiteImageInfo,
     // 1 = inside white image only.
     // 2 = inside black image only.
     // 3 = inside both images.
-    vigra::BImage maskInit(uBB.size());
+    BImage maskInit(uBB.size());
 
     ImageType *image = new ImageType(inputUnion.size());
     AlphaType *imageA = new AlphaType(inputUnion.size());
 
     // Load the white image.
-    vigra::importImageAlpha(*whiteImageInfo,
+    importImageAlpha(*whiteImageInfo,
             destImage(*image),
             destImage(*imageA));
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
-    vigra::initImageIf(destImageRange(maskInit),
+    initImageIf(destImageRange(maskInit),
             maskIter(imageA->upperLeft() + uBB.getUL()),
             1);
 
     // Load the black image.
-    vigra::importImageAlpha(*blackImageInfo,
+    importImageAlpha(*blackImageInfo,
             destImage(*image),
             destImage(*imageA));
 
     // maskInit = maskInit + 2 at all pixels where blackImage contributes.
-    vigra::transformImageIf(srcImageRange(maskInit),
+    transformImageIf(srcImageRange(maskInit),
             maskIter(imageA->upperLeft() + uBB.getUL()),
             destImage(maskInit),
-            vigra::linearIntensityTransform(1, 2));
+            linearIntensityTransform(1, 2));
 
     // mem xsection = ImageType*os + AlphaType*os + BImage*uBB
     delete image;
@@ -92,21 +106,21 @@ vigra::ImageImportInfo *mask(vigra::ImageImportInfo *whiteImageInfo,
     // Dump maskInit into mask
     // maskInit = 1 then mask = max value - white image
     // maskInit = 2 then mask = zero - black image
-    vigra::transformImage(srcImageRange(maskInit),
+    transformImage(srcImageRange(maskInit),
             destImage(mask),
             ifThenElse(Arg1() == Param(1),
                     Param(GetMaxAlpha<AlphaPixelType>()),
-                    Param(vigra::NumericTraits<AlphaPixelType>::zero())));
+                    Param(NumericTraits<AlphaPixelType>::zero())));
 
     char tmpFilename[] = ".enblend_mask_XXXXXX";
     int tmpFD = mkstemp(tmpFilename);
-    vigra::ImageExportInfo maskImageInfo(tmpFilename);
+    ImageExportInfo maskImageInfo(tmpFilename);
     maskImageInfo.setPosition(uBB.getUL());
     maskImageInfo.setFileType("TIFF");
-    vigra::exportImage(srcImageRange(mask), maskImageInfo);
+    exportImage(srcImageRange(mask), maskImageInfo);
     close(tmpFD);
 
-    return new vigra::ImageImportInfo(tmpFilename);
+    return new ImageImportInfo(tmpFilename);
 }
 
 #endif /* __MASK_H__ */

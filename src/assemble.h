@@ -39,6 +39,17 @@
 
 using namespace std;
 
+using vigra::copyImageIf;
+using vigra::Diff2D;
+using vigra::exportImageAlpha;
+using vigra::FindBoundingRectangle;
+using vigra::ImageExportInfo;
+using vigra::ImageImportInfo;
+using vigra::importImageAlpha;
+using vigra::inspectImageIf;
+using vigra::Threshold;
+using vigra::transformImage;
+
 /** Find images that don't overlap and assemble them into one image.
  *  Uses a greedy heuristic.
  *  Removes used images from given list of ImageImportInfos.
@@ -46,7 +57,7 @@ using namespace std;
  *  memory xsection = 2 * (ImageType*os + AlphaType*os)
  */
 template <typename ImageType, typename AlphaType>
-vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
+ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
         EnblendROI &bb) {
 
@@ -73,15 +84,15 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
     }
 
     // Load the first image into the destination.
-    vigra::Diff2D imagePos = imageInfoList.front()->getPosition();
-    vigra::importImageAlpha(*imageInfoList.front(),
+    Diff2D imagePos = imageInfoList.front()->getPosition();
+    importImageAlpha(*imageInfoList.front(),
             destIter(image.upperLeft() + imagePos - inputUnion.getUL()),
             destIter(imageA.upperLeft() + imagePos - inputUnion.getUL()));
     imageInfoList.erase(imageInfoList.begin());
 
     // Mask off pixels that are not totally opaque.
-    vigra::transformImage(srcImageRange(imageA), destImage(imageA),
-            vigra::Threshold<AlphaPixelType, AlphaPixelType>(
+    transformImage(srcImageRange(imageA), destImage(imageA),
+            Threshold<AlphaPixelType, AlphaPixelType>(
                     GetMaxAlpha<AlphaPixelType>(),
                     GetMaxAlpha<AlphaPixelType>(),
                     0,
@@ -93,20 +104,20 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
         // Attempt to assemble additional non-overlapping images.
 
         // List of ImageImportInfos we decide to assemble.
-        list<list<vigra::ImageImportInfo*>::iterator> toBeRemoved;
+        list<list<ImageImportInfo*>::iterator> toBeRemoved;
 
-        list<vigra::ImageImportInfo*>::iterator i;
+        list<ImageImportInfo*>::iterator i;
         for (i = imageInfoList.begin(); i != imageInfoList.end(); i++) {
-            vigra::ImageImportInfo *info = *i;
+            ImageImportInfo *info = *i;
 
             // Load the next image.
             ImageType src(info->size());
             AlphaType srcA(info->size());
-            vigra::importImageAlpha(*info, destImage(src), destImage(srcA));
+            importImageAlpha(*info, destImage(src), destImage(srcA));
 
             // Mask off pixels that are not totally opaque.
-            vigra::transformImage(srcImageRange(srcA), destImage(srcA),
-                    vigra::Threshold<AlphaPixelType, AlphaPixelType>(
+            transformImage(srcImageRange(srcA), destImage(srcA),
+                    Threshold<AlphaPixelType, AlphaPixelType>(
                             GetMaxAlpha<AlphaPixelType>(),
                             GetMaxAlpha<AlphaPixelType>(),
                             0,
@@ -141,11 +152,11 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
                     cout.flush();
                 }
 
-                vigra::Diff2D srcPos = info->getPosition();
-                vigra::copyImageIf(srcImageRange(src),
+                Diff2D srcPos = info->getPosition();
+                copyImageIf(srcImageRange(src),
                         maskImage(srcA),
                         destIter(image.upperLeft() - inputUnion.getUL() + srcPos));
-                vigra::copyImageIf(srcImageRange(srcA),
+                copyImageIf(srcImageRange(srcA),
                         maskImage(srcA),
                         destIter(imageA.upperLeft() - inputUnion.getUL() + srcPos));
 
@@ -156,7 +167,7 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
         }
         
         // Erase the ImageImportInfos we used.
-        list<list<vigra::ImageImportInfo*>::iterator>::iterator r;
+        list<list<ImageImportInfo*>::iterator>::iterator r;
         for (r = toBeRemoved.begin(); r != toBeRemoved.end(); r++) {
             imageInfoList.erase(*r);
         }
@@ -165,8 +176,8 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
     if (Verbose > 0) cout << endl;
 
     // Calculate bounding box of image.
-    vigra::FindBoundingRectangle unionRect;
-    vigra::inspectImageIf(srcIterRange(vigra::Diff2D(), vigra::Diff2D() + image.size()),
+    FindBoundingRectangle unionRect;
+    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image.size()),
             srcImage(imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
     if (Verbose > 0) {
@@ -185,14 +196,14 @@ vigra::ImageImportInfo *assemble(list<vigra::ImageImportInfo*> &imageInfoList,
     // Return ImageImportInfo for that file.
     char tmpFilename[] = ".enblend_assemble_XXXXXX";
     int tmpFD = mkstemp(tmpFilename);
-    vigra::ImageExportInfo outputImageInfo(tmpFilename);
+    ImageExportInfo outputImageInfo(tmpFilename);
     outputImageInfo.setFileType("TIFF");
-    vigra::exportImageAlpha(srcImageRange(image),
+    exportImageAlpha(srcImageRange(image),
             srcImage(imageA),
             outputImageInfo);
     close(tmpFD);
     
-    return new vigra::ImageImportInfo(tmpFilename);
+    return new ImageImportInfo(tmpFilename);
 };
 
 #endif /* __ASSEMBLE_H__ */

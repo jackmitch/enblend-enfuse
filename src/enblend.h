@@ -32,9 +32,12 @@
 
 using namespace std;
 
+using vigra::ImageExportInfo;
+using vigra::ImageImportInfo;
+
 template <typename ImageType, typename AlphaType, typename MaskType, typename PyramidType>
-void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
-        vigra::ImageExportInfo &outputImageInfo,
+void enblend(list<ImageImportInfo*> &imageInfoList,
+        ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
     typedef typename ImageType::value_type image_value_type;
@@ -51,7 +54,7 @@ void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
 
     // Create the initial white image.
     EnblendROI whiteBB;
-    vigra::ImageImportInfo *whiteImageInfo =
+    ImageImportInfo *whiteImageInfo =
             assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
 
     // Main blending loop.
@@ -59,7 +62,7 @@ void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
 
         // Create the black image.
         EnblendROI blackBB;
-        vigra::ImageImportInfo *blackImageInfo =
+        ImageImportInfo *blackImageInfo =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
 
         // Union bounding box of whiteImage and blackImage.
@@ -71,7 +74,7 @@ void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
         bool overlap = whiteBB.intersect(blackBB, iBB);
 
         // Create the blend mask.
-        vigra::ImageImportInfo *maskImageInfo =
+        ImageImportInfo *maskImageInfo =
                 mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
                         inputUnion, uBB, iBB);
 
