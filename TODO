@@ -1,0 +1,4 @@
+- Stitching discrepancy avoidance in mask creation
+
+- Region-of-interest reduction by expanding top of mask pyramid and finding
+  transition zone bounding box.

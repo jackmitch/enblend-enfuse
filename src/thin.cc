@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar; if not, write to the Free Software
+ * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifdef HAVE_CONFIG_H
@@ -39,7 +39,7 @@ extern uint32 ROILastY;
 
 			        	/* Direction masks:		*/
 			        	/*   N	   S	 W     E	*/
-static	uint32	directionMasks[]	= { 0200, 0002, 0040, 0010 };
+static	uint16	directionMasks[]	= { 0200, 0002, 0040, 0010 };
 
 /*	True if pixel neighbor map indicates the pixel is 8-simple and	*/
 /*	not an end point and thus can be remarked.  The neighborhood	*/
@@ -51,7 +51,7 @@ static	uint32	directionMasks[]	= { 0200, 0002, 0040, 0010 };
 /*				d e f					*/
 /*				g h i					*/
 
-static	unsigned char	remarkTable[512] = {
+static	uint8   remarkTable[512] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -85,32 +85,27 @@ static	unsigned char	remarkTable[512] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-/** Convert x,y coordinates to an index in the 1-d data array.
- */
-inline int coord(int x, int y) {
-    return ((y * OutputWidth) + x);
-}
-
-/** This function analyzes all of the black pixels in the input mask
- *  and determines how far away each one is from a red, green, or blue
- *  region. If the pixel is closer to a red region than any other region,
- *  the black pixel is changed to red. Likewise for green and blue.
+/** This function analyzes all of the thinnable pixels in the input mask
+ *  and determines how far away each one is from a green or blue
+ *  region. If the pixel is closer to a green region than any other region,
+ *  the thinnable pixel is changed to green. Likewise for blue.
+ *  This function only operates within the region-of-interest.
  *
  *  Based on an algorithm in "Efficient Binary Image Thinning Using
  *  Neighborhood Maps" by Joseph M. Cychosz, from "Graphics Gems IV",
  *  ed. Paul Heckbert. Academic Press, Inc. 1994.
  */
-void thinMask(uint32 *mask) {
+void thinMask(MaskPixel *mask) {
 
-    int passCount = 0;
-    int passIndex = 0;
-    int modifiedPixelCount = 1;
-    int blackPixelsRemaining = 0;
+    uint32 passCount = 0;
+    uint32 passIndex = 0;
+    uint32 modifiedPixelCount = 1;
+    uint32 thinnablePixelsRemaining = 0;
 
-    uint32 pMap;
-    uint32 qMap;
-    uint32 *qbMapArray;
-    uint32 directionMask;
+    uint16 pMap;
+    uint16 qMap;
+    uint16 *qbMapArray;
+    uint16 directionMask;
 
     int32 directionIndexOffsets[] = {
             -OutputWidth, // NORTH
@@ -119,12 +114,12 @@ void thinMask(uint32 *mask) {
             1};           // EAST
     int32 directionIndexOffset;
 
-    uint32 x;
-    uint32 y;
-
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
+    uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
-    qbMapArray = (uint32*)malloc(roiWidth * sizeof(uint32));
+    MaskPixel *firstPixel = &mask[ROIFirstY * OutputWidth + ROIFirstX];
+
+    qbMapArray = (uint16*)malloc(roiWidth * sizeof(uint16));
     if (qbMapArray == NULL) {
         cerr << "enblend: malloc failed for qbMapArray" << endl;
         exit(1);
@@ -135,91 +130,117 @@ void thinMask(uint32 *mask) {
         modifiedPixelCount = 0;
 
         for (passIndex = 0; passIndex < 4; passIndex++) {
+            thinnablePixelsRemaining = 0;
+
             directionMask = directionMasks[passIndex];
             directionIndexOffset = directionIndexOffsets[passIndex];
 
-            blackPixelsRemaining = 0;
-
             // Build initial previous scan buffer.
-            pMap = (mask[coord(ROIFirstX,ROIFirstY)] & 1) ? 0777 : 0776;
-            for (x = ROIFirstX; x < ROILastX; x++) {
-                pMap = ((pMap << 1) & 0666)
-                        | ((mask[coord(x+1,ROIFirstY)] & 1) ? 0111 : 0110);
-                qbMapArray[x-ROIFirstX] = pMap;
+            pMap = 0776 | firstPixel->r;
+
+            uint32 x;
+            for (x = 0; x < (roiWidth-1); x++) {
+                pMap = ((pMap << 1) & 0666) | 0110 | firstPixel[x+1].r;
+                qbMapArray[x] = pMap;
             }
-            // Right edge pixel
-            qbMapArray[x-ROIFirstX] = ((pMap << 1) & 0666) | 0111;
+            // Right edge pixel is implicitly thinnable.
+            qbMapArray[x] = ((pMap << 1) & 0666) | 0111;
+
+            MaskPixel *currentPixel;
 
             // Scan image for pixel remarking candidates.
-            for (y = ROIFirstY; y < ROILastY; y++) {
+            uint32 y;
+            for (y = 0; y < (roiHeight-1); y++) {
+                currentPixel = &firstPixel[y * OutputWidth];
 
                 // Calculate first pMap.
                 qMap = qbMapArray[0];
                 pMap = ((qMap << 2) & 0110) | 0666
-                        | ((mask[coord(ROIFirstX,y+1)] & 1) ? 0001 : 0000);
+                        | currentPixel[OutputWidth].r;
 
                 // Process pixels across row.
-                for (x = ROIFirstX; x <= ROILastX ; x++) {
-                    qMap = qbMapArray[x-ROIFirstX];
-                    pMap = ((pMap << 1) & 0666) | ((qMap << 3) & 0110);
+                for (x = 0; x < (roiWidth-1); x++) {
+                    qMap = qbMapArray[x];
+                    pMap = ((pMap << 1) & 0666)
+                            | ((qMap << 3) & 0110)
+                            | currentPixel[OutputWidth + 1].r;
 
-                    if (x != OutputWidth - 1) {
-                        pMap |= ((mask[coord(x+1,y+1)] & 1) ? 0001 : 0000);
-                    } else {
-                        // Right edge.
-                        pMap |= 0001;
-                    }
-
-                    qbMapArray[x-ROIFirstX] = pMap;
+                    qbMapArray[x] = pMap;
 
                     if (((pMap & directionMask) == 0)
                             && remarkTable[pMap]) {
                         // Modify pixel.
                         modifiedPixelCount++;
-                        // Remove black bit, do not change trans bits.
-                        mask[coord(x,y)] &= 0xFF000000;
-                        // Set color mark bit, do not change trans bits.
-                        mask[coord(x,y)] |= (0x00FFFFFF &
-                                mask[coord(x,y) + directionIndexOffset]);
+                        // Remove thinnable bit.
+                        currentPixel->r = 0;
+                        // Set color mark bit.
+                        currentPixel->g = currentPixel[directionIndexOffset].g;
+                        currentPixel->b = currentPixel[directionIndexOffset].b;
                     }
-                    else if ((pMap & 0020) != 0) {
-                        blackPixelsRemaining++;
+                    else if (pMap & 0020) {
+                        thinnablePixelsRemaining++;
                     }
+
+                    currentPixel++;
+                }
+
+                // Right edge of row.
+                qMap = qbMapArray[x];
+                pMap = ((pMap << 1) & 0666)
+                        | ((qMap << 3) & 0110)
+                        | 1;
+
+                qbMapArray[x] = pMap;
+
+                if (((pMap & directionMask) == 0)
+                        && remarkTable[pMap]) {
+                    // Modify pixel.
+                    modifiedPixelCount++;
+                    // Remove thinnable bit.
+                    currentPixel->r = 0;
+                    // Set color mark bit.
+                    currentPixel->g = currentPixel[directionIndexOffset].g;
+                    currentPixel->b = currentPixel[directionIndexOffset].b;
+                }
+                else if (pMap & 0020) {
+                    thinnablePixelsRemaining++;
                 }
             }
 
-            // Process bottom scanline.
+            // Bottom scanline
+            currentPixel = &firstPixel[y * OutputWidth];
+
             // Initial pMap.
             qMap = qbMapArray[0];
             pMap = ((qMap << 2) & 0110) | 0667;
 
-            for (x = ROIFirstX; x <= ROILastX; x++) {
-                qMap = qbMapArray[x-ROIFirstX];
+            for (x = 0; x < roiWidth; x++) {
+                qMap = qbMapArray[x];
                 pMap = ((pMap << 1) & 0666) | ((qMap << 3) & 0110) | 0001;
 
                 if (((pMap & directionMask) == 0)
                         && remarkTable[pMap]) {
                     // Modify pixel.
                     modifiedPixelCount++;
-                    // Remove black bit, do not change trans bits.
-                    mask[coord(x,y)] &= 0xFF000000;
-                    // Set color mark bit, do not change trans bits.
-                    mask[coord(x,y)] |= (0x00FFFFFF &
-                            mask[coord(x,y) + directionIndexOffset]);
-                    //mask[coord(x,y)] =
-                    //        mask[coord(x,y) + directionIndexOffset];
+                    // Remove thinnable bit.
+                    currentPixel->r = 0;
+                    // Set color mark bit.
+                    currentPixel->g = currentPixel[directionIndexOffset].g;
+                    currentPixel->b = currentPixel[directionIndexOffset].b;
                 }
-                else if ((pMap & 0020) != 0) {
-                    blackPixelsRemaining++;
+                else if (pMap & 0020) {
+                    thinnablePixelsRemaining++;
                 }
+
+                currentPixel++;
             }
         }
 
         if (Verbose > 0) {
             cout << "thin: pass " << passCount << ", "
                  << modifiedPixelCount
-                 << " pixels remarked, "
-                 << blackPixelsRemaining
+                 << " pixels thinned, "
+                 << thinnablePixelsRemaining
                  << " pixels to go."
                  << endl;
 

@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar; if not, write to the Free Software
+ * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifdef HAVE_CONFIG_H
@@ -22,8 +22,6 @@
 #endif
 
 #include <iostream>
-#include <stdlib.h>
-#include <tiffio.h>
 
 #include "enblend.h"
 
@@ -32,7 +30,6 @@ using namespace std;
 extern int Verbose;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
-extern double StitchMismatchThreshold;
 
 // Region of interest for this operation.
 extern uint32 ROIFirstX;
@@ -40,15 +37,17 @@ extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
 
-/** Calculate a blending mask between outputBuf and inputTIFF.
+/** Calculate a blending mask between whiteImage and blackImage.
+ *  Sets the region-of-interest to the bounding box of the union
+ *  of whiteImage and blackImage.
  */
-uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
+MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
 
     // Allocate memory for the blending mask.
-    uint32 *mask = (uint32*)_TIFFmalloc(
-            OutputWidth * OutputHeight * sizeof(uint32));
+    MaskPixel *mask = (MaskPixel*)calloc(OutputWidth * OutputHeight,
+            sizeof(MaskPixel));
     if (mask == NULL) {
-        cerr << "enblend: malloc failed for mask" << endl;
+        cerr << "enblend: malloc failed in mask for mask" << endl;
         exit(1);
     }
 
@@ -58,100 +57,78 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
     ROIFirstY = OutputHeight - 1;
     ROILastY = 0;
 
-    for (uint32 i = 0; i < OutputHeight; i++) {
-        TIFFReadScanline(inputTIFF,
-                &(mask[i * OutputWidth]),
-                i,
-                8);
+    uint32 *whitePixel = whiteImage;
+    uint32 *blackPixel = blackImage;
+    MaskPixel *maskPixel = mask;
 
-        for (uint32 j = 0; j < OutputWidth; j++) {
-            uint32 outPixel = outputBuf[(i * OutputWidth) + j];
-            uint32 inPixel = mask[(i * OutputWidth) + j];
+    for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
 
-            if (outPixel != 0 || inPixel != 0) {
-                // Pixel is in region of interest.
-                ROIFirstX = min(j, ROIFirstX);
-                ROILastX = max(j, ROILastX);
-                ROIFirstY = min(i, ROIFirstY);
-                ROILastY = max(i, ROILastY);
-            }
-
-            if (outPixel == 0 && inPixel == 0) {
-                // Pixel is not in the union of the two images.
-                // Make the mask pixel black.
-                mask[(i * OutputWidth) + j] = 0x00000001;
-            }
-            else if (outPixel != 0 && inPixel == 0) {
-                // Pixel is in out only.
-                // Make the mask pixel blue.
-                mask[(i * OutputWidth) + j] = 0xFF00FF00;
-            }
-            else if (outPixel == 0 && inPixel != 0) {
-                // Pixel is in input only.
-                // Make the mask pixel green.
-                mask[(i * OutputWidth) + j] = 0xFFFF0000;
-            }
-            else {
-                // Pixel is in the intersection of the two images.
-
-                /* FIXME stitch mismatch avoidance is broken.
-                // Calculate the stitch mismatch at this pixel.
-                double rDiff = abs((int32)TIFFGetR(outPixel) - (int32)TIFFGetR(inPixel))
-                        / 255.0;
-                double bDiff = abs((int32)TIFFGetB(outPixel) - (int32)TIFFGetB(inPixel))
-                        / 255.0;
-                double gDiff = abs((int32)TIFFGetG(outPixel) - (int32)TIFFGetG(inPixel))
-                        / 255.0;
-
-                if (rDiff > StitchMismatchThreshold
-                        || bDiff > StitchMismatchThreshold
-                        || gDiff > StitchMismatchThreshold) {
-                    // Make the mask pixel red.
-                    mask[(i * OutputWidth) + j] = RED;
-                } else {
-                    // Make the mask pixel black.
-                    mask[(i * OutputWidth) + j] = BLACK;
-                }
-                */
-
-                // Make the mask pixel black.
-                mask[(i * OutputWidth) + j] = 0xFF000001;
-
-            }
+        if (*whitePixel != 0 || *blackPixel != 0) {
+            // Pixel is in region of interest.
+            uint32 x = i % OutputWidth;
+            uint32 y = i / OutputWidth;
+            ROIFirstX = min(x, ROIFirstX);
+            ROILastX = max(x, ROILastX);
+            ROIFirstY = min(y, ROIFirstY);
+            ROILastY = max(y, ROILastY);
         }
+
+        if (*whitePixel == 0 && *blackPixel == 0) {
+            // Pixel is not in the union of the two images.
+            // Mark the pixel as thinnable.
+            maskPixel->r = 1;
+        }
+        else if (*whitePixel == 0) {
+            // Pixel is in blackImage but not whiteImage.
+            // Make the pixel green.
+            maskPixel->g = 255;
+            maskPixel->a = 255;
+        }
+        else if (*blackPixel == 0) {
+            // Pixel is in whiteImage but not blackImage.
+            // Make the pixel blue.
+            maskPixel->b = 255;
+            maskPixel->a = 255;
+        }
+        else {
+            // Pixel is in both images.
+            // Mark the pixel as thinnable.
+            maskPixel->r = 1;
+            maskPixel->a = 255;
+        }
+
+        whitePixel++;
+        blackPixel++;
+        maskPixel++;
+
     }
 
     // Run the thinning transform on the mask inside the ROI.
-    // This will replace the black pixels with either green or blue
+    // This will replace the thinnable pixels with either green or blue
     // based on how close each pixel is to a green or blue region.
     thinMask(mask);
 
-    // Swap blue for white and green for black.
-    // Only needs to be done within region of interest.
-    // Outside ROI make mask transparent.
+    // Remark all blue pixels as white. These pixels are closer to
+    // whiteImage than blackImage.
+    // Remark all green pixels as black. These pixels are closer to
+    // blackImage than whiteImage.
+    // Remark remaining thinnable pixels as white.
+    // Do not change alpha channel - this stores the union of
+    // whiteImage and blackImage.
+    maskPixel = mask;
     for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
-        //uint32 x = i % OutputWidth;
-        //uint32 y = i / OutputWidth;
-        //if (x < ROIFirstX || x > ROILastX
-        //        || y < ROIFirstY || y > ROILastY) {
-        //    mask[i] = TRANS;
-        //}
-        //else if (mask[i] == BLUE) {
-        //    mask[i] = WHITE;
-        //}
-        //else if (mask[i] == GREEN) {
-        //    mask[i] = TRANS;
-        //}
-        if (mask[i] & 0x0000FF00) {
-            // White - pixel is near out
-            mask[i] |= 0x00FFFFFF;
-        } else if (mask[i] & 0x00FF0000) {
-            // Black - pixel is near in
-            mask[i] &= 0xFF000000;
-        } else {
-            // pixel was not remarked. Keep trans info, set to out - white.
-            mask[i] |= 0x00FFFFFF;
+        if (maskPixel->g != 0) {
+            maskPixel->r = 0;
+            maskPixel->g = 0;
+            maskPixel->b = 0;
         }
+        else {
+            maskPixel->r = 255;
+            maskPixel->g = 255;
+            maskPixel->b = 255;
+        }
+
+        maskPixel++;
     }
 
     return mask;

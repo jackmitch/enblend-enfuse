@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar; if not, write to the Free Software
+ * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifdef HAVE_CONFIG_H
@@ -52,7 +52,7 @@ void printUsageAndExit() {
     cout << endl;
     cout << "Options:" << endl;
     cout << " -o filename       Write output to file" << endl;
-    //FIXME stitch mismatch avoidance is broken.
+    //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
@@ -84,8 +84,10 @@ int main(int argc, char** argv) {
             }
             case 't': {
                 StitchMismatchThreshold = strtod(optarg, NULL);
-                if (StitchMismatchThreshold < 0.0 || StitchMismatchThreshold > 1.0) {
-                    cerr << "enblend: threshold must be between 0.0 and 1.0 inclusive."
+                if (StitchMismatchThreshold < 0.0
+                        || StitchMismatchThreshold > 1.0) {
+                    cerr << "enblend: threshold must be between "
+                         << "0.0 and 1.0 inclusive."
                          << endl;
                     printUsageAndExit();
                 }
@@ -204,129 +206,76 @@ int main(int argc, char** argv) {
         listIterator++;
     }
 
-    // Allocate memory for the output image.
-    uint32 *outputBuf = (uint32*)_TIFFmalloc(OutputWidth * OutputHeight * sizeof(uint32));
-    if (outputBuf == NULL) {
-        cerr << "enblend: malloc failed for outputBuf" << endl;
-        exit(1);
-    }
-
-    // Remove the first TIFF file name.
-    char *fileZeroName = inputFileNameList.front();
-    inputFileNameList.pop_front();
-
-    if (Verbose > 0) {
-        cout << "Starting with first image \""
-             << fileZeroName
-             << "\"" << endl;
-    }
-
-    TIFF *inputTIFF = TIFFOpen(fileZeroName, "r");
-    if (inputTIFF == NULL) {
-        // Error opening tiff.
-        cerr << "enblend: error opening input TIFF file \""
-             << fileZeroName
-             << "\"" << endl;
-        exit(1);
-    }
-
-    // The first TIFF gets copied directly into the output.
-    for (uint32 i = 0; i < OutputHeight; i++) {
-        TIFFReadScanline(inputTIFF,
-                &(outputBuf[i * OutputWidth]),
-                i,
-                8);
-    }
-
-    // Done with the first TIFF.
-    TIFFClose(inputTIFF);
-
-    //TODO: Sort the images in the list.
+    // Create the initial white image.
+    uint32 *whiteImage = assemble(inputFileNameList);
 
     // Main blending loop
     while (!inputFileNameList.empty()) {
-        char *inputFileName = inputFileNameList.front();
-        inputFileNameList.pop_front();
 
-        if (Verbose > 0) {
-            cout << "Next image: \"" << inputFileName << "\"" << endl;
-        }
+        // Create the black image.
+        uint32 *blackImage = assemble(inputFileNameList);
 
-        inputTIFF = TIFFOpen(inputFileName, "r");
-        if (inputTIFF == NULL) {
-            // Error opening tiff.
-            cerr << "enblend: error opening input TIFF file \""
-                 << inputFileName
-                 << "\"" << endl;
-            exit(1);
-        }
-
-        // Create blend mask. Black pixels are the inputTIFF zone,
-        // White pixels are the outputBuf zone
-        uint32 *mask = createMask(outputBuf, inputTIFF);
+        // Create the blend mask.
+        MaskPixel *mask = createMask(whiteImage, blackImage);
 
         // Count max number of levels we can make from ROI size.
         int32 shortDimension = min(ROILastX - ROIFirstX + 1,
                 ROILastY - ROIFirstY + 1);
         if (shortDimension < 4) {
-            cerr << "enblend: union of images is too small to make even one pyramid."
+            cerr << "enblend: union of images is too small to make "
+                 << "more than one pyramid level."
                  << endl;
-            exit(1);
         }
-        int32 maximumLevels = 1;
+        uint32 maximumLevels = 1;
         while (shortDimension > 8) {
             shortDimension = shortDimension >> 1;
             maximumLevels++;
         }
 
         // Build Gaussian pyramid from mask.
-        vector<LPPixel*> *maskPyramid = gaussianPyramid(mask, maximumLevels);
+        vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
 
-        // TODO: find a good level to stop at where the blending zone does not
-        // overrun the overlap zone too much.
+        // Build Laplacian pyramid from whiteImage
+        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
 
-        // Build Laplacian pyramid from outputBuf
-        vector<LPPixel*> *outputLP = laplacianPyramid(outputBuf, maximumLevels);
+        // Build Laplacian pyramid from blackImage
+        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
 
-        // Build Laplacian pyramid from inputTIFF
-        vector<LPPixel*> *inputLP = laplacianPyramid(inputTIFF, maximumLevels);
+        // Blend pyramids
+        blend(*whiteLP, *blackLP, *maskGP);
 
-        // blend.
-        blend(maskPyramid, inputLP, outputLP);
+        // Collapse result back into whiteImage.
+        collapsePyramid(*whiteLP, whiteImage, mask);
 
-        // collapse result into outputBuf
-        collapsePyramid(outputLP, outputBuf, mask);
-
-        TIFFClose(inputTIFF);
-
-        //outputBuf = mask;
-        _TIFFfree(mask);
-
-        for (int32 i = 0; i < maximumLevels; i++) {
-            LPPixel *g = (*maskPyramid)[i];
+        // Free allocated memory.
+        _TIFFfree(blackImage);
+        free(mask);
+        for (uint32 i = 0; i < maximumLevels; i++) {
+            LPPixel *g = (*maskGP)[i];
             free(g);
-            g = (*outputLP)[i];
+            g = (*whiteLP)[i];
             free(g);
-            g = (*inputLP)[i];
+            g = (*blackLP)[i];
             free(g);
         }
-        delete maskPyramid;
-        delete outputLP;
-        delete inputLP;
+        delete maskGP;
+        delete whiteLP;
+        delete blackLP;
 
-        //TODO: sort list again.
     }
 
     // dump output scanlines.
     for (uint32 i = 0; i < OutputHeight; i++) {
         TIFFWriteScanline(outputTIFF,
-                &(outputBuf[i * OutputWidth]),
+                &(whiteImage[i * OutputWidth]),
                 i,
                 8);
     }
 
     // close outputTIFF.
     TIFFClose(outputTIFF);
+
+    _TIFFfree(whiteImage);
 
     return 0;
 }

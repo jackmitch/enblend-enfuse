@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar; if not, write to the Free Software
+ * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifdef HAVE_CONFIG_H
@@ -40,73 +40,76 @@ extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
 
-const double A = 0.4;
-const double W[] = {0.25 - A / 2.0, 0.25, A, 0.25, 0.25 - A / 2.0};
+// Gaussian filter coefficients
+static const double A = 0.4;
+static const double W[] = {0.25 - A / 2.0, 0.25, A, 0.25, 0.25 - A / 2.0};
 
-/** Expand in into out, either adding or subtracting from what is there.
+/** The Burt & Adelson Expand operation.
+ *  Expand in, and either add or subtract from out.
  */
 void expand(LPPixel *in, uint32 inW, uint32 inH,
         LPPixel *out, uint32 outW, uint32 outH,
-        bool add, bool keepOut=true) {
-
-    cerr << "in = " << in << " out = " << out << endl;
+        bool add) {
 
     for (uint32 outY = 0; outY < outH; outY++) {
         for (uint32 outX = 0; outX < outW; outX++) {
-            double outTmpR = 0.0;
-            double outTmpG = 0.0;
-            double outTmpB = 0.0;
-            double outTmpA = 0.0;
+
+            double r = 0.0;
+            double g = 0.0;
+            double b = 0.0;
+            double a = 0.0;
             double noContrib = 1.0;
+
             for (int m = 0; m < 5; m++) {
+                // Skip non-integral values of inX index.
                 if (((int32)outX - (m-2)) & 1 == 1) continue;
-                //uint32 inX = abs((int32)outX - (m-2)) >> 1;
-                //if (inX >= inW) inX -= (2 * (inX - inW) + 2);
+
                 int32 inX = ((int32)outX - (m-2)) >> 1;
+
+                // Boundary condition: replicate first and last column.
                 if (inX >= (int32)inW) inX = inW - 1;
                 if (inX < 0) inX = 0;
+
                 for (int n = 0; n < 5; n++) {
+                    // Skip non-integral values of inY index.
                     if (((int32)outY - (n-2)) & 1 == 1) continue;
-                    //uint32 inY = abs((int32)outY - (n-2)) >> 1;
-                    //if (inY >= inH) inY -= (2 * (inY - inH) + 2);
+
                     int32 inY = ((int32)outY - (n-2)) >> 1;
+
+                    // Boundary condition: replicate top and bottom rows.
                     if (inY >= (int32)inH) inY = inH - 1;
                     if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * inW + inX]);
+
                     if (inPixel->a != 255) {
+                        // Transparent pixels don't count.
                         noContrib -= W[m] * W[n];
                     } else {
-                        outTmpR += W[m] * W[n] * inPixel->r;
-                        outTmpG += W[m] * W[n] * inPixel->g;
-                        outTmpB += W[m] * W[n] * inPixel->b;
-                        outTmpA += W[m] * W[n] * inPixel->a;
+                        r += W[m] * W[n] * inPixel->r;
+                        g += W[m] * W[n] * inPixel->g;
+                        b += W[m] * W[n] * inPixel->b;
+                        a += W[m] * W[n] * inPixel->a;
                     }
                 }
             }
 
-            outTmpR = (noContrib == 0) ? 0 : outTmpR / noContrib;
-            outTmpG = (noContrib == 0) ? 0 : outTmpG / noContrib;
-            outTmpB = (noContrib == 0) ? 0 : outTmpB / noContrib;
-            outTmpA = (noContrib == 0) ? 0 : outTmpA / noContrib;
+            // Adjust filter for any ignored transparent pixels.
+            r = (noContrib == 0.0) ? 0.0 : r / noContrib;
+            g = (noContrib == 0.0) ? 0.0 : g / noContrib;
+            b = (noContrib == 0.0) ? 0.0 : b / noContrib;
+            a = (noContrib == 0.0) ? 0.0 : a / noContrib;
 
-            if (keepOut) {
-                if (add) {
-                    out->r += (int16)lrint(outTmpR * 4.0);
-                    out->g += (int16)lrint(outTmpG * 4.0);
-                    out->b += (int16)lrint(outTmpB * 4.0);
-                    out->a += (int16)lrint(outTmpA * 4.0);
-                } else {
-                    out->r -= (int16)lrint(outTmpR * 4.0);
-                    out->g -= (int16)lrint(outTmpG * 4.0);
-                    out->b -= (int16)lrint(outTmpB * 4.0);
-                    out->a -= (int16)lrint(outTmpA * 4.0);
-                }
+            if (add) {
+                out->r += (int16)lrint(r * 4.0);
+                out->g += (int16)lrint(g * 4.0);
+                out->b += (int16)lrint(b * 4.0);
+                out->a += (int16)lrint(a * 4.0);
             } else {
-                out->r = (int16)lrint(outTmpR * 4.0);
-                out->g = (int16)lrint(outTmpG * 4.0);
-                out->b = (int16)lrint(outTmpB * 4.0);
-                out->a = (int16)lrint(outTmpA * 4.0);
+                out->r -= (int16)lrint(r * 4.0);
+                out->g -= (int16)lrint(g * 4.0);
+                out->b -= (int16)lrint(b * 4.0);
+                out->a -= (int16)lrint(a * 4.0);
             }
 
             out++;
@@ -117,59 +120,67 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
     return;
 }
 
-
+/** The Burt & Adelson Reduce operation.
+ *  Allocates a new LPPixel array one quarter the size of in.
+ */
 LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
     uint32 outW = w >> 1;
     uint32 outH = h >> 1;
 
     LPPixel *out = (LPPixel*)calloc(outW * outH, sizeof(LPPixel));
     if (out == NULL) {
-        cerr << "enblend: malloc failed in reduce." << endl;
+        cerr << "enblend: malloc failed in reduce for out" << endl;
         exit(1);
     }
 
     LPPixel *outIndex = out;
     for (uint32 outY = 0; outY < outH; outY++) {
         for (uint32 outX = 0; outX < outW; outX++) {
-            double outTmpR = 0.0;
-            double outTmpG = 0.0;
-            double outTmpB = 0.0;
-            double outTmpA = 0.0;
+
+            double r = 0.0;
+            double g = 0.0;
+            double b = 0.0;
+            double a = 0.0;
             double noContrib = 1.0;
+
             for (int m = 0; m < 5; m++) {
-                //uint32 inX = abs(2 * (int)outX + m - 2);
-                //if (inX >= w) inX -= (2 * (inX - w) + 2);
                 int32 inX = 2 * (int32)outX + m - 2;
+
+                // Boundary condition: replicate first and last column.
                 if (inX >= (int32)w) inX = w - 1;
                 if (inX < 0) inX = 0;
 
                 for (int n = 0; n < 5; n++) {
-                    //uint32 inY = abs(2 * (int)outY + n - 2);
-                    //if (inY >= h) inY -= (2 * (inY - h) + 2);
                     int32 inY = 2 * (int32)outY + n - 2;
+
+                    // Boundary condition: replicate first and last column.
                     if (inY >= (int32)h) inY = h - 1;
                     if (inY < 0) inY = 0;
 
                     LPPixel *inPixel = &(in[inY * w + inX]);
 
                     if (inPixel->a != 255) {
+                        // Transparent pixels don't count.
                         noContrib -= W[m] * W[n];
                     } else {
-                        outTmpR += W[m] * W[n] * inPixel->r;
-                        outTmpG += W[m] * W[n] * inPixel->g;
-                        outTmpB += W[m] * W[n] * inPixel->b;
-                        outTmpA += W[m] * W[n] * inPixel->a;
+                        r += W[m] * W[n] * inPixel->r;
+                        g += W[m] * W[n] * inPixel->g;
+                        b += W[m] * W[n] * inPixel->b;
+                        a += W[m] * W[n] * inPixel->a;
                     }
                 }
             }
-            outTmpR = (noContrib == 0) ? 0 : outTmpR / noContrib;
-            outTmpG = (noContrib == 0) ? 0 : outTmpG / noContrib;
-            outTmpB = (noContrib == 0) ? 0 : outTmpB / noContrib;
-            outTmpA = (noContrib == 0) ? 0 : outTmpA / noContrib;
-            outIndex->r = (int16)lrint(outTmpR);
-            outIndex->g = (int16)lrint(outTmpG);
-            outIndex->b = (int16)lrint(outTmpB);
-            outIndex->a = (int16)lrint(outTmpA);
+
+            // Adjust filter for any ignored transparent pixels.
+            r = (noContrib == 0.0) ? 0.0 : r / noContrib;
+            g = (noContrib == 0.0) ? 0.0 : g / noContrib;
+            b = (noContrib == 0.0) ? 0.0 : b / noContrib;
+            a = (noContrib == 0.0) ? 0.0 : a / noContrib;
+
+            outIndex->r = (int16)lrint(r);
+            outIndex->g = (int16)lrint(g);
+            outIndex->b = (int16)lrint(b);
+            outIndex->a = (int16)lrint(a);
 
             outIndex++;
 
@@ -179,130 +190,192 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
     return out;
 }
 
-vector<LPPixel*> *gaussianPyramid(uint32 *mask, int32 levels) {
+/** Create a Gaussian pyramid from image with the specified number of levels.
+ *  Returns a vector of pyramid levels.
+ *  This version of the function takes an input image array of TIFF pixels.
+ */
+vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels) {
+
+    // Only consider the region-of-interest within image.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
+    // Create vector for output.
     vector<LPPixel*> *v = new vector<LPPixel*>();
 
     if (Verbose > 0) {
-        cout << "Generating gaussian pyramid g0" << endl;
+        cout << "Generating Gaussian pyramid g0" << endl;
     }
 
     // Build level 0
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
-        cerr << "enblend: malloc failed for gaussian pyramid g0" << endl;
+        cerr << "enblend: malloc failed in gaussianPyramid for g" << endl;
         exit(1);
     }
 
-    // Copy mask ROI verbatim into g0.
-    LPPixel *gIndex = g;
-    for (uint32 maskY = ROIFirstY; maskY <= ROILastY; maskY++) {
-        for (uint32 maskX = ROIFirstX; maskX <= ROILastX; maskX++) {
-            uint32 maskPixel = mask[maskY * OutputWidth + maskX];
-            gIndex->r = TIFFGetR(maskPixel);
-            gIndex->g = TIFFGetG(maskPixel);
-            gIndex->b = TIFFGetB(maskPixel);
-            gIndex->a = TIFFGetA(maskPixel);
-            gIndex++;
+    v->push_back(g);
+    levels--;
+
+    // Copy image region-of-interest verbatim into g.
+    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
+            uint32 pixel = image[y * OutputWidth + x];
+            g->r = TIFFGetR(pixel);
+            g->g = TIFFGetG(pixel);
+            g->b = TIFFGetB(pixel);
+            g->a = TIFFGetA(pixel);
+            g++;
         }
     }
 
-    levels--;
-    cerr << "pushing g = " << g << endl;
-    v->push_back(g);
-
-    while (levels > 0) {
+    // Make remaining levels.
+    uint32 l = 1;
+    while (l < levels) {
         if (Verbose > 0) {
-            cout << "Generating gaussian pyramid g" << v->size() << endl;
+            cout << "Generating Gaussian pyramid g" << v->size() << endl;
         }
 
         g = reduce(g, roiWidth, roiHeight);
         v->push_back(g);
-        cerr << "pushing g = " << g << endl;
 
         roiWidth = roiWidth >> 1;
         roiHeight = roiHeight >> 1;
-        levels--;
+        l++;
     }
 
     return v;
 }
 
-vector<LPPixel*> *laplacianPyramid(uint32 *image, int32 levels) {
+/** Create a Gaussian pyramid from image with the specified number of levels.
+ *  Returns a vector of pyramid levels.
+ *  This version of the function takes an input image array of MaskPixels.
+ */
+vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
+
+    // Only consider the region-of-interest within image.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
+    // Create vector for output.
+    vector<LPPixel*> *v = new vector<LPPixel*>();
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid g0" << endl;
+    }
+
+    // Build level 0
+    LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
+    if (g == NULL) {
+        cerr << "enblend: malloc failed in gaussianPyramid for g" << endl;
+        exit(1);
+    }
+
+    v->push_back(g);
+
+    // Copy image region-of-interest verbatim into g.
+    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
+            MaskPixel *pixel = &image[y * OutputWidth + x];
+            g->r = pixel->r;
+            g->g = pixel->g;
+            g->b = pixel->b;
+            g->a = pixel->a;
+            g++;
+        }
+    }
+
+    // Make remaining levels.
+    uint32 l = 1;
+    while (l < levels) {
+        if (Verbose > 0) {
+            cout << "Generating Gaussian pyramid g" << v->size() << endl;
+        }
+
+        g = reduce(g, roiWidth, roiHeight);
+        v->push_back(g);
+
+        roiWidth = roiWidth >> 1;
+        roiHeight = roiHeight >> 1;
+        l++;
+    }
+
+    return v;
+}
+
+/** Create a Laplacian pyramid from image with the specified number of levels.
+ *  Returns a vector of pyramid levels.
+ */
+vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels) {
+
+    // Only consider the region-of-interest within image.
+    uint32 roiWidth = ROILastX - ROIFirstX + 1;
+    uint32 roiHeight = ROILastY - ROIFirstY + 1;
+
+    // First create a Gaussian pyramid.
     vector<LPPixel*> *gp = gaussianPyramid(image, levels);
 
-    for (int32 i = 0; i < levels - 1; i++) {
-        expand((*gp)[i + 1], roiWidth >> (i+1), roiHeight >> (i+1),
-            (*gp)[i], roiWidth >> i, roiHeight >> i,
+    // For each level, subtract the expansion of the next level.
+    // Stop if there is no next level.
+    for (uint32 l = 0; l < (levels-1); l++) {
+        if (Verbose > 0) {
+            cout << "Generating Laplacian pyramid l" << l << endl;
+        }
+        expand((*gp)[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
+            (*gp)[l], roiWidth >> l, roiHeight >> l,
             false);
     }
 
     return gp;
 }
 
-vector<LPPixel*> *laplacianPyramid(TIFF *image, int32 levels) {
+/** Collapse the Laplacian pyramid given in p.
+ *  Copy the result into the region-of-interest of dest.
+ *  Use mask to set full transparency on pixels within the region-of-interest
+ *  but outside the union of the images that make up the region-of-interest.
+ */
+void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
 
-    // Allocate memory for the TIFF.
-    uint32 *imageBuf = (uint32*)_TIFFmalloc(
-            OutputWidth * OutputHeight * sizeof(uint32));
-    if (imageBuf == NULL) {
-        cerr << "enblend: malloc failed for imageBuf" << endl;
-        exit(1);
-    }
-
-    for (uint32 i = 0; i < OutputHeight; i++) {
-        TIFFReadScanline(image,
-                &(imageBuf[i * OutputWidth]),
-                i,
-                8);
-    }
-
-    vector<LPPixel*> *lp = laplacianPyramid(imageBuf, levels);
-
-    // lp contains the pyramid levels we need, the full-size input image
-    // can be discarded now.
-    _TIFFfree(imageBuf);
-
-    return lp;
-
-}
-
-void collapsePyramid(vector<LPPixel*> *p, uint32 *dest, uint32 *mask) {
+    // Only operate within the region-of-interest.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
-    for (int i = p->size() - 2; i >= 0; i--) {
-        expand((*p)[i + 1], roiWidth >> (i+1), roiHeight >> (i+1),
-            (*p)[i], roiWidth >> i, roiHeight >> i,
+    // For each level, add the expansion of the next level.
+    // Work backwards from the smallest level to the largest.
+    for (int l = (p.size()-2); l >= 0; l--) {
+        if (Verbose > 0) {
+            cout << "Collapsing Laplacian pyramid l" << l << endl;
+        }
+        expand(p[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
+            p[l], roiWidth >> l, roiHeight >> l,
             true);
     }
 
-    cout << "p0 = " << (*p)[0] << endl;
-    // Copy p0 into dest ROI, omitting partially transparent pixels.
-    LPPixel *pixel = (*p)[0];
-    for (uint32 j = 0; j < roiHeight; j++) {
-        for (uint32 i = 0; i < roiWidth; i++) {
+    // Copy p[0] into dest ROI, omitting transparent pixels in mask.
+    LPPixel *pixel = p[0];
+    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
+
+            // Convert back to uint8 data from int16 data.
             pixel->r = min(255, max(0, (int)pixel->r));
             pixel->g = min(255, max(0, (int)pixel->g));
             pixel->b = min(255, max(0, (int)pixel->b));
             pixel->a = min(255, max(0, (int)pixel->a));
 
-            uint32 maskP = mask[(j+ROIFirstY) * OutputWidth + (i+ROIFirstX)];
+            MaskPixel *maskPixel = &mask[y * OutputWidth + x];
+
             uint32 p;
-            if (TIFFGetA(maskP) != 255) {
-                p = TRANS;
+            if (maskPixel->a != 255) {
+                p = 0;
             } else {
                 p = (pixel->r & 0xFF)
                         | ((pixel->g & 0xFF) << 8)
                         | ((pixel->b & 0xFF) << 16)
                         | ((pixel->a & 0xFF) << 24);
             }
-            dest[(j+ROIFirstY) * OutputWidth + (i+ROIFirstX)] = p;
+
+            dest[y * OutputWidth + x] = p;
+
             pixel++;
         }
     }

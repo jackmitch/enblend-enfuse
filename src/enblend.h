@@ -14,14 +14,22 @@
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar; if not, write to the Free Software
+ * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifndef __ENBLEND_H__
 #define __ENBLEND_H__
 
 #include <tiffio.h>
+#include <list>
 #include <vector>
+
+typedef struct {
+    uint8 r;
+    uint8 g;
+    uint8 b;
+    uint8 a;
+} MaskPixel;
 
 typedef struct {
     int16 r;
@@ -30,24 +38,24 @@ typedef struct {
     int16 a;
 } LPPixel;
 
-uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF);
+// assemble.cc
+uint32 *assemble(std::list<char*> &filenames);
 
-void thinMask(uint32 *mask);
+// blend.cc
+void blend(std::vector<LPPixel*> &whiteLP,
+        std::vector<LPPixel*> &blackLP,
+        std::vector<LPPixel*> &maskGP);
 
-std::vector<LPPixel*> *gaussianPyramid(uint32 *mask, int32 levels);
-std::vector<LPPixel*> *laplacianPyramid(uint32 *image, int32 levels);
-std::vector<LPPixel*> *laplacianPyramid(TIFF *image, int32 levels);
-void collapsePyramid(std::vector<LPPixel*> *p, uint32 *dest, uint32 *mask);
+// mask.cc
+MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage);
 
-void blend(std::vector<LPPixel*> *maskGP,
-        std::vector<LPPixel*> *inputLP,
-        std::vector<LPPixel*> *outputLP);
+// pyramid.cc
+std::vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels);
+std::vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels);
+std::vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels);
+void collapsePyramid(std::vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask);
 
-#define WHITE 0xFFFFFFFF
-#define BLACK 0xFF000000
-#define BLUE  0xFFFF0000
-#define GREEN 0xFF00FF00
-#define RED   0xFF0000FF
-#define TRANS 0x00000000
+// thin.cc
+void thinMask(MaskPixel *mask);
 
 #endif /* __ENBLEND_H__ */
