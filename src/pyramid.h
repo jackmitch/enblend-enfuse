@@ -24,8 +24,12 @@
 #include <config.h>
 #endif
 
+#include <vector>
+
 #include "vigra/numerictraits.hxx"
 
+using std::vector;
+using vigra::DRGBImage;
 using vigra::NumericTraits;
 
 namespace enblend {
@@ -84,6 +88,15 @@ unsigned int filterHalfWidth(const unsigned int level) {
     // Else there is no round-to-zero issue.
     delete[] f;
     return (length - 1);
+}
+
+template <class SrcImageIterator, class SrcAccessor>
+vector<int*> *gaussianPyramid(unsigned int numLevels,
+        SrcImageIterator src_upperleft,
+        SrcImageIterator src_lowerright,
+        SrcAccessor sa) {
+    //FIXME
+    return new vector<int*>();
 }
 
 } // namespace enblend

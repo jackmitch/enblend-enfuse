@@ -41,6 +41,7 @@
 using std::cout;
 using std::endl;
 using std::list;
+using std::pair;
 
 using vigra::copyImageIf;
 using vigra::Diff2D;
@@ -62,22 +63,25 @@ namespace enblend {
  *  Returns an ImageImportInfo for the temporary file.
  *  memory xsection = 2 * (ImageType*os + AlphaType*os)
  */
+//ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
+//        EnblendROI &inputUnion,
+//        EnblendROI &bb,
+//        ImageExportInfo *exportInfo = NULL) {
 template <typename ImageType, typename AlphaType>
-ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
+pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
-        EnblendROI &bb,
-        ImageExportInfo *exportInfo = NULL) {
+        EnblendROI &bb) {
 
     typedef typename AlphaType::PixelType AlphaPixelType;
     typedef typename AlphaType::Iterator AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
-    if (imageInfoList.empty()) return NULL;
+    if (imageInfoList.empty()) return pair<ImageType*, AlphaType*>(NULL, NULL);
 
     // Create an image to assemble input images into.
-    ImageType image(inputUnion.size());
-    AlphaType imageA(inputUnion.size());
+    ImageType *image = new ImageType(inputUnion.size());
+    AlphaType *imageA = new AlphaType(inputUnion.size());
 
     if (Verbose > 0) {
         if (OneAtATime) {
@@ -94,12 +98,12 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
     // Load the first image into the destination.
     Diff2D imagePos = imageInfoList.front()->getPosition();
     importImageAlpha(*imageInfoList.front(),
-            destIter(image.upperLeft() + imagePos - inputUnion.getUL()),
-            destIter(imageA.upperLeft() + imagePos - inputUnion.getUL()));
+            destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
+            destIter(imageA->upperLeft() + imagePos - inputUnion.getUL()));
     imageInfoList.erase(imageInfoList.begin());
 
     // Mask off pixels that are not totally opaque.
-    transformImage(srcImageRange(imageA), destImage(imageA),
+    transformImage(srcImageRange(*imageA), destImage(*imageA),
             Threshold<AlphaPixelType, AlphaPixelType>(
                     NumericTraits<AlphaPixelType>::max(),
                     NumericTraits<AlphaPixelType>::max(),
@@ -136,8 +140,8 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
             // Check for overlap.
             bool overlapFound = false;
             AlphaIteratorType dy =
-                    imageA.upperLeft() - inputUnion.getUL() + info->getPosition();
-            AlphaAccessor da = imageA.accessor();
+                    imageA->upperLeft() - inputUnion.getUL() + info->getPosition();
+            AlphaAccessor da = imageA->accessor();
             AlphaIteratorType sy = srcA.upperLeft();
             AlphaIteratorType send = srcA.lowerRight();
             AlphaAccessor sa = srcA.accessor();
@@ -164,10 +168,10 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
                 Diff2D srcPos = info->getPosition();
                 copyImageIf(srcImageRange(src),
                         maskImage(srcA),
-                        destIter(image.upperLeft() - inputUnion.getUL() + srcPos));
+                        destIter(image->upperLeft() - inputUnion.getUL() + srcPos));
                 copyImageIf(srcImageRange(srcA),
                         maskImage(srcA),
-                        destIter(imageA.upperLeft() - inputUnion.getUL() + srcPos));
+                        destIter(imageA->upperLeft() - inputUnion.getUL() + srcPos));
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
@@ -186,8 +190,8 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
 
     // Calculate bounding box of image.
     FindBoundingRectangle unionRect;
-    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image.size()),
-            srcImage(imageA), unionRect);
+    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
+            srcImage(*imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
     if (Verbose > 0) {
         cout << "Combined union bounding box: ("
@@ -201,28 +205,30 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
              << ")" << endl;
     }
 
-    if (exportInfo) {
-        // Use the given exportInfo and return a
-        // corresponding ImageImportInfo.
-        exportImageAlpha(srcImageRange(image),
-                srcImage(imageA),
-                *exportInfo);
-        return new ImageImportInfo(exportInfo->getFileName());
-    }
-    else {
-        // Dump image+imageA to temp file.
-        // Return ImageImportInfo for that file.
-        char tmpFilename[] = ".enblend_assemble_XXXXXX";
-        int tmpFD = mkstemp(tmpFilename);
-        ImageExportInfo outputImageInfo(tmpFilename);
-        outputImageInfo.setFileType("TIFF");
-        exportImageAlpha(srcImageRange(image),
-                srcImage(imageA),
-                outputImageInfo);
-        close(tmpFD);
-    
-        return new ImageImportInfo(tmpFilename);
-    }
+    return pair<ImageType*, AlphaType*>(image, imageA);
+
+//    if (exportInfo) {
+//        // Use the given exportInfo and return a
+//        // corresponding ImageImportInfo.
+//        exportImageAlpha(srcImageRange(image),
+//                srcImage(imageA),
+//                *exportInfo);
+//        return new ImageImportInfo(exportInfo->getFileName());
+//    }
+//    else {
+//        // Dump image+imageA to temp file.
+//        // Return ImageImportInfo for that file.
+//        char tmpFilename[] = ".enblend_assemble_XXXXXX";
+//        int tmpFD = mkstemp(tmpFilename);
+//        ImageExportInfo outputImageInfo(tmpFilename);
+//        outputImageInfo.setFileType("TIFF");
+//        exportImageAlpha(srcImageRange(image),
+//                srcImage(imageA),
+//                outputImageInfo);
+//        close(tmpFD);
+//    
+//        return new ImageImportInfo(tmpFilename);
+//    }
 
 };
 

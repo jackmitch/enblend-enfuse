@@ -30,49 +30,60 @@
 #include "assemble.h"
 #include "bounds.h"
 #include "mask.h"
+#include "pyramid.h"
 
 #include "common.h"
 #include "vigra/impex.hxx"
+#include "vigra/initimage.hxx"
 
 using std::cout;
 using std::endl;
 using std::list;
+using std::pair;
 
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
+using vigra::initImageIf;
+using vigra::NumericTraits;
 
 namespace enblend {
 
-template <typename ImageType, typename AlphaType, typename MaskType, typename PyramidType>
+template <typename ImageType, typename AlphaType, typename PyramidType, typename PyramidRGBType>
 void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
     typedef typename ImageType::value_type ImageValueType;
     typedef typename AlphaType::value_type AlphaValueType;
-    typedef typename MaskType::value_type MaskValueType;
     typedef typename PyramidType::value_type PyramidValueType;
+    typedef typename PyramidRGBType::value_type PyramidRGBValueType;
 
     cout << "sizeof(ImageValueType) = " << sizeof(ImageValueType) << endl;
     cout << "sizeof(AlphaValueType) = " << sizeof(AlphaValueType) << endl;
-    cout << "sizeof(MaskValueType) = " << sizeof(MaskValueType) << endl;
     cout << "sizeof(PyramidValueType) = " << sizeof(PyramidValueType) << endl;
+    cout << "sizeof(PyramidRGBValueType) = " << sizeof(PyramidRGBValueType) << endl;
 
-    // Create the initial white image. This should go into outputImageInfo.
-    // This way the output file always contains the results of the last completed
-    // blend iteration.
-    EnblendROI whiteBB;
-    ImageImportInfo *whiteImageInfo =
-            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB,
-                    &outputImageInfo);
+    // Create the initial black image.
+    EnblendROI blackBB;
+    pair<ImageType*, AlphaType*> blackPair =
+            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
+    exportImageAlpha(srcImageRange(*(blackPair.first)),
+                     srcImage(*(blackPair.second)),
+                     outputImageInfo);
+    // mem xsection = up to 2*inputUnion*ImageValueType
 
     // Main blending loop.
     while (!imageInfoList.empty()) {
 
-        // Create the black image.
-        EnblendROI blackBB;
-        ImageImportInfo *blackImageInfo =
-                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
+        // Create the white image.
+        EnblendROI whiteBB;
+        pair<ImageType*, AlphaType*> whitePair =
+                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+        ImageExportInfo whiteInfo("enblend_white.tif");
+        exportImageAlpha(srcImageRange(*(whitePair.first)),
+                         srcImage(*(whitePair.second)),
+                         whiteInfo);
+        // mem xsection = up to 2*inputUnion*ImageValueType
 
         // Union bounding box of whiteImage and blackImage.
         EnblendROI uBB;
@@ -84,63 +95,88 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Calculate ROI bounds and number of levels from iBB.
         // ROI bounds not to extend uBB.
+        // FIXME consider case where overlap==false
         EnblendROI roiBB;
-        unsigned int numLevels =
-                roiBounds<PyramidValueType, MaskValueType>(inputUnion, iBB, uBB, roiBB);
+        unsigned int numLevels = roiBounds<PyramidValueType>(inputUnion, iBB, uBB, roiBB);
 
-        // Create the blend mask and the union mask.
-        ImageImportInfo *maskImageInfo =
-                mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
-                        inputUnion, uBB, iBB, overlap);
+        // Create the blend mask.
+        PyramidType *mask =
+                createMask<AlphaType, PyramidType>(whitePair.second, blackPair.second, uBB);
+        ImageExportInfo maskInfo("enblend_mask.tif");
+        maskInfo.setPosition(uBB.getUL());
+        exportImage(srcImageRange(*mask), maskInfo);
 
-        // Copy pixels inside blackBB and outside ROI into white image.
-
-        // Build Laplacian pyramid from blackImage.
-        //ImageImportInfo *blackLPInfo = 
-
-        // Now we no longer need the blackImage temp file, delete it.
-        unlink(blackImageInfo->getFileName());
-        delete blackImageInfo;
+        //// Get the first level of the gaussian pyramid for black image.
+        //PyramidType *blackGP0 = new PyramidType(roiBB.size());
+        //AlphaType *blackGP0a = new AlphaType(roiBB.size());
+        //copyImage(roiBB.apply(srcImageRange(*(blackPair.first))),
+        //        destImage(*blackGP0));
+        //copyImage(roiBB.apply(srcImageRange(*(blackPair.second))),
+        //        destImage(*blackGP0a));
 
         // Build Gaussian pyramid from mask.
-        //ImageImportInfo *maskGPInfo =
+        vector<int*> *maskGP = gaussianPyramid(numLevels,
+                mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
+                mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
+                mask->accessor());
 
-        // We no longer need the maskImage temp file, delete it.
-        unlink(maskImageInfo->getFileName());
-        delete maskImageInfo;
+        // Now it is safe to make changes to mask image.
+        // Black out the ROI in the mask.
+        // Make an roiBounds relative to uBB origin.
+        initImage(mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
+                mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
+                mask->accessor(),
+                NumericTraits<PyramidValueType>::zero());
 
-        // Build Laplacian pyramid from whiteImage
-        //vector<PyramidType*> *whiteLP =
+        // Copy pixels inside whiteBB and inside white part of mask into black image.
+        // These are pixels where the white image contributes outside of the ROI.
+        // We cannot modify black image inside the ROI yet because we haven't built the
+        // black pyramid.
+        copyImageIf(uBB.apply(srcImageRange(*(whitePair.first))),
+                    maskImage(*mask),
+                    uBB.apply(destImage(*(blackPair.first))));
+
+        // We no longer need the mask.
+        delete mask;
+
+        // Build Laplacian pyramid from white image.
+        //vector<PyramidType*> *whiteLP = whitePair.first, whitePair.second
+
+        // We no longer need the white rgb data.
+        delete whitePair.first;
+
+        // Build Laplacian pyramid from black image.
+
+        // Make the black image alpha equal to the union of the
+        // white and black alpha channels.
+        initImageIf(whiteBB.apply(destImageRange(*(blackPair.second))),
+                whiteBB.apply(maskImage(*(whitePair.second))),
+                NumericTraits<AlphaValueType>::max());
+
+        // We no longer need the white alpha data.
+        delete whitePair.second;
 
         // Blend pyramids
+        // delete mask pyramid
+        // delete white pyramid
+        // collapse black pyramid
 
-        // We no longer need the blackLPInfo file or the maskGPInfo files.
-        // Delete them.
-        //unlink(blackLPInfo->getFileName());
-        //delete blackLPInfo;
-        //unlink(maskGPInfo->getFileName());
-        //delete maskGPInfo;
+        // copy collapsed black pyramid into black image ROI, using black alpha mask.
 
-        // Collapse result back into whiteImageInfo.
-        //collapsePyramid
+        // delete black pyramid
 
-        // Copy result into whiteImageFile using unionMaskFile as a template.
+        // Checkpoint results.
+        exportImageAlpha(srcImageRange(*(blackPair.first)),
+                         srcImage(*(blackPair.second)),
+                         outputImageInfo);
 
-        // Done with unionMaskFile.
-
-        // done with whiteLP.
-        //for (unsigned int i = 0; i < whiteLP->size(); i++) {
-        //    delete whiteLP[i];
-        //}
-        //delete whiteLP;
-
-        // Now set whiteBB to uBB.
-        whiteBB = uBB;
+        // Now set blackBB to uBB.
+        blackBB = uBB;
     }
 
-    // We no longer need whiteImageInfo.
-    // Final results are already in
-    delete whiteImageInfo;
+    delete blackPair.first;
+    delete blackPair.second;
+
 };
 
 } // namespace enblend

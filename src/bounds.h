@@ -34,7 +34,7 @@ using std::min;
 
 namespace enblend {
 
-template <typename PyramidPixelType, typename MaskPixelType>
+template <typename PyramidPixelType>
 unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,
         const EnblendROI &uBB,
@@ -53,11 +53,15 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         // Add these up to find the spread of the bounding box that is
         // necessary to include all of the level 0 pixels that will influence
         // blending on level levels-1.
-        unsigned int extent =
-                filterHalfWidth<PyramidPixelType>(levels - 1)
-                + filterHalfWidth<MaskPixelType>(levels - 1);
+        // Here I am assuming that the mask uses the same data type as a single
+        // channel of the RGB pyramid.
+        unsigned int extent = 2 * filterHalfWidth<PyramidPixelType>(levels - 1);
 
         // Set roiBB equal to iBB plus extent pixels in every direction.
+        // I am conservatively estimating that the transition line touches
+        // opposing corners of the iBB.
+        // In some cases the transition line may touch adjacent corners of
+        // the iBB. In those cases this code overestimates the size of the ROI.
         Diff2D extentDiff(extent, extent);
         roiBB.setCorners(iBB.getUL() - extentDiff, iBB.getLR() + extentDiff);
 

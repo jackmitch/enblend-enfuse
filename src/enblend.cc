@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     if (isColor) {
         if (strcmp(pixelType, "UINT8") == 0) {
-            enblendMain<BRGBImage, BImage, BImage, SImage>(
+            enblendMain<BRGBImage, BImage, SImage, SRGBImage>(
                     imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
         //    enblendMain<SRGBImage, BImage, SImage, IImage>(

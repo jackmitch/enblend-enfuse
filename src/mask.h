@@ -55,13 +55,10 @@ namespace enblend {
 
 /** Calculate a blending mask between whiteImage and blackImage.
  */
-template <typename ImageType, typename AlphaType, typename MaskType>
-ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
-        ImageImportInfo *blackImageInfo,
-        EnblendROI &inputUnion,
-        EnblendROI &uBB,
-        EnblendROI &iBB,
-        bool overlap) {
+template <typename AlphaType, typename MaskType>
+MaskType *createMask(AlphaType *whiteAlpha,
+        AlphaType *blackAlpha,
+        EnblendROI &uBB) {
 
     typedef typename MaskType::PixelType MaskPixelType;
 
@@ -71,75 +68,55 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
     // 255 = inside black image only.
     BImage *maskInit = new BImage(uBB.size());
 
-    ImageType *image = new ImageType(inputUnion.size());
-    AlphaType *imageA = new AlphaType(inputUnion.size());
-
-    // Load the white image.
-    importImageAlpha(*whiteImageInfo,
-            destImage(*image),
-            destImage(*imageA));
-    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
-
     // Set maskInit = 1 at all pixels where whiteImage contributes.
     initImageIf(destImageRange(*maskInit),
-            maskIter(imageA->upperLeft() + uBB.getUL()),
+            maskIter(whiteAlpha->upperLeft() + uBB.getUL()),
             1);
-
-    // Load the black image.
-    importImageAlpha(*blackImageInfo,
-            destImage(*image),
-            destImage(*imageA));
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
     // if whiteImage also contributes, this wraps around to zero.
     transformImageIf(srcImageRange(*maskInit),
-            maskIter(imageA->upperLeft() + uBB.getUL()),
+            maskIter(blackAlpha->upperLeft() + uBB.getUL()),
             destImage(*maskInit),
             linearIntensityTransform(1, 255));
-
-    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
-    delete image;
-    delete imageA;
-    // mem xsection = BImage * uBB
 
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
     BImage *maskTransform = new BImage(uBB.size());
-    // mem xsection = 2*BImage*uBB
     nearestFeatureTransform(srcImageRange(*maskInit),
             destImage(*maskTransform));
-    // mem xsection = 2*BImage*uBB + 2*UIImage*uBB
 
     delete maskInit;
-    // mem xsection = BImage*uBB
 
-    MaskType mask(uBB.size());
-    // mem xsection = BImage*uBB + MaskType*uBB
+    MaskType *mask = new MaskType(uBB.size());
 
-    // Dump maskInit into mask
-    // maskInit = 1, then mask = max value (white image)
-    // maskInit != 1, then mask = zero - (black image)
+    // Dump maskTransform into mask
+    // maskTransform = 1, then mask = max value (white image)
+    // maskTransform != 1, then mask = zero - (black image)
     transformImage(srcImageRange(*maskTransform),
-            destImage(mask),
+            destImage(*mask),
             ifThenElse(Arg1() == Param(1),
                     Param(NumericTraits<MaskPixelType>::max()),
                     Param(NumericTraits<MaskPixelType>::zero())));
 
     delete maskTransform;
-    // mem xsection = MaskType*uBB
 
-    //char tmpFilename[] = ".enblend_mask_XXXXXX";
-    char tmpFilename[] = "enblend_mask.tif";
-    //int tmpFD = mkstemp(tmpFilename);
-    ImageExportInfo maskImageInfo(tmpFilename);
-    maskImageInfo.setPosition(uBB.getUL());
-    maskImageInfo.setFileType("TIFF");
-    exportImage(srcImageRange(mask), maskImageInfo);
-    //close(tmpFD);
+    return mask;
 
-    return new ImageImportInfo(tmpFilename);
+    ////char tmpFilename[] = ".enblend_mask_XXXXXX";
+    //char tmpFilename[] = "enblend_mask.tif";
+    ////int tmpFD = mkstemp(tmpFilename);
+    //ImageExportInfo maskImageInfo(tmpFilename);
+    //maskImageInfo.setPosition(uBB.getUL());
+    //maskImageInfo.setFileType("TIFF");
+    //exportImage(srcImageRange(mask), maskImageInfo);
+    ////close(tmpFD);
+
+    //return new ImageImportInfo(tmpFilename);
 }
 
 } // namespace enblend
 
 #endif /* __MASK_H__ */
+    // mem xsection = BImage*uBB + ImageType*inputUnion + AlphaType*inputUnion
+    // mem xsection = 2*BImage*uBB + 2*UIImage*uBB
