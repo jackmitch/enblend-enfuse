@@ -28,10 +28,11 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tiffio.h>
 
+#include "common.h"
+#include "assemble.h"
 #include "enblend.h"
-#include "vigra_ext/ROI.h"
+
 #include "vigra/impex.hxx"
 #include "vigra/stdimage.hxx"
 
@@ -42,11 +43,11 @@ int Verbose = 0;
 int MaximumLevels = 0;
 bool OneAtATime = false;
 bool Wraparound = false;
+double StitchMismatchThreshold = 0.4;
 
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
 
-double StitchMismatchThreshold = 0.4;
 uint16 PlanarConfig;
 uint16 Photometric;
 
@@ -88,13 +89,6 @@ int main(int argc, char** argv) {
     list<char*> inputFileNameList;
     list<char*>::iterator inputFileNameIterator;
 
-    // Command-line parameters
-    int verbose = 0;
-    int maximumLevels = 0;
-    bool oneAtATime = false;
-    bool wraparound = false;
-    double stitchMismatchThreshold = 0.4;
-
     // Parse command line.
     int c;
     extern char *optarg;
@@ -106,13 +100,13 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'v': {
-                verbose++;
+                Verbose++;
                 break;
             }
             case 't': {
-                stitchMismatchThreshold = strtod(optarg, NULL);
-                if (stitchMismatchThreshold < 0.0
-                        || stitchMismatchThreshold > 1.0) {
+                StitchMismatchThreshold = strtod(optarg, NULL);
+                if (StitchMismatchThreshold < 0.0
+                        || StitchMismatchThreshold > 1.0) {
                     cerr << "enblend: threshold must be between "
                          << "0.0 and 1.0 inclusive."
                          << endl;
@@ -138,8 +132,8 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'l': {
-                maximumLevels = atoi(optarg);
-                if (maximumLevels < 1) {
+                MaximumLevels = atoi(optarg);
+                if (MaximumLevels < 1) {
                     cerr << "enblend: maximum levels must be 1 or more."
                          << endl;
                     printUsageAndExit();
@@ -147,11 +141,11 @@ int main(int argc, char** argv) {
                 break;
             }
             case 's': {
-                oneAtATime = true;
+                OneAtATime = true;
                 break;
             }
             case 'w': {
-                wraparound = true;
+                Wraparound = true;
                 break;
             }
             default: {
@@ -183,7 +177,7 @@ int main(int argc, char** argv) {
 
     bool isColor = false;
     const char *pixelType = NULL;
-    vigra_ext::ROI<vigra::Diff2D> inputUnion;
+    EnblendROI inputUnion;
 
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
@@ -202,7 +196,7 @@ int main(int argc, char** argv) {
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
 
-        if (verbose > 0) {
+        if (Verbose > 0) {
             cout << "Input image \""
                  << *inputFileNameIterator
                  << "\" ";
@@ -234,7 +228,7 @@ int main(int argc, char** argv) {
         // Get input image's position and size.
         vigra::Diff2D imageSize(inputInfo->width(), inputInfo->height());
         vigra::Diff2D imagePos = inputInfo->getPosition();
-        vigra_ext::ROI<vigra::Diff2D> imageROI(imagePos, imageSize);
+        EnblendROI imageROI(imagePos, imageSize);
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
             // The first input image.
@@ -268,14 +262,13 @@ int main(int argc, char** argv) {
     }
 
     // Create the Info for the output file.
-    vigra::ImageExportInfo outputImageInfo =
-            vigra::ImageExportInfo(outputFileName);
+    vigra::ImageExportInfo outputImageInfo(outputFileName);
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
 
     // The size of the output image.
-    if (verbose > 0) {
+    if (Verbose > 0) {
         // print inputUnion.
         vigra::Diff2D outputImageSize = inputUnion.size();
         cout << "Output image size: "
@@ -303,67 +296,25 @@ int main(int argc, char** argv) {
     if (isColor) {
         if (strcmp(pixelType, "UINT8") == 0) {
             enblend<vigra::BRGBImage, vigra::BImage, vigra::BImage, vigra::SImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "INT16") == 0) {
-            enblend<vigra::SRGBImage, vigra::BImage, vigra::SImage, vigra::IImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "UINT16") == 0) {
-            enblend<vigra::USRGBImage, vigra::BImage, vigra::SImage, vigra::IImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "INT32") == 0) {
-            enblend<vigra::IRGBImage, vigra::BImage, vigra::IImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "UINT32") == 0) {
-            enblend<vigra::UIRGBImage, vigra::BImage, vigra::IImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "FLOAT") == 0) {
-            enblend<vigra::FRGBImage, vigra::BImage, vigra::FImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "DOUBLE") == 0) {
-            enblend<vigra::DRGBImage, vigra::BImage, vigra::DImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
+                    imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "INT16") == 0) {
+        //    enblend<vigra::SRGBImage, vigra::BImage, vigra::SImage, vigra::IImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "UINT16") == 0) {
+        //    enblend<vigra::USRGBImage, vigra::BImage, vigra::SImage, vigra::IImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "INT32") == 0) {
+        //    enblend<vigra::IRGBImage, vigra::BImage, vigra::IImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "UINT32") == 0) {
+        //    enblend<vigra::UIRGBImage, vigra::BImage, vigra::IImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "FLOAT") == 0) {
+        //    enblend<vigra::FRGBImage, vigra::BImage, vigra::FImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+        //    enblend<vigra::DRGBImage, vigra::BImage, vigra::DImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
         } else {
             cerr << "enblend: pixel type \""
                  << pixelType
@@ -372,76 +323,34 @@ int main(int argc, char** argv) {
             exit(1);
         }
     } else {
-        if (strcmp(pixelType, "UINT8") == 0) {
-            enblend<vigra::BImage, vigra::BImage, vigra::BImage, vigra::SImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "INT16") == 0) {
-            enblend<vigra::SImage, vigra::BImage, vigra::SImage, vigra::IImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "UINT16") == 0) {
-            enblend<vigra::USImage, vigra::BImage, vigra::SImage, vigra::IImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "INT32") == 0) {
-            enblend<vigra::IImage, vigra::BImage, vigra::IImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "UINT32") == 0) {
-            enblend<vigra::UIImage, vigra::BImage, vigra::IImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "FLOAT") == 0) {
-            enblend<vigra::FImage, vigra::BImage, vigra::FImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else if (strcmp(pixelType, "DOUBLE") == 0) {
-            enblend<vigra::DImage, vigra::BImage, vigra::DImage, vigra::DImage>(
-                    imageInfoList,
-                    outputImageInfo,
-                    verbose,
-                    maximumLevels,
-                    oneAtATime,
-                    wraparound,
-                    stitchMismatchThreshold);
-        } else {
+        //if (strcmp(pixelType, "UINT8") == 0) {
+        //    enblend<vigra::BImage, vigra::BImage, vigra::BImage, vigra::SImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "INT16") == 0) {
+        //    enblend<vigra::SImage, vigra::BImage, vigra::SImage, vigra::IImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "UINT16") == 0) {
+        //    enblend<vigra::USImage, vigra::BImage, vigra::SImage, vigra::IImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "INT32") == 0) {
+        //    enblend<vigra::IImage, vigra::BImage, vigra::IImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "UINT32") == 0) {
+        //    enblend<vigra::UIImage, vigra::BImage, vigra::IImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "FLOAT") == 0) {
+        //    enblend<vigra::FImage, vigra::BImage, vigra::FImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+        //    enblend<vigra::DImage, vigra::BImage, vigra::DImage, vigra::DImage>(
+        //            imageInfoList, outputImageInfo, inputUnion);
+        //} else {
             cerr << "enblend: pixel type \""
                  << pixelType
                  << "\" is not supported."
                  << endl;
             exit(1);
-        }
+        //}
     }
 
     // delete entries in imageInfoList, in case
@@ -452,26 +361,6 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
-
-template <typename ImageType, typename AlphaType, typename MaskType, typename PyramidType>
-void enblend(list<vigra::ImageImportInfo*> &imageInfoList,
-        vigra::ImageExportInfo &outputImageInfo,
-        int verbose,
-        int maximumLevels,
-        bool oneAtATime,
-        bool wraparound,
-        double stitchMismatchThreshold) {
-
-    typedef typename ImageType::value_type image_value_type;
-    typedef typename AlphaType::value_type alpha_value_type;
-    typedef typename MaskType::value_type mask_value_type;
-    typedef typename PyramidType::value_type pyramid_value_type;
-
-    cout << "sizeof(image_value_type) = " << sizeof(image_value_type) << endl;
-    cout << "sizeof(alpha_value_type) = " << sizeof(alpha_value_type) << endl;
-    cout << "sizeof(mask_value_type) = " << sizeof(mask_value_type) << endl;
-    cout << "sizeof(pyramid_value_type) = " << sizeof(pyramid_value_type) << endl;
 }
 
 /*

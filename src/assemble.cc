@@ -28,6 +28,7 @@
 #include <tiffio.h>
 
 #include "enblend.h"
+#include "vigra/impex.hxx"
 
 using namespace std;
 
