@@ -273,8 +273,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
                 srcImageRange(*((*blackLP)[0])),
-                roiBB.apply(destImage(*(blackPair.first))),
-                roiBB.apply(maskImage(*(blackPair.second))));
+                roiBB.apply(maskImage(*(blackPair.second))),
+                roiBB.apply(destImage(*(blackPair.first))));
 
         if (Verbose > 0) {
             cout << "Checkpointing..." << endl;

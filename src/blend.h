@@ -67,9 +67,10 @@ void blend(vector<MaskPyramidType*> *maskGP,
     typedef typename MaskPyramidType::value_type MaskPixelType;
     typedef typename OrigMaskType::value_type OrigMaskPixelType;
 
-    MaskPixelType maxMaskPixel =
-            convertToPyramidMath<OrigMaskPixelType, MaskPixelType>(
-                    NumericTraits<OrigMaskPixelType>::max());
+    // Discovert the maximum value that will be found in the mask pyramid.
+    // We need this to scale the mask values to the range [0.0, 1.0].
+    ConvertScalarToPyramidFunctor<OrigMaskPixelType, MaskPixelType> f;
+    MaskPixelType maxMaskPixel = f(NumericTraits<OrigMaskPixelType>::max());
     double maxMaskPixelD = NumericTraits<MaskPixelType>::toRealPromote(maxMaskPixel);
 
     if (Verbose > 0) {

@@ -73,6 +73,7 @@ bool OneAtATime = true;
 bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
+bool UseLabColor = false;
 
 //uint32 OutputWidth = 0;
 //uint32 OutputHeight = 0;
@@ -102,6 +103,7 @@ void printUsageAndExit() {
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -a                Pre-assemble non-overlapping images" << endl;
+    cout << " -c                Use CIE L*a*b* color space" << endl;
     cout << " -l number         Maximum number of levels to use" << endl;
     //cout << " -s                Blend images one at a time, in the order given" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
@@ -124,7 +126,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "gawsl:o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "cgawsl:o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -188,6 +190,10 @@ int main(int argc, char** argv) {
             }
             case 'g': {
                 GimpAssociatedAlphaHack = true;
+                break;
+            }
+            case 'c': {
+                UseLabColor = true;
                 break;
             }
             default: {
@@ -356,9 +362,9 @@ int main(int argc, char** argv) {
             //} else if (strcmp(pixelType, "INT16") == 0) {
             //    enblendMain<SRGBImage, IRGBImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT16") == 0) {
-                enblendMain<USRGBImage, IRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USRGBImage, IRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT32") == 0) {
             //    enblendMain<IRGBImage, DRGBImage>(
             //            imageInfoList, outputImageInfo, inputUnion);

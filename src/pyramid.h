@@ -28,10 +28,10 @@
 #include <vector>
 //#include <boost/static_assert.hpp>
 
-#include "fixmath.h"
-
 #include "vigra/convolution.hxx"
 #include "vigra/numerictraits.hxx"
+
+#include "fixmath.h"
 
 using std::cout;
 using std::vector;
