@@ -40,6 +40,7 @@ using std::pair;
 using vigra::NumericTraits;
 using vigra::triple;
 using vigra::UICFImage;
+using vigra::UIImage;
 
 namespace enblend {
 
@@ -89,7 +90,11 @@ void nearestFeatureTransform(bool wraparound,
         DestImageIterator dest_upperleft,
         DestAccessor da) {
 
+    #ifdef ENBLEND_CACHE_IMAGES
     typedef UICFImage::traverser DnfIterator;
+    #else
+    typedef UIImage::traverser DnfIterator;
+    #endif
     typedef typename SrcAccessor::value_type SrcValueType;
 
     SrcImageIterator sx, sy, send, smidpoint;
@@ -101,8 +106,13 @@ void nearestFeatureTransform(bool wraparound,
     int h = src_lowerright.y - src_upperleft.y;
 
     // This image will be iterated over columns.
+    #ifdef ENBLEND_CACHE_IMAGES
     UICFImage dnfColumn(w, h);
     UICFImage dnfLeft(w, h);
+    #else
+    UIImage dnfColumn(w, h);
+    UIImage dnfLeft(w, h);
+    #endif
 
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.

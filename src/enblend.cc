@@ -45,22 +45,36 @@ using std::list;
 using vigra::CachedFileImageDirector;
 using vigra::BCFImage;
 using vigra::BRGBCFImage;
+using vigra::BImage;
+using vigra::BRGBImage;
 using vigra::Diff2D;
 using vigra::DCFImage;
 using vigra::DRGBCFImage;
+using vigra::DImage;
+using vigra::DRGBImage;
 using vigra::FCFImage;
 using vigra::FRGBCFImage;
+using vigra::FImage;
+using vigra::FRGBImage;
 using vigra::ICFImage;
+using vigra::IImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::IRGBCFImage;
+using vigra::IRGBImage;
 using vigra::SCFImage;
 using vigra::SRGBCFImage;
+using vigra::SImage;
+using vigra::SRGBImage;
 using vigra::StdException;
 using vigra::UICFImage;
 using vigra::UIRGBCFImage;
+using vigra::UIImage;
+using vigra::UIRGBImage;
 using vigra::USCFImage;
 using vigra::USRGBCFImage;
+using vigra::USImage;
+using vigra::USRGBImage;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
@@ -113,8 +127,10 @@ void printUsageAndExit() {
     cout << " -c                Use CIE L*a*b* color space" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
     cout << " -m megabytes      Use this much memory before going to disk (default=1GB)" << endl;
+
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
+
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
     exit(1);
@@ -384,8 +400,13 @@ int main(int argc, char** argv) {
     try {
         if (isColor) {
             if (strcmp(pixelType, "UINT8") == 0) {
+                #ifdef ENBLEND_CACHE_IMAGES
                 enblendMain<BRGBCFImage, SRGBCFImage>(
                         imageInfoList, outputImageInfo, inputUnion);
+                #else
+                enblendMain<BRGBImage, SRGBImage>(
+                        imageInfoList, outputImageInfo, inputUnion);
+                #endif
             //} else if (strcmp(pixelType, "INT16") == 0) {
             //    enblendMain<SRGBImage, IRGBImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
