@@ -73,6 +73,7 @@ public:
     // Obtain a pointer to a blocksize chunk of memory.
     void* allocateBlock() {
         void *block = pool->malloc();
+        pool->set_next_size(1);
         if (block == NULL) throw std::bad_alloc();
         return block;
     }
