@@ -28,6 +28,7 @@
 using namespace std;
 
 extern int Verbose;
+extern int MaximumLevels;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
@@ -93,26 +94,26 @@ uint32 bounds(MaskPixel *mask) {
     // Caluclate how many levels we can create, and determine the size of
     // the region-of-interest on level 0 so that all of the pixels that
     // influence blending on the bottom level are included.
-    uint32 maximumLevels = 1;
+    uint32 levels = 1;
     while (true) {
 
         // filterHalfWidth = how many pixels the transition line spreads
-        // out into layer maximumLevels-1, given the precision of the mask.
+        // out into layer levels-1, given the precision of the mask.
         // filterHalfWidth = how many pixels an image feature spreads
-        // out into layer maximumLevels-1, given the precision of the image.
+        // out into layer levels-1, given the precision of the image.
         // Add these up to find the spread of the bounding box that is
         // necessary to include all of the level 0 pixels that will influence
-        // blending on level maximumLevels-1.
+        // blending on level levels-1.
         // Since image precision = mask precision = 8 bpp, I'm just doubling
         // the value.
-        int32 extent = 2 * filterHalfWidth(maximumLevels - 1, 255);
+        int32 extent = 2 * filterHalfWidth(levels - 1, 255);
 
         ROIFirstX = max(firstMulticolorColumn - extent, (int32)UBBFirstX);
         ROILastX = min((int32)UBBLastX, lastMulticolorColumn + extent);
         ROIFirstY = max(firstMulticolorRow - extent, (int32)UBBFirstY);
         ROILastY = min((int32)UBBLastY, lastMulticolorRow + extent);
 
-        //cout << "Level " << maximumLevels << " tl bb = ("
+        //cout << "Level " << levels << " tl bb = ("
         //        << firstExtentColumn << ", "
         //        << firstExtentRow << ") -> ("
         //        << lastExtentColumn << ", "
@@ -123,18 +124,22 @@ uint32 bounds(MaskPixel *mask) {
         uint32 shortDimension = min(ROILastY - ROIFirstY + 1,
                 ROILastX - ROIFirstX + 1);
 
-        if ((shortDimension >> (maximumLevels - 1)) > 8) {
+        if (levels >= MaximumLevels) {
+            // Hit the user-specified level limit.
+            break;
+        }
+        else if ((shortDimension >> (levels - 1)) > 8) {
             // Try another level.
-            maximumLevels++;
+            levels++;
         }
         else {
-            // quit - this is a good maximumLevels.
+            // quit - this is a good number of levels.
             break;
         }
     }
 
     if (Verbose > 0) {
-        cout << "MaximumLevels = " << maximumLevels << endl;
+        cout << "MaximumLevels = " << levels << endl;
         cout << "Region of Interest bounding box = ("
              << ROIFirstX << ", "
              << ROIFirstY << ") -> ("
@@ -143,13 +148,13 @@ uint32 bounds(MaskPixel *mask) {
              << endl;
     }
 
-    if (maximumLevels == 1) {
+    if (levels == 1) {
         cerr << "enblend: intersection of images is too small to make "
              << "more than one pyramid level."
              << endl;
     }
 
-    return maximumLevels;
+    return levels;
 }
 
 /** Copy pixels from inside the UBB but outside the ROI from srcImage

@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <getopt.h>
+#include <stdlib.h>
 #include <string.h>
 #include <tiffio.h>
 
@@ -35,6 +36,7 @@ using namespace std;
 
 // Global values from command line parameters.
 int Verbose = 0;
+int MaximumLevels = 0;
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
 double StitchMismatchThreshold = 0.4;
@@ -62,6 +64,7 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
+    cout << " -l number         Maximum number of levels to use" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
     exit(1);
@@ -80,7 +83,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "l:o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -115,6 +118,15 @@ int main(int argc, char** argv) {
                     exit(1);
                 }
                 strncpy(outputFileName, optarg, len);
+                break;
+            }
+            case 'l': {
+                MaximumLevels = atoi(optarg);
+                if (MaximumLevels < 1) {
+                    cerr << "enblend: maximum levels must be 1 or more."
+                         << endl;
+                    printUsageAndExit();
+                }
                 break;
             }
             default: {
@@ -183,7 +195,7 @@ int main(int argc, char** argv) {
             // We already forced this to be a 4-channel-per pixel (above), so 
             // make the fourth channel be alpha if RGB image (see tiff spec)
             // If not specified, Photoshop doesn't open up with transparent area
-            if (photometric == PHOTOMETRIC_RGB) {
+            if (Photometric == PHOTOMETRIC_RGB) {
                 uint16 v[1];				
                 v[0] = EXTRASAMPLE_ASSOCALPHA;
                 TIFFSetField(outputTIFF, TIFFTAG_EXTRASAMPLES, 1, v);
@@ -237,13 +249,16 @@ int main(int argc, char** argv) {
         // mem = 2 fullsize uint32 + fullsize MaskPixel
 
         // Calculate the ROI bounds and number of levels.
-        uint32 maximumLevels = bounds(mask);
+        uint32 levels = bounds(mask);
+        if (MaximumLevels > 0) {
+            levels = min(levels, (uint32)MaximumLevels);
+        }
 
         // Copy parts of blackImage outside of ROI into whiteImage.
         copyExcludedPixels(whiteImage, blackImage);
 
         // Build Laplacian pyramid from blackImage
-        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
+        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, levels);
         // mem = 2 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
         //savePyramid(*blackLP, "black");
 
@@ -252,12 +267,12 @@ int main(int argc, char** argv) {
         // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
 
         // Build Gaussian pyramid from mask.
-        vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
+        vector<LPPixel*> *maskGP = gaussianPyramid(mask, levels);
         // mem = 1 fullsize uint32 + fullsize MaskPixel + 8/3 roi LPPixel
         //savePyramid(*maskGP, "mask");
 
         // Build Laplacian pyramid from whiteImage
-        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
+        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, levels);
         // mem = 1 fullsize uint32 + fullsize MaskPixel + 12/3 roi LPPixel
         //savePyramid(*whiteLP, "white");
 
@@ -265,7 +280,7 @@ int main(int argc, char** argv) {
         blend(*whiteLP, *blackLP, *maskGP);
 
         // Free allocated memory.
-        for (uint32 i = 0; i < maximumLevels; i++) {
+        for (uint32 i = 0; i < levels; i++) {
             free((*maskGP)[i]);
             free((*blackLP)[i]);
         }
@@ -278,7 +293,7 @@ int main(int argc, char** argv) {
 
         free(mask);
         // mem = 1 fullsize uint32 + 4/3 roi LPPixel
-        for (uint32 i = 0; i < maximumLevels; i++) {
+        for (uint32 i = 0; i < levels; i++) {
             free((*whiteLP)[i]);
         }
         delete whiteLP;

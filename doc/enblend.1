@@ -2,7 +2,7 @@
 .SH NAME
 enblend \- combine images using a multiresolution spline
 .SH SYNOPSIS
-.B enblend [-v] -o output-file input-files...
+.B enblend [-v] [-l num] -o output-file input-files...
 .SH DESCRIPTION
 .B enblend
 overlays multiple TIFF images using the Burt & Adelson multiresolution spline.
@@ -29,6 +29,10 @@ or
 to do this. The multiple TIFFs produced by these programs are exactly what
 enblend is designed to work with.
 .SH OPTIONS
+.IP "-l num"
+Limit the number of levels used for pyramid blending. This trades off quality
+of results for faster execution time and lower memory usage. The default is
+to use as many levels as possible given the size of the overlap region.
 .IP -v
 Verbose output
 .IP "-o output-file"
