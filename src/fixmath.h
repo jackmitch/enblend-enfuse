@@ -25,7 +25,7 @@
 #endif
 
 #include <boost/static_assert.hpp>
-//#include "vigra/colorconversions.hxx"
+#include "vigra/colorconversions.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
@@ -33,6 +33,10 @@ using std::pair;
 
 using vigra::NumericTraits;
 //using vigra::RGBPrime2YPrimeCbCrFunctor;
+using vigra::RGBPrime2LabFunctor;
+using vigra::Lab2RGBPrimeFunctor;
+//using vigra::RGBPrime2RGBFunctor;
+//using vigra::RGB2RGBPrimeFunctor;
 using vigra::triple;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
@@ -47,11 +51,59 @@ inline T2 convertToPyramidMath(T1 v) {
     BOOST_STATIC_ASSERT(false);
 };
 
-// Convert to type T1 from fixed-point value stored in type T2.
-template <typename T1, typename T2>
-inline T1 convertFromPyramidMath(T2 v) {
+template <typename T1>
+inline double convertFromPyramidMath(T1 v) {
     // Fixed-point math conversion not defined for this type pair.
     BOOST_STATIC_ASSERT(false);
+};
+
+/* convertToPyramidMath functions expect v to be in the range -256 to 255.
+ * They are encoded as a signed fixed-point type with 9 integer bits and
+ * as many fraction bits as possible.
+ */
+template <>
+inline short convertToPyramidMath<double, short>(double v) {
+    return NumericTraits<short>::fromRealPromote(v * 128.0);
+};
+
+template <>
+inline short convertToPyramidMath<float, short>(float v) {
+    return NumericTraits<short>::fromRealPromote(v * 128.0);
+};
+
+template <>
+inline double convertFromPyramidMath<short>(short v) {
+    return NumericTraits<short>::toRealPromote(v) / 128.0;
+};
+
+template <>
+inline int convertToPyramidMath<double, int>(double v) {
+    return NumericTraits<int>::fromRealPromote(v * 8388608.0);
+};
+
+template <>
+inline int convertToPyramidMath<float, int>(float v) {
+    return NumericTraits<int>::fromRealPromote(v * 8388608.0);
+};
+
+template <>
+inline double convertFromPyramidMath<int>(int v) {
+    return NumericTraits<int>::toRealPromote(v) / 8388608.0;
+};
+
+template <>
+inline double convertToPyramidMath<double, double>(double v) {
+    return v;
+};
+
+template <>
+inline double convertToPyramidMath<float, double>(float v) {
+    return v;
+};
+
+template <>
+inline double convertFromPyramidMath<double>(double v) {
+    return v;
 };
 
 template <>
@@ -62,9 +114,14 @@ inline short convertToPyramidMath<unsigned char, short>(unsigned char v) {
 };
 
 template <>
-inline unsigned char convertFromPyramidMath<unsigned char, short>(short v) {
-    double r = (double)v / 128.0;
-    return NumericTraits<unsigned char>::fromRealPromote(r);
+inline int convertToPyramidMath<unsigned char, int>(unsigned char v) {
+    // Shift left 23 bits
+    return (int)v << 23;
+};
+
+template <>
+inline double convertToPyramidMath<unsigned char, double>(unsigned char v) {
+    return (double)v / NumericTraits<unsigned char>::max();
 };
 
 template <>
@@ -75,22 +132,10 @@ inline int convertToPyramidMath<short, int>(short v) {
 };
 
 template <>
-inline short convertFromPyramidMath<short, int>(int v) {
-    double r = (double)v / 32768.0;
-    return NumericTraits<short>::fromRealPromote(r);
-};
-
-template <>
 inline int convertToPyramidMath<unsigned short, int>(unsigned short v) {
     // cast to int does not sign-extend
     // Shift left 15 bits
     return (int)v << 15;
-};
-
-template <>
-inline unsigned short convertFromPyramidMath<unsigned short, int>(int v) {
-    double r = (double)v / 32768.0;
-    return NumericTraits<unsigned short>::fromRealPromote(r);
 };
 
 template <>
@@ -99,38 +144,8 @@ inline double convertToPyramidMath<int, double>(int v) {
 };
 
 template <>
-inline int convertFromPyramidMath<int, double>(double v) {
-    return NumericTraits<int>::fromRealPromote(v);
-};
-
-template <>
 inline double convertToPyramidMath<unsigned int, double>(unsigned int v) {
     return NumericTraits<unsigned int>::toRealPromote(v);
-};
-
-template <>
-inline unsigned int convertFromPyramidMath<unsigned int, double>(double v) {
-    return NumericTraits<unsigned int>::fromRealPromote(v);
-};
-
-template <>
-inline double convertToPyramidMath<float, double>(float v) {
-    return (double)v;
-};
-
-template <>
-inline float convertFromPyramidMath<float, double>(double v) {
-    return (float)v;
-};
-
-template <>
-inline double convertToPyramidMath<double, double>(double v) {
-    return v;
-};
-
-template <>
-inline double convertFromPyramidMath<double, double>(double v) {
-    return v;
 };
 
 // copy scalar image to scalar fixed-point pyramid image.
@@ -185,9 +200,13 @@ void copyToPyramidImage(
     typedef typename SrcImageType::const_traverser SrcTraverser;
     typedef typename PyramidImageType::traverser DestTraverser;
 
-    //typedef RGBPrime2YPrimeCbCrFunctor<SrcPixelType> ColorFunctor;
-    //typedef typename ColorFunctor::result_type ColorFunctorResult;
-    //ColorFunctor f;
+    typedef RGBPrime2LabFunctor<SrcPixelType> ColorFunctor;
+    typedef typename ColorFunctor::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    // Functor for color space conversion.
+    // L*a*b* components need a 8-bit signed integer part and arbitrary fractional bits.
+    ColorFunctor cf(NumericTraits<SrcPixelType>::max());
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
@@ -198,8 +217,16 @@ void copyToPyramidImage(
         DestTraverser dx = dy;
 
         for (; sx.x != send.x; ++sx.x, ++dx.x) {
-            PyramidVectorType r;
+            ColorFunctorResultType labVector = cf(sa(sx));
 
+            PyramidPixelType l = convertToPyramidMath<ColorFunctorResultComponent, PyramidPixelType>(labVector[0]);
+            PyramidPixelType a = convertToPyramidMath<ColorFunctorResultComponent, PyramidPixelType>(labVector[1]);
+            PyramidPixelType b = convertToPyramidMath<ColorFunctorResultComponent, PyramidPixelType>(labVector[2]);
+
+            PyramidVectorType r(l, a, b);
+            da.set(r, dx);
+
+            //r = convertToPyramidMath<double, PyramidPixelType>(f(sa(sx)));
             //ColorFunctorResult converted = f(sa(sx));
             //unsigned char yp = NumericTraits<unsigned char>::fromRealPromote(converted[0]);
             //unsigned char cb = NumericTraits<unsigned char>::fromRealPromote(converted[1]);
@@ -208,13 +235,13 @@ void copyToPyramidImage(
             //r.setGreen(convertToPyramidMath<unsigned char, PyramidPixelType>(cb));
             //r.setBlue(convertToPyramidMath<unsigned char, PyramidPixelType>(cr));
 
-            SrcVectorIterator svi = sa(sx).begin();
-            PyramidVectorIterator pvi = r.begin();
-            for (; pvi != r.end(); ++pvi, ++svi) {
-                *pvi = convertToPyramidMath<SrcPixelType, PyramidPixelType>(*svi);
-            }
+            //SrcVectorIterator svi = sa(sx).begin();
+            //PyramidVectorIterator pvi = r.begin();
+            //for (; pvi != r.end(); ++pvi, ++svi) {
+            //    *pvi = convertToPyramidMath<SrcPixelType, PyramidPixelType>(*svi);
+            //}
 
-            da.set(r, dx);
+            //da.set(r, dx);
         }
     }
 
@@ -284,7 +311,8 @@ inline void copyFromPyramidImageIf(
 
         for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
             if (ma(mx)) {
-                da.set(convertFromPyramidMath<DestPixelType, PyramidPixelType>(sa(sx)), dx);
+                double p = convertFromPyramidMath<PyramidPixelType>(sa(sx));
+                da.set(NumericTraits<DestPixelType>::fromRealPromote(p), dx);
             }
         }
     }
@@ -315,9 +343,12 @@ inline void copyFromPyramidImageIf(
     typedef typename DestImageType::traverser DestTraverser;
     typedef typename MaskImageType::const_traverser MaskTraverser;
 
-    //typedef YPrimeCbCr2RGBPrimeFunctor<DestPixelType> ColorFunctor;
-    //typedef typename ColorFunctor::argument_type ColorArgType;
-    //ColorFunctor f;
+    typedef Lab2RGBPrimeFunctor<double> ColorFunctor;
+    typedef typename ColorFunctor::argument_type ColorFunctorArgumentType;
+    typedef typename ColorFunctor::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    ColorFunctor cf(NumericTraits<DestPixelType>::max());
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
@@ -331,21 +362,29 @@ inline void copyFromPyramidImageIf(
 
         for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
             if (ma(mx)) {
-                DestVectorType r;
+                PyramidVectorType p = sa(sx);
+                double l = convertFromPyramidMath<PyramidPixelType>(p.red());
+                double a = convertFromPyramidMath<PyramidPixelType>(p.green());
+                double b = convertFromPyramidMath<PyramidPixelType>(p.blue());
+                ColorFunctorArgumentType labVector(l, a, b);
+                ColorFunctorResultType rgbpVector = cf(labVector);
+                DestVectorType r = NumericTraits<DestVectorType>::fromRealPromote(rgbpVector);
+                da.set(r, dx);
 
+                //r = f(sa(sx));
                 //PyramidVectorType p = sa(sx);
                 //ColorArgType c;
                 //c[0] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.red());
                 //c[1] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.green());
                 //c[2] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.blue());
                 //r = f(c);
-                PyramidVectorIterator pvi = sa(sx).begin();
-                DestVectorIterator dvi = r.begin();
-                for (; dvi != r.end(); ++dvi, ++pvi) {
-                    *dvi = convertFromPyramidMath<DestPixelType, PyramidPixelType>(*pvi);
-                }
+                //PyramidVectorIterator pvi = sa(sx).begin();
+                //DestVectorIterator dvi = r.begin();
+                //for (; dvi != r.end(); ++dvi, ++pvi) {
+                //    *dvi = convertFromPyramidMath<DestPixelType, PyramidPixelType>(*pvi);
+                //}
 
-                da.set(r, dx);
+                //da.set(r, dx);
             }
         }
     }
@@ -390,6 +429,13 @@ inline void copyFromPyramidImageIf(
             dest.second,
             mask.first,
             mask.second);
+};
+
+template <typename DestImageType, typename PyramidImageType>
+inline void copyLabPyramid(
+        triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
+        pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
+
 };
 
 } // namespace enblend

@@ -201,6 +201,16 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
         delete whiteLP;
 
+        for (unsigned int i = 0; i < numLevels; i++) {
+            char filenameBuf[512];
+            snprintf(filenameBuf, 512, "enblend_blend_lp%04u.tif", i);
+            cout << filenameBuf << endl;
+            ImageExportInfo lpInfo(filenameBuf);
+            vigra::USRGBImage usLabPyramid((*blackLP)[i]->width(), (*blackLP)[i]->height());
+            copyLabPyramid(srcImageRange(*((*blackLP)[i])), destImage(usLabPyramid));
+            exportImage(srcImageRange(usLabPyramid), lpInfo);
+        }
+
         // collapse black pyramid
         collapsePyramid(wraparoundThisIteration, blackLP);
 
