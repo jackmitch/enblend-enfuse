@@ -1,3 +1,29 @@
+2004-04-26 19:29  mihal
+
+	* src/bounds.cc: Backed out the old fix for the boundary condition
+	  issue.
+
+2004-04-26 19:28  mihal
+
+	* src/enblend.cc: Changed bitsPerSample to a 16-bit int for
+	  big-endian machines.
+
+2004-04-18 00:31  mihal
+
+	* configure.in, src/blend.cc, src/bounds.cc, src/io.cc,
+	  src/pyramid.cc: Fixed another boundary issue problem in the
+	  pyramid code that caused seams to appear in some output images. A
+	  shortcut I used to caluclate pyramid level sizes turned out to
+	  not be general enough.
+
+2004-04-03 00:26  mihal
+
+	* configure.in: Incremented version to 1.1.
+
+2004-04-03 00:15  mihal
+
+	* ChangeLog, configure.in: Bumped the version to 1.01.
+
 2004-04-03 00:00  mihal
 
 	* src/: bounds.cc, enblend.h, io.cc, mask.cc, pyramid.cc: Fixed
