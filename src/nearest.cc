@@ -33,17 +33,14 @@ extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
 // Region of interest for this operation.
-extern uint32 ROIFirstX;
-extern uint32 ROILastX;
-extern uint32 ROIFirstY;
-extern uint32 ROILastY;
+extern uint32 UBBFirstX;
+extern uint32 UBBLastX;
+extern uint32 UBBFirstY;
+extern uint32 UBBLastY;
 
 #define EUCLIDEAN_METRIC
 
 #ifdef EUCLIDEAN_METRIC
-    //typedef float dist_t;
-    //#define DIST_MAX INFINITY
-    //#define DIST_MIN 0.0f
     typedef uint32 dist_t;
     #define DIST_MAX ((dist_t)-1)
     #define DIST_MIN 0
@@ -79,20 +76,20 @@ extern uint32 ROILastY;
 #endif
 #endif
 
-/** Perform a nearest feature transform on the input image within the region
- *  of interest. For each thinnable pixel, determine if the pixel is closer
+/** Perform a nearest feature transform on the input image within the union
+ *  bounding box. For each thinnable pixel, determine if the pixel is closer
  *  to a green pixel or a blue pixel. Make the thinnable pixel the same color
  *  as the closest green or blue pixel.
  */
 void nearestFeatureTransform(MaskPixel *mask) {
 
-    uint32 roiWidth = ROILastX - ROIFirstX + 1;
-    uint32 roiHeight = ROILastY - ROIFirstY + 1;
-    uint32 roiPixels = roiWidth * roiHeight;
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+    uint32 ubbHeight = UBBLastY - UBBFirstY + 1;
+    uint32 ubbPixels = ubbWidth * ubbHeight;
 
     // For each pixel, store the distance to the nearest feature in the same
     // column.
-    dist_t *dnfColumn = (dist_t*)malloc(roiPixels * sizeof(dist_t));
+    dist_t *dnfColumn = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfColumn == NULL) {
         cerr << "nearestFeatureTransform: malloc failed for dnfColumn" << endl;
         exit(1);
@@ -100,7 +97,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
 
     // For each pixel, store the distance to the nearest feature in the same
     // column or any column to the left.
-    dist_t *dnfLeft = (dist_t*)malloc(roiPixels * sizeof(dist_t));
+    dist_t *dnfLeft = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfLeft == NULL) {
         cerr << "nearestFeatureTransform: malloc failed for dnfLeft" << endl;
         exit(1);
@@ -111,8 +108,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
     if (Verbose > 0) {
         cout << "nearestFeatureTransform: top-down pass" << endl;
     }
-    MaskPixel *firstMaskP = &mask[ROIFirstY * OutputWidth + ROIFirstX];
-    for (uint32 x = 0; x < roiWidth; x++) {
+    MaskPixel *firstMaskP = &mask[UBBFirstY * OutputWidth + UBBFirstX];
+    for (uint32 x = 0; x < ubbWidth; x++) {
         dist_t *dnfColumnP = &dnfColumn[x];
         MaskPixel *maskP = firstMaskP + x;
 
@@ -123,7 +120,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
         uint32 lastFeatureDeltaY = 0;
         bool foundFirstFeature = false;
 
-        for (uint32 y = 0; y < roiHeight; y++) {
+        for (uint32 y = 0; y < ubbHeight; y++) {
             if (maskP->r == 0) {
                 // maskP is a feature pixel.
                 *dnfColumnP = DIST_MIN;
@@ -143,7 +140,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
             lastFeatureDeltaY++;
 
             // Move pointers down one row.
-            dnfColumnP += roiWidth;
+            dnfColumnP += ubbWidth;
             maskP += OutputWidth;
         }
     }
@@ -155,9 +152,9 @@ void nearestFeatureTransform(MaskPixel *mask) {
     if (Verbose > 0) {
         cout << "nearestFeatureTransform: bottom-up pass" << endl;
     }
-    MaskPixel *lastMaskP = &mask[ROILastY * OutputWidth + ROILastX];
-    dist_t *lastDNFColumnP = &dnfColumn[roiWidth * roiHeight - 1];
-    for (uint32 x = 0; x < roiWidth; x++) {
+    MaskPixel *lastMaskP = &mask[UBBLastY * OutputWidth + UBBLastX];
+    dist_t *lastDNFColumnP = &dnfColumn[ubbWidth * ubbHeight - 1];
+    for (uint32 x = 0; x < ubbWidth; x++) {
         dist_t *dnfColumnP = lastDNFColumnP - x;
         MaskPixel *maskP = lastMaskP - x;
 
@@ -168,7 +165,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
         uint32 lastFeatureDeltaY = 0;
         bool foundFirstFeature = false;
 
-        for (uint32 y = 0; y < roiHeight; y++) {
+        for (uint32 y = 0; y < ubbHeight; y++) {
             if (maskP->r == 0) {
                 // maskP is a feature pixel.
                 //*dnfColumnP = DIST_MIN; don't need to do this again.
@@ -191,7 +188,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
             lastFeatureDeltaY++;
 
             // Move pointers up one row.
-            dnfColumnP -= roiWidth;
+            dnfColumnP -= ubbWidth;
             maskP -= OutputWidth;
         }
     }
@@ -203,16 +200,16 @@ void nearestFeatureTransform(MaskPixel *mask) {
         cout << "nearestFeatureTransform: left-right pass" << endl; //... ";
         //cout.flush();
     }
-    for (uint32 y = 0; y < roiHeight; y++) {
-        dist_t *dnfLeftP = &dnfLeft[y * roiWidth];
-        dist_t *dnfColumnP = &dnfColumn[y * roiWidth];
+    for (uint32 y = 0; y < ubbHeight; y++) {
+        dist_t *dnfLeftP = &dnfLeft[y * ubbWidth];
+        dist_t *dnfColumnP = &dnfColumn[y * ubbWidth];
         MaskPixel *maskP = firstMaskP + (y * OutputWidth);
 
         // List of dnfColumnP's on the left that might be the closest features
         // to the current dnfColumnP.
         list<dist_t*> potentialFeatureList;
 
-        for (uint32 x = 0; x < roiWidth; x++) {
+        for (uint32 x = 0; x < ubbWidth; x++) {
             // First add ourself to the list.
             potentialFeatureList.push_back(dnfColumnP);
 
@@ -277,17 +274,17 @@ void nearestFeatureTransform(MaskPixel *mask) {
         cout << "nearestFeatureTransform: right-left pass" << endl; //... ";
         //cout.flush();
     }
-    dist_t *lastDNFLeftP = &dnfLeft[roiWidth * roiHeight - 1];
-    for (uint32 y = 0; y < roiHeight; y++) {
-        dist_t *dnfColumnP = lastDNFColumnP - (y * roiWidth);
-        dist_t *dnfLeftP = lastDNFLeftP - (y * roiWidth);
+    dist_t *lastDNFLeftP = &dnfLeft[ubbWidth * ubbHeight - 1];
+    for (uint32 y = 0; y < ubbHeight; y++) {
+        dist_t *dnfColumnP = lastDNFColumnP - (y * ubbWidth);
+        dist_t *dnfLeftP = lastDNFLeftP - (y * ubbWidth);
         MaskPixel *maskP = lastMaskP - (y * OutputWidth);
 
         // List of dnfColumnP's on the right that might be the closest features
         // to the current dnfColumnP.
         list<dist_t*> potentialFeatureList;
 
-        for (uint32 x = 0; x < roiWidth; x++) {
+        for (uint32 x = 0; x < ubbWidth; x++) {
             // First add ourself to the list.
             potentialFeatureList.push_back(dnfColumnP);
 

@@ -32,7 +32,7 @@ extern int Verbose;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
-// Region of interest for this operation.
+// Region of interest for pyramids.
 extern uint32 ROIFirstX;
 extern uint32 ROILastX;
 extern uint32 ROIFirstY;
@@ -75,13 +75,11 @@ void blend(std::vector<LPPixel*> &whiteLP,
             double r = whitePixel->r * whiteCoeff + blackPixel->r * blackCoeff;
             double g = whitePixel->g * whiteCoeff + blackPixel->g * blackCoeff;
             double b = whitePixel->b * whiteCoeff + blackPixel->b * blackCoeff;
-            double a = whitePixel->a * whiteCoeff + blackPixel->a * blackCoeff;
 
             // Convert back to int16
-            whitePixel->r = (int16)lrint(r);
-            whitePixel->g = (int16)lrint(g);
-            whitePixel->b = (int16)lrint(b);
-            whitePixel->a = (int16)lrint(a);
+            whitePixel->r = (int16)rint(r);
+            whitePixel->g = (int16)rint(g);
+            whitePixel->b = (int16)rint(b);
 
             maskPixel++;
             blackPixel++;

@@ -32,10 +32,10 @@ extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
 // Region of interest for this operation.
-extern uint32 ROIFirstX;
-extern uint32 ROILastX;
-extern uint32 ROIFirstY;
-extern uint32 ROILastY;
+extern uint32 UBBFirstX;
+extern uint32 UBBLastX;
+extern uint32 UBBFirstY;
+extern uint32 UBBLastY;
 
 			        	/* Direction masks:		*/
 			        	/*   N	   S	 W     E	*/
@@ -114,10 +114,10 @@ void thinMask(MaskPixel *mask) {
             1};           // EAST
     int32 directionIndexOffset;
 
-    uint32 roiWidth = ROILastX - ROIFirstX + 1;
-    uint32 roiHeight = ROILastY - ROIFirstY + 1;
+    uint32 roiWidth = UBBLastX - UBBFirstX + 1;
+    uint32 roiHeight = UBBLastY - UBBFirstY + 1;
 
-    MaskPixel *firstPixel = &mask[ROIFirstY * OutputWidth + ROIFirstX];
+    MaskPixel *firstPixel = &mask[UBBFirstY * OutputWidth + UBBFirstX];
 
     qbMapArray = (uint16*)malloc(roiWidth * sizeof(uint16));
     if (qbMapArray == NULL) {

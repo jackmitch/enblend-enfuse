@@ -46,6 +46,56 @@ extern uint32 ROILastY;
 // Gaussian filter coefficients
 static const double A = 0.4;
 static const double W[] = {0.25 - A / 2.0, 0.25, A, 0.25, 0.25 - A / 2.0};
+static const uint32 A100 = 40;
+static const uint32 W100[] = {25 - A100 / 2, 25, A100, 25, 25 - A100 / 2};
+
+/** Calculate the half width of a level n filter, taking into account
+ *  pixel precision and rounding method.
+ */
+uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue) {
+
+    // This is the arithmetic half width (true for level  > 0).
+    uint32 length = 1 + (1 << level);
+
+    // Use internal LPPixel precision data type.
+    int16 *f = (int16*)calloc(length, sizeof(int16));
+    if (f == NULL) {
+        cerr << "enblend: malloc failed in filterHalfWidth for f" << endl;
+    }
+
+    // input f(x) is the step function u(-x)
+    f[0] = maxPixelValue;
+
+    for (uint32 l = 1; l <= level; l++) {
+        // sample 0 from level l-1
+        double pZero = f[0];
+        // sample 1 from level l-1
+        double pOne = f[1 << (l-1)];
+
+        // sample 0 on level l
+        double nZero = (pZero * W[2]) + (pOne * W[3])
+                + (maxPixelValue * W[0]) + (maxPixelValue * W[1]);
+        f[0] = (int16)rint(nZero);
+
+        // sample 1 on level l
+        double nOne = (pZero * W[0]) + (pOne * W[1]);
+        f[1 << l] = (int16)rint(nOne);
+
+        // remaining samples on level l are zero.
+
+        // If sample 1 was rounded down to zero, then sample 1 on
+        // level l-1 is the rightmost nonzero value.
+        if (f[1 << l] == 0) {
+            free(f);
+            // return the index of the rightmost nonzero value.
+            return (1 << (l-1));
+        }
+    }
+
+    // Else there is no round-to-zero issue.
+    free(f);
+    return (length - 1);
+}
 
 /** The Burt & Adelson Expand operation.
  *  Expand in, and either add or subtract from out.
@@ -60,8 +110,6 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
             double r = 0.0;
             double g = 0.0;
             double b = 0.0;
-            double a = 0.0;
-            double noContrib = 1.0;
 
             for (int m = 0; m < 5; m++) {
                 // Skip non-integral values of inX index.
@@ -85,34 +133,20 @@ void expand(LPPixel *in, uint32 inW, uint32 inH,
 
                     LPPixel *inPixel = &(in[inY * inW + inX]);
 
-                    //if (inPixel->a != 255) {
-                    //    // Transparent pixels don't count.
-                    //    noContrib -= W[m] * W[n];
-                    //} else {
-                        r += W[m] * W[n] * inPixel->r;
-                        g += W[m] * W[n] * inPixel->g;
-                        b += W[m] * W[n] * inPixel->b;
-                        a += W[m] * W[n] * inPixel->a;
-                    //}
+                    r += W[m] * W[n] * inPixel->r;
+                    g += W[m] * W[n] * inPixel->g;
+                    b += W[m] * W[n] * inPixel->b;
                 }
             }
 
-            // Adjust filter for any ignored transparent pixels.
-            r = (noContrib == 0.0) ? 0.0 : r / noContrib;
-            g = (noContrib == 0.0) ? 0.0 : g / noContrib;
-            b = (noContrib == 0.0) ? 0.0 : b / noContrib;
-            a = (noContrib == 0.0) ? 0.0 : a / noContrib;
-
             if (add) {
-                out->r += (int16)lrint(r * 4.0);
-                out->g += (int16)lrint(g * 4.0);
-                out->b += (int16)lrint(b * 4.0);
-                out->a += (int16)lrint(a * 4.0);
+                out->r += (int16)rint(r * 4.0);
+                out->g += (int16)rint(g * 4.0);
+                out->b += (int16)rint(b * 4.0);
             } else {
-                out->r -= (int16)lrint(r * 4.0);
-                out->g -= (int16)lrint(g * 4.0);
-                out->b -= (int16)lrint(b * 4.0);
-                out->a -= (int16)lrint(a * 4.0);
+                out->r -= (int16)rint(r * 4.0);
+                out->g -= (int16)rint(g * 4.0);
+                out->b -= (int16)rint(b * 4.0);
             }
 
             out++;
@@ -143,8 +177,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
             double r = 0.0;
             double g = 0.0;
             double b = 0.0;
-            double a = 0.0;
-            double noContrib = 1.0;
+            uint32 noContrib = 10000;
 
             for (int m = 0; m < 5; m++) {
                 int32 inX = 2 * (int32)outX + m - 2;
@@ -164,26 +197,24 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
 
                     if (inPixel->a != 255) {
                         // Transparent pixels don't count.
-                        noContrib -= W[m] * W[n];
+                        noContrib -= W100[m] * W100[n];
                     } else {
                         r += W[m] * W[n] * inPixel->r;
                         g += W[m] * W[n] * inPixel->g;
                         b += W[m] * W[n] * inPixel->b;
-                        a += W[m] * W[n] * inPixel->a;
                     }
                 }
             }
 
             // Adjust filter for any ignored transparent pixels.
-            r = (noContrib == 0.0) ? 0.0 : r / noContrib;
-            g = (noContrib == 0.0) ? 0.0 : g / noContrib;
-            b = (noContrib == 0.0) ? 0.0 : b / noContrib;
-            a = (noContrib == 0.0) ? 0.0 : a / noContrib;
+            r = (noContrib == 0) ? 0.0 : r / (noContrib / 10000.0);
+            g = (noContrib == 0) ? 0.0 : g / (noContrib / 10000.0);
+            b = (noContrib == 0) ? 0.0 : b / (noContrib / 10000.0);
 
-            outIndex->r = (int16)lrint(r);
-            outIndex->g = (int16)lrint(g);
-            outIndex->b = (int16)lrint(b);
-            outIndex->a = (int16)lrint(a);
+            outIndex->r = (int16)rint(r);
+            outIndex->g = (int16)rint(g);
+            outIndex->b = (int16)rint(b);
+            outIndex->a = (noContrib == 0) ? 0 : 255;
 
             outIndex++;
 
@@ -311,15 +342,12 @@ vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
  *  Returns a vector of pyramid levels.
  */
 vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels) {
-    //static int run = 0;
     // Only consider the region-of-interest within image.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
     // First create a Gaussian pyramid.
     vector<LPPixel*> *gp = gaussianPyramid(image, levels);
-    //if (run++ == 0) savePyramid(*gp, "black");
-    //else savePyramid(*gp, "white");
 
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
@@ -366,7 +394,6 @@ void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
             pixel->r = min(255, max(0, (int)pixel->r));
             pixel->g = min(255, max(0, (int)pixel->g));
             pixel->b = min(255, max(0, (int)pixel->b));
-            pixel->a = min(255, max(0, (int)pixel->a));
 
             MaskPixel *maskPixel = &mask[y * OutputWidth + x];
 
@@ -377,7 +404,7 @@ void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
                         (pixel->r & 0xFF)
                         | ((pixel->g & 0xFF) << 8)
                         | ((pixel->b & 0xFF) << 16)
-                        | ((pixel->a & 0xFF) << 24);
+                        | (0xFF << 24);
             }
 
             pixel++;
@@ -430,13 +457,11 @@ void savePyramid(vector<LPPixel*> &p, char *prefix) {
                 pixel->r = min(255, max(0, (int)abs(pixel->r)));
                 pixel->g = min(255, max(0, (int)abs(pixel->g)));
                 pixel->b = min(255, max(0, (int)abs(pixel->b)));
-                //pixel->a = min(255, max(0, (int)abs(pixel->a)));
                 image[y * OutputWidth + x] =
                         (pixel->r & 0xFF)
                         | ((pixel->g & 0xFF) << 8)
                         | ((pixel->b & 0xFF) << 16)
                         | (0xFF << 24);
-                        //| ((pixel->a & 0xFF) << 24);
                 pixel++;
             }
         }

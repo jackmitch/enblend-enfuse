@@ -31,15 +31,14 @@ extern int Verbose;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
 
-// Region of interest for this operation.
-extern uint32 ROIFirstX;
-extern uint32 ROILastX;
-extern uint32 ROIFirstY;
-extern uint32 ROILastY;
+// Union bounding box.
+extern uint32 UBBFirstX;
+extern uint32 UBBLastX;
+extern uint32 UBBFirstY;
+extern uint32 UBBLastY;
 
 /** Calculate a blending mask between whiteImage and blackImage.
- *  Sets the region-of-interest to the bounding box of the union
- *  of whiteImage and blackImage.
+ *  Sets the union bounding box of whiteImage and blackImage.
  */
 MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
 
@@ -52,10 +51,10 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
     }
 
     // Region of interest boundaries
-    ROIFirstX = OutputWidth - 1;
-    ROILastX = 0;
-    ROIFirstY = OutputHeight - 1;
-    ROILastY = 0;
+    UBBFirstX = OutputWidth - 1;
+    UBBLastX = 0;
+    UBBFirstY = OutputHeight - 1;
+    UBBLastY = 0;
 
     uint32 *whitePixel = whiteImage;
     uint32 *blackPixel = blackImage;
@@ -67,10 +66,10 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
             // Pixel is in region of interest.
             uint32 x = i % OutputWidth;
             uint32 y = i / OutputWidth;
-            ROIFirstX = min(x, ROIFirstX);
-            ROILastX = max(x, ROILastX);
-            ROIFirstY = min(y, ROIFirstY);
-            ROILastY = max(y, ROILastY);
+            UBBFirstX = min(x, UBBFirstX);
+            UBBLastX = max(x, UBBLastX);
+            UBBFirstY = min(y, UBBFirstY);
+            UBBLastY = max(y, UBBLastY);
         }
 
         if (*whitePixel == 0 && *blackPixel == 0) {
@@ -103,10 +102,9 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
 
     }
 
-    // Run the thinning transform on the mask inside the ROI.
+    // Run the nearest feature transform on the mask inside the UBB.
     // This will replace the thinnable pixels with either green or blue
     // based on how close each pixel is to a green or blue region.
-    //thinMask(mask);
     nearestFeatureTransform(mask);
 
     // Remark all blue pixels as white. These pixels are closer to

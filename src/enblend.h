@@ -46,10 +46,18 @@ void blend(std::vector<LPPixel*> &whiteLP,
         std::vector<LPPixel*> &blackLP,
         std::vector<LPPixel*> &maskGP);
 
+// bounds.cc
+uint32 bounds(MaskPixel *mask);
+void copyExcludedPixels(uint32 *dstImage, uint32 *srcImage);
+
 // mask.cc
 MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage);
 
+// nearest.cc
+void nearestFeatureTransform(MaskPixel *mask);
+
 // pyramid.cc
+uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue);
 std::vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels);
 std::vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels);
 std::vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels);
@@ -58,8 +66,5 @@ void savePyramid(std::vector<LPPixel*> &p, char *prefix);
 
 // thin.cc
 void thinMask(MaskPixel *mask);
-
-// nearest.cc
-void nearestFeatureTransform(MaskPixel *mask);
 
 #endif /* __ENBLEND_H__ */

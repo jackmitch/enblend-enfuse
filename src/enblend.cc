@@ -41,7 +41,13 @@ double StitchMismatchThreshold = 0.4;
 uint16 PlanarConfig;
 uint16 Photometric;
 
-// The region of interest for the current operation.
+// Union bounding box.
+uint32 UBBFirstX;
+uint32 UBBLastX;
+uint32 UBBFirstY;
+uint32 UBBLastY;
+
+// The region of interest for pyramids.
 uint32 ROIFirstX;
 uint32 ROILastX;
 uint32 ROIFirstY;
@@ -217,34 +223,26 @@ int main(int argc, char** argv) {
         // Create the blend mask.
         MaskPixel *mask = createMask(whiteImage, blackImage);
 
-        // Count max number of levels we can make from ROI size.
-        int32 shortDimension = min(ROILastX - ROIFirstX + 1,
-                ROILastY - ROIFirstY + 1);
-        if (shortDimension < 4) {
-            cerr << "enblend: union of images is too small to make "
-                 << "more than one pyramid level."
-                 << endl;
-        }
-        uint32 maximumLevels = 1;
-        while (shortDimension > 8) {
-            shortDimension = shortDimension >> 1;
-            maximumLevels++;
-        }
+        // Calculate the ROI bounds and number of levels.
+        uint32 maximumLevels = bounds(mask);
+
+        // Copy parts of blackImage outside of ROI into whiteImage.
+        copyExcludedPixels(whiteImage, blackImage);
 
         // Build Laplacian pyramid from blackImage
         vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
-        savePyramid(*blackLP, "black");
+        //savePyramid(*blackLP, "black");
 
         // Free allocated memory.
         _TIFFfree(blackImage);
 
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
-        savePyramid(*maskGP, "mask");
+        //savePyramid(*maskGP, "mask");
 
         // Build Laplacian pyramid from whiteImage
         vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
-        savePyramid(*whiteLP, "white");
+        //savePyramid(*whiteLP, "white");
 
         // Blend pyramids
         blend(*whiteLP, *blackLP, *maskGP);
