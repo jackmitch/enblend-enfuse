@@ -308,6 +308,11 @@ class RowIterator : private IMAGE_ITERATOR
     : IMAGE_ITERATOR(i)
     {}
 
+    // MIHAL
+    RowIterator()
+    : IMAGE_ITERATOR()
+    {}
+
         /** Assignment.
         */
     RowIterator & operator=(RowIterator  const & i)
