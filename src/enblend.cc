@@ -315,8 +315,9 @@ int main(int argc, char** argv) {
                  << "MB" << endl;
         }
 
-        // Copy parts of blackImage outside of ROI into whiteImage.
-        copyExcludedPixels(whiteImageFile, blackImageFile);
+        // Copy parts of blackImage outside of ROI and inside the black part
+        // of the mask into whiteImage.
+        copyExcludedPixels(whiteImageFile, blackImageFile, maskFile);
 
         // Build Laplacian pyramid from blackImage
         FILE *blackLPFile = laplacianPyramidFile(blackImageFile, levels);

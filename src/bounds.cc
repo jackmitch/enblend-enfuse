@@ -271,10 +271,12 @@ uint32 roiBounds(FILE *maskFile) {
 }
 
 /** Copy pixels from inside the UBB but outside the ROI from srcImage
- *  into dstImage. Ignore transparent pixels.
- *  Files are OutputWidth * OutputHeight * uint32.
+ *  into dstImage. Ignore transparent pixels. Ignore pixels that aren't black
+ *  in the mask.
+ *  src and dst files are OutputWidth * OutputHeight * uint32.
+ *  mask file is UBBWidth * UBBHeight * MaskPixel
  */
-void copyExcludedPixels(FILE *dst, FILE *src) {
+void copyExcludedPixels(FILE *dst, FILE *src, FILE *mask) {
 
     uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
 
@@ -292,34 +294,46 @@ void copyExcludedPixels(FILE *dst, FILE *src) {
         exit(1);
     }
 
+    MaskPixel *maskLine = (MaskPixel*)malloc(ubbWidth * sizeof(uint32));
+    if (maskLine == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in createMask for maskLine)" << endl;
+        exit(1);
+    }
+
     for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
         fseek(src, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
         fseek(dst, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
+        fseek(mask, (y - UBBFirstY) * ubbWidth * sizeof(MaskPixel), SEEK_SET);
         readFromTmpfile(srcLine, sizeof(uint32), ubbWidth, src);
         readFromTmpfile(dstLine, sizeof(uint32), ubbWidth, dst);
+        readFromTmpfile(maskLine, sizeof(MaskPixel), ubbWidth, mask);
         
         uint32 *srcPixel = srcLine;
         uint32 *dstPixel = dstLine;
+        MaskPixel *maskPixel = maskLine;
         for (uint32 x = UBBFirstX; x <= UBBLastX; x++) {
             if (y < ROIFirstY
                     || y > ROILastY
                     || x < ROIFirstX
                     || x > ROILastX) {
-                if (TIFFGetA(*srcPixel) == 255 && TIFFGetA(*dstPixel) == 0) {
+                if (maskPixel->a == 255 && maskPixel->r == 0) {
                     *dstPixel = *srcPixel;
                 }
             }
             srcPixel++;
             dstPixel++;
+            maskPixel++;
         }
 
         // Write the modified line back to dst file.
-        fseek(dst, -ubbWidth * sizeof(uint32), SEEK_CUR);
+        fseek(dst, -(ubbWidth * sizeof(uint32)), SEEK_CUR);
         writeToTmpfile(dstLine, sizeof(uint32), ubbWidth, dst);
     }
 
     free(srcLine);
     free(dstLine);
+    free(maskLine);
 
     return;
 }
@@ -380,7 +394,7 @@ void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile) {
         }
 
         // Write back results.
-        fseek(uint32File, -roiWidth * sizeof(uint32), SEEK_CUR);
+        fseek(uint32File, -(roiWidth * sizeof(uint32)), SEEK_CUR);
         writeToTmpfile(outputLine, sizeof(uint32), roiWidth, uint32File);
 
     }
