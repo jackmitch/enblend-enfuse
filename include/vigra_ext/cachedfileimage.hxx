@@ -22,9 +22,6 @@
 #ifndef VIGRA_EXT_CACHEDFILEIMAGE_HXX
 #define VIGRA_EXT_CACHEDFILEIMAGE_HXX
 
-#define CACHED_FILE_IMAGE_BLOCKSIZE 1000000
-#define CACHED_FILE_IMAGE_CACHELINES 10
-
 #include <errno.h>
 #include <iostream>
 #include <list>
@@ -37,6 +34,62 @@ using std::list;
 namespace vigra {
 
 template <class PIXELTYPE> class CachedFileImage;
+
+class CachedFileImageDirector {
+public:
+
+    static CachedFileImageDirector &v() {
+        static CachedFileImageDirector *instance = NULL;
+        if (instance == NULL) {
+            instance = new CachedFileImageDirector();
+        }
+        return *instance;
+    }
+
+    void setBlockSize(int bytes) {
+        blocksize = bytes;
+    }
+
+    int getBlockSize() {
+        return blocksize;
+    }
+
+    void setAllocation(long long bytes) {
+        managedBytes = bytes;
+        bytesAvailable = bytes;
+    }
+
+    long long requestBytes(long long request) {
+        bytesAvailable -= request;
+        return request;
+    }
+
+    void returnBytes(long long bytes) {
+        bytesAvailable += bytes;
+    }
+
+    void incrementCacheMisses() {
+        cacheMisses++;
+    }
+
+    long long getCacheMisses() {
+        return cacheMisses;
+    }
+
+protected:
+    CachedFileImageDirector()
+    : blocksize(1<<20),
+      managedBytes(1LL<<30),
+      bytesAvailable(0),
+      cacheMisses(0)
+    {}
+
+    int blocksize;
+    long long managedBytes;
+    long long bytesAvailable;
+    long long cacheMisses;
+
+};
 
 template <class Iterator>
 class CachedFileSequentialAccessIteratorPolicy
@@ -512,6 +565,7 @@ private:
 
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::deallocate() {
+    CachedFileImageDirector::v().returnBytes(width_ * height_ * sizeof(PIXELTYPE));
     delete blockLRU_;
     if (lines_ != NULL) {
         // Go through lines and delete any allocated memory there.
@@ -537,13 +591,17 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initLineStartArray() {
 
     // Number of lines to load in one block.
-    linesPerBlocksize_ = (int)ceil(((double)CACHED_FILE_IMAGE_BLOCKSIZE) / (width_ * sizeof(PIXELTYPE)));
-    // a block must be at least one line.
-    linesPerBlocksize_ = max(1, linesPerBlocksize_);
+    linesPerBlocksize_ = (int)ceil(
+            ((double)CachedFileImageDirector::v().getBlockSize())
+            / (width_ * sizeof(PIXELTYPE)));
 
     // FIXME some mechanism for determining how much of the image is going to be in memory.
     // implement a CachedFileImageDirector
-    blocksAllowed_ = CACHED_FILE_IMAGE_CACHELINES;
+    long long bytesAllowed = CachedFileImageDirector::v().requestBytes(
+            width_ * height_ * sizeof(PIXELTYPE));
+
+    blocksAllowed_ = (int)ceil(bytesAllowed
+            / (double)CachedFileImageDirector::v().getBlockSize());
 
     // Cap blocksAllowed_ at the actual number of blocks needed.
     int blocksNeeded = (int)ceil(((double)height_) / linesPerBlocksize_);
@@ -559,11 +617,11 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     for (int block = 0; block < blocksAllowed_; block++) {
         blockLRU_->push_front(block);
         for (int subblock = 0; subblock < linesPerBlocksize_; subblock++, line++) {
-            if (line < height_) {
-                lines_[line] = Allocator::allocate(width_);
-                std::uninitialized_fill_n(lines_[line], width_, initPixel);
-            }
+            if (line >= height_) break;
+            lines_[line] = Allocator::allocate(width_);
+            std::uninitialized_fill_n(lines_[line], width_, initPixel);
         }
+        if (line >= height_) break;
     }
 
     // All remaining lines (if any) are null (swapped out)
@@ -593,6 +651,7 @@ inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
 
 template <class PIXELTYPE>
 PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
+    CachedFileImageDirector::v().incrementCacheMisses();
     int blockNumber = dy / linesPerBlocksize_; // lineToBlockNumber(dy);
     int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
 
