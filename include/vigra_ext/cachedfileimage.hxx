@@ -221,7 +221,7 @@ public:
 
 protected:
     CachedFileImageDirector()
-    : blocksize(1<<20),
+    : blocksize(2<<20),
       managedBytes(1LL<<30),
       cacheMisses(0),
       imageList(),
