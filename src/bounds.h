@@ -27,13 +27,18 @@
 #include "common.h"
 #include "pyramid.h"
 
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::min;
 
 namespace enblend {
 
+/** Characterize the overlap between src1 and src2.
+ *  The images may overlap completely (CompleteOverlap),
+ *  partially (PartialOverlap),
+ *  or not at all (NoOverlap).
+ */
 template <typename SrcImageIterator, typename SrcAccessor>
 Overlap inspectOverlap(
         SrcImageIterator src1_upperleft,
@@ -74,6 +79,7 @@ Overlap inspectOverlap(
 
 };
 
+// Argument object factory version.
 template <typename SrcImageIterator, typename SrcAccessor>
 Overlap inspectOverlap(
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
@@ -82,6 +88,11 @@ Overlap inspectOverlap(
                           src2.first, src2.second);
 };
 
+/** Determine the region-of-interest and number of blending levels to use,
+ *  given the current intersection-bounding-box.
+ *  We also need to know if the image is a 360-degree pano so we can check
+ *  for the case that the ROI wraps around the left and right edges.
+ */
 template <typename PyramidPixelType>
 unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,

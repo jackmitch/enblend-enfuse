@@ -61,12 +61,8 @@ namespace enblend {
  *  Uses a greedy heuristic.
  *  Removes used images from given list of ImageImportInfos.
  *  Returns an ImageImportInfo for the temporary file.
- *  memory xsection = 2 * (ImageType*os + AlphaType*os)
+ *  memory xsection = 2 * (ImageType*inputUnion + AlphaType*inputUnion)
  */
-//ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
-//        EnblendROI &inputUnion,
-//        EnblendROI &bb,
-//        ImageExportInfo *exportInfo = NULL) {
 template <typename ImageType, typename AlphaType>
 pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
@@ -102,7 +98,8 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             destIter(imageA->upperLeft() + imagePos - inputUnion.getUL()));
     imageInfoList.erase(imageInfoList.begin());
 
-    // Mask off pixels that are not totally opaque.
+    // Threshold the alpha mask so that all pixels are either contributing
+    // or not contributing.
     transformImage(srcImageRange(*imageA), destImage(*imageA),
             Threshold<AlphaPixelType, AlphaPixelType>(
                     NumericTraits<AlphaPixelType>::max() / 2,
@@ -127,7 +124,8 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             AlphaType srcA(info->size());
             importImageAlpha(*info, destImage(src), destImage(srcA));
 
-            // Mask off pixels that are not totally opaque.
+            // Threshold the alpha mask so that all pixels are either
+            // contributing or not contributing.
             transformImage(srcImageRange(srcA), destImage(srcA),
                     Threshold<AlphaPixelType, AlphaPixelType>(
                             NumericTraits<AlphaPixelType>::max() / 2,
@@ -186,14 +184,14 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         }
     }
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES
-            && !OneAtATime) cout << endl;
+    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) cout << endl;
 
     // Calculate bounding box of image.
     FindBoundingRectangle unionRect;
     inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
             srcImage(*imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
+
     if (Verbose > VERBOSE_ASSEMBLE_MESSAGES
             && !OneAtATime) {
         cout << "Combined union bounding box: ("
@@ -208,29 +206,6 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     }
 
     return pair<ImageType*, AlphaType*>(image, imageA);
-
-//    if (exportInfo) {
-//        // Use the given exportInfo and return a
-//        // corresponding ImageImportInfo.
-//        exportImageAlpha(srcImageRange(image),
-//                srcImage(imageA),
-//                *exportInfo);
-//        return new ImageImportInfo(exportInfo->getFileName());
-//    }
-//    else {
-//        // Dump image+imageA to temp file.
-//        // Return ImageImportInfo for that file.
-//        char tmpFilename[] = ".enblend_assemble_XXXXXX";
-//        int tmpFD = mkstemp(tmpFilename);
-//        ImageExportInfo outputImageInfo(tmpFilename);
-//        outputImageInfo.setFileType("TIFF");
-//        exportImageAlpha(srcImageRange(image),
-//                srcImage(imageA),
-//                outputImageInfo);
-//        close(tmpFD);
-//    
-//        return new ImageImportInfo(tmpFilename);
-//    }
 
 };
 

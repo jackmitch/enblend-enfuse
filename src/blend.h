@@ -31,12 +31,17 @@
 
 using std::cout;
 using std::vector;
+
 using vigra::combineThreeImages;
 using vigra::NumericTraits;
 
 namespace enblend {
 
-struct BlendFunctor {
+/** Functor for blending a black and white pyramid level using a mask
+ *  pyramid level.
+ */
+class BlendFunctor {
+public:
     BlendFunctor(double maskMax) : scale(maskMax) {}
 
     template <typename MaskPixelType, typename ImagePixelType>
@@ -44,6 +49,7 @@ struct BlendFunctor {
 
         typedef typename NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
 
+        // Convert mask pixel to blend coefficient in range [0.0, 1.0].
         double whiteCoeff =
                 NumericTraits<MaskPixelType>::toRealPromote(maskP) / scale;
         double blackCoeff = 1.0 - whiteCoeff;
@@ -56,9 +62,12 @@ struct BlendFunctor {
         return NumericTraits<ImagePixelType>::fromRealPromote(blendP);
     }
 
+protected:
     double scale;
 };
 
+/** Blend black and white pyramids using mask pyramid.
+ */
 template <typename OrigMaskType, typename MaskPyramidType, typename ImagePyramidType>
 void blend(vector<MaskPyramidType*> *maskGP,
         vector<ImagePyramidType*> *whiteLP,
@@ -67,10 +76,10 @@ void blend(vector<MaskPyramidType*> *maskGP,
     typedef typename MaskPyramidType::value_type MaskPixelType;
     typedef typename OrigMaskType::value_type OrigMaskPixelType;
 
-    // Discovert the maximum value that will be found in the mask pyramid.
-    // We need this to scale the mask values to the range [0.0, 1.0].
+    // Discover the value of MaskPixelType that is considered white (100%).
     ConvertScalarToPyramidFunctor<OrigMaskPixelType, MaskPixelType> f;
     MaskPixelType maxMaskPixel = f(NumericTraits<OrigMaskPixelType>::max());
+    // Find the scale factor that converts the max mask pixel value to 1.0.
     double maxMaskPixelD = NumericTraits<MaskPixelType>::toRealPromote(maxMaskPixel);
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
@@ -85,6 +94,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
             cout.flush();
         }
 
+        // Blend the pixels in this layer using the blend functor.
         combineThreeImages(srcImageRange(*((*maskGP)[layer])),
                 srcImage(*((*whiteLP)[layer])),
                 srcImage(*((*blackLP)[layer])),

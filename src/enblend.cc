@@ -42,19 +42,19 @@ using std::cerr;
 using std::endl;
 using std::list;
 
-using vigra::CachedFileImageDirector;
 using vigra::BCFImage;
-using vigra::BRGBCFImage;
 using vigra::BImage;
+using vigra::BRGBCFImage;
 using vigra::BRGBImage;
-using vigra::Diff2D;
+using vigra::CachedFileImageDirector;
 using vigra::DCFImage;
-using vigra::DRGBCFImage;
+using vigra::Diff2D;
 using vigra::DImage;
+using vigra::DRGBCFImage;
 using vigra::DRGBImage;
 using vigra::FCFImage;
-using vigra::FRGBCFImage;
 using vigra::FImage;
+using vigra::FRGBCFImage;
 using vigra::FRGBImage;
 using vigra::ICFImage;
 using vigra::IImage;
@@ -63,23 +63,23 @@ using vigra::ImageImportInfo;
 using vigra::IRGBCFImage;
 using vigra::IRGBImage;
 using vigra::SCFImage;
-using vigra::SRGBCFImage;
 using vigra::SImage;
+using vigra::SRGBCFImage;
 using vigra::SRGBImage;
 using vigra::StdException;
 using vigra::UICFImage;
-using vigra::UIRGBCFImage;
 using vigra::UIImage;
+using vigra::UIRGBCFImage;
 using vigra::UIRGBImage;
 using vigra::USCFImage;
-using vigra::USRGBCFImage;
 using vigra::USImage;
+using vigra::USRGBCFImage;
 using vigra::USRGBImage;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
 
-// Random number generator
+// Random number generator for dithering
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
@@ -90,24 +90,6 @@ bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseLabColor = false;
-
-//uint32 OutputWidth = 0;
-//uint32 OutputHeight = 0;
-
-//uint16 PlanarConfig;
-//uint16 Photometric;
-
-//// Union bounding box.
-//uint32 UBBFirstX;
-//uint32 UBBLastX;
-//uint32 UBBFirstY;
-//uint32 UBBLastY;
-
-//// The region of interest for pyramids.
-//uint32 ROIFirstX;
-//uint32 ROILastX;
-//uint32 ROIFirstY;
-//uint32 ROILastY;
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {
@@ -123,10 +105,10 @@ void printUsageAndExit() {
     cout << " -w                Blend across -180/+180 boundary" << endl;
 
     cout << endl << "Extended options:" << endl;
-    cout << " -b kilobytes      Image cache block size (default=1MB)" << endl;
+    cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
     cout << " -c                Use CIE L*a*b* color space" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
-    cout << " -m megabytes      Use this much memory before going to disk (default=1GB)" << endl;
+    cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
 
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
@@ -205,10 +187,12 @@ int main(int argc, char** argv) {
                     break;
                 }
                 int len = strlen(optarg) + 1;
-                outputFileName = new char[len];
-                if (outputFileName == NULL) {
-                    cerr << endl
-                         << "enblend: out of memory (in main for outputFileName)" << endl;
+                try {
+                    outputFileName = new char[len];
+                } catch (std::bad_alloc& e) {
+                    cerr << endl << "enblend: out of memory"
+                         << endl << e.what()
+                         << endl;
                     exit(1);
                 }
                 strncpy(outputFileName, optarg, len);
@@ -221,14 +205,15 @@ int main(int argc, char** argv) {
                 break;
             }
             case 't': {
-                StitchMismatchThreshold = strtod(optarg, NULL);
-                if (StitchMismatchThreshold < 0.0
-                        || StitchMismatchThreshold > 1.0) {
-                    cerr << "enblend: threshold must be between "
-                         << "0.0 and 1.0 inclusive."
-                         << endl;
-                    printUsageAndExit();
-                }
+                printUsageAndExit();
+                //StitchMismatchThreshold = strtod(optarg, NULL);
+                //if (StitchMismatchThreshold < 0.0
+                //        || StitchMismatchThreshold > 1.0) {
+                //    cerr << "enblend: threshold must be between "
+                //         << "0.0 and 1.0 inclusive."
+                //         << endl;
+                //    printUsageAndExit();
+                //}
                 break;
             }
             case 'v': {
@@ -260,6 +245,15 @@ int main(int argc, char** argv) {
     } else {
         cerr << "enblend: no input files specified." << endl;
         printUsageAndExit();
+    }
+
+    // Check that more than one input file was given.
+    if (inputFileNameList.size() <= 1) {
+        cerr << "enblend: only one input file given. "
+             << "Enblend needs two or more overlapping input images in order "
+             << "to do blending calculations. The output will be the same as "
+             << "the input."
+             << endl;
     }
 
     // List of info structures for each input image.
@@ -360,7 +354,6 @@ int main(int argc, char** argv) {
 
     // The size of the output image.
     if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        // print inputUnion.
         Diff2D ul = inputUnion.getUL();
         Diff2D lr = inputUnion.getLR();
         Diff2D outputImageSize = inputUnion.size();
@@ -388,25 +381,74 @@ int main(int argc, char** argv) {
              << endl;
         exit(1);
     }
-    //IRGBImage::Accessor::value_type foo();
-    //IRGBImage::Accessor::value_type::value_type bar();
-    //cout << sizeof(IRGBImage::Accessor::value_type) << endl;
-    //cout << sizeof(IRGBImage::Accessor::value_type::value_type) << endl;
-    //IImage::Accessor::value_type bam();
-    //IImage::Accessor::value_type::value_type baz();
-    //cout << sizeof(IImage::Accessor::value_type) << endl;
-    //cout << sizeof(IImage::Accessor::value_type::value_type) << endl;
+
     // Invoke templatized blender.
     try {
+    #ifdef ENBLEND_CACHE_IMAGES
         if (isColor) {
             if (strcmp(pixelType, "UINT8") == 0) {
-                #ifdef ENBLEND_CACHE_IMAGES
                 enblendMain<BRGBCFImage, SRGBCFImage>(
                         imageInfoList, outputImageInfo, inputUnion);
-                #else
+            //} else if (strcmp(pixelType, "INT16") == 0) {
+            //    enblendMain<SRGBCFImage, IRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USRGBCFImage, IRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT32") == 0) {
+            //    enblendMain<IRGBCFImage, DRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT32") == 0) {
+            //    enblendMain<UIRGBCFImage, DRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "FLOAT") == 0) {
+            //    enblendMain<FRGBCFImage, DRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+            //    enblendMain<DRGBCFImage, DRGBCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            } else {
+                cerr << "enblend: pixel type \""
+                     << pixelType
+                     << "\" is not supported."
+                     << endl;
+                exit(1);
+            }
+        } else {
+            //if (strcmp(pixelType, "UINT8") == 0) {
+            //    enblendMain<BCFImage, SCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT16") == 0) {
+            //    enblendMain<SCFImage, ICFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USCFImage, ICFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT32") == 0) {
+            //    enblendMain<ICFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT32") == 0) {
+            //    enblendMain<UICFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "FLOAT") == 0) {
+            //    enblendMain<FCFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+            //    enblendMain<DCFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else {
+                cerr << "enblend: pixel type \""
+                     << pixelType
+                     << "\" is not supported."
+                     << endl;
+                exit(1);
+            //}
+        }
+    #else
+        if (isColor) {
+            if (strcmp(pixelType, "UINT8") == 0) {
                 enblendMain<BRGBImage, SRGBImage>(
                         imageInfoList, outputImageInfo, inputUnion);
-                #endif
             //} else if (strcmp(pixelType, "INT16") == 0) {
             //    enblendMain<SRGBImage, IRGBImage>(
             //            imageInfoList, outputImageInfo, inputUnion);
@@ -462,6 +504,7 @@ int main(int argc, char** argv) {
                 exit(1);
             //}
         }
+    #endif
     } catch (std::bad_alloc& e) {
         cerr << endl << "enblend: out of memory"
              << endl << e.what()
@@ -485,226 +528,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-/*
-    // Create output TIFF object.
-    TIFF *outputTIFF = TIFFOpen(outputFileName, "w");
-    if (outputTIFF == NULL) {
-        cerr << "enblend: error opening output TIFF file \""
-             << outputFileName
-             << "\"" << endl;
-        exit(1);
-    }
-
-    // Set basic parameters for output TIFF.
-    TIFFSetField(outputTIFF, TIFFTAG_ORIENTATION, 1);
-    TIFFSetField(outputTIFF, TIFFTAG_SAMPLESPERPIXEL, 4);
-    TIFFSetField(outputTIFF, TIFFTAG_BITSPERSAMPLE, 8);
-
-    // Give output tiff the same parameters as first input tiff.
-    // Check that all input tiffs are the same size.
-    listIterator = inputFileNameList.begin();
-    while (listIterator != inputFileNameList.end()) {
-        TIFF *inputTIFF = TIFFOpen(*listIterator, "r");
-
-        if (inputTIFF == NULL) {
-            // Error opening tiff.
-            cerr << "enblend: error opening input TIFF file \""
-                 << *listIterator
-                 << "\"" << endl;
-            exit(1);
-        }
-
-        uint16 bitsPerSample = 0;
-        TIFFGetField(inputTIFF, TIFFTAG_BITSPERSAMPLE, &bitsPerSample);
-        if (bitsPerSample != 8) {
-            cerr << "enblend: input TIFF file \""
-                 << *listIterator
-                 << "\" uses " << bitsPerSample << " bits per sample. "
-                 << "Only 8 bit TIFFs are currently supported." << endl;
-            exit(1);
-        }
-
-        if (listIterator == inputFileNameList.begin()) {
-            // The first input tiff
-            TIFFGetField(inputTIFF, TIFFTAG_PLANARCONFIG, &PlanarConfig);
-            TIFFGetField(inputTIFF, TIFFTAG_PHOTOMETRIC, &Photometric);
-            TIFFGetField(inputTIFF, TIFFTAG_IMAGEWIDTH, &OutputWidth);
-            TIFFGetField(inputTIFF, TIFFTAG_IMAGELENGTH, &OutputHeight);
-
-            TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
-            TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
-            TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
-            TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
-
-            // We already forced this to be a 4-channel-per pixel (above), so 
-            // make the fourth channel be alpha if RGB image (see tiff spec)
-            // If not specified, Photoshop doesn't open up with transparent area
-            if (Photometric == PHOTOMETRIC_RGB) {
-                uint16 v[1];				
-                v[0] = EXTRASAMPLE_ASSOCALPHA;
-                TIFFSetField(outputTIFF, TIFFTAG_EXTRASAMPLES, 1, v);
-            }			
-
-            if (Verbose > 0) {
-                cout << "Output image size: "
-                     << OutputWidth
-                     << " x "
-                     << OutputHeight << endl;
-            }
-        }
-        else {
-            uint32 otherWidth;
-            uint32 otherHeight;
-            TIFFGetField(inputTIFF, TIFFTAG_IMAGEWIDTH, &otherWidth);
-            TIFFGetField(inputTIFF, TIFFTAG_IMAGELENGTH, &otherHeight);
-
-            if (otherWidth != OutputWidth || otherHeight != OutputHeight) {
-                cerr << "enblend: input TIFF \""
-                     << *listIterator
-                     << "\" size "
-                     << otherWidth << "x" << otherHeight
-                     << " is not the same size as the first TIFF \""
-                     << inputFileNameList.front()
-                     << "\" size "
-                     << OutputWidth << "x" << OutputHeight
-                     << endl;
-                exit(1);
-            }
-        }
-            
-        TIFFClose(inputTIFF);
-        listIterator++;
-    }
-
-    // Create the initial white image.
-    FILE *whiteImageFile = assemble(inputFileNameList, OneAtATime);
-
-    // Main blending loop
-    while (!inputFileNameList.empty()) {
-
-        // Create the black image.
-        FILE *blackImageFile = assemble(inputFileNameList, OneAtATime);
-
-        // Caluclate the union bounding box of whiteImage and blackImage.
-        ubbBounds(whiteImageFile, blackImageFile);
-
-        // Estimate memory usage for this blend step.
-        if (Verbose > 0) {
-            // Max usage is in mask =
-            // ubbWidth * ubbHeight * MaskPixel
-            // + 2 * ubbWidth * ubbHeight * uint32
-            uint32 ubbPixels = (UBBLastY - UBBFirstY + 1) *
-                   (UBBLastX - UBBFirstX + 1);
-            long long bytes = ubbPixels * sizeof(MaskPixel)
-                    + 2 * ubbPixels * sizeof(uint32);
-            cout << "Estimated memory required for this blend step: "
-                 << (bytes / 1000000)
-                 << "MB" << endl;
-        }
-
-        // Create the blend mask.
-        FILE *maskFile = createMask(whiteImageFile, blackImageFile);
-
-        // Calculate the ROI bounds and number of levels.
-        uint32 levels = roiBounds(maskFile);
-        if (levels == 0) {
-            // Corner case - the mask indicates that blackImage has no
-            // contribution to the output.
-            cerr << "enblend: some images are redundant and will not be "
-                 << "blended. Try using the -s flag to blend the images "
-                 << "in a custom order you specify." << endl;
-            closeTmpfile(blackImageFile);
-            closeTmpfile(maskFile);
-            continue;
-        }
-        if (MaximumLevels > 0) {
-            levels = min(levels, (uint32)MaximumLevels);
-        }
-
-        // Estimate disk usage for this blend step.
-        if (Verbose > 0) {
-            // whiteImageFile = OutputWidth * OutputHeight * uint32
-            // blackImageFile = OutputWidth * OutputHeight * uint32
-            // maskFile = ubbWidth * ubbHeight * MaskPixel
-            // blackLPFile = 4/3 * roiWidth * roiHeight * LPPixel
-            // maskGPFile = 4/3 * roiWidth * roiHeight * LPPixel
-            long long bytes = (2 * OutputWidth * OutputHeight * sizeof(uint32))
-                    + ((UBBLastY - UBBFirstY + 1) * (UBBLastX - UBBFirstX + 1) * sizeof(MaskPixel))
-                    + ((ROILastY - ROIFirstY + 1) * (ROILastX - ROIFirstX + 1) * sizeof(LPPixel) * 8 / 3);
-            cout << "Estimated temporary disk space required for this blend step: "
-                 << (bytes / 1000000)
-                 << "MB" << endl;
-        }
-
-        // Copy parts of blackImage outside of ROI and inside the black part
-        // of the mask into whiteImage.
-        copyExcludedPixels(whiteImageFile, blackImageFile, maskFile);
-
-        // Build Laplacian pyramid from blackImage
-        FILE *blackLPFile = laplacianPyramidFile(blackImageFile, levels);
-
-        // Done with blackImage temp file. It will be deleted.
-        closeTmpfile(blackImageFile);
-
-        // Build Gaussian pyramid from mask.
-        FILE *maskGPFile = gaussianPyramidFile(maskFile, levels);
-
-        // Build Laplacian pyramid from whiteImage
-        // load whiteImage from disk one row at a time.
-        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImageFile, levels);
-
-        // Blend pyramids
-        blend(*whiteLP, blackLPFile, maskGPFile);
-
-        // Done with blackLP and maskGP temp files. They will be deleted.
-        closeTmpfile(blackLPFile);
-        closeTmpfile(maskGPFile);
-
-        // Collapse result back into whiteImage.
-        collapsePyramid(*whiteLP);
-
-        // Copy result into whiteImageFile using maskFile as template.
-        copyROIToOutputWithMask((*whiteLP)[0], whiteImageFile, maskFile);
-
-        // Done with maskFile temp file. It will be deleted.
-        closeTmpfile(maskFile);
-
-        // Done with whiteLP.
-        for (uint32 i = 0; i < levels; i++) {
-            free((*whiteLP)[i]);
-        }
-        delete whiteLP;
-
-    }
-
-    // dump output scanlines.
-    if (Verbose > 0) {
-        cout << "Writing output file." << endl;
-    }
-
-    // Scanline for copying whiteImageFile to outputTIFF.
-    uint32 *line = (uint32*)malloc(OutputWidth * sizeof(uint32));
-    if (line == NULL) {
-        cerr << endl
-             << "enblend: out of memory (in main for line)" << endl;
-        exit(1);
-    }
-
-    rewind(whiteImageFile);
-    for (uint32 i = 0; i < OutputHeight; i++) {
-        readFromTmpfile(line, sizeof(uint32), OutputWidth, whiteImageFile);
-        TIFFWriteScanline(outputTIFF, line, i, 8);
-    }
-
-    free(line);
-
-    // close whiteImageFile.
-    closeTmpfile(whiteImageFile);
-
-    // close outputTIFF.
-    TIFFClose(outputTIFF);
-
-    free(outputFileName);
-
-*/
