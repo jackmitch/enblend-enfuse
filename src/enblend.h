@@ -41,27 +41,32 @@ using std::endl;
 using std::list;
 using std::pair;
 
+using vigra::BasicImage;
+using vigra::BImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::initImageIf;
 using vigra::NumericTraits;
+using vigra::VigraTrueType;
+using vigra::VigraFalseType;
 
 namespace enblend {
 
-template <typename ImageType, typename AlphaType, typename PyramidType, typename PyramidRGBType>
+template <typename ImageType, typename MaskPyramidType, typename ImagePyramidType>
 void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
     typedef typename ImageType::value_type ImageValueType;
+    typedef BImage AlphaType;
     typedef typename AlphaType::value_type AlphaValueType;
-    typedef typename PyramidType::value_type PyramidValueType;
-    typedef typename PyramidRGBType::value_type PyramidRGBValueType;
+    typedef typename MaskPyramidType::value_type MaskPyramidValueType;
+    typedef typename ImagePyramidType::value_type ImagePyramidValueType;
 
     cout << "sizeof(ImageValueType) = " << sizeof(ImageValueType) << endl;
     cout << "sizeof(AlphaValueType) = " << sizeof(AlphaValueType) << endl;
-    cout << "sizeof(PyramidValueType) = " << sizeof(PyramidValueType) << endl;
-    cout << "sizeof(PyramidRGBValueType) = " << sizeof(PyramidRGBValueType) << endl;
+    cout << "sizeof(MaskPyramidValueType) = " << sizeof(MaskPyramidValueType) << endl;
+    cout << "sizeof(ImagePyramidValueType) = " << sizeof(ImagePyramidValueType) << endl;
 
     // Create the initial black image.
     EnblendROI blackBB;
@@ -97,11 +102,11 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // ROI bounds not to extend uBB.
         // FIXME consider case where overlap==false
         EnblendROI roiBB;
-        unsigned int numLevels = roiBounds<PyramidValueType>(inputUnion, iBB, uBB, roiBB);
+        unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, uBB, roiBB);
 
         // Create the blend mask.
-        PyramidType *mask =
-                createMask<AlphaType, PyramidType>(whitePair.second, blackPair.second, uBB);
+        BImage *mask =
+                createMask<AlphaType, BImage>(whitePair.second, blackPair.second, uBB);
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
@@ -115,10 +120,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //        destImage(*blackGP0a));
 
         // Build Gaussian pyramid from mask.
-        vector<int*> *maskGP = gaussianPyramid(numLevels,
-                mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
-                mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
-                mask->accessor());
+        //vector<int*> *maskGP = gaussianPyramid(numLevels,
+        //        mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
+        //        mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
+        //        mask->accessor());
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
@@ -126,7 +131,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         initImage(mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
                 mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
                 mask->accessor(),
-                NumericTraits<PyramidValueType>::zero());
+                NumericTraits<MaskPyramidValueType>::zero());
 
         // Copy pixels inside whiteBB and inside white part of mask into black image.
         // These are pixels where the white image contributes outside of the ROI.
@@ -178,6 +183,45 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     delete blackPair.second;
 
 };
+
+template <typename ImageType, typename ImagePyramidType>
+void enblendMain(list<ImageImportInfo*> &imageInfoList,
+        ImageExportInfo &outputImageInfo,
+        EnblendROI &inputUnion,
+        VigraTrueType) {
+
+    // ImagePyramidType::value_type is a scalar.
+    typedef BasicImage<typename ImagePyramidType::value_type> MaskPyramidType;
+
+    enblendMain<ImageType, MaskPyramidType, ImagePyramidType>(
+            imageInfoList, outputImageInfo, inputUnion);
+}
+
+template <typename ImageType, typename ImagePyramidType>
+void enblendMain(list<ImageImportInfo*> &imageInfoList,
+        ImageExportInfo &outputImageInfo,
+        EnblendROI &inputUnion,
+        VigraFalseType) {
+
+    // ImagePyramidType::value_type is a vector.
+    typedef typename ImagePyramidType::value_type VectorType;
+    typedef BasicImage<typename VectorType::value_type> MaskPyramidType;
+
+    enblendMain<ImageType, MaskPyramidType, ImagePyramidType>(
+            imageInfoList, outputImageInfo, inputUnion);
+}
+
+template <typename ImageType, typename ImagePyramidType>
+void enblendMain(list<ImageImportInfo*> &imageInfoList,
+        ImageExportInfo &outputImageInfo,
+        EnblendROI &inputUnion) {
+
+    // This indicates if ImagePyramidType is RGB or grayscale.
+    typedef typename NumericTraits<typename ImagePyramidType::value_type>::isScalar is_scalar;
+
+    enblendMain<ImageType, ImagePyramidType>(
+            imageInfoList, outputImageInfo, inputUnion, is_scalar());
+}
 
 } // namespace enblend
 

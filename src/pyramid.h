@@ -25,6 +25,7 @@
 #endif
 
 #include <vector>
+#include <boost/static_assert.hpp>
 
 #include "vigra/numerictraits.hxx"
 
@@ -90,13 +91,53 @@ unsigned int filterHalfWidth(const unsigned int level) {
     return (length - 1);
 }
 
-template <class SrcImageIterator, class SrcAccessor>
-vector<int*> *gaussianPyramid(unsigned int numLevels,
-        SrcImageIterator src_upperleft,
-        SrcImageIterator src_lowerright,
-        SrcAccessor sa) {
-    //FIXME
-    return new vector<int*>();
+//template <typename SrcImageType, typename PyramidImageType>
+//vector<int*> *gaussianPyramid(unsigned int numLevels,
+//        SrcImageIterator src_upperleft,
+//        SrcImageIterator src_lowerright,
+//        SrcAccessor sa) {
+//    //FIXME
+//    return new vector<int*>();
+//}
+
+template <typename SrcImageType, typename PyramidImageType>
+vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        typename SrcImageType::const_traverser src_upperleft,
+        typename SrcImageType::const_traverser src_lowerright,
+        typename SrcImageType::const_accessor sa,
+        VigraFalseType) {
+
+    // ImageTypes are both vectors.
+}
+
+template <typename SrcImageType, typename PyramidImageType>
+vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        typename SrcImageType::const_traverser src_upperleft,
+        typename SrcImageType::const_traverser src_lowerright,
+        typename SrcImageType::const_accessor sa,
+        VigraTrueType) {
+
+    // ImageTypes are both scalars.
+
+}
+template <typename SrcImageType, typename PyramidImageType>
+vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        typename SrcImageType::const_traverser src_upperleft,
+        typename SrcImageType::const_traverser src_lowerright,
+        typename SrcImageType::const_accessor sa) {
+
+    // This indicates if the source image is a vector or a scalar.
+    typedef typename NumericTraits<typename SrcImageType::value_type>::isScalar src_is_scalar;
+    typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
+
+    // The source image and the pyramid image must both be vectors or both be scalars.
+    BOOST_STATIC_ASSERT(src_is_scalar() == pyramid_is_scalar());
+
+    return gaussianPyramid<SrcImageType, PyramidImageType>(numLevels,
+            src_upperleft,
+            src_lowerright,
+            sa,
+            pyramid_is_scalar());
 }
 
 } // namespace enblend

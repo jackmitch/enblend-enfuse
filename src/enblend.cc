@@ -321,29 +321,36 @@ int main(int argc, char** argv) {
              << endl;
         exit(1);
     }
-
+    //IRGBImage::Accessor::value_type foo();
+    //IRGBImage::Accessor::value_type::value_type bar();
+    //cout << sizeof(IRGBImage::Accessor::value_type) << endl;
+    //cout << sizeof(IRGBImage::Accessor::value_type::value_type) << endl;
+    //IImage::Accessor::value_type bam();
+    //IImage::Accessor::value_type::value_type baz();
+    //cout << sizeof(IImage::Accessor::value_type) << endl;
+    //cout << sizeof(IImage::Accessor::value_type::value_type) << endl;
     // Invoke templatized blender.
     if (isColor) {
         if (strcmp(pixelType, "UINT8") == 0) {
-            enblendMain<BRGBImage, BImage, SImage, SRGBImage>(
+            enblendMain<BRGBImage, SRGBImage>(
                     imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    enblendMain<SRGBImage, BImage, SImage, IImage>(
+        //    enblendMain<SRGBImage, IRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    enblendMain<USRGBImage, BImage, SImage, IImage>(
+        //    enblendMain<USRGBImage, IRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    enblendMain<IRGBImage, BImage, IImage, DImage>(
+        //    enblendMain<IRGBImage, DRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    enblendMain<UIRGBImage, BImage, IImage, DImage>(
+        //    enblendMain<UIRGBImage, DRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    enblendMain<FRGBImage, BImage, FImage, DImage>(
+        //    enblendMain<FRGBImage, DRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    enblendMain<DRGBImage, BImage, DImage, DImage>(
+        //    enblendMain<DRGBImage, DRGBImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         } else {
             cerr << "enblend: pixel type \""
@@ -354,25 +361,25 @@ int main(int argc, char** argv) {
         }
     } else {
         //if (strcmp(pixelType, "UINT8") == 0) {
-        //    enblendMain<BImage, BImage, BImage, SImage>(
+        //    enblendMain<BImage, SImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT16") == 0) {
-        //    enblendMain<SImage, BImage, SImage, IImage>(
+        //    enblendMain<SImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT16") == 0) {
-        //    enblendMain<USImage, BImage, SImage, IImage>(
+        //    enblendMain<USImage, IImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "INT32") == 0) {
-        //    enblendMain<IImage, BImage, IImage, DImage>(
+        //    enblendMain<IImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "UINT32") == 0) {
-        //    enblendMain<UIImage, BImage, IImage, DImage>(
+        //    enblendMain<UIImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "FLOAT") == 0) {
-        //    enblendMain<FImage, BImage, FImage, DImage>(
+        //    enblendMain<FImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-        //    enblendMain<DImage, BImage, DImage, DImage>(
+        //    enblendMain<DImage, DImage>(
         //            imageInfoList, outputImageInfo, inputUnion);
         //} else {
             cerr << "enblend: pixel type \""
