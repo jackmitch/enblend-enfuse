@@ -47,31 +47,184 @@ using vigra::VigraTrueType;
 
 namespace enblend {
 
-template <typename T>
-inline T& dither(T &v, VigraFalseType) {
-    return v;
+template <typename SrcPixelType, typename PyramidPixelType, int SrcIntegerBits=1+8*sizeof(SrcPixelType)>
+class ConvertScalarToPyramidFunctor {
+public:
+    typedef typename NumericTraits<SrcPixelType>::isIntegral SrcIsIntegral;
+    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
+
+    ConvertScalarToPyramidFunctor() { }
+
+    inline PyramidPixelType operator()(const SrcPixelType &v) const {
+        return doConvert(v, SrcIsIntegral(), PyramidIsIntegral());
+    }
+
+protected:
+
+    // Convert an integral pixel type to an integral pyramid value type.
+    inline PyramidPixelType doConvert(const SrcPixelType &v, VigraTrueType, VigraTrueType) const {
+        return convertIntegerToFixedPoint(v);
+    }
+
+    // Convert an integral pixel type to a real pyramid value type.
+    inline PyramidPixelType doConvert(const SrcPixelType &v, VigraTrueType, VigraFalseType) const {
+        return NumericTraits<SrcPixelType>::toRealPromote(v);
+    }
+
+    // Convert a real pixel type to an integral pyramid value type.
+    inline PyramidPixelType doConvert(const SrcPixelType &v, VigraFalseType, VigraTrueType) const {
+        return convertDoubleToFixedPoint(v);
+    }
+
+    // Convert a real pixel type to a real pyramid value type.
+    inline PyramidPixelType doConvert(const SrcPixelType &v, VigraFalseType, VigraFalseType) const {
+        return v;
+    }
+
+    template <int FractionBits=8*sizeof(PyramidPixelType)-SrcIntegerBits>
+    inline PyramidPixelType convertDoubleToFixedPoint(const double &v) {
+        return NumericTraits<PyramidPixelType>::fromRealPromote(v * (double)(1 << FractionBits));
+    };
+
+    template <int FractionBits=8*sizeof(PyramidPixelType)-SrcIntegerBits>
+    inline PyramidPixelType convertIntegerToFixedPoint(const SrcPixelType &v) {
+        return (PyramidPixelType)v << FractionBits;
+    };
+
 };
 
-template <typename T>
-inline T& dither(T &v, VigraTrueType) {
-    typedef typename NumericTraits<T>::RealPromote TReal;
+template <typename DestPixelType, typename PyramidPixelType, int IntegerBits>
+class ConvertPyramidToScalarFunctor {
+public:
+    typedef typename NumericTraits<DestPixelType>::isIntegral DestIsIntegral;
+    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
 
-    TReal rv = NumericTraits<T>::toRealPromote(v);
-    TReal rvFraction = rv - floor(rv);
+    ConvertPyramidToScalarFunctor() { }
 
-    // Only dither values within a certain range of the rounding cutoff point.
-    if (rvFraction > 0.25 && rvFraction <= 0.75) {
-        // Generate a random number between 0 and 0.5.
-        double random = 0.5 * (double)Twister() / UINT_MAX;
-        if ((rvFraction - 0.25) >= random) {
-            v = ceil(v);
+    inline DestPixelType operator()(const PyramidPixelType &v) const {
+        return doConvert(v, DestIsIntegral(), PyramidIsIntegral());
+    }
+
+protected:
+
+    // Convert an integral pyramid pixel to an integral image pixel.
+    inline DestPixelType doConvert(const PyramidPixelType &v, VigraTrueType, VigraTrueType) const {
+        double d = convertFixedPointToDouble(v);
+        d = dither(d);
+        return NumericTraits<DestPixelType>::fromRealPromote(d);
+    }
+
+    // Convert a real pyramid pixel to an integral image pixel.
+    inline DestPixelType doConvert(const PyramidPixelType &v, VigraTrueType, VigraFalseType) const {
+        double d = dither(v);
+        return NumericTraits<DestPixelType>::fromRealPromote(d);
+    }
+
+    // Convert an integral pyramid pixel to a real image pixel.
+    inline DestPixelType doConvert(const PyramidPixelType &v, VigraFalseType, VigraTrueType) const {
+        return convertFixedPointToDouble(v);
+    }
+
+    // Convert a real pyramid pixel to a real image pixel.
+    inline DestPixelType doConvert(const PyramidPixelType &v, VigraFalseType, VigraFalseType) const {
+        return v;
+    }
+
+    inline double dither(const double &v) const {
+        double vFraction = v - floor(v);
+        // Only dither values within a certain range of the rounding cutoff point.
+        if (vFraction > 0.25 && vFraction <= 0.75) {
+            // Generate a random number between 0 and 0.5.
+            double random = 0.5 * (double)Twister() / UINT_MAX;
+            if ((vFraction - 0.25) >= random) {
+                return ceil(v);
+            } else {
+                return floor(v);
+            }
         } else {
-            v = floor(v);
+            return v;
         }
     }
 
-    return v;
+    template <int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
+    inline double convertFixedPointToDouble(const PyramidPixelType &v) {
+        return NumericTraits<PyramidPixelType>::toRealPromote(v) / (double)(1 << FractionBits);
+    };
+
 };
+
+template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorType, typename PyramidPixelType>
+class ConvertToLabPyramidFunctor {
+public:
+    typedef RBGPrime2LabFunctor<SrcPixelType> ColorFunctorType;
+    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    // L*a*b* components:
+    //      0      <= L <= 100
+    //    -86.1813 <= a <=  98.2352
+    //   -107.862  <= b <=  94.4758
+    // Needs 8 integer bits
+    // Needs 9 integer bits for pyramid math
+    typedef ConvertScalarToPyramidFunctor<ColorFunctorResultComponent, PyramidPixelType, 9> ConvertFunctorType;
+
+    ConvertToLabPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {}
+
+    PyramidVectorType operator()(const SrcVectorType &v) const {
+        ColorFunctorResultType labVector = colorFunctor(v);
+        PyramidPixelType l = convertFunctor(labVector[0]);
+        PyramidPixelType a = convertFunctor(labVector[1]);
+        PyramidPixelType b = convertFunctor(labVector[2]);
+        return PyramidVectorType(l, a, b);
+    }
+
+protected:
+    ColorFunctorType colorFunctor;
+    ConvertFunctorType convertFunctor;
+};
+
+template <typename DestVectorType, typename DestPixelType, typename PyramidVectorType, typename PyramidPixelType>
+class ConvertFromLabPyramidFunctor {
+public:
+    typedef Lab2RGBPrimeFunctor<double> ColorFunctorType;
+    typedef typename ColorFunctorType::argument_type ColorFunctorArgumentType;
+    typedef typename ColorFunctorType::result_type ColorFunctorResultType;
+    typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
+
+    // L*a*b* fixed-point pyramid uses 9 integer bits.
+    typedef ConvertPyramidToScalarFunctor<double, PyramidPixelType, 9> DoubleFunctorType;
+    typedef ConvertPyramidToScalarFunctor<DestPixelType, double, 9> DestFunctorType;
+
+    ConvertFromLabPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {}
+
+    DestVectorType operator()(const PyramidVectorType &v) const {
+        double l = doubleFunctor(v.red());
+        double a = doubleFunctor(v.green());
+        double b = doubleFunctor(v.blue());
+
+        ColorFunctorArgumentType labVector(l, a, b);
+        ColorFunctorResultType rgbpVector = colorFunctor(labVector);
+
+        DestPixelType r = destFunctor(rgbpVector.red());
+        DestPixelType g = destFunctor(rgbpVector.green());
+        DestPixelType b = destFunctor(rgbpVector.blue());
+
+        return DestVectorType(r, g, b);
+    }
+
+protected:
+    ColorFunctorType colorFunctor;
+    DoubleFunctorType doubleFunctor;
+    DestFunctorType destFunctor;
+};
+
+
+
+
+
+
+
+
 
 // Convert type T1 to fixed-point value stored in type T2.
 template <typename T1, typename T2>
