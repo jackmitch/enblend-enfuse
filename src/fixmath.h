@@ -237,6 +237,10 @@ void copyToPyramidImage(
     // L*a*b* components need a 8-bit signed integer part and arbitrary fractional bits.
     ColorFunctor cf(NumericTraits<SrcPixelType>::max());
 
+    if (Verbose > 0) {
+        cout << "R'G'B' to L*a*b* color space conversion..." << endl;
+    }
+
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
     DestTraverser dy = dest_upperleft;
@@ -342,7 +346,6 @@ inline void copyFromPyramidImageIf(
         for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
             if (ma(mx)) {
                 double p = convertFromPyramidMath<PyramidPixelType>(sa(sx));
-                //FIXME instead of doing fromRealPromote, do some dithering here.
                 p = dither(p, DestPixelIsIntegral());
                 da.set(NumericTraits<DestPixelType>::fromRealPromote(p), dx);
             }
@@ -382,6 +385,10 @@ inline void copyFromPyramidImageIf(
     typedef typename ColorFunctorResultType::value_type ColorFunctorResultComponent;
 
     ColorFunctor cf(NumericTraits<DestPixelType>::max());
+
+    if (Verbose > 0) {
+        cout << "L*a*b* to R'G'B' color space conversion..." << endl;
+    }
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;

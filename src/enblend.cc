@@ -67,11 +67,12 @@ using enblend::EnblendROI;
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 0;
-int MaximumLevels = 0;
-bool OneAtATime = false;
+int Verbose = 1;
+unsigned int MaximumLevels = 0;
+bool OneAtATime = true;
 bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
+bool GimpAssociatedAlphaHack = false;
 
 //uint32 OutputWidth = 0;
 //uint32 OutputHeight = 0;
@@ -100,9 +101,11 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
+    cout << " -a                Pre-assemble non-overlapping images" << endl;
     cout << " -l number         Maximum number of levels to use" << endl;
-    cout << " -s                Blend images one at a time, in the order given" << endl;
+    //cout << " -s                Blend images one at a time, in the order given" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
+    cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
     exit(1);
@@ -121,7 +124,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "wsl:o:t:vh")) != -1) {
+    while ((c = getopt(argc, argv, "gawsl:o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -160,20 +163,31 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'l': {
-                MaximumLevels = atoi(optarg);
-                if (MaximumLevels < 1) {
-                    cerr << "enblend: maximum levels must be 1 or more."
+                int levels = atoi(optarg);
+                if (levels < 1) {
+                    cerr << "enblend: levels must be 1 or more."
                          << endl;
                     printUsageAndExit();
                 }
+                MaximumLevels = (unsigned int)levels;
                 break;
             }
             case 's': {
+                // Deprecated sequential blending flag.
                 OneAtATime = true;
+                cerr << "enblend: the -s flag is deprecated." << endl;
                 break;
             }
             case 'w': {
                 Wraparound = true;
+                break;
+            }
+            case 'a': {
+                OneAtATime = false;
+                break;
+            }
+            case 'g': {
+                GimpAssociatedAlphaHack = true;
                 break;
             }
             default: {

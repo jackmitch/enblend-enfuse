@@ -453,17 +453,16 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     // Pyramid level 0
     PyramidImageType *gp0 = new PyramidImageType(w, h);
 
-    if (Verbose > 0) {
-        cout << "Generating Gaussian pyramid: g0";
-        cout.flush();
-    }
-
     // Copy src image into gp0, using fixed-point conversions.
     copyToPyramidImage<SrcImageType, PyramidImageType>(
             src_upperleft, src_lowerright, sa,
             gp0->upperLeft(), gp0->accessor());
 
     gp->push_back(gp0);
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid:";
+    }
 
     // Make remaining levels.
     PyramidImageType *lastGP = gp0;
@@ -534,17 +533,16 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     // Pyramid level 0
     PyramidImageType *gp0 = new PyramidImageType(w, h);
 
-    if (Verbose > 0) {
-        cout << "Generating Gaussian pyramid: g0";
-        cout.flush();
-    }
-
     // Copy src image into gp0, using fixed-point conversions.
     copyToPyramidImage<SrcImageType, PyramidImageType>(
             src_upperleft, src_lowerright, sa,
             gp0->upperLeft(), gp0->accessor());
 
     gp->push_back(gp0);
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid:";
+    }
 
     // Make remaining levels.
     PyramidImageType *lastGP = gp0;

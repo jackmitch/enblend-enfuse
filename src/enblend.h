@@ -38,6 +38,7 @@
 #include "common.h"
 #include "vigra/impex.hxx"
 #include "vigra/initimage.hxx"
+#include "vigra/inspectimage.hxx"
 #include "vigra/transformimage.hxx"
 
 using std::cout;
@@ -47,10 +48,12 @@ using std::pair;
 
 using vigra::BasicImage;
 using vigra::BImage;
+using vigra::FindMinMax;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::initImageIf;
 using vigra::initImage;
+using vigra::inspectImage;
 using vigra::NumericTraits;
 using vigra::VigraTrueType;
 using vigra::VigraFalseType;
@@ -81,7 +84,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     exportImageAlpha(srcImageRange(*(blackPair.first)),
                      srcImage(*(blackPair.second)),
                      outputImageInfo);
-    // mem xsection = up to 2*inputUnion*ImageValueType
+    // mem usage before = 0
+    // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+    // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
     // Main blending loop.
     while (!imageInfoList.empty()) {
@@ -90,24 +95,44 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+        // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
+        // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+
         //ImageExportInfo whiteInfo("enblend_white.tif");
         //exportImageAlpha(srcImageRange(*(whitePair.first)),
         //                 srcImage(*(whitePair.second)),
         //                 whiteInfo);
-        // mem xsection = up to 2*inputUnion*ImageValueType
 
         // Union bounding box of whiteImage and blackImage.
         EnblendROI uBB;
         whiteBB.unite(blackBB, uBB);
 
+        // Determine what kind of overlap we have.
+        Overlap overlap = inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
+                uBB.apply(srcImage(*(whitePair.second))));
+
+        // If white image is redundant, skip it and go to next images.
+        if (overlap == CompleteOverlap) {
+            // White image is redundant.
+            delete whitePair.first;
+            delete whitePair.second;
+            cerr << "enblend: some images are redundant and will not be blended."
+                 << endl;
+            continue;
+        }
+
         // Intersection bounding box of whiteImage and blackImage.
         EnblendROI iBB;
-        bool overlap = whiteBB.intersect(blackBB, iBB);
-        //FIXME consider case where whiteImage does not contribute.
+        whiteBB.intersect(blackBB, iBB);
+
+        // If images are disjoint, make the iBB the full size of the uBB.
+        if (overlap == NoOverlap) {
+            iBB = uBB;
+        }
 
         // Calculate ROI bounds and number of levels from iBB.
         // ROI bounds not to extend uBB.
-        // FIXME consider case where overlap==false
         EnblendROI roiBB;
         unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, uBB, roiBB);
         bool wraparoundThisIteration = Wraparound && (roiBB.size().x == inputUnion.size().x);
@@ -121,9 +146,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the blend mask.
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
                 uBB, wraparoundThisIteration);
-        ImageExportInfo maskInfo("enblend_mask.tif");
-        maskInfo.setPosition(uBB.getUL());
-        exportImage(srcImageRange(*mask), maskInfo);
+        //ImageExportInfo maskInfo("enblend_mask.tif");
+        //maskInfo.setPosition(uBB.getUL());
+        //exportImage(srcImageRange(*mask), maskInfo);
 
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
@@ -245,15 +270,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // collapse black pyramid
         collapsePyramid(wraparoundThisIteration, blackLP);
 
-        if (Verbose > 0) {
-            cout << "Checkpointing..." << endl;
-        }
-
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
                 srcImageRange(*((*blackLP)[0])),
                 roiBB.apply(destImage(*(blackPair.first))),
                 roiBB.apply(maskImage(*(blackPair.second))));
+
+        if (Verbose > 0) {
+            cout << "Checkpointing..." << endl;
+        }
 
         // delete black pyramid
         for (unsigned int i = 0; i < blackLP->size(); i++) {
