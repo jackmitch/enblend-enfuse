@@ -21,3 +21,26 @@ March 27, 2004
     - Added an option to blend the input images sequentially in the order
       given on the command line. Sometimes the assembler can make poor choices
       and seams will still be visible in the output.
+
+April 3, 2004
+    Released enblend-1.1
+
+    - Fixed a bug in reading from temporary files that appeared on machines
+      with different versions of GCC.
+
+    - Fixed a boundary condition problem that lead to horizontal or vertical
+      seams to appear in the output.
+
+    - Fixed a bug where segments of an input image would appear on the far
+      side of a blending zone. This would cause strange wedge-shaped artifacts
+      in some output images.
+
+April 26, 2004
+    Released enblend-1.2
+
+    - Fixed a bug where 8-bit TIFFS would not be identified properly on
+      big-endian machines.
+
+    - A second (better) fix for the boundary condition problem that lead
+      to horizontal or vertical seams to appear in the output.
+

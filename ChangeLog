@@ -1,3 +1,7 @@
+2004-04-26 19:41  mihal
+
+	* ChangeLog: Incremented version to 1.2.
+
 2004-04-26 19:29  mihal
 
 	* src/bounds.cc: Backed out the old fix for the boundary condition
