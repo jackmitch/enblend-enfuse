@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "assemble.h"
+#include "blend.h"
 #include "bounds.h"
 #include "mask.h"
 #include "pyramid.h"
@@ -60,6 +61,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion) {
 
     typedef typename ImageType::value_type ImageValueType;
+    typedef BImage MaskType;
     typedef BImage AlphaType;
     typedef typename AlphaType::value_type AlphaValueType;
     typedef typename MaskPyramidType::value_type MaskPyramidValueType;
@@ -86,10 +88,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
-        ImageExportInfo whiteInfo("enblend_white.tif");
-        exportImageAlpha(srcImageRange(*(whitePair.first)),
-                         srcImage(*(whitePair.second)),
-                         whiteInfo);
+        //ImageExportInfo whiteInfo("enblend_white.tif");
+        //exportImageAlpha(srcImageRange(*(whitePair.first)),
+        //                 srcImage(*(whitePair.second)),
+        //                 whiteInfo);
         // mem xsection = up to 2*inputUnion*ImageValueType
 
         // Union bounding box of whiteImage and blackImage.
@@ -99,6 +101,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Intersection bounding box of whiteImage and blackImage.
         EnblendROI iBB;
         bool overlap = whiteBB.intersect(blackBB, iBB);
+        //FIXME consider case where whiteImage does not contribute.
 
         // Calculate ROI bounds and number of levels from iBB.
         // ROI bounds not to extend uBB.
@@ -114,27 +117,23 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
 
         // Create the blend mask.
-        BImage *mask = createMask<AlphaType, BImage>(whitePair.second, blackPair.second,
+        MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
                 uBB, wraparoundThisIteration);
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
 
         // Build Gaussian pyramid from mask.
-        //vector<int*> *maskGP = gaussianPyramid(numLevels,
-        //        mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
-        //        mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
-        //        mask->accessor());
-        vector<MaskPyramidType*> *maskGP = gaussianPyramid<BImage, MaskPyramidType>(
+        vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
                 numLevels, wraparoundThisIteration, roiBB_uBB.apply(srcImageRange(*mask)));
 
-        for (unsigned int i = 0; i < numLevels; i++) {
-            char filenameBuf[512];
-            snprintf(filenameBuf, 512, "enblend_mask_gp%04u.tif", i);
-            cout << filenameBuf << endl;
-            ImageExportInfo mgpInfo(filenameBuf);
-            exportImage(srcImageRange(*((*maskGP)[i])), mgpInfo);
-        }
+        //for (unsigned int i = 0; i < numLevels; i++) {
+        //    char filenameBuf[512];
+        //    snprintf(filenameBuf, 512, "enblend_mask_gp%04u.tif", i);
+        //    cout << filenameBuf << endl;
+        //    ImageExportInfo mgpInfo(filenameBuf);
+        //    exportImage(srcImageRange(*((*maskGP)[i])), mgpInfo);
+        //}
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
@@ -154,12 +153,29 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         delete mask;
 
         // Build Laplacian pyramid from white image.
-        //vector<PyramidType*> *whiteLP = whitePair.first, whitePair.second
+        vector<ImagePyramidType*> *whiteLP =
+                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                        numLevels, wraparoundThisIteration,
+                        roiBB.apply(srcImageRange(*(whitePair.first))),
+                        roiBB.apply(maskImage(*(whitePair.second))));
+
+        //for (unsigned int i = 0; i < numLevels; i++) {
+        //    char filenameBuf[512];
+        //    snprintf(filenameBuf, 512, "enblend_white_lp%04u.tif", i);
+        //    cout << filenameBuf << endl;
+        //    ImageExportInfo wlpInfo(filenameBuf);
+        //    exportImage(srcImageRange(*((*whiteLP)[i])), wlpInfo);
+        //}
 
         // We no longer need the white rgb data.
         delete whitePair.first;
 
         // Build Laplacian pyramid from black image.
+        vector<ImagePyramidType*> *blackLP =
+                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                        numLevels, wraparoundThisIteration,
+                        roiBB.apply(srcImageRange(*(blackPair.first))),
+                        roiBB.apply(maskImage(*(blackPair.second))));
 
         // Make the black image alpha equal to the union of the
         // white and black alpha channels.
@@ -171,13 +187,38 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         delete whitePair.second;
 
         // Blend pyramids
+        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
+
         // delete mask pyramid
+        for (unsigned int i = 0; i < maskGP->size(); i++) {
+            delete (*maskGP)[i];
+        }
+        delete maskGP;
+
         // delete white pyramid
+        for (unsigned int i = 0; i < whiteLP->size(); i++) {
+            delete (*whiteLP)[i];
+        }
+        delete whiteLP;
+
         // collapse black pyramid
+        collapsePyramid(wraparoundThisIteration, blackLP);
+
+        if (Verbose > 0) {
+            cout << "Checkpointing..." << endl;
+        }
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
+        copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
+                srcImageRange(*((*blackLP)[0])),
+                roiBB.apply(destImage(*(blackPair.first))),
+                roiBB.apply(maskImage(*(blackPair.second))));
 
         // delete black pyramid
+        for (unsigned int i = 0; i < blackLP->size(); i++) {
+            delete (*blackLP)[i];
+        }
+        delete blackLP;
 
         // Checkpoint results.
         exportImageAlpha(srcImageRange(*(blackPair.first)),

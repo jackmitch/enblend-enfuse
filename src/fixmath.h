@@ -25,15 +25,18 @@
 #endif
 
 #include <boost/static_assert.hpp>
+//#include "vigra/colorconversions.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
 using std::pair;
 
 using vigra::NumericTraits;
+//using vigra::RGBPrime2YPrimeCbCrFunctor;
 using vigra::triple;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
+//using vigra::YPrimeCbCr2RGBPrimeFunctor;
 
 namespace enblend {
 
@@ -176,11 +179,15 @@ void copyToPyramidImage(
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidPixelType;
 
-    typedef typename SrcVectorType::iterator SrcVectorIterator;
+    typedef typename SrcVectorType::const_iterator SrcVectorIterator;
     typedef typename PyramidVectorType::iterator PyramidVectorIterator;
 
     typedef typename SrcImageType::const_traverser SrcTraverser;
     typedef typename PyramidImageType::traverser DestTraverser;
+
+    //typedef RGBPrime2YPrimeCbCrFunctor<SrcPixelType> ColorFunctor;
+    //typedef typename ColorFunctor::result_type ColorFunctorResult;
+    //ColorFunctor f;
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
@@ -192,6 +199,14 @@ void copyToPyramidImage(
 
         for (; sx.x != send.x; ++sx.x, ++dx.x) {
             PyramidVectorType r;
+
+            //ColorFunctorResult converted = f(sa(sx));
+            //unsigned char yp = NumericTraits<unsigned char>::fromRealPromote(converted[0]);
+            //unsigned char cb = NumericTraits<unsigned char>::fromRealPromote(converted[1]);
+            //unsigned char cr = NumericTraits<unsigned char>::fromRealPromote(converted[2]);
+            //r.setRed(convertToPyramidMath<unsigned char, PyramidPixelType>(yp));
+            //r.setGreen(convertToPyramidMath<unsigned char, PyramidPixelType>(cb));
+            //r.setBlue(convertToPyramidMath<unsigned char, PyramidPixelType>(cr));
 
             SrcVectorIterator svi = sa(sx).begin();
             PyramidVectorIterator pvi = r.begin();
@@ -239,13 +254,15 @@ inline void copyToPyramidImage(
 };
 
 // copy scalar fixed-point pyramid image to scalar image.
-template <typename DestImageType, typename PyramidImageType>
-inline void copyFromPyramidImage(
+template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
+inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
         typename PyramidImageType::const_traverser src_lowerright,
         typename PyramidImageType::ConstAccessor sa,
         typename DestImageType::traverser dest_upperleft,
         typename DestImageType::Accessor da,
+        typename MaskImageType::const_traverser mask_upperleft,
+        typename MaskImageType::ConstAccessor ma,
         VigraTrueType) {
 
     typedef typename PyramidImageType::value_type PyramidPixelType;
@@ -253,30 +270,37 @@ inline void copyFromPyramidImage(
 
     typedef typename PyramidImageType::const_traverser SrcTraverser;
     typedef typename DestImageType::traverser DestTraverser;
+    typedef typename MaskImageType::const_traverser MaskTraverser;
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
     DestTraverser dy = dest_upperleft;
+    MaskTraverser my = mask_upperleft;
 
-    for (; sy.y != send.y; ++sy.y, ++dy.y) {
+    for (; sy.y != send.y; ++sy.y, ++dy.y, ++my.y) {
         SrcTraverser sx = sy;
         DestTraverser dx = dy;
+        MaskTraverser mx = my;
 
-        for (; sx.x != send.x; ++sx.x, ++dx.x) {
-            da.set(convertFromPyramidMath<DestPixelType, PyramidPixelType>(sa(sx)), dx);
+        for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
+            if (ma(mx)) {
+                da.set(convertFromPyramidMath<DestPixelType, PyramidPixelType>(sa(sx)), dx);
+            }
         }
     }
 
 };
 
 // copy vector fixed-point pyramid image to vector image.
-template <typename DestImageType, typename PyramidImageType>
-inline void copyFromPyramidImage(
+template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
+inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
         typename PyramidImageType::const_traverser src_lowerright,
         typename PyramidImageType::ConstAccessor sa,
         typename DestImageType::traverser dest_upperleft,
         typename DestImageType::Accessor da,
+        typename MaskImageType::const_traverser mask_upperleft,
+        typename MaskImageType::ConstAccessor ma,
         VigraFalseType) {
 
     typedef typename PyramidImageType::value_type PyramidVectorType;
@@ -284,66 +308,88 @@ inline void copyFromPyramidImage(
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename DestVectorType::value_type DestPixelType;
 
-    typedef typename PyramidVectorType::iterator PyramidVectorIterator;
+    typedef typename PyramidVectorType::const_iterator PyramidVectorIterator;
     typedef typename DestVectorType::iterator DestVectorIterator;
 
     typedef typename PyramidImageType::const_traverser SrcTraverser;
     typedef typename DestImageType::traverser DestTraverser;
+    typedef typename MaskImageType::const_traverser MaskTraverser;
+
+    //typedef YPrimeCbCr2RGBPrimeFunctor<DestPixelType> ColorFunctor;
+    //typedef typename ColorFunctor::argument_type ColorArgType;
+    //ColorFunctor f;
 
     SrcTraverser sy = src_upperleft;
     SrcTraverser send = src_lowerright;
     DestTraverser dy = dest_upperleft;
+    MaskTraverser my = mask_upperleft;
 
-    for (; sy.y != send.y; ++sy.y, ++dy.y) {
+    for (; sy.y != send.y; ++sy.y, ++dy.y, ++my.y) {
         SrcTraverser sx = sy;
         DestTraverser dx = dy;
+        MaskTraverser mx = my;
 
-        for (; sx.x != send.x; ++sx.x, ++dx.x) {
-            DestVectorType r;
+        for (; sx.x != send.x; ++sx.x, ++dx.x, ++mx.x) {
+            if (ma(mx)) {
+                DestVectorType r;
 
-            PyramidVectorIterator pvi = sa(sx).begin();
-            DestVectorIterator dvi = r.begin();
-            for (; dvi != r.end(); ++dvi, ++pvi) {
-                *dvi = convertFromPyramidMath<DestPixelType, PyramidPixelType>(*pvi);
+                //PyramidVectorType p = sa(sx);
+                //ColorArgType c;
+                //c[0] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.red());
+                //c[1] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.green());
+                //c[2] = convertFromPyramidMath<DestPixelType, PyramidPixelType>(p.blue());
+                //r = f(c);
+                PyramidVectorIterator pvi = sa(sx).begin();
+                DestVectorIterator dvi = r.begin();
+                for (; dvi != r.end(); ++dvi, ++pvi) {
+                    *dvi = convertFromPyramidMath<DestPixelType, PyramidPixelType>(*pvi);
+                }
+
+                da.set(r, dx);
             }
-
-            da.set(r, dx);
         }
     }
 
 };
 
 // Switch based on vector or scalar image types.
-template <typename DestImageType, typename PyramidImageType>
-inline void copyFromPyramidImage(
+template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
+inline void copyFromPyramidImageIf(
         typename PyramidImageType::const_traverser src_upperleft,
         typename PyramidImageType::const_traverser src_lowerright,
         typename PyramidImageType::ConstAccessor sa,
         typename DestImageType::traverser dest_upperleft,
-        typename DestImageType::Accessor da) {
+        typename DestImageType::Accessor da,
+        typename MaskImageType::const_traverser mask_upperleft,
+        typename MaskImageType::ConstAccessor ma) {
 
     typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar src_is_scalar;
 
-    copyFromPyramidImage<DestImageType, PyramidImageType>(
+    copyFromPyramidImageIf<DestImageType, PyramidImageType, MaskImageType>(
             src_upperleft,
             src_lowerright,
             sa,
             dest_upperleft,
             da,
+            mask_upperleft,
+            ma,
             src_is_scalar());
 };
 
 // Using argument object factory
-template <typename DestImageType, typename PyramidImageType>
-inline void copyFromPyramidImage(
+template <typename DestImageType, typename PyramidImageType, typename MaskImageType>
+inline void copyFromPyramidImageIf(
         triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
-        pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
-    copyFromPyramidImage<DestImageType, PyramidImageType>(
+        pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest,
+        pair<typename MaskImageType::const_traverser, typename MaskImageType::ConstAccessor> mask) {
+    copyFromPyramidImageIf<DestImageType, PyramidImageType, MaskImageType>(
             src.first,
             src.second,
             src.third,
             dest.first,
-            dest.second);
+            dest.second,
+            mask.first,
+            mask.second);
 };
 
 } // namespace enblend

@@ -263,6 +263,259 @@ inline void reduce(bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename DestImageIterator, typename DestAccessor>
+void expand(bool add, bool wraparound,
+        SrcImageIterator src_upperleft,
+        SrcImageIterator src_lowerright,
+        SrcAccessor sa,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da) {
+
+    typedef typename SrcAccessor::value_type PixelType;
+    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+
+    int src_w = src_lowerright.x - src_upperleft.x;
+    int src_h = src_lowerright.y - src_upperleft.y;
+
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    SrcImageIterator sy = src_upperleft;
+    for (int srcy = 0, desty = 0; dy.y != dend.y; ++dy.y, desty++) {
+
+        DestImageIterator dx = dy;
+        SrcImageIterator sx = sy;
+        for (int srcx = 0, destx = 0; dx.x != dend.x; ++dx.x, destx++) {
+
+            RealPixelType p(NumericTraits<RealPixelType>::zero());
+            unsigned int totalContrib = 0;
+
+            if (destx & 1 == 1) {
+                for (int kx = 0; kx <= 1; kx++) {
+                    // kx=0 -> W[-1]
+                    // kx=1 -> W[ 1]
+                    int wIndexA = (kx==0) ? 1 : 3;
+                    int bounded_kx = kx;
+
+                    if (wraparound) {
+                        // Boundary condition - wrap around the image.
+                        // First boundary case cannot happen when destx is odd.
+                        //if (srcx + kx < 0) bounded_kx += src_w;
+                        if (srcx + kx >= src_w) bounded_kx -= src_w;
+                    } else {
+                        // Boundary condition - replicate first and last column.
+                        // First boundary case cannot happen when destx is odd.
+                        //if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+                        if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+                    }
+
+                    if (desty & 1 == 1) {
+                        for (int ky = 0; ky <= 1; ky++) {
+                            // ky=0 -> W[-1]
+                            // ky=1 -> W[ 1]
+                            int wIndexB = (ky==0) ? 1 : 3;
+                            int bounded_ky = ky;
+
+                            // Boundary condition: replicate top and bottom rows.
+                            // First boundary condition cannot happen when desty is odd.
+                            //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
+                        }
+                    }
+                    else {
+                        for (int ky = -1; ky <= 1; ky++) {
+                            // ky=-1 -> W[-2]
+                            // ky= 0 -> W[ 0]
+                            // ky= 1 -> W[ 2]
+                            int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
+                            int bounded_ky = ky;
+
+                            // Boundary condition: replicate top and bottom rows.
+                            if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
+                        }
+                    }
+                }
+            }
+            else {
+                for (int kx = -1; kx <= 1; kx++) {
+                    // kx=-1 -> W[-2]
+                    // kx= 0 -> W[ 0]
+                    // kx= 1 -> W[ 2]
+                    int wIndexA = (kx==-1) ? 0 : ((kx==0) ? 2 : 4); 
+                    int bounded_kx = kx;
+
+                    if (wraparound) {
+                        // Boundary condition - wrap around the image.
+                        if (srcx + kx < 0) bounded_kx += src_w;
+                        if (srcx + kx >= src_w) bounded_kx -= src_w;
+                    } else {
+                        // Boundary condition - replicate first and last column.
+                        if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+                        if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+                    }
+
+                    if (desty & 1 == 1) {
+                        for (int ky = 0; ky <= 1; ky++) {
+                            // ky=0 -> W[-1]
+                            // ky=1 -> W[ 1]
+                            int wIndexB = (ky==0) ? 1 : 3;
+                            int bounded_ky = ky;
+
+                            // Boundary condition: replicate top and bottom rows.
+                            // First boundary condition cannot happen when desty is odd.
+                            //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
+                        }
+                    }
+                    else {
+                        for (int ky = -1; ky <= 1; ky++) {
+                            // ky=-1 -> W[-2]
+                            // ky= 0 -> W[ 0]
+                            // ky= 1 -> W[ 2]
+                            int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
+                            int bounded_ky = ky;
+
+                            // Boundary condition: replicate top and bottom rows.
+                            if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
+                        }
+                    }
+                }
+            }
+
+            p /= (totalContrib / 10000.0);
+
+            // Get dest pixel at dx.
+            RealPixelType pOrig = NumericTraits<PixelType>::toRealPromote(da(dx));
+
+            // Add or subtract p.
+            if (add) pOrig += p;
+            else pOrig -= p;
+
+            // Write back the result.
+            da.set(NumericTraits<PixelType>::fromRealPromote(pOrig), dx);
+
+            if (destx & 1 == 1) {
+                sx.x++;
+                srcx++;
+            }
+        }
+
+        if (desty & 1 == 1) {
+            sy.y++;
+            srcy++;
+        }
+    }
+
+};
+
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename DestImageIterator, typename DestAccessor>
+inline void expand(bool add, bool wraparound,
+        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+        triple<DestImageIterator, DestImageIterator, DestAccessor> dest) {
+    expand(add, wraparound,
+            src.first, src.second, src.third,
+            dest.first, dest.second, dest.third);
+};
+
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        bool wraparound,
+        typename SrcImageType::const_traverser src_upperleft,
+        typename SrcImageType::const_traverser src_lowerright,
+        typename SrcImageType::ConstAccessor sa,
+        typename AlphaImageType::const_traverser alpha_upperleft,
+        typename AlphaImageType::ConstAccessor aa) {
+
+    vector<PyramidImageType*> *gp = new vector<PyramidImageType*>();
+
+    // Size of pyramid level 0
+    int w = src_lowerright.x - src_upperleft.x;
+    int h = src_lowerright.y - src_upperleft.y;
+
+    // Pyramid level 0
+    PyramidImageType *gp0 = new PyramidImageType(w, h);
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid: g0";
+        cout.flush();
+    }
+
+    // Copy src image into gp0, using fixed-point conversions.
+    copyToPyramidImage<SrcImageType, PyramidImageType>(
+            src_upperleft, src_lowerright, sa,
+            gp0->upperLeft(), gp0->accessor());
+
+    gp->push_back(gp0);
+
+    // Make remaining levels.
+    PyramidImageType *lastGP = gp0;
+    AlphaImageType *lastA = NULL;
+    for (unsigned int l = 1; l < numLevels; l++) {
+
+        if (Verbose > 0) {
+            cout << " g" << l;
+            cout.flush();
+        }
+
+        // Size of next level
+        w = (w + 1) >> 1;
+        h = (h + 1) >> 1;
+
+        // Next pyramid level
+        PyramidImageType *gpn = new PyramidImageType(w, h);
+        AlphaImageType *nextA = new AlphaImageType(w, h);
+
+        if (lastA == NULL) {
+            reduce(wraparound,
+                    srcImageRange(*lastGP), maskIter(alpha_upperleft, aa),
+                    destImageRange(*gpn), destImageRange(*nextA));
+        } else {
+            reduce(wraparound,
+                    srcImageRange(*lastGP), maskImage(*lastA),
+                    destImageRange(*gpn), destImageRange(*nextA));
+        }
+
+        gp->push_back(gpn);
+        lastGP = gpn;
+        delete lastA;
+        lastA = nextA;
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
+    }
+
+    return gp;
+
+};
+
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        bool wraparound,
+        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+        pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
+    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+            numLevels, wraparound,
+            src.first, src.second, src.third,
+            alpha.first, alpha.second);
+};
+
 template <typename SrcImageType, typename PyramidImageType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
@@ -327,6 +580,87 @@ inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     return gaussianPyramid<SrcImageType, PyramidImageType>(numLevels,
             wraparound,
             src.first, src.second, src.third);
+};
+
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
+        bool wraparound,
+        typename SrcImageType::const_traverser src_upperleft,
+        typename SrcImageType::const_traverser src_lowerright,
+        typename SrcImageType::ConstAccessor sa,
+        typename AlphaImageType::const_traverser alpha_upperleft,
+        typename AlphaImageType::ConstAccessor aa) {
+
+    // First create a Gaussian pyramid.
+    vector <PyramidImageType*> *gp =
+            gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+                    numLevels, wraparound,
+                    src_upperleft, src_lowerright, sa,
+                    alpha_upperleft, aa);
+
+    if (Verbose > 0) {
+        cout << "Generating Laplacian pyramid:";
+        cout.flush();
+    }
+
+    // For each level, subtract the expansion of the next level.
+    // Stop if there is no next level.
+    for (unsigned int l = 0; l < (numLevels-1); l++) {
+
+        if (Verbose > 0) {
+            cout << " l" << l;
+            cout.flush();
+        }
+
+        expand(false, wraparound,
+                srcImageRange(*((*gp)[l+1])),
+                destImageRange(*((*gp)[l])));
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
+    }
+
+    return gp;
+};
+
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+inline vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
+        bool wraparound,
+        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+        pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
+    return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+            numLevels, wraparound,
+            src.first, src.second, src.third,
+            alpha.first, alpha.second);
+};
+
+template <typename PyramidImageType>
+void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
+
+    if (Verbose > 0) {
+        cout << "Collapsing Laplacian pyramid:";
+        cout.flush();
+    }
+
+    // For each level, add the expansion of the next level.
+    // Work backwards from the smallest level to the largest.
+    for (int l = (p->size()-2); l >= 0; l--) {
+
+        if (Verbose > 0) {
+            cout << " l" << l;
+            cout.flush();
+        }
+
+        expand(true, wraparound,
+                srcImageRange(*((*p)[l+1])),
+                destImageRange(*((*p)[l])));
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
+    }
+
 };
 
 } // namespace enblend
