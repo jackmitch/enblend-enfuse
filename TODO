@@ -1,13 +1,9 @@
 - Nadir and Zenith in 360x360 panos.
 
-- Fix nearest feature transform to be aware of wraparound.
-
 - Allow users to provide their own blending masks. Have an option to write out
   the mask that enblend calculates to a TIFF file.
 
 - Support multilayer TIFFs.
-
-- Support 16-bit TIFFs.
 
 - Stitching discrepancy avoidance in mask creation.
 

@@ -16,6 +16,11 @@ You should have received a copy of the GNU General Public License
 along with Enblend; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+Enblend uses the VIGRA computer vision library.
+VIGRA is Copyright 1998-2002 by Ullrich Koethe
+Cognitive Systems Group, University of Hamburg, Germany
+Please see the file VIGRA_LICENSE for details.
+
                         ENBLEND
 
 Enblend is a tool for compositing images using a Burt & Adelson multiresolution
@@ -29,13 +34,15 @@ features. Clouds and sky are the opposite. These features have to be blended
 across a wide transition zone because any sudden change in color will be
 immediately noticeable.
 
-Enblend expects each input TIFF to be the same size. The alpha channel should
-indicate the region of the file that has valid image data. Enblend compares
-the alpha regions in the input files to find the areas where images overlap.
+Enblend expects each input TIFF to have an alpha channel. The alpha channel
+should indicate the region of the file that has valid image data. Enblend
+compares the alpha regions in the input files to find the areas where images
+overlap. Alpha channels can be used to indicate to Enblend that certain
+portions of an input image should not contribute to the final image.
 
 Enblend does not align images for you. Use a tool like Hugin or PanoTools
-to do this. The multiple TIFFs produced by these programs are exactly what
-enblend is designed to work with.
+to do this. The TIFFs produced by these programs are exactly what Enblend is
+designed to work with.
 
                         INSTALLATION
 
