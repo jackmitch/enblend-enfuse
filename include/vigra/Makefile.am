@@ -3,6 +3,7 @@ EXTRA_DIST = accessor.hxx \
              basicimage.hxx \
              basicimageview.hxx \
              bordertreatment.hxx \
+             cachedfileimage.hxx \
              codec.hxx \
              colorconversions.hxx \
              combineimages.hxx \
@@ -48,6 +49,7 @@ EXTRA_DIST = accessor.hxx \
              rgbvalue.hxx \
              seededregiongrowing.hxx \
              separableconvolution.hxx \
+             stdcachedfileimage.hxx \
              stdconvolution.hxx \
              stdimagefunctions.hxx \
              stdimage.hxx \
