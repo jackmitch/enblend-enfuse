@@ -19,7 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
- 
+/* Modifications by Andrew Mihal as of 10 October 2004: 
+ *  - bugfix to initAveraging from vigra 1.3
+ */
  
 #ifndef VIGRA_SEPARABLECONVOLUTION_HXX
 #define VIGRA_SEPARABLECONVOLUTION_HXX
@@ -1567,7 +1569,8 @@ void Kernel1D<ARITHTYPE>::initAveraging(int radius,
     kernel_.erase(kernel_.begin(), kernel_.end());
     kernel_.reserve(radius*2+1);
     
-    for(i=0; i<=radius*2+1; ++i)
+    // MIHAL bugfix from vigra 1.3
+    for(int i=0; i<=radius*2+1; ++i)
     {
         kernel_.push_back(scale * norm);
     }

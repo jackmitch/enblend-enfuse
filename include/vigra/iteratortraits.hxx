@@ -19,7 +19,10 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
- 
+/* Modifications by Andrew Mihal as of 10 October 2004:
+ *  - added typenames to IteratorTraits<Iterator>::DefaultAccessor()
+ *    for compilation with gcc-3.4.2
+ */
  
 #ifndef VIGRA_ITERATORTRAITS_HXX
 #define VIGRA_ITERATORTRAITS_HXX
@@ -446,7 +449,7 @@ srcIter(Iterator const & upperleft)
 {
     return pair<Iterator, typename IteratorTraits<Iterator>::DefaultAccessor>(
                   upperleft,
-                  IteratorTraits<Iterator>::DefaultAccessor());
+                  typename IteratorTraits<Iterator>::DefaultAccessor());
 }
 
 template <class Iterator>
@@ -456,7 +459,7 @@ srcIterRange(Iterator const & upperleft, Iterator const & lowerright)
     return triple<Iterator, Iterator, 
                   typename IteratorTraits<Iterator>::DefaultAccessor>(
                   upperleft, lowerright, 
-                  IteratorTraits<Iterator>::DefaultAccessor());
+                  typename IteratorTraits<Iterator>::DefaultAccessor());
 }
 
 template <class Iterator>
@@ -465,7 +468,7 @@ maskIter(Iterator const & upperleft)
 {
     return pair<Iterator, typename IteratorTraits<Iterator>::DefaultAccessor>(
                   upperleft,
-                  IteratorTraits<Iterator>::DefaultAccessor());
+                  typename IteratorTraits<Iterator>::DefaultAccessor());
 }
 
 template <class Iterator>
@@ -474,7 +477,7 @@ destIter(Iterator const & upperleft)
 {
     return pair<Iterator, typename IteratorTraits<Iterator>::DefaultAccessor>(
                   upperleft,
-                  IteratorTraits<Iterator>::DefaultAccessor());
+                  typename IteratorTraits<Iterator>::DefaultAccessor());
 }
 
 template <class Iterator>
@@ -484,7 +487,7 @@ destIterRange(Iterator const & upperleft, Iterator const & lowerright)
     return triple<Iterator, Iterator, 
                   typename IteratorTraits<Iterator>::DefaultAccessor>(
                   upperleft, lowerright, 
-                  IteratorTraits<Iterator>::DefaultAccessor());
+                  typename IteratorTraits<Iterator>::DefaultAccessor());
 }
 
 //@}

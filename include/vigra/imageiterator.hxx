@@ -19,7 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
-
+/* Modifications by Andrew Mihal as of 10 October 2004
+ *  - added Base:: from vigra 1.3
+ */
 
 #ifndef VIGRA_IMAGEITERATOR_HXX
 #define VIGRA_IMAGEITERATOR_HXX
@@ -975,8 +977,8 @@ class ConstImageIterator
 
     ConstImageIterator & operator=(ImageIterator<PIXELTYPE> const & o)
     {
-        x = o.x;
-        y = o.y;
+        Base::x = o.x;
+        Base::y = o.y;
         return *this;
     }
 };
@@ -1111,8 +1113,8 @@ class ConstStridedImageIterator
         /** Assign mutable iterator */
     ConstStridedImageIterator & operator=(StridedImageIterator<PIXELTYPE> const & o)
     {
-        x = o.x;
-        y = o.y;
+        Base::x = o.x;
+        Base::y = o.y;
         return *this;
     }
 };

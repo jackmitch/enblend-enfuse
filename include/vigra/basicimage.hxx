@@ -19,8 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
-
-
+/* Modifications by Andrew Mihal as of 10 October 2004:
+ * Added a fix to BasicImageIterator from vigra 1.3
+ */
 #ifndef VIGRA_BASICIMAGE_HXX
 #define VIGRA_BASICIMAGE_HXX
 
@@ -293,8 +294,10 @@ class ConstBasicImageIterator
     ConstBasicImageIterator &
     operator=(BasicImageIterator<PIXELTYPE, ITERATOR> const & rhs)
     {
-        x = rhs.x;
-        y = rhs.y;
+        // MIHAL Sun Oct 10 22:42:05 PDT 2004
+        // Added the Base:: from vigra 1.3
+        Base::x = rhs.x;
+        Base::y = rhs.y;
         return *this;
     }
 

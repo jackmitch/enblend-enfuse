@@ -19,7 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
-
+/* Modifications by Andrew Mihal as of 10 October 2004:
+ * - added BaseType:: from vigra 1.3
+ */
 
 #ifndef VIGRA_TINYVECTOR_HXX
 #define VIGRA_TINYVECTOR_HXX
@@ -503,7 +505,9 @@ class TinyVector
     explicit TinyVector(value_type const & initial)
     : BaseType()
     {
-        Loop::assignScalar(begin(), initial);
+        // MIHAL Sun Oct 10 22:45:12 PDT 2004
+        // added BaseType:: from vigra 1.3
+        Loop::assignScalar(BaseType::begin(), initial);
     }
 
         /** Construction with explicit values.
@@ -512,8 +516,8 @@ class TinyVector
     TinyVector(value_type const & i1, value_type const & i2)
     : BaseType()
     {
-        data_[0] = i1;
-        data_[1] = i2;
+        BaseType::data_[0] = i1;
+        BaseType::data_[1] = i2;
     }
 
         /** Construction with explicit values.
@@ -522,9 +526,9 @@ class TinyVector
     TinyVector(value_type const & i1, value_type const & i2, value_type const & i3)
     : BaseType()
     {
-        data_[0] = i1;
-        data_[1] = i2;
-        data_[2] = i3;
+        BaseType::data_[0] = i1;
+        BaseType::data_[1] = i2;
+        BaseType::data_[2] = i3;
     }
 
         /** Construction with explicit values.
@@ -534,10 +538,10 @@ class TinyVector
                value_type const & i3, value_type const & i4)
     : BaseType()
     {
-        data_[0] = i1;
-        data_[1] = i2;
-        data_[2] = i3;
-        data_[3] = i4;
+        BaseType::data_[0] = i1;
+        BaseType::data_[1] = i2;
+        BaseType::data_[2] = i3;
+        BaseType::data_[3] = i4;
     }
 
        /** Default constructor (initializes all components with zero)
@@ -545,7 +549,7 @@ class TinyVector
     TinyVector()
     : BaseType()
     {
-        Loop::assignScalar(data_, NumericTraits<value_type>::zero());
+        Loop::assignScalar(BaseType::data_, NumericTraits<value_type>::zero());
     }
 
         /** Copy constructor.
@@ -553,14 +557,14 @@ class TinyVector
     TinyVector(TinyVector const & r)
     : BaseType()
     {
-        Loop::assign(data_, r.data_);
+        Loop::assign(BaseType::data_, r.data_);
     }
 
         /** Copy assignment.
         */
     TinyVector & operator=(TinyVector const & r)
     {
-        Loop::assign(data_, r.data_);
+        Loop::assign(BaseType::data_, r.data_);
         return *this;
     }
 
@@ -570,7 +574,7 @@ class TinyVector
     TinyVector(TinyVectorBase<U, SIZE, DATA, DERIVED> const & r)
     : BaseType()
     {
-		Loop::assignCast(data_, r.begin());
+		Loop::assignCast(BaseType::data_, r.begin());
     }
 
         /** Copy assignment with type conversion.
@@ -578,7 +582,7 @@ class TinyVector
     template <class U, class DATA, class DERIVED>
     TinyVector & operator=(TinyVectorBase<U, SIZE, DATA, DERIVED> const & r)
     {
-		Loop::assignCast(data_, r.begin());
+		Loop::assignCast(BaseType::data_, r.begin());
         return *this;
     }
 
@@ -634,7 +638,7 @@ class TinyVectorView
     TinyVectorView()
     : BaseType()
     {
-        data_ = 0;
+        BaseType::data_ = 0;
     }
 
         /** Construct view for given data array
@@ -642,7 +646,7 @@ class TinyVectorView
     TinyVectorView(const_pointer data)
     : BaseType()
     {
-        data_ = const_cast<pointer>(data);
+        BaseType::data_ = const_cast<pointer>(data);
     }
 
         /** Copy constructor (shallow copy).
@@ -650,7 +654,7 @@ class TinyVectorView
     TinyVectorView(TinyVectorView const & other)
     : BaseType()
     {
-        data_ = const_cast<pointer>(other.data_);
+        BaseType::data_ = const_cast<pointer>(other.data_);
     }
 
         /** Construct view from other TinyVector.
@@ -659,14 +663,14 @@ class TinyVectorView
     TinyVectorView(TinyVectorBase<T, SIZE, DATA, DERIVED> const & other)
     : BaseType()
     {
-        data_ = const_cast<pointer>(other.data_);
+        BaseType::data_ = const_cast<pointer>(other.data_);
     }
 
         /** Copy the data (not the pointer) of the rhs.
         */
    TinyVectorView & operator=(TinyVectorView const & r)
     {
-        Loop::assign(data_, r.begin());
+        Loop::assign(BaseType::data_, r.begin());
         return *this;
     }
 
@@ -675,7 +679,7 @@ class TinyVectorView
     template <class U, class DATA, class DERIVED>
     TinyVectorView & operator=(TinyVectorBase<U, SIZE, DATA, DERIVED> const & r)
     {
-        Loop::assignCast(data_, r.begin());
+        Loop::assignCast(BaseType::data_, r.begin());
         return *this;
     }
 };

@@ -26,8 +26,7 @@
 #include <vigra/iteratortraits.hxx>
 #include <vigra/accessor.hxx>
 #include <vigra/rgbvalue.hxx>
-
-#include <vigra_ext/cachedfileimage.hxx>
+#include <vigra/cachedfileimage.hxx>
 
 namespace vigra {
 

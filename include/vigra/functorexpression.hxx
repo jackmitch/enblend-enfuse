@@ -19,6 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Andrew Mihal as on 10 October 2004:
+ * - bugfix for IfThenElseFunctor operator()()
+ */
  
 #ifndef VIGRA_FUNCTOREXPRESSION_HXX 
 #define VIGRA_FUNCTOREXPRESSION_HXX 
@@ -984,13 +987,15 @@ struct IfThenElseFunctor
     typename ResultTraits0<IfThenElseFunctor>::Res 
     operator()() const 
     {
+        // MIHAL Sun Oct 10 23:05:40 PDT 2004
+        // there is no v1 in this context.
         typename 
             ResultTraits0<IfThenElseFunctor>::Res 
-            r2(expr2_(v1));
+            r2(expr2_(/*v1*/));
         typename 
             ResultTraits0<IfThenElseFunctor>::Res 
-            r3(expr3_(v1));
-        return expr1_(v1) ? r2 : r3;
+            r3(expr3_(/*v1*/));
+        return expr1_(/*v1*/) ? r2 : r3;
     }
 
     template <class T> 

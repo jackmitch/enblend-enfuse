@@ -377,7 +377,7 @@ public:
         d.x += dx;
         d.y += dy;
         if (d.x >= width) {++d.y; d.x -= width;}
-        if (d.x < 0) {--dy.y; d.x += width;}
+        if (d.x < 0) {--d.y; d.x += width;}
     }
 
 };
@@ -448,7 +448,7 @@ public:
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator->() const {
-        BOOST_STATIC_ASSERT(false);
+        //BOOST_STATIC_ASSERT(false);
         return (*i)[y] + x;
     }
 
@@ -462,7 +462,7 @@ public:
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator[](int dy) const {
-        BOOST_STATIC_ASSERT(false);
+        //BOOST_STATIC_ASSERT(false);
         return (*i)[y + dy] + x;
     }
 
@@ -538,9 +538,9 @@ public:
     ConstCachedFileImageIterator &
     operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
     {
-        x = rhs.x;
-        y = rhs.y;
-        i = rhs.i;
+        Base::x = rhs.x;
+        Base::y = rhs.y;
+        Base::i = rhs.i;
         return *this;
     }
 
@@ -657,13 +657,13 @@ public:
 
     // FIXME - needs to return a weak_ptr
     pointer operator[](int dy) {
-        BOOST_STATIC_ASSERT(false);
+        //BOOST_STATIC_ASSERT(false);
         return getLinePointerDirty(dy);
     }
 
     // FIXME - needs to return a weak_ptr
     const_pointer operator[](int dy) const {
-        BOOST_STATIC_ASSERT(false);
+        //BOOST_STATIC_ASSERT(false);
         return getLinePointer(dy);
     }
 
