@@ -30,8 +30,6 @@
 #include <string.h>
 
 #include "common.h"
-#include "assemble.h"
-#include "mask.h"
 #include "enblend.h"
 
 #include "vigra/impex.hxx"

@@ -35,6 +35,7 @@
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
 #include "vigra/inspectimage.hxx"
+#include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 
 using namespace std;
@@ -47,6 +48,7 @@ using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
 using vigra::inspectImageIf;
+using vigra::NumericTraits;
 using vigra::Threshold;
 using vigra::transformImage;
 
@@ -63,6 +65,7 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
 
     typedef typename AlphaType::PixelType AlphaPixelType;
     typedef typename AlphaType::Iterator AlphaIteratorType;
+    typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
     if (imageInfoList.empty()) return NULL;
@@ -93,10 +96,10 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
     // Mask off pixels that are not totally opaque.
     transformImage(srcImageRange(imageA), destImage(imageA),
             Threshold<AlphaPixelType, AlphaPixelType>(
-                    GetMaxAlpha<AlphaPixelType>(),
-                    GetMaxAlpha<AlphaPixelType>(),
-                    0,
-                    GetMaxAlpha<AlphaPixelType>()
+                    NumericTraits<AlphaPixelType>::max(),
+                    NumericTraits<AlphaPixelType>::max(),
+                    NumericTraits<AlphaPixelType>::zero(),
+                    NumericTraits<AlphaPixelType>::max()
             )
     );
 
@@ -118,10 +121,10 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
             // Mask off pixels that are not totally opaque.
             transformImage(srcImageRange(srcA), destImage(srcA),
                     Threshold<AlphaPixelType, AlphaPixelType>(
-                            GetMaxAlpha<AlphaPixelType>(),
-                            GetMaxAlpha<AlphaPixelType>(),
-                            0,
-                            GetMaxAlpha<AlphaPixelType>()
+                            NumericTraits<AlphaPixelType>::max(),
+                            NumericTraits<AlphaPixelType>::max(),
+                            NumericTraits<AlphaPixelType>::zero(),
+                            NumericTraits<AlphaPixelType>::max()
                     )
             );
 
@@ -129,14 +132,15 @@ ImageImportInfo *assemble(list<ImageImportInfo*> &imageInfoList,
             bool overlapFound = false;
             AlphaIteratorType dy =
                     imageA.upperLeft() - inputUnion.getUL() + info->getPosition();
+            AlphaAccessor da = imageA.accessor();
             AlphaIteratorType sy = srcA.upperLeft();
             AlphaIteratorType send = srcA.lowerRight();
+            AlphaAccessor sa = srcA.accessor();
             for(; sy.y != send.y; ++sy.y, ++dy.y) {
                 AlphaIteratorType sx = sy;
                 AlphaIteratorType dx = dy;
                 for(; sx.x != send.x; ++sx.x, ++dx.x) {
-                    if (*sx == GetMaxAlpha<AlphaPixelType>()
-                            && *dx == GetMaxAlpha<AlphaPixelType>()) {
+                    if (sa(sx) && da(dx)) {
                         overlapFound = true;
                         break;
                     }

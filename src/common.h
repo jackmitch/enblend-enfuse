@@ -40,7 +40,7 @@
 //    int16 a;
 //} LPPixel;
 
-template<typename T1> T1 GetMaxAlpha();
+//template<typename T1> T1 GetMaxAlpha();
 
 typedef vigra_ext::ROI<vigra::Diff2D> EnblendROI;
 

@@ -27,6 +27,8 @@
 #include <iostream>
 
 #include "common.h"
+#include "nearest.h"
+
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
@@ -58,15 +60,15 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
         ImageImportInfo *blackImageInfo,
         EnblendROI &inputUnion,
         EnblendROI &uBB,
-        EnblendROI &iBB) {
+        EnblendROI &iBB,
+        bool overlap) {
 
-    typedef typename AlphaType::PixelType AlphaPixelType;
+    typedef typename MaskType::PixelType MaskPixelType;
 
     // Mask initializer pixel values:
-    // 0 = outside both black and white image.
+    // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
-    // 2 = inside black image only.
-    // 3 = inside both images.
+    // 255 = inside black image only.
     BImage maskInit(uBB.size());
 
     ImageType *image = new ImageType(inputUnion.size());
@@ -87,30 +89,34 @@ ImageImportInfo *mask(ImageImportInfo *whiteImageInfo,
             destImage(*image),
             destImage(*imageA));
 
-    // maskInit = maskInit + 2 at all pixels where blackImage contributes.
+    // maskInit = maskInit + 255 at all pixels where blackImage contributes.
+    // if whiteImage also contributes, this wraps around to zero.
     transformImageIf(srcImageRange(maskInit),
             maskIter(imageA->upperLeft() + uBB.getUL()),
             destImage(maskInit),
-            linearIntensityTransform(1, 2));
+            linearIntensityTransform(1, 255));
 
     // mem xsection = ImageType*os + AlphaType*os + BImage*uBB
     delete image;
     delete imageA;
 
     // Do mask transform here.
-    // replaces 0 and 3 areas with either 1 or 2.
+    // replaces 0 areas with either 1 or 255.
+    BImage maskTransform(uBB.size());
+    nearestFeatureTransform(srcImageRange(maskInit),
+            destImage(maskTransform));
 
     MaskType mask(uBB.size());
-    // mem xsection = BImage*uBB + MaskType*uBB
+    // mem xsection = 2 * BImage*uBB + MaskType*uBB
 
     // Dump maskInit into mask
-    // maskInit = 1 then mask = max value - white image
-    // maskInit = 2 then mask = zero - black image
-    transformImage(srcImageRange(maskInit),
+    // maskInit = 1 then mask = max value (white image)
+    // maskInit = other then mask = zero - (black image)
+    transformImage(srcImageRange(maskTransform),
             destImage(mask),
             ifThenElse(Arg1() == Param(1),
-                    Param(GetMaxAlpha<AlphaPixelType>()),
-                    Param(NumericTraits<AlphaPixelType>::zero())));
+                    Param(NumericTraits<MaskPixelType>::max()),
+                    Param(NumericTraits<MaskPixelType>::zero())));
 
     char tmpFilename[] = ".enblend_mask_XXXXXX";
     int tmpFD = mkstemp(tmpFilename);

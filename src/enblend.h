@@ -27,6 +27,9 @@
 #include <iostream>
 #include <list>
 
+#include "assemble.h"
+#include "mask.h"
+
 #include "common.h"
 #include "vigra/impex.hxx"
 
@@ -49,8 +52,6 @@ void enblend(list<ImageImportInfo*> &imageInfoList,
     cout << "sizeof(alpha_value_type) = " << sizeof(alpha_value_type) << endl;
     cout << "sizeof(mask_value_type) = " << sizeof(mask_value_type) << endl;
     cout << "sizeof(pyramid_value_type) = " << sizeof(pyramid_value_type) << endl;
-
-    cout << "max_alpha=" << (int)GetMaxAlpha<alpha_value_type>() << endl;
 
     // Create the initial white image.
     EnblendROI whiteBB;
@@ -76,7 +77,7 @@ void enblend(list<ImageImportInfo*> &imageInfoList,
         // Create the blend mask.
         ImageImportInfo *maskImageInfo =
                 mask<ImageType, AlphaType, MaskType>(whiteImageInfo, blackImageInfo,
-                        inputUnion, uBB, iBB);
+                        inputUnion, uBB, iBB, overlap);
 
     }
 
