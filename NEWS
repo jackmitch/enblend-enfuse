@@ -44,3 +44,13 @@ April 26, 2004
     - A second (better) fix for the boundary condition problem that lead
       to horizontal or vertical seams to appear in the output.
 
+May 18, 2004
+    Released enblend-1.3
+
+    - Added a configure test for the endian-ness of the machine. I changed
+      the way enblend reads and writes 8-bit color fields in 32-bit pixel
+      words to reflect the endian-ness of the machine. This should get
+      enblend working on powerpc machines.
+
+      This release adds no new features.
+
