@@ -193,6 +193,16 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
+        uint32 bitsPerSample = 0;
+        TIFFGetField(inputTIFF, TIFFTAG_BITSPERSAMPLE, &bitsPerSample);
+        if (bitsPerSample != 8) {
+            cerr << "enblend: input TIFF file \""
+                 << *listIterator
+                 << "\" uses " << bitsPerSample << " bits per sample. "
+                 << "Only 8 bit TIFFs are currently supported." << endl;
+            exit(1);
+        }
+
         if (listIterator == inputFileNameList.begin()) {
             // The first input tiff
             TIFFGetField(inputTIFF, TIFFTAG_PLANARCONFIG, &PlanarConfig);
