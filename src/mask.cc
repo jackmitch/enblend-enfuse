@@ -46,7 +46,7 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
     MaskPixel *mask = (MaskPixel*)calloc(OutputWidth * OutputHeight,
             sizeof(MaskPixel));
     if (mask == NULL) {
-        cerr << "enblend: malloc failed in mask for mask" << endl;
+        cerr << "enblend: out of memory in mask for mask" << endl;
         exit(1);
     }
 

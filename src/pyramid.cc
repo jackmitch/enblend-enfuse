@@ -60,7 +60,7 @@ uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue) {
     // Use internal LPPixel precision data type.
     int16 *f = (int16*)calloc(length, sizeof(int16));
     if (f == NULL) {
-        cerr << "enblend: malloc failed in filterHalfWidth for f" << endl;
+        cerr << "enblend: out of memory in filterHalfWidth for f" << endl;
     }
 
     // input f(x) is the step function u(-x)
@@ -166,7 +166,7 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
 
     LPPixel *out = (LPPixel*)calloc(outW * outH, sizeof(LPPixel));
     if (out == NULL) {
-        cerr << "enblend: malloc failed in reduce for out" << endl;
+        cerr << "enblend: out of memory in reduce for out" << endl;
         exit(1);
     }
 
@@ -244,7 +244,7 @@ vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels) {
     // Build level 0
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
-        cerr << "enblend: malloc failed in gaussianPyramid for g" << endl;
+        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
         exit(1);
     }
 
@@ -301,7 +301,7 @@ vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
     // Build level 0
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
-        cerr << "enblend: malloc failed in gaussianPyramid for g" << endl;
+        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
         exit(1);
     }
 

@@ -91,7 +91,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // column.
     dist_t *dnfColumn = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfColumn == NULL) {
-        cerr << "nearestFeatureTransform: malloc failed for dnfColumn" << endl;
+        cerr << "nearestFeatureTransform: out of memory for dnfColumn" << endl;
         exit(1);
     }
 
@@ -99,7 +99,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
     // column or any column to the left.
     dist_t *dnfLeft = (dist_t*)malloc(ubbPixels * sizeof(dist_t));
     if (dnfLeft == NULL) {
-        cerr << "nearestFeatureTransform: malloc failed for dnfLeft" << endl;
+        cerr << "nearestFeatureTransform: out of memory for dnfLeft" << endl;
         exit(1);
     }
 

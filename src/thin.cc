@@ -121,7 +121,7 @@ void thinMask(MaskPixel *mask) {
 
     qbMapArray = (uint16*)malloc(roiWidth * sizeof(uint16));
     if (qbMapArray == NULL) {
-        cerr << "enblend: malloc failed for qbMapArray" << endl;
+        cerr << "enblend: out of memory for qbMapArray" << endl;
         exit(1);
     }
 

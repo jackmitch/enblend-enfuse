@@ -48,14 +48,14 @@ uint32 *assemble(std::list<char*> &filenames) {
     uint32 *image = (uint32*)_TIFFmalloc(
             OutputWidth * OutputHeight * sizeof(uint32));
     if (image == NULL) {
-        cerr << "enblend: malloc failed in assemble for image." << endl;
+        cerr << "enblend: out of memory in assemble for image." << endl;
         exit(1);
     }
     memset(image, 0, OutputWidth * OutputHeight * sizeof(uint32));
 
     uint32 *scanline = (uint32*)calloc(OutputWidth, sizeof(uint32));
     if (scanline == NULL) {
-        cerr << "enblend: malloc failed in assemble for scanline." << endl;
+        cerr << "enblend: out of memory in assemble for scanline." << endl;
         exit(1);
     }
 

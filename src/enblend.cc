@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
                 int len = strlen(optarg) + 1;
                 outputFileName = (char*)malloc(len * sizeof(char));
                 if (outputFileName == NULL) {
-                    cerr << "enblend: malloc failed for outputFileName" << endl;
+                    cerr << "enblend: out of memory for outputFileName" << endl;
                     exit(1);
                 }
                 strncpy(outputFileName, optarg, len);
@@ -180,6 +180,15 @@ int main(int argc, char** argv) {
             TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
             TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
 
+            // We already forced this to be a 4-channel-per pixel (above), so 
+            // make the fourth channel be alpha if RGB image (see tiff spec)
+            // If not specified, Photoshop doesn't open up with transparent area
+            if (photometric == PHOTOMETRIC_RGB) {
+                uint16 v[1];				
+                v[0] = EXTRASAMPLE_ASSOCALPHA;
+                TIFFSetField(outputTIFF, TIFFTAG_EXTRASAMPLES, 1, v);
+            }			
+
             if (Verbose > 0) {
                 cout << "output size = "
                      << OutputWidth
@@ -213,15 +222,19 @@ int main(int argc, char** argv) {
 
     // Create the initial white image.
     uint32 *whiteImage = assemble(inputFileNameList);
+    // mem = 1 fullsize uint32
 
     // Main blending loop
     while (!inputFileNameList.empty()) {
 
         // Create the black image.
         uint32 *blackImage = assemble(inputFileNameList);
+        // mem = 2 fullsize uint32
 
         // Create the blend mask.
         MaskPixel *mask = createMask(whiteImage, blackImage);
+        // mem = 2 fullsize uint32 + fullsize MaskPixel + 2 ubb uint32
+        // mem = 2 fullsize uint32 + fullsize MaskPixel
 
         // Calculate the ROI bounds and number of levels.
         uint32 maximumLevels = bounds(mask);
@@ -231,17 +244,21 @@ int main(int argc, char** argv) {
 
         // Build Laplacian pyramid from blackImage
         vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
+        // mem = 2 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
         //savePyramid(*blackLP, "black");
 
         // Free allocated memory.
         _TIFFfree(blackImage);
+        // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
 
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
+        // mem = 1 fullsize uint32 + fullsize MaskPixel + 8/3 roi LPPixel
         //savePyramid(*maskGP, "mask");
 
         // Build Laplacian pyramid from whiteImage
         vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
+        // mem = 1 fullsize uint32 + fullsize MaskPixel + 12/3 roi LPPixel
         //savePyramid(*whiteLP, "white");
 
         // Blend pyramids
@@ -254,15 +271,18 @@ int main(int argc, char** argv) {
         }
         delete maskGP;
         delete blackLP;
+        // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
 
         // Collapse result back into whiteImage.
         collapsePyramid(*whiteLP, whiteImage, mask);
 
         free(mask);
+        // mem = 1 fullsize uint32 + 4/3 roi LPPixel
         for (uint32 i = 0; i < maximumLevels; i++) {
             free((*whiteLP)[i]);
         }
         delete whiteLP;
+        // mem = 1 fullsize uint32
 
     }
 
