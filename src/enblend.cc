@@ -232,32 +232,37 @@ int main(int argc, char** argv) {
             maximumLevels++;
         }
 
+        // Build Laplacian pyramid from blackImage
+        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
+
+        // Free allocated memory.
+        _TIFFfree(blackImage);
+
         // Build Gaussian pyramid from mask.
         vector<LPPixel*> *maskGP = gaussianPyramid(mask, maximumLevels);
 
         // Build Laplacian pyramid from whiteImage
         vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, maximumLevels);
 
-        // Build Laplacian pyramid from blackImage
-        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, maximumLevels);
-
         // Blend pyramids
         blend(*whiteLP, *blackLP, *maskGP);
+
+        // Free allocated memory.
+        for (uint32 i = 0; i < maximumLevels; i++) {
+            free((*maskGP)[i]);
+            free((*blackLP)[i]);
+        }
+        delete maskGP;
+        delete blackLP;
 
         // Collapse result back into whiteImage.
         collapsePyramid(*whiteLP, whiteImage, mask);
 
-        // Free allocated memory.
-        _TIFFfree(blackImage);
         free(mask);
         for (uint32 i = 0; i < maximumLevels; i++) {
-            free((*maskGP)[i]);
             free((*whiteLP)[i]);
-            free((*blackLP)[i]);
         }
-        delete maskGP;
         delete whiteLP;
-        delete blackLP;
 
     }
 
