@@ -1090,7 +1090,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
                           * (LONGLONG)sizeof(PIXELTYPE);
         LARGE_INTEGER liOffset;
         liOffset.QuadPart = offset;
-        if (0 == SetFilePointerEx(hTempFile_, liOffset, NULL, FILE_BEGIN)) {
+        if (0 == SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN)) {
             // TODO (jbeda): format a real message here using FormatMessage 
             // from GetLastError
             vigra_fail("Unable to open temporary file");
@@ -1231,7 +1231,7 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
                           * (LONGLONG)sizeof(PIXELTYPE);
         LARGE_INTEGER liOffset;
         liOffset.QuadPart = offset;
-        if (0 == SetFilePointerEx(hTempFile_, liOffset, NULL, FILE_BEGIN)) {
+        if (0 == SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN)) {
             // TODO (jbeda): format a real message here using FormatMessage 
             // from GetLastError
             vigra_fail("Unable to open temporary file");
