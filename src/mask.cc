@@ -22,6 +22,7 @@
 #endif
 
 #include <iostream>
+#include <stdlib.h>
 #include <tiffio.h>
 
 #include "enblend.h"
@@ -31,12 +32,15 @@ using namespace std;
 extern int Verbose;
 extern uint32 OutputWidth;
 extern uint32 OutputHeight;
+extern double StitchMismatchThreshold;
+
+// Region of interest for this operation.
+extern uint32 ROIFirstX;
+extern uint32 ROILastX;
+extern uint32 ROIFirstY;
+extern uint32 ROILastY;
 
 /** Calculate a blending mask between outputBuf and inputTIFF.
- *
- *  Based on an algorithm in "Efficient Binary Image Thinning Using
- *  Neighborhood Maps" by Joseph M. Cychosz, from "Graphics Gems IV",
- *  ed. Paul Heckbert. Academic Press, Inc. 1994.
  */
 uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
 
@@ -48,6 +52,12 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
         exit(1);
     }
 
+    // Region of interest boundaries
+    ROIFirstX = OutputWidth - 1;
+    ROILastX = 0;
+    ROIFirstY = OutputHeight - 1;
+    ROILastY = 0;
+
     for (uint32 i = 0; i < OutputHeight; i++) {
         TIFFReadScanline(inputTIFF,
                 &(mask[i * OutputWidth]),
@@ -58,27 +68,79 @@ uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF) {
             uint32 outPixel = outputBuf[(i * OutputWidth) + j];
             uint32 inPixel = mask[(i * OutputWidth) + j];
 
+            if (outPixel != 0 || inPixel != 0) {
+                // Pixel is in region of interest.
+                ROIFirstX = min(j, ROIFirstX);
+                ROILastX = max(j, ROILastX);
+                ROIFirstY = min(i, ROIFirstY);
+                ROILastY = max(i, ROILastY);
+            }
+
             if (outPixel == 0 && inPixel == 0) {
                 // Pixel is not in the union of the two images.
                 // Make the mask pixel black.
-                mask[(i * OutputWidth) + j] = 0xFF000000;
+                mask[(i * OutputWidth) + j] = BLACK;
             }
             else if (outPixel != 0 && inPixel == 0) {
                 // Pixel is in out only.
                 // Make the mask pixel blue.
-                mask[(i * OutputWidth) + j] = 0xFFFF0000;
+                mask[(i * OutputWidth) + j] = BLUE;
             }
             else if (outPixel == 0 && inPixel != 0) {
                 // Pixel is in input only.
                 // Make the mask pixel green.
-                mask[(i * OutputWidth) + j] = 0xFF00FF00;
+                mask[(i * OutputWidth) + j] = GREEN;
             }
             else {
                 // Pixel is in the intersection of the two images.
+
+                /* FIXME stitch mismatch avoidance is broken.
+                // Calculate the stitch mismatch at this pixel.
+                double rDiff = abs((int32)TIFFGetR(outPixel) - (int32)TIFFGetR(inPixel))
+                        / 255.0;
+                double bDiff = abs((int32)TIFFGetB(outPixel) - (int32)TIFFGetB(inPixel))
+                        / 255.0;
+                double gDiff = abs((int32)TIFFGetG(outPixel) - (int32)TIFFGetG(inPixel))
+                        / 255.0;
+
+                if (rDiff > StitchMismatchThreshold
+                        || bDiff > StitchMismatchThreshold
+                        || gDiff > StitchMismatchThreshold) {
+                    // Make the mask pixel red.
+                    mask[(i * OutputWidth) + j] = RED;
+                } else {
+                    // Make the mask pixel black.
+                    mask[(i * OutputWidth) + j] = BLACK;
+                }
+                */
+
                 // Make the mask pixel black.
-                //TODO: red if different above threshold.
-                mask[(i * OutputWidth) + j] = 0xFF000000;
+                mask[(i * OutputWidth) + j] = BLACK;
+
             }
+        }
+    }
+
+    // Run the thinning transform on the mask inside the ROI.
+    // This will replace the black pixels with either green or blue
+    // based on how close each pixel is to a green or blue region.
+    thinMask(mask);
+
+    // Swap blue for white and green for black.
+    // Only needs to be done within region of interest.
+    // Outside ROI make mask transparent.
+    for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
+        uint32 x = i % OutputWidth;
+        uint32 y = i / OutputWidth;
+        if (x < ROIFirstX || x > ROILastX
+                || y < ROIFirstY || y > ROILastY) {
+            mask[i] = TRANS;
+        }
+        else if (mask[i] == BLUE) {
+            mask[i] = WHITE;
+        }
+        else if (mask[i] == GREEN) {
+            mask[i] = BLACK;
         }
     }
 

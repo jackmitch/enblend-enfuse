@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <list>
+#include <vector>
 
 #include <getopt.h>
 #include <string.h>
@@ -32,9 +33,17 @@
 
 using namespace std;
 
+// Global values from command line parameters.
 int Verbose = 0;
 uint32 OutputWidth = 0;
 uint32 OutputHeight = 0;
+double StitchMismatchThreshold = 0.4;
+
+// The region of interest for the current operation.
+uint32 ROIFirstX;
+uint32 ROILastX;
+uint32 ROIFirstY;
+uint32 ROILastY;
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {
@@ -43,6 +52,8 @@ void printUsageAndExit() {
     cout << endl;
     cout << "Options:" << endl;
     cout << " -o filename       Write output to file" << endl;
+    //FIXME stitch mismatch avoidance is broken.
+    //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -h                Print this help message" << endl;
     exit(1);
@@ -61,7 +72,7 @@ int main(int argc, char** argv) {
     int c;
     extern char *optarg;
     extern int optind;
-    while ((c = getopt(argc, argv, "o:vh")) != -1) {
+    while ((c = getopt(argc, argv, "o:t:vh")) != -1) {
         switch (c) {
             case 'h': {
                 printUsageAndExit();
@@ -69,6 +80,15 @@ int main(int argc, char** argv) {
             }
             case 'v': {
                 Verbose++;
+                break;
+            }
+            case 't': {
+                StitchMismatchThreshold = strtod(optarg, NULL);
+                if (StitchMismatchThreshold < 0.0 || StitchMismatchThreshold > 1.0) {
+                    cerr << "enblend: threshold must be between 0.0 and 1.0 inclusive."
+                         << endl;
+                    printUsageAndExit();
+                }
                 break;
             }
             case 'o': {
@@ -241,15 +261,57 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        // Create blend mask.
+        // Create blend mask. Black pixels are the inputTIFF zone,
+        // White pixels are the outputBuf zone
         uint32 *mask = createMask(outputBuf, inputTIFF);
 
-        // blend into outputBuf.
-        outputBuf = mask;
+        // Count max number of levels we can make from ROI size.
+        int32 shortDimension = min(ROILastX - ROIFirstX + 1,
+                ROILastY - ROIFirstY + 1);
+        if (shortDimension < 4) {
+            cerr << "enblend: union of images is too small to make even one pyramid."
+                 << endl;
+            exit(1);
+        }
+        int32 maximumLevels = 1;
+        while (shortDimension > 8) {
+            shortDimension = shortDimension >> 1;
+            maximumLevels++;
+        }
+
+        // Build Gaussian pyramid from mask.
+        vector<uint32*> *maskPyramid = gaussianPyramid(mask, maximumLevels);
+
+        // TODO: find a good level to stop at where the blending zone does not
+        // overrun the overlap zone too much.
+
+        // Build Laplacian pyramid from outputBuf
+        vector<uint32*> *outputLP = laplacianPyramid(outputBuf, maximumLevels);
+
+        // Build Laplacian pyramid from inputTIFF
+        vector<uint32*> *inputLP = laplacianPyramid(inputTIFF, maximumLevels);
+
+        // blend.
+        blend(maskPyramid, inputLP, outputLP);
+
+        // collapse result into outputBuf
+        collapsePyramid(outputLP, outputBuf);
 
         TIFFClose(inputTIFF);
 
         //_TIFFfree(mask);
+
+        for (int32 i = 0; i < maximumLevels; i++) {
+            uint32 *g = (*maskPyramid)[i];
+            free(g);
+            g = (*outputLP)[i];
+            free(g);
+            g = (*inputLP)[i];
+            free(g);
+        }
+        delete maskPyramid;
+        delete outputLP;
+        delete inputLP;
 
         //TODO: sort list again.
     }

@@ -20,6 +20,27 @@
 #ifndef __ENBLEND_H__
 #define __ENBLEND_H__
 
+#include <tiffio.h>
+#include <vector>
+
 uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF);
+
+void thinMask(uint32 *mask);
+
+std::vector<uint32*> *gaussianPyramid(uint32 *mask, int32 levels);
+std::vector<uint32*> *laplacianPyramid(uint32 *image, int32 levels);
+std::vector<uint32*> *laplacianPyramid(TIFF *image, int32 levels);
+void collapsePyramid(std::vector<uint32*> *p, uint32 *dest);
+
+void blend(std::vector<uint32*> *mask,
+        std::vector<uint32*> *inputLP,
+        std::vector<uint32*> *outputLP);
+
+#define WHITE 0xFFFFFFFF
+#define BLACK 0xFF000000
+#define BLUE  0xFFFF0000
+#define GREEN 0xFF00FF00
+#define RED   0xFF0000FF
+#define TRANS 0x00000000
 
 #endif /* __ENBLEND_H__ */
