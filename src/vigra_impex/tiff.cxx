@@ -35,6 +35,8 @@ extern "C"
 #include <tiffio.h>
 }
 
+extern bool GimpAssociatedAlphaHack;
+
 namespace vigra {
 
     CodecDesc TIFFCodecFactory::getCodecDesc() const
@@ -286,7 +288,11 @@ namespace vigra {
 
         if (extra_samples_per_pixel > 0) {
             for (int i=0; i< extra_samples_per_pixel; i++) {
-		if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA)
+                // MIHAL Sun Sep 19 18:00:54 PDT 2004
+                // Suppress warning when using workaround for
+                // Gimp and Cinepaint.
+		if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA
+                        && !GimpAssociatedAlphaHack)
                 {
                     std::cerr << "WARNING: TIFFDecoderImpl::init(): associated alpha treated"
                                  " as unassociated alpha!" << std::endl;
@@ -717,9 +723,16 @@ namespace vigra {
 	if (extra_samples_per_pixel > 0) {
 	    uint16 types[extra_samples_per_pixel];
 	    for ( int i=0; i < extra_samples_per_pixel; i++ ) {
-                // MIHAL
-		//types[i] = EXTRASAMPLE_UNASSALPHA;
-		types[i] = EXTRASAMPLE_ASSOCALPHA;
+                // MIHAL Sun Sep 19 18:00:54 PDT 2004
+                // Workaround for Gimp and Cinepaint.
+                // Cinepaint crashes trying to load unassociated alpha images.
+                // Gimp versions < 2 behave differently loading
+                // assoc vs. unassoc images.
+                if (GimpAssociatedAlphaHack) {
+                    types[i] = EXTRASAMPLE_ASSOCALPHA;
+                } else {
+                    types[i] = EXTRASAMPLE_UNASSALPHA;
+                }
 	    }
 	    TIFFSetField( tiff, TIFFTAG_EXTRASAMPLES, extra_samples_per_pixel,
 			  types );
