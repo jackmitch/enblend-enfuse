@@ -215,17 +215,17 @@ vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels) {
     }
 
     v->push_back(g);
-    levels--;
 
     // Copy image region-of-interest verbatim into g.
+    LPPixel *gIndex = g;
     for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
         for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
             uint32 pixel = image[y * OutputWidth + x];
-            g->r = TIFFGetR(pixel);
-            g->g = TIFFGetG(pixel);
-            g->b = TIFFGetB(pixel);
-            g->a = TIFFGetA(pixel);
-            g++;
+            gIndex->r = TIFFGetR(pixel);
+            gIndex->g = TIFFGetG(pixel);
+            gIndex->b = TIFFGetB(pixel);
+            gIndex->a = TIFFGetA(pixel);
+            gIndex++;
         }
     }
 
@@ -274,14 +274,15 @@ vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
     v->push_back(g);
 
     // Copy image region-of-interest verbatim into g.
+    LPPixel *gIndex = g;
     for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
         for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
             MaskPixel *pixel = &image[y * OutputWidth + x];
-            g->r = pixel->r;
-            g->g = pixel->g;
-            g->b = pixel->b;
-            g->a = pixel->a;
-            g++;
+            gIndex->r = pixel->r;
+            gIndex->g = pixel->g;
+            gIndex->b = pixel->b;
+            gIndex->a = pixel->a;
+            gIndex++;
         }
     }
 
@@ -364,17 +365,15 @@ void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
 
             MaskPixel *maskPixel = &mask[y * OutputWidth + x];
 
-            uint32 p;
             if (maskPixel->a != 255) {
-                p = 0;
+                dest[y * OutputWidth + x] = 0;
             } else {
-                p = (pixel->r & 0xFF)
+                dest[y * OutputWidth + x] =
+                        (pixel->r & 0xFF)
                         | ((pixel->g & 0xFF) << 8)
                         | ((pixel->b & 0xFF) << 16)
                         | ((pixel->a & 0xFF) << 24);
             }
-
-            dest[y * OutputWidth + x] = p;
 
             pixel++;
         }

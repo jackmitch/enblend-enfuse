@@ -251,17 +251,18 @@ int main(int argc, char** argv) {
         _TIFFfree(blackImage);
         free(mask);
         for (uint32 i = 0; i < maximumLevels; i++) {
-            LPPixel *g = (*maskGP)[i];
-            free(g);
-            g = (*whiteLP)[i];
-            free(g);
-            g = (*blackLP)[i];
-            free(g);
+            free((*maskGP)[i]);
+            free((*whiteLP)[i]);
+            free((*blackLP)[i]);
         }
         delete maskGP;
         delete whiteLP;
         delete blackLP;
 
+    }
+
+    if (Verbose > 0) {
+        cout << "Writing output file." << endl;
     }
 
     // dump output scanlines.

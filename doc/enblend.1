@@ -1,0 +1,41 @@
+.TH enblend 1 "March 4, 2004" "" ""
+.SH NAME
+enblend \- combine images using a multiresolution spline
+.SH SYNOPSIS
+.B enblend [-v] -o output-file input-files...
+.SH DESCRIPTION
+.B enblend
+overlays multiple TIFF images using the Burt & Adelson multiresolution spline.
+This technique tries to make the seams between the input images invisible.
+The basic idea is that image features should be blended across a transition
+zone proportional in size to the spatial frequency of the features. For example,
+objects like trees and windowpanes have rapid changes in color. By blending
+these features in a narrow zone, you will not be able to see the seam because
+the eye already expects to see color changes at the edge of these features.
+Clouds and sky are the opposite. These features have to be blended across a
+wide transition zone because any sudden change in color will be immediately
+noticeable.
+
+Enblend expects each input TIFF to be the same size. The alpha channel should
+indicate the region of the file that has valid image data. Enblend compares
+the alpha regions in the input files to find the areas where images overlap.
+
+Enblend does
+.B not
+align images for you. Use a tool like
+.B Hugin
+or
+.B PanoTools
+to do this. The multiple TIFFs produced by these programs are exactly what
+enblend is designed to work with.
+.SH OPTIONS
+.IP -v
+Verbose output
+.IP "-o output-file"
+Required. Specify the name of the output file.
+.IP -h
+Print information on the available options.
+.IP input-files
+Two or more TIFF files.
+.SH AUTHOR
+Andrew Mihal <mihal@eecs.berkeley.edu>

@@ -53,6 +53,10 @@ void blend(std::vector<LPPixel*> &whiteLP,
     // Do each layer individually.
     for (uint32 layer = 0; layer < blackLP.size(); layer++) {
 
+        if (Verbose > 0) {
+            cout << "Blending layer " << layer << endl;
+        }
+
         // Calculate the size of the layer.
         uint32 layerWidth = roiWidth >> layer;
         uint32 layerHeight = roiHeight >> layer;

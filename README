@@ -1,0 +1,64 @@
+Copyright (C) 2004 Andrew Mihal.
+
+This file is part of Enblend.
+
+Enblend is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Enblend is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Enblend; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+                        ENBLEND
+
+Enblend is a tool for compositing images using a Burt & Adelson multiresolution
+spline. This technique tries to make the seams between the input images
+invisible. The basic idea is that image features should be blended across a
+transition zone proportional in size to the spatial frequency of the features.
+For example, objects like trees and windowpanes have rapid changes in color.
+By blending these features in a narrow zone, you will not be able to see the
+seam because the eye already expects to see color changes at the edge of these
+features. Clouds and sky are the opposite. These features have to be blended
+across a wide transition zone because any sudden change in color will be
+immediately noticeable.
+
+Enblend expects each input TIFF to be the same size. The alpha channel should
+indicate the region of the file that has valid image data. Enblend compares
+the alpha regions in the input files to find the areas where images overlap.
+
+Enblend does not align images for you. Use a tool like Hugin or PanoTools
+to do this. The multiple TIFFs produced by these programs are exactly what
+enblend is designed to work with.
+
+                        INSTALLATION
+
+./configure
+make
+make install
+
+See INSTALL for more information.
+
+                        DEMONSTRATION
+
+There are three photographs of Piedmont, California in the demo subdirectory.
+Due to vignetting at the corners of the images, the color of the sky does not
+match up perfectly between the images.
+
+Stitch them together like this:
+
+enblend -v -o out.tif left.tif middle.tif right.tif
+
+The color across the sky should blend perfectly. Also note that in the original
+images, the stitcher was not able to perfectly align all of the houses on
+the hillside. Ad hoc blend techniques require lots of manual effort to
+prevent ghosting in these situations. The multiresolution spline can usually
+prevent this. You should not see any ghosting around the houses, especially
+around windows where there is an abrupt change from light to dark.
+
