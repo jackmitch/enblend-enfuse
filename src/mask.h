@@ -58,7 +58,8 @@ namespace enblend {
 template <typename AlphaType, typename MaskType>
 MaskType *createMask(AlphaType *whiteAlpha,
         AlphaType *blackAlpha,
-        EnblendROI &uBB) {
+        EnblendROI &uBB,
+        bool wraparound) {
 
     typedef typename MaskType::PixelType MaskPixelType;
 
@@ -83,7 +84,8 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
     BImage *maskTransform = new BImage(uBB.size());
-    nearestFeatureTransform(srcImageRange(*maskInit),
+    nearestFeatureTransform(wraparound,
+            srcImageRange(*maskInit),
             destImage(*maskTransform));
 
     delete maskInit;

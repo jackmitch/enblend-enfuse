@@ -24,8 +24,10 @@
 #include <config.h>
 #endif
 
+//#include <boost/static_assert.hpp>
 #include <iostream>
 #include <list>
+#include <stdio.h>
 
 #include "assemble.h"
 #include "bounds.h"
@@ -103,34 +105,41 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // FIXME consider case where overlap==false
         EnblendROI roiBB;
         unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, uBB, roiBB);
+        bool wraparoundThisIteration = Wraparound && (roiBB.size().x == inputUnion.size().x);
+
+        // Create a version of roiBB relative to uBB upperleft corner.
+        // This is to access roi within images of size uBB.
+        // For example, the mask.
+        EnblendROI roiBB_uBB;
+        roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
 
         // Create the blend mask.
-        BImage *mask =
-                createMask<AlphaType, BImage>(whitePair.second, blackPair.second, uBB);
+        BImage *mask = createMask<AlphaType, BImage>(whitePair.second, blackPair.second,
+                uBB, wraparoundThisIteration);
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
-
-        //// Get the first level of the gaussian pyramid for black image.
-        //PyramidType *blackGP0 = new PyramidType(roiBB.size());
-        //AlphaType *blackGP0a = new AlphaType(roiBB.size());
-        //copyImage(roiBB.apply(srcImageRange(*(blackPair.first))),
-        //        destImage(*blackGP0));
-        //copyImage(roiBB.apply(srcImageRange(*(blackPair.second))),
-        //        destImage(*blackGP0a));
 
         // Build Gaussian pyramid from mask.
         //vector<int*> *maskGP = gaussianPyramid(numLevels,
         //        mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
         //        mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
         //        mask->accessor());
+        vector<MaskPyramidType*> *maskGP = gaussianPyramid<BImage, MaskPyramidType>(
+                numLevels, wraparoundThisIteration, roiBB_uBB.apply(srcImageRange(*mask)));
+
+        for (unsigned int i = 0; i < numLevels; i++) {
+            char filenameBuf[512];
+            snprintf(filenameBuf, 512, "enblend_mask_gp%04u.tif", i);
+            cout << filenameBuf << endl;
+            ImageExportInfo mgpInfo(filenameBuf);
+            exportImage(srcImageRange(*((*maskGP)[i])), mgpInfo);
+        }
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
         // Make an roiBounds relative to uBB origin.
-        initImage(mask->upperLeft() + (roiBB.getUL() - uBB.getUL()),
-                mask->upperLeft() + (roiBB.getLR() - uBB.getUL()),
-                mask->accessor(),
+        initImage(roiBB_uBB.apply(destImageRange(*mask)),
                 NumericTraits<MaskPyramidValueType>::zero());
 
         // Copy pixels inside whiteBB and inside white part of mask into black image.
@@ -191,9 +200,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         VigraTrueType) {
 
     // ImagePyramidType::value_type is a scalar.
-    typedef BasicImage<typename ImagePyramidType::value_type> MaskPyramidType;
+    //typedef BasicImage<typename ImagePyramidType::value_type> MaskPyramidType;
 
-    enblendMain<ImageType, MaskPyramidType, ImagePyramidType>(
+    enblendMain<ImageType, ImagePyramidType, ImagePyramidType>(
             imageInfoList, outputImageInfo, inputUnion);
 }
 
@@ -217,10 +226,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion) {
 
     // This indicates if ImagePyramidType is RGB or grayscale.
-    typedef typename NumericTraits<typename ImagePyramidType::value_type>::isScalar is_scalar;
+    typedef typename NumericTraits<typename ImagePyramidType::value_type>::isScalar pyramid_is_scalar;
+    typedef typename NumericTraits<typename ImageType::value_type>::isScalar image_is_scalar;
+
+    // If the image is RGB, the pyramid must also be RGB.
+    // If the image is scalar, the pyramid must also be scalar.
+    BOOST_STATIC_ASSERT(pyramid_is_scalar::asBool == image_is_scalar::asBool);
 
     enblendMain<ImageType, ImagePyramidType>(
-            imageInfoList, outputImageInfo, inputUnion, is_scalar());
+            imageInfoList, outputImageInfo, inputUnion, pyramid_is_scalar());
 }
 
 } // namespace enblend

@@ -24,14 +24,18 @@
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <vector>
-#include <boost/static_assert.hpp>
+//#include <boost/static_assert.hpp>
+
+#include "fixmath.h"
 
 #include "vigra/numerictraits.hxx"
 
+using std::cout;
 using std::vector;
-using vigra::DRGBImage;
 using vigra::NumericTraits;
+using vigra::triple;
 
 namespace enblend {
 
@@ -91,54 +95,239 @@ unsigned int filterHalfWidth(const unsigned int level) {
     return (length - 1);
 }
 
-//template <typename SrcImageType, typename PyramidImageType>
-//vector<int*> *gaussianPyramid(unsigned int numLevels,
-//        SrcImageIterator src_upperleft,
-//        SrcImageIterator src_lowerright,
-//        SrcAccessor sa) {
-//    //FIXME
-//    return new vector<int*>();
-//}
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename MaskIterator, typename MaskAccessor,
+        typename DestImageIterator, typename DestAccessor,
+        typename DestMaskIterator, typename DestMaskAccessor>
+inline void reduce(bool wraparound,
+        SrcImageIterator src_upperleft,
+        SrcImageIterator src_lowerright,
+        SrcAccessor sa,
+        MaskIterator mask_upperleft,
+        MaskAccessor ma,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da,
+        DestMaskIterator dest_mask_upperleft,
+        DestMaskIterator dest_mask_lowerright,
+        DestMaskAccessor dma) {
+
+    typedef typename SrcAccessor::value_type PixelType;
+    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename DestMaskAccessor::value_type DestMaskPixelType;
+
+    int src_w = src_lowerright.x - src_upperleft.x;
+    int src_h = src_lowerright.y - src_upperleft.y;
+    assert(src_w > 1 && src_h > 1);
+
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    SrcImageIterator sy = src_upperleft;
+    MaskIterator my = mask_upperleft;
+    DestMaskIterator dmy = dest_mask_upperleft;
+    for (int srcy = 0; dy.y != dend.y; ++dy.y, ++dmy.y, sy.y+=2, my.y+=2, srcy+=2) {
+
+        DestImageIterator dx = dy;
+        SrcImageIterator sx = sy;
+        MaskIterator mx = my;
+        DestMaskIterator dmx = dmy;
+        for (int srcx = 0; dx.x != dend.x; ++dx.x, ++dmx.x, sx.x+=2, mx.x+=2, srcx+=2) {
+
+            RealPixelType p(NumericTraits<RealPixelType>::zero());
+            unsigned int noContrib = 10000;
+
+            for (int kx = -2; kx <= 2; kx++) {
+                int bounded_kx = kx;
+
+                if (wraparound) {
+                    // Boundary condition: wrap around the image.
+                    if (srcx + kx < 0) bounded_kx += src_w;
+                    if (srcx + kx >= src_w) bounded_kx -= src_w;
+                } else {
+                    // Boundary condition: replicate first and last column.
+                    if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+                }
+
+                for (int ky = -2; ky <= 2; ky++) {
+                    int bounded_ky = ky;
+
+                    // Boundary condition: replicate top and bottom rows.
+                    if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                    if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                    if (mx(bounded_kx, bounded_ky)) {
+                        p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
+                    } else {
+                        // Transparent pixels don't count.
+                        noContrib -= W100[kx+2] * W100[ky+2];
+                    }
+
+                }
+            }
+
+            // Adjust filter for any ignored transparent pixels.
+            if (noContrib != 0) p /= ((double)noContrib / 10000.0);
+
+            da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
+            dma.set((noContrib == 0) ? NumericTraits<DestMaskPixelType>::zero()
+                                     : NumericTraits<DestMaskPixelType>::nonZero(),
+                    dmx);
+
+        }
+    }
+};
+
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename MaskIterator, typename MaskAccessor,
+        typename DestImageIterator, typename DestAccessor,
+        typename DestMaskIterator, typename DestMaskAccessor>
+inline void reduce(bool wraparound,
+        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+        pair<MaskIterator, MaskAccessor> mask,
+        triple<DestImageIterator, DestImageIterator, DestAccessor> dest,
+        triple<DestMaskIterator, DestMaskIterator, DestMaskAccessor> destMask) {
+    reduce(wraparound,
+            src.first, src.second, src.third,
+            mask.first, mask.second,
+            dest.first, dest.second, dest.third,
+            destMask.first, destMask.second, destMask.third);
+};
+
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename DestImageIterator, typename DestAccessor>
+inline void reduce(bool wraparound,
+        SrcImageIterator src_upperleft,
+        SrcImageIterator src_lowerright,
+        SrcAccessor sa,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da) {
+
+    typedef typename SrcAccessor::value_type PixelType;
+    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+
+    int src_w = src_lowerright.x - src_upperleft.x;
+    int src_h = src_lowerright.y - src_upperleft.y;
+    assert(src_w > 1 && src_h > 1);
+
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    SrcImageIterator sy = src_upperleft;
+    for (int srcy = 0; dy.y != dend.y; ++dy.y, sy.y+=2, srcy+=2) {
+
+        DestImageIterator dx = dy;
+        SrcImageIterator sx = sy;
+        for (int srcx = 0; dx.x != dend.x; ++dx.x, sx.x+=2, srcx+=2) {
+
+            RealPixelType p(NumericTraits<RealPixelType>::zero());
+
+            for (int kx = -2; kx <= 2; kx++) {
+                int bounded_kx = kx;
+
+                if (wraparound) {
+                    // Boundary condition: wrap around the image.
+                    if (srcx + kx < 0) bounded_kx += src_w;
+                    if (srcx + kx >= src_w) bounded_kx -= src_w;
+                } else {
+                    // Boundary condition: replicate first and last column.
+                    if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+                }
+
+                for (int ky = -2; ky <= 2; ky++) {
+                    int bounded_ky = ky;
+
+                    // Boundary condition: replicate top and bottom rows.
+                    if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                    if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+                    p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
+
+                }
+            }
+
+            da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
+        }
+    }
+
+};
+
+template <typename SrcImageIterator, typename SrcAccessor,
+        typename DestImageIterator, typename DestAccessor>
+inline void reduce(bool wraparound,
+        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+        triple<DestImageIterator, DestImageIterator, DestAccessor> dest) {
+    reduce(wraparound,
+            src.first, src.second, src.third,
+            dest.first, dest.second, dest.third);
+};
 
 template <typename SrcImageType, typename PyramidImageType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
         typename SrcImageType::const_traverser src_lowerright,
-        typename SrcImageType::const_accessor sa,
-        VigraFalseType) {
+        typename SrcImageType::ConstAccessor sa) {
 
-    // ImageTypes are both vectors.
-}
+    vector<PyramidImageType*> *gp = new vector<PyramidImageType*>();
+
+    // Size of pyramid level 0
+    int w = src_lowerright.x - src_upperleft.x;
+    int h = src_lowerright.y - src_upperleft.y;
+
+    // Pyramid level 0
+    PyramidImageType *gp0 = new PyramidImageType(w, h);
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid: g0";
+        cout.flush();
+    }
+
+    // Copy src image into gp0, using fixed-point conversions.
+    copyToPyramidImage<SrcImageType, PyramidImageType>(
+            src_upperleft, src_lowerright, sa,
+            gp0->upperLeft(), gp0->accessor());
+
+    gp->push_back(gp0);
+
+    // Make remaining levels.
+    PyramidImageType *lastGP = gp0;
+    for (unsigned int l = 1; l < numLevels; l++) {
+
+        if (Verbose > 0) {
+            cout << " g" << l;
+            cout.flush();
+        }
+
+        // Size of next level
+        w = (w + 1) >> 1;
+        h = (h + 1) >> 1;
+
+        // Next pyramid level
+        PyramidImageType *gpn = new PyramidImageType(w, h);
+
+        reduce(wraparound, srcImageRange(*lastGP), destImageRange(*gpn));
+
+        gp->push_back(gpn);
+        lastGP = gpn;
+    }
+
+    if (Verbose > 0) {
+        cout << endl;
+    }
+
+    return gp;
+};
 
 template <typename SrcImageType, typename PyramidImageType>
-vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
-        typename SrcImageType::const_traverser src_upperleft,
-        typename SrcImageType::const_traverser src_lowerright,
-        typename SrcImageType::const_accessor sa,
-        VigraTrueType) {
-
-    // ImageTypes are both scalars.
-
-}
-template <typename SrcImageType, typename PyramidImageType>
-vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
-        typename SrcImageType::const_traverser src_upperleft,
-        typename SrcImageType::const_traverser src_lowerright,
-        typename SrcImageType::const_accessor sa) {
-
-    // This indicates if the source image is a vector or a scalar.
-    typedef typename NumericTraits<typename SrcImageType::value_type>::isScalar src_is_scalar;
-    typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
-
-    // The source image and the pyramid image must both be vectors or both be scalars.
-    BOOST_STATIC_ASSERT(src_is_scalar() == pyramid_is_scalar());
-
+inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
+        bool wraparound,
+        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src) {
     return gaussianPyramid<SrcImageType, PyramidImageType>(numLevels,
-            src_upperleft,
-            src_lowerright,
-            sa,
-            pyramid_is_scalar());
-}
+            wraparound,
+            src.first, src.second, src.third);
+};
 
 } // namespace enblend
 
