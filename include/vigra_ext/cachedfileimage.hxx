@@ -22,14 +22,17 @@
 #ifndef VIGRA_EXT_CACHEDFILEIMAGE_HXX
 #define VIGRA_EXT_CACHEDFILEIMAGE_HXX
 
-#include <assert.h>
 #include <errno.h>
 #include <map>
 #include <iostream>
 #include <list>
 #include <stdio.h>
 #include <unistd.h>
+
+#include <boost/static_assert.hpp>
 #include <boost/pool/pool.hpp>
+
+#include <vigra/error.hxx>
 #include <vigra/utilities.hxx>
 
 using std::cout;
@@ -39,6 +42,7 @@ using std::map;
 
 namespace vigra {
 
+/** Abstract base class for CachedFileImages. */
 class CachedFileImageBase {
 public:
     virtual int numBlocksAllocated() const = 0;
@@ -46,6 +50,7 @@ public:
     virtual void swapOutBlock() const = 0;
 };
 
+// Forward declaration.
 template <class PIXELTYPE> class CachedFileImage;
 
 /** A singleton that manages memory for several CachedFileImages.
@@ -54,6 +59,8 @@ class CachedFileImageDirector {
 public:
 
     ~CachedFileImageDirector() {
+        // Make sure all image caches get destroyed and
+        // temp backing files get deleted.
         if (!imageList.empty()) {
             cout << "Cleaning up temporary files." << endl;
             list<CachedFileImageBase const *>::iterator i;
@@ -73,6 +80,9 @@ public:
     // Obtain a pointer to a blocksize chunk of memory.
     void* allocateBlock() {
         void *block = pool->malloc();
+        // Prevent the pool from allocating more than one block
+        // at a time from the system. Otherwise the pool will grab
+        // more blocks than managedBlocks.
         pool->set_next_size(1);
         if (block == NULL) throw std::bad_alloc();
         return block;
@@ -85,7 +95,7 @@ public:
     // Set the number of bytes this director manages.
     void setAllocation(long long bytes) {
         // This may not be changed after images have been created.
-        assert(imageList.empty());
+        vigra_precondition(imageList.empty(), "CachedFileImageDirector: attempt to change allocation after images have already been created.");
         managedBytes = bytes;
         // Recalculate the number of blocks available.
         managedBlocks = (int)ceil(managedBytes / (double)blocksize);
@@ -96,7 +106,7 @@ public:
     // moved between the caches and the backing files.
     void setBlockSize(int bytes) {
         // This may not be changed after images have been created.
-        assert(imageList.empty());
+        vigra_precondition(imageList.empty(), "CachedFileImageDirector: attempt to change block size after images have already been created.");
         blocksize = bytes;
         delete pool;
         pool = new boost::pool<>(blocksize);
@@ -150,13 +160,13 @@ public:
         // most-recently-swapped image.
         imageList.push_back(image);
 
+        // Initialize the cache miss counter for this image.
         imageToMissMap[image] = 0LL;
 
         return blocksAllocated;
     }
 
-    // Unregister a CachedFileImage with the director and return its blocks
-    // to the pool.
+    // Unregister a CachedFileImage with the director.
     void returnBlocksUnregisterImage(int blocks, CachedFileImageBase const * image) {
         //cout << "returning " << blocks << " blocks" << endl;
         blocksAvailable += blocks;
@@ -199,10 +209,12 @@ public:
         return cacheMisses;
     }
 
+    // How many cache misses have occured for the given image.
     long long getCacheMisses(CachedFileImageBase const * image) {
         return imageToMissMap[image];
     }
 
+    // Reset all cache miss counters.
     void resetCacheMisses() {
         cacheMisses = 0LL;
         map<CachedFileImageBase const *, long long>::iterator i;
@@ -211,38 +223,42 @@ public:
         }
     }
 
+    // Print general stats about allocated blocks and cache misses.
     void printStats() {
         cout << "Summary: cache misses="
              << cacheMisses
-             << " blocks managed="
+             << "  blocks managed="
              << managedBlocks
-             << " allocated="
+             << "  allocated="
              << (managedBlocks - blocksAvailable)
-             << " free="
+             << "  free="
              << blocksAvailable
              << endl;
     }
 
+    // Print stats about a particular image.
     void printStats(const char * imageName, const CachedFileImageBase * image) {
         cout << imageName << ":"
              << " cache misses=" << imageToMissMap[image]
-             << " blocks allocated=" << image->numBlocksAllocated()
-             << " / " << image->numBlocksNeeded()
-             << " required"
+             << "  blocks allocated=" << image->numBlocksAllocated()
+             << "  blocks required=" << image->numBlocksNeeded()
              << endl;
     }
 
+    // Print stats about a particular image.
+    // Add an integer suffix to the image's name.
     void printStats(const char * imageName, const int imageNumber,
             const CachedFileImageBase * image) {
         cout << imageName << imageNumber << ":"
              << " cache misses=" << imageToMissMap[image]
              << "  blocks allocated=" << image->numBlocksAllocated()
-             << " / " << image->numBlocksNeeded()
-             << " required"
+             << "  blocks required=" << image->numBlocksNeeded()
              << endl;
     }
 
 protected:
+
+    // Singleton constructor.
     CachedFileImageDirector()
     : blocksize(2<<20),
       managedBytes(1LL<<30),
@@ -265,9 +281,6 @@ protected:
             if (image->numBlocksAllocated() > 0) {
                 // Image is currently using blocks.
                 image->swapOutBlock();
-                // Mark image as most-recently-swapped.
-                //imageList.erase(i);
-                //imageList.push_back(image);
                 return 1;
             }
         }
@@ -290,11 +303,12 @@ protected:
     // Back is most-recently-missed image
     list<CachedFileImageBase const *> imageList;
 
-    // Map of images to cache misses
+    // Map of images to cache miss counters.
     map<CachedFileImageBase const *, long long> imageToMissMap;
 
 };
 
+/** A policy for iterating over all pixels in a CachedFileImage sequentially. */
 template <class Iterator>
 class CachedFileSequentialAccessIteratorPolicy
 {
@@ -368,6 +382,7 @@ public:
 
 };
 
+/** Base class for CachedFileImage traversers. */
 template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
 class CachedFileImageIteratorBase
 {
@@ -431,8 +446,9 @@ public:
         return (*i)(x, y);
     }
 
-    // pointer is supposed to be a weak_ptr
+    // FIXME pointer is supposed to be a weak_ptr
     pointer operator->() const {
+        BOOST_STATIC_ASSERT(false);
         return (*i)[y] + x;
     }
 
@@ -444,8 +460,9 @@ public:
         return (*i)(x+dx, y+dy);
     }
 
-    // pointer is supposed to be a weak_ptr
+    // FIXME pointer is supposed to be a weak_ptr
     pointer operator[](int dy) const {
+        BOOST_STATIC_ASSERT(false);
         return (*i)[y + dy] + x;
     }
 
@@ -464,7 +481,8 @@ protected:
     CachedFileImageIteratorBase() : x(0), y(0), i(NULL) { }
 
 };
-    
+ 
+/** Regular CachedFileImage traverser. */
 template <class PIXELTYPE>
 class CachedFileImageIterator
 : public CachedFileImageIteratorBase<CachedFileImageIterator<PIXELTYPE>,
@@ -489,6 +507,7 @@ public:
 
 };
 
+/** Traverser over const CachedFileImage. */
 template <class PIXELTYPE>
 class ConstCachedFileImageIterator
 : public CachedFileImageIteratorBase<ConstCachedFileImageIterator<PIXELTYPE>,
@@ -527,14 +546,10 @@ public:
 
 };
 
+// Forward declaration.
 template <class T> struct IteratorTraits;
 
-//class CachedFileImageBase {
-//public:
-//    virtual int numBlocksAllocated() const = 0;
-//    virtual void swapOutBlock() const = 0;
-//};
-
+/** Basic CachedFileImage */
 template <class PIXELTYPE>
 class CachedFileImage : public CachedFileImageBase {
 public:
@@ -554,15 +569,6 @@ public:
     typedef Size2D size_type;
     typedef typename IteratorTraits<traverser>::DefaultAccessor Accessor;
     typedef typename IteratorTraits<const_traverser>::DefaultAccessor ConstAccessor;
-
-    //struct Allocator {
-    //    static value_type * allocate(int n) {
-    //        return (value_type *)::operator new(n*sizeof(value_type));
-    //    }
-    //    static void deallocate(value_type * p) {
-    //        ::operator delete(p);
-    //    }
-    //};
 
     CachedFileImage() {
         initMembers();
@@ -634,34 +640,30 @@ public:
     }
 
     reference operator[](difference_type const & d) {
-        //cout << "dirty" << endl;
         return (getLinePointerDirty(d.y))[d.x];
     }
 
     const_reference operator[](difference_type const & d) const {
-        //cout << "clean" << endl;
         return (getLinePointer(d.y))[d.x];
     }
 
     reference operator()(int dx, int dy) {
-        //cout << "dirty" << endl;
         return (getLinePointerDirty(dy))[dx];
     }
 
     const_reference operator()(int dx, int dy) const {
-        //cout << "clean" << endl;
         return (getLinePointer(dy))[dx];
     }
 
-    // dangerous - needs to return a weak_ptr
+    // FIXME - needs to return a weak_ptr
     pointer operator[](int dy) {
-        //cout << "dirty" << endl;
+        BOOST_STATIC_ASSERT(false);
         return getLinePointerDirty(dy);
     }
 
-    // dangerous - needs to return a weak_ptr
+    // FIXME - needs to return a weak_ptr
     const_pointer operator[](int dy) const {
-        //cout << "clean" << endl;
+        BOOST_STATIC_ASSERT(false);
         return getLinePointer(dy);
     }
 
@@ -735,6 +737,7 @@ public:
 
 private:
 
+    // Data value used to initialize previously unused pixels.
     PIXELTYPE initPixel;
 
     void deallocate();
@@ -749,19 +752,11 @@ private:
     PIXELTYPE * getLinePointerDirty(int dy);
     PIXELTYPE * getLinePointerCacheMiss(int dy) const;
 
-    // Free space, if necessary, by swapping out a block of lines to the file.
+    // Free space by swapping out a block of lines to the file.
     void swapLeastRecentlyUsedBlock() const;
 
     // Lazy creation of tmp file for swapping image data to disk
     void initTmpfile() const;
-
-    //inline int lineToBlockNumber(int line) const {
-    //    return line / linesPerBlocksize_;
-    //}
-
-    //inline int blockToFirstLineNumber(int block) const {
-    //    return block * linesPerBlocksize_;
-    //}
 
     void initMembers() {
         initPixel = value_type();
@@ -782,15 +777,26 @@ private:
     int linesPerBlocksize_;
     // How many blocks are currently cached in memory.
     mutable int blocksAllocated_;
+    // How many blocks are needed for the entire image.
     int blocksNeeded_;
 
     // lru replacement policy
     // most recently used block is at start of list.
     // least recently used block is at end of list.
+    // Here, "used" means swapped out.
     mutable list<int> *blockLRU_;
 
+    // Array of pointers to first pixel in each line.
     mutable PIXELTYPE ** lines_;
+
+    // For each block, indicate if that block is dirty.
+    // Dirty blocks get swapped to disk when they are deallocated.
+    // Clean blocks are simply deallocated.
     mutable bool * blockIsClean_;
+
+    // For each block, indicate if that block is in the file.
+    // Blocks in the file get read from disk when the block is swapped in.
+    // Blocks not in the file get initialized with initPixel instead.
     mutable bool * blockInFile_;
 
     int width_, height_;
@@ -801,19 +807,12 @@ private:
 
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::deallocate() {
+    // Unregister the image with the director.
     CachedFileImageDirector::v().returnBlocksUnregisterImage(blocksAllocated_, this);
     delete blockLRU_;
+
+    // Deallocate all the blocks in use.
     if (lines_ != NULL) {
-        // Go through lines and delete any allocated memory there.
-        //for (int line = 0; line < height_; line++) {
-        //    PIXELTYPE *p = lines_[line];
-        //    if (p != NULL) {
-        //        for (int column = 0; column < width_; column++) {
-        //            (p[column]).~PIXELTYPE();
-        //        }
-        //        Allocator::deallocate(p);
-        //    }
-        //}
         int line = 0;
         for (int block = 0; block < blocksNeeded_; block++) {
             int firstLineInBlock = line;
@@ -822,6 +821,8 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
                 PIXELTYPE *p = lines_[line];
                 if (p != NULL) {
                     for (int column = 0; column < width_; column++) {
+                        //FIXME if pixel type is not a simple data type and this destructor actually does
+                        // something, then we are in big trouble.
                         (p[column]).~PIXELTYPE();
                     }
                 }
@@ -831,8 +832,11 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
         }
         delete[] lines_;
     }
+
     delete[] blockIsClean_;
     delete[] blockInFile_;
+
+    // Close and delete the tmp file if it exists.
     if (tmpFile_ != NULL) {
         fclose(tmpFile_);
         unlink(tmpFilename_);
@@ -840,6 +844,7 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
     delete[] tmpFilename_;
 };
 
+/** Perform initialization of internal data structures once image size is known. */
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initLineStartArray() {
 
@@ -849,11 +854,12 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
             / (width_ * sizeof(PIXELTYPE)));
 
     if (linesPerBlocksize_ <= 0) {
-        throw vigra::InvariantViolation("Image cache block size is too small.");
+        vigra_fail("Image cache block size is too small.");
     }
 
     blocksNeeded_ = (int)ceil(((double)height_) / linesPerBlocksize_);
 
+    // Request blocks from the director.
     int blocksAllowed = CachedFileImageDirector::v().requestBlocksForNewImage(
             blocksNeeded_, this);
 
@@ -882,8 +888,8 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
         // Divide the block up amongst the lines in the block.
         for (int subblock = 0; subblock < linesPerBlocksize_; subblock++, line++, blockStart+=width_) {
             if (line >= height_) break;
-            //lines_[line] = Allocator::allocate(width_);
             lines_[line] = blockStart;
+            // Fill the line with initPixel.
             std::uninitialized_fill_n(lines_[line], width_, initPixel);
         }
         if (line >= height_) break;
@@ -897,6 +903,9 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     return;
 };
 
+/** Obtain a pointer to the beginning of a row.
+ *  Marks the block that owns that row dirty.
+ */
 template <class PIXELTYPE>
 inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(int dy) {
     PIXELTYPE *line = lines_[dy];
@@ -910,27 +919,24 @@ inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(int dy) {
     return line;
 };
 
+/** Obtain a pointer to the beginning of a row.
+ *  This is for clean dereferences.
+ */
 template <class PIXELTYPE>
 inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
     PIXELTYPE *line = lines_[dy];
 
     // Check if line dy is swapped out.
-    if (line == NULL) {
-        return getLinePointerCacheMiss(dy);
-    }
-    else {
-        // make blockNumber the least recently used block.
-        // this remove function call really sucks
-        //blockLRU_->remove(blockNumber);
-        //blockLRU_->push_front(blockNumber);
-        return line;
-    }
+    if (line == NULL) line = getLinePointerCacheMiss(dy);
+
+    return line;
 };
 
+/** Swap in the requested line. */
 template <class PIXELTYPE>
 PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
-    int blockNumber = dy / linesPerBlocksize_; // lineToBlockNumber(dy);
-    int firstLineInBlock = blockNumber * linesPerBlocksize_; // blockToFirstLineNumber(blockNumber);
+    int blockNumber = dy / linesPerBlocksize_;
+    int firstLineInBlock = blockNumber * linesPerBlocksize_;
 
     int moreBlocks = CachedFileImageDirector::v().registerCacheMiss(this);
     if (moreBlocks == 0 && blocksAllocated_ == 0) {
@@ -945,6 +951,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     // Allocate a block.
     PIXELTYPE* blockStart = (PIXELTYPE*)CachedFileImageDirector::v().allocateBlock();
 
+    // The number of lines in the block and the number of pixels in the block.
     int numLinesInBlock = min(height_, firstLineInBlock + linesPerBlocksize_) - firstLineInBlock;
     int pixelsToRead = numLinesInBlock * width_;
 
@@ -972,44 +979,6 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
         if (absoluteLineNumber >= height_) break;
         lines_[absoluteLineNumber] = blockStart;
     }
-    //    //// Allocate lines for new block.
-    //    //for (int l = 0; l < linesPerBlocksize_; l++) {
-    //    //    int absoluteLineNumber = l + firstLineInBlock;
-    //    //    if (absoluteLineNumber >= height_) break;
-    //    //    lines_[absoluteLineNumber] = Allocator::allocate(width_);
-
-    //    //    // fill the line with data from the file.
-    //    //    int itemsRead = fread(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_);
-
-    //    //    if (itemsRead < width_) {
-    //    //        vigra_fail("CachedFileImage: error reading from image backing file.\n");
-    //    //    }
-    //    //}
-    //}
-    //else {
-    //    // File does not have data for this block. Create new lines and fill them with initPixel.
-    //    // Allocate lines for new block.
-
-    //    // Allocate a block.
-    //    PIXELTYPE* blockStart = (PIXELTYPE*)CachedFileImageDirector::v().allocateBlock();
-
-    //    // Divide the block up amongst the lines in the block.
-    //    for (int l = 0; l < linesPerBlocksize_; l++, blockStart+=width_) {
-    //        int absoluteLineNumber = l + firstLineInBlock;
-    //        if (absoluteLineNumber >= height_) break;
-    //        lines_[absoluteLineNumber] = blockStart;
-    //        std::uninitialized_fill_n(lines_[absoluteLineNumber], width_, initPixel);
-    //    }
-
-    //    //for (int l = 0; l < linesPerBlocksize_; l++) {
-    //    //    int absoluteLineNumber = l + firstLineInBlock;
-    //    //    if (absoluteLineNumber >= height_) break;
-    //    //    lines_[absoluteLineNumber] = Allocator::allocate(width_);
-
-    //    //    // fill with initPixel.
-    //    //    std::uninitialized_fill_n(lines_[absoluteLineNumber], width_, initPixel);
-    //    //}
-    //}
 
     // Mark this block as clean.
     blockIsClean_[blockNumber] = true;
@@ -1021,21 +990,15 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     return lines_[dy];
 };
 
-
+/** Swap a block out to disk. */
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
     if (blocksAllocated_ == 0) return;
 
+    // Swap the least-recently-swapped block.
     int blockNumber = blockLRU_->back();
-
-    //list<int>::iterator listIterator = blockLRU_->begin();
-    //for(; listIterator != blockLRU_->end(); listIterator++) {
-    //    cout << *listIterator << " ";
-    //}
-    //cout << endl << "swapping out block " << blockNumber << endl;
-    //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
-
     blockLRU_->pop_back();
+    //cout << endl << "swapping out block " << blockNumber << endl;
 
     int firstLineInBlock = blockNumber * linesPerBlocksize_;
     PIXELTYPE *blockStart = lines_[firstLineInBlock];
@@ -1061,66 +1024,53 @@ void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
         }
     }
 
+    // Deallocate lines in block.
     for (int l = 0; l < linesPerBlocksize_; l++) {
         int absoluteLineNumber = l + firstLineInBlock;
         if (absoluteLineNumber >= height_) break;
-        //cout << "swapping line " << absoluteLineNumber << endl;
-        //if (fwrite(lines_[absoluteLineNumber], sizeof(PIXELTYPE), width_, tmpFile_)
-        //        != (unsigned int)width_) {
-        //    vigra_fail("CachedFileImage: error writing to image backing file.\n");
-        //}
-        // Deallocate line
         PIXELTYPE *p = lines_[absoluteLineNumber];
         for (int column = 0; column <= width_; column++) {
             //FIXME if pixel type is not a simple data type and this destructor actually does
             // something, then we are in big trouble.
             (p[column]).~PIXELTYPE();
         }
-        //Allocator::deallocate(p);
         lines_[absoluteLineNumber] = NULL;
     }
 
+    // Return block to the director.
     CachedFileImageDirector::v().deallocateBlock(blockStart);
-
-    //}
-    //else {
-    //    // Block is clean - just deallocate it.
-    //    PIXELTYPE *blockStart = lines
-    //    for (int l = 0; l < linesPerBlocksize_; l++) {
-    //        int absoluteLineNumber = l + firstLineInBlock;
-    //        if (absoluteLineNumber >= height_) break;
-    //        // Deallocate line
-    //        PIXELTYPE *p = lines_[absoluteLineNumber];
-    //        for (int column = 0; column <= width_; column++) {
-    //            //FIXME if pixel type is not a simple data type and this destructor actually does
-    //            // something, then we are in big trouble.
-    //            (p[column]).~PIXELTYPE();
-    //        }
-    //        Allocator::deallocate(p);
-    //        lines_[absoluteLineNumber] = NULL;
-    //    }
-    //}
 
     blocksAllocated_--;
 };
 
+/** Create the tmp file to store swapped-out blocks. */
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
+    #ifdef HAVE_MKSTEMP
     int tmpFD = mkstemp(filenameTemplate);
     if (tmpFD < 0) {
         vigra_fail("CachedFileImage: unable to create image backing file.\n");
+    }
+    tmpFile_ = fdopen(tmpFD, "wb+");
+    #else
+    char *tmpReturn = mktemp(filenameTemplate);
+    if (tmpReturn == NULL) {
+        vigra_fail("CachedFileImage: unable to create image backing file.\n");
+    }
+    tmpFile_ = fopen(filenameTemplate, "wb+");
+    #endif
+
+    if (tmpFile_ == NULL) {
+        vigra_fail(strerror(errno));
     }
 
     int filenameTemplateLength = strlen(filenameTemplate) + 1;
     tmpFilename_ = new char[filenameTemplateLength];
     strncpy(tmpFilename_, filenameTemplate, filenameTemplateLength);
 
-    tmpFile_ = fdopen(tmpFD, "wb+");
-    if (tmpFile_ == NULL) {
-        vigra_fail(strerror(errno));
-    }
+    // This doesn't seem to help.
     //if (setvbuf(tmpFile_, NULL, _IONBF, 0) != 0) {
     //    vigra_fail(strerror(errno));
     //}
@@ -1149,10 +1099,28 @@ CachedFileImage<PIXELTYPE> &
 CachedFileImage<PIXELTYPE>::init(value_type const & pixel) {
     initPixel = pixel;
 
-    iterator i = begin();
-    iterator iend = end();
+    // Mark all blocks as clean
+    // Mark all blocks as absent from the backing file.
+    // This will effectively discard all current pixel data in the file.
+    for (int block = 0; block < blocksNeeded_; block++) {
+        blockIsClean_[block] = true;
+        blockInFile_[block] = false;
+    }
 
-    for(; i != iend; ++i) *i = pixel;
+    // For any lines that are currently allocated, fill them with initPixel.
+    // This will discard all current pixel data in memory.
+    for (int line = 0; line < height_; line++) {
+        PIXELTYPE *p = lines_[line];
+        if (lines_[line] != NULL) {
+            for (int column = 0; column <= width_; column++) {
+                //FIXME if pixel type is not a simple data type and this destructor actually does
+                // something, then we are in big trouble.
+                (p[column]).~PIXELTYPE();
+            }
+            // Fill the line with initPixel.
+            std::uninitialized_fill_n(lines_[line], width_, initPixel);
+        }
+    }
 
     return *this;
 };
@@ -1168,8 +1136,6 @@ void CachedFileImage<PIXELTYPE>::resize(int width, int height, value_type const 
     width_ = width;
     height_ = height;
     initLineStartArray();
-    //this should do a fast init.
-    //init(d);
 };
 
 template <class PIXELTYPE>
