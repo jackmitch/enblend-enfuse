@@ -192,9 +192,8 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             srcImage(*imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES
-            /*&& !OneAtATime*/) {
-        cout << "assembled bounding box: ("
+    if (Verbose > VERBOSE_ABB_MESSAGES) {
+        cout << "assembled images bounding box: ("
              << unionRect.upperLeft.x
              << ", "
              << unionRect.upperLeft.y

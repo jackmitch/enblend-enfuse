@@ -25,6 +25,9 @@
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.
 #define VERBOSE_ASSEMBLE_MESSAGES           0
+#define VERBOSE_ABB_MESSAGES                1
+#define VERBOSE_UBB_MESSAGES                1
+#define VERBOSE_IBB_MESSAGES                1
 #define VERBOSE_BLEND_MESSAGES              0
 #define VERBOSE_NUMLEVELS_MESSAGES          0
 #define VERBOSE_ROIBB_SIZE_MESSAGES         1

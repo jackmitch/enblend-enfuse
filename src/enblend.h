@@ -140,29 +140,39 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Union bounding box of whiteImage and blackImage.
         EnblendROI uBB;
         whiteBB.unite(blackBB, uBB);
-	cout << "union bounding box: ("
-             << uBB.getUL().x
-             << ", "
-             << uBB.getUL().y
-             << ") -> ("
-             << uBB.getLR().x
-             << ", "
-             << uBB.getLR().y
-             << ")" << endl;
+
+        if (Verbose > VERBOSE_UBB_MESSAGES) {
+            cout << "image union bounding box: ("
+                 << uBB.getUL().x
+                 << ", "
+                 << uBB.getUL().y
+                 << ") -> ("
+                 << uBB.getLR().x
+                 << ", "
+                 << uBB.getLR().y
+                 << ")" << endl;
+        }
 
         // Intersection bounding box of whiteImage and blackImage.
         EnblendROI iBB;
-        whiteBB.intersect(blackBB, iBB);
+        bool iBBValid = whiteBB.intersect(blackBB, iBB);
 
-	cout << "intersect bounding box: ("
-             << iBB.getUL().x
-             << ", "
-             << iBB.getUL().y
-             << ") -> ("
-             << iBB.getLR().x
-             << ", "
-             << iBB.getLR().y
-             << ")" << endl;
+        if (Verbose > VERBOSE_IBB_MESSAGES) {
+            if (iBBValid) {
+                cout << "image intersection bounding box: ("
+                     << iBB.getUL().x
+                     << ", "
+                     << iBB.getUL().y
+                     << ") -> ("
+                     << iBB.getLR().x
+                     << ", "
+                     << iBB.getLR().y
+                     << ")" << endl;
+            } else {
+                cout << "image intersection bounding box: (no intersection)"
+                     << endl;
+            }
+        }
 
         // Determine what kind of overlap we have.
         Overlap overlap = inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
