@@ -94,7 +94,7 @@ October 17, 2004
       the associated alpha tag set, even though the image is really
       unassociated alpha.
 
-FIXME: date
+November 15, 2004
     Released enblend-2.1
 
     - Compression is no longer the default option in the Windows executable.
@@ -103,11 +103,12 @@ FIXME: date
       on Windows.
 
     - Fixed a bug in Vigra that caused primary color spots to appear in
-      overexposed areas of the image.
+      overexposed areas of 16-bit images.
 
     - Fixed a problem with Enblend crashing on large panoramas.
       Modified tiff import to use a scanline-based interface instead of a
       strip-based interface. PTStitcher generates TIFFs with the rows/strip
       tag set to an unreasonable value.
       
-    - Ported the source to compile natively on Win32 using MSVC
+    - Ported the source to compile natively on Win32 using MSVC.
+

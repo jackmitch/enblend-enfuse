@@ -2,12 +2,13 @@ Instructions for building on Win32
 ==================================
 
 Joe Beda -- http://www.eightypercent.net
-Last updated Nov. 11, 2003
+Last updated Nov. 15, 2004
 
 Requrements:
 * Microsoft Visual C++ 2003
-    - you can probably get away with the express version of 2k5
-    - The tools can be downloaded for free from:
+    - It is ok to use the express version of 2k5
+    - Alternatively, you can use the command-line Visual C++ Toolkit:
+        The tools can be downloaded for free from:
         http://msdn.microsoft.com/visualc/vctoolkit2003/
         http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
         However, you don't get a build system.  If you are interested
@@ -15,6 +16,8 @@ Requrements:
 * Boost - http://www.boost.org/
     - Instructions for building here: http://www.boost.org/
     - Use the vc7.1 target.
+    - It is ok to just install the boost header files - Enblend does not
+      use any boost libraries.
 * libtiff - http://www.remotesensing.org/libtiff/
     - I've gotten it working using v3.7.0
     - Instructions for building are here: 
