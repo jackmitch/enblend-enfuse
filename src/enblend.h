@@ -48,6 +48,7 @@ using std::pair;
 
 using vigra::BCFImage;
 using vigra::CachedFileImage;
+using vigra::CachedFileImageDirector;
 using vigra::FindMinMax;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
@@ -84,6 +85,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     exportImageAlpha(srcImageRange(*(blackPair.first)),
                      srcImage(*(blackPair.second)),
                      outputImageInfo);
+    if (Verbose > VERBOSE_CFI_MESSAGES) {
+        CachedFileImageDirector &v = CachedFileImageDirector::v();
+        cout << "Image cache statistics after loading black image:" << endl;
+        v.printStats("blackImage", blackPair.first);
+        v.printStats("blackAlpha", blackPair.second);
+        v.printStats();
+        v.resetCacheMisses();
+        cout << "--------------------------------------------------------------------------------" << endl;
+    }
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
@@ -95,6 +105,17 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after loading white image:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats("whiteImage", whitePair.first);
+            v.printStats("whiteAlpha", whitePair.second);
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
         // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
         // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -163,6 +184,18 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the blend mask.
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
                 uBB, wraparoundThisIteration);
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after mask generation:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats("whiteImage", whitePair.first);
+            v.printStats("whiteAlpha", whitePair.second);
+            v.printStats("mask", mask);
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -174,6 +207,21 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
                 numLevels, wraparoundThisIteration, roiBB_uBB.apply(srcImageRange(*mask)));
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after calculating mask pyramid:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats("whiteImage", whitePair.first);
+            v.printStats("whiteAlpha", whitePair.second);
+            v.printStats("mask", mask);
+            for (unsigned int i = 0; i < maskGP->size(); i++) {
+                v.printStats("maskGP", i, (*maskGP)[i]);
+            }
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
@@ -229,6 +277,23 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                         numLevels, wraparoundThisIteration,
                         roiBB.apply(srcImageRange(*(whitePair.first))),
                         roiBB.apply(maskImage(*(whitePair.second))));
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after calculating white pyramid:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats("whiteImage", whitePair.first);
+            v.printStats("whiteAlpha", whitePair.second);
+            for (unsigned int i = 0; i < maskGP->size(); i++) {
+                v.printStats("maskGP", i, (*maskGP)[i]);
+            }
+            for (unsigned int i = 0; i < whiteLP->size(); i++) {
+                v.printStats("whiteLP", i, (*whiteLP)[i]);
+            }
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         //for (unsigned int i = 0; i < numLevels; i++) {
@@ -249,6 +314,25 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                         numLevels, wraparoundThisIteration,
                         roiBB.apply(srcImageRange(*(blackPair.first))),
                         roiBB.apply(maskImage(*(blackPair.second))));
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after calculating black pyramid:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats("whiteAlpha", whitePair.second);
+            for (unsigned int i = 0; i < maskGP->size(); i++) {
+                v.printStats("maskGP", i, (*maskGP)[i]);
+            }
+            for (unsigned int i = 0; i < whiteLP->size(); i++) {
+                v.printStats("whiteLP", i, (*whiteLP)[i]);
+            }
+            for (unsigned int i = 0; i < blackLP->size(); i++) {
+                v.printStats("blackLP", i, (*blackLP)[i]);
+            }
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
         // Peak memory xsection is here!
         // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
@@ -264,6 +348,24 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Blend pyramids
         blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after blending pyramids:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            for (unsigned int i = 0; i < maskGP->size(); i++) {
+                v.printStats("maskGP", i, (*maskGP)[i]);
+            }
+            for (unsigned int i = 0; i < whiteLP->size(); i++) {
+                v.printStats("whiteLP", i, (*whiteLP)[i]);
+            }
+            for (unsigned int i = 0; i < blackLP->size(); i++) {
+                v.printStats("blackLP", i, (*blackLP)[i]);
+            }
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
 
         // delete mask pyramid
         for (unsigned int i = 0; i < maskGP->size(); i++) {
@@ -300,6 +402,18 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // collapse black pyramid
         collapsePyramid(wraparoundThisIteration, blackLP);
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after collapsing black pyramid:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            for (unsigned int i = 0; i < blackLP->size(); i++) {
+                v.printStats("blackLP", i, (*blackLP)[i]);
+            }
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
@@ -322,6 +436,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         exportImageAlpha(srcImageRange(*(blackPair.first)),
                          srcImage(*(blackPair.second)),
                          outputImageInfo);
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after checkpointing:" << endl;
+            v.printStats("blackImage", blackPair.first);
+            v.printStats("blackAlpha", blackPair.second);
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
 
         // Now set blackBB to uBB.
         blackBB = uBB;

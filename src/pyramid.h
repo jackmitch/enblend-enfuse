@@ -460,7 +460,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 
     gp->push_back(gp0);
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << "Generating Gaussian pyramid:";
     }
 
@@ -469,7 +469,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     AlphaImageType *lastA = NULL;
     for (unsigned int l = 1; l < numLevels; l++) {
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
             cout << " g" << l;
             cout.flush();
         }
@@ -498,7 +498,9 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         lastA = nextA;
     }
 
-    if (Verbose > 0) {
+    delete lastA;
+
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << endl;
     }
 
@@ -540,7 +542,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 
     gp->push_back(gp0);
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << "Generating Gaussian pyramid:";
     }
 
@@ -548,7 +550,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     PyramidImageType *lastGP = gp0;
     for (unsigned int l = 1; l < numLevels; l++) {
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
             cout << " g" << l;
             cout.flush();
         }
@@ -566,7 +568,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         lastGP = gpn;
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << endl;
     }
 
@@ -598,7 +600,7 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
                     src_upperleft, src_lowerright, sa,
                     alpha_upperleft, aa);
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << "Generating Laplacian pyramid:";
         cout.flush();
     }
@@ -607,7 +609,7 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
     // Stop if there is no next level.
     for (unsigned int l = 0; l < (numLevels-1); l++) {
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
             cout << " l" << l;
             cout.flush();
         }
@@ -617,7 +619,7 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
                 destImageRange(*((*gp)[l])));
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << endl;
     }
 
@@ -638,7 +640,7 @@ inline vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
 template <typename PyramidImageType>
 void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << "Collapsing Laplacian pyramid:";
         cout.flush();
     }
@@ -647,7 +649,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
     // Work backwards from the smallest level to the largest.
     for (int l = (p->size()-2); l >= 0; l--) {
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
             cout << " l" << l;
             cout.flush();
         }
@@ -657,7 +659,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
                 destImageRange(*((*p)[l])));
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << endl;
     }
 
