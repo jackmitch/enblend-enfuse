@@ -19,6 +19,9 @@
 /*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
 /*                                                                      */
 /************************************************************************/
+/* Modifications by Andrew Mihal as of 21 November 2004:
+ *  - Added namespace quantifiers for compilation with gcc-3.4.
+ */
 
 #ifndef VIGRA_PIXELNEIGHBORHOOD_HXX
 #define VIGRA_PIXELNEIGHBORHOOD_HXX
@@ -496,7 +499,7 @@ protected:
 public:
         /** Create circulator refering to the given direction.
         */
-    NeighborOffsetCirculator(Direction dir = East)
+    NeighborOffsetCirculator(Direction dir = NEIGHBORCODE::East)
         : direction_(dir)
     {
     }
@@ -504,14 +507,14 @@ public:
         /** pre-increment */
     NeighborOffsetCirculator & operator++()
     {
-        direction_ = static_cast<Direction>((direction_+1) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_+1) % NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
         /** pre-decrement */
     NeighborOffsetCirculator & operator--()
     {
-        direction_ = static_cast<Direction>((direction_ + DirectionCount-1) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ + NEIGHBORCODE::DirectionCount-1) % NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
@@ -534,18 +537,18 @@ public:
         /** add-assignment */
     NeighborOffsetCirculator & operator+=(difference_type d)
     {
-        direction_ = static_cast<Direction>((direction_ + d) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ + d) % NEIGHBORCODE::DirectionCount);
         if(direction_ < 0)
-            direction_ = static_cast<Direction>(direction_ + DirectionCount);
+            direction_ = static_cast<Direction>(direction_ + NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
         /** subtract-assignment */
     NeighborOffsetCirculator & operator-=(difference_type d)
     {
-        direction_ = static_cast<Direction>((direction_ - d) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ - d) % NEIGHBORCODE::DirectionCount);
         if(direction_ < 0)
-            direction_ = static_cast<Direction>(direction_ + DirectionCount);
+            direction_ = static_cast<Direction>(direction_ + NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
@@ -567,7 +570,7 @@ public:
         */
     NeighborOffsetCirculator & turnRight()
     {
-        direction_ = static_cast<Direction>((direction_ + South) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ + NEIGHBORCODE::South) % NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
@@ -577,7 +580,7 @@ public:
         */
     NeighborOffsetCirculator & turnLeft()
     {
-        direction_ = static_cast<Direction>((direction_ + North) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ + NEIGHBORCODE::North) % NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
@@ -587,7 +590,7 @@ public:
         */
     NeighborOffsetCirculator & turnRound()
     {
-        direction_ = static_cast<Direction>((direction_ + West) % DirectionCount);
+        direction_ = static_cast<Direction>((direction_ + NEIGHBORCODE::West) % NEIGHBORCODE::DirectionCount);
         return *this;
     }
 
@@ -654,9 +657,9 @@ public:
         */
     Diff2D const &relativeDiff(difference_type offset) const
     {
-        Direction toDir = static_cast<Direction>((direction_ + offset) % DirectionCount);
+        Direction toDir = static_cast<Direction>((direction_ + offset) % NEIGHBORCODE::DirectionCount);
         if(toDir < 0)
-            toDir = static_cast<Direction>(toDir + DirectionCount);
+            toDir = static_cast<Direction>(toDir + NEIGHBORCODE::DirectionCount);
         return NEIGHBORCODE::relativeDiff(direction_, toDir);
     }
 
@@ -690,9 +693,9 @@ public:
         */
     Direction direction(difference_type offset) const
     {
-        int result = (direction_ + offset) % DirectionCount;
+        int result = (direction_ + offset) % NEIGHBORCODE::DirectionCount;
         if(result < 0)
-            result += DirectionCount;
+            result += NEIGHBORCODE::DirectionCount;
         return static_cast<Direction>(result);
     }
 };
