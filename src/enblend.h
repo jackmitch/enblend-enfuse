@@ -24,6 +24,8 @@
 #include <list>
 #include <vector>
 
+#include "vigra/impex.hxx"
+
 typedef struct {
     uint8 r;
     uint8 g;
@@ -49,6 +51,19 @@ void ubbBounds(FILE *uint32File1, FILE *uint32File2);
 uint32 roiBounds(FILE *maskFile);
 void copyExcludedPixels(FILE *dst, FILE *src, FILE *mask);
 void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile);
+
+// enblend.cc
+template <typename ImageType,
+          typename AlphaType,
+          typename MaskType,
+          typename PyramidType>
+void enblend(std::list<vigra::ImageImportInfo*> &imageInfoList,
+        vigra::ImageExportInfo &outputImageInfo,
+        int verbose,
+        int maximumLevels,
+        bool oneAtATime,
+        bool wraparound,
+        double stitchMismatchThreshold);
 
 // io.cc
 void closeTmpfile(FILE *f);
