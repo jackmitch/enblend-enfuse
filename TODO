@@ -13,3 +13,5 @@
 
 - Make assemble smarter.
 
+- Documentation on -s flag is unclear and part about not caring about
+  overlap is wrong.
