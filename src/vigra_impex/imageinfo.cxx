@@ -448,7 +448,7 @@ bool ImageImportInfo::isGrayscale() const
 
 bool ImageImportInfo::isColor() const
 {
-    return m_num_bands == 3;
+    return (m_num_bands - m_num_extra_bands) == 3;
 }
 
 bool ImageImportInfo::isByte() const
