@@ -43,15 +43,17 @@ extern uint32 ROILastY;
  *  The result is written back to whiteLP.
  *  This function only operates within the region-of-interest.
  */
-void blend(std::vector<LPPixel*> &whiteLP,
-        std::vector<LPPixel*> &blackLP,
-        std::vector<LPPixel*> &maskGP) {
+void blend(vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile) {
 
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
+    // Make sure we're at the beginning of the files.
+    rewind(blackLPFile);
+    rewind(maskGPFile);
+
     // Do each layer individually.
-    for (uint32 layer = 0; layer < blackLP.size(); layer++) {
+    for (uint32 layer = 0; layer < whiteLP.size(); layer++) {
 
         if (Verbose > 0) {
             cout << "Blending layer " << layer << endl;
@@ -61,30 +63,51 @@ void blend(std::vector<LPPixel*> &whiteLP,
         uint32 layerWidth = roiWidth >> layer;
         uint32 layerHeight = roiHeight >> layer;
 
-        // Iterate over each pixel in the layer.
-        LPPixel *maskPixel = maskGP[layer];
-        LPPixel *blackPixel = blackLP[layer];
-        LPPixel *whitePixel = whiteLP[layer];
-        for (uint32 i = 0; i < (layerWidth * layerHeight); i++) {
-
-            // whiteCoeff is the weight of whitePixel.
-            double whiteCoeff = maskPixel->r / 255.0;
-            // (1.0 - whiteCoeff) is the weight of blackPixel;
-            double blackCoeff = 1.0 - whiteCoeff;
-
-            double r = whitePixel->r * whiteCoeff + blackPixel->r * blackCoeff;
-            double g = whitePixel->g * whiteCoeff + blackPixel->g * blackCoeff;
-            double b = whitePixel->b * whiteCoeff + blackPixel->b * blackCoeff;
-
-            // Convert back to int16
-            whitePixel->r = (int16)rint(r);
-            whitePixel->g = (int16)rint(g);
-            whitePixel->b = (int16)rint(b);
-
-            maskPixel++;
-            blackPixel++;
-            whitePixel++;
+        // layerWidth-sized line for blackLPFile.
+        LPPixel *blackLine = (LPPixel*)malloc(layerWidth * sizeof(LPPixel));
+        if (blackLine == NULL) {
+            cerr << "enblend: out of memory in blend for blackLine" << endl;
+            exit(1);
         }
+
+        // layerWidth-sized line for maskGPFile.
+        LPPixel *maskLine = (LPPixel*)malloc(layerWidth * sizeof(LPPixel));
+        if (maskLine == NULL) {
+            cerr << "enblend: out of memory in blend for maskLine" << endl;
+            exit(1);
+        }
+
+        // Iterate over each pixel in the layer.
+        LPPixel *whitePixel = whiteLP[layer];
+        for (uint32 y = 0; y < layerHeight; y++) {
+            readFromTmpfile(blackLine, sizeof(LPPixel), layerWidth, blackLPFile);
+            readFromTmpfile(maskLine, sizeof(LPPixel), layerWidth, maskGPFile);
+            LPPixel *blackPixel = blackLine;
+            LPPixel *maskPixel = maskLine;
+
+            for (uint32 x = 0; x < layerWidth; x++) {
+                // whiteCoeff is the weight of whitePixel.
+                double whiteCoeff = maskPixel->r / 255.0;
+                // (1.0 - whiteCoeff) is the weight of blackPixel;
+                double blackCoeff = 1.0 - whiteCoeff;
+
+                double r = whitePixel->r * whiteCoeff + blackPixel->r * blackCoeff;
+                double g = whitePixel->g * whiteCoeff + blackPixel->g * blackCoeff;
+                double b = whitePixel->b * whiteCoeff + blackPixel->b * blackCoeff;
+
+                // Convert back to int16
+                whitePixel->r = (int16)rint(r);
+                whitePixel->g = (int16)rint(g);
+                whitePixel->b = (int16)rint(b);
+
+                maskPixel++;
+                blackPixel++;
+                whitePixel++;
+            }
+        }
+
+        free(blackLine);
+        free(maskLine);
 
     }
 

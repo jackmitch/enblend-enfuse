@@ -39,32 +39,35 @@ typedef struct {
 } LPPixel;
 
 // assemble.cc
-uint32 *assemble(std::list<char*> &filenames, bool pickOne);
+FILE *assemble(std::list<char*> &filenames, bool pickOne);
 
 // blend.cc
-void blend(std::vector<LPPixel*> &whiteLP,
-        std::vector<LPPixel*> &blackLP,
-        std::vector<LPPixel*> &maskGP);
+void blend(std::vector<LPPixel*> &whiteLP, FILE *blackLPFile, FILE *maskGPFile);
 
 // bounds.cc
-uint32 bounds(MaskPixel *mask);
-void copyExcludedPixels(uint32 *dstImage, uint32 *srcImage);
+void ubbBounds(FILE *i1, FILE *i2);
+uint32 roiBounds(FILE *maskFile);
+void copyExcludedPixels(FILE *dst, FILE *src);
+void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile);
+
+// io.cc
+void readFromTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
+void writeToTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
+FILE *dumpToTmpfile(void *ptr, size_t size, size_t nmemb);
+FILE *dumpPyramidToTmpfile(std::vector<LPPixel*> &v);
+void saveMaskAsTIFF(MaskPixel *mask);
 
 // mask.cc
-MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage);
+FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile);
 
 // nearest.cc
 void nearestFeatureTransform(MaskPixel *mask);
 
 // pyramid.cc
 uint32 filterHalfWidth(uint32 level, uint32 maxPixelValue);
-std::vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels);
-std::vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels);
-std::vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels);
-void collapsePyramid(std::vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask);
-void savePyramid(std::vector<LPPixel*> &p, char *prefix);
-
-// thin.cc
-void thinMask(MaskPixel *mask);
+FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels);
+std::vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels);
+FILE *laplacianPyramidFile(FILE *imageFile, uint32 levels);
+void collapsePyramid(std::vector<LPPixel*> &p);
 
 #endif /* __ENBLEND_H__ */

@@ -238,120 +238,97 @@ int main(int argc, char** argv) {
         listIterator++;
     }
 
+    // Scanline for copying whiteImageFile to outputTIFF.
+    uint32 *line = (uint32*)malloc(OutputWidth * sizeof(uint32));
+    if (line == NULL) {
+        cerr << "enblend: out of memory in main for line." << endl;
+        exit(1);
+    }
+
     // Create the initial white image.
-    uint32 *whiteImage = assemble(inputFileNameList, false);
-    // mem = 1 fullsize uint32
+    FILE *whiteImageFile = assemble(inputFileNameList, false);
 
     // Main blending loop
     while (!inputFileNameList.empty()) {
 
-        // Write whiteImage to disk as output file.
-        // free whiteImage.
-        // mem = 0
-
         // Create the black image.
-        // write to disk as temp file.
-        // free blackImage.
-        uint32 *blackImage = assemble(inputFileNameList, OneAtATime);
-        // mem = 0
+        FILE *blackImageFile = assemble(inputFileNameList, OneAtATime);
+
+        // Caluclate the union bounding box of whiteImage and blackImage.
+        ubbBounds(whiteImageFile, blackImageFile);
 
         // Create the blend mask.
-        // load blackImage and whiteImage from disk one row at a time.
-        MaskPixel *mask = createMask(whiteImage, blackImage);
-        // maybe an extra-conservative nnt algo?
-        // mem = 1 ubb MaskPixel + 2 ubb uint32 distance matrices
-        // mem = 1 ubb MaskPixel
+        FILE *maskFile = createMask(whiteImageFile, blackImageFile);
 
         // Calculate the ROI bounds and number of levels.
-        uint32 levels = bounds(mask);
+        uint32 levels = roiBounds(maskFile);
         if (MaximumLevels > 0) {
             levels = min(levels, (uint32)MaximumLevels);
         }
-        // write mask to disk as temp file.
-        // free mask.
-        // mem = 0
 
         // Copy parts of blackImage outside of ROI into whiteImage.
-        // work on blackImage and whiteImage from files one row at a time.
-        copyExcludedPixels(whiteImage, blackImage);
-        // mem = 0.
+        copyExcludedPixels(whiteImageFile, blackImageFile);
 
         // Build Laplacian pyramid from blackImage
-        // load blackImage from disk one row at a time.
-        // dump result to disk.
-        vector<LPPixel*> *blackLP = laplacianPyramid(blackImage, levels);
-        // mem = 4/3 roi LPPixel
-        // mem = 0
-        //savePyramid(*blackLP, "black");
+        FILE *blackLPFile = laplacianPyramidFile(blackImageFile, levels);
 
-        // Free allocated memory.
-        // done with blackImage temp file.
-        _TIFFfree(blackImage);
-        // mem = 0
+        // Done with blackImage temp file. It will be deleted.
+        fclose(blackImageFile);
 
         // Build Gaussian pyramid from mask.
-        // load mask from disk one row at a time.
-        // dump result to disk.
-        vector<LPPixel*> *maskGP = gaussianPyramid(mask, levels);
-        // mem = 4/3 roi LPPixel
-        // mem = 0
-        savePyramid(*maskGP, "mask");
+        FILE *maskGPFile = gaussianPyramidFile(maskFile, levels);
 
         // Build Laplacian pyramid from whiteImage
         // load whiteImage from disk one row at a time.
-        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImage, levels);
-        // mem = 4/3 roi LPPixel
-        //savePyramid(*whiteLP, "white");
+        vector<LPPixel*> *whiteLP = laplacianPyramid(whiteImageFile, levels);
 
         // Blend pyramids
-        // store only whiteLP in memory.
-        // load blackLP and maskGP from disk one row at a time.
-        blend(*whiteLP, *blackLP, *maskGP);
+        blend(*whiteLP, blackLPFile, maskGPFile);
 
-        // Free allocated memory.
-        // done with maskGP and blackLP temp files.
-        for (uint32 i = 0; i < levels; i++) {
-            free((*maskGP)[i]);
-            free((*blackLP)[i]);
-        }
-        delete maskGP;
-        delete blackLP;
-        // mem = 1 fullsize uint32 + fullsize MaskPixel + 4/3 roi LPPixel
-        // should mem = 4/3 roi LPPixel
+        // Done with blackLP and maskGP temp files. They will be deleted.
+        fclose(blackLPFile);
+        fclose(maskGPFile);
 
         // Collapse result back into whiteImage.
-        collapsePyramid(*whiteLP, whiteImage, mask);
-        // copy whiteLP[0] into whiteImage on disk.
-        // can be done one row at a time, don't neet to load whiteImage or maskImage entirely.
+        collapsePyramid(*whiteLP);
 
-        free(mask);
-        // mem = 1 fullsize uint32 + 4/3 roi LPPixel
+        // Copy result into whiteImageFile using maskFile as template.
+        copyROIToOutputWithMask((*whiteLP)[0], whiteImageFile, maskFile);
+
+        // Done with maskFile temp file. It will be deleted.
+        fclose(maskFile);
+
+        // Done with whiteLP.
         for (uint32 i = 0; i < levels; i++) {
             free((*whiteLP)[i]);
         }
         delete whiteLP;
-        // mem = 1 fullsize uint32
+
+        // Checkpoint.
+        if (Verbose > 0) {
+            if (!inputFileNameList.empty()) {
+                cout << "Blend step complete - updating output file." << endl;
+            } else {
+                cout << "Writing output file." << endl;
+            }
+        }
+
+        // dump output scanlines.
+        rewind(whiteImageFile);
+        for (uint32 i = 0; i < OutputHeight; i++) {
+            readFromTmpfile(line, sizeof(uint32), OutputWidth, whiteImageFile);
+            TIFFWriteScanline(outputTIFF, line, i, 8);
+        }
 
     }
 
-    // don't need to do any of this - whiteImage is already complete.
+    free(line);
 
-    if (Verbose > 0) {
-        cout << "Writing output file." << endl;
-    }
-
-    // dump output scanlines.
-    for (uint32 i = 0; i < OutputHeight; i++) {
-        TIFFWriteScanline(outputTIFF,
-                &(whiteImage[i * OutputWidth]),
-                i,
-                8);
-    }
+    // close whiteImageFile.
+    fclose(whiteImageFile);
 
     // close outputTIFF.
     TIFFClose(outputTIFF);
-
-    _TIFFfree(whiteImage);
 
     return 0;
 }

@@ -108,7 +108,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
     if (Verbose > 0) {
         cout << "nearestFeatureTransform: top-down pass" << endl;
     }
-    MaskPixel *firstMaskP = &mask[UBBFirstY * OutputWidth + UBBFirstX];
+    MaskPixel *firstMaskP = mask;
     for (uint32 x = 0; x < ubbWidth; x++) {
         dist_t *dnfColumnP = &dnfColumn[x];
         MaskPixel *maskP = firstMaskP + x;
@@ -141,7 +141,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
 
             // Move pointers down one row.
             dnfColumnP += ubbWidth;
-            maskP += OutputWidth;
+            maskP += ubbWidth;
         }
     }
 
@@ -152,8 +152,8 @@ void nearestFeatureTransform(MaskPixel *mask) {
     if (Verbose > 0) {
         cout << "nearestFeatureTransform: bottom-up pass" << endl;
     }
-    MaskPixel *lastMaskP = &mask[UBBLastY * OutputWidth + UBBLastX];
-    dist_t *lastDNFColumnP = &dnfColumn[ubbWidth * ubbHeight - 1];
+    MaskPixel *lastMaskP = &mask[ubbPixels - 1];
+    dist_t *lastDNFColumnP = &dnfColumn[ubbPixels - 1];
     for (uint32 x = 0; x < ubbWidth; x++) {
         dist_t *dnfColumnP = lastDNFColumnP - x;
         MaskPixel *maskP = lastMaskP - x;
@@ -189,7 +189,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
 
             // Move pointers up one row.
             dnfColumnP -= ubbWidth;
-            maskP -= OutputWidth;
+            maskP -= ubbWidth;
         }
     }
 
@@ -203,7 +203,7 @@ void nearestFeatureTransform(MaskPixel *mask) {
     for (uint32 y = 0; y < ubbHeight; y++) {
         dist_t *dnfLeftP = &dnfLeft[y * ubbWidth];
         dist_t *dnfColumnP = &dnfColumn[y * ubbWidth];
-        MaskPixel *maskP = firstMaskP + (y * OutputWidth);
+        MaskPixel *maskP = firstMaskP + (y * ubbWidth);
 
         // List of dnfColumnP's on the left that might be the closest features
         // to the current dnfColumnP.
@@ -274,11 +274,11 @@ void nearestFeatureTransform(MaskPixel *mask) {
         cout << "nearestFeatureTransform: right-left pass" << endl; //... ";
         //cout.flush();
     }
-    dist_t *lastDNFLeftP = &dnfLeft[ubbWidth * ubbHeight - 1];
+    dist_t *lastDNFLeftP = &dnfLeft[ubbPixels - 1];
     for (uint32 y = 0; y < ubbHeight; y++) {
         dist_t *dnfColumnP = lastDNFColumnP - (y * ubbWidth);
         dist_t *dnfLeftP = lastDNFLeftP - (y * ubbWidth);
-        MaskPixel *maskP = lastMaskP - (y * OutputWidth);
+        MaskPixel *maskP = lastMaskP - (y * ubbWidth);
 
         // List of dnfColumnP's on the right that might be the closest features
         // to the current dnfColumnP.

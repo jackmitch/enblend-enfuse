@@ -44,43 +44,114 @@ extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
 
+/** Caluclate the union bounding box of these two images.
+ *  Files are OutputWidth * OutputHeight * uint32.
+ */
+void ubbBounds(FILE *i1, FILE *i2) {
+    UBBFirstX = OutputWidth - 1;
+    UBBLastX = 0;
+    UBBFirstY = OutputHeight - 1;
+    UBBLastY = 0;
+
+    uint32 *line1 = (uint32*)malloc(OutputWidth * sizeof(uint32));
+    uint32 *line2 = (uint32*)malloc(OutputWidth * sizeof(uint32));
+    if (line1 == NULL || line2 == NULL) {
+        cerr << "enblend: out of memory in ubbBounds for scanline." << endl;
+        exit(1);
+    }
+
+    // Make sure we're at the beginning of the files.
+    rewind(i1);
+    rewind(i2);
+
+    for (uint32 y = 0; y < OutputHeight; y++) {
+        readFromTmpfile(line1, sizeof(uint32), OutputWidth, i1);
+        readFromTmpfile(line2, sizeof(uint32), OutputWidth, i2);
+
+        uint32 *pixel1 = line1;
+        uint32 *pixel2 = line2;
+        for (uint32 x = 0; x < OutputWidth; x++) {
+            if (*pixel1 != 0 || *pixel2 != 0) {
+                // Pixel is in the union bounding box.
+                UBBFirstX = min(x, UBBFirstX);
+                UBBLastX = max(x, UBBLastX);
+                UBBFirstY = min(y, UBBFirstY);
+                UBBLastY = max(y, UBBLastY);
+            }
+            pixel1++;
+            pixel2++;
+        }
+    }
+
+    free(line1);
+    free(line2);
+
+    if (Verbose > 0) {
+        cout << "Union bounding box = ("
+             << UBBFirstX << ", " << UBBFirstY
+             << ") -> ("
+             << UBBLastX << ", " << UBBLastY
+             << ")" << endl;
+    }
+
+    return;
+}
+
 /** Caluclate the region of interest for pyramids and the number of
  *  levels we're going to make based on the blend mask.
  */
-uint32 bounds(MaskPixel *mask) {
+uint32 roiBounds(FILE *maskFile) {
+
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+    uint32 ubbHeight = UBBLastY - UBBFirstY + 1;
+
     // First calculate the bounding box of the transition line.
     int32 firstMulticolorRow = UBBLastY;
     int32 lastMulticolorRow = UBBFirstY;
     int32 firstMulticolorColumn = UBBLastX;
     int32 lastMulticolorColumn = UBBFirstX;
 
-    // Scan rows.
+    // Allocate memory for two rows.
+    MaskPixel *firstRow = (MaskPixel*)malloc(ubbWidth * sizeof(MaskPixel));
+    MaskPixel *row = (MaskPixel*)malloc(ubbWidth * sizeof(MaskPixel));
+    if (row == NULL || firstRow == NULL) {
+        cerr << "enblend: out of memory in roiBounds for rows." << endl;
+        exit(1);
+    }
+
+    // Make sure we're at the beginning of the mask file.
+    rewind(maskFile);
+
     for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
-        MaskPixel *maskP = &mask[y * OutputWidth + UBBFirstX];
+        readFromTmpfile(row, sizeof(MaskPixel), ubbWidth, maskFile);
+        if (y == UBBFirstY) {
+            memcpy(firstRow, row, ubbWidth * sizeof(MaskPixel));
+        }
+
+        MaskPixel *maskPFirst = firstRow;
+        MaskPixel *maskP = row;
         uint8 leftmostColor = maskP->r;
         for (uint32 x = UBBFirstX; x <= UBBLastX; x++) {
             if (maskP->r != leftmostColor) {
+                // Row y is a multicolor row.
                 firstMulticolorRow = min(firstMulticolorRow, (int32)y);
                 lastMulticolorRow = max(lastMulticolorRow, (int32)y);
-                break;
+            }
+            if (maskP->r != maskPFirst->r) {
+                // Column x is a multicolor column.
+                firstMulticolorColumn = min(firstMulticolorColumn, (int32)x);
+                lastMulticolorColumn = max(lastMulticolorColumn, (int32)x);
             }
             maskP++;
+            maskPFirst++;
         }
     }
 
-    // Scan columns.
-    for (uint32 x = UBBFirstX; x <= UBBLastX; x++) {
-        MaskPixel *maskP = &mask[UBBFirstY * OutputWidth + x];
-        uint8 topmostColor = maskP->r;
-        for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
-            if (maskP->r != topmostColor) {
-                firstMulticolorColumn = min(firstMulticolorColumn, (int32)x);
-                lastMulticolorColumn = max(lastMulticolorColumn, (int32)x);
-                break;
-            }
-            maskP += OutputWidth;
-        }
-    }
+    free(row);
+    free(firstRow);
+
+    // FIXME: sanity check for situation where there is no transition line
+    // this means one image has no contribution.
 
     if (Verbose > 0) {
         cout << "Transition line bounding box = ("
@@ -159,24 +230,112 @@ uint32 bounds(MaskPixel *mask) {
 
 /** Copy pixels from inside the UBB but outside the ROI from srcImage
  *  into dstImage. Ignore transparent pixels.
+ *  Files are OutputWidth * OutputHeight * uint32.
  */
-void copyExcludedPixels(uint32 *dstImage, uint32 *srcImage) {
+void copyExcludedPixels(FILE *dst, FILE *src) {
+
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+
+    uint32 *srcLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    uint32 *dstLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    if (srcLine == NULL || dstLine == NULL) {
+        cerr << "enblend: out of memory in createMask for scanline." << endl;
+        exit(1);
+    }
 
     for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
+        fseek(src, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
+        fseek(dst, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
+        readFromTmpfile(srcLine, sizeof(uint32), ubbWidth, src);
+        readFromTmpfile(dstLine, sizeof(uint32), ubbWidth, dst);
+        
+        uint32 *srcPixel = srcLine;
+        uint32 *dstPixel = dstLine;
         for (uint32 x = UBBFirstX; x <= UBBLastX; x++) {
             if (y < ROIFirstY
                     || y > ROILastY
                     || x < ROIFirstX
                     || x > ROILastX) {
-                uint32 index = (y * OutputWidth) + x;
-                uint32 srcPixel = srcImage[index];
-                if (TIFFGetA(srcPixel)) {
-                    dstImage[index] = srcImage[index];
+                if (TIFFGetA(*srcPixel)) {
+                    *dstPixel = *srcPixel;
                 }
             }
+            srcPixel++;
+            dstPixel++;
         }
+
+        // Write the modified line back to dst file.
+        fseek(dst, -ubbWidth * sizeof(uint32), SEEK_CUR);
+        writeToTmpfile(dstLine, sizeof(uint32), ubbWidth, dst);
     }
+
+    free(srcLine);
+    free(dstLine);
 
     return;
 }
 
+/** Copy ROI-sized area of LPPixels into output-sized tmpfile.
+ *  Ignore pixels that are transparent in UBB-sized mask tmpfile.
+ */
+void copyROIToOutputWithMask(LPPixel *roi, FILE *uint32File, FILE *maskFile) {
+
+    uint32 roiWidth = ROILastX - ROIFirstX + 1;
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+
+    uint32 *outputLine = (uint32*)malloc(roiWidth * sizeof(uint32));
+    if (outputLine == NULL) {
+        cerr << "enblend: out of memory in copy for outputLine" << endl;
+        exit(1);
+    }
+
+    MaskPixel *maskLine = (MaskPixel*)malloc(roiWidth * sizeof(MaskPixel));
+    if (maskLine == NULL) {
+        cerr << "enblend: out of memory in copy for maskLine" << endl;
+        exit(1);
+    }
+
+    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+        uint32 ubbY = y - UBBFirstY;
+        uint32 ubbX = ROIFirstX - UBBFirstX;
+
+        // Read roiWidth-sized line from uint32File.
+        fseek(uint32File, (y * OutputWidth + ROIFirstX) * sizeof(uint32), SEEK_SET);
+        readFromTmpfile(outputLine, sizeof(uint32), roiWidth, uint32File);
+
+        // Read roiWidth-sized line from maskFile.
+        fseek(maskFile, (ubbY * ubbWidth + ubbX) * sizeof(MaskPixel), SEEK_SET);
+        readFromTmpfile(maskLine, sizeof(MaskPixel), roiWidth, maskFile);
+
+        MaskPixel *maskPixel = maskLine;
+        uint32 *outputPixel = outputLine;
+        for (uint32 x = 0; x < roiWidth; x++) {
+            if (maskPixel->a == 255) {
+                // Convert back to uint8 data from int16 data.
+                roi->r = min(255, max(0, (int)roi->r));
+                roi->g = min(255, max(0, (int)roi->g));
+                roi->b = min(255, max(0, (int)roi->b));
+
+                *outputPixel =
+                        (roi->r & 0xFF)
+                        | ((roi->g & 0xFF) << 8)
+                        | ((roi->b & 0xFF) << 16)
+                        | (0xFF << 24);
+
+            }
+            outputPixel++;
+            maskPixel++;
+            roi++;
+        }
+
+        // Write back results.
+        fseek(uint32File, -roiWidth * sizeof(uint32), SEEK_CUR);
+        writeToTmpfile(outputLine, sizeof(uint32), roiWidth, uint32File);
+
+    }
+
+    free(outputLine);
+    free(maskLine);
+
+    return;
+}

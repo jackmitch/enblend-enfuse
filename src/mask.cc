@@ -40,67 +40,72 @@ extern uint32 UBBLastY;
 /** Calculate a blending mask between whiteImage and blackImage.
  *  Sets the union bounding box of whiteImage and blackImage.
  */
-MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
+FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
+
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+    uint32 ubbHeight = UBBLastY - UBBFirstY + 1;
 
     // Allocate memory for the blending mask.
-    MaskPixel *mask = (MaskPixel*)calloc(OutputWidth * OutputHeight,
+    MaskPixel *mask = (MaskPixel*)calloc(ubbWidth * ubbHeight,
             sizeof(MaskPixel));
     if (mask == NULL) {
         cerr << "enblend: out of memory in mask for mask" << endl;
         exit(1);
     }
 
-    // Region of interest boundaries
-    UBBFirstX = OutputWidth - 1;
-    UBBLastX = 0;
-    UBBFirstY = OutputHeight - 1;
-    UBBLastY = 0;
-
-    uint32 *whitePixel = whiteImage;
-    uint32 *blackPixel = blackImage;
-    MaskPixel *maskPixel = mask;
-
-    for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
-
-        if (*whitePixel != 0 || *blackPixel != 0) {
-            // Pixel is in region of interest.
-            uint32 x = i % OutputWidth;
-            uint32 y = i / OutputWidth;
-            UBBFirstX = min(x, UBBFirstX);
-            UBBLastX = max(x, UBBLastX);
-            UBBFirstY = min(y, UBBFirstY);
-            UBBLastY = max(y, UBBLastY);
-        }
-
-        if (*whitePixel == 0 && *blackPixel == 0) {
-            // Pixel is not in the union of the two images.
-            // Mark the pixel as thinnable.
-            maskPixel->r = 1;
-        }
-        else if (*whitePixel == 0) {
-            // Pixel is in blackImage but not whiteImage.
-            // Make the pixel green.
-            maskPixel->g = 255;
-            maskPixel->a = 255;
-        }
-        else if (*blackPixel == 0) {
-            // Pixel is in whiteImage but not blackImage.
-            // Make the pixel blue.
-            maskPixel->b = 255;
-            maskPixel->a = 255;
-        }
-        else {
-            // Pixel is in both images.
-            // Mark the pixel as thinnable.
-            maskPixel->r = 1;
-            maskPixel->a = 255;
-        }
-
-        whitePixel++;
-        blackPixel++;
-        maskPixel++;
-
+    uint32 *whiteLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    uint32 *blackLine = (uint32*)malloc(ubbWidth * sizeof(uint32));
+    if (whiteLine == NULL || blackLine == NULL) {
+        cerr << "enblend: out of memory in createMask for scanline." << endl;
+        exit(1);
     }
+
+    MaskPixel *maskPixel = mask;
+    for (uint32 y = UBBFirstY; y <= UBBLastY; y++) {
+        // Move to the pixel at (UBBFirstX, y)
+        fseek(whiteImageFile, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
+        fseek(blackImageFile, (y * OutputWidth + UBBFirstX) * sizeof(uint32), SEEK_SET);
+
+        // Read lines from white and black images.
+        readFromTmpfile(whiteLine, sizeof(uint32), ubbWidth, whiteImageFile);
+        readFromTmpfile(blackLine, sizeof(uint32), ubbWidth, blackImageFile);
+
+        uint32 *whitePixel = whiteLine;
+        uint32 *blackPixel = blackLine;
+        for (uint32 x = 0; x < ubbWidth; x++) {
+
+            if (*whitePixel == 0 && *blackPixel == 0) {
+                // Pixel is not in the union of the two images.
+                // Mark the pixel as thinnable.
+                maskPixel->r = 1;
+            }
+            else if (*whitePixel == 0) {
+                // Pixel is in blackImage but not whiteImage.
+                // Make the pixel green.
+                maskPixel->g = 255;
+                maskPixel->a = 255;
+            }
+            else if (*blackPixel == 0) {
+                // Pixel is in whiteImage but not blackImage.
+                // Make the pixel blue.
+                maskPixel->b = 255;
+                maskPixel->a = 255;
+            }
+            else {
+                // Pixel is in both images.
+                // Mark the pixel as thinnable.
+                maskPixel->r = 1;
+                maskPixel->a = 255;
+            }
+
+            whitePixel++;
+            blackPixel++;
+            maskPixel++;
+        }
+    }
+
+    free(whiteLine);
+    free(blackLine);
 
     // Run the nearest feature transform on the mask inside the UBB.
     // This will replace the thinnable pixels with either green or blue
@@ -115,7 +120,7 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
     // Do not change alpha channel - this stores the union of
     // whiteImage and blackImage.
     maskPixel = mask;
-    for (uint32 i = 0; i < (OutputWidth * OutputHeight); i++) {
+    for (uint32 i = 0; i < (ubbWidth * ubbHeight); i++) {
         if (maskPixel->g != 0) {
             maskPixel->r = 0;
             maskPixel->g = 0;
@@ -130,6 +135,8 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
         maskPixel++;
     }
 
-    return mask;
+    saveMaskAsTIFF(mask);
+    // Dump mask to file.
+    return dumpToTmpfile(mask, sizeof(MaskPixel), ubbWidth * ubbHeight);
 }
 

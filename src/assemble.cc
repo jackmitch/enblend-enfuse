@@ -41,17 +41,15 @@ extern uint32 OutputHeight;
  *  Removes used images from given list of filenames.
  *  Returns an output-sized buffer created with _TIFFmalloc.
  */
-uint32 *assemble(std::list<char*> &filenames, bool pickOne) {
+FILE *assemble(std::list<char*> &filenames, bool pickOne) {
 
     if (filenames.empty()) return NULL;
 
-    uint32 *image = (uint32*)_TIFFmalloc(
-            OutputWidth * OutputHeight * sizeof(uint32));
+    uint32 *image = (uint32*)calloc(OutputWidth * OutputHeight, sizeof(uint32));
     if (image == NULL) {
         cerr << "enblend: out of memory in assemble for image." << endl;
         exit(1);
     }
-    memset(image, 0, OutputWidth * OutputHeight * sizeof(uint32));
 
     uint32 *scanline = (uint32*)calloc(OutputWidth, sizeof(uint32));
     if (scanline == NULL) {
@@ -138,6 +136,6 @@ uint32 *assemble(std::list<char*> &filenames, bool pickOne) {
         cout << endl;
     }
 
-    return image;
+    return dumpToTmpfile(image, sizeof(uint32), OutputWidth * OutputHeight);
 
 }

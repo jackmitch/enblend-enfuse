@@ -37,6 +37,12 @@ extern uint32 OutputHeight;
 extern uint16 PlanarConfig;
 extern uint16 Photometric;
 
+// Union bounding box.
+extern uint32 UBBFirstX;
+extern uint32 UBBLastX;
+extern uint32 UBBFirstY;
+extern uint32 UBBLastY;
+
 // Region of interest for this operation.
 extern uint32 ROIFirstX;
 extern uint32 ROILastX;
@@ -224,101 +230,129 @@ LPPixel *reduce(LPPixel *in, uint32 w, uint32 h) {
     return out;
 }
 
-/** Create a Gaussian pyramid from image with the specified number of levels.
- *  Returns a vector of pyramid levels.
- *  This version of the function takes an input image array of TIFF pixels.
+/** Create a Gaussian pyramid for the mask in the specified file.
+ *  maskFile is ubbWidth * ubbHeight * MaskPixel.
+ *  Saves the result in a temporary file.
  */
-vector<LPPixel*> *gaussianPyramid(uint32 *image, uint32 levels) {
+FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
+
+    vector<LPPixel*> v;
 
     // Only consider the region-of-interest within image.
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
-
-    // Create vector for output.
-    vector<LPPixel*> *v = new vector<LPPixel*>();
 
     if (Verbose > 0) {
         cout << "Generating Gaussian pyramid g0" << endl;
     }
 
-    // Build level 0
+    // Allocate space for level 0.
     LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
     if (g == NULL) {
         cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
         exit(1);
     }
 
-    v->push_back(g);
-
-    // Copy image region-of-interest verbatim into g.
-    LPPixel *gIndex = g;
-    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
-        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
-            uint32 pixel = image[y * OutputWidth + x];
-            gIndex->r = TIFFGetR(pixel);
-            gIndex->g = TIFFGetG(pixel);
-            gIndex->b = TIFFGetB(pixel);
-            gIndex->a = TIFFGetA(pixel);
-            gIndex++;
-        }
-    }
-
-    // Make remaining levels.
-    uint32 l = 1;
-    while (l < levels) {
-        if (Verbose > 0) {
-            cout << "Generating Gaussian pyramid g" << v->size() << endl;
-        }
-
-        g = reduce(g, roiWidth, roiHeight);
-        v->push_back(g);
-
-        roiWidth = roiWidth >> 1;
-        roiHeight = roiHeight >> 1;
-        l++;
-    }
-
-    return v;
-}
-
-/** Create a Gaussian pyramid from image with the specified number of levels.
- *  Returns a vector of pyramid levels.
- *  This version of the function takes an input image array of MaskPixels.
- */
-vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
-
-    // Only consider the region-of-interest within image.
-    uint32 roiWidth = ROILastX - ROIFirstX + 1;
-    uint32 roiHeight = ROILastY - ROIFirstY + 1;
-
-    // Create vector for output.
-    vector<LPPixel*> *v = new vector<LPPixel*>();
-
-    if (Verbose > 0) {
-        cout << "Generating Gaussian pyramid g0" << endl;
-    }
-
-    // Build level 0
-    LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
-    if (g == NULL) {
-        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
+    // Allocate space for a scanline.
+    MaskPixel *line = (MaskPixel*)malloc(roiWidth * sizeof(MaskPixel));
+    if (line == NULL) {
+        cerr << "enblend: out of memory in gaussianPyramid for line" << endl;
         exit(1);
     }
 
-    v->push_back(g);
+    // Make sure we're at the beginning of the file.
+    rewind(maskFile);
 
     // Copy image region-of-interest verbatim into g.
     LPPixel *gIndex = g;
-    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
-        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
-            MaskPixel *pixel = &image[y * OutputWidth + x];
+    for (uint32 y = ROIFirstY - UBBFirstY; y <= ROILastY - UBBFirstY; y++) {
+
+        fseek(maskFile, (y * ubbWidth + ROIFirstX - UBBFirstX) * sizeof(MaskPixel), SEEK_SET);
+        readFromTmpfile(line, sizeof(MaskPixel), roiWidth, maskFile);
+
+        MaskPixel *pixel = line;
+        for (uint32 x = 0; x < roiWidth; x++) {
             gIndex->r = pixel->r;
             gIndex->g = pixel->g;
             gIndex->b = pixel->b;
             gIndex->a = pixel->a;
             gIndex++;
+            pixel++;
         }
     }
+
+    free(line);
+
+    v.push_back(g);
+
+    // Make remaining levels.
+    uint32 l = 1;
+    while (l < levels) {
+        if (Verbose > 0) {
+            cout << "Generating Gaussian pyramid g" << v.size() << endl;
+        }
+
+        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
+        v.push_back(g);
+
+        l++;
+    }
+
+    return dumpPyramidToTmpfile(v);
+}
+
+/** Create a Gaussian pyramid for the image in the specified file.
+ *  uint32File is OutputWidth * OutputHeight * uint32.
+ */
+vector<LPPixel*> *gaussianPyramid(FILE *uint32File, uint32 levels) {
+
+    vector<LPPixel*> *v = new vector<LPPixel*>();
+
+    // Only consider the region-of-interest within image.
+    uint32 ubbWidth = UBBLastX - UBBFirstX + 1;
+    uint32 roiWidth = ROILastX - ROIFirstX + 1;
+    uint32 roiHeight = ROILastY - ROIFirstY + 1;
+
+    if (Verbose > 0) {
+        cout << "Generating Gaussian pyramid g0" << endl;
+    }
+
+    // Allocate space for level 0.
+    LPPixel *g = (LPPixel*)malloc(roiWidth * roiHeight * sizeof(LPPixel));
+    if (g == NULL) {
+        cerr << "enblend: out of memory in gaussianPyramid for g" << endl;
+        exit(1);
+    }
+
+    // Allocate space for a scanline.
+    uint32 *line = (uint32*)malloc(roiWidth * sizeof(uint32));
+    if (line == NULL) {
+        cerr << "enblend: out of memory in gaussianPyramid for line" << endl;
+        exit(1);
+    }
+
+    // Copy image region-of-interest verbatim into g.
+    LPPixel *gIndex = g;
+    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+
+        fseek(uint32File, (y * OutputWidth + ROIFirstX) * sizeof(uint32), SEEK_SET);
+        readFromTmpfile(line, sizeof(uint32), roiWidth, uint32File);
+
+        uint32 *pixel = line;
+        for (uint32 x = 0; x < roiWidth; x++) {
+            gIndex->r = TIFFGetR(*pixel);
+            gIndex->g = TIFFGetG(*pixel);
+            gIndex->b = TIFFGetB(*pixel);
+            gIndex->a = TIFFGetA(*pixel);
+            gIndex++;
+            pixel++;
+        }
+    }
+
+    free(line);
+
+    v->push_back(g);
 
     // Make remaining levels.
     uint32 l = 1;
@@ -327,27 +361,26 @@ vector<LPPixel*> *gaussianPyramid(MaskPixel *image, uint32 levels) {
             cout << "Generating Gaussian pyramid g" << v->size() << endl;
         }
 
-        g = reduce(g, roiWidth, roiHeight);
+        g = reduce(g, roiWidth >> (l-1), roiHeight >> (l-1));
         v->push_back(g);
 
-        roiWidth = roiWidth >> 1;
-        roiHeight = roiHeight >> 1;
         l++;
     }
 
     return v;
 }
 
-/** Create a Laplacian pyramid from image with the specified number of levels.
+/** Create a Laplacian pyramid from imageFile with the specified number of
+ *  levels.
  *  Returns a vector of pyramid levels.
  */
-vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels) {
+vector<LPPixel*> *laplacianPyramid(FILE *imageFile, uint32 levels) {
     // Only consider the region-of-interest within image.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
 
     // First create a Gaussian pyramid.
-    vector<LPPixel*> *gp = gaussianPyramid(image, levels);
+    vector<LPPixel*> *gp = gaussianPyramid(imageFile, levels);
 
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
@@ -363,12 +396,23 @@ vector<LPPixel*> *laplacianPyramid(uint32 *image, uint32 levels) {
     return gp;
 }
 
+/** Create a Laplacian pyramid from imageFile with the specified number of
+ *  levels.
+ *  Returns the pyramid in a temp file.
+ */
+FILE *laplacianPyramidFile(FILE *imageFile, uint32 levels) {
+    vector<LPPixel*> *v = laplacianPyramid(imageFile, levels);
+    FILE *pyramidFile = dumpPyramidToTmpfile(*v);
+    delete v;
+    return pyramidFile;
+}
+
 /** Collapse the Laplacian pyramid given in p.
  *  Copy the result into the region-of-interest of dest.
  *  Use mask to set full transparency on pixels within the region-of-interest
  *  but outside the union of the images that make up the region-of-interest.
  */
-void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
+void collapsePyramid(vector<LPPixel*> &p) {
 
     // Only operate within the region-of-interest.
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
@@ -383,32 +427,6 @@ void collapsePyramid(vector<LPPixel*> &p, uint32 *dest, MaskPixel *mask) {
         expand(p[l + 1], roiWidth >> (l+1), roiHeight >> (l+1),
             p[l], roiWidth >> l, roiHeight >> l,
             true);
-    }
-
-    // Copy p[0] into dest ROI, omitting transparent pixels in mask.
-    LPPixel *pixel = p[0];
-    for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
-        for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
-
-            // Convert back to uint8 data from int16 data.
-            pixel->r = min(255, max(0, (int)pixel->r));
-            pixel->g = min(255, max(0, (int)pixel->g));
-            pixel->b = min(255, max(0, (int)pixel->b));
-
-            MaskPixel *maskPixel = &mask[y * OutputWidth + x];
-
-            if (maskPixel->a != 255) {
-                dest[y * OutputWidth + x] = 0;
-            } else {
-                dest[y * OutputWidth + x] =
-                        (pixel->r & 0xFF)
-                        | ((pixel->g & 0xFF) << 8)
-                        | ((pixel->b & 0xFF) << 16)
-                        | (0xFF << 24);
-            }
-
-            pixel++;
-        }
     }
 
     return;
