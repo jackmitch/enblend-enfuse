@@ -39,6 +39,7 @@ using std::cout;
 using std::endl;
 using std::list;
 using std::map;
+using std::min;
 
 namespace vigra {
 
