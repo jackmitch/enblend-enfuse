@@ -1,13 +1,52 @@
-AC_INIT
-AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(enblend,0.9)
+#dnl AC_INIT(enblend,0.9)
+#AC_INIT
+#AM_CONFIG_HEADER(config.h)
+#AM_INIT_AUTOMAKE(enblend,0.9)
+#AC_PROG_CXX
+#AC_PROG_INSTALL
+#AC_HEADER_STDC
+#dnl AC_HAVE_HEADERS(tiffio.h getopt.h string.h)
+#dnl AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_ERROR([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
+#dnl AC_CHECK_HEADER(tiffio.h,,AC_MSG_ERROR([libtiff-devel header files are required to compile enblend.]))
+#dnl AC_CHECK_HEADERS(math.h)
+#dnl AC_CHECK_FUNCS(lrint)
+#dnl AC_FUNC_STRTOD
+#AC_OUTPUT(Makefile doc/Makefile src/Makefile)
+
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT(enblend, 0.9, [mihal@eecs.berkeley.edu])
+AC_CONFIG_SRCDIR([src/blend.cc])
+AM_INIT_AUTOMAKE
+AC_CONFIG_HEADER([config.h])
+
+# Checks for programs.
 AC_PROG_CXX
-AC_PROG_INSTALL
+AC_PROG_CC
+CXXFLAGS = 
+
+# Checks for libraries.
+# FIXME: Replace `main' with a function in `-ltiff':
+#AC_CHECK_LIB([tiff], [main])
+
+# Checks for header files.
 AC_HEADER_STDC
-dnl AC_HAVE_HEADERS(tiffio.h getopt.h string.h)
-AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_ERROR([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
-AC_CHECK_HEADER(tiffio.h,,AC_MSG_ERROR([libtiff-devel header files are required to compile enblend.]))
-dnl AC_CHECK_HEADERS(math.h)
-AC_CHECK_FUNCS(lrint)
+AC_CHECK_HEADERS([stdlib.h string.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+
+# Checks for library functions.
+AC_FUNC_MALLOC
 AC_FUNC_STRTOD
-AC_OUTPUT(Makefile doc/Makefile src/Makefile)
+AC_CHECK_FUNCS([memset])
+
+AC_CONFIG_FILES([Makefile
+                 demo/Makefile
+                 doc/Makefile
+                 src/Makefile])
+AC_OUTPUT
