@@ -146,7 +146,7 @@ public:
         } else {
             // Zero blocks available.
             // Try to free a block by forcing another image to swap.
-            blocksAvailable += freeBlock();
+            blocksAvailable += freeBlock(image);
             if (blocksAvailable == 0) {
                 // Attempt to free a block was a failure.
                 vigra_fail("CachedFileImageDirector::requestBlocksForNewImage(): "
@@ -188,7 +188,7 @@ public:
             // Try to free a block from an image that has not
             // missed recently. If this fails then we just won't
             // give the calling image more blocks.
-            blocksAvailable += freeBlock();
+            blocksAvailable += freeBlock(image);
         }
 
         // Add image to back of list.
@@ -273,15 +273,24 @@ protected:
         pool = new boost::pool<>(blocksize);
     }
 
-    int freeBlock() {
+    // Free a block for the given image.
+    // Find another image with proportionally more blocks than image.
+    int freeBlock(CachedFileImageBase const * image) {
         // Try to free a block from an image.
         // Check least-recently-missed images first.
+        //double imageAllocation = (double)image->numBlocksAllocated() / (double)image->numBlocksNeeded();
         list<CachedFileImageBase const *>::iterator i;
         for (i = imageList.begin(); i != imageList.end(); i++) {
-            CachedFileImageBase const * image = *i;
-            if (image->numBlocksAllocated() > 0) {
-                // Image is currently using blocks.
-                image->swapOutBlock();
+            CachedFileImageBase const * candidate = *i;
+            //double candidateAllocation = (double)candidate->numBlocksAllocated() /
+            //        (double)candidate->numBlocksNeeded();
+            //cout << "imageAllocation " << imageAllocation << endl;
+            //cout << "candidateAllocation " << candidateAllocation << endl;
+            if (candidate->numBlocksAllocated() > image->numBlocksAllocated()) {
+                candidate->swapOutBlock();
+                // mark candidate as most-recently-missed.
+                imageList.erase(i);
+                imageList.push_back(candidate);
                 return 1;
             }
         }
@@ -732,10 +741,6 @@ public:
         return blocksNeeded_;
     }
 
-    void swapOutBlock() const {
-        swapLeastRecentlyUsedBlock();
-    }
-
 private:
 
     // Data value used to initialize previously unused pixels.
@@ -754,7 +759,7 @@ private:
     PIXELTYPE * getLinePointerCacheMiss(int dy) const;
 
     // Free space by swapping out a block of lines to the file.
-    void swapLeastRecentlyUsedBlock() const;
+    void swapOutBlock() const;
 
     // Lazy creation of tmp file for swapping image data to disk
     void initTmpfile() const;
@@ -764,7 +769,7 @@ private:
         linesPerBlocksize_ = 0;
         blocksAllocated_ = 0;
         blocksNeeded_ = 0;
-        blockLRU_ = NULL;
+        blocksInMemory_ = NULL;
         lines_ = NULL;
         blockIsClean_ = NULL;
         blockInFile_ = NULL;
@@ -781,11 +786,9 @@ private:
     // How many blocks are needed for the entire image.
     int blocksNeeded_;
 
-    // lru replacement policy
-    // most recently used block is at start of list.
-    // least recently used block is at end of list.
-    // Here, "used" means swapped out.
-    mutable list<int> *blockLRU_;
+    // List of blocks in memory. 
+    // Blocks are in sequential order.
+    mutable list<int> *blocksInMemory_;
 
     // Array of pointers to first pixel in each line.
     mutable PIXELTYPE ** lines_;
@@ -810,7 +813,7 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::deallocate() {
     // Unregister the image with the director.
     CachedFileImageDirector::v().returnBlocksUnregisterImage(blocksAllocated_, this);
-    delete blockLRU_;
+    delete blocksInMemory_;
 
     // Deallocate all the blocks in use.
     if (lines_ != NULL) {
@@ -854,8 +857,10 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
             ((double)CachedFileImageDirector::v().getBlockSize())
             / (width_ * sizeof(PIXELTYPE)));
 
-    if (linesPerBlocksize_ <= 0) {
-        vigra_fail("Image cache block size is too small.");
+    // Need a minimum of 3 lines per block to support 5-line sliding windows.
+    if (linesPerBlocksize_ < 3) {
+        vigra_fail("Image cache block size is too small. Use the -b flag to "
+                "increase the cache block size.");
     }
 
     blocksNeeded_ = (int)ceil(((double)height_) / linesPerBlocksize_);
@@ -865,7 +870,7 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
             blocksNeeded_, this);
 
     // Create the blockLRU list.
-    blockLRU_ = new list<int>();
+    blocksInMemory_ = new list<int>();
 
     lines_ = new PIXELTYPE*[height_];
     blockIsClean_ = new bool[blocksNeeded_];
@@ -880,7 +885,7 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     // Allocate mem for the first linesPerBlocksize_*blocksAllowed lines.
     int line = 0;
     for (int block = 0; block < blocksAllowed; block++) {
-        blockLRU_->push_front(block);
+        blocksInMemory_->push_back(block);
         blocksAllocated_++;
 
         // Get a block from the director.
@@ -945,7 +950,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
                 " and attempt to free blocks failed.");
     } else if (moreBlocks == 0) {
         // Make space for new block.
-        swapLeastRecentlyUsedBlock();
+        swapOutBlock();
     }
     //cout << "swapping in block " << blockNumber << endl;
 
@@ -984,8 +989,14 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     // Mark this block as clean.
     blockIsClean_[blockNumber] = true;
 
-    // Mark this block as most recently used.
-    blockLRU_->push_front(blockNumber);
+    // Add this block to the list in the right spot.
+    //blocksInMemory_->push_front(blockNumber);
+    list<int>::iterator i = blocksInMemory_->begin();
+    for (; i != blocksInMemory_->end(); ++i) {
+        if (*i > blockNumber) break;
+    }
+    blocksInMemory_->insert(i, blockNumber);
+
     blocksAllocated_++;
 
     return lines_[dy];
@@ -993,13 +1004,26 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
 
 /** Swap a block out to disk. */
 template <class PIXELTYPE>
-void CachedFileImage<PIXELTYPE>::swapLeastRecentlyUsedBlock() const {
-    if (blocksAllocated_ == 0) return;
+void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
+    if (blocksAllocated_ == 0) vigra_fail("Attempt to free a block from an image that has no blocks.");
 
-    // Swap the least-recently-swapped block.
-    int blockNumber = blockLRU_->back();
-    blockLRU_->pop_back();
-    //cout << endl << "swapping out block " << blockNumber << endl;
+    // Enblend iterates over images in 5-line sliding windows (in reduce).
+    // So the block least likely to be used next is the block before the
+    // last block currently in memory.
+    // If we only have one block, and we got to this point, then there is
+    // probably going to be thrashing.
+    // This means that there is only 1 block managed by the director, or that
+    // there are so many images the director can only assign 1 block per image.
+    int blockNumber = 0;
+    if (blocksAllocated_ == 1) {
+        //vigra_fail("");
+        blockNumber = blocksInMemory_->back();
+        blocksInMemory_->pop_back();
+    } else {
+        list<int>::iterator penultimate = --(blocksInMemory_->end());
+        blockNumber = *(--penultimate);
+        blocksInMemory_->erase(penultimate);
+    }
 
     int firstLineInBlock = blockNumber * linesPerBlocksize_;
     PIXELTYPE *blockStart = lines_[firstLineInBlock];
@@ -1162,7 +1186,7 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
         std::swap(linesPerBlocksize_, rhs.linesPerBlocksize_);
         std::swap(blocksAllocated_, rhs.blocksAllocated_);
         std::swap(blocksNeeded_, rhs.blocksNeeded_);
-        std::swap(blockLRU_, rhs.blockLRU_);
+        std::swap(blocksInMemory_, rhs.blocksInMemory_);
         std::swap(lines_, rhs.lines_);
         std::swap(blockIsClean_, rhs.blockIsClean_);
         std::swap(blockInFile_, rhs.blockInFile_);
