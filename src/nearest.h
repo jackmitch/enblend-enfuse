@@ -106,7 +106,7 @@ void nearestFeatureTransform(bool wraparound,
 
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) cout << "Creating blend mask: 1/6";
         else cout << "Creating blend mask: 1/4";
         cout.flush();
@@ -151,7 +151,7 @@ void nearestFeatureTransform(bool wraparound,
     // feature in the same column and below us.
     // If this is smaller than the value caluclated in the top-down pass,
     // overwrite that value.
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) cout << " 2/6";
         else cout << " 2/4";
         cout.flush();
@@ -202,7 +202,7 @@ void nearestFeatureTransform(bool wraparound,
     }
 
     // Calculate dnfLeft for each pixel.
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) cout << " 3/6";
         else cout << " 3/4";
         cout.flush();
@@ -216,7 +216,8 @@ void nearestFeatureTransform(bool wraparound,
     for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
 
         // Indicate halfway mark when wraparound is true.
-        if (Verbose > 0 && wraparound && (sy.y == smidpoint.y)) {
+        if (Verbose > VERBOSE_NFT_MESSAGES
+                && wraparound && (sy.y == smidpoint.y)) {
             cout << " 4/6";
             cout.flush();
         }
@@ -285,7 +286,7 @@ void nearestFeatureTransform(bool wraparound,
     // Final pass: calculate the distance to the nearest feature in the same
     // column or any column to the right. If this is smaller than dnflx,
     // Then recolor the pixel to the color of the nearest feature to the right.
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) cout << " 5/6";
         else cout << " 4/4";
         cout.flush();
@@ -303,7 +304,8 @@ void nearestFeatureTransform(bool wraparound,
         --dy.y;
 
         // Indicate halfway mark when wraparound is true.
-        if (Verbose > 0 && wraparound && (sy.y == smidpoint.y)) {
+        if (Verbose > VERBOSE_NFT_MESSAGES
+                && wraparound && (sy.y == smidpoint.y)) {
             cout << " 6/6";
             cout.flush();
         }
@@ -366,7 +368,7 @@ void nearestFeatureTransform(bool wraparound,
         }
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
         cout << endl;
     }
 

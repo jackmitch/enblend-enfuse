@@ -271,7 +271,7 @@ int main(int argc, char** argv) {
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
             cout << "Input image \""
                  << *inputFileNameIterator
                  << "\" ";
@@ -343,7 +343,7 @@ int main(int argc, char** argv) {
     outputImageInfo.setPixelType(pixelType);
 
     // The size of the output image.
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
         // print inputUnion.
         Diff2D ul = inputUnion.getUL();
         Diff2D lr = inputUnion.getLR();

@@ -83,7 +83,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     ImageType *image = new ImageType(inputUnion.size());
     AlphaType *imageA = new AlphaType(inputUnion.size());
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
         if (OneAtATime) {
             cout << "Loading next image: "
                  << imageInfoList.front()->getFileName()
@@ -160,7 +160,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             if (!overlapFound) {
                 // Copy src and srcA into image and imageA.
 
-                if (Verbose > 0) {
+                if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
                     cout << " " << info->getFileName();
                     cout.flush();
                 }
@@ -186,14 +186,16 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         }
     }
 
-    if (Verbose > 0 && !OneAtATime) cout << endl;
+    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES
+            && !OneAtATime) cout << endl;
 
     // Calculate bounding box of image.
     FindBoundingRectangle unionRect;
     inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
             srcImage(*imageA), unionRect);
     bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
-    if (Verbose > 0 && !OneAtATime) {
+    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES
+            && !OneAtATime) {
         cout << "Combined union bounding box: ("
              << unionRect.upperLeft.x
              << ", "

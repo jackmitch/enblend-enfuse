@@ -138,7 +138,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         bool wraparoundThisIteration = Wraparound && (roiBB.size().x == inputUnion.size().x);
 
         // Estimate memory requirements for this blend iteration
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // Maximum utilization is when all three pyramids have been built
             // inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
             // + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
@@ -314,7 +314,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         delete blackLP;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
             cout << "Checkpointing..." << endl;
         }
 

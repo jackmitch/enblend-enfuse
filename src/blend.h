@@ -73,14 +73,14 @@ void blend(vector<MaskPyramidType*> *maskGP,
     MaskPixelType maxMaskPixel = f(NumericTraits<OrigMaskPixelType>::max());
     double maxMaskPixelD = NumericTraits<MaskPixelType>::toRealPromote(maxMaskPixel);
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_BLEND_MESSAGES) {
         cout << "Blending layers:";
         cout.flush();
     }
 
     for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
 
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_BLEND_MESSAGES) {
             cout << " l" << layer;
             cout.flush();
         }
@@ -92,7 +92,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
                 BlendFunctor(maxMaskPixelD));
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_BLEND_MESSAGES) {
         cout << endl;
     }
 

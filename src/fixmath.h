@@ -197,7 +197,7 @@ template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorT
 class ConvertToLabPyramidFunctor {
 public:
     ConvertToLabPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "R'G'B' to L*a*b* color space conversion..." << endl;
         }
     }
@@ -227,7 +227,7 @@ template <typename DestVectorType, typename DestPixelType, typename PyramidVecto
 class ConvertFromLabPyramidFunctor {
 public:
     ConvertFromLabPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "L*a*b* to R'G'B' color space conversion..." << endl;
         }
     }
@@ -255,7 +255,7 @@ template <typename SrcVectorType, typename SrcPixelType, typename PyramidVectorT
 class ConvertToYPrimePbPrPyramidFunctor {
 public:
     ConvertToYPrimePbPrPyramidFunctor() : colorFunctor(NumericTraits<SrcPixelType>::max()), convertFunctor() {
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "R'G'B' to Y'PbPr color space conversion..." << endl;
         }
     }
@@ -284,7 +284,7 @@ template <typename DestVectorType, typename DestPixelType, typename PyramidVecto
 class ConvertFromYPrimePbPrPyramidFunctor {
 public:
     ConvertFromYPrimePbPrPyramidFunctor() : colorFunctor(NumericTraits<DestPixelType>::max()), doubleFunctor(), destFunctor() {
-        if (Verbose > 0) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "Y'PbPr to R'G'B' color space conversion..." << endl;
         }
     }

@@ -153,8 +153,10 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         }
     }
 
-    if (Verbose > 0) {
+    if (Verbose > VERBOSE_NUMLEVELS_MESSAGES) {
         cout << "Using " << levels << " blending levels" << endl;
+    }
+    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Region of Interest bounding box: ("
              << roiBB.getUL().x
              << ", "

@@ -26,6 +26,20 @@
 
 #include "vigra_ext/ROI.h"
 
+// Defines to control how many -v flags are required for each type
+// of message to be produced on stdout.
+#define VERBOSE_ASSEMBLE_MESSAGES           0
+#define VERBOSE_BLEND_MESSAGES              0
+#define VERBOSE_NUMLEVELS_MESSAGES          0
+#define VERBOSE_ROIBB_SIZE_MESSAGES         0
+#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  0
+#define VERBOSE_CHECKPOINTING_MESSAGES      0
+#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   0
+#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   0
+#define VERBOSE_COLOR_CONVERSION_MESSAGES   0
+#define VERBOSE_NFT_MESSAGES                0
+#define VERBOSE_PYRAMID_MESSAGES            0
+
 namespace enblend {
 
 //typedef struct {
