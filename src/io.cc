@@ -206,7 +206,7 @@ FILE *dumpPyramidToTmpfile(vector<LPPixel*> &v) {
 
 /** Save a mask as a TIFF called mask.tif.
  */
-void saveMaskAsTIFF(MaskPixel *mask) {
+void saveMaskAsTIFF(MaskPixel *mask, char *filename) {
 
     uint32 *image = (uint32*)calloc(OutputWidth * OutputHeight, sizeof(uint32));
     if (image == NULL) {
@@ -215,9 +215,10 @@ void saveMaskAsTIFF(MaskPixel *mask) {
         exit(1);
     }
 
-    TIFF *outputTIFF = TIFFOpen("mask.tif", "w");
+    TIFF *outputTIFF = TIFFOpen(filename, "w");
     if (outputTIFF == NULL) {
-        cerr << "enblend: error opening TIFF file \"mask.tif\"" << endl;
+        cerr << "enblend: error opening TIFF file \""
+             << filename << "\"" << endl;
         exit(1);
     }
 
@@ -258,4 +259,111 @@ void saveMaskAsTIFF(MaskPixel *mask) {
 
     TIFFClose(outputTIFF);
 
+}
+
+/** Save a pyramid as a multilayered tiff.
+ */
+void savePyramidAsTIFF(vector<LPPixel*> &p, char *filename) {
+
+    uint32 roiWidth = ROILastX - ROIFirstX + 1;
+    uint32 roiHeight = ROILastY - ROIFirstY + 1;
+
+    // Make a copy of p.
+    vector<LPPixel*> pCopy;
+    for (uint32 i = 0; i < p.size(); i++) {
+        uint32 levelPixels = (roiWidth >> i) * (roiHeight >> i);
+        LPPixel *level = (LPPixel*)malloc(levelPixels * sizeof(LPPixel));
+        if (level == NULL) {
+            cerr << endl
+                 << "enblend: out of memory (in savePyramidAsTIFF for level)"
+                 << endl;
+            exit(1);
+        }
+        pCopy.push_back(level);
+        memcpy(level, p[i], levelPixels * sizeof(LPPixel));
+    }
+
+    // Output image.
+    uint32 *image = (uint32*)malloc(OutputWidth * OutputHeight * sizeof(uint32));
+    if (image == NULL) {
+        cerr << endl
+             << "enblend: out of memory (in savePyramidAsTIFF for image)"
+             << endl;
+        exit(1);
+    }
+
+    for (uint32 i = 0; i < p.size(); i++) {
+
+        char filenameBuf[512];
+        snprintf(filenameBuf, 512, "%s%04u.tif", filename, (unsigned int)i);
+        cout << filenameBuf << endl;
+        TIFF *outputTIFF = TIFFOpen(filenameBuf, "w");
+        if (outputTIFF == NULL) {
+            cerr << "enblend: error opening TIFF file \""
+                 << filenameBuf << "\"" << endl;
+            exit(1);
+        }
+
+
+        vector<LPPixel*> pCopySubset;
+
+        // clear levels up to i.
+        for (uint32 j = 0; j < i; j++) {
+            uint32 jPixels = (roiWidth >> j) * (roiHeight >> j);
+            memset(pCopy[j], 0, jPixels * sizeof(LPPixel));
+            pCopySubset.push_back(pCopy[j]);
+        }
+        pCopySubset.push_back(pCopy[i]);
+
+        // Collapse from i up.
+        collapsePyramid(pCopySubset);
+
+        // Write pCopySubset into a layer of the tiff.
+        //TIFFSetDirectory(outputTIFF, i);
+        TIFFSetField(outputTIFF, TIFFTAG_ORIENTATION, 1);
+        TIFFSetField(outputTIFF, TIFFTAG_SAMPLESPERPIXEL, 4);
+        TIFFSetField(outputTIFF, TIFFTAG_BITSPERSAMPLE, 8);
+        TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
+        TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
+        TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
+        TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
+
+        memset(image, 0, OutputWidth * OutputHeight * sizeof(uint32));
+
+        LPPixel *pixel = pCopy[0];
+        for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
+            for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
+                pixel->r = min(255, max(0, (int)abs(pixel->r)));
+                pixel->g = min(255, max(0, (int)abs(pixel->g)));
+                pixel->b = min(255, max(0, (int)abs(pixel->b)));
+                image[y * OutputWidth + x] =
+                        (pixel->r & 0xFF)
+                        | ((pixel->g & 0xFF) << 8)
+                        | ((pixel->b & 0xFF) << 16)
+                        | (0xFF << 24);
+                pixel++;
+            }
+        }
+
+        for (uint32 line = 0; line < OutputHeight; line++) {
+            TIFFWriteScanline(outputTIFF,
+                    &(image[line * OutputWidth]),
+                    line,
+                    8);
+        }
+
+        //TIFFWriteDirectory(outputTIFF);
+        TIFFClose(outputTIFF);
+
+    }
+
+    //TIFFClose(outputTIFF);
+
+    for (uint32 i = 0; i < p.size(); i++) {
+        free(pCopy[i]);
+    }
+
+    free(image);
+
+    return;
 }

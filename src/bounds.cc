@@ -251,6 +251,14 @@ uint32 roiBounds(FILE *maskFile) {
         }
     }
 
+    // The outside border of the ROI must be solid white or black in the mask,
+    // or else there will be a boundary condition problem in expand.
+    // Give ourselves a one pixel pad to ensure against this.
+    ROIFirstX = (ROIFirstX == 0) ? 0 : max(ROIFirstX - 1, UBBFirstX);
+    ROILastX = min(ROILastX + 1, UBBLastX);
+    ROIFirstY = (ROIFirstY == 0) ? 0 : max(ROIFirstY - 1, UBBFirstY);
+    ROILastY = min(ROILastY + 1, UBBLastY);
+
     if (Verbose > 0) {
         cout << "Using " << levels << " blending levels" << endl;
         cout << "Region of Interest bounding box = ("

@@ -56,7 +56,8 @@ void readFromTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
 void writeToTmpfile(void *ptr, size_t size, size_t nmemb, FILE *stream);
 FILE *dumpToTmpfile(void *ptr, size_t size, size_t nmemb);
 FILE *dumpPyramidToTmpfile(std::vector<LPPixel*> &v);
-void saveMaskAsTIFF(MaskPixel *mask);
+void saveMaskAsTIFF(MaskPixel *mask, char *filename);
+void savePyramidAsTIFF(std::vector<LPPixel*> &p, char *filename);
 
 // mask.cc
 FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile);

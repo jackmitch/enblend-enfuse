@@ -146,7 +146,7 @@ FILE *createMask(FILE *whiteImageFile, FILE *blackImageFile) {
         maskPixel++;
     }
 
-    //saveMaskAsTIFF(mask);
+    //saveMaskAsTIFF(mask, "mask.tif");
 
     // Dump mask to file.
     return dumpToTmpfile(mask, sizeof(MaskPixel), ubbWidth * ubbHeight);

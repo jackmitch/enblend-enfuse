@@ -347,6 +347,8 @@ FILE *gaussianPyramidFile(FILE *maskFile, uint32 levels) {
         cout << endl;
     }
 
+    //savePyramidAsTIFF(v, "mask_pyramid");
+
     return dumpPyramidToTmpfile(v);
 }
 
@@ -530,80 +532,3 @@ void collapsePyramid(vector<LPPixel*> &p) {
     return;
 }
 
-void savePyramid(vector<LPPixel*> &p, char *prefix) {
-    uint32 *image = (uint32*)calloc(OutputWidth * OutputHeight, sizeof(uint32));
-
-    vector<LPPixel*> pCopy;
-    uint32 roiWidth = ROILastX - ROIFirstX + 1;
-    uint32 roiHeight = ROILastY - ROIFirstY + 1;
-    for (unsigned int i = 0; i < p.size(); i++) {
-        LPPixel *level = (LPPixel*)calloc((roiWidth >> i) * (roiHeight >> i), sizeof(LPPixel));
-        pCopy.push_back(level);
-    }
-
-    // If the user specified a 360 degree panorama, and the transition line
-    // is near the left or right edge, then enable the wraparound boundary
-    // condition.
-    // If the transition line is near the edge, then the roiWidth is set to
-    // the full output width in roiBounds.
-    bool wraparound = Wraparound && (roiWidth == OutputWidth);
-
-    for (unsigned int i = 0; i < p.size(); i++) {
-        char buf[512];
-        snprintf(buf, 512, "%s%u.tif", prefix, i);
-        cout << buf << endl;
-
-        TIFF *outputTIFF = TIFFOpen(buf, "w");
-        TIFFSetField(outputTIFF, TIFFTAG_ORIENTATION, 1);
-        TIFFSetField(outputTIFF, TIFFTAG_SAMPLESPERPIXEL, 4);
-        TIFFSetField(outputTIFF, TIFFTAG_BITSPERSAMPLE, 8);
-        TIFFSetField(outputTIFF, TIFFTAG_IMAGEWIDTH, OutputWidth);
-        TIFFSetField(outputTIFF, TIFFTAG_IMAGELENGTH, OutputHeight);
-        TIFFSetField(outputTIFF, TIFFTAG_PHOTOMETRIC, Photometric);
-        TIFFSetField(outputTIFF, TIFFTAG_PLANARCONFIG, PlanarConfig);
- 
-        // Clear layers up to i
-        for (unsigned int j = 0; j < i; j++) {
-            memset(pCopy[j], 0, (roiWidth >> j) * (roiHeight >> j) * sizeof(LPPixel));
-        }
-        // Copy layer i from p
-        memcpy(pCopy[i], p[i], (roiWidth >> i) * (roiHeight >> i) * sizeof(LPPixel));
-        for (int j = i-1; j >= 0; j--) {
-            expand(pCopy[j + 1], roiWidth >> (j+1), roiHeight >> (j+1),
-                    pCopy[j], roiWidth >> j, roiHeight >> j,
-                    true,
-                    wraparound);
-        }
-
-        LPPixel *pixel = pCopy[0];
-        for (uint32 y = ROIFirstY; y <= ROILastY; y++) {
-            for (uint32 x = ROIFirstX; x <= ROILastX; x++) {
-                pixel->r = min(255, max(0, (int)abs(pixel->r)));
-                pixel->g = min(255, max(0, (int)abs(pixel->g)));
-                pixel->b = min(255, max(0, (int)abs(pixel->b)));
-                image[y * OutputWidth + x] =
-                        (pixel->r & 0xFF)
-                        | ((pixel->g & 0xFF) << 8)
-                        | ((pixel->b & 0xFF) << 16)
-                        | (0xFF << 24);
-                pixel++;
-            }
-        }
-        
-        for (uint32 scan = 0; scan < OutputHeight; scan++) {
-            TIFFWriteScanline(outputTIFF,
-                    &(image[scan * OutputWidth]),
-                    scan,
-                    8);
-        }
-
-        TIFFClose(outputTIFF);
-
-    }
-
-    free(image);
-    for (unsigned int i = 0; i < pCopy.size(); i++) {
-        free(pCopy[i]);
-    }
-
-}
