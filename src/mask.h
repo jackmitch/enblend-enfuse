@@ -103,6 +103,10 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     delete maskTransform;
 
+    //char tmpFilename[] = "enblend_mask.tif";
+    //ImageImportInfo maskImageInfo(tmpFilename);
+    //importImage(maskImageInfo, destImage(*mask));
+
     return mask;
 
     ////char tmpFilename[] = ".enblend_mask_XXXXXX";
