@@ -278,18 +278,19 @@ int main(int argc, char** argv) {
             shortDimension = shortDimension >> 1;
             maximumLevels++;
         }
+        maximumLevels = 3;
 
         // Build Gaussian pyramid from mask.
-        vector<uint32*> *maskPyramid = gaussianPyramid(mask, maximumLevels);
+        vector<LPPixel*> *maskPyramid = gaussianPyramid(mask, maximumLevels);
 
         // TODO: find a good level to stop at where the blending zone does not
         // overrun the overlap zone too much.
 
         // Build Laplacian pyramid from outputBuf
-        vector<uint32*> *outputLP = laplacianPyramid(outputBuf, maximumLevels);
+        vector<LPPixel*> *outputLP = laplacianPyramid(outputBuf, maximumLevels);
 
         // Build Laplacian pyramid from inputTIFF
-        vector<uint32*> *inputLP = laplacianPyramid(inputTIFF, maximumLevels);
+        vector<LPPixel*> *inputLP = laplacianPyramid(inputTIFF, maximumLevels);
 
         // blend.
         blend(maskPyramid, inputLP, outputLP);
@@ -299,10 +300,10 @@ int main(int argc, char** argv) {
 
         TIFFClose(inputTIFF);
 
-        //_TIFFfree(mask);
+        _TIFFfree(mask);
 
         for (int32 i = 0; i < maximumLevels; i++) {
-            uint32 *g = (*maskPyramid)[i];
+            LPPixel *g = (*maskPyramid)[i];
             free(g);
             g = (*outputLP)[i];
             free(g);

@@ -40,9 +40,9 @@ extern uint32 ROILastX;
 extern uint32 ROIFirstY;
 extern uint32 ROILastY;
 
-void blend(std::vector<uint32*> *mask,
-        std::vector<uint32*> *inputLP,
-        std::vector<uint32*> *outputLP) {
+void blend(std::vector<LPPixel*> *maskGP,
+        std::vector<LPPixel*> *inputLP,
+        std::vector<LPPixel*> *outputLP) {
 
     uint32 roiWidth = ROILastX - ROIFirstX + 1;
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
@@ -50,45 +50,45 @@ void blend(std::vector<uint32*> *mask,
     for (uint32 layer = 0; layer < inputLP->size(); layer++) {
         uint32 layerWidth = roiWidth >> layer;
         uint32 layerHeight = roiHeight >> layer;
+
+        LPPixel *maskPixel = (*maskGP)[layer];
+        LPPixel *inPixel = (*inputLP)[layer];
+        LPPixel *outPixel = (*outputLP)[layer];
+
         for (uint32 index = 0; index < (layerWidth * layerHeight); index++) {
-            uint32 maskPixel = ((*mask)[layer])[index];
-            uint32 inPixel = ((*inputLP)[layer])[index];
-            uint32 *outPixel = &(((*outputLP)[layer])[index]);
+            double outRCoeff = maskPixel->r / 255.0;
+            double outGCoeff = maskPixel->g / 255.0;
+            double outBCoeff = maskPixel->b / 255.0;
+            double outACoeff = maskPixel->a / 255.0;
 
-            uint32 maskR = TIFFGetR(maskPixel);
-            uint32 maskG = TIFFGetG(maskPixel);
-            uint32 maskB = TIFFGetB(maskPixel);
-            uint32 maskA = TIFFGetA(maskPixel);
+            double outRD = outPixel->r * outRCoeff
+                    + inPixel->r * (1.0 - outRCoeff);
+            double outGD = outPixel->g * outGCoeff
+                    + inPixel->g * (1.0 - outGCoeff);
+            double outBD = outPixel->b * outBCoeff
+                    + inPixel->b * (1.0 - outBCoeff);
+            double outAD = outPixel->a * outACoeff
+                    + inPixel->a * (1.0 - outACoeff);
 
-            uint32 inR = TIFFGetR(inPixel);
-            uint32 inG = TIFFGetG(inPixel);
-            uint32 inB = TIFFGetB(inPixel);
-            uint32 inA = TIFFGetA(inPixel);
+            outPixel->r = lrint(outRD);
+            outPixel->g = lrint(outGD);
+            outPixel->b = lrint(outBD);
+            outPixel->a = lrint(outAD);
 
-            uint32 outR = TIFFGetR(*outPixel);
-            uint32 outG = TIFFGetG(*outPixel);
-            uint32 outB = TIFFGetB(*outPixel);
-            uint32 outA = TIFFGetA(*outPixel);
+            maskPixel++;
+            inPixel++;
+            outPixel++;
 
-            double outRCoeff = maskR / 255.0;
-            double outGCoeff = maskG / 255.0;
-            double outBCoeff = maskB / 255.0;
-            double outACoeff = maskA / 255.0;
+            //if (outRL > 255 || outGL > 255 || outBL > 255 || outAL > 255 || outRL < 0 || outGL < 0 || outBL < 0 || outAL < 0) {
+            //    cerr << "blend overflow level " << layer << " pixel " << index
+            //         << " r=" << outRL << " g=" << outGL << " b=" << outBL
+            //         << " a=" << outAL << endl;
+            //}
 
-            double outRD = outR * outRCoeff + inR * (1.0 - outRCoeff);
-            double outGD = outG * outGCoeff + inG * (1.0 - outGCoeff);
-            double outBD = outB * outBCoeff + inB * (1.0 - outBCoeff);
-            double outAD = outA * outACoeff + inA * (1.0 - outACoeff);
-
-            long outRL = lrint(outRD);
-            long outGL = lrint(outGD);
-            long outBL = lrint(outBD);
-            long outAL = lrint(outAD);
-
-            *outPixel = (outRL & 0xFF)
-                    | ((outGL & 0xFF) << 8)
-                    | ((outBL & 0xFF) << 16)
-                    | ((outAL & 0xFF) << 24);
+            //*outPixel = (outRL & 0xFF)
+            //        | ((outGL & 0xFF) << 8)
+            //        | ((outBL & 0xFF) << 16)
+            //        | ((outAL & 0xFF) << 24);
 
         }
     }

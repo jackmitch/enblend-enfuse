@@ -23,18 +23,25 @@
 #include <tiffio.h>
 #include <vector>
 
+typedef struct {
+    int16 r;
+    int16 g;
+    int16 b;
+    int16 a;
+} LPPixel;
+
 uint32 *createMask(uint32 *outputBuf, TIFF *inputTIFF);
 
 void thinMask(uint32 *mask);
 
-std::vector<uint32*> *gaussianPyramid(uint32 *mask, int32 levels);
-std::vector<uint32*> *laplacianPyramid(uint32 *image, int32 levels);
-std::vector<uint32*> *laplacianPyramid(TIFF *image, int32 levels);
-void collapsePyramid(std::vector<uint32*> *p, uint32 *dest);
+std::vector<LPPixel*> *gaussianPyramid(uint32 *mask, int32 levels);
+std::vector<LPPixel*> *laplacianPyramid(uint32 *image, int32 levels);
+std::vector<LPPixel*> *laplacianPyramid(TIFF *image, int32 levels);
+void collapsePyramid(std::vector<LPPixel*> *p, uint32 *dest);
 
-void blend(std::vector<uint32*> *mask,
-        std::vector<uint32*> *inputLP,
-        std::vector<uint32*> *outputLP);
+void blend(std::vector<LPPixel*> *maskGP,
+        std::vector<LPPixel*> *inputLP,
+        std::vector<LPPixel*> *outputLP);
 
 #define WHITE 0xFFFFFFFF
 #define BLACK 0xFF000000
