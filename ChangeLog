@@ -1,3 +1,500 @@
+2004-10-16 22:18  mihal
+
+	* Makefile.am, configure.in: Last tweaks to the configuration.
+
+2004-10-16 21:56  mihal
+
+	* cross-configure.sh, cross-make.sh: Scripts for building Enblend
+	  with mingw and gnuwin32.
+
+2004-10-16 21:55  mihal
+
+	* src/enblend.cc, include/vigra/cachedfileimage.hxx,
+	  src/vigra_impex/tiff.hxx: A couple more tweaks for the windows
+	  executable.
+
+2004-10-16 13:29  mihal
+
+	* NEWS, configure.in, src/enblend.h, src/nearest.h: Fixed a memory
+	  leak.
+
+2004-10-15 23:43  mihal
+
+	* src/: assemble.h, nearest.h: Now creating all CFImages on the
+	  heap to avoid segfaults in the SIGINT handler.
+
+2004-10-15 23:42  mihal
+
+	* include/vigra/cachedfileimage.hxx: Cleaned up code - comments,
+	  error messages.
+
+2004-10-15 23:41  mihal
+
+	* src/: bounds.h, enblend.h: Fixed bug in detecting wraparound
+	  condition.
+
+2004-10-15 23:41  mihal
+
+	* src/enblend.cc: Added option for LZW compression of the output
+	  file.
+
+2004-10-15 20:47  mihal
+
+	* src/: assemble.h, common.h, enblend.h: Fixing up some messages.
+
+2004-10-15 19:14  mihal
+
+	* src/: enblend.cc, gigapixel_lowerright.cc,
+	  gigapixel_readback_bounds.cc, gigapixel_upperleft.cc: Added
+	  gigapixel test generators.
+
+2004-10-15 13:49  mihal
+
+	* src/: assemble.h, enblend.h: Working on cleaning up messages.
+
+2004-10-14 19:15  mihal
+
+	* include/vigra/cachedfileimage.hxx: Fixed a bug in fseeko for
+	  exceptionally large images.
+
+2004-10-14 10:46  mihal
+
+	* include/vigra/: imageiteratoradapter.hxx, impex.hxx: Cleaning up
+	  the default ctors for cached file image row iterators.
+
+2004-10-13 22:27  mihal
+
+	* include/vigra/cachedfileimage.hxx: Commented out some debugging
+	  messages.
+
+2004-10-12 23:16  mihal
+
+	* include/vigra/cachedfileimage.hxx: Debugging the cache block
+	  replacement policy.
+
+2004-10-12 18:45  mihal
+
+	* include/vigra/cachedfileimage.hxx: Debugging the cache block
+	  replacement policy.
+
+2004-10-11 23:18  mihal
+
+	* include/vigra/cachedfileimage.hxx: Reworked the cache replacement
+	  policy.
+
+2004-10-11 15:11  mihal
+
+	* include/vigra/cachedfileimage.hxx: Added import for std::min.
+
+2004-10-11 00:45  mihal
+
+	* configure.in, src/Makefile.am: Updates to the configuration.
+
+2004-10-11 00:45  mihal
+
+	* src/: enblend.cc, pyramid.h: Minor syntax changes to enable
+	  compilation with gcc 3.4.2.
+
+2004-10-11 00:43  mihal
+
+	* include/vigra/: basicimage.hxx, cachedfileimage.hxx,
+	  functorexpression.hxx, imageiterator.hxx, iteratortraits.hxx,
+	  separableconvolution.hxx, stdcachedfileimage.hxx,
+	  stdconvolution.hxx, tinyvector.hxx: Backported some bugfixes from
+	  vigra 1.3.  Changes to enable compilation under gcc 3.4.2.
+
+2004-10-10 20:47  mihal
+
+	* include/vigra/accessor.hxx: Added a bugfix from vigra 1.3.
+
+2004-10-10 20:16  mihal
+
+	* src/: bounds.h, enblend.cc, pyramid.h: Added limit of 30 to -l
+	  parameter.
+
+2004-10-09 23:38  mihal
+
+	* src/enblend.cc: Enabled all pixel types.
+
+2004-10-09 23:38  mihal
+
+	* include/vigra/colorconversions.hxx: Added a cast to prevent
+	  ambiguity between float pow() and double pow().
+
+2004-10-09 22:46  mihal
+
+	* src/: bounds.h, enblend.cc, enblend.h, mask.h, pyramid.h:
+	  Reworked the roiBounds code - now considers both iBB and mBB to
+	  calculate roiBB.  Parameter -l now sets exact number of levels to
+	  use, overriding estimate.  Cleaned up messages regarding small
+	  iBBs.  Cleaned up messages in pyramid code.  Images that do not
+	  overlap will now only be blended if -l is given.
+
+2004-10-09 00:11  mihal
+
+	* README, TODO: Documentation update.
+
+2004-10-09 00:11  mihal
+
+	* src/: common.h, enblend.cc, enblend.h, mask.h, nearest.h,
+	  pyramid.h: Code cleanup and commenting.
+
+2004-10-09 00:11  mihal
+
+	* include/vigra/codec.hxx, include/vigra/extraimagetraits.hxx,
+	  include/vigra/imageinfo.hxx,
+	  include/vigra/imageiteratoradapter.hxx, include/vigra/impex.hxx,
+	  src/vigra_impex/imageinfo.cxx, src/vigra_impex/png.cxx,
+	  src/vigra_impex/png.hxx, src/vigra_impex/tiff.cxx,
+	  src/vigra_impex/tiff.hxx, src/vigra_impex/viff.cxx: Documented
+	  changes to the VIGRA library against VIGRA 1.2.0.
+
+2004-10-09 00:10  mihal
+
+	* include/vigra_ext/: Makefile.am, cachedfileimage.hxx,
+	  stdcachedfileimage.hxx: These files now live in the vigra
+	  directory. Copies here preserve revision history.
+
+2004-10-08 23:01  mihal
+
+	* include/vigra/: Makefile.am, cachedfileimage.hxx,
+	  stdcachedfileimage.hxx: Moved cachedfileimage to the vigra
+	  directory.
+
+2004-10-07 22:26  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx, src/bounds.h,
+	  src/common.h, src/fixmath.h, src/mask.h, src/nearest.h,
+	  src/pyramid.h: Code cleanup and commenting.
+
+2004-10-07 01:09  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Modified the pool's policy
+	  for allocating system memory to be constant instead of
+	  exponential. This prevents the pool from allocating more memory
+	  than the director is supposed to manage.
+
+2004-10-07 00:33  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx, src/Makefile.am,
+	  src/enblend.cc, src/nearest.h: Changed nearestFeatureTransform to
+	  do all columns in parallel in steps 1 and 2. This is more
+	  cache-friendly than iterating over each column individually.
+
+	  Added SIGINT handler and set up CachedFileImageDirector to clean
+	  up temp files on exit.
+
+	  Changed the CachedFileImage allocation scheme to use boost::pool.
+	  The pool works with blocksize chunks.
+
+	  Changed the CachedFileImage file I/O behavior to fread and fwrite
+	  entire blocks at a time, instead of single image lines at a time.
+
+2004-10-05 23:51  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Added dirty and swapped
+	  flags to make the image caching faster.
+
+2004-10-05 00:41  mihal
+
+	* src/: Makefile.am, assemble.h, blend.h, bounds.h, common.h,
+	  enblend.cc, enblend.h, vigra_impex/Makefile.am: Code cleanup /
+	  commenting.
+
+2004-10-05 00:41  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Made default block size
+	  2MiB.
+
+2004-10-03 21:45  mihal
+
+	* src/: Makefile.am, enblend.cc, enblend.h, mask.h, nearest.h:
+	  Added preprocessor statements to turn off image caching.
+
+2004-10-03 21:44  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Corrected an
+	  over-estimation on number of lines per cache block.
+
+2004-09-30 23:22  mihal
+
+	* src/: Makefile.am, common.h, enblend.h, pyramid.h: Added
+	  CachedFileImage stats messages.
+
+2004-09-30 23:21  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Added more stats
+	  collection.  Fixed bug in cache miss when tmp file does not
+	  exist.
+
+2004-09-29 23:47  mihal
+
+	* src/: assemble.h, common.h, enblend.cc, enblend.h, mask.h,
+	  nearest.h: Replaced standard vigra images with CachedFileImages.
+
+2004-09-29 23:46  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Added more statistics
+	  gathering information to the CachedFileImageDirector.
+
+2004-09-29 23:45  mihal
+
+	* include/vigra/impexalpha.hxx: Removed alpha scale factor debug
+	  messages.
+
+2004-09-29 23:45  mihal
+
+	* include/vigra/imageiteratoradapter.hxx: Added a default
+	  constructor for RowIterator.	This is needed to use
+	  CachedFileImages with impex.
+
+2004-09-28 22:51  mihal
+
+	* src/: assemble.h, blend.h, bounds.h, common.h, enblend.cc,
+	  enblend.h, fixmath.h, nearest.h: Organized messages into classes
+	  for different levels of verbose output.
+
+2004-09-28 22:50  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: More work on the
+	  CachedFileImageDirector.
+
+2004-09-27 22:38  mihal
+
+	* src/: Makefile.am, enblend.cc, enblend.h, mask.h, nearest.h: Work
+	  on memory/disk partitioning with CachedFileImageDirector.
+	  Alphabetized options.  Added options for memory/disk
+	  partitioning.
+
+2004-09-27 22:37  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Added
+	  CachedFileImageDirector.
+
+2004-09-26 18:13  mihal
+
+	* include/vigra_ext/cachedfileimage.hxx: Bugfixes and performance
+	  improvements.
+
+2004-09-26 18:12  mihal
+
+	* include/vigra_ext/stdcachedfileimage.hxx: Removed duplicate
+	  declaration.
+
+2004-09-26 13:23  mihal
+
+	* include/vigra_ext/: Makefile.am, ROI.h, cachedfileimage.hxx,
+	  stdcachedfileimage.hxx: Added file-backed image types.
+
+2004-09-22 12:58  mihal
+
+	* src/: enblend.h, fixmath.h, mask.h: Added option for using L*a*b*
+	  color space vs. no color correction.	Added memory usage
+	  estimation.
+
+2004-09-21 23:40  mihal
+
+	* src/: blend.h, enblend.cc, enblend.h, fixmath.h, pyramid.h: Added
+	  option to use L*a*b* color space.  Finished reorganizing fixmath
+	  code.
+
+2004-09-21 00:41  mihal
+
+	* src/fixmath.h: Refactoring the fixed point code.
+
+2004-09-19 19:14  mihal
+
+	* src/: enblend.cc, enblend.h, fixmath.h, pyramid.h: Added -a and
+	  -g flags.  Deprecated -s flag.
+
+2004-09-19 19:14  mihal
+
+	* src/common.h: Added enum for various overlap cases.
+
+2004-09-19 19:13  mihal
+
+	* src/bounds.h: Added inspectOverlap function to deal with overlap
+	  corner cases.
+
+2004-09-19 19:13  mihal
+
+	* src/assemble.h: Improved messages for sequential mode.
+
+2004-09-19 19:12  mihal
+
+	* src/vigra_impex/tiff.cxx: Added hack for gimp and cinepaint.
+
+2004-09-18 22:40  mihal
+
+	* src/vigra_impex/Makefile.am: Removed jpeg and png options from
+	  vigra build.
+
+2004-09-18 22:39  mihal
+
+	* src/: Makefile.am, assemble.h, enblend.cc, enblend.h, fixmath.h,
+	  mask.h, pyramid.h: More work on the vigra port.  Fixed banding
+	  artifacts in 8-bit images.
+
+2004-09-18 01:21  mihal
+
+	* src/vigra_impex/tiff.cxx: Workaround for cinepaint bug with
+	  unassoc-alpha.
+
+2004-09-18 01:21  mihal
+
+	* src/: enblend.h, fixmath.h: Exploring banding problems.
+
+2004-09-18 01:21  mihal
+
+	* src/mask.h: Commented code to load mask from tif.
+
+2004-09-18 01:20  mihal
+
+	* src/assemble.h: Changed pixel acceptance criteria to mask max/2
+	  instead of mask max.	Cinepaint scales 8-bit tiffs to 16-bit
+	  tiffs without using max.
+
+2004-09-12 23:00  mihal
+
+	* src/: Makefile.am, blend.h, enblend.h, fixmath.h, pyramid.h: More
+	  work on the vigra port.
+
+2004-09-11 23:12  mihal
+
+	* src/: Makefile.am, enblend.h, fixmath.h, mask.h, nearest.h,
+	  pyramid.h: More work on the vigra port.  Implement fixed-point
+	  math for pyramid calculations.  Implement support for wraparound
+	  in mask generation.
+
+2004-09-09 00:22  mihal
+
+	* src/: enblend.cc, enblend.h, pyramid.h: More work on the vigra
+	  port.
+
+2004-09-08 00:16  mihal
+
+	* src/: assemble.h, bounds.h, enblend.cc, enblend.h, mask.h,
+	  pyramid.h: More work on the vigra port.
+
+2004-09-07 00:03  mihal
+
+	* src/vigra_impex/tiff.cxx: Experimenting with gimp's handling of
+	  associated and unassociated alpha.
+
+2004-09-02 22:03  mihal
+
+	* configure.in, src/Makefile.am, src/assemble.h, src/bounds.h,
+	  src/enblend.cc, src/enblend.h, src/mask.h, src/nearest.h,
+	  src/pyramid.h: More work on the vigra port.
+
+2004-08-31 21:53  mihal
+
+	* src/: assemble.h, common.h, enblend.cc, enblend.h, mask.h,
+	  nearest.h: More work on the vigra port.
+
+2004-08-20 01:08  mihal
+
+	* src/: Makefile.am, assemble.h, common.h, enblend.cc, enblend.h,
+	  mask.h, nearest.h: Continuing work on the vigra port.
+
+2004-08-10 22:35  mihal
+
+	* src/: assemble.h, enblend.cc, enblend.h, mask.h: Vigra namespace
+	  cleanup.
+
+2004-08-08 22:06  mihal
+
+	* src/: Makefile.am, assemble.h, common.h, enblend.cc, enblend.h,
+	  mask.h: More work on the vigra port.
+
+2004-07-12 16:29  mihal
+
+	* src/: Makefile.am, Makefile.nocygwin, alpha.cc, assemble.cc,
+	  assemble.h, common.h, enblend.cc, enblend.h: More work on porting
+	  enblend to vigra.  Added a makefile for building a windows
+	  executable.
+
+2004-07-12 16:29  mihal
+
+	* include/vigra_ext/: Correlation.h, FunctorAccessor.h,
+	  Interpolators.h, LayerImage.h, LoweSIFT.h, Makefile.am,
+	  NearestFeatureTransform.h, PhaseCorrelation.h, PointMatching.h,
+	  Pyramid.h, blend.h, tiffUtils.h, utils.h: Added the rest of
+	  vigra_ext to the code tree.
+
+2004-07-06 00:04  mihal
+
+	* src/: enblend.cc, enblend.h: Main now invokes a templatized
+	  blending loop based on input image pixel types.
+
+2004-07-06 00:04  mihal
+
+	* src/vigra_impex/imageinfo.cxx: isColor now looks for three
+	  non-extrabands.
+
+2004-07-03 17:01  mihal
+
+	* Makefile.am, VIGRA_LICENSE, configure.in, include/Makefile.am,
+	  include/vigra/Makefile.am, include/vigra/accessor.hxx,
+	  include/vigra/array_vector.hxx, include/vigra/basicimage.hxx,
+	  include/vigra/basicimageview.hxx,
+	  include/vigra/bordertreatment.hxx, include/vigra/codec.hxx,
+	  include/vigra/colorconversions.hxx,
+	  include/vigra/combineimages.hxx, include/vigra/config.hxx,
+	  include/vigra/contourcirculator.hxx,
+	  include/vigra/convolution.hxx, include/vigra/copyimage.hxx,
+	  include/vigra/cornerdetection.hxx, include/vigra/diff2d.hxx,
+	  include/vigra/distancetransform.hxx,
+	  include/vigra/edgedetection.hxx, include/vigra/error.hxx,
+	  include/vigra/extraimagetraits.hxx, include/vigra/fftw.hxx,
+	  include/vigra/flatmorphology.hxx,
+	  include/vigra/functorexpression.hxx,
+	  include/vigra/gaborfilter.hxx, include/vigra/imagecontainer.hxx,
+	  include/vigra/imageinfo.hxx, include/vigra/imageiterator.hxx,
+	  include/vigra/imageiteratoradapter.hxx, include/vigra/impex.hxx,
+	  include/vigra/impexalpha.hxx, include/vigra/initimage.hxx,
+	  include/vigra/inspectimage.hxx,
+	  include/vigra/interpolating_accessor.hxx,
+	  include/vigra/iteratoradapter.hxx,
+	  include/vigra/iteratortags.hxx, include/vigra/iteratortraits.hxx,
+	  include/vigra/labelimage.hxx, include/vigra/localminmax.hxx,
+	  include/vigra/mathutil.hxx, include/vigra/memory.hxx,
+	  include/vigra/metaprogramming.hxx, include/vigra/multi_array.hxx,
+	  include/vigra/multi_impex.hxx, include/vigra/multi_iterator.hxx,
+	  include/vigra/nonlineardiffusion.hxx,
+	  include/vigra/numerictraits.hxx,
+	  include/vigra/pixelneighborhood.hxx,
+	  include/vigra/recursiveconvolution.hxx,
+	  include/vigra/resizeimage.hxx, include/vigra/rgbvalue.hxx,
+	  include/vigra/seededregiongrowing.hxx,
+	  include/vigra/separableconvolution.hxx,
+	  include/vigra/stdconvolution.hxx, include/vigra/stdimage.hxx,
+	  include/vigra/stdimagefunctions.hxx, include/vigra/symmetry.hxx,
+	  include/vigra/tiff.hxx, include/vigra/tinyvector.hxx,
+	  include/vigra/transformimage.hxx, include/vigra/tuple.hxx,
+	  include/vigra/utilities.hxx, include/vigra/windows.h,
+	  include/vigra_ext/Makefile.am, include/vigra_ext/ROI.h,
+	  src/Makefile.am, src/enblend.cc, src/vigra_impex/Makefile.am,
+	  src/vigra_impex/auto_file.hxx, src/vigra_impex/bmp.cxx,
+	  src/vigra_impex/bmp.hxx, src/vigra_impex/byteorder.cxx,
+	  src/vigra_impex/byteorder.hxx, src/vigra_impex/codecmanager.cxx,
+	  src/vigra_impex/codecmanager.hxx, src/vigra_impex/error.hxx,
+	  src/vigra_impex/gif.cxx, src/vigra_impex/gif.hxx,
+	  src/vigra_impex/imageinfo.cxx, src/vigra_impex/jpeg.cxx,
+	  src/vigra_impex/jpeg.hxx, src/vigra_impex/png.cxx,
+	  src/vigra_impex/png.hxx, src/vigra_impex/pnm.cxx,
+	  src/vigra_impex/pnm.hxx, src/vigra_impex/sun.cxx,
+	  src/vigra_impex/sun.hxx, src/vigra_impex/tiff.cxx,
+	  src/vigra_impex/tiff.hxx, src/vigra_impex/viff.cxx,
+	  src/vigra_impex/viff.hxx, src/vigra_impex/void_vector.cxx,
+	  src/vigra_impex/void_vector.hxx: Imported Pablo's modified vigra
+	  library.
+
+2004-05-18 23:33  mihal
+
+	* ChangeLog, TODO, doc/enblend.1: Changed the description of the -s
+	  flag in the documentation to be more clear.
+
 2004-05-18 23:28  mihal
 
 	* NEWS, configure.in: Changed version number to 1.3.

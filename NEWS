@@ -57,4 +57,40 @@ May 18, 2004
 October 17, 2004
     Released enblend-2.0
 
-    - 
+    - Ported Enblend to the VIGRA Computer Vision Library.
+
+    - Support for signed and unsigned 16-bit, 32-bit, single- and double-
+      precision floating point pixel types. 
+
+    - Fixed the banding artifacts that often appeared in skies.
+
+    - Sophisticated memory/disk balancing. You can tell Enblend how much
+      memory it is allowed to use, and it will swap to disk after that.
+
+    - Support for huge panoramas. I have tested that Enblend can blend a 
+      1.2 gigapixel, 16-bit per channel color image. You should be able to
+      go right up to the 4 gigabyte limit of the TIFF format.
+
+    - Optional blending in CIE L*a*b* color space.
+
+    - Option to use LZW compression for the output image, if your libtiff
+      supports it. This option is selected by default in the prebuilt
+      Windows executable.
+
+    - The -s option for sequential blending is now the default. 
+      Enblend cannot accurately determine how many blending levels to use
+      when there are multiple disjoint overlap regions in one blending
+      iteration. It is better to manually tell Enblend the order in which
+      the images should be blended. If you still want Enblend to assemble
+      non-overlapping images first, use the -a flag.
+
+    - The -l option now tells Enblend the exact number of blending levels
+      that you want to use. The geometry of your images may force Enblend to
+      use a smaller number of levels. In this case a message will be printed.
+
+    - Gimp (ver. < 2) and Cinepaint exhibit unusual behaviors when loading
+      images with unassociated alpha channels. Use the -g flag to work
+      around this. With this flag Enblend will create the output image with
+      the associated alpha tag set, even though the image is really
+      unassociated alpha.
+
