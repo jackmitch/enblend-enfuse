@@ -120,13 +120,13 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             ImageImportInfo *info = *i;
 
             // Load the next image.
-            ImageType src(info->size());
-            AlphaType srcA(info->size());
-            importImageAlpha(*info, destImage(src), destImage(srcA));
+            ImageType *src = new ImageType(info->size());
+            AlphaType *srcA = new AlphaType(info->size());
+            importImageAlpha(*info, destImage(*src), destImage(*srcA));
 
             // Threshold the alpha mask so that all pixels are either
             // contributing or not contributing.
-            transformImage(srcImageRange(srcA), destImage(srcA),
+            transformImage(srcImageRange(*srcA), destImage(*srcA),
                     Threshold<AlphaPixelType, AlphaPixelType>(
                             NumericTraits<AlphaPixelType>::max() / 2,
                             NumericTraits<AlphaPixelType>::max(),
@@ -140,9 +140,9 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             AlphaIteratorType dy =
                     imageA->upperLeft() - inputUnion.getUL() + info->getPosition();
             AlphaAccessor da = imageA->accessor();
-            AlphaIteratorType sy = srcA.upperLeft();
-            AlphaIteratorType send = srcA.lowerRight();
-            AlphaAccessor sa = srcA.accessor();
+            AlphaIteratorType sy = srcA->upperLeft();
+            AlphaIteratorType send = srcA->lowerRight();
+            AlphaAccessor sa = srcA->accessor();
             for(; sy.y != send.y; ++sy.y, ++dy.y) {
                 AlphaIteratorType sx = sy;
                 AlphaIteratorType dx = dy;
@@ -164,17 +164,19 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
                 }
 
                 Diff2D srcPos = info->getPosition();
-                copyImageIf(srcImageRange(src),
-                        maskImage(srcA),
+                copyImageIf(srcImageRange(*src),
+                        maskImage(*srcA),
                         destIter(image->upperLeft() - inputUnion.getUL() + srcPos));
-                copyImageIf(srcImageRange(srcA),
-                        maskImage(srcA),
+                copyImageIf(srcImageRange(*srcA),
+                        maskImage(*srcA),
                         destIter(imageA->upperLeft() - inputUnion.getUL() + srcPos));
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
             }
 
+            delete src;
+            delete srcA;
         }
         
         // Erase the ImageImportInfos we used.

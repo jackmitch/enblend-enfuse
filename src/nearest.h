@@ -113,13 +113,13 @@ void nearestFeatureTransform(bool wraparound,
 
     #ifdef ENBLEND_CACHE_IMAGES
     // Distance to the nearest feature in the current column.
-    UICFImage dnfColumn(w, h);
+    UICFImage *dnfColumn = new UICFImage(w, h);
     // Distance to the nearest feature in the current column, or any
     // column to the left of this column.
-    UICFImage dnfLeft(w, h);
+    UICFImage *dnfLeft = new UICFImage(w, h);
     #else
-    UIImage dnfColumn(w, h);
-    UIImage dnfLeft(w, h);
+    UIImage *dnfColumn = new UIImage(w, h);
+    UIImage *dnfLeft = new UIImage(w, h);
     #endif
 
     // Data structures for initializing dnfColumn.
@@ -144,7 +144,7 @@ void nearestFeatureTransform(bool wraparound,
     }
     sy = src_upperleft;
     send = src_lowerright;
-    dnfcy = dnfColumn.upperLeft();
+    dnfcy = dnfColumn->upperLeft();
     dy = dest_upperleft;
     for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y) {
         sx = sy;
@@ -191,7 +191,7 @@ void nearestFeatureTransform(bool wraparound,
     }
     sy = src_lowerright;
     send = src_upperleft;
-    dnfcy = dnfColumn.lowerRight();
+    dnfcy = dnfColumn->lowerRight();
     dy = dest_upperleft + (src_lowerright - src_upperleft);
     for (; sy.y != send.y;) {
         --sy.y;
@@ -240,8 +240,8 @@ void nearestFeatureTransform(bool wraparound,
     sy = src_upperleft;
     send = src_lowerright;
     smidpoint = src_upperleft + Diff2D(w/2, h/2);
-    dnfcy = dnfColumn.upperLeft();
-    dnfly = dnfLeft.upperLeft();
+    dnfcy = dnfColumn->upperLeft();
+    dnfly = dnfLeft->upperLeft();
     dy = dest_upperleft;
     for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
 
@@ -327,8 +327,8 @@ void nearestFeatureTransform(bool wraparound,
     sy = src_lowerright;
     send = src_upperleft;
     smidpoint = src_upperleft + Diff2D(w/2, h/2);
-    dnfcy = dnfColumn.lowerRight();
-    dnfly = dnfLeft.lowerRight();
+    dnfcy = dnfColumn->lowerRight();
+    dnfly = dnfLeft->lowerRight();
     dy = dest_upperleft + (src_lowerright - src_upperleft);
     for (; sy.y != send.y;) {
         --sy.y;
