@@ -92,83 +92,71 @@ Overlap inspectOverlap(
 };
 
 /** Determine the region-of-interest and number of blending levels to use,
- *  given the current intersection-bounding-box.
+ *  given the current mask-bounding-box and intersection-bounding-box.
  *  We also need to know if the image is a 360-degree pano so we can check
  *  for the case that the ROI wraps around the left and right edges.
  */
 template <typename PyramidPixelType>
 unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,
+        const EnblendROI &mBB,
         const EnblendROI &uBB,
         EnblendROI &roiBB) {
 
-    // Calculate how many levels we can create, and determine the size of
-    // the region-of-interest on level 0 os that all of the pixels that
-    // influence blending on the bottom level are included.
     unsigned int levels = 1;
-    while (true) {
 
-        // filterHalfWidth = how many pixels the transition line spreads
-        // out into layer levels-1, given the precision of the mask.
-        // filterHalfWidth = how many pixels an image feature spreads out into
-        // layer levels-1, given the precision of the image.
-        // Add these up to find the spread of the bounding box that is
-        // necessary to include all of the level 0 pixels that will influence
-        // blending on level levels-1.
-        // Here I am assuming that the mask uses the same data type as a single
-        // channel of the RGB pyramid.
-        unsigned int extent = 2 * filterHalfWidth<PyramidPixelType>(levels - 1);
-
-        // Set roiBB equal to iBB plus extent pixels in every direction.
-        // I am conservatively estimating that the transition line touches
-        // opposing corners of the iBB.
-        // In some cases the transition line may touch adjacent corners of
-        // the iBB. In those cases this code overestimates the size of the ROI.
-        Diff2D extentDiff(extent, extent);
-        roiBB.setCorners(iBB.getUL() - extentDiff, iBB.getLR() + extentDiff);
-
-        // Check for wraparound condition.
-        if (Wraparound
-                && uBB.size().x == inputUnion.size().x
-                && ((uBB.getUL().x > roiBB.getUL().x)
-                    || (roiBB.getLR().x > uBB.getLR().x))) {
-            // If the image is a 360 pano,
-            // and the images in this step wrap around,
-            // and the roi extends beyond the left or right edge of the image,
-            // Then make the roi the full union bounding box size.
-            roiBB = uBB;
-        }
-        else {
-            // roiBB = uBB intersect roiBB
-            // This guarantees that roiBB is no bigger than uBB.
-            uBB.intersect(roiBB, roiBB);
-        }
-
-        if (levels == MaximumLevels) {
-            // Hit the user-specified level limit.
-            break;
-        }
-        else {
-            // Calculate short dimension of ROI.
-            unsigned int shortDimension = min(roiBB.size().x, roiBB.size().y);
-
-            for (unsigned int i = 1; i < levels; i++) {
-                shortDimension = (shortDimension + 1) >> 1;
-            }
-
-            if (shortDimension > 8) {
-                // Try another level.
-                levels++;
-            }
-            else {
-                // quit - this is a good number of levels.
+    if (ExactLevels == 0) {
+        // Estimate the number of blending levels to use based on the size of the iBB.
+        // Assume the transition line runs approximately down the center of the iBB.
+        // Choose a number of levels that makes the mask spread out to the edges
+        // of the iBB.
+        // Calculate short dimension of iBB.
+        unsigned int shortDimension = min(iBB.size().x, iBB.size().y);
+        while (levels < 32) {
+            unsigned int extent = filterHalfWidth<PyramidPixelType>(levels + 1);
+            if ((2 * extent) > shortDimension) {
+                // levels + 1 is too many levels.
                 break;
             }
+            levels++;
         }
+
+        if (levels == 1) {
+            cerr << "enblend: overlap region is too small to make "
+                 << "more than one pyramid level."
+                 << endl;
+        }
+
+    } else {
+        levels = ExactLevels;
+    }
+
+    unsigned int extent = filterHalfWidth<PyramidPixelType>(levels);
+    Diff2D extentDiff(extent, extent);
+    roiBB.setCorners(mBB.getUL() - extentDiff, mBB.getLR() + extentDiff);
+
+    // ROI must not be bigger than uBB.
+    uBB.intersect(roiBB, roiBB);
+
+    // Verify the number of levels based on the size of the ROI.
+    unsigned int roiShortDimension = min(roiBB.size().x, roiBB.size().y);
+    unsigned int allowableLevels;
+    for (allowableLevels = 1; allowableLevels < levels; allowableLevels++) {
+        if (roiShortDimension <= 8) {
+            // ROI dimensions preclude using more levels than allowableLevels.
+            break;
+        }
+        roiShortDimension = (roiShortDimension + 1) >> 1;
+    }
+
+    if (allowableLevels < ExactLevels) {
+        cerr << "enblend: image geometry precludes using more than "
+             << allowableLevels
+             << " levels." << endl;
     }
 
     if (Verbose > VERBOSE_NUMLEVELS_MESSAGES) {
-        cout << "Using " << levels << " blending levels" << endl;
+        cout << "Using " << allowableLevels << " blending levels" << endl;
     }
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Region of Interest bounding box: ("
@@ -182,13 +170,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
              << ")" << endl;
     }
 
-    if (levels == 1 && levels != MaximumLevels) {
-        cerr << "enblend: intersection of images is too small to make "
-             << "more than one pyramid level."
-             << endl;
-    }
-
-    return levels;
+    return allowableLevels;
 }
 
 } // namespace enblend

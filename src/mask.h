@@ -29,6 +29,7 @@
 #include "common.h"
 #include "nearest.h"
 
+#include "vigra/error.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
@@ -61,9 +62,12 @@ template <typename AlphaType, typename MaskType>
 MaskType *createMask(AlphaType *whiteAlpha,
         AlphaType *blackAlpha,
         EnblendROI &uBB,
-        bool wraparound) {
+        bool wraparound,
+        EnblendROI &mBB) {
 
     typedef typename MaskType::PixelType MaskPixelType;
+    typedef typename MaskType::traverser MaskIteratorType;
+    typedef typename MaskType::Accessor MaskAccessor;
 
     //// Read mask from a file instead of calculating it.
     //MaskType *fileMask = new MaskType(uBB.size());
@@ -123,6 +127,66 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     delete maskTransform;
     // mem xsection = MaskType*ubb
+
+    // Find the bounding box of the mask transition line and put it in mBB.
+    MaskIteratorType firstMulticolorColumn = mask->lowerRight();
+    MaskIteratorType lastMulticolorColumn = mask->upperLeft();
+    MaskIteratorType firstMulticolorRow = mask->lowerRight();
+    MaskIteratorType lastMulticolorRow = mask->upperLeft();
+
+    MaskIteratorType myPrev = mask->upperLeft();
+    MaskIteratorType my = mask->upperLeft() + Diff2D(0,1);
+    MaskIteratorType mend = mask->lowerRight();
+    for (; my.y != mend.y; ++my.y, ++myPrev.y) {
+        MaskIteratorType mxLeft = my;
+        MaskIteratorType mx = my + Diff2D(1,0);
+        MaskIteratorType mxUpLeft = myPrev;
+        MaskIteratorType mxUp = myPrev + Diff2D(1,0);
+
+        if (*mxUpLeft != *mxLeft) {
+            // Transition line is between mxUpLeft and mxLeft.
+            if (firstMulticolorRow.y > mxUpLeft.y) firstMulticolorRow = mxUpLeft;
+            if (lastMulticolorRow.y < mxLeft.y) lastMulticolorRow = mxLeft;
+        }
+
+        for (; mx.x != mend.x; ++mx.x, ++mxLeft.x, ++mxUp.x) {
+            if (*mxLeft != *mx || *mxUp != *mx) {
+                // Transition line is between mxLeft and mx and between mx and mxUp
+                if (firstMulticolorColumn.x > mxLeft.x) firstMulticolorColumn = mxLeft;
+                if (lastMulticolorColumn.x < mx.x) lastMulticolorColumn = mx;
+                if (firstMulticolorRow.y > mxUp.y) firstMulticolorRow = mxUp;
+                if (lastMulticolorRow.y < mx.y) lastMulticolorRow = mx;
+            }
+        }
+    }
+
+    // Check that mBB is well-defined.
+    if ((firstMulticolorColumn.x >= lastMulticolorColumn.x)
+            || (firstMulticolorRow.y >= lastMulticolorRow.y)) {
+        // No transition pixels were found in the mask at all.
+        // This means that one image has no contribution.
+        vigra_fail("Mask transition line bounding box undefined.");
+    }
+
+    // Move mBB lower right corner out one pixel, per VIGRA convention.
+    ++lastMulticolorColumn.x;
+    ++lastMulticolorRow.y;
+
+    // mBB is defined relative to the inputUnion origin.
+    mBB.setCorners(uBB.getUL() + Diff2D(firstMulticolorColumn.x, firstMulticolorRow.y),
+            uBB.getUL() + Diff2D(lastMulticolorColumn.x, lastMulticolorRow.y));
+
+    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
+        cout << "Mask transition line bounding box: ("
+             << mBB.getUL().x
+             << ", "
+             << mBB.getUL().y
+             << ") -> ("
+             << mBB.getLR().x
+             << ", "
+             << mBB.getLR().y
+             << ")" << endl;
+    }
 
     return mask;
 }

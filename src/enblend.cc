@@ -85,7 +85,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 int Verbose = 1;
-unsigned int MaximumLevels = 0;
+unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
@@ -100,7 +100,7 @@ void printUsageAndExit() {
     cout << "Common options:" << endl;
     cout << " -a                Pre-assemble non-overlapping images" << endl;
     cout << " -h                Print this help message" << endl;
-    cout << " -l number         Maximum number of levels to use" << endl;
+    cout << " -l number         Number of levels to use" << endl;
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
-                MaximumLevels = (unsigned int)levels;
+                ExactLevels = (unsigned int)levels;
                 break;
             }
             case 'm': {
