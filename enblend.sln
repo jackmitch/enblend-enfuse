@@ -9,20 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vigra_impex", "src\vigra_im
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 3
-		SccLocalPath0 = .
-		CanCheckoutShared = true
-		SolutionUniqueID = {8CA856D7-EADF-4D2B-BE77-D240E0EAFBDC}
-		SccProjectUniqueName1 = src\\enblend.vcproj
-		SccLocalPath1 = .
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection1 = src\\
-		SccProjectUniqueName2 = src\\vigra_impex\\vigra_impex.vcproj
-		SccLocalPath2 = .
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection2 = src\\vigra_impex\\
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release

@@ -4,10 +4,6 @@
 	Version="7.10"
 	Name="vigra_impex"
 	ProjectGUID="{687B0862-A655-447F-8B25-292F0911E776}"
-	SccProjectName="//depot/enblend/enblend-win32-src-20041031b"
-	SccAuxPath=""
-	SccLocalPath="..\.."
-	SccProvider="MSSCCI:Source Depot"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform

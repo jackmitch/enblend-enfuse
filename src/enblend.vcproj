@@ -5,10 +5,6 @@
 	Name="enblend"
 	ProjectGUID="{A1402918-6CCA-4625-A83B-FF965635D7BE}"
 	RootNamespace="enblend"
-	SccProjectName="SAK"
-	SccAuxPath="SAK"
-	SccLocalPath="SAK"
-	SccProvider="SAK"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
