@@ -108,7 +108,6 @@ MaskPixel *createMask(uint32 *whiteImage, uint32 *blackImage) {
     // based on how close each pixel is to a green or blue region.
     //thinMask(mask);
     nearestFeatureTransform(mask);
-    return(mask);
 
     // Remark all blue pixels as white. These pixels are closer to
     // whiteImage than blackImage.

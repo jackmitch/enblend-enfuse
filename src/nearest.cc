@@ -41,9 +41,12 @@ extern uint32 ROILastY;
 #define EUCLIDEAN_METRIC
 
 #ifdef EUCLIDEAN_METRIC
-    typedef float dist_t;
-    #define DIST_MAX INFINITY
-    #define DIST_MIN 0.0f
+    //typedef float dist_t;
+    //#define DIST_MAX INFINITY
+    //#define DIST_MIN 0.0f
+    typedef uint32 dist_t;
+    #define DIST_MAX ((dist_t)-1)
+    #define DIST_MIN 0
     inline dist_t distance(uint32 deltaX, dist_t *deltaY) {
         return *deltaY + deltaX * deltaX;
     }
@@ -87,191 +90,255 @@ void nearestFeatureTransform(MaskPixel *mask) {
     uint32 roiHeight = ROILastY - ROIFirstY + 1;
     uint32 roiPixels = roiWidth * roiHeight;
 
-    dist_t *g = (dist_t*)malloc(roiPixels * sizeof(dist_t));
-    if (g == NULL) {
-        cerr << "nearestFeatureTransform: malloc failed for g" << endl;
-        exit(1);
-    }
-    dist_t *d = (dist_t*)malloc(roiPixels * sizeof(dist_t));
-    if (d == NULL) {
-        cerr << "nearestFeatureTransform: malloc failed for d" << endl;
+    // For each pixel, store the distance to the nearest feature in the same
+    // column.
+    dist_t *dnfColumn = (dist_t*)malloc(roiPixels * sizeof(dist_t));
+    if (dnfColumn == NULL) {
+        cerr << "nearestFeatureTransform: malloc failed for dnfColumn" << endl;
         exit(1);
     }
 
-    // Top-down g initialization
-    if (Verbose > 0) {
-        cout << "nearestFeatureTransform: preinit top-down." << endl;
+    // For each pixel, store the distance to the nearest feature in the same
+    // column or any column to the left.
+    dist_t *dnfLeft = (dist_t*)malloc(roiPixels * sizeof(dist_t));
+    if (dnfLeft == NULL) {
+        cerr << "nearestFeatureTransform: malloc failed for dnfLeft" << endl;
+        exit(1);
     }
+
+    // Initialize dnfColumn top-down. Store the distance to the nearest feature
+    // in the same column and above us.
+    if (Verbose > 0) {
+        cout << "nearestFeatureTransform: top-down pass" << endl;
+    }
+    MaskPixel *firstMaskP = &mask[ROIFirstY * OutputWidth + ROIFirstX];
     for (uint32 x = 0; x < roiWidth; x++) {
-        dist_t *gPixel = &g[x];
-        uint32 maskX = x + ROIFirstX;
-        uint8 lastG = 0;
-        uint8 lastB = 0;
-        uint32 lastY = 0;
+        dist_t *dnfColumnP = &dnfColumn[x];
+        MaskPixel *maskP = firstMaskP + x;
+
+        // Color of the last feature pixel.
+        uint8 lastFeatureG = 0;
+        uint8 lastFeatureB = 0;
+        // Distance to the last feature pixel in pixels.
+        uint32 lastFeatureDeltaY = 0;
         bool foundFirstFeature = false;
+
         for (uint32 y = 0; y < roiHeight; y++) {
-            uint32 maskY = y + ROIFirstY;
-
-            MaskPixel *maskPixel = &mask[maskY * OutputWidth + maskX];
-
-            if (maskPixel->r == 0) {
-                // maskPixel is a feature pixel.
-                *gPixel = DIST_MIN;
-                lastY = y;
-                lastG = maskPixel->g;
-                lastB = maskPixel->b;
+            if (maskP->r == 0) {
+                // maskP is a feature pixel.
+                *dnfColumnP = DIST_MIN;
+                lastFeatureDeltaY = 0;
+                lastFeatureG = maskP->g;
+                lastFeatureB = maskP->b;
                 foundFirstFeature = true;
             } else if (foundFirstFeature) {
-                // maskPixel is not a feature.
-                *gPixel = distance(y - lastY);
-                maskPixel->g = lastG;
-                maskPixel->b = lastB;
+                // maskP is not a feature.
+                *dnfColumnP = distance(lastFeatureDeltaY);
+                maskP->g = lastFeatureG;
+                maskP->b = lastFeatureB;
             } else {
-                *gPixel = DIST_MAX;
+                *dnfColumnP = DIST_MAX;
             }
 
-            gPixel += roiWidth;
+            lastFeatureDeltaY++;
+
+            // Move pointers down one row.
+            dnfColumnP += roiWidth;
+            maskP += OutputWidth;
         }
     }
 
-    // Bottom-up g initialization
+    // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
+    // feature in the same column and below us.
+    // If this is smaller than the value caluclated in the top-down pass,
+    // overwrite that value.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: preinit bottom-up." << endl;
+        cout << "nearestFeatureTransform: bottom-up pass" << endl;
     }
-    for (uint32 x = 1; x <= roiWidth; x++) {
-        dist_t *gPixel = &g[roiPixels - x];
-        uint32 maskX = ROILastX - x + 1;
-        uint8 lastG = 0;
-        uint8 lastB = 0;
-        uint32 lastY = 0;
+    MaskPixel *lastMaskP = &mask[ROILastY * OutputWidth + ROILastX];
+    dist_t *lastDNFColumnP = &dnfColumn[roiWidth * roiHeight - 1];
+    for (uint32 x = 0; x < roiWidth; x++) {
+        dist_t *dnfColumnP = lastDNFColumnP - x;
+        MaskPixel *maskP = lastMaskP - x;
+
+        // Color of the last feature pixel.
+        uint8 lastFeatureG = 0;
+        uint8 lastFeatureB = 0;
+        // Distance to the last feature pixel in pixels.
+        uint32 lastFeatureDeltaY = 0;
         bool foundFirstFeature = false;
+
         for (uint32 y = 0; y < roiHeight; y++) {
-            uint32 maskY = ROILastY - y;
-
-            MaskPixel *maskPixel = &mask[maskY * OutputWidth + maskX];
-
-            if (maskPixel->r == 0) {
-                // maskPixel is a feature pixel.
-                lastY = y;
-                lastG = maskPixel->g;
-                lastB = maskPixel->b;
+            if (maskP->r == 0) {
+                // maskP is a feature pixel.
+                //*dnfColumnP = DIST_MIN; don't need to do this again.
+                lastFeatureDeltaY = 0;
+                lastFeatureG = maskP->g;
+                lastFeatureB = maskP->b;
                 foundFirstFeature = true;
             } else if (foundFirstFeature) {
-                // maskPixel is not a feature.
-                dist_t dist = distance(y - lastY);
-                if (dist < *gPixel) {
-                    *gPixel = dist;
-                    maskPixel->g = lastG;
-                    maskPixel->b = lastB;
+                // maskP is not a feature.
+                dist_t distLastFeature = distance(lastFeatureDeltaY);
+                // If last feature is closer than nearest feature above,
+                // change distance and color to match last feature.
+                if (distLastFeature < *dnfColumnP) {
+                    *dnfColumnP = distLastFeature;
+                    maskP->g = lastFeatureG;
+                    maskP->b = lastFeatureB;
                 }
             }
 
-            gPixel -= roiWidth;
+            lastFeatureDeltaY++;
+
+            // Move pointers up one row.
+            dnfColumnP -= roiWidth;
+            maskP -= OutputWidth;
         }
     }
 
-    // Left-to-right transform
+    //size_t maxListSize = 0;
+
+    // Calculate dnfLeft for each pixel.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: LR pass." << endl;
+        cout << "nearestFeatureTransform: left-right pass" << endl; //... ";
+        //cout.flush();
     }
     for (uint32 y = 0; y < roiHeight; y++) {
-        uint32 maskY = ROIFirstY + y;
-        dist_t *gPixel = &g[y * roiWidth];
-        dist_t *dPixel = &d[y * roiWidth];
-        list<dist_t*> featureList;
+        dist_t *dnfLeftP = &dnfLeft[y * roiWidth];
+        dist_t *dnfColumnP = &dnfColumn[y * roiWidth];
+        MaskPixel *maskP = firstMaskP + (y * OutputWidth);
+
+        // List of dnfColumnP's on the left that might be the closest features
+        // to the current dnfColumnP.
+        list<dist_t*> potentialFeatureList;
 
         for (uint32 x = 0; x < roiWidth; x++) {
-            uint32 maskX = ROIFirstX + x;
-            MaskPixel *maskPixel = &mask[maskY * OutputWidth + maskX];
-
             // First add ourself to the list.
-            featureList.push_back(gPixel);
+            potentialFeatureList.push_back(dnfColumnP);
 
-            // Iterate backwards through list, prune
-            list<dist_t*>::iterator featureIterator = featureList.end();
-            featureIterator--;
-            dist_t featureIteratorDistance = **featureIterator;
-            while (featureIterator != featureList.begin()) {
-                list<dist_t*>::iterator previous = featureIterator;
-                previous--;
-                // previous is this many columns to the left of the origin.
-                uint32 colDiff = gPixel - *previous;
-                // previous feature is this far from origin.
-                dist_t dist = distance(colDiff, *previous);
-                if (dist >= featureIteratorDistance) {
-                    // previous is no candidate.
-                    featureList.erase(previous);
+            // Iterate through the list starting at the right. For each
+            // potential feature, all of the potential features to the left
+            // in the list must be strictly closer. If not delete them from
+            // the list.
+            list<dist_t*>::iterator potentialFeature =
+                    --(potentialFeatureList.end());
+            // The last potential feature is dnfColumnP, just added above.
+            // That is in the current column so the distance to that feature
+            // is simply *dnfColumnP.
+            dist_t distPotentialFeature = *dnfColumnP;
+            while (potentialFeature != potentialFeatureList.begin()) {
+                // Make an iterator that points to the predecessor.
+                list<dist_t*>::iterator previousFeature = potentialFeature;
+                previousFeature--;
+
+                // previousFeature is this many columns to the left of (x,y).
+                uint32 deltaX = dnfColumnP - *previousFeature;
+
+                // previousFeature is this far from (x,y).
+                dist_t distPreviousFeature = distance(deltaX, *previousFeature);
+
+                if (distPreviousFeature >= distPotentialFeature) {
+                    // previousFeature is not a candidate for dnfLeftP
+                    // or anything further to the right.
+                    potentialFeatureList.erase(previousFeature);
                 } else {
-                    // previous is a candidate.
-                    featureIterator = previous;
-                    featureIteratorDistance = dist;
+                    // previousFeature is a candidate.
+                    potentialFeature = previousFeature;
+                    distPotentialFeature = distPreviousFeature;
                 }
             }
 
-            // Now choose the feature
-            dist_t *gChoose = featureList.front();
-            int32 colDiff = gChoose - gPixel;
-            *dPixel = distance(colDiff, gChoose);
-            *gPixel = distance(colDiff, gChoose);
-            maskPixel->g = maskPixel[colDiff].g;
-            maskPixel->b = maskPixel[colDiff].b;
+            // The closest feature to (x,y) in columns <= x is the first
+            // potential feature in the list.
+            *dnfLeftP = distPotentialFeature;
 
-            gPixel++;
-            dPixel++;
+            // Set color of maskP to be color of closest feature to the left.
+            MaskPixel *maskPLeft = maskP - (dnfColumnP - *potentialFeature);
+            maskP->g = maskPLeft->g;
+            maskP->b = maskPLeft->b;
+
+            // Move pointers right one column.
+            dnfLeftP++;
+            dnfColumnP++;
+            maskP++;
+
+            //maxListSize = max(maxListSize, potentialFeatureList.size());
         }
     }
+    //if (Verbose > 0) {
+    //    cout << "max feature list size=" << maxListSize << endl;
+    //}
+    //maxListSize = 0;
 
-    // right-to-left transform
+    // Final pass: calculate the distance to the nearest feature in the same
+    // column or any column to the right. If this is smaller than dnfLeftP,
+    // Then recolor the pixel to the color of the nearest feature to the right.
     if (Verbose > 0) {
-        cout << "nearestFeatureTransform: RL pass." << endl;
+        cout << "nearestFeatureTransform: right-left pass" << endl; //... ";
+        //cout.flush();
     }
+    dist_t *lastDNFLeftP = &dnfLeft[roiWidth * roiHeight - 1];
     for (uint32 y = 0; y < roiHeight; y++) {
-        uint32 maskY = ROIFirstY + y;
-        dist_t *gPixel = &g[(y+1) * roiWidth - 1];
-        dist_t *dPixel = &d[(y+1) * roiWidth - 1];
-        list<dist_t*> featureList;
+        dist_t *dnfColumnP = lastDNFColumnP - (y * roiWidth);
+        dist_t *dnfLeftP = lastDNFLeftP - (y * roiWidth);
+        MaskPixel *maskP = lastMaskP - (y * OutputWidth);
+
+        // List of dnfColumnP's on the right that might be the closest features
+        // to the current dnfColumnP.
+        list<dist_t*> potentialFeatureList;
 
         for (uint32 x = 0; x < roiWidth; x++) {
-            uint32 maskX = ROILastX - x;
-            MaskPixel *maskPixel = &mask[maskY * OutputWidth + maskX];
-
             // First add ourself to the list.
-            featureList.push_back(gPixel);
+            potentialFeatureList.push_back(dnfColumnP);
 
-            // Iterate backwards through list, prune
-            list<dist_t*>::iterator featureIterator = featureList.end();
-            featureIterator--;
-            dist_t featureIteratorDistance = **featureIterator;
-            while (featureIterator != featureList.begin()) {
-                list<dist_t*>::iterator previous = featureIterator;
-                previous--;
-                uint32 colDiff = *previous - gPixel;
-                dist_t dist = distance(colDiff, *previous);
-                if (dist >= featureIteratorDistance) {
-                    // previous is no candidate.
-                    featureList.erase(previous);
+            // Iterate through list and prune as before.
+            list<dist_t*>::iterator potentialFeature =
+                    --(potentialFeatureList.end());
+            dist_t distPotentialFeature = *dnfColumnP;
+            while (potentialFeature != potentialFeatureList.begin()) {
+                // Iterator that points to predecessor.
+                list<dist_t*>::iterator previousFeature = potentialFeature;
+                previousFeature--;
+
+                // previousFeature is this many columns to the right of (x,y);
+                uint32 deltaX = *previousFeature - dnfColumnP;
+
+                // previousFeature is this far from (x,y);
+                dist_t distPreviousFeature = distance(deltaX, *previousFeature);
+
+                if (distPreviousFeature >= distPotentialFeature) {
+                    // previousFeature is not a candidate.
+                    potentialFeatureList.erase(previousFeature);
                 } else {
-                    // previous is a candidate.
-                    featureIterator = previous;
-                    featureIteratorDistance = dist;
+                    // previousFeature is a candidate.
+                    potentialFeature = previousFeature;
+                    distPotentialFeature = distPreviousFeature;
                 }
             }
 
-            // Now choose the feature
-            dist_t *gChoose = featureList.front();
-            int32 colDiff = gChoose - gPixel;
-            if (*dPixel > distance(colDiff, gChoose)) {
-                maskPixel->g = maskPixel[colDiff].g;
-                maskPixel->b = maskPixel[colDiff].b;
+            // The closest feature on the right is potentialFeature.
+            if (*dnfLeftP > distPotentialFeature) {
+                // Recolor maskP.
+                MaskPixel *maskPRight = maskP + (*potentialFeature - dnfColumnP);
+                maskP->g = maskPRight->g;
+                maskP->b = maskPRight->b;
             }
 
-            gPixel--;
-            dPixel--;
+            // Move pointers left one column.
+            dnfLeftP--;
+            dnfColumnP--;
+            maskP--;
+
+            //maxListSize = max(maxListSize, potentialFeatureList.size());
         }
     }
+    //if (Verbose > 0) {
+    //    cout << "max feature list size=" << maxListSize << endl;
+    //}
 
-    free(g);
-    free(d);
+    free(dnfColumn);
+    free(dnfLeft);
+
     return;
 }
 
