@@ -404,6 +404,9 @@ void nearestFeatureTransform(bool wraparound,
         }
     }
 
+    delete dnfColumn;
+    delete dnfLeft;
+
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         cout << endl;
     }

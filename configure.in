@@ -8,6 +8,7 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_LANG(C++)
 #CXXFLAGS = 
 
 AC_C_BIGENDIAN
@@ -21,6 +22,9 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
 AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
+AC_CHECK_HEADER(boost/random/mersenne_twister.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
+AC_CHECK_HEADER(boost/static_assert.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
+AC_CHECK_HEADER(boost/pool/pool.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
