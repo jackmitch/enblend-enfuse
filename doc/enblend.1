@@ -37,9 +37,11 @@ to use as many levels as possible given the size of the overlap region.
 Blend images one at a time, in the order specified on the command line.
 This overrides the default behavior which is
 to preassemble as many non-overlapping images as possible before blending.
-Also, Enblend will not care if each new image overlaps the previous images or
-not. Use this when the default blending order makes bad choices and leaves
-seams in the output.
+Enblend will blend even if an image does not overlap at all with the previous
+images.
+However, if an image overlaps completely with the previous images, it will
+still be considered redundant and will be skipped. Enblend can't decide if
+this new image is better or worse than the previous images.
 .IP -w
 Blend around the -180/+180 boundary. Useful for full-360 panoramas.
 Currently there is still an issue at the zenith and nadir.

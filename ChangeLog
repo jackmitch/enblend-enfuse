@@ -1,3 +1,27 @@
+2004-05-18 23:28  mihal
+
+	* NEWS, configure.in: Changed version number to 1.3.
+
+2004-05-18 23:15  mihal
+
+	* configure.in: Added a test to determine the endian-ness of the
+	  architecture.
+
+2004-05-18 23:14  mihal
+
+	* src/: assemble.cc, bounds.cc, enblend.h, io.cc, mask.cc,
+	  pyramid.cc: Added custom macros to access 8-bit color fields in
+	  32-bit pixel words, taking into account the endian-ness of the
+	  architecture.
+
+2004-05-09 10:36  mihal
+
+	* TODO: Added a few todo items from user feedback.
+
+2004-04-26 19:48  mihal
+
+	* ChangeLog, NEWS: Updated documentation.
+
 2004-04-26 19:41  mihal
 
 	* ChangeLog: Incremented version to 1.2.
