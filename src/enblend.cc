@@ -35,7 +35,7 @@
 
 #include "vigra/impex.hxx"
 #include "vigra/stdimage.hxx"
-#include "vigra_ext/cachedfileimage.hxx"
+#include "vigra_ext/stdcachedfileimage.hxx"
 
 using std::cout;
 using std::cerr;
@@ -43,24 +43,24 @@ using std::endl;
 using std::list;
 
 using vigra::CachedFileImageDirector;
-using vigra::BImage;
-using vigra::BRGBImage;
+using vigra::BCFImage;
+using vigra::BRGBCFImage;
 using vigra::Diff2D;
-using vigra::DImage;
-using vigra::DRGBImage;
-using vigra::FImage;
-using vigra::FRGBImage;
-using vigra::IImage;
+using vigra::DCFImage;
+using vigra::DRGBCFImage;
+using vigra::FCFImage;
+using vigra::FRGBCFImage;
+using vigra::ICFImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
-using vigra::IRGBImage;
-using vigra::SImage;
-using vigra::SRGBImage;
+using vigra::IRGBCFImage;
+using vigra::SCFImage;
+using vigra::SRGBCFImage;
 using vigra::StdException;
-using vigra::UIImage;
-using vigra::UIRGBImage;
-using vigra::USImage;
-using vigra::USRGBImage;
+using vigra::UICFImage;
+using vigra::UIRGBCFImage;
+using vigra::USCFImage;
+using vigra::USRGBCFImage;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
@@ -384,7 +384,7 @@ int main(int argc, char** argv) {
     try {
         if (isColor) {
             if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BRGBImage, SRGBImage>(
+                enblendMain<BRGBCFImage, SRGBCFImage>(
                         imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT16") == 0) {
             //    enblendMain<SRGBImage, IRGBImage>(

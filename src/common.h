@@ -39,6 +39,7 @@
 #define VERBOSE_COLOR_CONVERSION_MESSAGES   0
 #define VERBOSE_NFT_MESSAGES                0
 #define VERBOSE_PYRAMID_MESSAGES            0
+#define VERBOSE_CFI_MESSAGES                0
 
 namespace enblend {
 

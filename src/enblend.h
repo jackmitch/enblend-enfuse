@@ -46,8 +46,8 @@ using std::endl;
 using std::list;
 using std::pair;
 
-using vigra::BasicImage;
-using vigra::BImage;
+using vigra::BCFImage;
+using vigra::CachedFileImage;
 using vigra::FindMinMax;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
@@ -66,8 +66,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion) {
 
     typedef typename ImageType::value_type ImageValueType;
-    typedef BImage MaskType;
-    typedef BImage AlphaType;
+    typedef BCFImage MaskType;
+    typedef BCFImage AlphaType;
     typedef typename AlphaType::value_type AlphaValueType;
     typedef typename MaskPyramidType::value_type MaskPyramidValueType;
     typedef typename ImagePyramidType::value_type ImagePyramidValueType;
@@ -353,7 +353,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
     // ImagePyramidType::value_type is a vector.
     typedef typename ImagePyramidType::value_type VectorType;
-    typedef BasicImage<typename VectorType::value_type> MaskPyramidType;
+    typedef CachedFileImage<typename VectorType::value_type> MaskPyramidType;
 
     enblendMain<ImageType, MaskPyramidType, ImagePyramidType>(
             imageInfoList, outputImageInfo, inputUnion);

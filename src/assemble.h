@@ -73,7 +73,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &bb) {
 
     typedef typename AlphaType::PixelType AlphaPixelType;
-    typedef typename AlphaType::Iterator AlphaIteratorType;
+    typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?

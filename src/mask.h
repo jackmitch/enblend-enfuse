@@ -29,6 +29,7 @@
 #include "common.h"
 #include "nearest.h"
 
+#include "vigra_ext/stdcachedfileimage.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/impexalpha.hxx"
@@ -36,7 +37,7 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 
-using vigra::BImage;
+using vigra::BCFImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
@@ -73,7 +74,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 1 = inside white image only.
     // 255 = inside black image only.
     // This image will be iterated over columns
-    BImage *maskInit = new BImage(uBB.size());
+    BCFImage *maskInit = new BCFImage(uBB.size());
     // mem xsection = BImage*ubb
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
@@ -91,7 +92,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // Do mask transform here.
     // replaces 0 areas with either 1 or 255.
     // This image will be iterated over columns
-    BImage *maskTransform = new BImage(uBB.size());
+    BCFImage *maskTransform = new BCFImage(uBB.size());
     // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
             srcImageRange(*maskInit),
