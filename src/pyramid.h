@@ -59,8 +59,11 @@ static const unsigned int W100[] = {25 - A100 / 2, 25, A100, 25, 25 - A100 / 2};
  */
 template <typename PixelType>
 unsigned int filterHalfWidth(const unsigned int levels) {
-    vigra_precondition((levels >= 1 && levels <= 30),
-            "filterHalfWidth: levels outside of range [1,30]");
+    // For levels >= 30, the full width will just barely fit in int32.
+    // When this range is added to a bounding box it will certainly
+    // overflow the Diff2D.
+    vigra_precondition((levels >= 1 && levels <= 29),
+            "filterHalfWidth: levels outside of range [1,29]");
 
     // This is the arithmetic half width.
     int halfWidth = (levels == 1) ? 0 : ((1 << (levels+1)) - 4);

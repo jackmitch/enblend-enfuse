@@ -133,7 +133,7 @@ void printUsageAndExit() {
     cout << "Common options:" << endl;
     cout << " -a                Pre-assemble non-overlapping images" << endl;
     cout << " -h                Print this help message" << endl;
-    cout << " -l number         Number of levels to use (1 to 30)" << endl;
+    cout << " -l number         Number of levels to use (1 to 29)" << endl;
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
@@ -218,8 +218,8 @@ int main(int argc, char** argv) {
             }
             case 'l': {
                 int levels = atoi(optarg);
-                if (levels < 1 || levels > 30) {
-                    cerr << "enblend: levels must in the range 1 to 30."
+                if (levels < 1 || levels > 29) {
+                    cerr << "enblend: levels must in the range 1 to 29."
                          << endl;
                     printUsageAndExit();
                 }
