@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 #ifdef _WIN32
+#include <windows.h>
 #include <io.h>
 #endif
 
@@ -1085,15 +1086,27 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
     if (blockInFile_[blockNumber]) {
         // Find the right spot in the file.
 #ifdef _WIN32
+        DWORD dwError = NO_ERROR;
         LONGLONG offset = (LONGLONG)width_
                           * (LONGLONG)firstLineInBlock
                           * (LONGLONG)sizeof(PIXELTYPE);
         LARGE_INTEGER liOffset;
         liOffset.QuadPart = offset;
-        if (0 == SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN)) {
-            // TODO (jbeda): format a real message here using FormatMessage 
-            // from GetLastError
-            vigra_fail("Unable to open temporary file");
+        liOffset.LowPart = SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN);
+        if (liOffset.LowPart == INVALID_SET_FILE_POINTER && (dwError = GetLastError()) != NO_ERROR) {
+            LPVOID lpMsgBuf;
+            FormatMessage(
+                    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                    NULL,
+                    dwError,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR) &lpMsgBuf,
+                    0,
+                    NULL);
+            cerr << endl << lpMsgBuf << endl;
+            LocalFree(lpMsgBuf);
+            vigra_fail("Unable to seek within temporary file.\n"
+                    "This error is specific to the Windows version of Enblend.");
         }
 #else
         off_t offset = (off_t)width_
@@ -1226,15 +1239,27 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 
         // Find the right spot in the file.
 #ifdef _WIN32
+        DWORD dwError = NO_ERROR;
         LONGLONG offset = (LONGLONG)width_
                           * (LONGLONG)firstLineInBlock
                           * (LONGLONG)sizeof(PIXELTYPE);
         LARGE_INTEGER liOffset;
         liOffset.QuadPart = offset;
-        if (0 == SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN)) {
-            // TODO (jbeda): format a real message here using FormatMessage 
-            // from GetLastError
-            vigra_fail("Unable to open temporary file");
+        liOffset.LowPart = SetFilePointer(hTempFile_, liOffset.LowPart, &liOffset.HighPart, FILE_BEGIN);
+        if (liOffset.LowPart == INVALID_SET_FILE_POINTER && (dwError = GetLastError()) != NO_ERROR) {
+            LPVOID lpMsgBuf;
+            FormatMessage(
+                    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                    NULL,
+                    dwError,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR) &lpMsgBuf,
+                    0,
+                    NULL);
+            cerr << endl << lpMsgBuf << endl;
+            LocalFree(lpMsgBuf);
+            vigra_fail("Unable to seek within temporary file.\n"
+                    "This error is specific to the Windows version of Enblend.");
         }
 #else
         off_t offset = (off_t)width_
