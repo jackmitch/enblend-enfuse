@@ -1,3 +1,20 @@
+2005-04-10 00:10  acmihal
+
+	* configure.in, include/vigra/cachedfileimage.hxx,
+	  src/win32helpers/win32config.h: Added proper handling of
+	  SetFilePointer return values.
+
+2005-04-09 23:31  acmihal
+
+	* src/: enblend.cc, pyramid.h: Lowered maximum levels settable with
+	  -l parameter from 30 to 29.  Full filter width with 30 levels
+	  will overflow Diff2Ds.
+
+2005-02-05 14:48  acmihal
+
+	* ChangeLog, NEWS, configure.in, src/win32helpers/win32config.h:
+	  Checking in NEWS and ChangeLog for 2.2 release.
+
 2005-01-26 20:47  acmihal
 
 	* configure.in, cross-configure.sh, cross-make.sh, enblend.sln,

@@ -126,3 +126,14 @@ February 5, 2004
       that includes support for all of the TIFF compression standards, such
       as Deflate, LZW, JPEG, and Packbits. Nona/Hugin produces TIFF files
       with the Deflate option.
+
+April 17, 2005
+    Released enblend-2.3
+
+    - Reduced the maximum number of levels you can specify with the -l
+      parameter from 30 to 29. While both of these are impractically large,
+      at least 29 does not lead to arithmetic overflow and a subsequent crash.
+
+    - Fixed a bug in temporary file handling in the Windows version of
+      enblend. This should solve the "unable to open temporary file" error.
+
