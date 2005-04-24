@@ -1,3 +1,8 @@
+2005-04-17 18:09  acmihal
+
+	* ChangeLog, NEWS, configure.in, src/win32helpers/win32config.h:
+	  Updated NEWS, ChangeLog, and configure for the 2.3 release.
+
 2005-04-10 00:10  acmihal
 
 	* configure.in, include/vigra/cachedfileimage.hxx,

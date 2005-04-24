@@ -74,6 +74,9 @@ namespace vigra {
         void init( const std::string & );
         void close();
         void abort();
+
+        uint32_t getICCProfileLength() const;
+        const unsigned char *getICCProfile() const;
     };
 
     class TIFFEncoder : public Encoder
@@ -108,6 +111,8 @@ namespace vigra {
         void init( const std::string & );
         void close();
         void abort();
+
+        void setICCProfile(const uint32_t length, const unsigned char * const buf);
     };
 }
 

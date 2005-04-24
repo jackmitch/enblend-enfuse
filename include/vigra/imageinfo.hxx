@@ -122,6 +122,7 @@ class ImageExportInfo
             TIFF support requires libtiff.
         **/
     ImageExportInfo( const char * );
+    ~ImageExportInfo();
 
     const char * getFileName() const;
 
@@ -233,10 +234,24 @@ class ImageExportInfo
     float getXResolution() const;
     float getYResolution() const;
 
+        /** Returns the size of the ICC profile
+         **/
+    uint32_t getICCProfileLength() const;
+
+        /** Returns a pointer to the beginning of the ICC profile data.
+         **/
+    const unsigned char *getICCProfile() const;
+
+        /** Sets the ICC profile to a copy of the given profile.
+         **/
+    void setICCProfile(const uint32_t length, const unsigned char * const buf);
+
   private:
     std::string m_filename, m_filetype, m_pixeltype, m_comp;
     float m_x_res, m_y_res;
     vigra::Diff2D m_pos;
+    uint32_t m_profile_length;
+    unsigned char *m_profile_ptr;
 };
 
 // return an encoder for a given ImageExportInfo object
@@ -285,6 +300,7 @@ class ImageImportInfo
             </DL>
         **/
     ImageImportInfo( const char *  );
+    ~ImageImportInfo();
 
     const char * getFileName() const;
 
@@ -360,11 +376,21 @@ class ImageImportInfo
          **/
     float getYResolution() const;
 
+        /** Returns the size of the ICC profile
+         **/
+    uint32_t getICCProfileLength() const;
+
+        /** Returns a pointer to the beginning of the ICC profile data.
+         **/
+    const unsigned char *getICCProfile() const;
+
   private:
     std::string m_filename, m_filetype, m_pixeltype;
     int m_width, m_height, m_num_bands, m_num_extra_bands;
     float m_x_res, m_y_res;
     vigra::Diff2D m_pos;
+    uint32_t m_profile_length;
+    unsigned char *m_profile_ptr;
 };
 
 // return a decoder for a given ImageImportInfo object

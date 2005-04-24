@@ -143,6 +143,9 @@ namespace vigra {
         float x_resolution, y_resolution;
         vigra::Diff2D position;
 
+        uint32_t iccProfileLength;
+        const unsigned char *iccProfilePtr;
+
     public:
 
         TIFFCodecImpl();
@@ -161,6 +164,8 @@ namespace vigra {
         x_resolution = 0;
         y_resolution = 0;
         extra_samples_per_pixel = 0;
+        iccProfileLength = 0;
+        iccProfilePtr = NULL;
     }
 
     TIFFCodecImpl::~TIFFCodecImpl()
@@ -485,6 +490,9 @@ namespace vigra {
             position.y = (int)floor(fvalue + 0.5);
         }
 
+        // ICC Profile
+        TIFFGetField(tiff, TIFFTAG_ICCPROFILE, &iccProfileLength, &iccProfilePtr);
+        
         // allocate data buffers
         // mihal 27-10-2004: use scanline interface instead of strip interface
         //const unsigned int stripsize = TIFFStripSize(tiff);
@@ -637,6 +645,16 @@ namespace vigra {
 
     void TIFFDecoder::close() {}
     void TIFFDecoder::abort() {}
+
+    uint32_t TIFFDecoder::getICCProfileLength() const
+    {
+        return pimpl->iccProfileLength;
+    }
+
+    const unsigned char *TIFFDecoder::getICCProfile() const
+    {
+        return pimpl->iccProfilePtr;
+    }
 
 
     // this encoder always writes interleaved tiff files
@@ -819,6 +837,11 @@ namespace vigra {
             TIFFSetField( tiff, TIFFTAG_YPOSITION, position.y / y_resolution);
         }
 
+        // Set ICC profile, if available.
+        if (iccProfileLength > 0) {
+            TIFFSetField(tiff, TIFFTAG_ICCPROFILE, iccProfileLength, iccProfilePtr);
+        }
+
         // alloc memory
         stripbuffer = new tdata_t[1];
         stripbuffer[0] = 0;
@@ -914,6 +937,13 @@ namespace vigra {
 
     void TIFFEncoder::close() {}
     void TIFFEncoder::abort() {}
+
+    void TIFFEncoder::setICCProfile(const uint32_t length, const unsigned char * const buf)
+    {
+        pimpl->iccProfileLength = length;
+        pimpl->iccProfilePtr = buf;
+    }
+
 }
 
 #endif // HasTIFF

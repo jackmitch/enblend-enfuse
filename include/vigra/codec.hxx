@@ -100,6 +100,9 @@ namespace vigra
         virtual const void * currentScanlineOfBand( unsigned int ) const = 0;
         virtual void nextScanline() = 0;
 
+        virtual uint32_t getICCProfileLength() const { return 0; }
+        virtual const unsigned char *getICCProfile() const { return NULL; }
+
     };
 
     struct Encoder
@@ -126,6 +129,10 @@ namespace vigra
         {
         }
         virtual void setYResolution( float yres )
+        {
+        }
+
+        virtual void setICCProfile(const uint32_t length, const unsigned char * const buf)
         {
         }
 

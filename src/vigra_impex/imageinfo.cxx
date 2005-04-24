@@ -253,8 +253,14 @@ bool isImage(char const * filename)
 
 ImageExportInfo::ImageExportInfo( const char * filename )
     : m_filename(filename),
-      m_x_res(0), m_y_res(0)
+      m_x_res(0), m_y_res(0),
+      m_profile_length(0), m_profile_ptr(NULL)
 {}
+
+ImageExportInfo::~ImageExportInfo()
+{
+    delete[] m_profile_ptr;
+}
 
 ImageExportInfo & ImageExportInfo::setFileType( const char * filetype )
 {
@@ -327,6 +333,25 @@ vigra::Diff2D ImageExportInfo::getPosition() const
     return m_pos;
 }
 
+uint32_t ImageExportInfo::getICCProfileLength() const
+{
+    return m_profile_length;
+}
+
+const unsigned char *ImageExportInfo::getICCProfile() const
+{
+    return m_profile_ptr;
+}
+
+void ImageExportInfo::setICCProfile(const uint32_t length, const unsigned char * const buf)
+{
+    // Delete existing profile.
+    delete[] m_profile_ptr;
+    m_profile_length = length;
+    m_profile_ptr = new unsigned char[m_profile_length];
+    VIGRA_CSTD::memcpy(m_profile_ptr, buf, m_profile_length);
+}
+
 // return an encoder for a given ImageExportInfo object
 std::auto_ptr<Encoder> encoder( const ImageExportInfo & info )
 {
@@ -370,6 +395,11 @@ std::auto_ptr<Encoder> encoder( const ImageExportInfo & info )
     enc->setYResolution(info.getYResolution());
     enc->setPosition(info.getPosition());
 
+    if (info.getICCProfileLength() > 0) {
+        enc->setICCProfile(info.getICCProfileLength(),
+                info.getICCProfile());
+    }
+
     return enc;
 }
 
@@ -388,7 +418,20 @@ ImageImportInfo::ImageImportInfo( const char * filename )
     m_num_extra_bands = decoder->getNumExtraBands();
     m_pos = decoder->getPosition();
 
+    m_profile_length = decoder->getICCProfileLength();
+    if (m_profile_length > 0) {
+        m_profile_ptr = new unsigned char[m_profile_length];
+        VIGRA_CSTD::memcpy(m_profile_ptr, decoder->getICCProfile(), m_profile_length);
+    }
+    else {
+        m_profile_ptr = NULL;
+    }
+
     decoder->abort(); // there probably is no better way than this
+}
+
+ImageImportInfo::~ImageImportInfo() {
+    delete[] m_profile_ptr;
 }
 
 const char * ImageImportInfo::getFileName() const
@@ -476,6 +519,16 @@ float ImageImportInfo::getXResolution() const
 float ImageImportInfo::getYResolution() const
 {
     return m_y_res;
+}
+
+uint32_t ImageImportInfo::getICCProfileLength() const
+{
+    return m_profile_length;
+}
+
+const unsigned char *ImageImportInfo::getICCProfile() const
+{
+    return m_profile_ptr;
 }
 
 // return a decoder for a given ImageImportInfo object
