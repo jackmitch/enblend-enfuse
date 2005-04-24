@@ -8,7 +8,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: impexalpha.hxx,v 1.2 2004-09-30 06:45:32 mihal Exp $
+ *  $Id: impexalpha.hxx,v 1.3 2005-04-24 06:54:50 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -105,10 +105,10 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
     //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor, for reading from the mask image
-    typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<image_type>,
+    typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<image_type, ScaleType>,
 	AlphaAccessor> ScalingAccessor;
 
-    vigra::ScalarIntensityTransform<image_type> scaler(scale);
+    vigra::ScalarIntensityTransform<image_type, ScaleType> scaler(scale);
     ScalingAccessor scaleA(scaler,
                            alpha.second);
 
@@ -146,10 +146,10 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
     //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
-    typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<component_type>,
+    typedef vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<component_type, ScaleType>,
 	AlphaAccessor> ScalingAccessor;
 
-    vigra::ScalarIntensityTransform<component_type> scaler(scale);
+    vigra::ScalarIntensityTransform<component_type, ScaleType> scaler(scale);
     ScalingAccessor scaleA(scaler,
 			   alpha.second);
 
@@ -211,10 +211,10 @@ void importImageAlpha(vigra::ImageImportInfo const & info,
     //std::cerr << " import alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
-    typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<ScaleType>,
+    typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<alpha_type, ScaleType>,
 	AlphaAccessor> ScalingAccessor;
 
-    vigra::ScalarIntensityTransform<ScaleType> scaler(scale);
+    vigra::ScalarIntensityTransform<alpha_type, ScaleType> scaler(scale);
     ScalingAccessor scaleA(scaler,
 			   alpha.second);
 
@@ -272,10 +272,10 @@ void importImageAlpha(vigra::ImageImportInfo const & info,
     //std::cerr << " export alpha factor: " << scale << std::endl;
 
     // construct scaling accessor.
-    typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<ScaleType>,
+    typedef vigra_ext::WriteFunctorAccessor<vigra::ScalarIntensityTransform<alpha_type, ScaleType>,
 	AlphaAccessor> ScalingAccessor;
 
-    vigra::ScalarIntensityTransform<ScaleType> scaler(scale);
+    vigra::ScalarIntensityTransform<alpha_type, ScaleType> scaler(scale);
     ScalingAccessor scaleA(scaler,
 			   alpha.second);
 
