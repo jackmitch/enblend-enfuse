@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: FunctorAccessor.h,v 1.2 2004-11-13 23:54:16 jbeda Exp $
+ *  $Id: FunctorAccessor.h,v 1.3 2005-04-24 07:02:42 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -25,6 +25,9 @@
 #define _FUNCTORACCESSOR_H
 
 #include <vigra/numerictraits.hxx>
+
+using vigra::VigraTrueType;
+using vigra::VigraFalseType;
 
 namespace vigra_ext {
 
@@ -83,6 +86,8 @@ template <class Functor, class Accessor>
 class WriteFunctorAccessor
 {
   public:
+    typedef typename Functor::result_type value_type;
+
     WriteFunctorAccessor(Functor f, Accessor a)
         : m_f(f), m_a(a)
     {
@@ -173,6 +178,41 @@ public:
     Acc2  a2_;
 };
 
+template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType, bool useFirst>
+class FirstOrSecondComponent {};
+
+template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType>
+class FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, ComponentType, true> {
+public:
+    template <class V, class ITERATOR, int IDX>
+    inline static void set(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
+            V const & value, ITERATOR const & i) {
+        a1.template setComponent<V, Iter1, typename ITERATOR::value_type, IDX>(value, i1, *i);
+    };
+
+    template <class ITERATOR, int IDX>
+    inline static ComponentType get(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
+            ITERATOR const & i) {
+        return a1.template getComponent<Iter1, typename ITERATOR::value_type, IDX>(i1, *i);
+    };
+};
+
+template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType>
+class FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, ComponentType, false> {
+public:
+    template <class V, class ITERATOR, int IDX>
+    inline static void set(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
+            V const & value, ITERATOR const & i) {
+        a2.set(value, i2, *i);
+    };
+
+    template <class ITERATOR, int IDX>
+    inline static ComponentType get(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
+            ITERATOR const & i) {
+        return a2(i2, *i);
+    };
+};
+
 /** split a vector image into a vector and a scalar image
  *
  *  like SplitVector2Accessor, but for the vector -> vector, scalar
@@ -209,6 +249,14 @@ public:
 	} else {
 	    vigra_fail("too many components in input value");
 	}
+    }
+
+    // Version with compile-time constant idx
+    template <class V, class ITERATOR, int IDX>
+    inline void setComponent( V const & value, ITERATOR const & i ) const
+    {
+        FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
+                ::template set<V, ITERATOR, IDX>(i1_, a1_, i2_, a2_, value, i);
     }
 
     Iter1 i1_;
@@ -345,6 +393,14 @@ public:
 	}
     }
 
+    // Version with compile-time constant idx
+    template <class ITERATOR, int IDX>
+    component_type getComponent(ITERATOR const & i) const
+    {
+        return FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
+                ::template get<ITERATOR, IDX>(i1_, a1_, i2_, a2_, i);
+    }
+
         /** read one component, with offset */
     template <class ITERATOR, class DIFFERENCE_>
     component_type const getComponent(ITERATOR i, DIFFERENCE_ const & d, int idx) const
@@ -361,6 +417,15 @@ public:
             // throw an exception.
             throw 0;
 	}
+    }
+
+    // Version with compile-time constant idx
+    template <class ITERATOR, class DIFFERENCE_, int IDX>
+    component_type const getComponent(ITERATOR i, DIFFERENCE_ const & d) const
+    {
+        i += d;
+        return FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
+                ::template get<ITERATOR, IDX>(i1_, a1_, i2_, a2_, i);
     }
 
     Iter1 i1_;

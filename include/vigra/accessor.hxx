@@ -664,6 +664,13 @@ class VectorAccessor
         return (*i)[idx]; 
     }
     
+    // Version of getComponent where idx is a compile-time constant
+    template <class ITERATOR, int IDX>
+    component_type const & getComponent(ITERATOR const & i) const 
+    { 
+        return (*i)[IDX]; 
+    }
+
         /** Set the component data at given vector index
             at given iterator position. The type <TT>V</TT> of the passed
             in <TT>value</TT> is automatically converted to <TT>component_type</TT>.
@@ -674,6 +681,13 @@ class VectorAccessor
     { 
         (*i)[idx] = detail::RequiresExplicitCast<component_type>::cast(value); 
     }
+
+    // Version of setComponent where idx is a compile-time constant
+    template <class V, class ITERATOR, int IDX>
+    void setComponent(V const & value, ITERATOR const & i) const
+    {
+        (*i)[IDX] = detail::RequiresExplicitCast<component_type>::cast(value);
+    }
     
         /** Read the component data at given vector index
             at an offset of given iterator position
@@ -682,6 +696,13 @@ class VectorAccessor
     component_type const & getComponent(ITERATOR const & i, DIFFERENCE const & diff, int idx) const
     { 
         return i[diff][idx]; 
+    }
+
+    // Version of getComponent where idx is a compile-time constant
+    template <class ITERATOR, class DIFFERENCE, int IDX>
+    component_type const & getComponent(ITERATOR const & i, DIFFERENCE const & diff) const
+    {
+        return i[diff][IDX];
     }
     
     /** Set the component data at given vector index
@@ -695,6 +716,15 @@ class VectorAccessor
     { 
         i[diff][idx] = detail::RequiresExplicitCast<component_type>::cast(value); 
     }
+
+    // Version of setComponent where idx is a compile-time constant
+    template <class V, class ITERATOR, class DIFFERENCE, int IDX>
+    void
+    setComponent(V const & value, ITERATOR const & i, DIFFERENCE const & diff) const
+    {
+        i[diff][IDX] = detail::RequiresExplicitCast<component_type>::cast(value); 
+    }
+
 };
 
 

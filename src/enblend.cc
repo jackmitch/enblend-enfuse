@@ -383,6 +383,8 @@ int main(int argc, char** argv) {
 
             if (inputInfo->isColor()) cout << "RGB ";
 
+            if (inputInfo->getICCProfileLength() > 0) cout << "ICC ";
+
             cout << inputInfo->getPixelType() << " "
                  << "position="
                  << inputInfo->getPosition().x
@@ -451,6 +453,18 @@ int main(int argc, char** argv) {
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
 
+    // Find the first ICC profile in the input images and copy it to the output image.
+    for (imageInfoIterator = imageInfoList.begin();
+            imageInfoIterator != imageInfoList.end();
+            ++imageInfoIterator) {
+        if ((*imageInfoIterator)->getICCProfileLength() > 0) {
+            outputImageInfo.setICCProfile(
+                    (*imageInfoIterator)->getICCProfileLength(),
+                    (*imageInfoIterator)->getICCProfile());
+            break;
+        }
+    }
+
     // The size of the output image.
     if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
         Diff2D ul = inputUnion.getUL();
@@ -514,34 +528,34 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         } else {
-            if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BCFImage, SCFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT16") == 0) {
-                enblendMain<SCFImage, ICFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT16") == 0) {
-                enblendMain<USCFImage, ICFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT32") == 0) {
-                enblendMain<ICFImage, DCFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT32") == 0) {
-                enblendMain<UICFImage, DCFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "FLOAT") == 0) {
-                enblendMain<FCFImage, DCFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "DOUBLE") == 0) {
-                enblendMain<DCFImage, DCFImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else {
-                cerr << "enblend: images with pixel type \""
-                     << pixelType
-                     << "\" are not supported."
-                     << endl;
-                exit(1);
-            }
+            //if (strcmp(pixelType, "UINT8") == 0) {
+            //    enblendMain<BCFImage, SCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT16") == 0) {
+            //    enblendMain<SCFImage, ICFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USCFImage, ICFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT32") == 0) {
+            //    enblendMain<ICFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT32") == 0) {
+            //    enblendMain<UICFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "FLOAT") == 0) {
+            //    enblendMain<FCFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+            //    enblendMain<DCFImage, DCFImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else {
+            //    cerr << "enblend: images with pixel type \""
+            //         << pixelType
+            //         << "\" are not supported."
+            //         << endl;
+            //    exit(1);
+            //}
         }
     #else
         if (isColor) {

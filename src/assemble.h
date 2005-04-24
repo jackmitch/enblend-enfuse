@@ -40,6 +40,7 @@
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
+#include "vigra_ext/FunctorAccessor.h"
 
 using std::cout;
 using std::endl;
@@ -57,6 +58,8 @@ using vigra::inspectImageIf;
 using vigra::NumericTraits;
 using vigra::Threshold;
 using vigra::transformImage;
+
+using vigra_ext::WriteFunctorAccessor;
 
 namespace enblend {
 
@@ -95,22 +98,26 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     }
 
     // Load the first image into the destination.
-    Diff2D imagePos = imageInfoList.front()->getPosition();
-    importImageAlpha(*imageInfoList.front(),
-            destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
-            destIter(imageA->upperLeft() + imagePos - inputUnion.getUL()));
-    imageInfoList.erase(imageInfoList.begin());
-
+    // Use a thresholding accessor to write to the alpha image.
+    typedef WriteFunctorAccessor<
+            Threshold<AlphaPixelType, AlphaPixelType>, AlphaAccessor>
+            ThresholdingAccessor;
     // Threshold the alpha mask so that all pixels are either contributing
     // or not contributing.
-    transformImage(srcImageRange(*imageA), destImage(*imageA),
+    ThresholdingAccessor imageATA(
             Threshold<AlphaPixelType, AlphaPixelType>(
                     NumericTraits<AlphaPixelType>::max() / 2,
                     NumericTraits<AlphaPixelType>::max(),
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::max()
-            )
-    );
+            ),
+            imageA->accessor());
+
+    Diff2D imagePos = imageInfoList.front()->getPosition();
+    importImageAlpha(*imageInfoList.front(),
+            destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
+            destIter(imageA->upperLeft() + imagePos - inputUnion.getUL(), imageATA));
+    imageInfoList.erase(imageInfoList.begin());
 
     if (!OneAtATime) {
         // Attempt to assemble additional non-overlapping images.
@@ -125,18 +132,17 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             // Load the next image.
             ImageType *src = new ImageType(info->size());
             AlphaType *srcA = new AlphaType(info->size());
-            importImageAlpha(*info, destImage(*src), destImage(*srcA));
 
-            // Threshold the alpha mask so that all pixels are either
-            // contributing or not contributing.
-            transformImage(srcImageRange(*srcA), destImage(*srcA),
+            // Use a thresholding accessor to write to the alpha image.
+            ThresholdingAccessor srcATA(
                     Threshold<AlphaPixelType, AlphaPixelType>(
                             NumericTraits<AlphaPixelType>::max() / 2,
                             NumericTraits<AlphaPixelType>::max(),
                             NumericTraits<AlphaPixelType>::zero(),
                             NumericTraits<AlphaPixelType>::max()
-                    )
-            );
+                    ),
+                    srcA->accessor());
+            importImageAlpha(*info, destImage(*src), destImage(*srcA, srcATA));
 
             // Check for overlap.
             bool overlapFound = false;

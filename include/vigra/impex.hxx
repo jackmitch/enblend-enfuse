@@ -100,15 +100,48 @@ namespace vigra
         DstRowIterator xs = ys.rowIterator();
 
         // iterate
-        for( size_type y = 0; y < height; ++y, ++ys.y ) {
-            dec->nextScanline();
-            for( size_type b = 0; b < num_bands; ++b ) {
+        if (num_bands == 4) {
+            // Speedup for this particular case
+            unsigned int offset = dec->getOffset();
+            SrcValueType const * scanline0;
+            SrcValueType const * scanline1;
+            SrcValueType const * scanline2;
+            SrcValueType const * scanline3;
+            for( size_type y = 0; y < height; ++y, ++ys.y ) {
+                dec->nextScanline();
                 xs = ys.rowIterator();
-                scanline = static_cast< SrcValueType const * >
-                    (dec->currentScanlineOfBand(b));
+                scanline0 = static_cast< SrcValueType const * >
+                    (dec->currentScanlineOfBand(0));
+                scanline1 = static_cast< SrcValueType const * >
+                    (dec->currentScanlineOfBand(1));
+                scanline2 = static_cast< SrcValueType const * >
+                    (dec->currentScanlineOfBand(2));
+                scanline3 = static_cast< SrcValueType const * >
+                    (dec->currentScanlineOfBand(3));
                 for( size_type x = 0; x < width; ++x, ++xs ) {
-                    a.setComponent( *scanline, xs, b );
-                    scanline += dec->getOffset();
+                    a.template setComponent<SrcValueType, DstRowIterator, 0>( *scanline0, xs );
+                    a.template setComponent<SrcValueType, DstRowIterator, 1>( *scanline1, xs );
+                    a.template setComponent<SrcValueType, DstRowIterator, 2>( *scanline2, xs );
+                    a.template setComponent<SrcValueType, DstRowIterator, 3>( *scanline3, xs );
+                    scanline0 += offset;
+                    scanline1 += offset;
+                    scanline2 += offset;
+                    scanline3 += offset;
+                }
+            }
+        }
+        else {
+            // General case
+            for( size_type y = 0; y < height; ++y, ++ys.y ) {
+                dec->nextScanline();
+                for( size_type b = 0; b < num_bands; ++b ) {
+                    xs = ys.rowIterator();
+                    scanline = static_cast< SrcValueType const * >
+                        (dec->currentScanlineOfBand(b));
+                    for( size_type x = 0; x < width; ++x, ++xs ) {
+                        a.setComponent( *scanline, xs, b );
+                        scanline += dec->getOffset();
+                    }
                 }
             }
         }
@@ -397,18 +430,50 @@ namespace vigra
         ImageIterator ys(ul);
         // MIHAL no default constructor available for cachedfileimages
         SrcRowIterator xs = ys.rowIterator();
-        for( size_type y = 0; y < height; ++y, ++ys.y ) {
-            for( size_type b = 0; b < num_bands; ++b ) {
+
+        if (num_bands == 4) {
+            unsigned int offset = enc->getOffset();
+            DstValueType * scanline0;
+            DstValueType * scanline1;
+            DstValueType * scanline2;
+            DstValueType * scanline3;
+            for( size_type y = 0; y < height; ++y, ++ys.y ) {
                 xs = ys.rowIterator();
-                scanline = static_cast< DstValueType * >
-                    (enc->currentScanlineOfBand(b));
-//                std::cerr << "b= " << b << std::endl;
-                for( size_type x = 0; x < width; ++x, ++xs ) {
-                    *scanline = a.getComponent( xs, b );
-                    scanline += enc->getOffset();
+                scanline0 = static_cast< DstValueType * >
+                        (enc->currentScanlineOfBand(0));
+                scanline1 = static_cast< DstValueType * >
+                        (enc->currentScanlineOfBand(1));
+                scanline2 = static_cast< DstValueType * >
+                        (enc->currentScanlineOfBand(2));
+                scanline3 = static_cast< DstValueType * >
+                        (enc->currentScanlineOfBand(3));
+                for( size_type x = 0; x < width; ++x, ++xs) {
+                    *scanline0 = a.template getComponent<SrcRowIterator, 0>( xs );
+                    *scanline1 = a.template getComponent<SrcRowIterator, 1>( xs );
+                    *scanline2 = a.template getComponent<SrcRowIterator, 2>( xs );
+                    *scanline3 = a.template getComponent<SrcRowIterator, 3>( xs );
+                    scanline0 += offset;
+                    scanline1 += offset;
+                    scanline2 += offset;
+                    scanline3 += offset;
                 }
+                enc->nextScanline();
             }
-            enc->nextScanline();
+        }
+        else {
+            for( size_type y = 0; y < height; ++y, ++ys.y ) {
+                for( size_type b = 0; b < num_bands; ++b ) {
+                    xs = ys.rowIterator();
+                    scanline = static_cast< DstValueType * >
+                        (enc->currentScanlineOfBand(b));
+//                    std::cerr << "b= " << b << std::endl;
+                    for( size_type x = 0; x < width; ++x, ++xs ) {
+                        *scanline = a.getComponent( xs, b );
+                        scanline += enc->getOffset();
+                    }
+                }
+                enc->nextScanline();
+            }
         }
     } // write_bands()
 
