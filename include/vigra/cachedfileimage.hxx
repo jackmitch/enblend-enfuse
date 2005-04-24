@@ -829,9 +829,9 @@ private:
     // split into two functions for efficiency.
     // getLinePointer can then be inlined, and we only incur the function
     // call overhead on cache misses.
-    PIXELTYPE * getLinePointer(int dy) const;
-    PIXELTYPE * getLinePointerDirty(int dy);
-    PIXELTYPE * getLinePointerCacheMiss(int dy) const;
+    PIXELTYPE * getLinePointer(const int dy) const;
+    PIXELTYPE * getLinePointerDirty(const int dy);
+    PIXELTYPE * getLinePointerCacheMiss(const int dy) const;
 
     // Free space by swapping out a block of lines to the file.
     void swapOutBlock() const;
@@ -842,6 +842,7 @@ private:
     void initMembers() {
         initPixel = value_type();
         linesPerBlocksize_ = 0;
+        linesPerBlocksizeLog2_ = 0;
         blocksAllocated_ = 0;
         blocksNeeded_ = 0;
         blocksInMemory_ = NULL;
@@ -860,6 +861,7 @@ private:
 
     // how many image lines are loaded in one fread
     int linesPerBlocksize_;
+    int linesPerBlocksizeLog2_;
     // How many blocks are currently cached in memory.
     mutable int blocksAllocated_;
     // How many blocks are needed for the entire image.
@@ -951,6 +953,12 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     linesPerBlocksize_ = (int)floor(
             ((double)CachedFileImageDirector::v().getBlockSize())
             / (width_ * sizeof(PIXELTYPE)));
+    // Round this down to the nearest power of two.
+    // This will let us divide using right-shift to calculate block number from line number.
+    linesPerBlocksizeLog2_ = (int)floor(log(linesPerBlocksize_)/log(2));
+    linesPerBlocksize_ = 1 << linesPerBlocksizeLog2_;
+    //cout << "linesPerBlocksizeLog2=" << linesPerBlocksizeLog2_ << endl;
+    //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
 
     // Need a minimum of 3 lines per block to support 5-line sliding windows.
     if (linesPerBlocksize_ < 3) {
@@ -1022,14 +1030,15 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
  *  Marks the block that owns that row dirty.
  */
 template <class PIXELTYPE>
-inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(int dy) {
+inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(const int dy) {
     PIXELTYPE *line = lines_[dy];
 
     // Check if line dy is swapped out.
     if (line == NULL) line = getLinePointerCacheMiss(dy);
 
     // Mark this block as dirty.
-    blockIsClean_[dy / linesPerBlocksize_] = false;
+    //blockIsClean_[dy / linesPerBlocksize_] = false;
+    blockIsClean_[dy >> linesPerBlocksizeLog2_] = false;
 
     return line;
 };
@@ -1038,7 +1047,7 @@ inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerDirty(int dy) {
  *  This is for clean dereferences.
  */
 template <class PIXELTYPE>
-inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
+inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(const int dy) const {
     PIXELTYPE *line = lines_[dy];
 
     // Check if line dy is swapped out.
@@ -1049,9 +1058,11 @@ inline PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointer(int dy) const {
 
 /** Swap in the requested line. */
 template <class PIXELTYPE>
-PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(int dy) const {
-    int blockNumber = dy / linesPerBlocksize_;
-    int firstLineInBlock = blockNumber * linesPerBlocksize_;
+PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(const int dy) const {
+    //int blockNumber = dy / linesPerBlocksize_;
+    int blockNumber = dy >> linesPerBlocksizeLog2_;
+    //int firstLineInBlock = blockNumber * linesPerBlocksize_;
+    int firstLineInBlock = blockNumber << linesPerBlocksizeLog2_;
 
     //cout << "-------------------------------------------------------" << endl;
     //cout << "image " << this << " cache miss:"
@@ -1222,7 +1233,8 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
     //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
 
-    int firstLineInBlock = blockNumber * linesPerBlocksize_;
+    //int firstLineInBlock = blockNumber * linesPerBlocksize_;
+    int firstLineInBlock = blockNumber << linesPerBlocksizeLog2_;
     PIXELTYPE *blockStart = lines_[firstLineInBlock];
 
     // If block is dirty, swap it to the file.
@@ -1451,6 +1463,7 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
     if (&rhs != this) {
         std::swap(initPixel, rhs.initPixel);
         std::swap(linesPerBlocksize_, rhs.linesPerBlocksize_);
+        std::swap(linesPerBlocksizeLog2_, rhs.linesPerBlocksizeLog2_);
         std::swap(blocksAllocated_, rhs.blocksAllocated_);
         std::swap(blocksNeeded_, rhs.blocksNeeded_);
         std::swap(blocksInMemory_, rhs.blocksInMemory_);
