@@ -1,0 +1,1 @@
+EXTRA_DIST = vgl_polygon_scan_iterator.h vgl_polygon_scan_iterator.txx

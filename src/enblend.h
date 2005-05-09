@@ -72,8 +72,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion) {
 
     #ifdef ENBLEND_CACHE_IMAGES
-    // FIXME mask caching turned off
-    typedef BImage MaskType;
+    typedef BCFImage MaskType;
     typedef BCFImage AlphaType;
     #else
     typedef BImage MaskType;
@@ -263,7 +262,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
-return;
+//return;
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
         EnblendROI roiBB;

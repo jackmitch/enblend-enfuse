@@ -548,24 +548,24 @@ int main(int argc, char** argv) {
             if (strcmp(pixelType, "UINT8") == 0) {
                 enblendMain<BRGBImage, SRGBImage>(
                         imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT16") == 0) {
-                enblendMain<SRGBImage, IRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT16") == 0) {
-                enblendMain<USRGBImage, IRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT32") == 0) {
-                enblendMain<IRGBImage, DRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT32") == 0) {
-                enblendMain<UIRGBImage, DRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "FLOAT") == 0) {
-                enblendMain<FRGBImage, DRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "DOUBLE") == 0) {
-                enblendMain<DRGBImage, DRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT16") == 0) {
+            //    enblendMain<SRGBImage, IRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USRGBImage, IRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT32") == 0) {
+            //    enblendMain<IRGBImage, DRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT32") == 0) {
+            //    enblendMain<UIRGBImage, DRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "FLOAT") == 0) {
+            //    enblendMain<FRGBImage, DRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+            //    enblendMain<DRGBImage, DRGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
             } else {
                 cerr << "enblend: images with pixel type \""
                      << pixelType
@@ -574,34 +574,34 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         } else {
-            if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BImage, SImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT16") == 0) {
-                enblendMain<SImage, IImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT16") == 0) {
-                enblendMain<USImage, IImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "INT32") == 0) {
-                enblendMain<IImage, DImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "UINT32") == 0) {
-                enblendMain<UIImage, DImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "FLOAT") == 0) {
-                enblendMain<FImage, DImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else if (strcmp(pixelType, "DOUBLE") == 0) {
-                enblendMain<DImage, DImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            } else {
+            //if (strcmp(pixelType, "UINT8") == 0) {
+            //    enblendMain<BImage, SImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT16") == 0) {
+            //    enblendMain<SImage, IImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT16") == 0) {
+            //    enblendMain<USImage, IImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT32") == 0) {
+            //    enblendMain<IImage, DImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "UINT32") == 0) {
+            //    enblendMain<UIImage, DImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "FLOAT") == 0) {
+            //    enblendMain<FImage, DImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
+            //    enblendMain<DImage, DImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else {
                 cerr << "enblend: images with pixel type \""
                      << pixelType
                      << "\" are not supported."
                      << endl;
                 exit(1);
-            }
+            //}
         }
     #endif
 

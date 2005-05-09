@@ -21,6 +21,11 @@ VIGRA is Copyright 1998-2002 by Ullrich Koethe
 Cognitive Systems Group, University of Hamburg, Germany
 Please see the file VIGRA_LICENSE for details.
 
+Enblend uses components of the VXL computer vision library.
+VXL is Copyright 2000-2003 by TargetJr Consortium
+GE Corporate Research and Development (GE CRD)
+Please see the file VXL_LICENSE for details.
+
                         ENBLEND
 
 Enblend is a tool for compositing images using a Burt & Adelson multiresolution

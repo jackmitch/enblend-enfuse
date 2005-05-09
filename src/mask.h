@@ -45,6 +45,7 @@
 #include "vigra/rgbvalue.hxx"
 #include "vigra/stdcachedfileimage.hxx"
 #include "vigra/transformimage.hxx"
+#include "vgl/vgl_polygon_scan_iterator.h"
 
 using __gnu_cxx::hash_set;
 
@@ -123,6 +124,7 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     //MaskType *fileMask = new MaskType(uBB.size());
     //ImageImportInfo fileMaskInfo("enblend_mask.tif");
     //importImage(fileMaskInfo, destImage(*fileMask));
+    //maskBounds(srcImageRange(*fileMask), uBB, mBB);
     //return fileMask;
 
     // Mask initializer pixel values:
@@ -151,6 +153,7 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     // Mask transform replaces 0 areas with either 1 or 255.
     #ifdef ENBLEND_CACHE_IMAGES
     BCFImage *maskTransform = new BCFImage(uBB.size());
+    // FIXME should this be a cf image?
     UIImage *maskDistance = new UIImage(uBB.size());
     #else
     BImage *maskTransform = new BImage(uBB.size());
@@ -170,6 +173,7 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     // mem xsection = BImage*ubb + MaskType*ubb + UIImage*ubb
 
     // Dump maskTransform into mask
+    // FIXME replace this with white flood fill of snakes polygons.
     // maskTransform = 1, then mask = max value (white image)
     // maskTransform != 1, then mask = zero - (black image)
     transformImage(srcImageRange(*maskTransform),
@@ -181,9 +185,6 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     delete maskTransform;
     // mem xsection = MaskType*ubb + UIImage*uBB
 
-    // Calculate mask bounds.
-    maskBounds(srcImageRange(*mask), uBB, mBB);
-
     EnblendROI iBB_uBB;
     iBB_uBB.setCorners(iBB.getUL() - uBB.getUL(), iBB.getLR() - uBB.getUL());
     cout << "iBB_uBB= (" << iBB_uBB.getUL().x << ", " << iBB_uBB.getUL().y << ")"
@@ -192,16 +193,21 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
 
     // Map distances to costs. Max distance = cost 0. Min distance (feature) = cost 1<<20
     UIImage *distanceCostImage = new UIImage(iBB.size().x + 2, iBB.size().y + 2, NumericTraits<unsigned int>::max());
-    FindMinMax<UIImage::value_type> minmax;
-    inspectImage(iBB_uBB.apply(srcImageRange(*maskDistance)), minmax);
-    transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
-            destIter(distanceCostImage->upperLeft() + Diff2D(1,1)),
-            linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
-    transformImage(srcImageRange(*distanceCostImage),
-                   destImage(*distanceCostImage),
-                   ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
-                              Param(NumericTraits<unsigned int>::max()),
-                              Arg1()));
+    //// FIXME nearestFeatureTransform should return max distance
+    //// then we can remove inspectImage call
+    //FindMinMax<UIImage::value_type> minmax;
+    //inspectImage(iBB_uBB.apply(srcImageRange(*maskDistance)), minmax);
+    //// FIXME combine these two calls using one functor
+    //transformImage(iBB_uBB.apply(srcImageRange(*maskDistance)),
+    //        destIter(distanceCostImage->upperLeft() + Diff2D(1,1)),
+    //        linearRangeMapping(minmax.min, minmax.max, 1<<20, 0));
+    //transformImage(srcImageRange(*distanceCostImage),
+    //               destImage(*distanceCostImage),
+    //               ifThenElse(Arg1() >= Param((unsigned int)(1<<20)),
+    //                          Param(NumericTraits<unsigned int>::max()),
+    //                          Arg1()));
+    // FIXME just have nearestFeatureTransform put the data here to start with.
+    copyImage(iBB_uBB.apply(srcImageRange(*maskDistance)), destIter(distanceCostImage->upperLeft() + Diff2D(1,1)));
     delete maskDistance;
 
     // Map stitch mismatches to costs.
@@ -363,13 +369,13 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     combineTwoImages(srcImageRange(*distanceCostImage),
             srcImage(*maskCrackVisualize, RedAccessor<BRGBCFImage::value_type>()),
             destImage(*maskCrackVisualize, RedAccessor<BRGBCFImage::value_type>()),
-            ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
+            //ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::max()),
+            ifThenElse(Arg1() == Param(NumericTraits<unsigned int>::zero()),
                     Param(0xff), Arg2()));
 
     // Visualize snakes
     for (unsigned int i = 0; i < snakes.size(); i++) {
         vector<pair<bool, Point2D> > *snake = snakes[i];
-        // FIXME put cost function images here
         annealSnake<UIImage, BImage>(distanceCostImage, stitchCostImage, snake);
         for (unsigned int j = 0; j < snake->size(); j++) {
             unsigned int next = (j+1) % snake->size();
@@ -396,6 +402,32 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     delete stitchCostImage;
     delete maskCrackVisualize;
     delete maskCrack;
+
+    initImage(iBB_uBB.apply(destImageRange(*mask)), NumericTraits<MaskPixelType>::zero());
+    vgl_polygon snakesPoly;
+    for (unsigned int i = 0; i < snakes.size(); i++) {
+        // Flood fill each snake white.
+        vgl_polygon_sheet sheet;
+        vector<pair<bool, Point2D> > *snake = snakes[i];
+        for (unsigned int j = 0; j < snake->size(); j++) {
+            sheet.push_back((*snake)[j].second);
+        }
+        snakesPoly.push_back(sheet);
+    }
+    //cout << "snakesPoly.size()=" << snakesPoly.size() << endl;
+    //for (unsigned int i = 0; i < snakesPoly.size(); i++) {
+    //    cout << "snakesPoly[" << i << "].size()=" << snakesPoly[i].size() << endl;
+    //}
+    // Iterator that points to 0,0 of snake coord space = mask->upperLeft() + iBB_uBB.getUL();
+    vgl_polygon_scan_iterator<MaskIteratorType> fill(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly);
+    vgl_polygon_scan_iterator<MaskIteratorType> fillEnd(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly);
+    do {
+        *fill = NumericTraits<MaskPixelType>::max();
+    } while (++fill != fillEnd);
+    //for (unsigned int i = 0; i < 100; i++) {
+    //    *fill = NumericTraits<MaskPixelType>::max();
+    //    ++fill;
+    //}
 
     // Delete all snakes.
     for (unsigned int i = 0; i < snakes.size(); i++) {
@@ -453,6 +485,9 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
 
     
     //delete entryExitPoints;
+
+    // Calculate mask bounds.
+    maskBounds(srcImageRange(*mask), uBB, mBB);
 
     return mask;
 };
