@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: FunctorAccessor.h,v 1.3 2005-04-24 07:02:42 acmihal Exp $
+ *  $Id: FunctorAccessor.h,v 1.4 2005-06-24 03:39:37 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -172,6 +172,18 @@ public:
 	}
     }
 
+    // Version with compile-time constant idx
+    template <class V, class ITERATOR, int IDX>
+    void setComponent( V const & value, ITERATOR const & i) const {
+        // Cannot do a compile-time index check.
+        // See impex.hxx::write_bands for an example of a function that
+        // does a runtime switch between using a SplitVector2Accessor and a
+        // SplitVectorNAccessor. We want the whole function to compile for
+        // either accessor type. Therefore IDX>1 should compile even though
+        // it should never be called at runtime.
+        setComponent<V, ITERATOR>(value, i, IDX);
+    }
+
     Iter1 i1_;
     Acc1  a1_;
     Iter2 i2_;
@@ -309,6 +321,18 @@ public:
 	}
     }
 
+    // Version with compile-time constant idx
+    template <class ITERATOR, int IDX>
+    component_type getComponent(ITERATOR const & i) const {
+        // Cannot do a compile-time index check.
+        // See impex.hxx::read_bands for an example of a function that
+        // does a runtime switch between using a MergeScalarScalar2VectorAccessor and a
+        // MergeVectorScalar2VectorAccessor. We want the whole function to compile for
+        // either accessor type. Therefore IDX>1 should compile even though
+        // it should never be called at runtime.
+        return getComponent<ITERATOR>(i, IDX);
+    }
+
         /** read one component, with offset */
     template <class ITERATOR, class DIFFERENCE_>
     component_type const & getComponent(ITERATOR const & i, DIFFERENCE_ const & d, int idx) const
@@ -322,6 +346,18 @@ public:
 	default:
 	    vigra_fail("too many components in input value");
 	}
+    }
+
+    // Version with compile-time constant idx
+    template <class ITERATOR, class DIFFERENCE_, int IDX>
+    component_type const & getComponent(ITERATOR const & i, DIFFERENCE_ const & d) const {
+        // Cannot do a compile-time index check.
+        // See impex.hxx::read_bands for an example of a function that
+        // does a runtime switch between using a MergeScalarScalar2VectorAccessor and a
+        // MergeVectorScalar2VectorAccessor. We want the whole function to compile for
+        // either accessor type. Therefore IDX>1 should compile even though
+        // it should never be called at runtime.
+        return getComponent<ITERATOR, DIFFERENCE_>(i, d, IDX);
     }
 
     Iter1 i1_;

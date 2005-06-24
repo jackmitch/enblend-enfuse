@@ -9,3 +9,6 @@
 
 - Make assemble smarter.
 
+- For win32, recompile libtiff with TIF_PLATFORM_CONSOLE
+- remove tiff warning handler = null
+- add errno checks around libtiff calls in vigra_impex
