@@ -623,6 +623,16 @@ operator/(RGBValue<V> const & r, double v)
     return res;
 }
 
+/// component-wise right shift
+// mihal 20050712
+template <class V>
+inline
+RGBValue<V> operator>>(RGBValue<V> const & r, int rs)
+{
+    RGBValue<V> res(r.red() >> rs, r.green() >> rs, r.blue() >> rs);
+    return res;
+}
+
     /// cross product
 template <class V1, class V2>
 inline
