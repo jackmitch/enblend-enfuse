@@ -285,7 +285,7 @@ double AnnealConfiguration<DistanceCostImage, StitchCostImage>::evalSegmentCost(
 
     unsigned int lineLength = 0;
     do {
-        stitchCost += *lineS;
+        stitchCost += 256.0 * log(0.2 * *lineS + 1.0) / log(52.0);
         ++lineS;
         ++lineLength;
     } while (lineS != lineSEnd);
@@ -300,8 +300,8 @@ double AnnealConfiguration<DistanceCostImage, StitchCostImage>::evalSegmentCost(
 
     // It is costly for points to stray too far from their original locations,
     // depending on how near the center they are.
-    if (distance > (originalFeatureDistance / 5)) {
-        distanceCost = 10.0 * distance;
+    if (distance > (originalFeatureDistance / 2)) {
+        distanceCost = 2.0 * distance;
     }
 
     //cout << "pointA=" << pointA << " originalLoc=" << movingPointOriginalLocation << " distanceCost=" << distanceCost << " origFeatureDistance=" << originalFeatureDistance << endl;
@@ -313,7 +313,7 @@ double AnnealConfiguration<DistanceCostImage, StitchCostImage>::evalSegmentCost(
     if (lineLength < 5) weightedCost *= 2.0;
 
     // Also penalize long lines
-    if (lineLength > 50) weightedCost *= 1.5;
+    if (lineLength > 30) weightedCost *= 2.0;
 
     return weightedCost;
 };
@@ -455,21 +455,21 @@ void annealSnake(const DistanceCostImage* const dci,
 
     uniform_01<mt19937> thermal(Twister);
 
-    unsigned int stepsPerIteration = 128 * snake->size();
+    unsigned int stepsPerIteration = 256 * snake->size();
     //unsigned int stepsPerIteration = 10;
     cout << "initial cost=" << cfg.getCost() << endl;
     cout << "stepsPerIteration=" << stepsPerIteration << endl;
 
     double initialTemperature = 1.0;
-    double temperatureCutoff = 0.005;
+    double temperatureCutoff = 0.0005;
     double temperatureDampening = 0.85;
     double temperature = initialTemperature;
 
     while (temperature > temperatureCutoff) {
-        unsigned int stepSize = 5 + (unsigned int)(temperature * 60);
+        unsigned int stepSize = 5 + (unsigned int)(temperature * 70);
         cfg.setMaxStepSize(stepSize);
         unsigned int acceptedSteps = 0;
-        double acceptCoefficient = 0.10 + (0.10 * temperature);
+        double acceptCoefficient = 0.05 + (0.15 * temperature);
         for (unsigned int i = 0; i < stepsPerIteration; i++) {
             double prevCost = cfg.getCost();
             double newCost = cfg.step();
