@@ -36,6 +36,7 @@
 #include "bounds.h"
 #include "mask.h"
 #include "pyramid.h"
+#include "wavelet.h"
 
 #include "vigra/impex.hxx"
 #include "vigra/initimage.hxx"
@@ -94,6 +95,75 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+
+typename ImageType::traverser end = blackPair.first->lowerRight();
+if ((blackPair.first->width() & 1) == 1) end += Diff2D(-1, 0);
+if ((blackPair.first->height() & 1) == 1) end += Diff2D(0, -1);
+
+ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
+MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
+typename ImagePyramidType::traverser xend = xform.lowerRight();
+if ((blackBB.size().x & 1) == 1) xend += Diff2D(-1, 0);
+if ((blackBB.size().y & 1) == 1) xend += Diff2D(0, -1);
+typename MaskPyramidType::traverser axend = axform.lowerRight();
+if ((blackBB.size().x & 1) == 1) axend += Diff2D(-1, 0);
+if ((blackBB.size().y & 1) == 1) axend += Diff2D(0, -1);
+
+
+wavelet(false,
+        blackPair.first->upperLeft(),
+        end,
+        blackPair.first->accessor(),
+
+        //blackPair.second->upperLeft(),
+        //blackPair.second->accessor(),
+
+        xform.upperLeft(),
+        xend,
+        xform.accessor()/*,*/
+
+        //axform.upperLeft(),
+        //axend,
+        /*axform.accessor()*/);
+
+FindMinMax<typename ImagePyramidValueType::value_type> minmax;
+inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), minmax);
+cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+transformImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(axform), destImage(*(blackPair.second)),
+        linearRangeMapping(NumericTraits<MaskPyramidValueType>::min(),
+                           NumericTraits<MaskPyramidValueType>::max(),
+                           NumericTraits<AlphaValueType>::min(),
+                           NumericTraits<AlphaValueType>::max()));
+
+exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.tif"));
+exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet_mask.tif"));
+
+ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
+typename ImagePyramidType::traverser ixend = ixform.lowerRight();
+if ((blackBB.size().x & 1) == 1) ixend += Diff2D(-1, 0);
+if ((blackBB.size().y & 1) == 1) ixend += Diff2D(0, -1);
+
+iwavelet(false,
+        xform.upperLeft(), xend, xform.accessor(),
+        ixform.upperLeft(), ixend, ixform.accessor());
+
+minmax.reset();
+inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(ixform, GreenAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(ixform, BlueAccessor<ImagePyramidValueType>()), minmax);
+cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+copyImage(srcImageRange(ixform), destImage(*(blackPair.first)));
+exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iwavelet.tif"));
+
+return;
 
     #ifdef ENBLEND_CACHE_IMAGES
     if (Verbose > VERBOSE_CFI_MESSAGES) {
