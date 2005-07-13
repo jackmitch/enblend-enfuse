@@ -96,35 +96,16 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
-typename ImageType::traverser end = blackPair.first->lowerRight();
-if ((blackPair.first->width() & 1) == 1) end += Diff2D(-1, 0);
-if ((blackPair.first->height() & 1) == 1) end += Diff2D(0, -1);
-
 ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
 MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
-typename ImagePyramidType::traverser xend = xform.lowerRight();
-if ((blackBB.size().x & 1) == 1) xend += Diff2D(-1, 0);
-if ((blackBB.size().y & 1) == 1) xend += Diff2D(0, -1);
-typename MaskPyramidType::traverser axend = axform.lowerRight();
-if ((blackBB.size().x & 1) == 1) axend += Diff2D(-1, 0);
-if ((blackBB.size().y & 1) == 1) axend += Diff2D(0, -1);
 
-
-wavelet(false,
+wavelet(7, false,
         blackPair.first->upperLeft(),
-        end,
+        blackPair.first->lowerRight(),
         blackPair.first->accessor(),
-
-        //blackPair.second->upperLeft(),
-        //blackPair.second->accessor(),
-
         xform.upperLeft(),
-        xend,
-        xform.accessor()/*,*/
-
-        //axform.upperLeft(),
-        //axend,
-        /*axform.accessor()*/);
+        xform.lowerRight(),
+        xform.accessor());
 
 FindMinMax<typename ImagePyramidValueType::value_type> minmax;
 inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
@@ -147,13 +128,10 @@ exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.
 exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet_mask.tif"));
 
 ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
-typename ImagePyramidType::traverser ixend = ixform.lowerRight();
-if ((blackBB.size().x & 1) == 1) ixend += Diff2D(-1, 0);
-if ((blackBB.size().y & 1) == 1) ixend += Diff2D(0, -1);
 
-iwavelet(false,
-        xform.upperLeft(), xend, xform.accessor(),
-        ixform.upperLeft(), ixend, ixform.accessor());
+iwavelet(7, false,
+        xform.upperLeft(), xform.lowerRight(), xform.accessor(),
+        ixform.upperLeft(), ixform.lowerRight(), ixform.accessor());
 
 minmax.reset();
 inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
