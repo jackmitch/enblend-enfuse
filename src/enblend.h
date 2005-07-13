@@ -99,7 +99,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
 MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
 
-wavelet(7, false,
+wavelet(7, true,
         blackPair.first->upperLeft(),
         blackPair.first->lowerRight(),
         blackPair.first->accessor(),
@@ -129,7 +129,7 @@ exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet
 
 ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
 
-iwavelet(7, false,
+iwavelet(7, true,
         xform.upperLeft(), xform.lowerRight(), xform.accessor(),
         ixform.upperLeft(), ixform.lowerRight(), ixform.accessor());
 
