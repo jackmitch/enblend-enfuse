@@ -125,6 +125,8 @@ inline void wavelet(bool wraparound,
     // Transform columns from dest to dest
     DestImageIterator dx = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
+    //// If lowpass only, do half the columns.
+    //if (lowpassOnly) dend += Diff2D((src_w + 1) >> 1 - dend.x, 0);
     for (; dx.x != dend.x; ++dx.x) {
 
         dy = dx;
@@ -180,7 +182,7 @@ inline void wavelet(bool wraparound,
 
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
-inline void wavelet(int levels, bool wraparound,
+inline void wavelet(unsigned int levels, bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
@@ -194,7 +196,7 @@ inline void wavelet(int levels, bool wraparound,
             src_upperleft, src_lowerright, sa,
             dest_upperleft, dest_lowerright, da);
 
-    for (int i = 1; i < levels; i++) {
+    for (unsigned int i = 1; i < levels; i++) {
         int dest_w = dest_lowerright.x - dest_upperleft.x;
         int dest_h = dest_lowerright.y - dest_upperleft.y;
         dest_lowerright = dest_upperleft + Diff2D((dest_w + 1) >> 1, (dest_h + 1) >> 1);
@@ -203,6 +205,16 @@ inline void wavelet(int levels, bool wraparound,
                 dest_upperleft, dest_lowerright, da,
                 dest_upperleft, dest_lowerright, da);
     }
+};
+
+// Version using argument object factories
+template <typename SrcImageType, typename DestImageType>
+inline void wavelet(unsigned int levels, bool wraparound,
+        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+        triple<typename DestImageType::traverser, typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
+    wavelet(levels, wraparound,
+            src.first, src.second, src.third,
+            dest.first, dest.second, dest.third);
 };
 
 // Inverse CDF(2,2) wavelet transform with integer lifting
@@ -350,7 +362,7 @@ inline void iwavelet(bool wraparound,
 
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
-inline void iwavelet(int levels, bool wraparound,
+inline void iwavelet(unsigned int levels, bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
@@ -364,22 +376,32 @@ inline void iwavelet(int levels, bool wraparound,
 
     DestImageIterator *lowerRightArray = new DestImageIterator[levels];
     lowerRightArray[0] = dest_lowerright;
-    for (int i = 1; i < levels; i++) {
+    for (unsigned int i = 1; i < levels; i++) {
         int dest_w = dest_lowerright.x - dest_upperleft.x;
         int dest_h = dest_lowerright.y - dest_upperleft.y;
         dest_lowerright = dest_upperleft + Diff2D((dest_w + 1) >> 1, (dest_h + 1) >> 1);
         lowerRightArray[i] = dest_lowerright;
     }
 
-    for (int i = levels - 1; i >= 0; --i) {
+    for (unsigned int i = levels; i > 0; --i) {
         iwavelet(wraparound,
-                dest_upperleft, lowerRightArray[i], da,
-                dest_upperleft, lowerRightArray[i], da);
+                dest_upperleft, lowerRightArray[i-1], da,
+                dest_upperleft, lowerRightArray[i-1], da);
     }
 
     delete [] lowerRightArray;
 
 }
+
+// Version using argument object factories
+template <typename SrcImageType, typename DestImageType>
+inline void iwavelet(unsigned int levels, bool wraparound,
+        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+        triple<typename DestImageType::traverser, typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
+    iwavelet(levels, wraparound,
+            src.first, src.second, src.third,
+            dest.first, dest.second, dest.third);
+};
 
 template <typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,

@@ -376,7 +376,7 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     // Visualize snakes
     for (unsigned int i = 0; i < snakes.size(); i++) {
         vector<pair<bool, Point2D> > *snake = snakes[i];
-        annealSnake<UIImage, BImage>(distanceCostImage, stitchCostImage, snake);
+        //annealSnake<UIImage, BImage>(distanceCostImage, stitchCostImage, snake);
         for (unsigned int j = 0; j < snake->size(); j++) {
             unsigned int next = (j+1) % snake->size();
             pair<bool, Point2D> pointA = (*snake)[j];
@@ -403,6 +403,9 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     delete maskCrackVisualize;
     delete maskCrack;
 
+    cout << "starting snake fill" << endl;
+    cout.flush();
+
     initImage(iBB_uBB.apply(destImageRange(*mask)), NumericTraits<MaskPixelType>::zero());
     vgl_polygon snakesPoly;
     for (unsigned int i = 0; i < snakes.size(); i++) {
@@ -419,8 +422,9 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     //    cout << "snakesPoly[" << i << "].size()=" << snakesPoly[i].size() << endl;
     //}
     // Iterator that points to 0,0 of snake coord space = mask->upperLeft() + iBB_uBB.getUL();
-    vgl_polygon_scan_iterator<MaskIteratorType> fill(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly);
-    vgl_polygon_scan_iterator<MaskIteratorType> fillEnd(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly);
+    // FIXME this may try to fill snake pixels outside of mask size. - fixed?
+    vgl_polygon_scan_iterator<MaskIteratorType> fill(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly, false);
+    vgl_polygon_scan_iterator<MaskIteratorType> fillEnd(mask->upperLeft() + iBB_uBB.getUL() + Diff2D(-1,-1), snakesPoly, false);
     do {
         *fill = NumericTraits<MaskPixelType>::max();
     } while (++fill != fillEnd);
@@ -433,6 +437,9 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     for (unsigned int i = 0; i < snakes.size(); i++) {
         delete snakes[i];
     }
+
+    cout << "done with snakes" << endl;
+    cout.flush();
 
     //// Debug: combine cost visualization with mask.
     //BRGBCFImage *visualization = new BRGBCFImage(uBB.size());

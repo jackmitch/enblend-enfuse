@@ -96,64 +96,64 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
-ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
-MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
+//ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
+//MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
+//
+//wavelet(7, Wraparound,
+//        blackPair.first->upperLeft(),
+//        blackPair.first->lowerRight(),
+//        blackPair.first->accessor(),
+//        xform.upperLeft(),
+//        xform.lowerRight(),
+//        xform.accessor());
+//
+//FindMinMax<typename ImagePyramidValueType::value_type> minmax;
+//inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
+//inspectImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), minmax);
+//inspectImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), minmax);
+//cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+//transformImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//transformImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//transformImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//transformImage(srcImageRange(axform), destImage(*(blackPair.second)),
+//        linearRangeMapping(NumericTraits<MaskPyramidValueType>::min(),
+//                           NumericTraits<MaskPyramidValueType>::max(),
+//                           NumericTraits<AlphaValueType>::min(),
+//                           NumericTraits<AlphaValueType>::max()));
+//
+//exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.tif"));
+//exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet_mask.tif"));
+//
+//ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
+//
+//iwavelet(7, Wraparound,
+//        xform.upperLeft(), xform.lowerRight(), xform.accessor(),
+//        ixform.upperLeft(), ixform.lowerRight(), ixform.accessor());
+//
+//minmax.reset();
+//inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
+//inspectImage(srcImageRange(ixform, GreenAccessor<ImagePyramidValueType>()), minmax);
+//inspectImage(srcImageRange(ixform, BlueAccessor<ImagePyramidValueType>()), minmax);
+//cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+//copyImage(srcImageRange(ixform), destImage(*(blackPair.first)));
+//exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iwavelet.tif"));
+//
+//return;
 
-wavelet(7, true,
-        blackPair.first->upperLeft(),
-        blackPair.first->lowerRight(),
-        blackPair.first->accessor(),
-        xform.upperLeft(),
-        xform.lowerRight(),
-        xform.accessor());
-
-FindMinMax<typename ImagePyramidValueType::value_type> minmax;
-inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
-inspectImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), minmax);
-inspectImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), minmax);
-cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
-transformImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-transformImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-transformImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-transformImage(srcImageRange(axform), destImage(*(blackPair.second)),
-        linearRangeMapping(NumericTraits<MaskPyramidValueType>::min(),
-                           NumericTraits<MaskPyramidValueType>::max(),
-                           NumericTraits<AlphaValueType>::min(),
-                           NumericTraits<AlphaValueType>::max()));
-
-exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.tif"));
-exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet_mask.tif"));
-
-ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
-
-iwavelet(7, true,
-        xform.upperLeft(), xform.lowerRight(), xform.accessor(),
-        ixform.upperLeft(), ixform.lowerRight(), ixform.accessor());
-
-minmax.reset();
-inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
-inspectImage(srcImageRange(ixform, GreenAccessor<ImagePyramidValueType>()), minmax);
-inspectImage(srcImageRange(ixform, BlueAccessor<ImagePyramidValueType>()), minmax);
-cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
-copyImage(srcImageRange(ixform), destImage(*(blackPair.first)));
-exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iwavelet.tif"));
-
-return;
-
-    #ifdef ENBLEND_CACHE_IMAGES
-    if (Verbose > VERBOSE_CFI_MESSAGES) {
-        CachedFileImageDirector &v = CachedFileImageDirector::v();
-        cout << "Image cache statistics after loading black image:" << endl;
-        v.printStats("blackImage", blackPair.first);
-        v.printStats("blackAlpha", blackPair.second);
-        v.printStats();
-        v.resetCacheMisses();
-        cout << "--------------------------------------------------------------------------------" << endl;
-    }
-    #endif
+    //#ifdef ENBLEND_CACHE_IMAGES
+    //if (Verbose > VERBOSE_CFI_MESSAGES) {
+    //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+    //    cout << "Image cache statistics after loading black image:" << endl;
+    //    v.printStats("blackImage", blackPair.first);
+    //    v.printStats("blackAlpha", blackPair.second);
+    //    v.printStats();
+    //    v.resetCacheMisses();
+    //    cout << "--------------------------------------------------------------------------------" << endl;
+    //}
+    //#endif
 
     // Main blending loop.
     while (!imageInfoList.empty()) {
@@ -166,19 +166,19 @@ return;
         // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
 
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after loading white image:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after loading white image:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    v.printStats("whiteImage", whitePair.first);
+        //    v.printStats("whiteAlpha", whitePair.second);
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
 
         //ImageExportInfo whiteInfo("enblend_white.tif");
         //exportImageAlpha(srcImageRange(*(whitePair.first)),
@@ -266,21 +266,21 @@ return;
         }
 
         // Estimate memory requirements for mask generation
-        if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
-            // mem usage = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
-            //           + 2*BImage*ubb + 2*UIImage*ubb
-            long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
-            long long uBBPixels = uBB.size().x * uBB.size().y;
-            long long bytes =
-                    inputUnionPixels
-                        * (2*sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
-                    + uBBPixels
-                        * (2*sizeof(typename BImage::value_type) + 2*sizeof(typename UIImage::value_type));
-            int mbytes = (int)ceil(bytes / 1000000.0);
-            cout << "Estimated space required for mask generation: "
-                 << mbytes
-                 << "MB" << endl;
-        }
+        //if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
+        //    // mem usage = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        //    //           + 2*BImage*ubb + 2*UIImage*ubb
+        //    long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
+        //    long long uBBPixels = uBB.size().x * uBB.size().y;
+        //    long long bytes =
+        //            inputUnionPixels
+        //                * (2*sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
+        //            + uBBPixels
+        //                * (2*sizeof(typename BImage::value_type) + 2*sizeof(typename UIImage::value_type));
+        //    int mbytes = (int)ceil(bytes / 1000000.0);
+        //    cout << "Estimated space required for mask generation: "
+        //         << mbytes
+        //         << "MB" << endl;
+        //}
 
         // Create the blend mask.
         bool wraparoundForMask = Wraparound && 
@@ -292,48 +292,50 @@ return;
         // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
 
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after mask generation:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            //v.printStats("mask", mask);
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after mask generation:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    v.printStats("whiteImage", whitePair.first);
+        //    v.printStats("whiteAlpha", whitePair.second);
+        //    //v.printStats("mask", mask);
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
 
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
-//return;
+
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
-        EnblendROI roiBB;
-        unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
+        //EnblendROI roiBB;
+        //unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
+        EnblendROI roiBB = iBB;
+        unsigned int numLevels = ExactLevels;
         bool wraparoundForBlend = Wraparound && (roiBB.size().x == inputUnion.size().x);
         //cout << "Wraparound = " << wraparoundForBlend << endl;
 
-        // Estimate memory requirements for this blend iteration
-        if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
-            // Maximum utilization is when all three pyramids have been built
-            // inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
-            // + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
-            long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
-            long long roiBBPixels = roiBB.size().x * roiBB.size().y;
-            long long bytes =
-                    inputUnionPixels * (sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
-                    + (4/3) * roiBBPixels *
-                            (sizeof(MaskPyramidValueType) + 2*sizeof(ImagePyramidValueType));
-            int mbytes = (int)ceil(bytes / 1000000.0);
-            cout << "Estimated space required for this blend step: "
-                 << mbytes
-                 << "MB" << endl;
-        }
+        //// Estimate memory requirements for this blend iteration
+        //if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
+        //    // Maximum utilization is when all three pyramids have been built
+        //    // inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        //    // + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
+        //    long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
+        //    long long roiBBPixels = roiBB.size().x * roiBB.size().y;
+        //    long long bytes =
+        //            inputUnionPixels * (sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
+        //            + (4/3) * roiBBPixels *
+        //                    (sizeof(MaskPyramidValueType) + 2*sizeof(ImagePyramidValueType));
+        //    int mbytes = (int)ceil(bytes / 1000000.0);
+        //    cout << "Estimated space required for this blend step: "
+        //         << mbytes
+        //         << "MB" << endl;
+        //}
 
         // Create a version of roiBB relative to uBB upperleft corner.
         // This is to access roi within images of size uBB.
@@ -343,27 +345,65 @@ return;
 
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
-                numLevels, wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+                (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+
+        // put the mask in dyadic form.
+        MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
+        typename MaskPyramidType::traverser maskEnd = dyadicMask.lowerRight();
+        for (unsigned int i = 1; i < (numLevels+1); i++) {
+            int maskW = maskEnd.x - dyadicMask.upperLeft().x;
+            int maskH = maskEnd.y - dyadicMask.upperLeft().y;
+            int halfMaskW = (maskW + 1) >> 1;
+            int halfMaskH = (maskH + 1) >> 1;
+            typename MaskPyramidType::traverser halfMaskEnd = dyadicMask.upperLeft() + Diff2D(halfMaskW, halfMaskH);
+            typename MaskPyramidType::traverser gbegin = ((*maskGP)[i])->upperLeft();
+            typename MaskPyramidType::traverser gend = ((*maskGP)[i])->lowerRight();
+            int gW = gend.x - gbegin.x;
+            int gH = gend.y - gbegin.y;
+            //cout << "mask=(" << maskW << ", " << maskH << ") half=(" << halfMaskW << ", " << halfMaskH << ") g=(" << gW << ", " << gH << ")" << endl;
+            copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd));
+            copyImage(srcIterRange(gbegin, gbegin + Diff2D(halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd + Diff2D(-halfMaskW, 0)));
+            copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, halfMaskH)), destIter(halfMaskEnd + Diff2D(0, -halfMaskH)));
+            maskEnd = halfMaskEnd;
+        }
+        copyImage(srcImageRange(*((*maskGP)[numLevels])), destImage(dyadicMask));
+
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating mask pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            //v.printStats("mask", mask);
-            for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
-            }
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        FindMinMax<MaskPyramidValueType> maskMinMax;
+        inspectImage(srcImageRange(dyadicMask), maskMinMax);
+        MaskType mask_s(roiBB.size().x, roiBB.size().y);
+        transformImage(srcImageRange(dyadicMask), destImage(mask_s),
+                linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
+        exportImage(srcImageRange(mask_s), ImageExportInfo("enblend_wavelet_mask.tif"));
+
+        ImageType xform_s(roiBB.size().x, roiBB.size().y);
+        //transformImage(srcImageRange(maskXform), destImage(xform_s, RedAccessor<ImageValueType>()),
+        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
+        //transformImage(srcImageRange(maskXform), destImage(xform_s, GreenAccessor<ImageValueType>()),
+        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
+        //transformImage(srcImageRange(maskXform), destImage(xform_s, BlueAccessor<ImageValueType>()),
+        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
+        //exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_mask.tif"));
+
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after calculating mask pyramid:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    v.printStats("whiteImage", whitePair.first);
+        //    v.printStats("whiteAlpha", whitePair.second);
+        //    //v.printStats("mask", mask);
+        //    for (unsigned int i = 0; i < maskGP->size(); i++) {
+        //        v.printStats("maskGP", i, (*maskGP)[i]);
+        //    }
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
@@ -383,64 +423,98 @@ return;
         delete mask;
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
+        ImagePyramidType whiteXform(roiBB.size().x, roiBB.size().y);
+        wavelet<ImageType, ImagePyramidType>(numLevels, wraparoundForBlend,
+                roiBB.apply(srcImageRange(*(whitePair.first))),
+                destImageRange(whiteXform));
+
+        FindMinMax<typename ImagePyramidValueType::value_type> minmax;
+        inspectImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        transformImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), destImage(xform_s, BlueAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_white.tif"));
+
         // Build Laplacian pyramid from white image.
-        vector<ImagePyramidType*> *whiteLP =
-                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
-                        numLevels, wraparoundForBlend,
-                        roiBB.apply(srcImageRange(*(whitePair.first))),
-                        roiBB.apply(maskImage(*(whitePair.second))));
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating white pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
-            }
-            for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
-            }
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        //vector<ImagePyramidType*> *whiteLP =
+        //        laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+        //                numLevels, wraparoundForBlend,
+        //                roiBB.apply(srcImageRange(*(whitePair.first))),
+        //                roiBB.apply(maskImage(*(whitePair.second))));
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after calculating white pyramid:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    v.printStats("whiteImage", whitePair.first);
+        //    v.printStats("whiteAlpha", whitePair.second);
+        //    for (unsigned int i = 0; i < maskGP->size(); i++) {
+        //        v.printStats("maskGP", i, (*maskGP)[i]);
+        //    }
+        //    for (unsigned int i = 0; i < whiteLP->size(); i++) {
+        //        v.printStats("whiteLP", i, (*whiteLP)[i]);
+        //    }
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         // We no longer need the white rgb data.
         delete whitePair.first;
         // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
+        ImagePyramidType blackXform(roiBB.size().x, roiBB.size().y);
+        wavelet<ImageType, ImagePyramidType>(numLevels, wraparoundForBlend,
+                roiBB.apply(srcImageRange(*(blackPair.first))),
+                destImageRange(blackXform));
+
+        minmax.reset();
+        inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(xform_s, BlueAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_black.tif"));
+
         // Build Laplacian pyramid from black image.
-        vector<ImagePyramidType*> *blackLP =
-                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
-                        numLevels, wraparoundForBlend,
-                        roiBB.apply(srcImageRange(*(blackPair.first))),
-                        roiBB.apply(maskImage(*(blackPair.second))));
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating black pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteAlpha", whitePair.second);
-            for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
-            }
-            for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
-            }
-            for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
-            }
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        //vector<ImagePyramidType*> *blackLP =
+        //        laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+        //                numLevels, wraparoundForBlend,
+        //                roiBB.apply(srcImageRange(*(blackPair.first))),
+        //                roiBB.apply(maskImage(*(blackPair.second))));
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after calculating black pyramid:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    v.printStats("whiteAlpha", whitePair.second);
+        //    for (unsigned int i = 0; i < maskGP->size(); i++) {
+        //        v.printStats("maskGP", i, (*maskGP)[i]);
+        //    }
+        //    for (unsigned int i = 0; i < whiteLP->size(); i++) {
+        //        v.printStats("whiteLP", i, (*whiteLP)[i]);
+        //    }
+        //    for (unsigned int i = 0; i < blackLP->size(); i++) {
+        //        v.printStats("blackLP", i, (*blackLP)[i]);
+        //    }
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
         // Peak memory xsection is here!
         // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
         //exportPyramid(blackLP, "enblend_black_lp");
@@ -456,27 +530,56 @@ return;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after blending pyramids:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
-            }
-            for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
-            }
-            for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
-            }
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+        vector<MaskPyramidType*> *maskWP = new vector<MaskPyramidType*>;
+        maskWP->push_back(&dyadicMask);
+        vector<ImagePyramidType*> *whiteWP = new vector<ImagePyramidType*>;
+        whiteWP->push_back(&whiteXform);
+        vector<ImagePyramidType*> *blackWP = new vector<ImagePyramidType*>;
+        blackWP->push_back(&blackXform);
+        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskWP, whiteWP, blackWP);
+        delete maskWP;
+        delete whiteWP;
+        delete blackWP;
+
+        minmax.reset();
+        inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(xform_s, BlueAccessor<ImageValueType>()),
+                linearRangeMapping(minmax.min, minmax.max, 0, 255));
+        exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_blend.tif"));
+
+        BasicImage<RGBValue<unsigned short> > blackXform16(roiBB.size().x, roiBB.size().y);
+        copyImage(srcImageRange(blackXform), destImage(blackXform16));
+        ImageExportInfo blend16("enblend_wavelet_blend16.tif");
+        blend16.setPixelType("UINT16");
+        exportImage(srcImageRange(blackXform16), blend16);
+
+        //blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after blending pyramids:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    for (unsigned int i = 0; i < maskGP->size(); i++) {
+        //        v.printStats("maskGP", i, (*maskGP)[i]);
+        //    }
+        //    for (unsigned int i = 0; i < whiteLP->size(); i++) {
+        //        v.printStats("whiteLP", i, (*whiteLP)[i]);
+        //    }
+        //    for (unsigned int i = 0; i < blackLP->size(); i++) {
+        //        v.printStats("blackLP", i, (*blackLP)[i]);
+        //    }
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
 
         // delete mask pyramid
         //exportPyramid(maskGP, "enblend_mask_gp");
@@ -484,47 +587,74 @@ return;
             delete (*maskGP)[i];
         }
         delete maskGP;
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
+        //// mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
-        // delete white pyramid
-        //exportPyramid(whiteLP, "enblend_white_lp");
-        for (unsigned int i = 0; i < whiteLP->size(); i++) {
-            delete (*whiteLP)[i];
-        }
-        delete whiteLP;
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
+        //// delete white pyramid
+        ////exportPyramid(whiteLP, "enblend_white_lp");
+        //for (unsigned int i = 0; i < whiteLP->size(); i++) {
+        //    delete (*whiteLP)[i];
+        //}
+        //delete whiteLP;
+        //// mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
 
         //exportPyramid(blackLP, "enblend_blend_lp");
 
         // collapse black pyramid
-        collapsePyramid(wraparoundForBlend, blackLP);
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after collapsing black pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
-            }
-            v.printStats();
-            v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
-        }
-        #endif
+
+        iwavelet<ImagePyramidType, ImagePyramidType>(numLevels, wraparoundForBlend,
+                srcImageRange(blackXform), destImageRange(blackXform));
+
+        copyImage(srcImageRange(blackXform), destImage(blackXform16));
+        ImageExportInfo iwavelet("enblend_iwavelet.tif");
+        iwavelet.setPixelType("UINT16");
+        exportImage(srcImageRange(blackXform16), iwavelet);
+        minmax.reset();
+        inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
+        inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+        transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(blackXform, RedAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(254), (Arg1() / Param(4)) + Param(64)));
+        transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(blackXform, GreenAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(254), (Arg1() / Param(4)) + Param(64)));
+        transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(blackXform, BlueAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(254), (Arg1() / Param(4)) + Param(64)));
+        transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(blackXform, RedAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse((Arg1() > Param(127)) && (Arg1() != Param(254)), Param(255), Arg1()));
+        transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(blackXform, GreenAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse((Arg1() > Param(127)) && (Arg1() != Param(254)), Param(255), Arg1()));
+        transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(blackXform, BlueAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse((Arg1() > Param(127)) && (Arg1() != Param(254)), Param(255), Arg1()));
+        copyImage(srcImageRange(blackXform), roiBB.apply(destImage(*(blackPair.first))));
+
+        //collapsePyramid(wraparoundForBlend, blackLP);
+        //#ifdef ENBLEND_CACHE_IMAGES
+        //if (Verbose > VERBOSE_CFI_MESSAGES) {
+        //    CachedFileImageDirector &v = CachedFileImageDirector::v();
+        //    cout << "Image cache statistics after collapsing black pyramid:" << endl;
+        //    v.printStats("blackImage", blackPair.first);
+        //    v.printStats("blackAlpha", blackPair.second);
+        //    for (unsigned int i = 0; i < blackLP->size(); i++) {
+        //        v.printStats("blackLP", i, (*blackLP)[i]);
+        //    }
+        //    v.printStats();
+        //    v.resetCacheMisses();
+        //    cout << "--------------------------------------------------------------------------------" << endl;
+        //}
+        //#endif
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
-        copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
-                srcImageRange(*((*blackLP)[0])),
-                roiBB.apply(maskImage(*(blackPair.second))),
-                roiBB.apply(destImage(*(blackPair.first))));
+        //copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
+        //        srcImageRange(*((*blackLP)[0])),
+        //        roiBB.apply(maskImage(*(blackPair.second))),
+        //        roiBB.apply(destImage(*(blackPair.first))));
 
-        // delete black pyramid
-        for (unsigned int i = 0; i < blackLP->size(); i++) {
-            delete (*blackLP)[i];
-        }
-        delete blackLP;
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+        //// delete black pyramid
+        //for (unsigned int i = 0; i < blackLP->size(); i++) {
+        //    delete (*blackLP)[i];
+        //}
+        //delete blackLP;
+        //// mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
             cout << "Checkpointing..." << endl;

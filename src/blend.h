@@ -42,7 +42,7 @@ namespace enblend {
  */
 class BlendFunctor {
 public:
-    BlendFunctor(double maskMax) : scale(maskMax) {}
+    BlendFunctor(double maskMax) : scale(maskMax)/*, msgCount(0)*/ {}
 
     template <typename MaskPixelType, typename ImagePixelType>
     ImagePixelType operator()(const MaskPixelType &maskP, const ImagePixelType &wP, const ImagePixelType &bP) const {
@@ -59,11 +59,19 @@ public:
 
         RealImagePixelType blendP = (whiteCoeff * rwP) + (blackCoeff * rbP);
 
+        //if (msgCount++ < 50) {
+        //    cout << "whiteCoeff=" << whiteCoeff << " blackCoeff=" << blackCoeff << " wP=" << wP << " bP=" << bP << " rwP=" << rwP << " rbP=" << rbP << " blendP=" << blendP << " result=" << NumericTraits<ImagePixelType>::fromRealPromote(blendP) << endl;
+        //}
+        //ImagePixelType result = NumericTraits<ImagePixelType>::fromRealPromote(blendP);
+        //if (result.red() < 0 || result.red() > 255 || (whiteCoeff != 0.0 && whiteCoeff != 1.0)) {
+        //    cout << "whiteCoeff=" << whiteCoeff << " blackCoeff=" << blackCoeff << " wP=" << wP << " bP=" << bP << " rwP=" << rwP << " rbP=" << rbP << " blendP=" << blendP << " result=" << NumericTraits<ImagePixelType>::fromRealPromote(blendP) << endl;
+        //}
         return NumericTraits<ImagePixelType>::fromRealPromote(blendP);
     }
 
 protected:
     double scale;
+    //mutable int msgCount;
 };
 
 /** Blend black and white pyramids using mask pyramid.
