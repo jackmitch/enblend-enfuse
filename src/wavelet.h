@@ -32,7 +32,7 @@ using vigra::BasicImage;
 
 namespace enblend {
 
-// Forward CDF(2,2) wavelet transform with integer lifting
+// Forward CDF(4,2) wavelet transform with integer lifting
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void wavelet(bool wraparound,
@@ -76,47 +76,89 @@ inline void wavelet(bool wraparound,
             *tsi = sa(sx);
         }
 
+        // From tempS and tempD to tempS
+        // s = s - (1/4)(dp + d)
+        tsi = tempS.upperLeft();
+        tdi = tempD.upperLeft();
+        if (wraparound) {
+            *tsi = *tsi - ((*tdi + tdi((src_w>>1)-1, 0)) >> 2);
+        } else {
+            *tsi = *tsi - (*tdi >> 1);
+        }
+        ++tsi.x;
+        ++tdi.x;
+        for (int i = 1; i < (src_w >> 1); ++i, ++tsi.x, ++tdi.x) {
+            *tsi = *tsi - ((tdi(-1, 0) + *tdi) >> 2);
+        }
+        if ((src_w & 1) == 1) {
+            if (wraparound) {
+                *tsi = *tsi - ((tdi(-1, 0) + *(tempD.upperLeft())) >> 2);
+            } else {
+                *tsi = *tsi - (tdi(-1, 0) >> 1);
+            }
+        }
+        
         // Dual lifting, from tempS and tempD to second half of destImage
+        // d = d - (s + sn)
         DestImageIterator dx = dy + Diff2D((src_w + 1) >> 1, 0);
         DestImageIterator dend = dest_lowerright;
         if ((src_w & 1) == 0) dend += Diff2D(-1, 0);
         tsi = tempS.upperLeft();
         tdi = tempD.upperLeft();
         for (; dx.x != dend.x; ++dx.x, ++tsi.x, ++tdi.x) {
-            *dx = *tdi - ((*tsi + tsi(1, 0)) >> 1);
+            //*dx = *tdi - ((*tsi + tsi(1, 0)) >> 1);
+            *dx = *tdi - (*tsi + tsi(1, 0));
         }
         if ((src_w & 1) == 0){
             if (wraparound) {
-                *dx = *tdi - ((*tsi + *(tempS.upperLeft())) >> 1);
+                //*dx = *tdi - ((*tsi + *(tempS.upperLeft())) >> 1);
+                *dx = *tdi - (*tsi + *(tempS.upperLeft()));
             } else {
                 // Mirror edge treatment
-                *dx = *tdi - *tsi;
+                //*dx = *tdi - *tsi;
+                *dx = *tdi - (*tsi << 1);
             }
         }
 
         // Primal lifting - from tempS and second half of destImage to first half of destImage
+        // s = s + (3/16)(d + dp)
         dx = dy;
         dend = dy + Diff2D((src_w + 1) >> 1, 0);
         DestImageIterator dualLiftResult = dend;
         tsi = tempS.upperLeft();
         if (wraparound) {
-            *dx = *tsi + ((*dualLiftResult + dy(src_w - 1, 0)) >> 2);
+            //*dx = *tsi + ((*dualLiftResult + dy(src_w - 1, 0)) >> 2);
+            DestPixelType tmp = *dualLiftResult + dy(src_w - 1, 0);
+            tmp += (tmp << 1);
+            *dx = *tsi + (tmp >> 4);
         } else {
             // Mirror edge treatment
-            *dx = *tsi + (*dualLiftResult >> 1);
+            //*dx = *tsi + (*dualLiftResult >> 1);
+            DestPixelType tmp = *dualLiftResult;
+            tmp += (tmp << 1);
+            *dx = *tsi + (tmp >> 3);
         }
         ++dx.x;
         ++tsi.x;
         ++dualLiftResult.x;
         if ((src_w & 1) == 1) dend += Diff2D(-1, 0);
         for (; dx.x != dend.x; ++dx.x, ++tsi.x, ++dualLiftResult.x) {
-            *dx = *tsi + ((dualLiftResult(-1, 0) + *dualLiftResult) >> 2);
+            //*dx = *tsi + ((dualLiftResult(-1, 0) + *dualLiftResult) >> 2);
+            DestPixelType tmp = dualLiftResult(-1, 0) + *dualLiftResult;
+            tmp += (tmp << 1);
+            *dx = *tsi + (tmp >> 4);
         }
         if ((src_w & 1) == 1) {
             if (wraparound) {
-                *dx = *tsi + ((dualLiftResult(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
+                //*dx = *tsi + ((dualLiftResult(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
+                DestPixelType tmp = dualLiftResult(-1, 0) + dy((src_w + 1) >> 1, 0);
+                tmp += (tmp << 1);
+                *dx = *tsi + (tmp >> 4);
             } else {
-                *dx = *tsi + (dualLiftResult(-1, 0) >> 1);
+                //*dx = *tsi + (dualLiftResult(-1, 0) >> 1);
+                DestPixelType tmp = dualLiftResult(-1, 0);
+                tmp += (tmp << 1);
+                *dx = *tsi + (tmp >> 3);
             }
         }
 
@@ -144,6 +186,20 @@ inline void wavelet(bool wraparound,
             *tsi = da(dy);
         }
 
+        // From tempS and tempD to tempS
+        // s = s - (1/4)(dp + d)
+        tsi = tempS.upperLeft();
+        tdi = tempD.upperLeft();
+        *tsi = *tsi - ((*tdi + tdi((src_h>>1)-1, 0)) >> 2);
+        ++tsi.x;
+        ++tdi.x;
+        for (int i = 1; i < (src_h >> 1); ++i, ++tsi.x, ++tdi.x) {
+            *tsi = *tsi - ((tdi(-1, 0) + *tdi) >> 2);
+        }
+        if ((src_h & 1) == 1) {
+            *tsi = *tsi - (tdi(-1, 0) >> 1);
+        }
+        
         // Dual lifting, from tempS and tempD to second half of destImage
         dy = dx + Diff2D(0, (src_h + 1) >> 1);
         DestImageIterator dend = dest_lowerright;
@@ -151,11 +207,13 @@ inline void wavelet(bool wraparound,
         tsi = tempS.upperLeft();
         tdi = tempD.upperLeft();
         for (; dy.y != dend.y; ++dy.y, ++tsi.x, ++tdi.x) {
-            *dy = *tdi - ((*tsi + tsi(1, 0)) >> 1);
+            //*dy = *tdi - ((*tsi + tsi(1, 0)) >> 1);
+            *dy = *tdi - (*tsi + tsi(1, 0));
         }
         if ((src_h & 1) == 0) {
             // Mirror edge treatment
-            *dy = *tdi - *tsi;
+            //*dy = *tdi - *tsi;
+            *dy = *tdi - (*tsi << 1);
         }
 
         // Primal lifting - from tempS and second half of destImage to first half of destImage
@@ -165,15 +223,26 @@ inline void wavelet(bool wraparound,
         if ((src_h & 1) == 1) dend += Diff2D(0, -1);
         tsi = tempS.upperLeft();
         // Mirror edge treatment
-        *dy = *tsi + (*dualLiftResult >> 1);
+        //*dy = *tsi + (*dualLiftResult >> 1);
+        {
+            DestPixelType tmp = *dualLiftResult;
+            tmp += (tmp << 1);
+            *dy = *tsi + (tmp >> 3);
+        }
         ++dy.y;
         ++tsi.x;
         ++dualLiftResult.y;
         for (; dy.y != dend.y; ++dy.y, ++tsi.x, ++dualLiftResult.y) {
-            *dy = *tsi + ((dualLiftResult(0, -1) + *dualLiftResult) >> 2);
+            //*dy = *tsi + ((dualLiftResult(0, -1) + *dualLiftResult) >> 2);
+            DestPixelType tmp = dualLiftResult(0, -1) + *dualLiftResult;
+            tmp += (tmp << 1);
+            *dy = *tsi + (tmp >> 4);
         }
         if ((src_h & 1) == 1) {
-            *dy = *tsi + (dualLiftResult(0, -1) >> 1);
+            //*dy = *tsi + (dualLiftResult(0, -1) >> 1);
+            DestPixelType tmp = dualLiftResult(0, -1);
+            tmp += (tmp << 1);
+            *dy = *tsi + (tmp >> 3);
         }
 
     }
@@ -217,7 +286,7 @@ inline void wavelet(unsigned int levels, bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
-// Inverse CDF(2,2) wavelet transform with integer lifting
+// Inverse CDF(4,2) wavelet transform with integer lifting
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void iwavelet(bool wraparound,
@@ -254,15 +323,26 @@ inline void iwavelet(bool wraparound,
         if ((src_h & 1) == 1) siend += Diff2D(0, -1);
         TempImageIterator tsi = tempS.upperLeft();
         // Mirror edge treatment
-        *tsi = *si - (*di >> 1);
+        //*tsi = *si - (*di >> 1);
+        {
+            DestPixelType tmp = *di;
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 3);
+        }
         ++si.y;
         ++di.y;
         ++tsi.x;
         for (; si.y != siend.y; ++si.y, ++di.y, ++tsi.x) {
-            *tsi = *si - ((di(0, -1) + *di) >> 2);
+            //*tsi = *si - ((di(0, -1) + *di) >> 2);
+            DestPixelType tmp = di(0, -1) + *di;
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 4);
         }
         if ((src_h & 1) == 1) {
-            *tsi = *si - (di(0, -1) >> 1);
+            //*tsi = *si - (di(0, -1) >> 1);
+            DestPixelType tmp = di(0, -1);
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 3);
         }
 
         // Inverse dual lifting from source and tempS to tempD
@@ -272,11 +352,27 @@ inline void iwavelet(bool wraparound,
         tsi = tempS.upperLeft();
         TempImageIterator tdi = tempD.upperLeft();
         for (; di.y != diend.y; ++di.y, ++tsi.x, ++tdi.x) {
-            *tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
+            //*tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
+            *tdi = *di + (*tsi + tsi(1, 0));
         }
         if ((src_h & 1) == 0) {
             // Mirror edge treatment
-            *tdi = *di + *tsi;
+            //*tdi = *di + *tsi;
+            *tdi = *di + (*tsi << 1);
+        }
+
+        // From tempS and tempD to tempS
+        // s = s + (1/4)(dp + d)
+        tsi = tempS.upperLeft();
+        tdi = tempD.upperLeft();
+        *tsi = *tsi + ((*tdi + tdi((src_h>>1)-1, 0)) >> 2);
+        ++tsi.x;
+        ++tdi.x;
+        for (int i = 1; i < (src_h >> 1); ++i, ++tsi.x, ++tdi.x) {
+            *tsi = *tsi + ((tdi(-1, 0) + *tdi) >> 2);
+        }
+        if ((src_h & 1) == 1) {
+            *tsi = *tsi + (tdi(-1, 0) >> 1);
         }
 
         // Merging from tempS and tempD to destImage
@@ -305,23 +401,38 @@ inline void iwavelet(bool wraparound,
         DestImageIterator di = siend;
         TempImageIterator tsi = tempS.upperLeft();
         if (wraparound) {
-            *tsi = *si - ((*di + dy(src_w - 1, 0)) >> 2);
+            //*tsi = *si - ((*di + dy(src_w - 1, 0)) >> 2);
+            DestPixelType tmp = *di + dy(src_w - 1, 0);
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 4);
         } else {
             // Mirror edge treatment
-            *tsi = *si - (*di >> 1);
+            //*tsi = *si - (*di >> 1);
+            DestPixelType tmp = *di;
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 3);
         }
         ++si.x;
         ++di.x;
         ++tsi.x;
         if ((src_w & 1) == 1) siend += Diff2D(-1, 0);
         for (; si.x != siend.x; ++si.x, ++di.x, ++tsi.x) {
-            *tsi = *si - ((di(-1, 0) + *di) >> 2);
+            //*tsi = *si - ((di(-1, 0) + *di) >> 2);
+            DestPixelType tmp = di(-1, 0) + *di;
+            tmp += (tmp << 1);
+            *tsi = *si - (tmp >> 4);
         }
         if ((src_w & 1) == 1) {
             if (wraparound) {
-                *tsi = *si - ((di(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
+                //*tsi = *si - ((di(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
+                DestPixelType tmp = di(-1, 0) + dy((src_w + 1) >> 1, 0);
+                tmp += (tmp << 1);
+                *tsi = *si - (tmp >> 4);
             } else {
-                *tsi = *si - (di(-1, 0) >> 1);
+                //*tsi = *si - (di(-1, 0) >> 1);
+                DestPixelType tmp = di(-1, 0);
+                tmp += (tmp << 1);
+                *tsi = *si - (tmp >> 3);
             }
         }
 
@@ -332,14 +443,39 @@ inline void iwavelet(bool wraparound,
         tsi = tempS.upperLeft();
         TempImageIterator tdi = tempD.upperLeft();
         for (; di.x != diend.x; ++di.x, ++tsi.x, ++tdi.x) {
-            *tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
+            //*tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
+            *tdi = *di + (*tsi + tsi(1, 0));
         }
         if ((src_w & 1) == 0) {
             if (wraparound) {
-                *tdi = *di + ((*tsi + *(tempS.upperLeft())) >> 1);
+                //*tdi = *di + ((*tsi + *(tempS.upperLeft())) >> 1);
+                *tdi = *di + (*tsi + *(tempS.upperLeft()));
             } else {
                 // Mirror edge treatment
-                *tdi = *di + *tsi;
+                //*tdi = *di + *tsi;
+                *tdi = *di + (*tsi << 1);
+            }
+        }
+
+        // From tempS and tempD to tempS
+        // s = s + (1/4)(dp + d)
+        tsi = tempS.upperLeft();
+        tdi = tempD.upperLeft();
+        if (wraparound) {
+            *tsi = *tsi + ((*tdi + tdi((src_w>>1)-1, 0)) >> 2);
+        } else {
+            *tsi = *tsi + (*tdi >> 1);
+        }
+        ++tsi.x;
+        ++tdi.x;
+        for (int i = 1; i < (src_w >> 1); ++i, ++tsi.x, ++tdi.x) {
+            *tsi = *tsi + ((tdi(-1, 0) + *tdi) >> 2);
+        }
+        if ((src_w & 1) == 1) {
+            if (wraparound) {
+                *tsi = *tsi + ((tdi(-1, 0) + *(tempD.upperLeft())) >> 2);
+            } else {
+                *tsi = *tsi + (tdi(-1, 0) >> 1);
             }
         }
 
