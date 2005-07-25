@@ -98,7 +98,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
-
+/*
 ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
 wavelet<ImageType, ImagePyramidType>(ExactLevels, Wraparound, srcImageRange(*(blackPair.first)), destImageRange(xform));
 
@@ -159,7 +159,7 @@ transformImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), de
 exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iiwavelet.tif"));
 
 return;
-
+*/
     //#ifdef ENBLEND_CACHE_IMAGES
     //if (Verbose > VERBOSE_CFI_MESSAGES) {
     //    CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -365,14 +365,20 @@ return;
         //        (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
 
         // put the mask in dyadic form.
-        MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
+        //MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
+        MaskType waveletMask(roiBB.size().x, roiBB.size().y);
+        //split<MaskType, MaskType>(numLevels, roiBB_uBB.apply(srcImageRange(*mask)), destImageRange(waveletMask));
+        copyImage(roiBB_uBB.apply(srcImageRange(*mask)), destImage(waveletMask));
+        exportImage(srcImageRange(waveletMask), ImageExportInfo("enblend_wavelet_mask.tif"));
+
         //wavelet<MaskType, MaskPyramidType>(numLevels, wraparoundForBlend,
         //        roiBB_uBB.apply(srcImageRange(*mask)),
         //        destImageRange(dyadicMask));
-        typename MaskPyramidType::traverser maskEnd = dyadicMask.lowerRight();
+        //typename MaskPyramidType::traverser maskEnd = dyadicMask.lowerRight();
         //typename MaskPyramidType::traverser gbegin = ((*maskGP)[0])->upperLeft();
         //typename MaskPyramidType::traverser gend = ((*maskGP)[0])->lowerRight();
         //for (unsigned int i = 0; i < numLevels; i++) {
+        /*
         {
             unsigned int i = numLevels-1;
             int maskW = maskEnd.x - dyadicMask.upperLeft().x;
@@ -394,6 +400,7 @@ return;
             // Recurse
             maskEnd = halfMaskEnd;
         }
+        */
         //for (unsigned int i = 1; i < (numLevels+1); i++) {
         //    int maskW = maskEnd.x - dyadicMask.upperLeft().x;
         //    int maskH = maskEnd.y - dyadicMask.upperLeft().y;
@@ -415,6 +422,7 @@ return;
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
+        /*
         FindMinMax<MaskPyramidValueType> maskMinMax;
         inspectImage(srcImageRange(dyadicMask), maskMinMax);
         cout << "dyadicMask minmax.min=" << maskMinMax.min << " minmax.max=" << maskMinMax.max << endl;
@@ -435,15 +443,7 @@ return;
         transformImage(srcImageRange(dyadicMask), destImage(mask_s),
                 linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
         exportImage(srcImageRange(mask_s), ImageExportInfo("enblend_wavelet_mask_inv.tif"));
-
-        ImageType xform_s(roiBB.size().x, roiBB.size().y);
-        //transformImage(srcImageRange(maskXform), destImage(xform_s, RedAccessor<ImageValueType>()),
-        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
-        //transformImage(srcImageRange(maskXform), destImage(xform_s, GreenAccessor<ImageValueType>()),
-        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
-        //transformImage(srcImageRange(maskXform), destImage(xform_s, BlueAccessor<ImageValueType>()),
-        //        linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
-        //exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_mask.tif"));
+        */
 
         //#ifdef ENBLEND_CACHE_IMAGES
         //if (Verbose > VERBOSE_CFI_MESSAGES) {
@@ -491,6 +491,8 @@ return;
         inspectImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), minmax);
         cout << "whiteXform minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+
+        ImageType xform_s(roiBB.size().x, roiBB.size().y);
         transformImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         transformImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
@@ -590,13 +592,13 @@ return;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        vector<MaskPyramidType*> *maskWP = new vector<MaskPyramidType*>;
-        maskWP->push_back(&dyadicMask);
+        vector<MaskType*> *maskWP = new vector<MaskType*>;
+        maskWP->push_back(&waveletMask);
         vector<ImagePyramidType*> *whiteWP = new vector<ImagePyramidType*>;
         whiteWP->push_back(&whiteXform);
         vector<ImagePyramidType*> *blackWP = new vector<ImagePyramidType*>;
         blackWP->push_back(&blackXform);
-        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskWP, whiteWP, blackWP);
+        blend<MaskType, MaskType, ImagePyramidType>(maskWP, whiteWP, blackWP);
         delete maskWP;
         delete whiteWP;
         delete blackWP;
@@ -662,8 +664,7 @@ return;
 
         // collapse black pyramid
 
-        //iwavelet<ImagePyramidType, ImagePyramidType>(numLevels, wraparoundForBlend,
-        //        srcImageRange(blackXform), destImageRange(blackXform));
+        iwavelet<ImagePyramidType>(numLevels, wraparoundForBlend, destImageRange(blackXform));
 
         copyImage(srcImageRange(blackXform), destImage(blackXform16));
         ImageExportInfo iwavelet("enblend_iwavelet.tif");

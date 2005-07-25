@@ -685,7 +685,7 @@ inline void _zeroDetailCoefficients(unsigned int srcLevel,
     }
     }
 
-}
+};
 
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
