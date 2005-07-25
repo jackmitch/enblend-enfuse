@@ -38,9 +38,11 @@
 #include "pyramid.h"
 #include "wavelet.h"
 
+#include "vigra/imageiterator.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/initimage.hxx"
 #include "vigra/inspectimage.hxx"
+#include "vigra/resizeimage.hxx"
 #include "vigra/transformimage.hxx"
 
 using std::cout;
@@ -60,6 +62,7 @@ using vigra::initImage;
 using vigra::initImageIf;
 using vigra::inspectImage;
 using vigra::NumericTraits;
+using vigra::StridedImageIterator;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
 
@@ -96,52 +99,66 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
-//ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
-//MaskPyramidType axform(blackBB.size().x, blackBB.size().y, NumericTraits<MaskPyramidValueType>::max());
-//
-//wavelet(7, Wraparound,
-//        blackPair.first->upperLeft(),
-//        blackPair.first->lowerRight(),
-//        blackPair.first->accessor(),
-//        xform.upperLeft(),
-//        xform.lowerRight(),
-//        xform.accessor());
-//
-//FindMinMax<typename ImagePyramidValueType::value_type> minmax;
-//inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
-//inspectImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), minmax);
-//inspectImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), minmax);
-//cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
-//transformImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
-//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-//transformImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
-//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-//transformImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
-//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
-//transformImage(srcImageRange(axform), destImage(*(blackPair.second)),
-//        linearRangeMapping(NumericTraits<MaskPyramidValueType>::min(),
-//                           NumericTraits<MaskPyramidValueType>::max(),
-//                           NumericTraits<AlphaValueType>::min(),
-//                           NumericTraits<AlphaValueType>::max()));
-//
-//exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.tif"));
-//exportImage(srcImageRange(*(blackPair.second)), ImageExportInfo("enblend_wavelet_mask.tif"));
-//
-//ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
-//
-//iwavelet(7, Wraparound,
-//        xform.upperLeft(), xform.lowerRight(), xform.accessor(),
-//        ixform.upperLeft(), ixform.lowerRight(), ixform.accessor());
-//
-//minmax.reset();
-//inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
-//inspectImage(srcImageRange(ixform, GreenAccessor<ImagePyramidValueType>()), minmax);
-//inspectImage(srcImageRange(ixform, BlueAccessor<ImagePyramidValueType>()), minmax);
-//cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
-//copyImage(srcImageRange(ixform), destImage(*(blackPair.first)));
-//exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iwavelet.tif"));
-//
-//return;
+ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
+wavelet<ImageType, ImagePyramidType>(ExactLevels, Wraparound, srcImageRange(*(blackPair.first)), destImageRange(xform));
+
+ImagePyramidType ixform(blackBB.size().x, blackBB.size().y);
+copyImage(srcImageRange(xform), destImage(ixform));
+iwavelet<ImagePyramidType>(ExactLevels, Wraparound, destImageRange(ixform));
+
+ImagePyramidType iixform(blackBB.size().x, blackBB.size().y);
+copyImage(srcImageRange(xform), destImage(iixform));
+zeroDetailCoefficients<ImagePyramidType>(ExactLevels, destImageRange(iixform));
+iwavelet<ImagePyramidType>(ExactLevels, Wraparound, destImageRange(iixform));
+
+// Compare ixform and blackPair.first for perfect reconstruction
+typename ImagePyramidType::iterator ixform_iterator = ixform.begin();
+typename ImageType::iterator image_iterator = (blackPair.first)->begin();
+for (; ixform_iterator != ixform.end(); ++ixform_iterator, ++image_iterator) {
+    if (*ixform_iterator != *image_iterator) {
+        cout << "images differ!" << endl;
+        break;
+    }
+}
+
+FindMinMax<typename ImagePyramidValueType::value_type> minmax;
+inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), minmax);
+cout << "xform min=" << minmax.min << " max=" << minmax.max << endl;
+
+transformImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(xform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(xform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_wavelet.tif"));
+
+minmax.reset();
+inspectImage(srcImageRange(ixform, RedAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(ixform, GreenAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(ixform, BlueAccessor<ImagePyramidValueType>()), minmax);
+cout << "ixform min=" << minmax.min << " max=" << minmax.max << endl;
+
+copyImage(srcImageRange(ixform), destImage(*(blackPair.first)));
+exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iwavelet.tif"));
+
+minmax.reset();
+inspectImage(srcImageRange(iixform, RedAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(iixform, GreenAccessor<ImagePyramidValueType>()), minmax);
+inspectImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), minmax);
+cout << "iixform min=" << minmax.min << " max=" << minmax.max << endl;
+
+transformImage(srcImageRange(iixform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(iixform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+transformImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
+        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iiwavelet.tif"));
+
+return;
 
     //#ifdef ENBLEND_CACHE_IMAGES
     //if (Verbose > VERBOSE_CFI_MESSAGES) {
@@ -344,39 +361,80 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
 
         // Build Gaussian pyramid from mask.
-        vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
-                (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+        //vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
+        //        (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
 
         // put the mask in dyadic form.
         MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
+        //wavelet<MaskType, MaskPyramidType>(numLevels, wraparoundForBlend,
+        //        roiBB_uBB.apply(srcImageRange(*mask)),
+        //        destImageRange(dyadicMask));
         typename MaskPyramidType::traverser maskEnd = dyadicMask.lowerRight();
-        for (unsigned int i = 1; i < (numLevels+1); i++) {
+        //typename MaskPyramidType::traverser gbegin = ((*maskGP)[0])->upperLeft();
+        //typename MaskPyramidType::traverser gend = ((*maskGP)[0])->lowerRight();
+        //for (unsigned int i = 0; i < numLevels; i++) {
+        {
+            unsigned int i = numLevels-1;
             int maskW = maskEnd.x - dyadicMask.upperLeft().x;
             int maskH = maskEnd.y - dyadicMask.upperLeft().y;
             int halfMaskW = (maskW + 1) >> 1;
             int halfMaskH = (maskH + 1) >> 1;
+            for (unsigned int i = 1; i < numLevels; i++) {
+                halfMaskW = (halfMaskW + 1) >> 1;
+                halfMaskH = (halfMaskH + 1) >> 1;
+            }
             typename MaskPyramidType::traverser halfMaskEnd = dyadicMask.upperLeft() + Diff2D(halfMaskW, halfMaskH);
-            typename MaskPyramidType::traverser gbegin = ((*maskGP)[i])->upperLeft();
-            typename MaskPyramidType::traverser gend = ((*maskGP)[i])->lowerRight();
-            int gW = gend.x - gbegin.x;
-            int gH = gend.y - gbegin.y;
-            //cout << "mask=(" << maskW << ", " << maskH << ") half=(" << halfMaskW << ", " << halfMaskH << ") g=(" << gW << ", " << gH << ")" << endl;
-            copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd));
-            copyImage(srcIterRange(gbegin, gbegin + Diff2D(halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd + Diff2D(-halfMaskW, 0)));
-            copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, halfMaskH)), destIter(halfMaskEnd + Diff2D(0, -halfMaskH)));
+            // Just do splitting here
+            StridedImageIterator<typename MaskType::value_type> strideBegin(&(*mask)(roiBB_uBB.getUL().x, roiBB_uBB.getUL().y), uBB.size().x, 2 << i, 2 << i);
+            StridedImageIterator<typename MaskType::value_type> strideEnd = strideBegin + Diff2D(halfMaskW, halfMaskH);
+            copyImage(srcIterRange(strideBegin, strideEnd), destImage(dyadicMask));
+            //dyadicMask(halfMaskW>>2, halfMaskH>>2) = 255;
+            //dyadicMask((halfMaskW>>2) + 1, (halfMaskH>>2) + 1) = 255;
+            //dyadicMask((halfMaskW>>2) + 2, (halfMaskH>>2) + 2) = 255;
+            // Recurse
             maskEnd = halfMaskEnd;
         }
-        copyImage(srcImageRange(*((*maskGP)[numLevels])), destImage(dyadicMask));
+        //for (unsigned int i = 1; i < (numLevels+1); i++) {
+        //    int maskW = maskEnd.x - dyadicMask.upperLeft().x;
+        //    int maskH = maskEnd.y - dyadicMask.upperLeft().y;
+        //    int halfMaskW = (maskW + 1) >> 1;
+        //    int halfMaskH = (maskH + 1) >> 1;
+        //    typename MaskPyramidType::traverser halfMaskEnd = dyadicMask.upperLeft() + Diff2D(halfMaskW, halfMaskH);
+        //    typename MaskPyramidType::traverser gbegin = ((*maskGP)[i])->upperLeft();
+        //    typename MaskPyramidType::traverser gend = ((*maskGP)[i])->lowerRight();
+        //    int gW = gend.x - gbegin.x;
+        //    int gH = gend.y - gbegin.y;
+        //    //cout << "mask=(" << maskW << ", " << maskH << ") half=(" << halfMaskW << ", " << halfMaskH << ") g=(" << gW << ", " << gH << ")" << endl;
+        //    copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd));
+        //    copyImage(srcIterRange(gbegin, gbegin + Diff2D(halfMaskW, maskH - halfMaskH)), destIter(halfMaskEnd + Diff2D(-halfMaskW, 0)));
+        //    copyImage(srcIterRange(gbegin, gbegin + Diff2D(maskW - halfMaskW, halfMaskH)), destIter(halfMaskEnd + Diff2D(0, -halfMaskH)));
+        //    maskEnd = halfMaskEnd;
+        //}
+        //copyImage(srcImageRange(*((*maskGP)[numLevels])), destImage(dyadicMask));
 
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
         FindMinMax<MaskPyramidValueType> maskMinMax;
         inspectImage(srcImageRange(dyadicMask), maskMinMax);
+        cout << "dyadicMask minmax.min=" << maskMinMax.min << " minmax.max=" << maskMinMax.max << endl;
         MaskType mask_s(roiBB.size().x, roiBB.size().y);
         transformImage(srcImageRange(dyadicMask), destImage(mask_s),
                 linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
         exportImage(srcImageRange(mask_s), ImageExportInfo("enblend_wavelet_mask.tif"));
+
+        //iwavelet<MaskPyramidType>(numLevels, Wraparound, destImageRange(dyadicMask));
+        maskMinMax.reset();
+        inspectImage(srcImageRange(dyadicMask), maskMinMax);
+        cout << "inverse mask minmax.min=" << maskMinMax.min << " minmax.max=" << maskMinMax.max << endl;
+
+        USImage mask_us(roiBB.size().x, roiBB.size().y);
+        copyImage(srcImageRange(dyadicMask), destImage(mask_us));
+        exportImage(srcImageRange(mask_us), ImageExportInfo("enblend_wavelet_mask_inv16.tif"));
+
+        transformImage(srcImageRange(dyadicMask), destImage(mask_s),
+                linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
+        exportImage(srcImageRange(mask_s), ImageExportInfo("enblend_wavelet_mask_inv.tif"));
 
         ImageType xform_s(roiBB.size().x, roiBB.size().y);
         //transformImage(srcImageRange(maskXform), destImage(xform_s, RedAccessor<ImageValueType>()),
@@ -432,6 +490,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         inspectImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        cout << "whiteXform minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
         transformImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         transformImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
@@ -480,6 +539,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        cout << "blackXform minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
         transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
@@ -545,6 +605,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
+        cout << "blend minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
         transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(xform_s, RedAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(xform_s, GreenAccessor<ImageValueType>()),
@@ -583,10 +644,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // delete mask pyramid
         //exportPyramid(maskGP, "enblend_mask_gp");
-        for (unsigned int i = 0; i < maskGP->size(); i++) {
-            delete (*maskGP)[i];
-        }
-        delete maskGP;
+        //for (unsigned int i = 0; i < maskGP->size(); i++) {
+        //    delete (*maskGP)[i];
+        //}
+        //delete maskGP;
         //// mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
         //// delete white pyramid
@@ -601,8 +662,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // collapse black pyramid
 
-        iwavelet<ImagePyramidType, ImagePyramidType>(numLevels, wraparoundForBlend,
-                srcImageRange(blackXform), destImageRange(blackXform));
+        //iwavelet<ImagePyramidType, ImagePyramidType>(numLevels, wraparoundForBlend,
+        //        srcImageRange(blackXform), destImageRange(blackXform));
 
         copyImage(srcImageRange(blackXform), destImage(blackXform16));
         ImageExportInfo iwavelet("enblend_iwavelet.tif");
@@ -612,7 +673,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
-        cout << "minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+        cout << "collapse minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
         transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(blackXform, RedAccessor<ImagePyramidValueType>()),
                 vigra::functor::ifThenElse(Arg1() < Param(0), Param(254), (Arg1() / Param(4)) + Param(64)));
         transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(blackXform, GreenAccessor<ImagePyramidValueType>()),

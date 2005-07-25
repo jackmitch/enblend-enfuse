@@ -32,10 +32,22 @@ using vigra::BasicImage;
 
 namespace enblend {
 
-// Forward CDF(4,2) wavelet transform with integer lifting
+template <typename T>
+inline T three16(const T & v) {
+    T res = v + (v << 1);
+    return (res >> 4);
+}
+
+template <typename T>
+inline T three8(const T & v) {
+    T res = v + (v << 1);
+    return (res >> 3);
+}
+
+// Forward cubic B-spline wavelet transform with integer lifting
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
-inline void wavelet(bool wraparound,
+inline void _wavelet(unsigned int srcLevel, bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
@@ -44,210 +56,636 @@ inline void wavelet(bool wraparound,
         DestAccessor da) {
 
     typedef typename DestAccessor::value_type DestPixelType;
-    typedef BasicImage<DestPixelType> TempImage;
-    typedef typename TempImage::traverser TempImageIterator;
 
+    // Size of input image
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
-    vigra_precondition(src_w > 1 && src_h > 1,
-            "src image too small in wavelet");
 
-    TempImage tempS((max(src_w, src_h) + 1) >> 1, 1);
-    TempImage tempD((max(src_w, src_h) + 1) >> 1, 1);
+    // Distance between s pixels
+    int stride = 2 << srcLevel;
 
-    // Transform rows from source to dest
+    // Distance between s-d pair
+    int adjacent = 1 << srcLevel;
+
+    // Number of s and d pixels
+    int sCount = src_w;
+    int dCount;
+    for (unsigned int i = 0; i <= srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+
+    // First do the rows
+    {
     SrcImageIterator sy = src_upperleft;
     SrcImageIterator send = src_lowerright;
     DestImageIterator dy = dest_upperleft;
     for (; sy.y != send.y; ++sy.y, ++dy.y) {
 
         SrcImageIterator sx = sy;
+        DestImageIterator dx = dy;
 
-        // Splitting from source into tempS and tempD.
-        TempImageIterator tsi = tempS.upperLeft();
-        TempImageIterator tdi = tempD.upperLeft();
-        for (; sx.x < (send.x - 1); ++sx.x, ++tsi.x, ++tdi.x) {
-            *tsi = sa(sx);
-            ++sx.x;
-            *tdi = sa(sx);
-        }
-        // Odd sample
-        if (sx.x != send.x) {
-            *tsi = sa(sx);
-        }
+        // Lifting 1:
+        // ds = ss - 1/4 * (sd_prev + sd)
+        {
+            SrcImageIterator ss = sx;
+            SrcImageIterator sd = ss + Diff2D(adjacent, 0);
 
-        // From tempS and tempD to tempS
-        // s = s - (1/4)(dp + d)
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        if (wraparound) {
-            *tsi = *tsi - ((*tdi + tdi((src_w>>1)-1, 0)) >> 2);
-        } else {
-            *tsi = *tsi - (*tdi >> 1);
-        }
-        ++tsi.x;
-        ++tdi.x;
-        for (int i = 1; i < (src_w >> 1); ++i, ++tsi.x, ++tdi.x) {
-            *tsi = *tsi - ((tdi(-1, 0) + *tdi) >> 2);
-        }
-        if ((src_w & 1) == 1) {
+            DestImageIterator ds = dx;
+            //DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            // In case sCount > dCount and wraparound:
+            // last s will depend on first s
+            DestPixelType firstPixel;
+
+            // Left border
             if (wraparound) {
-                *tsi = *tsi - ((tdi(-1, 0) + *(tempD.upperLeft())) >> 2);
+                //cout << "l1 left ww" << endl;
+                firstPixel = *ss - ( (sx(adjacent + stride * (dCount - 1), 0) + *sd) >> 2 );
             } else {
-                *tsi = *tsi - (tdi(-1, 0) >> 1);
+                firstPixel = *ss - ( *sd >> 1 );
+            }
+            ds.x += stride;
+            ss.x += stride;
+            sd.x += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds = *ss - ( (sd(-stride, 0) + *sd) >> 2 );
+                ds.x += stride;
+                ss.x += stride;
+                sd.x += stride;
+            }
+
+            // Right border
+            if (i < sCount) {
+                if (wraparound) {
+                    //cout << "l1 right ww" << endl;
+                    *ds = *ss - ( (sd(-stride, 0) + sx(adjacent, 0)) >> 2 );
+                } else {
+                    *ds = *ss - ( sd(-stride, 0) >> 1 );
+                }
+            }
+
+            // First pixel
+            *dx = firstPixel;
+        }
+
+        // Lifting 2:
+        // dd = sd - (ds + ds_next)
+        {
+            SrcImageIterator ss = sx;
+            SrcImageIterator sd = ss + Diff2D(adjacent, 0);
+
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            int i;
+            for (i = 0; i < (sCount - 1); i++) {
+                *dd = *sd - (*ds + ds(stride, 0));
+                dd.x += stride;
+                sd.x += stride;
+                ds.x += stride;
+            }
+
+            // Right border
+            if (i < dCount) {
+                if (wraparound) {
+                    //cout << "l2 right ww" << endl;
+                    *dd = *sd - (*ds + *dx);
+                } else {
+                    *dd = *sd - (*ds << 1);
+                }
             }
         }
-        
-        // Dual lifting, from tempS and tempD to second half of destImage
-        // d = d - (s + sn)
-        DestImageIterator dx = dy + Diff2D((src_w + 1) >> 1, 0);
-        DestImageIterator dend = dest_lowerright;
-        if ((src_w & 1) == 0) dend += Diff2D(-1, 0);
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        for (; dx.x != dend.x; ++dx.x, ++tsi.x, ++tdi.x) {
-            //*dx = *tdi - ((*tsi + tsi(1, 0)) >> 1);
-            *dx = *tdi - (*tsi + tsi(1, 0));
-        }
-        if ((src_w & 1) == 0){
+
+        // Lifting 3:
+        // ds = ds + 3/16 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            // In case sCount > dCount and wraparound:
+            // last s will depend on first s
+            DestPixelType firstPixel;
+
+            // Left border
             if (wraparound) {
-                //*dx = *tdi - ((*tsi + *(tempS.upperLeft())) >> 1);
-                *dx = *tdi - (*tsi + *(tempS.upperLeft()));
+                //cout << "l3 left ww" << endl;
+                firstPixel = *ds + three16( dx(adjacent + stride * (dCount - 1), 0) + *dd );
             } else {
-                // Mirror edge treatment
-                //*dx = *tdi - *tsi;
-                *dx = *tdi - (*tsi << 1);
+                firstPixel = *ds + three8( *dd );
             }
+            ds.x += stride;
+            dd.x += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds += three16( dd(-stride, 0) + *dd );
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            // Right border
+            if (i < sCount) {
+                if (wraparound) {
+                    //cout << "l3 right ww" << endl;
+                    *ds += three16( dd(-stride, 0) + dx(adjacent, 0) );
+                } else {
+                    *ds += three8( dd(-stride, 0) );
+                }
+            }
+
+            // First pixel
+            *dx = firstPixel;
         }
 
-        // Primal lifting - from tempS and second half of destImage to first half of destImage
-        // s = s + (3/16)(d + dp)
-        dx = dy;
-        dend = dy + Diff2D((src_w + 1) >> 1, 0);
-        DestImageIterator dualLiftResult = dend;
-        tsi = tempS.upperLeft();
-        if (wraparound) {
-            //*dx = *tsi + ((*dualLiftResult + dy(src_w - 1, 0)) >> 2);
-            DestPixelType tmp = *dualLiftResult + dy(src_w - 1, 0);
-            tmp += (tmp << 1);
-            *dx = *tsi + (tmp >> 4);
-        } else {
-            // Mirror edge treatment
-            //*dx = *tsi + (*dualLiftResult >> 1);
-            DestPixelType tmp = *dualLiftResult;
-            tmp += (tmp << 1);
-            *dx = *tsi + (tmp >> 3);
-        }
-        ++dx.x;
-        ++tsi.x;
-        ++dualLiftResult.x;
-        if ((src_w & 1) == 1) dend += Diff2D(-1, 0);
-        for (; dx.x != dend.x; ++dx.x, ++tsi.x, ++dualLiftResult.x) {
-            //*dx = *tsi + ((dualLiftResult(-1, 0) + *dualLiftResult) >> 2);
-            DestPixelType tmp = dualLiftResult(-1, 0) + *dualLiftResult;
-            tmp += (tmp << 1);
-            *dx = *tsi + (tmp >> 4);
-        }
-        if ((src_w & 1) == 1) {
-            if (wraparound) {
-                //*dx = *tsi + ((dualLiftResult(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
-                DestPixelType tmp = dualLiftResult(-1, 0) + dy((src_w + 1) >> 1, 0);
-                tmp += (tmp << 1);
-                *dx = *tsi + (tmp >> 4);
-            } else {
-                //*dx = *tsi + (dualLiftResult(-1, 0) >> 1);
-                DestPixelType tmp = dualLiftResult(-1, 0);
-                tmp += (tmp << 1);
-                *dx = *tsi + (tmp >> 3);
+        // Scaling
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            int i;
+            for (i = 0; i < dCount; i++) {
+                *ds <<= 1;
+                *ds -= *dd & DestPixelType(1);
+                *dd += *dd & DestPixelType(1);
+                *dd >>= 1;
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            if (i < sCount) {
+                //cout << "scale last s" << endl;
+                *ds <<= 1;
             }
         }
 
     }
+    } // end of all rows namespace
 
-    // Transform columns from dest to dest
+    sCount = src_h;
+    for (unsigned int i = 0; i <= srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+
+    // Now do the columns
+    {
     DestImageIterator dx = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
-    //// If lowpass only, do half the columns.
-    //if (lowpassOnly) dend += Diff2D((src_w + 1) >> 1 - dend.x, 0);
     for (; dx.x != dend.x; ++dx.x) {
 
-        dy = dx;
+        DestImageIterator dy = dx;
 
-        // Split from dest into tempS and tempD.
-        TempImageIterator tsi = tempS.upperLeft();
-        TempImageIterator tdi = tempD.upperLeft();
-        for (; dy.y < (dend.y - 1); ++dy.y, ++tsi.x, ++tdi.x) {
-            *tsi = da(dy);
-            ++dy.y;
-            *tdi = da(dy);
-        }
-        // Odd sample
-        if (dy.y != dend.y) {
-            *tsi = da(dy);
-        }
-
-        // From tempS and tempD to tempS
-        // s = s - (1/4)(dp + d)
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        *tsi = *tsi - ((*tdi + tdi((src_h>>1)-1, 0)) >> 2);
-        ++tsi.x;
-        ++tdi.x;
-        for (int i = 1; i < (src_h >> 1); ++i, ++tsi.x, ++tdi.x) {
-            *tsi = *tsi - ((tdi(-1, 0) + *tdi) >> 2);
-        }
-        if ((src_h & 1) == 1) {
-            *tsi = *tsi - (tdi(-1, 0) >> 1);
-        }
-        
-        // Dual lifting, from tempS and tempD to second half of destImage
-        dy = dx + Diff2D(0, (src_h + 1) >> 1);
-        DestImageIterator dend = dest_lowerright;
-        if ((src_h & 1) == 0) dend += Diff2D(0, -1);
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        for (; dy.y != dend.y; ++dy.y, ++tsi.x, ++tdi.x) {
-            //*dy = *tdi - ((*tsi + tsi(1, 0)) >> 1);
-            *dy = *tdi - (*tsi + tsi(1, 0));
-        }
-        if ((src_h & 1) == 0) {
-            // Mirror edge treatment
-            //*dy = *tdi - *tsi;
-            *dy = *tdi - (*tsi << 1);
-        }
-
-        // Primal lifting - from tempS and second half of destImage to first half of destImage
-        dy = dx;
-        dend = dx + Diff2D(0, (src_h + 1) >> 1);
-        DestImageIterator dualLiftResult = dend;
-        if ((src_h & 1) == 1) dend += Diff2D(0, -1);
-        tsi = tempS.upperLeft();
-        // Mirror edge treatment
-        //*dy = *tsi + (*dualLiftResult >> 1);
+        // Lifting 1:
+        // ds = ds - 1/4 * (dd_prev + dd)
         {
-            DestPixelType tmp = *dualLiftResult;
-            tmp += (tmp << 1);
-            *dy = *tsi + (tmp >> 3);
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            // Top border - no wraparound
+            *ds -= *dd >> 1;
+            ds.y += stride;
+            dd.y += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds -= (dd(0, -stride) + *dd) >> 2;
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < sCount) {
+                *ds -= dd(0, -stride) >> 1;
+            }
         }
-        ++dy.y;
-        ++tsi.x;
-        ++dualLiftResult.y;
-        for (; dy.y != dend.y; ++dy.y, ++tsi.x, ++dualLiftResult.y) {
-            //*dy = *tsi + ((dualLiftResult(0, -1) + *dualLiftResult) >> 2);
-            DestPixelType tmp = dualLiftResult(0, -1) + *dualLiftResult;
-            tmp += (tmp << 1);
-            *dy = *tsi + (tmp >> 4);
+
+        // Lifting 2:
+        // dd = dd - (ds + ds_next)
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            int i;
+            for (i = 0; i < (sCount - 1); i++) {
+                *dd -= *ds + ds(0, stride);
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < dCount) {
+                *dd -= *ds << 1;
+            }
         }
-        if ((src_h & 1) == 1) {
-            //*dy = *tsi + (dualLiftResult(0, -1) >> 1);
-            DestPixelType tmp = dualLiftResult(0, -1);
-            tmp += (tmp << 1);
-            *dy = *tsi + (tmp >> 3);
+
+        // Lifting 3:
+        // ds = ds + 3/16 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            // Top border
+            *ds += three8(*dd);
+            ds.y += stride;
+            dd.y += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds += three16( dd(0, -stride) + *dd );
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < sCount) {
+                *ds += three8( dd(0, -stride) );
+            }
+        }
+
+        // Scaling
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            int i;
+            for (i = 0; i < dCount; i++) {
+                *ds <<= 1;
+                *ds -= *dd & DestPixelType(1);
+                *dd += *dd & DestPixelType(1);
+                *dd >>= 1;
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            if (i < sCount) {
+                *ds <<= 1;
+            }
         }
 
     }
+    } // end of all columns namespace
+
+}
+
+// Inverse cubic B-spline wavelet transform with integer lifting
+template <typename DestImageIterator, typename DestAccessor>
+inline void _iwavelet(unsigned int srcLevel, bool wraparound,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da) {
+
+    typedef typename DestAccessor::value_type DestPixelType;
+
+    if (srcLevel == 0) {
+        vigra_fail("Cannot run IDWT on level 0 image.");
+    }
+
+    // Size of input image
+    int dest_w = dest_lowerright.x - dest_upperleft.x;
+    int dest_h = dest_lowerright.y - dest_upperleft.y;
+
+    // Distance between s pixels
+    int stride = 1 << srcLevel;
+
+    // Distance between s-d pair
+    int adjacent = 1 << (srcLevel - 1);
+
+    cout << "stride=" << stride << " adjacent=" << adjacent << endl;
+
+    // Number of s and d pixels
+    int sCount = dest_h;
+    int dCount = 0;
+    for (unsigned int i = 0; i < srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+    cout << "dest_h=" << dest_h << " sCount=" << sCount << " dCount=" << dCount << endl;
+
+    // First do the columns
+    {
+    DestImageIterator dx = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    for (; dx.x != dend.x; ++dx.x) {
+
+        DestImageIterator dy = dx;
+
+        // Inverse scaling
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            int i;
+            for (i = 0; i < dCount; i++) {
+                *dd <<= 1;
+                *dd -= *ds & DestPixelType(1);
+                *ds += *ds & DestPixelType(1);
+                *ds >>= 1;
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            if (i < sCount) {
+                *ds = (*ds + DestPixelType(1)) >> 1;
+            }
+        }
+
+        // Inverse lifting 3:
+        // ds = ds - 3/16 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            // Top border
+            *ds -= three8(*dd);
+            ds.y += stride;
+            dd.y += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds -= three16( dd(0, -stride) + *dd );
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < sCount) {
+                *ds -= three8( dd(0, -stride) );
+            }
+        }
+
+        // Inverse lifting 2:
+        // dd = dd + (ds + ds_next)
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            int i;
+            for (i = 0; i < (sCount - 1); i++) {
+                *dd += *ds + ds(0, stride);
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < dCount) {
+                *dd += *ds << 1;
+            }
+        }
+
+        // Inverse lifting 1:
+        // ds = ds + 1/4 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dy;
+            DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+            // Top border
+            *ds += *dd >> 1;
+            ds.y += stride;
+            dd.y += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds += (dd(0, -stride) + *dd) >> 2;
+                ds.y += stride;
+                dd.y += stride;
+            }
+
+            // Bottom border
+            if (i < sCount) {
+                *ds += dd(0, -stride) >> 1;
+            }
+        }
+
+    }
+    } // end of all columns namespace
+
+    sCount = dest_w;
+    for (unsigned int i = 0; i < srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+    cout << "dest_w=" << dest_w << " sCount=" << sCount << " dCount=" << dCount << endl;
+
+    // Next do the rows
+    {
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    for (; dy.y != dend.y; ++dy.y) {
+
+        DestImageIterator dx = dy;
+
+        // Inverse scaling
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            int i;
+            for (i = 0; i < dCount; i++) {
+                *dd <<= 1;
+                *dd -= *ds & DestPixelType(1);
+                *ds += *ds & DestPixelType(1);
+                *ds >>= 1;
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            if (i < sCount) {
+                //cout << "iscale last s" << endl;
+                *ds = (*ds + DestPixelType(1)) >> 1;
+            }
+        }
+
+        // Inverse lifting 3:
+        // ds = ds - 3/16 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            // In case sCount > dCount and wraparound:
+            // last s will depend on first s
+            DestPixelType firstPixel;
+
+            // Left border
+            if (wraparound) {
+                //cout << "il3 left ww" << endl;
+                firstPixel = *ds - three16( dx(adjacent + stride * (dCount - 1), 0) + *dd );
+            } else {
+                firstPixel = *ds - three8( *dd );
+            }
+            ds.x += stride;
+            dd.x += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds -= three16( dd(-stride, 0) + *dd );
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            // Right border
+            if (i < sCount) {
+                if (wraparound) {
+                    //cout << "il3 right ww" << endl;
+                    *ds -= three16( dd(-stride, 0) + dx(adjacent, 0) );
+                } else {
+                    *ds -= three8( dd(-stride, 0) );
+                }
+            }
+
+            // First pixel
+            *dx = firstPixel;
+        }
+
+        // Inverse lifting 2:
+        // dd = dd + (ds + ds_next)
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            int i;
+            for (i = 0; i < (sCount - 1); i++) {
+                *dd += *ds + ds(stride, 0);
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            // Right border
+            if (i < dCount) {
+                if (wraparound) {
+                    //cout << "il2 right ww" << endl;
+                    *dd += *ds + *dx;
+                } else {
+                    *dd += *ds << 1;
+                }
+            }
+        }
+
+        // Inverse lifting 1:
+        // ds = ds + 1/4 * (dd_prev + dd)
+        {
+            DestImageIterator ds = dx;
+            DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+            // In case sCount > dCount and wraparound:
+            // last s will depend on first s
+            DestPixelType firstPixel;
+
+            // Left border
+            if (wraparound) {
+                //cout << "il1 left ww" << endl;
+                firstPixel = *ds + ( (dx(adjacent + stride * (dCount - 1), 0) + *dd) >> 2 );
+            } else {
+                firstPixel = *ds + ( *dd >> 1 );
+            }
+            ds.x += stride;
+            dd.x += stride;
+
+            int i;
+            for (i = 1; i < dCount; i++) {
+                *ds += (dd(-stride, 0) + *dd) >> 2;
+                ds.x += stride;
+                dd.x += stride;
+            }
+
+            // Right border
+            if (i < sCount) {
+                if (wraparound) {
+                    //cout << "il1 right ww" << endl;
+                    *ds += ( (dd(-stride, 0) + dx(adjacent, 0)) >> 2 );
+                } else {
+                    *ds += ( dd(-stride, 0) >> 1 );
+                }
+            }
+
+            // First pixel
+            *dx = firstPixel;
+        }
+    }
+    } // end of all rows namespace
 
 };
+
+// Clear all detail coefficients at a certain level.
+template <typename DestImageIterator, typename DestAccessor>
+inline void _zeroDetailCoefficients(unsigned int srcLevel,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da) {
+
+    typedef typename DestAccessor::value_type DestPixelType;
+
+    if (srcLevel == 0) {
+        vigra_fail("Cannot run zeroDetailCoefficients on level 0 image.");
+    }
+
+    // Size of input image
+    int dest_w = dest_lowerright.x - dest_upperleft.x;
+    int dest_h = dest_lowerright.y - dest_upperleft.y;
+
+    // Distance between s pixels
+    int stride = 1 << srcLevel;
+
+    // Distance between s-d pair
+    int adjacent = 1 << (srcLevel - 1);
+
+    cout << "stride=" << stride << " adjacent=" << adjacent << endl;
+
+    // Number of s and d pixels
+    int sCount = dest_h;
+    int dCount = 0;
+    for (unsigned int i = 0; i < srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+    cout << "dest_h=" << dest_h << " sCount=" << sCount << " dCount=" << dCount << endl;
+
+    // First do the columns
+    {
+    DestImageIterator dx = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    for (; dx.x != dend.x; ++dx.x) {
+
+        DestImageIterator dy = dx;
+
+        DestImageIterator ds = dy;
+        DestImageIterator dd = ds + Diff2D(0, adjacent);
+
+        for (int i = 0; i < dCount; i++) {
+            *dd = DestPixelType(0);
+            dd.y += stride;
+        }
+    }
+    }
+
+    sCount = dest_w;
+    for (unsigned int i = 0; i < srcLevel; i++) {
+        dCount = sCount >> 1;
+        sCount = (sCount + 1) >> 1;
+    }
+    cout << "dest_w=" << dest_w << " sCount=" << sCount << " dCount=" << dCount << endl;
+
+    // Now do the rows
+    {
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    for (; dy.y != dend.y; ++dy.y) {
+
+        DestImageIterator dx = dy;
+
+        DestImageIterator ds = dx;
+        DestImageIterator dd = ds + Diff2D(adjacent, 0);
+
+        for (int i = 0; i < dCount; i++) {
+            *dd = DestPixelType(0);
+            dd.x += stride;
+        }
+    }
+    }
+
+}
 
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
@@ -261,19 +699,16 @@ inline void wavelet(unsigned int levels, bool wraparound,
 
     if (levels == 0) return;
 
-    wavelet(wraparound,
+    _wavelet(0, wraparound,
             src_upperleft, src_lowerright, sa,
             dest_upperleft, dest_lowerright, da);
 
     for (unsigned int i = 1; i < levels; i++) {
-        int dest_w = dest_lowerright.x - dest_upperleft.x;
-        int dest_h = dest_lowerright.y - dest_upperleft.y;
-        dest_lowerright = dest_upperleft + Diff2D((dest_w + 1) >> 1, (dest_h + 1) >> 1);
-
-        wavelet(wraparound,
+        _wavelet(i, wraparound,
                 dest_upperleft, dest_lowerright, da,
                 dest_upperleft, dest_lowerright, da);
     }
+
 };
 
 // Version using argument object factories
@@ -286,257 +721,46 @@ inline void wavelet(unsigned int levels, bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
-// Inverse CDF(4,2) wavelet transform with integer lifting
-template <typename SrcImageIterator, typename SrcAccessor,
-        typename DestImageIterator, typename DestAccessor>
-inline void iwavelet(bool wraparound,
-        SrcImageIterator src_upperleft,
-        SrcImageIterator src_lowerright,
-        SrcAccessor sa,
-        DestImageIterator dest_upperleft,
-        DestImageIterator dest_lowerright,
-        DestAccessor da) {
-
-    typedef typename DestAccessor::value_type DestPixelType;
-    typedef BasicImage<DestPixelType> TempImage;
-    typedef typename TempImage::traverser TempImageIterator;
-
-    int src_w = src_lowerright.x - src_upperleft.x;
-    int src_h = src_lowerright.y - src_upperleft.y;
-    vigra_precondition(src_w > 1 && src_h > 1,
-            "src image too small in wavelet");
-
-    TempImage tempS((max(src_w, src_h) + 1) >> 1, 1);
-    TempImage tempD((max(src_w, src_h) + 1) >> 1, 1);
-
-    // Transform columns from source to dest.
-    SrcImageIterator sx = src_upperleft;
-    SrcImageIterator send = src_lowerright;
-    DestImageIterator dx = dest_upperleft;
-    DestImageIterator dend = dest_lowerright;
-    for (; sx.x != send.x; ++sx.x, ++dx.x) {
-
-        // Inverse primal lifting from source to tempS
-        SrcImageIterator si = sx;
-        SrcImageIterator siend = sx + Diff2D(0, (src_h + 1) >> 1);
-        SrcImageIterator di = siend;
-        if ((src_h & 1) == 1) siend += Diff2D(0, -1);
-        TempImageIterator tsi = tempS.upperLeft();
-        // Mirror edge treatment
-        //*tsi = *si - (*di >> 1);
-        {
-            DestPixelType tmp = *di;
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 3);
-        }
-        ++si.y;
-        ++di.y;
-        ++tsi.x;
-        for (; si.y != siend.y; ++si.y, ++di.y, ++tsi.x) {
-            //*tsi = *si - ((di(0, -1) + *di) >> 2);
-            DestPixelType tmp = di(0, -1) + *di;
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 4);
-        }
-        if ((src_h & 1) == 1) {
-            //*tsi = *si - (di(0, -1) >> 1);
-            DestPixelType tmp = di(0, -1);
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 3);
-        }
-
-        // Inverse dual lifting from source and tempS to tempD
-        di = sx + Diff2D(0, (src_h + 1) >> 1);
-        SrcImageIterator diend = src_lowerright;
-        if ((src_h & 1) == 0) diend += Diff2D(0, -1);
-        tsi = tempS.upperLeft();
-        TempImageIterator tdi = tempD.upperLeft();
-        for (; di.y != diend.y; ++di.y, ++tsi.x, ++tdi.x) {
-            //*tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
-            *tdi = *di + (*tsi + tsi(1, 0));
-        }
-        if ((src_h & 1) == 0) {
-            // Mirror edge treatment
-            //*tdi = *di + *tsi;
-            *tdi = *di + (*tsi << 1);
-        }
-
-        // From tempS and tempD to tempS
-        // s = s + (1/4)(dp + d)
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        *tsi = *tsi + ((*tdi + tdi((src_h>>1)-1, 0)) >> 2);
-        ++tsi.x;
-        ++tdi.x;
-        for (int i = 1; i < (src_h >> 1); ++i, ++tsi.x, ++tdi.x) {
-            *tsi = *tsi + ((tdi(-1, 0) + *tdi) >> 2);
-        }
-        if ((src_h & 1) == 1) {
-            *tsi = *tsi + (tdi(-1, 0) >> 1);
-        }
-
-        // Merging from tempS and tempD to destImage
-        DestImageIterator dy = dx;
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        for (; dy.y < (dend.y - 1); ++dy.y, ++tsi.x, ++tdi.x) {
-            *dy = *tsi;
-            ++dy.y;
-            *dy = *tdi;
-        }
-        // Odd sample
-        if (dy.y != dend.y) {
-            *dy = *tsi;
-        }
-
-    }
-
-    // Transform rows from dest to dest.
-    DestImageIterator dy = dest_upperleft;
-    for (; dy.y != dend.y; ++dy.y) {
-
-        // Inverse primal lifting from dest to tempS
-        DestImageIterator si = dy;
-        DestImageIterator siend = dy + Diff2D((src_w + 1) >> 1, 0);
-        DestImageIterator di = siend;
-        TempImageIterator tsi = tempS.upperLeft();
-        if (wraparound) {
-            //*tsi = *si - ((*di + dy(src_w - 1, 0)) >> 2);
-            DestPixelType tmp = *di + dy(src_w - 1, 0);
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 4);
-        } else {
-            // Mirror edge treatment
-            //*tsi = *si - (*di >> 1);
-            DestPixelType tmp = *di;
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 3);
-        }
-        ++si.x;
-        ++di.x;
-        ++tsi.x;
-        if ((src_w & 1) == 1) siend += Diff2D(-1, 0);
-        for (; si.x != siend.x; ++si.x, ++di.x, ++tsi.x) {
-            //*tsi = *si - ((di(-1, 0) + *di) >> 2);
-            DestPixelType tmp = di(-1, 0) + *di;
-            tmp += (tmp << 1);
-            *tsi = *si - (tmp >> 4);
-        }
-        if ((src_w & 1) == 1) {
-            if (wraparound) {
-                //*tsi = *si - ((di(-1, 0) + dy((src_w + 1) >> 1, 0)) >> 2);
-                DestPixelType tmp = di(-1, 0) + dy((src_w + 1) >> 1, 0);
-                tmp += (tmp << 1);
-                *tsi = *si - (tmp >> 4);
-            } else {
-                //*tsi = *si - (di(-1, 0) >> 1);
-                DestPixelType tmp = di(-1, 0);
-                tmp += (tmp << 1);
-                *tsi = *si - (tmp >> 3);
-            }
-        }
-
-        // Inverse dual lifting from dest and tempS to tempD
-        di = dy + Diff2D((src_w + 1) >> 1, 0);
-        DestImageIterator diend = dend;
-        if ((src_w & 1) == 0) diend += Diff2D(-1, 0);
-        tsi = tempS.upperLeft();
-        TempImageIterator tdi = tempD.upperLeft();
-        for (; di.x != diend.x; ++di.x, ++tsi.x, ++tdi.x) {
-            //*tdi = *di + ((*tsi + tsi(1, 0)) >> 1);
-            *tdi = *di + (*tsi + tsi(1, 0));
-        }
-        if ((src_w & 1) == 0) {
-            if (wraparound) {
-                //*tdi = *di + ((*tsi + *(tempS.upperLeft())) >> 1);
-                *tdi = *di + (*tsi + *(tempS.upperLeft()));
-            } else {
-                // Mirror edge treatment
-                //*tdi = *di + *tsi;
-                *tdi = *di + (*tsi << 1);
-            }
-        }
-
-        // From tempS and tempD to tempS
-        // s = s + (1/4)(dp + d)
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        if (wraparound) {
-            *tsi = *tsi + ((*tdi + tdi((src_w>>1)-1, 0)) >> 2);
-        } else {
-            *tsi = *tsi + (*tdi >> 1);
-        }
-        ++tsi.x;
-        ++tdi.x;
-        for (int i = 1; i < (src_w >> 1); ++i, ++tsi.x, ++tdi.x) {
-            *tsi = *tsi + ((tdi(-1, 0) + *tdi) >> 2);
-        }
-        if ((src_w & 1) == 1) {
-            if (wraparound) {
-                *tsi = *tsi + ((tdi(-1, 0) + *(tempD.upperLeft())) >> 2);
-            } else {
-                *tsi = *tsi + (tdi(-1, 0) >> 1);
-            }
-        }
-
-        // Merging from tempS and tempD to destImage
-        dx = dy;
-        tsi = tempS.upperLeft();
-        tdi = tempD.upperLeft();
-        for (; dx.x < (dend.x - 1); ++dx.x, ++tsi.x, ++tdi.x) {
-            *dx = *tsi;
-            ++dx.x;
-            *dx = *tdi;
-        }
-        // Odd sample
-        if (dx.x != dend.x) {
-            *dx = *tsi;
-        }
-    }
-
-};
-
-template <typename SrcImageIterator, typename SrcAccessor,
-        typename DestImageIterator, typename DestAccessor>
+template <typename DestImageIterator, typename DestAccessor>
 inline void iwavelet(unsigned int levels, bool wraparound,
-        SrcImageIterator src_upperleft,
-        SrcImageIterator src_lowerright,
-        SrcAccessor sa,
         DestImageIterator dest_upperleft,
         DestImageIterator dest_lowerright,
         DestAccessor da) {
-
-    copyImage(src_upperleft, src_lowerright, sa, dest_upperleft, da);
 
     if (levels == 0) return;
 
-    DestImageIterator *lowerRightArray = new DestImageIterator[levels];
-    lowerRightArray[0] = dest_lowerright;
-    for (unsigned int i = 1; i < levels; i++) {
-        int dest_w = dest_lowerright.x - dest_upperleft.x;
-        int dest_h = dest_lowerright.y - dest_upperleft.y;
-        dest_lowerright = dest_upperleft + Diff2D((dest_w + 1) >> 1, (dest_h + 1) >> 1);
-        lowerRightArray[i] = dest_lowerright;
+    for (unsigned int i = levels; i > 0; i--) {
+        _iwavelet(i, wraparound, dest_upperleft, dest_lowerright, da);
     }
-
-    for (unsigned int i = levels; i > 0; --i) {
-        iwavelet(wraparound,
-                dest_upperleft, lowerRightArray[i-1], da,
-                dest_upperleft, lowerRightArray[i-1], da);
-    }
-
-    delete [] lowerRightArray;
 
 }
 
 // Version using argument object factories
-template <typename SrcImageType, typename DestImageType>
+template <typename DestImageType>
 inline void iwavelet(unsigned int levels, bool wraparound,
-        triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         triple<typename DestImageType::traverser, typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
-    iwavelet(levels, wraparound,
-            src.first, src.second, src.third,
-            dest.first, dest.second, dest.third);
+    iwavelet(levels, wraparound, dest.first, dest.second, dest.third);
+};
+
+template <typename DestImageIterator, typename DestAccessor>
+inline void zeroDetailCoefficients(unsigned int levels,
+        DestImageIterator dest_upperleft,
+        DestImageIterator dest_lowerright,
+        DestAccessor da) {
+
+    if (levels == 0) return;
+
+    for (unsigned int i = 1; i <= levels; i++) {
+        _zeroDetailCoefficients(i, dest_upperleft, dest_lowerright, da);
+    }
+
+};
+
+// Version using argument object factories
+template<typename DestImageType>
+inline void zeroDetailCoefficients(unsigned int levels,
+        triple<typename DestImageType::traverser, typename DestImageType::traverser, typename DestImageType::Accessor> dest) {
+    zeroDetailCoefficients(levels, dest.first, dest.second, dest.third);
 };
 
 template <typename SrcImageIterator, typename SrcAccessor,

@@ -534,6 +534,26 @@ operator/=(RGBValue<V> & l, double r)
     return l;
 }
 
+/// component-wise right shift assignment
+// mihal 20050724
+template <class V>
+inline RGBValue<V> & operator>>=(RGBValue<V> & l, const unsigned int s) {
+    l.red() >>= s;
+    l.green() >>= s;
+    l.blue() >>= s;
+    return l;
+}
+
+/// component-wise left shift assignment
+// mihal 20050724
+template <class V>
+inline RGBValue<V> & operator<<=(RGBValue<V> & l, const unsigned int s) {
+    l.red() <<= s;
+    l.green() <<= s;
+    l.blue() <<= s;
+    return l;
+}
+
 using VIGRA_CSTD::abs;
 
     /// component-wise absolute value
@@ -623,6 +643,16 @@ operator/(RGBValue<V> const & r, double v)
     return res;
 }
 
+/// bit-wise and
+// mihal 20050724
+template <class V>
+inline
+RGBValue<V> operator&(RGBValue<V> const & r1, RGBValue<V> const & r2)
+{
+    RGBValue<V> res(r1.red() & r2.red(), r1.green() & r2.green(), r1.blue() & r2.blue());
+    return res;
+}
+
 /// component-wise right shift
 // mihal 20050712
 template <class V>
@@ -630,6 +660,16 @@ inline
 RGBValue<V> operator>>(RGBValue<V> const & r, int rs)
 {
     RGBValue<V> res(r.red() >> rs, r.green() >> rs, r.blue() >> rs);
+    return res;
+}
+
+/// component-wise left shift
+// mihal 20050714
+template <class V>
+inline
+RGBValue<V> operator<<(RGBValue<V> const & r, int ls)
+{
+    RGBValue<V> res(r.red() << ls, r.green() << ls, r.blue() << ls);
     return res;
 }
 
