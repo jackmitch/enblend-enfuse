@@ -1,3 +1,120 @@
+2005-12-03 14:06  acmihal
+
+	* AUTHORS, NEWS, README, configure.in, doc/enblend.1,
+	  src/assemble.h, src/blend.h, src/bounds.h, src/common.h,
+	  src/enblend.cc, src/enblend.h, src/fixmath.h, src/mask.h,
+	  src/nearest.h, src/pyramid.h, src/vigra_impex/tiff.cxx,
+	  src/win32helpers/win32config.h: Added Pablo's patch for working
+	  with cropped and shifted images.  Updated copyright dates.
+	  Updated NEWS for the 2.4 release.
+
+2005-07-24 23:53  acmihal
+
+	* src/: blend.h, enblend.h, wavelet.h: Modified main blending loop
+	  to use refactored wavelet transform.
+
+2005-07-24 22:33  acmihal
+
+	* include/vigra/rgbvalue.hxx, src/Makefile.am, src/enblend.h,
+	  src/wavelet.h, src/vigra_impex/Makefile.am: Refactored the
+	  wavelet transform code.
+
+2005-07-15 00:40  acmihal
+
+	* src/wavelet.h: Trying a CDF(4,2) wavelet.
+
+2005-07-14 01:05  acmihal
+
+	* src/: blend.h, enblend.h, mask.h, wavelet.h: Experimental
+	  blending using the wavelet transform.
+
+2005-07-13 00:37  acmihal
+
+	* src/: enblend.h, wavelet.h: Added wraparound boundary condition
+	  to wavelet transform.
+
+2005-07-13 00:00  acmihal
+
+	* src/: enblend.h, wavelet.h: Working on wavelet boundary
+	  conditions.
+
+2005-07-12 16:08  acmihal
+
+	* src/: Makefile.am, enblend.h, wavelet.h: Forward and reverse
+	  wavelet transforms are working now.
+
+2005-07-12 16:07  acmihal
+
+	* include/vigra/rgbvalue.hxx: Added a logical right shift function
+	  for RGBValues.  The wavelet code uses this for division.
+
+2005-07-12 16:06  acmihal
+
+	* src/anneal.h: Adjusted the parameters of the simulated annealing.
+
+2005-07-12 16:05  acmihal
+
+	* READMEWIN: Added copyright notices for the libraries that are
+	  linked against the windows executable.
+
+2005-07-12 01:06  acmihal
+
+	* src/wavelet.h: Starting to explore the use of a wavelet transform
+	  to replace the pyramid code.
+
+2005-07-11 23:08  acmihal
+
+	* src/nearest.h: Incorporated Fulvio Senore's data structure for
+	  speeding up the potentialFeatureList.
+
+2005-06-23 20:39  acmihal
+
+	* TODO, include/vigra_ext/FunctorAccessor.h, src/enblend.cc: Added
+	  compile-time index template functions to the Split and Merge
+	  scalar/scalar accessors.  Re-enabled grayscale images.
+
+2005-05-09 00:51  acmihal
+
+	* Makefile.am, README, VXL_LICENSE, configure.in,
+	  include/Makefile.am, src/Makefile.am, src/anneal.h,
+	  src/enblend.cc, src/enblend.h, src/mask.h,
+	  src/vigra_impex/Makefile.am: Refactored the active contour code.
+	  Added a polygon-interior iterator adaptor that I ported from the
+	  VXL library. This is used to generate blending mask templates
+	  from the active contour models.
+
+2005-04-24 00:05  acmihal
+
+	* ChangeLog, include/vigra/codec.hxx, include/vigra/imageinfo.hxx,
+	  src/vigra_impex/imageinfo.cxx, src/vigra_impex/tiff.cxx,
+	  src/vigra_impex/tiff.hxx: Added some rudimentary ICC profile
+	  support to the TIFF component of vigra_impex.  Enblend will now
+	  copy the first ICC profile it finds among the input TIFFs to the
+	  output TIFF. No color management is done.
+
+2005-04-24 00:02  acmihal
+
+	* include/vigra/accessor.hxx, include/vigra/impex.hxx,
+	  include/vigra_ext/FunctorAccessor.h, src/assemble.h,
+	  src/enblend.cc: An attempt to make vigra_impex a little faster by
+	  template-specializing the code for the Merge and Split Accessors
+	  for the special case of 4 bands per image. More work is required.
+	  Grayscale images are temporarily disabled.
+
+2005-04-23 23:54  acmihal
+
+	* include/vigra/impexalpha.hxx: Fixed a bug in the template
+	  parameters on ScalarIntensityTransform.  When used as a functor
+	  with the Read/WriteFunctorAccessors, a type mismatch would occur
+	  when the Accessors were nested with other FunctorAccessors.
+
+2005-04-23 23:50  acmihal
+
+	* include/vigra/cachedfileimage.hxx: Now choosing
+	  linesPerBlocksize_ always equal to a power of two, so the
+	  calculation of a block number from a line number can use a
+	  right-shift instead of a divide.
+
 2005-04-17 18:09  acmihal
 
 	* ChangeLog, NEWS, configure.in, src/win32helpers/win32config.h:
