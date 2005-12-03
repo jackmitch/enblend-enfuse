@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Mihal
+ * Copyright (C) 2004-2005 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -70,10 +70,11 @@ MaskType *createMask(AlphaType *whiteAlpha,
     typedef typename MaskType::Accessor MaskAccessor;
 
     //// Read mask from a file instead of calculating it.
+    //// Be sure to still calculate mBB below.
     //MaskType *fileMask = new MaskType(uBB.size());
     //ImageImportInfo fileMaskInfo("enblend_mask.tif");
     //importImage(fileMaskInfo, destImage(*fileMask));
-    //return fileMask;
+    //MaskType *mask = fileMask;
 
     // Mask initializer pixel values:
     // 0 = outside both black and white image, or inside both images.

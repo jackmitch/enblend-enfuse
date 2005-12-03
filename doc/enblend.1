@@ -82,6 +82,9 @@ images with unassociated alpha channels. Use the -g flag to work
 around this. With this flag Enblend will create the output image with
 the associated alpha tag set, even though the image is really
 unassociated alpha.
+.IP "-f WIDTHxHEIGHT"
+Set the size of the output image manually. This is useful when the input images are
+cropped TIFF files, such as those produced by Nona.
 .IP "-m megabytes"
 Set the size of Enblend's image cache. This is the amount of memory Enblend
 will use for storing image data before swapping to disk.
@@ -90,7 +93,7 @@ The default is 1 GiB.
 .SH ADDITIONAL INFORMATION
 Please see the Enblend web page at:
 .PP
-http://www-cad.eecs.berkeley.edu/~mihal/enblend/
+http://enblend.sourceforge.net/
 
 .SH AUTHOR
-Andrew Mihal <mihal@eecs.berkeley.edu>
+Andrew Mihal <acmihal@users.sourceforge.net>

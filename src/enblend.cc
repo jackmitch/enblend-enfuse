@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Mihal
+ * Copyright (C) 2004-2005 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -74,6 +74,9 @@ double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseLabColor = false;
 bool UseLZW = false;
+bool OutputSizeGiven = false;
+int OutputWidthCmdLine = 0;
+int OutputHeightCmdLine = 0;
 
 #include "common.h"
 #include "enblend.h"
@@ -143,6 +146,9 @@ void printUsageAndExit() {
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
     cout << " -c                Use CIE L*a*b* color space" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout << " -f WIDTHxHEIGHT   Manually set the size of the output image." << endl
+         << "                   Useful for cropped and shifted input TIFF images," << endl
+         << "                   such as those produced by Nona." << endl;
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
 
     //TODO stitch mismatch avoidance is work-in-progress.
@@ -175,7 +181,9 @@ int main(int argc, char** argv) {
     
     signal(SIGINT, sigint_handler);
 
-    TIFFSetWarningHandler(NULL);
+    // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
+    // to avoid interactive warning dialogs.
+    //TIFFSetWarningHandler(NULL);
     //TIFFSetErrorHandler(NULL);
 
     // The name of the output file.
@@ -187,7 +195,7 @@ int main(int argc, char** argv) {
 
     // Parse command line.
     int c;
-    while ((c = getopt(argc, argv, "ab:cghl:m:o:st:vwz")) != -1) {
+    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwz")) != -1) {
         switch (c) {
             case 'a': {
                 OneAtATime = false;
@@ -206,6 +214,16 @@ int main(int argc, char** argv) {
             }
             case 'c': {
                 UseLabColor = true;
+                break;
+            }
+            case 'f': {
+                OutputSizeGiven = true;
+                int nP = sscanf(optarg, "%dx%d", &OutputWidthCmdLine, &OutputHeightCmdLine);
+                if (nP != 2) {
+                    cerr << "enblend: the -f option requires a parameter of the form WIDTHxHEIGHT"
+                         << endl;
+                    printUsageAndExit();
+                }
                 break;
             }
             case 'g': {
@@ -303,7 +321,7 @@ int main(int argc, char** argv) {
     if (optind < argc) {
         while (optind < argc) {
 #ifdef _WIN32
-            // There has got to be an easier way...            
+            // There has got to be an easier way...
             char drive[_MAX_DRIVE];
             char dir[_MAX_DIR];
             char fname[_MAX_FNAME];
@@ -446,6 +464,14 @@ int main(int argc, char** argv) {
         inputFileNameIterator++;
     }
 
+    // Make sure that inputUnion is at least as big as given by the -f paramater.
+    if (OutputSizeGiven) {
+        Diff2D ul(0, 0);
+        Diff2D lr(OutputWidthCmdLine, OutputHeightCmdLine);
+        EnblendROI givenSize(ul, lr);
+        inputUnion.unite(givenSize, inputUnion);
+    }
+
     // Create the Info for the output file.
     ImageExportInfo outputImageInfo(outputFileName);
     if (UseLZW) outputImageInfo.setCompression("LZW");
@@ -479,6 +505,11 @@ int main(int argc, char** argv) {
              << ")"
              << endl;
     }
+
+    // Set the output image position and resolution.
+    outputImageInfo.setXResolution(150.0);
+    outputImageInfo.setYResolution(150.0);
+    outputImageInfo.setPosition(inputUnion.getUL());
 
     // Sanity check on the output image file.
     try {

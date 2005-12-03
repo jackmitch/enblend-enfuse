@@ -137,3 +137,34 @@ April 17, 2005
     - Fixed a bug in temporary file handling in the Windows version of
       enblend. This should solve the "unable to open temporary file" error.
 
+December 3, 2005
+    Released enblend-2.4
+
+    - Added support for working with cropped and shifted input images.
+      These types of files are created by Nona's "Multiple TIFF" stitching
+      option. A cropped and shifted TIFF saves space and time because it is
+      just large enough for a single input image, instead of being the size
+      of the entire output panorama with lots of empty space all around.
+      Nona embeds an (x,y) offset coordinate in the file so that Enblend can
+      tell where this file belongs in the final panorama.
+
+      By default, if you give Enblend cropped and shifted TIFFs, the output
+      will also be a cropped and shifted TIFF. Sometimes you may want to
+      include the extra blank space anyway, for example if you are creating a
+      360-degree panorama and the image size must be exactly a 2:1 ratio. In
+      this case, use the new -f parameter to manually set the size of the
+      output image:
+
+      -f WIDTHxHEIGHT
+
+      Thanks to Pablo d'Angelo for providing this patch.
+
+    - Enblend will now create output files with embedded ICC profiles.
+      The first ICC profile found amongst the input images will be copied
+      to the output image. Enblend does not use ICC profiles to do color
+      calculations.
+
+    - Incorporated a patch from Fulvio Senore to make the mask generation
+      faster. Fulvio wrote a more efficient data structure for use in the
+      nearest feature transform.
+

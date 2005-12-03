@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Mihal
+ * Copyright (C) 2004-2005 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -108,7 +108,12 @@ protected:
 template <typename DestPixelType, typename PyramidPixelType, int IntegerBits=1+8*sizeof(DestPixelType), int FractionBits=8*sizeof(PyramidPixelType)-IntegerBits>
 class ConvertPyramidToScalarFunctor {
 public:
-    ConvertPyramidToScalarFunctor() { }
+    ConvertPyramidToScalarFunctor() /*: overflows(0), underflows(0)*/ { }
+
+    //~ConvertPyramidToScalarFunctor() {
+    //    cout << "overflows=" << overflows << endl;
+    //    cout << "underflows=" << underflows << endl;
+    //}
 
     inline DestPixelType operator()(const PyramidPixelType &v) const {
         return doConvert(v, DestIsIntegral(), PyramidIsIntegral());
@@ -122,6 +127,8 @@ protected:
     inline DestPixelType doConvert(const PyramidPixelType &v, VigraTrueType, VigraTrueType) const {
         double d = convertFixedPointToDouble(v);
         d = dither(d);
+        //if (d > NumericTraits<DestPixelType>::max()) overflows++;
+        //if (d < NumericTraits<DestPixelType>::min()) underflows++;
         return NumericTraits<DestPixelType>::fromRealPromote(d);
     }
 
@@ -165,6 +172,9 @@ protected:
     inline double convertFixedPointToDouble(const PyramidPixelType &v) const {
         return NumericTraits<PyramidPixelType>::toRealPromote(v) / (double)(1 << FractionBits);
     };
+
+    //mutable int overflows;
+    //mutable int underflows;
 
 };
 
