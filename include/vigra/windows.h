@@ -26,9 +26,16 @@
 // prevent the global namespace to become polluted with 
 // badly named Windows macros
 
+#if defined(_WIN32)
+#define VC_EXTRALEAN
 #define NOMINMAX
 #include <windows.h>
 #undef NOMINMAX
 #undef DIFFERENCE
+#endif
+
+#ifndef uint32_t
+typedef unsigned int uint32_t;
+#endif
 
 #endif /* VIGRA_WINDOWS_H */

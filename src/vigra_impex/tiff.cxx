@@ -42,12 +42,13 @@
 // NB (jbeda): tiffio.h is going to include this anyway.  Let's include
 // it now so that we can control how it comes in.  Namely, we want
 // to get our version that doesn't set the evil min/max macros.
-#if defined(_WIN32)
-#define VC_EXTRALEAN
-#define NOMINMAX
-#include <windows.h>
-#undef DIFFERENCE
-#endif
+#include "vigra/windows.h"
+//#if defined(_WIN32)
+//#define VC_EXTRALEAN
+//#define NOMINMAX
+//#include <windows.h>
+//#undef DIFFERENCE
+//#endif
 
 #include "error.hxx"
 #include "tiff.hxx"

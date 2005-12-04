@@ -35,6 +35,7 @@
 #include <map>
 
 #include "vigra/diff2d.hxx"
+#include "vigra/windows.h"
 
 // possible pixel types:
 // "undefined", "UINT8", "UINT16", "INT16", "UINT32", "INT32", "FLOAT", "DOUBLE"

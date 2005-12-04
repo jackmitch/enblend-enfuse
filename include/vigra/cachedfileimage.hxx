@@ -955,7 +955,7 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
             / (width_ * sizeof(PIXELTYPE)));
     // Round this down to the nearest power of two.
     // This will let us divide using right-shift to calculate block number from line number.
-    linesPerBlocksizeLog2_ = (int)floor(log(linesPerBlocksize_)/log(2));
+    linesPerBlocksizeLog2_ = (int)floor(log((double)linesPerBlocksize_)/log(2.0));
     linesPerBlocksize_ = 1 << linesPerBlocksizeLog2_;
     //cout << "linesPerBlocksizeLog2=" << linesPerBlocksizeLog2_ << endl;
     //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
