@@ -166,19 +166,33 @@ MaskType *createMask(AlphaType *whiteAlpha,
             || (firstMulticolorRow.y >= lastMulticolorRow.y)) {
         // No transition pixels were found in the mask at all.
         // This means that one image has no contribution.
-        vigra_fail("Mask transition line bounding box undefined.");
+        if (*(mask->upperLeft()) == NumericTraits<MaskPixelType>::zero()) {
+            // If the mask is entirely black, then inspectOverlap should have caught this.
+            // It should have said that the white image is redundant.
+            vigra_fail("Mask is entirely black, but white image was not identified as redundant.");
+        }
+        else {
+            // If the mask is entirely white, then the black image would have been identified
+            // as redundant if black and white were swapped.
+            // Set mBB to the full size of the mask.
+            mBB.setCorners(uBB.getUL(), uBB.getLR());
+            // Explain why the black image disappears completely.
+            cerr << "enblend: the previous images are completely overlapped by the current images"
+                 << endl;
+        }
     }
+    else {
+        // Move mBB lower right corner out one pixel, per VIGRA convention.
+        ++lastMulticolorColumn.x;
+        ++lastMulticolorRow.y;
 
-    // Move mBB lower right corner out one pixel, per VIGRA convention.
-    ++lastMulticolorColumn.x;
-    ++lastMulticolorRow.y;
-
-    // mBB is defined relative to the inputUnion origin.
-    mBB.setCorners(
-            uBB.getUL() + Diff2D(firstMulticolorColumn.x - mask->upperLeft().x,
-                                 firstMulticolorRow.y - mask->upperLeft().y),
-            uBB.getUL() + Diff2D(lastMulticolorColumn.x - mask->upperLeft().x,
-                                 lastMulticolorRow.y - mask->upperLeft().y));
+        // mBB is defined relative to the inputUnion origin.
+        mBB.setCorners(
+                uBB.getUL() + Diff2D(firstMulticolorColumn.x - mask->upperLeft().x,
+                                     firstMulticolorRow.y - mask->upperLeft().y),
+                uBB.getUL() + Diff2D(lastMulticolorColumn.x - mask->upperLeft().x,
+                                     lastMulticolorRow.y - mask->upperLeft().y));
+    }
 
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Mask transition line bounding box: ("
