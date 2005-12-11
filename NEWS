@@ -168,3 +168,11 @@ December 3, 2005
       faster. Fulvio wrote a more efficient data structure for use in the
       nearest feature transform.
 
+December 11, 2005
+    Released enblend-2.5
+
+    - Fixed a bug where Enblend would crash when the -w parameter was used.
+
+    - Fixed a bug where Enblend would sometimes say "mask transition line
+      bounding box undefined."
+

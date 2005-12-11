@@ -1,3 +1,14 @@
+2005-12-03 17:49  acmihal
+
+	* include/vigra/cachedfileimage.hxx, include/vigra/codec.hxx,
+	  include/vigra/windows.h, src/enblend.vcproj,
+	  src/vigra_impex/tiff.cxx, src/vigra_impex/vigra_impex.vcproj:
+	  Minor changes to enable compilation under MSVC++ Express 2005.
+
+2005-12-03 14:07  acmihal
+
+	* ChangeLog: Checking in the ChangeLog for the 2.4 release.
+
 2005-12-03 14:06  acmihal
 
 	* AUTHORS, NEWS, README, configure.in, doc/enblend.1,
