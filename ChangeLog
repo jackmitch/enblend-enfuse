@@ -1,3 +1,22 @@
+2005-12-10 22:52  acmihal
+
+	* ChangeLog, NEWS, configure.in, src/win32helpers/win32config.h:
+	  Updated NEWS and the version number for release 2.5.
+
+2005-12-10 22:48  acmihal
+
+	* src/nearest.h: Fixed a segfault in the potential feature list
+	  data structure.
+
+2005-12-10 22:47  acmihal
+
+	* src/mask.h: Fixed the exception for when the mask transition line
+	  is undefined.  If the mask is entirely black, throw an exception
+	  because the redundant white image should have been previously
+	  detected.  If the mask is entirely white, then the white image
+	  completely overlaps the black image. Print an informative message
+	  and continue.
+
 2005-12-03 17:49  acmihal
 
 	* include/vigra/cachedfileimage.hxx, include/vigra/codec.hxx,
