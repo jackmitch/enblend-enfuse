@@ -82,96 +82,77 @@ inline dist_t _nftDistance(dist_t deltaY) {
     #endif
 };
 
-/** Data structure for potentialFeatureList.
+/** Data structure for potentialFeatureStack.
  *  Contribution from Fulvio Senore.
  *  Fast insert and delete, avoiding dynamic memory allocation.
- *
- * this is a custom list implementation to be used in nearest.h
- * the purpose is gaining speed since using the standard template list
- *  is not very efficient
- *
- * the list stores (dist_t *) elements and we will know at the moment of list
- * creation the maximum number of elements that will be inserted
- *
- * to simplify code the list contains always at least a dummy element.
  */
 template <typename T>
-class CNearestList {
+class FeatureList {
 
-    struct CData {
+    struct Node {
         T value;
-        CData *prev;
+        Node *prev;
     };
 
-    // it will hold the list elements
-    CData *array;
-
-    // pointer to the dummy first element that is always present
-    CData *dummy;
+    // Statically allocated memory for Nodes
+    Node *array;
 
     // pointer to the first unused element of the array
-    CData *firstUnused;
+    Node *firstUnused;
 
-    // pointer to the last element
-    CData *last;
+    // pointer to the end of the list
+    Node *last;
 
-    // pointer to the last returned element
-    CData *current;
+    Node *iterator;
 
 public:
 
-    CNearestList(int size) {
-        array = new CData[size];
-        dummy = array;
-        dummy->prev = NULL;
-        last = dummy;
-        current = NULL;
-        firstUnused = array + 1;
+    FeatureList(int size) {
+        array = new Node[size];
+        firstUnused = array;
+        last = NULL;
+        iterator = NULL;
     }
 
-    ~CNearestList() {
+    ~FeatureList() {
         delete [] array;
     }
 
     void clear() {
-        last = dummy;
-        current = NULL;
-        firstUnused = array + 1;
+        firstUnused = array;
+        last = NULL;
+        iterator = NULL;
     }
 
-    void add(T value) {
-        CData *tmp = last;
-        last = firstUnused++;
-        last->value = value;
-        last->prev = tmp;
+    void push_back(const T& value) {
+        firstUnused->value = value;
+        firstUnused->prev = last;
+        last = firstUnused;
+        firstUnused++;
     }
 
-    void removePrevious(void) {
-        current->prev = current->prev->prev;
+    void move_to_end() {
+        iterator = last;
     }
 
-    void moveLast(void) {
-        current = last;
+    bool has_previous() const {
+        return (iterator->prev != NULL);
     }
 
-    void movePrevious(void) {
-        current = current->prev;
+    void erase_previous() {
+        iterator->prev = iterator->prev->prev;
     }
 
-    T getCurrent(void) {
-        return current->value;
+    T get_current() {
+        return iterator->value;
     }
 
-    T getPrevious(void) {
-        return current->prev->value;
+    T get_previous() {
+        return iterator->prev->value;
     }
 
-    bool isAtBegin(void) {
-        return (current->prev == dummy);
-    }
-
-    void setCurrent(T value) {
-        current->value = value;
+    void move_backwards() {
+        iterator = iterator->prev;
     }
 
 };
@@ -327,7 +308,7 @@ void nearestFeatureTransform(bool wraparound,
 
     // List of dnfcx's on the left that might be the closest features
     // to the current dnflx.
-    CNearestList<typename DnfIterator::MoveX> potentialFeatureList(w * 2);
+    FeatureList<typename DnfIterator::MoveX> potentialFeatureList((wraparound) ? w*2 : w);
 
     // Calculate dnfLeft for each pixel.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
@@ -363,22 +344,22 @@ void nearestFeatureTransform(bool wraparound,
 
             for (; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dnflx.x, ++dx.x) {
                 // First add ourself to the list.
-                potentialFeatureList.add(dnfcx.x);
+                potentialFeatureList.push_back(dnfcx.x);
 
                 // Iterate throught the list starting at the right. For each
                 // potential feature, all of the potential features to the left
                 // in the list must be strictly closer. If not delete them from
                 // the list.
-                potentialFeatureList.moveLast();
+                potentialFeatureList.move_to_end();
                 // The last potential feature is dnfcx, just added above.
                 // That is in the current column so the distance to that feature
                 // is simply *dnfcx.
                 unsigned int distPotentialFeature = *dnfcx;
-                while (!potentialFeatureList.isAtBegin()) {
-                    // Make an iterator that points to the predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.getPrevious();
+                while (potentialFeatureList.has_previous()) {
+                    // X coordinate of the predecessor.
+                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
 
-                    // Subtract the iterators .x components to find out how many
+                    // Subtract the X coordinates to find out how many
                     // columns to the left of dnfcx previousFeature is.
                     // DeltaX must be positive.
                     // modulo w to consider wraparound condition.
@@ -392,10 +373,10 @@ void nearestFeatureTransform(bool wraparound,
                     if (distPreviousFeature >= distPotentialFeature) {
                         // previousFeature is not a candidate for dnflx
                         // or any dnflx further to the right.
-                        potentialFeatureList.removePrevious();
+                        potentialFeatureList.erase_previous();
                     } else {
                         // previousFeature is a candidate.
-                        potentialFeatureList.movePrevious();
+                        potentialFeatureList.move_backwards();
                         distPotentialFeature = distPreviousFeature;
                     }
                 }
@@ -405,7 +386,7 @@ void nearestFeatureTransform(bool wraparound,
                 *dnflx = distPotentialFeature;
 
                 // Set color of dx to be color of closest feature to the left.
-                da.set(dx((potentialFeatureList.getCurrent() - dnfcx.x), 0), dx);
+                da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
             }
         }
     }
@@ -455,16 +436,16 @@ void nearestFeatureTransform(bool wraparound,
                 --dx.x;
 
                 // First add ourself to the list.
-                potentialFeatureList.add(dnfcx.x);
+                potentialFeatureList.push_back(dnfcx.x);
 
                 // Iterate through list and prune as before.
-                potentialFeatureList.moveLast();
+                potentialFeatureList.move_to_end();
                 unsigned int distPotentialFeature = *dnfcx;
-                while (!potentialFeatureList.isAtBegin()) {
-                    // Iterator that points to predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.getPrevious();
+                while (potentialFeatureList.has_previous()) {
+                    // X coordinate of the predecessor.
+                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
 
-                    // Subtract the iterators .x components to find out how many
+                    // Subtract the X coordinates to find out how many
                     // columns to the right of dnfcx previousFeature is.
                     // DeltaX must be positive.
                     // modulo w to consider wraparound condition.
@@ -477,10 +458,10 @@ void nearestFeatureTransform(bool wraparound,
 
                     if (distPreviousFeature >= distPotentialFeature) {
                         // previousFeature is not a candidate.
-                        potentialFeatureList.removePrevious();
+                        potentialFeatureList.erase_previous();
                     } else {
                         // previousFeature is a candidate.
-                        potentialFeatureList.movePrevious();
+                        potentialFeatureList.move_backwards();
                         distPotentialFeature = distPreviousFeature;
                     }
                 }
@@ -490,7 +471,7 @@ void nearestFeatureTransform(bool wraparound,
                     // Following line only necessary for advanced mask generation.
                     //*dnflx = distPotentialFeature;
                     // Recolor dx.
-                    da.set(dx((potentialFeatureList.getCurrent() - dx.x), 0), dx);
+                    da.set(dx((potentialFeatureList.get_current() - dx.x), 0), dx);
                 }
             }
         }
