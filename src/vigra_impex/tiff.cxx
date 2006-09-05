@@ -474,12 +474,12 @@ namespace vigra {
 
         // XPosition
         if (TIFFGetField( tiff, TIFFTAG_XPOSITION, &fvalue )) {
-            fvalue = fvalue / unitLength;
+            fvalue = fvalue * x_resolution;
             position.x = (int)floor(fvalue + 0.5);
         }
         // YPosition
         if (TIFFGetField( tiff, TIFFTAG_YPOSITION, &fvalue )) {
-            fvalue = fvalue / unitLength;
+            fvalue = fvalue * y_resolution;
             position.y = (int)floor(fvalue + 0.5);
         }
 
@@ -806,9 +806,10 @@ namespace vigra {
         }
 
         // save position, if available
-        if (position.x > 0 && position.y > 0 &&
+        if (position.x >= 0 && position.y >= 0 &&
             x_resolution > 0 && y_resolution > 0)
         {
+            std::cout << "doing the position setting" << std::endl;
             TIFFSetField( tiff, TIFFTAG_XPOSITION, position.x / x_resolution);
             TIFFSetField( tiff, TIFFTAG_YPOSITION, position.y / y_resolution);
         }

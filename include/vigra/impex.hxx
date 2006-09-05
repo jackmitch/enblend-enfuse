@@ -377,6 +377,7 @@ namespace vigra
     template< class ImageIterator, class Accessor, class DstValueType >
     void write_bands( Encoder * enc, ImageIterator ul, ImageIterator lr, Accessor a, DstValueType)
     {
+        std::cout << "write_bands" << std::endl;
         typedef unsigned int size_type;
         typedef typename ImageIterator::row_iterator SrcRowIterator;
         typedef typename Accessor::value_type  AccessorValueType;

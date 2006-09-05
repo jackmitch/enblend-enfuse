@@ -6,5 +6,5 @@ enblend_LDFLAGS = -ffast-math
 #enblend_LDFLAGS = -pg -DENBLEND_CACHE_IMAGES -ffast-math
 #enblend_LDADD = vigra_impex/libvigra_impex.a -lpng -ljpeg -ltiff
 enblend_LDADD = vigra_impex/libvigra_impex.a -ltiff
-enblend_CXXFLAGS = -g -O3 -ffast-math -Wall -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I../include
+enblend_CXXFLAGS = -g -O3 -ffast-math -Wall -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -I../include
 #enblend_CXXFLAGS = -g -pg -O3 -ffast-math -Wall -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -I../include

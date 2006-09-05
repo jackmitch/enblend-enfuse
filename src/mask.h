@@ -154,7 +154,8 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     #ifdef ENBLEND_CACHE_IMAGES
     BCFImage *maskTransform = new BCFImage(uBB.size());
     // FIXME should this be a cf image?
-    UIImage *maskDistance = new UIImage(uBB.size());
+    //UIImage *maskDistance = new UIImage(uBB.size());
+    UICFImage *maskDistance = new UICFImage(uBB.size());
     #else
     BImage *maskTransform = new BImage(uBB.size());
     UIImage *maskDistance = new UIImage(uBB.size());
@@ -376,6 +377,7 @@ MaskType *createMask(const pair<const ImageType*, const AlphaType*> whitePair, /
     // Visualize snakes
     for (unsigned int i = 0; i < snakes.size(); i++) {
         vector<pair<bool, Point2D> > *snake = snakes[i];
+        // Turned off annealing solution to work on wavelet transform
         //annealSnake<UIImage, BImage>(distanceCostImage, stitchCostImage, snake);
         for (unsigned int j = 0; j < snake->size(); j++) {
             unsigned int next = (j+1) % snake->size();

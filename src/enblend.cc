@@ -465,6 +465,9 @@ int main(int argc, char** argv) {
              << ")"
              << endl;
     }
+    outputImageInfo.setXResolution(150.0);
+    outputImageInfo.setYResolution(150.0);
+    outputImageInfo.setPosition(inputUnion.getUL());
 
     // Sanity check on the output image file.
     try {
@@ -486,7 +489,8 @@ int main(int argc, char** argv) {
     #ifdef ENBLEND_CACHE_IMAGES
         if (isColor) {
             if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BRGBCFImage, SRGBCFImage>(
+                // FIXME changed this from SRGB to test overflow
+                enblendMain<BRGBCFImage, IRGBCFImage>(
                         imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT16") == 0) {
             //    enblendMain<SRGBCFImage, IRGBCFImage>(

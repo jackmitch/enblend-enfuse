@@ -98,7 +98,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
-/*
+
 ImagePyramidType xform(blackBB.size().x, blackBB.size().y);
 wavelet<ImageType, ImagePyramidType>(ExactLevels, Wraparound, srcImageRange(*(blackPair.first)), destImageRange(xform));
 
@@ -114,12 +114,15 @@ iwavelet<ImagePyramidType>(ExactLevels, Wraparound, destImageRange(iixform));
 // Compare ixform and blackPair.first for perfect reconstruction
 typename ImagePyramidType::iterator ixform_iterator = ixform.begin();
 typename ImageType::iterator image_iterator = (blackPair.first)->begin();
+bool foundDifference = false;
 for (; ixform_iterator != ixform.end(); ++ixform_iterator, ++image_iterator) {
     if (*ixform_iterator != *image_iterator) {
         cout << "images differ!" << endl;
+        foundDifference = true;
         break;
     }
 }
+if (!foundDifference) cout << "perfect reconstruction!" << endl;
 
 FindMinMax<typename ImagePyramidValueType::value_type> minmax;
 inspectImage(srcImageRange(xform, RedAccessor<ImagePyramidValueType>()), minmax);
@@ -150,16 +153,27 @@ inspectImage(srcImageRange(iixform, GreenAccessor<ImagePyramidValueType>()), min
 inspectImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), minmax);
 cout << "iixform min=" << minmax.min << " max=" << minmax.max << endl;
 
+//transformImage(srcImageRange(iixform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//transformImage(srcImageRange(iixform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//transformImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
+//        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+//exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iiwavelet.tif"));
+
 transformImage(srcImageRange(iixform, RedAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), RedAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(255),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(0), Arg1())));
 transformImage(srcImageRange(iixform, GreenAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), GreenAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(255),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(0), Arg1())));
 transformImage(srcImageRange(iixform, BlueAccessor<ImagePyramidValueType>()), destImage(*(blackPair.first), BlueAccessor<ImageValueType>()),
-        linearRangeMapping(minmax.min, minmax.max, 0, 255));
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(255),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(0), Arg1())));
 exportImage(srcImageRange(*(blackPair.first)), ImageExportInfo("enblend_iiwavelet.tif"));
 
 return;
-*/
+
     //#ifdef ENBLEND_CACHE_IMAGES
     //if (Verbose > VERBOSE_CFI_MESSAGES) {
     //    CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -206,7 +220,7 @@ return;
         EnblendROI uBB;
         whiteBB.unite(blackBB, uBB);
 
-        if (Verbose > VERBOSE_UBB_MESSAGES) {
+        //if (Verbose > VERBOSE_UBB_MESSAGES) {
             cout << "image union bounding box: ("
                  << uBB.getUL().x
                  << ", "
@@ -216,7 +230,7 @@ return;
                  << ", "
                  << uBB.getLR().y
                  << ")" << endl;
-        }
+        //}
 
         // Intersection bounding box of whiteImage and blackImage.
         EnblendROI iBB;
@@ -332,7 +346,8 @@ return;
         // ROI bounds must be at least mBB but not to extend uBB.
         //EnblendROI roiBB;
         //unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
-        EnblendROI roiBB = iBB;
+        // FIXME changed iBB to uBB for overflow test
+        EnblendROI roiBB = uBB;
         unsigned int numLevels = ExactLevels;
         bool wraparoundForBlend = Wraparound && (roiBB.size().x == inputUnion.size().x);
         //cout << "Wraparound = " << wraparoundForBlend << endl;
@@ -360,16 +375,77 @@ return;
         EnblendROI roiBB_uBB;
         roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
 
+        // FIXME this is assuming that mask level 0 is full-size
+        // This only needs to be true for levels=0
+        // if levels > 0, the biggest mask we need is half-size
+
+        // FIXME new level numbering convention: 0 levels = paste images directly together using mask, 0 wavelet transform levels
+        //                                       1 levels = 1 wavelet transform level, half-size mask in each quadrant
+
         // Build Gaussian pyramid from mask.
-        //vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
-        //        (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+        vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
+                (numLevels+1), wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+        //for (unsigned int i = 0; i < (numLevels + 1); i++) {
+        //    ((*maskGP)[i])->init(20*i);
+        //}
 
         // put the mask in dyadic form.
-        //MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
-        MaskType waveletMask(roiBB.size().x, roiBB.size().y);
+        MaskPyramidType dyadicMask(roiBB.size().x, roiBB.size().y);
+        for (unsigned int i = 1; i < (numLevels + 1); i++) {
+            typename MaskPyramidType::traverser gbegin = ((*maskGP)[i])->upperLeft();
+            typename MaskPyramidType::traverser gend = ((*maskGP)[i])->lowerRight();
+            int sCountX = gend.x - gbegin.x;
+            int sCountY = gend.y - gbegin.y;
+            int dCountX = roiBB.size().x >> i;
+            int dCountY = roiBB.size().y >> i;
+
+            // Distance between s pixels in dyadic mask level i-1
+            int stride = 2 << (i-1);
+            // Distance between s-d pair in dyadic mask level i-1
+            int adjacent = 1 << (i-1);
+
+            cout << "Copying mask level " << i << " into mask" << endl;
+            cout << "    mask is  " << roiBB.size().x << "x" << roiBB.size().y << endl;
+            cout << "    level is " << sCountX << "x" << sCountY << endl;
+            cout << "    dCountX =" << dCountX << " dcountY=" << dCountY << endl;
+            cout << "    stride=" << stride << " adjacent=" << adjacent << endl;
+
+            typename MaskPyramidType::traverser dy = dyadicMask.upperLeft();
+            typename MaskPyramidType::traverser gy = gbegin;
+            for (int my = 0; my < dCountY; my++, dy.y += stride, ++gy.y) {
+                typename MaskPyramidType::traverser dx = dy;
+                typename MaskPyramidType::traverser gx = gy;
+                for (int mx = 0; mx < dCountX; mx++, dx.x += stride, ++gx.x) {
+                    dx(0, 0) = *gx;
+                    dx(adjacent, 0) = *gx;
+                    dx(0, adjacent) = *gx;
+                    dx(adjacent, adjacent) = *gx;
+                }
+                if (dCountX < sCountX) {
+                    dx(0, 0) = *gx;
+                    dx(0, adjacent) = *gx;
+                }
+            }
+            if (dCountY < sCountY) {
+                typename MaskPyramidType::traverser dx = dy;
+                typename MaskPyramidType::traverser gx = gy;
+                for (int mx = 0; mx < dCountX; mx++, dx.x += stride, ++gx.x) {
+                    dx(0, 0) = *gx;
+                    dx(adjacent, 0) = *gx;
+                }
+                if (dCountX < sCountX) {
+                    dx(0, 0) = *gx;
+                }
+            }
+        }
+
+        //MaskType waveletMask(roiBB.size().x, roiBB.size().y);
         //split<MaskType, MaskType>(numLevels, roiBB_uBB.apply(srcImageRange(*mask)), destImageRange(waveletMask));
-        copyImage(roiBB_uBB.apply(srcImageRange(*mask)), destImage(waveletMask));
-        exportImage(srcImageRange(waveletMask), ImageExportInfo("enblend_wavelet_mask.tif"));
+        //copyImage(roiBB_uBB.apply(srcImageRange(*mask)), destImage(waveletMask));
+        //exportImage(srcImageRange(waveletMask), ImageExportInfo("enblend_wavelet_mask.tif"));
+
+        //cout << "Mask" << endl;
+        //dumpImageAsText(mask->upperLeft() + Diff2D(136,152), mask->upperLeft() + Diff2D(146,159), mask->accessor());
 
         //wavelet<MaskType, MaskPyramidType>(numLevels, wraparoundForBlend,
         //        roiBB_uBB.apply(srcImageRange(*mask)),
@@ -422,15 +498,15 @@ return;
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
-        /*
         FindMinMax<MaskPyramidValueType> maskMinMax;
         inspectImage(srcImageRange(dyadicMask), maskMinMax);
-        cout << "dyadicMask minmax.min=" << maskMinMax.min << " minmax.max=" << maskMinMax.max << endl;
+        //cout << "dyadicMask minmax.min=" << maskMinMax.min << " minmax.max=" << maskMinMax.max << endl;
         MaskType mask_s(roiBB.size().x, roiBB.size().y);
         transformImage(srcImageRange(dyadicMask), destImage(mask_s),
                 linearRangeMapping(maskMinMax.min, maskMinMax.max, 0, 255));
         exportImage(srcImageRange(mask_s), ImageExportInfo("enblend_wavelet_mask.tif"));
 
+        /*
         //iwavelet<MaskPyramidType>(numLevels, Wraparound, destImageRange(dyadicMask));
         maskMinMax.reset();
         inspectImage(srcImageRange(dyadicMask), maskMinMax);
@@ -487,6 +563,13 @@ return;
                 destImageRange(whiteXform));
 
         FindMinMax<typename ImagePyramidValueType::value_type> minmax;
+/*
+        cout << endl << "White" << endl;
+        dumpImageAsText((*(whitePair.first)).upperLeft() + Diff2D(136,152), (*(whitePair.first)).upperLeft() + Diff2D(146,159), RedAccessor<ImageValueType>());
+        cout << endl << "WhiteXform" << endl;;
+        dumpImageAsText(whiteXform.upperLeft() + Diff2D(136,152), whiteXform.upperLeft() + Diff2D(146, 159), RedAccessor<ImagePyramidValueType>());
+
+        FindMinMax<typename ImagePyramidValueType::value_type> minmax;
         inspectImage(srcImageRange(whiteXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(whiteXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), minmax);
@@ -500,6 +583,7 @@ return;
         transformImage(srcImageRange(whiteXform, BlueAccessor<ImagePyramidValueType>()), destImage(xform_s, BlueAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_white.tif"));
+*/
 
         // Build Laplacian pyramid from white image.
         //vector<ImagePyramidType*> *whiteLP =
@@ -537,6 +621,12 @@ return;
                 roiBB.apply(srcImageRange(*(blackPair.first))),
                 destImageRange(blackXform));
 
+/*
+        cout << endl << "Black" << endl;
+        dumpImageAsText((*(blackPair.first)).upperLeft() + Diff2D(136,152), (*(blackPair.first)).upperLeft() + Diff2D(146,159), RedAccessor<ImageValueType>());
+        cout << endl << "BlackXform" << endl;
+        dumpImageAsText(blackXform.upperLeft() + Diff2D(136,152), blackXform.upperLeft() + Diff2D(146, 159), RedAccessor<ImagePyramidValueType>());
+
         minmax.reset();
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
@@ -549,6 +639,7 @@ return;
         transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(xform_s, BlueAccessor<ImageValueType>()),
                 linearRangeMapping(minmax.min, minmax.max, 0, 255));
         exportImage(srcImageRange(xform_s), ImageExportInfo("enblend_wavelet_black.tif"));
+*/
 
         // Build Laplacian pyramid from black image.
         //vector<ImagePyramidType*> *blackLP =
@@ -592,17 +683,18 @@ return;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        vector<MaskType*> *maskWP = new vector<MaskType*>;
-        maskWP->push_back(&waveletMask);
+        vector<MaskPyramidType*> *maskWP = new vector<MaskPyramidType*>;
+        maskWP->push_back(&dyadicMask);
         vector<ImagePyramidType*> *whiteWP = new vector<ImagePyramidType*>;
         whiteWP->push_back(&whiteXform);
         vector<ImagePyramidType*> *blackWP = new vector<ImagePyramidType*>;
         blackWP->push_back(&blackXform);
-        blend<MaskType, MaskType, ImagePyramidType>(maskWP, whiteWP, blackWP);
+        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskWP, whiteWP, blackWP);
         delete maskWP;
         delete whiteWP;
         delete blackWP;
 
+/*
         minmax.reset();
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
@@ -621,6 +713,12 @@ return;
         ImageExportInfo blend16("enblend_wavelet_blend16.tif");
         blend16.setPixelType("UINT16");
         exportImage(srcImageRange(blackXform16), blend16);
+
+        cout << endl << "BlendXform" << endl;
+        blackXform(136+4, 152+4) = ImagePyramidValueType((251+33)/2 - 33);
+        blackXform(136+4, 152+5) = ImagePyramidValueType((32+0)/2);
+        dumpImageAsText(blackXform.upperLeft() + Diff2D(136,152), blackXform.upperLeft() + Diff2D(146, 159), RedAccessor<ImagePyramidValueType>());
+*/
 
         //blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
         //#ifdef ENBLEND_CACHE_IMAGES
@@ -646,10 +744,10 @@ return;
 
         // delete mask pyramid
         //exportPyramid(maskGP, "enblend_mask_gp");
-        //for (unsigned int i = 0; i < maskGP->size(); i++) {
-        //    delete (*maskGP)[i];
-        //}
-        //delete maskGP;
+        for (unsigned int i = 0; i < maskGP->size(); i++) {
+            delete (*maskGP)[i];
+        }
+        delete maskGP;
         //// mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
         //// delete white pyramid
@@ -666,15 +764,31 @@ return;
 
         iwavelet<ImagePyramidType>(numLevels, wraparoundForBlend, destImageRange(blackXform));
 
+/*
+        cout << endl << "Blend inverse" << endl;
+        dumpImageAsText(blackXform.upperLeft() + Diff2D(136,152), blackXform.upperLeft() + Diff2D(146, 159), RedAccessor<ImagePyramidValueType>());
+
         copyImage(srcImageRange(blackXform), destImage(blackXform16));
         ImageExportInfo iwavelet("enblend_iwavelet.tif");
         iwavelet.setPixelType("UINT16");
         exportImage(srcImageRange(blackXform16), iwavelet);
+*/
         minmax.reset();
         inspectImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), minmax);
         inspectImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), minmax);
         cout << "collapse minmax.min=" << minmax.min << " minmax.max=" << minmax.max << endl;
+
+        transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(blackXform, RedAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(0),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(255), Arg1())));
+        transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(blackXform, GreenAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(0),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(255), Arg1())));
+        transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(blackXform, BlueAccessor<ImagePyramidValueType>()),
+                vigra::functor::ifThenElse(Arg1() < Param(0), Param(0),
+                        vigra::functor::ifThenElse(Arg1() > Param(255), Param(255), Arg1())));
+/*
         transformImage(srcImageRange(blackXform, RedAccessor<ImagePyramidValueType>()), destImage(blackXform, RedAccessor<ImagePyramidValueType>()),
                 vigra::functor::ifThenElse(Arg1() < Param(0), Param(254), (Arg1() / Param(4)) + Param(64)));
         transformImage(srcImageRange(blackXform, GreenAccessor<ImagePyramidValueType>()), destImage(blackXform, GreenAccessor<ImagePyramidValueType>()),
@@ -687,6 +801,7 @@ return;
                 vigra::functor::ifThenElse((Arg1() > Param(127)) && (Arg1() != Param(254)), Param(255), Arg1()));
         transformImage(srcImageRange(blackXform, BlueAccessor<ImagePyramidValueType>()), destImage(blackXform, BlueAccessor<ImagePyramidValueType>()),
                 vigra::functor::ifThenElse((Arg1() > Param(127)) && (Arg1() != Param(254)), Param(255), Arg1()));
+*/
         copyImage(srcImageRange(blackXform), roiBB.apply(destImage(*(blackPair.first))));
 
         //collapsePyramid(wraparoundForBlend, blackLP);

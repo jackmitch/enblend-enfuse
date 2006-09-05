@@ -32,6 +32,18 @@ using vigra::BasicImage;
 
 namespace enblend {
 
+template <typename SrcImageIterator, typename SrcAccessor>
+inline void dumpImageAsText(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa) {
+    SrcImageIterator sy = src_upperleft;
+    for (; sy.y != src_lowerright.y; ++sy.y) {
+        SrcImageIterator sx = sy;
+        for (; sx.x != src_lowerright.x; ++sx.x) {
+            cout << (int)(sa(sx)) << "\t";
+        }
+        cout << endl;
+    }
+};
+
 template <typename T>
 inline T three16(const T & v) {
     T res = v + (v << 1);
