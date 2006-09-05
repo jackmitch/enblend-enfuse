@@ -1,3 +1,19 @@
+X Merge new vigra
+- .cvsignore files
+- new vigra fixed point math
+- vigra sized_int
+- skipsm reduce replacement
+- icc
+- new seam alg
+- fix cachedFileImage typedef in enblend.cc to redefine CFImages if no env var set
+- fast compile env var?
+- multilayer images
+
+
+
+
+
+
 - Nadir and Zenith in 360x360 panos.
 
 - Allow users to provide their own blending masks. Have an option to write out

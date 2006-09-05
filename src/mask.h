@@ -32,11 +32,11 @@
 #include "vigra/error.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
-#include "vigra/impexalpha.hxx"
 #include "vigra/initimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 #include "vigra/stdcachedfileimage.hxx"
+#include "vigra_ext/impexalpha.hxx"
 
 using vigra::BCFImage;
 using vigra::BImage;

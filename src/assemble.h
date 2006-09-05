@@ -36,11 +36,11 @@
 #include "common.h"
 #include "vigra/copyimage.hxx"
 #include "vigra/impex.hxx"
-#include "vigra/impexalpha.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/transformimage.hxx"
 #include "vigra_ext/FunctorAccessor.h"
+#include "vigra_ext/impexalpha.hxx"
 
 using std::cout;
 using std::endl;

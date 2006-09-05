@@ -1,1 +1,19 @@
-EXTRA_DIST = blend.h Correlation.h FunctorAccessor.h Interpolators.h LayerImage.h LoweSIFT.h NearestFeatureTransform.h PhaseCorrelation.h PointMatching.h Pyramid.h ROI.h tiffUtils.h utils.h
+EXTRA_DIST = blend.h \
+             Correlation.h \
+             FitPolynom.h \
+             FunctorAccessor.h \
+             ImageTransforms.h \
+             Interpolators.h \
+             MultiLayerImage.h \
+             MultiThreadOperations.h \
+             NearestFeatureTransform.h \
+             Pyramid.h \
+             RansacParameterEstimator.h \
+             ROI.h \
+             ROIImage.h \
+             VigQuotientEstimator.h \
+             VignettingCorrection.h \
+             impexalpha.hxx \
+             ransac.h \
+             tiffUtils.h \
+             utils.h

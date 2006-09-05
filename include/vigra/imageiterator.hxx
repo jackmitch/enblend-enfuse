@@ -4,24 +4,36 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
-/*    ( Version 1.2.0, Aug 07 2003 )                                    */
-/*    You may use, modify, and distribute this software according       */
-/*    to the terms stated in the LICENSE file included in               */
-/*    the VIGRA distribution.                                           */
-/*                                                                      */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
-/*        koethe@informatik.uni-hamburg.de                              */
+/*        koethe@informatik.uni-hamburg.de          or                  */
+/*        vigra@kogs1.informatik.uni-hamburg.de                         */
 /*                                                                      */
-/*  THIS SOFTWARE IS PROVIDED AS IS AND WITHOUT ANY EXPRESS OR          */
-/*  IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED      */
-/*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
-/* Modifications by Andrew Mihal as of 10 October 2004
- *  - added Base:: from vigra 1.3
- */
+
 
 #ifndef VIGRA_IMAGEITERATOR_HXX
 #define VIGRA_IMAGEITERATOR_HXX
@@ -57,7 +69,7 @@ class StridedIteratorPolicy
         difference_type stride_;
     };
 
-    static void initialize(BaseType & d) {}
+    static void initialize(BaseType & /* d */) {}
 
     static reference dereference(BaseType const & d)
         { return const_cast<reference>(*d.current_); }
@@ -420,6 +432,11 @@ The following iterator traits must be defined for an image iterator:
     <td><tt>IteratorTraits&lt;ImageIterator&gt;::default_accessor</tt></td>
     <td>the default accessor to be used with the iterator</td>
 </tr>
+<tr>
+    <td><tt>IteratorTraits&lt;ImageIterator&gt;::hasConstantStrides</tt></td>
+    <td>whether the iterator uses constant strides on the underlying memory
+        (always <tt>VigraTrueType</tt> for <tt>ImageIterator</tt>s).</td>
+</tr>
 </table>
 </p>
 */
@@ -469,6 +486,15 @@ class DirectionSelector<UnstridedArrayTag>
         bool operator<(type const & rhs) const
          { return current_ < rhs.current_; }
 
+        bool operator<=(type const & rhs) const
+         { return current_ <= rhs.current_; }
+
+        bool operator>(type const & rhs) const
+         { return current_ > rhs.current_; }
+
+        bool operator>=(type const & rhs) const
+         { return current_ >= rhs.current_; }
+
         int operator-(type const & rhs) const
          { return current_ - rhs.current_; }
 
@@ -477,7 +503,7 @@ class DirectionSelector<UnstridedArrayTag>
 
         T operator()(int d) const
         { return current_ + d; }
-        
+
         T current_;
     };
 };
@@ -500,7 +526,7 @@ class DirectionSelector<StridedArrayTag>
         : stride_(rhs.stride_),
           current_(rhs.current_)
         {}
-        
+
         type & operator=(type const & rhs)
         {
             stride_ = rhs.stride_;
@@ -523,6 +549,15 @@ class DirectionSelector<StridedArrayTag>
 
         bool operator<(type const & rhs) const
          { return (current_ < rhs.current_); }
+
+        bool operator<=(type const & rhs) const
+         { return (current_ <= rhs.current_); }
+
+        bool operator>(type const & rhs) const
+         { return (current_ > rhs.current_); }
+
+        bool operator>=(type const & rhs) const
+         { return (current_ >= rhs.current_); }
 
         int operator-(type const & rhs) const
          { return (current_ - rhs.current_) / stride_; }
@@ -550,7 +585,7 @@ class LinearIteratorSelector<UnstridedArrayTag>
     {
       public:
         typedef typename IMAGEITERATOR::pointer res;
-        
+
         template <class DirSelect>
         static res construct(typename IMAGEITERATOR::pointer data, DirSelect const &)
         {
@@ -568,7 +603,7 @@ class LinearIteratorSelector<StridedArrayTag>
     {
       public:
         typedef IteratorAdaptor<StridedIteratorPolicy<IMAGEITERATOR> > res;
-        
+
         template <class DirSelect>
         static res construct(typename IMAGEITERATOR::pointer data, DirSelect const & d)
         {
@@ -590,7 +625,8 @@ class LinearIteratorSelector<StridedArrayTag>
 /** \brief Base class for 2D random access iterators.
 
     This class contains the navigational part of the iterator.
-    Use derived classes to specifiy the access to the pixels.
+    It is usually not constructed directly, but via some derived class such as
+    \ref ImageIterator or \ref StridedImageIterator.
 
     <b>\#include</b> "<a href="imageiterator_8hxx-source.html">vigra/imageiterator.hxx</a>"
 
@@ -600,8 +636,8 @@ class LinearIteratorSelector<StridedArrayTag>
     this:
 
     \code
-    vigra::ImageIteratorBase<SomePixelType> iterator(base, width);
-    vigra::ImageIteratorBase<SomePixelType> iterator1(base, width);
+    vigra::ImageIterator<SomePixelType> iterator(base, width);
+    vigra::ImageIterator<SomePixelType> iterator1(base, width);
     \endcode
 
     See the paper: U. Koethe:
@@ -614,10 +650,10 @@ template <class IMAGEITERATOR,
           class StridedOrUnstrided = UnstridedArrayTag>
 class ImageIteratorBase
 {
-    typedef typename 
+    typedef typename
         detail::LinearIteratorSelector<StridedOrUnstrided>::template type<ImageIteratorBase>
         RowIteratorSelector;
-    typedef typename 
+    typedef typename
         detail::LinearIteratorSelector<StridedArrayTag>::template type<ImageIteratorBase>
         ColumnIteratorSelector;
   public:
@@ -662,12 +698,12 @@ class ImageIteratorBase
 
         /** Let operations act in X direction
         */
-    typedef typename 
+    typedef typename
         detail::DirectionSelector<StridedOrUnstrided>::template type<pointer> MoveX;
 
         /** Let operations act in Y direction
         */
-    typedef typename 
+    typedef typename
         detail::DirectionSelector<StridedArrayTag>::template type<int> MoveY;
 
     /** @name Comparison of Iterators */
@@ -727,9 +763,9 @@ class ImageIteratorBase
 
   protected:
         /** Construct from raw memory with a vertical stride of <TT>ystride</TT>.
-        <TT>ystride</TT> must equal the physical image width (row length), 
+        <TT>ystride</TT> must equal the physical image width (row length),
         even if the iterator will only be used for a sub image. This constructor
-        must only be called for unstrided iterators 
+        must only be called for unstrided iterators
         (<tt>StridedOrUnstrided == UnstridedArrayTag</tt>)
         */
     ImageIteratorBase(pointer base, int ystride)
@@ -738,9 +774,9 @@ class ImageIteratorBase
     {}
 
         /** Construct from raw memory with a horizontal stride of <TT>xstride</TT>
-        and a vertical stride of <TT>ystride</TT>. This constructor 
+        and a vertical stride of <TT>ystride</TT>. This constructor
         may be used for iterators that shall skip pixels. Thus, it
-        must only be called for strided iterators 
+        must only be called for strided iterators
         (<tt>StridedOrUnstrided == StridedArrayTag</tt>)
         */
     ImageIteratorBase(pointer base, int xstride, int ystride)
@@ -859,7 +895,7 @@ class ImageIteratorBase
     //@}
 
     row_iterator rowIterator() const
-    { 
+    {
         return RowIteratorSelector::construct(current(), x);
     }
 
@@ -910,7 +946,7 @@ class ImageIterator
     typedef typename Base::difference_type difference_type;
 
         /** Construct from raw memory with a vertical stride of <TT>ystride</TT>.
-        <TT>ystride</TT> must equal the physical image width (row length), 
+        <TT>ystride</TT> must equal the physical image width (row length),
         even if the iterator will only be used for a sub image.
         If the raw memory is encapsulated in an image object this
         object should have a factory function that constructs the
@@ -956,7 +992,7 @@ class ConstImageIterator
     typedef typename Base::difference_type difference_type;
 
         /** Construct from raw memory with a vertical stride of <TT>ystride</TT>.
-        <TT>ystride</TT> must equal the physical image width (row length), 
+        <TT>ystride</TT> must equal the physical image width (row length),
         even if the iterator will only be used for a sub image.
         If the raw memory is encapsulated in an image object this
         object should have a factory function that constructs the
@@ -994,20 +1030,20 @@ class ConstImageIterator
     This iterator can be used when some pixels shall be automatically skipped, for example
     if an image is to be sub-sampled: instead of advancing to the next pixel,
     <tt>++iterator.x</tt> jumps to the pixel at a horizontal offset of <tt>xskip</tt>.
-    Likewise with <tt>yskip</tt> in vertical direction. Most functions and local types 
+    Likewise with <tt>yskip</tt> in vertical direction. Most functions and local types
     are inherited from ImageIteratorBase.
-    
+
     <b> Usage:</b>
-    
+
     \code
     BImage img(w,h);
     ...
     int xskip = 2, yskip = 2;
     int wskip = w / xskip + 1, hskip = h / yskip + 1;
-    
+
     StridedImageIterator<BImage::value_type> upperLeft(&img(0,0), w, xskip, yskip);
     StridedImageIterator<BImage::value_type> lowerRight = upperLeft + Diff2D(wskip, hskip);
-    
+
     // now navigation with upperLeft and lowerRight lets the image appear to have half
     // the original resolution in either dimension
     \endcode
@@ -1030,7 +1066,7 @@ class StridedImageIterator
     typedef typename Base::difference_type difference_type;
 
         /** Construct from raw memory with a vertical stride of <TT>ystride</TT>,
-        jumping by <tt>xskip</tt> horizontally and <tt>yskip</tt> vertically. 
+        jumping by <tt>xskip</tt> horizontally and <tt>yskip</tt> vertically.
         <tt>ystride</tt> must be the physical width (row length) of the image.
         */
     StridedImageIterator(pointer base, int ystride, int xskip, int yskip)
@@ -1055,20 +1091,20 @@ class StridedImageIterator
     This iterator can be used when some pixels shall be automatically skipped, for example
     if an image is to be sub-sampled: instead of advancing to the next pixel,
     <tt>++iterator.x</tt> jumps to the pixel at a horizontal offset of <tt>xskip</tt>.
-    Likewise with <tt>yskip</tt> in vertical direction. Most functions and local types 
+    Likewise with <tt>yskip</tt> in vertical direction. Most functions and local types
     are inherited from ImageIteratorBase.
-    
+
     <b> Usage:</b>
-    
+
     \code
     BImage img(w,h);
     ...
     int xskip = 2, yskip = 2;
     int wskip = w / xskip + 1, hskip = h / yskip + 1;
-    
+
     ConstStridedImageIterator<BImage::value_type> upperLeft(&img(0,0), w, xskip, yskip);
     ConstStridedImageIterator<BImage::value_type> lowerRight = upperLeft + Diff2D(wskip, hskip);
-    
+
     // now navigation with upperLeft and lowerRight lets the image appear to have half
     // the original resolution in either dimension
     \endcode
@@ -1093,7 +1129,7 @@ class ConstStridedImageIterator
     typedef typename Base::difference_type difference_type;
 
         /** Construct from raw memory with a vertical stride of <TT>ystride</TT>,
-        jumping by <tt>xskip</tt> horizontally and <tt>yskip</tt> vertically. 
+        jumping by <tt>xskip</tt> horizontally and <tt>yskip</tt> vertically.
         <tt>ystride</tt> must be the physical width (row length) of the image.
         */
     ConstStridedImageIterator(pointer base, int ystride, int xskip, int yskip)
@@ -1119,148 +1155,160 @@ class ConstStridedImageIterator
     }
 };
 
+/********************************************************/
+/*                                                      */
+/*             definition of iterator traits            */
+/*                                                      */
+/********************************************************/
+
+
 #ifndef NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
 template <class T>
 struct IteratorTraits<ImageIterator<T> >
+: public IteratorTraitsBase<ImageIterator<T> >
 {
-    typedef ImageIterator<T>                     Iterator;
-    typedef ImageIterator<T>                     iterator;
-    typedef typename iterator::iterator_category iterator_category;
-    typedef typename iterator::value_type        value_type;
-    typedef typename iterator::reference         reference;
-    typedef typename iterator::index_reference   index_reference;
-    typedef typename iterator::pointer           pointer;
-    typedef typename iterator::difference_type   difference_type;
-    typedef typename iterator::row_iterator      row_iterator;
-    typedef typename iterator::column_iterator   column_iterator;
-    typedef StandardAccessor<T>                  DefaultAccessor;
-    typedef StandardAccessor<T>                  default_accessor;
+    typedef ImageIterator<T>                              mutable_iterator;
+    typedef ConstImageIterator<T>                         const_iterator;
+    typedef typename AccessorTraits<T>::default_accessor  DefaultAccessor;
+    typedef DefaultAccessor                               default_accessor;
+    typedef VigraTrueType                                 hasConstantStrides;
 };
 
 template <class T>
 struct IteratorTraits<ConstImageIterator<T> >
+: public IteratorTraitsBase<ConstImageIterator<T> >
 {
-    typedef ConstImageIterator<T>                Iterator;
-    typedef ConstImageIterator<T>                iterator;
-    typedef typename iterator::iterator_category iterator_category;
-    typedef typename iterator::value_type        value_type;
-    typedef typename iterator::reference         reference;
-    typedef typename iterator::index_reference   index_reference;
-    typedef typename iterator::pointer           pointer;
-    typedef typename iterator::difference_type   difference_type;
-    typedef typename iterator::row_iterator      row_iterator;
-    typedef typename iterator::column_iterator   column_iterator;
-    typedef StandardConstAccessor<T>             DefaultAccessor;
-    typedef StandardConstAccessor<T>             default_accessor;
+    typedef ImageIterator<T>                              mutable_iterator;
+    typedef ConstImageIterator<T>                         const_iterator;
+    typedef typename AccessorTraits<T>::default_const_accessor  DefaultAccessor;
+    typedef DefaultAccessor                               default_accessor;
+    typedef VigraTrueType                                 hasConstantStrides;
 };
 
 template <class T>
 struct IteratorTraits<StridedImageIterator<T> >
+: public IteratorTraitsBase<StridedImageIterator<T> >
 {
-    typedef StridedImageIterator<T>              Iterator;
-    typedef StridedImageIterator<T>              iterator;
-    typedef typename iterator::iterator_category iterator_category;
-    typedef typename iterator::value_type        value_type;
-    typedef typename iterator::reference         reference;
-    typedef typename iterator::index_reference   index_reference;
-    typedef typename iterator::pointer           pointer;
-    typedef typename iterator::difference_type   difference_type;
-    typedef typename iterator::row_iterator      row_iterator;
-    typedef typename iterator::column_iterator   column_iterator;
-    typedef StandardAccessor<T>                  DefaultAccessor;
-    typedef StandardAccessor<T>                  default_accessor;
+    typedef StridedImageIterator<T>                       mutable_iterator;
+    typedef ConstStridedImageIterator<T>                  const_iterator;
+    typedef typename AccessorTraits<T>::default_accessor  DefaultAccessor;
+    typedef DefaultAccessor                               default_accessor;
+    typedef VigraTrueType                                 hasConstantStrides;
 };
 
 template <class T>
 struct IteratorTraits<ConstStridedImageIterator<T> >
+: public IteratorTraitsBase<ConstStridedImageIterator<T> >
 {
-    typedef ConstStridedImageIterator<T>         Iterator;
-    typedef ConstStridedImageIterator<T>         iterator;
-    typedef typename iterator::iterator_category iterator_category;
-    typedef typename iterator::value_type        value_type;
-    typedef typename iterator::reference         reference;
-    typedef typename iterator::index_reference   index_reference;
-    typedef typename iterator::pointer           pointer;
-    typedef typename iterator::difference_type   difference_type;
-    typedef typename iterator::row_iterator      row_iterator;
-    typedef typename iterator::column_iterator   column_iterator;
-    typedef StandardConstAccessor<T>             DefaultAccessor;
-    typedef StandardConstAccessor<T>             default_accessor;
+    typedef StridedImageIterator<T>                       mutable_iterator;
+    typedef ConstStridedImageIterator<T>                  const_iterator;
+    typedef typename AccessorTraits<T>::default_const_accessor  DefaultAccessor;
+    typedef DefaultAccessor                               default_accessor;
+    typedef VigraTrueType                                 hasConstantStrides;
 };
 
-#endif
+#else // NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
-#define VIGRA_DEFINE_ITERATORTRAITS(ITERATOR, VALUETYPE, ACCESSOR) \
-    template<> \
-    struct IteratorTraits<ITERATOR<VALUETYPE > > \
+#define VIGRA_DEFINE_ITERATORTRAITS(VALUETYPE) \
+    template <>  \
+    struct IteratorTraits<ImageIterator<VALUETYPE > > \
+    : public IteratorTraitsBase<ImageIterator<VALUETYPE > > \
     { \
-        typedef ITERATOR<VALUETYPE >                  Iterator; \
-        typedef ITERATOR<VALUETYPE >                  iterator; \
-        typedef iterator::iterator_category           iterator_category; \
-        typedef iterator::value_type                  value_type; \
-        typedef iterator::reference                   reference; \
-        typedef iterator::index_reference             index_reference; \
-        typedef iterator::pointer                     pointer; \
-        typedef iterator::difference_type             difference_type; \
-        typedef iterator::row_iterator                row_iterator; \
-        typedef iterator::column_iterator             column_iterator; \
-        typedef ACCESSOR<VALUETYPE >                  default_accessor; \
-        typedef ACCESSOR<VALUETYPE >                  DefaultAccessor; \
+        typedef ImageIterator<VALUETYPE>                         mutable_iterator; \
+        typedef ConstImageIterator<VALUETYPE>                    const_iterator; \
+        typedef typename AccessorTraits<VALUETYPE >::default_accessor  DefaultAccessor; \
+        typedef DefaultAccessor                               default_accessor; \
+        typedef VigraTrueType                                 hasConstantStrides; \
+    }; \
+    \
+    template <>  \
+    struct IteratorTraits<ConstImageIterator<VALUETYPE > > \
+    : public IteratorTraitsBase<ConstImageIterator<VALUETYPE > > \
+    { \
+        typedef ImageIterator<VALUETYPE>                         mutable_iterator; \
+        typedef ConstImageIterator<VALUETYPE>                    const_iterator; \
+        typedef typename AccessorTraits<VALUETYPE >::default_const_accessor  DefaultAccessor; \
+        typedef DefaultAccessor                               default_accessor; \
+        typedef VigraTrueType                                 hasConstantStrides; \
+    }; \
+    template <>  \
+    struct IteratorTraits<StridedImageIterator<VALUETYPE > > \
+    : public IteratorTraitsBase<StridedImageIterator<VALUETYPE > > \
+    { \
+        typedef StridedImageIterator<VALUETYPE>                         mutable_iterator; \
+        typedef ConstStridedImageIterator<VALUETYPE>                    const_iterator; \
+        typedef typename AccessorTraits<VALUETYPE >::default_accessor  DefaultAccessor; \
+        typedef DefaultAccessor                               default_accessor; \
+        typedef VigraTrueType                                 hasConstantStrides; \
+    }; \
+    \
+    template <>  \
+    struct IteratorTraits<ConstStridedImageIterator<VALUETYPE > > \
+    : public IteratorTraitsBase<ConstStridedImageIterator<VALUETYPE > > \
+    { \
+        typedef StridedImageIterator<VALUETYPE>                         mutable_iterator; \
+        typedef ConstStridedImageIterator<VALUETYPE>                    const_iterator; \
+        typedef typename AccessorTraits<VALUETYPE >::default_const_accessor  DefaultAccessor; \
+        typedef DefaultAccessor                               default_accessor; \
+        typedef VigraTrueType                                 hasConstantStrides; \
     };
 
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, unsigned char, StandardValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, unsigned char, StandardConstValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, short, StandardValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, short, StandardConstValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, int, StandardValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, int, StandardConstValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, float, StandardValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, float, StandardConstValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, double, StandardValueAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, double, StandardConstValueAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(RGBValue<unsigned char>)
+VIGRA_DEFINE_ITERATORTRAITS(RGBValue<short>)
+VIGRA_DEFINE_ITERATORTRAITS(RGBValue<int>)
+VIGRA_DEFINE_ITERATORTRAITS(RGBValue<float>)
+VIGRA_DEFINE_ITERATORTRAITS(RGBValue<double>)
 
-template <class T> class RGBValue;
-template <class T> class RGBAccessor;
-
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, RGBValue<unsigned char>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, RGBValue<unsigned char>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, RGBValue<int>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, RGBValue<int>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, RGBValue<float>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, RGBValue<float>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, RGBValue<double>, RGBAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, RGBValue<double>, RGBAccessor)
-
-template <class VALUETYPE, int SIZE>
-class TinyVector;
-
+#define VIGRA_PIXELTYPE TinyVector<unsigned char, 2>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<unsigned char, 3>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<unsigned char, 4>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<short, 2>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<short, 3>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<short, 4>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<int, 2>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<int, 3>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
+#define VIGRA_PIXELTYPE TinyVector<int, 4>
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
+#undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<float, 2>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<float, 3>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<float, 4>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<double, 2>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<double, 3>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 #define VIGRA_PIXELTYPE TinyVector<double, 4>
-VIGRA_DEFINE_ITERATORTRAITS(ImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
-VIGRA_DEFINE_ITERATORTRAITS(ConstImageIterator, VIGRA_PIXELTYPE, VectorAccessor)
+VIGRA_DEFINE_ITERATORTRAITS(VIGRA_PIXELTYPE)
 #undef VIGRA_PIXELTYPE
 
 #undef VIGRA_DEFINE_ITERATORTRAITS
+
+#endif // NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
 template <class PIXELTYPE>
 class ConstValueIteratorPolicy
@@ -1535,6 +1583,7 @@ struct IteratorTraits<ConstValueIterator<T> >
     typedef typename iterator::column_iterator     column_iterator;
     typedef StandardConstAccessor<T>               DefaultAccessor;
     typedef StandardConstAccessor<T>               default_accessor;
+    typedef VigraTrueType                                 hasConstantStrides;
 };
 
 #endif

@@ -220,14 +220,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Estimate memory requirements for mask generation
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // mem usage = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
-            //           + 2*BImage*ubb + 2*UIImage*ubb
+            //           + 2*BImage*ubb + 2*UInt32Image*ubb
             long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
             long long uBBPixels = uBB.size().x * uBB.size().y;
             long long bytes =
                     inputUnionPixels
                         * (2*sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
                     + uBBPixels
-                        * (2*sizeof(typename BImage::value_type) + 2*sizeof(typename UIImage::value_type));
+                        * (2*sizeof(typename BImage::value_type) + 2*sizeof(typename UInt32Image::value_type));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for mask generation: "
                  << mbytes
@@ -241,7 +241,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
                 uBB, wraparoundForMask, mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
-        // mem xsection = 2*BImage*ubb + 2*UIImage*ubb
+        // mem xsection = 2*BImage*ubb + 2*UInt32Image*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
 
         #ifdef ENBLEND_CACHE_IMAGES

@@ -5,7 +5,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: tiffUtils.h,v 1.2 2004-11-18 06:59:18 acmihal Exp $
+ *  $Id: tiffUtils.h,v 1.2.2.1 2006-09-05 07:39:29 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -21,33 +21,29 @@
  *  License along with this software; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Modifications by Andrew Mihal 17 November 2004
- *   - Throw error if TIFFWrite* returns -1 (may indicate LZW is disabled)
- *  Andrew Mihal's modifications are covered by the GPL.
  */
 
 #ifndef _TIFFUTILS_H
 #define _TIFFUTILS_H
 
-#include <vigra/error.hxx>
 #include <vigra/tiff.hxx>
 #include <vigra/transformimage.hxx>
 #include <vigra/functorexpression.hxx>
 
 #include <vigra_ext/FunctorAccessor.h>
 
-//#include <tiffio.h>
+#include <tiffio.h>
 
 // add this to the vigra_ext namespace
 namespace vigra_ext {
 
-    
+
 //***************************************************************************
 //
 //  functions to write tiff files with a single alpha channel.
 //
 //***************************************************************************
-    
+
 /** write a new Tiff directory, for a new layer
  *
  * @param tiff tiff struct
@@ -59,18 +55,27 @@ namespace vigra_ext {
  */
 inline void createTiffDirectory(vigra::TiffImage * tiff, const std::string & pagename,
 				const std::string & documentname,
+                                const std::string comp,
 				uint16 page, uint16 nImg,
-				vigra::Diff2D offset)
+				vigra::Diff2D offset,
+                                const vigra::ICCProfile & icc)
 {
     const float dpi = 150;
     // create a new directory for our image
     // hopefully I didn't forget too much stuff..
-    TIFFCreateDirectory (tiff);
+    // TIFF tag reference at http://www.awaresystems.be/imaging/tiff/tifftags.html
 
     // set page
-    TIFFSetField (tiff, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
-    TIFFSetField (tiff, TIFFTAG_PAGENUMBER, (unsigned short)page, (unsigned short)nImg);
-
+    // FIXME: Also only needed for multilayer images
+    if (nImg > 1) {
+        // create tiff directory for the new layers
+        // TIFFOpen already created the first one.
+        if (page > 1) {
+            TIFFCreateDirectory (tiff);
+        }
+        TIFFSetField (tiff, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
+        TIFFSetField (tiff, TIFFTAG_PAGENUMBER, (unsigned short)page, (unsigned short)nImg);
+    }
     TIFFSetField (tiff, TIFFTAG_XRESOLUTION, (float) dpi);
     TIFFSetField (tiff, TIFFTAG_YRESOLUTION, (float) dpi);
     // offsets must allways be positive so correct them
@@ -84,6 +89,25 @@ inline void createTiffDirectory(vigra::TiffImage * tiff, const std::string & pag
     TIFFSetField (tiff, TIFFTAG_PAGENAME, pagename.c_str() );
     //
     TIFFSetField (tiff, TIFFTAG_IMAGEDESCRIPTION, "stitched with hugin");
+
+    // set compression
+    unsigned short tiffcomp;
+    if ( comp == "JPEG" )
+        tiffcomp = COMPRESSION_OJPEG;
+    else if ( comp == "LZW" )
+        tiffcomp = COMPRESSION_LZW;
+    else if ( comp == "DEFLATE" )
+        tiffcomp = COMPRESSION_DEFLATE;
+    else
+        tiffcomp = COMPRESSION_NONE;
+
+    TIFFSetField(tiff, TIFFTAG_COMPRESSION, tiffcomp);
+
+    // Set ICC profile, if available.
+    if (icc.isValid()) {
+        TIFFSetField(tiff, TIFFTAG_ICCPROFILE, icc.getSize(), icc.getPtr());
+    }
+
 }
 
 
@@ -108,6 +132,7 @@ createScalarATiffImage(ImageIterator upperleft, ImageIterator lowerright,
     TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
     TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
     TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+    TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, 1);
 
     // for alpha stuff, do not uses premultilied data
     // We do not want to throw away data by premultiplying
@@ -136,11 +161,7 @@ createScalarATiffImage(ImageIterator upperleft, ImageIterator lowerright,
                 *pg = a(xs);
                 *alpha = alphaA(xa);
             }
-            // MIHAL testing return value.
-            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
-            if (rv == -1) {
-                vigra::vigra_fail("error in TIFFWriteScanline");
-            }
+            TIFFWriteScanline(tiff, buf, y);
         }
     }
     catch(...)
@@ -160,7 +181,9 @@ createRGBATiffImage(ImageIterator upperleft, ImageIterator lowerright,
                     AlphaIterator alphaUpperleft, AlphaAccessor alphaA,
                     vigra::TiffImage * tiff, int sampleformat)
 {
-    typedef typename ImageAccessor::value_type::value_type PixelType;
+    typedef typename ImageAccessor::value_type PType;
+    typedef typename PType::value_type PixelType;
+//    typedef typename ImageAccessor::value_type PixelType;
     int w = lowerright.x - upperleft.x;
     int h = lowerright.y - upperleft.y;
 
@@ -171,8 +194,8 @@ createRGBATiffImage(ImageIterator upperleft, ImageIterator lowerright,
     TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
     TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, sampleformat);
     TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
-    TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_ADOBE_DEFLATE);
-
+    TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, 1);
+		
     // for alpha stuff, do not uses premultilied data
     // We do not want to throw away data & accuracy by premultiplying
     uint16 nextra_samples = 1;
@@ -204,11 +227,7 @@ createRGBATiffImage(ImageIterator upperleft, ImageIterator lowerright,
                 *pb = a.blue(xs);
                 *alpha = alphaA(xa);
             }
-            // MIHAL testing return value.
-            tsize_t rv = TIFFWriteScanline(tiff, buf, y);
-            if (rv == -1) {
-                vigra::vigra_fail("error in TIFFWriteScanline");
-            }
+            TIFFWriteScanline(tiff, buf, y);
         }
     }
     catch(...)
@@ -440,7 +459,7 @@ struct CreateAlphaTiffImage<unsigned int>
     {
         vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<unsigned int>, AlphaAccessor>
             mA(vigra::ScalarIntensityTransform<unsigned int>(16777216), aA);
-        createScalarATiffImage(iUL, iLR, iA, aUL, aA, tiff,  SAMPLEFORMAT_UINT);
+        createScalarATiffImage(iUL, iLR, iA, aUL, mA, tiff,  SAMPLEFORMAT_UINT);
     }
 };
 
@@ -458,7 +477,7 @@ struct CreateAlphaTiffImage<float>
     {
         vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<float>, AlphaAccessor>
             mA(vigra::ScalarIntensityTransform<float>(1.0f/255), aA);
-        createScalarATiffImage(iUL, iLR, iA, aUL, aA, tiff,  SAMPLEFORMAT_IEEEFP);
+        createScalarATiffImage(iUL, iLR, iA, aUL, mA, tiff,  SAMPLEFORMAT_IEEEFP);
     }
 };
 
@@ -476,7 +495,7 @@ struct CreateAlphaTiffImage<double>
     {
         vigra_ext::ReadFunctorAccessor<vigra::ScalarIntensityTransform<double>, AlphaAccessor>
             mA(vigra::ScalarIntensityTransform<double>(1.0f/255), aA);
-        createScalarATiffImage(iUL, iLR, iA, aUL, aA, tiff,  SAMPLEFORMAT_IEEEFP);
+        createScalarATiffImage(iUL, iLR, iA, aUL, mA, tiff,  SAMPLEFORMAT_IEEEFP);
     }
 };
 
@@ -519,7 +538,7 @@ createAlphaTiffImage(vigra::triple<ImageIterator, ImageIterator, ImageAccessor> 
 }
 
 
-    
+
 //***************************************************************************
 //
 //  functions to read tiff files with a single alpha channel,

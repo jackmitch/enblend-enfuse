@@ -41,8 +41,8 @@ using vigra::linearRangeMapping;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::triple;
-using vigra::USImage;
-using vigra::USRGBImage;
+using vigra::UInt16Image;
+using vigra::UInt16RGBImage;
 
 namespace enblend {
 
@@ -687,7 +687,7 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraTrueType) {
         snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
 
         // Rescale the pyramid values to fit in UINT16.
-        USImage usPyramid((*v)[i]->width(), (*v)[i]->height());
+        UInt16Image usPyramid((*v)[i]->width(), (*v)[i]->height());
         transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
                 linearRangeMapping(NumericTraits<PyramidValueType>::min(),
                                      NumericTraits<PyramidValueType>::max(),
@@ -716,12 +716,12 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
         snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
 
         // Rescale the pyramid values to fit in UINT16.
-        USRGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
+        UInt16RGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
         transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
                 linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
                                    PyramidVectorType(NumericTraits<PyramidValueType>::max()),
-                                   typename USRGBImage::value_type(NumericTraits<unsigned short>::min()),
-                                   typename USRGBImage::value_type(NumericTraits<unsigned short>::max())));
+                                   typename UInt16RGBImage::value_type(NumericTraits<unsigned short>::min()),
+                                   typename UInt16RGBImage::value_type(NumericTraits<unsigned short>::max())));
 
         ImageExportInfo info(filenameBuf);
         exportImage(srcImageRange(usPyramid), info);

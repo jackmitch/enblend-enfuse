@@ -4,22 +4,36 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
-/*    ( Version 1.2.0, Aug 07 2003 )                                    */
-/*    You may use, modify, and distribute this software according       */
-/*    to the terms stated in the LICENSE file included in               */
-/*    the VIGRA distribution.                                           */
-/*                                                                      */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
-/*        koethe@informatik.uni-hamburg.de                              */
+/*        koethe@informatik.uni-hamburg.de          or                  */
+/*        vigra@kogs1.informatik.uni-hamburg.de                         */
 /*                                                                      */
-/*  THIS SOFTWARE IS PROVIDED AS IS AND WITHOUT ANY EXPRESS OR          */
-/*  IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED      */
-/*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
- 
+
 #ifndef VIGRA_INTERPOLATING_ACCESSOR_HXX
 #define VIGRA_INTERPOLATING_ACCESSOR_HXX
 
@@ -29,13 +43,13 @@
 
 namespace vigra {
 
-/** \addtogroup DataAccessors 
+/** \addtogroup DataAccessors
 */
 //@{
 
 /********************************************************/
 /*                                                      */
-/*                  InterpolatingAccessor               */
+/*            BilinearInterpolatingAccessor             */
 /*                                                      */
 /********************************************************/
 
@@ -47,21 +61,21 @@ namespace vigra {
     It uses the given ACCESSOR (which is usually the
     accessor originally associated with the iterator)
     to access data.
-    
+
     <b>\#include</b> "<a href="accessor_8hxx-source.html">vigra/accessor.hxx</a>"
     Namespace: vigra
-    
+
     <b> Required Interface:</b>
-    
+
     \code
     ITERATOR iter;
     ACCESSOR a;
     VALUETYPE destvalue;
     float s;
     int x, y;
-    
+
     destvalue = s * a(iter, x, y) + s * a(iter, x, y);
-    
+
     \endcode
 */
 template <class ACCESSOR, class VALUETYPE>
@@ -71,28 +85,28 @@ class BilinearInterpolatingAccessor
     /** the iterators' pixel type
     */
     typedef VALUETYPE value_type;
-    
+
     /** init from given accessor
     */
     BilinearInterpolatingAccessor(ACCESSOR a)
     : a_(a)
     {}
-    
+
     /** Interpolate the data item at a non-integer position.
-        Ensure that no outside pixels are accessed if 
+        Ensure that no outside pixels are accessed if
         (x, y) is near the image border (as long as
         0 <= x <= width-1, 0 <= y <= height-1).
     */
     template <class ITERATOR>
-    value_type operator()(ITERATOR const & i, float x, float y) const 
-    { 
+    value_type operator()(ITERATOR const & i, float x, float y) const
+    {
         int ix = int(x);
         int iy = int(y);
         float dx = x - ix;
         float dy = y - iy;
-        
+
         value_type ret;
-        
+
         // avoid dereferencing the iterator outside its range
         if(dx == 0.0)
         {
@@ -112,7 +126,7 @@ class BilinearInterpolatingAccessor
             if(dy == 0.0)
             {
                 ret = detail::RequiresExplicitCast<value_type>::cast(
-                  (1.0 - dx) * a_(i, Diff2D(ix, iy)) + 
+                  (1.0 - dx) * a_(i, Diff2D(ix, iy)) +
                   dx * a_(i, Diff2D(ix + 1, iy)));
             }
             else
@@ -124,17 +138,17 @@ class BilinearInterpolatingAccessor
                   dx * dy * a_(i, Diff2D(ix + 1, iy + 1)));
             }
         }
-            
+
         return ret;
     }
 
     /** Interpolate the data item at a non-integer position.
-        This function works as long as 0 <= x < width-1, 
+        This function works as long as 0 <= x < width-1,
         0 <= y < height-1. It is slightly faster than <TT>operator()</TT>.
     */
     template <class ITERATOR>
-    value_type unchecked(ITERATOR const & i, float x, float y) const 
-    { 
+    value_type unchecked(ITERATOR const & i, float x, float y) const
+    {
         int ix = int(x);
         int iy = int(y);
         float dx = x - ix;
@@ -145,7 +159,7 @@ class BilinearInterpolatingAccessor
                (1.0 - dx) * dy * a_(i, Diff2D(ix, iy + 1)) +
                dx * dy * a_(i, Diff2D(ix + 1, iy + 1)));
     }
-    
+
   private:
     ACCESSOR a_;
 };

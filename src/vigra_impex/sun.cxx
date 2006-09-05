@@ -4,24 +4,40 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
-/*    ( Version 1.2.0, Aug 07 2003 )                                    */
-/*    You may use, modify, and distribute this software according       */
-/*    to the terms stated in the LICENSE file included in               */
-/*    the VIGRA distribution.                                           */
-/*                                                                      */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
-/*        koethe@informatik.uni-hamburg.de                              */
+/*        koethe@informatik.uni-hamburg.de          or                  */
+/*        vigra@kogs1.informatik.uni-hamburg.de                         */
 /*                                                                      */
-/*  THIS SOFTWARE IS PROVIDED AS IS AND WITHOUT ANY EXPRESS OR          */
-/*  IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED      */
-/*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
 
 #include <fstream>
 #include <stdexcept>
+#include "vigra/config.hxx"
+#include "vigra/sized_int.hxx"
 #include "error.hxx"
 #include "byteorder.hxx"
 #include "void_vector.hxx"
@@ -70,6 +86,10 @@ namespace vigra {
         desc.fileExtensions.resize(1);
         desc.fileExtensions[0] = "ras";
 
+        desc.bandNumbers.resize(2);
+        desc.bandNumbers[0] = 1;
+        desc.bandNumbers[1] = 3;
+        
         return desc;
     }
 
@@ -85,7 +105,7 @@ namespace vigra {
 
     struct SunHeader
     {
-        typedef unsigned long field_type;
+        typedef UInt32 field_type;
 
         // attributes
 
@@ -126,8 +146,8 @@ namespace vigra {
         SunHeader header;
         std::ifstream stream;
         byteorder bo;
-        void_vector< unsigned char > maps, bands;
-        unsigned int components, row_stride;
+        void_vector< UInt8 > maps, bands;
+        UInt32 components, row_stride;
         bool recode;
 
         // methods
@@ -140,13 +160,13 @@ namespace vigra {
     };
 
     SunDecoderImpl::SunDecoderImpl( const std::string & filename )
-#ifdef WIN32
-        : stream( filename.c_str(), std::ios::binary ),
+#ifdef VIGRA_NEED_BIN_STREAMS
+        : stream( filename.c_str(), std::ios::binary ), 
 #else
-        : stream( filename.c_str() ),
+        : stream( filename.c_str() ), 
 #endif
-          bo ("big endian"),
-          maps (0),
+          bo ("big endian"), 
+          maps (0), 
           bands (0),
           recode (false)
     {
@@ -157,7 +177,7 @@ namespace vigra {
             msg += "'.";
             vigra_precondition (0, msg.c_str ());
         }
-
+        
         // read the magic number, adjust byte order if necessary
         SunHeader::field_type magic;
         read_field (stream, bo, magic);
@@ -218,16 +238,16 @@ namespace vigra {
         // recode if necessary
         if (recode) {
 
-            void_vector <unsigned char> recode_bands;
+            void_vector <UInt8> recode_bands;
 
             if (header.depth == 1) {
 
-                // expand to unsigned char.
+                // expand to UInt8.
                 recode_bands.resize (header.width);
                 for (unsigned int i = 0; i < header.width; ++i) {
 
                     // there are eight pixels in each byte.
-                    const unsigned char b = bands [i/8];
+                    const UInt8 b = bands [i/8];
                     recode_bands [i] = b >> i%8 & 0x01;
                 }
 
@@ -238,13 +258,13 @@ namespace vigra {
             // color map the scanline.
             if (header.maptype == RMT_EQUAL_RGB) {
 
-                // map from unsigned char to rgb
+                // map from UInt8 to rgb
                 recode_bands.resize (3*header.width);
                 const unsigned int mapstride = header.maplength/3;
-                unsigned char *recode_mover = recode_bands.data ();
+                UInt8 *recode_mover = recode_bands.data ();
                 for (unsigned int i = 0; i < header.width; ++i) {
                     // find out the pointer to the red color
-                    unsigned char *map_mover = maps.data () + bands [i];
+                    UInt8 *map_mover = maps.data () + bands [i];
                     // red
                     *recode_mover++ = *map_mover;
                     map_mover += mapstride;
@@ -254,10 +274,10 @@ namespace vigra {
                     // blue
                     *recode_mover++ = *map_mover;
                 }
-
+                
             } else if (header.maptype == RMT_RAW) {
 
-                // map from unsigned char to unsigned char
+                // map from UInt8 to UInt8
                 recode_bands.resize (header.width);
                 for (unsigned int i = 0; i < header.width; ++i)
                     recode_bands [i] = maps [bands [i]];
@@ -272,7 +292,7 @@ namespace vigra {
         if (header.type == RT_STANDARD && header.maptype != RMT_EQUAL_RGB
             && components == 3) {
 
-            void_vector <unsigned char> recode_bands (3*header.width);
+            void_vector <UInt8> recode_bands (3*header.width);
             for (unsigned int i = 0; i < header.width; ++i) {
                 recode_bands [3*i]   = bands [3*i+2];
                 recode_bands [3*i+1] = bands [3*i+1];
@@ -344,8 +364,8 @@ namespace vigra {
         SunHeader header;
         std::ofstream stream;
         byteorder bo;
-        void_vector< unsigned char > bands;
-        unsigned int components, row_stride;
+        void_vector< UInt8 > bands;
+        UInt32 components, row_stride;
         bool finalized;
 
         // methods
@@ -359,10 +379,10 @@ namespace vigra {
     };
 
     SunEncoderImpl::SunEncoderImpl( const std::string & filename )
-#ifdef WIN32
-        : stream( filename.c_str(), std::ios::binary ),
+#ifdef VIGRA_NEED_BIN_STREAMS
+        : stream( filename.c_str(), std::ios::binary ), 
 #else
-        : stream( filename.c_str() ),
+        : stream( filename.c_str() ), 
 #endif
           bo("big endian"),
           bands(0), finalized(false)
@@ -414,7 +434,7 @@ namespace vigra {
     {
         if ( components == 3 ) {
             // rgb -> bgr
-            void_vector< unsigned char > recode_bands(bands.size());
+            void_vector< UInt8 > recode_bands(bands.size());
             for ( unsigned int i = 0; i < header.width; ++i ) {
                 recode_bands[ 3 * i ] = bands[ 3 * i + 2 ];
                 recode_bands[ 3 * i + 1 ] = bands[ 3 * i + 1 ];
@@ -442,31 +462,31 @@ namespace vigra {
 
     void SunEncoder::setWidth( unsigned int width )
     {
-        VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
+        VIGRA_IMPEX_FINALIZED(pimpl->finalized);
         pimpl->header.width = width;
     }
 
     void SunEncoder::setHeight( unsigned int height )
     {
-        VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
+        VIGRA_IMPEX_FINALIZED(pimpl->finalized);
         pimpl->header.height = height;
     }
 
     void SunEncoder::setNumBands( unsigned int numBands )
     {
-        VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
+        VIGRA_IMPEX_FINALIZED(pimpl->finalized);
         pimpl->components = numBands;
     }
 
     void SunEncoder::setCompressionType( const std::string & comp,
                                          int quality )
     {
-        VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
+        VIGRA_IMPEX_FINALIZED(pimpl->finalized);
     }
 
     void SunEncoder::setPixelType( const std::string & pixeltype )
     {
-        VIGRA_IMPEX2_FINALIZED(pimpl->finalized);
+        VIGRA_IMPEX_FINALIZED(pimpl->finalized);
         vigra_precondition( pixeltype == "UINT8",
                             "SunEncoder::setPixelType(): "
                             "SUN raster supports only the UINT8 pixeltype" );

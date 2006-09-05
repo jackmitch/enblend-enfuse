@@ -5,7 +5,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: ROI.h,v 1.2 2004-09-26 20:23:58 mihal Exp $
+ *  $Id: ROI.h,v 1.2.4.1 2006-09-05 07:39:28 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -153,7 +153,7 @@ public:
     template <typename ImgIter, typename ImgAccessor>
     vigra::triple<ImgIter, ImgIter, ImgAccessor>
     apply(vigra::triple<ImgIter, ImgIter, ImgAccessor> image,
-	  const ROI & imageROI)
+	  const ROI & imageROI) const
     {
         vigra::Diff2D ulDiff = getUL() - imageROI.getUL();
 	vigra::Diff2D lrDiff = getLR() - imageROI.getLR();
@@ -180,7 +180,7 @@ public:
     template <typename ImgIter, typename ImgAccessor>
     std::pair<ImgIter, ImgAccessor>
     apply(std::pair<ImgIter, ImgAccessor> image,
-	  const ROI & imageROI)
+	  const ROI & imageROI) const
     {
         vigra::Diff2D ulDiff = getUL() - imageROI.getUL();
 	return std::make_pair(image.first + ulDiff, image.second);
@@ -194,7 +194,7 @@ public:
      */
     template <typename ImgIter, typename ImgAccessor>
     vigra::triple<ImgIter, ImgIter, ImgAccessor>
-    apply(vigra::triple<ImgIter, ImgIter, ImgAccessor> image)
+    apply(vigra::triple<ImgIter, ImgIter, ImgAccessor> image) const
     {
 	return vigra::make_triple(image.first + getUL(), image.first + getLR(), image.third);
     }
@@ -208,7 +208,7 @@ public:
      */
     template <typename ImgIter, typename ImgAccessor>
     std::pair<ImgIter, ImgAccessor>
-    apply(std::pair<ImgIter, ImgAccessor> image)
+    apply(std::pair<ImgIter, ImgAccessor> image) const
     {
 	return std::make_pair(image.first + getUL(), image.second);
     }

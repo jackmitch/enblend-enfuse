@@ -40,7 +40,7 @@ using std::pair;
 using vigra::NumericTraits;
 using vigra::triple;
 using vigra::UICFImage;
-using vigra::UIImage;
+using vigra::UInt32Image;
 
 namespace enblend {
 
@@ -174,7 +174,7 @@ void nearestFeatureTransform(bool wraparound,
     #ifdef ENBLEND_CACHE_IMAGES
     typedef UICFImage::traverser DnfIterator;
     #else
-    typedef UIImage::traverser DnfIterator;
+    typedef UInt32Image::traverser DnfIterator;
     #endif
     typedef typename SrcAccessor::value_type SrcValueType;
 
@@ -193,8 +193,8 @@ void nearestFeatureTransform(bool wraparound,
     // column to the left of this column.
     UICFImage *dnfLeft = new UICFImage(w, h);
     #else
-    UIImage *dnfColumn = new UIImage(w, h);
-    UIImage *dnfLeft = new UIImage(w, h);
+    UInt32Image *dnfColumn = new UInt32Image(w, h);
+    UInt32Image *dnfLeft = new UInt32Image(w, h);
     #endif
 
     // Data structures for initializing dnfColumn.

@@ -4,27 +4,44 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
-/*    ( Version 1.2.0, Aug 07 2003 )                                    */
-/*    You may use, modify, and distribute this software according       */
-/*    to the terms stated in the LICENSE file included in               */
-/*    the VIGRA distribution.                                           */
-/*                                                                      */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
-/*        koethe@informatik.uni-hamburg.de                              */
+/*        koethe@informatik.uni-hamburg.de          or                  */
+/*        vigra@kogs1.informatik.uni-hamburg.de                         */
 /*                                                                      */
-/*  THIS SOFTWARE IS PROVIDED AS IS AND WITHOUT ANY EXPRESS OR          */
-/*  IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED      */
-/*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /*                                                                      */
 /************************************************************************/
-/* Modifications by Pablo d'Angelo, as of 3 July 2004:
+/* Modifications by Pablo d'Angelo
+ * updated to vigra 1.4 by Douglas Wilkins
+ * as of 18 Febuary 2006:
  *  - Added UINT16 and UINT32 pixel types.
  *  - Added support for obtaining extra bands beyond RGB.
  *  - Added support for a position field that indicates the start of this
  *    image relative to some global origin.
  *  - Added support for x and y resolution fields.
+ *  - Added support for ICC profiles
  */
 
 #include <iostream>
@@ -43,7 +60,7 @@
 #include "codecmanager.hxx"
 
 #if defined(_WIN32)
-#  include <windows.h>
+#  include "vigra/windows.h"
 #else
 #  include <dirent.h>
 #endif
@@ -78,15 +95,19 @@ void findImageSequence(const std::string &name_base,
     WIN32_FIND_DATA FileData;
 
     std::string base, path;
-    size_t split = name_base.rfind('/');
-    if(split == -1)
+
+	// on Windows, both '/' and '\' are valid path separators
+	// note: std::basic_string.rfind() may return unsigned int, so exlicitely use std::max<int>()
+	int split = std::max<int>(static_cast<int>(name_base.rfind('/')),
+                              static_cast<int>(name_base.rfind('\\')));
+	if(split == -1)
     {
         path = ".";
         base = name_base;
     }
     else
     {
-        for(size_t i=0; i<split; ++i)
+        for(int i=0; i<split; ++i)
         {
             if(name_base[i] == '/')
                 path += '\\';
@@ -192,7 +213,7 @@ void findImageSequence(const std::string &name_base,
 #endif // _WIN32
 
 // build a string from a sequence.
-#if _MSC_VER < 1300
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
 template <class iterator>
 std::string stringify (const iterator &start, const iterator &end)
 {
@@ -253,13 +274,11 @@ bool isImage(char const * filename)
 
 ImageExportInfo::ImageExportInfo( const char * filename )
     : m_filename(filename),
-      m_x_res(0), m_y_res(0),
-      m_profile_length(0), m_profile_ptr(NULL)
+      m_x_res(0), m_y_res(0)
 {}
 
 ImageExportInfo::~ImageExportInfo()
 {
-    delete[] m_profile_ptr;
 }
 
 ImageExportInfo & ImageExportInfo::setFileType( const char * filetype )
@@ -333,23 +352,16 @@ vigra::Diff2D ImageExportInfo::getPosition() const
     return m_pos;
 }
 
-uint32_t ImageExportInfo::getICCProfileLength() const
+const ImageExportInfo::ICCProfile & ImageExportInfo::getICCProfile() const
 {
-    return m_profile_length;
+    return m_icc_profile;
 }
 
-const unsigned char *ImageExportInfo::getICCProfile() const
+ImageExportInfo & ImageExportInfo::setICCProfile(
+    const ImageExportInfo::ICCProfile &profile)
 {
-    return m_profile_ptr;
-}
-
-void ImageExportInfo::setICCProfile(const uint32_t length, const unsigned char * const buf)
-{
-    // Delete existing profile.
-    delete[] m_profile_ptr;
-    m_profile_length = length;
-    m_profile_ptr = new unsigned char[m_profile_length];
-    VIGRA_CSTD::memcpy(m_profile_ptr, buf, m_profile_length);
+    m_icc_profile = profile;
+    return *this;
 }
 
 // return an encoder for a given ImageExportInfo object
@@ -376,17 +388,26 @@ std::auto_ptr<Encoder> encoder( const ImageExportInfo & info )
         int quality = -1;
         std::istringstream compstream(comp.c_str());
         compstream >> quality;
+
+        // FIXME: dangelo: This code might lead to strange effects (setting an invalid compression mode),
+        // if other formats also support a numerical compression parameter.
         if ( quality != -1 ) {
             enc->setCompressionType( "JPEG", quality );
-            return enc;
+        } else {
+            // leave any other compression type to the codec
+            enc->setCompressionType(comp);
         }
-
-        // leave any other compression type to the codec
-        enc->setCompressionType(comp);
     }
 
     std::string pixel_type = info.getPixelType();
     if ( pixel_type != "" ) {
+        if(!isPixelTypeSupported( enc->getFileType(), pixel_type ))
+        {
+            std::string msg("exportImage(): file type ");
+            msg += enc->getFileType() + " does not support requested pixel type "
+                                      + pixel_type + ".";
+            vigra_precondition(false, msg.c_str());
+        }
         enc->setPixelType(pixel_type);
     }
 
@@ -395,9 +416,8 @@ std::auto_ptr<Encoder> encoder( const ImageExportInfo & info )
     enc->setYResolution(info.getYResolution());
     enc->setPosition(info.getPosition());
 
-    if (info.getICCProfileLength() > 0) {
-        enc->setICCProfile(info.getICCProfileLength(),
-                info.getICCProfile());
+    if ( info.getICCProfile().size() > 0 ) {
+        enc->setICCProfile(info.getICCProfile());
     }
 
     return enc;
@@ -418,20 +438,12 @@ ImageImportInfo::ImageImportInfo( const char * filename )
     m_num_extra_bands = decoder->getNumExtraBands();
     m_pos = decoder->getPosition();
 
-    m_profile_length = decoder->getICCProfileLength();
-    if (m_profile_length > 0) {
-        m_profile_ptr = new unsigned char[m_profile_length];
-        VIGRA_CSTD::memcpy(m_profile_ptr, decoder->getICCProfile(), m_profile_length);
-    }
-    else {
-        m_profile_ptr = NULL;
-    }
+    m_icc_profile = decoder->getICCProfile();
 
     decoder->abort(); // there probably is no better way than this
 }
 
 ImageImportInfo::~ImageImportInfo() {
-    delete[] m_profile_ptr;
 }
 
 const char * ImageImportInfo::getFileName() const
@@ -456,8 +468,12 @@ ImageImportInfo::PixelType ImageImportInfo::pixelType() const
      return UINT8;
    if (pixeltype == "INT16")
      return INT16;
+   if (pixeltype == "UINT16")
+     return UINT16;
    if (pixeltype == "INT32")
      return INT32;
+   if (pixeltype == "UINT32")
+     return UINT32;
    if (pixeltype == "FLOAT")
      return FLOAT;
    if (pixeltype == "DOUBLE")
@@ -486,9 +502,9 @@ int ImageImportInfo::numExtraBands() const
     return m_num_extra_bands;
 }
 
-vigra::Size2D ImageImportInfo::size() const
+Size2D ImageImportInfo::size() const
 {
-    return vigra::Size2D( m_width, m_height );
+    return Size2D( m_width, m_height );
 }
 
 bool ImageImportInfo::isGrayscale() const
@@ -506,7 +522,7 @@ bool ImageImportInfo::isByte() const
     return m_pixeltype == "UINT8";
 }
 
-vigra::Diff2D ImageImportInfo::getPosition() const
+Diff2D ImageImportInfo::getPosition() const
 {
     return m_pos;
 }
@@ -521,14 +537,9 @@ float ImageImportInfo::getYResolution() const
     return m_y_res;
 }
 
-uint32_t ImageImportInfo::getICCProfileLength() const
+const ImageImportInfo::ICCProfile & ImageImportInfo::getICCProfile() const
 {
-    return m_profile_length;
-}
-
-const unsigned char *ImageImportInfo::getICCProfile() const
-{
-    return m_profile_ptr;
+    return m_icc_profile;
 }
 
 // return a decoder for a given ImageImportInfo object

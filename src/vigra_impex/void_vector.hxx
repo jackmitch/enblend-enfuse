@@ -4,21 +4,36 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
-/*    ( Version 1.2.0, Aug 07 2003 )                                    */
-/*    You may use, modify, and distribute this software according       */
-/*    to the terms stated in the LICENSE file included in               */
-/*    the VIGRA distribution.                                           */
-/*                                                                      */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
-/*        koethe@informatik.uni-hamburg.de                              */
+/*        koethe@informatik.uni-hamburg.de          or                  */
+/*        vigra@kogs1.informatik.uni-hamburg.de                         */
 /*                                                                      */
-/*  THIS SOFTWARE IS PROVIDED AS IS AND WITHOUT ANY EXPRESS OR          */
-/*  IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED      */
-/*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
+
 
 #ifndef VIGRA_IMPEX_VOIDVECTOR
 #define VIGRA_IMPEX_VOIDVECTOR
@@ -57,27 +72,27 @@ namespace vigra
             if (m_capacity)
                 m_data = ::operator new(m_capacity);
         }
-
+    
         void_vector_base( size_type size , size_t capacity)
             : m_data(0), m_size(size), m_capacity(capacity)
         {
             if (m_capacity)
                 m_data = ::operator new(m_capacity);
         }
-
+    
         void_vector_base( this_type const & rhs )
             : m_size(rhs.m_size), m_capacity(rhs.m_capacity)
         {
             m_data = ::operator new(rhs.m_capacity);
             VIGRA_CSTD::memcpy( m_data, rhs.m_data, m_size );
         }
-
+    
         ~void_vector_base()
         {
             if(m_data)
                 ::operator delete(m_data);
         }
-
+    
         this_type & operator=( this_type const & rhs )
         {
             if ( this == &rhs ) return *this;
@@ -88,7 +103,7 @@ namespace vigra
             VIGRA_CSTD::memcpy( m_data, rhs.m_data, m_size );
             return *this;
         }
-
+    
         void append( this_type const & rhs )
         {
             size_type new_size = m_size + rhs.m_size;
@@ -134,12 +149,12 @@ namespace vigra
         {
             return m_size;
         }
-
+    
         inline size_type capacity() const
         {
             return m_capacity;
         }
-
+    
         inline void clear()
         {
             m_size = 0;
@@ -156,7 +171,7 @@ namespace vigra
         typedef T value_type;
         typedef value_type * iterator;
         typedef value_type const * const_iterator;
-
+    
     public:
         void_vector()
             : void_vector_base( 0, 20 * sizeof(value_type) )
@@ -198,26 +213,31 @@ namespace vigra
         {
             return data() + size();
         }
-
+    
         inline iterator end()
         {
             return data() + size();
         }
-
+    
         void push_back( value_type const & t )
         {
             if ( size() == capacity() ) reserve();
             data()[m_size++] = t;
         }
-
+    
         value_type & operator[]( size_type i )
         {
             return data()[i];
         }
-
+    
         value_type const & operator[]( size_type i ) const
         {
             return data()[i];
+        }
+
+        void reserve()
+        {
+            void_vector_base::reserve();
         }
 
         void reserve( size_type new_capacity )

@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: FunctorAccessor.h,v 1.4 2005-06-24 03:39:37 acmihal Exp $
+ *  $Id: FunctorAccessor.h,v 1.4.2.1 2006-09-05 07:39:28 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -26,10 +26,8 @@
 
 #include <vigra/numerictraits.hxx>
 
-using vigra::VigraTrueType;
-using vigra::VigraFalseType;
-
 namespace vigra_ext {
+
 
 /** This class can be used to apply a function when reading
     the input image.
@@ -172,57 +170,17 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class V, class ITERATOR, int IDX>
-    void setComponent( V const & value, ITERATOR const & i) const {
-        // Cannot do a compile-time index check.
-        // See impex.hxx::write_bands for an example of a function that
-        // does a runtime switch between using a SplitVector2Accessor and a
-        // SplitVectorNAccessor. We want the whole function to compile for
-        // either accessor type. Therefore IDX>1 should compile even though
-        // it should never be called at runtime.
-        setComponent<V, ITERATOR>(value, i, IDX);
-    }
+	/** return the size (Number of Bands) */
+	template <class ITERATOR>
+	unsigned int size(ITERATOR const & i) const
+	{
+		return 2;
+	}
 
     Iter1 i1_;
     Acc1  a1_;
     Iter2 i2_;
     Acc2  a2_;
-};
-
-template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType, bool useFirst>
-class FirstOrSecondComponent {};
-
-template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType>
-class FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, ComponentType, true> {
-public:
-    template <class V, class ITERATOR, int IDX>
-    inline static void set(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
-            V const & value, ITERATOR const & i) {
-        a1.template setComponent<V, Iter1, typename ITERATOR::value_type, IDX>(value, i1, *i);
-    };
-
-    template <class ITERATOR, int IDX>
-    inline static ComponentType get(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
-            ITERATOR const & i) {
-        return a1.template getComponent<Iter1, typename ITERATOR::value_type, IDX>(i1, *i);
-    };
-};
-
-template <class Iter1, class Acc1, class Iter2, class Acc2, typename ComponentType>
-class FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, ComponentType, false> {
-public:
-    template <class V, class ITERATOR, int IDX>
-    inline static void set(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
-            V const & value, ITERATOR const & i) {
-        a2.set(value, i2, *i);
-    };
-
-    template <class ITERATOR, int IDX>
-    inline static ComponentType get(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2,
-            ITERATOR const & i) {
-        return a2(i2, *i);
-    };
 };
 
 /** split a vector image into a vector and a scalar image
@@ -263,13 +221,12 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class V, class ITERATOR, int IDX>
-    inline void setComponent( V const & value, ITERATOR const & i ) const
-    {
-        FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
-                ::template set<V, ITERATOR, IDX>(i1_, a1_, i2_, a2_, value, i);
-    }
+	/** return the size (Number of Bands) */
+	template <class ITERATOR>
+	unsigned int size(ITERATOR const & i) const
+	{
+		return SIZE;
+	}
 
     Iter1 i1_;
     Acc1  a1_;
@@ -321,18 +278,6 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class ITERATOR, int IDX>
-    component_type getComponent(ITERATOR const & i) const {
-        // Cannot do a compile-time index check.
-        // See impex.hxx::read_bands for an example of a function that
-        // does a runtime switch between using a MergeScalarScalar2VectorAccessor and a
-        // MergeVectorScalar2VectorAccessor. We want the whole function to compile for
-        // either accessor type. Therefore IDX>1 should compile even though
-        // it should never be called at runtime.
-        return getComponent<ITERATOR>(i, IDX);
-    }
-
         /** read one component, with offset */
     template <class ITERATOR, class DIFFERENCE_>
     component_type const & getComponent(ITERATOR const & i, DIFFERENCE_ const & d, int idx) const
@@ -348,17 +293,12 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class ITERATOR, class DIFFERENCE_, int IDX>
-    component_type const & getComponent(ITERATOR const & i, DIFFERENCE_ const & d) const {
-        // Cannot do a compile-time index check.
-        // See impex.hxx::read_bands for an example of a function that
-        // does a runtime switch between using a MergeScalarScalar2VectorAccessor and a
-        // MergeVectorScalar2VectorAccessor. We want the whole function to compile for
-        // either accessor type. Therefore IDX>1 should compile even though
-        // it should never be called at runtime.
-        return getComponent<ITERATOR, DIFFERENCE_>(i, d, IDX);
-    }
+	/** return the size (Number of Bands) */
+	template <class ITERATOR>
+	unsigned int size(ITERATOR const & i) const
+	{
+		return 2;
+	}
 
     Iter1 i1_;
     Acc1  a1_;
@@ -429,14 +369,6 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class ITERATOR, int IDX>
-    component_type getComponent(ITERATOR const & i) const
-    {
-        return FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
-                ::template get<ITERATOR, IDX>(i1_, a1_, i2_, a2_, i);
-    }
-
         /** read one component, with offset */
     template <class ITERATOR, class DIFFERENCE_>
     component_type const getComponent(ITERATOR i, DIFFERENCE_ const & d, int idx) const
@@ -455,14 +387,13 @@ public:
 	}
     }
 
-    // Version with compile-time constant idx
-    template <class ITERATOR, class DIFFERENCE_, int IDX>
-    component_type const getComponent(ITERATOR i, DIFFERENCE_ const & d) const
-    {
-        i += d;
-        return FirstOrSecondComponent<Iter1, Acc1, Iter2, Acc2, component_type, (IDX<(SIZE-1))>
-                ::template get<ITERATOR, IDX>(i1_, a1_, i2_, a2_, i);
-    }
+
+	/** return the size (Number of Bands) */
+	template <class ITERATOR>
+	unsigned int size(ITERATOR const & i) const
+	{
+		return SIZE;
+	}
 
     Iter1 i1_;
     Acc1  a1_;
@@ -628,18 +559,12 @@ protected:
     }
 
     /** if scalar & vector image */
-    // TODO (jbeda): We need to figure out what is going on here.  How did this
-    // ever compile as it has the exact same footprint as the above method.
-    // My guess is that gcc doesn't give errors for template functions that
-    // are never compiled.  MSVC 7.1 does.
-    /*
     template <class V, class ITERATOR>
-    void setComponentScalarIsScalar(V const & value, ITERATOR const & i, int idx,
+    void setComponentScalarIsVector(V const & value, ITERATOR const & i, int idx,
 				    vigra::VigraTrueType) const
     {
 	vigra_fail("vector -> scalar, vector accessor not implemented");
     }
-    */
 
     /** if vector & scalar image */
     template <class V, class ITERATOR>
@@ -658,18 +583,12 @@ protected:
     }
 
     /** if vector & vector image */
-    // TODO (jbeda): We need to figure out what is going on here.  How did this
-    // ever compile as it has the exact same footprint as the above method.
-    // My guess is that gcc doesn't give errors for template functions that
-    // are never compiled.  MSVC 7.1 does.
-    /*
     template <class V, class ITERATOR>
-    void setComponentVectorIsScalar(V const & value, ITERATOR const & i, int idx,
+    void setComponentVectorIsVector(V const & value, ITERATOR const & i, int idx,
 				    vigra::VigraTrueType) const
     {
 	vigra_fail("vector -> vector, vector accessor not implemented");
     }
-    */
 
     Iter1 i1_;
     Acc1  a1_;
