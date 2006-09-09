@@ -296,6 +296,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
                 numLevels, wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
+        //exportPyramid(maskGP, "mask");
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
 
@@ -338,6 +339,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Laplacian pyramid from white image.
         vector<ImagePyramidType*> *whiteLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                        "whiteGP",
                         numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(whitePair.first))),
                         roiBB.apply(maskImage(*(whitePair.second))));
@@ -369,6 +371,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Build Laplacian pyramid from black image.
         vector<ImagePyramidType*> *blackLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                        "blackGP",
                         numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(blackPair.first))),
                         roiBB.apply(maskImage(*(blackPair.second))));

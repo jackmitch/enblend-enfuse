@@ -30,6 +30,7 @@
 #include "vigra/error.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
+#include "vigra/rgbvalue.hxx"
 #include "vigra/transformimage.hxx"
 
 #include "fixmath.h"
@@ -41,10 +42,75 @@ using vigra::linearRangeMapping;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::triple;
+using vigra::Int8;
+using vigra::Int16;
+using vigra::Int32;
+using vigra::Int64;
+using vigra::RGBValue;
+using vigra::UInt8;
+using vigra::UInt16;
+using vigra::UInt32;
+using vigra::UInt64;
 using vigra::UInt16Image;
 using vigra::UInt16RGBImage;
 
 namespace enblend {
+
+struct Error_PyramidPromoteTraits_not_specialized_for_this_case { };
+
+template<class A>
+struct PyramidPromoteTraits {
+    typedef Error_PyramidPromoteTraits_not_specialized_for_this_case Type;
+    typedef Error_PyramidPromoteTraits_not_specialized_for_this_case Promote;
+};
+
+#define DEFINE_PYRAMIDPROMOTETRAITS(A, B) \
+template<> \
+struct PyramidPromoteTraits<A> { \
+    typedef A Type; \
+    typedef B Promote; \
+};
+
+// SKIPSM 5x5 math requires 6 more bits on top of base type
+DEFINE_PYRAMIDPROMOTETRAITS(Int8, Int16);
+DEFINE_PYRAMIDPROMOTETRAITS(Int16, Int32);
+DEFINE_PYRAMIDPROMOTETRAITS(Int32, Int64);
+DEFINE_PYRAMIDPROMOTETRAITS(Int64, double);
+DEFINE_PYRAMIDPROMOTETRAITS(UInt8, UInt16);
+DEFINE_PYRAMIDPROMOTETRAITS(UInt16, UInt32);
+DEFINE_PYRAMIDPROMOTETRAITS(UInt32, UInt64);
+DEFINE_PYRAMIDPROMOTETRAITS(UInt64, double);
+DEFINE_PYRAMIDPROMOTETRAITS(float, float);
+DEFINE_PYRAMIDPROMOTETRAITS(double, double);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int8>, RGBValue<Int16>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int16>, RGBValue<Int32>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int32>, RGBValue<Int64>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int64>, RGBValue<double>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt8>, RGBValue<UInt16>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt16>, RGBValue<UInt32>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt32>, RGBValue<UInt64>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt64>, RGBValue<double>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<float>, RGBValue<float>);
+DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
+
+#define SKIPSM5X5(MASK, IMAGE) \
+    UInt16 mtmp1 = MASK;                    RealPixelType itmp1 = IMAGE;                        \
+    UInt16 mtmp2 = msr0 + mtmp1;            RealPixelType itmp2 = isr0 + itmp1;                 \
+    msr0 = mtmp1;                           isr0 = itmp1;                                       \
+    mtmp1 = msr1 + mtmp2;                   itmp1 = isr1 + itmp2;                               \
+    msr1 = mtmp2;                           isr1 = itmp2;                                       \
+    mtmp2 = msr2 + mtmp1;                   itmp2 = isr2 + itmp1;                               \
+    msr2 = mtmp1;                           isr2 = itmp1;                                       \
+    mtmp1 = msr3 + mtmp2;                   itmp1 = isr3 + itmp2;                               \
+    msr3 = mtmp2;                           isr3 = itmp2;                                       \
+    mtmp2 = msc0[srcx] + mtmp1;             itmp2 = isc0[srcx] + itmp1;                         \
+    msc0[srcx] = mtmp1;                     isc0[srcx] = itmp1;                                 \
+    mtmp1 = msc1[srcx] + mtmp2;             itmp1 = isc1[srcx] + itmp2;                         \
+    msc1[srcx] = mtmp2;                     isc1[srcx] = itmp2;                                 \
+    mtmp2 = msc2[srcx] + mtmp1;             itmp2 = isc2[srcx] + itmp1;                         \
+    msc2[srcx] = mtmp1;                     isc2[srcx] = itmp1;                                 \
+    mtmp1 = msc3[srcx] + mtmp2;             itmp1 = isc3[srcx] + itmp2;                         \
+    msc3[srcx] = mtmp2;                     isc3[srcx] = itmp2;
 
 // Pyramid filter coefficients.
 static const double A = 0.4;
@@ -93,69 +159,389 @@ inline void reduce(bool wraparound,
 
     typedef typename SrcAccessor::value_type PixelType;
     typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename MaskAccessor::value_type MaskPixelType;
     typedef typename DestMaskAccessor::value_type DestMaskPixelType;
+    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
+    typedef typename PyramidPromoteTraits<MaskPixelType>::Promote SKIPSMMaskPixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
+    int dst_w = dest_lowerright.x - dest_upperleft.x;
+    //int dst_h = dest_lowerright.y - dest_upperleft.y;
+
     vigra_precondition(src_w > 1 && src_h > 1,
             "src image too small in reduce");
 
+    SKIPSMImagePixelType isr0, isr1, isrp;
+    SKIPSMImagePixelType *isc0 = new SKIPSMImagePixelType[dst_w + 1];
+    SKIPSMImagePixelType *isc1 = new SKIPSMImagePixelType[dst_w + 1];
+    SKIPSMImagePixelType *iscp = new SKIPSMImagePixelType[dst_w + 1];
+
     DestImageIterator dy = dest_upperleft;
-    DestImageIterator dend = dest_lowerright;
+    DestImageIterator dx = dy;
     SrcImageIterator sy = src_upperleft;
+    SrcImageIterator sx = sy;
     MaskIterator my = mask_upperleft;
+    MaskIterator mx = my;
     DestMaskIterator dmy = dest_mask_upperleft;
-    for (int srcy = 0; dy.y != dend.y; ++dy.y, ++dmy.y, sy.y+=2, my.y+=2, srcy+=2) {
+    DestMaskIterator dmx = dmy;
 
-        DestImageIterator dx = dy;
-        SrcImageIterator sx = sy;
-        MaskIterator mx = my;
-        DestMaskIterator dmx = dmy;
-        for (int srcx = 0; dx.x != dend.x; ++dx.x, ++dmx.x, sx.x+=2, mx.x+=2, srcx+=2) {
+    bool evenY = true;
+    bool evenX = true;
+    int srcy = 0;
+    int srcx = 0;
+    int dsty = 0;
+    int dstx = 0;
 
-            RealPixelType p(NumericTraits<RealPixelType>::zero());
-            unsigned int noContrib = 10000;
+// time with no rows: 0
+// time with first row: 0
+// time with only last row: 0
+// time with first, last, and odd main rows: .44 sec / pyramid
+// time with first, last, and even main rows: 1.1 sec / pyramid
+// time with everything: 1.62 sec / pyramid
 
-            for (int kx = -2; kx <= 2; kx++) {
-                int bounded_kx = kx;
-
-                if (wraparound) {
-                    // Boundary condition: wrap around the image.
-                    if (srcx + kx < 0) bounded_kx += src_w;
-                    if (srcx + kx >= src_w) bounded_kx -= src_w;
-                } else {
-                    // Boundary condition: replicate first and last column.
-                    if (srcx + kx < 0) bounded_kx -= (srcx + kx);
-                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
-                }
-
-                for (int ky = -2; ky <= 2; ky++) {
-                    int bounded_ky = ky;
-
-                    // Boundary condition: replicate top and bottom rows.
-                    if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-                    if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
-
-                    if (mx(bounded_kx, bounded_ky)) {
-                        p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
-                    } else {
-                        // Transparent pixels don't count.
-                        noContrib -= W100[kx+2] * W100[ky+2];
-                    }
-
-                }
+    // First row
+    {
+        isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        for (sx = sy, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x) {
+            PixelType current = sa(sx);
+            if (evenX) {
+                isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                // FIXME Check if this x6 is faster with shifts or with integer multiply
+                //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
+                //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2) + sa(sx);
+                isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current;
+                isr1 = isr0 + isrp;
+                isr0 = current;
             }
-
-            // Adjust filter for any ignored transparent pixels.
-            if (noContrib != 0) p /= ((double)noContrib / 10000.0);
-
-            da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
-            dma.set((noContrib == 0) ? NumericTraits<DestMaskPixelType>::zero()
-                                     : NumericTraits<DestMaskPixelType>::nonZero(),
-                    dmx);
-
+            else {
+                isrp = current << 2;
+                ++dstx;
+            }
+            evenX = !evenX;
+        }
+        // Last entries in first row
+        if (!evenX) {
+            // previous srcx was even
+            ++dstx;
+            isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            // FIXME Check if this x6 is faster with shifts or with integer multiply
+            //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
+            //isc0[dstx] = isr1 + (isr0 * 6);
+            isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6));
+        }
+        else {
+            // previous srcx was odd
+            isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            // FIXME Check if this x6 is faster with shifts or with integer multiply
+            //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
+            //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2);
+            isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp;
         }
     }
+    ++sy.y;
+
+    // Main Rows
+    {
+        for (evenY = false, srcy = 1, dsty = 0; srcy < src_h; ++srcy, ++sy.y) {
+
+            isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+
+            if (evenY) {
+                // Even-numbered row
+
+                // First entry in row
+                sx = sy;
+                isr0 = sa(sx);
+                //isc1[0] = isc0[0] + (iscp[0] << 2);
+                //isc0[0] = sa(sx);
+                ++sx.x;
+                dx = dy;
+
+                // Main entries in row
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
+                    PixelType current = sa(sx);
+                    if (evenX) {
+                        // FIXME Check if this x6 is faster with shifts or with integer multiply
+                        //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
+                        //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
+                        SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                        isc1[dstx] = isc0[dstx] + iscp[dstx];
+                        // FIXME Check if this x6 is faster with shifts or with integer multiply
+                        //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
+                        //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2) + sa(sx);
+                        isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current;
+                        isr1 = isr0 + isrp;
+                        isr0 = current;
+                        //da.set((da(dx) + isc0[dstx]) / 256, dx);
+                        p += isc0[dstx];
+                        p >>= 8;
+                        da.set(p, dx);
+                        ++dx.x;
+                    }
+                    else {
+                        isrp = current << 2;
+                        ++dstx;
+                    }
+                    evenX = !evenX;
+                }
+
+                // Last entries in row
+                if (!evenX) {
+                    // previous srcx was even
+                    ++dstx;
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
+                    //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
+                    SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                    isc1[dstx] = isc0[dstx] + iscp[dstx];
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
+                    isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6));
+                    //da.set((da(dx) + isc0[dstx]) / 256, dx);
+                    p += isc0[dstx];
+                    p >>= 8;
+                    da.set(p, dx);
+                }
+                else {
+                    // Previous srcx was odd
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
+                    //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
+                    SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                    isc1[dstx] = isc0[dstx] + iscp[dstx];
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
+                    isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp;
+                    //da.set((da(dx) + isc0[dstx]) / 256, dx);
+                    p += isc0[dstx];
+                    p >>= 8;
+                    da.set(p, dx);
+                }
+
+                ++dsty;
+                ++dy.y;
+
+            }
+            else {
+                // Odd-numbered row
+                for (sx = sy, evenX = true, srcx = 0, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
+                    PixelType current = sa(sx);
+                    if (evenX) {
+                        // FIXME Check if this x6 is faster with shifts or with integer multiply
+                        //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
+                        iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current) << 2;
+                        isr1 = isr0 + isrp;
+                        isr0 = current;
+                    }
+                    else {
+                        isrp = current << 2;
+                        ++dstx;
+                    }
+                    evenX = !evenX;
+                }
+                // Last entries in row
+                if (!evenX) {
+                    // previous srcx was even
+                    ++dstx;
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
+                    iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6))) << 2;
+                }
+                else {
+                    // previous srcx was odd
+                    // FIXME Check if this x6 is faster with shifts or with integer multiply
+                    //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
+                    iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp) << 2;
+                }
+            }
+            evenY = !evenY;
+        }
+    }
+
+    // Last Rows
+    {
+        if (!evenY) {
+            // Last srcy was even
+            // odd row will set all iscp[] to zero
+            // even row will do:
+            //isc0[dstx] = 0;
+            //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
+            //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
+            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
+                // FIXME Check if this x6 is faster with shifts or with integer multiply
+                //da.set((isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1)) / 256, dx);
+                //da.set((isc1[dstx] + (isc0[dstx] * 6)) / 256, dx);
+                //SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * 6)) / 256;
+                SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6))) >> 8;
+                da.set(p, dx);
+            }
+        }
+        else {
+            // Last srcy was odd
+            // even row will do:
+            // isc0[dstx] = 0;
+            // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
+            // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
+            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
+                // FIXME Check if this x6 is faster with shifts or with integer multiply
+                //da.set((isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2)) / 256, dx);
+                //da.set((isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2)) / 256, dx);
+                //SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2)) / 256;
+                SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx]) >> 8;
+                da.set(p, dx);
+            }
+        }
+    }
+
+    delete[] isc0;
+    delete[] isc1;
+    delete[] iscp;
+
+    //RealPixelType isr0, isr1, isr2, isr3;
+    //RealPixelType *isc0 = new RealPixelType[src_w + 2];
+    //RealPixelType *isc1 = new RealPixelType[src_w + 2];
+    //RealPixelType *isc2 = new RealPixelType[src_w + 2];
+    //RealPixelType *isc3 = new RealPixelType[src_w + 2];
+
+    //UInt16 msr0, msr1, msr2, msr3;
+    //UInt16 *msc0 = new UInt16[src_w + 2];
+    //UInt16 *msc1 = new UInt16[src_w + 2];
+    //UInt16 *msc2 = new UInt16[src_w + 2];
+    //UInt16 *msc3 = new UInt16[src_w + 2];
+
+    //for (int i = 0; i < src_w + 2; i++) {
+    //    isc0[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isc1[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isc2[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isc3[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    msc0[i] = NumericTraits<UInt16>::zero();
+    //    msc1[i] = NumericTraits<UInt16>::zero();
+    //    msc2[i] = NumericTraits<UInt16>::zero();
+    //    msc3[i] = NumericTraits<UInt16>::zero();
+    //}
+
+    //DestImageIterator dy = dest_upperleft;
+    //SrcImageIterator sy = src_upperleft;
+    //MaskIterator my = mask_upperleft;
+    //DestMaskIterator dmy = dest_mask_upperleft;
+
+    //bool eveny = true;
+    //int srcy = 0;
+    //for (srcy = 0; srcy < src_h + 2; ++my.y, ++sy.y, ++srcy) {
+    //    SrcImageIterator sx = sy;
+    //    DestImageIterator dx = dy;
+    //    MaskIterator mx = my;
+    //    DestMaskIterator dmx = dmy;
+
+    //    isr0 = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isr1 = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isr2 = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    isr3 = RealPixelType(NumericTraits<RealPixelType>::zero());
+    //    msr0 = NumericTraits<UInt16>::zero();
+    //    msr1 = NumericTraits<UInt16>::zero();
+    //    msr2 = NumericTraits<UInt16>::zero();
+    //    msr3 = NumericTraits<UInt16>::zero();
+
+    //    bool evenx = true;
+    //    int srcx = 0;
+    //    for (srcx = 0; srcx < src_w + 2; ++mx.x, ++sx.x, ++srcx) {
+
+    //        SKIPSM5X5((((srcy < src_h) && (srcx < src_w) && ma(mx)) ? 1 : 0),
+    //                  (((srcy < src_h) && (srcx < src_w) && ma(mx)) ? NumericTraits<PixelType>::toRealPromote(sa(sx)) : RealPixelType(NumericTraits<RealPixelType>::zero())))
+
+    //        if (eveny && evenx) {
+    //            if (srcy && srcx) {
+    //                if (mtmp1) {
+    //                    da.set(NumericTraits<PixelType>::fromRealPromote(itmp1 / mtmp1), dx, Diff2D(-1, -1));
+    //                    dma.set(NumericTraits<DestMaskPixelType>::nonZero(), dmx, Diff2D(-1, -1));
+    //                } else {
+    //                    dma.set(NumericTraits<DestMaskPixelType>::zero(), dmx, Diff2D(-1, -1));
+    //                }
+    //            }
+    //            ++dx.x;
+    //            ++dmx.x;
+    //        }
+
+    //        evenx = !evenx;
+    //    }
+
+    //    if (eveny) {
+    //        ++dy.y;
+    //        ++dmy.y;
+    //    }
+    //    eveny = !eveny;
+    //}
+
+    //delete[] isc0;
+    //delete[] isc1;
+    //delete[] isc2;
+    //delete[] isc3;
+    //delete[] msc0;
+    //delete[] msc1;
+    //delete[] msc2;
+    //delete[] msc3;
+
+    //DestImageIterator dy = dest_upperleft;
+    //DestImageIterator dend = dest_lowerright;
+    //SrcImageIterator sy = src_upperleft;
+    //MaskIterator my = mask_upperleft;
+    //DestMaskIterator dmy = dest_mask_upperleft;
+    //for (int srcy = 0; dy.y != dend.y; ++dy.y, ++dmy.y, sy.y+=2, my.y+=2, srcy+=2) {
+
+    //    DestImageIterator dx = dy;
+    //    SrcImageIterator sx = sy;
+    //    MaskIterator mx = my;
+    //    DestMaskIterator dmx = dmy;
+    //    for (int srcx = 0; dx.x != dend.x; ++dx.x, ++dmx.x, sx.x+=2, mx.x+=2, srcx+=2) {
+
+    //        RealPixelType p(NumericTraits<RealPixelType>::zero());
+    //        unsigned int noContrib = 10000;
+
+    //        for (int kx = -2; kx <= 2; kx++) {
+    //            int bounded_kx = kx;
+
+    //            if (wraparound) {
+    //                // Boundary condition: wrap around the image.
+    //                if (srcx + kx < 0) bounded_kx += src_w;
+    //                if (srcx + kx >= src_w) bounded_kx -= src_w;
+    //            } else {
+    //                // Boundary condition: replicate first and last column.
+    //                if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+    //                if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+    //            }
+
+    //            for (int ky = -2; ky <= 2; ky++) {
+    //                int bounded_ky = ky;
+
+    //                // Boundary condition: replicate top and bottom rows.
+    //                if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+    //                if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+    //                if (mx(bounded_kx, bounded_ky)) {
+    //                    p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
+    //                } else {
+    //                    // Transparent pixels don't count.
+    //                    noContrib -= W100[kx+2] * W100[ky+2];
+    //                }
+
+    //            }
+    //        }
+
+    //        // Adjust filter for any ignored transparent pixels.
+    //        if (noContrib != 0) p /= ((double)noContrib / 10000.0);
+
+    //        da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
+    //        dma.set((noContrib == 0) ? NumericTraits<DestMaskPixelType>::zero()
+    //                                 : NumericTraits<DestMaskPixelType>::nonZero(),
+    //                dmx);
+
+    //    }
+    //}
 
 };
 
@@ -196,6 +582,76 @@ inline void reduce(bool wraparound,
     int src_h = src_lowerright.y - src_upperleft.y;
     vigra_precondition(src_w > 1 && src_h > 1,
             "src image too small in reduce");
+
+/*    RealPixelType isr0, isr1, isr2, isr3;
+    RealPixelType *isc0 = new RealPixelType[src_w + 2];
+    RealPixelType *isc1 = new RealPixelType[src_w + 2];
+    RealPixelType *isc2 = new RealPixelType[src_w + 2];
+    RealPixelType *isc3 = new RealPixelType[src_w + 2];
+
+    UInt16 msr0, msr1, msr2, msr3;
+    UInt16 *msc0 = new UInt16[src_w + 2];
+    UInt16 *msc1 = new UInt16[src_w + 2];
+    UInt16 *msc2 = new UInt16[src_w + 2];
+    UInt16 *msc3 = new UInt16[src_w + 2];
+
+    for (int i = 0; i < src_w + 2; i++) {
+        isc0[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isc1[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isc2[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isc3[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
+        msc0[i] = NumericTraits<UInt16>::zero();
+        msc1[i] = NumericTraits<UInt16>::zero();
+        msc2[i] = NumericTraits<UInt16>::zero();
+        msc3[i] = NumericTraits<UInt16>::zero();
+    }
+
+    DestImageIterator dy = dest_upperleft;
+    SrcImageIterator sy = src_upperleft;
+
+    bool eveny = true;
+    int srcy = 0;
+    for (srcy = 0; srcy < src_h + 2; ++sy.y, ++srcy) {
+        SrcImageIterator sx = sy;
+        DestImageIterator dx = dy;
+
+        isr0 = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isr1 = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isr2 = RealPixelType(NumericTraits<RealPixelType>::zero());
+        isr3 = RealPixelType(NumericTraits<RealPixelType>::zero());
+        msr0 = NumericTraits<UInt16>::zero();
+        msr1 = NumericTraits<UInt16>::zero();
+        msr2 = NumericTraits<UInt16>::zero();
+        msr3 = NumericTraits<UInt16>::zero();
+
+        bool evenx = true;
+        int srcx = 0;
+        for (srcx = 0; srcx < src_w + 2; ++sx.x, ++srcx) {
+
+            SKIPSM5X5((((srcy < src_h) && (srcx < src_w)) ? 1 : 0),
+                      (((srcy < src_h) && (srcx < src_w)) ? NumericTraits<PixelType>::toRealPromote(sa(sx)) : RealPixelType(NumericTraits<RealPixelType>::zero())))
+
+            if (eveny && evenx) {
+                if (srcy && srcx && mtmp1) da.set(NumericTraits<PixelType>::fromRealPromote(itmp1 / mtmp1), dx, Diff2D(-1, -1));
+                ++dx.x;
+            }
+
+            evenx = !evenx;
+        }
+
+        if (eveny) ++dy.y;
+        eveny = !eveny;
+    }
+
+    delete[] isc0;
+    delete[] isc1;
+    delete[] isc2;
+    delete[] isc3;
+    delete[] msc0;
+    delete[] msc1;
+    delete[] msc2;
+    delete[] msc3;
+*/
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
@@ -588,7 +1044,7 @@ inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 
 /** Calculate the Laplacian pyramid of the given SrcImage/AlphaImage pair. */
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
-vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
+vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
         typename SrcImageType::const_traverser src_lowerright,
@@ -602,6 +1058,8 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
                     numLevels, wraparound,
                     src_upperleft, src_lowerright, sa,
                     alpha_upperleft, aa);
+
+    //exportPyramid(gp, exportName);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
         cout << "Generating Laplacian pyramid:";
@@ -631,11 +1089,12 @@ vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
 
 // Version using argument object factories.
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
-inline vector<PyramidImageType*> *laplacianPyramid(unsigned int numLevels,
+inline vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
     return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+            exportName,
             numLevels, wraparound,
             src.first, src.second, src.third,
             alpha.first, alpha.second);
@@ -673,7 +1132,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 
 // Export a scalar pyramid as a set of UINT16 tiff files.
 template <typename PyramidImageType>
-void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraTrueType) {
+void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType) {
     typedef typename PyramidImageType::value_type PyramidValueType;
 
     //for (unsigned int i = 0; i < (v->size() - 1); i++) {
@@ -701,7 +1160,7 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraTrueType) {
 
 // Export a vector pyramid as a set of UINT16 tiff files.
 template <typename PyramidImageType>
-void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
+void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType) {
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidValueType;
 
@@ -730,7 +1189,7 @@ void exportPyramid(vector<PyramidImageType*> *v, char *prefix, VigraFalseType) {
 
 // Export a pyramid as a set of UINT16 tiff files.
 template <typename PyramidImageType>
-void exportPyramid(vector<PyramidImageType*> *v, char *prefix) {
+void exportPyramid(vector<PyramidImageType*> *v, const char *prefix) {
     typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
     exportPyramid(v, prefix, pyramid_is_scalar());
 };
