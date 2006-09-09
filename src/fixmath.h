@@ -138,13 +138,13 @@ protected:
         if ((vFraction >= quarter) && (vFraction < threeQuarter)) {
             PyramidPixelType random = (PyramidPixelType(::Twister()) & (half - 1)) + quarter;
             if (random <= vFraction) {
-                return DestPixelType(v >> FractionBits) + 1;
+                return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> FractionBits) + 1));
             } else {
                 return DestPixelType(v >> FractionBits);
             }
         }
         else if (vFraction >= quarter) {
-            return DestPixelType(v >> FractionBits) + 1;
+            return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> FractionBits) + 1));
         }
         else {
             return DestPixelType(v >> FractionBits);

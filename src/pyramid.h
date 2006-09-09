@@ -93,6 +93,11 @@ DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt64>, RGBValue<double>);
 DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<float>, RGBValue<float>);
 DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
 
+// time with multiplies: 77.23
+// time with shifts: 80.78
+#define MUL6(A) (A * SKIPSMImagePixelType(6))
+//#define MUL6(A) ((A + (A << 1)) << 1)
+
 #define SKIPSM5X5(MASK, IMAGE) \
     UInt16 mtmp1 = MASK;                    RealPixelType itmp1 = IMAGE;                        \
     UInt16 mtmp2 = msr0 + mtmp1;            RealPixelType itmp2 = isr0 + itmp1;                 \
@@ -193,26 +198,16 @@ inline void reduce(bool wraparound,
     int dsty = 0;
     int dstx = 0;
 
-// time with no rows: 0
-// time with first row: 0
-// time with only last row: 0
-// time with first, last, and odd main rows: .44 sec / pyramid
-// time with first, last, and even main rows: 1.1 sec / pyramid
-// time with everything: 1.62 sec / pyramid
-
     // First row
     {
         isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         for (sx = sy, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x) {
-            PixelType current = sa(sx);
+            SKIPSMImagePixelType current(sa(sx));
             if (evenX) {
                 isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-                // FIXME Check if this x6 is faster with shifts or with integer multiply
-                //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
-                //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2) + sa(sx);
-                isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current;
+                isc0[dstx] = isr1 + MUL6(isr0) + isrp + current;
                 isr1 = isr0 + isrp;
                 isr0 = current;
             }
@@ -227,18 +222,12 @@ inline void reduce(bool wraparound,
             // previous srcx was even
             ++dstx;
             isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            // FIXME Check if this x6 is faster with shifts or with integer multiply
-            //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
-            //isc0[dstx] = isr1 + (isr0 * 6);
-            isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6));
+            isc0[dstx] = isr1 + MUL6(isr0);
         }
         else {
             // previous srcx was odd
             isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            // FIXME Check if this x6 is faster with shifts or with integer multiply
-            //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
-            //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2);
-            isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp;
+            isc0[dstx] = isr1 + MUL6(isr0) + isrp;
         }
     }
     ++sy.y;
@@ -264,20 +253,13 @@ inline void reduce(bool wraparound,
 
                 // Main entries in row
                 for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
-                    PixelType current = sa(sx);
+                    SKIPSMImagePixelType current(sa(sx));
                     if (evenX) {
-                        // FIXME Check if this x6 is faster with shifts or with integer multiply
-                        //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
-                        //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
-                        SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                        SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
                         isc1[dstx] = isc0[dstx] + iscp[dstx];
-                        // FIXME Check if this x6 is faster with shifts or with integer multiply
-                        //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
-                        //isc0[dstx] = isr1 + (isr0 * 6) + (isrp << 2) + sa(sx);
-                        isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current;
+                        isc0[dstx] = isr1 + MUL6(isr0) + isrp + current;
                         isr1 = isr0 + isrp;
                         isr0 = current;
-                        //da.set((da(dx) + isc0[dstx]) / 256, dx);
                         p += isc0[dstx];
                         p >>= 8;
                         da.set(p, dx);
@@ -294,30 +276,18 @@ inline void reduce(bool wraparound,
                 if (!evenX) {
                     // previous srcx was even
                     ++dstx;
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
-                    //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
-                    SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                    SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
-                    isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6));
-                    //da.set((da(dx) + isc0[dstx]) / 256, dx);
+                    isc0[dstx] = isr1 + MUL6(isr0);
                     p += isc0[dstx];
                     p >>= 8;
                     da.set(p, dx);
                 }
                 else {
                     // Previous srcx was odd
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //da.set(isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2), dx);
-                    //da.set(isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2), dx);
-                    SKIPSMImagePixelType p = isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx];
+                    SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //isc0[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
-                    isc0[dstx] = isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp;
-                    //da.set((da(dx) + isc0[dstx]) / 256, dx);
+                    isc0[dstx] = isr1 + MUL6(isr0) + isrp;
                     p += isc0[dstx];
                     p >>= 8;
                     da.set(p, dx);
@@ -330,11 +300,9 @@ inline void reduce(bool wraparound,
             else {
                 // Odd-numbered row
                 for (sx = sy, evenX = true, srcx = 0, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
-                    PixelType current = sa(sx);
+                    SKIPSMImagePixelType current(sa(sx));
                     if (evenX) {
-                        // FIXME Check if this x6 is faster with shifts or with integer multiply
-                        //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2) + sa(sx);
-                        iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp + current) << 2;
+                        iscp[dstx] = (isr1 + MUL6(isr0) + isrp + current) << 2;
                         isr1 = isr0 + isrp;
                         isr0 = current;
                     }
@@ -348,15 +316,11 @@ inline void reduce(bool wraparound,
                 if (!evenX) {
                     // previous srcx was even
                     ++dstx;
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1);
-                    iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6))) << 2;
+                    iscp[dstx] = (isr1 + MUL6(isr0)) << 2;
                 }
                 else {
                     // previous srcx was odd
-                    // FIXME Check if this x6 is faster with shifts or with integer multiply
-                    //iscp[dstx] = isr1 + ((isr0 + (isr0 << 1)) << 1) + (isrp << 2);
-                    iscp[dstx] = (isr1 + (isr0 * SKIPSMImagePixelType(6)) + isrp) << 2;
+                    iscp[dstx] = (isr1 + MUL6(isr0) + isrp) << 2;
                 }
             }
             evenY = !evenY;
@@ -373,11 +337,7 @@ inline void reduce(bool wraparound,
             //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
-                // FIXME Check if this x6 is faster with shifts or with integer multiply
-                //da.set((isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1)) / 256, dx);
-                //da.set((isc1[dstx] + (isc0[dstx] * 6)) / 256, dx);
-                //SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * 6)) / 256;
-                SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6))) >> 8;
+                SKIPSMImagePixelType p = (isc1[dstx] + MUL6(isc0[dstx])) >> 8;
                 da.set(p, dx);
             }
         }
@@ -388,11 +348,7 @@ inline void reduce(bool wraparound,
             // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
-                // FIXME Check if this x6 is faster with shifts or with integer multiply
-                //da.set((isc1[dstx] + ((isc0[dstx] + (isc0[dstx] << 1)) << 1) + (iscp[dstx] << 2)) / 256, dx);
-                //da.set((isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2)) / 256, dx);
-                //SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * 6) + (iscp[dstx] << 2)) / 256;
-                SKIPSMImagePixelType p = (isc1[dstx] + (isc0[dstx] * SKIPSMImagePixelType(6)) + iscp[dstx]) >> 8;
+                SKIPSMImagePixelType p = (isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx]) >> 8;
                 da.set(p, dx);
             }
         }
