@@ -1,9 +1,17 @@
 X Merge new vigra
 X .cvsignore files
 X integer math dithering
-- fast cfi row iterators
 - skipsm reduce replacement
+    X vector
+    X extrapolation
+    - wraparound boundary conditions
+    - scalar
 - skipsm expand replacement
+    X vector
+    X normal boundary condition
+    - wraparound boundary condition
+- fast cfi row iterators
+- cfi swap policy improvements
 - new vigra fixed point math
 - vigra sized_int
 - icc blending
@@ -11,6 +19,7 @@ X integer math dithering
 - fix cachedFileImage typedef in enblend.cc to redefine CFImages if no env var set
 - fast compile env var?
 - multilayer images
+- vogl's hdr test cases
 
 
 

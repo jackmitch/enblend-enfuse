@@ -675,6 +675,20 @@ operator*=(RGBValue<V1, RIDX1, GIDX1, BIDX1> & l,
     return l;
 }
 
+    /// componentwise divide-assignment
+// mihal 20060909
+template <class V1, unsigned int RIDX1, unsigned int BIDX1, unsigned int GIDX1, class V2, unsigned int RIDX2, unsigned int GIDX2, unsigned int BIDX2>
+inline
+RGBValue<V1, RIDX1, GIDX1, BIDX1> &
+operator/=(RGBValue<V1, RIDX1, GIDX1, BIDX1> & l,
+           RGBValue<V2, RIDX2, GIDX2, BIDX2> const & r)
+{
+    l.red() /= r.red();
+    l.green() /= r.green();
+    l.blue() /= r.blue();
+    return l;
+}
+
     /// componentwise scalar multiply-assignment
 template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
 inline
@@ -774,6 +788,23 @@ operator*(RGBValue<V1, R, G, B> const & r1,
                            RGBValue<V2, R, G, B> >::Promote res(r1);
 
     res *= r2;
+
+    return res;
+}
+
+    /// component-wise division
+// mihal 20060909
+template <class V1, unsigned int R, unsigned int G, unsigned int B, class V2>
+inline
+typename PromoteTraits<RGBValue<V1, R, G, B>,
+                       RGBValue<V2, R, G, B> >::Promote
+operator/(RGBValue<V1, R, G, B> const & r1,
+          RGBValue<V2, R, G, B> const & r2)
+{
+    typename PromoteTraits<RGBValue<V1, R, G, B>,
+                           RGBValue<V2, R, G, B> >::Promote res(r1);
+
+    res /= r2;
 
     return res;
 }
