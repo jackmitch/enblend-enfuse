@@ -95,27 +95,10 @@ DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
 
 // time with multiplies: 77.23
 // time with shifts: 80.78
-#define MUL6(A) (A * SKIPSMImagePixelType(6))
-//#define MUL6(A) ((A + (A << 1)) << 1)
-
-#define SKIPSM5X5(MASK, IMAGE) \
-    UInt16 mtmp1 = MASK;                    RealPixelType itmp1 = IMAGE;                        \
-    UInt16 mtmp2 = msr0 + mtmp1;            RealPixelType itmp2 = isr0 + itmp1;                 \
-    msr0 = mtmp1;                           isr0 = itmp1;                                       \
-    mtmp1 = msr1 + mtmp2;                   itmp1 = isr1 + itmp2;                               \
-    msr1 = mtmp2;                           isr1 = itmp2;                                       \
-    mtmp2 = msr2 + mtmp1;                   itmp2 = isr2 + itmp1;                               \
-    msr2 = mtmp1;                           isr2 = itmp1;                                       \
-    mtmp1 = msr3 + mtmp2;                   itmp1 = isr3 + itmp2;                               \
-    msr3 = mtmp2;                           isr3 = itmp2;                                       \
-    mtmp2 = msc0[srcx] + mtmp1;             itmp2 = isc0[srcx] + itmp1;                         \
-    msc0[srcx] = mtmp1;                     isc0[srcx] = itmp1;                                 \
-    mtmp1 = msc1[srcx] + mtmp2;             itmp1 = isc1[srcx] + itmp2;                         \
-    msc1[srcx] = mtmp2;                     isc1[srcx] = itmp2;                                 \
-    mtmp2 = msc2[srcx] + mtmp1;             itmp2 = isc2[srcx] + itmp1;                         \
-    msc2[srcx] = mtmp1;                     isc2[srcx] = itmp1;                                 \
-    mtmp1 = msc3[srcx] + mtmp2;             itmp1 = isc3[srcx] + itmp2;                         \
-    msc3[srcx] = mtmp2;                     isc3[srcx] = itmp2;
+#define IMUL6(A) (A * SKIPSMImagePixelType(6))
+//#define IMUL6(A) ((A + (A << 1)) << 1)
+#define MMUL6(A) (A * SKIPSMMaskPixelType(6))
+//#define MMUL6(A) ((A + (A << 1)) << 1)
 
 // Pyramid filter coefficients.
 static const double A = 0.4;
@@ -144,6 +127,10 @@ unsigned int filterHalfWidth(const unsigned int levels) {
 
 /** The Burt & Adelson Reduce operation.
  *  This version is for images with alpha channels.
+ *  Gaussian blur, downsampling, and extrapolation in one pass over the input images using SKIPSM-based algorithm.
+ *
+ *  Frederick M. Waltz and John W.V. Miller. An efficient algorithm for Gaussian blur using finite-state machines.
+ *  SPIE Conf. on Machine Vision Systems for Inspection and Metrology VII. November 1998.
  */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,
@@ -163,11 +150,12 @@ inline void reduce(bool wraparound,
         DestMaskAccessor dma) {
 
     typedef typename SrcAccessor::value_type PixelType;
-    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename DestAccessor::value_type DestPixelType;
+    //typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
     typedef typename MaskAccessor::value_type MaskPixelType;
     typedef typename DestMaskAccessor::value_type DestMaskPixelType;
     typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
-    typedef typename PyramidPromoteTraits<MaskPixelType>::Promote SKIPSMMaskPixelType;
+    typedef UInt16 SKIPSMMaskPixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
@@ -181,6 +169,11 @@ inline void reduce(bool wraparound,
     SKIPSMImagePixelType *isc0 = new SKIPSMImagePixelType[dst_w + 1];
     SKIPSMImagePixelType *isc1 = new SKIPSMImagePixelType[dst_w + 1];
     SKIPSMImagePixelType *iscp = new SKIPSMImagePixelType[dst_w + 1];
+
+    SKIPSMMaskPixelType msr0, msr1, msrp;
+    SKIPSMMaskPixelType *msc0 = new SKIPSMMaskPixelType[dst_w + 1];
+    SKIPSMMaskPixelType *msc1 = new SKIPSMMaskPixelType[dst_w + 1];
+    SKIPSMMaskPixelType *mscp = new SKIPSMMaskPixelType[dst_w + 1];
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dx = dy;
@@ -198,21 +191,34 @@ inline void reduce(bool wraparound,
     int dsty = 0;
     int dstx = 0;
 
+// without extrapolation = 2.63
+// with extrapolation = 4.39
+
     // First row
     {
+        msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+        msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+        msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
         isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-        for (sx = sy, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x) {
-            SKIPSMImagePixelType current(sa(sx));
+
+        for (sx = sy, mx = my, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
+            SKIPSMImagePixelType icurrent(sa(sx));
+            SKIPSMMaskPixelType mcurrent((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
             if (evenX) {
+                msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msc0[dstx] = msr1 + MMUL6(msr0) + msrp + mcurrent;
+                msr1 = msr0 + msrp;
+                msr0 = mcurrent;
                 isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-                isc0[dstx] = isr1 + MUL6(isr0) + isrp + current;
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
                 isr1 = isr0 + isrp;
-                isr0 = current;
+                isr0 = icurrent;
             }
             else {
-                isrp = current << 2;
+                msrp = mcurrent << 2;
+                isrp = icurrent << 2;
                 ++dstx;
             }
             evenX = !evenX;
@@ -221,21 +227,29 @@ inline void reduce(bool wraparound,
         if (!evenX) {
             // previous srcx was even
             ++dstx;
+            msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msc0[dstx] = msr1 + MMUL6(msr0);
             isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isc0[dstx] = isr1 + MUL6(isr0);
+            isc0[dstx] = isr1 + IMUL6(isr0);
         }
         else {
             // previous srcx was odd
+            msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
             isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isc0[dstx] = isr1 + MUL6(isr0) + isrp;
+            isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
         }
     }
     ++sy.y;
+    ++my.y;
 
     // Main Rows
     {
-        for (evenY = false, srcy = 1, dsty = 0; srcy < src_h; ++srcy, ++sy.y) {
+        for (evenY = false, srcy = 1, dsty = 0; srcy < src_h; ++srcy, ++sy.y, ++my.y) {
 
+            msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
             isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
             isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
             isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
@@ -245,28 +259,48 @@ inline void reduce(bool wraparound,
 
                 // First entry in row
                 sx = sy;
-                isr0 = sa(sx);
+                mx = my;
+                msr0 = SKIPSMMaskPixelType((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                isr0 = SKIPSMImagePixelType(sa(sx));
                 //isc1[0] = isc0[0] + (iscp[0] << 2);
                 //isc0[0] = sa(sx);
                 ++sx.x;
+                ++mx.x;
                 dx = dy;
+                dmx = dmy;
 
                 // Main entries in row
-                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
-                    SKIPSMImagePixelType current(sa(sx));
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
+                    SKIPSMMaskPixelType mcurrent((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                    SKIPSMImagePixelType icurrent(sa(sx));
                     if (evenX) {
-                        SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
+                        SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
+                        msc1[dstx] = msc0[dstx] + mscp[dstx];
+                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp + mcurrent;
+                        msr1 = msr0 + msrp;
+                        msr0 = mcurrent;
+                        mp += msc0[dstx];
+
+                        SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                         isc1[dstx] = isc0[dstx] + iscp[dstx];
-                        isc0[dstx] = isr1 + MUL6(isr0) + isrp + current;
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
                         isr1 = isr0 + isrp;
-                        isr0 = current;
-                        p += isc0[dstx];
-                        p >>= 8;
-                        da.set(p, dx);
+                        isr0 = icurrent;
+                        if (mp) {
+                            ip += isc0[dstx];
+                            ip /= SKIPSMImagePixelType(mp);
+                            da.set(ip, dx);
+                        } else {
+                            da.set(DestPixelType(NumericTraits<DestPixelType>::zero()), dx);
+                        }
+                        dma.set(mp ? NumericTraits<DestMaskPixelType>::max() : NumericTraits<DestMaskPixelType>::zero(), dmx);
+
                         ++dx.x;
+                        ++dmx.x;
                     }
                     else {
-                        isrp = current << 2;
+                        msrp = mcurrent << 2;
+                        isrp = icurrent << 2;
                         ++dstx;
                     }
                     evenX = !evenX;
@@ -276,38 +310,65 @@ inline void reduce(bool wraparound,
                 if (!evenX) {
                     // previous srcx was even
                     ++dstx;
-                    SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
+
+                    SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
+                    msc1[dstx] = msc0[dstx] + mscp[dstx];
+                    msc0[dstx] = msr1 + MMUL6(msr0);
+                    mp += msc0[dstx];
+
+                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    isc0[dstx] = isr1 + MUL6(isr0);
-                    p += isc0[dstx];
-                    p >>= 8;
-                    da.set(p, dx);
+                    isc0[dstx] = isr1 + IMUL6(isr0);
+                    if (mp) {
+                        ip += isc0[dstx];
+                        ip /= SKIPSMImagePixelType(mp);
+                        da.set(ip, dx);
+                    } else {
+                        da.set(DestPixelType(NumericTraits<DestPixelType>::zero()), dx);
+                    }
+                    dma.set(mp ? NumericTraits<DestMaskPixelType>::max() : NumericTraits<DestMaskPixelType>::zero(), dmx);
                 }
                 else {
                     // Previous srcx was odd
-                    SKIPSMImagePixelType p = isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx];
+                    SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
+                    msc1[dstx] = msc0[dstx] + mscp[dstx];
+                    msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                    mp += msc0[dstx];
+
+                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    isc0[dstx] = isr1 + MUL6(isr0) + isrp;
-                    p += isc0[dstx];
-                    p >>= 8;
-                    da.set(p, dx);
+                    isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+                    if (mp) {
+                        ip += isc0[dstx];
+                        ip /= SKIPSMImagePixelType(mp);
+                        da.set(ip, dx);
+                    } else {
+                        da.set(DestPixelType(NumericTraits<DestPixelType>::zero()), dx);
+                    }
+                    dma.set(mp ? NumericTraits<DestMaskPixelType>::max() : NumericTraits<DestMaskPixelType>::zero(), dmx);
                 }
 
                 ++dsty;
                 ++dy.y;
+                ++dmy.y;
 
             }
             else {
                 // Odd-numbered row
-                for (sx = sy, evenX = true, srcx = 0, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
-                    SKIPSMImagePixelType current(sa(sx));
+                for (sx = sy, mx = my, evenX = true, srcx = 0, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
+                    SKIPSMMaskPixelType mcurrent((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                    SKIPSMImagePixelType icurrent(sa(sx));
                     if (evenX) {
-                        iscp[dstx] = (isr1 + MUL6(isr0) + isrp + current) << 2;
+                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp + mcurrent) << 2;
+                        msr1 = msr0 + msrp;
+                        msr0 = mcurrent;
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + icurrent) << 2;
                         isr1 = isr0 + isrp;
-                        isr0 = current;
+                        isr0 = icurrent;
                     }
                     else {
-                        isrp = current << 2;
+                        msrp = mcurrent << 2;
+                        isrp = icurrent << 2;
                         ++dstx;
                     }
                     evenX = !evenX;
@@ -316,11 +377,13 @@ inline void reduce(bool wraparound,
                 if (!evenX) {
                     // previous srcx was even
                     ++dstx;
-                    iscp[dstx] = (isr1 + MUL6(isr0)) << 2;
+                    mscp[dstx] = (msr1 + MMUL6(msr0)) << 2;
+                    iscp[dstx] = (isr1 + IMUL6(isr0)) << 2;
                 }
                 else {
                     // previous srcx was odd
-                    iscp[dstx] = (isr1 + MUL6(isr0) + isrp) << 2;
+                    mscp[dstx] = (msr1 + MMUL6(msr0) + msrp) << 2;
+                    iscp[dstx] = (isr1 + IMUL6(isr0) + isrp) << 2;
                 }
             }
             evenY = !evenY;
@@ -336,9 +399,15 @@ inline void reduce(bool wraparound,
             //isc0[dstx] = 0;
             //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
-            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
-                SKIPSMImagePixelType p = (isc1[dstx] + MUL6(isc0[dstx])) >> 8;
-                da.set(p, dx);
+            for (dstx = 1, dx = dy, dmx = dmy; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dmx.x) {
+                SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]);
+                if (mp) {
+                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx])) / SKIPSMImagePixelType(mp);
+                    da.set(ip, dx);
+                } else {
+                    da.set(DestPixelType(NumericTraits<DestPixelType>::zero()), dx);
+                }
+                dma.set(mp ? NumericTraits<DestMaskPixelType>::max() : NumericTraits<DestMaskPixelType>::zero(), dmx);
             }
         }
         else {
@@ -347,9 +416,15 @@ inline void reduce(bool wraparound,
             // isc0[dstx] = 0;
             // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
-            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
-                SKIPSMImagePixelType p = (isc1[dstx] + MUL6(isc0[dstx]) + iscp[dstx]) >> 8;
-                da.set(p, dx);
+            for (dstx = 1, dx = dy, dmx = dmy; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dmx.x) {
+                SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
+                if (mp) {
+                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx]) / SKIPSMImagePixelType(mp);
+                    da.set(ip, dx);
+                } else {
+                    da.set(DestPixelType(NumericTraits<DestPixelType>::zero()), dx);
+                }
+                dma.set(mp ? NumericTraits<DestMaskPixelType>::max() : NumericTraits<DestMaskPixelType>::zero(), dmx);
             }
         }
     }
@@ -357,6 +432,10 @@ inline void reduce(bool wraparound,
     delete[] isc0;
     delete[] isc1;
     delete[] iscp;
+
+    delete[] msc0;
+    delete[] msc1;
+    delete[] mscp;
 
     //RealPixelType isr0, isr1, isr2, isr3;
     //RealPixelType *isc0 = new RealPixelType[src_w + 2];
@@ -662,6 +741,134 @@ inline void reduce(bool wraparound,
             dest.first, dest.second, dest.third);
 };
 
+#define SKIPSM_EXPAND(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+    current = SKIPSMImagePixelType(sa(sx));                         \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
+    out01 = sc0a[srcx];                                             \
+    out11 = sc0b[srcx];                                             \
+    sc1a[srcx] = sc0a[srcx];                                        \
+    sc1b[srcx] = sc0b[srcx];                                        \
+    sc0a[srcx] = sr1 + IMUL6(sr0) + current;                        \
+    sc0b[srcx] = (sr0 + current) << 2;                              \
+    sr1 = sr0;                                                      \
+    sr0 = current;                                                  \
+    out00 += sc0a[srcx];                                            \
+    out10 += sc0b[srcx];                                            \
+    out01 += sc0a[srcx];                                            \
+    out11 += sc0b[srcx];                                            \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
+    out10 /= SKIPSMImagePixelType(SCALE_OUT10);                     \
+    out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
+    out11 /= SKIPSMImagePixelType(SCALE_OUT11);                     \
+    da.set(add ? (da(dx) + out00) : (da(dx) - out00), dx);          \
+    ++dx.x;                                                         \
+    da.set(add ? (da(dx) + out10) : (da(dx) - out10), dx);          \
+    ++dx.x;                                                         \
+    da.set(add ? (da(dxx) + out01) : (da(dxx) - out01), dxx);       \
+    ++dxx.x;                                                        \
+    da.set(add ? (da(dxx) + out11) : (da(dxx) - out11), dxx);       \
+    ++dxx.x;
+
+#define SKIPSM_EXPAND_SHIFT                                         \
+    current = SKIPSMImagePixelType(sa(sx));                         \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
+    out01 = sc0a[srcx];                                             \
+    out11 = sc0b[srcx];                                             \
+    sc1a[srcx] = sc0a[srcx];                                        \
+    sc1b[srcx] = sc0b[srcx];                                        \
+    sc0a[srcx] = sr1 + IMUL6(sr0) + current;                        \
+    sc0b[srcx] = (sr0 + current) << 2;                              \
+    sr1 = sr0;                                                      \
+    sr0 = current;                                                  \
+    out00 += sc0a[srcx];                                            \
+    out10 += sc0b[srcx];                                            \
+    out01 += sc0a[srcx];                                            \
+    out11 += sc0b[srcx];                                            \
+    out00 >>= 6;                                                    \
+    out10 >>= 6;                                                    \
+    out01 >>= 4;                                                    \
+    out11 >>= 4;                                                    \
+    da.set(add ? (da(dx) + out00) : (da(dx) - out00), dx);          \
+    ++dx.x;                                                         \
+    da.set(add ? (da(dx) + out10) : (da(dx) - out10), dx);          \
+    ++dx.x;                                                         \
+    da.set(add ? (da(dxx) + out01) : (da(dxx) - out01), dxx);       \
+    ++dxx.x;                                                        \
+    da.set(add ? (da(dxx) + out11) : (da(dxx) - out11), dxx);       \
+    ++dxx.x;
+
+#define SKIPSM_EXPAND_ROW_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
+    out10 /= SKIPSMImagePixelType(SCALE_OUT10);                     \
+    da.set(add ? (da(dx) + out00) : (da(dx) - out00), dx);          \
+    ++dx.x;                                                         \
+    da.set(add ? (da(dx) + out10) : (da(dx) - out10), dx);          \
+    ++dx.x;                                                         \
+    if ((dst_h & 1) == 0) {                                         \
+        out01 = sc0a[srcx];                                         \
+        out11 = sc0b[srcx];                                         \
+        out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
+        out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
+        da.set(add ? (da(dxx) + out01) : (da(dxx) - out01), dxx);   \
+        ++dxx.x;                                                    \
+        da.set(add ? (da(dxx) + out11) : (da(dxx) - out11), dxx);   \
+        ++dxx.x;                                                    \
+    }
+
+#define SKIPSM_EXPAND_COLUMN_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out01 = sc0a[srcx];                                             \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
+    out11 = sc0b[srcx];                                             \
+    sc1a[srcx] = sc0a[srcx];                                        \
+    sc1b[srcx] = sc0b[srcx];                                        \
+    sc0a[srcx] = sr1 + IMUL6(sr0);                                  \
+    sc0b[srcx] = sr0 << 2;                                          \
+    out00 += sc0a[srcx];                                            \
+    out01 += sc0a[srcx];                                            \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
+    out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
+    da.set(add ? (da(dx) + out00) : (da(dx) - out00), dx);          \
+    da.set(add ? (da(dxx) + out01) : (da(dxx) - out01), dxx);       \
+    if ((dst_w & 1) == 0) {                                         \
+        ++dx.x;                                                     \
+        ++dxx.x;                                                    \
+        out10 += sc0b[srcx];                                        \
+        out11 += sc0b[srcx];                                        \
+        out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
+        out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
+        da.set(add ? (da(dx) + out10) : (da(dx) - out10), dx);      \
+        da.set(add ? (da(dxx) + out11) : (da(dxx) - out11), dxx);   \
+    }
+
+#define SKIPSM_EXPAND_ROW_COLUMN_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
+    da.set(add ? (da(dx) + out00) : (da(dx) - out00), dx);          \
+    if ((dst_w & 1) == 0) {                                         \
+        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
+        ++dx.x;                                                     \
+        da.set(add ? (da(dx) + out10) : (da(dx) - out10), dx);      \
+    }                                                               \
+    if ((dst_h & 1) == 0) {                                         \
+        out01 = sc0a[srcx];                                         \
+        out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
+        da.set(add ? (da(dxx) + out01) : (da(dxx) - out01), dxx);   \
+        if ((dst_w & 1) == 0) {                                     \
+            out11 = sc0b[srcx];                                     \
+            out11 /= SKIPSMImagePixelType(SCALE_OUT11);             \
+            ++dxx.x;                                                \
+            da.set(add ? (da(dxx) + out11) : (da(dxx) - out11), dxx);\
+        }                                                           \
+    }
+
+// with old expand: 27.42
+// with new expand: 3.54
 /** The Burt & Adelson Expand operation. */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
@@ -674,163 +881,348 @@ void expand(bool add, bool wraparound,
         DestAccessor da) {
 
     typedef typename SrcAccessor::value_type PixelType;
-    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    //typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename DestAccessor::value_type DestPixelType;
+    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
+    int dst_w = dest_lowerright.x - dest_upperleft.x;
+    int dst_h = dest_lowerright.y - dest_upperleft.y;
+
+    SKIPSMImagePixelType current;
+    SKIPSMImagePixelType out00, out10, out01, out11;
+    SKIPSMImagePixelType sr0, sr1;
+    SKIPSMImagePixelType *sc0a = new SKIPSMImagePixelType[src_w + 1];
+    SKIPSMImagePixelType *sc0b = new SKIPSMImagePixelType[src_w + 1];
+    SKIPSMImagePixelType *sc1a = new SKIPSMImagePixelType[src_w + 1];
+    SKIPSMImagePixelType *sc1b = new SKIPSMImagePixelType[src_w + 1];
 
     DestImageIterator dy = dest_upperleft;
-    DestImageIterator dend = dest_lowerright;
+    DestImageIterator dyy = dest_upperleft;
+    DestImageIterator dx = dy;
+    DestImageIterator dxx = dyy;
     SrcImageIterator sy = src_upperleft;
-    for (int srcy = 0, desty = 0; dy.y != dend.y; ++dy.y, desty++) {
+    SrcImageIterator sx = sy;
 
-        DestImageIterator dx = dy;
-        SrcImageIterator sx = sy;
-        for (int srcx = 0, destx = 0; dx.x != dend.x; ++dx.x, destx++) {
+    int srcy = 0;
+    int srcx = 0;
+    //int dsty = 0;
+    //int dstx = 0;
 
-            RealPixelType p(NumericTraits<RealPixelType>::zero());
-            unsigned int totalContrib = 0;
+    // First row
+    {
+        sr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        for (sx = sy, srcx = 0; srcx < src_w; ++srcx, ++sx.x) {
+            current = SKIPSMImagePixelType(sa(sx));
+            sc0a[srcx] = sr1 + IMUL6(sr0) + current;
+            sc0b[srcx] = (sr0 + current) << 2;
+            sc1a[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            sc1b[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            sr1 = sr0;
+            sr0 = current;
+        }
+        // extra column at end of first row
+        sc0a[srcx] = sr1 + IMUL6(sr0);
+        sc0b[srcx] = sr0 << 2;
+        sc1a[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        sc1b[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+    }
 
-            if ((destx & 1) == 1) {
-                // This is an odd-numbered column.
-                for (int kx = 0; kx <= 1; kx++) {
-                    // kx=0 -> W[-1]
-                    // kx=1 -> W[ 1]
-                    int wIndexA = (kx==0) ? 1 : 3;
-                    int bounded_kx = kx;
+    // dy  = row 0
+    // dyy = row 1
+    ++dyy.y;
+    // sy = row 1
+    srcy = 1;
+    ++sy.y;
 
-                    if (wraparound) {
-                        // Boundary condition - wrap around the image.
-                        // First boundary case cannot happen when destx is odd.
-                        //if (srcx + kx < 0) bounded_kx += src_w;
-                        if (srcx + kx >= src_w) bounded_kx -= src_w;
-                    } else {
-                        // Boundary condition - replicate first and last column.
-                        // First boundary case cannot happen when destx is odd.
-                        //if (srcx + kx < 0) bounded_kx -= (srcx + kx);
-                        if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
-                    }
+    // Second row
+    if (src_h > 1) {
+        // First column
+        srcx = 0;
+        sx = sy;
+        sr0 = SKIPSMImagePixelType(sa(sx));
+        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        // sc*[0] are irrelvant
 
-                    if ((desty & 1) == 1) {
-                        // This is an odd-numbered row.
-                        for (int ky = 0; ky <= 1; ky++) {
-                            // ky=0 -> W[-1]
-                            // ky=1 -> W[ 1]
-                            int wIndexB = (ky==0) ? 1 : 3;
-                            int bounded_ky = ky;
+        srcx = 1;
+        ++sx.x;
+        dx = dy;
+        dxx = dyy;
 
-                            // Boundary condition: replicate top and bottom rows.
-                            // First boundary condition cannot happen when desty is odd.
-                            //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+        // Second column
+        if (src_w > 1) {
+            SKIPSM_EXPAND(49, 56, 14, 16)
 
-                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
-                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
-                        }
-                    }
-                    else {
-                        // This is an even-numbered row.
-                        for (int ky = -1; ky <= 1; ky++) {
-                            // ky=-1 -> W[-2]
-                            // ky= 0 -> W[ 0]
-                            // ky= 1 -> W[ 2]
-                            int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
-                            int bounded_ky = ky;
-
-                            // Boundary condition: replicate top and bottom rows.
-                            if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
-
-                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
-                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
-                        }
-                    }
-                }
-            }
-            else {
-                // This is an even-numbered column.
-                for (int kx = -1; kx <= 1; kx++) {
-                    // kx=-1 -> W[-2]
-                    // kx= 0 -> W[ 0]
-                    // kx= 1 -> W[ 2]
-                    int wIndexA = (kx==-1) ? 0 : ((kx==0) ? 2 : 4); 
-                    int bounded_kx = kx;
-
-                    if (wraparound) {
-                        // Boundary condition - wrap around the image.
-                        if (srcx + kx < 0) bounded_kx += src_w;
-                        if (srcx + kx >= src_w) bounded_kx -= src_w;
-                    } else {
-                        // Boundary condition - replicate first and last column.
-                        if (srcx + kx < 0) bounded_kx -= (srcx + kx);
-                        if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
-                    }
-
-                    if ((desty & 1) == 1) {
-                        // This is an odd-numbered row.
-                        for (int ky = 0; ky <= 1; ky++) {
-                            // ky=0 -> W[-1]
-                            // ky=1 -> W[ 1]
-                            int wIndexB = (ky==0) ? 1 : 3;
-                            int bounded_ky = ky;
-
-                            // Boundary condition: replicate top and bottom rows.
-                            // First boundary condition cannot happen when desty is odd.
-                            //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
-
-                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
-                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
-                        }
-                    }
-                    else {
-                        // This is an even-numbered row.
-                        for (int ky = -1; ky <= 1; ky++) {
-                            // ky=-1 -> W[-2]
-                            // ky= 0 -> W[ 0]
-                            // ky= 1 -> W[ 2]
-                            int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
-                            int bounded_ky = ky;
-
-                            // Boundary condition: replicate top and bottom rows.
-                            if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-                            if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
-
-                            p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
-                            totalContrib += (W100[wIndexA] * W100[wIndexB]);
-                        }
-                    }
-                }
+            // Main columns
+            for (srcx = 2, ++sx.x; srcx < src_w; ++srcx, ++sx.x) {
+                SKIPSM_EXPAND(56, 56, 16, 16)
             }
 
-            p /= (totalContrib / 10000.0);
-
-            // Get dest pixel at dx.
-            RealPixelType pOrig = NumericTraits<PixelType>::toRealPromote(da(dx));
-            RealPixelType pMod;
-
-            // Add or subtract p.
-            if (add) {
-                pMod = pOrig + p;
-            }
-            else {
-                pMod = pOrig - p;
-            }
-
-            // Write back the result.
-            da.set(NumericTraits<PixelType>::fromRealPromote(pMod), dx);
-
-            if ((destx & 1) == 1) {
-                sx.x++;
-                srcx++;
-            }
+            // extra column at end of second row
+            SKIPSM_EXPAND_COLUMN_END(49, 28, 14, 8)
+        }
+        else {
+            SKIPSM_EXPAND_COLUMN_END(42, 28, 12, 8)
         }
 
-        if ((desty & 1) == 1) {
-            sy.y++;
-            srcy++;
+    }
+    else {
+        // No Second Row
+        // First Column
+        srcx = 0;
+        sr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+
+        dx = dy;
+        dxx = dyy;
+
+        if (src_w > 1) {
+            // Second Column
+            srcx = 1;
+            SKIPSM_EXPAND_ROW_END(42, 48, 7, 8)
+
+            // Main columns
+            for (srcx = 2; srcx < src_w; ++srcx) {
+                SKIPSM_EXPAND_ROW_END(48, 48, 8, 8)
+            }
+
+            // extra column at end of row
+            SKIPSM_EXPAND_ROW_COLUMN_END(42, 24, 7, 4)
+        }
+        else {
+            // No Second Column
+            // dst_w, dst_h must be at least 2
+            SKIPSM_EXPAND_ROW_COLUMN_END(36, 24, 6, 4)
+        }
+
+        return;
+    }
+
+    // dy = row 2
+    // dyy = row 3
+    dy.y += 2;
+    dyy.y += 2;
+    // sy = row 2
+    srcy = 2;
+    ++sy.y;
+
+    // Main Rows
+    for (srcy = 2, sx = sy; srcy < src_h; ++srcy, ++sy.y, dy.y += 2, dyy.y += 2) {
+        // First column
+        srcx = 0;
+        sx = sy;
+        sr0 = SKIPSMImagePixelType(sa(sx));
+        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        // sc*[0] are irrelvant
+
+        srcx = 1;
+        ++sx.x;
+        dx = dy;
+        dxx = dyy;
+
+        // Second column
+        if (src_w > 1) {
+            SKIPSM_EXPAND(56, 64, 14, 16)
+
+            // Main columns
+            for (srcx = 2, ++sx.x; srcx < src_w; ++srcx, ++sx.x) {
+                //SKIPSM_EXPAND(64, 64, 16, 16)
+                SKIPSM_EXPAND_SHIFT
+            }
+
+            // extra column at end of row
+            SKIPSM_EXPAND_COLUMN_END(56, 32, 14, 8)
+        }
+        else {
+            // No second column
+            // dst_w must be at least 2
+            SKIPSM_EXPAND_COLUMN_END(48, 32, 12, 8)
         }
     }
+
+    // Extra row at end
+    {
+        srcx = 0;
+        sr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+
+        dx = dy;
+        dxx = dyy;
+
+        if (src_w > 1) {
+            // Second Column
+            srcx = 1;
+            SKIPSM_EXPAND_ROW_END(49, 56, 7, 8)
+
+            // Main columns
+            for (srcx = 2; srcx < src_w; ++srcx) {
+                SKIPSM_EXPAND_ROW_END(56, 56, 8, 8)
+            }
+
+            // extra column at end of row
+            SKIPSM_EXPAND_ROW_COLUMN_END(49, 28, 7, 4)
+        }
+        else {
+            // No Second Column
+            // dst_w, dst_h must be at least 2
+            SKIPSM_EXPAND_ROW_COLUMN_END(42, 28, 6, 4)
+        }
+    }
+
+    //DestImageIterator dy = dest_upperleft;
+    //DestImageIterator dend = dest_lowerright;
+    //SrcImageIterator sy = src_upperleft;
+    //for (int srcy = 0, desty = 0; dy.y != dend.y; ++dy.y, desty++) {
+
+    //    DestImageIterator dx = dy;
+    //    SrcImageIterator sx = sy;
+    //    for (int srcx = 0, destx = 0; dx.x != dend.x; ++dx.x, destx++) {
+
+    //        RealPixelType p(NumericTraits<RealPixelType>::zero());
+    //        unsigned int totalContrib = 0;
+
+    //        if ((destx & 1) == 1) {
+    //            // This is an odd-numbered column.
+    //            for (int kx = 0; kx <= 1; kx++) {
+    //                // kx=0 -> W[-1]
+    //                // kx=1 -> W[ 1]
+    //                int wIndexA = (kx==0) ? 1 : 3;
+    //                int bounded_kx = kx;
+
+    //                if (wraparound) {
+    //                    // Boundary condition - wrap around the image.
+    //                    // First boundary case cannot happen when destx is odd.
+    //                    //if (srcx + kx < 0) bounded_kx += src_w;
+    //                    if (srcx + kx >= src_w) bounded_kx -= src_w;
+    //                } else {
+    //                    // Boundary condition - replicate first and last column.
+    //                    // First boundary case cannot happen when destx is odd.
+    //                    //if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+    //                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+    //                }
+
+    //                if ((desty & 1) == 1) {
+    //                    // This is an odd-numbered row.
+    //                    for (int ky = 0; ky <= 1; ky++) {
+    //                        // ky=0 -> W[-1]
+    //                        // ky=1 -> W[ 1]
+    //                        int wIndexB = (ky==0) ? 1 : 3;
+    //                        int bounded_ky = ky;
+
+    //                        // Boundary condition: replicate top and bottom rows.
+    //                        // First boundary condition cannot happen when desty is odd.
+    //                        //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+    //                        if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+    //                        p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+    //                        totalContrib += (W100[wIndexA] * W100[wIndexB]);
+    //                    }
+    //                }
+    //                else {
+    //                    // This is an even-numbered row.
+    //                    for (int ky = -1; ky <= 1; ky++) {
+    //                        // ky=-1 -> W[-2]
+    //                        // ky= 0 -> W[ 0]
+    //                        // ky= 1 -> W[ 2]
+    //                        int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
+    //                        int bounded_ky = ky;
+
+    //                        // Boundary condition: replicate top and bottom rows.
+    //                        if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+    //                        if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+    //                        p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+    //                        totalContrib += (W100[wIndexA] * W100[wIndexB]);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        else {
+    //            // This is an even-numbered column.
+    //            for (int kx = -1; kx <= 1; kx++) {
+    //                // kx=-1 -> W[-2]
+    //                // kx= 0 -> W[ 0]
+    //                // kx= 1 -> W[ 2]
+    //                int wIndexA = (kx==-1) ? 0 : ((kx==0) ? 2 : 4); 
+    //                int bounded_kx = kx;
+
+    //                if (wraparound) {
+    //                    // Boundary condition - wrap around the image.
+    //                    if (srcx + kx < 0) bounded_kx += src_w;
+    //                    if (srcx + kx >= src_w) bounded_kx -= src_w;
+    //                } else {
+    //                    // Boundary condition - replicate first and last column.
+    //                    if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+    //                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+    //                }
+
+    //                if ((desty & 1) == 1) {
+    //                    // This is an odd-numbered row.
+    //                    for (int ky = 0; ky <= 1; ky++) {
+    //                        // ky=0 -> W[-1]
+    //                        // ky=1 -> W[ 1]
+    //                        int wIndexB = (ky==0) ? 1 : 3;
+    //                        int bounded_ky = ky;
+
+    //                        // Boundary condition: replicate top and bottom rows.
+    //                        // First boundary condition cannot happen when desty is odd.
+    //                        //if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+    //                        if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+    //                        p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+    //                        totalContrib += (W100[wIndexA] * W100[wIndexB]);
+    //                    }
+    //                }
+    //                else {
+    //                    // This is an even-numbered row.
+    //                    for (int ky = -1; ky <= 1; ky++) {
+    //                        // ky=-1 -> W[-2]
+    //                        // ky= 0 -> W[ 0]
+    //                        // ky= 1 -> W[ 2]
+    //                        int wIndexB = (ky==-1) ? 0 : ((ky==0) ? 2 : 4);
+    //                        int bounded_ky = ky;
+
+    //                        // Boundary condition: replicate top and bottom rows.
+    //                        if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+    //                        if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
+
+    //                        p += (W[wIndexA] * W[wIndexB]) * sx(bounded_kx, bounded_ky);
+    //                        totalContrib += (W100[wIndexA] * W100[wIndexB]);
+    //                    }
+    //                }
+    //            }
+    //        }
+
+    //        p /= (totalContrib / 10000.0);
+
+    //        // Get dest pixel at dx.
+    //        RealPixelType pOrig = NumericTraits<PixelType>::toRealPromote(da(dx));
+    //        RealPixelType pMod;
+
+    //        // Add or subtract p.
+    //        if (add) {
+    //            pMod = pOrig + p;
+    //        }
+    //        else {
+    //            pMod = pOrig - p;
+    //        }
+
+    //        // Write back the result.
+    //        da.set(NumericTraits<PixelType>::fromRealPromote(pMod), dx);
+
+    //        if ((destx & 1) == 1) {
+    //            sx.x++;
+    //            srcx++;
+    //        }
+    //    }
+
+    //    if ((desty & 1) == 1) {
+    //        sy.y++;
+    //        srcy++;
+    //    }
+    //}
 
 };
 

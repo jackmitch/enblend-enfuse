@@ -140,17 +140,17 @@ protected:
             if (random <= vFraction) {
                 return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> FractionBits) + 1));
             } else {
-                return DestPixelType(v >> FractionBits);
+                return DestPixelType(NumericTraits<DestPixelType>::fromPromote(v >> FractionBits));
             }
         }
         else if (vFraction >= quarter) {
             return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> FractionBits) + 1));
         }
         else {
-            return DestPixelType(v >> FractionBits);
+            return DestPixelType(NumericTraits<DestPixelType>::fromPromote(v >> FractionBits));
         }
 
-        // Floating-point dithering
+        //// Floating-point dithering
         //double d = convertFixedPointToDouble(v);
         //d = dither(d);
         ////if (d > NumericTraits<DestPixelType>::max()) overflows++;
