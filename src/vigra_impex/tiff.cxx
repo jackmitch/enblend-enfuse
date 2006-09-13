@@ -416,8 +416,9 @@ namespace vigra {
                             vigra_fail( "TIFFDecoderImpl::init(): Sampleformat or Datatype tag undefined and guessing sampletype from Bits per Sample failed." );
                             break;
                     }
-                    std::cerr << "Warning: no TIFFTAG_SAMPLEFORMAT or TIFFTAG_DATATYPE, "
-                                 "guessing pixeltype '" << pixeltype << "'.\n";
+                    // mihal 20060913 commented this out to reduce messages
+                    //std::cerr << "Warning: no TIFFTAG_SAMPLEFORMAT or TIFFTAG_DATATYPE, "
+                    //             "guessing pixeltype '" << pixeltype << "'.\n";
                 }
             }
 

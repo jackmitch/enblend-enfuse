@@ -4,14 +4,18 @@ X integer math dithering
 - skipsm reduce replacement
     X vector
     X extrapolation
-    - wraparound boundary conditions
+    X wraparound boundary conditions
+    - fix artifacts
     - scalar
+    - comment
 - skipsm expand replacement
     X vector
     X normal boundary condition
-    - wraparound boundary condition
+    X wraparound boundary condition
+    - comment
 - fast cfi row iterators
 - cfi swap policy improvements
+- make checkpointing optional
 - new vigra fixed point math
 - vigra sized_int
 - icc blending

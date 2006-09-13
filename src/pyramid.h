@@ -152,7 +152,7 @@ inline void reduce(bool wraparound,
 
     typedef typename SrcAccessor::value_type PixelType;
     typedef typename DestAccessor::value_type DestPixelType;
-    //typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
     typedef typename MaskAccessor::value_type MaskPixelType;
     typedef typename DestMaskAccessor::value_type DestMaskPixelType;
     typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
@@ -166,6 +166,7 @@ inline void reduce(bool wraparound,
     vigra_precondition(src_w > 1 && src_h > 1,
             "src image too small in reduce");
 
+#if 1
     SKIPSMImagePixelType isr0, isr1, isrp;
     SKIPSMImagePixelType *isc0 = new SKIPSMImagePixelType[dst_w + 1];
     SKIPSMImagePixelType *isc1 = new SKIPSMImagePixelType[dst_w + 1];
@@ -194,15 +195,27 @@ inline void reduce(bool wraparound,
 
 // without extrapolation = 2.63
 // with extrapolation = 4.39
+// with wraparound (no -w) = 4.11
 
     // First row
     {
-        msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-        msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-        msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-        isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-        isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-        isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        if (wraparound) {
+            msr0 = SKIPSMMaskPixelType(ma(my, Diff2D(src_w-2, 0)) ?
+                    NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+            msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msrp = SKIPSMMaskPixelType(ma(my, Diff2D(src_w-1, 0)) ? 
+                    NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero()) << 2;
+            isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2, 0)));
+            isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1, 0))) << 2;
+        } else {
+            msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+            isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        }
 
         for (sx = sy, mx = my, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
             SKIPSMImagePixelType icurrent(sa(sx));
@@ -228,17 +241,36 @@ inline void reduce(bool wraparound,
         if (!evenX) {
             // previous srcx was even
             ++dstx;
-            msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-            msc0[dstx] = msr1 + MMUL6(msr0);
-            isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isc0[dstx] = isr1 + IMUL6(isr0);
+            if (wraparound) {
+                msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msc0[dstx] = msr1 + MMUL6(msr0)
+                                  + (SKIPSMMaskPixelType(ma(my) ?
+                                            NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero()) << 2)
+                                  + SKIPSMMaskPixelType(ma(my, Diff2D(1,0)) ?
+                                            NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2) + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)));
+            } else {
+                msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msc0[dstx] = msr1 + MMUL6(msr0);
+                isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isc0[dstx] = isr1 + IMUL6(isr0);
+            }
         }
         else {
             // previous srcx was odd
-            msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-            msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
-            isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+            if (wraparound) {
+                msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msc0[dstx] = msr1 + MMUL6(msr0) + msrp
+                                  + SKIPSMMaskPixelType(ma(my) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+            } else {
+                msc1[dstx] = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                isc1[dstx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+            }
         }
     }
     ++sy.y;
@@ -248,12 +280,23 @@ inline void reduce(bool wraparound,
     {
         for (evenY = false, srcy = 1, dsty = 0; srcy < src_h; ++srcy, ++sy.y, ++my.y) {
 
-            msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-            msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-            msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
-            isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-            isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            if (wraparound) {
+                msr0 = SKIPSMMaskPixelType(ma(my, Diff2D(src_w-2, 0)) ?
+                        NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msrp = SKIPSMMaskPixelType(ma(my, Diff2D(src_w-1, 0)) ? 
+                        NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero()) << 2;
+                isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2, 0)));
+                isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1, 0))) << 2;
+            } else {
+                msr0 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msr1 = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                msrp = SKIPSMMaskPixelType(NumericTraits<SKIPSMMaskPixelType>::zero());
+                isr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+                isrp = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            }
 
             if (evenY) {
                 // Even-numbered row
@@ -261,6 +304,10 @@ inline void reduce(bool wraparound,
                 // First entry in row
                 sx = sy;
                 mx = my;
+                if (wraparound) {
+                    msr1 = msr0 + msrp;
+                    isr1 = isr0 + isrp;
+                }
                 msr0 = SKIPSMMaskPixelType((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
                 isr0 = SKIPSMImagePixelType(sa(sx));
                 //isc1[0] = isc0[0] + (iscp[0] << 2);
@@ -314,12 +361,24 @@ inline void reduce(bool wraparound,
 
                     SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
                     msc1[dstx] = msc0[dstx] + mscp[dstx];
-                    msc0[dstx] = msr1 + MMUL6(msr0);
+                    if (wraparound) {
+                        msc0[dstx] = msr1 + MMUL6(msr0)
+                                          + (SKIPSMMaskPixelType(ma(my) ?
+                                                    NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero()) << 2)
+                                          + SKIPSMMaskPixelType(ma(my, Diff2D(1,0)) ?
+                                                    NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                    } else {
+                        msc0[dstx] = msr1 + MMUL6(msr0);
+                    }
                     mp += msc0[dstx];
 
                     SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    isc0[dstx] = isr1 + IMUL6(isr0);
+                    if (wraparound) {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2) + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)));
+                    } else {
+                        isc0[dstx] = isr1 + IMUL6(isr0);
+                    }
                     if (mp) {
                         ip += isc0[dstx];
                         ip /= SKIPSMImagePixelType(mp);
@@ -333,12 +392,21 @@ inline void reduce(bool wraparound,
                     // Previous srcx was odd
                     SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
                     msc1[dstx] = msc0[dstx] + mscp[dstx];
-                    msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                    if (wraparound) {
+                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp
+                                          + SKIPSMMaskPixelType(ma(my) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                    } else {
+                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                    }
                     mp += msc0[dstx];
 
                     SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
-                    isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+                    if (wraparound) {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+                    } else {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+                    }
                     if (mp) {
                         ip += isc0[dstx];
                         ip /= SKIPSMImagePixelType(mp);
@@ -355,8 +423,22 @@ inline void reduce(bool wraparound,
 
             }
             else {
-                // Odd-numbered row
-                for (sx = sy, mx = my, evenX = true, srcx = 0, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
+                // First entry in odd-numbered row
+                sx = sy;
+                mx = my;
+                if (wraparound) {
+                    msr1 = msr0 + msrp;
+                    isr1 = isr0 + isrp;
+                }
+                msr0 = SKIPSMMaskPixelType((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
+                isr0 = SKIPSMImagePixelType(sa(sx));
+                //isc1[0] = isc0[0] + (iscp[0] << 2);
+                //isc0[0] = sa(sx);
+                ++sx.x;
+                ++mx.x;
+
+                // Main entries in odd-numbered row
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
                     SKIPSMMaskPixelType mcurrent((ma(mx)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero());
                     SKIPSMImagePixelType icurrent(sa(sx));
                     if (evenX) {
@@ -378,13 +460,28 @@ inline void reduce(bool wraparound,
                 if (!evenX) {
                     // previous srcx was even
                     ++dstx;
-                    mscp[dstx] = (msr1 + MMUL6(msr0)) << 2;
-                    iscp[dstx] = (isr1 + IMUL6(isr0)) << 2;
+                    if (wraparound) {
+                        mscp[dstx] = (msr1 + MMUL6(msr0)
+                                           + (SKIPSMMaskPixelType(ma(my) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero()) << 2)
+                                           + SKIPSMMaskPixelType(ma(my, Diff2D(1,0)) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero())
+                                     ) << 2;
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2) + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)))) << 2;
+                    } else {
+                        mscp[dstx] = (msr1 + MMUL6(msr0)) << 2;
+                        iscp[dstx] = (isr1 + IMUL6(isr0)) << 2;
+                    }
                 }
                 else {
                     // previous srcx was odd
-                    mscp[dstx] = (msr1 + MMUL6(msr0) + msrp) << 2;
-                    iscp[dstx] = (isr1 + IMUL6(isr0) + isrp) << 2;
+                    if (wraparound) {
+                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp
+                                           + SKIPSMMaskPixelType(ma(my) ? NumericTraits<SKIPSMMaskPixelType>::one() : NumericTraits<SKIPSMMaskPixelType>::zero())
+                                     ) << 2;
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy))) << 2;
+                    } else {
+                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp) << 2;
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp) << 2;
+                    }
                 }
             }
             evenY = !evenY;
@@ -438,146 +535,65 @@ inline void reduce(bool wraparound,
     delete[] msc1;
     delete[] mscp;
 
-    //RealPixelType isr0, isr1, isr2, isr3;
-    //RealPixelType *isc0 = new RealPixelType[src_w + 2];
-    //RealPixelType *isc1 = new RealPixelType[src_w + 2];
-    //RealPixelType *isc2 = new RealPixelType[src_w + 2];
-    //RealPixelType *isc3 = new RealPixelType[src_w + 2];
+#else
 
-    //UInt16 msr0, msr1, msr2, msr3;
-    //UInt16 *msc0 = new UInt16[src_w + 2];
-    //UInt16 *msc1 = new UInt16[src_w + 2];
-    //UInt16 *msc2 = new UInt16[src_w + 2];
-    //UInt16 *msc3 = new UInt16[src_w + 2];
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dend = dest_lowerright;
+    SrcImageIterator sy = src_upperleft;
+    MaskIterator my = mask_upperleft;
+    DestMaskIterator dmy = dest_mask_upperleft;
+    for (int srcy = 0; dy.y != dend.y; ++dy.y, ++dmy.y, sy.y+=2, my.y+=2, srcy+=2) {
 
-    //for (int i = 0; i < src_w + 2; i++) {
-    //    isc0[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isc1[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isc2[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isc3[i] = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    msc0[i] = NumericTraits<UInt16>::zero();
-    //    msc1[i] = NumericTraits<UInt16>::zero();
-    //    msc2[i] = NumericTraits<UInt16>::zero();
-    //    msc3[i] = NumericTraits<UInt16>::zero();
-    //}
+        DestImageIterator dx = dy;
+        SrcImageIterator sx = sy;
+        MaskIterator mx = my;
+        DestMaskIterator dmx = dmy;
+        for (int srcx = 0; dx.x != dend.x; ++dx.x, ++dmx.x, sx.x+=2, mx.x+=2, srcx+=2) {
 
-    //DestImageIterator dy = dest_upperleft;
-    //SrcImageIterator sy = src_upperleft;
-    //MaskIterator my = mask_upperleft;
-    //DestMaskIterator dmy = dest_mask_upperleft;
+            RealPixelType p(NumericTraits<RealPixelType>::zero());
+            unsigned int noContrib = 10000;
 
-    //bool eveny = true;
-    //int srcy = 0;
-    //for (srcy = 0; srcy < src_h + 2; ++my.y, ++sy.y, ++srcy) {
-    //    SrcImageIterator sx = sy;
-    //    DestImageIterator dx = dy;
-    //    MaskIterator mx = my;
-    //    DestMaskIterator dmx = dmy;
+            for (int kx = -2; kx <= 2; kx++) {
+                int bounded_kx = kx;
 
-    //    isr0 = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isr1 = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isr2 = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    isr3 = RealPixelType(NumericTraits<RealPixelType>::zero());
-    //    msr0 = NumericTraits<UInt16>::zero();
-    //    msr1 = NumericTraits<UInt16>::zero();
-    //    msr2 = NumericTraits<UInt16>::zero();
-    //    msr3 = NumericTraits<UInt16>::zero();
+                if (wraparound) {
+                    // Boundary condition: wrap around the image.
+                    if (srcx + kx < 0) bounded_kx += src_w;
+                    if (srcx + kx >= src_w) bounded_kx -= src_w;
+                } else {
+                    // Boundary condition: replicate first and last column.
+                    if (srcx + kx < 0) bounded_kx -= (srcx + kx);
+                    if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
+                }
 
-    //    bool evenx = true;
-    //    int srcx = 0;
-    //    for (srcx = 0; srcx < src_w + 2; ++mx.x, ++sx.x, ++srcx) {
+                for (int ky = -2; ky <= 2; ky++) {
+                    int bounded_ky = ky;
 
-    //        SKIPSM5X5((((srcy < src_h) && (srcx < src_w) && ma(mx)) ? 1 : 0),
-    //                  (((srcy < src_h) && (srcx < src_w) && ma(mx)) ? NumericTraits<PixelType>::toRealPromote(sa(sx)) : RealPixelType(NumericTraits<RealPixelType>::zero())))
+                    // Boundary condition: replicate top and bottom rows.
+                    if (srcy + ky < 0) bounded_ky -= (srcy + ky);
+                    if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
 
-    //        if (eveny && evenx) {
-    //            if (srcy && srcx) {
-    //                if (mtmp1) {
-    //                    da.set(NumericTraits<PixelType>::fromRealPromote(itmp1 / mtmp1), dx, Diff2D(-1, -1));
-    //                    dma.set(NumericTraits<DestMaskPixelType>::nonZero(), dmx, Diff2D(-1, -1));
-    //                } else {
-    //                    dma.set(NumericTraits<DestMaskPixelType>::zero(), dmx, Diff2D(-1, -1));
-    //                }
-    //            }
-    //            ++dx.x;
-    //            ++dmx.x;
-    //        }
+                    if (mx(bounded_kx, bounded_ky)) {
+                        p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
+                    } else {
+                        // Transparent pixels don't count.
+                        noContrib -= W100[kx+2] * W100[ky+2];
+                    }
 
-    //        evenx = !evenx;
-    //    }
+                }
+            }
 
-    //    if (eveny) {
-    //        ++dy.y;
-    //        ++dmy.y;
-    //    }
-    //    eveny = !eveny;
-    //}
+            // Adjust filter for any ignored transparent pixels.
+            if (noContrib != 0) p /= ((double)noContrib / 10000.0);
 
-    //delete[] isc0;
-    //delete[] isc1;
-    //delete[] isc2;
-    //delete[] isc3;
-    //delete[] msc0;
-    //delete[] msc1;
-    //delete[] msc2;
-    //delete[] msc3;
+            da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
+            dma.set((noContrib == 0) ? NumericTraits<DestMaskPixelType>::zero()
+                                     : NumericTraits<DestMaskPixelType>::nonZero(),
+                    dmx);
 
-    //DestImageIterator dy = dest_upperleft;
-    //DestImageIterator dend = dest_lowerright;
-    //SrcImageIterator sy = src_upperleft;
-    //MaskIterator my = mask_upperleft;
-    //DestMaskIterator dmy = dest_mask_upperleft;
-    //for (int srcy = 0; dy.y != dend.y; ++dy.y, ++dmy.y, sy.y+=2, my.y+=2, srcy+=2) {
-
-    //    DestImageIterator dx = dy;
-    //    SrcImageIterator sx = sy;
-    //    MaskIterator mx = my;
-    //    DestMaskIterator dmx = dmy;
-    //    for (int srcx = 0; dx.x != dend.x; ++dx.x, ++dmx.x, sx.x+=2, mx.x+=2, srcx+=2) {
-
-    //        RealPixelType p(NumericTraits<RealPixelType>::zero());
-    //        unsigned int noContrib = 10000;
-
-    //        for (int kx = -2; kx <= 2; kx++) {
-    //            int bounded_kx = kx;
-
-    //            if (wraparound) {
-    //                // Boundary condition: wrap around the image.
-    //                if (srcx + kx < 0) bounded_kx += src_w;
-    //                if (srcx + kx >= src_w) bounded_kx -= src_w;
-    //            } else {
-    //                // Boundary condition: replicate first and last column.
-    //                if (srcx + kx < 0) bounded_kx -= (srcx + kx);
-    //                if (srcx + kx >= src_w) bounded_kx -= (srcx + kx - (src_w - 1));
-    //            }
-
-    //            for (int ky = -2; ky <= 2; ky++) {
-    //                int bounded_ky = ky;
-
-    //                // Boundary condition: replicate top and bottom rows.
-    //                if (srcy + ky < 0) bounded_ky -= (srcy + ky);
-    //                if (srcy + ky >= src_h) bounded_ky -= (srcy + ky - (src_h - 1));
-
-    //                if (mx(bounded_kx, bounded_ky)) {
-    //                    p += (W[kx+2] * W[ky+2]) * sx(bounded_kx, bounded_ky);
-    //                } else {
-    //                    // Transparent pixels don't count.
-    //                    noContrib -= W100[kx+2] * W100[ky+2];
-    //                }
-
-    //            }
-    //        }
-
-    //        // Adjust filter for any ignored transparent pixels.
-    //        if (noContrib != 0) p /= ((double)noContrib / 10000.0);
-
-    //        da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
-    //        dma.set((noContrib == 0) ? NumericTraits<DestMaskPixelType>::zero()
-    //                                 : NumericTraits<DestMaskPixelType>::nonZero(),
-    //                dmx);
-
-    //    }
-    //}
+        }
+    }
+#endif
 
 };
 
@@ -762,13 +778,13 @@ inline void reduce(bool wraparound,
     out10 /= SKIPSMImagePixelType(SCALE_OUT10);                     \
     out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
     out11 /= SKIPSMImagePixelType(SCALE_OUT11);                     \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dx)), out00)), dx);                                  \
+    da.set(cf(SKIPSMImagePixelType(da(dx)), out00), dx);            \
     ++dx.x;                                                         \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dx)), out10)), dx);                                  \
+    da.set(cf(SKIPSMImagePixelType(da(dx)), out10), dx);            \
     ++dx.x;                                                         \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dxx)), out01)), dxx);                                \
+    da.set(cf(SKIPSMImagePixelType(da(dxx)), out01), dxx);          \
     ++dxx.x;                                                        \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dxx)), out11)), dxx);                                \
+    da.set(cf(SKIPSMImagePixelType(da(dxx)), out11), dxx);          \
     ++dxx.x;
 
 #define SKIPSM_EXPAND_SHIFT                                         \
@@ -791,13 +807,13 @@ inline void reduce(bool wraparound,
     out10 >>= 6;                                                    \
     out01 >>= 4;                                                    \
     out11 >>= 4;                                                    \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dx)), out00)), dx);                                  \
+    da.set(cf(SKIPSMImagePixelType(da(dx)), out00), dx);            \
     ++dx.x;                                                         \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dx)), out10)), dx);                                  \
+    da.set(cf(SKIPSMImagePixelType(da(dx)), out10), dx);            \
     ++dx.x;                                                         \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dxx)), out01)), dxx);                                \
+    da.set(cf(SKIPSMImagePixelType(da(dxx)), out01), dxx);          \
     ++dxx.x;                                                        \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(SKIPSMImagePixelType(da(dxx)), out11)), dxx);                                \
+    da.set(cf(SKIPSMImagePixelType(da(dxx)), out11), dxx);          \
     ++dxx.x;
 
 #define SKIPSM_EXPAND_ROW_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
@@ -805,18 +821,18 @@ inline void reduce(bool wraparound,
     out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
     out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
     out10 /= SKIPSMImagePixelType(SCALE_OUT10);                     \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out00)), dx);                                  \
+    da.set(cf(da(dx), out00), dx);                                  \
     ++dx.x;                                                         \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out10)), dx);                                  \
+    da.set(cf(da(dx), out10), dx);                                  \
     ++dx.x;                                                         \
     if ((dst_h & 1) == 0) {                                         \
         out01 = sc0a[srcx];                                         \
         out11 = sc0b[srcx];                                         \
         out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
         out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out01)), dxx);                            \
+        da.set(cf(da(dxx), out01), dxx);                            \
         ++dxx.x;                                                    \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out11)), dxx);                            \
+        da.set(cf(da(dxx), out11), dxx);                            \
         ++dxx.x;                                                    \
     }
 
@@ -833,8 +849,8 @@ inline void reduce(bool wraparound,
     out01 += sc0a[srcx];                                            \
     out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
     out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out00)), dx);                                  \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out01)), dxx);                                \
+    da.set(cf(da(dx), out00), dx);                                  \
+    da.set(cf(da(dxx), out01), dxx);                                \
     if ((dst_w & 1) == 0) {                                         \
         ++dx.x;                                                     \
         ++dxx.x;                                                    \
@@ -842,29 +858,55 @@ inline void reduce(bool wraparound,
         out11 += sc0b[srcx];                                        \
         out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
         out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out10)), dx);                              \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out11)), dxx);                            \
+        da.set(cf(da(dx), out10), dx);                              \
+        da.set(cf(da(dxx), out11), dxx);                            \
+    }
+
+#define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
+    out01 = sc0a[srcx];                                             \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
+    out11 = sc0b[srcx];                                             \
+    sc1a[srcx] = sc0a[srcx];                                        \
+    sc1b[srcx] = sc0b[srcx];                                        \
+    sc0a[srcx] = sr1 + IMUL6(sr0) + SKIPSMImagePixelType(sa(sy));   \
+    sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) << 2;         \
+    out00 += sc0a[srcx];                                            \
+    out01 += sc0a[srcx];                                            \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
+    out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
+    da.set(cf(da(dx), out00), dx);                                  \
+    da.set(cf(da(dxx), out01), dxx);                                \
+    if ((dst_w & 1) == 0) {                                         \
+        ++dx.x;                                                     \
+        ++dxx.x;                                                    \
+        out10 += sc0b[srcx];                                        \
+        out11 += sc0b[srcx];                                        \
+        out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
+        out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
+        da.set(cf(da(dx), out10), dx);                              \
+        da.set(cf(da(dxx), out11), dxx);                            \
     }
 
 #define SKIPSM_EXPAND_ROW_COLUMN_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
     out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
-    da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out00)), dx);                                  \
+    da.set(cf(da(dx), out00), dx);                                  \
     if ((dst_w & 1) == 0) {                                         \
         out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
         out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
         ++dx.x;                                                     \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dx), out10)), dx);                              \
+        da.set(cf(da(dx), out10), dx);                              \
     }                                                               \
     if ((dst_h & 1) == 0) {                                         \
         out01 = sc0a[srcx];                                         \
         out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
-        da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out01)), dxx);                            \
+        da.set(cf(da(dxx), out01), dxx);                            \
         if ((dst_w & 1) == 0) {                                     \
             out11 = sc0b[srcx];                                     \
             out11 /= SKIPSMImagePixelType(SCALE_OUT11);             \
             ++dxx.x;                                                \
-            da.set(NumericTraits<DestPixelType>::fromPromote(pm(da(dxx), out11)), dxx);                        \
+            da.set(cf(da(dxx), out11), dxx);                        \
         }                                                           \
     }
 
@@ -873,14 +915,15 @@ inline void reduce(bool wraparound,
 /** The Burt & Adelson Expand operation. */
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor,
-        typename PlusMinusFunctorType>
+        typename CombineFunctor>
 void expand(bool add, bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
         DestImageIterator dest_upperleft,
         DestImageIterator dest_lowerright,
-        DestAccessor da) {
+        DestAccessor da,
+        CombineFunctor cf) {
 
     typedef typename SrcAccessor::value_type PixelType;
     typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
@@ -896,7 +939,8 @@ void expand(bool add, bool wraparound,
     // Without templatized plus/minus functor: 2.15minus 1.15plus
     // with functor: 1.94minus 1.14plus
     // with functor and fromPromote 2.08minus 1.46plus
-    PlusMinusFunctorType pm;
+    // with functor and fromPromote only for add: 2.16 minus 1.39 plus
+    // with wraparound, not used: 1.86minus 1.36plus
 
     SKIPSMImagePixelType current;
     SKIPSMImagePixelType out00, out10, out01, out11;
@@ -920,8 +964,13 @@ void expand(bool add, bool wraparound,
 
     // First row
     {
-        sr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
-        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        if (wraparound) {
+            sr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0)));
+        } else {
+            sr0 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+            sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        }
         for (sx = sy, srcx = 0; srcx < src_w; ++srcx, ++sx.x) {
             current = SKIPSMImagePixelType(sa(sx));
             sc0a[srcx] = sr1 + IMUL6(sr0) + current;
@@ -932,8 +981,13 @@ void expand(bool add, bool wraparound,
             sr0 = current;
         }
         // extra column at end of first row
-        sc0a[srcx] = sr1 + IMUL6(sr0);
-        sc0b[srcx] = sr0 << 2;
+        if (wraparound) {
+            sc0a[srcx] = sr1 + IMUL6(sr0) + SKIPSMImagePixelType(sa(sy));
+            sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) << 2;
+        } else {
+            sc0a[srcx] = sr1 + IMUL6(sr0);
+            sc0b[srcx] = sr0 << 2;
+        }
         sc1a[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
         sc1b[srcx] = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
     }
@@ -951,7 +1005,11 @@ void expand(bool add, bool wraparound,
         srcx = 0;
         sx = sy;
         sr0 = SKIPSMImagePixelType(sa(sx));
-        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        if (wraparound) {
+            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+        } else {
+            sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        }
         // sc*[0] are irrelvant
 
         srcx = 1;
@@ -961,7 +1019,11 @@ void expand(bool add, bool wraparound,
 
         // Second column
         if (src_w > 1) {
-            SKIPSM_EXPAND(49, 56, 14, 16)
+            if (wraparound) {
+                SKIPSM_EXPAND(56, 56, 16, 16)
+            } else {
+                SKIPSM_EXPAND(49, 56, 14, 16)
+            }
 
             // Main columns
             for (srcx = 2, ++sx.x; srcx < src_w; ++srcx, ++sx.x) {
@@ -969,9 +1031,14 @@ void expand(bool add, bool wraparound,
             }
 
             // extra column at end of second row
-            SKIPSM_EXPAND_COLUMN_END(49, 28, 14, 8)
+            if (wraparound) {
+                SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(56, 56, 16, 16)
+            } else {
+                SKIPSM_EXPAND_COLUMN_END(49, 28, 14, 8)
+            }
         }
         else {
+            // Math works out exactly the same for wraparound and no wraparound when src_w ==1
             SKIPSM_EXPAND_COLUMN_END(42, 28, 12, 8)
         }
 
@@ -989,7 +1056,11 @@ void expand(bool add, bool wraparound,
         if (src_w > 1) {
             // Second Column
             srcx = 1;
-            SKIPSM_EXPAND_ROW_END(42, 48, 7, 8)
+            if (wraparound) {
+                SKIPSM_EXPAND_ROW_END(48, 48, 8, 8)
+            } else {
+                SKIPSM_EXPAND_ROW_END(42, 48, 7, 8)
+            }
 
             // Main columns
             for (srcx = 2; srcx < src_w; ++srcx) {
@@ -997,7 +1068,11 @@ void expand(bool add, bool wraparound,
             }
 
             // extra column at end of row
-            SKIPSM_EXPAND_ROW_COLUMN_END(42, 24, 7, 4)
+            if (wraparound) {
+                SKIPSM_EXPAND_ROW_COLUMN_END(48, 48, 8, 8)
+            } else {
+                SKIPSM_EXPAND_ROW_COLUMN_END(42, 24, 7, 4)
+            }
         }
         else {
             // No Second Column
@@ -1027,7 +1102,11 @@ void expand(bool add, bool wraparound,
         srcx = 0;
         sx = sy;
         sr0 = SKIPSMImagePixelType(sa(sx));
-        sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        if (wraparound) {
+            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+        } else {
+            sr1 = SKIPSMImagePixelType(NumericTraits<SKIPSMImagePixelType>::zero());
+        }
         // sc*[0] are irrelvant
 
         srcx = 1;
@@ -1037,7 +1116,11 @@ void expand(bool add, bool wraparound,
 
         // Second column
         if (src_w > 1) {
-            SKIPSM_EXPAND(56, 64, 14, 16)
+            if (wraparound) {
+                SKIPSM_EXPAND_SHIFT
+            } else {
+                SKIPSM_EXPAND(56, 64, 14, 16)
+            }
 
             // Main columns
             for (srcx = 2, ++sx.x; srcx < src_w; ++srcx, ++sx.x) {
@@ -1046,11 +1129,16 @@ void expand(bool add, bool wraparound,
             }
 
             // extra column at end of row
-            SKIPSM_EXPAND_COLUMN_END(56, 32, 14, 8)
+            if (wraparound) {
+                SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(64, 64, 16, 16)
+            } else {
+                SKIPSM_EXPAND_COLUMN_END(56, 32, 14, 8)
+            }
         }
         else {
             // No second column
             // dst_w must be at least 2
+            // Math works out exactly the same for wraparound and no wraparound when src_w ==1
             SKIPSM_EXPAND_COLUMN_END(48, 32, 12, 8)
         }
     }
@@ -1067,7 +1155,11 @@ void expand(bool add, bool wraparound,
         if (src_w > 1) {
             // Second Column
             srcx = 1;
-            SKIPSM_EXPAND_ROW_END(49, 56, 7, 8)
+            if (wraparound) {
+                SKIPSM_EXPAND_ROW_END(56, 56, 8, 8)
+            } else {
+                SKIPSM_EXPAND_ROW_END(49, 56, 7, 8)
+            }
 
             // Main columns
             for (srcx = 2; srcx < src_w; ++srcx) {
@@ -1075,7 +1167,11 @@ void expand(bool add, bool wraparound,
             }
 
             // extra column at end of row
-            SKIPSM_EXPAND_ROW_COLUMN_END(49, 28, 7, 4)
+            if (wraparound) {
+                SKIPSM_EXPAND_ROW_COLUMN_END(56, 56, 8, 8)
+            } else {
+                SKIPSM_EXPAND_ROW_COLUMN_END(49, 28, 7, 4)
+            }
         }
         else {
             // No Second Column
@@ -1247,6 +1343,13 @@ void expand(bool add, bool wraparound,
 
 };
 
+template<typename T1, typename T2, typename T3>
+struct FromPromotePlusFunctorWrapper : public std::binary_function<T1, T2, T3> {
+    inline T3 operator()(const T1 &a, const T2 &b) const {
+        return NumericTraits<T3>::fromPromote(a + b);
+    }
+};
+
 // Version using argument object factories.
 template <typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
@@ -1256,14 +1359,15 @@ inline void expand(bool add, bool wraparound,
 
     typedef typename SrcAccessor::value_type PixelType;
     typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
+    typedef typename DestAccessor::value_type DestPixelType;
 
     if (add) {
-        expand<SrcImageIterator, SrcAccessor, DestImageIterator, DestAccessor, std::plus<SKIPSMImagePixelType> >
-                (add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third);
+        expand(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+                FromPromotePlusFunctorWrapper<DestPixelType, SKIPSMImagePixelType, DestPixelType>());
     }
     else {
-        expand<SrcImageIterator, SrcAccessor, DestImageIterator, DestAccessor, std::minus<SKIPSMImagePixelType> >
-                (add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third);
+        expand(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+                std::minus<SKIPSMImagePixelType>());
     }
 
 };
@@ -1463,7 +1567,7 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
         cout << " l" << (numLevels-1) << endl;
     }
 
-    exportPyramid(gp, exportName);
+    //exportPyramid(gp, exportName);
 
     return gp;
 };
