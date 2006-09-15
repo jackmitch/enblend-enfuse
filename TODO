@@ -5,7 +5,7 @@ X integer math dithering
     X vector
     X extrapolation
     X wraparound boundary conditions
-    - scalar
+    X no alpha
     - comment
 - skipsm expand replacement
     X vector

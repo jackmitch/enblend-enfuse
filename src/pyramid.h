@@ -98,6 +98,8 @@ DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
 // time with shifts: 80.78
 #define IMUL6(A) (A * SKIPSMImagePixelType(6))
 //#define IMUL6(A) ((A + (A << 1)) << 1)
+#define IMUL5(A) (A * SKIPSMImagePixelType(5))
+#define IMUL11(A) (A * SKIPSMImagePixelType(11))
 #define MMUL6(A) (A * SKIPSMMaskPixelType(6))
 //#define MMUL6(A) ((A + (A << 1)) << 1)
 
@@ -627,12 +629,251 @@ inline void reduce(bool wraparound,
         DestAccessor da) {
 
     typedef typename SrcAccessor::value_type PixelType;
+    typedef typename DestAccessor::value_type DestPixelType;
     typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
+    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
+    int dst_w = dest_lowerright.x - dest_upperleft.x;
+    //int dst_h = dest_lowerright.y - dest_upperleft.y;
+
     vigra_precondition(src_w > 1 && src_h > 1,
             "src image too small in reduce");
+
+// before skipsm: 1.84 / 59.84
+// after  skipsm:  .51 / 58.58
+#if 1
+
+    SKIPSMImagePixelType isr0, isr1, isrp;
+    SKIPSMImagePixelType *isc0 = new SKIPSMImagePixelType[dst_w + 1];
+    SKIPSMImagePixelType *isc1 = new SKIPSMImagePixelType[dst_w + 1];
+    SKIPSMImagePixelType *iscp = new SKIPSMImagePixelType[dst_w + 1];
+
+    const SKIPSMImagePixelType SKIPSMImageZero(NumericTraits<SKIPSMImagePixelType>::zero());
+
+    DestImageIterator dy = dest_upperleft;
+    DestImageIterator dx = dy;
+    SrcImageIterator sy = src_upperleft;
+    SrcImageIterator sx = sy;
+
+    bool evenY = true;
+    bool evenX = true;
+    int srcy = 0;
+    int srcx = 0;
+    //int dsty = 0;
+    int dstx = 0;
+
+    // First row
+    {
+        if (wraparound) {
+            isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2, 0)));
+            isr1 = SKIPSMImageZero;
+            isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1, 0))) << 2;
+        } else {
+            isr0 = SKIPSMImagePixelType(sa(sy));
+            isr1 = SKIPSMImageZero;
+            isrp = SKIPSMImagePixelType(sa(sy)) << 2;
+        }
+
+        for (sx = sy, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x) {
+            SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
+            if (evenX) {
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
+                isc1[dstx] = IMUL5(isc0[dstx]);
+                isr1 = isr0 + isrp;
+                isr0 = icurrent;
+            }
+            else {
+                isrp = icurrent << 2;
+                ++dstx;
+            }
+            evenX = !evenX;
+        }
+        // Last entries in first row
+        if (!evenX) {
+            // previous srcx was even
+            ++dstx;
+            if (wraparound) {
+                isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2)
+                                  + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)));
+                isc1[dstx] = IMUL5(isc0[dstx]);
+            } else {
+                isc0[dstx] = isr1 + IMUL11(isr0);
+                isc1[dstx] = IMUL5(isc0[dstx]);
+            }
+        }
+        else {
+            // previous srcx was odd
+            if (wraparound) {
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+                isc1[dstx] = IMUL5(isc0[dstx]);
+            } else {
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (isrp >> 2);
+                isc1[dstx] = IMUL5(isc0[dstx]);
+            }
+        }
+    }
+    ++sy.y;
+
+    // Main Rows
+    {
+        for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y) {
+
+            if (wraparound) {
+                isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0)));
+                isr1 = SKIPSMImageZero;
+                isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0))) << 2;
+            } else {
+                isr0 = SKIPSMImagePixelType(sa(sy));
+                isr1 = SKIPSMImageZero;
+                isrp = SKIPSMImagePixelType(sa(sy)) << 2;
+            }
+
+            if (evenY) {
+                // Even-numbered row
+
+                // First entry in row
+                sx = sy;
+                isr1 = isr0 + isrp;
+                isr0 = SKIPSMImagePixelType(sa(sx));
+                //isc1[0] = isc0[0] + (iscp[0] << 2);
+                //isc0[0] = sa(sx);
+                ++sx.x;
+                dx = dy;
+
+                // Main entries in row
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
+                    SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
+                    if (evenX) {
+                        SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                        isc1[dstx] = isc0[dstx] + iscp[dstx];
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
+                        isr1 = isr0 + isrp;
+                        isr0 = icurrent;
+                        ip += isc0[dstx];
+                        ip >>= 8;
+                        da.set(DestPixelType(ip), dx);
+                        ++dx.x;
+                    }
+                    else {
+                        isrp = icurrent << 2;
+                        ++dstx;
+                    }
+                    evenX = !evenX;
+                }
+
+                // Last entries in row
+                if (!evenX) {
+                    // previous srcx was even
+                    ++dstx;
+
+                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    isc1[dstx] = isc0[dstx] + iscp[dstx];
+                    if (wraparound) {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2)
+                                          + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)));
+                    } else {
+                        isc0[dstx] = isr1 + IMUL11(isr0);
+                    }
+                    ip += isc0[dstx];
+                    ip >>= 8;
+                    da.set(DestPixelType(ip), dx);
+                }
+                else {
+                    // Previous srcx was odd
+                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    isc1[dstx] = isc0[dstx] + iscp[dstx];
+                    if (wraparound) {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+                    } else {
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (isrp >> 2);
+                    }
+                    ip += isc0[dstx];
+                    ip >>= 8;
+                    da.set(DestPixelType(ip), dx);
+                }
+
+                ++dy.y;
+            }
+            else {
+                // First entry in odd-numbered row
+                sx = sy;
+                isr1 = isr0 + isrp;
+                isr0 = SKIPSMImagePixelType(sa(sx));
+                //isc1[0] = isc0[0] + (iscp[0] << 2);
+                //isc0[0] = sa(sx);
+                ++sx.x;
+
+                // Main entries in odd-numbered row
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
+                    SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
+                    if (evenX) {
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + icurrent) << 2;
+                        isr1 = isr0 + isrp;
+                        isr0 = icurrent;
+                    }
+                    else {
+                        isrp = icurrent << 2;
+                        ++dstx;
+                    }
+                    evenX = !evenX;
+                }
+                // Last entries in row
+                if (!evenX) {
+                    // previous srcx was even
+                    ++dstx;
+                    if (wraparound) {
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) << 2)
+                                           + SKIPSMImagePixelType(sa(sy, Diff2D(1,0)))
+                                     ) << 2;
+                    } else {
+                        iscp[dstx] = (isr1 + IMUL11(isr0)) << 2;
+                    }
+                }
+                else {
+                    // previous srcx was odd
+                    if (wraparound) {
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy))) << 2;
+                    } else {
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + (isrp >> 2)) << 2;
+                    }
+                }
+            }
+            evenY = !evenY;
+        }
+    }
+
+    // Last Rows
+    {
+        if (!evenY) {
+            // Last srcy was even
+            // odd row will set all iscp[] to zero
+            // even row will do:
+            //isc0[dstx] = 0;
+            //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
+            //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
+            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
+                SKIPSMImagePixelType ip = (isc1[dstx] + IMUL11(isc0[dstx])) >> 8;
+                da.set(DestPixelType(ip), dx);
+            }
+        }
+        else {
+            // Last srcy was odd
+            // even row will do:
+            // isc0[dstx] = 0;
+            // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
+            // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
+            for (dstx = 1, dx = dy; dstx < (dst_w + 1); ++dstx, ++dx.x) {
+                SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx] + (iscp[dstx] >> 2)) >> 8;
+                da.set(DestPixelType(ip), dx);
+            }
+        }
+    }
+
+    delete[] isc0;
+    delete[] isc1;
+    delete[] iscp;
 
 /*    RealPixelType isr0, isr1, isr2, isr3;
     RealPixelType *isc0 = new RealPixelType[src_w + 2];
@@ -704,6 +945,8 @@ inline void reduce(bool wraparound,
     delete[] msc3;
 */
 
+#else
+
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dend = dest_lowerright;
     SrcImageIterator sy = src_upperleft;
@@ -743,6 +986,8 @@ inline void reduce(bool wraparound,
             da.set(NumericTraits<PixelType>::fromRealPromote(p), dx);
         }
     }
+
+#endif
 
 };
 
