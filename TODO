@@ -5,7 +5,6 @@ X integer math dithering
     X vector
     X extrapolation
     X wraparound boundary conditions
-    - fix artifacts
     - scalar
     - comment
 - skipsm expand replacement
@@ -16,6 +15,7 @@ X integer math dithering
 - fast cfi row iterators
 - cfi swap policy improvements
 - make checkpointing optional
+    - exportImageAlpha needs accessor to convert AlphaType to ImageComponentType
 - new vigra fixed point math
 - vigra sized_int
 - icc blending

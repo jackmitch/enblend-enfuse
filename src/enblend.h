@@ -66,7 +66,7 @@ namespace enblend {
 
 /** Enblend's main blending loop. Templatized to handle different image types.
  */
-template <typename ImageType, typename MaskPyramidType, typename ImagePyramidType>
+template <typename ImageType, typename ImageComponentType, typename MaskPyramidType, typename ImagePyramidType>
 void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
@@ -87,7 +87,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     // Create the initial black image.
     EnblendROI blackBB;
     pair<ImageType*, AlphaType*> blackPair =
-            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
+            assemble<ImageType, ImageComponentType, AlphaType>(imageInfoList, inputUnion, blackBB);
     exportImageAlpha(srcImageRange(*(blackPair.first)),
                      srcImage(*(blackPair.second)),
                      outputImageInfo);
@@ -113,7 +113,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the white image.
         EnblendROI whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
-                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+                assemble<ImageType, ImageComponentType, AlphaType>(imageInfoList, inputUnion, whiteBB);
         // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
         // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -516,8 +516,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
         VigraTrueType) {
 
+    typedef typename ImageType::value_type ImageComponentType;
+
     // ImagePyramidType::value_type is a scalar.
-    enblendMain<ImageType, ImagePyramidType, ImagePyramidType>(
+    enblendMain<ImageType, ImageComponentType, ImagePyramidType, ImagePyramidType>(
             imageInfoList, outputImageInfo, inputUnion);
 }
 
@@ -528,14 +530,17 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         VigraFalseType) {
 
     // ImagePyramidType::value_type is a vector.
-    typedef typename ImagePyramidType::value_type VectorType;
+    typedef typename ImagePyramidType::value_type ImagePyramidVectorType;
+    typedef typename ImagePyramidVectorType::value_type ImagePyramidComponentType;
+    typedef typename ImageType::value_type ImageVectorType;
+    typedef typename ImageVectorType::value_type ImageComponentType;
     #ifdef ENBLEND_CACHE_IMAGES
-    typedef CachedFileImage<typename VectorType::value_type> MaskPyramidType;
+    typedef CachedFileImage<ImagePyramidComponentType> MaskPyramidType;
     #else
-    typedef BasicImage<typename VectorType::value_type> MaskPyramidType;
+    typedef BasicImage<ImagePyramidComponentType> MaskPyramidType;
     #endif
 
-    enblendMain<ImageType, MaskPyramidType, ImagePyramidType>(
+    enblendMain<ImageType, ImageComponentType, MaskPyramidType, ImagePyramidType>(
             imageInfoList, outputImageInfo, inputUnion);
 }
 

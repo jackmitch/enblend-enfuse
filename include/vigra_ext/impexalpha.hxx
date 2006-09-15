@@ -8,7 +8,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: impexalpha.hxx,v 1.1.2.1 2006-09-05 07:39:29 acmihal Exp $
+ *  $Id: impexalpha.hxx,v 1.1.2.2 2006-09-15 06:25:17 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -95,8 +95,9 @@ public:
     template <class DIFFERENCE>
     value_type operator()(DIFFERENCE const & d) const
     {
-        return value_type(a1_(i1_, d),
-                          a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
+        //return value_type(a1_(i1_, d),
+        //                  a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
+        return value_type(a1_(i1_, d), a2_(i2_, d));
     }
 
         /** read the data item at an offset
@@ -105,8 +106,9 @@ public:
     value_type operator()(DIFFERENCE1 d, DIFFERENCE2 const & d2) const
     {
         d += d2;
-        return value_type(a1_(i1_, d),
-                          a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
+        return value_type(a1_(i1_, d), a2_(i2_, d));
+        //return value_type(a1_(i1_, d),
+        //                  a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
 
 //        return std::make_pair(a1_(i1_, d1), a2_(i2_, d1));
     }
@@ -117,7 +119,8 @@ public:
     value_type set(const value_type & vt, DIFFERENCE const & d) const
     {
         a1_.set(vt[0], i1_, d);
-        a2_.set(vt[1] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
+        a2_.set(vt[1], i2_, d);
+        //a2_.set(vt[1] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
     }
 
     /** scalar & scalar image */
@@ -129,7 +132,8 @@ public:
             a1_.set(value, i1_, *i);
             break;
         case 1:
-            a2_.set(value ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
+            //a2_.set(value ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
+            a2_.set(value, i2_, *i);
             break;
         default:
             vigra_fail("too many components in input value");
@@ -144,7 +148,8 @@ public:
             case 0:
                 return a1_( i1_, *i );
             case 1:
-                return a2_( i2_, *i ) ? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
+                return a2_( i2_, *i );
+                //return a2_( i2_, *i ) ? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
             default:
                 vigra_fail("too many components in input value");
             // never reached, but here to silence compiler
@@ -198,7 +203,8 @@ public:
         return value_type(v1[0],
                           v1[1],
                           v1[2],
-                          a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
+                          a2_(i2_, d));
+                          //a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
     }
 
         /** read the data item at an offset
@@ -211,7 +217,8 @@ public:
         return value_type(v1[0],
                           v1[1],
                           v1[2],
-                          a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
+                          a2_(i2_, d));
+                          //a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
     }
 
         /** write the current data item
@@ -224,7 +231,8 @@ public:
         a1_.setComponent(vt[0], i1_, 0);
         a1_.setComponent(vt[1], i1_, 1);
         a1_.setComponent(vt[2], i1_, 2);
-        a2_.set(vt[3] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
+        //a2_.set(vt[3] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
+        a2_.set(vt[3], i2_, d);
     }
 
     /** vector & scalar image */
@@ -234,7 +242,8 @@ public:
         if ( idx < static_size - 1 ) {
             a1_.setComponent(value, i1_, *i, idx);
         } else if ( idx == static_size - 1 ) {
-            a2_.set(value? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
+            a2_.set(value, i2_, *i);
+            //a2_.set(value? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
         } else {
             vigra_fail("too many components in input value");
         }
@@ -248,10 +257,12 @@ public:
             return a1_.getComponent(i1_, *i, idx);
         } else 
 #ifndef DEBUG
-            return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
+            return a2_(i2_, *i);
+            //return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
 #else
             if ( idx == static_size - 1 ) {
-                return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
+                return a2_(i2_, *i);
+                //return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
         } else {
             vigra_fail("too many components in input value");
             // just to silence the compiler warning. this is

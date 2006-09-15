@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: FunctorAccessor.h,v 1.4.2.1 2006-09-05 07:39:28 acmihal Exp $
+ *  $Id: FunctorAccessor.h,v 1.4.2.2 2006-09-15 06:25:17 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -96,7 +96,7 @@ class WriteFunctorAccessor
     template <class Value, class ITERATOR>
     void set(Value const & v, ITERATOR const & i) const
     {
-	m_a.set(m_f(v), i);
+	m_a.set(m_f(vigra::detail::RequiresExplicitCast<typename Functor::argument_type>::cast(v)), i);
     }
 
     /** Set functor result
@@ -104,7 +104,7 @@ class WriteFunctorAccessor
     template <class Value, class ITERATOR_, class DIFFERENCE_>
     void set(Value const & v, ITERATOR_ const & i, DIFFERENCE_ d) const
     {
-        m_a.set(m_f(v),i,d);
+        m_a.set(m_f(vigra::detail::RequiresExplicitCast<typename Functor::argument_type>::cast(v)),i,d);
     }
 
     Functor m_f;

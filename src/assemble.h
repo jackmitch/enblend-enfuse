@@ -69,11 +69,13 @@ namespace enblend {
  *  Returns an ImageImportInfo for the temporary file.
  *  memory xsection = 2 * (ImageType*inputUnion + AlphaType*inputUnion)
  */
-template <typename ImageType, typename AlphaType>
+template <typename ImageType, typename ImageComponentType, typename AlphaType>
 pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
         EnblendROI &bb) {
 
+    typedef typename ImageType::PixelType ImagePixelType;
+    typedef typename ImageType::Accessor ImageAccessor;
     typedef typename AlphaType::PixelType AlphaPixelType;
     typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
@@ -100,14 +102,15 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     // Load the first image into the destination.
     // Use a thresholding accessor to write to the alpha image.
     typedef WriteFunctorAccessor<
-            Threshold<AlphaPixelType, AlphaPixelType>, AlphaAccessor>
+            Threshold<ImageComponentType, AlphaPixelType>, AlphaAccessor>
             ThresholdingAccessor;
     // Threshold the alpha mask so that all pixels are either contributing
     // or not contributing.
     ThresholdingAccessor imageATA(
-            Threshold<AlphaPixelType, AlphaPixelType>(
-                    NumericTraits<AlphaPixelType>::max() / 2,
-                    NumericTraits<AlphaPixelType>::max(),
+            Threshold<ImageComponentType, AlphaPixelType>(
+                    //NumericTraits<AlphaPixelType>::max() / 2,
+                    NumericTraits<ImageComponentType>::max(),
+                    NumericTraits<ImageComponentType>::max(),
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::max()
             ),
@@ -135,9 +138,10 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
 
             // Use a thresholding accessor to write to the alpha image.
             ThresholdingAccessor srcATA(
-                    Threshold<AlphaPixelType, AlphaPixelType>(
-                            NumericTraits<AlphaPixelType>::max() / 2,
-                            NumericTraits<AlphaPixelType>::max(),
+                    Threshold<ImageComponentType, AlphaPixelType>(
+                            //NumericTraits<AlphaPixelType>::max() / 2,
+                            NumericTraits<ImageComponentType>::max(),
+                            NumericTraits<ImageComponentType>::max(),
                             NumericTraits<AlphaPixelType>::zero(),
                             NumericTraits<AlphaPixelType>::max()
                     ),
