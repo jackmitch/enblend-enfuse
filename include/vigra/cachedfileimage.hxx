@@ -453,6 +453,112 @@ public:
 
 };
 
+/** Forward Declaration. */
+template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
+class CachedFileImageIteratorBase;
+
+template <typename T>
+class NotifyingInteger
+{
+public:
+
+    NotifyingInteger(int y, T *cfiIterator) : _y(y), _i(cfiIterator) { }
+
+    inline NotifyingInteger & operator=(const int y) {
+        if (y != _y) {
+            _i->_notify(_y, y);
+            _y = y;
+        }
+        return *this;
+    }
+
+    inline NotifyingInteger & operator++() {
+        _i->_notify(_y, _y+1);
+        ++_y;
+        return *this;
+    }
+
+    inline void operator++(int) {
+        ++(*this);
+    }
+
+    inline NotifyingInteger & operator--() {
+        _i->_notify(_y, _y-1);
+        --_y;
+        return *this;
+    }
+
+    inline void operator--(int) {
+        --(*this);
+    }
+
+    inline NotifyingInteger<T>& operator+=(NotifyingInteger<T> const &r) {
+        _i->_notify(_y, _y + r._y);
+        _y += r._y;
+        return *this;
+    }
+
+    inline NotifyingInteger<T>& operator+=(const int r) {
+        _i->_notify(_y, _y + r);
+        _y += r;
+        return *this;
+    }
+
+    inline NotifyingInteger<T>& operator-=(NotifyingInteger<T> const &r) {
+        _i->_notify(_y, _y - r._y);
+        _y -= r._y;
+        return *this;
+    }
+
+    inline NotifyingInteger<T>& operator-=(const int r) {
+        _i->_notify(_y, _y - r);
+        _y -= r;
+        return *this;
+    }
+
+    friend bool operator==(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y == r._y);
+    }
+
+    friend bool operator!=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y != r._y);
+    }
+
+    friend bool operator<(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y < r._y);
+    }
+
+    friend bool operator>(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y > r._y);
+    }
+
+    friend bool operator<=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y <= r._y);
+    }
+
+    friend bool operator>=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y >= r._y);
+    }
+
+    friend int operator-(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
+        return (l._y - r._y);
+    }
+
+private:
+
+    // Don't let the compiler use these.
+    // Shallow copy will create two NotifyingIntegers both notifying the same iterator.
+    NotifyingInteger(const NotifyingInteger<T> &t);
+    NotifyingInteger& operator=(const NotifyingInteger<T> &t);
+
+    template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
+    friend class CachedFileImageIteratorBase;
+
+    int _y;
+    T *_i;
+
+};
+
 /** Base class for CachedFileImage traversers. */
 template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
 class CachedFileImageIteratorBase
@@ -471,11 +577,10 @@ public:
     typedef RowIterator<IMAGEITERATOR> row_iterator;
     typedef ColumnIterator<IMAGEITERATOR> column_iterator;
     typedef int MoveX;
-    typedef int MoveY;
+    typedef NotifyingInteger<self_type> MoveY;
 
     MoveX x;
     MoveY y;
-    image_type *i;
 
     IMAGEITERATOR & operator+=(difference_type const & s) {
         x += s.x;
@@ -514,27 +619,37 @@ public:
     }
 
     reference operator*() const {
-        return (*i)(x, y);
+        //std::cout << "iterator=" << this << " currentRow=" << (void*)currentRow << " modifying pixel at (" << x << "," << y._y << ")  = " << (void*)(&currentRow[x]) << std::endl;
+        return currentRow[x];
+        //return (*i)(x, y);
     }
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator->() const {
         //BOOST_STATIC_ASSERT(false);
-        return (*i)[y] + x;
+        return (*i)[y._y] + x;
     }
 
     index_reference operator[](difference_type const & d) const {
-        return (*i)(x+d.x, y+d.y);
+        if (d.y == 0) {
+            return currentRow[x+d.x];
+        } else {
+            return (*i)(x+d.x, y._y+d.y);
+        }
     }
 
     index_reference operator()(int dx, int dy) const {
-        return (*i)(x+dx, y+dy);
+        if (dy == 0) {
+            return currentRow[x+dx];
+        } else {
+            return (*i)(x+dx, y._y+dy);
+        }
     }
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator[](int dy) const {
         //BOOST_STATIC_ASSERT(false);
-        return (*i)[y + dy] + x;
+        return (*i)[y._y + dy] + x;
     }
 
     row_iterator rowIterator() const {
@@ -547,10 +662,37 @@ public:
 
 protected:
 
-    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y), i(I) { }
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y, this), i(I), currentRow(NULL) {
+        _notify(Y);
+        //cout << "constructed iterator with notify " << this << endl;
+    }
 
-    CachedFileImageIteratorBase() : x(0), y(0), i(NULL) { }
+    CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y._y, this), i(r.i), currentRow(r.currentRow) { }
 
+    CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
+        x = r.x;
+        y._y = r.y._y;
+        i = r.i;
+        currentRow = r.currentRow;
+        return *this;
+    }
+
+    void _notify(int initialY) {
+        // Y has been initialized to initialY.
+        if (i) currentRow = (*i)[initialY];
+        //std::cout << "iterator " << this << " _notify(" << initialY << ") currentRow=" << (void*)currentRow << std::endl;
+    }
+
+    void _notify(int oldY, int newY) {
+        // Y has changed from oldY to newY
+        if (i) currentRow = (*i)[newY];
+        //std::cout << "iterator " << this << " _notify(" << oldY << ", " << newY << ") currentRow=" << (void*)currentRow << std::endl;
+    }
+
+    friend class NotifyingInteger<self_type>;
+
+    image_type *i;
+    pointer currentRow;
 };
  
 /** Regular CachedFileImage traverser. */
@@ -610,8 +752,10 @@ public:
     operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
     {
         Base::x = rhs.x;
-        Base::y = rhs.y;
+        // FIXME: This is probably broken because y._y cannot be accessed from here.
+        Base::y._y = rhs.y._y;
         Base::i = rhs.i;
+        Base::currentRow = rhs.currentRow;
         return *this;
     }
 
@@ -729,13 +873,17 @@ public:
     // FIXME - needs to return a weak_ptr
     pointer operator[](int dy) {
         //BOOST_STATIC_ASSERT(false);
-        return getLinePointerDirty(dy);
+        //cout << "fetching line pointer for row " << dy << endl;
+        if (dy >= height_) return NULL;
+        else return getLinePointerDirty(dy);
     }
 
     // FIXME - needs to return a weak_ptr
     const_pointer operator[](int dy) const {
         //BOOST_STATIC_ASSERT(false);
-        return getLinePointer(dy);
+        //cout << "fetching line pointer for row " << dy << endl;
+        if (dy >= height_) return NULL;
+        else return getLinePointer(dy);
     }
 
     traverser upperLeft() {

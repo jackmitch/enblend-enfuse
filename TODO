@@ -1,19 +1,22 @@
 X Merge new vigra
 X .cvsignore files
 X integer math dithering
-- skipsm reduce replacement
+X skipsm reduce replacement
     X vector
     X extrapolation
     X wraparound boundary conditions
     X no alpha
-    - comment
-- skipsm expand replacement
+    X comment
+X skipsm expand replacement
     X vector
     X normal boundary condition
     X wraparound boundary condition
-    - comment
-- fast cfi row iterators
-- cfi swap policy improvements
+    X comment
+X fast cfi row iterators
+    left-middle test before changes: 59.54
+    left-middle test after changes: 50.50 
+    2.5 non-profiling test: 12.9 user
+    3.0 non-profiling test: 7.24 user
 - make checkpointing optional
     - exportImageAlpha needs accessor to convert AlphaType to ImageComponentType
 - new vigra fixed point math
@@ -21,9 +24,12 @@ X integer math dithering
 - icc blending
 - new seam alg
 - fix cachedFileImage typedef in enblend.cc to redefine CFImages if no env var set
+- vigra impex improvements
 - fast compile env var?
+- cfi swap policy improvements
 - multilayer images
 - vogl's hdr test cases
+- enable all pixel types
 
 
 

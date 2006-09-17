@@ -131,6 +131,10 @@ public:
         firstUnused++;
     }
 
+    void move_to_beginning() {
+        iterator = array;
+    }
+
     void move_to_end() {
         iterator = last;
     }
@@ -213,9 +217,11 @@ void nearestFeatureTransform(bool wraparound,
     }
     // Initialization.
     for (int i = 0; i < w; i++) {
-        lastFeature[i] = sa(src_upperleft);
+        // before commenting out: 18.23
+        // after commenting out:  18.35
+        //lastFeature[i] = sa(src_upperleft);
         foundFirstFeature[i] = false;
-        lastFeatureDeltaY[i] = 0;
+        //lastFeatureDeltaY[i] = 0;
     }
     sy = src_upperleft;
     send = src_lowerright;
@@ -260,9 +266,13 @@ void nearestFeatureTransform(bool wraparound,
     }
     // Initialization.
     for (int i = 0; i < w; i++) {
-        lastFeature[i] = sa(src_upperleft);
+        // before commenting out: 18.35
+        // after commenting out:  18.69
+        //lastFeature[i] = sa(src_upperleft);
         foundFirstFeature[i] = false;
-        lastFeatureDeltaY[i] = 0;
+        // before commenting out this and previous lastFeatureDeltaY init: 18.69
+        // after: 
+        //lastFeatureDeltaY[i] = 0;
     }
     sy = src_lowerright;
     send = src_upperleft;
@@ -290,7 +300,9 @@ void nearestFeatureTransform(bool wraparound,
                 *dnfcx = 0;
                 lastFeatureDeltaY[xIndex] = 0;
                 // Nearest feature color = source feature color.
-                da.set(lastFeature[xIndex], dx);
+                // time before commenting out this line: 19.52
+                // time after commenting out this line: 18.23
+                //da.set(lastFeature[xIndex], dx);
             }
             else if (foundFirstFeature[xIndex]) {
                 // Source pixel is not a feature
@@ -355,6 +367,7 @@ void nearestFeatureTransform(bool wraparound,
                 // That is in the current column so the distance to that feature
                 // is simply *dnfcx.
                 unsigned int distPotentialFeature = *dnfcx;
+
                 while (potentialFeatureList.has_previous()) {
                     // X coordinate of the predecessor.
                     typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
