@@ -39,8 +39,7 @@ using std::pair;
 
 using vigra::NumericTraits;
 using vigra::triple;
-using vigra::UICFImage;
-using vigra::UInt32Image;
+using vigra::UINT32IMAGE;
 
 namespace enblend {
 
@@ -175,11 +174,7 @@ void nearestFeatureTransform(bool wraparound,
         DestImageIterator dest_upperleft,
         DestAccessor da) {
 
-    #ifdef ENBLEND_CACHE_IMAGES
-    typedef UICFImage::traverser DnfIterator;
-    #else
-    typedef UInt32Image::traverser DnfIterator;
-    #endif
+    typedef UINT32IMAGE::traverser DnfIterator;
     typedef typename SrcAccessor::value_type SrcValueType;
 
     SrcImageIterator sx, sy, send, smidpoint;
@@ -190,16 +185,11 @@ void nearestFeatureTransform(bool wraparound,
     int w = src_lowerright.x - src_upperleft.x;
     int h = src_lowerright.y - src_upperleft.y;
 
-    #ifdef ENBLEND_CACHE_IMAGES
     // Distance to the nearest feature in the current column.
-    UICFImage *dnfColumn = new UICFImage(w, h);
+    UINT32IMAGE *dnfColumn = new UINT32IMAGE(w, h);
     // Distance to the nearest feature in the current column, or any
     // column to the left of this column.
-    UICFImage *dnfLeft = new UICFImage(w, h);
-    #else
-    UInt32Image *dnfColumn = new UInt32Image(w, h);
-    UInt32Image *dnfLeft = new UInt32Image(w, h);
-    #endif
+    UINT32IMAGE *dnfLeft = new UINT32IMAGE(w, h);
 
     // Data structures for initializing dnfColumn.
     // These let us initialize all of the columns in one pass

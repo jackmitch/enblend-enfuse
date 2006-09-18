@@ -21,6 +21,42 @@
 #include <config.h>
 #endif
 
+#ifdef ENBLEND_CACHE_IMAGES
+    #define DIMAGE          DCFImage
+    #define DRGBIMAGE       DRGBCFImage
+    #define FIMAGE          FCFImage
+    #define FRGBIMAGE       FRGBCFImage
+    #define INT8IMAGE       Int8CFImage
+    #define INT8RGBIMAGE    Int8RGBCFImage
+    #define UINT8IMAGE      UInt8CFImage
+    #define UINT8RGBIMAGE   UInt8RGBCFImage
+    #define INT16IMAGE      Int16CFImage
+    #define INT16RGBIMAGE   Int16RGBCFImage
+    #define UINT16IMAGE     UInt16CFImage
+    #define UINT16RGBIMAGE  UInt16RGBCFImage
+    #define INT32IMAGE      Int32CFImage
+    #define INT32RGBIMAGE   Int32RGBCFImage
+    #define UINT32IMAGE     UInt32CFImage
+    #define UINT32RGBIMAGE  UInt32RGBCFImage
+#else
+    #define DIMAGE          DImage
+    #define DRGBIMAGE       DRGBImage
+    #define FIMAGE          FImage
+    #define FRGBIMAGE       FRGBImage
+    #define INT8IMAGE       Int8Image
+    #define INT8RGBIMAGE    Int8RGBImage
+    #define UINT8IMAGE      UInt8Image
+    #define UINT8RGBIMAGE   UInt8RGBImage
+    #define INT16IMAGE      Int16Image
+    #define INT16RGBIMAGE   Int16RGBImage
+    #define UINT16IMAGE     UInt16Image
+    #define UINT16RGBIMAGE  UInt16RGBImage
+    #define INT32IMAGE      Int32Image
+    #define INT32RGBIMAGE   Int32RGBImage
+    #define UINT32IMAGE     UInt32Image
+    #define UINT32RGBIMAGE  UInt32RGBImage
+#endif
+
 #ifdef _WIN32
 #include <win32helpers\win32config.h>
 
@@ -72,11 +108,12 @@ bool OneAtATime = true;
 bool Wraparound = false;
 double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
-bool UseLabColor = false;
+bool UseCIECAM = false;
 bool UseLZW = false;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
+bool Checkpoint = false;
 
 #include "common.h"
 #include "enblend.h"
@@ -91,39 +128,28 @@ using std::cout;
 using std::endl;
 using std::list;
 
-using vigra::BCFImage;
-using vigra::BImage;
-using vigra::BRGBCFImage;
-using vigra::BRGBImage;
+using vigra::DIMAGE;
+using vigra::DRGBIMAGE;
+using vigra::FIMAGE;
+using vigra::FRGBIMAGE;
+using vigra::INT8IMAGE;
+using vigra::INT8RGBIMAGE;
+using vigra::UINT8IMAGE;
+using vigra::UINT8RGBIMAGE;
+using vigra::INT16IMAGE;
+using vigra::INT16RGBIMAGE;
+using vigra::UINT16IMAGE;
+using vigra::UINT16RGBIMAGE;
+using vigra::INT32IMAGE;
+using vigra::INT32RGBIMAGE;
+using vigra::UINT32IMAGE;
+using vigra::UINT32RGBIMAGE;
+
 using vigra::CachedFileImageDirector;
-using vigra::DCFImage;
 using vigra::Diff2D;
-using vigra::DImage;
-using vigra::DRGBCFImage;
-using vigra::DRGBImage;
-using vigra::FCFImage;
-using vigra::FImage;
-using vigra::FRGBCFImage;
-using vigra::FRGBImage;
-using vigra::ICFImage;
-using vigra::IImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
-using vigra::IRGBCFImage;
-using vigra::IRGBImage;
-using vigra::SCFImage;
-using vigra::SImage;
-using vigra::SRGBCFImage;
-using vigra::SRGBImage;
 using vigra::StdException;
-using vigra::UICFImage;
-using vigra::UInt32Image;
-using vigra::UIRGBCFImage;
-using vigra::UInt32RGBImage;
-using vigra::USCFImage;
-using vigra::UInt16Image;
-using vigra::USRGBCFImage;
-using vigra::UInt16RGBImage;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
@@ -141,10 +167,11 @@ void printUsageAndExit() {
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
     cout << " -z                Use LZW compression" << endl;
+    cout << " -x                Checkpoint partial results" << endl;
 
     cout << endl << "Extended options:" << endl;
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
-    cout << " -c                Use CIE L*a*b* color space" << endl;
+    cout << " -c                Use CIECAM02 to blend colors" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
     cout << " -f WIDTHxHEIGHT   Manually set the size of the output image." << endl
          << "                   Useful for cropped and shifted input TIFF images," << endl
@@ -195,7 +222,7 @@ int main(int argc, char** argv) {
 
     // Parse command line.
     int c;
-    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwz")) != -1) {
+    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwxz")) != -1) {
         switch (c) {
             case 'a': {
                 OneAtATime = false;
@@ -213,7 +240,7 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'c': {
-                UseLabColor = true;
+                UseCIECAM = true;
                 break;
             }
             case 'f': {
@@ -298,6 +325,10 @@ int main(int argc, char** argv) {
             }
             case 'w': {
                 Wraparound = true;
+                break;
+            }
+            case 'x': {
+                Checkpoint = true;
                 break;
             }
             case 'z': {
@@ -527,28 +558,30 @@ int main(int argc, char** argv) {
 
     // Invoke templatized blender.
     try {
-    #ifdef ENBLEND_CACHE_IMAGES
         if (isColor) {
             if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BRGBCFImage, SRGBCFImage>(
+                enblendMain<UINT8RGBIMAGE, INT16RGBIMAGE>(
                         imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT8") == 0) {
+            //    enblendMain<INT8RGBImage, INT16RGBImage>(
+            //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT16") == 0) {
-            //    enblendMain<SRGBCFImage, IRGBCFImage>(
+            //    enblendMain<INT16RGBIMAGE, INT32RGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "UINT16") == 0) {
-            //    enblendMain<USRGBCFImage, IRGBCFImage>(
+            //    enblendMain<UINT16RGBIMAGE, INT32RGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT32") == 0) {
-            //    enblendMain<IRGBCFImage, DRGBCFImage>(
+            //    enblendMain<INT32RGBIMAGE, DRGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "UINT32") == 0) {
-            //    enblendMain<UIRGBCFImage, DRGBCFImage>(
+            //    enblendMain<UINT32RGBIMAGE, DRGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "FLOAT") == 0) {
-            //    enblendMain<FRGBCFImage, DRGBCFImage>(
+            //    enblendMain<FRGBIMAGE, DRGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-            //    enblendMain<DRGBCFImage, DRGBCFImage>(
+            //    enblendMain<DRGBIMAGE, DRGBIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             } else {
                 cerr << "enblend: images with pixel type \""
@@ -559,25 +592,28 @@ int main(int argc, char** argv) {
             }
         } else {
             //if (strcmp(pixelType, "UINT8") == 0) {
-            //    enblendMain<BCFImage, SCFImage>(
+            //    enblendMain<UINT8IMAGE, INT16IMAGE>(
+            //            imageInfoList, outputImageInfo, inputUnion);
+            //} else if (strcmp(pixelType, "INT8") == 0) {
+            //    enblendMain<INT8IMAGE, INT16IMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT16") == 0) {
-            //    enblendMain<SCFImage, ICFImage>(
+            //    enblendMain<INT16IMAGE, INT32IMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "UINT16") == 0) {
-            //    enblendMain<USCFImage, ICFImage>(
+            //    enblendMain<UINT16IMAGE, INT32IMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "INT32") == 0) {
-            //    enblendMain<ICFImage, DCFImage>(
+            //    enblendMain<INT32IMAGE, DIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "UINT32") == 0) {
-            //    enblendMain<UICFImage, DCFImage>(
+            //    enblendMain<UINT32IMAGE, DIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "FLOAT") == 0) {
-            //    enblendMain<FCFImage, DCFImage>(
+            //    enblendMain<FIMAGE, DIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-            //    enblendMain<DCFImage, DCFImage>(
+            //    enblendMain<DIMAGE, DIMAGE>(
             //            imageInfoList, outputImageInfo, inputUnion);
             //} else {
                 cerr << "enblend: images with pixel type \""
@@ -587,67 +623,6 @@ int main(int argc, char** argv) {
                 exit(1);
             //}
         }
-    #else
-        if (isColor) {
-            if (strcmp(pixelType, "UINT8") == 0) {
-                enblendMain<BRGBImage, SRGBImage>(
-                        imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "INT16") == 0) {
-            //    enblendMain<SRGBImage, IRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "UINT16") == 0) {
-            //    enblendMain<UInt16RGBImage, IRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "INT32") == 0) {
-            //    enblendMain<IRGBImage, DRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "UINT32") == 0) {
-            //    enblendMain<UInt32RGBImage, DRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "FLOAT") == 0) {
-            //    enblendMain<FRGBImage, DRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-            //    enblendMain<DRGBImage, DRGBImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            } else {
-                cerr << "enblend: images with pixel type \""
-                     << pixelType
-                     << "\" are not supported."
-                     << endl;
-                exit(1);
-            }
-        } else {
-            //if (strcmp(pixelType, "UINT8") == 0) {
-            //    enblendMain<BImage, SImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "INT16") == 0) {
-            //    enblendMain<SImage, IImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "UINT16") == 0) {
-            //    enblendMain<UInt16Image, IImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "INT32") == 0) {
-            //    enblendMain<IImage, DImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "UINT32") == 0) {
-            //    enblendMain<UInt32Image, DImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "FLOAT") == 0) {
-            //    enblendMain<FImage, DImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else if (strcmp(pixelType, "DOUBLE") == 0) {
-            //    enblendMain<DImage, DImage>(
-            //            imageInfoList, outputImageInfo, inputUnion);
-            //} else {
-                cerr << "enblend: images with pixel type \""
-                     << pixelType
-                     << "\" are not supported."
-                     << endl;
-                exit(1);
-            //}
-        }
-    #endif
 
         // delete entries in imageInfoList, in case
         // enblend loop returned early.

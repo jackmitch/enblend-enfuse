@@ -48,8 +48,7 @@ using std::list;
 using std::pair;
 
 using vigra::BasicImage;
-using vigra::BCFImage;
-using vigra::BImage;
+using vigra::UINT8IMAGE;
 using vigra::CachedFileImage;
 using vigra::CachedFileImageDirector;
 using vigra::FindMinMax;
@@ -71,13 +70,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
-    #ifdef ENBLEND_CACHE_IMAGES
-    typedef BCFImage MaskType;
-    typedef BCFImage AlphaType;
-    #else
-    typedef BImage MaskType;
-    typedef BImage AlphaType;
-    #endif
+    typedef UINT8IMAGE MaskType;
+    typedef UINT8IMAGE AlphaType;
 
     typedef typename ImageType::value_type ImageValueType;
     typedef typename AlphaType::value_type AlphaValueType;
@@ -88,9 +82,11 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     EnblendROI blackBB;
     pair<ImageType*, AlphaType*> blackPair =
             assemble<ImageType, ImageComponentType, AlphaType>(imageInfoList, inputUnion, blackBB);
-    exportImageAlpha(srcImageRange(*(blackPair.first)),
-                     srcImage(*(blackPair.second)),
-                     outputImageInfo);
+
+    if (Checkpoint) {
+        checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
+    }
+
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
     // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
@@ -205,13 +201,17 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             delete whitePair.first;
             delete whitePair.second;
 
-            if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
-                cout << "Checkpointing..." << endl;
-            }
             // Checkpoint results.
-            exportImageAlpha(srcImageRange(*(blackPair.first)),
-                             srcImage(*(blackPair.second)),
-                             outputImageInfo);
+            if (Checkpoint) {
+                if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+                    if (imageInfoList.empty()) {
+                        cout << "Writing final output..." << endl;
+                    } else {
+                        cout << "Checkpointing..." << endl;
+                    }
+                }
+                checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
+            }
 
             blackBB = uBB;
             continue;
@@ -227,7 +227,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                     inputUnionPixels
                         * (2*sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
                     + uBBPixels
-                        * (2*sizeof(typename BImage::value_type) + 2*sizeof(typename UInt32Image::value_type));
+                        * (2*sizeof(typename UINT8IMAGE::value_type) + 2*sizeof(typename UINT32IMAGE::value_type));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for mask generation: "
                  << mbytes
@@ -481,14 +481,18 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         delete blackLP;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
 
-        if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
-            cout << "Checkpointing..." << endl;
+        // Checkpoint results.
+        if (Checkpoint) {
+            if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+                if (imageInfoList.empty()) {
+                    cout << "Writing final output..." << endl;
+                } else {
+                    cout << "Checkpointing..." << endl;
+                }
+            }
+            checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
         }
 
-        // Checkpoint results.
-        exportImageAlpha(srcImageRange(*(blackPair.first)),
-                         srcImage(*(blackPair.second)),
-                         outputImageInfo);
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -503,6 +507,13 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Now set blackBB to uBB.
         blackBB = uBB;
+    }
+
+    if (!Checkpoint) {
+        if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+            cout << "Writing final output..." << endl;
+        }
+        checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
     }
 
     delete blackPair.first;

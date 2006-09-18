@@ -49,6 +49,13 @@
  *  - Modified decoder to use the scanline interface - the strip-based
  *    interface hogs memory when the rows/strip value is large.
  *  - Added support for ICC profiles
+ *
+ * Modification by Andrew Mihal 17 September 2006:
+ *   - Added GimpAssociatedAlphaHack. Suppresses associated alpha warnings,
+ *     produces associated alpha output images when set.
+ *     Cinepaint crashes when loading unassociated alpha images.
+ *     Gimp versions < 2 behave differently when loading assoc/unassoc images.
+ *
  * Andrew Mihal's modifications are covered by the VIGRA license.
  */
 
@@ -70,6 +77,8 @@ extern "C"
 #include <tiff.h>
 #include <tiffio.h>
 }
+
+extern bool GimpAssociatedAlphaHack;
 
 namespace vigra {
 
@@ -333,7 +342,7 @@ namespace vigra {
 
         if (extra_samples_per_pixel > 0) {
             for (int i=0; i< extra_samples_per_pixel; i++) {
-                if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA)
+                if (extra_sample_types[i] ==  EXTRASAMPLE_ASSOCALPHA && !GimpAssociatedAlphaHack)
                 {
                     std::cerr << "WARNING: TIFFDecoderImpl::init(): associated alpha treated"
                                  " as unassociated alpha!" << std::endl;
@@ -784,7 +793,11 @@ namespace vigra {
        if (extra_samples_per_pixel > 0) {
               uint16 * types = new  uint16[extra_samples_per_pixel];
            for ( int i=0; i < extra_samples_per_pixel; i++ ) {
-              types[i] = EXTRASAMPLE_UNASSALPHA;
+              if (GimpAssociatedAlphaHack) {
+                types[i] = EXTRASAMPLE_ASSOCALPHA;
+              } else {
+                types[i] = EXTRASAMPLE_UNASSALPHA;
+              }
             }
             TIFFSetField( tiff, TIFFTAG_EXTRASAMPLES, extra_samples_per_pixel,
                           types );

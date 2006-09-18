@@ -26,6 +26,7 @@
 #include <vigra/iteratortraits.hxx>
 #include <vigra/accessor.hxx>
 #include <vigra/rgbvalue.hxx>
+#include <vigra/sized_int.hxx>
 #include <vigra/cachedfileimage.hxx>
 
 namespace vigra {
@@ -69,20 +70,23 @@ namespace vigra {
         typedef CONSTACCESSOR<VALUETYPE >            DefaultAccessor; \
     };
 
-CFI_DEFINE_ITERATORTRAITS(unsigned char, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<unsigned char> BCFImage;
+CFI_DEFINE_ITERATORTRAITS(UInt8, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<UInt8> UInt8CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(unsigned short, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<unsigned short> USCFImage;
+CFI_DEFINE_ITERATORTRAITS(Int8, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<Int8> Int8CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(short, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<short> SCFImage;
+CFI_DEFINE_ITERATORTRAITS(UInt16, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<UInt16> UInt16CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(unsigned int, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<unsigned int> UICFImage;
+CFI_DEFINE_ITERATORTRAITS(Int16, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<Int16> Int16CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(int, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<int> ICFImage;
+CFI_DEFINE_ITERATORTRAITS(UInt32, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<UInt32> UInt32CFImage;
+
+CFI_DEFINE_ITERATORTRAITS(Int32, StandardValueAccessor, StandardConstValueAccessor)
+typedef CachedFileImage<Int32> Int32CFImage;
 
 CFI_DEFINE_ITERATORTRAITS(float, StandardValueAccessor, StandardConstValueAccessor)
 typedef CachedFileImage<float> FCFImage;
@@ -90,20 +94,23 @@ typedef CachedFileImage<float> FCFImage;
 CFI_DEFINE_ITERATORTRAITS(double, StandardValueAccessor, StandardConstValueAccessor)
 typedef CachedFileImage<double> DCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<unsigned char>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<unsigned char> > BRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt8>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<UInt8> > UInt8RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<unsigned short>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<unsigned short> > USRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(RGBValue<Int8>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<Int8> > Int8RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<short>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<short> > SRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt16>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<UInt16> > UInt16RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<unsigned int>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<unsigned int> > UIRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(RGBValue<Int16>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<Int16> > Int16RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<int>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<int> > IRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt32>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<UInt32> > UInt32RGBCFImage;
+
+CFI_DEFINE_ITERATORTRAITS(RGBValue<Int32>, RGBAccessor, RGBAccessor)
+typedef CachedFileImage<RGBValue<Int32> > Int32RGBCFImage;
 
 CFI_DEFINE_ITERATORTRAITS(RGBValue<float>, RGBAccessor, RGBAccessor)
 typedef CachedFileImage<RGBValue<float> > FRGBCFImage;

@@ -38,8 +38,7 @@
 #include "vigra/stdcachedfileimage.hxx"
 #include "vigra_ext/impexalpha.hxx"
 
-using vigra::BCFImage;
-using vigra::BImage;
+using vigra::UINT8IMAGE;
 using vigra::exportImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
@@ -80,11 +79,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
     // 255 = inside black image only.
-    #ifdef ENBLEND_CACHE_IMAGES
-    BCFImage *maskInit = new BCFImage(uBB.size());
-    #else
-    BImage *maskInit = new BImage(uBB.size());
-    #endif
+    UINT8IMAGE *maskInit = new UINT8IMAGE(uBB.size());
     // mem xsection = BImage*ubb
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
@@ -100,11 +95,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
             linearIntensityTransform(1, 255));
 
     // Mask transform replaces 0 areas with either 1 or 255.
-    #ifdef ENBLEND_CACHE_IMAGES
-    BCFImage *maskTransform = new BCFImage(uBB.size());
-    #else
-    BImage *maskTransform = new BImage(uBB.size());
-    #endif
+    UINT8IMAGE *maskTransform = new UINT8IMAGE(uBB.size());
     // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
             srcImageRange(*maskInit),

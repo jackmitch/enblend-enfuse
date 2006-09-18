@@ -17,20 +17,21 @@ X fast cfi row iterators
     left-middle test after changes: 50.50 
     2.5 non-profiling test: 12.9 user
     3.0 non-profiling test: 7.24 user
-- make checkpointing optional
-    - exportImageAlpha needs accessor to convert AlphaType to ImageComponentType
-- new vigra fixed point math
-- vigra sized_int
+X make checkpointing optional
+    X exportImageAlpha needs accessor to convert AlphaType to ImageComponentType
+      lmr test with checkpointing: 104.77
+      lmr test with no checkpointing: 99.15
+X vigra sized_int
+X defines for choosing CachedFileImages vs. BasicImages.
+X add GimpAssociatedAlphaHack to new vigra_impex
 - icc blending
 - new seam alg
-- fix cachedFileImage typedef in enblend.cc to redefine CFImages if no env var set
 - vigra impex improvements
-- fast compile env var?
 - cfi swap policy improvements
 - multilayer images
 - vogl's hdr test cases
 - enable all pixel types
-
+- update version number
 
 
 

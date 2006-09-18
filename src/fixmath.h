@@ -26,24 +26,17 @@
 
 #include <math.h>
 
-#include "vigra/colorconversions.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
 using std::cout;
 using std::pair;
 
-using vigra::Lab2RGBPrimeFunctor;
 using vigra::NumericTraits;
-using vigra::RGB2RGBPrimeFunctor;
-using vigra::RGBPrime2LabFunctor;
-using vigra::RGBPrime2RGBFunctor;
-using vigra::RGBPrime2YPrimePbPrFunctor;
 using vigra::triple;
 using vigra::UInt32;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
-using vigra::YPrimePbPr2RGBPrimeFunctor;
 
 namespace enblend {
 
@@ -289,15 +282,9 @@ void copyToPyramidImage(
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidPixelType;
 
-    //if (UseLabColor) {
-    //    transformImage(src_upperleft, src_lowerright, sa,
-    //            dest_upperleft, da,
-    //            ConvertToLabPyramidFunctor<SrcVectorType, SrcPixelType, PyramidVectorType, PyramidPixelType>());
-    //} else {
-        transformImage(src_upperleft, src_lowerright, sa,
-                dest_upperleft, da,
-                ConvertVectorToPyramidFunctor<SrcVectorType, SrcPixelType, PyramidVectorType, PyramidPixelType>());
-    //}
+    transformImage(src_upperleft, src_lowerright, sa,
+            dest_upperleft, da,
+            ConvertVectorToPyramidFunctor<SrcVectorType, SrcPixelType, PyramidVectorType, PyramidPixelType>());
 
 };
 
@@ -375,17 +362,10 @@ inline void copyFromPyramidImageIf(
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename DestVectorType::value_type DestPixelType;
 
-    //if (UseLabColor) {
-    //    transformImageIf(src_upperleft, src_lowerright, sa,
-    //            mask_upperleft, ma,
-    //            dest_upperleft, da,
-    //            ConvertFromLabPyramidFunctor<DestVectorType, DestPixelType, PyramidVectorType, PyramidPixelType>());
-    //} else {
-        transformImageIf(src_upperleft, src_lowerright, sa,
-                mask_upperleft, ma,
-                dest_upperleft, da,
-                ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, PyramidVectorType, PyramidPixelType>());
-    //}
+    transformImageIf(src_upperleft, src_lowerright, sa,
+            mask_upperleft, ma,
+            dest_upperleft, da,
+            ConvertPyramidToVectorFunctor<DestVectorType, DestPixelType, PyramidVectorType, PyramidPixelType>());
 
 };
 
