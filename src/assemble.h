@@ -35,6 +35,7 @@
 #endif
 
 #include "common.h"
+#include "fixmath.h"
 #include "vigra/copyimage.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/inspectimage.hxx"
@@ -68,24 +69,24 @@ namespace enblend {
 
 /** Write output images.
  */
-template <typename ImageType, typename ImageComponentType, typename AlphaType>
+template <typename ImageType, typename AlphaType>
 void checkpoint(pair<ImageType*, AlphaType*> &p, ImageExportInfo &outputImageInfo) {
 
-    typedef typename ImageType::Accessor ImageAccessor;
     typedef typename ImageType::PixelType ImagePixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename AlphaType::Accessor AlphaAccessor;
     typedef typename AlphaType::PixelType AlphaPixelType;
 
     typedef ReadFunctorAccessor<
-            Threshold<AlphaPixelType, ImageComponentType>, AlphaAccessor>
+            Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
             ThresholdingAccessor;
  
     ThresholdingAccessor ata(
-            Threshold<AlphaPixelType, ImageComponentType>(
+            Threshold<AlphaPixelType, ImagePixelComponentType>(
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::zero(),
-                    NumericTraits<ImageComponentType>::max(),
-                    NumericTraits<ImageComponentType>::zero()
+                    NumericTraits<ImagePixelComponentType>::max(),
+                    NumericTraits<ImagePixelComponentType>::zero()
             ),
             (p.second)->accessor());
 
@@ -95,26 +96,28 @@ void checkpoint(pair<ImageType*, AlphaType*> &p, ImageExportInfo &outputImageInf
 
 };
 
-template <typename ImageComponentType,
-          typename DestIterator, typename DestAccessor,
+template <typename DestIterator, typename DestAccessor,
           typename AlphaIterator, typename AlphaAccessor>
-void import(const ImageImportInfo &info, const pair<DestIterator, DestAccessor> &image, const pair<AlphaIterator, AlphaAccessor> &alpha) {
+void import(const ImageImportInfo &info,
+            const pair<DestIterator, DestAccessor> &image,
+            const pair<AlphaIterator, AlphaAccessor> &alpha) {
 
-    typedef vigra::RGBValue<ImageComponentType> ImagePixelType;
+    typedef typename DestIterator::PixelType ImagePixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename AlphaIterator::PixelType AlphaPixelType;
 
     // Use a thresholding accessor to write to the alpha image.
     typedef WriteFunctorAccessor<
-            Threshold<ImageComponentType, AlphaPixelType>, AlphaAccessor>
+            Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
             ThresholdingAccessor;
 
     // Threshold the alpha mask so that all pixels are either contributing
     // or not contributing.
     ThresholdingAccessor ata(
-            Threshold<ImageComponentType, AlphaPixelType>(
+            Threshold<ImagePixelComponentType, AlphaPixelType>(
                     //NumericTraits<AlphaPixelType>::max() / 2,
-                    NumericTraits<ImageComponentType>::max(),
-                    NumericTraits<ImageComponentType>::max(),
+                    NumericTraits<ImagePixelComponentType>::max(),
+                    NumericTraits<ImagePixelComponentType>::max(),
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::max()
             ),
@@ -122,7 +125,7 @@ void import(const ImageImportInfo &info, const pair<DestIterator, DestAccessor> 
 
     importImageAlpha(info, image, destIter(alpha.first, ata));
 
-
+/*
     if (UseCIECAM) {
         cmsHPROFILE sourceProfile;
         cmsHPROFILE destProfile = cmsCreateXYZProfile();
@@ -154,16 +157,16 @@ void import(const ImageImportInfo &info, const pair<DestIterator, DestAccessor> 
         }
 
         cmsViewingConditions conditions;
-        if (!cmsTakeMediaWhitePoint(&(conditions.whitePoint), sourceProfile)) {
-            cerr << endl << "enblend: could not get media white point from \"" << cmsTakeProductName(sourceProfile)
-                 << "\"." << endl << endl;
-            exit(1);
-        }
-        conditions.whitePoint.X *= 100.0;
-        conditions.whitePoint.Y *= 100.0;
-        conditions.whitePoint.Z *= 100.0;
+        //if (!cmsTakeMediaWhitePoint(&(conditions.whitePoint), sourceProfile)) {
+        //    cerr << endl << "enblend: could not get media white point from \"" << cmsTakeProductName(sourceProfile)
+        //         << "\"." << endl << endl;
+        //    exit(1);
+        //}
+        conditions.whitePoint.X = 96.42;
+        conditions.whitePoint.Y = 100.0;
+        conditions.whitePoint.Z *= 82.49;
         conditions.Yb = 20.0;
-        conditions.La = 20.0;
+        conditions.La = 31.83;
         conditions.surround = AVG_SURROUND;
         conditions.D_value = 1.0;
         cout << "source profile media white X=" << conditions.whitePoint.X << " Y=" << conditions.whitePoint.Y << " Z=" << conditions.whitePoint.Z << endl;
@@ -217,6 +220,7 @@ DONE:
         cmsCloseProfile(sourceProfile);
         cmsCloseProfile(destProfile);
     }
+*/
 
 };
 
@@ -226,14 +230,11 @@ DONE:
  *  Returns an ImageImportInfo for the temporary file.
  *  memory xsection = 2 * (ImageType*inputUnion + AlphaType*inputUnion)
  */
-template <typename ImageType, typename ImageComponentType, typename AlphaType>
+template <typename ImageType, typename AlphaType>
 pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         EnblendROI &inputUnion,
         EnblendROI &bb) {
 
-    typedef typename ImageType::PixelType ImagePixelType;
-    typedef typename ImageType::Accessor ImageAccessor;
-    typedef typename AlphaType::PixelType AlphaPixelType;
     typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
 
@@ -256,28 +257,8 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
         }
     }
 
-    //// Load the first image into the destination.
-    //// Use a thresholding accessor to write to the alpha image.
-    //typedef WriteFunctorAccessor<
-    //        Threshold<ImageComponentType, AlphaPixelType>, AlphaAccessor>
-    //        ThresholdingAccessor;
-    //// Threshold the alpha mask so that all pixels are either contributing
-    //// or not contributing.
-    //ThresholdingAccessor imageATA(
-    //        Threshold<ImageComponentType, AlphaPixelType>(
-    //                //NumericTraits<AlphaPixelType>::max() / 2,
-    //                NumericTraits<ImageComponentType>::max(),
-    //                NumericTraits<ImageComponentType>::max(),
-    //                NumericTraits<AlphaPixelType>::zero(),
-    //                NumericTraits<AlphaPixelType>::max()
-    //        ),
-    //        imageA->accessor());
-
     Diff2D imagePos = imageInfoList.front()->getPosition();
-    //importImageAlpha(*imageInfoList.front(),
-    //        destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
-    //        destIter(imageA->upperLeft() + imagePos - inputUnion.getUL(), imageATA));
-    import<ImageComponentType>(*imageInfoList.front(),
+    import(*imageInfoList.front(),
             destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
             destIter(imageA->upperLeft() + imagePos - inputUnion.getUL()));
     imageInfoList.erase(imageInfoList.begin());
@@ -296,18 +277,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             ImageType *src = new ImageType(info->size());
             AlphaType *srcA = new AlphaType(info->size());
 
-            // Use a thresholding accessor to write to the alpha image.
-            //ThresholdingAccessor srcATA(
-            //        Threshold<ImageComponentType, AlphaPixelType>(
-            //                //NumericTraits<AlphaPixelType>::max() / 2,
-            //                NumericTraits<ImageComponentType>::max(),
-            //                NumericTraits<ImageComponentType>::max(),
-            //                NumericTraits<AlphaPixelType>::zero(),
-            //                NumericTraits<AlphaPixelType>::max()
-            //        ),
-            //        srcA->accessor());
-            //importImageAlpha(*info, destImage(*src), destImage(*srcA, srcATA));
-            import<ImageComponentType>(*info, destImage(*src), destImage(*srcA));
+            import(*info, destImage(*src), destImage(*srcA));
 
             // Check for overlap.
             bool overlapFound = false;

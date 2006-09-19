@@ -31,6 +31,7 @@
 #include <boost/static_assert.hpp>
 
 #include "common.h"
+#include "fixmath.h"
 #include "assemble.h"
 #include "blend.h"
 #include "bounds.h"
@@ -48,7 +49,6 @@ using std::list;
 using std::pair;
 
 using vigra::BasicImage;
-using vigra::UINT8IMAGE;
 using vigra::CachedFileImage;
 using vigra::CachedFileImageDirector;
 using vigra::FindMinMax;
@@ -65,27 +65,28 @@ namespace enblend {
 
 /** Enblend's main blending loop. Templatized to handle different image types.
  */
-template <typename ImageType, typename ImageComponentType, typename MaskPyramidType, typename ImagePyramidType>
+template <typename ImagePixelType>
 void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
-    typedef UINT8IMAGE MaskType;
-    typedef UINT8IMAGE AlphaType;
-
-    typedef typename ImageType::value_type ImageValueType;
-    typedef typename AlphaType::value_type AlphaValueType;
-    typedef typename MaskPyramidType::value_type MaskPyramidValueType;
-    typedef typename ImagePyramidType::value_type ImagePyramidValueType;
+    typedef UInt8 AlphaPixelType;
+    typedef typename EnblendNumericTraits<AlphaPixelType>::ImageType AlphaType;
+    typedef typename EnblendNumericTraits<AlphaPixelType>::ImageType MaskType;
+    typedef typename MaskType::value_type MaskPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
+    typedef typename EnblendNumericTraits<ImagePixelComponentType>::PyramidPixelType MaskPyramidPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelComponentType>::PyramidType MaskPyramidType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::PyramidType ImagePyramidType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::PyramidPixelType ImagePyramidPixelType;
 
     // Create the initial black image.
     EnblendROI blackBB;
     pair<ImageType*, AlphaType*> blackPair =
-            assemble<ImageType, ImageComponentType, AlphaType>(imageInfoList, inputUnion, blackBB);
+            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
 
-    if (Checkpoint) {
-        checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
-    }
+    if (Checkpoint) checkpoint(blackPair, outputImageInfo);
 
     // mem usage before = 0
     // mem xsection = up to 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -109,7 +110,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Create the white image.
         EnblendROI whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
-                assemble<ImageType, ImageComponentType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
         // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
         // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -210,7 +211,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                         cout << "Checkpointing..." << endl;
                     }
                 }
-                checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
+                checkpoint(blackPair, outputImageInfo);
             }
 
             blackBB = uBB;
@@ -225,9 +226,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             long long uBBPixels = uBB.size().x * uBB.size().y;
             long long bytes =
                     inputUnionPixels
-                        * (2*sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
+                        * (2*sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
                     + uBBPixels
-                        * (2*sizeof(typename UINT8IMAGE::value_type) + 2*sizeof(typename UINT32IMAGE::value_type));
+                        * (2*sizeof(MaskPixelType) + 2*sizeof(UInt32));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for mask generation: "
                  << mbytes
@@ -266,7 +267,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
         EnblendROI roiBB;
-        unsigned int numLevels = roiBounds<MaskPyramidValueType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
+        unsigned int numLevels = roiBounds<ImagePixelComponentType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
         bool wraparoundForBlend = Wraparound && (roiBB.size().x == inputUnion.size().x);
         //cout << "Wraparound = " << wraparoundForBlend << endl;
 
@@ -278,9 +279,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
             long long roiBBPixels = roiBB.size().x * roiBB.size().y;
             long long bytes =
-                    inputUnionPixels * (sizeof(ImageValueType) + 2*sizeof(AlphaValueType))
+                    inputUnionPixels * (sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
                     + (4/3) * roiBBPixels *
-                            (sizeof(MaskPyramidValueType) + 2*sizeof(ImagePyramidValueType));
+                            (sizeof(MaskPyramidPixelType) + 2*sizeof(ImagePyramidPixelType));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for this blend step: "
                  << mbytes
@@ -322,7 +323,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Black out the ROI in the mask.
         // Make an roiBounds relative to uBB origin.
         initImage(roiBB_uBB.apply(destImageRange(*mask)),
-                NumericTraits<MaskPyramidValueType>::zero());
+                NumericTraits<MaskPyramidPixelType>::zero());
 
         // Copy pixels inside whiteBB and inside white part of mask into black image.
         // These are pixels where the white image contributes outside of the ROI.
@@ -404,14 +405,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // white and black alpha channels.
         initImageIf(whiteBB.apply(destImageRange(*(blackPair.second))),
                 whiteBB.apply(maskImage(*(whitePair.second))),
-                NumericTraits<AlphaValueType>::max());
+                NumericTraits<AlphaPixelType>::max());
 
         // We no longer need the white alpha data.
         delete whitePair.second;
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        blend<MaskType, MaskPyramidType, ImagePyramidType>(maskGP, whiteLP, blackLP);
+        blend<MaskType>(maskGP, whiteLP, blackLP);
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -469,7 +470,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #endif
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
-        copyFromPyramidImageIf<ImageType, ImagePyramidType, AlphaType>(
+        copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType>(
                 srcImageRange(*((*blackLP)[0])),
                 roiBB.apply(maskImage(*(blackPair.second))),
                 roiBB.apply(destImage(*(blackPair.first))));
@@ -490,7 +491,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                     cout << "Checkpointing..." << endl;
                 }
             }
-            checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
+            checkpoint(blackPair, outputImageInfo);
         }
 
         #ifdef ENBLEND_CACHE_IMAGES
@@ -507,70 +508,19 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Now set blackBB to uBB.
         blackBB = uBB;
+
     }
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
             cout << "Writing final output..." << endl;
         }
-        checkpoint<ImageType, ImageComponentType, AlphaType>(blackPair, outputImageInfo);
+        checkpoint(blackPair, outputImageInfo);
     }
 
     delete blackPair.first;
     delete blackPair.second;
-
 };
-
-template <typename ImageType, typename ImagePyramidType>
-void enblendMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo &outputImageInfo,
-        EnblendROI &inputUnion,
-        VigraTrueType) {
-
-    typedef typename ImageType::value_type ImageComponentType;
-
-    // ImagePyramidType::value_type is a scalar.
-    enblendMain<ImageType, ImageComponentType, ImagePyramidType, ImagePyramidType>(
-            imageInfoList, outputImageInfo, inputUnion);
-}
-
-template <typename ImageType, typename ImagePyramidType>
-void enblendMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo &outputImageInfo,
-        EnblendROI &inputUnion,
-        VigraFalseType) {
-
-    // ImagePyramidType::value_type is a vector.
-    typedef typename ImagePyramidType::value_type ImagePyramidVectorType;
-    typedef typename ImagePyramidVectorType::value_type ImagePyramidComponentType;
-    typedef typename ImageType::value_type ImageVectorType;
-    typedef typename ImageVectorType::value_type ImageComponentType;
-    #ifdef ENBLEND_CACHE_IMAGES
-    typedef CachedFileImage<ImagePyramidComponentType> MaskPyramidType;
-    #else
-    typedef BasicImage<ImagePyramidComponentType> MaskPyramidType;
-    #endif
-
-    enblendMain<ImageType, ImageComponentType, MaskPyramidType, ImagePyramidType>(
-            imageInfoList, outputImageInfo, inputUnion);
-}
-
-template <typename ImageType, typename ImagePyramidType>
-void enblendMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo &outputImageInfo,
-        EnblendROI &inputUnion) {
-
-    // This indicates if ImagePyramidType is RGB or grayscale.
-    typedef typename NumericTraits<typename ImagePyramidType::value_type>::isScalar pyramid_is_scalar;
-    typedef typename NumericTraits<typename ImageType::value_type>::isScalar image_is_scalar;
-
-    // If the image is RGB, the pyramid must also be RGB.
-    // If the image is scalar, the pyramid must also be scalar.
-    BOOST_STATIC_ASSERT(pyramid_is_scalar::asBool == image_is_scalar::asBool);
-
-    enblendMain<ImageType, ImagePyramidType>(
-            imageInfoList, outputImageInfo, inputUnion, pyramid_is_scalar());
-}
 
 } // namespace enblend
 

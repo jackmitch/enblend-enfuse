@@ -32,6 +32,7 @@
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/rgbvalue.hxx"
+#include "vigra/sized_int.hxx"
 #include "vigra/transformimage.hxx"
 
 #include "fixmath.h"
@@ -43,56 +44,19 @@ using vigra::linearRangeMapping;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::triple;
-using vigra::Int8;
-using vigra::Int16;
-using vigra::Int32;
-using vigra::Int64;
-using vigra::RGBValue;
-using vigra::UInt8;
+//using vigra::Int8;
+//using vigra::Int16;
+//using vigra::Int32;
+//using vigra::Int64;
+//using vigra::RGBValue;
+//using vigra::UInt8;
 using vigra::UInt16;
-using vigra::UInt32;
-using vigra::UInt64;
+//using vigra::UInt32;
+//using vigra::UInt64;
 using vigra::UInt16Image;
 using vigra::UInt16RGBImage;
 
 namespace enblend {
-
-struct Error_PyramidPromoteTraits_not_specialized_for_this_case { };
-
-template<class A>
-struct PyramidPromoteTraits {
-    typedef Error_PyramidPromoteTraits_not_specialized_for_this_case Type;
-    typedef Error_PyramidPromoteTraits_not_specialized_for_this_case Promote;
-};
-
-#define DEFINE_PYRAMIDPROMOTETRAITS(A, B) \
-template<> \
-struct PyramidPromoteTraits<A> { \
-    typedef A Type; \
-    typedef B Promote; \
-};
-
-// SKIPSM 5x5 math requires 6 more bits on top of base type
-DEFINE_PYRAMIDPROMOTETRAITS(Int8, Int16);
-DEFINE_PYRAMIDPROMOTETRAITS(Int16, Int32);
-DEFINE_PYRAMIDPROMOTETRAITS(Int32, Int64);
-DEFINE_PYRAMIDPROMOTETRAITS(Int64, double);
-DEFINE_PYRAMIDPROMOTETRAITS(UInt8, UInt16);
-DEFINE_PYRAMIDPROMOTETRAITS(UInt16, UInt32);
-DEFINE_PYRAMIDPROMOTETRAITS(UInt32, UInt64);
-DEFINE_PYRAMIDPROMOTETRAITS(UInt64, double);
-DEFINE_PYRAMIDPROMOTETRAITS(float, float);
-DEFINE_PYRAMIDPROMOTETRAITS(double, double);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int8>, RGBValue<Int16>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int16>, RGBValue<Int32>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int32>, RGBValue<Int64>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<Int64>, RGBValue<double>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt8>, RGBValue<UInt16>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt16>, RGBValue<UInt32>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt32>, RGBValue<UInt64>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<UInt64>, RGBValue<double>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<float>, RGBValue<float>);
-DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
 
 #define IMUL6(A) (A * SKIPSMImagePixelType(6))
 #define IMUL5(A) (A * SKIPSMImagePixelType(5))
@@ -104,7 +68,7 @@ DEFINE_PYRAMIDPROMOTETRAITS(RGBValue<double>, RGBValue<double>);
  *  and the last non-zero input is at location 0.
  *  Returns the location of the last non-zero output.
  */
-template <typename PixelType>
+template <typename ImagePixelComponentType>
 unsigned int filterHalfWidth(const unsigned int levels) {
     // For levels >= 30, the full width will just barely fit in int32.
     // When this range is added to a bounding box it will certainly
@@ -209,7 +173,8 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *  Updates when visting (odd x, odd y) source pixel:
  *  srp <= 4*current
  */
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,
         typename DestImageIterator, typename DestAccessor,
         typename DestMaskIterator, typename DestMaskAccessor>
@@ -226,13 +191,8 @@ inline void reduce(bool wraparound,
         DestMaskIterator dest_mask_lowerright,
         DestMaskAccessor dma) {
 
-    typedef typename SrcAccessor::value_type PixelType;
     typedef typename DestAccessor::value_type DestPixelType;
-    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
-    typedef typename MaskAccessor::value_type MaskPixelType;
     typedef typename DestMaskAccessor::value_type DestMaskPixelType;
-    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
-    typedef UInt16 SKIPSMMaskPixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
@@ -610,7 +570,8 @@ inline void reduce(bool wraparound,
 };
 
 // Version using argument object factories.
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename MaskIterator, typename MaskAccessor,
         typename DestImageIterator, typename DestAccessor,
         typename DestMaskIterator, typename DestMaskAccessor>
@@ -619,7 +580,7 @@ inline void reduce(bool wraparound,
         pair<MaskIterator, MaskAccessor> mask,
         triple<DestImageIterator, DestImageIterator, DestAccessor> dest,
         triple<DestMaskIterator, DestMaskIterator, DestMaskAccessor> destMask) {
-    reduce(wraparound,
+    reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
             src.first, src.second, src.third,
             mask.first, mask.second,
             dest.first, dest.second, dest.third,
@@ -629,7 +590,8 @@ inline void reduce(bool wraparound,
 /** The Burt & Adelson Reduce operation.
  *  This version is for images that do not have alpha channels.
  */
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void reduce(bool wraparound,
         SrcImageIterator src_upperleft,
@@ -639,10 +601,7 @@ inline void reduce(bool wraparound,
         DestImageIterator dest_lowerright,
         DestAccessor da) {
 
-    typedef typename SrcAccessor::value_type PixelType;
     typedef typename DestAccessor::value_type DestPixelType;
-    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
-    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
@@ -887,12 +846,13 @@ inline void reduce(bool wraparound,
 };
 
 // Version using argument object factories.
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void reduce(bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
         triple<DestImageIterator, DestImageIterator, DestAccessor> dest) {
-    reduce(wraparound,
+    reduce<SKIPSMImagePixelType>(wraparound,
             src.first, src.second, src.third,
             dest.first, dest.second, dest.third);
 };
@@ -1121,7 +1081,8 @@ inline void reduce(bool wraparound,
  *  out(-1, -1) <= 4*sc0b[x] + 4*(new sc0b[x])
  *
  */
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor,
         typename CombineFunctor>
 void expand(bool add, bool wraparound,
@@ -1132,11 +1093,6 @@ void expand(bool add, bool wraparound,
         DestImageIterator dest_lowerright,
         DestAccessor da,
         CombineFunctor cf) {
-
-    typedef typename SrcAccessor::value_type PixelType;
-    typedef typename NumericTraits<PixelType>::RealPromote RealPixelType;
-    typedef typename DestAccessor::value_type DestPixelType;
-    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
@@ -1405,29 +1361,32 @@ struct FromPromotePlusFunctorWrapper : public std::binary_function<T1, T2, T3> {
 };
 
 // Version using argument object factories.
-template <typename SrcImageIterator, typename SrcAccessor,
+template <typename SKIPSMImagePixelType,
+        typename SrcImageIterator, typename SrcAccessor,
         typename DestImageIterator, typename DestAccessor>
 inline void expand(bool add, bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
         triple<DestImageIterator, DestImageIterator, DestAccessor> dest) {
 
     typedef typename SrcAccessor::value_type PixelType;
-    typedef typename PyramidPromoteTraits<PixelType>::Promote SKIPSMImagePixelType;
+    typedef typename EnblendNumericTraits<PixelType>::SKIPSMPixelType SKIPSMImagePixelType;
     typedef typename DestAccessor::value_type DestPixelType;
 
     if (add) {
-        expand(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+        expand<SKIPSMImagePixelType>(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
                 FromPromotePlusFunctorWrapper<DestPixelType, SKIPSMImagePixelType, DestPixelType>());
     }
     else {
-        expand(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+        expand<SKIPSMImagePixelType>(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
                 std::minus<SKIPSMImagePixelType>());
     }
 
 };
 
 /** Calculate the Gaussian pyramid for the given SrcImage/AlphaImage pair. */
-template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1446,9 +1405,8 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     PyramidImageType *gp0 = new PyramidImageType(w, h);
 
     // Copy src image into gp0, using fixed-point conversions.
-    copyToPyramidImage<SrcImageType, PyramidImageType>(
-            src_upperleft, src_lowerright, sa,
-            gp0->upperLeft(), gp0->accessor());
+    copyToPyramidImage<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits>(
+            src_upperleft, src_lowerright, sa, gp0->upperLeft(), gp0->accessor());
 
     gp->push_back(gp0);
 
@@ -1475,11 +1433,11 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         AlphaImageType *nextA = new AlphaImageType(w, h);
 
         if (lastA == NULL) {
-            reduce(wraparound,
+            reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
                     srcImageRange(*lastGP), maskIter(alpha_upperleft, aa),
                     destImageRange(*gpn), destImageRange(*nextA));
         } else {
-            reduce(wraparound,
+            reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
                     srcImageRange(*lastGP), maskImage(*lastA),
                     destImageRange(*gpn), destImageRange(*nextA));
         }
@@ -1501,19 +1459,21 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 };
 
 // Version using argument object factories.
-template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
-    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>(
             numLevels, wraparound,
             src.first, src.second, src.third,
             alpha.first, alpha.second);
 };
 
 /** Calculate the Gaussian pyramid for the given image (without an alpha channel). */
-template <typename SrcImageType, typename PyramidImageType>
+template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits, typename SKIPSMImagePixelType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1530,7 +1490,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     PyramidImageType *gp0 = new PyramidImageType(w, h);
 
     // Copy src image into gp0, using fixed-point conversions.
-    copyToPyramidImage<SrcImageType, PyramidImageType>(
+    copyToPyramidImage<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits>(
             src_upperleft, src_lowerright, sa,
             gp0->upperLeft(), gp0->accessor());
 
@@ -1570,17 +1530,20 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 };
 
 // Version using argument object factories.
-template <typename SrcImageType, typename PyramidImageType>
+template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits, typename SKIPSMImagePixelType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src) {
-    return gaussianPyramid<SrcImageType, PyramidImageType>(numLevels,
+    return gaussianPyramid<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>(
+            numLevels,
             wraparound,
             src.first, src.second, src.third);
 };
 
 /** Calculate the Laplacian pyramid of the given SrcImage/AlphaImage pair. */
-template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
 vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1591,7 +1554,7 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
 
     // First create a Gaussian pyramid.
     vector <PyramidImageType*> *gp =
-            gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+            gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMMaskPixelType>(
                     numLevels, wraparound,
                     src_upperleft, src_lowerright, sa,
                     alpha_upperleft, aa);
@@ -1612,7 +1575,7 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
             cout.flush();
         }
 
-        expand(false, wraparound,
+        expand<SKIPSMImagePixelType>(false, wraparound,
                 srcImageRange(*((*gp)[l+1])),
                 destImageRange(*((*gp)[l])));
     }
@@ -1627,12 +1590,14 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
 };
 
 // Version using argument object factories.
-template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType>
+template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
 inline vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
-    return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType>(
+    return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMMaskPixelType>(
             exportName,
             numLevels, wraparound,
             src.first, src.second, src.third,
@@ -1640,7 +1605,7 @@ inline vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsig
 };
 
 /** Collapse the given Laplacian pyramid. */
-template <typename PyramidImageType>
+template <typename SKIPSMImagePixelType, typename PyramidImageType>
 void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
@@ -1658,7 +1623,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
             cout.flush();
         }
 
-        expand(true, wraparound,
+        expand<SKIPSMImagePixelType>(true, wraparound,
                 srcImageRange(*((*p)[l+1])),
                 destImageRange(*((*p)[l])));
     }
@@ -1689,8 +1654,8 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueTy
         transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
                 linearRangeMapping(NumericTraits<PyramidValueType>::min(),
                                      NumericTraits<PyramidValueType>::max(),
-                                     NumericTraits<unsigned short>::min(),
-                                     NumericTraits<unsigned short>::max()));
+                                     NumericTraits<UInt16>::min(),
+                                     NumericTraits<UInt16>::max()));
 
         ImageExportInfo info(filenameBuf);
         exportImage(srcImageRange(usPyramid), info);
@@ -1718,8 +1683,8 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseT
         transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
                 linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
                                    PyramidVectorType(NumericTraits<PyramidValueType>::max()),
-                                   typename UInt16RGBImage::value_type(NumericTraits<unsigned short>::min()),
-                                   typename UInt16RGBImage::value_type(NumericTraits<unsigned short>::max())));
+                                   typename UInt16RGBImage::value_type(NumericTraits<UInt16>::min()),
+                                   typename UInt16RGBImage::value_type(NumericTraits<UInt16>::max())));
 
         ImageExportInfo info(filenameBuf);
         exportImage(srcImageRange(usPyramid), info);

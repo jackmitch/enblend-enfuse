@@ -73,11 +73,11 @@ void blend(vector<MaskPyramidType*> *maskGP,
         vector<ImagePyramidType*> *whiteLP,
         vector<ImagePyramidType*> *blackLP) {
 
-    typedef typename MaskPyramidType::value_type MaskPixelType;
+    typedef typename MaskPyramidType::value_type MaskPyramidPixelType;
     typedef typename OrigMaskType::value_type OrigMaskPixelType;
 
     // Discover the value of MaskPixelType that is considered white (100%).
-    ConvertScalarToPyramidFunctor<OrigMaskPixelType, MaskPixelType> f;
+    ConvertScalarToPyramidFunctor<OrigMaskPixelType> f;
     MaskPixelType maxMaskPixel = f(NumericTraits<OrigMaskPixelType>::max());
     // Find the scale factor that converts the max mask pixel value to 1.0.
     double maxMaskPixelD = NumericTraits<MaskPixelType>::toRealPromote(maxMaskPixel);

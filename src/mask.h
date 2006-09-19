@@ -38,7 +38,6 @@
 #include "vigra/stdcachedfileimage.hxx"
 #include "vigra_ext/impexalpha.hxx"
 
-using vigra::UINT8IMAGE;
 using vigra::exportImage;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
@@ -79,23 +78,23 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
     // 255 = inside black image only.
-    UINT8IMAGE *maskInit = new UINT8IMAGE(uBB.size());
+    MaskType *maskInit = new MaskType(uBB.size());
     // mem xsection = BImage*ubb
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
     initImageIf(destImageRange(*maskInit),
             maskIter(whiteAlpha->upperLeft() + uBB.getUL()),
-            1);
+            NumericTraits<MaskPixelType>::one());
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
     // if whiteImage also contributes, this wraps around to zero.
     transformImageIf(srcImageRange(*maskInit),
             maskIter(blackAlpha->upperLeft() + uBB.getUL()),
             destImage(*maskInit),
-            linearIntensityTransform(1, 255));
+            linearIntensityTransform(NumericTraits<MaskPixelType>::one(), NumericTraits<MaskPixelType>::max()));
 
     // Mask transform replaces 0 areas with either 1 or 255.
-    UINT8IMAGE *maskTransform = new UINT8IMAGE(uBB.size());
+    MaskType *maskTransform = new MaskType(uBB.size());
     // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
             srcImageRange(*maskInit),
@@ -113,7 +112,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // maskTransform != 1, then mask = zero - (black image)
     transformImage(srcImageRange(*maskTransform),
             destImage(*mask),
-            ifThenElse(Arg1() == Param(1),
+            ifThenElse(Arg1() == Param(NumericTraits<MaskPixelType>::one()),
                     Param(NumericTraits<MaskPixelType>::max()),
                     Param(NumericTraits<MaskPixelType>::zero())));
 

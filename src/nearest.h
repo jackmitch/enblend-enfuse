@@ -39,7 +39,6 @@ using std::pair;
 
 using vigra::NumericTraits;
 using vigra::triple;
-using vigra::UINT32IMAGE;
 
 namespace enblend {
 
@@ -174,7 +173,8 @@ void nearestFeatureTransform(bool wraparound,
         DestImageIterator dest_upperleft,
         DestAccessor da) {
 
-    typedef UINT32IMAGE::traverser DnfIterator;
+    typedef typename EnblendNumericTraits<UInt32>::ImageType DNFImage;
+    typedef typename DNFImage::traverser DnfIterator;
     typedef typename SrcAccessor::value_type SrcValueType;
 
     SrcImageIterator sx, sy, send, smidpoint;
@@ -186,10 +186,10 @@ void nearestFeatureTransform(bool wraparound,
     int h = src_lowerright.y - src_upperleft.y;
 
     // Distance to the nearest feature in the current column.
-    UINT32IMAGE *dnfColumn = new UINT32IMAGE(w, h);
+    DNFImage *dnfColumn = new DNFImage(w, h);
     // Distance to the nearest feature in the current column, or any
     // column to the left of this column.
-    UINT32IMAGE *dnfLeft = new UINT32IMAGE(w, h);
+    DNFImage *dnfLeft = new DNFImage(w, h);
 
     // Data structures for initializing dnfColumn.
     // These let us initialize all of the columns in one pass

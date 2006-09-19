@@ -96,7 +96,7 @@ Overlap inspectOverlap(
  *  We also need to know if the image is a 360-degree pano so we can check
  *  for the case that the ROI wraps around the left and right edges.
  */
-template <typename PyramidPixelType>
+template <typename ImagePixelComponentType>
 unsigned int roiBounds(const EnblendROI &inputUnion,
         const EnblendROI &iBB,
         const EnblendROI &mBB,
@@ -114,7 +114,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         // Calculate short dimension of iBB.
         unsigned int shortDimension = min(iBB.size().x, iBB.size().y);
         while (levels < 30) {
-            unsigned int extent = filterHalfWidth<PyramidPixelType>(levels + 1);
+            unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels + 1);
             if ((2 * extent) > shortDimension) {
                 // levels + 1 is too many levels.
                 break;
@@ -132,7 +132,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         levels = ExactLevels;
     }
 
-    unsigned int extent = filterHalfWidth<PyramidPixelType>(levels);
+    unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels);
     Diff2D extentDiff(extent, extent);
     roiBB.setCorners(mBB.getUL() - extentDiff, mBB.getLR() + extentDiff);
 
