@@ -31,6 +31,7 @@
 #include <boost/static_assert.hpp>
 
 #include "common.h"
+#include "numerictraits.h"
 #include "fixmath.h"
 #include "assemble.h"
 #include "blend.h"
@@ -70,16 +71,24 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
         EnblendROI &inputUnion) {
 
-    typedef UInt8 AlphaPixelType;
-    typedef typename EnblendNumericTraits<AlphaPixelType>::ImageType AlphaType;
-    typedef typename EnblendNumericTraits<AlphaPixelType>::ImageType MaskType;
-    typedef typename MaskType::value_type MaskPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
-    typedef typename EnblendNumericTraits<ImagePixelComponentType>::PyramidPixelType MaskPyramidPixelType;
-    typedef typename EnblendNumericTraits<ImagePixelComponentType>::PyramidType MaskPyramidType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
-    typedef typename EnblendNumericTraits<ImagePixelType>::PyramidType ImagePyramidType;
-    typedef typename EnblendNumericTraits<ImagePixelType>::PyramidPixelType ImagePyramidPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::AlphaType AlphaType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::MaskPixelType MaskPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::MaskType MaskType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidPixelType ImagePyramidPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidType ImagePyramidType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::MaskPyramidPixelType MaskPyramidPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::MaskPyramidType MaskPyramidType;
+
+    enum {ImagePyramidIntegerBits = EnblendNumericTraits<ImagePixelType>::ImagePyramidIntegerBits};
+    enum {ImagePyramidFractionBits = EnblendNumericTraits<ImagePixelType>::ImagePyramidFractionBits};
+    enum {MaskPyramidIntegerBits = EnblendNumericTraits<ImagePixelType>::MaskPyramidIntegerBits};
+    enum {MaskPyramidFractionBits = EnblendNumericTraits<ImagePixelType>::MaskPyramidFractionBits};
+    typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMImagePixelType SKIPSMImagePixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMAlphaPixelType SKIPSMAlphaPixelType;
+    typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
     // Create the initial black image.
     EnblendROI blackBB;
@@ -295,7 +304,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
 
         // Build Gaussian pyramid from mask.
-        vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType>(
+        vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType,
+                                                           MaskPyramidIntegerBits, MaskPyramidFractionBits,
+                                                           SKIPSMMaskPixelType>(
                 numLevels, wraparoundForBlend, roiBB_uBB.apply(srcImageRange(*mask)));
         //exportPyramid(maskGP, "mask");
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -339,11 +350,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Build Laplacian pyramid from white image.
         vector<ImagePyramidType*> *whiteLP =
-                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
+                                 ImagePyramidIntegerBits, ImagePyramidFractionBits,
+                                 SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
                         "whiteGP",
                         numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(whitePair.first))),
                         roiBB.apply(maskImage(*(whitePair.second))));
+
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -371,11 +385,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Build Laplacian pyramid from black image.
         vector<ImagePyramidType*> *blackLP =
-                laplacianPyramid<ImageType, AlphaType, ImagePyramidType>(
+                laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
+                                 ImagePyramidIntegerBits, ImagePyramidFractionBits,
+                                 SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
                         "blackGP",
                         numLevels, wraparoundForBlend,
                         roiBB.apply(srcImageRange(*(blackPair.first))),
                         roiBB.apply(maskImage(*(blackPair.second))));
+
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -412,7 +429,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        blend<MaskType>(maskGP, whiteLP, blackLP);
+        ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
+        blend(maskGP, whiteLP, blackLP, whiteMask(NumericTraits<MaskPixelType>::max()));
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -453,7 +471,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //exportPyramid(blackLP, "enblend_blend_lp");
 
         // collapse black pyramid
-        collapsePyramid(wraparoundForBlend, blackLP);
+        collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector &v = CachedFileImageDirector::v();
@@ -470,7 +488,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #endif
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
-        copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType>(
+        copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType,
+                               ImagePyramidIntegerBits, ImagePyramidFractionBits>(
                 srcImageRange(*((*blackLP)[0])),
                 roiBB.apply(maskImage(*(blackPair.second))),
                 roiBB.apply(destImage(*(blackPair.first))));

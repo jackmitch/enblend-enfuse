@@ -31,109 +31,12 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
-using std::cout;
 using std::pair;
 
-using vigra::BasicImage;
-using vigra::CachedFileImage;
 using vigra::NumericTraits;
-using vigra::RGBValue;
 using vigra::triple;
-using vigra::VigraFalseType;
-using vigra::VigraTrueType;
-
-using vigra::Int8;
-using vigra::Int16;
-using vigra::Int32;
-using vigra::Int64;
-using vigra::UInt8;
-using vigra::UInt16;
-using vigra::UInt32;
-using vigra::UInt64;
-
-#ifdef ENBLEND_CACHE_IMAGES
-    #define IMAGE CachedFileImage
-#else
-    #define IMAGE BasicImage
-#endif
 
 namespace enblend {
-
-struct Error_EnblendNumericTraits_not_specialized_for_this_case { };
-
-template<class A>
-struct EnblendNumericTraits {
-    // Types related to input images
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImagePixelComponentType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImagePixelType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImageType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImageIsScalar;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case AlphaPixelType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case AlphaType;
-
-    // Types related to the mask
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case MaskPixelType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case MaskType;
-
-    // Types related to image pyramids
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImagePyramidPixelComponentType;
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case ImagePyramidPixelType;
-    enum { ImagePyramidIntegerBits = 0 };
-    enum { ImagePyramidFractionBits = 0 };
-
-    // Pixel type used by SKIPSM algorithm for intermediate image pixel calculations
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case SKIPSMImagePixelType;
-
-    // Pixel type used by SKIPSM algorithm for intermediate alpha pixel calculations
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case SKIPSMAlphaPixelType;
-
-    // Types related to mask pyramid
-    typedef Error_EnblendNumericTraits_not_specialized_for_this_case MaskPyramidPixelType;
-    enum { MaskPyramidIntegerBits = 0 };
-    enum { MaskPyramidFractionBits = 0 };
-};
-
-#define DEFINE_ENBLENDNUMERICTRAITS(I, A, B, C, D, E) \
-template<> \
-struct EnblendNumericTraits<A> { \
-    typedef A ImagePixelComponentType; \
-    typedef A ImagePixelType; \
-    typedef I<A> ImageType; \
-    typedef B PyramidPixelComponentType; \
-    typedef B PyramidPixelType; \
-    enum {PyramidIntegerBits = C}; \
-    enum {PyramidFractionBits = D}; \
-    typedef I<B> PyramidType; \
-    typedef E SKIPSMPixelComponentType; \
-    typedef E SKIPSMPixelType; \
-};\
-template<> \
-struct EnblendNumericTraits<RGBValue<A,0,1,2> > { \
-    typedef A ImagePixelComponentType; \
-    typedef RGBValue<A,0,1,2> ImagePixelType; \
-    typedef I<RGBValue<A,0,1,2> > ImageType; \
-    typedef B PyramidPixelComponentType; \
-    typedef RGBValue<B,0,1,2> PyramidPixelType; \
-    enum {PyramidIntegerBits = C}; \
-    enum {PyramidFractionBits = D}; \
-    typedef I<RGBValue<B,0,1,2> > PyramidType; \
-    typedef E SKIPSMPixelComponentType; \
-    typedef RGBValue<E,0,1,2> SKIPSMPixelType; \
-};
-
-// Traits for converting between image pixel types and pyramid pixel types
-// Pyramids require one more bit of precision than the regular image type.
-// SKIPSM math requires 6 bits on top of the pyramid type.
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, Int8, Int16, 9, 7, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, UInt8, Int16, 9, 7, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, Int16, Int32, 17, 9, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, UInt16, Int32, 17, 9, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, Int32, Int64, 33, 25, Int64)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, UInt32, Int64, 33, 25, Int64)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, Int64, double, 0, 0, double)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, UInt64, double, 0, 0, double)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, float, double, 0, 0, double)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGE, double, double, 0, 0, double)
 
 /** A functor for converting scalar pixel values to the number representation used
  *  for pyramids. These are either fixed-point integers or floating-point numbers.

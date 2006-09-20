@@ -40,18 +40,19 @@ namespace enblend {
 /** Functor for blending a black and white pyramid level using a mask
  *  pyramid level.
  */
+template <typename MaskPixelType>
 class BlendFunctor {
 public:
-    BlendFunctor(double maskMax) : scale(maskMax) {}
+    BlendFunctor(MaskPixelType w) : white(NumericTraits<MaskPixelType>::toRealPromote(w)) {}
 
-    template <typename MaskPixelType, typename ImagePixelType>
+    template <typename ImagePixelType>
     ImagePixelType operator()(const MaskPixelType &maskP, const ImagePixelType &wP, const ImagePixelType &bP) const {
 
         typedef typename NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
 
         // Convert mask pixel to blend coefficient in range [0.0, 1.0].
         double whiteCoeff =
-                NumericTraits<MaskPixelType>::toRealPromote(maskP) / scale;
+                NumericTraits<MaskPixelType>::toRealPromote(maskP) / white;
         double blackCoeff = 1.0 - whiteCoeff;
 
         RealImagePixelType rwP = NumericTraits<ImagePixelType>::toRealPromote(wP);
@@ -63,24 +64,16 @@ public:
     }
 
 protected:
-    double scale;
+    double white;
 };
 
 /** Blend black and white pyramids using mask pyramid.
  */
-template <typename OrigMaskType, typename MaskPyramidType, typename ImagePyramidType>
+template <typename MaskPyramidType, typename ImagePyramidType>
 void blend(vector<MaskPyramidType*> *maskGP,
         vector<ImagePyramidType*> *whiteLP,
-        vector<ImagePyramidType*> *blackLP) {
-
-    typedef typename MaskPyramidType::value_type MaskPyramidPixelType;
-    typedef typename OrigMaskType::value_type OrigMaskPixelType;
-
-    // Discover the value of MaskPixelType that is considered white (100%).
-    ConvertScalarToPyramidFunctor<OrigMaskPixelType> f;
-    MaskPixelType maxMaskPixel = f(NumericTraits<OrigMaskPixelType>::max());
-    // Find the scale factor that converts the max mask pixel value to 1.0.
-    double maxMaskPixelD = NumericTraits<MaskPixelType>::toRealPromote(maxMaskPixel);
+        vector<ImagePyramidType*> *blackLP,
+        typename MaskPyramidType::value_type maskPyramidWhiteValue) {
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
         cout << "Blending layers:";
@@ -99,7 +92,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
                 srcImage(*((*whiteLP)[layer])),
                 srcImage(*((*blackLP)[layer])),
                 destImage(*((*blackLP)[layer])),
-                BlendFunctor(maxMaskPixelD));
+                BlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
     }
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {

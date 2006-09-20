@@ -24,10 +24,13 @@ X make checkpointing optional
 X vigra sized_int
 X defines for choosing CachedFileImages vs. BasicImages.
 X add GimpAssociatedAlphaHack to new vigra_impex
+X EnblendNumericTraits
 - icc blending
-- new seam alg
+    - make sure all input images have same icc profile
+    - do convert in image->pyramid pixel convert functors
 - vigra impex improvements
 - cfi swap policy improvements
+- new seam alg
 - multilayer images
 - vogl's hdr test cases
 - enable all pixel types

@@ -1,7 +1,7 @@
 EXTRA_DIST = enblend.vcproj
 SUBDIRS = vigra_impex win32helpers
 bin_PROGRAMS = enblend
-enblend_SOURCES = assemble.h blend.h bounds.h common.h enblend.h enblend.cc fixmath.h mask.h nearest.h pyramid.h
+enblend_SOURCES = assemble.h blend.h bounds.h common.h enblend.h enblend.cc fixmath.h mask.h nearest.h numerictraits.h pyramid.h
 enblend_LDFLAGS = -pg -DENBLEND_CACHE_IMAGES -ffast-math
 #enblend_LDADD = vigra_impex/libvigra_impex.a -lpng -ljpeg -ltiff
 enblend_LDADD = vigra_impex/libvigra_impex.a -ltiff

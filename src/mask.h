@@ -43,7 +43,6 @@ using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
 using vigra::initImageIf;
-using vigra::linearIntensityTransform;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::transformImageIf;
@@ -91,7 +90,7 @@ MaskType *createMask(AlphaType *whiteAlpha,
     transformImageIf(srcImageRange(*maskInit),
             maskIter(blackAlpha->upperLeft() + uBB.getUL()),
             destImage(*maskInit),
-            linearIntensityTransform(NumericTraits<MaskPixelType>::one(), NumericTraits<MaskPixelType>::max()));
+            (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
 
     // Mask transform replaces 0 areas with either 1 or 255.
     MaskType *maskTransform = new MaskType(uBB.size());

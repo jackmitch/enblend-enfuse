@@ -44,15 +44,7 @@ using vigra::linearRangeMapping;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::triple;
-//using vigra::Int8;
-//using vigra::Int16;
-//using vigra::Int32;
-//using vigra::Int64;
-//using vigra::RGBValue;
-//using vigra::UInt8;
 using vigra::UInt16;
-//using vigra::UInt32;
-//using vigra::UInt64;
 using vigra::UInt16Image;
 using vigra::UInt16RGBImage;
 
@@ -61,7 +53,7 @@ namespace enblend {
 #define IMUL6(A) (A * SKIPSMImagePixelType(6))
 #define IMUL5(A) (A * SKIPSMImagePixelType(5))
 #define IMUL11(A) (A * SKIPSMImagePixelType(11))
-#define MMUL6(A) (A * SKIPSMMaskPixelType(6))
+#define AMUL6(A) (A * SKIPSMAlphaPixelType(6))
 
 /** Calculate the half-width of a n-level filter.
  *  Assumes that the input function is a left-handed function,
@@ -173,26 +165,26 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *  Updates when visting (odd x, odd y) source pixel:
  *  srp <= 4*current
  */
-template <typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType,
+template <typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType,
         typename SrcImageIterator, typename SrcAccessor,
-        typename MaskIterator, typename MaskAccessor,
+        typename AlphaIterator, typename AlphaAccessor,
         typename DestImageIterator, typename DestAccessor,
-        typename DestMaskIterator, typename DestMaskAccessor>
+        typename DestAlphaIterator, typename DestAlphaAccessor>
 inline void reduce(bool wraparound,
         SrcImageIterator src_upperleft,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
-        MaskIterator mask_upperleft,
-        MaskAccessor ma,
+        AlphaIterator alpha_upperleft,
+        AlphaAccessor aa,
         DestImageIterator dest_upperleft,
         DestImageIterator dest_lowerright,
         DestAccessor da,
-        DestMaskIterator dest_mask_upperleft,
-        DestMaskIterator dest_mask_lowerright,
-        DestMaskAccessor dma) {
+        DestAlphaIterator dest_alpha_upperleft,
+        DestAlphaIterator dest_alpha_lowerright,
+        DestAlphaAccessor daa) {
 
     typedef typename DestAccessor::value_type DestPixelType;
-    typedef typename DestMaskAccessor::value_type DestMaskPixelType;
+    typedef typename DestAlphaAccessor::value_type DestAlphaPixelType;
 
     int src_w = src_lowerright.x - src_upperleft.x;
     int src_h = src_lowerright.y - src_upperleft.y;
@@ -209,27 +201,27 @@ inline void reduce(bool wraparound,
     SKIPSMImagePixelType *iscp = new SKIPSMImagePixelType[dst_w + 1];
 
     // State variables for source mask pixel values
-    SKIPSMMaskPixelType msr0, msr1, msrp;
-    SKIPSMMaskPixelType *msc0 = new SKIPSMMaskPixelType[dst_w + 1];
-    SKIPSMMaskPixelType *msc1 = new SKIPSMMaskPixelType[dst_w + 1];
-    SKIPSMMaskPixelType *mscp = new SKIPSMMaskPixelType[dst_w + 1];
+    SKIPSMAlphaPixelType asr0, asr1, asrp;
+    SKIPSMAlphaPixelType *asc0 = new SKIPSMAlphaPixelType[dst_w + 1];
+    SKIPSMAlphaPixelType *asc1 = new SKIPSMAlphaPixelType[dst_w + 1];
+    SKIPSMAlphaPixelType *ascp = new SKIPSMAlphaPixelType[dst_w + 1];
 
     // Convenient constants
     const SKIPSMImagePixelType SKIPSMImageZero(NumericTraits<SKIPSMImagePixelType>::zero());
-    const SKIPSMMaskPixelType SKIPSMMaskZero(NumericTraits<SKIPSMMaskPixelType>::zero());
-    const SKIPSMMaskPixelType SKIPSMMaskOne(NumericTraits<SKIPSMMaskPixelType>::one());
+    const SKIPSMAlphaPixelType SKIPSMAlphaZero(NumericTraits<SKIPSMAlphaPixelType>::zero());
+    const SKIPSMAlphaPixelType SKIPSMAlphaOne(NumericTraits<SKIPSMAlphaPixelType>::one());
     const DestPixelType DestImageZero(NumericTraits<DestPixelType>::zero());
-    const DestMaskPixelType DestMaskZero(NumericTraits<DestMaskPixelType>::zero());
-    const DestMaskPixelType DestMaskMax(NumericTraits<DestMaskPixelType>::max());
+    const DestAlphaPixelType DestAlphaZero(NumericTraits<DestAlphaPixelType>::zero());
+    const DestAlphaPixelType DestAlphaMax(NumericTraits<DestAlphaPixelType>::max());
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dx = dy;
     SrcImageIterator sy = src_upperleft;
     SrcImageIterator sx = sy;
-    MaskIterator my = mask_upperleft;
-    MaskIterator mx = my;
-    DestMaskIterator dmy = dest_mask_upperleft;
-    DestMaskIterator dmx = dmy;
+    AlphaIterator ay = alpha_upperleft;
+    AlphaIterator ax = ay;
+    DestAlphaIterator day = dest_alpha_upperleft;
+    DestAlphaIterator dax = day;
 
     bool evenY = true;
     bool evenX = true;
@@ -241,36 +233,36 @@ inline void reduce(bool wraparound,
     // First row
     {
         if (wraparound) {
-            msr0 = ma(my, Diff2D(src_w-2, 0)) ? SKIPSMMaskOne : SKIPSMMaskZero;
-            msr1 = SKIPSMMaskZero;
-            msrp = ma(my, Diff2D(src_w-1, 0)) ? (SKIPSMMaskOne << 2) : SKIPSMMaskZero;
-            isr0 = ma(my, Diff2D(src_w-2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2, 0))) : SKIPSMImageZero;
+            asr0 = aa(ay, Diff2D(src_w-2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+            asr1 = SKIPSMAlphaZero;
+            asrp = aa(ay, Diff2D(src_w-1, 0)) ? (SKIPSMAlphaOne << 2) : SKIPSMAlphaZero;
+            isr0 = aa(ay, Diff2D(src_w-2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2, 0))) : SKIPSMImageZero;
             isr1 = SKIPSMImageZero;
-            isrp = ma(my, Diff2D(src_w-1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1, 0))) << 2) : SKIPSMImageZero;
+            isrp = aa(ay, Diff2D(src_w-1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1, 0))) << 2) : SKIPSMImageZero;
         } else {
-            msr0 = SKIPSMMaskZero;
-            msr1 = SKIPSMMaskZero;
-            msrp = SKIPSMMaskZero;
+            asr0 = SKIPSMAlphaZero;
+            asr1 = SKIPSMAlphaZero;
+            asrp = SKIPSMAlphaZero;
             isr0 = SKIPSMImageZero;
             isr1 = SKIPSMImageZero;
             isrp = SKIPSMImageZero;
         }
 
-        for (sx = sy, mx = my, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
-            SKIPSMMaskPixelType mcurrent(ma(mx) ? SKIPSMMaskOne : SKIPSMMaskZero);
-            SKIPSMImagePixelType icurrent(ma(mx) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
+        for (sx = sy, ax = ay, evenX = true, srcx = 0, dstx = 0;  srcx < src_w; ++srcx, ++sx.x, ++ax.x) {
+            SKIPSMAlphaPixelType mcurrent(aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+            SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
             if (evenX) {
-                msc1[dstx] = SKIPSMMaskZero;
-                msc0[dstx] = msr1 + MMUL6(msr0) + msrp + mcurrent;
-                msr1 = msr0 + msrp;
-                msr0 = mcurrent;
+                asc1[dstx] = SKIPSMAlphaZero;
+                asc0[dstx] = asr1 + AMUL6(asr0) + asrp + mcurrent;
+                asr1 = asr0 + asrp;
+                asr0 = mcurrent;
                 isc1[dstx] = SKIPSMImageZero;
                 isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
                 isr1 = isr0 + isrp;
                 isr0 = icurrent;
             }
             else {
-                msrp = mcurrent << 2;
+                asrp = mcurrent << 2;
                 isrp = icurrent << 2;
                 ++dstx;
             }
@@ -282,14 +274,14 @@ inline void reduce(bool wraparound,
             // previous srcx was even
             ++dstx;
             if (wraparound) {
-                msc1[dstx] = SKIPSMMaskZero;
-                msc0[dstx] = msr1 + MMUL6(msr0) + (ma(my) ? (SKIPSMMaskOne << 2) : SKIPSMMaskZero) + (ma(my, Diff2D(1,0)) ? SKIPSMMaskOne : SKIPSMMaskZero);
+                asc1[dstx] = SKIPSMAlphaZero;
+                asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne << 2) : SKIPSMAlphaZero) + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + (ma(my) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
-                                  + (ma(my, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero);
+                isc0[dstx] = isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
+                                  + (aa(ay, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero);
             } else {
-                msc1[dstx] = SKIPSMMaskZero;
-                msc0[dstx] = msr1 + MMUL6(msr0);
+                asc1[dstx] = SKIPSMAlphaZero;
+                asc0[dstx] = asr1 + AMUL6(asr0);
                 isc1[dstx] = SKIPSMImageZero;
                 isc0[dstx] = isr1 + IMUL6(isr0);
             }
@@ -297,36 +289,36 @@ inline void reduce(bool wraparound,
         else {
             // previous srcx was odd
             if (wraparound) {
-                msc1[dstx] = SKIPSMMaskZero;
-                msc0[dstx] = msr1 + MMUL6(msr0) + msrp + (ma(my) ? SKIPSMMaskOne : SKIPSMMaskZero);
+                asc1[dstx] = SKIPSMAlphaZero;
+                asc0[dstx] = asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (ma(my) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
+                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
             } else {
-                msc1[dstx] = SKIPSMMaskZero;
-                msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                asc1[dstx] = SKIPSMAlphaZero;
+                asc0[dstx] = asr1 + AMUL6(asr0) + asrp;
                 isc1[dstx] = SKIPSMImageZero;
                 isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
             }
         }
     }
     ++sy.y;
-    ++my.y;
+    ++ay.y;
 
     // Main Rows
     {
-        for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y, ++my.y) {
+        for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y, ++ay.y) {
 
             if (wraparound) {
-                msr0 = ma(my, Diff2D(src_w-2, 0)) ? SKIPSMMaskOne : SKIPSMMaskZero;
-                msr1 = SKIPSMMaskZero;
-                msrp = ma(my, Diff2D(src_w-1, 0)) ? (SKIPSMMaskOne << 2) : SKIPSMMaskZero;
-                isr0 = ma(my, Diff2D(src_w-2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0))) : SKIPSMImageZero;
+                asr0 = aa(ay, Diff2D(src_w-2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+                asr1 = SKIPSMAlphaZero;
+                asrp = aa(ay, Diff2D(src_w-1, 0)) ? (SKIPSMAlphaOne << 2) : SKIPSMAlphaZero;
+                isr0 = aa(ay, Diff2D(src_w-2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0))) : SKIPSMImageZero;
                 isr1 = SKIPSMImageZero;
-                isrp = ma(my, Diff2D(src_w-1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0))) << 2) : SKIPSMImageZero;
+                isrp = aa(ay, Diff2D(src_w-1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0))) << 2) : SKIPSMImageZero;
             } else {
-                msr0 = SKIPSMMaskZero;
-                msr1 = SKIPSMMaskZero;
-                msrp = SKIPSMMaskZero;
+                asr0 = SKIPSMAlphaZero;
+                asr1 = SKIPSMAlphaZero;
+                asrp = SKIPSMAlphaZero;
                 isr0 = SKIPSMImageZero;
                 isr1 = SKIPSMImageZero;
                 isrp = SKIPSMImageZero;
@@ -337,51 +329,51 @@ inline void reduce(bool wraparound,
 
                 // First entry in row
                 sx = sy;
-                mx = my;
+                ax = ay;
                 if (wraparound) {
-                    msr1 = msr0 + msrp;
+                    asr1 = asr0 + asrp;
                     isr1 = isr0 + isrp;
                 }
-                msr0 = ma(mx) ? SKIPSMMaskOne : SKIPSMMaskZero;
-                isr0 = ma(mx) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero;
+                asr0 = aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+                isr0 = aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero;
                 // isc*[0] are never used
                 ++sx.x;
-                ++mx.x;
+                ++ax.x;
                 dx = dy;
-                dmx = dmy;
+                dax = day;
 
                 // Main entries in row
-                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
-                    SKIPSMMaskPixelType mcurrent(ma(mx) ? SKIPSMMaskOne : SKIPSMMaskZero);
-                    SKIPSMImagePixelType icurrent(ma(mx) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++ax.x) {
+                    SKIPSMAlphaPixelType mcurrent(aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                    SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
                     if (evenX) {
-                        SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
-                        msc1[dstx] = msc0[dstx] + mscp[dstx];
-                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp + mcurrent;
-                        msr1 = msr0 + msrp;
-                        msr0 = mcurrent;
-                        mp += msc0[dstx];
+                        SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                        asc1[dstx] = asc0[dstx] + ascp[dstx];
+                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp + mcurrent;
+                        asr1 = asr0 + asrp;
+                        asr0 = mcurrent;
+                        ap += asc0[dstx];
 
                         SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                         isc1[dstx] = isc0[dstx] + iscp[dstx];
                         isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
-                        if (mp) {
+                        if (ap) {
                             ip += isc0[dstx];
-                            ip /= SKIPSMImagePixelType(mp);
+                            ip /= SKIPSMImagePixelType(ap);
                             da.set(DestPixelType(ip), dx);
-                            dma.set(DestMaskMax, dmx);
+                            daa.set(DestAlphaMax, dax);
                         } else {
                             da.set(DestImageZero, dx);
-                            dma.set(DestMaskZero, dmx);
+                            daa.set(DestAlphaZero, dax);
                         }
 
                         ++dx.x;
-                        ++dmx.x;
+                        ++dax.x;
                     }
                     else {
-                        msrp = mcurrent << 2;
+                        asrp = mcurrent << 2;
                         isrp = icurrent << 2;
                         ++dstx;
                     }
@@ -393,94 +385,94 @@ inline void reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
 
-                    SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
-                    msc1[dstx] = msc0[dstx] + mscp[dstx];
+                    SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                    asc1[dstx] = asc0[dstx] + ascp[dstx];
                     if (wraparound) {
-                        msc0[dstx] = msr1 + MMUL6(msr0) + (ma(my) ? (SKIPSMMaskOne << 2) : SKIPSMMaskZero) + (ma(my, Diff2D(1,0)) ? SKIPSMMaskOne : SKIPSMMaskZero);
+                        asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne << 2) : SKIPSMAlphaZero) + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     } else {
-                        msc0[dstx] = msr1 + MMUL6(msr0);
+                        asc0[dstx] = asr1 + AMUL6(asr0);
                     }
-                    mp += msc0[dstx];
+                    ap += asc0[dstx];
 
                     SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + (ma(my) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
-                                          + (ma(my, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero);
+                        isc0[dstx] = isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
+                                          + (aa(ay, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero);
                     } else {
                         isc0[dstx] = isr1 + IMUL6(isr0);
                     }
-                    if (mp) {
+                    if (ap) {
                         ip += isc0[dstx];
-                        ip /= SKIPSMImagePixelType(mp);
+                        ip /= SKIPSMImagePixelType(ap);
                         da.set(DestPixelType(ip), dx);
-                        dma.set(DestMaskMax, dmx);
+                        daa.set(DestAlphaMax, dax);
                     } else {
                         da.set(DestImageZero, dx);
-                        dma.set(DestMaskZero, dmx);
+                        daa.set(DestAlphaZero, dax);
                     }
                 }
                 else {
                     // Previous srcx was odd
-                    SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
-                    msc1[dstx] = msc0[dstx] + mscp[dstx];
+                    SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                    asc1[dstx] = asc0[dstx] + ascp[dstx];
                     if (wraparound) {
-                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp + (ma(my) ? SKIPSMMaskOne : SKIPSMMaskZero);
+                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     } else {
-                        msc0[dstx] = msr1 + MMUL6(msr0) + msrp;
+                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp;
                     }
-                    mp += msc0[dstx];
+                    ap += asc0[dstx];
 
                     SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (ma(my) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
+                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
                     } else {
                         isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
                     }
-                    if (mp) {
+                    if (ap) {
                         ip += isc0[dstx];
-                        ip /= SKIPSMImagePixelType(mp);
+                        ip /= SKIPSMImagePixelType(ap);
                         da.set(DestPixelType(ip), dx);
-                        dma.set(DestMaskMax, dmx);
+                        daa.set(DestAlphaMax, dax);
                     } else {
                         da.set(DestImageZero, dx);
-                        dma.set(DestMaskZero, dmx);
+                        daa.set(DestAlphaZero, dax);
                     }
                 }
 
                 ++dy.y;
-                ++dmy.y;
+                ++day.y;
 
             }
             else {
                 // First entry in odd-numbered row
                 sx = sy;
-                mx = my;
+                ax = ay;
                 if (wraparound) {
-                    msr1 = msr0 + msrp;
+                    asr1 = asr0 + asrp;
                     isr1 = isr0 + isrp;
                 }
-                msr0 = ma(mx) ? SKIPSMMaskOne : SKIPSMMaskZero;
-                isr0 = ma(mx) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero;
+                asr0 = aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+                isr0 = aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero;
                 // isc*[0] are never used
                 ++sx.x;
-                ++mx.x;
+                ++ax.x;
 
                 // Main entries in odd-numbered row
-                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++mx.x) {
-                    SKIPSMMaskPixelType mcurrent(ma(mx) ? SKIPSMMaskOne : SKIPSMMaskZero);
-                    SKIPSMImagePixelType icurrent(ma(mx) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
+                for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x, ++ax.x) {
+                    SKIPSMAlphaPixelType mcurrent(aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                    SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
                     if (evenX) {
-                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp + mcurrent) << 2;
-                        msr1 = msr0 + msrp;
-                        msr0 = mcurrent;
+                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp + mcurrent) << 2;
+                        asr1 = asr0 + asrp;
+                        asr0 = mcurrent;
                         iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + icurrent) << 2;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
                     }
                     else {
-                        msrp = mcurrent << 2;
+                        asrp = mcurrent << 2;
                         isrp = icurrent << 2;
                         ++dstx;
                     }
@@ -492,24 +484,24 @@ inline void reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
                     if (wraparound) {
-                        mscp[dstx] = (msr1 + MMUL6(msr0) + (ma(my) ? (SKIPSMMaskOne << 2) : SKIPSMMaskZero)
-                                           + (ma(my, Diff2D(1,0)) ? SKIPSMMaskOne : SKIPSMMaskZero)
+                        ascp[dstx] = (asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne << 2) : SKIPSMAlphaZero)
+                                           + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero)
                                      ) << 2;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + (ma(my) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
-                                           + (ma(my, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero)
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) << 2) : SKIPSMImageZero)
+                                           + (aa(ay, Diff2D(1,0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1,0))) : SKIPSMImageZero)
                                      ) << 2;
                     } else {
-                        mscp[dstx] = (msr1 + MMUL6(msr0)) << 2;
+                        ascp[dstx] = (asr1 + AMUL6(asr0)) << 2;
                         iscp[dstx] = (isr1 + IMUL6(isr0)) << 2;
                     }
                 }
                 else {
                     // previous srcx was odd
                     if (wraparound) {
-                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp + (ma(my) ? SKIPSMMaskOne : SKIPSMMaskZero)) << 2;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + (ma(my) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero)) << 2;
+                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero)) << 2;
+                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero)) << 2;
                     } else {
-                        mscp[dstx] = (msr1 + MMUL6(msr0) + msrp) << 2;
+                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp) << 2;
                         iscp[dstx] = (isr1 + IMUL6(isr0) + isrp) << 2;
                     }
                 }
@@ -527,15 +519,15 @@ inline void reduce(bool wraparound,
             //isc0[dstx] = 0;
             //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
-            for (dstx = 1, dx = dy, dmx = dmy; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dmx.x) {
-                SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]);
-                if (mp) {
-                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx])) / SKIPSMImagePixelType(mp);
+            for (dstx = 1, dx = dy, dax = day; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dax.x) {
+                SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]);
+                if (ap) {
+                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx])) / SKIPSMImagePixelType(ap);
                     da.set(DestPixelType(ip), dx);
-                    dma.set(DestMaskMax, dmx);
+                    daa.set(DestAlphaMax, dax);
                 } else {
                     da.set(DestImageZero, dx);
-                    dma.set(DestMaskZero, dmx);
+                    daa.set(DestAlphaZero, dax);
                 }
             }
         }
@@ -545,15 +537,15 @@ inline void reduce(bool wraparound,
             // isc0[dstx] = 0;
             // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
-            for (dstx = 1, dx = dy, dmx = dmy; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dmx.x) {
-                SKIPSMMaskPixelType mp = msc1[dstx] + MMUL6(msc0[dstx]) + mscp[dstx];
-                if (mp) {
-                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx]) / SKIPSMImagePixelType(mp);
+            for (dstx = 1, dx = dy, dax = day; dstx < (dst_w + 1); ++dstx, ++dx.x, ++dax.x) {
+                SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                if (ap) {
+                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx]) / SKIPSMImagePixelType(ap);
                     da.set(DestPixelType(ip), dx);
-                    dma.set(DestMaskMax, dmx);
+                    daa.set(DestAlphaMax, dax);
                 } else {
                     da.set(DestImageZero, dx);
-                    dma.set(DestMaskZero, dmx);
+                    daa.set(DestAlphaZero, dax);
                 }
             }
         }
@@ -563,24 +555,24 @@ inline void reduce(bool wraparound,
     delete[] isc1;
     delete[] iscp;
 
-    delete[] msc0;
-    delete[] msc1;
-    delete[] mscp;
+    delete[] asc0;
+    delete[] asc1;
+    delete[] ascp;
 
 };
 
 // Version using argument object factories.
-template <typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType,
+template <typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType,
         typename SrcImageIterator, typename SrcAccessor,
-        typename MaskIterator, typename MaskAccessor,
+        typename AlphaIterator, typename AlphaAccessor,
         typename DestImageIterator, typename DestAccessor,
-        typename DestMaskIterator, typename DestMaskAccessor>
+        typename DestAlphaIterator, typename DestAlphaAccessor>
 inline void reduce(bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-        pair<MaskIterator, MaskAccessor> mask,
+        pair<AlphaIterator, AlphaAccessor> mask,
         triple<DestImageIterator, DestImageIterator, DestAccessor> dest,
-        triple<DestMaskIterator, DestMaskIterator, DestMaskAccessor> destMask) {
-    reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
+        triple<DestAlphaIterator, DestAlphaIterator, DestAlphaAccessor> destMask) {
+    reduce<SKIPSMImagePixelType, SKIPSMAlphaPixelType>(wraparound,
             src.first, src.second, src.third,
             mask.first, mask.second,
             dest.first, dest.second, dest.third,
@@ -1368,16 +1360,18 @@ inline void expand(bool add, bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
         triple<DestImageIterator, DestImageIterator, DestAccessor> dest) {
 
-    typedef typename SrcAccessor::value_type PixelType;
-    typedef typename EnblendNumericTraits<PixelType>::SKIPSMPixelType SKIPSMImagePixelType;
     typedef typename DestAccessor::value_type DestPixelType;
 
     if (add) {
-        expand<SKIPSMImagePixelType>(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+        expand<SKIPSMImagePixelType>(add, wraparound,
+                src.first, src.second, src.third,
+                dest.first, dest.second, dest.third,
                 FromPromotePlusFunctorWrapper<DestPixelType, SKIPSMImagePixelType, DestPixelType>());
     }
     else {
-        expand<SKIPSMImagePixelType>(add, wraparound, src.first, src.second, src.third, dest.first, dest.second, dest.third,
+        expand<SKIPSMImagePixelType>(add, wraparound,
+                src.first, src.second, src.third,
+                dest.first, dest.second, dest.third,
                 std::minus<SKIPSMImagePixelType>());
     }
 
@@ -1386,7 +1380,7 @@ inline void expand(bool add, bool wraparound,
 /** Calculate the Gaussian pyramid for the given SrcImage/AlphaImage pair. */
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
-          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
+          typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1433,11 +1427,11 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         AlphaImageType *nextA = new AlphaImageType(w, h);
 
         if (lastA == NULL) {
-            reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
+            reduce<SKIPSMImagePixelType, SKIPSMAlphaPixelType>(wraparound,
                     srcImageRange(*lastGP), maskIter(alpha_upperleft, aa),
                     destImageRange(*gpn), destImageRange(*nextA));
         } else {
-            reduce<SKIPSMImagePixelType, SKIPSMMaskPixelType>(wraparound,
+            reduce<SKIPSMImagePixelType, SKIPSMAlphaPixelType>(wraparound,
                     srcImageRange(*lastGP), maskImage(*lastA),
                     destImageRange(*gpn), destImageRange(*nextA));
         }
@@ -1461,19 +1455,23 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 // Version using argument object factories.
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
-          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
+          typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
-    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>(
+    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType,
+            PyramidIntegerBits, PyramidFractionBits,
+            SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
             numLevels, wraparound,
             src.first, src.second, src.third,
             alpha.first, alpha.second);
 };
 
 /** Calculate the Gaussian pyramid for the given image (without an alpha channel). */
-template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits, typename SKIPSMImagePixelType>
+template <typename SrcImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType>
 vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1516,7 +1514,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         // Next pyramid level
         PyramidImageType *gpn = new PyramidImageType(w, h);
 
-        reduce(wraparound, srcImageRange(*lastGP), destImageRange(*gpn));
+        reduce<SKIPSMImagePixelType>(wraparound, srcImageRange(*lastGP), destImageRange(*gpn));
 
         gp->push_back(gpn);
         lastGP = gpn;
@@ -1530,11 +1528,14 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 };
 
 // Version using argument object factories.
-template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits, typename SKIPSMImagePixelType>
+template <typename SrcImageType, typename PyramidImageType,
+          int PyramidIntegerBits, int PyramidFractionBits,
+          typename SKIPSMImagePixelType>
 inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src) {
-    return gaussianPyramid<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>(
+    return gaussianPyramid<SrcImageType, PyramidImageType,
+            PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>(
             numLevels,
             wraparound,
             src.first, src.second, src.third);
@@ -1543,7 +1544,7 @@ inline vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
 /** Calculate the Laplacian pyramid of the given SrcImage/AlphaImage pair. */
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
-          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
+          typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
 vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         typename SrcImageType::const_traverser src_upperleft,
@@ -1554,7 +1555,9 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
 
     // First create a Gaussian pyramid.
     vector <PyramidImageType*> *gp =
-            gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMMaskPixelType>(
+            gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType,
+                    PyramidIntegerBits, PyramidFractionBits,
+                    SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
                     numLevels, wraparound,
                     src_upperleft, src_lowerright, sa,
                     alpha_upperleft, aa);
@@ -1592,12 +1595,14 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
 // Version using argument object factories.
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
-          typename SKIPSMImagePixelType, typename SKIPSMMaskPixelType>
+          typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
 inline vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int numLevels,
         bool wraparound,
         triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
         pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha) {
-    return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMMaskPixelType>(
+    return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType,
+            PyramidIntegerBits, PyramidFractionBits,
+            SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
             exportName,
             numLevels, wraparound,
             src.first, src.second, src.third,
@@ -1697,7 +1702,6 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix) {
     typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
     exportPyramid(v, prefix, pyramid_is_scalar());
 };
-
 
 } // namespace enblend
 
