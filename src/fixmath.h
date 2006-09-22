@@ -28,6 +28,7 @@
 
 #include "vigra/basicimage.hxx"
 #include "vigra/cachedfileimage.hxx"
+#include "vigra/mathutil.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
@@ -184,11 +185,6 @@ class ConvertVectorToPyramidFunctor {
 
     typedef typename SrcVectorType::value_type SrcComponentType;
     typedef typename PyramidVectorType::value_type PyramidComponentType;
-    //typedef typename EnblendNumericTraits<SrcVectorType>::PyramidPixelType PyramidVectorType;
-    //typedef typename EnblendNumericTraits<SrcVectorType>::PyramidPixelComponentType PyramidPixelComponentType;
-    //typedef typename EnblendNumericTraits<SrcVectorType>::ImagePixelComponentType SrcComponentType;
-    //enum {PyramidIntegerBits = EnblendNumericTraits<SrcVectorType>::PyramidIntegerBits};
-    //enum {PyramidFractionBits = EnblendNumericTraits<SrcVectorType>::PyramidFractionBits};
     typedef ConvertScalarToPyramidFunctor<SrcComponentType, PyramidComponentType,
             PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
 
@@ -209,11 +205,6 @@ class ConvertPyramidToVectorFunctor {
 
     typedef typename DestVectorType::value_type DestComponentType;
     typedef typename PyramidVectorType::value_type PyramidComponentType;
-    //typedef typename EnblendNumericTraits<DestVectorType>::PyramidPixelType PyramidVectorType;
-    //typedef typename EnblendNumericTraits<DestVectorType>::PyramidPixelComponentType PyramidPixelComponentType;
-    //typedef typename EnblendNumericTraits<DestVectorType>::ImagePixelComponentType DestComponentType;
-    //enum {PyramidIntegerBits = EnblendNumericTraits<DestVectorType>::PyramidIntegerBits};
-    //enum {PyramidFractionBits = EnblendNumericTraits<DestVectorType>::PyramidFractionBits};
     typedef ConvertPyramidToScalarFunctor<DestComponentType, PyramidComponentType,
             PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
 
@@ -228,6 +219,99 @@ protected:
     ConvertFunctorType cf;
 };
 
+/** Fixed point converter that uses ICC profile transformation */
+template <typename SrcVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
+class ConvertVectorToJCHPyramidFunctor {
+
+    typedef typename SrcVectorType::value_type SrcComponentType;
+    typedef typename PyramidVectorType::value_type PyramidComponentType;
+    typedef ConvertScalarToPyramidFunctor<double, PyramidComponentType,
+            PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
+
+public:
+    ConvertVectorToJCHPyramidFunctor() : cf() {
+        scale = 1.0 / NumericTraits<SrcComponentType>::toRealPromote(
+                            NumericTraits<SrcComponentType>::max());
+    }
+
+    inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        double rgb[3];
+        rgb[0] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.red());
+        rgb[1] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.green());
+        rgb[2] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.blue());
+
+        double xyz[3];
+        cmsDoTransform(InputToXYZTransform, rgb, xyz, 1);
+
+        cmsCIEXYZ cmsxyz;
+        cmsxyz.X = xyz[0] * 100.0;
+        cmsxyz.Y = xyz[1] * 100.0;
+        cmsxyz.Z = xyz[2] * 100.0;
+
+        cmsJCh jch;
+        cmsCIECAM02Forward(CIECAMTransform, &cmsxyz, &jch);
+
+        // convert polar to cylindrical
+        double c = jch.C * sin(jch.h * (M_PI / 180.0));
+        jch.h = jch.C * cos(jch.h * (M_PI / 180.0));
+        jch.C = c;
+
+        return PyramidVectorType(cf(jch.J), cf(jch.C), cf(jch.h));
+    }
+
+protected:
+    ConvertFunctorType cf;
+    double scale;
+};
+
+/** Fixed point converter that uses ICC profile transformation */
+template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
+class ConvertJCHPyramidToVectorFunctor {
+
+    typedef typename DestVectorType::value_type DestComponentType;
+    typedef typename PyramidVectorType::value_type PyramidComponentType;
+    typedef ConvertPyramidToScalarFunctor<double, PyramidComponentType,
+            PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
+
+public:
+    ConvertJCHPyramidToVectorFunctor() : cf() {
+        scale = NumericTraits<DestComponentType>::toRealPromote(
+                        NumericTraits<DestComponentType>::max());
+    }
+
+    inline DestVectorType operator()(const PyramidVectorType &v) const {
+        cmsJCh jch;
+        jch.J = cf(v.red());
+        jch.C = cf(v.green());
+        jch.h = cf(v.blue());
+
+        double r = sqrt(jch.C * jch.C + jch.h * jch.h);
+        jch.h = (180.0 / M_PI) * atan2(jch.C, jch.h);
+        if (jch.h < 0.0) jch.h += 360.0;
+        jch.C = r;
+
+        cmsCIEXYZ cmsxyz;
+        cmsCIECAM02Reverse(CIECAMTransform, &jch, &cmsxyz);
+
+        double xyz[3];
+        xyz[0] = cmsxyz.X / 100.0;
+        xyz[1] = cmsxyz.Y / 100.0;
+        xyz[2] = cmsxyz.Z / 100.0;
+
+        double rgb[3];
+        cmsDoTransform(XYZToInputTransform, xyz, rgb, 1);
+
+        return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(rgb[0] * scale),
+                              NumericTraits<DestComponentType>::fromRealPromote(rgb[1] * scale),
+                              NumericTraits<DestComponentType>::fromRealPromote(rgb[2] * scale));
+    }
+
+protected:
+    ConvertFunctorType cf;
+    double scale;
+};
+
+
 /** Copy a scalar image into a scalar pyramid image. */
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
 void copyToPyramidImage(
@@ -240,10 +324,6 @@ void copyToPyramidImage(
 
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
-
-    //typedef typename EnblendNumericTraits<SrcPixelType>::PyramidPixelType PyramidPixelType;
-    //enum {PyramidIntegerBits = EnblendNumericTraits<SrcPixelType>::PyramidIntegerBits};
-    //enum {PyramidFractionBits = EnblendNumericTraits<SrcPixelType>::PyramidFractionBits};
 
     transformImage(src_upperleft, src_lowerright, sa,
             dest_upperleft, da,
@@ -265,9 +345,18 @@ void copyToPyramidImage(
     typedef typename SrcImageType::value_type SrcVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
-    transformImage(src_upperleft, src_lowerright, sa,
-            dest_upperleft, da,
-            ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    if (UseCIECAM) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+            cout << "CIECAM02 color conversion..." << endl;
+        }
+        transformImage(src_upperleft, src_lowerright, sa,
+                dest_upperleft, da,
+                ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    } else {
+        transformImage(src_upperleft, src_lowerright, sa,
+                dest_upperleft, da,
+                ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    }
 
 };
 
@@ -318,9 +407,6 @@ inline void copyFromPyramidImageIf(
 
     typedef typename DestImageType::value_type DestPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
-    //typedef typename EnblendNumericTraits<DestPixelType>::PyramidPixelType PyramidPixelType;
-    //enum {PyramidIntegerBits = EnblendNumericTraits<DestPixelType>::PyramidIntegerBits};
-    //enum {PyramidFractionBits = EnblendNumericTraits<DestPixelType>::PyramidFractionBits};
 
     transformImageIf(src_upperleft, src_lowerright, sa,
             mask_upperleft, ma,
@@ -346,10 +432,20 @@ inline void copyFromPyramidImageIf(
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
-    transformImageIf(src_upperleft, src_lowerright, sa,
-            mask_upperleft, ma,
-            dest_upperleft, da,
-            ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    if (UseCIECAM) {
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+            cout << "CIECAM02 color conversion..." << endl;
+        }
+        transformImageIf(src_upperleft, src_lowerright, sa,
+                mask_upperleft, ma,
+                dest_upperleft, da,
+                ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    } else {
+        transformImageIf(src_upperleft, src_lowerright, sa,
+                mask_upperleft, ma,
+                dest_upperleft, da,
+                ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+    }
 
 };
 

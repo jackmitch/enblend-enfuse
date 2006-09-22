@@ -28,7 +28,6 @@
 #include <list>
 #include <stdlib.h>
 #include <string.h>
-#include <lcms.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -124,103 +123,6 @@ void import(const ImageImportInfo &info,
             alpha.second);
 
     importImageAlpha(info, image, destIter(alpha.first, ata));
-
-/*
-    if (UseCIECAM) {
-        cmsHPROFILE sourceProfile;
-        cmsHPROFILE destProfile = cmsCreateXYZProfile();
-
-        ImageImportInfo::ICCProfile iccdata = info.getICCProfile();
-
-        if (iccdata.empty()) {
-            cout << "enblend: input image \"" << info.getFileName() << "\" does not have an ICC profile. Assuming sRGB." << endl;
-            sourceProfile = cmsCreate_sRGBProfile();
-        }
-        else {
-            sourceProfile = cmsOpenProfileFromMem(iccdata.data(), iccdata.size());
-        }
-
-        if (sourceProfile == NULL) {
-            cerr << endl << "enblend: could not read ICC profile data from file \"" << info.getFileName() << "\"."
-                 << endl << endl;
-            exit(1);
-        }
-
-        cmsHTRANSFORM transform = cmsCreateTransform(sourceProfile, TYPE_RGB_DBL,
-                                                     destProfile, TYPE_XYZ_DBL,
-                                                     INTENT_PERCEPTUAL, 0);
-
-        if (transform == NULL) {
-            cerr << endl << "enblend: error building color transform from \"" << cmsTakeProductName(sourceProfile)
-                 << "\" to XYZ." << endl << endl;
-            exit(1);
-        }
-
-        cmsViewingConditions conditions;
-        //if (!cmsTakeMediaWhitePoint(&(conditions.whitePoint), sourceProfile)) {
-        //    cerr << endl << "enblend: could not get media white point from \"" << cmsTakeProductName(sourceProfile)
-        //         << "\"." << endl << endl;
-        //    exit(1);
-        //}
-        conditions.whitePoint.X = 96.42;
-        conditions.whitePoint.Y = 100.0;
-        conditions.whitePoint.Z *= 82.49;
-        conditions.Yb = 20.0;
-        conditions.La = 31.83;
-        conditions.surround = AVG_SURROUND;
-        conditions.D_value = 1.0;
-        cout << "source profile media white X=" << conditions.whitePoint.X << " Y=" << conditions.whitePoint.Y << " Z=" << conditions.whitePoint.Z << endl;
-
-        LCMSHANDLE ciecamTransform = cmsCIECAM02Init(&conditions);
-        if (!ciecamTransform) {
-            cerr << endl << "enblend: error initializing CIECAM02 transform." << endl << endl;
-            exit(1);
-        }
-
-        DestIterator sy = image.first;
-        AlphaIterator my = alpha.first;
-        for (int y = 0; y < info.height(); y++, ++sy.y, ++my.y) {
-            DestIterator sx = sy;
-            AlphaIterator mx = my;
-            for (int x = 0; x < info.width(); x++, ++sx.x, ++mx.x) {
-                if (alpha.second(mx)) {
-                    double inputBuffer[3];
-                    double outputBuffer[3];
-                    double scaleFactor = 1.0 / NumericTraits<ImageComponentType>::max();
-                    ImagePixelType pixel = image.second(sx);
-                    inputBuffer[0] = scaleFactor * NumericTraits<ImageComponentType>::toRealPromote(pixel.red());
-                    inputBuffer[1] = scaleFactor * NumericTraits<ImageComponentType>::toRealPromote(pixel.green());
-                    inputBuffer[2] = scaleFactor * NumericTraits<ImageComponentType>::toRealPromote(pixel.blue());
-
-                    cmsDoTransform(transform, inputBuffer, outputBuffer, 1);
-
-                    cmsCIEXYZ xyz;
-                    xyz.X = outputBuffer[0] * 100.0;
-                    xyz.Y = outputBuffer[1] * 100.0;
-                    xyz.Z = outputBuffer[2] * 100.0;
-
-                    cmsJCh jch;
-                    cmsCIECAM02Forward(ciecamTransform, &xyz, &jch);
-
-                    cout << "pixel rgb value=(" << (int)pixel.red() << ", " << (int)pixel.green() << ", " << (int)pixel.blue() << ")" << endl;
-                    cout << "pixel XYZ value=(" << xyz.X << ", " << xyz.Y << ", " << xyz.Z << ")" << endl;
-                    cout << "pixel JCh value=(" << jch.J << ", " << jch.C << ", " << jch.h << ")" << endl;
-                    //RGBValue<ImageComponentType> result;
-                    //result.setRed(
-                    //image.second.set(
-
-                    goto DONE;
-                }
-            }
-        }
-
-DONE:
-        cmsCIECAM02Done(ciecamTransform);
-        cmsDeleteTransform(transform);
-        cmsCloseProfile(sourceProfile);
-        cmsCloseProfile(destProfile);
-    }
-*/
 
 };
 

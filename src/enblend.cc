@@ -36,6 +36,7 @@
 #define BOOST_NO_STDC_NAMESPACE 1
 #endif
 
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <vector>
@@ -59,6 +60,7 @@ extern "C" int optind;
 #endif
 
 #include <boost/random/mersenne_twister.hpp>
+#include <lcms.h>
 
 // Globals
 
@@ -78,6 +80,14 @@ bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 bool Checkpoint = false;
+
+// Objects for ICC profiles
+cmsHPROFILE InputProfile = NULL;
+cmsHPROFILE XYZProfile = NULL;
+cmsHTRANSFORM InputToXYZTransform = NULL;
+cmsHTRANSFORM XYZToInputTransform = NULL;
+cmsViewingConditions ViewingConditions;
+LCMSHANDLE CIECAMTransform = NULL;
 
 #include "common.h"
 #include "enblend.h"
@@ -368,6 +378,7 @@ int main(int argc, char** argv) {
 
     bool isColor = false;
     const char *pixelType = NULL;
+    ImageImportInfo::ICCProfile iccProfile;
     EnblendROI inputUnion;
 
     // Check that all input images have the same parameters.
@@ -430,6 +441,16 @@ int main(int argc, char** argv) {
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
             pixelType = inputInfo->getPixelType();
+            iccProfile = inputInfo->getICCProfile();
+            if (!iccProfile.empty()) {
+                InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
+                if (InputProfile == NULL) {
+                    cerr << endl << "enblend: error parsing ICC profile data from file\""
+                         << *inputFileNameIterator
+                         << "\"" << endl;
+                    exit(1);
+                }
+            }
         }
         else {
             // second and later images.
@@ -453,6 +474,45 @@ int main(int argc, char** argv) {
                      << "." << endl;
                 exit(1);
             }
+            if (!std::equal(iccProfile.begin(), iccProfile.end(), inputInfo->getICCProfile().begin())) {
+                ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
+                cmsHPROFILE newProfile = NULL;
+                if (!mismatchProfile.empty()) {
+                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(), mismatchProfile.size());
+                    if (newProfile == NULL) {
+                        cerr << endl << "enblend: error parsing ICC profile data from file\""
+                             << *inputFileNameIterator
+                             << "\"" << endl;
+                        exit(1);
+                    }
+                }
+
+                cerr << endl << "enblend: Input image \""
+                     << *inputFileNameIterator
+                     << "\" has ";
+                if (newProfile) {
+                    cerr << " ICC profile \""
+                         << cmsTakeProductName(newProfile)
+                         << " "
+                         << cmsTakeProductDesc(newProfile)
+                         << "\"";
+                } else {
+                    cerr << " no ICC profile";
+                }
+                cerr << " but previous images have ";
+                if (InputProfile) {
+                    cerr << " ICC profile \""
+                         << cmsTakeProductName(InputProfile)
+                         << " "
+                         << cmsTakeProductDesc(InputProfile)
+                         << "\"." << endl;
+                } else {
+                    cerr << " no ICC profile." << endl;
+                }
+                cerr << "enblend: Blending images with different color spaces may have unexpected results."
+                     << endl;
+
+            }
         }
 
         inputFileNameIterator++;
@@ -473,14 +533,53 @@ int main(int argc, char** argv) {
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
 
-    // Find the first ICC profile in the input images and copy it to the output image.
-    for (imageInfoIterator = imageInfoList.begin();
-            imageInfoIterator != imageInfoList.end();
-            ++imageInfoIterator) {
-        if (!(*imageInfoIterator)->getICCProfile().empty() > 0) {
-            outputImageInfo.setICCProfile(
-                    (*imageInfoIterator)->getICCProfile());
-            break;
+    // Set the output image ICC profile
+    outputImageInfo.setICCProfile(iccProfile);
+
+    if (UseCIECAM) {
+        if (InputProfile == NULL) {
+            cerr << "enblend: Input images do not have ICC profiles. Assuming sRGB." << endl;
+            InputProfile = cmsCreate_sRGBProfile();
+        }
+        XYZProfile = cmsCreateXYZProfile();
+
+        InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
+                                                 XYZProfile, TYPE_XYZ_DBL,
+                                                 INTENT_PERCEPTUAL, 0);
+        if (InputToXYZTransform == NULL) {
+            cerr << "enblend: Error building color transform from \""
+                 << cmsTakeProductName(InputProfile)
+                 << " "
+                 << cmsTakeProductDesc(InputProfile)
+                 << "\" to XYZ." << endl;
+            exit(1);
+        }
+
+        XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
+                                                 InputProfile, TYPE_RGB_DBL,
+                                                 INTENT_PERCEPTUAL, 0);
+        if (XYZToInputTransform == NULL) {
+            cerr << "enblend: Error building color transform from XYZ to \""
+                 << cmsTakeProductName(InputProfile)
+                 << " "
+                 << cmsTakeProductDesc(InputProfile)
+                 << "\"." << endl;
+            exit(1);
+        }
+
+        // P2 Viewing Conditions: D50, 500 lumens
+        ViewingConditions.whitePoint.X = 96.42;
+        ViewingConditions.whitePoint.Y = 100.0;
+        ViewingConditions.whitePoint.Z = 82.49;
+        ViewingConditions.Yb = 20.0;
+        ViewingConditions.La = 31.83;
+        ViewingConditions.surround = AVG_SURROUND;
+        ViewingConditions.D_value = 1.0;
+
+        CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
+        if (!CIECAMTransform) {
+            cerr << endl << "enblend: Error initializing CIECAM02 transform." << endl;
+            exit(1);
         }
     }
 
@@ -579,6 +678,12 @@ int main(int argc, char** argv) {
              << endl;
         exit(1);
     }
+
+    if (CIECAMTransform) cmsCIECAM02Done(CIECAMTransform);
+    if (InputToXYZTransform) cmsDeleteTransform(InputToXYZTransform);
+    if (XYZToInputTransform) cmsDeleteTransform(XYZToInputTransform);
+    if (XYZProfile) cmsCloseProfile(XYZProfile);
+    if (InputProfile) cmsCloseProfile(InputProfile);
 
     // Success.
     return 0;
