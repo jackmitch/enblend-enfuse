@@ -723,6 +723,15 @@ inline RGBValue<V> & operator>>=(RGBValue<V> & l, const unsigned int s) {
     return l;
 }
 
+template <>
+inline RGBValue<double> & operator>>=(RGBValue<double> & l, const unsigned int s) {
+    double scale = exp2(s);
+    l.red() /= scale;
+    l.green() /= scale;
+    l.blue() /= scale;
+    return l;
+}
+
 /// component-wise left shift assignment
 // mihal 20050724
 template <class V>
@@ -730,6 +739,15 @@ inline RGBValue<V> & operator<<=(RGBValue<V> & l, const unsigned int s) {
     l.red() <<= s;
     l.green() <<= s;
     l.blue() <<= s;
+    return l;
+}
+
+template <>
+inline RGBValue<double> & operator<<=(RGBValue<double> & l, const unsigned int s) {
+    double scale = exp2(s);
+    l.red() *= scale;
+    l.green() *= scale;
+    l.blue() *= scale;
     return l;
 }
 
@@ -868,6 +886,15 @@ RGBValue<V> operator>>(RGBValue<V> const & r, int rs)
     return res;
 }
 
+template <>
+inline
+RGBValue<double> operator>>(RGBValue<double> const & r, int rs)
+{
+    double scale = exp2(rs);
+    RGBValue<double> res(r.red() / scale, r.green() / scale, r.blue() / scale);
+    return res;
+}
+
 /// component-wise left shift
 // mihal 20050714
 template <class V>
@@ -875,6 +902,15 @@ inline
 RGBValue<V> operator<<(RGBValue<V> const & r, int ls)
 {
     RGBValue<V> res(r.red() << ls, r.green() << ls, r.blue() << ls);
+    return res;
+}
+
+template <>
+inline
+RGBValue<double> operator<<(RGBValue<double> const & r, int ls)
+{
+    double scale = exp2(ls);
+    RGBValue<double> res(r.red() * scale, r.green() * scale, r.blue() * scale);
     return res;
 }
 

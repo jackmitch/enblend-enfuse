@@ -235,6 +235,7 @@ public:
     }
 
     inline PyramidVectorType operator()(const SrcVectorType &v) const {
+        // rgb values must be in range [0,1]
         double rgb[3];
         rgb[0] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.red());
         rgb[1] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.green());
@@ -242,7 +243,9 @@ public:
 
         double xyz[3];
         cmsDoTransform(InputToXYZTransform, rgb, xyz, 1);
+        // xyz values are in range [0,1]
 
+        // relative xyz values must be in range [0,100]
         cmsCIEXYZ cmsxyz;
         cmsxyz.X = xyz[0] * 100.0;
         cmsxyz.Y = xyz[1] * 100.0;
@@ -250,11 +253,17 @@ public:
 
         cmsJCh jch;
         cmsCIECAM02Forward(CIECAMTransform, &cmsxyz, &jch);
+        // J in range [0,100], C in range [0,120], h in range [0,360]
 
-        // convert polar to cylindrical
-        double c = jch.C * sin(jch.h * (M_PI / 180.0));
-        jch.h = jch.C * cos(jch.h * (M_PI / 180.0));
-        jch.C = c;
+        // convert cylindrical to cartesian
+        double theta = jch.h * M_PI / 180.0;
+        jch.h = jch.C * cos(theta);
+        jch.C = jch.C * sin(theta);
+
+        // Scale to maximize usage of fixed-point type
+        jch.J *= exp2(PyramidIntegerBits - 1 - 7);
+        jch.C *= exp2(PyramidIntegerBits - 1 - 7);
+        jch.h *= exp2(PyramidIntegerBits - 1 - 7);
 
         return PyramidVectorType(cf(jch.J), cf(jch.C), cf(jch.h));
     }
@@ -285,6 +294,12 @@ public:
         jch.C = cf(v.green());
         jch.h = cf(v.blue());
 
+        // Scale back to range J[0,100], C[0,120], h[0,120]
+        jch.J /= exp2(PyramidIntegerBits - 1 - 7);
+        jch.C /= exp2(PyramidIntegerBits - 1 - 7);
+        jch.h /= exp2(PyramidIntegerBits - 1 - 7);
+
+        // convert cartesian to cylindrical
         double r = sqrt(jch.C * jch.C + jch.h * jch.h);
         jch.h = (180.0 / M_PI) * atan2(jch.C, jch.h);
         if (jch.h < 0.0) jch.h += 360.0;
@@ -292,7 +307,9 @@ public:
 
         cmsCIEXYZ cmsxyz;
         cmsCIECAM02Reverse(CIECAMTransform, &jch, &cmsxyz);
+        // xyz values in range [0,100]
 
+        // scale xyz values to range [0,1]
         double xyz[3];
         xyz[0] = cmsxyz.X / 100.0;
         xyz[1] = cmsxyz.Y / 100.0;
@@ -300,6 +317,7 @@ public:
 
         double rgb[3];
         cmsDoTransform(XYZToInputTransform, xyz, rgb, 1);
+        // rgb values in range [0,1]
 
         return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(rgb[0] * scale),
                               NumericTraits<DestComponentType>::fromRealPromote(rgb[1] * scale),

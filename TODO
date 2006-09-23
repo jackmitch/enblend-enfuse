@@ -25,12 +25,13 @@ X vigra sized_int
 X defines for choosing CachedFileImages vs. BasicImages.
 X add GimpAssociatedAlphaHack to new vigra_impex
 X EnblendNumericTraits
-- icc blending
-    - make sure all input images have same icc profile
-    - do convert in image->pyramid pixel convert functors
+X icc blending
+    X make sure all input images have same icc profile
+    X do convert in image->pyramid pixel convert functors
+- new seam alg
 - vigra impex improvements
 - cfi swap policy improvements
-- new seam alg
+- cache blackLP copyToPyramid/copyFromPyramid?
 - multilayer images
 - vogl's hdr test cases
 - enable all pixel types

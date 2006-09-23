@@ -545,7 +545,7 @@ int main(int argc, char** argv) {
 
         InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
                                                  XYZProfile, TYPE_XYZ_DBL,
-                                                 INTENT_PERCEPTUAL, 0);
+                                                 INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (InputToXYZTransform == NULL) {
             cerr << "enblend: Error building color transform from \""
                  << cmsTakeProductName(InputProfile)
@@ -557,7 +557,7 @@ int main(int argc, char** argv) {
 
         XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
                                                  InputProfile, TYPE_RGB_DBL,
-                                                 INTENT_PERCEPTUAL, 0);
+                                                 INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (XYZToInputTransform == NULL) {
             cerr << "enblend: Error building color transform from XYZ to \""
                  << cmsTakeProductName(InputProfile)
