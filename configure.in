@@ -17,6 +17,7 @@ AC_C_BIGENDIAN
 #AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
 AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[])
 AC_CHECK_LIB(lcms,cmsCreateTransform,,AC_MSG_WARN([liblcms is required to compile enblend.]),[])
+AC_CHECK_LIB(xmi,miNewPaintedSet,,AC_MSG_WARN([libxmi is required to compile enblend.]),[])
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -27,6 +28,7 @@ AC_CHECK_HEADER(boost/random/mersenne_twister.hpp,,AC_MSG_WARN([boost header fil
 AC_CHECK_HEADER(boost/static_assert.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
 AC_CHECK_HEADER(lcms.h,,AC_MSG_WARN([lcms header files are required to compile enblend.]))
+AC_CHECK_HEADER(xmi.h,,AC_MSG_WARN([xmi header files are required to compile enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

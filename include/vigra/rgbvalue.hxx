@@ -725,7 +725,7 @@ inline RGBValue<V> & operator>>=(RGBValue<V> & l, const unsigned int s) {
 
 template <>
 inline RGBValue<double> & operator>>=(RGBValue<double> & l, const unsigned int s) {
-    double scale = exp2(s);
+    double scale = (double)(1 << s); //exp2(s);
     l.red() /= scale;
     l.green() /= scale;
     l.blue() /= scale;
@@ -744,7 +744,7 @@ inline RGBValue<V> & operator<<=(RGBValue<V> & l, const unsigned int s) {
 
 template <>
 inline RGBValue<double> & operator<<=(RGBValue<double> & l, const unsigned int s) {
-    double scale = exp2(s);
+    double scale = (double)(1 << s); //exp2(s);
     l.red() *= scale;
     l.green() *= scale;
     l.blue() *= scale;
@@ -890,7 +890,7 @@ template <>
 inline
 RGBValue<double> operator>>(RGBValue<double> const & r, int rs)
 {
-    double scale = exp2(rs);
+    double scale = (double)(1 << rs); //exp2(rs);
     RGBValue<double> res(r.red() / scale, r.green() / scale, r.blue() / scale);
     return res;
 }
@@ -909,7 +909,7 @@ template <>
 inline
 RGBValue<double> operator<<(RGBValue<double> const & r, int ls)
 {
-    double scale = exp2(ls);
+    double scale = (double)(1 << ls); //exp2(ls);
     RGBValue<double> res(r.red() * scale, r.green() * scale, r.blue() * scale);
     return res;
 }

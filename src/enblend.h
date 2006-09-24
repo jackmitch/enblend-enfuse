@@ -43,6 +43,7 @@
 #include "vigra/initimage.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/transformimage.hxx"
+#include "vigra_ext/XMIWrapper.h"
 
 using std::cout;
 using std::endl;
@@ -61,6 +62,8 @@ using vigra::inspectImage;
 using vigra::NumericTraits;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
+
+using vigra_ext::copyPaintedSetToImage;
 
 namespace enblend {
 
@@ -269,9 +272,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
         #endif
 
-        //ImageExportInfo maskInfo("enblend_mask.tif");
-        //maskInfo.setPosition(uBB.getUL());
-        //exportImage(srcImageRange(*mask), maskInfo);
+        ImageExportInfo maskInfo("enblend_mask.tif");
+        maskInfo.setPosition(uBB.getUL());
+        exportImage(srcImageRange(*mask), maskInfo);
+//break;
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
@@ -529,6 +533,30 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         blackBB = uBB;
 
     }
+
+    miPoint points[4];
+    miGC *pGC;
+    miPaintedSet *paintedSet;
+    miPixel pixels[2];
+
+    points[0].x = 25; points[0].y = 5;
+    points[1].x = 5; points[1].y = 5;
+    points[2].x = 5; points[2].y = 25;
+    points[3].x = 35; points[3].y = 22;
+
+    pixels[0] = 255;
+    pixels[1] = 255;
+    pGC = miNewGC(2, pixels);
+    //miSetGCAttrib(pGC, MI_GC_LINE_WIDTH, 0);
+    paintedSet = miNewPaintedSet();
+
+    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN, 4, points);
+    //miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, 4, points);
+
+    copyPaintedSetToImage(destImageRange(*(blackPair.second)), paintedSet, Diff2D(10,20));
+
+    miDeleteGC(pGC);
+    miDeletePaintedSet(paintedSet);
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {

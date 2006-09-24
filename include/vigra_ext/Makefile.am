@@ -16,4 +16,5 @@ EXTRA_DIST = blend.h \
              impexalpha.hxx \
              ransac.h \
              tiffUtils.h \
-             utils.h
+             utils.h \
+             XMIWrapper.h

@@ -73,6 +73,13 @@ MaskType *createMask(AlphaType *whiteAlpha,
     //importImage(fileMaskInfo, destImage(*fileMask));
     //MaskType *mask = fileMask;
 
+    int ubb_w = uBB.size().x;
+    int ubb_h = uBB.size().y;
+    int stride8_w = (ubb_w + 7) >> 3;
+    int stride8_h = (ubb_h + 7) >> 3;
+
+    // Stride 8 mask
+    //MaskType *maskInit = new MaskType(stride8_w, stride8_h);
     // Mask initializer pixel values:
     // 0 = outside both black and white image, or inside both images.
     // 1 = inside white image only.
@@ -81,18 +88,23 @@ MaskType *createMask(AlphaType *whiteAlpha,
     // mem xsection = BImage*ubb
 
     // Set maskInit = 1 at all pixels where whiteImage contributes.
+    //initImageIf(destIterRange(maskInit->upperLeft(), maskInit->upperLeft() + Diff2D(ubb_w >> 3, ubb_h >> 3)),
     initImageIf(destImageRange(*maskInit),
+// Need stride 8 iterator starting at whiteAlpha->upperLeft() + uBB.getUL()
             maskIter(whiteAlpha->upperLeft() + uBB.getUL()),
             NumericTraits<MaskPixelType>::one());
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
     // if whiteImage also contributes, this wraps around to zero.
+    //transformImageIf(srcIterRange(maskInit->upperLeft(), maskInit->upperLeft() + Diff2D(ubb_w >> 3, ubb_h >> 3)),
     transformImageIf(srcImageRange(*maskInit),
+// Need stride 8 iterator starting at blackAlpha->upperLeft() + uBB.getUL()
             maskIter(blackAlpha->upperLeft() + uBB.getUL()),
             destImage(*maskInit),
             (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
 
     // Mask transform replaces 0 areas with either 1 or 255.
+    //MaskType *maskTransform = new MaskType(stride8_w, stride8_h);
     MaskType *maskTransform = new MaskType(uBB.size());
     // mem xsection = 2*BImage*ubb
     nearestFeatureTransform(wraparound,
@@ -102,6 +114,8 @@ MaskType *createMask(AlphaType *whiteAlpha,
 
     delete maskInit;
     // mem xsection = BImage*ubb
+
+// FIXME stride 8 done up to here
 
     MaskType *mask = new MaskType(uBB.size());
     // mem xsection = BImage*ubb + MaskType*ubb

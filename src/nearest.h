@@ -217,12 +217,12 @@ void nearestFeatureTransform(bool wraparound,
     send = src_lowerright;
     dnfcy = dnfColumn->upperLeft();
     dy = dest_upperleft;
-    for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dy.y) {
+    for (; sy.y < send.y; ++sy.y, ++dnfcy.y, ++dy.y) {
         sx = sy;
         dnfcx = dnfcy;
         dx = dy;
 
-        for (int xIndex = 0; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dx.x, ++xIndex) {
+        for (int xIndex = 0; sx.x < send.x; ++sx.x, ++dnfcx.x, ++dx.x, ++xIndex) {
             if (sa(sx)) {
                 // Source pixel is a feature pixel.
                 lastFeature[xIndex] = sa(sx);
@@ -268,7 +268,7 @@ void nearestFeatureTransform(bool wraparound,
     send = src_upperleft;
     dnfcy = dnfColumn->lowerRight();
     dy = dest_upperleft + (src_lowerright - src_upperleft);
-    for (; sy.y != send.y;) {
+    for (; sy.y > send.y;) {
         --sy.y;
         --dnfcy.y;
         --dy.y;
@@ -277,7 +277,7 @@ void nearestFeatureTransform(bool wraparound,
         dnfcx = dnfcy;
         dx = dy;
 
-        for (int xIndex = w-1; sx.x != send.x; --xIndex) {
+        for (int xIndex = w-1; sx.x > send.x; --xIndex) {
             --sx.x;
             --dnfcx.x;
             --dx.x;
@@ -324,7 +324,7 @@ void nearestFeatureTransform(bool wraparound,
     dnfcy = dnfColumn->upperLeft();
     dnfly = dnfLeft->upperLeft();
     dy = dest_upperleft;
-    for (; sy.y != send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
+    for (; sy.y < send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
 
         // Indicate halfway mark when wraparound is true.
         if (Verbose > VERBOSE_NFT_MESSAGES
@@ -344,7 +344,7 @@ void nearestFeatureTransform(bool wraparound,
             dnflx = dnfly;
             dx = dy;
 
-            for (; sx.x != send.x; ++sx.x, ++dnfcx.x, ++dnflx.x, ++dx.x) {
+            for (; sx.x < send.x; ++sx.x, ++dnfcx.x, ++dnflx.x, ++dx.x) {
                 // First add ourself to the list.
                 potentialFeatureList.push_back(dnfcx.x);
 
@@ -408,7 +408,7 @@ void nearestFeatureTransform(bool wraparound,
     dnfcy = dnfColumn->lowerRight();
     dnfly = dnfLeft->lowerRight();
     dy = dest_upperleft + (src_lowerright - src_upperleft);
-    for (; sy.y != send.y;) {
+    for (; sy.y > send.y;) {
         --sy.y;
         --dnfcy.y;
         --dnfly.y;
@@ -432,7 +432,7 @@ void nearestFeatureTransform(bool wraparound,
             dnflx = dnfly;
             dx = dy;
 
-            for (; sx.x != send.x;) {
+            for (; sx.x > send.x;) {
                 --sx.x;
                 --dnfcx.x;
                 --dnflx.x;

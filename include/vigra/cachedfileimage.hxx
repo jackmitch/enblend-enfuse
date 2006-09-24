@@ -46,6 +46,7 @@
 #include <boost/pool/pool.hpp>
 
 #include <vigra/error.hxx>
+#include <vigra/metaprogramming.hxx>
 #include <vigra/utilities.hxx>
 
 using std::cout;
@@ -453,10 +454,170 @@ public:
 
 };
 
-/** Forward Declaration. */
-template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
-class CachedFileImageIteratorBase;
+namespace cfi_detail {
 
+template <class StridedOrUnstrided, class T>
+class DirectionSelector;
+
+template <class T>
+class DirectionSelector<UnstridedArrayTag, T>
+{
+public:
+    DirectionSelector(T base=0) : current_(base) {}
+    DirectionSelector(DirectionSelector const & rhs) : current_(rhs.current_) {}
+
+    DirectionSelector & operator=(DirectionSelector const & rhs) {
+        current_ = rhs.current_;
+        return *this;
+    }
+
+    void operator++() { ++current_; }
+    void operator++(int) { ++current_; }
+    void operator--() { --current_; }
+    void operator--(int) { --current_; }
+    void operator+=(int dx) { current_ += dx; }
+    void operator-=(int dx) { current_ -= dx; }
+
+    bool operator==(DirectionSelector const & rhs) const { return (current_ == rhs.current_); }
+    bool operator!=(DirectionSelector const & rhs) const { return (current_ != rhs.current_); }
+    bool operator<(DirectionSelector const & rhs) const { return (current_ < rhs.current_); }
+    bool operator<=(DirectionSelector const & rhs) const { return (current_ <= rhs.current_); }
+    bool operator>(DirectionSelector const & rhs) const { return (current_ > rhs.current_); }
+    bool operator>=(DirectionSelector const & rhs) const { return (current_ >= rhs.current_); }
+
+    int operator-(DirectionSelector const & rhs) const { return (current_ - rhs.current_); }
+
+    T operator()() const { return current_; }
+    T operator()(int d) const { return (current_ + d); }
+
+    T current_;
+};
+
+template <class T>
+class DirectionSelector<StridedArrayTag, T> {
+public:
+    DirectionSelector(int stride=1, T base=0) : stride_(stride), current_(base) {}
+    DirectionSelector(DirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_) {}
+
+    DirectionSelector & operator=(DirectionSelector const & rhs) {
+        stride_ = rhs.stride_;
+        current_ = rhs.current_;
+        return *this;
+    }
+
+    void operator++() { current_ += stride_; }
+    void operator++(int) { current_ += stride_; }
+    void operator--() { current_ -= stride_; }
+    void operator--(int) { current_ -= stride_; }
+    void operator+=(int dy) { current_ += dy*stride_; }
+    void operator-=(int dy) { current_ -= dy*stride_; }
+
+    bool operator==(DirectionSelector const & rhs) const { return (current_ == rhs.current_); }
+    bool operator!=(DirectionSelector const & rhs) const { return (current_ != rhs.current_); }
+    bool operator<(DirectionSelector const & rhs) const { return (current_ < rhs.current_); }
+    bool operator<=(DirectionSelector const & rhs) const { return (current_ <= rhs.current_); }
+    bool operator>(DirectionSelector const & rhs) const { return (current_ > rhs.current_); }
+    bool operator>=(DirectionSelector const & rhs) const { return (current_ >= rhs.current_); }
+
+    int operator-(DirectionSelector const & rhs) const { return (current_ - rhs.current_) / stride_; }
+
+    T operator()() const { return current_; }
+    T operator()(int d) const { return current_ + d*stride_; }
+
+    int stride_;
+    T current_;
+};
+
+template <class StridedOrUnstrided, class T, class Notify>
+class NotifyingDirectionSelector;
+
+template <class T, class Notify>
+class NotifyingDirectionSelector<UnstridedArrayTag, T, Notify>
+{
+public:
+    NotifyingDirectionSelector() : current_(0), notify_(NULL) {}
+    NotifyingDirectionSelector(T base, Notify *notify) : current_(base), notify_(notify) {}
+    NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : current_(rhs.current_), notify_(NULL) {}
+
+    NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
+        notify_->_notify(current_, rhs.current_);
+        current_ = rhs.current_;
+        return *this;
+    }
+
+    void setNotify(Notify *n) { notify_ = n; }
+
+    void operator++() { notify_->_notify(current_, current_+1); ++current_; }
+    void operator++(int) { notify_->_notify(current_, current_+1); ++current_; }
+    void operator--() { notify_->_notify(current_, current_-1); --current_; }
+    void operator--(int) { notify_->_notify(current_, current_-1); --current_; }
+    void operator+=(int dx) { notify_->_notify(current_, current_+dx); current_ += dx; }
+    void operator-=(int dx) { notify_->_notify(current_, current_-dx); current_ -= dx; }
+
+    bool operator==(NotifyingDirectionSelector const & rhs) const { return (current_ == rhs.current_); }
+    bool operator!=(NotifyingDirectionSelector const & rhs) const { return (current_ != rhs.current_); }
+    bool operator<(NotifyingDirectionSelector const & rhs) const { return (current_ < rhs.current_); }
+    bool operator<=(NotifyingDirectionSelector const & rhs) const { return (current_ <= rhs.current_); }
+    bool operator>(NotifyingDirectionSelector const & rhs) const { return (current_ > rhs.current_); }
+    bool operator>=(NotifyingDirectionSelector const & rhs) const { return (current_ >= rhs.current_); }
+
+    int operator-(NotifyingDirectionSelector const & rhs) const { return (current_ - rhs.current_); }
+
+    T operator()() const { return current_; }
+    T operator()(int d) const { return (current_ + d); }
+
+    T current_;
+
+private:
+    Notify *notify_;
+};
+
+template <class T, class Notify>
+class NotifyingDirectionSelector<StridedArrayTag, T, Notify> {
+public:
+    NotifyingDirectionSelector() : stride_(1), current_(0), notify_(NULL) {}
+    NotifyingDirectionSelector(int stride, Notify *notify, T base = 0) : stride_(stride), current_(base), notify_(notify) {}
+    NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_), notify_(NULL) {}
+
+    void setNotify(Notify *n) { notify_ = n; }
+
+    NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
+        notify_->_notify(current_, rhs.current_);
+        current_ = rhs.current_;
+        stride_ = rhs.stride_;
+        return *this;
+    }
+
+    void operator++() { notify_->_notify(current_, current_+stride_); current_ += stride_; }
+    void operator++(int) { notify_->_notify(current_, current_+stride_); current_ += stride_; }
+    void operator--() { notify_->_notify(current_, current_-stride_); current_ -= stride_; }
+    void operator--(int) { notify_->_notify(current_, current_-stride_); current_ -= stride_; }
+    void operator+=(int dy) { notify_->_notify(current_, current_+dy*stride_); current_ += dy*stride_; }
+    void operator-=(int dy) { notify_->_notify(current_, current_-dy*stride_); current_ -= dy*stride_; }
+
+    bool operator==(NotifyingDirectionSelector const & rhs) const { return (current_ == rhs.current_); }
+    bool operator!=(NotifyingDirectionSelector const & rhs) const { return (current_ != rhs.current_); }
+    bool operator<(NotifyingDirectionSelector const & rhs) const { return (current_ < rhs.current_); }
+    bool operator<=(NotifyingDirectionSelector const & rhs) const { return (current_ <= rhs.current_); }
+    bool operator>(NotifyingDirectionSelector const & rhs) const { return (current_ > rhs.current_); }
+    bool operator>=(NotifyingDirectionSelector const & rhs) const { return (current_ >= rhs.current_); }
+
+    int operator-(NotifyingDirectionSelector const & rhs) const { return (current_ - rhs.current_) / stride_; }
+
+    T operator()() const { return current_; }
+    T operator()(int d) const { return current_ + d*stride_; }
+
+    int stride_;
+    T current_;
+
+private:
+    Notify *notify_;
+
+};
+
+} // namespace cfi_detail
+
+/*
 template <typename T>
 class NotifyingInteger
 {
@@ -558,14 +719,16 @@ private:
     T *_i;
 
 };
+*/
 
 /** Base class for CachedFileImage traversers. */
-template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
+template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER,
+          class StridedOrUnstrided=UnstridedArrayTag>
 class CachedFileImageIteratorBase
 {
 public:
     typedef CachedFileImageIteratorBase<IMAGEITERATOR,
-            IMAGETYPE, PIXELTYPE, REFERENCE, POINTER> self_type;
+            IMAGETYPE, PIXELTYPE, REFERENCE, POINTER, StridedOrUnstrided> self_type;
     typedef IMAGETYPE image_type;
     typedef PIXELTYPE value_type;
     typedef PIXELTYPE PixelType;
@@ -576,8 +739,14 @@ public:
     typedef image_traverser_tag iterator_category;
     typedef RowIterator<IMAGEITERATOR> row_iterator;
     typedef ColumnIterator<IMAGEITERATOR> column_iterator;
-    typedef int MoveX;
-    typedef NotifyingInteger<self_type> MoveY;
+    //typedef typename cfi_detail::DirectionSelector<StridedOrUnstrided>::template type<int> MoveX;
+    //friend class cfi_detail::DirectionSelector<StridedOrUnstrided>::template type<int>;
+    //typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided>::template type<int, self_type> MoveY;
+    //friend class cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided>::template type<int, self_type>;
+    typedef typename cfi_detail::DirectionSelector<StridedOrUnstrided, int> MoveX;
+    friend class cfi_detail::DirectionSelector<StridedOrUnstrided, int>;
+    typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type> MoveY;
+    friend class cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type>;
 
     MoveX x;
     MoveY y;
@@ -620,36 +789,36 @@ public:
 
     reference operator*() const {
         //std::cout << "iterator=" << this << " currentRow=" << (void*)currentRow << " modifying pixel at (" << x << "," << y._y << ")  = " << (void*)(&currentRow[x]) << std::endl;
-        return currentRow[x];
+        return currentRow[x()];
         //return (*i)(x, y);
     }
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator->() const {
         //BOOST_STATIC_ASSERT(false);
-        return (*i)[y._y] + x;
+        return (*i)[y()] + x();
     }
 
     index_reference operator[](difference_type const & d) const {
         if (d.y == 0) {
-            return currentRow[x+d.x];
+            return currentRow[x()+d.x];
         } else {
-            return (*i)(x+d.x, y._y+d.y);
+            return (*i)(x()+d.x, y()+d.y);
         }
     }
 
     index_reference operator()(int dx, int dy) const {
         if (dy == 0) {
-            return currentRow[x+dx];
+            return currentRow[x()+dx];
         } else {
-            return (*i)(x+dx, y._y+dy);
+            return (*i)(x()+dx, y()+dy);
         }
     }
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator[](int dy) const {
         //BOOST_STATIC_ASSERT(false);
-        return (*i)[y._y + dy] + x;
+        return (*i)[y() + dy] + x();
     }
 
     row_iterator rowIterator() const {
@@ -667,11 +836,18 @@ protected:
         //cout << "constructed iterator with notify " << this << endl;
     }
 
-    CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y._y, this), i(r.i), currentRow(r.currentRow) { }
+    // Constructor only for strided iterators
+    //CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, this, Y), i(I), currentRow(NULL) {
+    //    _notify(Y);
+    //}
+
+    CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y), i(r.i), currentRow(r.currentRow) {
+        y.setNotify(this);
+    }
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
         x = r.x;
-        y._y = r.y._y;
+        y = r.y;
         i = r.i;
         currentRow = r.currentRow;
         return *this;
@@ -689,10 +865,9 @@ protected:
         //std::cout << "iterator " << this << " _notify(" << oldY << ", " << newY << ") currentRow=" << (void*)currentRow << std::endl;
     }
 
-    friend class NotifyingInteger<self_type>;
-
     image_type *i;
     pointer currentRow;
+
 };
  
 /** Regular CachedFileImage traverser. */

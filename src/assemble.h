@@ -189,10 +189,10 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             AlphaIteratorType sy = srcA->upperLeft();
             AlphaIteratorType send = srcA->lowerRight();
             AlphaAccessor sa = srcA->accessor();
-            for(; sy.y != send.y; ++sy.y, ++dy.y) {
+            for(; sy.y < send.y; ++sy.y, ++dy.y) {
                 AlphaIteratorType sx = sy;
                 AlphaIteratorType dx = dy;
-                for(; sx.x != send.x; ++sx.x, ++dx.x) {
+                for(; sx.x < send.x; ++sx.x, ++dx.x) {
                     if (sa(sx) && da(dx)) {
                         overlapFound = true;
                         break;

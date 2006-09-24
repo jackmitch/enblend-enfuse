@@ -54,12 +54,12 @@ Overlap inspectOverlap(
     bool foundOverlap = false;
     bool foundDistinctS2 = false;
 
-    for (; s1y.y != send.y; ++s1y.y, ++s2y.y) {
+    for (; s1y.y < send.y; ++s1y.y, ++s2y.y) {
 
         SrcImageIterator s1x = s1y;
         SrcImageIterator s2x = s2y;
 
-        for (; s1x.x != send.x; ++s1x.x, ++s2x.x) {
+        for (; s1x.x < send.x; ++s1x.x, ++s2x.x) {
             if (s1a(s1x) && s2a(s2x)) {
                 foundOverlap = true;
             } else if (s2a(s2x)) {
