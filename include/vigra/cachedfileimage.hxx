@@ -617,110 +617,6 @@ private:
 
 } // namespace cfi_detail
 
-/*
-template <typename T>
-class NotifyingInteger
-{
-public:
-
-    NotifyingInteger(int y, T *cfiIterator) : _y(y), _i(cfiIterator) { }
-
-    inline NotifyingInteger & operator=(const int y) {
-        if (y != _y) {
-            _i->_notify(_y, y);
-            _y = y;
-        }
-        return *this;
-    }
-
-    inline NotifyingInteger & operator++() {
-        _i->_notify(_y, _y+1);
-        ++_y;
-        return *this;
-    }
-
-    inline void operator++(int) {
-        ++(*this);
-    }
-
-    inline NotifyingInteger & operator--() {
-        _i->_notify(_y, _y-1);
-        --_y;
-        return *this;
-    }
-
-    inline void operator--(int) {
-        --(*this);
-    }
-
-    inline NotifyingInteger<T>& operator+=(NotifyingInteger<T> const &r) {
-        _i->_notify(_y, _y + r._y);
-        _y += r._y;
-        return *this;
-    }
-
-    inline NotifyingInteger<T>& operator+=(const int r) {
-        _i->_notify(_y, _y + r);
-        _y += r;
-        return *this;
-    }
-
-    inline NotifyingInteger<T>& operator-=(NotifyingInteger<T> const &r) {
-        _i->_notify(_y, _y - r._y);
-        _y -= r._y;
-        return *this;
-    }
-
-    inline NotifyingInteger<T>& operator-=(const int r) {
-        _i->_notify(_y, _y - r);
-        _y -= r;
-        return *this;
-    }
-
-    friend bool operator==(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y == r._y);
-    }
-
-    friend bool operator!=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y != r._y);
-    }
-
-    friend bool operator<(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y < r._y);
-    }
-
-    friend bool operator>(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y > r._y);
-    }
-
-    friend bool operator<=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y <= r._y);
-    }
-
-    friend bool operator>=(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y >= r._y);
-    }
-
-    friend int operator-(NotifyingInteger<T> const &l, NotifyingInteger<T> const &r) {
-        return (l._y - r._y);
-    }
-
-private:
-
-    // Don't let the compiler use these.
-    // Shallow copy will create two NotifyingIntegers both notifying the same iterator.
-    NotifyingInteger(const NotifyingInteger<T> &t);
-    NotifyingInteger& operator=(const NotifyingInteger<T> &t);
-
-    template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER>
-    friend class CachedFileImageIteratorBase;
-
-    int _y;
-    T *_i;
-
-};
-*/
-
 /** Base class for CachedFileImage traversers. */
 template <class IMAGEITERATOR, class IMAGETYPE, class PIXELTYPE, class REFERENCE, class POINTER,
           class StridedOrUnstrided=UnstridedArrayTag>
@@ -739,10 +635,6 @@ public:
     typedef image_traverser_tag iterator_category;
     typedef RowIterator<IMAGEITERATOR> row_iterator;
     typedef ColumnIterator<IMAGEITERATOR> column_iterator;
-    //typedef typename cfi_detail::DirectionSelector<StridedOrUnstrided>::template type<int> MoveX;
-    //friend class cfi_detail::DirectionSelector<StridedOrUnstrided>::template type<int>;
-    //typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided>::template type<int, self_type> MoveY;
-    //friend class cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided>::template type<int, self_type>;
     typedef typename cfi_detail::DirectionSelector<StridedOrUnstrided, int> MoveX;
     friend class cfi_detail::DirectionSelector<StridedOrUnstrided, int>;
     typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type> MoveY;
@@ -837,19 +729,20 @@ protected:
     }
 
     // Constructor only for strided iterators
-    //CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, this, Y), i(I), currentRow(NULL) {
-    //    _notify(Y);
-    //}
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, this, Y), i(I), currentRow(NULL) {
+        _notify(Y);
+    }
 
     CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y), i(r.i), currentRow(r.currentRow) {
         y.setNotify(this);
     }
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
+        // We will get notified when y changes, so it is important to change the image first.
+        i = r.i;
         x = r.x;
         y = r.y;
-        i = r.i;
-        currentRow = r.currentRow;
+        //currentRow = r.currentRow;
         return *this;
     }
 
@@ -870,6 +763,13 @@ protected:
 
 };
  
+/** Forward declarations */
+template <class PIXELTYPE>
+class StridedCachedFileImageIterator;
+
+template <class PIXELTYPE>
+class ConstStridedCachedFileImageIterator;
+
 /** Regular CachedFileImage traverser. */
 template <class PIXELTYPE>
 class CachedFileImageIterator
@@ -893,6 +793,8 @@ public:
     : Base(0, 0, NULL)
     {}
 
+    friend class StridedCachedFileImageIterator<PIXELTYPE>;
+    friend class ConstStridedCachedFileImageIterator<PIXELTYPE>;
 };
 
 /** Traverser over const CachedFileImage. */
@@ -916,7 +818,8 @@ public:
     {}
 
     ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
-    : Base(rhs.x, rhs.y, rhs.i)
+    //: Base(rhs.x, rhs.y, rhs.i)
+    : Base(rhs)
     {}
 
     ConstCachedFileImageIterator()
@@ -926,9 +829,87 @@ public:
     ConstCachedFileImageIterator &
     operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
     {
+        // We will get notified when y changes so it is important to change i first.
+        Base::i = rhs.i;
         Base::x = rhs.x;
-        // FIXME: This is probably broken because y._y cannot be accessed from here.
-        Base::y._y = rhs.y._y;
+        Base::y = rhs.y;
+        //Base::currentRow = rhs.currentRow;
+        return *this;
+    }
+
+    friend class ConstStridedCachedFileImageIterator<PIXELTYPE>;
+};
+
+/** Regular CachedFileImage traverser. */
+template <class PIXELTYPE>
+class StridedCachedFileImageIterator
+: public CachedFileImageIteratorBase<StridedCachedFileImageIterator<PIXELTYPE>,
+                CachedFileImage<PIXELTYPE>,
+                PIXELTYPE, PIXELTYPE &, PIXELTYPE *, StridedArrayTag>
+// FIXME this needs to be a weak_ptr    ^^^^^^^^^^^
+// in case someone uses the iterator to get a pointer to cached data.
+{
+public:
+
+    typedef CachedFileImageIteratorBase<StridedCachedFileImageIterator,
+            CachedFileImage<PIXELTYPE>,
+            PIXELTYPE, PIXELTYPE &, PIXELTYPE *, StridedArrayTag> Base;
+
+    StridedCachedFileImageIterator(const int x, const int y, CachedFileImage<PIXELTYPE> * const i, const int xstride, const int ystride)
+    : Base(x, y, i, xstride, ystride)
+    {}
+
+    StridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    : Base(r.x(), r.y(), r.i, xstride, ystride)
+    {}
+
+    StridedCachedFileImageIterator()
+    : Base(0, 0, NULL, 1, 1)
+    {}
+
+};
+
+/** Traverser over const CachedFileImage. */
+template <class PIXELTYPE>
+class ConstStridedCachedFileImageIterator
+: public CachedFileImageIteratorBase<ConstStridedCachedFileImageIterator<PIXELTYPE>,
+                const CachedFileImage<PIXELTYPE>,
+                PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *, StridedArrayTag>
+// FIXME this needs to be a weak_ptr          ^^^^^^^^^^^^^^^^^
+// in case someone uses the iterator to get a pointer to cached data.
+{
+public:
+
+    typedef CachedFileImageIteratorBase<ConstStridedCachedFileImageIterator,
+            const CachedFileImage<PIXELTYPE>,
+            PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *, StridedArrayTag> Base;
+    // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
+
+    ConstStridedCachedFileImageIterator(const int x, const int y, const CachedFileImage<PIXELTYPE> * const i, const int xstride, const int ystride)
+    : Base(x, y, i, xstride, ystride)
+    {}
+
+    ConstStridedCachedFileImageIterator(ConstCachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    : Base(r.x(), r.y(), r.i, xstride, ystride)
+    {}
+
+    ConstStridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    : Base(r.x(), r.y(), r.i, xstride, ystride)
+    {}
+
+    ConstStridedCachedFileImageIterator(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
+    : Base(rhs)
+    {}
+
+    ConstStridedCachedFileImageIterator()
+    : Base(0, 0, NULL, 1, 1)
+    {}
+
+    ConstStridedCachedFileImageIterator &
+    operator=(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
+    {
+        Base::x = rhs.x;
+        Base::y = rhs.y;
         Base::i = rhs.i;
         Base::currentRow = rhs.currentRow;
         return *this;
@@ -972,12 +953,12 @@ public:
         resize(width, height, value_type());
     }
 
-    explicit CachedFileImage(difference_type const & size) {
+    explicit CachedFileImage(difference_type const & size, value_type const & d = value_type()) {
         vigra_precondition((size.x >= 0) && (size.y >= 0),
                 "CachedFileImage::CachedIfelImage(Diff2D size): "
                 "size.x and size.y must be >= 0.\n");
         initMembers();
-        resize(size.x, size.y, value_type());
+        resize(size.x, size.y, d);
     }
 
     CachedFileImage(int width, int height, value_type const & d) {
@@ -1915,6 +1896,60 @@ maskImage(CachedFileImage<PixelType> const & img)
     return pair<typename CachedFileImage<PixelType>::const_traverser, 
                 typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(), 
                                                                img.accessor());
+}
+
+template <class PixelType>
+inline pair< ConstStridedCachedFileImageIterator<PixelType>,
+             typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor>
+maskStrideIter(CachedFileImageIterator<PixelType> const & upperLeft, int xstride, int ystride)
+{
+    return pair< ConstStridedCachedFileImageIterator<PixelType>,
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor >
+                (ConstStridedCachedFileImageIterator<PixelType>(upperLeft, xstride, ystride),
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor());
+}
+
+template <class PixelType>
+inline pair< ConstStridedCachedFileImageIterator<PixelType>,
+             typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor>
+maskStrideIter(ConstCachedFileImageIterator<PixelType> const & upperLeft, int xstride, int ystride)
+{
+    return pair< ConstStridedCachedFileImageIterator<PixelType>,
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor >
+                (ConstStridedCachedFileImageIterator<PixelType>(upperLeft, xstride, ystride),
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor());
+}
+
+template <class PixelType>
+inline triple< ConstStridedCachedFileImageIterator<PixelType>,
+             ConstStridedCachedFileImageIterator<PixelType>,
+             typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor>
+maskStrideIterRange(CachedFileImageIterator<PixelType> const & upperLeft,
+                    CachedFileImageIterator<PixelType> const & lowerRight,
+                    int xstride, int ystride)
+{
+    return triple< ConstStridedCachedFileImageIterator<PixelType>,
+                ConstStridedCachedFileImageIterator<PixelType>,
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor >
+                (ConstStridedCachedFileImageIterator<PixelType>(upperLeft, xstride, ystride),
+                ConstStridedCachedFileImageIterator<PixelType>(lowerRight, xstride, ystride),
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor());
+}
+
+template <class PixelType>
+inline triple< ConstStridedCachedFileImageIterator<PixelType>,
+             ConstStridedCachedFileImageIterator<PixelType>,
+             typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor>
+maskStrideIterRange(ConstCachedFileImageIterator<PixelType> const & upperLeft,
+                    ConstCachedFileImageIterator<PixelType> const & lowerRight,
+                    int xstride, int ystride)
+{
+    return triple< ConstStridedCachedFileImageIterator<PixelType>,
+                ConstStridedCachedFileImageIterator<PixelType>,
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor >
+                (ConstStridedCachedFileImageIterator<PixelType>(upperLeft, xstride, ystride),
+                ConstStridedCachedFileImageIterator<PixelType>(lowerRight, xstride, ystride),
+                typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor());
 }
 
 } // namespace vigra
