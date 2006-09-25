@@ -30,12 +30,15 @@ X icc blending
     X do convert in image->pyramid pixel convert functors
 - new seam alg
     X libxmi polygon fill
-    - cfi strided iterators
+    X cfi strided iterators
         lmr before changes: 99.15
         lmr after changes: 97.58
-    - stride 8 mask generation
-    - stride 8 mask polygonization
-    - polygon mask fill
+    X stride 8 mask generation
+    X stride 8 mask polygonization
+    X polygon mask fill
+    - dijkstra polygon vertex interpolation
+    - polygon vertex annealing
+    - code cleanup and comments
 - vigra impex improvements
 - cfi swap policy improvements
 - cache blackLP copyToPyramid/copyFromPyramid?
@@ -43,6 +46,7 @@ X icc blending
 - load/save mask from file
 - vogl's hdr test cases
 - enable all pixel types
+- fix memory estimation messages
 - update version number
 - documentation update
 

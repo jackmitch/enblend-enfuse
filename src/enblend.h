@@ -43,7 +43,6 @@
 #include "vigra/initimage.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/transformimage.hxx"
-#include "vigra_ext/XMIWrapper.h"
 
 using std::cout;
 using std::endl;
@@ -62,8 +61,6 @@ using vigra::inspectImage;
 using vigra::NumericTraits;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
-
-using vigra_ext::copyPaintedSetToImage;
 
 namespace enblend {
 
@@ -251,8 +248,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         bool wraparoundForMask = Wraparound && 
                 (uBB.size().x == inputUnion.size().x);
         EnblendROI mBB;
-        MaskType *mask = createMask<AlphaType, MaskType>(whitePair.second, blackPair.second,
-                uBB, wraparoundForMask, mBB);
+        MaskType *mask = createMask<ImageType, AlphaType, MaskType>(
+                whitePair.first, blackPair.first, whitePair.second, blackPair.second,
+                uBB, iBB, wraparoundForMask, mBB);
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UInt32Image*ubb
         // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -275,7 +273,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo maskInfo("enblend_mask.tif");
         maskInfo.setPosition(uBB.getUL());
         exportImage(srcImageRange(*mask), maskInfo);
-//break;
+break;
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
@@ -533,7 +531,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         blackBB = uBB;
 
     }
-
+/*
     miPoint points[4];
     miGC *pGC;
     miPaintedSet *paintedSet;
@@ -557,6 +555,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
     miDeleteGC(pGC);
     miDeletePaintedSet(paintedSet);
+*/
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {

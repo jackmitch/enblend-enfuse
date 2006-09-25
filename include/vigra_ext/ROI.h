@@ -5,7 +5,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: ROI.h,v 1.2.4.1 2006-09-05 07:39:28 acmihal Exp $
+ *  $Id: ROI.h,v 1.2.4.2 2006-09-25 10:01:11 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
@@ -48,6 +48,10 @@ public:
     ROI(Coord & ul, Coord & size)
 	: m_ul(ul), m_size(size)
     {
+    }
+
+    bool includes(Coord & point) {
+        return ((point.x >= m_ul.x) && (point.y >= m_ul.y) && (point.x < (m_ul.x + m_size.x)) && (point.y < (m_ul.y + m_size.y)));
     }
 
     void set(Coord & ul, Coord & size)

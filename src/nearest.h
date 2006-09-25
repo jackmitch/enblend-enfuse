@@ -267,7 +267,7 @@ void nearestFeatureTransform(bool wraparound,
     sy = src_lowerright;
     send = src_upperleft;
     dnfcy = dnfColumn->lowerRight();
-    dy = dest_upperleft + (src_lowerright - src_upperleft);
+    dy = dest_upperleft + Diff2D(w, h);
     for (; sy.y > send.y;) {
         --sy.y;
         --dnfcy.y;
@@ -407,7 +407,7 @@ void nearestFeatureTransform(bool wraparound,
     smidpoint = src_upperleft + Diff2D(w/2, h/2);
     dnfcy = dnfColumn->lowerRight();
     dnfly = dnfLeft->lowerRight();
-    dy = dest_upperleft + (src_lowerright - src_upperleft);
+    dy = dest_upperleft + Diff2D(w, h);
     for (; sy.y > send.y;) {
         --sy.y;
         --dnfcy.y;
@@ -474,7 +474,7 @@ void nearestFeatureTransform(bool wraparound,
                     // Following line only necessary for advanced mask generation.
                     //*dnflx = distPotentialFeature;
                     // Recolor dx.
-                    da.set(dx((potentialFeatureList.get_current() - dx.x), 0), dx);
+                    da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
                 }
             }
         }
