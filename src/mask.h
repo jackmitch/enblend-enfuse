@@ -25,9 +25,11 @@
 #endif
 
 #include <iostream>
+#include <ext/slist>
 
 #include "common.h"
 #include "nearest.h"
+#include "path.h"
 
 #include "vigra/contourcirculator.hxx"
 #include "vigra/error.hxx"
@@ -42,6 +44,7 @@
 
 using std::make_pair;
 using std::vector;
+using __gnu_cxx::slist;
 
 using vigra::combineThreeImages;
 using vigra::combineTwoImages;
@@ -164,7 +167,7 @@ MaskType *createMask(ImageType *white,
     int distance = 4;
     Point2D borderUL(1,1);
     Point2D borderLR(mask->width()-1, mask->height()-1);
-    vector<vector<pair<bool, Point2D> > *> snakes;
+    vector<slist<pair<bool, Point2D> > *> snakes;
     MaskIteratorType my = mask->upperLeft() + Diff2D(1,1);
     MaskIteratorType mend = mask->lowerRight() + Diff2D(-1, -1);
     for (int y = 1; my.y < mend.y; ++y, ++my.y) {
@@ -177,7 +180,7 @@ MaskType *createMask(ImageType *white,
                 // Found the corner of a previously unvisited white region.
                 // Create a snake to hold the border of this region.
                 vector<Point2D> excessPoints;
-                vector<pair<bool, Point2D> > *snake = new vector<pair<bool, Point2D> >();
+                slist<pair<bool, Point2D> > *snake = new slist<pair<bool, Point2D> >();
                 snakes.push_back(snake);
 
                 // Walk around border of white region.
@@ -199,13 +202,13 @@ MaskType *createMask(ImageType *white,
                                 || (currentPoint.x == borderUL.x && currentPoint.y == borderLR.y)
                                 || (currentPoint.x == borderLR.x && currentPoint.y == borderUL.y)
                                 || (currentPoint.x == borderLR.x && currentPoint.y == borderLR.y)) {
-                            snake->push_back(make_pair(false, currentPoint));
+                            snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         }
                         else if (!lastPointFrozen
                                 || ((nextPoint.x != borderUL.x) && (nextPoint.x != borderLR.x)
                                         && (nextPoint.y != borderUL.y) && (nextPoint.y != borderLR.y))) {
-                            snake->push_back(make_pair(false, currentPoint));
+                            snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         }
                         lastPointFrozen = true;
@@ -214,7 +217,7 @@ MaskType *createMask(ImageType *white,
                         // Current point is not frozen.
                         // FIXME need to fix painting routine below if pixels are to be skipped.
                         if ((distanceLastPoint % distance) == 0) {
-                            snake->push_back(make_pair(true, currentPoint));
+                            snake->push_front(make_pair(true, currentPoint));
                             distanceLastPoint = 0;
                         } else {
                             excessPoints.push_back(currentPoint);
@@ -225,7 +228,7 @@ MaskType *createMask(ImageType *white,
                 } while (crack != crackEnd);
 
                 // Paint the border so this region will not be found again
-                for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+                for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                          vertexIterator != snake->end(); ++vertexIterator) {
                     (*mask)[vertexIterator->second] = NumericTraits<MaskPixelType>::zero();
                 }
@@ -247,10 +250,10 @@ MaskType *createMask(ImageType *white,
             ifThenElse(Arg1() || Arg2(), Param(NumericTraits<MaskPixelType>::max()), Param(NumericTraits<MaskPixelType>::zero())));
 
     // Mark movable snake vertices (vertices inside union region)
-    for (vector<vector<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
-        vector<pair<bool, Point2D> > *snake = *snakeIterator;
-        for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator) {
             if (vertexIterator->first &&
                     ((*mask)(vertexIterator->second.x, vertexIterator->second.y) == NumericTraits<MaskPixelType>::zero())) {
@@ -264,10 +267,10 @@ MaskType *createMask(ImageType *white,
     delete mask;
 
     // Convert snake vertices to root-relative vertices
-    for (vector<vector<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
-        vector<pair<bool, Point2D> > *snake = *snakeIterator;
-        for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator) {
             vertexIterator->second = uBB.getUL() + (8 * (vertexIterator->second + Diff2D(-1,-1)));
         }
@@ -278,12 +281,12 @@ MaskType *createMask(ImageType *white,
     int rightExtent = NumericTraits<int>::min();
     int topExtent = NumericTraits<int>::max();
     int bottomExtent = NumericTraits<int>::min();
-    for (vector<vector<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
-        vector<pair<bool, Point2D> > *snake = *snakeIterator;
-        vector<pair<bool, Point2D> >::iterator lastVertex = snake->end();
-        --lastVertex;
-        for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+        slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
+        //--lastVertex;
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator) {
             if (lastVertex->first || vertexIterator->first) {
                 leftExtent = std::min(leftExtent, lastVertex->second.x);
@@ -323,6 +326,8 @@ MaskType *createMask(ImageType *white,
                      destIter(mismatchImage.upperLeft() + uvBBOffset),
                      abs(Arg1() - Arg2()));
     // Areas where only one image contribute have maximum cost
+    transformImage(srcImageRange(mismatchImage), destImage(mismatchImage),
+                     ifThenElse(Arg1() > Param(10), Arg1(), Param(NumericTraits<MismatchImagePixelType>::one())));
     combineThreeImages(uvBB.apply(srcImageRange(*whiteAlpha)),
                      uvBB.apply(srcImage(*blackAlpha)),
                      srcIter(mismatchImage.upperLeft() + uvBBOffset),
@@ -330,27 +335,64 @@ MaskType *createMask(ImageType *white,
                      ifThenElse(Arg1() ^ Arg2(), Param(NumericTraits<MismatchImagePixelType>::max()), Arg3()));
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
-    for (vector<vector<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
-        vector<pair<bool, Point2D> > *snake = *snakeIterator;
-        vector<pair<bool, Point2D> >::iterator lastVertex = snake->end();
-        --lastVertex;
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+        slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
+        //--lastVertex;
         bool lastVertexInVBB = vBB.includes(lastVertex->second);
 
-        for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
             vertexIterator != snake->end(); ++vertexIterator) {
             Point2D point = vertexIterator->second;
             bool pointInVBB = vBB.includes(point);
 
             if (lastVertexInVBB && pointInVBB && (lastVertex->first || vertexIterator->first)) {
-                // FIXME do dijkstra between these points
-
                 // Move point relative to vBB
                 point -= vBB.getUL();
-                mismatchImage(point.x, point.y) = vertexIterator->first ? 128 : 200;
+                //mismatchImage[point] = vertexIterator->first ? 128 : 200;
 
                 Point2D lastPoint = lastVertex->second - vBB.getUL();
-                mismatchImage(lastPoint.x, lastPoint.y) = lastVertex->first ? 128 : 200;
+                //mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
+
+                EnblendROI pointSurround;
+                pointSurround.setCorners(point - Diff2D(50,50), point + Diff2D(50,50));
+                //cout << "pointSurroundFirst=" << pointSurround << endl;
+                EnblendROI lastPointSurround;
+                lastPointSurround.setCorners(lastPoint - Diff2D(50,50), lastPoint + Diff2D(50,50));
+                //cout << "lastPointSurroundFirst=" << lastPointSurround << endl;
+                pointSurround.unite(lastPointSurround, pointSurround);
+                //cout << "union=" << pointSurround << endl;
+                EnblendROI withinVBB;
+                withinVBB.setCorners(Diff2D(0,0), vBB.size());
+                pointSurround.intersect(withinVBB, pointSurround);
+                //cout << "intersect=" << pointSurround << endl;
+
+                //cout << "vBB=" << vBB << endl;
+                //cout << "pointSurround=" << pointSurround << endl;
+                //cout << "point=" << point << " moved=" << (point-pointSurround.getUL()) << endl;
+                //cout << "lastPoint=" << lastPoint << " moved=" << (lastPoint-pointSurround.getUL()) << endl;
+
+                vector<Point2D> *shortPath = minCostPath(pointSurround.apply(srcImageRange(mismatchImage)),
+                        point - pointSurround.getUL(),
+                        lastPoint - pointSurround.getUL());
+
+                for (vector<Point2D>::iterator shortPathPoint = shortPath->begin();
+                        shortPathPoint != shortPath->end();
+                        ++shortPathPoint) {
+                    mismatchImage[*shortPathPoint + pointSurround.getUL()] = 50;
+                    snake->insert_after(lastVertex, make_pair(false, *shortPathPoint + pointSurround.getUL() + vBB.getUL()));
+                }
+
+                delete shortPath;
+
+                mismatchImage[point] = vertexIterator->first ? 128 : 200;
+                mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
+
+                // FIXME do dijkstra between these points
+                // route from point to lastPoint
+                // backtrack when solution is found from lastPoint to point
+                // insert new vertices before vertexIterator
             }
             else if (pointInVBB) {
                 point -= vBB.getUL();
@@ -374,14 +416,14 @@ MaskType *createMask(ImageType *white,
 
     mask = new MaskType(uBB.size());
 
-    for (vector<vector<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
-        vector<pair<bool, Point2D> > *snake = *snakeIterator;
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
 
         miPoint *points = new miPoint[snake->size()];
 
         int i = 0;
-        for (vector<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator, ++i) {
             Point2D vertex = vertexIterator->second - uBB.getUL();
             points[i].x = vertex.x;
