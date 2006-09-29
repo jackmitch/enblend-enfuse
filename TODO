@@ -37,10 +37,13 @@ X EnblendNumericTraits
     X stride 8 mask generation
     X stride 8 mask polygonization
     X polygon mask fill
-    - dijkstra polygon vertex interpolation
+    X dijkstra polygon vertex interpolation - at half resolution
     - polygon vertex annealing
     - code cleanup and comments
     - Progress indicators for advanced mask generation
+    - options to control adv mask gen quality
+    - output of quality improvement
+    - option to revert to old mask algorithm
 - vigra impex improvements
 - cfi swap policy improvements
 - cache blackLP copyToPyramid/copyFromPyramid?

@@ -28,6 +28,7 @@
 #include <ext/slist>
 
 #include "common.h"
+//#include "anneal.h"
 #include "nearest.h"
 #include "path.h"
 
@@ -115,7 +116,7 @@ MaskType *createMask(ImageType *white,
     //        maskIter(whiteAlpha->upperLeft() + uBB.getUL()),
     //        NumericTraits<MaskPixelType>::one());
     initImageIf(stride8_initBB.apply(destImageRange(*maskInit)),
-            maskStrideIter(whiteAlpha->upperLeft() + uBB.getUL(), 8, 8),
+            stride(8, 8, maskIter(whiteAlpha->upperLeft() + uBB.getUL())),
             NumericTraits<MaskPixelType>::one());
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
@@ -125,7 +126,7 @@ MaskType *createMask(ImageType *white,
     //        destImage(*maskInit),
     //        (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
     transformImageIf(stride8_initBB.apply(srcImageRange(*maskInit)),
-            maskStrideIter(blackAlpha->upperLeft() + uBB.getUL(), 8, 8),
+            stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.getUL())),
             stride8_initBB.apply(destImage(*maskInit)),
             (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
 
@@ -244,8 +245,8 @@ MaskType *createMask(ImageType *white,
     
     // Fill mask with union region
     mask->init(NumericTraits<MaskPixelType>::zero());
-    combineTwoImages(maskStrideIterRange(whiteAlpha->upperLeft() + uBB.getUL(), whiteAlpha->upperLeft() + uBB.getLR(), 8, 8),
-            maskStrideIter(blackAlpha->upperLeft() + uBB.getUL(), 8, 8),
+    combineTwoImages(stride(8, 8, srcIterRange(whiteAlpha->upperLeft() + uBB.getUL(), whiteAlpha->upperLeft() + uBB.getLR())),
+            stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.getUL())),
             destIter(mask->upperLeft() + Diff2D(1,1)),
             ifThenElse(Arg1() || Arg2(), Param(NumericTraits<MaskPixelType>::max()), Param(NumericTraits<MaskPixelType>::zero())));
 
@@ -318,21 +319,37 @@ MaskType *createMask(ImageType *white,
     // Offset between vBB and uvBB
     Diff2D uvBBOffset = uvBB.getUL() - vBB.getUL();
 
+    // Push ul corner of vBB so that there is an even number of pixels between vBB and uvBB.
+    // This is necessary for striding by two over vBB.
+    if (uvBBOffset.x % 2) vBB.setUpperLeft(vBB.getUL() + Diff2D(-1,0));
+    if (uvBBOffset.y % 2) vBB.setUpperLeft(vBB.getUL() + Diff2D(0,-1));
+    uvBBOffset = uvBB.getUL() - vBB.getUL();
+    Diff2D uvBBOffsetHalf = uvBBOffset / 2;
+
     // Create stitch mismatch image
     typedef UInt8 MismatchImagePixelType;
-    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage(vBB.size(), NumericTraits<MismatchImagePixelType>::max());
-    combineTwoImages(uvBB.apply(srcImageRange(*white, RGBToGrayAccessor<ImagePixelType>())),
-                     uvBB.apply(srcImage(*black, RGBToGrayAccessor<ImagePixelType>())),
-                     destIter(mismatchImage.upperLeft() + uvBBOffset),
+    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
+            NumericTraits<MismatchImagePixelType>::zero());
+    //cout << "mismatch image w=" << mismatchImage.width() << " h=" << mismatchImage.height() << endl;
+    //cout << "uvBBOffset =" << uvBBOffset << " half=" << uvBBOffsetHalf << endl;
+    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToGrayAccessor<ImagePixelType>()))),
+                     stride(2, 2, uvBB.apply(srcImage(*black, RGBToGrayAccessor<ImagePixelType>()))),
+                     destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      abs(Arg1() - Arg2()));
-    // Areas where only one image contribute have maximum cost
     transformImage(srcImageRange(mismatchImage), destImage(mismatchImage),
                      ifThenElse(Arg1() > Param(10), Arg1(), Param(NumericTraits<MismatchImagePixelType>::one())));
-    combineThreeImages(uvBB.apply(srcImageRange(*whiteAlpha)),
-                     uvBB.apply(srcImage(*blackAlpha)),
-                     srcIter(mismatchImage.upperLeft() + uvBBOffset),
-                     destIter(mismatchImage.upperLeft() + uvBBOffset),
+    // Areas where only one image contribute have maximum cost
+    combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
+                     stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
+                     srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+                     destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      ifThenElse(Arg1() ^ Arg2(), Param(NumericTraits<MismatchImagePixelType>::max()), Arg3()));
+
+    // Anneal snakes over mismatch image
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+            snakeIterator != snakes.end(); ++snakeIterator) {
+        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+    };
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
@@ -340,31 +357,40 @@ MaskType *createMask(ImageType *white,
         slist<pair<bool, Point2D> > *snake = *snakeIterator;
         slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
         //--lastVertex;
-        bool lastVertexInVBB = vBB.includes(lastVertex->second);
+        //bool lastVertexInVBB = vBB.includes(lastVertex->second);
 
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
             vertexIterator != snake->end(); ++vertexIterator) {
             Point2D point = vertexIterator->second;
-            bool pointInVBB = vBB.includes(point);
+            //bool pointInVBB = vBB.includes(point);
 
-            if (lastVertexInVBB && pointInVBB && (lastVertex->first || vertexIterator->first)) {
-                // Move point relative to vBB
-                point -= vBB.getUL();
+            if (/*lastVertexInVBB && pointInVBB &&*/ (lastVertex->first || vertexIterator->first)) {
+                // FIXME do dijkstra between these points
+                // route from point to lastPoint
+                // backtrack when solution is found from lastPoint to point
+                // insert new vertices before vertexIterator
+
+                // Move point relative to vBB stride 2
+                //cout << "point=" << point;
+                point = (point - vBB.getUL()) / 2;
+                //cout << " moved=" << point << endl;
                 //mismatchImage[point] = vertexIterator->first ? 128 : 200;
 
-                Point2D lastPoint = lastVertex->second - vBB.getUL();
+                // Last point relative to vBB stride 2
+                Point2D lastPoint = (lastVertex->second - vBB.getUL()) / 2;
                 //mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
 
+                int radius = 25;
                 EnblendROI pointSurround;
-                pointSurround.setCorners(point - Diff2D(50,50), point + Diff2D(50,50));
+                pointSurround.setCorners(point - Diff2D(radius,radius), point + Diff2D(radius,radius));
                 //cout << "pointSurroundFirst=" << pointSurround << endl;
                 EnblendROI lastPointSurround;
-                lastPointSurround.setCorners(lastPoint - Diff2D(50,50), lastPoint + Diff2D(50,50));
+                lastPointSurround.setCorners(lastPoint - Diff2D(radius,radius), lastPoint + Diff2D(radius,radius));
                 //cout << "lastPointSurroundFirst=" << lastPointSurround << endl;
                 pointSurround.unite(lastPointSurround, pointSurround);
                 //cout << "union=" << pointSurround << endl;
                 EnblendROI withinVBB;
-                withinVBB.setCorners(Diff2D(0,0), vBB.size());
+                withinVBB.setCorners(Diff2D(0,0), (vBB.size() + Diff2D(1,1)) / 2);
                 pointSurround.intersect(withinVBB, pointSurround);
                 //cout << "intersect=" << pointSurround << endl;
 
@@ -381,7 +407,7 @@ MaskType *createMask(ImageType *white,
                         shortPathPoint != shortPath->end();
                         ++shortPathPoint) {
                     mismatchImage[*shortPathPoint + pointSurround.getUL()] = 50;
-                    snake->insert_after(lastVertex, make_pair(false, *shortPathPoint + pointSurround.getUL() + vBB.getUL()));
+                    snake->insert_after(lastVertex, make_pair(false, ((*shortPathPoint + pointSurround.getUL()) * 2) + vBB.getUL()));
                 }
 
                 delete shortPath;
@@ -389,18 +415,14 @@ MaskType *createMask(ImageType *white,
                 mismatchImage[point] = vertexIterator->first ? 128 : 200;
                 mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
 
-                // FIXME do dijkstra between these points
-                // route from point to lastPoint
-                // backtrack when solution is found from lastPoint to point
-                // insert new vertices before vertexIterator
             }
-            else if (pointInVBB) {
-                point -= vBB.getUL();
-                mismatchImage(point.x, point.y) = 90;
-            }
+            //else if (pointInVBB) {
+            //    point = (point - vBB.getUL()) / 2;
+            //    mismatchImage[point] = 90;
+            //}
 
             lastVertex = vertexIterator;
-            lastVertexInVBB = pointInVBB;
+            //lastVertexInVBB = pointInVBB;
         }
     }
 
@@ -505,7 +527,7 @@ MaskType *createMask(ImageType *white,
                                      lastMulticolorRow.y - mask->upperLeft().y));
     }
 
-    //if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
+    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Mask transition line bounding box: ("
              << mBB.getUL().x
              << ", "
@@ -515,7 +537,7 @@ MaskType *createMask(ImageType *white,
              << ", "
              << mBB.getLR().y
              << ")" << endl;
-    //}
+    }
 
     return mask;
 
