@@ -28,7 +28,7 @@
 #include <ext/slist>
 
 #include "common.h"
-//#include "anneal.h"
+#include "anneal.h"
 #include "nearest.h"
 #include "path.h"
 
@@ -349,6 +349,14 @@ MaskType *createMask(ImageType *white,
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
         slist<pair<bool, Point2D> > *snake = *snakeIterator;
+
+        // Move snake points to mismatchImage-relative coordinates
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+                vertexIterator != snake->end(); ++vertexIterator) {
+            vertexIterator->second = (vertexIterator->second - vBB.getUL()) / 2;
+        }
+
+        annealSnake(&mismatchImage, snake);
     };
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
@@ -372,12 +380,13 @@ MaskType *createMask(ImageType *white,
 
                 // Move point relative to vBB stride 2
                 //cout << "point=" << point;
-                point = (point - vBB.getUL()) / 2;
+                //point = (point - vBB.getUL()) / 2;
                 //cout << " moved=" << point << endl;
                 //mismatchImage[point] = vertexIterator->first ? 128 : 200;
 
                 // Last point relative to vBB stride 2
-                Point2D lastPoint = (lastVertex->second - vBB.getUL()) / 2;
+                //Point2D lastPoint = (lastVertex->second - vBB.getUL()) / 2;
+                Point2D lastPoint = lastVertex->second;
                 //mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
 
                 int radius = 25;
@@ -407,7 +416,7 @@ MaskType *createMask(ImageType *white,
                         shortPathPoint != shortPath->end();
                         ++shortPathPoint) {
                     mismatchImage[*shortPathPoint + pointSurround.getUL()] = 50;
-                    snake->insert_after(lastVertex, make_pair(false, ((*shortPathPoint + pointSurround.getUL()) * 2) + vBB.getUL()));
+                    snake->insert_after(lastVertex, make_pair(false, (*shortPathPoint + pointSurround.getUL())));
                 }
 
                 delete shortPath;
@@ -416,6 +425,7 @@ MaskType *createMask(ImageType *white,
                 mismatchImage[lastPoint] = lastVertex->first ? 128 : 200;
 
             }
+
             //else if (pointInVBB) {
             //    point = (point - vBB.getUL()) / 2;
             //    mismatchImage[point] = 90;
@@ -423,6 +433,11 @@ MaskType *createMask(ImageType *white,
 
             lastVertex = vertexIterator;
             //lastVertexInVBB = pointInVBB;
+        }
+
+        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+            vertexIterator != snake->end(); ++vertexIterator) {
+            vertexIterator->second = (vertexIterator->second * 2) + vBB.getUL();
         }
     }
 

@@ -44,6 +44,7 @@ X EnblendNumericTraits
     - options to control adv mask gen quality
     - output of quality improvement
     - option to revert to old mask algorithm
+- replace EnblendROI with vigra::Rect2D
 - vigra impex improvements
 - cfi swap policy improvements
 - cache blackLP copyToPyramid/copyFromPyramid?
