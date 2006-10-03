@@ -1958,6 +1958,7 @@ stride(int xstride, int ystride, vigra::triple<CachedFileImageIterator<PixelType
     Diff2D diff = image.second - image.first;
     if (diff.x % xstride) diff.x += (xstride - (diff.x % xstride));
     if (diff.y % ystride) diff.y += (ystride - (diff.y % ystride));
+    //cout << "stride(" << xstride << ", " << ystride << ", " << (image.second - image.first) << ", " << diff << ")" << endl;
     return vigra::make_triple(StridedCachedFileImageIterator<PixelType>(image.first, xstride, ystride),
                        StridedCachedFileImageIterator<PixelType>(image.first + diff, xstride, ystride),
                        image.third);

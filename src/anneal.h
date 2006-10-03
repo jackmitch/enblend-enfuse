@@ -162,6 +162,10 @@ public:
         return totalCost;
     }
 
+    int numMoveableVertices() const {
+        return moveablePointIndices.size();
+    }
+
     vector<Point2D>& getCurrentPoints() {
         return currentPoints;
     }
@@ -223,8 +227,10 @@ protected:
 template <typename CostImage>
 double AnnealConfiguration<CostImage>::evalSegmentCost(const Point2D& pointA, const Point2D &pointB) const {
     typedef typename CostImage::const_traverser CostIterator;
+    typedef typename CostImage::PixelType CostType;
 
     double cost = 0.0;
+    int lineLength = 0;
 
     if (pointA != pointB) {
         LineIterator<CostIterator> lineStart(costImage->upperLeft() + pointA,
@@ -233,12 +239,18 @@ double AnnealConfiguration<CostImage>::evalSegmentCost(const Point2D& pointA, co
                                            costImage->upperLeft() + pointB);
 
         do {
-            cost += *lineStart;
+            CostType pointCost = *lineStart;
+            if (pointCost == NumericTraits<CostType>::max()) cost += 20 * pointCost;
+            else cost += 2 * pointCost;
+            ++lineLength;
             ++lineStart;
         } while (lineStart != lineEnd);
     }
 
-    return cost;
+    if (lineLength < 30) return cost;
+    if (lineLength < 50) return cost + (1 << (lineLength-30));
+    else return cost + (1 << 20);
+    //return cost + (1 << (std::min(20, lineLength-20)));
 };
 
 template <typename CostImage>
@@ -278,7 +290,7 @@ double AnnealConfiguration<CostImage>::step() {
     double distanceDeltaCost = (cacheMovePoint - originalLocation).magnitude()
                              - (currentLocation - originalLocation).magnitude();
 
-    cacheDeltaCost = deltaCost + distanceDeltaCost;
+    cacheDeltaCost = deltaCost + 1.25 * distanceDeltaCost;
 
     return (cacheDeltaCost / totalCost);
 };
@@ -290,21 +302,21 @@ void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) 
 
     uniform_01<mt19937> thermal(Twister);
 
-    unsigned int stepsPerIteration = 256 * snake->size();
+    unsigned int stepsPerIteration = 256 * cfg.numMoveableVertices();
 
     cout << "initial cost=" << cfg.getCost() << endl;
     cout << "stepsPerIteration=" << stepsPerIteration << endl;
 
     double initialTemperature = 1.0;
-    double temperatureCutoff = 0.0005;
+    double temperatureCutoff = 0.01;
     double temperatureDampening = 0.85;
     double temperature = initialTemperature;
 
     while (temperature > temperatureCutoff) {
-        unsigned int stepSize = 5 + (unsigned int)(temperature * 70);
+        unsigned int stepSize = 3 + (unsigned int)(temperature * 20 /*.20 * std::min(ci->width(), ci->height())*/);
         cfg.setMaxStepSize(stepSize);
         unsigned int acceptedSteps = 0;
-        double acceptCoefficient = 0.05 + (0.15 * temperature);
+        double acceptCoefficient = 0.05 + (0.10 * temperature);
         for (unsigned int i = 0; i < stepsPerIteration; i++) {
             double percentDifference = cfg.step();
             double acceptProbability = acceptCoefficient * exp(-5.0 * percentDifference / temperature);

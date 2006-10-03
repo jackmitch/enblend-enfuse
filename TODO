@@ -38,7 +38,8 @@ X EnblendNumericTraits
     X stride 8 mask polygonization
     X polygon mask fill
     X dijkstra polygon vertex interpolation - at half resolution
-    - polygon vertex annealing
+    X polygon vertex annealing
+    - make it work with wraparound
     - code cleanup and comments
     - Progress indicators for advanced mask generation
     - options to control adv mask gen quality

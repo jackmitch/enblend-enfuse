@@ -69,8 +69,10 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
     // A  8  9
     // 2  0  1
     // 6  4  5
-    const unsigned char neighborArray[] = {0xA, 8, 9, 1, 5, 4, 6, 2};
-    const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
+    //const unsigned char neighborArray[] = {0xA, 8, 9, 1, 5, 4, 6, 2};
+    const unsigned char neighborArray[] = {0xA, 1, 6, 8, 5, 2, 9, 4};
+    //const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
+    const unsigned char neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
 
     UInt8Image *pathNextHop = new UInt8Image(w, h);
     WorkingImageType *costSoFar = new WorkingImageType(w, h, NumericTraits<WorkingPixelType>::max());
@@ -81,8 +83,9 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
     //cout << "startingPoint=" << startingPoint << endl;
     //cout << "endingPoint=" << endingPoint << endl;
 
-    (*costSoFar)[startingPoint] = ca(cost_upperleft + startingPoint);
-    pq->push(startingPoint);
+    (*costSoFar)[endingPoint] = std::max(NumericTraits<WorkingPixelType>::one(),
+                                           NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + endingPoint)));
+    pq->push(endingPoint);
 
     while (!pq->empty()) {
         Point2D top = pq->top();
@@ -90,7 +93,7 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
 
         //cout << "visiting point=" << top << endl;
 
-        if (top != endingPoint) {
+        if (top != startingPoint) {
             WorkingPixelType costToTop = (*costSoFar)[top];
 
             //cout << "costToTop = " << costToTop << endl;
@@ -118,9 +121,10 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
                 //cout << "neighborPreviousCost=" << neighborPreviousCost << endl;
                 if (neighborPreviousCost != NumericTraits<WorkingPixelType>::max()) continue;
 
-                WorkingPixelType neighborCost = ca(cost_upperleft + neighborPoint);
+                WorkingPixelType neighborCost = std::max(NumericTraits<WorkingPixelType>::one(),
+                                                         NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
                 //cout << "neighborCost=" << neighborCost << endl;
-                if (neighborCost == NumericTraits<CostPixelType>::max()) continue;
+                //if (neighborCost == NumericTraits<CostPixelType>::max()) continue;
 
                 WorkingPixelType newNeighborCost = neighborCost + costToTop;
                 if (newNeighborCost < neighborPreviousCost) {
@@ -133,15 +137,16 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
         }
         else {
             // If yes then follow back to beginning using pathNextHop
-            unsigned char nextHop = 0;
-            do {
-                result->push_back(top);
-                nextHop = (*pathNextHop)[top];
+            // include neither start nor end point in result
+            unsigned char nextHop = (*pathNextHop)[top];
+            while (nextHop != 0) {
                 if (nextHop & 0x8) --top.y;
                 if (nextHop & 0x4) ++top.y;
                 if (nextHop & 0x2) --top.x;
                 if (nextHop & 0x1) ++top.x;
-            } while (nextHop != 0);
+                nextHop = (*pathNextHop)[top];
+                if (nextHop != 0) result->push_back(top);
+            }
             break;
         }
     }
