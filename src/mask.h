@@ -377,10 +377,16 @@ MaskType *createMask(ImageType *white,
             NumericTraits<MismatchImagePixelType>::max());
 
     // Areas other than intersection region have maximum cost
-    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
-                     stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
+    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
+                     stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-                     ifThenElse(Arg1() & Arg2(), Param(NumericTraits<MismatchImagePixelType>::one()),
+                     ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
+                            Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
+    combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
+                     stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
+                     srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+                     destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+                     ifThenElse(Arg1() & Arg2(), Arg3(),
                                                  Param(NumericTraits<MismatchImagePixelType>::max())));
 
     // Anneal snakes over mismatch image
@@ -398,31 +404,71 @@ MaskType *createMask(ImageType *white,
 
         slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ++vertexIterator) {
-            if (vertexIterator->first || lastVertex->first) {
-                    mismatchImage[vertexIterator->second] = vertexIterator->first ? 200 : 230;
-                    mismatchImage[lastVertex->second] = lastVertex->first ? 200 : 230;
+                vertexIterator != snake->end(); ) {
+            if (vertexIterator->first &&
+                    (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
+                // Vertex is still in max-cost region. Delete it.
+                if (vertexIterator == snake->begin()) {
+                    snake->pop_front();
+                    vertexIterator = snake->begin();
+                }
+                else {
+                    vertexIterator = snake->erase_after(lastVertex);
+                }
+                bool needsBreak = false;
+                if (vertexIterator == snake->end()) {
+                    vertexIterator = snake->begin();
+                    needsBreak = true;
+                }
+                // vertexIterator now points to next entry.
+
+                if (!(lastVertex->first || vertexIterator->first)) {
+                    // We deleted an entire range of moveable points between two nonmoveable points.
+                    // insert dummy point after lastVertex so dijkstra can work over this range.
+                    if (vertexIterator == snake->begin()) {
+                        snake->push_front(make_pair(true, vertexIterator->second));
+                        lastVertex = snake->begin();
+                    } else {
+                        lastVertex = snake->insert_after(lastVertex, make_pair(true, vertexIterator->second));
+                    }
+                }
+
+                if (needsBreak) break;
             }
-            lastVertex = vertexIterator;
+            else {
+                lastVertex = vertexIterator;
+                ++vertexIterator;
+            }
         }
+
+        //lastVertex = snake->previous(snake->end());
+        //for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
+        //        vertexIterator != snake->end(); ++vertexIterator) {
+        //    if (vertexIterator->first || lastVertex->first) {
+        //            mismatchImage[vertexIterator->second] = vertexIterator->first ? 200 : 230;
+        //            mismatchImage[lastVertex->second] = lastVertex->first ? 200 : 230;
+        //    }
+        //    lastVertex = vertexIterator;
+        //}
     };
 
-    ImageExportInfo annealInfo("enblend_anneal.tif");
-    exportImage(srcImageRange(mismatchImage), annealInfo);
+    //ImageExportInfo annealInfo("enblend_anneal.tif");
+    //exportImage(srcImageRange(mismatchImage), annealInfo);
 
-    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
-                     stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
-                     destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-                     ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
-                            Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
+    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
+    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
+    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
+    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
     //transformImage(srcImageRange(mismatchImage), destImage(mismatchImage),
     //                 ifThenElse(Arg1() > Param(10), Arg1(), Param(NumericTraits<MismatchImagePixelType>::one())));
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
                      stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
                      srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-                     ifThenElse(Arg1() ^ Arg2(), Param(NumericTraits<MismatchImagePixelType>::max()), Arg3()));
-                            //ifThenElse(Arg1(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::one()))));
+                     ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
+                     //ifThenElse(Arg1() ^ Arg2(), Param(NumericTraits<MismatchImagePixelType>::max()),
+                     //       ifThenElse(Arg1(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::one()))));
 
     int snakeNumber = 0;
     //for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();

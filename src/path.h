@@ -70,11 +70,11 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
     // 2  0  1
     // 6  4  5
     //const unsigned char neighborArray[] = {0xA, 8, 9, 1, 5, 4, 6, 2};
-    const unsigned char neighborArray[] = {0xA, 1, 6, 8, 5, 2, 9, 4};
+    const UInt8 neighborArray[] = {0xA, 1, 6, 8, 5, 2, 9, 4};
     //const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
-    const unsigned char neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
+    const UInt8 neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
 
-    UInt8Image *pathNextHop = new UInt8Image(w, h);
+    UInt8Image *pathNextHop = new UInt8Image(w, h, UInt8(0));
     WorkingImageType *costSoFar = new WorkingImageType(w, h, NumericTraits<WorkingPixelType>::max());
     PQ *pq = new PQ(PathCompareFunctor<Point2D, WorkingImageType>(costSoFar));
     vector<Point2D> *result = new vector<Point2D>;
@@ -101,7 +101,7 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
             // For each 8-neighbor of top with costSoFar==0 do relax
             for (int i = 0; i < 8; i++) {
                 // get the negihbor;
-                unsigned char neighborDirection = neighborArray[i];
+                UInt8 neighborDirection = neighborArray[i];
                 Point2D neighborPoint = top;
                 if (neighborDirection & 0x8) --neighborPoint.y;
                 if (neighborDirection & 0x4) ++neighborPoint.y;
@@ -124,7 +124,12 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
                 WorkingPixelType neighborCost = std::max(NumericTraits<WorkingPixelType>::one(),
                                                          NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
                 //cout << "neighborCost=" << neighborCost << endl;
-                //if (neighborCost == NumericTraits<CostPixelType>::max()) continue;
+                if (neighborCost == NumericTraits<CostPixelType>::max()) neighborCost <<= 16;
+
+                if ((i & 1) == 0) {
+                    // neighbor is diagonal
+                    neighborCost *= 1.4;
+                }
 
                 WorkingPixelType newNeighborCost = neighborCost + costToTop;
                 if (newNeighborCost < neighborPreviousCost) {
@@ -138,7 +143,7 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
         else {
             // If yes then follow back to beginning using pathNextHop
             // include neither start nor end point in result
-            unsigned char nextHop = (*pathNextHop)[top];
+            UInt8 nextHop = (*pathNextHop)[top];
             while (nextHop != 0) {
                 if (nextHop & 0x8) --top.y;
                 if (nextHop & 0x4) ++top.y;

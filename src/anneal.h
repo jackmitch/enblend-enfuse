@@ -316,7 +316,7 @@ void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) 
         unsigned int stepSize = 3 + (unsigned int)(temperature * 20 /*.20 * std::min(ci->width(), ci->height())*/);
         cfg.setMaxStepSize(stepSize);
         unsigned int acceptedSteps = 0;
-        double acceptCoefficient = 0.05 + (0.10 * temperature);
+        double acceptCoefficient = 0.02 + (0.20 * temperature);
         for (unsigned int i = 0; i < stepsPerIteration; i++) {
             double percentDifference = cfg.step();
             double acceptProbability = acceptCoefficient * exp(-5.0 * percentDifference / temperature);
