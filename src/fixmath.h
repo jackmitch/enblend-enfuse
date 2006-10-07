@@ -261,9 +261,10 @@ public:
         jch.C = jch.C * sin(theta);
 
         // Scale to maximize usage of fixed-point type
-        jch.J *= exp2(PyramidIntegerBits - 1 - 7);
-        jch.C *= exp2(PyramidIntegerBits - 1 - 7);
-        jch.h *= exp2(PyramidIntegerBits - 1 - 7);
+        double shift = double(1 << (PyramidIntegerBits - 1 - 7));
+        jch.J *= shift; //exp2(PyramidIntegerBits - 1 - 7);
+        jch.C *= shift; //exp2(PyramidIntegerBits - 1 - 7);
+        jch.h *= shift; //exp2(PyramidIntegerBits - 1 - 7);
 
         return PyramidVectorType(cf(jch.J), cf(jch.C), cf(jch.h));
     }
@@ -295,9 +296,10 @@ public:
         jch.h = cf(v.blue());
 
         // Scale back to range J[0,100], C[0,120], h[0,120]
-        jch.J /= exp2(PyramidIntegerBits - 1 - 7);
-        jch.C /= exp2(PyramidIntegerBits - 1 - 7);
-        jch.h /= exp2(PyramidIntegerBits - 1 - 7);
+        double shift = double(1 << (PyramidIntegerBits - 1 - 7));
+        jch.J /= shift; //exp2(PyramidIntegerBits - 1 - 7);
+        jch.C /= shift; //exp2(PyramidIntegerBits - 1 - 7);
+        jch.h /= shift; //exp2(PyramidIntegerBits - 1 - 7);
 
         // convert cartesian to cylindrical
         double r = sqrt(jch.C * jch.C + jch.h * jch.h);
@@ -365,11 +367,28 @@ void copyToPyramidImage(
 
     if (UseCIECAM) {
         if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << "CIECAM02 color conversion..." << endl;
+            cout << "CIECAM02 color conversion:";
+            cout.flush();
         }
-        transformImage(src_upperleft, src_lowerright, sa,
-                dest_upperleft, da,
-                ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        int w = src_lowerright.x - src_upperleft.x;
+        int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
+        int tick = 1;
+        for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++dest_upperleft.y, ++y) {
+            if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+                if ((y % twentyPercent) == 0) {
+                    cout << " " << tick++ << "/5";
+                    cout.flush();
+                }
+            }
+            transformLine(src_upperleft.rowIterator(),
+                    src_upperleft.rowIterator() + w, sa,
+                    dest_upperleft.rowIterator(), da,
+                    ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        }
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
+        //transformImage(src_upperleft, src_lowerright, sa,
+        //        dest_upperleft, da,
+        //        ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
         transformImage(src_upperleft, src_lowerright, sa,
                 dest_upperleft, da,
@@ -452,12 +471,30 @@ inline void copyFromPyramidImageIf(
 
     if (UseCIECAM) {
         if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << "CIECAM02 color conversion..." << endl;
+            cout << "CIECAM02 color conversion:";
+            cout.flush();
         }
-        transformImageIf(src_upperleft, src_lowerright, sa,
-                mask_upperleft, ma,
-                dest_upperleft, da,
-                ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        int w = src_lowerright.x - src_upperleft.x;
+        int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
+        int tick = 1;
+        for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++mask_upperleft.y, ++dest_upperleft.y, ++y) {
+            if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+                if ((y % twentyPercent) == 0) {
+                    cout << " " << tick++ << "/5";
+                    cout.flush();
+                }
+            }
+            transformLineIf(src_upperleft.rowIterator(),
+                    src_upperleft.rowIterator() + w, sa,
+                    mask_upperleft.rowIterator(), ma,
+                    dest_upperleft.rowIterator(), da,
+                    ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        }
+        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
+        //transformImageIf(src_upperleft, src_lowerright, sa,
+        //        mask_upperleft, ma,
+        //        dest_upperleft, da,
+        //        ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
         transformImageIf(src_upperleft, src_lowerright, sa,
                 mask_upperleft, ma,

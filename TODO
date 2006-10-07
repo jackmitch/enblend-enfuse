@@ -25,10 +25,13 @@ X vigra sized_int
 X defines for choosing CachedFileImages vs. BasicImages.
 X add GimpAssociatedAlphaHack to new vigra_impex
 X EnblendNumericTraits
-- icc blending
+X icc blending
     X make sure all input images have same icc profile
     X do convert in image->pyramid pixel convert functors
-    - progress indicators for color transforms
+    X exp2 or shift and multiply?
+        exp2: 18.26 convert vector to JCH
+        shift: 18.60 convert
+    X progress indicators for color transforms
 - new seam alg
     X libxmi polygon fill
     X cfi strided iterators
