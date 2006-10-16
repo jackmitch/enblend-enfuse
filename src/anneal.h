@@ -364,11 +364,11 @@ public:
             }
         }
 
-        tau = 0.85;
+        tau = 0.8;
 
         // Maximum cost change possible by any single annealing move
-        deltaEMax = 500.0;
-        deltaEMin = 1.0;
+        deltaEMax = 300.0;
+        deltaEMin = 5.0;
         double epsilon = 1.0 / (kMax * kMax);
 
         tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
@@ -393,15 +393,18 @@ public:
 
     void run() {
         tCurrent = tInitial;
+        int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+        int actualIterations = 0;
         while (tCurrent > tFinal) {
             double epsilon = 1.0 / kMax;
-            eta = (int)ceil(log(epsilon) / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
+            unsigned int eta = (unsigned int)ceil(log(epsilon) / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
             cout << "tCurrent=" << tCurrent << " eta=" << eta << endl;
             for (unsigned int i = 0; i < eta; i++) {
                 //cout << "i = " << i << endl;
                 iterate();
             }
             tCurrent *= tau;
+            actualIterations++;
         }
 
         int convergeCount = 0;
@@ -409,12 +412,29 @@ public:
             if (convergedPoints[i]) convergeCount++;
         }
         cout << "Total points=" << convergedPoints.size() << " converged=" << convergeCount << endl;
+        cout << "predictedIterations=" << numIterations << " actualIterations=" << actualIterations << endl;
     }
 
     vector<Point2D> & getCurrentPoints() { return mfEstimates; }
 
-    double originalCost() { return 0.0; }
-    double currentCost() { return 0.0; }
+    double currentCost() {
+        double cost = 0.0;
+        for (unsigned int index = 0; index < originalPoints.size(); ++index) {
+            unsigned int nextIndex = (index + 1) % originalPoints.size();
+            Point2D originalPoint = originalPoints[index];
+            Point2D currentPointEstimate = mfEstimates[index];
+            Point2D nextPointEstimate = mfEstimates[nextIndex];
+            double segmentCost = 0.0;
+            if (costImageBounds.contains(currentPointEstimate) && costImageBounds.contains(nextPointEstimate)) {
+                segmentCost += costImageCost(currentPointEstimate, nextPointEstimate);
+                //if (segmentCost > 10000) cout << "currentPointEstimate=" << currentPointEstimate << " nextPointEstimate=" << nextPointEstimate << endl;
+            }
+            segmentCost += (currentPointEstimate - originalPoint).magnitude();
+            cost += segmentCost;
+            //cout << "segment " << originalPoint << " segmentCost=" << segmentCost << " totalCost=" << cost << endl;
+        }
+        return cost;
+    }
 
 protected:
 
@@ -424,6 +444,15 @@ protected:
 
         unsigned int lastIndex = originalPoints.size() - 1;
         for (unsigned int index = 0; index < originalPoints.size(); ++index) {
+            // Before this change 40.76 -> 40.09
+            if (convergedPoints[index]) continue;
+
+            vector<Point2D> *stateSpace = pointStateSpaces[index];
+            unsigned int localK = stateSpace->size();
+            if (localK == 1) continue;
+
+            vector<double> *stateProbabilities = pointStateProbabilities[index];
+
             unsigned int nextIndex = (index + 1) % originalPoints.size();
             //cout << "lastIndex=" << lastIndex << " index=" << index << " nextIndex=" << nextIndex << " size=" << originalPoints.size() << endl;
 
@@ -435,12 +464,8 @@ protected:
             //bool lastPointInCostImage = costImageBounds.contains(lastPointEstimate);
             //bool nextPointInCostImage = costImageBounds.contains(nextPointEstimate);
 
-            vector<Point2D> *stateSpace = pointStateSpaces[index];
-            vector<double> *stateProbabilities = pointStateProbabilities[index];
-            unsigned int localK = stateSpace->size();
 
             lastIndex = index;
-            if (localK == 1 || convergedPoints[index]) continue;
 
             // Calculate E values
             for (unsigned int i = 0; i < localK; ++i) {
@@ -448,26 +473,42 @@ protected:
                 E[i] = costImageCost(lastPointEstimate, currentPoint)
                         + costImageCost(currentPoint, nextPointEstimate)
                         + (currentPoint - originalPoint).magnitude();
+                pi[i] = 0.0;
             }
 
-            for (unsigned int j = 0; j < localK; ++j) pi[j] = 0.0;
+            // Before moving this up: 40.09 -> 39.53
+            //for (unsigned int j = 0; j < localK; ++j) pi[j] = 0.0;
 
             // Calculate new stateProbabilities
             for (unsigned int j = 0; j < localK; ++j) {
-                for (unsigned int i = j; i < localK; ++i) {
-                    double piT = (*stateProbabilities)[i] + (*stateProbabilities)[j];
-                    double An = 1.0 / (1.0 + exp((E[j] - E[i]) / tCurrent));
-                    pi[j] += An * piT;
-                    if (i != j) pi[i] += (1.0 - An) * piT;
+                // before moving this out: 65.92
+                // after movingh out: 64.69
+                double piTj = (*stateProbabilities)[j];
+                pi[j] += piTj;
+                // After i index start change: 64.41->63.83
+                for (unsigned int i = (j+1); i < localK; ++i) {
+                    double piT = (*stateProbabilities)[i] + piTj;
+                    // After An reciprocal change: 64.69->64.41
+                    double An = 1.0 + exp((E[j] - E[i]) / tCurrent);
+                    pi[j] += piT / An;
+                    /*if (i != j)*/ pi[i] += (1.0 - (1.0 / An)) * piT;
                 }
+                (*stateProbabilities)[j] = pi[j] / localK;
             }
 
+            // After moving normalize into previous loop: 63.83->63.10
             // Normalize
-            for (unsigned int i = 0; i < localK; ++i) {
-                (*stateProbabilities)[i] = pi[i] / localK;
-            }
+            //for (unsigned int i = 0; i < localK; ++i) {
+            //    (*stateProbabilities)[i] = pi[i] / localK;
+            //}
 
         }
+
+        updateEstimates();
+
+    }
+
+    void updateEstimates() {
 
         kMax = 1;
         // Make new mean field estimates.
@@ -529,16 +570,26 @@ protected:
 
             do {
                 CostImagePixelType pointCost = *lineStart;
-                if (pointCost == NumericTraits<CostImagePixelType>::max()) cost += 20 * pointCost;
-                else cost += 2 * pointCost;
+                // Time with this cost function: 17.62
+                //if (pointCost == NumericTraits<CostImagePixelType>::max()) cost += 20 * pointCost;
+                //else cost += 2 * pointCost;
+                // Time with this cost function: 17.56
+                //if (pointCost == NumericTraits<CostImagePixelType>::max()) cost += 8 * pointCost;
+                //else cost += 2 * pointCost;
+                // Time with this cost function
+                cost += pointCost;
                 ++lineLength;
                 ++lineStart;
             } while (lineStart != lineEnd);
         }
 
-        if (lineLength < 30) return cost;
-        if (lineLength < 50) return cost + (1 << (lineLength-30));
-        else return cost + (1 << 20);
+        // FIXME still need to penalize long lines?
+        // FIXME need to penalize short lines?
+        if (lineLength < 8) cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
+        return cost;
+        //if (lineLength < 30) return cost;
+        //if (lineLength < 50) return cost + (1 << (lineLength-30));
+        //else return cost + (1 << 20);
     }
 
     /*const*/ CostImage *costImage;
@@ -559,9 +610,6 @@ protected:
     // Current Temperature
     double tCurrent;
 
-    // Iterations per Temperature
-    unsigned int eta;
-
     // Cooling constant
     double tau;
 
@@ -575,7 +623,9 @@ template <typename CostImage>
 void annealSnake(/*const*/ CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
 
     GDAConfiguration<CostImage> cfg(ci, snake);
+    cout << "original cost = " << cfg.currentCost() << endl;
     cfg.run();
+    cout << "final cost = " << cfg.currentCost() << endl;
 
     slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
     vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
