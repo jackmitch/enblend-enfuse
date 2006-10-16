@@ -128,7 +128,7 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
 
                 if ((i & 1) == 0) {
                     // neighbor is diagonal
-                    neighborCost *= 1.4;
+                    neighborCost = WorkingPixelType(double(neighborCost) * 1.4);
                 }
 
                 WorkingPixelType newNeighborCost = neighborCost + costToTop;

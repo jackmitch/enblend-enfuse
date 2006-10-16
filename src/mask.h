@@ -373,7 +373,9 @@ MaskType *createMask(ImageType *white,
 
     // Create stitch mismatch image
     typedef UInt8 MismatchImagePixelType;
-    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
+    //EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
+    //        NumericTraits<MismatchImagePixelType>::max());
+    BasicImage<MismatchImagePixelType> mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
             NumericTraits<MismatchImagePixelType>::max());
 
     // Areas other than intersection region have maximum cost
@@ -403,6 +405,7 @@ MaskType *createMask(ImageType *white,
         annealSnake(&mismatchImage, snake);
 
         slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
+
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ) {
             if (vertexIterator->first &&
@@ -440,6 +443,7 @@ MaskType *createMask(ImageType *white,
                 ++vertexIterator;
             }
         }
+
 
         //lastVertex = snake->previous(snake->end());
         //for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
