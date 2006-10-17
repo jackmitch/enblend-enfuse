@@ -511,19 +511,42 @@ class LineIterator : private IMAGE_ITERATOR
         */
     LineIterator(IMAGE_ITERATOR  const & start,
                  IMAGE_ITERATOR  const & end)
-    : IMAGE_ITERATOR(start), x_(0.0), y_(0.0)
+    //: IMAGE_ITERATOR(start), x_(0.0), y_(0.0)
+    : IMAGE_ITERATOR(start)
     {
-        int dx = end.x - start.x;
-        int dy = end.y - start.y;
-        int adx = (dx < 0) ? -dx : dx;
-        int ady = (dy < 0) ? -dy : dy;
-        int dd = (adx > ady) ? adx : ady;
-        if(dd == 0) dd = 1;
+        //int dx = end.x - start.x;
+        //int dy = end.y - start.y;
+        //int adx = (dx < 0) ? -dx : dx;
+        //int ady = (dy < 0) ? -dy : dy;
+        //int dd = (adx > ady) ? adx : ady;
+        //if(dd == 0) dd = 1;
 
-        dx_ = (double)dx / dd;
-        dy_ = (double)dy / dd;
-        if(adx > ady) y_ += dy_ / 2.0;
-        else          x_ += dx_ / 2.0;
+        //dx_ = (double)dx / dd;
+        //dy_ = (double)dy / dd;
+        //if(adx > ady) y_ += dy_ / 2.0;
+        //else          x_ += dx_ / 2.0;
+        dy_ = end.y - start.y;
+        dx_ = end.x - start.x;
+
+        if (dy_ < 0) {
+            dy_ = -dy_;
+            stepy_ = -1;
+        } else {
+            stepy_ = 1;
+        }
+
+        if (dx_ < 0) {
+            dx_ = -dx_;
+            stepx_ = -1;
+        } else {
+            stepx_ = 1;
+        }
+
+        dy_ <<= 1;
+        dx_ <<= 1;
+
+        if (dx_ > dy_) fraction_ = dy_ - (dx_ >> 1);
+        else fraction_ = dx_ - (dy_ >> 1);
     }
 
     /** @name Navigation */
@@ -531,23 +554,40 @@ class LineIterator : private IMAGE_ITERATOR
         ///
     LineIterator &  operator++()
     {
-        x_ += dx_;
-        if(x_ >= 1.0) {
-            x_ -= 1.0;
-            ++(this->x);
+        //x_ += dx_;
+        //if(x_ >= 1.0) {
+        //    x_ -= 1.0;
+        //    ++(this->x);
+        //}
+        //else if(x_ <= -1.0) {
+        //    x_ += 1.0;
+        //    --(this->x);
+        //}
+        //y_ += dy_;
+        //if(y_ >= 1.0) {
+        //    y_ -= 1.0;
+        //    ++(this->y);
+        //}
+        //else if(y_ <= -1.0) {
+        //    y_ += 1.0;
+        //    --(this->y);
+        //}
+        //return *this;
+        if (dx_ > dy_) {
+            if (fraction_ >= 0) {
+                this->y += stepy_;
+                fraction_ -= dx_;
+            }
+            this->x += stepx_;
+            fraction_ += dy_;
         }
-        else if(x_ <= -1.0) {
-            x_ += 1.0;
-            --(this->x);
-        }
-        y_ += dy_;
-        if(y_ >= 1.0) {
-            y_ -= 1.0;
-            ++(this->y);
-        }
-        else if(y_ <= -1.0) {
-            y_ += 1.0;
-            --(this->y);
+        else {
+            if (fraction_ >= 0) {
+                this->x += stepx_;
+                fraction_ -= dy_;
+            }
+            this->y += stepy_;
+            fraction_ += dx_;
         }
         return *this;
     }
@@ -570,9 +610,27 @@ class LineIterator : private IMAGE_ITERATOR
         return IMAGE_ITERATOR::operator==(c);
     }
 
+    // mihal 20061016
+    // This saves us from having to construct a lineEnd LineIterator
+    // when iterating over a line - we can just make one LineIterator and compare
+    // it to the end iterator given in the constructor
+    bool operator==(IMAGE_ITERATOR const & c) const
+    {
+        return IMAGE_ITERATOR::operator==(c);
+    }
+
         /** Inequality.
        */
     bool operator!=(LineIterator const & c) const
+    {
+        return IMAGE_ITERATOR::operator!=(c);
+    }
+
+    // mihal 20061016
+    // This saves us from having to construct a lineEnd LineIterator
+    // when iterating over a line - we can just make one LineIterator and compare
+    // it to the end iterator given in the constructor
+    bool operator!=(IMAGE_ITERATOR const & c) const
     {
         return IMAGE_ITERATOR::operator!=(c);
     }
@@ -599,7 +657,8 @@ class LineIterator : private IMAGE_ITERATOR
 
   private:
 
-    double x_, y_, dx_, dy_;
+    //double x_, y_, dx_, dy_;
+    int dx_, dy_, fraction_, stepx_, stepy_;
 };
 
 //@}

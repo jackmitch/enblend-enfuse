@@ -42,6 +42,16 @@ X icc blending
     X polygon mask fill
     X dijkstra polygon vertex interpolation - at half resolution
     X polygon vertex annealing
+        X Replace LineIterator with Bresenham's algorithm
+              With original vigra LineIterator: 3.02 operator++
+                                                1.23 costImageCost
+              With new lineEnd compare:         2.65 operator++
+                                                2.16 iterate
+                                                1.17 costImageCost
+              With bresenham LineIterator:      0.93 operator++
+                                                1.97 iterate
+                                                1.10 costImageCost
+        - Additional optimizations:     start   4.48 iterate
     - make it work with wraparound
     - code cleanup and comments
     - Progress indicators for advanced mask generation

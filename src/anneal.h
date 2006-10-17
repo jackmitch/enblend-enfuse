@@ -338,12 +338,12 @@ public:
                 Diff2D normal(lastPoint2D.y - nextPoint2D.y, nextPoint2D.x - lastPoint2D.x);
                 normal *= std::min(costImageBounds.width(), costImageBounds.height()) / (3 * normal.magnitude());
 
-                LineIterator<Diff2D> lineBegin(Diff2D(currentPoint2D) + normal, Diff2D(currentPoint2D) - normal);
                 Diff2D lineEnd = Diff2D(currentPoint2D) - normal;
+                LineIterator<Diff2D> lineBegin(Diff2D(currentPoint2D) + normal, lineEnd);
 
                 vector<Point2D> *stateSpace = new vector<Point2D>();
                 pointStateSpaces.push_back(stateSpace);
-                while (*lineBegin != lineEnd) {
+                while (lineBegin != lineEnd) {
                     if (costImageBounds.contains(Point2D(*lineBegin))) {
                         if ((*costImage)[*lineBegin] != NumericTraits<CostImagePixelType>::max()) {
                             stateSpace->push_back(Point2D(*lineBegin));
@@ -504,12 +504,6 @@ protected:
 
         }
 
-        updateEstimates();
-
-    }
-
-    void updateEstimates() {
-
         kMax = 1;
         // Make new mean field estimates.
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
@@ -557,16 +551,16 @@ protected:
 
     }
 
-    double costImageCost(const Point2D &start, const Point2D &end) {
+    int costImageCost(const Point2D &start, const Point2D &end) {
         //cout << "costImageCost(" << start << ", " << end << ")" << endl;
-        double cost = 0.0;
+        int cost = 0;
         int lineLength = 0;
 
         if (start != end) {
-            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start,
-                                                 costImage->upperLeft() + end);
-            LineIterator<CostIterator> lineEnd(costImage->upperLeft() + end,
-                                               costImage->upperLeft() + end);
+            CostIterator endIterator = costImage->upperLeft() + end;
+            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, endIterator);
+            //LineIterator<CostIterator> lineEnd(costImage->upperLeft() + end,
+            //                                   costImage->upperLeft() + end);
 
             do {
                 CostImagePixelType pointCost = *lineStart;
@@ -580,7 +574,7 @@ protected:
                 cost += pointCost;
                 ++lineLength;
                 ++lineStart;
-            } while (lineStart != lineEnd);
+            } while (lineStart != endIterator);
         }
 
         // FIXME still need to penalize long lines?
