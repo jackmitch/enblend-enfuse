@@ -24,21 +24,25 @@
 #include <config.h>
 #endif
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
 #include <ext/slist>
+#include <algorithm>
 #include <vector>
-#include <boost/random.hpp>
 #include <math.h>
 
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
 
+using std::for_each;
 using std::pair;
 using std::vector;
 using __gnu_cxx::slist;
 
-using boost::uniform_01;
-using boost::variate_generator;
-using boost::mt19937;
+using boost::lambda::bind;
+using boost::lambda::_1;
+using boost::lambda::delete_ptr;
 
 using vigra::LineIterator;
 using vigra::Point2D;
@@ -46,283 +50,33 @@ using vigra::Rect2D;
 
 namespace enblend {
 
-template<class UniformRandomNumberGenerator, class IntType>
-struct uniform_smallint_integer
-{
-public:
-    typedef UniformRandomNumberGenerator base_type;
-    typedef IntType result_type;
-
-    uniform_smallint_integer(base_type & rng, IntType min, IntType max) : _rng(&rng)
-    { set(min, max); }
-
-    void set(result_type min, result_type max);
-
-    result_type min() const { return _min; }
-    result_type max() const { return _max; }
-    base_type& base() const { return *_rng; }
-
-    result_type operator()() {
-        // we must not use the low bits here, because LCGs get very bad then
-        return (IntType)((((*_rng)() - _baseMin) / _factor) % _range) + _min;
-    }
-
-private:
-    typedef typename base_type::result_type base_result;
-    base_type * _rng;
-    IntType _min, _max;
-    base_result _range;
-    base_result _baseMin;
-    //int _factor;
-    base_result _factor;
-};
-
-template<class UniformRandomNumberGenerator, class IntType>
-void uniform_smallint_integer<UniformRandomNumberGenerator, IntType>::
-set(result_type min, result_type max) 
-{
-    // skip all this if min and max are unchanged.
-    if (min == _min && _max == max) return;
-    _min = min;
-    _max = max;
-    assert(min < max);
-
-    _range = static_cast<base_result>(_max-_min)+1;
-    // FIXME there was a bug here where the variable would get shadowed
-    _factor = 1;
-  
-    // LCGs get bad when only taking the low bits.
-    // (probably put this logic into a partial template specialization)
-    // Check how many low bits we can ignore before we get too much
-    // quantization error.
-    _baseMin = _rng->min();
-    base_result r_base = _rng->max() - _baseMin;
-    if(r_base == std::numeric_limits<base_result>::max()) {
-        _factor = 2;
-        r_base /= 2;
-    }
-    r_base += 1;
-    if(r_base % _range == 0) {
-        // No quantization effects, good
-        _factor = r_base / _range;
-    } else {
-        // carefully avoid overflow; pessimizing heree
-        for( ; r_base/_range/32 >= _range; _factor *= 2)
-            r_base /= 2;
-    }
-    //cout << "min=" << _min << " max=" << _max << " range=" << _range << " factor=" << _factor << endl;
-}
-
-template <typename CostImage>
-class AnnealConfiguration {
-public:
-
-    AnnealConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v) :
-            costImage(d),
-            totalCost(0.0),
-            maxStepSize(20),
-            w(d->width()),
-            h(d->height()),
-            cacheMoveIndex(0),
-            cacheMovePoint(0,0),
-            cacheSegmentCost(0.0),
-            cacheNextSegmentCost(0.0),
-            cacheDeltaCost(0.0),
-            moveablePointRNG(Twister, 0, 10),
-            stepRNG(Twister, 0, 10) {
-
-        unsigned int pointIndex = 0;
-        slist<pair<bool, Point2D> >::iterator lastPoint = v->previous(v->end());
-        for (slist<pair<bool, Point2D> >::iterator point = v->begin();
-                point != v->end(); ++point, ++pointIndex) {
-
-            originalPoints.push_back(point->second);
-            currentPoints.push_back(point->second);
-
-            if (point->first) {
-                moveablePointIndices.push_back(pointIndex);
-            }
-
-            if (point->first || lastPoint->first) {
-                // Segment between lastPoint and point is moveable.
-                double segmentCost = evalSegmentCost(point->second, lastPoint->second);
-                totalCost += segmentCost;
-                segmentCosts.push_back(segmentCost);
-            }
-            else {
-                segmentCosts.push_back(0.0);
-            }
-
-            lastPoint = point;
-        }
-
-        moveablePointRNG.set(0, moveablePointIndices.size() - 1);
-    }
-
-    double getCost() const {
-        return totalCost;
-    }
-
-    int numMoveableVertices() const {
-        return moveablePointIndices.size();
-    }
-
-    vector<Point2D>& getCurrentPoints() {
-        return currentPoints;
-    }
-
-    void setMaxStepSize(unsigned int maxStepSize) {
-        this->maxStepSize = maxStepSize;
-    }
-
-    // Propose a move, return the percent improvement
-    double step();
-
-    void commit() {
-        currentPoints[cacheMoveIndex] = cacheMovePoint;
-        segmentCosts[cacheMoveIndex] = cacheSegmentCost;
-        segmentCosts[cacheMoveIndex+1] = cacheNextSegmentCost;
-        totalCost += cacheDeltaCost;
-    }
-
-protected:
-
-    const CostImage *costImage;
-
-    // Cost of the entire snake
-    double totalCost;
-
-    // original locations of points
-    vector<Point2D> originalPoints;
-
-    // Current positions of all points
-    vector<Point2D> currentPoints;
-
-    // Indices of movable points in currentPoints and originalPoints
-    vector<unsigned int> moveablePointIndices;
-
-    // Moveable segment costs. Index is for segment behind corresponding currentPoint.
-    vector<double> segmentCosts;
-
-    int maxStepSize;
-
-    int w;
-    int h;
-
-    // Calculate cost of segment between pointA and pointB
-    double evalSegmentCost(const Point2D &pointA, const Point2D &pointB) const;
-
-    // step function caches a proposed move here.
-    unsigned int cacheMoveIndex;
-    Point2D cacheMovePoint;
-    double cacheSegmentCost;
-    double cacheNextSegmentCost;
-    double cacheDeltaCost;
-
-    // Variate generator that picks a random moveable vertex.
-    uniform_smallint_integer<mt19937, unsigned int> moveablePointRNG;
-    uniform_smallint_integer<mt19937, int> stepRNG;
-
-};
-
-template <typename CostImage>
-double AnnealConfiguration<CostImage>::evalSegmentCost(const Point2D& pointA, const Point2D &pointB) const {
-    typedef typename CostImage::const_traverser CostIterator;
-    typedef typename CostImage::PixelType CostType;
-
-    double cost = 0.0;
-    int lineLength = 0;
-
-    if (pointA != pointB) {
-        LineIterator<CostIterator> lineStart(costImage->upperLeft() + pointA,
-                                             costImage->upperLeft() + pointB);
-        LineIterator<CostIterator> lineEnd(costImage->upperLeft() + pointB,
-                                           costImage->upperLeft() + pointB);
-
-        do {
-            CostType pointCost = *lineStart;
-            if (pointCost == NumericTraits<CostType>::max()) cost += 20 * pointCost;
-            else cost += 2 * pointCost;
-            ++lineLength;
-            ++lineStart;
-        } while (lineStart != lineEnd);
-    }
-
-    if (lineLength < 30) return cost;
-    if (lineLength < 50) return cost + (1 << (lineLength-30));
-    else return cost + (1 << 20);
-    //return cost + (1 << (std::min(20, lineLength-20)));
-};
-
-template <typename CostImage>
-double AnnealConfiguration<CostImage>::step() {
-
-    // Choose a moveable point randomly.
-    cacheMoveIndex = moveablePointIndices[moveablePointRNG()];
-    cacheMovePoint = currentPoints[cacheMoveIndex];
-
-    // Limit the size of the neighborhood if we are close to the image edge.
-    int minDeltaX = std::max((1 - cacheMovePoint.x), -maxStepSize);
-    int maxDeltaX = std::min((w - 2 - cacheMovePoint.x), maxStepSize);
-    int minDeltaY = std::max((1 - cacheMovePoint.y), -maxStepSize);
-    int maxDeltaY = std::min((h - 2 - cacheMovePoint.y), maxStepSize);
-
-    stepRNG.set(minDeltaX, maxDeltaX);
-    int deltaX = stepRNG();
-
-    stepRNG.set(minDeltaY, maxDeltaY);
-    int deltaY = stepRNG();
-
-    cacheMovePoint += Diff2D(deltaX, deltaY);
-
-    unsigned int previousPointIndex = (cacheMoveIndex == 0) ? (currentPoints.size() - 1) : (cacheMoveIndex - 1);
-    unsigned int nextPointIndex = (cacheMoveIndex + 1) % currentPoints.size();
-
-    cacheSegmentCost = evalSegmentCost(cacheMovePoint, currentPoints[previousPointIndex]);
-    cacheNextSegmentCost = evalSegmentCost(currentPoints[nextPointIndex], cacheMovePoint);
-
-    double deltaCost = (cacheSegmentCost - segmentCosts[cacheMoveIndex])
-                     + (cacheNextSegmentCost - segmentCosts[nextPointIndex]);
-
-    // Measure distance between newLocation and originalPoints[pointIndex];
-    Point2D currentLocation = currentPoints[cacheMoveIndex];
-    Point2D originalLocation = originalPoints[cacheMoveIndex];
-
-    double distanceDeltaCost = (cacheMovePoint - originalLocation).magnitude()
-                             - (currentLocation - originalLocation).magnitude();
-
-    cacheDeltaCost = deltaCost + 1.25 * distanceDeltaCost;
-
-    return (cacheDeltaCost / totalCost);
-};
-
 template <typename CostImage>
 class GDAConfiguration {
 public:
     typedef typename CostImage::PixelType CostImagePixelType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(/*const*/ CostImage* const d, slist<pair<bool, Point2D> > *v) : costImage(d) {
+    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v) : costImage(d) {
 
-        costImageBounds = Rect2D(d->size());
         kMax = 1;
 
         // Copy original point locations into originalPoints and mfEstimates
         slist<pair<bool, Point2D> >::iterator lastPoint = v->previous(v->end());
         for (slist<pair<bool, Point2D> >::iterator currentPoint = v->begin(); currentPoint != v->end(); ) {
-            convergedPoints.push_back(false);
+
             originalPoints.push_back(currentPoint->second);
             mfEstimates.push_back(currentPoint->second);
 
+            vector<Point2D> *stateSpace = new vector<Point2D>();
+            pointStateSpaces.push_back(stateSpace);
+
+            vector<double> *stateProbabilities = new vector<double>();
+            pointStateProbabilities.push_back(stateProbabilities);
+
             if (!currentPoint->first) {
                 // Point is not moveable.
-                vector<Point2D> *stateSpace = new vector<Point2D>();
                 stateSpace->push_back(currentPoint->second);
-                pointStateSpaces.push_back(stateSpace);
-
-                vector<double> *stateProbabilities = new vector<double>();
                 stateProbabilities->push_back(1.0);
-                pointStateProbabilities.push_back(stateProbabilities);
 
                 lastPoint = currentPoint;
                 ++currentPoint;
@@ -336,15 +90,13 @@ public:
 
                 // Determine state space of currentPoint along normal vector
                 Diff2D normal(lastPoint2D.y - nextPoint2D.y, nextPoint2D.x - lastPoint2D.x);
-                normal *= std::min(costImageBounds.width(), costImageBounds.height()) / (3 * normal.magnitude());
+                normal *= std::min(costImage->width(), costImage->height()) / (3 * normal.magnitude());
 
                 Diff2D lineEnd = Diff2D(currentPoint2D) - normal;
                 LineIterator<Diff2D> lineBegin(Diff2D(currentPoint2D) + normal, lineEnd);
 
-                vector<Point2D> *stateSpace = new vector<Point2D>();
-                pointStateSpaces.push_back(stateSpace);
                 while (lineBegin != lineEnd) {
-                    if (costImageBounds.contains(Point2D(*lineBegin))) {
+                    if (costImage->isInside(*lineBegin)) {
                         if ((*costImage)[*lineBegin] != NumericTraits<CostImagePixelType>::max()) {
                             stateSpace->push_back(Point2D(*lineBegin));
                             //(*costImage)[*lineBegin] = 150;
@@ -357,62 +109,40 @@ public:
                     ++lineBegin;
                 }
 
-                vector<double> *stateProbabilities = new vector<double>(stateSpace->size(), 1.0 / stateSpace->size());
-                pointStateProbabilities.push_back(stateProbabilities);
+                unsigned int localK = stateSpace->size();
+                for (unsigned int i = 0; i < localK; ++i) stateProbabilities->push_back(1.0 / localK);
 
-                kMax = std::max(kMax, stateSpace->size());
+                kMax = std::max(kMax, localK);
             }
+
+            convergedPoints.push_back(stateSpace->size() < 2);
         }
 
-        tau = 0.8;
-
-        // Maximum cost change possible by any single annealing move
+        tau = 0.75;
         deltaEMax = 300.0;
         deltaEMin = 5.0;
         double epsilon = 1.0 / (kMax * kMax);
-
         tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
         tFinal = deltaEMin / log((kMax - (kMax * epsilon) - 1) / (kMax * epsilon));
-        cout << "tInitial=" << tInitial << endl;
-        cout << "tFinal=" << tFinal << endl;
     }
 
     ~GDAConfiguration() {
-        for (vector<vector<Point2D>* >::iterator i = pointStateSpaces.begin();
-                i != pointStateSpaces.end();
-                ++i) {
-            delete *i;
-        }
-
-        for (vector<vector<double>* >::iterator i = pointStateProbabilities.begin();
-                i != pointStateProbabilities.end();
-                ++i) {
-            delete *i;
-        }
+        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
+        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
     }
 
     void run() {
         tCurrent = tInitial;
         int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
-        int actualIterations = 0;
         while (tCurrent > tFinal) {
             double epsilon = 1.0 / kMax;
             unsigned int eta = (unsigned int)ceil(log(epsilon) / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
             cout << "tCurrent=" << tCurrent << " eta=" << eta << endl;
             for (unsigned int i = 0; i < eta; i++) {
-                //cout << "i = " << i << endl;
                 iterate();
             }
             tCurrent *= tau;
-            actualIterations++;
         }
-
-        int convergeCount = 0;
-        for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-            if (convergedPoints[i]) convergeCount++;
-        }
-        cout << "Total points=" << convergedPoints.size() << " converged=" << convergeCount << endl;
-        cout << "predictedIterations=" << numIterations << " actualIterations=" << actualIterations << endl;
     }
 
     vector<Point2D> & getCurrentPoints() { return mfEstimates; }
@@ -424,14 +154,10 @@ public:
             Point2D originalPoint = originalPoints[index];
             Point2D currentPointEstimate = mfEstimates[index];
             Point2D nextPointEstimate = mfEstimates[nextIndex];
-            double segmentCost = 0.0;
-            if (costImageBounds.contains(currentPointEstimate) && costImageBounds.contains(nextPointEstimate)) {
-                segmentCost += costImageCost(currentPointEstimate, nextPointEstimate);
-                //if (segmentCost > 10000) cout << "currentPointEstimate=" << currentPointEstimate << " nextPointEstimate=" << nextPointEstimate << endl;
+            if (costImage->isInside(currentPointEstimate) && costImage->isInside(nextPointEstimate)) {
+                cost += costImageCost(currentPointEstimate, nextPointEstimate);
             }
-            segmentCost += (currentPointEstimate - originalPoint).magnitude();
-            cost += segmentCost;
-            //cout << "segment " << originalPoint << " segmentCost=" << segmentCost << " totalCost=" << cost << endl;
+            cost += (currentPointEstimate - originalPoint).magnitude() / 2.0;
         }
         return cost;
     }
@@ -444,27 +170,17 @@ protected:
 
         unsigned int lastIndex = originalPoints.size() - 1;
         for (unsigned int index = 0; index < originalPoints.size(); ++index) {
-            // Before this change 40.76 -> 40.09
+            // Skip updating points that have already converged.
             if (convergedPoints[index]) continue;
 
             vector<Point2D> *stateSpace = pointStateSpaces[index];
-            unsigned int localK = stateSpace->size();
-            if (localK == 1) continue;
-
             vector<double> *stateProbabilities = pointStateProbabilities[index];
+            unsigned int localK = stateSpace->size();
 
             unsigned int nextIndex = (index + 1) % originalPoints.size();
-            //cout << "lastIndex=" << lastIndex << " index=" << index << " nextIndex=" << nextIndex << " size=" << originalPoints.size() << endl;
-
             Point2D originalPoint = originalPoints[index];
-            //Point2D currentPointEstimate = mfEstimates[index];
             Point2D lastPointEstimate = mfEstimates[lastIndex];
             Point2D nextPointEstimate = mfEstimates[nextIndex];
-            //cout << "op=" << originalPoint << " cp=" << currentPointEstimate << " lpe=" << lastPointEstimate << " npe=" << nextPointEstimate << endl;
-            //bool lastPointInCostImage = costImageBounds.contains(lastPointEstimate);
-            //bool nextPointInCostImage = costImageBounds.contains(nextPointEstimate);
-
-
             lastIndex = index;
 
             // Calculate E values
@@ -472,71 +188,53 @@ protected:
                 Point2D currentPoint = (*stateSpace)[i];
                 E[i] = costImageCost(lastPointEstimate, currentPoint)
                         + costImageCost(currentPoint, nextPointEstimate)
-                        + (currentPoint - originalPoint).magnitude();
+                        + ((currentPoint - originalPoint).magnitude() / 2.0);
                 pi[i] = 0.0;
             }
 
-            // Before moving this up: 40.09 -> 39.53
-            //for (unsigned int j = 0; j < localK; ++j) pi[j] = 0.0;
-
             // Calculate new stateProbabilities
             for (unsigned int j = 0; j < localK; ++j) {
-                // before moving this out: 65.92
-                // after movingh out: 64.69
                 double piTj = (*stateProbabilities)[j];
                 pi[j] += piTj;
-                // After i index start change: 64.41->63.83
                 for (unsigned int i = (j+1); i < localK; ++i) {
                     double piT = (*stateProbabilities)[i] + piTj;
-                    // After An reciprocal change: 64.69->64.41
                     double An = 1.0 + exp((E[j] - E[i]) / tCurrent);
                     pi[j] += piT / An;
-                    /*if (i != j)*/ pi[i] += (1.0 - (1.0 / An)) * piT;
+                    pi[i] += (1.0 - (1.0 / An)) * piT;
                 }
                 (*stateProbabilities)[j] = pi[j] / localK;
             }
-
-            // After moving normalize into previous loop: 63.83->63.10
-            // Normalize
-            //for (unsigned int i = 0; i < localK; ++i) {
-            //    (*stateProbabilities)[i] = pi[i] / localK;
-            //}
-
         }
 
         kMax = 1;
         // Make new mean field estimates.
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
+            if (convergedPoints[index]) continue;
+
             vector<Point2D> *stateSpace = pointStateSpaces[index];
             vector<double> *stateProbabilities = pointStateProbabilities[index];
+            unsigned int localK = stateSpace->size();
             double estimateX = 0.0;
             double estimateY = 0.0;
-            unsigned int localK = stateSpace->size();
-            if (localK == 1 || convergedPoints[index]) continue;
+
             for (unsigned int k = 0; k < localK; ++k) {
                 double weight = (*stateProbabilities)[k];
                 if (weight > 0.99) convergedPoints[index] = true;
                 Point2D state = (*stateSpace)[k];
-                //cout << "state=" << state << " weight=" << weight << endl;
                 estimateX += weight * (double)state.x;
                 estimateY += weight * (double)state.y;
             }
             mfEstimates[index] = Point2D((int)round(estimateX), (int)round(estimateY));
-            //if (convergedPoints[index]) {
-            //    cout << "point " << originalPoints[index] << " has converged to " << mfEstimates[index] << endl;
-            //    for (unsigned int k = 0; k < localK; ++k) {
-            //        cout << "    " << (*stateSpace)[k] << " = " << (*stateProbabilities)[k] << endl;
-            //    }
-            //}
-
-            //cout << "op=" << originalPoints[index] << " localK=" << localK << " mfe=(" << estimateX << ", " << estimateY << ")" << "=" << mfEstimates[index] << endl;
 
             // Remove improbable solutions from the search space
-            for (unsigned int k = 0; k < stateProbabilities->size(); ) {
+            for (unsigned int k = 0; k < stateSpace->size(); ) {
                 double weight = (*stateProbabilities)[k];
                 if (weight < 0.0001) {
+                    // Replace this state with last state
                     (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
                     (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
+
+                    // Delete last state
                     stateProbabilities->pop_back();
                     stateSpace->pop_back();
                 } else {
@@ -544,55 +242,50 @@ protected:
                 }
             }
 
+            localK = stateSpace->size();
+            if (localK < 2) convergedPoints[index] = true;
             kMax = std::max(kMax, stateProbabilities->size());
 
-            // FIXME ensure new mfEstimate is inside costImage
+            // FIXME ensure new mfEstimate is inside costImage?
         }
 
     }
 
     int costImageCost(const Point2D &start, const Point2D &end) {
-        //cout << "costImageCost(" << start << ", " << end << ")" << endl;
         int cost = 0;
         int lineLength = 0;
 
         if (start != end) {
             CostIterator endIterator = costImage->upperLeft() + end;
             LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, endIterator);
-            //LineIterator<CostIterator> lineEnd(costImage->upperLeft() + end,
-            //                                   costImage->upperLeft() + end);
 
             do {
-                CostImagePixelType pointCost = *lineStart;
-                // Time with this cost function: 17.62
-                //if (pointCost == NumericTraits<CostImagePixelType>::max()) cost += 20 * pointCost;
-                //else cost += 2 * pointCost;
-                // Time with this cost function: 17.56
-                //if (pointCost == NumericTraits<CostImagePixelType>::max()) cost += 8 * pointCost;
-                //else cost += 2 * pointCost;
-                // Time with this cost function
-                cost += pointCost;
+                cost += *lineStart;
                 ++lineLength;
                 ++lineStart;
             } while (lineStart != endIterator);
         }
 
-        // FIXME still need to penalize long lines?
-        // FIXME need to penalize short lines?
         if (lineLength < 8) cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
+
         return cost;
-        //if (lineLength < 30) return cost;
-        //if (lineLength < 50) return cost + (1 << (lineLength-30));
-        //else return cost + (1 << 20);
     }
 
-    /*const*/ CostImage *costImage;
-    Rect2D costImageBounds;
+    const CostImage *costImage;
 
+    // Original point locations
     vector<Point2D> originalPoints;
+
+    // Mean-field estimates of current point locations
     vector<Point2D> mfEstimates;
+
+    // State spaces of each point
     vector<vector<Point2D>* > pointStateSpaces;
+
+    // Probability vectors for each state space
     vector<vector<double>* > pointStateProbabilities;
+
+    // Flags indicate which points have converged
     vector<bool> convergedPoints;
 
     // Initial Temperature
@@ -607,69 +300,30 @@ protected:
     // Cooling constant
     double tau;
 
+    // Maximum cost change possible by any single annealing move
     double deltaEMax;
+
+    // Minimum cost change possible by any single annealing move
     double deltaEMin;
+
+    // Largest state space over all points
     unsigned int kMax;
 
 };
 
 template <typename CostImage>
-void annealSnake(/*const*/ CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
+void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
 
     GDAConfiguration<CostImage> cfg(ci, snake);
-    cout << "original cost = " << cfg.currentCost() << endl;
+    //cout << "original cost = " << cfg.currentCost() << endl;
     cfg.run();
-    cout << "final cost = " << cfg.currentCost() << endl;
+    //cout << "final cost = " << cfg.currentCost() << endl;
 
     slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
     vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
     for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
         snakePoint->second = *annealedPoint;
     }
-
-    //AnnealConfiguration<CostImage> cfg(ci, snake);
-
-    //uniform_01<mt19937> thermal(Twister);
-
-    //unsigned int stepsPerIteration = 256 * cfg.numMoveableVertices();
-
-    //cout << "initial cost=" << cfg.getCost() << endl;
-    //cout << "stepsPerIteration=" << stepsPerIteration << endl;
-
-    //double initialTemperature = 1.0;
-    //double temperatureCutoff = 0.01;
-    //double temperatureDampening = 0.85;
-    //double temperature = initialTemperature;
-
-    //while (temperature > temperatureCutoff) {
-    //    unsigned int stepSize = 3 + (unsigned int)(temperature * 20 /*.20 * std::min(ci->width(), ci->height())*/);
-    //    cfg.setMaxStepSize(stepSize);
-    //    unsigned int acceptedSteps = 0;
-    //    double acceptCoefficient = 0.02 + (0.20 * temperature);
-    //    for (unsigned int i = 0; i < stepsPerIteration; i++) {
-    //        double percentDifference = cfg.step();
-    //        double acceptProbability = acceptCoefficient * exp(-5.0 * percentDifference / temperature);
-    //        if ((percentDifference < 0.0) || (thermal() < acceptProbability)) {
-    //            cfg.commit();
-    //            acceptedSteps++;
-    //        }
-    //    }
-    //    cout << "temp=" << temperature
-    //         << " stepSize=" << stepSize
-    //         << " accepted steps=" << acceptedSteps
-    //         << " accept ratio=" << ((double)acceptedSteps / (double)stepsPerIteration)
-    //         << " cost=" << cfg.getCost()
-    //         << endl;
-    //    temperature *= temperatureDampening;
-    //}
-
-    //cout << "final cost=" << cfg.getCost() << endl;
-
-    //slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
-    //vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
-    //for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
-    //    snakePoint->second = *annealedPoint;
-    //}
 
 };
 

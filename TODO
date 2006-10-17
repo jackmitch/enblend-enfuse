@@ -52,6 +52,10 @@ X icc blending
                                                 1.97 iterate
                                                 1.10 costImageCost
         - Additional optimizations:     start   4.48 iterate
+              code cleanup                      4.63 iterate
+              tau=.75                           3.60 iterate
+              magnitude / 4.0                   3.76 iterate
+              magnitude / 2.0                   3.69 iterate
     - make it work with wraparound
     - code cleanup and comments
     - Progress indicators for advanced mask generation
