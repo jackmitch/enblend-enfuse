@@ -1043,49 +1043,57 @@ public:
     }
 
     traverser upperLeft() {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::upperLeft(): image must have non-zero size.");
         return traverser(0, 0, this);
     }
 
     traverser lowerRight() {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::lowerRight(): image must have non-zero size.");
         return traverser(width_, height_, this);
     }
 
     const_traverser upperLeft() const {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::upperLeft(): image must have non-zero size.");
         return const_traverser(0, 0, this);
     }
 
     const_traverser lowerRight() const {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::lowerRight(): image must have non-zero size.");
         return const_traverser(width_, height_, this);
     }
 
     iterator begin() {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::begin(): image must have non-zero size.");
         return iterator(traverser(0, 0, this));
     }
 
     iterator end() {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::end(): image must have non-zero size.");
         return iterator(traverser(0, height_, this));
     }
 
     const_iterator begin() const {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::begin(): image must have non-zero size.");
         return const_iterator(const_traverser(0, 0, this));
     }
 
     const_iterator end() const {
-        vigra_precondition(width_ > 0 && height_ > 0,
+        //vigra_precondition(width_ > 0 && height_ > 0,
+        vigra_assert(width_ > 0 && height_ > 0,
                 "CachedFileImage::end(): image must have non-zero size.");
         return const_iterator(const_traverser(0, height_, this));
     }

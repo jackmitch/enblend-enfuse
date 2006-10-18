@@ -62,6 +62,12 @@ X icc blending
     - options to control adv mask gen quality
     - output of quality improvement
     - option to revert to old mask algorithm
+- make striding argument object factories for BasicImages
+- add NDEBUG to Makefile.am
+- misc optimizations
+    vigra_precondition in BasicImage, CachedFileImage 7.16
+    change to NDEBUG, vigra_assert                    7.21
+    costImageCost changes:                             .77 costImageCost -> .61
 - replace EnblendROI with vigra::Rect2D
 - vigra impex improvements
 - cfi swap policy improvements

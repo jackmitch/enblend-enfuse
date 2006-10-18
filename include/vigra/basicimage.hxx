@@ -33,7 +33,7 @@
 /*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
-
+// mihal 20061017   changed vigra_precondition to vigra_assert in functions that return traversers.
 #ifndef VIGRA_BASICIMAGE_HXX
 #define VIGRA_BASICIMAGE_HXX
 
@@ -852,7 +852,8 @@ class BasicImage
         */
     traverser upperLeft()
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::upperLeft(): image must have non-zero size.");
         return traverser(lines_);
     }
@@ -863,7 +864,8 @@ class BasicImage
         */
     traverser lowerRight()
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::lowerRight(): image must have non-zero size.");
         return upperLeft() + size();
     }
@@ -872,7 +874,8 @@ class BasicImage
         */
     const_traverser upperLeft() const
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::upperLeft(): image must have non-zero size.");
         return const_traverser(const_cast<PIXELTYPE **>(lines_));
     }
@@ -883,7 +886,8 @@ class BasicImage
         */
     const_traverser lowerRight() const
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::lowerRight(): image must have non-zero size.");
         return upperLeft() + size();
     }
@@ -892,7 +896,8 @@ class BasicImage
         */
     iterator begin()
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::begin(): image must have non-zero size.");
         return data_;
     }
@@ -901,7 +906,8 @@ class BasicImage
         */
     iterator end()
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::end(): image must have non-zero size.");
         return data_ + width() * height();
     }
@@ -910,7 +916,8 @@ class BasicImage
         */
     const_iterator begin() const
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::begin(): image must have non-zero size.");
         return data_;
     }
@@ -919,7 +926,8 @@ class BasicImage
         */
     const_iterator end() const
     {
-        vigra_precondition(data_ != 0,
+        //vigra_precondition(data_ != 0,
+        vigra_assert(data_ != 0,
           "BasicImage::end(): image must have non-zero size.");
         return data_ + width() * height();
     }

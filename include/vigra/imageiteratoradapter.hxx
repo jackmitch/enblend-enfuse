@@ -528,25 +528,32 @@ class LineIterator : private IMAGE_ITERATOR
         dy_ = end.y - start.y;
         dx_ = end.x - start.x;
 
-        if (dy_ < 0) {
-            dy_ = -dy_;
-            stepy_ = -1;
-        } else {
-            stepy_ = 1;
-        }
+        stepy_ = (dy_ < 0) ? -1 : 1;
+        dy_ = std::abs(dy_) << 1;
 
-        if (dx_ < 0) {
-            dx_ = -dx_;
-            stepx_ = -1;
-        } else {
-            stepx_ = 1;
-        }
+        stepx_ = (dx_ < 0) ? -1 : 1;
+        dx_ = std::abs(dx_) << 1;
 
-        dy_ <<= 1;
-        dx_ <<= 1;
+        fraction_ = (dx_ > dy_) ? (dy_ - (dx_ >> 1)) : (dx_ - (dy_ >> 1));
 
-        if (dx_ > dy_) fraction_ = dy_ - (dx_ >> 1);
-        else fraction_ = dx_ - (dy_ >> 1);
+        //if (dy_ < 0) {
+        //    dy_ = -dy_;
+        //    stepy_ = -1;
+        //} else {
+        //    stepy_ = 1;
+        //}
+
+        //if (dx_ < 0) {
+        //    dx_ = -dx_;
+        //    stepx_ = -1;
+        //} else {
+        //    stepx_ = 1;
+        //}
+        //dy_ <<= 1;
+        //dx_ <<= 1;
+
+        //if (dx_ > dy_) fraction_ = dy_ - (dx_ >> 1);
+        //else fraction_ = dx_ - (dy_ >> 1);
     }
 
     /** @name Navigation */

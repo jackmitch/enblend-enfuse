@@ -57,7 +57,7 @@ using vigra::importImageAlpha;
 using vigra::initImageIf;
 using vigra::NumericTraits;
 using vigra::Point2D;
-//using vigra::RGBToGrayAccessor;
+using vigra::RGBToGrayAccessor;
 using vigra::transformImage;
 using vigra::transformImageIf;
 

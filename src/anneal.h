@@ -186,6 +186,7 @@ protected:
             // Calculate E values
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
+                // FIXME memoize these for converged neighbors
                 E[i] = costImageCost(lastPointEstimate, currentPoint)
                         + costImageCost(currentPoint, nextPointEstimate)
                         + ((currentPoint - originalPoint).magnitude() / 2.0);
@@ -253,18 +254,27 @@ protected:
 
     int costImageCost(const Point2D &start, const Point2D &end) {
         int cost = 0;
-        int lineLength = 0;
 
-        if (start != end) {
-            CostIterator endIterator = costImage->upperLeft() + end;
-            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, endIterator);
+        int lineLength = std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
 
-            do {
+        if (lineLength > 0) {
+            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, costImage->upperLeft() + end);
+            for (int i = 0; i < lineLength; ++i) {
                 cost += *lineStart;
-                ++lineLength;
                 ++lineStart;
-            } while (lineStart != endIterator);
+            }
         }
+
+        //if (start != end) {
+        //    CostIterator endIterator = costImage->upperLeft() + end;
+        //    LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, endIterator);
+
+        //    do {
+        //        cost += *lineStart;
+        //        ++lineLength;
+        //        ++lineStart;
+        //    } while (lineStart != endIterator);
+        //}
 
         if (lineLength < 8) cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
 
