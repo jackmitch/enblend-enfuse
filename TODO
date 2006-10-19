@@ -42,20 +42,11 @@ X icc blending
     X polygon mask fill
     X dijkstra polygon vertex interpolation - at half resolution
     X polygon vertex annealing
-        X Replace LineIterator with Bresenham's algorithm
-              With original vigra LineIterator: 3.02 operator++
-                                                1.23 costImageCost
-              With new lineEnd compare:         2.65 operator++
-                                                2.16 iterate
-                                                1.17 costImageCost
-              With bresenham LineIterator:      0.93 operator++
-                                                1.97 iterate
-                                                1.10 costImageCost
-        - Additional optimizations:     start   4.48 iterate
-              code cleanup                      4.63 iterate
-              tau=.75                           3.60 iterate
-              magnitude / 4.0                   3.76 iterate
-              magnitude / 2.0                   3.69 iterate
+        X Integer LineIterator
+        X Memoize magnitude 33.28/67.95 -> 33.20/67.85
+        X Fast EXP macro updateStateProbabilities 25.95->17.18
+        X factor out tCurrent divide 12.35
+        X E integer 11.29
     - make it work with wraparound
     - code cleanup and comments
     - Progress indicators for advanced mask generation
@@ -63,7 +54,7 @@ X icc blending
     - output of quality improvement
     - option to revert to old mask algorithm
 - make striding argument object factories for BasicImages
-- add NDEBUG to Makefile.am
+X add NDEBUG to Makefile.am
 - misc optimizations
     vigra_precondition in BasicImage, CachedFileImage 7.16
     change to NDEBUG, vigra_assert                    7.21
@@ -79,7 +70,9 @@ X icc blending
 - fix memory estimation messages
 - update version number
 - documentation update
-
+- windows version
+    - compile libtiff with 64-bit file i/o api
+    - link other vigra-impex graphics libraries
 
 
 

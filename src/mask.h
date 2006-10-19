@@ -71,6 +71,24 @@ using vigra_ext::copyPaintedSetToImage;
 
 namespace enblend {
 
+template <typename PixelType, typename ResultType>
+class PixelDifferenceFunctor
+{
+public:
+    ResultType operator()(const PixelType & a, const PixelType & b) const {
+        ResultType aLum = a.luminance();
+        ResultType bLum = b.luminance();
+        ResultType aHue = a.hue();
+        ResultType bHue = b.hue();
+        ResultType lumDiff = std::abs(aLum - bLum);
+        ResultType hueDiff = std::abs(aHue - bHue);
+        if (hueDiff > (NumericTraits<ResultType>::max() / 2)) hueDiff = NumericTraits<ResultType>::max() - hueDiff;
+        return std::max(hueDiff, lumDiff);
+    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
+    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
+    }
+};
+
 template <class RGBVALUE>
 class RGBToHueAccessor
 {
@@ -379,11 +397,19 @@ MaskType *createMask(ImageType *white,
             NumericTraits<MismatchImagePixelType>::max());
 
     // Areas other than intersection region have maximum cost
-    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
-                     stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
+    combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white))),
+                     stride(2, 2, uvBB.apply(srcImage(*black))),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-                     ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
-                            Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
+                     PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
+    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToGrayAccessor<ImagePixelType>()))),
+    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToGrayAccessor<ImagePixelType>()))),
+    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+    //                 abs(Arg1() - Arg2()));
+    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
+    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
+    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
+    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
+    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
                      stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
                      srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),

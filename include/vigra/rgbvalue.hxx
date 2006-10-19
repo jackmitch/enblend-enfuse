@@ -287,6 +287,20 @@ class RGBValue
     value_type luminance() const {
          return detail::RequiresExplicitCast<value_type>::cast(0.3*red() + 0.59*green() + 0.11*blue()); }
 
+    // mihal 20061017 quick-and-dirty hue calculation
+    value_type hue() const {
+        value_type max = std::max(red(), std::max(green(), blue()));
+        value_type min = std::min(red(), std::min(green(), blue()));
+        value_type delta = (max - min) * 6;
+        typename NumericTraits<value_type>::RealPromote rdelta = NumericTraits<value_type>::toRealPromote(delta);
+        typename NumericTraits<value_type>::RealPromote h = 0.0;
+        if (red() == max) h = (green() - blue()) / rdelta;
+        else if (green() == max) h = (1/3) + ((blue() - red()) / rdelta);
+        else h = (2/3) + ((red() - green()) / rdelta);
+        if (h < 0.0) h += 1.0;
+        return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
+    }
+
         /** Calculate magnitude.
         */
     NormType magnitude() const {
