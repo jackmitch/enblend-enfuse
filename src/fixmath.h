@@ -24,7 +24,11 @@
 #include <config.h>
 #endif
 
+#ifdef _WIN32
+#include <cmath>
+#else
 #include <math.h>
+#endif
 
 #include "vigra/basicimage.hxx"
 #include "vigra/cachedfileimage.hxx"

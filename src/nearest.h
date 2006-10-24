@@ -25,7 +25,11 @@
 #endif
 
 #include <iostream>
+#ifdef _WIN32
+#include <cmath>
+#else
 #include <math.h>
+#endif
 #include <stdlib.h>
 #include <utility>
 

@@ -55,6 +55,10 @@ using std::list;
 using std::map;
 using std::min;
 
+#ifdef _WIN32
+#define mktemp _mktemp
+#endif
+
 namespace vigra {
 
 /** Abstract base class for CachedFileImages. */
@@ -723,13 +727,15 @@ public:
 
 protected:
 
-    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y, this), i(I), currentRow(NULL) {
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y, NULL), i(I), currentRow(NULL) {
+		y.setNotify(this);
         _notify(Y);
         //cout << "constructed iterator with notify " << this << endl;
     }
 
     // Constructor only for strided iterators
-    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, this, Y), i(I), currentRow(NULL) {
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, NULL, Y), i(I), currentRow(NULL) {
+		y.setNotify(this);
         _notify(Y);
     }
 
@@ -1681,7 +1687,7 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
         vigra_fail(strerror(errno));
     }
 
-    int filenameTemplateLength = strlen(filenameTemplate) + 1;
+    unsigned int filenameTemplateLength = (unsigned int)strlen(filenameTemplate) + 1;
     tmpFilename_ = new char[filenameTemplateLength];
     strncpy(tmpFilename_, filenameTemplate, filenameTemplateLength);
 

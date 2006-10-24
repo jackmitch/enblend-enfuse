@@ -27,10 +27,19 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
+#ifdef _WIN32
+#include <slist>
+#else
 #include <ext/slist>
+#endif
 #include <algorithm>
 #include <vector>
+
+#ifdef _WIN32
+#include <cmath>
+#else
 #include <math.h>
+#endif
 
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
@@ -38,7 +47,11 @@
 using std::for_each;
 using std::pair;
 using std::vector;
+#ifdef _WIN32
+using std::slist;
+#else
 using __gnu_cxx::slist;
+#endif
 
 using boost::lambda::bind;
 using boost::lambda::_1;
@@ -225,8 +238,8 @@ protected:
 
     // before reintegration: .44/17.25 -> 18.04
     void iterate() {
-        int E[kMax];
-        double pi[kMax];
+        int *E = new int[kMax];
+        double *pi = new double[kMax];
 
         unsigned int lastIndex = originalPoints.size() - 1;
         for (unsigned int index = 0; index < originalPoints.size(); ++index) {
@@ -287,6 +300,9 @@ protected:
             }
         }
 
+		delete[] E;
+		delete[] pi;
+
         kMax = 1;
         // Make new mean field estimates.
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
@@ -310,7 +326,7 @@ protected:
             }
             estimateX /= totalWeight;
             estimateY /= totalWeight;
-            Point2D newEstimate((int)round(estimateX), (int)round(estimateY));
+			Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX), NumericTraits<int>::fromRealPromote(estimateY));
             mfEstimates[index] = newEstimate;
 
             // Sanity check

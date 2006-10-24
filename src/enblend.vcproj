@@ -42,10 +42,10 @@
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\include;."
-				PreprocessorDefinitions="WIN32;__WIN32__;_DEBUG;ENBLEND_CACHE_IMAGES"
+				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;ENBLEND_CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libtiff.lib"
+				AdditionalDependencies="libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib"
 				OutputFile="$(OutDir)/enblend.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -124,15 +124,20 @@
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\include;."
-				PreprocessorDefinitions="WIN32;__WIN32__;NDEBUG;ENBLEND_CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE;"
+				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;ENBLEND_CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4251"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -145,11 +150,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libtiff.lib libjpeg.lib zlib.lib"
+				AdditionalDependencies="libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib"
 				OutputFile="$(OutDir)/enblend.exe"
 				LinkIncremental="1"
-				GenerateDebugInformation="true"
+				GenerateDebugInformation="false"
 				SubSystem="1"
+				LargeAddressAware="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -203,6 +209,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\anneal.h"
+				>
+			</File>
+			<File
 				RelativePath=".\assemble.h"
 				>
 			</File>
@@ -232,6 +242,14 @@
 			</File>
 			<File
 				RelativePath=".\nearest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\numerictraits.h"
+				>
+			</File>
+			<File
+				RelativePath=".\path.h"
 				>
 			</File>
 			<File

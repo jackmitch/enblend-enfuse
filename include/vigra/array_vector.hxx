@@ -508,7 +508,8 @@ void ArrayVector<T, Alloc>::swap(this_type & rhs)
 template <class T, class Alloc>
 void ArrayVector<T, Alloc>::deallocate(pointer data, size_type size)
 {
-    if(data)
+	// mihal 20061023 stlport seems to not handle deallocate(data, 0) properly.
+    if(data && (size > 0))
     {
         detail::destroy_n(data, size);
         alloc_.deallocate(data, size);

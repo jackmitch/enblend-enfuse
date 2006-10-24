@@ -149,8 +149,13 @@ namespace vigra {
 
     void PnmDecoderImpl::skip_whitespace()
     {
-        while ( std::isspace( stream.peek() ) )
+#ifdef _WIN32
+		while (isspace(stream.peek()))
+			stream.get();
+#else
+		while ( std::isspace( stream.peek() ) )
             stream.get();
+#endif
     }
 
     void PnmDecoderImpl::skip()

@@ -71,8 +71,8 @@ X add NDEBUG to Makefile.am
 - update version number
 - documentation update
 - windows version
-    - compile libtiff with 64-bit file i/o api
-    - link other vigra-impex graphics libraries
+    X compile libtiff with 64-bit file i/o api
+    X link other vigra-impex graphics libraries
 
 
 

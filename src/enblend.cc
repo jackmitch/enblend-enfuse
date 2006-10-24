@@ -25,6 +25,8 @@
 #include <win32helpers\win32config.h>
 
 // Make sure we bring in windows.h the right way
+#define _STLP_VERBOSE_AUTO_LINK
+#define _USE_MATH_DEFINES
 #define NOMINMAX
 #define VC_EXTRALEAN 
 #include <windows.h>
@@ -126,6 +128,10 @@ using vigra::StdException;
 
 using enblend::enblendMain;
 using enblend::EnblendROI;
+
+#ifdef _WIN32
+#define strdup _strdup
+#endif
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {

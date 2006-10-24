@@ -95,6 +95,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     pair<ImageType*, AlphaType*> blackPair =
             assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
 
+	ImageExportInfo blackAlpha("enblend_black_alpha.tif");
+	exportImage(srcImageRange(*(blackPair.second)), blackAlpha);
+
     if (Checkpoint) checkpoint(blackPair, outputImageInfo);
 
     // mem usage before = 0
@@ -123,6 +126,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
         // mem xsection = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+
+		ImageExportInfo whiteAlpha("enblend_white_alpha.tif");
+		exportImage(srcImageRange(*(whitePair.second)), whiteAlpha);
 
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {

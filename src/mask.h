@@ -25,7 +25,11 @@
 #endif
 
 #include <iostream>
+#ifdef _WIN32
+#include <slist>
+#else
 #include <ext/slist>
+#endif
 
 #include "common.h"
 #include "anneal.h"
@@ -43,9 +47,17 @@
 #include "vigra_ext/impexalpha.hxx"
 #include "vigra_ext/XMIWrapper.h"
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/if.hpp>
+
 using std::make_pair;
 using std::vector;
+#ifdef _WIN32
+using std::slist;
+#else
 using __gnu_cxx::slist;
+#endif
 
 using vigra::combineThreeImages;
 using vigra::combineTwoImages;
@@ -66,8 +78,14 @@ using vigra::functor::Arg2;
 using vigra::functor::Arg3;
 using vigra::functor::ifThenElse;
 using vigra::functor::Param;
+using vigra::functor::UnaryFunctor;
 
 using vigra_ext::copyPaintedSetToImage;
+
+using boost::lambda::_1;
+using boost::lambda::_2;
+using boost::lambda::if_then_else_return;
+using boost::lambda::constant;
 
 namespace enblend {
 
@@ -168,9 +186,9 @@ MaskType *createMask(ImageType *white,
     //initImageIf(destImageRange(*maskInit),
     //        maskIter(whiteAlpha->upperLeft() + uBB.getUL()),
     //        NumericTraits<MaskPixelType>::one());
-    initImageIf(stride8_initBB.apply(destImageRange(*maskInit)),
-            stride(8, 8, maskIter(whiteAlpha->upperLeft() + uBB.getUL())),
-            NumericTraits<MaskPixelType>::one());
+    //initImageIf(stride8_initBB.apply(destImageRange(*maskInit)),
+    //        stride(8, 8, maskIter(whiteAlpha->upperLeft() + uBB.getUL())),
+    //        NumericTraits<MaskPixelType>::one());
 
     // maskInit = maskInit + 255 at all pixels where blackImage contributes.
     // if whiteImage also contributes, this wraps around to zero.
@@ -178,10 +196,30 @@ MaskType *createMask(ImageType *white,
     //        maskIter(blackAlpha->upperLeft() + uBB.getUL()),
     //        destImage(*maskInit),
     //        (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
-    transformImageIf(stride8_initBB.apply(srcImageRange(*maskInit)),
-            stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.getUL())),
-            stride8_initBB.apply(destImage(*maskInit)),
-            (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
+    //transformImageIf(stride8_initBB.apply(srcImageRange(*maskInit)),
+    //        stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.getUL())),
+    //        stride8_initBB.apply(destImage(*maskInit)),
+    //        (Param(NumericTraits<MaskPixelType>::one()) * Arg1()) + Param(NumericTraits<MaskPixelType>::max()));
+
+	combineTwoImages(stride(8, 8, uBB.apply(srcImageRange(*blackAlpha))),
+					 stride(8, 8, uBB.apply(srcImage(*whiteAlpha))),
+					 stride8_initBB.apply(destImage(*maskInit)),
+					 //ifThenElse(vigra::functor::UnaryFunctor<vigra::functor::Functor_bitXor<UnaryFunctor<UnaryFunctor<vigra::functor::ArgumentFunctor2> >, UnaryFunctor<UnaryFunctor<vigra::functor::ArgumentFunctor1> > > >(vigra::functor::Functor_bitXor<UnaryFunctor<UnaryFunctor<vigra::functor::ArgumentFunctor2> >, UnaryFunctor<UnaryFunctor<vigra::functor::ArgumentFunctor1> > >(Arg2(), Arg1())),
+					 //if_then_else_return(_1 ^ _2, constant(NumericTraits<MaskPixelType>::max()),
+					 //constant(NumericTraits<MaskPixelType>::zero())));
+					 Arg1());
+					 //ifThenElse(Arg2(),
+					 //Param(NumericTraits<MaskPixelType>::max()),
+					 //Param(NumericTraits<MaskPixelType>::zero())));
+					 //ifThenElse((Arg2() || Arg1()),
+					 //		Param(NumericTraits<MaskPixelType>::max()),
+					 //		//ifThenElse(Arg1(),
+					 //		//		Param(NumericTraits<MaskPixelType>::one()),
+					 //		//		Param(NumericTraits<MaskPixelType>::max())),
+					 //		Param(NumericTraits<MaskPixelType>::zero())));
+
+	ImageExportInfo maskInitInfo("enblend_mask_init.tif");
+	exportImage(srcImageRange(*maskInit), maskInitInfo);
 
     // Mask transform replaces 0 areas with either 1 or 255.
     //MaskType *maskTransform = new MaskType(uBB.size());
