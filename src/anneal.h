@@ -241,7 +241,9 @@ protected:
             unsigned int nextIndex = (index + 1) % originalPoints.size();
             Point2D originalPoint = originalPoints[index];
             Point2D lastPointEstimate = mfEstimates[lastIndex];
+            bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
             Point2D nextPointEstimate = mfEstimates[nextIndex];
+            bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
             lastIndex = index;
 
             // Calculate E values.
@@ -249,9 +251,9 @@ protected:
             double exp_a = (1048576 / M_LN2) / tCurrent;
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
-                E[i] = costImageCost(lastPointEstimate, currentPoint)
-                        + costImageCost(currentPoint, nextPointEstimate)
-                        + (*stateDistances)[i];
+                E[i] = (*stateDistances)[i];
+                if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
+                if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
                 E[i] = (int)(E[i] * exp_a);
                 pi[i] = 0.0;
             }
@@ -308,7 +310,14 @@ protected:
             }
             estimateX /= totalWeight;
             estimateY /= totalWeight;
-            mfEstimates[index] = Point2D((int)round(estimateX), (int)round(estimateY));
+            Point2D newEstimate((int)round(estimateX), (int)round(estimateY));
+            mfEstimates[index] = newEstimate;
+
+            // Sanity check
+            if (!costImage->isInside(newEstimate)) {
+                cerr << "new mf estimate for point " << originalPoints[index] << " is outside cost image: " << newEstimate << endl;
+                exit(-1);
+            }
 
             // Remove improbable solutions from the search space
             for (unsigned int k = 0; k < stateSpace->size(); ) {
@@ -338,6 +347,11 @@ protected:
     }
 
     inline int costImageCost(const Point2D &start, const Point2D &end) {
+        if (!(costImage->isInside(start) && costImage->isInside(end))) {
+            cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
+            exit(-1);
+        }
+
         int cost = 0;
 
         int lineLength = std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
