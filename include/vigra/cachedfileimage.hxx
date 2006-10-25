@@ -791,8 +791,8 @@ public:
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *> Base;
 
     CachedFileImageIterator(const int x = 0,
-							const int y = 0,
-							CachedFileImage<PIXELTYPE> * const i = NULL)
+                            const int y = 0,
+                            CachedFileImage<PIXELTYPE> * const i = NULL)
     : Base(x, y, i)
     {}
 
@@ -817,25 +817,25 @@ public:
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
     ConstCachedFileImageIterator(const int x = 0,
-								 const int y = 0,
-								 const CachedFileImage<PIXELTYPE> * const i = NULL)
+                                 const int y = 0,
+                                 const CachedFileImage<PIXELTYPE> * const i = NULL)
     : Base(x, y, i)
     {}
 
-	ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
+    ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
     : Base(rhs)
     {}
 
     ConstCachedFileImageIterator &
     operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
     {
-		Base::x = rhs.x;
-		Base::y = rhs.y;
-		Base::i = rhs.i;
-		Base::currentRow = NULL;
-		Base::y.setNotify(this);
-		Base::_notify(Base::y());
-		return *this;
+        Base::x = rhs.x;
+        Base::y = rhs.y;
+        Base::i = rhs.i;
+        Base::currentRow = NULL;
+        Base::y.setNotify(this);
+        Base::_notify(Base::y());
+        return *this;
     }
 
     friend class ConstStridedCachedFileImageIterator<PIXELTYPE>;
@@ -857,16 +857,16 @@ public:
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *, StridedArrayTag> Base;
 
     StridedCachedFileImageIterator(const int x = 0,
-								   const int y = 0,
-								   CachedFileImage<PIXELTYPE> * const i = NULL,
-								   const int xstride = 1,
-								   const int ystride = 1)
+                                   const int y = 0,
+                                   CachedFileImage<PIXELTYPE> * const i = NULL,
+                                   const int xstride = 1,
+                                   const int ystride = 1)
     : Base(x, y, i, xstride, ystride)
     {}
 
     StridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r,
-								   const int xstride,
-								   const int ystride)
+                                   const int xstride,
+                                   const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
@@ -889,22 +889,22 @@ public:
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
     ConstStridedCachedFileImageIterator(const int x = 0,
-		                                const int y = 0,
-										const CachedFileImage<PIXELTYPE> * const i = NULL,
-										const int xstride = 1,
-										const int ystride = 1)
+                                        const int y = 0,
+                                        const CachedFileImage<PIXELTYPE> * const i = NULL,
+                                        const int xstride = 1,
+                                        const int ystride = 1)
     : Base(x, y, i, xstride, ystride)
     {}
 
     ConstStridedCachedFileImageIterator(ConstCachedFileImageIterator<PIXELTYPE> const & r,
-										const int xstride,
-										const int ystride)
+                                        const int xstride,
+                                        const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
     ConstStridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r,
-		                                const int xstride,
-										const int ystride)
+                                        const int xstride,
+                                        const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
@@ -915,13 +915,13 @@ public:
     ConstStridedCachedFileImageIterator &
     operator=(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
     {
-		Base::x = rhs.x;
-		Base::y = rhs.y;
-		Base::i = rhs.i;
-		Base::currentRow = NULL;
-		Base::y.setNotify(this);
-		Base::_notify(Base::y());
-		return *this;
+        Base::x = rhs.x;
+        Base::y = rhs.y;
+        Base::i = rhs.i;
+        Base::currentRow = NULL;
+        Base::y.setNotify(this);
+        Base::_notify(Base::y());
+        return *this;
     }
 
 };

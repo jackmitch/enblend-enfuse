@@ -187,33 +187,6 @@ int main(int argc, char** argv) {
     
     signal(SIGINT, sigint_handler);
 
-	/*
-	try
-    {
-        vigra::ImageImportInfo info1(argv[1]);
-        vigra::ImageImportInfo info2(argv[2]);
-        vigra::ImageExportInfo info3(argv[3]);
-        
-        vigra::UInt8CFImage in1(info1.width(), info1.height());
-        vigra::UInt8CFImage in2(info1.width(), info1.height());
-        vigra::UInt8CFImage out(info1.width(), info1.height());
-           
-        importImage(info1, destImage(in1));
-        importImage(info2, destImage(in2));
-
-        combineTwoImages(srcImageRange(in1), srcImage(in2), destImage(out),
-            Arg1() ^ Arg2());
-            
-        exportImage(srcImageRange(out), info3);
-
-    }
-    catch (vigra::StdException & e)
-    {
-        std::cout << e.what() << std::endl;
-        return 1;
-    }
-	*/
-
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
     // to avoid interactive warning dialogs.
     //TIFFSetWarningHandler(NULL);
