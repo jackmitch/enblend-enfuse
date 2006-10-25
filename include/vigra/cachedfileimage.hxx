@@ -539,13 +539,12 @@ template <class T, class Notify>
 class NotifyingDirectionSelector<UnstridedArrayTag, T, Notify>
 {
 public:
-    NotifyingDirectionSelector() : current_(0), notify_(NULL) {}
-    NotifyingDirectionSelector(T base, Notify *notify) : current_(base), notify_(notify) {}
+    NotifyingDirectionSelector(T base = 0) : current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : current_(rhs.current_), notify_(NULL) {}
 
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
-        notify_->_notify(current_, rhs.current_);
         current_ = rhs.current_;
+        notify_ = NULL;
         return *this;
     }
 
@@ -579,18 +578,17 @@ private:
 template <class T, class Notify>
 class NotifyingDirectionSelector<StridedArrayTag, T, Notify> {
 public:
-    NotifyingDirectionSelector() : stride_(1), current_(0), notify_(NULL) {}
-    NotifyingDirectionSelector(int stride, Notify *notify, T base = 0) : stride_(stride), current_(base), notify_(notify) {}
+    NotifyingDirectionSelector(int stride = 1, T base = 0) : stride_(stride), current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_), notify_(NULL) {}
 
-    void setNotify(Notify *n) { notify_ = n; }
-
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
-        notify_->_notify(current_, rhs.current_);
-        current_ = rhs.current_;
         stride_ = rhs.stride_;
+        current_ = rhs.current_;
+        notify_ = NULL;
         return *this;
     }
+
+	void setNotify(Notify *n) { notify_ = n; }
 
     void operator++() { notify_->_notify(current_, current_+stride_); current_ += stride_; }
     void operator++(int) { notify_->_notify(current_, current_+stride_); current_ += stride_; }
@@ -727,29 +725,30 @@ public:
 
 protected:
 
-    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y, NULL), i(I), currentRow(NULL) {
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y), i(I), currentRow(NULL) {
 		y.setNotify(this);
-        _notify(Y);
-        //cout << "constructed iterator with notify " << this << endl;
+        _notify(y());
     }
 
     // Constructor only for strided iterators
-    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, NULL, Y), i(I), currentRow(NULL) {
+    CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, Y), i(I), currentRow(NULL) {
 		y.setNotify(this);
-        _notify(Y);
+        _notify(y());
     }
 
-    CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y), i(r.i), currentRow(r.currentRow) {
+    CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y), i(r.i), currentRow(NULL) {
         y.setNotify(this);
-    }
+		_notify(y());
+	}
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
-        // We will get notified when y changes, so it is important to change the image first.
-        i = r.i;
         x = r.x;
         y = r.y;
-        //currentRow = r.currentRow;
-        return *this;
+        i = r.i;
+		currentRow = NULL;
+		y.setNotify(this);
+		_notify(y());
+		return *this;
     }
 
     void _notify(int initialY) {
@@ -791,12 +790,10 @@ public:
             CachedFileImage<PIXELTYPE>,
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *> Base;
 
-    CachedFileImageIterator(const int x, const int y, CachedFileImage<PIXELTYPE> * const i)
+    CachedFileImageIterator(const int x = 0,
+							const int y = 0,
+							CachedFileImage<PIXELTYPE> * const i = NULL)
     : Base(x, y, i)
-    {}
-
-    CachedFileImageIterator()
-    : Base(0, 0, NULL)
     {}
 
     friend class StridedCachedFileImageIterator<PIXELTYPE>;
@@ -819,28 +816,26 @@ public:
             PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *> Base;
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
-    ConstCachedFileImageIterator(const int x, const int y, const CachedFileImage<PIXELTYPE> * const i)
+    ConstCachedFileImageIterator(const int x = 0,
+								 const int y = 0,
+								 const CachedFileImage<PIXELTYPE> * const i = NULL)
     : Base(x, y, i)
     {}
 
-    ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
-    //: Base(rhs.x, rhs.y, rhs.i)
+	ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
     : Base(rhs)
-    {}
-
-    ConstCachedFileImageIterator()
-    : Base(0, 0, NULL)
     {}
 
     ConstCachedFileImageIterator &
     operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
     {
-        // We will get notified when y changes so it is important to change i first.
-        Base::i = rhs.i;
-        Base::x = rhs.x;
-        Base::y = rhs.y;
-        //Base::currentRow = rhs.currentRow;
-        return *this;
+		Base::x = rhs.x;
+		Base::y = rhs.y;
+		Base::i = rhs.i;
+		Base::currentRow = NULL;
+		Base::y.setNotify(this);
+		Base::_notify(Base::y());
+		return *this;
     }
 
     friend class ConstStridedCachedFileImageIterator<PIXELTYPE>;
@@ -861,16 +856,18 @@ public:
             CachedFileImage<PIXELTYPE>,
             PIXELTYPE, PIXELTYPE &, PIXELTYPE *, StridedArrayTag> Base;
 
-    StridedCachedFileImageIterator(const int x, const int y, CachedFileImage<PIXELTYPE> * const i, const int xstride, const int ystride)
+    StridedCachedFileImageIterator(const int x = 0,
+								   const int y = 0,
+								   CachedFileImage<PIXELTYPE> * const i = NULL,
+								   const int xstride = 1,
+								   const int ystride = 1)
     : Base(x, y, i, xstride, ystride)
     {}
 
-    StridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    StridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r,
+								   const int xstride,
+								   const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
-    {}
-
-    StridedCachedFileImageIterator()
-    : Base(0, 0, NULL, 1, 1)
     {}
 
 };
@@ -891,15 +888,23 @@ public:
             PIXELTYPE, PIXELTYPE const &, PIXELTYPE const *, StridedArrayTag> Base;
     // FIXME this needs to be a weak_ptr  ^^^^^^^^^^^^^^^^^
 
-    ConstStridedCachedFileImageIterator(const int x, const int y, const CachedFileImage<PIXELTYPE> * const i, const int xstride, const int ystride)
+    ConstStridedCachedFileImageIterator(const int x = 0,
+		                                const int y = 0,
+										const CachedFileImage<PIXELTYPE> * const i = NULL,
+										const int xstride = 1,
+										const int ystride = 1)
     : Base(x, y, i, xstride, ystride)
     {}
 
-    ConstStridedCachedFileImageIterator(ConstCachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    ConstStridedCachedFileImageIterator(ConstCachedFileImageIterator<PIXELTYPE> const & r,
+										const int xstride,
+										const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
-    ConstStridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r, const int xstride, const int ystride)
+    ConstStridedCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & r,
+		                                const int xstride,
+										const int ystride)
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
@@ -907,18 +912,16 @@ public:
     : Base(rhs)
     {}
 
-    ConstStridedCachedFileImageIterator()
-    : Base(0, 0, NULL, 1, 1)
-    {}
-
     ConstStridedCachedFileImageIterator &
     operator=(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
     {
-        Base::x = rhs.x;
-        Base::y = rhs.y;
-        Base::i = rhs.i;
-        Base::currentRow = rhs.currentRow;
-        return *this;
+		Base::x = rhs.x;
+		Base::y = rhs.y;
+		Base::i = rhs.i;
+		Base::currentRow = NULL;
+		Base::y.setNotify(this);
+		Base::_notify(Base::y());
+		return *this;
     }
 
 };
