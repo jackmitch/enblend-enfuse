@@ -27,6 +27,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
+#include <list>
 #ifdef _WIN32
 #include <slist>
 #else
@@ -43,10 +44,12 @@
 
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
+#include "vigra_ext/XMIWrapper.h"
 
 using std::for_each;
 using std::pair;
 using std::vector;
+using std::list;
 #ifdef _WIN32
 using std::slist;
 #else
@@ -61,23 +64,72 @@ using vigra::LineIterator;
 using vigra::Point2D;
 using vigra::Rect2D;
 
+using vigra_ext::copyPaintedSetToImage;
+
 namespace enblend {
 
-//static union {
-//    double d;
-//    struct {
-//        #ifdef WORDS_BIGENDIAN
-//            int i, j;
-//        #else
-//            int j, i;
-//        #endif
-//    } n;
-//} _eco;
-//
-//#define EXP_A (1048576 / M_LN2)
-//#define EXP_C 60801
-//#define EXP(y) (_eco.n.i = int(EXP_A*(y)) + (1072693248 - EXP_C), _eco.d)
+/*
+template <typename CostImage>
+void drawDottedLine(CostImage & i, list<Point2D> & l, typename CostImage::PixelType p) {
+    typedef typename CostImage::PixelType CostImagePixelType;
 
+    miPixel pixels[2];
+    pixels[0] = p;
+    pixels[1] = p;
+    miGC *pGC = miNewGC(2, pixels);
+    miPaintedSet *paintedSet = miNewPaintedSet();
+    miPoint *mip = new miPoint[l.size()];
+
+    int index = 0;
+    for (list<Point2D>::iterator points = l.begin(); points != l.end(); ++points, ++index) {
+        mip[index].x = (*points).x;
+        mip[index].y = (*points).y;
+    }
+
+    miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
+    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
+    miClearPaintedSet(paintedSet);
+
+    p = (p > (NumericTraits<CostImagePixelType>::max() / 2))
+            ? NumericTraits<CostImagePixelType>::zero()
+            : NumericTraits<CostImagePixelType>::max();
+    pixels[0] = p;
+    pixels[1] = p;
+    miSetGCPixels(pGC, 2, pixels);
+    
+    miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
+    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
+
+    miDeleteGC(pGC);
+    miDeletePaintedSet(paintedSet);
+    delete[] mip;
+}
+
+template<typename CostImage>
+void drawSegments(CostImage & i, list<Point2D> & l1, list<Point2D> & l2, typename CostImage::PixelType p) {
+    typedef typename CostImage::PixelType CostImagePixelType;
+
+    miPixel pixels[2];
+    pixels[0] = p;
+    pixels[1] = p;
+    miGC *pGC = miNewGC(2, pixels);
+    miPaintedSet *paintedSet = miNewPaintedSet();
+    miPoint mip[2];
+
+    for (list<Point2D>::iterator l1Point = l1.begin(), l2Point = l2.begin(); l1Point != l1.end(); ++l1Point, ++l2Point) {
+        mip[0].x = (*l1Point).x;
+        mip[0].y = (*l1Point).y;
+        mip[1].x = (*l2Point).x;
+        mip[1].y = (*l2Point).y;
+        miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, 2, mip);
+    }
+
+    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
+
+    miDeleteGC(pGC);
+    miDeletePaintedSet(paintedSet);
+}
+*/
 
 template <typename CostImage>
 class GDAConfiguration {
@@ -85,13 +137,167 @@ public:
     typedef typename CostImage::PixelType CostImagePixelType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v) : costImage(d) {
+    GDAConfiguration(const CostImage* const d, list<pair<bool, Point2D> > *v) : costImage(d) {
 
         kMax = 1;
 
+        CostImage visualizeStateSpaceImage(*costImage);
+
+        int costImageShortDimension = std::min(costImage->width(), costImage->height());
+        // Determine state space of currentPoint
+        int stateSpaceWidth = costImageShortDimension / 3;
+
+/*
+        list<bool> selfIntersects;
+        list<Point2D> leftPoints;
+        list<Point2D> middlePoints;
+        list<Point2D> rightPoints;
+
+        // FIXME assuming v is an open contour bounded by one nonmoveable vertex on each end.
+        list<pair<bool, Point2D> >::iterator last = --(v->end());
+        Point2D previousPoint = last->second;
+        for (list<pair<bool, Point2D> >::iterator current = v->begin(); current != last; ) {
+
+            bool currentMoveable = current->first;
+            Point2D currentPoint = current->second;
+            ++current;
+            Point2D nextPoint = current->second;
+
+            //cout << "previousPoint=" << previousPoint << " currentPoint=" << currentPoint << " nextPoint=" << nextPoint << endl;
+
+            if (currentMoveable) {
+                // vp = vector from previousPoint to currentPoint
+                Diff2D vp(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y);
+                // vn = vector from currentPoint to nextPoint
+                Diff2D vn(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
+                // np = normal to vp
+                Diff2D np(-vp.y, vp.x);
+                // nn = normal to vn
+                Diff2D nn(-vn.y, vn.x);
+                
+                // normal = normal vector at currentPoint
+                // normal points to the left of vp and vn.
+                Diff2D normal = np + nn;
+                normal *= (stateSpaceWidth / normal.magnitude());
+
+                middlePoints.push_back(currentPoint);
+                leftPoints.push_back(currentPoint + normal);
+                rightPoints.push_back(currentPoint - normal);
+                selfIntersects.push_back(false);
+
+                //cout << "leftPoint=" << (currentPoint+normal) << " middlePoint=" << currentPoint << " rightPoint=" << (currentPoint - normal) << endl;
+            }
+
+            previousPoint = currentPoint;
+        }
+
+        drawDottedLine(visualizeStateSpaceImage, leftPoints, 50);
+        drawDottedLine(visualizeStateSpaceImage, rightPoints, 75);
+        drawDottedLine(visualizeStateSpaceImage, middlePoints, 100);
+
+        list<Point2D>::iterator lastMiddle = middlePoints.begin();
+        list<Point2D>::iterator lastLeft = leftPoints.begin();
+        list<Point2D>::iterator lastRight = rightPoints.begin();
+        list<Point2D>::iterator lastSelfIntersects = selfIntersects.begin();
+        list<Point2D>::iterator currentSelfIntersects = ++(selfIntersects.begin());
+        list<Point2D>::iterator currentMiddle = ++(middlePoints.begin());
+        list<Point2D>::iterator currentLeft = ++(leftPoints.begin());
+        list<Point2D>::iterator currentRight = ++(rightPoints.begin());
+        for (; currentMiddle != middlePoints.end();
+                ++lastMiddle, ++lastLeft, ++lastRight, ++currentMiddle, ++currentLeft, ++currentRight, ++lastSelfIntersects, ++currentSelfIntersects) {
+
+            list<Point2D>::iterator backwardsSelfIntersects = lastSelfIntersects;
+            list<Point2D>::iterator backwardsLeft = lastLeft;
+            list<Point2D>::iterator backwardsMiddle = lastMiddle;
+            //bool hasIntersect = false;
+            while(segmentIntersect(*backwardsMiddle, *backwardsLeft, *currentMiddle, *currentLeft)) {
+                //hasIntersect = true;
+                *backwardsSelfIntersects = true;
+                if (backwardsLeft == leftPoints.begin()) break;
+                --backwardsLeft;
+                --backwardsMiddle;
+                --backwardsSelfIntersects;
+            }
+            //if (hasIntersect) {
+            //    Point2D pointToUse = *backwardsLeft;
+            //    for (++backwardsLeft, ++backwardsMiddle; backwardsLeft != currentLeft; ++backwardsLeft, ++backwardsMiddle) {
+            //        *backwardsLeft = pointToUse;
+            //        //int priorDistance = (*backwardsLeft - *backwardsMiddle).squaredMagnitude();
+            //        //int newDistance = (*currentLeft - *backwardsMiddle).squaredMagnitude();
+            //        //if (newDistance > priorDistance)
+            //        //    *backwardsLeft = *currentLeft;
+            //    }
+            //    *currentLeft = pointToUse;
+            //}
+
+*/
+
+/*
+            if (segmentIntersect(*lastMiddle, *lastLeft, *currentMiddle, *currentLeft)) {
+                //cout << "left intersect " << *lastMiddle << "->" << *lastLeft << "  " << *currentMiddle << "->" << *currentLeft << endl;
+
+                //int currentDistance = (*currentLeft - *currentMiddle).squaredMagnitude();
+                //int lastDistance = (*lastLeft - *currentMiddle).squaredMagnitude();
+                //if (currentDistance < lastDistance) {
+                    *currentLeft = *lastLeft;
+                //}
+            }
+
+            //if (lastRight->x > 200 && lastRight->x < 220) cout << "right test " << *lastMiddle << "->" << *lastRight << "  " << *currentMiddle << "->" << *currentRight << endl;
+            if (segmentIntersect(*lastMiddle, *lastRight, *currentMiddle, *currentRight)) {
+                //cout << "right intersect " << *lastMiddle << "->" << *lastRight << "  " << *currentMiddle << "->" << *currentRight << endl;
+                int currentDistance = (*currentRight - *currentMiddle).squaredMagnitude();
+                int lastDistance = (*lastRight - *currentMiddle).squaredMagnitude();
+                if (currentDistance < lastDistance) {
+                    *currentRight = *lastRight;
+                }
+            }
+*/
+/*
+        }
+*/
+/*
+        list<Point2D>::iterator lastNonSelfIntersect = leftPoints.begin();
+        currentSelfIntersects = selfIntersects.begin();
+        currentLeft = leftPoints.begin();
+        bool 
+        for (; currentSelfIntersects != selfIntersects.end(); ++currentSelfIntersects, ++currentLeft) {
+            if (!*currentSelfIntersects) {
+
+        drawDottedLine(visualizeStateSpaceImage, leftPoints, 150);
+        drawDottedLine(visualizeStateSpaceImage, rightPoints, 175);
+        drawDottedLine(visualizeStateSpaceImage, middlePoints, 200);
+
+        drawSegments(visualizeStateSpaceImage, middlePoints, leftPoints, 220);
+        //miPixel pixels[2];
+        //pixels[0] = NumericTraits<CostImagePixelType>::max();
+        //pixels[1] = NumericTraits<CostImagePixelType>::max();
+        //miGC *pGC = miNewGC(2, pixels);
+        //miSetGCAttrib(pGC, MI_GC_LINE_WIDTH, stateSpaceWidth);
+        //miSetGCMiterLimit(pGC, 1.2);
+        //miPaintedSet *paintedSet = miNewPaintedSet();
+
+        //int goodPoints = 0;
+        //miPoint *leftParallelPoints = new miPoint[v->size()];
+        //miPoint *rightParallelPoints = new miPoint[v->size()];
+        //miPoint *centerPoints = new miPoint[v->size()];
+*/
+
+
+/*
         // Copy original point locations into originalPoints and mfEstimates
-        slist<pair<bool, Point2D> >::iterator lastPoint = v->previous(v->end());
-        for (slist<pair<bool, Point2D> >::iterator currentPoint = v->begin(); currentPoint != v->end(); ) {
+        //list<pair<bool, Point2D> >::iterator lastPoint = v->previous(v->end());
+        list<pair<bool, Point2D> >::iterator lastPoint = v->end();
+        --lastPoint;
+        for (list<pair<bool, Point2D> >::iterator currentPoint = v->begin(); currentPoint != v->end(); ) {
+
+        Point2D lastNormalPoint;
+        Point2D lastInvNormalPoint;
+        bool hasLastNormals = false;
+*/
+        list<pair<bool, Point2D> >::iterator lastPoint = v->end();
+        --lastPoint;
+        for (list<pair<bool, Point2D> >::iterator currentPoint = v->begin(); currentPoint != v->end(); ) {
 
             originalPoints.push_back(currentPoint->second);
             mfEstimates.push_back(currentPoint->second);
@@ -113,6 +319,7 @@ public:
 
                 lastPoint = currentPoint;
                 ++currentPoint;
+                hasLastNormals = false;
             }
             else {
                 Point2D lastPoint2D = lastPoint->second;
@@ -121,17 +328,180 @@ public:
                 ++currentPoint;
                 Point2D nextPoint2D = (currentPoint == v->end()) ? v->begin()->second : currentPoint->second;
 
+                // vp = vector from lastPoint to currentPoint
+                Diff2D vp(currentPoint2D.x - lastPoint2D.x, currentPoint2D.y - lastPoint2D.y);
+                // vn = vector from currentPoint to nextPoint
+                Diff2D vn(nextPoint2D.x - currentPoint2D.x, nextPoint2D.y - currentPoint2D.y);
+                // np = normal to vp
+                Diff2D np(-vp.y, vp.x);
+                // nn = normal to vn
+                Diff2D nn(-vn.y, vn.x);
+
+                // normal = normal vector at currentPoint
+                // normal points to the left of vp and vn.
+                Diff2D normal = np + nn;
+
+                normal *= (stateSpaceWidth / normal.magnitude());
+                Diff2D invNormal = -normal;
+
+                if (
+
+                hasLastNormals = true;
+                lastNormalPoint = normal;
+                lastInvNormalPoint = invNormal;
+#if 0
+                // Make polyline segment containing three points
+                // First point: point halfway between lastPoint2D and currentPoint2D
+                // Second point: currentPoint2D
+                // Last point: point halfway between currentPoint2D and nextPoint2D
+
+                // vp = vector from lastPoint to currentPoint
+                Diff2D vp(currentPoint2D.x - lastPoint2D.x, currentPoint2D.y - lastPoint2D.y);
+                Point2D previousHalf = lastPoint2D + (vp / 2);
+
+                // vn = vector from currentPoint to nextPoint
+                Diff2D vn(nextPoint2D.x - currentPoint2D.x, nextPoint2D.y - currentPoint2D.y);
+                Point2D nextHalf = currentPoint2D + (vn / 2);
+
+                miPoint points[3];
+                points[0].x = previousHalf.x;
+                points[0].y = previousHalf.y;
+                points[1].x = currentPoint2D.x;
+                points[1].y = currentPoint2D.y;
+                points[2].x = nextHalf.x;
+                points[2].y = nextHalf.y;
+
+                // Rasterize polyline segment
+                miClearPaintedSet(paintedSet);
+                --(pixels[0]);
+                --(pixels[1]);
+                miSetGCPixels(pGC, 2, pixels);
+                miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, 3, points);
+if (pixels[1] == 208)
+                copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+                visualizeStateSpaceImage[currentPoint2D] = 255;
+#endif
+
+#if 0
+                // Determine state space of currentPoint
+                double stateSpaceWidth = costImageShortDimension / 3.0;
+
+                // vp = vector from lastPoint to currentPoint
+                Diff2D vp(currentPoint2D.x - lastPoint2D.x, currentPoint2D.y - lastPoint2D.y);
+
+                // vn = vector from currentPoint to nextPoint
+                Diff2D vn(nextPoint2D.x - currentPoint2D.x, nextPoint2D.y - currentPoint2D.y);
+
+                // np = normal to vp
+                Diff2D np(-vp.y, vp.x);
+
+                // nn = normal to vn
+                Diff2D nn(-vn.y, vn.x);
+
+                // normal = normal vector at currentPoint
+                // normal points to the left of vp and vn.
+                Diff2D normal = np + nn;
+
+                Diff2D normalScaled = normal * (stateSpaceWidth / normal.magnitude());
+                Diff2D invNormalScaled = normal * (-1 * stateSpaceWidth / normal.magnitude());
+                //// cosTheta = cosine of angle between vp and vn
+                //double cosTheta = -1 * ((vp.x * vn.x) + (vp.y * vn.y)) / (vp.magnitude() * vn.magnitude());
+
+                //// Acute junction distance = distance from currentPoint to closest point in wide polyline
+                //// on the acute side
+                //double ajd = stateSpaceWidth / sqrt((1 - cosTheta) / 2);
+                //cout << "vp=" << vp << " vn=" << vn << " cosTheta=" << cosTheta << " ajd=" << ajd << endl;
+
+                //// Check to see if normal is on the acute or obtuse side of the intersection between vp and vn.
+                //// Take dot product of vn and np.
+                //// If positive -> vn is to the left of vp -> normal is on acute side
+                //// If negative -> vn is right of vp -> normal is on obtuse side
+                //int vnDOTnp = (vn.x * np.x) + (vn.y * np.y);
+
+                //Diff2D normalScaled = normal;
+                //Diff2D invNormalScaled = -normal;
+
+                //if (vnDOTnp > 0) {
+                //    // Normal is acute
+                //    // scale normal by ajd
+                //    normalScaled *= ajd / normal.magnitude();
+                //    // scale invNormal by stateSpaceWidth
+                //    invNormalScaled *= stateSpaceWidth / normal.magnitude();
+                //} else {
+                //    // Normal is obtuse
+                //    // scale normal by stateSpaceWidth
+                //    normalScaled *= stateSpaceWidth / normal.magnitude();
+                //    // scale invNormal by ajd
+                //    invNormalScaled *= ajd / normal.magnitude();
+                //}
+
+                //cout << "currentPoint=" << currentPoint2D << " normalScaled=" << normalScaled << " invNormalScaled=" << invNormalScaled << endl;
+
+                //// Find furthest good point along normalScaled
+                //Diff2D normalFarPoint(currentPoint2D);
+                //{
+                //    Diff2D lineStart = Diff2D(currentPoint2D);
+                //    Diff2D lineEnd = Diff2D(currentPoint2D) + normalScaled;
+                //    LineIterator<Diff2D> lineIterator(lineStart, lineEnd);
+                //    while (lineIterator != lineEnd) {
+                //        if (costImage->isInside(*lineIterator) &&
+                //            ((*costImage)[*lineIterator] != NumericTraits<CostImagePixelType>::max())) {
+                //            normalFarPoint = *lineIterator;
+                //            //visualizeStateSpaceImage[*lineIterator] = 125;
+                //        }
+                //        ++lineIterator;
+                //    }
+                //}
+                ////visualizeStateSpaceImage[normalFarPoint] = 150;
+
+                //// Find furthest good point along invNormalScaled
+                //Diff2D invNormalFarPoint(currentPoint2D);
+                //{
+                //    Diff2D lineStart = Diff2D(currentPoint2D);
+                //    Diff2D lineEnd = Diff2D(currentPoint2D) + invNormalScaled;
+                //    LineIterator<Diff2D> lineIterator(lineStart, lineEnd);
+                //    while (lineIterator != lineEnd) {
+                //        if (costImage->isInside(*lineIterator) &&
+                //            ((*costImage)[*lineIterator] != NumericTraits<CostImagePixelType>::max())) {
+                //            invNormalFarPoint = *lineIterator;
+                //            //visualizeStateSpaceImage[*lineIterator] = 175;
+                //        }
+                //        ++lineIterator;
+                //    }
+                //}
+                ////visualizeStateSpaceImage[invNormalFarPoint] = 200;
+                ////visualizeStateSpaceImage[currentPoint2D] = 255;
+
+                Diff2D normalFarPoint = Diff2D(currentPoint2D) + normalScaled;
+                Diff2D invNormalFarPoint = Diff2D(currentPoint2D) + invNormalScaled;
+                leftParallelPoints[goodPoints].x = normalFarPoint.x;
+                leftParallelPoints[goodPoints].y = normalFarPoint.y;
+                rightParallelPoints[goodPoints].x = invNormalFarPoint.x;
+                rightParallelPoints[goodPoints].y = invNormalFarPoint.y;
+                centerPoints[goodPoints].x = currentPoint2D.x;
+                centerPoints[goodPoints].y = currentPoint2D.y;
+                ++goodPoints;
+#endif
+
+// Old state space enumeration
+#if 1
                 // Determine state space of currentPoint along normal vector
+                // Normal points to the left of the vector
                 Diff2D normal(lastPoint2D.y - nextPoint2D.y, nextPoint2D.x - lastPoint2D.x);
-                normal *= std::min(costImage->width(), costImage->height()) / (3 * normal.magnitude());
+                normal *= costImageShortDimension / (3 * normal.magnitude());
 
                 Diff2D lineStart = Diff2D(currentPoint2D) + normal;
                 Diff2D lineEnd = Diff2D(currentPoint2D) - normal;
                 LineIterator<Diff2D> lineBegin(lineStart, lineEnd);
 
-                int numberOfStatePoints = 64;
+                // Choose a reasonable number of state points along this line.
+                int numberOfStatePoints = 32;
                 int lineLength = std::max(std::abs(lineEnd.x - lineStart.x), std::abs(lineEnd.y - lineStart.y));
                 int spaceBetweenPoints = lineLength / numberOfStatePoints;
+                //while (lineLength > numberOfStatePoints) {
+                //    ++spaceBetweenPoints;
+                //    lineLength >>= 1;
+                //}
 
                 int pointNumber = 0;
                 while (lineBegin != lineEnd) {
@@ -141,26 +511,98 @@ public:
                                 Point2D linePoint(*lineBegin);
                                 stateSpace->push_back(linePoint);
                                 stateDistances->push_back((int)((currentPoint2D - linePoint).magnitude()) / 4);
-                                //(*costImage)[*lineBegin] = 150;
+                                visualizeStateSpaceImage[*lineBegin] = 100;
                             }
                         }
                     }
                     ++pointNumber;
                     ++lineBegin;
-                    //if (*lineBegin == lineEnd) break;
-                    //++lineBegin;
-                    //if (*lineBegin == lineEnd) break;
-                    //++lineBegin;
                 }
+#endif
 
                 unsigned int localK = stateSpace->size();
+                kMax = std::max(kMax, localK);
+
                 for (unsigned int i = 0; i < localK; ++i) stateProbabilities->push_back(1.0 / localK);
 
-                kMax = std::max(kMax, localK);
+                //if (localK > (unsigned int)numberOfStatePoints) {
+                //    //int lineLength = std::max(std::abs(lineEnd.x - lineStart.x), std::abs(lineEnd.y - lineStart.y));
+                //    cout << lineStart << " -> " << lineEnd << " = " << lineLength << " space=" << spaceBetweenPoints << " pointNumber=" << pointNumber << " localK=" << localK << endl;
+                //}
+
             }
 
             convergedPoints.push_back(stateSpace->size() < 2);
         }
+*/
+
+#if 0
+        pixels[0] = 0;
+        pixels[1] = 1;
+        miClearPaintedSet(paintedSet);
+        miSetGCPixels(pGC, 2, pixels);
+        miPixel pixels[2];
+        pixels[0] = 200; //NumericTraits<CostImagePixelType>::max();
+        pixels[1] = 200; //NumericTraits<CostImagePixelType>::max();
+        miGC *pGC = miNewGC(2, pixels);
+        miSetGCAttrib(pGC, MI_GC_LINE_WIDTH, stateSpaceWidth);
+        miSetGCMiterLimit(pGC, 1.2);
+        miPaintedSet *paintedSet = miNewPaintedSet();
+
+        miPoint *points = new miPoint[v->size()];
+        int goodPoints = 0;
+
+        for (list<pair<bool, Point2D> >::iterator currentPoint = v->begin(); currentPoint != v->end(); ++currentPoint) {
+            if (currentPoint->first) {
+                points[goodPoints].x = currentPoint->second.x;
+                points[goodPoints].y = currentPoint->second.y;
+                ++goodPoints;
+            }
+        }
+
+        miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, points);
+
+        delete[] points;
+
+        copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+
+        miDeleteGC(pGC);
+        miDeletePaintedSet(paintedSet);
+#endif
+
+#if 0
+        miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, centerPoints);
+        copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+        miClearPaintedSet(paintedSet);
+        pixels[0] = 200;
+        pixels[1] = 200;
+        miSetGCPixels(pGC, 2, pixels);
+        miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, leftParallelPoints);
+        copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+        miClearPaintedSet(paintedSet);
+        pixels[0] = 175;
+        pixels[1] = 175;
+        miSetGCPixels(pGC, 2, pixels);
+        miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, rightParallelPoints);
+        copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+        miClearPaintedSet(paintedSet);
+        pixels[0] = 150;
+        pixels[1] = 150;
+        miSetGCPixels(pGC, 2, pixels);
+        miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, leftParallelPoints);
+        miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, rightParallelPoints);
+        miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, goodPoints, centerPoints);
+        copyPaintedSetToImage(destImageRange(visualizeStateSpaceImage), paintedSet, Diff2D(0,0));
+
+        delete[] leftParallelPoints;
+        delete[] rightParallelPoints;
+        delete[] centerPoints;
+        miDeleteGC(pGC);
+        miDeletePaintedSet(paintedSet);
+#endif
+
+        ImageExportInfo visInfo("enblend_anneal_state_space.tif");
+        exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
 
         tau = 0.75;
         deltaEMax = 300.0;
@@ -168,6 +610,7 @@ public:
         double epsilon = 1.0 / (kMax * kMax);
         tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
         tFinal = deltaEMin / log((kMax - (kMax * epsilon) - 1) / (kMax * epsilon));
+
     }
 
     ~GDAConfiguration() {
@@ -201,18 +644,10 @@ public:
                 vector<Point2D> *stateSpace = pointStateSpaces[i];
                 vector<double> *stateProbabilities = pointStateProbabilities[i];
                 unsigned int localK = stateSpace->size();
-                //Point2D bestState;
-                //double bestWeight = 0.0;
                 for (unsigned int state = 0; state < localK; ++state) {
                     cout << "    state " << (*stateSpace)[state] << " weight=" << (*stateProbabilities)[state] << endl;
-                    //if ((*stateProbabilities)[state] > bestWeight) {
-                    //    bestWeight = (*stateProbabilities)[state];
-                    //    bestState = (*stateSpace)[state];
-                    //}
                 }
                 cout << "    mfEstimate=" << mfEstimates[i] << endl;
-                //mfEstimates[i] = bestState;
-                //cout << "    new Estimate=" << mfEstimates[i] << endl;
             }
         }
     }
@@ -236,7 +671,6 @@ public:
 
 protected:
 
-    // before reintegration: .44/17.25 -> 18.04
     void iterate() {
         int *E = new int[kMax];
         double *pi = new double[kMax];
@@ -300,8 +734,8 @@ protected:
             }
         }
 
-		delete[] E;
-		delete[] pi;
+        delete[] E;
+        delete[] pi;
 
         kMax = 1;
         // Make new mean field estimates.
@@ -363,10 +797,10 @@ protected:
     }
 
     inline int costImageCost(const Point2D &start, const Point2D &end) {
-        if (!(costImage->isInside(start) && costImage->isInside(end))) {
-            cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
-            exit(-1);
-        }
+        //if (!(costImage->isInside(start) && costImage->isInside(end))) {
+        //    cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
+        //    exit(-1);
+        //}
 
         int cost = 0;
 
@@ -383,6 +817,16 @@ protected:
         if (lineLength < 8) cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
 
         return cost;
+    }
+
+    bool segmentIntersect(const Point2D & l1a, const Point2D & l1b, const Point2D & l2a, const Point2D & l2b) {
+        int denom = (l2b.y - l2a.y)*(l1b.x - l1a.x) - (l2b.x - l2a.x)*(l1b.y - l1a.y);
+        if (denom == 0) return false; // lines are parallel or coincident
+        int uaNum = (l2b.x - l2a.x)*(l1a.y - l2a.y) - (l2b.y - l2a.y)*(l1a.x - l2a.x);
+        int ubNum = (l1b.x - l1a.x)*(l1a.y - l2a.y) - (l1b.y - l1a.y)*(l1a.x - l2a.x);
+        if (denom < 0) { uaNum *= -1; ubNum *= -1; denom *= -1; }
+        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) return true;
+        return false;
     }
 
     const CostImage *costImage;
@@ -430,16 +874,21 @@ protected:
 template <typename CostImage>
 void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
 
-    GDAConfiguration<CostImage> cfg(ci, snake);
+    list<pair<bool, Point2D> > listSnake;
+    for (slist<pair<bool, Point2D> >::iterator p = snake->begin(); p != snake->end(); ++p) {
+        listSnake.push_back(*p);
+    }
+
+    GDAConfiguration<CostImage> cfg(ci, &listSnake);
     //cout << "original cost = " << cfg.currentCost() << endl;
-    cfg.run();
+    //cfg.run();
     //cout << "final cost = " << cfg.currentCost() << endl;
 
-    slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
-    vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
-    for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
-        snakePoint->second = *annealedPoint;
-    }
+    //slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
+    //vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
+    //for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
+    //    snakePoint->second = *annealedPoint;
+    //}
 
 };
 
