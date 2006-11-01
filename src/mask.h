@@ -102,40 +102,7 @@ public:
         ResultType hueDiff = std::abs(aHue - bHue);
         if (hueDiff > (NumericTraits<ResultType>::max() / 2)) hueDiff = NumericTraits<ResultType>::max() - hueDiff;
         return std::max(hueDiff, lumDiff);
-    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
-    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
     }
-};
-
-template <class RGBVALUE>
-class RGBToHueAccessor
-{
-  public:
-    typedef typename RGBVALUE::value_type value_type;
-
-        /** Get value of the hue
-        */
-    template <class ITERATOR>
-    value_type operator()(ITERATOR const & i) const { return hue(*i); }
-
-        /** Get value of the hue at an offset
-        */
-    template <class ITERATOR, class DIFFERENCE>
-    value_type operator()(ITERATOR const & i, DIFFERENCE d) const { return hue(i[d]); }
-
-    value_type hue(const RGBVALUE & v) const {
-        value_type max = std::max(v.red(), std::max(v.green(), v.blue()));
-        value_type min = std::min(v.red(), std::min(v.green(), v.blue()));
-        value_type delta = (max - min) * 6;
-        typename NumericTraits<value_type>::RealPromote rdelta = NumericTraits<value_type>::toRealPromote(delta);
-        typename NumericTraits<value_type>::RealPromote h = 0.0;
-        if (v.red() == max) h = (v.green() - v.blue()) / rdelta;
-        else if (v.green() == max) h = (1/3) + ((v.blue() - v.red()) / rdelta);
-        else h = (2/3) + ((v.red() - v.green()) / rdelta);
-        if (h < 0.0) h += 1.0;
-        return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
-    }
-
 };
 
 /** Calculate a blending mask between whiteImage and blackImage.
@@ -191,8 +158,8 @@ MaskType *createMask(ImageType *white,
                                            Param(NumericTraits<MaskPixelType>::max())),
                                 Param(NumericTraits<MaskPixelType>::zero())));
 
-    ImageExportInfo maskInitInfo("enblend_mask_init.tif");
-    exportImage(srcImageRange(*maskInit), maskInitInfo);
+    //ImageExportInfo maskInitInfo("enblend_mask_init.tif");
+    //exportImage(srcImageRange(*maskInit), maskInitInfo);
 
     // Mask transform replaces 0 areas with either 1 or 255.
     //MaskType *maskTransform = new MaskType(uBB.size());
@@ -225,8 +192,8 @@ MaskType *createMask(ImageType *white,
     //delete maskTransform;
     // mem xsection = MaskType*ubb
 
-    ImageExportInfo nearestMaskInfo("enblend_nearest_mask.tif");
-    exportImage(srcImageRange(*mask), nearestMaskInfo);
+    //ImageExportInfo nearestMaskInfo("enblend_nearest_mask.tif");
+    //exportImage(srcImageRange(*mask), nearestMaskInfo);
 
     // 0 = uninitialized border region
     // 1 = white image
@@ -286,7 +253,6 @@ MaskType *createMask(ImageType *white,
                     }
                     else {
                         // Current point is not frozen.
-                        // FIXME need to fix painting routine below if pixels are to be skipped.
                         if ((distanceLastPoint % distance) == 0) {
                             snake->push_front(make_pair(true, currentPoint));
                             distanceLastPoint = 0;
@@ -322,34 +288,26 @@ MaskType *createMask(ImageType *white,
             ifThenElse(Arg1() || Arg2(), Param(NumericTraits<MaskPixelType>::max()), Param(NumericTraits<MaskPixelType>::zero())));
 
     // Mark movable snake vertices (vertices inside union region)
-    int snakeCount = 0;
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
         slist<pair<bool, Point2D> > *snake = *snakeIterator;
-        cout << "snake " << snakeCount++ << " has " << snake->size() << " vertices." << endl;
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator) {
+
+            // Vertices outside union region are not moveable.
             if (vertexIterator->first &&
                     ((*mask)[vertexIterator->second] == NumericTraits<MaskPixelType>::zero())) {
                 vertexIterator->first = false;
             }
-            (*mask)[vertexIterator->second] = vertexIterator->first ? 200 : 100;
-        }
-    }
 
-    ImageExportInfo smallMaskInfo("enblend_small_mask.tif");
-    exportImage(srcImageRange(*mask), smallMaskInfo);
-    delete mask;
-
-    // Convert snake vertices to root-relative vertices
-    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-            snakeIterator != snakes.end(); ++snakeIterator) {
-        slist<pair<bool, Point2D> > *snake = *snakeIterator;
-        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ++vertexIterator) {
+            // Convert snake vertices to root-relative vertices
             vertexIterator->second = uBB.getUL() + (8 * (vertexIterator->second + Diff2D(-1,-1)));
         }
     }
+
+    //ImageExportInfo smallMaskInfo("enblend_small_mask.tif");
+    //exportImage(srcImageRange(*mask), smallMaskInfo);
+    delete mask;
 
     // Find extent of moveable snake vertices, and vertices bordering moveable vertices
     int leftExtent = NumericTraits<int>::max();
@@ -360,10 +318,9 @@ MaskType *createMask(ImageType *white,
             snakeIterator != snakes.end(); ++snakeIterator) {
         slist<pair<bool, Point2D> > *snake = *snakeIterator;
         slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
-        //--lastVertex;
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ++vertexIterator) {
-            if (lastVertex->first || vertexIterator->first) {
+            if (lastVertex->first || vertexIterator->first) {      
                 leftExtent = std::min(leftExtent, lastVertex->second.x);
                 rightExtent = std::max(rightExtent, lastVertex->second.x);
                 topExtent = std::min(topExtent, lastVertex->second.y);
@@ -412,21 +369,11 @@ MaskType *createMask(ImageType *white,
                      stride(2, 2, uvBB.apply(srcImage(*black))),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
-    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToGrayAccessor<ImagePixelType>()))),
-    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToGrayAccessor<ImagePixelType>()))),
-    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-    //                 abs(Arg1() - Arg2()));
-    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
-    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
-    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
-    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
                      stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
                      srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-                     ifThenElse(Arg1() & Arg2(), Arg3(),
-                                                 Param(NumericTraits<MismatchImagePixelType>::max())));
+                     ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
 
     // Anneal snakes over mismatch image
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
@@ -441,8 +388,8 @@ MaskType *createMask(ImageType *white,
 
         annealSnake(&mismatchImage, snake);
 
+        // Postprocess annealed vertices
         slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
-
         for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
                 vertexIterator != snake->end(); ) {
             if (vertexIterator->first &&
@@ -480,58 +427,22 @@ MaskType *createMask(ImageType *white,
                 ++vertexIterator;
             }
         }
+    }
 
-
-        //lastVertex = snake->previous(snake->end());
-        //for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-        //        vertexIterator != snake->end(); ++vertexIterator) {
-        //    if (vertexIterator->first || lastVertex->first) {
-        //            mismatchImage[vertexIterator->second] = vertexIterator->first ? 200 : 230;
-        //            mismatchImage[lastVertex->second] = lastVertex->first ? 200 : 230;
-        //    }
-        //    lastVertex = vertexIterator;
-        //}
-    };
-
-    //ImageExportInfo annealInfo("enblend_anneal.tif");
-    //exportImage(srcImageRange(mismatchImage), annealInfo);
-
-    //combineTwoImages(stride(2, 2, uvBB.apply(srcImageRange(*white, RGBToHueAccessor<ImagePixelType>()))),
-    //                 stride(2, 2, uvBB.apply(srcImage(*black, RGBToHueAccessor<ImagePixelType>()))),
-    //                 destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
-    //                 ifThenElse(abs(Arg1() - Arg2()) > Param(NumericTraits<MismatchImagePixelType>::max() / 2),
-    //                        Param(NumericTraits<MismatchImagePixelType>::max()) - abs(Arg1() - Arg2()), abs(Arg1() - Arg2())));
-    //transformImage(srcImageRange(mismatchImage), destImage(mismatchImage),
-    //                 ifThenElse(Arg1() > Param(10), Arg1(), Param(NumericTraits<MismatchImagePixelType>::one())));
+    // Adjust cost image for shortest path algorithm.
+    // Areas outside union region have epsilon cost
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
                      stride(2, 2, uvBB.apply(srcImage(*blackAlpha))),
                      srcIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
-                     //ifThenElse(Arg1() ^ Arg2(), Param(NumericTraits<MismatchImagePixelType>::max()),
-                     //       ifThenElse(Arg1(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::one()))));
-
-    int snakeNumber = 0;
-    //for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-    //        snakeIterator != snakes.end(); ++snakeIterator, ++snakeNumber) {
-    //    slist<pair<bool, Point2D> > *snake = *snakeIterator;
-    //    slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
-
-    //    for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-    //        vertexIterator != snake->end(); ++vertexIterator) {
-    //        Point2D point = vertexIterator->second;
-    //        cout << "snake " << snakeNumber << " point=" << point << " moveable=" << vertexIterator->first << endl;
-    //    }
-    //    cout << "snake " << snakeNumber << " last=" << lastVertex->second << " moveable=" << lastVertex->first << endl;
-    //}
 
     EnblendROI withinVBB;
     withinVBB.setCorners(Diff2D(0,0), (vBB.size() + Diff2D(1,1)) / 2);
 
-    snakeNumber = 0;
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-            snakeIterator != snakes.end(); ++snakeIterator, ++snakeNumber) {
+            snakeIterator != snakes.end(); ++snakeIterator) {
         slist<pair<bool, Point2D> > *snake = *snakeIterator;
 
         for (slist<pair<bool, Point2D> >::iterator currentVertex = snake->begin(); ; ) {
@@ -616,6 +527,7 @@ MaskType *createMask(ImageType *white,
     miDeleteGC(pGC);
     miDeletePaintedSet(paintedSet);
 
+    // Done with snakes
     for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
             snakeIterator != snakes.end(); ++snakeIterator) {
         delete *snakeIterator;

@@ -76,20 +76,27 @@ void copyPaintedSetToImage(DestIterator dest_upperleft,
     int dst_w = dest_lowerright.x - dest_upperleft.x;
     int dst_h = dest_lowerright.y - dest_upperleft.y;
 
+    //cout << "paintedSet->ngroups=" << paintedSet->ngroups << endl;
     for (int group = 0; group < paintedSet->ngroups; group++) {
+        //cout << "    group " << group << " count=" << paintedSet->groups[group]->group[0].count << endl;
         if (paintedSet->groups[group]->group[0].count > 0) {
             miPixel pixel = paintedSet->groups[group]->pixel;
             int spans = paintedSet->groups[group]->group[0].count;
+            //cout << " group " << group << " spans=" << spans << endl;
             const miPoint *ppt = paintedSet->groups[group]->group[0].points;
             unsigned int *pwidth = paintedSet->groups[group]->group[0].widths;
 
+            //if (ppt[0].y + offset.y >= dst_h) { cout << "min y coord is outside bb" << endl; continue; }
+            //if (ppt[spans-1].y + offset.y < 0) { cout << "max y coord is outside bb" << endl; continue; }
             if (ppt[0].y + offset.y >= dst_h) continue;
             if (ppt[spans-1].y + offset.y < 0) continue;
 
             for (int i = 0; i < spans; i++) {
                 int y = ppt[i].y + offset.y;
-                if (y < 0) break;
-                if (y >= dst_h) break;
+                //if (y < 0) { cout << "span y is less than 0" << endl; break; }
+                if (y < 0) continue;
+                //if (y >= dst_h) {cout << "span y is greater than dst_h" << endl; break; }
+                if (y >= dst_h) continue;
 
                 int width = pwidth[i];
                 int xstart = ppt[i].x + offset.x;
@@ -98,10 +105,13 @@ void copyPaintedSetToImage(DestIterator dest_upperleft,
                 int xstart_clip = (xstart < 0) ? 0 : xstart;
                 int xend_clip = (xend >= dst_w) ? (dst_w-1) : xend;
 
+                //int pixelsDrawn = 0;
                 DestIterator dx = dest_upperleft + Diff2D(xstart_clip, y);
                 for (int x = xstart_clip; x <= xend_clip; ++x, ++dx.x) {
                     da.set(pixel, dx);
+                    //++pixelsDrawn;
                 }
+                //cout << " group " << group << " span " << i << " pixelsDrawn=" << pixelsDrawn << endl;
             }
         }
     }

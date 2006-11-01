@@ -103,23 +103,6 @@ using std::cout;
 using std::endl;
 using std::list;
 
-//using vigra::DIMAGE;
-//using vigra::DRGBIMAGE;
-//using vigra::FIMAGE;
-//using vigra::FRGBIMAGE;
-//using vigra::INT8IMAGE;
-//using vigra::INT8RGBIMAGE;
-//using vigra::UINT8IMAGE;
-//using vigra::UINT8RGBIMAGE;
-//using vigra::INT16IMAGE;
-//using vigra::INT16RGBIMAGE;
-//using vigra::UINT16IMAGE;
-//using vigra::UINT16RGBIMAGE;
-//using vigra::INT32IMAGE;
-//using vigra::INT32RGBIMAGE;
-//using vigra::UINT32IMAGE;
-//using vigra::UINT32RGBIMAGE;
-
 using vigra::CachedFileImageDirector;
 using vigra::Diff2D;
 using vigra::ImageExportInfo;

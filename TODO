@@ -32,40 +32,37 @@ X icc blending
         exp2: 18.26 convert vector to JCH
         shift: 18.60 convert
     X progress indicators for color transforms
+X add NDEBUG to Makefile.am
+
 - new seam alg
-    X libxmi polygon fill
-    X cfi strided iterators
-        lmr before changes: 99.15
-        lmr after changes: 97.58
     X stride 8 mask generation
+        X cfi strided iterators 99.15 -> 97.58
     X stride 8 mask polygonization
-    X polygon mask fill
-    X dijkstra polygon vertex interpolation - at half resolution
-    X polygon vertex annealing
-        X Integer LineIterator
+        - make it work with wraparound?
+        - Arrange snakes into continuous pieces
+        - Experiment with different distances between vertices
+    - cost image
+        - Replace with CachedFileImage?
+        - Optimize vertices on BasicImage regions-of-interest?
+    - Strategy 1: GDA
+        X integer math / bresenham LineIterator
         X Memoize magnitude 33.28/67.95 -> 33.20/67.85
-        X Fast EXP macro updateStateProbabilities 25.95->17.18
+        X Fast EXP approximation 25.95->17.18
         X factor out tCurrent divide 12.35
         X E integer 11.29
-    - make it work with wraparound
+        - quality/speed tradeoff option?
+            - output quality improvement
+    X Strategy 2: Shortest Path
+    X libxmi polygon mask fill
     - code cleanup and comments
-    - Progress indicators for advanced mask generation
-    - options to control adv mask gen quality
-    - output of quality improvement
+    - progress indicators
     - option to revert to old mask algorithm
-- make striding argument object factories for BasicImages
-X add NDEBUG to Makefile.am
-- misc optimizations
-    vigra_precondition in BasicImage, CachedFileImage 7.16
-    change to NDEBUG, vigra_assert                    7.21
-    costImageCost changes:                             .77 costImageCost -> .61
-- replace EnblendROI with vigra::Rect2D
-- vigra impex improvements
-- cfi swap policy improvements
-- cache blackLP copyToPyramid/copyFromPyramid?
-- multilayer images
-- load/save mask from file
+
+- test for black row bug in alpine dam photo
 - vogl's hdr test cases
+- make striding argument object factories for BasicImages
+- replace EnblendROI with vigra::Rect2D
+- load/save mask from file
 - enable all pixel types
 - fix memory estimation messages
 - update version number
@@ -73,21 +70,13 @@ X add NDEBUG to Makefile.am
 - windows version
     X compile libtiff with 64-bit file i/o api
     X link other vigra-impex graphics libraries
+    - check libtiff warnings
 
+- Stuff for later revisions:
+    - improve GDA state space enumeration
+    - vigra impex improvements
+    - cfi swap policy improvements
+    - vigra multilayer tiff support
+    - blend nadir and zenith in 360x360 panos.
+    - make assemble smarter.
 
-
-
-- Nadir and Zenith in 360x360 panos.
-
-- Allow users to provide their own blending masks. Have an option to write out
-  the mask that enblend calculates to a TIFF file.
-
-- Support multilayer TIFFs.
-
-- Stitching discrepancy avoidance in mask creation.
-
-- Make assemble smarter.
-
-- For win32, recompile libtiff with TIF_PLATFORM_CONSOLE
-- remove tiff warning handler = null
-- add errno checks around libtiff calls in vigra_impex
