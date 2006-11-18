@@ -195,6 +195,15 @@ MaskType *createMask(ImageType *white,
     //ImageExportInfo nearestMaskInfo("enblend_nearest_mask.tif");
     //exportImage(srcImageRange(*mask), nearestMaskInfo);
 
+    typedef slist<pair<bool, Point2D> >* SegmentP;
+    typedef vector<SegmentP>* ContourP;
+    typedef vector<ContourP>* PolygonP;
+
+    vector<PolygonP> snakes;
+
+    //for (unsigned int polygon = 0; polygon < snakes.size(); ++polygon) {
+    //    ContourPk
+
     // 0 = uninitialized border region
     // 1 = white image
     // 255 = black image
@@ -202,7 +211,6 @@ MaskType *createMask(ImageType *white,
     int distance = 4;
     Point2D borderUL(1,1);
     Point2D borderLR(mask->width()-1, mask->height()-1);
-    vector<slist<pair<bool, Point2D> > *> snakes;
     MaskIteratorType my = mask->upperLeft() + Diff2D(1,1);
     MaskIteratorType mend = mask->lowerRight() + Diff2D(-1, -1);
     for (int y = 1; my.y < mend.y; ++y, ++my.y) {
@@ -305,6 +313,14 @@ MaskType *createMask(ImageType *white,
         }
     }
 
+    // Convert snakes into segments with unbroken runs of moveable vertices
+    // vector of polygons
+    // each polygon is a vector of runs
+    // each run is a slist of pair<bool, Point2D>
+    vector<vector<slist<pair<bool, Point2D> > *> *> polygons;
+    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
+            snakeIterator != snakes.end(); ++snakeIterator) {
+        vector<slist<pair<bool, Point2D> > *> *polygon = new vector<slist
     //ImageExportInfo smallMaskInfo("enblend_small_mask.tif");
     //exportImage(srcImageRange(*mask), smallMaskInfo);
     delete mask;
