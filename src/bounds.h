@@ -32,6 +32,8 @@ using std::cout;
 using std::endl;
 using std::min;
 
+using vigra::Point2D;
+
 namespace enblend {
 
 /** Characterize the overlap between src1 and src2.
@@ -97,11 +99,11 @@ Overlap inspectOverlap(
  *  for the case that the ROI wraps around the left and right edges.
  */
 template <typename ImagePixelComponentType>
-unsigned int roiBounds(const EnblendROI &inputUnion,
-        const EnblendROI &iBB,
-        const EnblendROI &mBB,
-        const EnblendROI &uBB,
-        EnblendROI &roiBB,
+unsigned int roiBounds(const Rect2D &inputUnion,
+        const Rect2D &iBB,
+        const Rect2D &mBB,
+        const Rect2D &uBB,
+        Rect2D &roiBB,
         bool wraparoundForMask) {
 
     unsigned int levels = 1;
@@ -112,7 +114,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         // Choose a number of levels that makes the mask spread out to the edges
         // of the iBB.
         // Calculate short dimension of iBB.
-        unsigned int shortDimension = min(iBB.size().x, iBB.size().y);
+        unsigned int shortDimension = min(iBB.width(), iBB.height());
         while (levels < 30) {
             unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels + 1);
             if ((2 * extent) > shortDimension) {
@@ -133,24 +135,24 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
     }
 
     unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels);
-    Diff2D extentDiff(extent, extent);
-    roiBB.setCorners(mBB.getUL() - extentDiff, mBB.getLR() + extentDiff);
+    roiBB = mBB;
+    roiBB.addBorder(extent);
 
     if (wraparoundForMask &&
-            (roiBB.getUL().x < 0 || roiBB.getLR().x > uBB.getLR().x)) {
+            (roiBB.left() < 0 || roiBB.right() > uBB.right())) {
         // If the ROI goes off either edge of the uBB,
         // and the uBB is the full size of the output image,
         // and the wraparound flag is specified,
         // then make roiBB the full width of uBB.
-        roiBB.setCorners(Diff2D(0, roiBB.getUL().y),
-                Diff2D(uBB.getLR().x, roiBB.getLR().y));
+        roiBB.setUpperLeft(Point2D(0, roiBB.top()));
+        roiBB.setLowerRight(Point2D(uBB.right(), roiBB.bottom()));
     }
 
     // ROI must not be bigger than uBB.
-    uBB.intersect(roiBB, roiBB);
+    roiBB &= uBB;
 
     // Verify the number of levels based on the size of the ROI.
-    unsigned int roiShortDimension = min(roiBB.size().x, roiBB.size().y);
+    unsigned int roiShortDimension = min(roiBB.width(), roiBB.height());
     unsigned int allowableLevels;
     for (allowableLevels = 1; allowableLevels < levels; allowableLevels++) {
         if (roiShortDimension <= 8) {
@@ -170,15 +172,7 @@ unsigned int roiBounds(const EnblendROI &inputUnion,
         cout << "Using " << allowableLevels << " blending levels" << endl;
     }
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cout << "Region of Interest bounding box: ("
-             << roiBB.getUL().x
-             << ", "
-             << roiBB.getUL().y
-             << ") -> ("
-             << roiBB.getLR().x
-             << ", "
-             << roiBB.getLR().y
-             << ")" << endl;
+        cout << "Region of Interest bounding box: " << roiBB << endl;
     }
 
     return allowableLevels;

@@ -414,15 +414,15 @@ protected:
         return cost;
     }
 
-    //bool segmentIntersect(const Point2D & l1a, const Point2D & l1b, const Point2D & l2a, const Point2D & l2b) {
-    //    int denom = (l2b.y - l2a.y)*(l1b.x - l1a.x) - (l2b.x - l2a.x)*(l1b.y - l1a.y);
-    //    if (denom == 0) return false; // lines are parallel or coincident
-    //    int uaNum = (l2b.x - l2a.x)*(l1a.y - l2a.y) - (l2b.y - l2a.y)*(l1a.x - l2a.x);
-    //    int ubNum = (l1b.x - l1a.x)*(l1a.y - l2a.y) - (l1b.y - l1a.y)*(l1a.x - l2a.x);
-    //    if (denom < 0) { uaNum *= -1; ubNum *= -1; denom *= -1; }
-    //    if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) return true;
-    //    return false;
-    //}
+    bool segmentIntersect(const Point2D & l1a, const Point2D & l1b, const Point2D & l2a, const Point2D & l2b) {
+        int denom = (l2b.y - l2a.y)*(l1b.x - l1a.x) - (l2b.x - l2a.x)*(l1b.y - l1a.y);
+        if (denom == 0) return false; // lines are parallel or coincident
+        int uaNum = (l2b.x - l2a.x)*(l1a.y - l2a.y) - (l2b.y - l2a.y)*(l1a.x - l2a.x);
+        int ubNum = (l1b.x - l1a.x)*(l1a.y - l2a.y) - (l1b.y - l1a.y)*(l1a.x - l2a.x);
+        if (denom < 0) { uaNum *= -1; ubNum *= -1; denom *= -1; }
+        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) return true;
+        return false;
+    }
 
     const CostImage *costImage;
     CostImage visualizeStateSpaceImage;

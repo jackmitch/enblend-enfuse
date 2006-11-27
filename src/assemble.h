@@ -58,6 +58,7 @@ using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
 using vigra::inspectImageIf;
 using vigra::NumericTraits;
+using vigra::Rect2D;
 using vigra::Threshold;
 using vigra::transformImage;
 
@@ -134,8 +135,8 @@ void import(const ImageImportInfo &info,
  */
 template <typename ImageType, typename AlphaType>
 pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
-        EnblendROI &inputUnion,
-        EnblendROI &bb) {
+        Rect2D &inputUnion,
+        Rect2D &bb) {
 
     typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
@@ -161,8 +162,8 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
 
     Diff2D imagePos = imageInfoList.front()->getPosition();
     import(*imageInfoList.front(),
-            destIter(image->upperLeft() + imagePos - inputUnion.getUL()),
-            destIter(imageA->upperLeft() + imagePos - inputUnion.getUL()));
+            destIter(image->upperLeft() + imagePos - inputUnion.upperLeft()),
+            destIter(imageA->upperLeft() + imagePos - inputUnion.upperLeft()));
     imageInfoList.erase(imageInfoList.begin());
 
     if (!OneAtATime) {
@@ -184,7 +185,7 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
             // Check for overlap.
             bool overlapFound = false;
             AlphaIteratorType dy =
-                    imageA->upperLeft() - inputUnion.getUL() + info->getPosition();
+                    imageA->upperLeft() - inputUnion.upperLeft() + info->getPosition();
             AlphaAccessor da = imageA->accessor();
             AlphaIteratorType sy = srcA->upperLeft();
             AlphaIteratorType send = srcA->lowerRight();
@@ -212,10 +213,10 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
                 Diff2D srcPos = info->getPosition();
                 copyImageIf(srcImageRange(*src),
                         maskImage(*srcA),
-                        destIter(image->upperLeft() - inputUnion.getUL() + srcPos));
+                        destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
                 copyImageIf(srcImageRange(*srcA),
                         maskImage(*srcA),
-                        destIter(imageA->upperLeft() - inputUnion.getUL() + srcPos));
+                        destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
@@ -238,18 +239,10 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     FindBoundingRectangle unionRect;
     inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
             srcImage(*imageA), unionRect);
-    bb.setCorners(unionRect.upperLeft, unionRect.lowerRight);
+    bb = unionRect();
 
     if (Verbose > VERBOSE_ABB_MESSAGES) {
-        cout << "assembled images bounding box: ("
-             << unionRect.upperLeft.x
-             << ", "
-             << unionRect.upperLeft.y
-             << ") -> ("
-             << unionRect.lowerRight.x
-             << ", "
-             << unionRect.lowerRight.y
-             << ")" << endl;
+        cout << "assembled images bounding box: " << unionRect() << endl;
     }
 
     return pair<ImageType*, AlphaType*>(image, imageA);

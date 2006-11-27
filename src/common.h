@@ -20,8 +20,6 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include "vigra_ext/ROI.h"
-
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.
 #define VERBOSE_ASSEMBLE_MESSAGES           0
@@ -42,12 +40,8 @@
 
 namespace enblend {
 
-/** The type used for regions-of-interest in Enblend. */
-typedef vigra_ext::ROI<vigra::Diff2D> EnblendROI;
-
 /** The different image overlap classifications. */
 enum Overlap {NoOverlap, PartialOverlap, CompleteOverlap};
-
 
 } // namespace enblend
 

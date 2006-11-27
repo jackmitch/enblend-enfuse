@@ -33,6 +33,7 @@ X icc blending
         shift: 18.60 convert
     X progress indicators for color transforms
 X add NDEBUG to Makefile.am
+- fast fromRealPromote
 
 - new seam alg
     X stride 8 mask generation
@@ -61,7 +62,7 @@ X add NDEBUG to Makefile.am
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases
 - make striding argument object factories for BasicImages
-- replace EnblendROI with vigra::Rect2D
+X replace EnblendROI with vigra::Rect2D
 - load/save mask from file
 - enable all pixel types
 - fix memory estimation messages

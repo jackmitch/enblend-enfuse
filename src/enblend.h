@@ -69,7 +69,7 @@ namespace enblend {
 template <typename ImagePixelType>
 void enblendMain(list<ImageImportInfo*> &imageInfoList,
         ImageExportInfo &outputImageInfo,
-        EnblendROI &inputUnion) {
+        Rect2D &inputUnion) {
 
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -91,7 +91,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
     // Create the initial black image.
-    EnblendROI blackBB;
+    Rect2D blackBB;
     pair<ImageType*, AlphaType*> blackPair =
             assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
 
@@ -120,7 +120,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     while (!imageInfoList.empty()) {
 
         // Create the white image.
-        EnblendROI whiteBB;
+        Rect2D whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
         // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
@@ -150,39 +150,21 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //                 whiteInfo);
 
         // Union bounding box of whiteImage and blackImage.
-        EnblendROI uBB;
-        whiteBB.unite(blackBB, uBB);
+        Rect2D uBB = blackBB | whiteBB;
 
         if (Verbose > VERBOSE_UBB_MESSAGES) {
-            cout << "image union bounding box: ("
-                 << uBB.getUL().x
-                 << ", "
-                 << uBB.getUL().y
-                 << ") -> ("
-                 << uBB.getLR().x
-                 << ", "
-                 << uBB.getLR().y
-                 << ")" << endl;
+            cout << "image union bounding box: " << uBB << endl;
         }
 
         // Intersection bounding box of whiteImage and blackImage.
-        EnblendROI iBB;
-        bool iBBValid = whiteBB.intersect(blackBB, iBB);
+        Rect2D iBB = blackBB & whiteBB;
+        bool iBBValid = !iBB.isEmpty();
 
         if (Verbose > VERBOSE_IBB_MESSAGES) {
             if (iBBValid) {
-                cout << "image intersection bounding box: ("
-                     << iBB.getUL().x
-                     << ", "
-                     << iBB.getUL().y
-                     << ") -> ("
-                     << iBB.getLR().x
-                     << ", "
-                     << iBB.getLR().y
-                     << ")" << endl;
+                cout << "image intersection bounding box: " << iBB << endl;
             } else {
-                cout << "image intersection bounding box: (no intersection)"
-                     << endl;
+                cout << "image intersection bounding box: (no intersection)" << endl;
             }
         }
 
@@ -237,13 +219,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // mem usage = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
             //           + 2*BImage*ubb + 2*UInt32Image*ubb
-            long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
-            long long uBBPixels = uBB.size().x * uBB.size().y;
             long long bytes =
-                    inputUnionPixels
-                        * (2*sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
-                    + uBBPixels
-                        * (2*sizeof(MaskPixelType) + 2*sizeof(UInt32));
+                    inputUnion.area() * (2*sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
+                    + uBB.area() * (2*sizeof(MaskPixelType) + 2*sizeof(UInt32));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for mask generation: "
                  << mbytes
@@ -251,9 +229,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
 
         // Create the blend mask.
-        bool wraparoundForMask = Wraparound && 
-                (uBB.size().x == inputUnion.size().x);
-        EnblendROI mBB;
+        bool wraparoundForMask = Wraparound && (uBB.width() == inputUnion.width());
+        Rect2D mBB;
         MaskType *mask = createMask<ImageType, AlphaType, MaskType>(
                 whitePair.first, blackPair.first, whitePair.second, blackPair.second,
                 uBB, iBB, wraparoundForMask, mBB);
@@ -278,26 +255,23 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #endif
 
         ImageExportInfo maskInfo("enblend_mask.tif");
-        maskInfo.setPosition(uBB.getUL());
+        maskInfo.setPosition(uBB.upperLeft());
         exportImage(srcImageRange(*mask), maskInfo);
 break;
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
-        EnblendROI roiBB;
+        Rect2D roiBB;
         unsigned int numLevels = roiBounds<ImagePixelComponentType>(inputUnion, iBB, mBB, uBB, roiBB, wraparoundForMask);
-        bool wraparoundForBlend = Wraparound && (roiBB.size().x == inputUnion.size().x);
-        //cout << "Wraparound = " << wraparoundForBlend << endl;
+        bool wraparoundForBlend = Wraparound && (roiBB.width() == inputUnion.width());
 
         // Estimate memory requirements for this blend iteration
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // Maximum utilization is when all three pyramids have been built
             // inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
             // + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
-            long long inputUnionPixels = inputUnion.size().x * inputUnion.size().y;
-            long long roiBBPixels = roiBB.size().x * roiBB.size().y;
             long long bytes =
-                    inputUnionPixels * (sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
-                    + (4/3) * roiBBPixels *
+                    inputUnion.area() * (sizeof(ImagePixelType) + 2*sizeof(AlphaPixelType))
+                    + (4/3) * roiBB.area() *
                             (sizeof(MaskPyramidPixelType) + 2*sizeof(ImagePyramidPixelType));
             int mbytes = (int)ceil(bytes / 1000000.0);
             cout << "Estimated space required for this blend step: "
@@ -308,8 +282,8 @@ break;
         // Create a version of roiBB relative to uBB upperleft corner.
         // This is to access roi within images of size uBB.
         // For example, the mask.
-        EnblendROI roiBB_uBB;
-        roiBB_uBB.setCorners(roiBB.getUL() - uBB.getUL(), roiBB.getLR() - uBB.getUL());
+        Rect2D roiBB_uBB = roiBB;
+        roiBB_uBB.moveBy(-uBB.upperLeft());
 
         // Build Gaussian pyramid from mask.
         vector<MaskPyramidType*> *maskGP = gaussianPyramid<MaskType, MaskPyramidType,
@@ -537,31 +511,6 @@ break;
         blackBB = uBB;
 
     }
-/*
-    miPoint points[4];
-    miGC *pGC;
-    miPaintedSet *paintedSet;
-    miPixel pixels[2];
-
-    points[0].x = 25; points[0].y = 5;
-    points[1].x = 5; points[1].y = 5;
-    points[2].x = 5; points[2].y = 25;
-    points[3].x = 35; points[3].y = 22;
-
-    pixels[0] = 255;
-    pixels[1] = 255;
-    pGC = miNewGC(2, pixels);
-    //miSetGCAttrib(pGC, MI_GC_LINE_WIDTH, 0);
-    paintedSet = miNewPaintedSet();
-
-    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN, 4, points);
-    //miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, 4, points);
-
-    copyPaintedSetToImage(destImageRange(*(blackPair.second)), paintedSet, Diff2D(10,20));
-
-    miDeleteGC(pGC);
-    miDeletePaintedSet(paintedSet);
-*/
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {

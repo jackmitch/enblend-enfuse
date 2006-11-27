@@ -1019,9 +1019,9 @@ public:
          * this rect isEmpty(), returns zero, otherwise returns
          * width()*height().
          */
-    int area() const
+    long long area() const
     {
-        return isEmpty() ? 0 : width()*height();
+        return isEmpty() ? 0LL : (long long)width()*(long long)height();
     }
 
         /** Determine and return the size of this rectangle. The width
@@ -1283,6 +1283,34 @@ public:
         result &= r;
         return result;
     }
+
+    /** create iterators to iterate over this ROI
+     *
+     *  @param image     iterators to source image
+     *
+     *  @return iterator set, to iterate over this ROI
+     */
+    template <typename ImgIter, typename ImgAccessor>
+    vigra::triple<ImgIter, ImgIter, ImgAccessor>
+    apply(vigra::triple<ImgIter, ImgIter, ImgAccessor> image) const
+    {
+	return vigra::make_triple(image.first + upperLeft_, image.first + lowerRight_, image.third);
+    }
+
+    /** create iterators to iterate over the ROI
+     *
+     *  @param image     iterators to source image (the source image should
+     *                   cover the whole ROI)
+     *
+     *  @return iterator set, to iterate over this ROI
+     */
+    template <typename ImgIter, typename ImgAccessor>
+    std::pair<ImgIter, ImgAccessor>
+    apply(std::pair<ImgIter, ImgAccessor> image) const
+    {
+	return std::make_pair(image.first + upperLeft_, image.second);
+    }
+
 };
 
 /********************************************************/

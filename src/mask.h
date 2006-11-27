@@ -69,7 +69,9 @@ using vigra::importImageAlpha;
 using vigra::initImageIf;
 using vigra::NumericTraits;
 using vigra::Point2D;
+using vigra::Rect2D;
 using vigra::RGBToGrayAccessor;
+using vigra::Size2D;
 using vigra::transformImage;
 using vigra::transformImageIf;
 
@@ -112,10 +114,10 @@ MaskType *createMask(ImageType *white,
         ImageType *black,
         AlphaType *whiteAlpha,
         AlphaType *blackAlpha,
-        EnblendROI &uBB,
-        EnblendROI &iBB,
+        Rect2D &uBB,
+        Rect2D &iBB,
         bool wraparound,
-        EnblendROI &mBB) {
+        Rect2D &mBB) {
 
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename MaskType::PixelType MaskPixelType;
@@ -130,15 +132,10 @@ MaskType *createMask(ImageType *white,
     //MaskType *mask = fileMask;
 
     // uBB rounded up to multiple of 8 pixels in each direction
-    Diff2D stride8_size(((uBB.size().x + 7) >> 3), ((uBB.size().y + 7) >> 3));
+    Size2D stride8_size(((uBB.width() + 7) >> 3), ((uBB.height() + 7) >> 3));
 
     // range of stride8 pixels that intersect uBB
-    EnblendROI stride8_initBB;
-    stride8_initBB.setCorners(Diff2D(0, 0), Diff2D((uBB.size().x >> 3), (uBB.size().y >> 3)));
-
-    cout << "uBB=" << uBB << endl;
-    cout << "stride8_size=" << stride8_size << endl;
-    cout << "stride8_initBB=" << stride8_initBB << endl;
+    Rect2D stride8_initBB(Size2D(uBB.width() >> 3, uBB.height() >> 3));
 
     // Stride 8 mask
     MaskType *maskInit = new MaskType(stride8_size);
@@ -287,8 +284,8 @@ MaskType *createMask(ImageType *white,
     
     // Fill mask with union region
     mask->init(NumericTraits<MaskPixelType>::zero());
-    combineTwoImages(stride(8, 8, srcIterRange(whiteAlpha->upperLeft() + uBB.getUL(), whiteAlpha->upperLeft() + uBB.getLR())),
-            stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.getUL())),
+    combineTwoImages(stride(8, 8, srcIterRange(whiteAlpha->upperLeft() + uBB.upperLeft(), whiteAlpha->upperLeft() + uBB.lowerRight())),
+            stride(8, 8, maskIter(blackAlpha->upperLeft() + uBB.upperLeft())),
             destIter(mask->upperLeft() + Diff2D(1,1)),
             ifThenElse(Arg1() || Arg2(), Param(NumericTraits<MaskPixelType>::max()), Param(NumericTraits<MaskPixelType>::zero())));
 
@@ -306,7 +303,7 @@ MaskType *createMask(ImageType *white,
             }
 
             // Convert snake vertices to root-relative vertices
-            vertexIterator->second = uBB.getUL() + (8 * (vertexIterator->second + Diff2D(-1,-1)));
+            vertexIterator->second = uBB.upperLeft() + (8 * (vertexIterator->second + Diff2D(-1,-1)));
         }
     }
 
@@ -324,52 +321,90 @@ MaskType *createMask(ImageType *white,
         Contour *currentContour = new Contour();
         contours.push_back(currentContour);
 
-        // Find first nonmoveable vertex
+        // Check if snake is a closed contour
+        bool closedContour = true;
         Segment::iterator vertexIterator = snake->begin();
-        bool foundNonmoveableVertex = false;
-        for (Segment::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ++vertexIterator) {
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
             if (!vertexIterator->first) {
-                foundNonmoveableVertex = true;
+                closedContour = false;
                 break;
             }
         }
 
-        if (!foundNonmoveableVertex) {
-            // snake consists of only moveable vertices.
+        // Closed contours consist of only moveable vertices.
+        if (closedContour) {
             currentContour->push_back(snake);
+            continue;
         }
-        else {
-            // Move initial run of moveable vertices plus first nonmoveable vertex to end of snake
-            Segment::iterator vertexIteratorPlusOne = vertexIterator; ++vertexIteratorPlusOne;
-            snake->insert(snake->end(), snake->begin(), vertexIteratorPlusOne);
-            snake->erase(snake->begin(), vertexIterator);
 
-            Segment *currentSegment = NULL;
-            bool startedMoveableSegment = false;
-            for (Segment::iterator vertexIterator = snake->begin();
-                    vertexIterator != snake->end(); ++vertexIterator) {
-                if (currentSegment == NULL) {
-                    currentSegment = new Segment();
-                    currentContour->push_back(currentSegment);
-                }
-                currentSegment->push_front(*vertexIterator);
-                cout << vertexIterator->first << " " << vertexIterator->second << endl;
-                if (!startedMoveableSegment && vertexIterator->first) startedMoveableSegment = true;
-                else if (startedMoveableSegment && !vertexIterator->first) {
-                    // End of currentSegment.
-                    // Correct for the push_fronts we've been doing
-                    currentSegment->reverse();
-                    // Cause a new CurrentSegment to be generated on next vertex.
-                    startedMoveableSegment = false;
-                    currentSegment = NULL;
-                    cout << "starting new segment" << endl;
-                }
-            }
-                    
-            delete snake;
+        if (snake->front().first) {
+            // First vertex is moveable. Rotate list so that first vertex is nonmoveable.
+            Segment::iterator firstNonmoveableVertex = snake->begin();
+            while (firstNonmoveableVertex->first) ++firstNonmoveableVertex;
+
+            // Copy initial run on moveable vertices and first nonmoveable vertex to end of list.
+            Segment::iterator firstNonmoveablePlusOne = firstNonmoveableVertex;
+            ++firstNonmoveablePlusOne;
+            snake->insert(snake->end(), snake->begin(), firstNonmoveablePlusOne);
+
+            // Erase initial run of moveable vertices.
+            snake->erase(snake->begin(), firstNonmoveableVertex);
         }
+
+        // Find last moveable vertex.
+        Segment::iterator lastMoveableVertex = snake->begin();
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+            if (vertexIterator->first) lastMoveableVertex = vertexIterator;
+        }
+
+        Segment *currentSegment = NULL;
+        bool insideMoveableSegment = false;
+        bool passedLastMoveableVertex = false;
+        Segment::iterator lastNonmoveableVertex = snake->begin();
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+
+            // Create a new segment if necessary.
+            if (currentSegment == NULL) {
+                currentSegment = new Segment();
+                currentContour->push_back(currentSegment);
+            }
+
+            // Keep track of when we visit the last moveable vertex.
+            // Don't create new segments after this point.
+            // Add all remaining nonmoveable vertices to current segment.
+            if (vertexIterator == lastMoveableVertex) passedLastMoveableVertex = true;
+
+            // Keep track of last nonmoveable vertex.
+            if (!vertexIterator->first) lastNonmoveableVertex = vertexIterator;
+
+            // All segments must begin with a nonmoveable vertex.
+            // If only one nonmoveable vertex separates two runs of moveable vertices,
+            // that vertex is copied into the beginning of the current segment.
+            // It was previously added at the end of the last segment.
+            if (vertexIterator->first && currentSegment->empty()) {
+                currentSegment->push_front(*lastNonmoveableVertex);
+            }
+
+            // Add the current vertex to the current segment.
+            currentSegment->push_front(*vertexIterator);
+
+            if (!insideMoveableSegment && vertexIterator->first) {
+                // Beginning a new moveable segment.
+                insideMoveableSegment = true;
+            }
+            else if (insideMoveableSegment && !vertexIterator->first && !passedLastMoveableVertex) {
+                // End of currentSegment.
+                insideMoveableSegment = false;
+                // Correct for the push_fronts we've been doing
+                currentSegment->reverse();
+                // Cause a new segment to be generated on next vertex.
+                currentSegment = NULL;
+            }
+        }
+
+        delete snake;
     }
+
     rawSegments.clear();
 
     int totalSegments = 0;
@@ -381,36 +416,49 @@ MaskType *createMask(ImageType *white,
     } else {
         cout << "There are " << totalSegments << " distinct seams." << endl;
     }
-/*
+
     // Find extent of moveable snake vertices, and vertices bordering moveable vertices
-    int leftExtent = NumericTraits<int>::max();
-    int rightExtent = NumericTraits<int>::min();
-    int topExtent = NumericTraits<int>::max();
-    int bottomExtent = NumericTraits<int>::min();
-    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-            snakeIterator != snakes.end(); ++snakeIterator) {
-        slist<pair<bool, Point2D> > *snake = *snakeIterator;
-        slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
-        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ++vertexIterator) {
-            if (lastVertex->first || vertexIterator->first) {      
-                leftExtent = std::min(leftExtent, lastVertex->second.x);
-                rightExtent = std::max(rightExtent, lastVertex->second.x);
-                topExtent = std::min(topExtent, lastVertex->second.y);
-                bottomExtent = std::max(bottomExtent, lastVertex->second.y);
-                leftExtent = std::min(leftExtent, vertexIterator->second.x);
-                rightExtent = std::max(rightExtent, vertexIterator->second.x);
-                topExtent = std::min(topExtent, vertexIterator->second.y);
-                bottomExtent = std::max(bottomExtent, vertexIterator->second.y);
+    // Vertex bounding box
+    Rect2D *vBB = NULL;
+    for (ContourVector::iterator currentContour = contours.begin();
+            currentContour != contours.end();
+            ++currentContour) {
+
+        for (Contour::iterator currentSegment = (*currentContour)->begin();
+                currentSegment != (*currentContour)->end();
+                ++currentSegment) {
+
+            Segment::iterator lastVertex = (*currentSegment)->begin();
+            bool foundFirstMoveableVertex = false;
+            for (Segment::iterator vertexIterator = (*currentSegment)->begin();
+                    vertexIterator != (*currentSegment)->end();
+                    ++vertexIterator) {
+
+                if (vertexIterator->first) {
+                    if (vBB == NULL) {
+                        vBB = new Rect2D(vertexIterator->second, Size2D(1,1));
+                    } else {
+                        *vBB |= vertexIterator->second;
+                    }
+
+                    if (!foundFirstMoveableVertex) *vBB |= lastVertex->second;
+
+                    foundFirstMoveableVertex = true;
+                }
+                else if (foundFirstMoveableVertex) {
+                    // First nonmoveable vertex at end of run.
+                    *vBB |= vertexIterator->second;
+                    break;
+                }
+
+                lastVertex = vertexIterator;
             }
-            lastVertex = vertexIterator;
         }
     }
 
-    // Vertex bounding box
-    EnblendROI vBB;
-    vBB.setCorners(Point2D(leftExtent, topExtent), Point2D(rightExtent+1, bottomExtent+1));
+    cout << "vBB = " << *vBB << endl;
 
+/*
     // Make sure that vertex bounding box is bigger than iBB by one pixel in each direction
     EnblendROI iBBPlus;
     iBBPlus.setCorners(iBB.getUL() + Diff2D(-1,-1), iBB.getLR() + Diff2D(1,1));
@@ -597,7 +645,7 @@ MaskType *createMask(ImageType *white,
                     vertexIterator != (*currentSegment)->end();
                     ++vertexIterator) {
             
-                Point2D vertex = vertexIterator->second - uBB.getUL();
+                Point2D vertex = vertexIterator->second - Diff2D(uBB.upperLeft());
                 points[i].x = vertex.x;
                 points[i].y = vertex.y;
                 ++i;
@@ -627,40 +675,36 @@ MaskType *createMask(ImageType *white,
     }
 
     // Find the bounding box of the mask transition line and put it in mBB.
-    MaskIteratorType firstMulticolorColumn = mask->lowerRight();
-    MaskIteratorType lastMulticolorColumn = mask->upperLeft();
-    MaskIteratorType firstMulticolorRow = mask->lowerRight();
-    MaskIteratorType lastMulticolorRow = mask->upperLeft();
+    // mBB starts out as empty rect
+    mBB = Rect2D(Point2D(mask->size()), Point2D(0,0));
 
     MaskIteratorType myPrev = mask->upperLeft();
     my = mask->upperLeft() + Diff2D(0,1);
     mend = mask->lowerRight();
-    for (; my.y < mend.y; ++my.y, ++myPrev.y) {
-        MaskIteratorType mxLeft = my;
-        MaskIteratorType mx = my + Diff2D(1,0);
+    MaskIteratorType mxLeft = myPrev;
+    MaskIteratorType mx = myPrev + Diff2D(1,0);
+    for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x) {
+        if (*mxLeft != *mx) mBB |= Rect2D(x-1, 0, x+1, 1);
+    }
+    for (int y = 1; my.y < mend.y; ++y, ++my.y, ++myPrev.y) {
+        mxLeft = my;
+        mx = my + Diff2D(1,0);
         MaskIteratorType mxUpLeft = myPrev;
         MaskIteratorType mxUp = myPrev + Diff2D(1,0);
 
         if (*mxUpLeft != *mxLeft) {
             // Transition line is between mxUpLeft and mxLeft.
-            if (firstMulticolorRow.y > mxUpLeft.y) firstMulticolorRow = mxUpLeft;
-            if (lastMulticolorRow.y < mxLeft.y) lastMulticolorRow = mxLeft;
+            mBB |= Rect2D(0, y-1, 1, y+1);
         }
 
-        for (; mx.x < mend.x; ++mx.x, ++mxLeft.x, ++mxUp.x) {
-            if (*mxLeft != *mx || *mxUp != *mx) {
-                // Transition line is between mxLeft and mx and between mx and mxUp
-                if (firstMulticolorColumn.x > mxLeft.x) firstMulticolorColumn = mxLeft;
-                if (lastMulticolorColumn.x < mx.x) lastMulticolorColumn = mx;
-                if (firstMulticolorRow.y > mxUp.y) firstMulticolorRow = mxUp;
-                if (lastMulticolorRow.y < mx.y) lastMulticolorRow = mx;
-            }
+        for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x, ++mxUp.x) {
+            if (*mxLeft != *mx) mBB |= Rect2D(x-1, y, x+1, y+1);
+            if (*mxUp != *mx) mBB |= Rect2D(x, y-1, x+1, y+1);
         }
     }
 
     // Check that mBB is well-defined.
-    if ((firstMulticolorColumn.x >= lastMulticolorColumn.x)
-            || (firstMulticolorRow.y >= lastMulticolorRow.y)) {
+    if (mBB.isEmpty()) {
         // No transition pixels were found in the mask at all.
         // This means that one image has no contribution.
         if (*(mask->upperLeft()) == NumericTraits<MaskPixelType>::zero()) {
@@ -672,35 +716,19 @@ MaskType *createMask(ImageType *white,
             // If the mask is entirely white, then the black image would have been identified
             // as redundant if black and white were swapped.
             // Set mBB to the full size of the mask.
-            mBB.setCorners(uBB.getUL(), uBB.getLR());
+            mBB = uBB;
             // Explain why the black image disappears completely.
             cerr << "enblend: the previous images are completely overlapped by the current images"
                  << endl;
         }
-    }
-    else {
-        // Move mBB lower right corner out one pixel, per VIGRA convention.
-        ++lastMulticolorColumn.x;
-        ++lastMulticolorRow.y;
-
-        // mBB is defined relative to the inputUnion origin.
-        mBB.setCorners(
-                uBB.getUL() + Diff2D(firstMulticolorColumn.x - mask->upperLeft().x,
-                                     firstMulticolorRow.y - mask->upperLeft().y),
-                uBB.getUL() + Diff2D(lastMulticolorColumn.x - mask->upperLeft().x,
-                                     lastMulticolorRow.y - mask->upperLeft().y));
+    } else {
+        // mBB is defined relative to inputUnion origin
+        cout << "mBB relative to mask: " << mBB << endl;
+        mBB.moveBy(uBB.upperLeft());
     }
 
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cout << "Mask transition line bounding box: ("
-             << mBB.getUL().x
-             << ", "
-             << mBB.getUL().y
-             << ") -> ("
-             << mBB.getLR().x
-             << ", "
-             << mBB.getLR().y
-             << ")" << endl;
+        cout << "Mask transition line bounding box: " << mBB << endl;
     }
 
     return mask;

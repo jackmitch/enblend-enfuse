@@ -107,10 +107,10 @@ using vigra::CachedFileImageDirector;
 using vigra::Diff2D;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
+using vigra::Rect2D;
 using vigra::StdException;
 
 using enblend::enblendMain;
-using enblend::EnblendROI;
 
 #ifdef _WIN32
 #define strdup _strdup
@@ -368,7 +368,7 @@ int main(int argc, char** argv) {
     bool isColor = false;
     const char *pixelType = NULL;
     ImageImportInfo::ICCProfile iccProfile;
-    EnblendROI inputUnion;
+    Rect2D inputUnion;
 
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
@@ -421,9 +421,8 @@ int main(int argc, char** argv) {
         }
 
         // Get input image's position and size.
-        Diff2D imageSize(inputInfo->width(), inputInfo->height());
-        Diff2D imagePos = inputInfo->getPosition();
-        EnblendROI imageROI(imagePos, imageSize);
+        Rect2D imageROI(Point2D(inputInfo->getPosition()),
+                Size2D(inputInfo->width(), inputInfo->height()));
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
             // The first input image.
@@ -443,7 +442,7 @@ int main(int argc, char** argv) {
         }
         else {
             // second and later images.
-            inputUnion.unite(imageROI, inputUnion);
+            inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
                 cerr << "enblend: Input image \""
@@ -509,10 +508,7 @@ int main(int argc, char** argv) {
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
-        Diff2D ul(0, 0);
-        Diff2D lr(OutputWidthCmdLine, OutputHeightCmdLine);
-        EnblendROI givenSize(ul, lr);
-        inputUnion.unite(givenSize, inputUnion);
+        inputUnion |= Rect2D(Size2D(OutputWidthCmdLine, OutputHeightCmdLine));
     }
 
     // Create the Info for the output file.
@@ -574,23 +570,13 @@ int main(int argc, char** argv) {
 
     // The size of the output image.
     if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        Diff2D ul = inputUnion.getUL();
-        Diff2D lr = inputUnion.getLR();
-        Diff2D outputImageSize = inputUnion.size();
-        cout << "Output image size: "
-             << "(" << ul.x << ", " << ul.y << ") -> "
-             << "(" << lr.x << ", " << lr.y << ") = ("
-             << outputImageSize.x
-             << " x "
-             << outputImageSize.y
-             << ")"
-             << endl;
+        cout << "Output image size: " << inputUnion << endl;
     }
 
     // Set the output image position and resolution.
     outputImageInfo.setXResolution(300.0);
     outputImageInfo.setYResolution(300.0);
-    outputImageInfo.setPosition(inputUnion.getUL());
+    outputImageInfo.setPosition(inputUnion.upperLeft());
 
     // Sanity check on the output image file.
     try {
