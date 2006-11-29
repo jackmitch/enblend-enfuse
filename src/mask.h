@@ -48,6 +48,7 @@
 #include "vigra_ext/XMIWrapper.h"
 
 #include <boost/lambda/lambda.hpp>
+#include <boost/lambda/algorithm.hpp>
 #include <boost/lambda/construct.hpp>
 #include <boost/lambda/if.hpp>
 
@@ -87,7 +88,10 @@ using vigra_ext::copyPaintedSetToImage;
 using boost::lambda::_1;
 using boost::lambda::_2;
 using boost::lambda::if_then_else_return;
+using boost::lambda::call_begin;
+using boost::lambda::call_end;
 using boost::lambda::constant;
+using boost::lambda::protect;
 
 namespace enblend {
 
@@ -411,15 +415,19 @@ MaskType *createMask(ImageType *white,
     for (ContourVector::iterator currentContour = contours.begin(); currentContour != contours.end(); ++currentContour) {
         totalSegments += (*currentContour)->size();
     }
-    if (totalSegments == 1) {
-        cout << "There is 1 distinct seam." << endl;
-    } else {
-        cout << "There are " << totalSegments << " distinct seams." << endl;
+
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        if (totalSegments == 1) {
+            cout << "Optimizing 1 distinct seam." << endl;
+        } else {
+            cout << "Optimizing " << totalSegments << " distinct seams." << endl;
+        }
     }
 
     // Find extent of moveable snake vertices, and vertices bordering moveable vertices
     // Vertex bounding box
-    Rect2D *vBB = NULL;
+    Rect2D vBB;
+    bool initializedVBB = false;
     for (ContourVector::iterator currentContour = contours.begin();
             currentContour != contours.end();
             ++currentContour) {
@@ -435,19 +443,20 @@ MaskType *createMask(ImageType *white,
                     ++vertexIterator) {
 
                 if (vertexIterator->first) {
-                    if (vBB == NULL) {
-                        vBB = new Rect2D(vertexIterator->second, Size2D(1,1));
+                    if (!initializedVBB) {
+                        vBB = Rect2D(vertexIterator->second, Size2D(1,1));
+                        initializedVBB = true;
                     } else {
-                        *vBB |= vertexIterator->second;
+                        vBB |= vertexIterator->second;
                     }
 
-                    if (!foundFirstMoveableVertex) *vBB |= lastVertex->second;
+                    if (!foundFirstMoveableVertex) vBB |= lastVertex->second;
 
                     foundFirstMoveableVertex = true;
                 }
                 else if (foundFirstMoveableVertex) {
                     // First nonmoveable vertex at end of run.
-                    *vBB |= vertexIterator->second;
+                    vBB |= vertexIterator->second;
                     break;
                 }
 
@@ -456,33 +465,31 @@ MaskType *createMask(ImageType *white,
         }
     }
 
-    cout << "vBB = " << *vBB << endl;
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        cout << "Strategy 1:";
+    }
 
-/*
     // Make sure that vertex bounding box is bigger than iBB by one pixel in each direction
-    EnblendROI iBBPlus;
-    iBBPlus.setCorners(iBB.getUL() + Diff2D(-1,-1), iBB.getLR() + Diff2D(1,1));
-    vBB.unite(iBBPlus, vBB);
+    Rect2D iBBPlus = iBB;
+    iBBPlus.addBorder(1);
+    vBB |= iBBPlus;
 
     // Vertex-Union bounding box: portion of uBB inside vBB.
-    EnblendROI uvBB;
-    vBB.intersect(uBB, uvBB);
+    Rect2D uvBB = vBB & uBB;
 
     // Offset between vBB and uvBB
-    Diff2D uvBBOffset = uvBB.getUL() - vBB.getUL();
+    Diff2D uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
 
     // Push ul corner of vBB so that there is an even number of pixels between vBB and uvBB.
     // This is necessary for striding by two over vBB.
-    if (uvBBOffset.x % 2) vBB.setUpperLeft(vBB.getUL() + Diff2D(-1,0));
-    if (uvBBOffset.y % 2) vBB.setUpperLeft(vBB.getUL() + Diff2D(0,-1));
-    uvBBOffset = uvBB.getUL() - vBB.getUL();
+    if (uvBBOffset.x % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(-1,0));
+    if (uvBBOffset.y % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(0,-1));
+    uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
     Diff2D uvBBOffsetHalf = uvBBOffset / 2;
 
     // Create stitch mismatch image
     typedef UInt8 MismatchImagePixelType;
-    //EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
-    //        NumericTraits<MismatchImagePixelType>::max());
-    BasicImage<MismatchImagePixelType> mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
+    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage((vBB.size() + Diff2D(1,1)) / 2,
             NumericTraits<MismatchImagePixelType>::max());
 
     // Areas other than intersection region have maximum cost
@@ -497,59 +504,89 @@ MaskType *createMask(ImageType *white,
                      ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
 
     // Anneal snakes over mismatch image
-    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-            snakeIterator != snakes.end(); ++snakeIterator) {
-        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+    int segmentNumber = 0;
+    for (ContourVector::iterator currentContour = contours.begin();
+            currentContour != contours.end();
+            ++currentContour) {
 
-        // Move snake points to mismatchImage-relative coordinates
-        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ++vertexIterator) {
-            vertexIterator->second = (vertexIterator->second - vBB.getUL()) / 2;
-        }
+        for (Contour::iterator currentSegment = (*currentContour)->begin();
+                currentSegment != (*currentContour)->end();
+                ++currentSegment) {
 
-        annealSnake(&mismatchImage, snake);
+            Segment *snake = *currentSegment;
 
-        // Postprocess annealed vertices
-        slist<pair<bool, Point2D> >::iterator lastVertex = snake->previous(snake->end());
-        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-                vertexIterator != snake->end(); ) {
-            if (vertexIterator->first &&
-                    (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
-                // Vertex is still in max-cost region. Delete it.
-                if (vertexIterator == snake->begin()) {
-                    snake->pop_front();
-                    vertexIterator = snake->begin();
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cout << " s" << segmentNumber++;
+            }
+
+            // Move snake points to mismatchImage-relative coordinates
+            for (Segment::iterator vertexIterator = snake->begin();
+                    vertexIterator != snake->end(); ++vertexIterator) {
+                vertexIterator->second = (vertexIterator->second - vBB.upperLeft()) / 2;
+            }
+
+            annealSnake(&mismatchImage, snake);
+
+            // Postprocess annealed vertices
+            Segment::iterator lastVertex = snake->previous(snake->end());
+            for (Segment::iterator vertexIterator = snake->begin();
+                    vertexIterator != snake->end(); ) {
+                if (vertexIterator->first &&
+                        (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
+                    // Vertex is still in max-cost region. Delete it.
+                    if (vertexIterator == snake->begin()) {
+                        snake->pop_front();
+                        vertexIterator = snake->begin();
+                    }
+                    else {
+                        vertexIterator = snake->erase_after(lastVertex);
+                    }
+                    bool needsBreak = false;
+                    if (vertexIterator == snake->end()) {
+                        vertexIterator = snake->begin();
+                        needsBreak = true;
+                    }
+                    // vertexIterator now points to next entry.
+
+                    // It is conceivable but very unlikely that every vertex in a closed contour
+                    // ended up in the max-cost region after annealing.
+                    if (snake->empty()) break;
+
+                    if (!(lastVertex->first || vertexIterator->first)) {
+                        // We deleted an entire range of moveable points between two nonmoveable points.
+                        // insert dummy point after lastVertex so dijkstra can work over this range.
+                        if (vertexIterator == snake->begin()) {
+                            snake->push_front(make_pair(true, vertexIterator->second));
+                            lastVertex = snake->begin();
+                        } else {
+                            lastVertex = snake->insert_after(lastVertex, make_pair(true, vertexIterator->second));
+                        }
+                    }
+
+                    if (needsBreak) break;
                 }
                 else {
-                    vertexIterator = snake->erase_after(lastVertex);
+                    lastVertex = vertexIterator;
+                    ++vertexIterator;
                 }
-                bool needsBreak = false;
-                if (vertexIterator == snake->end()) {
-                    vertexIterator = snake->begin();
-                    needsBreak = true;
-                }
-                // vertexIterator now points to next entry.
-
-                if (!(lastVertex->first || vertexIterator->first)) {
-                    // We deleted an entire range of moveable points between two nonmoveable points.
-                    // insert dummy point after lastVertex so dijkstra can work over this range.
-                    if (vertexIterator == snake->begin()) {
-                        snake->push_front(make_pair(true, vertexIterator->second));
-                        lastVertex = snake->begin();
-                    } else {
-                        lastVertex = snake->insert_after(lastVertex, make_pair(true, vertexIterator->second));
-                    }
-                }
-
-                if (needsBreak) break;
             }
-            else {
-                lastVertex = vertexIterator;
-                ++vertexIterator;
+
+            // Print an explanation if every vertex in a closed contour ended up in the
+            // max-cost region after annealing.
+            // FIXME explain how to fix this problem in the error message!
+            if (snake->empty()) {
+                cerr << endl
+                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed."
+                     << endl;
             }
         }
     }
 
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        cout << endl << "Strategy 2:";
+    }
+
+/*
     // Adjust cost image for shortest path algorithm.
     // Areas outside union region have epsilon cost
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
@@ -662,17 +699,14 @@ MaskType *createMask(ImageType *white,
     miDeleteGC(pGC);
     miDeletePaintedSet(paintedSet);
 
-    // Done with snakes
-    for (ContourVector::iterator currentContour = contours.begin();
-            currentContour != contours.end();
-            ++currentContour) {
-        for (Contour::iterator currentSegment = (*currentContour)->begin();
-                currentSegment != (*currentContour)->end();
-                ++currentSegment) {
-            delete *currentSegment;
-        }
-        delete *currentContour;
-    }
+    // Done with snakes.
+    // Delete all Segments in each Contour in contours.
+    std::for_each(contours.begin(), contours.end(),
+            bind(boost::lambda::ll::for_each(), bind(call_begin(),(*_1)), bind(call_end(),(*_1)),
+                    protect(bind(delete_ptr(),_1))));
+
+    // Delete all Contours in contours.
+    std::for_each(contours.begin(), contours.end(), bind(delete_ptr(),_1));
 
     // Find the bounding box of the mask transition line and put it in mBB.
     // mBB starts out as empty rect
@@ -723,7 +757,7 @@ MaskType *createMask(ImageType *white,
         }
     } else {
         // mBB is defined relative to inputUnion origin
-        cout << "mBB relative to mask: " << mBB << endl;
+        //cout << "mBB relative to mask: " << mBB << endl;
         mBB.moveBy(uBB.upperLeft());
     }
 

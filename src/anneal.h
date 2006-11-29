@@ -207,9 +207,9 @@ public:
     }
 
     ~GDAConfiguration() {
-        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
-        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
-        for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
+        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(),_1));
+        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(),_1));
+        for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(),_1));
     }
 
     void run() {

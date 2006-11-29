@@ -641,6 +641,8 @@ public:
     friend class cfi_detail::DirectionSelector<StridedOrUnstrided, int>;
     typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type> MoveY;
     friend class cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type>;
+    friend static bool CachedFileSequentialAccessIteratorPolicy<IMAGEITERATOR>::equal(IMAGEITERATOR const &, IMAGEITERATOR const &);
+    //static bool equal(BaseType const & d1, BaseType const & d2) {
 
     MoveX x;
     MoveY y;

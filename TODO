@@ -61,6 +61,8 @@ X add NDEBUG to Makefile.am
 
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases
+- blending against nothing leads to output with alpha=0?
+- check that automatic level determination works correctly
 - make striding argument object factories for BasicImages
 X replace EnblendROI with vigra::Rect2D
 - load/save mask from file
