@@ -34,7 +34,10 @@ X icc blending
     X progress indicators for color transforms
 X add NDEBUG to Makefile.am
 - fast fromRealPromote
-    before: lm test 5.090 5.119 4.988 4.899
+    linux before: lm test 14.51 14.54 14.52
+    linux after:  lm test 14.40 14.45 14.41
+    win32 before: lm test 5.164 5.046 5.077
+    win32 after:  lm test 
 
 - new seam alg
     X stride 8 mask generation

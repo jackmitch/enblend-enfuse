@@ -33,6 +33,9 @@
 /*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
 /*                                                                      */
 /************************************************************************/
+// Changes by Andrew Mihal 20061130
+// Changed fromRealPromote functions to use lrint.
+// Enblend includes float_cast.h to define lrint on win32.
  
  
 #ifndef VIGRA_NUMERICTRAITS_HXX
@@ -587,13 +590,18 @@ struct NumericTraits<signed char>
         return ((v < SCHAR_MIN) ? SCHAR_MIN : (v > SCHAR_MAX) ? SCHAR_MAX : v); 
     }
     static signed char fromRealPromote(RealPromote v) {
-        return ((v < 0.0) 
-                   ? ((v < (RealPromote)SCHAR_MIN) 
-                       ? SCHAR_MIN 
-                       : static_cast<signed char>(v - 0.5)) 
-                   : (v > (RealPromote)SCHAR_MAX) 
-                       ? SCHAR_MAX 
-                       : static_cast<signed char>(v + 0.5)); 
+        //return ((v < 0.0) 
+        //           ? ((v < (RealPromote)SCHAR_MIN) 
+        //               ? SCHAR_MIN 
+        //               : static_cast<signed char>(v - 0.5)) 
+        //           : (v > (RealPromote)SCHAR_MAX) 
+        //               ? SCHAR_MAX 
+        //               : static_cast<signed char>(v + 0.5)); 
+        return (v < (RealPromote)SCHAR_MIN)
+                ? SCHAR_MIN
+                : (v > (RealPromote)SCHAR_MAX)
+                    ? SCHAR_MAX
+                    : static_cast<signed char>(lrint(v));
     }
 };
 
@@ -631,11 +639,16 @@ struct NumericTraits<unsigned char>
         return ((v < 0) ? 0 : (v > UCHAR_MAX) ? UCHAR_MAX : v); 
     }
     static unsigned char fromRealPromote(RealPromote const & v) {
-            return ((v < 0.0) 
-                     ? 0 
-                     : ((v > (RealPromote)UCHAR_MAX) 
-                         ? UCHAR_MAX 
-                         : static_cast<unsigned char>(v + 0.5)));
+            //return ((v < 0.0) 
+            //         ? 0 
+            //         : ((v > (RealPromote)UCHAR_MAX) 
+            //             ? UCHAR_MAX 
+            //             : static_cast<unsigned char>(v + 0.5)));
+            return (v < 0.0)
+                    ? 0
+                    : (v > (RealPromote)UCHAR_MAX)
+                        ? UCHAR_MAX
+                        : static_cast<unsigned char>(lrint(v));
     }
 };
 
@@ -674,13 +687,18 @@ struct NumericTraits<short int>
                 (v > SHRT_MAX) ? SHRT_MAX : v); 
     }
     static short int fromRealPromote(RealPromote v) {
-        return ((v < 0.0) 
-                 ? ((v < (RealPromote)SHRT_MIN) 
-                     ? SHRT_MIN 
-                     : static_cast<short int>(v - 0.5)) 
-                 : ((v > (RealPromote)SHRT_MAX) 
-                     ? SHRT_MAX 
-                     : static_cast<short int>(v + 0.5))); 
+        //return ((v < 0.0) 
+        //         ? ((v < (RealPromote)SHRT_MIN) 
+        //             ? SHRT_MIN 
+        //             : static_cast<short int>(v - 0.5)) 
+        //         : ((v > (RealPromote)SHRT_MAX) 
+        //             ? SHRT_MAX 
+        //             : static_cast<short int>(v + 0.5))); 
+        return (v < (RealPromote)SHRT_MIN)
+                ? SHRT_MIN
+                : (v > (RealPromote)SHRT_MAX)
+                    ? SHRT_MAX
+                    : static_cast<short int>(lrint(v));
     }
 };
 
@@ -718,11 +736,16 @@ struct NumericTraits<short unsigned int>
         return ((v < 0) ? 0 : (v > USHRT_MAX) ? USHRT_MAX : v); 
     }
     static short unsigned int fromRealPromote(RealPromote v) {
-            return ((v < 0.0) 
-                     ? 0 
-                     : ((v > (RealPromote)USHRT_MAX) 
-                         ? USHRT_MAX 
-                         : static_cast<short unsigned int>(v + 0.5)));
+            //return ((v < 0.0) 
+            //         ? 0 
+            //         : ((v > (RealPromote)USHRT_MAX) 
+            //             ? USHRT_MAX 
+            //             : static_cast<short unsigned int>(v + 0.5)));
+            return (v < 0.0)
+                    ? 0
+                    : (v > (RealPromote)USHRT_MAX)
+                        ? USHRT_MAX
+                        : static_cast<short unsigned int>(lrint(v));
     }
 };
 
@@ -758,13 +781,18 @@ struct NumericTraits<int>
     static RealPromote toRealPromote(int v) { return v; }
     static int fromPromote(Promote v) { return v; }
     static int fromRealPromote(RealPromote v) {
-        return ((v < 0.0) 
-                 ? ((v < (RealPromote)INT_MIN) 
-                     ? INT_MIN 
-                     : static_cast<int>(v - 0.5)) 
-                 : ((v > (RealPromote)INT_MAX) 
-                     ? INT_MAX 
-                     : static_cast<int>(v + 0.5))); 
+        //return ((v < 0.0) 
+        //         ? ((v < (RealPromote)INT_MIN) 
+        //             ? INT_MIN 
+        //             : static_cast<int>(v - 0.5)) 
+        //         : ((v > (RealPromote)INT_MAX) 
+        //             ? INT_MAX 
+        //             : static_cast<int>(v + 0.5))); 
+        return (v < (RealPromote)INT_MIN)
+                ? INT_MIN
+                : (v > (RealPromote)INT_MAX)
+                    ? INT_MAX
+                    : static_cast<int>(lrint(v));
     }
 };
 
@@ -800,11 +828,16 @@ struct NumericTraits<unsigned int>
     static RealPromote toRealPromote(unsigned int v) { return v; }
     static unsigned int fromPromote(Promote v) { return v; }
     static unsigned int fromRealPromote(RealPromote v) {
-            return ((v < 0.0) 
-                     ? 0 
-                     : ((v > (RealPromote)UINT_MAX) 
-                         ? UINT_MAX 
-                         : static_cast<unsigned int>(v + 0.5)));
+            //return ((v < 0.0) 
+            //         ? 0 
+            //         : ((v > (RealPromote)UINT_MAX) 
+            //             ? UINT_MAX 
+            //             : static_cast<unsigned int>(v + 0.5)));
+            return (v < 0.0)
+                    ? 0
+                    : (v > (RealPromote)UINT_MAX)
+                        ? UINT_MAX
+                        : static_cast<unsigned int>(llrint(v));
     }
 };
 
@@ -840,13 +873,18 @@ struct NumericTraits<long>
     static RealPromote toRealPromote(long v) { return v; }
     static long fromPromote(Promote v) { return v; }
     static long fromRealPromote(RealPromote v) {
-        return ((v < 0.0) 
-                 ? ((v < (RealPromote)LONG_MIN) 
-                     ? LONG_MIN 
-                     : static_cast<long>(v - 0.5)) 
-                 : ((v > (RealPromote)LONG_MAX) 
-                     ? LONG_MAX 
-                     : static_cast<long>(v + 0.5))); 
+        //return ((v < 0.0) 
+        //         ? ((v < (RealPromote)LONG_MIN) 
+        //             ? LONG_MIN 
+        //             : static_cast<long>(v - 0.5)) 
+        //         : ((v > (RealPromote)LONG_MAX) 
+        //             ? LONG_MAX 
+        //             : static_cast<long>(v + 0.5))); 
+        return (v < (RealPromote)LONG_MIN)
+                ? LONG_MIN
+                : (v > (RealPromote)LONG_MAX)
+                    ? LONG_MAX
+                    : static_cast<long>(lrint(v));
     }
 };
 
@@ -882,11 +920,16 @@ struct NumericTraits<unsigned long>
     static RealPromote toRealPromote(unsigned long v) { return v; }
     static unsigned long fromPromote(Promote v) { return v; }
     static unsigned long fromRealPromote(RealPromote v) {
-            return ((v < 0.0) 
-                     ? 0 
-                     : ((v > (RealPromote)ULONG_MAX) 
-                         ? ULONG_MAX 
-                         : static_cast<unsigned long>(v + 0.5)));
+            //return ((v < 0.0) 
+            //         ? 0 
+            //         : ((v > (RealPromote)ULONG_MAX) 
+            //             ? ULONG_MAX 
+            //             : static_cast<unsigned long>(v + 0.5)));
+            return (v < 0.0)
+                    ? 0
+                    : (v > (RealPromote)ULONG_MAX)
+                        ? ULONG_MAX
+                        : static_cast<unsigned long>(llrint(v));
     }
 };
 

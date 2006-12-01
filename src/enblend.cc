@@ -24,6 +24,7 @@
 #ifdef _WIN32
 #include <win32helpers\win32config.h>
 
+// Defines lrint for fast fromRealPromotes
 #include "float_cast.h"
 
 // Make sure we bring in windows.h the right way
@@ -167,6 +168,9 @@ void sigint_handler(int sig) {
 int main(int argc, char** argv) {
 
 #ifdef _WIN32
+    // Make sure the FPU is set to rounding mode so that the lrint
+    // functions in float_cast.h will work properly.
+    // See changes in vigra numerictraits.hxx
     _controlfp( _RC_NEAR, _MCW_RC );
 #endif
     
