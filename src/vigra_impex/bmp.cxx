@@ -36,6 +36,7 @@
 
 #include <iostream>
 #include <fstream>
+#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/sized_int.hxx"
 #include "error.hxx"

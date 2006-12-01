@@ -43,6 +43,7 @@
 
 #include <stdexcept>
 #include <csetjmp>
+#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "void_vector.hxx"
 #include "error.hxx"

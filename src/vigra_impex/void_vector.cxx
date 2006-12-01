@@ -34,6 +34,7 @@
 /*                                                                      */
 /************************************************************************/
 
+#include "../float_cast.h"
 #include "void_vector.hxx"
 
 namespace vigra

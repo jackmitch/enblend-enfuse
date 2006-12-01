@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include "../float_cast.h"
 #include "byteorder.hxx"
 #include "vigra/sized_int.hxx"
 

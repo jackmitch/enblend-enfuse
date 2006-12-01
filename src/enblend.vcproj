@@ -237,6 +237,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\float_cast.h"
+				>
+			</File>
+			<File
 				RelativePath=".\mask.h"
 				>
 			</File>

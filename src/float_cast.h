@@ -70,55 +70,55 @@
 	
 __forceinline long int lrint (double flt) {
     long int intgr;
-    _asm {
-        fldl flt
-        fistpl intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 } 
 	
 __forceinline long int lrintf(float flt) {
     long int intgr;
-    _asm {
-        flds flt
-        fistpl intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 }
 
 __forceinline long int lrintl(long double flt) {
     long int intgr;
-    _asm {
-        fldt flt
-        fistpl intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 }
 
 __forceinline long long int llrint(double flt) {
     long long int intgr;
-    _asm {
-        fldl flt
-        fistpll intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 }
 
 __forceinline long long int llrintf(float flt) {
     long long int intgr;
-    _asm {
-        flds flt
-        fistpll intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 }
 
 __forceinline long long int llrintl(long double flt) {
     long long int intgr;
-    _asm {
-        fldt flt
-        fistpll intgr
-    };
+    __asm {
+        fld flt
+        fistp intgr
+    }
     return intgr;
 }
 

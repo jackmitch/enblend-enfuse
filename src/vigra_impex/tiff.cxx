@@ -63,6 +63,7 @@
 // NB (jbeda): tiffio.h is going to include this anyway.  Let's include
 // it now so that we can control how it comes in.  Namely, we want
 // to get our version that doesn't set the evil min/max macros.
+#include "../float_cast.h"
 #include "vigra/windows.h"
 
 #include "vigra/sized_int.hxx"

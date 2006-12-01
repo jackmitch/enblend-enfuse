@@ -48,6 +48,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <csetjmp>
+#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/sized_int.hxx"
 #include "void_vector.hxx"
