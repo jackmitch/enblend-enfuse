@@ -24,6 +24,8 @@
 #ifdef _WIN32
 #include <win32helpers\win32config.h>
 
+#include "float_cast.h"
+
 // Make sure we bring in windows.h the right way
 #define _STLP_VERBOSE_AUTO_LINK
 #define _USE_MATH_DEFINES
@@ -165,7 +167,7 @@ void sigint_handler(int sig) {
 int main(int argc, char** argv) {
 
 #ifdef _WIN32
-    _controlfp( _RC_UP, _MCW_RC );
+    _controlfp( _RC_NEAR, _MCW_RC );
 #endif
     
     signal(SIGINT, sigint_handler);

@@ -1,3 +1,7 @@
+/* Options for fast float to int conversion */
+#define HAVE_LRINT  0
+#define HAVE_LRINTF 0
+
 /* Name of package */
 #define PACKAGE "enblend"
 

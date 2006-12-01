@@ -586,7 +586,6 @@ MaskType *createMask(ImageType *white,
         cout << endl << "Strategy 2:";
     }
 
-/*
     // Adjust cost image for shortest path algorithm.
     // Areas outside union region have epsilon cost
     combineThreeImages(stride(2, 2, uvBB.apply(srcImageRange(*whiteAlpha))),
@@ -595,63 +594,85 @@ MaskType *createMask(ImageType *white,
                      destIter(mismatchImage.upperLeft() + uvBBOffsetHalf),
                      ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
 
-    EnblendROI withinVBB;
-    withinVBB.setCorners(Diff2D(0,0), (vBB.size() + Diff2D(1,1)) / 2);
+    Rect2D withinVBB((vBB.size() + Diff2D(1,1)) / 2);
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
-    for (vector<slist<pair<bool, Point2D> > *>::iterator snakeIterator = snakes.begin();
-            snakeIterator != snakes.end(); ++snakeIterator) {
-        slist<pair<bool, Point2D> > *snake = *snakeIterator;
+    segmentNumber = 0;
+    for (ContourVector::iterator currentContour = contours.begin();
+            currentContour != contours.end();
+            ++currentContour) {
 
-        for (slist<pair<bool, Point2D> >::iterator currentVertex = snake->begin(); ; ) {
-            slist<pair<bool, Point2D> >::iterator nextVertex = currentVertex;
-            ++nextVertex;
-            if (nextVertex == snake->end()) nextVertex = snake->begin();
+        for (Contour::iterator currentSegment = (*currentContour)->begin();
+                currentSegment != (*currentContour)->end();
+                ++currentSegment) {
 
-            if (currentVertex->first || nextVertex->first) {
-                // Find shortest path between these points
-                Point2D currentPoint = currentVertex->second;
-                Point2D nextPoint = nextVertex->second;
+            Segment *snake = *currentSegment;
 
-                int radius = 25;
-                EnblendROI pointSurround;
-                pointSurround.setCorners(currentPoint - Diff2D(radius,radius), currentPoint + Diff2D(radius,radius));
-                EnblendROI nextPointSurround;
-                nextPointSurround.setCorners(nextPoint - Diff2D(radius,radius), nextPoint + Diff2D(radius,radius));
-                pointSurround.unite(nextPointSurround, pointSurround);
-                pointSurround.intersect(withinVBB, pointSurround);
-
-                vector<Point2D> *shortPath = minCostPath(pointSurround.apply(srcImageRange(mismatchImage)),
-                        nextPoint - pointSurround.getUL(),
-                        currentPoint - pointSurround.getUL());
-
-                for (vector<Point2D>::iterator shortPathPoint = shortPath->begin();
-                        shortPathPoint != shortPath->end();
-                        ++shortPathPoint) {
-                    mismatchImage[*shortPathPoint + pointSurround.getUL()] = 130;
-                    snake->insert_after(currentVertex, make_pair(false, (*shortPathPoint + pointSurround.getUL())));
-                }
-
-                delete shortPath;
-
-                mismatchImage[currentPoint] = currentVertex->first ? 200 : 230;
-                mismatchImage[nextPoint] = nextVertex->first ? 200 : 230;
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cout << " s" << segmentNumber++;
             }
 
-            currentVertex = nextVertex;
-            if (nextVertex == snake->begin()) break;
-        }
+            for (Segment::iterator currentVertex = snake->begin(); ; ) {
+                Segment::iterator nextVertex = currentVertex;
+                ++nextVertex;
+                if (nextVertex == snake->end()) nextVertex = snake->begin();
 
-        // Move vertices relative to root
-        for (slist<pair<bool, Point2D> >::iterator vertexIterator = snake->begin();
-            vertexIterator != snake->end(); ++vertexIterator) {
-            vertexIterator->second = (vertexIterator->second * 2) + vBB.getUL();
+                if (currentVertex->first || nextVertex->first) {
+                    // Find shortest path between these points
+                    Point2D currentPoint = currentVertex->second;
+                    Point2D nextPoint = nextVertex->second;
+
+                    int radius = 25;
+                    Rect2D pointSurround(currentPoint, Size2D(1,1));
+                    pointSurround.addBorder(radius);
+                    Rect2D nextPointSurround(nextPoint, Size2D(1,1));
+                    nextPointSurround.addBorder(radius);
+
+                    pointSurround |= nextPointSurround;
+                    pointSurround &= withinVBB;
+
+                    // FIXME make BasicImage copy of pointSurrond.apply(mismatchImage)?
+                    // min cost path wants random access to cost image.
+                    BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
+                    copyImage(pointSurround.apply(srcImageRange(mismatchImage)), destImage(mismatchROIImage));
+                    //vector<Point2D> *shortPath = minCostPath(pointSurround.apply(srcImageRange(mismatchImage)),
+                    vector<Point2D> *shortPath = minCostPath(srcImageRange(mismatchROIImage),
+                            Point2D(nextPoint - pointSurround.upperLeft()),
+                            Point2D(currentPoint - pointSurround.upperLeft()));
+
+                    for (vector<Point2D>::iterator shortPathPoint = shortPath->begin();
+                            shortPathPoint != shortPath->end();
+                            ++shortPathPoint) {
+                        // FIXME following line is for visualization only
+                        mismatchImage[*shortPathPoint + pointSurround.upperLeft()] = 130;
+                        snake->insert_after(currentVertex, make_pair(false, (*shortPathPoint + pointSurround.upperLeft())));
+                    }
+
+                    delete shortPath;
+
+                    // FIXME following lines are for visualization only
+                    mismatchImage[currentPoint] = currentVertex->first ? 200 : 230;
+                    mismatchImage[nextPoint] = nextVertex->first ? 200 : 230;
+                }
+
+                currentVertex = nextVertex;
+                if (nextVertex == snake->begin()) break;
+            }
+
+            // Move vertices relative to root
+            for (Segment::iterator vertexIterator = snake->begin();
+                vertexIterator != snake->end(); ++vertexIterator) {
+                vertexIterator->second = (vertexIterator->second * 2) + vBB.upperLeft();
+            }
         }
+    }
+
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        cout << endl;
     }
 
     ImageExportInfo mismatchInfo("enblend_dijkstra.tif");
     exportImage(srcImageRange(mismatchImage), mismatchInfo);
-*/
 
     // Fill snakes on uBB-sized mask
     miPixel pixels[2];

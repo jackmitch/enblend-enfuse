@@ -407,32 +407,32 @@ public:
         int width = d.i->width();
         int dy = n / width;
         int dx = n % width;
-        if (d.x + dx >= width) {dy++; dx -= width;}
-        else if (d.x + dx < 0) {dy--; dx += width;}
+        if (d.x() + dx >= width) {dy++; dx -= width;}
+        else if (d.x() + dx < 0) {dy--; dx += width;}
         return d(dx, dy);
     }
 
     static bool equal(BaseType const & d1, BaseType const & d2) {
         int width1 = d1.i->width();
         int width2 = d2.i->width();
-        return (d1.y*width1 + d1.x) == (d2.y*width2 + d2.x);
+        return (d1.y()*width1 + d1.x()) == (d2.y()*width2 + d2.x());
     }
 
     static bool less(BaseType const & d1, BaseType const & d2) {
         int width1 = d1.i->width();
         int width2 = d2.i->width();
-        return (d1.y*width1 + d1.x) < (d2.y*width2 + d2.x);
+        return (d1.y()*width1 + d1.x()) < (d2.y()*width2 + d2.x());
     }
 
     static difference_type difference(BaseType const & d1, BaseType const & d2) {
         int width1 = d1.i->width();
         int width2 = d2.i->width();
-        return (d1.y*width1 + d1.x) - (d2.y*width2 + d2.x);
+        return (d1.y()*width1 + d1.x()) - (d2.y()*width2 + d2.x());
     }
 
     static void increment(BaseType & d) {
         ++d.x;
-        if (d.x == d.i->width()) {
+        if (d.x() == d.i->width()) {
             d.x = 0;
             ++d.y;
         }
@@ -440,7 +440,7 @@ public:
 
     static void decrement(BaseType & d) {
         --d.x;
-        if (d.x < 0) {
+        if (d.x() < 0) {
             d.x = d.i->width() - 1;
             --d.y;
         }
@@ -452,8 +452,8 @@ public:
         int dx = n % width;
         d.x += dx;
         d.y += dy;
-        if (d.x >= width) {++d.y; d.x -= width;}
-        if (d.x < 0) {--d.y; d.x += width;}
+        if (d.x() >= width) {++d.y; d.x -= width;}
+        if (d.x() < 0) {--d.y; d.x += width;}
     }
 
 };
@@ -641,8 +641,7 @@ public:
     friend class cfi_detail::DirectionSelector<StridedOrUnstrided, int>;
     typedef typename cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type> MoveY;
     friend class cfi_detail::NotifyingDirectionSelector<StridedOrUnstrided, int, self_type>;
-    friend static bool CachedFileSequentialAccessIteratorPolicy<IMAGEITERATOR>::equal(IMAGEITERATOR const &, IMAGEITERATOR const &);
-    //static bool equal(BaseType const & d1, BaseType const & d2) {
+    friend class CachedFileSequentialAccessIteratorPolicy<IMAGEITERATOR>;
 
     MoveX x;
     MoveY y;

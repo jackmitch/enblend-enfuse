@@ -47,6 +47,10 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([floor memset pow rint sqrt strchr strerror strrchr mkstemp])
 
+# lrint and lrintf
+AC_C99_FUNC_LRINT
+AC_C99_FUNC_LRINTF
+
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  include/Makefile
