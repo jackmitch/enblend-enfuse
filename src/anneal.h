@@ -213,7 +213,7 @@ public:
     }
 
     void run() {
-        int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+        //int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
 
         tCurrent = tInitial;
 

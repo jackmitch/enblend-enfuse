@@ -33,22 +33,25 @@ X icc blending
         shift: 18.60 convert
     X progress indicators for color transforms
 X add NDEBUG to Makefile.am
-- fast fromRealPromote
+X fast fromRealPromote
     linux before: lm test 14.51 14.54 14.52
     linux after:  lm test 14.40 14.45 14.41
     win32 before: lm test 5.164 5.046 5.077
-    win32 after:  lm test 
+    win32 after:  lm test 5.154 5.005 4.967
+    linux noprof: lm test 5.71 5.71 5.71
+    linux 2.5:    lm test 13.01 12.97 12.96
 
 - new seam alg
     X stride 8 mask generation
         X cfi strided iterators 99.15 -> 97.58
     X stride 8 mask polygonization
         - make it work with wraparound?
-        - Arrange snakes into continuous pieces
+        X Arrange snakes into continuous pieces
         - Experiment with different distances between vertices
-    - cost image
-        - Replace with CachedFileImage?
-        - Optimize vertices on BasicImage regions-of-interest?
+    X cost image
+        X Replace with CachedFileImage?
+        - Anneal vertices on BasicImage regions-of-interest?
+        X Dijkstra vertices on BasicImage regions-of-interest
     - Strategy 1: GDA
         X integer math / bresenham LineIterator
         X Memoize magnitude 33.28/67.95 -> 33.20/67.85
@@ -62,6 +65,19 @@ X add NDEBUG to Makefile.am
     - code cleanup and comments
     X progress indicators
     - option to revert to old mask algorithm
+
+- gpu blend
+    - cpu blending speed: lr test  .04 self 2.79 children
+    - gpu v1            : lr test 4.99 self  .01 children
+    - gpu profile basic loops:     .02 self 4.37 children
+                                  2.67 profile_to_float
+                                  1.66 profile_from_float
+    - gpu reorg loops :            .06 self 4.22 children
+                                  2.48 profile_to_float
+                                  1.70 profile_from_float
+    - gpu from_float lrint:        .11 self 3.52 children
+                                  2.54 profile_to_float
+                                   .92 profile_from_float
 
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases

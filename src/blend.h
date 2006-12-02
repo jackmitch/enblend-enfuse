@@ -29,11 +29,15 @@
 #include "vigra/combineimages.hxx"
 #include "vigra/numerictraits.hxx"
 
+#include <sh/sh.hpp>
+
 using std::cout;
 using std::vector;
 
 using vigra::combineThreeImages;
 using vigra::NumericTraits;
+
+using namespace SH;
 
 namespace enblend {
 
@@ -67,6 +71,34 @@ protected:
     double white;
 };
 
+template <typename PROGRAM, typename CHANNEL>
+void profile_run_program(PROGRAM & blend_prg, CHANNEL & result) {
+    result = blend_prg;
+};
+
+template <typename MX, typename WX, typename BX>
+void profile_to_float(MX & mx, unsigned int width, WX & wx, BX & bx, float *mask_ptr, float *white_ptr, float *black_ptr) {
+    for (unsigned int i = 0, j = 0; i < width; ++i, ++mx.x, ++wx.x, ++bx.x) {
+        mask_ptr[i] = static_cast<float>(*mx);
+        white_ptr[j] = static_cast<float>(wx->red());
+        black_ptr[j++] = static_cast<float>(bx->red());
+        white_ptr[j] = static_cast<float>(wx->green());
+        black_ptr[j++] = static_cast<float>(bx->green());
+        white_ptr[j] = static_cast<float>(wx->blue());
+        black_ptr[j++] = static_cast<float>(bx->blue());
+    }
+};
+
+template <typename ImagePixelComponentType, typename BX>
+void profile_from_float(BX & bx, float *results, unsigned int width) {
+    for (unsigned int i = 0, j = 0; i < width; ++i, ++bx.x) {
+        *bx = RGBValue<ImagePixelComponentType>(
+                static_cast<ImagePixelComponentType>(lrintf(results[j++])),
+                static_cast<ImagePixelComponentType>(lrintf(results[j++])),
+                static_cast<ImagePixelComponentType>(lrintf(results[j++])));
+    }
+};
+
 /** Blend black and white pyramids using mask pyramid.
  */
 template <typename MaskPyramidType, typename ImagePyramidType>
@@ -75,10 +107,31 @@ void blend(vector<MaskPyramidType*> *maskGP,
         vector<ImagePyramidType*> *blackLP,
         typename MaskPyramidType::value_type maskPyramidWhiteValue) {
 
+    typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
+
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
         cout << "Blending layers:";
         cout.flush();
     }
+
+    shInit();
+
+    ShAttrib1f scale(static_cast<float>(maskPyramidWhiteValue));
+    ShAttrib3f pyramidMin(static_cast<float>(NumericTraits<ImagePixelComponentType>::min()),
+                          static_cast<float>(NumericTraits<ImagePixelComponentType>::min()),
+                          static_cast<float>(NumericTraits<ImagePixelComponentType>::min()));
+    ShAttrib3f pyramidMax(static_cast<float>(NumericTraits<ImagePixelComponentType>::max()),
+                          static_cast<float>(NumericTraits<ImagePixelComponentType>::max()),
+                          static_cast<float>(NumericTraits<ImagePixelComponentType>::max()));
+
+    ShProgram prg = SH_BEGIN_PROGRAM("stream") {
+        ShInputAttrib1f mask;
+        ShInputAttrib3f white;
+        ShInOutAttrib3f black;
+        ShAttrib1f whiteCoeff = mask / scale;
+        ShAttrib1f blackCoeff = ShAttrib1f(1.0) - whiteCoeff;
+        black = SH::min(SH::max((whiteCoeff * white) + (blackCoeff * black), pyramidMin), pyramidMax);
+    } SH_END;
 
     for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
 
@@ -87,11 +140,90 @@ void blend(vector<MaskPyramidType*> *maskGP,
             cout.flush();
         }
 
-        combineThreeImages(srcImageRange(*((*maskGP)[layer])),
-                srcImage(*((*whiteLP)[layer])),
-                srcImage(*((*blackLP)[layer])),
-                destImage(*((*blackLP)[layer])),
-                CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
+        if (!UseGPU) {
+            combineThreeImages(srcImageRange(*((*maskGP)[layer])),
+                    srcImage(*((*whiteLP)[layer])),
+                    srcImage(*((*blackLP)[layer])),
+                    destImage(*((*blackLP)[layer])),
+                    CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
+            continue;
+        }
+
+        MaskPyramidType &maskImage = *((*maskGP)[layer]);
+        ImagePyramidType &whiteImage = *((*whiteLP)[layer]);
+        ImagePyramidType &blackImage = *((*blackLP)[layer]);
+
+        typename MaskPyramidType::traverser my = maskImage.upperLeft();
+        typename MaskPyramidType::traverser mend = maskImage.lowerRight();
+        typename ImagePyramidType::traverser wy = whiteImage.upperLeft();
+        typename ImagePyramidType::traverser by = blackImage.upperLeft();
+
+        unsigned int width = mend.x - my.x;
+        //float *mask_data = new float[width];
+        //float *white_data = new float[width * 3];
+        //float *black_data = new float[width * 3];
+
+        ShHostMemoryPtr mask_data = new ShHostMemory(sizeof(float) * width, SH_FLOAT);
+        ShHostMemoryPtr white_data = new ShHostMemory(sizeof(float) * width * 3, SH_FLOAT);
+        ShHostMemoryPtr black_data = new ShHostMemory(sizeof(float) * width * 3, SH_FLOAT);
+
+        ShChannel<ShAttrib1f> mask_channel(mask_data, width);
+        ShChannel<ShAttrib3f> white_channel(white_data, width);
+        ShChannel<ShAttrib3f> black_channel(black_data, width);
+
+        ShHostStoragePtr mask_data_storage = shref_dynamic_cast<ShHostStorage>(mask_channel.memory()->findStorage("host"));
+        ShHostStoragePtr white_data_storage = shref_dynamic_cast<ShHostStorage>(white_channel.memory()->findStorage("host"));
+        ShHostStoragePtr black_data_storage = shref_dynamic_cast<ShHostStorage>(black_channel.memory()->findStorage("host"));
+
+        ShProgram blend_prg = prg << mask_channel << white_channel << black_channel;
+
+        for (; my.y != mend.y; ++my.y, ++wy.y, ++by.y) {
+            typename MaskPyramidType::traverser mx = my;
+            typename ImagePyramidType::traverser wx = wy;
+            typename ImagePyramidType::traverser bx = by;
+
+            mask_data_storage->dirty();
+            white_data_storage->dirty();
+            black_data_storage->dirty();
+
+            float* mask_ptr = (float*)mask_data_storage->data();
+            float* white_ptr = (float*)white_data_storage->data();
+            float* black_ptr = (float*)black_data_storage->data();
+
+            //for (unsigned int i = 0; mx.x != mend.x; ++i, ++mx.x, ++wx.x, ++bx.x) {
+            //    mask_ptr[i] = static_cast<float>(*mx);
+            //    white_ptr[3*i] = static_cast<float>(wx->red());
+            //    white_ptr[3*i+1] = static_cast<float>(wx->green());
+            //    white_ptr[3*i+2] = static_cast<float>(wx->blue());
+            //    black_ptr[3*i] = static_cast<float>(bx->red());
+            //    black_ptr[3*i+1] = static_cast<float>(bx->green());
+            //    black_ptr[3*i+2] = static_cast<float>(bx->blue());
+            //}
+            profile_to_float(mx, width, wx, bx, mask_ptr, white_ptr, black_ptr);
+
+            //black_channel = blend_prg; //prg << mask_channel << white_channel << black_channel;
+            profile_run_program(blend_prg, black_channel);
+
+            black_data_storage->sync();
+            float *results = (float*)black_data_storage->data();
+
+            bx = by;
+            profile_from_float<ImagePixelComponentType>(bx, results, width);
+            //for (unsigned int i = 0; i < width; ++i, ++bx.x) {
+            //    typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
+            //    bx->setRed(NumericTraits<ImagePixelComponentType>::fromRealPromote(results[3*i]));
+            //    bx->setGreen(NumericTraits<ImagePixelComponentType>::fromRealPromote(results[3*i+1]));
+            //    bx->setBlue(NumericTraits<ImagePixelComponentType>::fromRealPromote(results[3*i+2]));
+            //}
+        }
+
+        //delete[] mask_data;
+        //delete[] white_data;
+        //delete[] black_data;
+        //delete mask_data_in;
+        //delete white_data_in;
+        //delete black_data_in;
+
     }
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {

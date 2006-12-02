@@ -23,10 +23,12 @@
 
 #ifdef _WIN32
 #include <win32helpers\win32config.h>
+#endif // _WIN32
 
 // Defines lrint for fast fromRealPromotes
 #include "float_cast.h"
 
+#ifdef _WIN32
 // Make sure we bring in windows.h the right way
 #define _STLP_VERBOSE_AUTO_LINK
 #define _USE_MATH_DEFINES
@@ -54,6 +56,10 @@ extern "C" int getopt(int nargc, char** nargv, char* ostr);
 
 extern "C" char *optarg;
 extern "C" int optind;
+
+#ifndef _WIN32
+#include <fenv.h>
+#endif
 
 #include <signal.h>
 #include <stdlib.h>
@@ -85,6 +91,7 @@ bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 bool Checkpoint = false;
+bool UseGPU = false;
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -172,6 +179,8 @@ int main(int argc, char** argv) {
     // functions in float_cast.h will work properly.
     // See changes in vigra numerictraits.hxx
     _controlfp( _RC_NEAR, _MCW_RC );
+#else
+    fesetround(FE_TONEAREST);
 #endif
     
     signal(SIGINT, sigint_handler);
@@ -190,7 +199,7 @@ int main(int argc, char** argv) {
 
     // Parse command line.
     int c;
-    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwxz")) != -1) {
+    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwxyz")) != -1) {
         switch (c) {
             case 'a': {
                 OneAtATime = false;
@@ -297,6 +306,10 @@ int main(int argc, char** argv) {
             }
             case 'x': {
                 Checkpoint = true;
+                break;
+            }
+            case 'y': {
+                UseGPU = true;
                 break;
             }
             case 'z': {

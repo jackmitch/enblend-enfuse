@@ -727,29 +727,29 @@ public:
 protected:
 
     CachedFileImageIteratorBase(const int X, const int Y, image_type * const I) : x(X), y(Y), i(I), currentRow(NULL) {
-		y.setNotify(this);
+        y.setNotify(this);
         _notify(y());
     }
 
     // Constructor only for strided iterators
     CachedFileImageIteratorBase(const int X, const int Y, image_type * const I, int xstride, int ystride) : x(xstride, X), y(ystride, Y), i(I), currentRow(NULL) {
-		y.setNotify(this);
+        y.setNotify(this);
         _notify(y());
     }
 
     CachedFileImageIteratorBase(const CachedFileImageIteratorBase &r) : x(r.x), y(r.y), i(r.i), currentRow(NULL) {
         y.setNotify(this);
-		_notify(y());
-	}
+        _notify(y());
+    }
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
         x = r.x;
         y = r.y;
         i = r.i;
-		currentRow = NULL;
-		y.setNotify(this);
-		_notify(y());
-		return *this;
+        currentRow = NULL;
+        y.setNotify(this);
+        _notify(y());
+        return *this;
     }
 
     void _notify(int initialY) {
@@ -823,21 +823,30 @@ public:
     : Base(x, y, i)
     {}
 
-    ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
-    : Base(rhs)
-    {}
+    // FIXME functions to copy CachedFileImageIterator to ConstCachedFileImageIterator are broken
 
-    ConstCachedFileImageIterator &
-    operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
-    {
-        Base::x = rhs.x;
-        Base::y = rhs.y;
-        Base::i = rhs.i;
-        Base::currentRow = NULL;
-        Base::y.setNotify(this);
-        Base::_notify(Base::y());
-        return *this;
-    }
+    //ConstCachedFileImageIterator(CachedFileImageIterator<PIXELTYPE> const & rhs)
+    //: Base(0, 0, NULL)
+    //{
+    //    Base::x = rhs.x;
+    //    Base::y = rhs.y;
+    //    Base::i = rhs.i;
+    //    Base::currentRow = NULL;
+    //    Base::y.setNotify(this);
+    //    Base::_notify(Base::y());
+    //}
+
+    //ConstCachedFileImageIterator &
+    //operator=(CachedFileImageIterator<PIXELTYPE> const & rhs)
+    //{
+    //    Base::x = rhs.x;
+    //    Base::y = rhs.y;
+    //    Base::i = rhs.i;
+    //    Base::currentRow = NULL;
+    //    Base::y.setNotify(this);
+    //    Base::_notify(Base::y());
+    //    return *this;
+    //}
 
     friend class ConstStridedCachedFileImageIterator<PIXELTYPE>;
 };
@@ -909,21 +918,30 @@ public:
     : Base(r.x(), r.y(), r.i, xstride, ystride)
     {}
 
-    ConstStridedCachedFileImageIterator(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
-    : Base(rhs)
-    {}
+    // FIXME functions to copy StridedCachedFileImageIterator to ConstStridedCachedFileImageIterator are broken
 
-    ConstStridedCachedFileImageIterator &
-    operator=(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
-    {
-        Base::x = rhs.x;
-        Base::y = rhs.y;
-        Base::i = rhs.i;
-        Base::currentRow = NULL;
-        Base::y.setNotify(this);
-        Base::_notify(Base::y());
-        return *this;
-    }
+    //ConstStridedCachedFileImageIterator(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
+    //: Base(0, 0, NULL, 1, 1)
+    //{
+    //    Base::x = rhs.x;
+    //    Base::y = rhs.y;
+    //    Base::i = rhs.i;
+    //    Base::currentRow = NULL;
+    //    Base::y.setNotify(this);
+    //    Base::_notify(Base::y());
+    //}
+
+    //ConstStridedCachedFileImageIterator &
+    //operator=(StridedCachedFileImageIterator<PIXELTYPE> const & rhs)
+    //{
+    //    Base::x = rhs.x;
+    //    Base::y = rhs.y;
+    //    Base::i = rhs.i;
+    //    Base::currentRow = NULL;
+    //    Base::y.setNotify(this);
+    //    Base::_notify(Base::y());
+    //    return *this;
+    //}
 
 };
 
