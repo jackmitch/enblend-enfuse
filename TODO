@@ -67,17 +67,29 @@ X fast fromRealPromote
     - option to revert to old mask algorithm
 
 - gpu blend
-    - cpu blending speed: lr test  .04 self 2.79 children
-    - gpu v1            : lr test 4.99 self  .01 children
-    - gpu profile basic loops:     .02 self 4.37 children
-                                  2.67 profile_to_float
-                                  1.66 profile_from_float
-    - gpu reorg loops :            .06 self 4.22 children
-                                  2.48 profile_to_float
-                                  1.70 profile_from_float
-    - gpu from_float lrint:        .11 self 3.52 children
-                                  2.54 profile_to_float
-                                   .92 profile_from_float
+    - libsh
+        - cpu blending speed: lr test  .04 self 2.79 children
+        - gpu v1            : lr test 4.99 self  .01 children
+        - gpu profile basic loops:     .02 self 4.37 children
+                                      2.67 profile_to_float
+                                      1.66 profile_from_float
+        - gpu reorg loops :            .06 self 4.22 children
+                                      2.48 profile_to_float
+                                      1.70 profile_from_float
+        - gpu from_float lrint:        .11 self 3.52 children
+                                      2.54 profile_to_float
+                                       .92 profile_from_float
+    - brook
+        - cpu blending speed: lr test  .00 self 2.53 children
+        - brook ogl backend:           .05 self 4.05 children
+                                                2.75 profile_to_float
+                                                1.27 profile_from_float
+                                                 .03 gpuBlendKernel
+                                        1.16 copyToTextureFormat
+                                         .66 copyFromTextureFormat
+                                        1.06 misc brook stuff
+                                       
+                                       
 
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases
@@ -94,6 +106,7 @@ X replace EnblendROI with vigra::Rect2D
     X compile libtiff with 64-bit file i/o api
     X link other vigra-impex graphics libraries
     - check libtiff warnings
+- update copyright dates
 
 - Stuff for later revisions:
     - improve GDA state space enumeration
