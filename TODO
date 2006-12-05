@@ -88,8 +88,29 @@ X fast fromRealPromote
                                         1.16 copyToTextureFormat
                                          .66 copyFromTextureFormat
                                         1.06 misc brook stuff
-                                       
-                                       
+
+        - GDA cpu                      41.94
+                                         .10 6.47 iterate
+                                        2.39 4.08 calcProbs
+                                        3.97  .11 costImageCost
+
+        - GDA ogl     localK streams   
+                                         .17 9.20 iterate
+                                        2.85 6.35 calcProbs
+                                        5.69  .12 costImageCost
+                                         .34  .20 cSPGPU_core
+
+        - GDA no profiling:             5.74 user  .25 system  7.57 elapsed
+                                        5.76 user  .25 system  7.36 elapsed
+                                        5.70 user  .25 system  7.34 elapsed
+
+        - GDA with gpu backend         23.82 user 5.81 system 32.48 elapsed
+                                       23.68 user 5.84 system 32.27 elapsed
+                                       23.56 user 5.74 system 31.78 elapsed
+
+        - GDA with cpu backend         21.22 user  .26 system 23.56 elapsed
+                                       21.22 user  .26 system 23.29 elapsed
+                                       21.21 user  .26 system 23.78 elapsed
 
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases
