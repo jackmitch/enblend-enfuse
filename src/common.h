@@ -39,6 +39,8 @@
 #define VERBOSE_PYRAMID_MESSAGES            0
 #define VERBOSE_CFI_MESSAGES                2
 
+#define GDA_KMAX    32
+
 namespace enblend {
 
 /** The different image overlap classifications. */

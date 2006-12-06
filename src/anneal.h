@@ -72,7 +72,6 @@ void gpuGDAMatrix(::brook::stream index,
                   ::brook::stream E,
                   ::brook::stream pi,
                   const float T,
-                  const float K,
                   ::brook::stream output);
 
 void gpuGDAReduce(::brook::stream input, ::brook::stream output);
@@ -121,7 +120,17 @@ public:
     typedef typename CostImage::PixelType CostImagePixelType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v) : costImage(d), visualizeStateSpaceImage(*d) {
+    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v)
+            : costImage(d),
+              visualizeStateSpaceImage(*d),
+              gpuE(NULL),
+              gpuPI(NULL),
+              gpuIndices(NULL),
+              index_stream(NULL),
+              e_stream(NULL),
+              pi_stream(NULL),
+              matrix_stream(NULL),
+              reduce_stream(NULL) {
 
         kMax = 1;
 
@@ -167,10 +176,9 @@ public:
                 Diff2D rightPoint = currentPoint - normal;
 
                 // Choose a reasonable number of state points between these extremes
-                int numberOfStatePoints = 32;
                 int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
                                           std::abs(rightPoint.y - leftPoint.y));
-                int spaceBetweenPoints = lineLength / numberOfStatePoints;
+                int spaceBetweenPoints = static_cast<int>(ceil(lineLength / (double)GDA_KMAX));
 
                 LineIterator<Diff2D> linePoint(leftPoint, rightPoint);
                 for (int i = 0; i < lineLength; ++i, ++linePoint) {
@@ -195,6 +203,11 @@ public:
 
             unsigned int localK = stateSpace->size();
 
+            if (localK > GDA_KMAX) {
+                cerr << "enblend: localK=" << localK << " > GDA_KMAX=" << GDA_KMAX << endl;
+                exit(-1);
+            }
+
             kMax = std::max(kMax, localK);
 
             pointStateProbabilities.push_back(new vector<double>(localK, 1.0 / localK));
@@ -207,6 +220,27 @@ public:
 
         //ImageExportInfo visInfo("enblend_anneal_state_space.tif");
         //exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
+
+        if (UseGPU) {
+            gpuE = new float[GDA_KMAX];
+            gpuPI = new float[GDA_KMAX];
+            gpuIndices = new float2[GDA_KMAX*GDA_KMAX];
+
+            for (unsigned int i = 0; i < GDA_KMAX; ++i) {
+                for (unsigned int j = 0; j < GDA_KMAX; ++j) {
+                    gpuIndices[GDA_KMAX*i+j].y = (float)i;
+                    gpuIndices[GDA_KMAX*i+j].x = (float)j;
+                }
+            }
+
+            index_stream = new ::brook::stream(::brook::getStreamType((float2*)0), GDA_KMAX, GDA_KMAX, -1);
+            e_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, -1);
+            pi_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, -1);
+            matrix_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, GDA_KMAX, -1);
+            reduce_stream = new ::brook::stream(::brook::getStreamType((float*)0), 1, GDA_KMAX, -1);
+
+            streamRead(*index_stream, gpuIndices);
+        }
 
         tau = 0.75;
         deltaEMax = 1000.0;
@@ -221,6 +255,14 @@ public:
         for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(),_1));
         for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(),_1));
         for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(),_1));
+        delete index_stream;
+        delete e_stream;
+        delete pi_stream;
+        delete matrix_stream;
+        delete reduce_stream;
+        delete[] gpuE;
+        delete[] gpuPI;
+        delete[] gpuIndices;
     }
 
     void run() {
@@ -277,8 +319,8 @@ public:
 
 protected:
 
-    inline void calculateStateProbabilities() {
-    //virtual void calculateStateProbabilities() {
+    //inline void calculateStateProbabilities() {
+    virtual void calculateStateProbabilities() {
 
         int *E = new int[kMax];
         double *pi = new double[kMax];
@@ -347,13 +389,8 @@ protected:
         delete[] pi;
     }
 
-    inline void calculateStateProbabilitiesGPU() {
-    //virtual void calculateStateProbabilitiesGPU() {
-
-        float *E = new float[kMax];
-        float *pi = new float[kMax];
-
-        float2 indices[kMax*kMax];
+    //inline void calculateStateProbabilitiesGPU() {
+    virtual void calculateStateProbabilitiesGPU() {
 
         unsigned int lastIndex = mfEstimates.size() - 1;
         for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
@@ -372,26 +409,23 @@ protected:
             bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
             lastIndex = index;
 
-        for (unsigned int i = 0; i < localK; ++i) {
-            for (unsigned int j = 0; j < localK; ++j) {
-                indices[localK*i+j].y = (float)i;
-                indices[localK*i+j].x = (float)j;
-            }
-        }
-
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
-                E[i] = (*stateDistances)[i];
-                if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
-                if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
-                pi[i] = static_cast<float>((*stateProbabilities)[i]);
+                gpuE[i] = (*stateDistances)[i];
+                if (lastPointInCostImage) gpuE[i] += costImageCost(lastPointEstimate, currentPoint);
+                if (nextPointInCostImage) gpuE[i] += costImageCost(currentPoint, nextPointEstimate);
+                gpuPI[i] = static_cast<float>((*stateProbabilities)[i]);
+            }
+            for (unsigned int i = localK; i < GDA_KMAX; ++i) {
+                gpuPI[i] = 0.0f;
             }
 
             //::brook::iter index_stream(::brook::__BRTFLOAT2, localK, localK, -1,
             //        (float2(0,0)).x, (float2(0,0)).y,
             //        (float2(localK, localK)).x, (float2(localK, localK)).y, -1);
-            cSPGPU_core(E, pi, indices, localK);
+            //cSPGPU_core(E, pi, indices, localK);
+            cSPGPU_core();
             //::brook::stream index_stream(::brook::getStreamType((float2*)0), localK, localK, -1);
             //::brook::stream e_stream(::brook::getStreamType((float*)0), localK, -1);
             //::brook::stream pi_stream(::brook::getStreamType((float*)0), localK, -1);
@@ -408,36 +442,58 @@ protected:
             //streamWrite(reduce_stream, pi);
 
             for (unsigned int i = 0; i < localK; ++i) {
-                (*stateProbabilities)[i] = static_cast<double>(pi[i]);
+                (*stateProbabilities)[i] = static_cast<double>(gpuPI[i]);
             }
         }
-
-        delete[] E;
-        delete[] pi;
     }
 
-    inline void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
+    //inline void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
     //virtual void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
-        ::brook::stream index_stream(::brook::getStreamType((float2*)0), localK, localK, -1);
-        ::brook::stream e_stream(::brook::getStreamType((float*)0), localK, -1);
-        ::brook::stream pi_stream(::brook::getStreamType((float*)0), localK, -1);
-        ::brook::stream matrix_stream(::brook::getStreamType((float*)0), localK, localK, -1);
-        ::brook::stream reduce_stream(::brook::getStreamType((float*)0), 1, localK, -1);
+    virtual void cSPGPU_core() {
+        //::brook::stream index_stream(::brook::getStreamType((float2*)0), localK, localK, -1);
+        //::brook::stream e_stream(::brook::getStreamType((float*)0), localK, -1);
+        //::brook::stream pi_stream(::brook::getStreamType((float*)0), localK, -1);
+        //::brook::stream matrix_stream(::brook::getStreamType((float*)0), localK, localK, -1);
+        //::brook::stream reduce_stream(::brook::getStreamType((float*)0), 1, localK, -1);
 
-        streamRead(index_stream, indices);
-        streamRead(e_stream, E);
-        streamRead(pi_stream, pi);
+        //streamRead(index_stream, indices);
+        streamRead(*e_stream, gpuE);
+        streamRead(*pi_stream, gpuPI);
 
-        gpuGDAMatrix(index_stream, e_stream, pi_stream, tCurrent, localK, matrix_stream);
-        gpuGDAReduce(matrix_stream, reduce_stream);
+        gpuGDAMatrix(*index_stream, *e_stream, *pi_stream, tCurrent, *matrix_stream);
+        gpuGDAReduce(*matrix_stream, *reduce_stream);
 
-        streamWrite(reduce_stream, pi);
+        streamWrite(*reduce_stream, gpuPI);
     }
 
-    void iterate() {
+    //void iterate() {
+    virtual void iterate() {
 
         if (UseGPU) {
             calculateStateProbabilitiesGPU();
+
+            //// Copy GPU-calculated results
+            //vector<vector<double> > gpuStateProbabilities;
+            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+            //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
+            //}
+
+            //// Do regular CPU computations
+            //calculateStateProbabilities();
+
+            //// Compare
+            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+            //    vector<double> &gpuProbs = gpuStateProbabilities[index];
+            //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
+            //    cout << "index " << index << endl;
+            //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
+            //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
+            //        if (diff > 0.001) {
+            //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
+            //        }
+            //    }
+            //}
+
         } else {
             calculateStateProbabilities();
         }
@@ -478,7 +534,7 @@ protected:
             // Remove improbable solutions from the search space
             for (unsigned int k = 0; k < stateSpace->size(); ) {
                 double weight = (*stateProbabilities)[k];
-                if (weight < 0.0001) {
+                if (weight < 0.000001) {
                     // Replace this state with last state
                     (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
                     (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
@@ -502,8 +558,8 @@ protected:
 
     }
 
-    inline int costImageCost(const Point2D &start, const Point2D &end) {
-    //virtual int costImageCost(const Point2D &start, const Point2D &end) {
+    //inline int costImageCost(const Point2D &start, const Point2D &end) {
+    virtual int costImageCost(const Point2D &start, const Point2D &end) {
         //if (!(costImage->isInside(start) && costImage->isInside(end))) {
         //    cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
         //    exit(-1);
@@ -573,6 +629,16 @@ protected:
 
     // Largest state space over all points
     unsigned int kMax;
+
+    // Data arrays for GPU streams
+    float *gpuE;
+    float *gpuPI;
+    float2 *gpuIndices;
+    ::brook::stream *index_stream;
+    ::brook::stream *e_stream;
+    ::brook::stream *pi_stream;
+    ::brook::stream *matrix_stream;
+    ::brook::stream *reduce_stream;
 
 };
 

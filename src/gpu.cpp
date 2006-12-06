@@ -30,8 +30,7 @@ namespace {
 				"#semantic main.pi : TEXUNIT2\n"
 				"#semantic main.__gatherconst_pi : C1\n"
 				"#semantic main.T : C2\n"
-				"#semantic main.K : C3\n"
-				"#semantic main.__workspace : C4\n"
+				"#semantic main.__workspace : C3\n"
 				"#var samplerRECT _tex_index : TEXUNIT0 : texunit 0 : 0 : 1\n"
 				"#var float2 _tex_index_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
 				"#var samplerRECT E[0]TEXUNIT1 : texunit 1 : 2 : 1\n"
@@ -39,46 +38,43 @@ namespace {
 				"#var samplerRECT pi[0]TEXUNIT2 : texunit 2 : 4 : 1\n"
 				"#var float4 __gatherconst_pi : C1 : c[1] : 5 : 1\n"
 				"#var float T : C2 : c[2] : 6 : 1\n"
-				"#var float K : C3 : c[3] : 7 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 8 : 1\n"
-				"#var float4 __workspace : C4 : c[4] : 9 : 0\n"
-				"#const c[5] = 2.718282 0 1\n"
-				"PARAM c[6] = { program.local[0..4],\n"
-				"		{ 2.7182817, 0, 1 } };\n"
+				"#var float __output_0 : $vout.COLOR0 : COL : 7 : 1\n"
+				"#var float4 __workspace : C3 : c[3] : 8 : 0\n"
+				"#const c[4] = 0 2.718282 1 32\n"
+				"PARAM c[5] = { program.local[0..3],\n"
+				"		{ 0, 2.7182817, 1, 32 } };\n"
 				"TEMP R0;\n"
 				"TEMP R1;\n"
 				"TEMP R2;\n"
 				"TEX R2.xy, fragment.texcoord[0], texture[0], RECT;\n"
-				"MOV R0.y, c[5];\n"
+				"MOV R0.y, c[4].x;\n"
 				"ADD R0.x, R2, c[0].z;\n"
 				"TEX R0.x, R0, texture[1], RECT;\n"
-				"MOV R0.w, c[5].y;\n"
+				"MOV R0.w, c[4].x;\n"
 				"ADD R0.z, R2.y, c[0];\n"
 				"TEX R1.x, R0.zwzw, texture[1], RECT;\n"
 				"ADD R0.x, R0, -R1;\n"
 				"RCP R0.y, c[2].x;\n"
 				"MUL R0.x, R0, R0.y;\n"
-				"POW R0.x, c[5].x, R0.x;\n"
-				"ADD R0.x, R0, c[5].z;\n"
+				"POW R0.x, c[4].y, R0.x;\n"
+				"ADD R0.x, R0, c[4].z;\n"
+				"MUL R0.x, R0, c[4].w;\n"
 				"RCP R0.y, R0.x;\n"
-				"MOV R0.w, c[5].y;\n"
+				"MOV R0.w, c[4].x;\n"
 				"ADD R0.z, R2.y, c[1];\n"
 				"TEX R0.x, R0.zwzw, texture[2], RECT;\n"
+				"MOV R0.w, c[4].x;\n"
 				"ADD R0.z, R2.x, c[1];\n"
-				"MOV R0.w, c[5].y;\n"
 				"TEX R1.x, R0.zwzw, texture[2], RECT;\n"
 				"ADD R0.x, R1, R0;\n"
-				"RCP R0.z, c[3].x;\n"
-				"MUL R0.x, R0.y, R0;\n"
-				"MUL result.color.x, R0, R0.z;\n"
+				"MUL result.color.x, R0, R0.y;\n"
 				"END \n"
 				"##!!BRCC\n"
-				"##narg:6\n"
+				"##narg:5\n"
 				"##s:2:index\n"
 				"##c:1:E\n"
 				"##c:1:pi\n"
 				"##c:1:T\n"
-				"##c:1:K\n"
 				"##o:1:output\n"
 				"##workspace:1024\n"
 				"##!!multipleOutputInfo:0:1:\n"
@@ -88,12 +84,11 @@ namespace {
 				.constant(2, kGatherConstant_Shape)
 				.constant(3, kGatherConstant_Shape)
 				.constant(4, 0)
-				.constant(5, 0)
 				.sampler(1, 0)
 				.sampler(2, 0)
 				.sampler(3, 0)
 				.interpolant(1, kStreamInterpolant_Position)
-				.output(6, 0)
+				.output(5, 0)
 			)
 		);
 	static const void* __gpuGDAMatrix_arb = &__gpuGDAMatrix_arb_desc;
@@ -103,15 +98,14 @@ void  __gpuGDAMatrix_cpu_inner(const __BrtFloat2  &index,
                               const __BrtArray<__BrtFloat1  > &E,
                               const __BrtArray<__BrtFloat1  > &pi,
                               const __BrtFloat1  &T,
-                              const __BrtFloat1  &K,
                               __BrtFloat1  &output)
 {
   __BrtFloat1  ex = E[index.swizzle1(maskX)];
   __BrtFloat1  ey = E[index.swizzle1(maskY)];
-  __BrtFloat1  An = __BrtFloat1(1.000000f) / (__BrtFloat1(1.000000f) + __exp_cpu_inner((ex - ey) / T));
+  __BrtFloat1  An = __BrtFloat1(32.000000f) * (__BrtFloat1(1.000000f) + __exp_cpu_inner((ex - ey) / T));
   __BrtFloat1  pi_plus = pi[index.swizzle1(maskX)] + pi[index.swizzle1(maskY)];
 
-  output = An * pi_plus / K;
+  output = pi_plus / An;
 }
 void  __gpuGDAMatrix_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
 {
@@ -119,8 +113,7 @@ void  __gpuGDAMatrix_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
   __BrtArray<__BrtFloat1  > *arg_E = (__BrtArray<__BrtFloat1  > *) args[1];
   __BrtArray<__BrtFloat1  > *arg_pi = (__BrtArray<__BrtFloat1  > *) args[2];
   __BrtFloat1 *arg_T = (__BrtFloat1 *) args[3];
-  __BrtFloat1 *arg_K = (__BrtFloat1 *) args[4];
-  ::brook::StreamInterface *arg_output = (::brook::StreamInterface *) args[5];
+  ::brook::StreamInterface *arg_output = (::brook::StreamInterface *) args[4];
   
   do {
     Addressable <__BrtFloat1  > __out_arg_output((__BrtFloat1 *) __k->FetchElem(arg_output));
@@ -128,7 +121,6 @@ void  __gpuGDAMatrix_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
                               *arg_E,
                               *arg_pi,
                               *arg_T,
-                              *arg_K,
                               __out_arg_output);
     *reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address) = __out_arg_output.castToArg(*reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address));
   } while (__k->Continue());
@@ -138,7 +130,6 @@ void  gpuGDAMatrix (::brook::stream index,
 		::brook::stream E,
 		::brook::stream pi,
 		const float  T,
-		const float  K,
 		::brook::stream output) {
   static const void *__gpuGDAMatrix_fp[] = {
      "fp30", __gpuGDAMatrix_fp30,
@@ -156,7 +147,6 @@ void  gpuGDAMatrix (::brook::stream index,
   __k->PushGatherStream(E);
   __k->PushGatherStream(pi);
   __k->PushConstant(T);
-  __k->PushConstant(K);
   __k->PushOutput(output);
   __k->Map();
 

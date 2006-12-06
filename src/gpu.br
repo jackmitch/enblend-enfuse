@@ -18,12 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-kernel void gpuGDAMatrix(float2 index<>, float E[], float pi[], float T, float K, out float output<>) {
+/*kernel void gpuGDAMatrix(float2 index<>, float E[], float pi[], float T, float K, out float output<>) {*/
+kernel void gpuGDAMatrix(float2 index<>, float E[32], float pi[32], float T, out float output<>) {
     float ex = E[index.x];
     float ey = E[index.y];
-    float An = 1.0f / (1.0f + exp((ex-ey)/T));
+    float An = 32.0f * (1.0f + exp((ex-ey)/T));
     float pi_plus = pi[index.x] + pi[index.y];
-    output = (An * pi_plus) / K;
+    output = pi_plus / An;
 }
 
 reduce void gpuGDAReduce(float input<>, reduce float output<>) {
