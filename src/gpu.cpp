@@ -5,16 +5,16 @@
 ////////////////////////////////////////////
 
 #include <brook/brook.hpp>
-static const char *__gpuGDAMatrix_ps20= NULL;
-static const char *__gpuGDAMatrix_ps2b= NULL;
-static const char *__gpuGDAMatrix_ps2a= NULL;
-static const char *__gpuGDAMatrix_ps30= NULL;
-static const char *__gpuGDAMatrix_fp30= NULL;
-static const char *__gpuGDAMatrix_fp40= NULL;
+static const char *__gpuGDAKernel4_ps20= NULL;
+static const char *__gpuGDAKernel4_ps2b= NULL;
+static const char *__gpuGDAKernel4_ps2a= NULL;
+static const char *__gpuGDAKernel4_ps30= NULL;
+static const char *__gpuGDAKernel4_fp30= NULL;
+static const char *__gpuGDAKernel4_fp40= NULL;
 
 namespace {
 	using namespace ::brook::desc;
-	static const gpu_kernel_desc __gpuGDAMatrix_arb_desc = gpu_kernel_desc()
+	static const gpu_kernel_desc __gpuGDAKernel4_arb_desc = gpu_kernel_desc()
 		.technique( gpu_technique_desc()
 			.pass( gpu_pass_desc(
 				"!!ARBfp1.0\n"
@@ -38,44 +38,677 @@ namespace {
 				"#var samplerRECT pi[0]TEXUNIT2 : texunit 2 : 4 : 1\n"
 				"#var float4 __gatherconst_pi : C1 : c[1] : 5 : 1\n"
 				"#var float T : C2 : c[2] : 6 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 7 : 1\n"
+				"#var float4 __output_0 : $vout.COLOR0 : COL : 7 : 1\n"
 				"#var float4 __workspace : C3 : c[3] : 8 : 0\n"
-				"#const c[4] = 0 2.718282 1 32\n"
-				"PARAM c[5] = { program.local[0..3],\n"
-				"		{ 0, 2.7182817, 1, 32 } };\n"
+				"#const c[4] = 0 31 2.718282 1\n"
+				"#const c[5] = 30 29 28 27\n"
+				"#const c[6] = 26 25 24 23\n"
+				"#const c[7] = 22 21 20 19\n"
+				"#const c[8] = 18 17 16 15\n"
+				"#const c[9] = 14 13 12 11\n"
+				"#const c[10] = 10 9 8 7\n"
+				"#const c[11] = 6 5 4 3\n"
+				"#const c[12] = 2 0.03125\n"
+				"PARAM c[13] = { program.local[0..3],\n"
+				"		{ 0, 31, 2.7182817, 1 },\n"
+				"		{ 30, 29, 28, 27 },\n"
+				"		{ 26, 25, 24, 23 },\n"
+				"		{ 22, 21, 20, 19 },\n"
+				"		{ 18, 17, 16, 15 },\n"
+				"		{ 14, 13, 12, 11 },\n"
+				"		{ 10, 9, 8, 7 },\n"
+				"		{ 6, 5, 4, 3 },\n"
+				"		{ 2, 0.03125 } };\n"
 				"TEMP R0;\n"
 				"TEMP R1;\n"
 				"TEMP R2;\n"
-				"TEX R2.xy, fragment.texcoord[0], texture[0], RECT;\n"
+				"TEMP R3;\n"
+				"TEMP R4;\n"
+				"TEMP R5;\n"
+				"TEMP R6;\n"
+				"TEMP R7;\n"
+				"TEX R5.x, fragment.texcoord[0], texture[0], RECT;\n"
+				"RCP R7.z, c[2].x;\n"
+				"MOV R7.xy, c[4].ywzw;\n"
+				"ADD R1.x, R5, c[0].z;\n"
+				"MOV R1.y, c[4].x;\n"
+				"TEX R1, R1, texture[1], RECT;\n"
 				"MOV R0.y, c[4].x;\n"
-				"ADD R0.x, R2, c[0].z;\n"
-				"TEX R0.x, R0, texture[1], RECT;\n"
-				"MOV R0.w, c[4].x;\n"
-				"ADD R0.z, R2.y, c[0];\n"
-				"TEX R1.x, R0.zwzw, texture[1], RECT;\n"
-				"ADD R0.x, R0, -R1;\n"
-				"RCP R0.y, c[2].x;\n"
-				"MUL R0.x, R0, R0.y;\n"
-				"POW R0.x, c[4].y, R0.x;\n"
-				"ADD R0.x, R0, c[4].z;\n"
-				"MUL R0.x, R0, c[4].w;\n"
-				"RCP R0.y, R0.x;\n"
-				"MOV R0.w, c[4].x;\n"
-				"ADD R0.z, R2.y, c[1];\n"
-				"TEX R0.x, R0.zwzw, texture[2], RECT;\n"
-				"MOV R0.w, c[4].x;\n"
-				"ADD R0.z, R2.x, c[1];\n"
-				"TEX R1.x, R0.zwzw, texture[2], RECT;\n"
-				"ADD R0.x, R1, R0;\n"
-				"MUL result.color.x, R0, R0.y;\n"
+				"MOV R0.x, c[0].z;\n"
+				"TEX R0, R0, texture[1], RECT;\n"
+				"ADD R2, R1, -R0;\n"
+				"MUL R2, R2, R7.z;\n"
+				"POW R2.x, c[4].z, R2.x;\n"
+				"POW R2.y, c[4].z, R2.y;\n"
+				"POW R2.w, c[4].z, R2.w;\n"
+				"POW R2.z, c[4].z, R2.z;\n"
+				"ADD R3, R2, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MOV R0.y, c[4].x;\n"
+				"ADD R0.x, c[0].z, R7.y;\n"
+				"TEX R0, R0, texture[1], RECT;\n"
+				"ADD R0, R1, -R0;\n"
+				"MUL R0, R0, R7.z;\n"
+				"POW R0.x, c[4].z, R0.x;\n"
+				"POW R0.y, c[4].z, R0.y;\n"
+				"POW R0.w, c[4].z, R0.w;\n"
+				"POW R0.z, c[4].z, R0.z;\n"
+				"ADD R0, R0, c[4].w;\n"
+				"RCP R2.x, R0.x;\n"
+				"RCP R2.y, R0.y;\n"
+				"RCP R2.z, R0.z;\n"
+				"RCP R2.w, R0.w;\n"
+				"MOV R0.y, c[4].x;\n"
+				"ADD R0.x, c[1].z, R7.y;\n"
+				"TEX R4, R0, texture[2], RECT;\n"
+				"ADD R0.x, R5, c[1].z;\n"
+				"MOV R0.y, c[4].x;\n"
+				"TEX R0, R0, texture[2], RECT;\n"
+				"ADD R4, R0, R4;\n"
+				"MUL R4, R4, R2;\n"
+				"MOV R2.y, c[4].x;\n"
+				"MOV R2.x, c[1].z;\n"
+				"TEX R2, R2, texture[2], RECT;\n"
+				"ADD R2, R0, R2;\n"
+				"MAD R6, R2, R3, R4;\n"
+				"MOV R2.x, c[12];\n"
+				"MOV R2.y, c[4].x;\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[11];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[12];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[10];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[11];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[9];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[10];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[8];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[9];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[7];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[8];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R4, R2, texture[1], RECT;\n"
+				"MOV R2, c[6];\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R5, R3, c[4].w;\n"
+				"MOV R3.x, c[7];\n"
+				"ADD R2.x, c[0].z, R2;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R4, R4, c[4].w;\n"
+				"RCP R4.x, R4.x;\n"
+				"RCP R4.y, R4.y;\n"
+				"RCP R4.z, R4.z;\n"
+				"RCP R4.w, R4.w;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R3;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MAD R3, R3, R4, R6;\n"
+				"RCP R4.x, R5.x;\n"
+				"RCP R4.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R2.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R4.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R4.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R4, R3;\n"
+				"ADD R3.x, c[0].z, R2.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R4, R3, texture[1], RECT;\n"
+				"ADD R4, R1, -R4;\n"
+				"MUL R4, R4, R7.z;\n"
+				"ADD R3.x, c[0].z, R2.y;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"POW R4.x, c[4].z, R4.x;\n"
+				"POW R4.y, c[4].z, R4.y;\n"
+				"POW R4.w, c[4].z, R4.w;\n"
+				"POW R4.z, c[4].z, R4.z;\n"
+				"ADD R6, R4, c[4].w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"MOV R2.w, c[4].x;\n"
+				"ADD R2.z, c[1], R2;\n"
+				"TEX R4, R2.zwzw, texture[2], RECT;\n"
+				"ADD R2.z, c[1], R2.y;\n"
+				"RCP R6.w, R6.w;\n"
+				"ADD R4, R0, R4;\n"
+				"MAD R4, R4, R6, R5;\n"
+				"MOV R2.w, c[4].x;\n"
+				"TEX R5, R2.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MOV R2.y, c[4].x;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MAD R6, R5, R3, R4;\n"
+				"TEX R3, R2, texture[1], RECT;\n"
+				"MOV R4, c[5];\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"ADD R2.x, c[0].z, R4.w;\n"
+				"MOV R2.y, c[4].x;\n"
+				"TEX R2, R2, texture[1], RECT;\n"
+				"ADD R2, R1, -R2;\n"
+				"MUL R2, R2, R7.z;\n"
+				"POW R2.x, c[4].z, R2.x;\n"
+				"POW R2.y, c[4].z, R2.y;\n"
+				"POW R2.w, c[4].z, R2.w;\n"
+				"POW R2.z, c[4].z, R2.z;\n"
+				"ADD R5, R2, c[4].w;\n"
+				"MOV R2.x, c[6];\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R3, R3, c[4].w;\n"
+				"RCP R3.x, R3.x;\n"
+				"RCP R3.y, R3.y;\n"
+				"RCP R3.z, R3.z;\n"
+				"RCP R3.w, R3.w;\n"
+				"MOV R2.y, c[4].x;\n"
+				"ADD R2.x, c[1].z, R2;\n"
+				"TEX R2, R2, texture[2], RECT;\n"
+				"ADD R2, R0, R2;\n"
+				"MAD R2, R2, R3, R6;\n"
+				"RCP R3.x, R5.x;\n"
+				"RCP R3.y, R5.y;\n"
+				"ADD R5.x, c[1].z, R4.w;\n"
+				"MOV R5.y, c[4].x;\n"
+				"RCP R3.z, R5.z;\n"
+				"TEX R6, R5, texture[2], RECT;\n"
+				"RCP R3.w, R5.w;\n"
+				"ADD R5, R0, R6;\n"
+				"MAD R5, R5, R3, R2;\n"
+				"ADD R2.x, c[0].z, R4.z;\n"
+				"MOV R2.y, c[4].x;\n"
+				"TEX R3, R2, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MUL R3, R3, R7.z;\n"
+				"ADD R2.x, c[0].z, R4.y;\n"
+				"MOV R2.y, c[4].x;\n"
+				"TEX R2, R2, texture[1], RECT;\n"
+				"ADD R2, R1, -R2;\n"
+				"MUL R2, R2, R7.z;\n"
+				"POW R3.x, c[4].z, R3.x;\n"
+				"POW R3.y, c[4].z, R3.y;\n"
+				"POW R3.w, c[4].z, R3.w;\n"
+				"POW R3.z, c[4].z, R3.z;\n"
+				"ADD R6, R3, c[4].w;\n"
+				"ADD R3.x, c[1].z, R4.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"TEX R3, R3, texture[2], RECT;\n"
+				"ADD R3, R0, R3;\n"
+				"MOV R4.w, c[4].x;\n"
+				"ADD R4.z, c[1], R4.y;\n"
+				"POW R2.x, c[4].z, R2.x;\n"
+				"POW R2.y, c[4].z, R2.y;\n"
+				"POW R2.w, c[4].z, R2.w;\n"
+				"POW R2.z, c[4].z, R2.z;\n"
+				"ADD R2, R2, c[4].w;\n"
+				"RCP R2.x, R2.x;\n"
+				"RCP R2.y, R2.y;\n"
+				"RCP R2.z, R2.z;\n"
+				"RCP R2.w, R2.w;\n"
+				"RCP R6.x, R6.x;\n"
+				"RCP R6.y, R6.y;\n"
+				"RCP R6.z, R6.z;\n"
+				"RCP R6.w, R6.w;\n"
+				"MAD R3, R3, R6, R5;\n"
+				"TEX R5, R4.zwzw, texture[2], RECT;\n"
+				"ADD R5, R0, R5;\n"
+				"MAD R5, R5, R2, R3;\n"
+				"ADD R2.x, c[0].z, R4;\n"
+				"MOV R2.y, c[4].x;\n"
+				"TEX R3, R2, texture[1], RECT;\n"
+				"ADD R3, R1, -R3;\n"
+				"MOV R2.y, c[4].x;\n"
+				"ADD R2.x, c[0].z, R7;\n"
+				"TEX R2, R2, texture[1], RECT;\n"
+				"ADD R1, R1, -R2;\n"
+				"MUL R1, R1, R7.z;\n"
+				"MUL R2, R3, R7.z;\n"
+				"POW R1.x, c[4].z, R1.x;\n"
+				"POW R1.y, c[4].z, R1.y;\n"
+				"POW R1.w, c[4].z, R1.w;\n"
+				"POW R1.z, c[4].z, R1.z;\n"
+				"ADD R3, R1, c[4].w;\n"
+				"MOV R1.x, c[5];\n"
+				"POW R2.x, c[4].z, R2.x;\n"
+				"POW R2.y, c[4].z, R2.y;\n"
+				"POW R2.w, c[4].z, R2.w;\n"
+				"POW R2.z, c[4].z, R2.z;\n"
+				"ADD R2, R2, c[4].w;\n"
+				"RCP R2.x, R2.x;\n"
+				"RCP R2.y, R2.y;\n"
+				"RCP R2.z, R2.z;\n"
+				"RCP R2.w, R2.w;\n"
+				"MOV R1.y, c[4].x;\n"
+				"ADD R1.x, c[1].z, R1;\n"
+				"TEX R1, R1, texture[2], RECT;\n"
+				"ADD R1, R0, R1;\n"
+				"MAD R1, R1, R2, R5;\n"
+				"RCP R2.x, R3.x;\n"
+				"RCP R2.y, R3.y;\n"
+				"RCP R2.z, R3.z;\n"
+				"MOV R3.y, c[4].x;\n"
+				"ADD R3.x, c[1].z, R7;\n"
+				"TEX R4, R3, texture[2], RECT;\n"
+				"RCP R2.w, R3.w;\n"
+				"ADD R0, R0, R4;\n"
+				"MAD R0, R0, R2, R1;\n"
+				"MUL result.color, R0, c[12].y;\n"
 				"END \n"
 				"##!!BRCC\n"
 				"##narg:5\n"
-				"##s:2:index\n"
-				"##c:1:E\n"
-				"##c:1:pi\n"
+				"##s:1:index\n"
+				"##c:4:E\n"
+				"##c:4:pi\n"
 				"##c:1:T\n"
-				"##o:1:output\n"
+				"##o:4:output\n"
 				"##workspace:1024\n"
 				"##!!multipleOutputInfo:0:1:\n"
 				"##!!fullAddressTrans:0:\n"
@@ -91,57 +724,66 @@ namespace {
 				.output(5, 0)
 			)
 		);
-	static const void* __gpuGDAMatrix_arb = &__gpuGDAMatrix_arb_desc;
+	static const void* __gpuGDAKernel4_arb = &__gpuGDAKernel4_arb_desc;
 }
 
-void  __gpuGDAMatrix_cpu_inner(const __BrtFloat2  &index,
-                              const __BrtArray<__BrtFloat1  > &E,
-                              const __BrtArray<__BrtFloat1  > &pi,
-                              const __BrtFloat1  &T,
-                              __BrtFloat1  &output)
+void  __gpuGDAKernel4_cpu_inner(const __BrtFloat1  &index,
+                               const __BrtArray<__BrtFloat4  > &E,
+                               const __BrtArray<__BrtFloat4  > &pi,
+                               const __BrtFloat1  &T,
+                               __BrtFloat4  &output)
 {
-  __BrtFloat1  ex = E[index.swizzle1(maskX)];
-  __BrtFloat1  ey = E[index.swizzle1(maskY)];
-  __BrtFloat1  An = __BrtFloat1(32.000000f) * (__BrtFloat1(1.000000f) + __exp_cpu_inner((ex - ey) / T));
-  __BrtFloat1  pi_plus = pi[index.swizzle1(maskX)] + pi[index.swizzle1(maskY)];
+  __BrtFloat4  ex = E[index];
+  __BrtFloat4  pix = pi[index];
+  __BrtFloat4  An;
+  __BrtFloat4  pi_plus;
+  __BrtFloat4  sum = __BrtFloat1(0.000000f);
+  __BrtFloat1  i = __BrtFloat1((float)0);
 
-  output = pi_plus / An;
+  for (i = __BrtFloat1((float)0); i < __BrtFloat1((float)32); ++i)
+  {
+    An = __exp_cpu_inner((ex - E[i]) / T) + __BrtFloat1(1.000000f);
+    pi_plus = pix + pi[i];
+    sum += pi_plus / An;
+  }
+
+  output = sum / __BrtFloat1(32.000000f);
 }
-void  __gpuGDAMatrix_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
+void  __gpuGDAKernel4_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
 {
   ::brook::StreamInterface *arg_index = (::brook::StreamInterface *) args[0];
-  __BrtArray<__BrtFloat1  > *arg_E = (__BrtArray<__BrtFloat1  > *) args[1];
-  __BrtArray<__BrtFloat1  > *arg_pi = (__BrtArray<__BrtFloat1  > *) args[2];
+  __BrtArray<__BrtFloat4  > *arg_E = (__BrtArray<__BrtFloat4  > *) args[1];
+  __BrtArray<__BrtFloat4  > *arg_pi = (__BrtArray<__BrtFloat4  > *) args[2];
   __BrtFloat1 *arg_T = (__BrtFloat1 *) args[3];
   ::brook::StreamInterface *arg_output = (::brook::StreamInterface *) args[4];
   
   do {
-    Addressable <__BrtFloat1  > __out_arg_output((__BrtFloat1 *) __k->FetchElem(arg_output));
-    __gpuGDAMatrix_cpu_inner (Addressable <__BrtFloat2 >((__BrtFloat2 *) __k->FetchElem(arg_index)),
-                              *arg_E,
-                              *arg_pi,
-                              *arg_T,
-                              __out_arg_output);
-    *reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address) = __out_arg_output.castToArg(*reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address));
+    Addressable <__BrtFloat4  > __out_arg_output((__BrtFloat4 *) __k->FetchElem(arg_output));
+    __gpuGDAKernel4_cpu_inner (Addressable <__BrtFloat1 >((__BrtFloat1 *) __k->FetchElem(arg_index)),
+                               *arg_E,
+                               *arg_pi,
+                               *arg_T,
+                               __out_arg_output);
+    *reinterpret_cast<__BrtFloat4 *>(__out_arg_output.address) = __out_arg_output.castToArg(*reinterpret_cast<__BrtFloat4 *>(__out_arg_output.address));
   } while (__k->Continue());
 }
 
-void  gpuGDAMatrix (::brook::stream index,
+void  gpuGDAKernel4 (::brook::stream index,
 		::brook::stream E,
 		::brook::stream pi,
 		const float  T,
 		::brook::stream output) {
-  static const void *__gpuGDAMatrix_fp[] = {
-     "fp30", __gpuGDAMatrix_fp30,
-     "fp40", __gpuGDAMatrix_fp40,
-     "arb", __gpuGDAMatrix_arb,
-     "ps20", __gpuGDAMatrix_ps20,
-     "ps2b", __gpuGDAMatrix_ps2b,
-     "ps2a", __gpuGDAMatrix_ps2a,
-     "ps30", __gpuGDAMatrix_ps30,
-     "cpu", (void *) __gpuGDAMatrix_cpu,
+  static const void *__gpuGDAKernel4_fp[] = {
+     "fp30", __gpuGDAKernel4_fp30,
+     "fp40", __gpuGDAKernel4_fp40,
+     "arb", __gpuGDAKernel4_arb,
+     "ps20", __gpuGDAKernel4_ps20,
+     "ps2b", __gpuGDAKernel4_ps2b,
+     "ps2a", __gpuGDAKernel4_ps2a,
+     "ps30", __gpuGDAKernel4_ps30,
+     "cpu", (void *) __gpuGDAKernel4_cpu,
      NULL, NULL };
-  static ::brook::kernel  __k(__gpuGDAMatrix_fp);
+  static ::brook::kernel  __k(__gpuGDAKernel4_fp);
 
   __k->PushStream(index);
   __k->PushGatherStream(E);
@@ -149,456 +791,6 @@ void  gpuGDAMatrix (::brook::stream index,
   __k->PushConstant(T);
   __k->PushOutput(output);
   __k->Map();
-
-}
-
-
-static const char *__gpuGDAReduce_ps20= NULL;
-static const char *__gpuGDAReduce_ps2b= NULL;
-static const char *__gpuGDAReduce_ps2a= NULL;
-static const char *__gpuGDAReduce_ps30= NULL;
-static const char *__gpuGDAReduce_fp30= NULL;
-static const char *__gpuGDAReduce_fp40= NULL;
-
-namespace {
-	using namespace ::brook::desc;
-	static const gpu_kernel_desc __gpuGDAReduce_arb_desc = gpu_kernel_desc()
-		.technique( gpu_technique_desc()
-			.reduction_factor(2)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 5 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R1;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:2:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(3)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 6 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:3:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(4)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex___reduce3_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD3 : TEX3 : 6 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 7 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[3], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:4:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.interpolant(0, 3)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(5)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex___reduce3_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float2 _tex___reduce4_pos : $vin.TEXCOORD3 : TEX3 : 6 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD4 : TEX4 : 7 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 8 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[3], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[4], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:5:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.interpolant(0, 3)
-				.interpolant(0, 4)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(6)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex___reduce3_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float2 _tex___reduce4_pos : $vin.TEXCOORD3 : TEX3 : 6 : 1\n"
-				"#var float2 _tex___reduce5_pos : $vin.TEXCOORD4 : TEX4 : 7 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD5 : TEX5 : 8 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 9 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[3], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[4], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[5], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:6:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.interpolant(0, 3)
-				.interpolant(0, 4)
-				.interpolant(0, 5)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(7)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex___reduce3_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float2 _tex___reduce4_pos : $vin.TEXCOORD3 : TEX3 : 6 : 1\n"
-				"#var float2 _tex___reduce5_pos : $vin.TEXCOORD4 : TEX4 : 7 : 1\n"
-				"#var float2 _tex___reduce6_pos : $vin.TEXCOORD5 : TEX5 : 8 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD6 : TEX6 : 9 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 10 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[3], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[4], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[5], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[6], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:7:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.interpolant(0, 3)
-				.interpolant(0, 4)
-				.interpolant(0, 5)
-				.interpolant(0, 6)
-				.output(0, 0)
-			)
-		)
-		.technique( gpu_technique_desc()
-			.reduction_factor(8)
-			.pass( gpu_pass_desc(
-				"!!ARBfp1.0\n"
-				"# cgc version 1.4.0001, build date Mar  9 2006 20:56:09\n"
-				"# command line args: -quiet -DCGC=1 -profile arbfp1 -DUSERECT=1 -profileopts MaxTexIndirections=4,NoDepenentReadLimit=0,NumInstructionSlots=96\n"
-				"#vendor NVIDIA Corporation\n"
-				"#version 1.0.02\n"
-				"#profile arbfp1\n"
-				"#program main\n"
-				"#semantic main._tex_input : TEXUNIT0\n"
-				"#semantic main._tex_output : TEXUNIT1\n"
-				"#semantic main.__workspace : C0\n"
-				"#var samplerRECT _tex_input : TEXUNIT0 : texunit 0 : 0 : 1\n"
-				"#var float2 _tex_input_pos : $vin.TEXCOORD0 : TEX0 : 1 : 1\n"
-				"#var float __output_0 : $vout.COLOR0 : COL : 2 : 1\n"
-				"#var samplerRECT _tex_output : TEXUNIT1 : texunit 1 : 3 : 1\n"
-				"#var float2 _tex___reduce2_pos : $vin.TEXCOORD1 : TEX1 : 4 : 1\n"
-				"#var float2 _tex___reduce3_pos : $vin.TEXCOORD2 : TEX2 : 5 : 1\n"
-				"#var float2 _tex___reduce4_pos : $vin.TEXCOORD3 : TEX3 : 6 : 1\n"
-				"#var float2 _tex___reduce5_pos : $vin.TEXCOORD4 : TEX4 : 7 : 1\n"
-				"#var float2 _tex___reduce6_pos : $vin.TEXCOORD5 : TEX5 : 8 : 1\n"
-				"#var float2 _tex___reduce7_pos : $vin.TEXCOORD6 : TEX6 : 9 : 1\n"
-				"#var float2 _tex_output_pos : $vin.TEXCOORD7 : TEX7 : 10 : 1\n"
-				"#var float4 __workspace : C0 : c[0] : 11 : 0\n"
-				"PARAM c[1] = { program.local[0] };\n"
-				"TEMP R0;\n"
-				"TEMP R1;\n"
-				"TEX R0.x, fragment.texcoord[1], texture[0], RECT;\n"
-				"TEX R1.x, fragment.texcoord[0], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R1.x;\n"
-				"TEX R0.x, fragment.texcoord[2], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[3], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[4], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[5], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[6], texture[0], RECT;\n"
-				"ADD R0.y, R0.x, R0;\n"
-				"TEX R0.x, fragment.texcoord[7], texture[1], RECT;\n"
-				"ADD result.color.x, R0, R0.y;\n"
-				"END \n"
-				"##!!BRCC\n"
-				"##narg:2\n"
-				"##s:1:input\n"
-				"##s:1:output\n"
-				"##workspace:1024\n"
-				"##!!multipleOutputInfo:0:1:\n"
-				"##!!fullAddressTrans:0:\n"
-				"##!!reductionFactor:8:\n"
-				"")
-				.sampler(0, 0)
-				.sampler(0, 1)
-				.interpolant(0, 0)
-				.interpolant(0, 1)
-				.interpolant(0, 2)
-				.interpolant(0, 3)
-				.interpolant(0, 4)
-				.interpolant(0, 5)
-				.interpolant(0, 6)
-				.interpolant(0, 7)
-				.output(0, 0)
-			)
-		);
-	static const void* __gpuGDAReduce_arb = &__gpuGDAReduce_arb_desc;
-}
-
-void  __gpuGDAReduce_cpu_inner(const __BrtFloat1  &input,
-                              __BrtFloat1  &output)
-{
-  output = output + input;
-}
-void  __gpuGDAReduce_cpu(::brook::Kernel *__k, const std::vector<void *>&args)
-{
-  ::brook::StreamInterface *arg_input = (::brook::StreamInterface *) args[0];
-  ::brook::StreamInterface *arg_output = (::brook::StreamInterface *) args[1];
-  
-  do {
-    Addressable <__BrtFloat1  > __out_arg_output((__BrtFloat1 *) __k->FetchElem(arg_output));
-    __gpuGDAReduce_cpu_inner (Addressable <__BrtFloat1 >((__BrtFloat1 *) __k->FetchElem(arg_input)),
-                              __out_arg_output);
-    *reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address) = __out_arg_output.castToArg(*reinterpret_cast<__BrtFloat1 *>(__out_arg_output.address));
-  } while (__k->Continue());
-}
-
-void  gpuGDAReduce (::brook::stream input,
-		::brook::stream output) {
-  static const void *__gpuGDAReduce_fp[] = {
-     "fp30", __gpuGDAReduce_fp30,
-     "fp40", __gpuGDAReduce_fp40,
-     "arb", __gpuGDAReduce_arb,
-     "ps20", __gpuGDAReduce_ps20,
-     "ps2b", __gpuGDAReduce_ps2b,
-     "ps2a", __gpuGDAReduce_ps2a,
-     "ps30", __gpuGDAReduce_ps30,
-     "cpu", (void *) __gpuGDAReduce_cpu,
-     NULL, NULL };
-  static ::brook::kernel  __k(__gpuGDAReduce_fp);
-
-  __k->PushStream(input);
-  __k->PushReduce(&output, __BRTReductionType(&output));
-  __k->Reduce();
-
-}
-
-void  gpuGDAReduce (::brook::stream input,
-		float  & output) {
-  static const void *__gpuGDAReduce_fp[] = {
-     "fp30", __gpuGDAReduce_fp30,
-     "fp40", __gpuGDAReduce_fp40,
-     "arb", __gpuGDAReduce_arb,
-     "ps20", __gpuGDAReduce_ps20,
-     "ps2b", __gpuGDAReduce_ps2b,
-     "ps2a", __gpuGDAReduce_ps2a,
-     "ps30", __gpuGDAReduce_ps30,
-     "cpu", (void *) __gpuGDAReduce_cpu,
-     NULL, NULL };
-  static ::brook::kernel  __k(__gpuGDAReduce_fp);
-
-  __k->PushStream(input);
-  __k->PushReduce(&output, __BRTReductionType(&output));
-  __k->Reduce();
 
 }
 
