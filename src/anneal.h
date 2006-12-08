@@ -66,7 +66,7 @@ using vigra::Rect2D;
 
 using vigra_ext::copyPaintedSetToImage;
 
-#include <brook/brook.hpp>
+//#include <brook/brook.hpp>
 
 /*
 void gpuGDAMatrix(::brook::stream index,
@@ -77,6 +77,7 @@ void gpuGDAMatrix(::brook::stream index,
 
 void gpuGDAReduce(::brook::stream input, ::brook::stream output);
 */
+/*
 void gpuGDAKernel(::brook::stream index,
                   ::brook::stream E,
                   ::brook::stream pi,
@@ -88,6 +89,7 @@ void gpuGDAKernel4(::brook::stream index,
                   ::brook::stream pi,
                   const float T,
                   ::brook::stream output);
+*/
 
 namespace enblend {
 
@@ -135,15 +137,15 @@ public:
 
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v)
             : costImage(d),
-              visualizeStateSpaceImage(*d),
-              gpuE(NULL),
+              visualizeStateSpaceImage(*d)
+              /*gpuE(NULL),
               gpuPI(NULL),
               gpuIndices(NULL),
               index_stream(NULL),
               e_stream(NULL),
               pi_stream(NULL),
-              /*matrix_stream(NULL),*/
-              reduce_stream(NULL) {
+              matrix_stream(NULL),
+              reduce_stream(NULL)*/ {
 
         kMax = 1;
 
@@ -234,6 +236,7 @@ public:
         //ImageExportInfo visInfo("enblend_anneal_state_space.tif");
         //exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
 
+        /*
         if (UseGPU) {
             gpuE = new float4[GDA_KMAX];
             gpuPI = new float4[GDA_KMAX];
@@ -255,6 +258,7 @@ public:
 
             streamRead(*index_stream, gpuIndices);
         }
+        */
 
         tau = 0.75;
         deltaEMax = 1000.0;
@@ -269,14 +273,14 @@ public:
         for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(),_1));
         for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(),_1));
         for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(),_1));
-        delete index_stream;
-        delete e_stream;
-        delete pi_stream;
-        /*delete matrix_stream;*/
-        delete reduce_stream;
-        delete[] gpuE;
-        delete[] gpuPI;
-        delete[] gpuIndices;
+        //delete index_stream;
+        //delete e_stream;
+        //delete pi_stream;
+        ///*delete matrix_stream;*/
+        //delete reduce_stream;
+        //delete[] gpuE;
+        //delete[] gpuPI;
+        //delete[] gpuIndices;
     }
 
     void run() {
@@ -403,6 +407,7 @@ protected:
         delete[] pi;
     }
 
+/*
     //inline void calculateStateProbabilitiesGPU() {
     virtual void calculateStateProbabilitiesGPU() {
 
@@ -538,38 +543,39 @@ protected:
 
         streamWrite(*reduce_stream, gpuPI);
     }
+*/
 
     //void iterate() {
     virtual void iterate() {
 
-        if (UseGPU) {
-            calculateStateProbabilitiesGPU();
+        //if (UseGPU) {
+        //    calculateStateProbabilitiesGPU();
 
-            //// Copy GPU-calculated results
-            //vector<vector<double> > gpuStateProbabilities;
-            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-            //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
-            //}
+        //    //// Copy GPU-calculated results
+        //    //vector<vector<double> > gpuStateProbabilities;
+        //    //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+        //    //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
+        //    //}
 
-            //// Do regular CPU computations
-            //calculateStateProbabilities();
+        //    //// Do regular CPU computations
+        //    //calculateStateProbabilities();
 
-            //// Compare
-            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-            //    vector<double> &gpuProbs = gpuStateProbabilities[index];
-            //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
-            //    cout << "index " << index << endl;
-            //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
-            //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
-            //        if (diff > 0.001) {
-            //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
-            //        }
-            //    }
-            //}
+        //    //// Compare
+        //    //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+        //    //    vector<double> &gpuProbs = gpuStateProbabilities[index];
+        //    //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
+        //    //    cout << "index " << index << endl;
+        //    //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
+        //    //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
+        //    //        if (diff > 0.001) {
+        //    //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
+        //    //        }
+        //    //    }
+        //    //}
 
-        } else {
+        //} else {
             calculateStateProbabilities();
-        }
+        //}
 
         kMax = 1;
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
@@ -624,7 +630,7 @@ protected:
                 }
             }
 
-            // Renormalize
+            // Renormalize?
             for (unsigned int k = 0; k < stateSpace->size(); ++k) {
                 (*stateProbabilities)[k] /= totalWeights;
             }
@@ -711,14 +717,14 @@ protected:
     unsigned int kMax;
 
     // Data arrays for GPU streams
-    float4 *gpuE;
-    float4 *gpuPI;
-    float *gpuIndices;
-    ::brook::stream *index_stream;
-    ::brook::stream *e_stream;
-    ::brook::stream *pi_stream;
-    //::brook::stream *matrix_stream;
-    ::brook::stream *reduce_stream;
+    //float4 *gpuE;
+    //float4 *gpuPI;
+    //float *gpuIndices;
+    //::brook::stream *index_stream;
+    //::brook::stream *e_stream;
+    //::brook::stream *pi_stream;
+    ////::brook::stream *matrix_stream;
+    //::brook::stream *reduce_stream;
 
 };
 

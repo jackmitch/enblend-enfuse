@@ -39,6 +39,7 @@ using vigra::NumericTraits;
 
 //using namespace SH;
 
+/*
 #include <brook/brook.hpp>
 
 void gpuBlendKernel(::brook::stream black,
@@ -48,6 +49,7 @@ void gpuBlendKernel(::brook::stream black,
                     const float clamp_min,
                     const float clamp_max,
                     ::brook::stream o);
+*/
 
 namespace enblend {
 
@@ -81,6 +83,7 @@ protected:
     double white;
 };
 
+/*
 template <typename PROGRAM, typename CHANNEL>
 void profile_run_program(PROGRAM & blend_prg, CHANNEL & result) {
     result = blend_prg;
@@ -108,6 +111,7 @@ void profile_from_float(BX & bx, float *results, unsigned int width) {
                 static_cast<ImagePixelComponentType>(lrintf(results[j++])));
     }
 };
+*/
 
 /** Blend black and white pyramids using mask pyramid.
  */
@@ -124,9 +128,11 @@ void blend(vector<MaskPyramidType*> *maskGP,
         cout.flush();
     }
 
+/*
     float scale = static_cast<float>(maskPyramidWhiteValue);
     float clamp_min = static_cast<float>(NumericTraits<ImagePixelComponentType>::min());
     float clamp_max = static_cast<float>(NumericTraits<ImagePixelComponentType>::max());
+*/
 
 /*
     shInit();
@@ -166,6 +172,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
             continue;
         }
 
+/*
         MaskPyramidType &maskImage = *((*maskGP)[layer]);
         ImagePyramidType &whiteImage = *((*whiteLP)[layer]);
         ImagePyramidType &blackImage = *((*blackLP)[layer]);
@@ -208,7 +215,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
         delete[] mask_data;
         delete[] white_data;
         delete[] black_data;
-
+*/
 /*
         ShHostMemoryPtr mask_data = new ShHostMemory(sizeof(float) * width, SH_FLOAT);
         ShHostMemoryPtr white_data = new ShHostMemory(sizeof(float) * width * 3, SH_FLOAT);

@@ -91,7 +91,7 @@ bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 bool Checkpoint = false;
-bool UseGPU = false;
+int UseGPU = 0;
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -103,6 +103,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 
 #include "common.h"
 #include "enblend.h"
+#include "gpu.h"
 
 #include "vigra/impex.hxx"
 #include "vigra/sized_int.hxx"
@@ -164,6 +165,7 @@ void printUsageAndExit() {
  */
 void sigint_handler(int sig) {
     CachedFileImageDirector::v().~CachedFileImageDirector();
+    if (UseGPU) wrapupGPU();
     #if !defined(__GW32C__) && !defined(_WIN32)
     signal(SIGINT, SIG_DFL);
     kill(getpid(), SIGINT);
@@ -197,10 +199,19 @@ int main(int argc, char** argv) {
     list<char*> inputFileNameList;
     list<char*>::iterator inputFileNameIterator;
 
+    static struct option long_options[] = {
+            {"gpu", no_argument, &UseGPU, 1},
+            {0, 0, 0, 0}
+    };
+
     // Parse command line.
+    int option_index = 0;
     int c;
-    while ((c = getopt(argc, argv, "ab:cf:ghl:m:o:st:vwxyz")) != -1) {
+    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:st:vwxz", long_options, &option_index)) != -1) {
         switch (c) {
+            case 0: {
+                break;
+            }
             case 'a': {
                 OneAtATime = false;
                 break;
@@ -369,6 +380,10 @@ int main(int argc, char** argv) {
     } else {
         cerr << "enblend: no input files specified." << endl;
         printUsageAndExit();
+    }
+
+    if (UseGPU) {
+        initGPU();
     }
 
     // Check that more than one input file was given.
@@ -678,6 +693,10 @@ int main(int argc, char** argv) {
     if (XYZToInputTransform) cmsDeleteTransform(XYZToInputTransform);
     if (XYZProfile) cmsCloseProfile(XYZProfile);
     if (InputProfile) cmsCloseProfile(InputProfile);
+
+    if (UseGPU) {
+        wrapupGPU();
+    }
 
     // Success.
     return 0;
