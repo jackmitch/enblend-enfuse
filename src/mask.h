@@ -465,10 +465,6 @@ MaskType *createMask(ImageType *white,
         }
     }
 
-    if (Verbose > VERBOSE_MASK_MESSAGES) {
-        cout << "Strategy 1:";
-    }
-
     // Make sure that vertex bounding box is bigger than iBB by one pixel in each direction
     Rect2D iBBPlus = iBB;
     iBBPlus.addBorder(1);
@@ -516,7 +512,8 @@ MaskType *createMask(ImageType *white,
             Segment *snake = *currentSegment;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
-                cout << " s" << segmentNumber++;
+                cout << "Strategy 1, s" << segmentNumber++ << ":";
+                cout.flush();
             }
 
             // Move snake points to mismatchImage-relative coordinates
@@ -571,6 +568,10 @@ MaskType *createMask(ImageType *white,
                 }
             }
 
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cout << endl;
+            }
+
             // Print an explanation if every vertex in a closed contour ended up in the
             // max-cost region after annealing.
             // FIXME explain how to fix this problem in the error message!
@@ -583,7 +584,8 @@ MaskType *createMask(ImageType *white,
     }
 
     if (Verbose > VERBOSE_MASK_MESSAGES) {
-        cout << endl << "Strategy 2:";
+        cout << "Strategy 2:";
+        cout.flush();
     }
 
     // Adjust cost image for shortest path algorithm.
@@ -610,6 +612,7 @@ MaskType *createMask(ImageType *white,
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
                 cout << " s" << segmentNumber++;
+                cout.flush();
             }
 
             for (Segment::iterator currentVertex = snake->begin(); ; ) {

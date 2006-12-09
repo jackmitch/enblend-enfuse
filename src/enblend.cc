@@ -92,6 +92,8 @@ int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 bool Checkpoint = false;
 int UseGPU = 0;
+int OptimizeMask = 1;
+int CoarseMask = 1;
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -150,6 +152,11 @@ void printUsageAndExit() {
          << "                   Useful for cropped and shifted input TIFF images," << endl
          << "                   such as those produced by Nona." << endl;
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
+    cout << " --coarse-mask     Use an approximation to speedup mask generation. Default." << endl
+         << " --fine-mask       Enables detailed mask generation. Slow. Use this if you" << endl
+         << "                   have very narrow overlap regions." << endl
+         << " --optimize        Turn on mask optimization. This is the default." << endl
+         << " --no-optimize     Turn off mask optimization." << endl;
 
     //TODO stitch mismatch avoidance is work-in-progress.
     //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
@@ -204,6 +211,10 @@ int main(int argc, char** argv) {
 
     static struct option long_options[] = {
             {"gpu", no_argument, &UseGPU, 1},
+            {"coarse-mask", no_argument, &CoarseMask, 1},
+            {"fine-mask", no_argument, &CoarseMask, 0},
+            {"optimize", no_argument, &OptimizeMask, 1},
+            {"no-optimize", no_argument, &OptimizeMask, 0},
             {0, 0, 0, 0}
     };
 
@@ -322,10 +333,6 @@ int main(int argc, char** argv) {
                 Checkpoint = true;
                 break;
             }
-            case 'y': {
-                UseGPU = true;
-                break;
-            }
             case 'z': {
                 UseLZW = true;
                 break;
@@ -336,7 +343,10 @@ int main(int argc, char** argv) {
             }
         }
     }
+cout << "CoarseMask=" << CoarseMask << endl;
+cout << "OptimizeMask=" << OptimizeMask << endl;
 
+exit(0);
     // Make sure mandatory output file name parameter given.
     if (outputFileName == NULL) {
         cerr << "enblend: no output file specified." << endl;

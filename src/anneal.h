@@ -67,31 +67,6 @@ using vigra::Rect2D;
 
 using vigra_ext::copyPaintedSetToImage;
 
-//#include <brook/brook.hpp>
-
-/*
-void gpuGDAMatrix(::brook::stream index,
-                  ::brook::stream E,
-                  ::brook::stream pi,
-                  const float T,
-                  ::brook::stream output);
-
-void gpuGDAReduce(::brook::stream input, ::brook::stream output);
-*/
-/*
-void gpuGDAKernel(::brook::stream index,
-                  ::brook::stream E,
-                  ::brook::stream pi,
-                  const float T,
-                  ::brook::stream output);
-
-void gpuGDAKernel4(::brook::stream index,
-                  ::brook::stream E,
-                  ::brook::stream pi,
-                  const float T,
-                  ::brook::stream output);
-*/
-
 namespace enblend {
 
 template <typename CostImage>
@@ -139,22 +114,9 @@ public:
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v)
             : costImage(d),
               visualizeStateSpaceImage(*d),
-              E(NULL),
-              Pi(NULL),
-              EF(NULL),
-              PiF(NULL)
-              /*gpuE(NULL),
-              gpuPI(NULL),
-              gpuIndices(NULL),
-              index_stream(NULL),
-              e_stream(NULL),
-              pi_stream(NULL),
-              matrix_stream(NULL),
-              reduce_stream(NULL)*/ {
+              E(NULL), Pi(NULL), EF(NULL), PiF(NULL) {
 
         kMax = 1;
-
-        //CostImage visualizeStateSpaceImage(*costImage);
 
         int costImageShortDimension = std::min(costImage->width(), costImage->height());
         // Determine state space of currentPoint
@@ -237,10 +199,6 @@ public:
             previousPoint = currentPoint;
         }
 
-
-        //ImageExportInfo visInfo("enblend_anneal_state_space.tif");
-        //exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
-
         if (UseGPU) {
             EF = new float[kMax * mfEstimates.size()];
             PiF = new float[kMax * mfEstimates.size()];
@@ -248,30 +206,6 @@ public:
             E = new int[kMax];
             Pi = new double[kMax];
         }
-
-        /*
-        if (UseGPU) {
-            gpuE = new float4[GDA_KMAX];
-            gpuPI = new float4[GDA_KMAX];
-            gpuIndices = new float[GDA_KMAX];
-
-            for (unsigned int i = 0; i < GDA_KMAX; ++i) {
-                gpuIndices[i] = static_cast<float>(i);
-            }
-
-            //index_stream = new ::brook::stream(::brook::getStreamType((float2*)0), GDA_KMAX, GDA_KMAX, -1);
-            //e_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, -1);
-            //pi_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, -1);
-            //matrix_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, GDA_KMAX, -1);
-            //reduce_stream = new ::brook::stream(::brook::getStreamType((float*)0), 1, GDA_KMAX, -1);
-            index_stream = new ::brook::stream(::brook::getStreamType((float*)0), GDA_KMAX, -1);
-            e_stream = new ::brook::stream(::brook::getStreamType((float4*)0), GDA_KMAX, -1);
-            pi_stream = new ::brook::stream(::brook::getStreamType((float4*)0), GDA_KMAX, -1);
-            reduce_stream = new ::brook::stream(::brook::getStreamType((float4*)0), GDA_KMAX, -1);
-
-            streamRead(*index_stream, gpuIndices);
-        }
-        */
 
         tau = 0.75;
         deltaEMax = 1000.0;
@@ -286,14 +220,6 @@ public:
         for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(),_1));
         for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(),_1));
         for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(),_1));
-        //delete index_stream;
-        //delete e_stream;
-        //delete pi_stream;
-        ///*delete matrix_stream;*/
-        //delete reduce_stream;
-        //delete[] gpuE;
-        //delete[] gpuPI;
-        //delete[] gpuIndices;
         delete[] E;
         delete[] Pi;
         delete[] EF;
@@ -301,11 +227,12 @@ public:
     }
 
     void run() {
-        //int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+        int progressIndicator = 1;
+        int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+        int iterationCount = 0;
+        int iterationsPerTick = (numIterations+3) / 4;
 
-        if (UseGPU) {
-            configureGPUTextures(kMax, pointStateSpaces.size());
-        }
+        if (UseGPU) configureGPUTextures(kMax, pointStateSpaces.size());
 
         tCurrent = tInitial;
 
@@ -314,22 +241,28 @@ public:
             unsigned int eta = (unsigned int)ceil(log(epsilon)
                              / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
 
-            cout << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
+            //cout << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
 
             for (unsigned int i = 0; i < eta; i++) iterate();
 
             tCurrent *= tau;
 
-            int numConvergedPoints = 0;
-            for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-                if (convergedPoints[i]) numConvergedPoints++;
+            //int numConvergedPoints = 0;
+            //for (unsigned int i = 0; i < convergedPoints.size(); i++) {
+            //    if (convergedPoints[i]) numConvergedPoints++;
+            //}
+            //cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
+
+            if ((Verbose > VERBOSE_MASK_MESSAGES) && (iterationCount % iterationsPerTick) == 0) {
+                cout << " " << progressIndicator++ << "/4";
+                cout.flush();
             }
-            cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
+
+            iterationCount++;
+
         }
 
-        if (UseGPU) {
-            clearGPUTextures();
-        }
+        if (UseGPU) clearGPUTextures();
 
         // Remaining state space points
         for (unsigned int i = 0; i < pointStateSpaces.size(); ++i) {
@@ -344,26 +277,26 @@ public:
         ImageExportInfo visInfo("enblend_anneal_state_space.tif");
         exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
 
-        for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-            if (!convergedPoints[i]) {
-                cout << "Unconverged point:" << endl;
-                vector<Point2D> *stateSpace = pointStateSpaces[i];
-                vector<double> *stateProbabilities = pointStateProbabilities[i];
-                unsigned int localK = stateSpace->size();
-                for (unsigned int state = 0; state < localK; ++state) {
-                    cout << "    state " << (*stateSpace)[state] << " weight=" << (*stateProbabilities)[state] << endl;
-                }
-                cout << "    mfEstimate=" << mfEstimates[i] << endl;
-            }
-        }
+        //for (unsigned int i = 0; i < convergedPoints.size(); i++) {
+        //    if (!convergedPoints[i]) {
+        //        cout << "Unconverged point:" << endl;
+        //        vector<Point2D> *stateSpace = pointStateSpaces[i];
+        //        vector<double> *stateProbabilities = pointStateProbabilities[i];
+        //        unsigned int localK = stateSpace->size();
+        //        for (unsigned int state = 0; state < localK; ++state) {
+        //            cout << "    state " << (*stateSpace)[state] << " weight=" << (*stateProbabilities)[state] << endl;
+        //        }
+        //        cout << "    mfEstimate=" << mfEstimates[i] << endl;
+        //    }
+        //}
     }
 
     vector<Point2D> & getCurrentPoints() { return mfEstimates; }
 
 protected:
 
-    //inline void calculateStateProbabilities() {
-    virtual void calculateStateProbabilities() {
+    //virtual void calculateStateProbabilities() {
+    inline void calculateStateProbabilities() {
 
         unsigned int lastIndex = mfEstimates.size() - 1;
         for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
@@ -390,7 +323,7 @@ protected:
                 E[i] = (*stateDistances)[i];
                 if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
-                E[i] = (int)(E[i] * exp_a);
+                E[i] = NumericTraits<int>::fromRealPromote(E[i] * exp_a);
                 Pi[i] = 0.0;
             }
 
@@ -427,8 +360,8 @@ protected:
 
     }
 
-    //inline void calculateStateProbabilitiesGPU() {
-    virtual void calculateStateProbabilitiesGPU() {
+    //virtual void calculateStateProbabilitiesGPU() {
+    inline void calculateStateProbabilitiesGPU() {
 
         unsigned int unconvergedPoints = 0;
         unsigned int lastIndex = mfEstimates.size() - 1;
@@ -468,8 +401,10 @@ protected:
             unconvergedPoints++;
         }
 
+        // Calculate all of the new PiF values on the GPU in parallel
         gpuGDAKernel(kMax, unconvergedPoints, tCurrent, EF, PiF, PiF);
 
+        // Write the results back to pointStateProbabilities
         unconvergedPoints = 0;
         for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
             // Skip updating points that have already converged.
@@ -491,97 +426,8 @@ protected:
 
     }
 
-/*
-            pack4Indices[pack4] = index;
-            pack4LocalK[pack4] = localK;
-
-            pack4++;
-            if (pack4 == 4) {
-                cSPGPU_core();
-
-                for (unsigned int p = 0; p < pack4; ++p) {
-                    for (unsigned int i = 0; i < pack4LocalK[p]; ++i) {
-                        float *gpuPIComponent = NULL;
-                        switch (p) {
-                            case 0: gpuPIComponent = &(gpuPI[i].x); break;
-                            case 1: gpuPIComponent = &(gpuPI[i].y); break;
-                            case 2: gpuPIComponent = &(gpuPI[i].z); break;
-                            case 3: gpuPIComponent = &(gpuPI[i].w); break;
-                        }
-                        (*(pointStateProbabilities[pack4Indices[p]]))[i] = static_cast<double>(*gpuPIComponent);
-                    }
-                }
-
-                pack4 = 0;
-            }
-                    
-            //::brook::iter index_stream(::brook::__BRTFLOAT2, localK, localK, -1,
-            //        (float2(0,0)).x, (float2(0,0)).y,
-            //        (float2(localK, localK)).x, (float2(localK, localK)).y, -1);
-            //cSPGPU_core(E, pi, indices, localK);
-            //cSPGPU_core();
-            //::brook::stream index_stream(::brook::getStreamType((float2*)0), localK, localK, -1);
-            //::brook::stream e_stream(::brook::getStreamType((float*)0), localK, -1);
-            //::brook::stream pi_stream(::brook::getStreamType((float*)0), localK, -1);
-            //::brook::stream matrix_stream(::brook::getStreamType((float*)0), localK, localK, -1);
-            //::brook::stream reduce_stream(::brook::getStreamType((float*)0), 1, localK, -1);
-
-            //streamRead(index_stream, indices);
-            //streamRead(e_stream, E);
-            //streamRead(pi_stream, pi);
-
-            //gpuGDAMatrix(index_stream, e_stream, pi_stream, tCurrent, localK, matrix_stream);
-            //gpuGDAReduce(matrix_stream, reduce_stream);
-
-            //streamWrite(reduce_stream, pi);
-
-            //for (unsigned int i = 0; i < localK; ++i) {
-            //    (*stateProbabilities)[i] = static_cast<double>(gpuPI[i].x);
-            //}
-        }
-
-        if (pack4 > 0) {
-            cSPGPU_core();
-            for (unsigned int p = 0; p < pack4; ++p) {
-                for (unsigned int i = 0; i < pack4LocalK[p]; ++i) {
-                    float *gpuPIComponent = NULL;
-                    switch (p) {
-                        case 0: gpuPIComponent = &(gpuPI[i].x); break;
-                        case 1: gpuPIComponent = &(gpuPI[i].y); break;
-                        case 2: gpuPIComponent = &(gpuPI[i].z); break;
-                        case 3: gpuPIComponent = &(gpuPI[i].w); break;
-                    }
-                    (*(pointStateProbabilities[pack4Indices[p]]))[i] = static_cast<double>(*gpuPIComponent);
-                }
-            }
-        }
-    }
-*/
-
-/*
-    //inline void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
-    //virtual void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
-    virtual void cSPGPU_core() {
-        //::brook::stream index_stream(::brook::getStreamType((float2*)0), localK, localK, -1);
-        //::brook::stream e_stream(::brook::getStreamType((float*)0), localK, -1);
-        //::brook::stream pi_stream(::brook::getStreamType((float*)0), localK, -1);
-        //::brook::stream matrix_stream(::brook::getStreamType((float*)0), localK, localK, -1);
-        //::brook::stream reduce_stream(::brook::getStreamType((float*)0), 1, localK, -1);
-
-        //streamRead(index_stream, indices);
-        streamRead(*e_stream, gpuE);
-        streamRead(*pi_stream, gpuPI);
-
-        //gpuGDAMatrix(*index_stream, *e_stream, *pi_stream, tCurrent, *matrix_stream);
-        //gpuGDAReduce(*matrix_stream, *reduce_stream);
-        gpuGDAKernel4(*index_stream, *e_stream, *pi_stream, tCurrent, *reduce_stream);
-
-        streamWrite(*reduce_stream, gpuPI);
-    }
-*/
-
-    //void iterate() {
-    virtual void iterate() {
+    //virtual void iterate() {
+    void iterate() {
 
         if (UseGPU) {
             calculateStateProbabilitiesGPU();
@@ -636,12 +482,13 @@ protected:
             estimateX /= totalWeight;
             estimateY /= totalWeight;
 
-            Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX), NumericTraits<int>::fromRealPromote(estimateY));
+            Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
+                                NumericTraits<int>::fromRealPromote(estimateY));
             mfEstimates[index] = newEstimate;
 
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
-                cerr << "new mf estimate is outside cost image: " << newEstimate << endl;
+                cerr << endl << "enblend: new mf estimate is outside cost image: " << newEstimate << endl;
                 exit(-1);
             }
 
@@ -665,7 +512,7 @@ protected:
                 }
             }
 
-            // Renormalize?
+            // Renormalize
             for (unsigned int k = 0; k < stateSpace->size(); ++k) {
                 (*stateProbabilities)[k] /= totalWeights;
             }
@@ -674,13 +521,12 @@ protected:
             if (localK < 2) convergedPoints[index] = true;
             kMax = std::max(kMax, stateProbabilities->size());
 
-            // FIXME ensure new mfEstimate is inside costImage?
         }
 
     }
 
-    //inline int costImageCost(const Point2D &start, const Point2D &end) {
-    virtual int costImageCost(const Point2D &start, const Point2D &end) {
+    //virtual int costImageCost(const Point2D &start, const Point2D &end) {
+    inline int costImageCost(const Point2D &start, const Point2D &end) {
         //if (!(costImage->isInside(start) && costImage->isInside(end))) {
         //    cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
         //    exit(-1);
@@ -759,25 +605,10 @@ protected:
     float *EF;
     float *PiF;
 
-    // Data arrays for GPU streams
-    //float4 *gpuE;
-    //float4 *gpuPI;
-    //float *gpuIndices;
-    //::brook::stream *index_stream;
-    //::brook::stream *e_stream;
-    //::brook::stream *pi_stream;
-    ////::brook::stream *matrix_stream;
-    //::brook::stream *reduce_stream;
-
 };
 
 template <typename CostImage>
 void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
-
-    //list<pair<bool, Point2D> > listSnake;
-    //for (slist<pair<bool, Point2D> >::iterator p = snake->begin(); p != snake->end(); ++p) {
-    //    listSnake.push_back(*p);
-    //}
 
     GDAConfiguration<CostImage> cfg(ci, snake);
 

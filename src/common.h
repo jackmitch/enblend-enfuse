@@ -39,7 +39,7 @@
 #define VERBOSE_PYRAMID_MESSAGES            0
 #define VERBOSE_CFI_MESSAGES                2
 
-#define GDA_KMAX    32
+#define GDA_KMAX    64
 
 namespace enblend {
 
