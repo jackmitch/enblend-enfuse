@@ -42,6 +42,7 @@
 #include <math.h>
 #endif
 
+#include "gpu.h"
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
 #include "vigra_ext/XMIWrapper.h"
@@ -137,7 +138,11 @@ public:
 
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v)
             : costImage(d),
-              visualizeStateSpaceImage(*d)
+              visualizeStateSpaceImage(*d),
+              E(NULL),
+              Pi(NULL),
+              EF(NULL),
+              PiF(NULL)
               /*gpuE(NULL),
               gpuPI(NULL),
               gpuIndices(NULL),
@@ -236,6 +241,14 @@ public:
         //ImageExportInfo visInfo("enblend_anneal_state_space.tif");
         //exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
 
+        if (UseGPU) {
+            EF = new float[kMax * mfEstimates.size()];
+            PiF = new float[kMax * mfEstimates.size()];
+        } else {
+            E = new int[kMax];
+            Pi = new double[kMax];
+        }
+
         /*
         if (UseGPU) {
             gpuE = new float4[GDA_KMAX];
@@ -281,10 +294,18 @@ public:
         //delete[] gpuE;
         //delete[] gpuPI;
         //delete[] gpuIndices;
+        delete[] E;
+        delete[] Pi;
+        delete[] EF;
+        delete[] PiF;
     }
 
     void run() {
         //int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+
+        if (UseGPU) {
+            configureGPUTextures(kMax, pointStateSpaces.size());
+        }
 
         tCurrent = tInitial;
 
@@ -304,6 +325,10 @@ public:
                 if (convergedPoints[i]) numConvergedPoints++;
             }
             cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
+        }
+
+        if (UseGPU) {
+            clearGPUTextures();
         }
 
         // Remaining state space points
@@ -340,9 +365,6 @@ protected:
     //inline void calculateStateProbabilities() {
     virtual void calculateStateProbabilities() {
 
-        int *E = new int[kMax];
-        double *pi = new double[kMax];
-
         unsigned int lastIndex = mfEstimates.size() - 1;
         for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
             // Skip updating points that have already converged.
@@ -369,7 +391,7 @@ protected:
                 if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
                 E[i] = (int)(E[i] * exp_a);
-                pi[i] = 0.0;
+                Pi[i] = 0.0;
             }
 
             // Calculate new stateProbabilities
@@ -391,33 +413,33 @@ protected:
             // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
             for (unsigned int j = 0; j < localK; ++j) {
                 double piTj = (*stateProbabilities)[j];
-                pi[j] += piTj;
+                Pi[j] += piTj;
                 for (unsigned int i = (j+1); i < localK; ++i) {
                     double piT = (*stateProbabilities)[i] + piTj;
                     eco.n.i = E[j] - E[i] + 1072693248 - 60801;
                     double piTAn = piT / (1 + eco.d);
-                    pi[j] += piTAn;
-                    pi[i] += piT - piTAn;
+                    Pi[j] += piTAn;
+                    Pi[i] += piT - piTAn;
                 }
-                (*stateProbabilities)[j] = pi[j] / localK;
+                (*stateProbabilities)[j] = Pi[j] / localK;
             }
         }
 
-        delete[] E;
-        delete[] pi;
     }
 
-/*
     //inline void calculateStateProbabilitiesGPU() {
     virtual void calculateStateProbabilitiesGPU() {
 
+        unsigned int unconvergedPoints = 0;
         unsigned int lastIndex = mfEstimates.size() - 1;
-        unsigned int pack4 = 0;
-        unsigned int pack4Indices[4];
-        unsigned int pack4LocalK[4];
         for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
             // Skip updating points that have already converged.
             if (convergedPoints[index]) continue;
+
+            unsigned int rowIndex = unconvergedPoints / 4;
+            unsigned int vectorIndex = unconvergedPoints % 4;
+            float *EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
+            float *PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
             vector<Point2D> *stateSpace = pointStateSpaces[index];
             vector<double> *stateProbabilities = pointStateProbabilities[index];
@@ -433,32 +455,43 @@ protected:
 
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
-                float *gpuEComponent = NULL;
-                float *gpuPIComponent = NULL;
-                switch (pack4) {
-                    case 0: gpuEComponent = &(gpuE[i].x); gpuPIComponent = &(gpuPI[i].x); break;
-                    case 1: gpuEComponent = &(gpuE[i].y); gpuPIComponent = &(gpuPI[i].y); break;
-                    case 2: gpuEComponent = &(gpuE[i].z); gpuPIComponent = &(gpuPI[i].z); break;
-                    case 3: gpuEComponent = &(gpuE[i].w); gpuPIComponent = &(gpuPI[i].w); break;
-                }
-
                 Point2D currentPoint = (*stateSpace)[i];
-                *gpuEComponent = (*stateDistances)[i];
-                if (lastPointInCostImage) *gpuEComponent += costImageCost(lastPointEstimate, currentPoint);
-                if (nextPointInCostImage) *gpuEComponent += costImageCost(currentPoint, nextPointEstimate);
-                *gpuPIComponent = static_cast<float>((*stateProbabilities)[i]);
+                EFbase[4*i] = (*stateDistances)[i];
+                if (lastPointInCostImage) EFbase[4*i] += costImageCost(lastPointEstimate, currentPoint);
+                if (nextPointInCostImage) EFbase[4*i] += costImageCost(currentPoint, nextPointEstimate);
+                PiFbase[4*i] = static_cast<float>((*stateProbabilities)[i]);
             }
-            for (unsigned int i = localK; i < GDA_KMAX; ++i) {
-                float *gpuPIComponent = NULL;
-                switch (pack4) {
-                    case 0: gpuPIComponent = &(gpuPI[i].x); break;
-                    case 1: gpuPIComponent = &(gpuPI[i].y); break;
-                    case 2: gpuPIComponent = &(gpuPI[i].z); break;
-                    case 3: gpuPIComponent = &(gpuPI[i].w); break;
-                }
-                *gpuPIComponent = 0.0f;
+            for (unsigned int i = localK; i < kMax; ++i) {
+                PiFbase[4*i] = 0.0f;
             }
 
+            unconvergedPoints++;
+        }
+
+        gpuGDAKernel(kMax, unconvergedPoints, tCurrent, EF, PiF, PiF);
+
+        unconvergedPoints = 0;
+        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
+            // Skip updating points that have already converged.
+            if (convergedPoints[index]) continue;
+
+            unsigned int rowIndex = unconvergedPoints / 4;
+            unsigned int vectorIndex = unconvergedPoints % 4;
+            float *PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
+
+            vector<double> *stateProbabilities = pointStateProbabilities[index];
+            unsigned int localK = stateProbabilities->size();
+
+            for (unsigned int i = 0; i < localK; ++i) {
+                (*stateProbabilities)[i] = static_cast<double>(PiFbase[4*i]);
+            }
+
+            unconvergedPoints++;
+        }
+
+    }
+
+/*
             pack4Indices[pack4] = index;
             pack4LocalK[pack4] = localK;
 
@@ -523,7 +556,9 @@ protected:
             }
         }
     }
+*/
 
+/*
     //inline void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
     //virtual void cSPGPU_core(float *E, float *pi, float2 *indices, unsigned int localK) {
     virtual void cSPGPU_core() {
@@ -548,34 +583,34 @@ protected:
     //void iterate() {
     virtual void iterate() {
 
-        //if (UseGPU) {
-        //    calculateStateProbabilitiesGPU();
+        if (UseGPU) {
+            calculateStateProbabilitiesGPU();
 
-        //    //// Copy GPU-calculated results
-        //    //vector<vector<double> > gpuStateProbabilities;
-        //    //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-        //    //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
-        //    //}
+            //// Copy GPU-calculated results
+            //vector<vector<double> > gpuStateProbabilities;
+            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+            //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
+            //}
 
-        //    //// Do regular CPU computations
-        //    //calculateStateProbabilities();
+            //// Do regular CPU computations
+            //calculateStateProbabilities();
 
-        //    //// Compare
-        //    //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-        //    //    vector<double> &gpuProbs = gpuStateProbabilities[index];
-        //    //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
-        //    //    cout << "index " << index << endl;
-        //    //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
-        //    //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
-        //    //        if (diff > 0.001) {
-        //    //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
-        //    //        }
-        //    //    }
-        //    //}
+            //// Compare
+            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
+            //    vector<double> &gpuProbs = gpuStateProbabilities[index];
+            //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
+            //    cout << "index " << index << endl;
+            //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
+            //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
+            //        if (diff > 0.001) {
+            //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
+            //        }
+            //    }
+            //}
 
-        //} else {
+        } else {
             calculateStateProbabilities();
-        //}
+        }
 
         kMax = 1;
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
@@ -715,6 +750,14 @@ protected:
 
     // Largest state space over all points
     unsigned int kMax;
+
+    // Data arrays for CPU probability calculations
+    int *E;
+    double *Pi;
+
+    // Data arrays for GPU probability calculations
+    float *EF;
+    float *PiF;
 
     // Data arrays for GPU streams
     //float4 *gpuE;

@@ -34,6 +34,9 @@ void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
 
 bool initGPU(void);
+bool configureGPUTextures(unsigned int k, unsigned int vars);
+bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData);
+bool clearGPUTextures();
 bool wrapupGPU(void);
 
 #endif /* __GPU_H__ */

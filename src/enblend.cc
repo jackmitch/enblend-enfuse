@@ -165,7 +165,10 @@ void printUsageAndExit() {
  */
 void sigint_handler(int sig) {
     CachedFileImageDirector::v().~CachedFileImageDirector();
-    if (UseGPU) wrapupGPU();
+    if (UseGPU) {
+        cout << "Cleaning up GPU state..." << endl;
+        wrapupGPU();
+    }
     #if !defined(__GW32C__) && !defined(_WIN32)
     signal(SIGINT, SIG_DFL);
     kill(getpid(), SIGINT);

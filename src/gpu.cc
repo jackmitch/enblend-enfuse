@@ -28,6 +28,39 @@ using std::endl;
 
 static GLuint GlutWindowHandle;
 static int MaxTextureSize;
+static GLuint PiTexture;
+static GLuint ETexture;
+static GLuint OutTexture;
+static GLuint FB;
+static GLhandleARB ProgramObject;
+static GLhandleARB ShaderObject;
+static GLint PiTextureParam;
+static GLint ETextureParam;
+static GLint TempParam;
+static GLint KMaxParam;
+
+static const char *GDAKernelSource = {
+"uniform sampler2DRect PiTexture;"
+"uniform sampler2DRect ETexture;"
+"uniform float Temperature;"
+"uniform float KMax;"
+"void main(void)"
+"{"
+"   vec4 pix = texture2DRect(PiTexture, gl_TexCoord[0].st);"
+"   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);"
+"   vec4 An;"
+"   vec4 pi_plus;"
+"   vec4 sum = vec4(0.0f, 0.0f, 0.0f, 0.0f);"
+"   float i = 0.0;"
+"   for (i = 0.0; i < KMax; i++) {"
+"       vec2 coord = vec2(i, gl_TexCoord[0].t);"
+"       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0f;"
+"       pi_plus = pix + texture2DRect(PiTexture, coord);"
+"       sum += (pi_plus / An);"
+"   }"
+"   gl_FragColor = sum / KMax;"
+"}"
+};
 
 void checkGLErrors(int line, char *file) {
     GLenum errCode;
@@ -116,10 +149,132 @@ bool initGPU() {
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MaxTextureSize);
 
+    ProgramObject = glCreateProgramObjectARB();
+    ShaderObject = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+    glAttachObjectARB(ProgramObject, ShaderObject);
+    glShaderSourceARB(ShaderObject, 1, &GDAKernelSource, NULL);
+    glCompileShaderARB(ShaderObject);
+    printInfoLog(ShaderObject);
+
+    glLinkProgramARB(ProgramObject);
+    GLint success;
+    glGetObjectParameterivARB(ProgramObject, GL_OBJECT_LINK_STATUS_ARB, &success);
+    if (!success) {
+        cerr << "enblend: GPU ARB shader program could not be linked." << endl;
+        exit(1);
+    }
+
+    PiTextureParam = glGetUniformLocationARB(ProgramObject, "PiTexture");
+    ETextureParam = glGetUniformLocationARB(ProgramObject, "ETexture");
+    TempParam = glGetUniformLocationARB(ProgramObject, "Temperature");
+    KMaxParam = glGetUniformLocationARB(ProgramObject, "KMax");
+
+    glUseProgramObjectARB(ProgramObject);
+
+    return true;
+}
+
+bool configureGPUTextures(unsigned int k, unsigned int vars) {
+    // state variables packed into vec4s
+    int height = (vars+3)/4;
+    int width = k;
+
+    glGenTextures(1, &PiTexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    CHECK_GL();
+
+    glGenTextures(1, &ETexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    CHECK_GL();
+
+    glGenTextures(1, &OutTexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, OutTexture);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    CHECK_GL();
+
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glGenFramebuffersEXT(1, &FB);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FB);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, width, 0.0, height);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glViewport(0, 0, width, height);
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, OutTexture, 0);
+
+    if (!checkFramebufferStatus()) {
+        exit(1);
+    }
+
+    return true;
+}
+
+bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData) {
+    unsigned localWidth = k;
+    unsigned localHeight = (vars+3) / 4;
+
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
+    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedPiData);
+
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
+    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedEData);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
+    glUniform1iARB(PiTextureParam, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
+    glUniform1iARB(ETextureParam, 1);
+
+    glUniform1fARB(TempParam, t);
+    glUniform1fARB(KMaxParam, k);
+
+    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);                glVertex2f(0.0, 0.0);
+        glTexCoord2f(localWidth, 0.0);         glVertex2f(localWidth, 0.0);
+        glTexCoord2f(localWidth, localHeight); glVertex2f(localWidth, localHeight);
+        glTexCoord2f(0.0, localHeight);        glVertex2f(0.0, localHeight);
+    glEnd();
+
+    glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    glReadPixels(0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedOutData);
+
+    return true;
+}
+
+bool clearGPUTextures() {
+    glDeleteFramebuffersEXT(1, &FB);
+    glDeleteTextures(1, &PiTexture);
+    glDeleteTextures(1, &ETexture);
+    glDeleteTextures(1, &OutTexture);
     return true;
 }
 
 bool wrapupGPU() {
+    if (FB != 0) glDeleteFramebuffersEXT(1, &FB);
+    if (PiTexture != 0) glDeleteTextures(1, &PiTexture);
+    if (ETexture != 0) glDeleteTextures(1, &ETexture);
+    if (OutTexture != 0) glDeleteTextures(1, &OutTexture);
     glutDestroyWindow(GlutWindowHandle);
     return true;
 }
