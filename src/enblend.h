@@ -233,7 +233,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         Rect2D mBB;
         MaskType *mask = createMask<ImageType, AlphaType, MaskType>(
                 whitePair.first, blackPair.first, whitePair.second, blackPair.second,
-                uBB, iBB, wraparoundForMask, mBB);
+                uBB, iBB, wraparoundForMask);
+        maskBounds(mask, uBB, mBB);
 
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UInt32Image*ubb

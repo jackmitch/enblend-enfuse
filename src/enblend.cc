@@ -51,7 +51,10 @@
 #ifndef _WIN32
 #include <getopt.h>
 #else
-extern "C" int getopt(int nargc, char** nargv, char* ostr);
+//extern "C" int getopt(int nargc, char** nargv, char* ostr);
+extern "C" {
+#include <win32helpers/getopt_long.h>
+}
 #endif
 
 extern "C" char *optarg;
@@ -343,11 +346,8 @@ int main(int argc, char** argv) {
             }
         }
     }
-cout << "CoarseMask=" << CoarseMask << endl;
-cout << "OptimizeMask=" << OptimizeMask << endl;
 
-exit(0);
-    // Make sure mandatory output file name parameter given.
+	// Make sure mandatory output file name parameter given.
     if (outputFileName == NULL) {
         cerr << "enblend: no output file specified." << endl;
         printUsageAndExit();

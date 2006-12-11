@@ -95,6 +95,11 @@ using boost::lambda::protect;
 
 namespace enblend {
 
+/** Data structures for vector masks */
+typedef slist<pair<bool, Point2D> > Segment;
+typedef vector<Segment*> Contour;
+typedef vector<Contour*> ContourVector;
+
 template <typename PixelType, typename ResultType>
 class PixelDifferenceFunctor
 {
@@ -135,7 +140,64 @@ MaskType *createMask(ImageType *white,
     //importImage(fileMaskInfo, destImage(*fileMask));
     //MaskType *mask = fileMask;
 
-    // uBB rounded up to multiple of 8 pixels in each direction
+    // Start by using the nearest feature transform to generate a mask.
+    Size2D nftInputSize;
+    Rect2D nftInputBB;
+    int nftStride;
+    if (CoarseMask) {
+        // Do NFT at 1/8 scale.
+        // uBB rounded up to multiple of 8 pixels in each direction
+        nftInputSize = Size2D(((uBB.width() + 7) >> 3), ((uBB.height() + 7) >> 3));
+        nftInputBB = Rect2D(Size2D(uBB.width() >> 3, uBB.height() >> 3));
+        nftStride = 8;
+    } else {
+        // Do NFT at 1/1 scale.
+        nftInputSize = uBB.size();
+        nftInputBB = uBB;
+        nftStride = 1;
+    }
+
+    // Input data for NFT:
+    // 0 = outside both black and white image, or inside both images.
+    // 1 = inside white image only.
+    // 255 = inside black image only.
+    MaskType *nftInputImage = new MaskType(nftInputSize);
+
+    combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                     stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
+                     nftInputBB.apply(destImage(*nftInputImage)),
+                     ifThenElse(Arg1() ^ Arg2(),
+                            ifThenElse(Arg1(),
+                                    Param(NumericTraits<MaskPixelType>::one()),
+                                    Param(NumericTraits<MaskPixelType>::max())),
+                            Param(NumericTraits<MaskPixelType>::zero())));
+
+    Size2D nftOutputSize;
+    Diff2D nftOutputOffset;
+    if (OptimizeMask) {
+        // Add 1-pixel border all around the image for the vectorization algorithm.
+        nftOutputSize = nftInputSize + Diff2D(2,2);
+        nftOutputOffset = Diff2D(1,1);
+    } else {
+        nftOutputSize = nftInputSize;
+        nftOutputOffset = Diff2D(0,0);
+    }
+
+    MaskType *nftOutputImage = new MaskType(nftOutputSize);
+
+    nearestFeatureTransform(wraparound,
+            srcImageRange(*nftInputImage),
+            destIter(nftOutputImage->upperLeft() + nftOutputOffset));
+
+    delete nftInputImage;
+
+    if (!CoarseMask && !OptimizeMask) {
+        // nftOutputImage is the final mask in this case.
+        return nftOutputImage;
+    }
+
+    // FIXME End of refactored code
+
     Size2D stride8_size(((uBB.width() + 7) >> 3), ((uBB.height() + 7) >> 3));
 
     // range of stride8 pixels that intersect uBB
@@ -195,10 +257,6 @@ MaskType *createMask(ImageType *white,
 
     //ImageExportInfo nearestMaskInfo("enblend_nearest_mask.tif");
     //exportImage(srcImageRange(*mask), nearestMaskInfo);
-
-    typedef slist<pair<bool, Point2D> > Segment;
-    typedef vector<Segment*> Contour;
-    typedef vector<Contour*> ContourVector;
 
     Contour rawSegments;
 
@@ -732,13 +790,21 @@ MaskType *createMask(ImageType *white,
     // Delete all Contours in contours.
     std::for_each(contours.begin(), contours.end(), bind(delete_ptr(),_1));
 
+}
+
+template <typename MaskType>
+void maskBounds(MaskType *mask, Rect2D & uBB, Rect2D & mBB) {
+
+    typedef typename MaskType::traverser MaskIteratorType;
+    typedef typename MaskType::Accessor MaskAccessor;
+
     // Find the bounding box of the mask transition line and put it in mBB.
     // mBB starts out as empty rect
     mBB = Rect2D(Point2D(mask->size()), Point2D(0,0));
 
     MaskIteratorType myPrev = mask->upperLeft();
-    my = mask->upperLeft() + Diff2D(0,1);
-    mend = mask->lowerRight();
+    MaskIteratorType my = mask->upperLeft() + Diff2D(0,1);
+    MaskIteratorType mend = mask->lowerRight();
     MaskIteratorType mxLeft = myPrev;
     MaskIteratorType mx = myPrev + Diff2D(1,0);
     for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x) {
@@ -788,8 +854,6 @@ MaskType *createMask(ImageType *white,
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
         cout << "Mask transition line bounding box: " << mBB << endl;
     }
-
-    return mask;
 
 }
 

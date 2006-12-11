@@ -38,9 +38,9 @@
  * $PostgreSQL: pgsql/src/port/getopt_long.c,v 1.5 2005/10/15 02:49:51 momjian Exp $
  */
 
-#include "c.h"
-
 #include "getopt_long.h"
+#include <string.h>
+#include <stdio.h>
 
 #ifndef HAVE_INT_OPTRESET
 int			optreset;
@@ -49,7 +49,6 @@ int			optreset;
 #define BADCH	'?'
 #define BADARG	':'
 #define EMSG	""
-
 
 int
 getopt_long(int argc, char *const argv[],

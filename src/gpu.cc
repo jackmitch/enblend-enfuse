@@ -130,16 +130,17 @@ bool initGPU() {
 
     cout << "enblend: using graphics card: " << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << endl;
 
-    bool has_arb_fragment_shader = glewGetExtension("GL_ARB_fragment_shader");
-    bool has_arb_vertex_shader = glewGetExtension("GL_ARB_vertex_shader");
-    bool has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
-    bool has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
+    GLboolean has_arb_fragment_shader = glewGetExtension("GL_ARB_fragment_shader");
+    GLboolean has_arb_vertex_shader = glewGetExtension("GL_ARB_vertex_shader");
+    GLboolean has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
+    GLboolean has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
 
     if (!(has_arb_fragment_shader && has_arb_vertex_shader && has_arb_shader_objects && has_arb_shading_language)) {
-        cerr << "enblend: extension GL_ARB_fragment_shader = " << has_arb_fragment_shader << endl;
-        cerr << "enblend: extension GL_ARB_vertex_shader = " << has_arb_vertex_shader << endl;
-        cerr << "enblend: extension GL_ARB_shader_objects = " << has_arb_shader_objects << endl;
-        cerr << "enblend: extension GL_ARB_shading_language_100 = " << has_arb_shading_language << endl;
+        const char * msg[] = {"false", "true"};
+        cerr << "enblend: extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << endl;
+        cerr << "enblend: extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << endl;
+        cerr << "enblend: extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << endl;
+        cerr << "enblend: extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << endl;
         cerr << "enblend: this graphics card lacks the necessary extensions for --gpu." << endl;
         cerr << "enblend: sorry, the --gpu flag is not going to work on this machine." << endl;
         glutDestroyWindow(GlutWindowHandle);

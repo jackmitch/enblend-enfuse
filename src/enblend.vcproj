@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib"
+				AdditionalDependencies="glew32s.lib glut32.lib libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib"
 				OutputFile="$(OutDir)/enblend.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="false"
@@ -202,6 +202,14 @@
 				RelativePath=".\win32helpers\getopt.c"
 				>
 			</File>
+			<File
+				RelativePath=".\win32helpers\getopt_long.c"
+				>
+			</File>
+			<File
+				RelativePath=".\gpu.cc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -238,6 +246,14 @@
 			</File>
 			<File
 				RelativePath=".\float_cast.h"
+				>
+			</File>
+			<File
+				RelativePath=".\win32helpers\getopt_long.h"
+				>
+			</File>
+			<File
+				RelativePath=".\gpu.h"
 				>
 			</File>
 			<File
