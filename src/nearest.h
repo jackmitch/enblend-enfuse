@@ -179,7 +179,8 @@ void nearestFeatureTransform(bool wraparound,
         SrcImageIterator src_lowerright,
         SrcAccessor sa,
         DestImageIterator dest_upperleft,
-        DestAccessor da) {
+        DestAccessor da,
+        typename SrcAccessor::value_type featurelessPixel) {
 
     typedef typename EnblendNumericTraits<UInt32>::ImageType DNFImage;
     typedef typename DNFImage::traverser DnfIterator;
@@ -231,7 +232,7 @@ void nearestFeatureTransform(bool wraparound,
         dx = dy;
 
         for (int xIndex = 0; sx.x < send.x; ++sx.x, ++dnfcx.x, ++dx.x, ++xIndex) {
-            if (sa(sx)) {
+            if (sa(sx) != featurelessPixel) {
                 // Source pixel is a feature pixel.
                 lastFeature[xIndex] = sa(sx);
                 foundFirstFeature[xIndex] = true;
@@ -290,7 +291,7 @@ void nearestFeatureTransform(bool wraparound,
             --dnfcx.x;
             --dx.x;
 
-            if (sa(sx)) {
+            if (sa(sx) != featurelessPixel) {
                 // Source pixel is a feature pixel.
                 lastFeature[xIndex] = sa(sx);
                 foundFirstFeature[xIndex] = true;
@@ -540,11 +541,12 @@ template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 inline void nearestFeatureTransform(bool wraparound,
         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-        pair<DestImageIterator, DestAccessor> dest) {
+        pair<DestImageIterator, DestAccessor> dest,
+        typename SrcAccessor::value_type featurelessPixel) {
 
     nearestFeatureTransform(wraparound,
             src.first, src.second, src.third,
-            dest.first, dest.second);
+            dest.first, dest.second, featurelessPixel);
 
 };
 

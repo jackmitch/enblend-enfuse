@@ -158,9 +158,9 @@ MaskType *createMask(ImageType *white,
     }
 
     // Input data for NFT:
-    // 0 = outside both black and white image, or inside both images.
-    // 1 = inside white image only.
-    // 255 = inside black image only.
+    // 1 = outside both black and white image, or inside both images.
+    // 255 = inside white image only.
+    // 0 = inside black image only.
     MaskType *nftInputImage = new MaskType(nftInputSize);
 
     combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
@@ -168,9 +168,9 @@ MaskType *createMask(ImageType *white,
                      nftInputBB.apply(destImage(*nftInputImage)),
                      ifThenElse(Arg1() ^ Arg2(),
                             ifThenElse(Arg1(),
-                                    Param(NumericTraits<MaskPixelType>::one()),
-                                    Param(NumericTraits<MaskPixelType>::max())),
-                            Param(NumericTraits<MaskPixelType>::zero())));
+                                    Param(NumericTraits<MaskPixelType>::max()),
+                                    Param(NumericTraits<MaskPixelType>::zero())),
+                            Param(NumericTraits<MaskPixelType>::one())));
 
     Size2D nftOutputSize;
     Diff2D nftOutputOffset;
@@ -195,6 +195,275 @@ MaskType *createMask(ImageType *white,
         // nftOutputImage is the final mask in this case.
         return nftOutputImage;
     }
+
+    // Vectorize the seam lines found in nftOutputImage.
+    Contour rawSegments;
+
+    Point2D borderUL(1, 1);
+    Point2D borderLR(nftOutputImage->width() - 1, nftOutputImage->height() - 1);
+    MaskIteratorType my = nftOutputImage->upperLeft() + Diff2D(1, 1);
+    MaskIteratorType mend = nftOutputImage->lowerRight() + Diff2D(-1, -1);
+    for (int y = 1; my.y < mend.y; ++y, ++my.y) {
+        MaskIteratorType mx = my;
+        MaskPixelType lastColor = NumericTraits<MaskPixelType>::zero();
+
+        for (int x = 1; mx.x < mend.x; ++x, ++mx.x) {
+            if ((*mx == NumericTraits<MaskPixelType>::max())
+                    && (lastColor == NumericTraits<MaskPixelType>::zero())) {
+                // Found the corner of a previously unvisited white region.
+                // Create a Segment to hold the border of this region.
+                vector<Point2D> excessPoints;
+                Segment *snake = new Segment();
+                rawSegments.push_back(snake);
+
+                // Walk around border of white region.
+                CrackContourCirculator<MaskIteratorType> crack(mx);
+                CrackContourCirculator<MaskIteratorType> crackEnd(crack);
+                bool lastPointFrozen = false;
+                int distanceLastPoint = 0;
+                do {
+                    Point2D currentPoint = *crack + Diff2D(x, y);
+                    crack++;
+                    Point2D nextPoint = *crack + Diff2D(x, y);
+
+                    // See if currentPoint lies on border.
+                    if ((currentPoint.x == borderUL.x) || (currentPoint.x == borderLR.x)
+                            || (currentPoint.y == borderUL.y) || (currentPoint.y == borderLR.y)) {
+
+                        // See if currentPoint is in a corner.
+                        if ((currentPoint.x == borderUL.x && currentPoint.y == borderUL.y)
+                                || (currentPoint.x == borderUL.x && currentPoint.y == borderLR.y)
+                                || (currentPoint.x == borderLR.x && currentPoint.y == borderUL.y)
+                                || (currentPoint.x == borderLR.x && currentPoint.y == borderLR.y)) {
+                            snake->push_front(make_pair(false, currentPoint));
+                            distanceLastPoint = 0;
+                        }
+                        else if (!lastPointFrozen
+                                || ((nextPoint.x != borderUL.x) && (nextPoint.x != borderLR.x)
+                                        && (nextPoint.y != borderUL.y) && (nextPoint.y != borderLR.y))) {
+                            snake->push_front(make_pair(false, currentPoint));
+                            distanceLastPoint = 0;
+                        }
+                        else {
+                            excessPoints.push_back(currentPoint);
+                        }
+                        lastPointFrozen = true;
+                    }
+                    else {
+                        // Current point is not frozen.
+                        if ((distanceLastPoint % distance) == 0) {
+                            snake->push_front(make_pair(true, currentPoint));
+                            distanceLastPoint = 0;
+                        } else {
+                            excessPoints.push_back(currentPoint);
+                        }
+                        lastPointFrozen = false;
+                    }
+                    distanceLastPoint++;
+                } while (crack != crackEnd);
+
+                // Paint the border so this region will not be found again
+                for (Segment::iterator vertexIterator = snake->begin();
+                         vertexIterator != snake->end(); ++vertexIterator) {
+                    (*mask)[vertexIterator->second] = NumericTraits<MaskPixelType>::one();
+
+                    // Convert vertices to uBB-relative coordinates.
+                    vertexIterator->second = nftStride * (vertexIterator->second + Diff2D(-1, -1));
+
+                    // Vertices outside union region are not moveable.
+                    if (vertexIterator->first
+                            && ((*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())
+                            && ((*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())) {
+
+                        vertexIterator->first = false;
+                    }
+                }
+                for (vector<Point2D>::iterator vertexIterator = excessPoints.begin();
+                        vertexIterator != excessPoints.end(); ++vertexIterator) {
+                    (*mask)[*vertexIterator] = NumericTraits<MaskPixelType>::one();
+                }
+
+            }
+
+            lastColor = *mx;
+        }
+    }
+
+    delete nftOutputImage;
+
+    if (!OptimizeMask) {
+        // Simply fill contours to get final unoptimized mask.
+        MaskType mask = new MaskType(uBB.size());
+        fillContour(*mask, rawSegments, Diff2D(0,0));
+        // delete all segments in rawSegments
+        std::for_each(rawSegments.begin(), rawSegments.end(), bind(delete_ptr(), _1));
+        return mask;
+    }
+
+    // Convert rawContours snakes into segments with unbroken runs of moveable vertices.
+    ContourVector contours;
+    for (Contour::iterator segments = rawSegments.begin();
+            segments != rawSegments.end(); ++segments) {
+        Segment *snake = *segments;
+
+        // Snake becomes multiple separate segments in one contour
+        Contour *currentContour = new Contour();
+        contours.push_back(currentContour);
+
+        // Check if snake is a closed contour
+        bool closedContour = true;
+        Segment::iterator vertexIterator = snake->begin();
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+            if (!vertexIterator->first) {
+                closedContour = false;
+                break;
+            }
+        }
+
+        // Closed contours consist of only moveable vertices.
+        if (closedContour) {
+            currentContour->push_back(snake);
+            continue;
+        }
+
+        if (snake->front().first) {
+            // First vertex is moveable. Rotate list so that first vertex is nonmoveable.
+            Segment::iterator firstNonmoveableVertex = snake->begin();
+            while (firstNonmoveableVertex->first) ++firstNonmoveableVertex;
+
+            // Copy initial run on moveable vertices and first nonmoveable vertex to end of list.
+            Segment::iterator firstNonmoveablePlusOne = firstNonmoveableVertex;
+            ++firstNonmoveablePlusOne;
+            snake->insert(snake->end(), snake->begin(), firstNonmoveablePlusOne);
+
+            // Erase initial run of moveable vertices.
+            snake->erase(snake->begin(), firstNonmoveableVertex);
+        }
+
+        // Find last moveable vertex.
+        Segment::iterator lastMoveableVertex = snake->begin();
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+            if (vertexIterator->first) lastMoveableVertex = vertexIterator;
+        }
+
+        Segment *currentSegment = NULL;
+        bool insideMoveableSegment = false;
+        bool passedLastMoveableVertex = false;
+        Segment::iterator lastNonmoveableVertex = snake->begin();
+        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+
+            // Create a new segment if necessary.
+            if (currentSegment == NULL) {
+                currentSegment = new Segment();
+                currentContour->push_back(currentSegment);
+            }
+
+            // Keep track of when we visit the last moveable vertex.
+            // Don't create new segments after this point.
+            // Add all remaining nonmoveable vertices to current segment.
+            if (vertexIterator == lastMoveableVertex) passedLastMoveableVertex = true;
+
+            // Keep track of last nonmoveable vertex.
+            if (!vertexIterator->first) lastNonmoveableVertex = vertexIterator;
+
+            // All segments must begin with a nonmoveable vertex.
+            // If only one nonmoveable vertex separates two runs of moveable vertices,
+            // that vertex is copied into the beginning of the current segment.
+            // It was previously added at the end of the last segment.
+            if (vertexIterator->first && currentSegment->empty()) {
+                currentSegment->push_front(*lastNonmoveableVertex);
+            }
+
+            // Add the current vertex to the current segment.
+            currentSegment->push_front(*vertexIterator);
+
+            if (!insideMoveableSegment && vertexIterator->first) {
+                // Beginning a new moveable segment.
+                insideMoveableSegment = true;
+            }
+            else if (insideMoveableSegment && !vertexIterator->first && !passedLastMoveableVertex) {
+                // End of currentSegment.
+                insideMoveableSegment = false;
+                // Correct for the push_fronts we've been doing
+                currentSegment->reverse();
+                // Cause a new segment to be generated on next vertex.
+                currentSegment = NULL;
+            }
+        }
+
+        delete snake;
+    }
+
+    rawSegments.clear();
+
+    int totalSegments = 0;
+    for (ContourVector::iterator currentContour = contours.begin(); currentContour != contours.end(); ++currentContour) {
+        totalSegments += (*currentContour)->size();
+    }
+
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        if (totalSegments == 1) {
+            cout << "Optimizing 1 distinct seam." << endl;
+        } else {
+            cout << "Optimizing " << totalSegments << " distinct seams." << endl;
+        }
+    }
+
+    // Find extent of moveable snake vertices, and vertices bordering moveable vertices
+    // Vertex bounding box
+    Rect2D vBB;
+    bool initializedVBB = false;
+    for (ContourVector::iterator currentContour = contours.begin();
+            currentContour != contours.end();
+            ++currentContour) {
+
+        for (Contour::iterator currentSegment = (*currentContour)->begin();
+                currentSegment != (*currentContour)->end();
+                ++currentSegment) {
+
+            Segment::iterator lastVertex = (*currentSegment)->begin();
+            bool foundFirstMoveableVertex = false;
+            for (Segment::iterator vertexIterator = (*currentSegment)->begin();
+                    vertexIterator != (*currentSegment)->end();
+                    ++vertexIterator) {
+
+                if (vertexIterator->first) {
+                    if (!initializedVBB) {
+                        vBB = Rect2D(vertexIterator->second, Size2D(1,1));
+                        initializedVBB = true;
+                    } else {
+                        vBB |= vertexIterator->second;
+                    }
+
+                    if (!foundFirstMoveableVertex) vBB |= lastVertex->second;
+
+                    foundFirstMoveableVertex = true;
+                }
+                else if (foundFirstMoveableVertex) {
+                    // First nonmoveable vertex at end of run.
+                    vBB |= vertexIterator->second;
+                    break;
+                }
+
+                lastVertex = vertexIterator;
+            }
+        }
+    }
+
+    // Move vBB to be root-relative.
+    vBB.moveBy(uBB.upperLeft());
+
+    // Make sure that vBB is bigger than iBB by one pixel in each direction.
+    // This will create a max-cost border to keep the seam line from leaving the intersection region.
+    Rect2D iBBPlus = iBB;
+    iBBPlus.addBorder(1);
+    vBB |= iBBPlus;
+
+    // Vertex-Union bounding box: portion of uBB inside vBB.
+    Rect2D uvBB = vBB & uBB;
+
+    // Offset between vBB and uvBB
+    Diff2D uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
 
     // FIXME End of refactored code
 
@@ -790,6 +1059,47 @@ MaskType *createMask(ImageType *white,
     // Delete all Contours in contours.
     std::for_each(contours.begin(), contours.end(), bind(delete_ptr(),_1));
 
+}
+
+template <typename MaskType>
+void fillContour(MaskType & mask, Contour & contour, Diff2D offset) {
+    miPixel pixels[2];
+    pixels[0] = NumericTraits<MaskPixelType>::max();
+    pixels[1] = NumericTraits<MaskPixelType>::max();
+    miGC *pGC = miNewGC(2, pixels);
+    miPaintedSet *paintedSet = miNewPaintedSet();
+
+    int totalPoints = 0;
+    for (Contour::iterator currentSegment = contour.begin();
+            currentSegment != contour.end();
+            ++currentSegment) {
+        totalPoints += (*currentSegment)->size();
+    }
+
+    miPoint *points = new miPoint[totalPoints];
+
+    int i = 0;
+    for (Contour::iterator currentSegment = contour.begin();
+            currentSegment != contour.end();
+            ++currentSegment) {
+        for (Segment::iterator vertexIterator = (*currentSegment)->begin();
+                vertexIterator != (*currentSegment)->end();
+                ++vertexIterator) {
+
+            points[i].x = vertexIterator->second.x;
+            points[i].y = vertexIterator->second.y;
+            ++i;
+        }
+    }
+
+    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN, totalPoints, points);
+
+    delete[] points;
+
+    copyPaintedSetToImage(destImageRange(mask), paintedSet, offset);
+
+    miDeleteGC(pGC);
+    miDeletePaintedSet(paintedSet);
 }
 
 template <typename MaskType>

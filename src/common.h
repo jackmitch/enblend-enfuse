@@ -40,6 +40,7 @@
 #define VERBOSE_CFI_MESSAGES                2
 
 #define GDA_KMAX    64
+#define MASK_VECTORIZE_DISTANCE 4
 
 namespace enblend {
 
