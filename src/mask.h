@@ -187,7 +187,8 @@ MaskType *createMask(ImageType *white,
 
     nearestFeatureTransform(wraparound,
             srcImageRange(*nftInputImage),
-            destIter(nftOutputImage->upperLeft() + nftOutputOffset));
+            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
+            NumericTraits<MaskPixelType>::one());
 
     delete nftInputImage;
 
@@ -267,10 +268,10 @@ MaskType *createMask(ImageType *white,
                          vertexIterator != snake->end(); ++vertexIterator) {
                     (*mask)[vertexIterator->second] = NumericTraits<MaskPixelType>::one();
 
-                    // Convert vertices to uBB-relative coordinates.
+                    // While we're at it, convert vertices to uBB-relative coordinates.
                     vertexIterator->second = nftStride * (vertexIterator->second + Diff2D(-1, -1));
 
-                    // Vertices outside union region are not moveable.
+                    // While we're at it, mark vertices outside the union region as not moveable.
                     if (vertexIterator->first
                             && ((*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())
                             && ((*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())) {
@@ -280,6 +281,9 @@ MaskType *createMask(ImageType *white,
                 }
                 for (vector<Point2D>::iterator vertexIterator = excessPoints.begin();
                         vertexIterator != excessPoints.end(); ++vertexIterator) {
+                    // These are points on the border of the white region that are
+                    // not in the snake. Recolor them so that this white region will
+                    // not be found again.
                     (*mask)[*vertexIterator] = NumericTraits<MaskPixelType>::one();
                 }
 
@@ -465,6 +469,139 @@ MaskType *createMask(ImageType *white,
     // Offset between vBB and uvBB
     Diff2D uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
 
+    Size2D mismatchImageSize;
+    int mismatchImageStride;
+    Diff2D uvBBStrideOffset;
+
+    if (CoarseMask) {
+        // Prepare to stride by two over uvBB to create cost image.
+        // Push ul corner of vBB so that there is an even number of pixels between vBB and uvBB.
+        if (uvBBOffset.x % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(-1, 0));
+        if (uvBBOffset.y % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(0, -1));
+        uvBBStrideOffset = (uvBB.upperLeft() - vBB.upperLeft()) / 2;
+        mismatchImageStride = 2;
+        mismatchImageSize = (vBB.size() + Diff2D(1, 1)) / 2; 
+    } else {
+        uvBBStrideOffset = uvBBOffset;
+        mismatchImageStride = 1;
+        mismatchImageSize = vBB.size();
+    }
+
+    typedef UInt8 MismatchImagePixelType;
+    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage(mismatchImageSize,
+            NumericTraits<MismatchImagePixelType>::max());
+
+    // Calculate mismatch image
+    combineTwoImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
+                     stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
+                     destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                     PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
+
+    // Areas other than intersection region have maximum cost.
+    combineThreeImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                       srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                       destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                       ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
+
+    // Strategy 1: Use GDA to optimize placement of snake vertices
+    int segmentNumber = 0;
+    for (ContourVector::iterator currentContour = contours.begin();
+            currentContour != contours.end();
+            ++currentContour) {
+
+        for (Contour::iterator currentSegment = (*currentContour)->begin();
+                currentSegment != (*currentContour)->end();
+                ++currentSegment) {
+
+            Segment *snake = *currentSegment;
+
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cout << "Strategy 1, s" << segmentNumber++ << ":";
+                cout.flush();
+            }
+
+            // Move snake points to mismatchImage-relative coordinates
+            for (Segment::iterator vertexIterator = snake->begin();
+                    vertexIterator != snake->end();
+                    ++vertexIterator) {
+                vertexIterator->second = (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
+            }
+
+            annealSnake(&mismatchImage, snake);
+
+            // Post-process annealed vertices
+            Segment::iterator lastVertex = snake->previous(snake->end());
+            for (Segment::iterator vertexIterator = snake->begin();
+                    vertexIterator != snake->end(); ) {
+
+                if (vertexIterator->first &&
+                        (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
+                    // Vertex is still in max-cost region. Delete it.
+                    if (vertexIterator == snake->begin()) {
+                        snake->pop_front();
+                        vertexIterator = snake->begin();
+                    } else {
+                        vertexIterator = snake->erase_after(lastVertex);
+                    }
+
+                    bool needsBreak = false;
+                    if (vertexIterator == snake->end()) {
+                        vertexIterator = snake->begin();
+                        needsBreak = true;
+                    }
+
+                    // vertexIterator now points to next entry.
+
+                    // It is conceivable but very unlikely that every vertex in a closed contour
+                    // ended up in the max-cost region after annealing.
+                    if (snake->empty()) break;
+
+                    if (!(lastVertex->first || vertexIterator->first)) {
+                        // We deleted an entire range of moveable points between two nonmoveable points.
+                        // insert dummy point after lastVertex so dijkstra can work over this range.
+                        if (vertexIterator == snake->begin()) {
+                            snake->push_front(make_pair(true, vertexIterator->second));
+                            lastVertex = snake->begin();
+                        } else {
+                            lastVertex = snake->insert_after(lastVertex, make_pair(true, vertexIterator->second));
+                        }
+                    }
+
+                    if (needsBreak) break;
+                }
+                else {
+                    lastVertex = vertexIterator;
+                    ++vertexIterator;
+                }
+            }
+
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cout << endl;
+            }
+
+            // Print an explanation if every vertex in a closed contour ended up in the
+            // max-cost region after annealing.
+            // FIXME explain how to fix this problem in the error message!
+            if (snake->empty()) {
+                cerr << endl
+                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed."
+                     << endl;
+            }
+        }
+    }
+
+    if (Verbose > VERBOSE_MASK_MESSAGES) {
+        cout << "Strategy 2:";
+        cout.flush();
+    }
+
+    // Adjust cost image for the shortest path algorithm.
+    // Areas outside the union region have epsilon cost.
+    combineThreeImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                       srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                       ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
     // FIXME End of refactored code
 
     Size2D stride8_size(((uBB.width() + 7) >> 3), ((uBB.height() + 7) >> 3));
