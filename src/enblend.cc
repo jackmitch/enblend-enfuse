@@ -86,7 +86,6 @@ int Verbose = 1;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 bool Wraparound = false;
-double StitchMismatchThreshold = 0.4;
 bool GimpAssociatedAlphaHack = false;
 bool UseCIECAM = false;
 bool UseLZW = false;
@@ -97,6 +96,9 @@ bool Checkpoint = false;
 int UseGPU = 0;
 int OptimizeMask = 1;
 int CoarseMask = 1;
+char *SaveMaskFileName = NULL;
+char *LoadMaskFileName = NULL;
+char *VisualizeMaskFileName = NULL;
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -151,21 +153,25 @@ void printUsageAndExit() {
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
     cout << " -c                Use CIECAM02 to blend colors" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout << " --gpu             Use the graphics card to accelerate some computations." << endl;
     cout << " -f WIDTHxHEIGHT   Manually set the size of the output image." << endl
          << "                   Useful for cropped and shifted input TIFF images," << endl
          << "                   such as those produced by Nona." << endl;
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
-    cout << " --coarse-mask     Use an approximation to speedup mask generation. Default." << endl
-         << " --fine-mask       Enables detailed mask generation. Slow. Use this if you" << endl
-         << "                   have very narrow overlap regions." << endl
-         << " --optimize        Turn on mask optimization. This is the default." << endl
-         << " --no-optimize     Turn off mask optimization." << endl;
+    cout << " --visualize=FILE  Save the optimizer's results for debugging." << endl;
 
-    //TODO stitch mismatch avoidance is work-in-progress.
-    //cout << " -t float          Stitch mismatch threshold, [0.0, 1.0]" << endl;
+    cout << endl << "Mask generation options:" << endl;
+    cout << " --coarse-mask     Use an approximation to speedup mask generation. Default." << endl;
+    cout << " --fine-mask       Enables detailed mask generation. Slow. Use this if you" << endl
+         << "                   have very narrow overlap regions." << endl;
+    cout << " --optimize        Turn on mask optimization. This is the default." << endl;
+    cout << " --no-optimize     Turn off mask optimization." << endl;
+    cout << " --save-mask=FILE  Save the generated mask to the given file." << endl;
+    cout << " --load-mask=FILE  Use the mask in the given file instead of generating one." << endl;
 
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
+
     exit(1);
 }
 
@@ -218,15 +224,49 @@ int main(int argc, char** argv) {
             {"fine-mask", no_argument, &CoarseMask, 0},
             {"optimize", no_argument, &OptimizeMask, 1},
             {"no-optimize", no_argument, &OptimizeMask, 0},
+            {"save-mask", required_argument, 0, 0},
+            {"load-mask", required_argument, 0, 0},
+            {"visualize", required_argument, 0, 0},
             {0, 0, 0, 0}
     };
 
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:st:vwxz", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz", long_options, &option_index)) != -1) {
         switch (c) {
             case 0: {
+                if (long_options[option_index].flag != 0) break;
+
+                char **optionString = NULL;
+                switch (option_index) {
+                    case 5: optionString = &SaveMaskFileName; break;
+                    case 6: optionString = &LoadMaskFileName; break;
+                    case 7: optionString = &VisualizeMaskFileName; break;
+                }
+
+                if (*optionString != NULL) {
+                    cerr << "enblend: more than one "
+                         << long_options[option_index].name
+                         << " output file specified."
+                         << endl;
+                    printUsageAndExit();
+                    break;
+                }
+
+                int len = strlen(optarg) + 1;
+
+                try {
+                    *optionString = new char[len];
+                } catch (std::bad_alloc& e) {
+                    cerr << endl << "enblend: out of memory"
+                         << endl << e.what()
+                         << endl;
+                    exit(1);
+                }
+
+                strncpy(*optionString, optarg, len);
+
                 break;
             }
             case 'a': {
@@ -310,18 +350,6 @@ int main(int argc, char** argv) {
                 // Deprecated sequential blending flag.
                 OneAtATime = true;
                 cerr << "enblend: the -s flag is deprecated." << endl;
-                break;
-            }
-            case 't': {
-                printUsageAndExit();
-                //StitchMismatchThreshold = strtod(optarg, NULL);
-                //if (StitchMismatchThreshold < 0.0
-                //        || StitchMismatchThreshold > 1.0) {
-                //    cerr << "enblend: threshold must be between "
-                //         << "0.0 and 1.0 inclusive."
-                //         << endl;
-                //    printUsageAndExit();
-                //}
                 break;
             }
             case 'v': {
@@ -640,6 +668,46 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    // Sanity check on the LoadMaskFileName
+    if (LoadMaskFileName) try {
+        ImageImportInfo maskInfo(LoadMaskFileName);
+    } catch (StdException& e) {
+        cerr << endl << "enblend: error opening load-mask input file \""
+             << LoadMaskFileName << "\":"
+             << endl << e.what()
+             << endl;
+        exit(1);
+    }
+
+    // Sanity check on the SaveMaskFileName
+    if (SaveMaskFileName) try {
+        ImageExportInfo maskInfo(SaveMaskFileName);
+        encoder(maskInfo);
+    } catch (StdException& e) {
+        cerr << endl << "enblend: error opening save-mask output file \""
+             << SaveMaskFileName << "\":"
+             << endl << e.what()
+             << endl;
+        exit(1);
+    }
+
+    // Sanity check on the VisualizeMaskFileName
+    if (VisualizeMaskFileName) try {
+        ImageExportInfo maskInfo(VisualizeMaskFileName);
+        encoder(maskInfo);
+    } catch (StdException& e) {
+        cerr << endl << "enblend: error opening visualize output file \""
+             << VisualizeMaskFileName << "\":"
+             << endl << e.what()
+             << endl;
+        exit(1);
+    }
+
+    if (VisualizeMaskFileName && !OptimizeMask) {
+        cerr << endl << "enblend: --visualize does nothing without --optimize."
+             << endl;
+    }
+
     // Invoke templatized blender.
     try {
         if (isColor) {
@@ -710,6 +778,10 @@ int main(int argc, char** argv) {
     if (UseGPU) {
         wrapupGPU();
     }
+
+    delete[] SaveMaskFileName;
+    delete[] LoadMaskFileName;
+    delete[] VisualizeMaskFileName;
 
     // Success.
     return 0;

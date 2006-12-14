@@ -38,9 +38,12 @@
 #define VERBOSE_MASK_MESSAGES               0
 #define VERBOSE_PYRAMID_MESSAGES            0
 #define VERBOSE_CFI_MESSAGES                2
+#define VERBOSE_GDA_MESSAGES                2
 
-#define GDA_KMAX    64
-#define MASK_VECTORIZE_DISTANCE 4
+#define GDA_KMAX                64
+#define DIJKSTRA_RADIUS         25
+#define MASK_VECTORIZE_DISTANCE_COARSE 4
+#define MASK_VECTORIZE_DISTANCE_FINE 4
 
 namespace enblend {
 

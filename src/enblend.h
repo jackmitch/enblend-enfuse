@@ -230,11 +230,20 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
         // Create the blend mask.
         bool wraparoundForMask = Wraparound && (uBB.width() == inputUnion.width());
-        Rect2D mBB;
+
         MaskType *mask = createMask<ImageType, AlphaType, MaskType>(
                 whitePair.first, blackPair.first, whitePair.second, blackPair.second,
                 uBB, iBB, wraparoundForMask);
+
+        // Calculate bounding box of seam line.
+        Rect2D mBB;
         maskBounds(mask, uBB, mBB);
+
+        if (SaveMaskFileName != NULL) {
+            ImageExportInfo maskInfo(SaveMaskFileName);
+            maskInfo.setPosition(uBB.upperLeft());
+            exportImage(srcImageRange(*mask), maskInfo);
+        }
 
         // mem usage before = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem xsection = 2*BImage*ubb + 2*UInt32Image*ubb
@@ -254,10 +263,6 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
-
-        ImageExportInfo maskInfo("enblend_mask.tif");
-        maskInfo.setPosition(uBB.upperLeft());
-        exportImage(srcImageRange(*mask), maskInfo);
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.

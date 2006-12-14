@@ -105,15 +105,15 @@ void drawDottedLine(CostImage & i, vector<Point2D> & l, typename CostImage::Pixe
     delete[] mip;
 }
 
-template <typename CostImage>
+template <typename CostImage, typename VisualizeImage>
 class GDAConfiguration {
 public:
     typedef typename CostImage::PixelType CostImagePixelType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v)
+    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v, VisualizeImage* const vi)
             : costImage(d),
-              visualizeStateSpaceImage(*d),
+              visualizeStateSpaceImage(vi),
               E(NULL), Pi(NULL), EF(NULL), PiF(NULL) {
 
         kMax = 1;
@@ -171,7 +171,7 @@ public:
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
 
-                        visualizeStateSpaceImage[*linePoint] = 150;
+                        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
                     }
                 }
 
@@ -180,14 +180,16 @@ public:
             if (stateSpace->size() == 0) {
                 stateSpace->push_back(currentPoint);
                 stateDistances->push_back(0);
-                if (costImage->isInside(currentPoint)) visualizeStateSpaceImage[currentPoint] = 200;
+                if (visualizeStateSpaceImage && costImage->isInside(currentPoint)) {
+                    (*visualizeStateSpaceImage)[currentPoint].setBlue(200);
+                }
             }
 
             unsigned int localK = stateSpace->size();
 
             if (localK > GDA_KMAX) {
                 cerr << "enblend: localK=" << localK << " > GDA_KMAX=" << GDA_KMAX << endl;
-                exit(-1);
+                exit(1);
             }
 
             kMax = std::max(kMax, localK);
@@ -264,31 +266,36 @@ public:
 
         if (UseGPU) clearGPUTextures();
 
-        // Remaining state space points
-        for (unsigned int i = 0; i < pointStateSpaces.size(); ++i) {
-            vector<Point2D> *stateSpace = pointStateSpaces[i];
-            for (unsigned int j = 0; j < stateSpace->size(); ++j) {
-                Point2D point = (*stateSpace)[j];
-                if (visualizeStateSpaceImage.isInside(point)) visualizeStateSpaceImage[point] = 255;
+        if (visualizeStateSpaceImage) {
+            // Remaining unconverged state space points
+            for (unsigned int i = 0; i < pointStateSpaces.size(); ++i) {
+                vector<Point2D> *stateSpace = pointStateSpaces[i];
+                for (unsigned int j = 0; j < stateSpace->size(); ++j) {
+                    Point2D point = (*stateSpace)[j];
+                    if (visualizeStateSpaceImage->isInside(point)) (*visualizeStateSpaceImage)[point].setGreen(255);
+                }
+            }
+            // Optimized contour
+            //drawDottedLine(visualizeStateSpaceImage, mfEstimates, 225);
+        }
+
+        if (Verbose > VERBOSE_GDA_MESSAGES) {
+            cout << endl;
+            for (unsigned int i = 0; i < convergedPoints.size(); i++) {
+                if (!convergedPoints[i]) {
+                    cout << "Unconverged point:" << endl;
+                    vector<Point2D> *stateSpace = pointStateSpaces[i];
+                    vector<double> *stateProbabilities = pointStateProbabilities[i];
+                    unsigned int localK = stateSpace->size();
+                    for (unsigned int state = 0; state < localK; ++state) {
+                        cout << "    state " << (*stateSpace)[state]
+                             << " weight=" << (*stateProbabilities)[state] << endl;
+                    }
+                    cout << "    mfEstimate=" << mfEstimates[i] << endl;
+                }
             }
         }
-        // Optimized contour
-        drawDottedLine(visualizeStateSpaceImage, mfEstimates, 225);
-        ImageExportInfo visInfo("enblend_anneal_state_space.tif");
-        exportImage(srcImageRange(visualizeStateSpaceImage), visInfo);
 
-        //for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-        //    if (!convergedPoints[i]) {
-        //        cout << "Unconverged point:" << endl;
-        //        vector<Point2D> *stateSpace = pointStateSpaces[i];
-        //        vector<double> *stateProbabilities = pointStateProbabilities[i];
-        //        unsigned int localK = stateSpace->size();
-        //        for (unsigned int state = 0; state < localK; ++state) {
-        //            cout << "    state " << (*stateSpace)[state] << " weight=" << (*stateProbabilities)[state] << endl;
-        //        }
-        //        cout << "    mfEstimate=" << mfEstimates[i] << endl;
-        //    }
-        //}
     }
 
     vector<Point2D> & getCurrentPoints() { return mfEstimates; }
@@ -347,14 +354,29 @@ protected:
             for (unsigned int j = 0; j < localK; ++j) {
                 double piTj = (*stateProbabilities)[j];
                 Pi[j] += piTj;
+                int ej = E[j];
                 for (unsigned int i = (j+1); i < localK; ++i) {
                     double piT = (*stateProbabilities)[i] + piTj;
-                    eco.n.i = E[j] - E[i] + 1072693248 - 60801;
+                    eco.n.i = (ej - E[i]) + (1072693248 - 60801);
+                    // FIXME eco.n.i is overflowing into NaN range!
                     double piTAn = piT / (1 + eco.d);
+                    if (isnan(piTAn)) {
+                        cout << endl << "piTAn=" << piTAn << " piT=" << piT << " denom=" << (1+eco.d) << endl;
+                        cout << "eco.n.i=" << eco.n.i << " ej=" << ej << " ei=" << E[i] << " ej-ei=" << (ej - E[i]) << endl;
+                        printf("%08x%08x\n", eco.n.i, eco.n.j);
+                    }
                     Pi[j] += piTAn;
                     Pi[i] += piT - piTAn;
                 }
-                (*stateProbabilities)[j] = Pi[j] / localK;
+                double result = Pi[j] / localK;
+                if (isnan(result)) {
+                    cerr << endl << "nan! Pi[j]=" << Pi[j] << " localK=" << localK << endl;
+                    for (unsigned int n = 0; n < localK; ++n) {
+                        cerr << "    sp[" << n << "] = " << (*stateProbabilities)[n]
+                             << "\te[" << n << "] = " << E[n] << endl;
+                    }
+                }
+                (*stateProbabilities)[j] = result;
             }
         }
 
@@ -484,13 +506,21 @@ protected:
 
             Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
                                 NumericTraits<int>::fromRealPromote(estimateY));
-            mfEstimates[index] = newEstimate;
 
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
-                cerr << endl << "enblend: new mf estimate is outside cost image: " << newEstimate << endl;
-                exit(-1);
+                cerr << endl << "enblend: optimizer error: new mean field estimate is outside cost image." << endl;
+                for (unsigned int state = 0; state < localK; ++state) {
+                    cerr << "    state " << (*stateSpace)[state]
+                         << " weight=" << (*stateProbabilities)[state] << endl;
+                }
+                cout << "    mfEstimate=" << newEstimate << endl;
+                // Skip this point from now on.
+                convergedPoints[index] = true;
+                continue;
             }
+
+            mfEstimates[index] = newEstimate;
 
             // Remove improbable solutions from the search space
             double totalWeights = 0.0;
@@ -560,7 +590,7 @@ protected:
     }
 
     const CostImage *costImage;
-    CostImage visualizeStateSpaceImage;
+    VisualizeImage *visualizeStateSpaceImage;
 
     // Mean-field estimates of current point locations
     vector<Point2D> mfEstimates;
@@ -607,10 +637,10 @@ protected:
 
 };
 
-template <typename CostImage>
-void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake) {
+template <typename CostImage, typename VisualizeImage>
+void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake, VisualizeImage* const vi) {
 
-    GDAConfiguration<CostImage> cfg(ci, snake);
+    GDAConfiguration<CostImage, VisualizeImage> cfg(ci, snake, vi);
 
     cfg.run();
 
