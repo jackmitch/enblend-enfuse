@@ -210,7 +210,7 @@ public:
         }
 
         tau = 0.75;
-        deltaEMax = 1000.0;
+        deltaEMax = 700.0;
         deltaEMin = 5.0;
         double epsilon = 1.0 / (kMax * kMax);
         tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
@@ -243,17 +243,17 @@ public:
             unsigned int eta = (unsigned int)ceil(log(epsilon)
                              / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
 
-            //cout << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
+            cout << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
 
             for (unsigned int i = 0; i < eta; i++) iterate();
 
             tCurrent *= tau;
 
-            //int numConvergedPoints = 0;
-            //for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-            //    if (convergedPoints[i]) numConvergedPoints++;
-            //}
-            //cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
+            int numConvergedPoints = 0;
+            for (unsigned int i = 0; i < convergedPoints.size(); i++) {
+                if (convergedPoints[i]) numConvergedPoints++;
+            }
+            cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
 
             if ((Verbose > VERBOSE_MASK_MESSAGES) && (iterationCount % iterationsPerTick) == 0) {
                 cout << " " << progressIndicator++ << "/4";
@@ -324,12 +324,18 @@ protected:
 
             // Calculate E values.
             // exp_a scaling factor is part of the Schraudolph approximation.
-            double exp_a = (1048576 / M_LN2) / tCurrent;
+            // for all e_i, e_j, in E: -700 < e_j-e_i < 700
+            double exp_a = 1512775 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
+            int emax = 700;
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
                 E[i] = (*stateDistances)[i];
                 if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
+                emax = std::max(emax, E[i]);
+            }
+            //exp_a *= 700 / emax;
+            for (unsigned int i = 0; i < localK; ++i) {
                 E[i] = NumericTraits<int>::fromRealPromote(E[i] * exp_a);
                 Pi[i] = 0.0;
             }
@@ -360,22 +366,24 @@ protected:
                     eco.n.i = (ej - E[i]) + (1072693248 - 60801);
                     // FIXME eco.n.i is overflowing into NaN range!
                     double piTAn = piT / (1 + eco.d);
-                    if (isnan(piTAn)) {
+                    if (_isnan(piTAn)) {
                         cout << endl << "piTAn=" << piTAn << " piT=" << piT << " denom=" << (1+eco.d) << endl;
                         cout << "eco.n.i=" << eco.n.i << " ej=" << ej << " ei=" << E[i] << " ej-ei=" << (ej - E[i]) << endl;
+                        printf("%08x         ej-ei\n", (ej - E[i]));
+                        printf("%08x         adj\n", 1072693248 - 60801);
                         printf("%08x%08x\n", eco.n.i, eco.n.j);
                     }
                     Pi[j] += piTAn;
                     Pi[i] += piT - piTAn;
                 }
                 double result = Pi[j] / localK;
-                if (isnan(result)) {
-                    cerr << endl << "nan! Pi[j]=" << Pi[j] << " localK=" << localK << endl;
-                    for (unsigned int n = 0; n < localK; ++n) {
-                        cerr << "    sp[" << n << "] = " << (*stateProbabilities)[n]
-                             << "\te[" << n << "] = " << E[n] << endl;
-                    }
-                }
+                //if (isnan(result)) {
+                //    cerr << endl << "nan! Pi[j]=" << Pi[j] << " localK=" << localK << endl;
+                //    for (unsigned int n = 0; n < localK; ++n) {
+                //        cerr << "    sp[" << n << "] = " << (*stateProbabilities)[n]
+                //             << "\te[" << n << "] = " << E[n] << endl;
+                //    }
+                //}
                 (*stateProbabilities)[j] = result;
             }
         }
