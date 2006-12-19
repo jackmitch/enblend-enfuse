@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2005 Andrew Mihal
+ * Copyright (C) 2004-2007 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -39,11 +39,6 @@
 #define VERBOSE_PYRAMID_MESSAGES            0
 #define VERBOSE_CFI_MESSAGES                2
 #define VERBOSE_GDA_MESSAGES                2
-
-#define GDA_KMAX                64
-#define DIJKSTRA_RADIUS         25
-#define MASK_VECTORIZE_DISTANCE_COARSE 4
-#define MASK_VECTORIZE_DISTANCE_FINE 4
 
 namespace enblend {
 

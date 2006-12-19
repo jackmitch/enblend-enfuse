@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Andrew Mihal
+ * Copyright (C) 2004-2007 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -160,7 +160,7 @@ public:
                 // Choose a reasonable number of state points between these extremes
                 int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
                                           std::abs(rightPoint.y - leftPoint.y));
-                int spaceBetweenPoints = static_cast<int>(ceil(lineLength / (double)GDA_KMAX));
+                int spaceBetweenPoints = static_cast<int>(ceil(lineLength / (double)GDAKmax));
 
                 LineIterator<Diff2D> linePoint(leftPoint, rightPoint);
                 for (int i = 0; i < lineLength; ++i, ++linePoint) {
@@ -187,8 +187,8 @@ public:
 
             unsigned int localK = stateSpace->size();
 
-            if (localK > GDA_KMAX) {
-                cerr << "enblend: localK=" << localK << " > GDA_KMAX=" << GDA_KMAX << endl;
+            if (localK > GDAKmax) {
+                cerr << "enblend: localK=" << localK << " > GDAKmax=" << GDAKmax << endl;
                 exit(1);
             }
 
@@ -210,7 +210,7 @@ public:
         }
 
         tau = 0.75;
-        deltaEMax = 700.0;
+        deltaEMax = 7000.0;
         deltaEMin = 5.0;
         double epsilon = 1.0 / (kMax * kMax);
         tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
@@ -243,19 +243,24 @@ public:
             unsigned int eta = (unsigned int)ceil(log(epsilon)
                              / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
 
-            cout << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
+            if (Verbose > VERBOSE_GDA_MESSAGES) {
+                cout << endl << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
+                cout.flush();
+            }
 
             for (unsigned int i = 0; i < eta; i++) iterate();
 
             tCurrent *= tau;
 
-            int numConvergedPoints = 0;
-            for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-                if (convergedPoints[i]) numConvergedPoints++;
+            if (Verbose > VERBOSE_GDA_MESSAGES) {
+                int numConvergedPoints = 0;
+                for (unsigned int i = 0; i < convergedPoints.size(); i++) {
+                    if (convergedPoints[i]) numConvergedPoints++;
+                }
+                cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size();
+                cout.flush();
             }
-            cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size() << endl;
-
-            if ((Verbose > VERBOSE_MASK_MESSAGES) && (iterationCount % iterationsPerTick) == 0) {
+            else if ((Verbose > VERBOSE_MASK_MESSAGES) && (iterationCount % iterationsPerTick) == 0) {
                 cout << " " << progressIndicator++ << "/4";
                 cout.flush();
             }
@@ -326,16 +331,11 @@ protected:
             // exp_a scaling factor is part of the Schraudolph approximation.
             // for all e_i, e_j, in E: -700 < e_j-e_i < 700
             double exp_a = 1512775 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
-            int emax = 700;
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
                 E[i] = (*stateDistances)[i];
                 if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
-                emax = std::max(emax, E[i]);
-            }
-            //exp_a *= 700 / emax;
-            for (unsigned int i = 0; i < localK; ++i) {
                 E[i] = NumericTraits<int>::fromRealPromote(E[i] * exp_a);
                 Pi[i] = 0.0;
             }
@@ -366,13 +366,13 @@ protected:
                     eco.n.i = (ej - E[i]) + (1072693248 - 60801);
                     // FIXME eco.n.i is overflowing into NaN range!
                     double piTAn = piT / (1 + eco.d);
-                    if (_isnan(piTAn)) {
-                        cout << endl << "piTAn=" << piTAn << " piT=" << piT << " denom=" << (1+eco.d) << endl;
-                        cout << "eco.n.i=" << eco.n.i << " ej=" << ej << " ei=" << E[i] << " ej-ei=" << (ej - E[i]) << endl;
-                        printf("%08x         ej-ei\n", (ej - E[i]));
-                        printf("%08x         adj\n", 1072693248 - 60801);
-                        printf("%08x%08x\n", eco.n.i, eco.n.j);
-                    }
+                    //if (isnan(piTAn)) {
+                    //    cout << endl << "piTAn=" << piTAn << " piT=" << piT << " denom=" << (1+eco.d) << endl;
+                    //    cout << "eco.n.i=" << eco.n.i << " ej=" << ej << " ei=" << E[i] << " ej-ei=" << (ej - E[i]) << endl;
+                    //    printf("%08x         ej-ei\n", (ej - E[i]));
+                    //    printf("%08x         adj\n", 1072693248 - 60801);
+                    //    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                    //}
                     Pi[j] += piTAn;
                     Pi[i] += piT - piTAn;
                 }
@@ -423,6 +423,37 @@ protected:
                 if (lastPointInCostImage) EFbase[4*i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) EFbase[4*i] += costImageCost(currentPoint, nextPointEstimate);
                 PiFbase[4*i] = static_cast<float>((*stateProbabilities)[i]);
+                if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
+                    union {
+                        double d;
+                        #ifdef WORDS_BIGENDIAN
+                            struct { int i, j; } n;
+                        #else
+                            struct { int j, i; } n;
+                        #endif
+                    } eco;
+                    cout << "gpu incoming pi is nan: PiFbase=";
+                    printf("%08x", PiFbase[4*i]);
+                    cout << " spi=";
+                    eco.d = (*stateProbabilities)[i];
+                    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                }
+                if (isnan(EFbase[4*i])) {
+                    union {
+                        double d;
+                        float f;
+                        #ifdef WORDS_BIGENDIAN
+                            struct { int i, j; } n;
+                        #else
+                            struct { int j, i; } n;
+                        #endif
+                    } eco;
+                    eco.n.i = 0;
+                    eco.n.j = 0;
+                    eco.f = EFbase[4*i];
+                    cout << "gpu incoming EF is nan: EFbase=";
+                    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                }
             }
             for (unsigned int i = localK; i < kMax; ++i) {
                 PiFbase[4*i] = 0.0f;
@@ -449,6 +480,24 @@ protected:
 
             for (unsigned int i = 0; i < localK; ++i) {
                 (*stateProbabilities)[i] = static_cast<double>(PiFbase[4*i]);
+                if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
+                    union {
+                        double d;
+                        float f;
+                        #ifdef WORDS_BIGENDIAN
+                            struct { int i, j; } n;
+                        #else
+                            struct { int j, i; } n;
+                        #endif
+                    } eco;
+                    cout << "gpu outgoing pi is nan: PiFbase=";
+                    eco.n.i = eco.n.j = 0;
+                    eco.f = PiFbase[4*i];
+                    printf("%08x%08x", eco.n.i, eco.n.j);
+                    cout << " spi=";
+                    eco.d = (*stateProbabilities)[i];
+                    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                }
             }
 
             unconvergedPoints++;
@@ -501,10 +550,11 @@ protected:
 
             // Make new mean field estimates.
             double totalWeight = 0.0;
+            bool hasHighWeightState = false;
             for (unsigned int k = 0; k < localK; ++k) {
                 double weight = (*stateProbabilities)[k];
                 totalWeight += weight;
-                if (weight > 0.99) convergedPoints[index] = true;
+                if (weight > 0.99) hasHighWeightState = true;
                 Point2D state = (*stateSpace)[k];
                 estimateX += weight * (double)state.x;
                 estimateY += weight * (double)state.y;
@@ -517,10 +567,21 @@ protected:
 
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
-                cerr << endl << "enblend: optimizer error: new mean field estimate is outside cost image." << endl;
+                union {
+                    double d;
+                    #ifdef WORDS_BIGENDIAN
+                        struct { int i, j; } n;
+                    #else
+                        struct { int j, i; } n;
+                    #endif
+                } eco;
+                cout << endl << "enblend: optimizer warning: new mean field estimate is outside cost image." << endl;
                 for (unsigned int state = 0; state < localK; ++state) {
-                    cerr << "    state " << (*stateSpace)[state]
-                         << " weight=" << (*stateProbabilities)[state] << endl;
+                    cout << "    state " << (*stateSpace)[state]
+                         << " weight=";
+                    cout << (*stateProbabilities)[state] << " = ";
+                    eco.d = (*stateProbabilities)[state];
+                    printf("%08x%08x\n", eco.n.i, eco.n.j);
                 }
                 cout << "    mfEstimate=" << newEstimate << endl;
                 // Skip this point from now on.
@@ -532,9 +593,10 @@ protected:
 
             // Remove improbable solutions from the search space
             double totalWeights = 0.0;
+            double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
             for (unsigned int k = 0; k < stateSpace->size(); ) {
                 double weight = (*stateProbabilities)[k];
-                if (weight < 0.00001) {
+                if (weight < cutoffWeight) {
                     // Replace this state with last state
                     (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
                     (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];

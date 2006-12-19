@@ -40,31 +40,27 @@ X fast fromRealPromote
     win32 after:  lm test 5.154 5.005 4.967
     linux noprof: lm test 5.71 5.71 5.71
     linux 2.5:    lm test 13.01 12.97 12.96
-
-- new seam alg
+X new seam alg
     X stride 8 mask generation
         X cfi strided iterators 99.15 -> 97.58
     X stride 8 mask polygonization
         - make it work with wraparound?
         X Arrange snakes into continuous pieces
-        - Experiment with different distances between vertices
+        X Experiment with different distances between vertices
     X cost image
         X Replace with CachedFileImage?
-        - Anneal vertices on BasicImage regions-of-interest?
         X Dijkstra vertices on BasicImage regions-of-interest
-    - Strategy 1: GDA
+    X Strategy 1: GDA
         X integer math / bresenham LineIterator
         X Memoize magnitude 33.28/67.95 -> 33.20/67.85
         X Fast EXP approximation 25.95->17.18
         X factor out tCurrent divide 12.35
         X E integer 11.29
-        - quality/speed tradeoff option?
-            - output quality improvement?
     X Strategy 2: Shortest Path
     X libxmi polygon mask fill
-    - code cleanup and comments
+    X code cleanup and comments
     X progress indicators
-    - option to revert to old mask algorithm
+    X option to revert to old mask algorithm
 
 - gpu blend
     - libsh
@@ -108,24 +104,32 @@ X fast fromRealPromote
         lr test gpu run= 9.80 costImageCost=8.81 calcStateProbs=0.50 kernel=0.00
         lr test cpu run=17.51 costImageCost=8.97 calcStateProbs=8.24
 
+X replace EnblendROI with vigra::Rect2D
+X load/save mask from file
+X update copyright dates
+X check that automatic level determination works correctly
+X fix memory estimation messages
+
 - test for black row bug in alpine dam photo
 - vogl's hdr test cases
-- blending against nothing leads to output with alpha=0?
-- check that automatic level determination works correctly
-- make striding argument object factories for BasicImages
-X replace EnblendROI with vigra::Rect2D
-- load/save mask from file
+- wraparound tests
+- testing, testing, testing
+
 - enable all pixel types
-- fix memory estimation messages
-- update version number
 - documentation update
-- windows version
+    - man page
+    - web page
+- update version number
+- merge into trunk
+- build windows executable
     X compile libtiff with 64-bit file i/o api
     X link other vigra-impex graphics libraries
     - check libtiff warnings
-- update copyright dates
+- create release packages
 
 - Stuff for later revisions:
+    - make striding argument object factories for BasicImages
+    - blending against nothing leads to output with alpha=0?
     - improve GDA state space enumeration
     - vigra impex improvements
     - cfi swap policy improvements

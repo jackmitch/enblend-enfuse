@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2005 Andrew Mihal
+ * Copyright (C) 2004-2007 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -246,6 +246,12 @@ MaskType *createMask(const ImageType* const white,
         // Read mask from a file instead of calculating it.
         MaskType *mask = new MaskType(uBB.size());
         ImageImportInfo maskInfo(LoadMaskFileName);
+        if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
+            cerr << "enblend: load-mask warning: mask " << LoadMaskFileName << " has size "
+                 << "(" << maskInfo.width() << "x" << maskInfo.height() << ")"
+                 << " but image union has size " << uBB.size() << "."
+                 << " Make sure this is the right mask for the given images." << endl;
+        }
         importImage(maskInfo, destImage(*mask));
         delete[] LoadMaskFileName;
         LoadMaskFileName = NULL;
@@ -275,6 +281,10 @@ MaskType *createMask(const ImageType* const white,
     // 0 = inside black image only.
     MaskType *nftInputImage = new MaskType(nftInputSize);
 
+    // mem usage before: 0
+    // mem usage after: CoarseMask: 1/8 * uBB * MaskType
+    //                  !CoarseMask: uBB * MaskType
+
     combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
                      stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
                      nftInputBB.apply(destImage(*nftInputImage)),
@@ -297,12 +307,24 @@ MaskType *createMask(const ImageType* const white,
 
     MaskType *nftOutputImage = new MaskType(nftOutputSize);
 
+    // mem usage before: CoarseMask: 1/8 * uBB * MaskType
+    //                   !CoarseMask: uBB * MaskType
+    // mem usage after: CoarseMask: 2/8 * uBB * MaskType
+    //                  !CoarseMask: 2 * uBB * MaskType
+
     nearestFeatureTransform(wraparound,
             srcImageRange(*nftInputImage),
             destIter(nftOutputImage->upperLeft() + nftOutputOffset),
             NumericTraits<MaskPixelType>::one());
 
+    // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
+    //                     !CoarseMask: uBB * UInt32 * 2
     delete nftInputImage;
+
+    // mem usage before: CoarseMask: 2/8 * uBB * MaskType
+    //                   !CoarseMask: 2 * uBB * MaskType
+    // mem usage after: CoarseMask: 1/8 * uBB * MaskType
+    //                  !CoarseMask: uBB * MaskType
 
     if (!CoarseMask && !OptimizeMask) {
         // nftOutputImage is the final mask in this case.
@@ -311,8 +333,6 @@ MaskType *createMask(const ImageType* const white,
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
-
-    int maskVectorizeDistance = (CoarseMask) ? MASK_VECTORIZE_DISTANCE_COARSE : MASK_VECTORIZE_DISTANCE_FINE;
 
     Point2D borderUL(1, 1);
     Point2D borderLR(nftOutputImage->width() - 1, nftOutputImage->height() - 1);
@@ -366,7 +386,7 @@ MaskType *createMask(const ImageType* const white,
                     }
                     else {
                         // Current point is not frozen.
-                        if ((distanceLastPoint % maskVectorizeDistance) == 0) {
+                        if ((distanceLastPoint % MaskVectorizeDistance) == 0) {
                             snake->push_front(make_pair(true, currentPoint));
                             distanceLastPoint = 0;
                         } else {
@@ -408,6 +428,8 @@ MaskType *createMask(const ImageType* const white,
     }
 
     delete nftOutputImage;
+
+    // mem usage after: 0
 
     if (!OptimizeMask) {
         // Simply fill contours to get final unoptimized mask.
@@ -611,6 +633,11 @@ MaskType *createMask(const ImageType* const white,
         visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
     }
 
+    // mem usage after: Visualize && CoarseMask: iBB * UInt8
+    //                  Visualize && !CoarseMask: 2 * iBB * UInt8
+    //                  !Visualize && CoarseMask: 1/2 * iBB * UInt8
+    //                  !Visualize && !CoarseMask: iBB * UInt8
+
     // Calculate mismatch image
     combineTwoImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
                      stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
@@ -768,7 +795,7 @@ MaskType *createMask(const ImageType* const white,
 
                     Rect2D pointSurround(currentPoint, Size2D(1,1));
                     pointSurround |= Rect2D(nextPoint, Size2D(1,1));
-                    pointSurround.addBorder(DIJKSTRA_RADIUS);
+                    pointSurround.addBorder(DijkstraRadius);
                     pointSurround &= withinMismatchImage;
 
                     // Make BasicImage to hold pointSurround portion of mismatchImage.
@@ -821,8 +848,8 @@ MaskType *createMask(const ImageType* const white,
         ImageExportInfo visualizeInfo(VisualizeMaskFileName);
         exportImage(srcImageRange(*visualizeImage), visualizeInfo);
         delete visualizeImage;
-        delete[] VisualizeMaskFileName;
-        VisualizeMaskFileName = NULL;
+        //delete[] VisualizeMaskFileName;
+        //VisualizeMaskFileName = NULL;
     }
 
     // Fill contours to get final unoptimized mask.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2005 Andrew Mihal
+ * Copyright (C) 2004-2007 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -99,6 +99,9 @@ int CoarseMask = 1;
 char *SaveMaskFileName = NULL;
 char *LoadMaskFileName = NULL;
 char *VisualizeMaskFileName = NULL;
+unsigned int GDAKmax = 64;
+unsigned int DijkstraRadius = 25;
+unsigned int MaskVectorizeDistance = 0;
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -180,8 +183,10 @@ void printUsageAndExit() {
  *  if we are killed.
  */
 void sigint_handler(int sig) {
+    // FIXME what if this occurs in a CFI atomic section?
     CachedFileImageDirector::v().~CachedFileImageDirector();
     if (UseGPU) {
+        // FIXME what if this occurs in a GL atomic section?
         cout << "Cleaning up GPU state..." << endl;
         wrapupGPU();
     }
@@ -227,6 +232,9 @@ int main(int argc, char** argv) {
             {"save-mask", required_argument, 0, 0},
             {"load-mask", required_argument, 0, 0},
             {"visualize", required_argument, 0, 0},
+            {"gda-kmax", required_argument, 0, 1},
+            {"dijkstra-radius", required_argument, 0, 1},
+            {"mask-vectorize-distance", required_argument, 0, 1},
             {0, 0, 0, 0}
     };
 
@@ -235,7 +243,7 @@ int main(int argc, char** argv) {
     int c;
     while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz", long_options, &option_index)) != -1) {
         switch (c) {
-            case 0: {
+            case 0: { /* Long Options with string arguments */
                 if (long_options[option_index].flag != 0) break;
 
                 char **optionString = NULL;
@@ -266,6 +274,27 @@ int main(int argc, char** argv) {
                 }
 
                 strncpy(*optionString, optarg, len);
+
+                break;
+            }
+            case 1: { /* Long options with unsigned integer arguments */
+                if (long_options[option_index].flag != 0) break;
+
+                unsigned int *optionUInt = NULL;
+                switch (option_index) {
+                    case 8:  optionUInt = &GDAKmax; break;
+                    case 9:  optionUInt = &DijkstraRadius; break;
+                    case 10: optionUInt = &MaskVectorizeDistance; break;
+                }
+
+                int value = atoi(optarg);
+                if (value < 1) {
+                    cerr << "enblend: " << long_options[option_index].name
+                         << " must be 1 or more." << endl;
+                    printUsageAndExit();
+                }
+
+                *optionUInt = static_cast<unsigned int>(value);
 
                 break;
             }
@@ -425,6 +454,10 @@ int main(int argc, char** argv) {
 
     if (UseGPU) {
         initGPU();
+    }
+
+    if (MaskVectorizeDistance == 0) {
+        MaskVectorizeDistance = CoarseMask ? 4 : 20;
     }
 
     // Check that more than one input file was given.
