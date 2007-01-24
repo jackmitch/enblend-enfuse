@@ -99,7 +99,7 @@ int CoarseMask = 1;
 char *SaveMaskFileName = NULL;
 char *LoadMaskFileName = NULL;
 char *VisualizeMaskFileName = NULL;
-unsigned int GDAKmax = 64;
+unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 

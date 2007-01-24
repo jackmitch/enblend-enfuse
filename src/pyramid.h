@@ -1405,7 +1405,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Generating Gaussian pyramid: g0";
+        cout << "Generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
@@ -1495,7 +1495,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Generating Gaussian pyramid: g0";
+        cout << "Generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.

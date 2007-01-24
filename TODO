@@ -136,4 +136,5 @@ X fix memory estimation messages
     - vigra multilayer tiff support
     - blend nadir and zenith in 360x360 panos.
     - make assemble smarter.
+    - store alpha masks in RLE format
 

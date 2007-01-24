@@ -1058,7 +1058,7 @@ public:
     pointer operator[](int dy) {
         //BOOST_STATIC_ASSERT(false);
         //cout << "fetching line pointer for row " << dy << endl;
-        if (dy >= height_) return NULL;
+        if (dy < 0 || dy >= height_) return NULL;
         else return getLinePointerDirty(dy);
     }
 
@@ -1066,7 +1066,7 @@ public:
     const_pointer operator[](int dy) const {
         //BOOST_STATIC_ASSERT(false);
         //cout << "fetching line pointer for row " << dy << endl;
-        if (dy >= height_) return NULL;
+        if (dy < 0 || dy >= height_) return NULL;
         else return getLinePointer(dy);
     }
 
@@ -1543,15 +1543,16 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 
     // Choose a block to swap out.
     int blockNumber = 0;
-    if (blocksAllocated_ == 1 && blocksNeeded_ > 1) {
-        // Never swap out our only block (if we need more than one).
-        // Enblend iterates over images in 5-line sliding windows (in reduce).
-        // This is to avoid thrashing.
-        vigra_fail("enblend: Out of memory blocks. Try using the -m flag to "
-                "increase the amount of memory to use, or use the -b flag to "
-                "decrease the block size\n"
-                "reason: probable thrash, 1 blocks allocated, 0 blocks available.");
-    } else {
+    // This is non longer necessary with SKIPSM-based reduce.
+    //if (blocksAllocated_ == 1 && blocksNeeded_ > 1) {
+    //    // Never swap out our only block (if we need more than one).
+    //    // Enblend iterates over images in 5-line sliding windows (in reduce).
+    //    // This is to avoid thrashing.
+    //    vigra_fail("enblend: Out of memory blocks. Try using the -m flag to "
+    //            "increase the amount of memory to use, or use the -b flag to "
+    //            "decrease the block size\n"
+    //            "reason: probable thrash, 1 blocks allocated, 0 blocks available.");
+    //} else {
         if (mostRecentlyLoadedBlockIterator_ == blocksInMemory_->begin()) {
             // We're at the beginning of the image.
             // The last block in memory is the one least likely to be used next.
@@ -1566,9 +1567,9 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
             blockNumber = *candidate;
             blocksInMemory_->erase(candidate);
         }
-    }
+    //}
 
-    //cout << "swapOutBlock after list remove block=" << blockNumber << ": ";
+    //cout << "swapOutBlock image=" << this << " after list remove block=" << blockNumber << ": ";
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
     //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
@@ -1660,9 +1661,9 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 
     blocksAllocated_--;
 
-    //cout << "swapOutBlock after swapout:"
+    //cout << "swapOutBlock image=" << this << " after swapout:"
     //     << " blocksAllocated=" << blocksAllocated_
-    //     << " blocksInMemory="
+    //     << " blocksInMemory=";
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
     //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;

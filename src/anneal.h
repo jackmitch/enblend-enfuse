@@ -162,18 +162,40 @@ public:
                                           std::abs(rightPoint.y - leftPoint.y));
                 int spaceBetweenPoints = static_cast<int>(ceil(lineLength / (double)GDAKmax));
 
-                LineIterator<Diff2D> linePoint(leftPoint, rightPoint);
-                for (int i = 0; i < lineLength; ++i, ++linePoint) {
-                    if (((i % spaceBetweenPoints) == 0)
-                            && costImage->isInside(*linePoint)
-                            && ((*costImage)[*linePoint] != NumericTraits<CostImagePixelType>::max())) {
+                LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
+                for (int i = 0; i < (lineLength+1)/2; ++i, ++linePoint) {
+                    if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
+                    else if (((i % spaceBetweenPoints) == 0) && costImage->isInside(*linePoint)) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
-
                         if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
                     }
                 }
+                linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
+                ++linePoint;
+                for (int i=(lineLength+1)/2; i < lineLength; ++i, ++linePoint) {
+                    if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
+                    else if (((i % spaceBetweenPoints) == 0) && costImage->isInside(*linePoint)) {
+                        stateSpace->push_back(Point2D(*linePoint));
+                        stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
+                                                           std::abs(linePoint->y - currentPoint.y)) / 2);
+                        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                    }
+                }
+
+                //LineIterator<Diff2D> linePoint(leftPoint, rightPoint);
+                //for (int i = 0; i < lineLength; ++i, ++linePoint) {
+                //    if (((i % spaceBetweenPoints) == 0)
+                //            && costImage->isInside(*linePoint)
+                //            && ((*costImage)[*linePoint] != NumericTraits<CostImagePixelType>::max())) {
+                //        stateSpace->push_back(Point2D(*linePoint));
+                //        stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
+                //                                           std::abs(linePoint->y - currentPoint.y)) / 2);
+
+                //        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                //    }
+                //}
 
             }
 
@@ -373,6 +395,11 @@ protected:
                     //    printf("%08x         adj\n", 1072693248 - 60801);
                     //    printf("%08x%08x\n", eco.n.i, eco.n.j);
                     //}
+                    if (isnan(piTAn)) {
+                        // exp term is infinity or zero.
+                        if (ej > E[i]) piTAn = 0.0;
+                        else piTAn = piT;
+                    }
                     Pi[j] += piTAn;
                     Pi[i] += piT - piTAn;
                 }

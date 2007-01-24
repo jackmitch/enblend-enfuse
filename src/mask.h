@@ -296,13 +296,14 @@ MaskType *createMask(const ImageType* const white,
 
     Size2D nftOutputSize;
     Diff2D nftOutputOffset;
-    if (OptimizeMask) {
+    if (!CoarseMask && !OptimizeMask) {
+        // If we're not going to vectorize the mask.
+        nftOutputSize = nftInputSize;
+        nftOutputOffset = Diff2D(0,0);
+    } else {
         // Add 1-pixel border all around the image for the vectorization algorithm.
         nftOutputSize = nftInputSize + Diff2D(2,2);
         nftOutputOffset = Diff2D(1,1);
-    } else {
-        nftOutputSize = nftInputSize;
-        nftOutputOffset = Diff2D(0,0);
     }
 
     MaskType *nftOutputImage = new MaskType(nftOutputSize);
@@ -316,6 +317,9 @@ MaskType *createMask(const ImageType* const white,
             srcImageRange(*nftInputImage),
             destIter(nftOutputImage->upperLeft() + nftOutputOffset),
             NumericTraits<MaskPixelType>::one());
+
+//ImageExportInfo nftmaskinfo("enblend_nft.tif");
+//exportImage(srcImageRange(*nftOutputImage), nftmaskinfo);
 
     // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
     //                     !CoarseMask: uBB * UInt32 * 2
@@ -530,6 +534,9 @@ MaskType *createMask(const ImageType* const white,
                 currentSegment = NULL;
             }
         }
+
+        // Reverse the final segment.
+        if (currentSegment != NULL) currentSegment->reverse();
 
         delete snake;
     }
