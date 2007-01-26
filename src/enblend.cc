@@ -104,7 +104,9 @@ unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 
 // Globals related to catching SIGINT
+#ifndef _WIN32
 sigset_t SigintMask;
+#endif
 
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
@@ -217,6 +219,7 @@ int main(int argc, char** argv) {
     fesetround(FE_TONEAREST);
 #endif
     
+#ifndef _WIN32
     sigemptyset(&SigintMask);
     sigaddset(&SigintMask, SIGINT);
 
@@ -224,6 +227,9 @@ int main(int argc, char** argv) {
     action.sa_handler = sigint_handler;
     sigemptyset(&(action.sa_mask));
     sigaction(SIGINT, &action, NULL);
+#else
+    signal(SIGINT, sigint_handler);
+#endif
 
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
     // to avoid interactive warning dialogs.
