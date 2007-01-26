@@ -1276,12 +1276,14 @@ void CachedFileImage<PIXELTYPE>::deallocate() {
 #ifdef _WIN32
     if (hTempFile_ != INVALID_HANDLE_VALUE) {
         CloseHandle(hTempFile_);
+    }
 #else
     if (tmpFile_ != NULL) {
         fclose(tmpFile_);
-#endif
-        unlink(tmpFilename_);
     }
+#endif
+    //    unlink(tmpFilename_);
+    //}
     delete[] tmpFilename_;
 };
 
@@ -1674,6 +1676,11 @@ template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
+#ifndef _WIN32
+    sigset_t oldsigmask;
+    sigprocmask(SIG_BLOCK, &SigintMask, &oldsigmask);
+#endif
+
 #if defined(_WIN32) && defined(HAVE_MKSTEMP)
 #error "Win32 has mkstemp?"
 #endif
@@ -1713,6 +1720,11 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     unsigned int filenameTemplateLength = (unsigned int)strlen(filenameTemplate) + 1;
     tmpFilename_ = new char[filenameTemplateLength];
     strncpy(tmpFilename_, filenameTemplate, filenameTemplateLength);
+
+#ifndef _WIN32
+    unlink(tmpFilename_);
+    sigprocmask(SIG_SETMASK, &oldsigmask, NULL);
+#endif
 
     // This doesn't seem to help.
     //if (setvbuf(tmpFile_, NULL, _IONBF, 0) != 0) {

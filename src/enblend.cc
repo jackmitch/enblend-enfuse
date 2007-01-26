@@ -103,6 +103,9 @@ unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 
+// Globals related to catching SIGINT
+sigset_t SigintMask;
+
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
 cmsHPROFILE XYZProfile = NULL;
@@ -183,16 +186,21 @@ void printUsageAndExit() {
  *  if we are killed.
  */
 void sigint_handler(int sig) {
+    cout << endl << "Interrupted." << endl;
     // FIXME what if this occurs in a CFI atomic section?
-    CachedFileImageDirector::v().~CachedFileImageDirector();
+    // This is no longer necessary, temp files are unlinked during creation.
+    //CachedFileImageDirector::v().~CachedFileImageDirector();
     if (UseGPU) {
         // FIXME what if this occurs in a GL atomic section?
-        cout << "Cleaning up GPU state..." << endl;
+        //cout << "Cleaning up GPU state..." << endl;
         wrapupGPU();
     }
     #if !defined(__GW32C__) && !defined(_WIN32)
-    signal(SIGINT, SIG_DFL);
-    kill(getpid(), SIGINT);
+    struct sigaction action;
+    action.sa_handler = SIG_DFL;
+    sigemptyset(&(action.sa_mask));
+    sigaction(SIGINT, &action, NULL);
+    raise(SIGINT);
     #else
     exit(0);
     #endif
@@ -209,7 +217,13 @@ int main(int argc, char** argv) {
     fesetround(FE_TONEAREST);
 #endif
     
-    signal(SIGINT, sigint_handler);
+    sigemptyset(&SigintMask);
+    sigaddset(&SigintMask, SIGINT);
+
+    struct sigaction action;
+    action.sa_handler = sigint_handler;
+    sigemptyset(&(action.sa_mask));
+    sigaction(SIGINT, &action, NULL);
 
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
     // to avoid interactive warning dialogs.

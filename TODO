@@ -116,6 +116,7 @@ X test for black row bug in alpine dam photo
 X wraparound tests
 - test large files on windows
 X testing, testing, testing
+- ctrl-c cleans up temp files right
 
 - enable all pixel types
 - documentation update

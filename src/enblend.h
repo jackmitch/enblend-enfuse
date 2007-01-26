@@ -90,10 +90,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMAlphaPixelType SKIPSMAlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
+    //sigset_t oldsigmask;
+    //sigprocmask(SIG_BLOCK, &SigintMask, &oldsigmask);
+
     // Create the initial black image.
     Rect2D blackBB;
     pair<ImageType*, AlphaType*> blackPair =
             assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
+
+    //sigprocmask(SIG_SETMASK, &oldsigmask, NULL);
 
     if (Checkpoint) checkpoint(blackPair, outputImageInfo);
 
