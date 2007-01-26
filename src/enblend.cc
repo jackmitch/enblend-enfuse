@@ -23,6 +23,7 @@
 
 #ifdef _WIN32
 #include <win32helpers\win32config.h>
+#define isnan _isnan
 #endif // _WIN32
 
 // Defines lrint for fast fromRealPromotes

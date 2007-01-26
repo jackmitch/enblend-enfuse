@@ -80,18 +80,19 @@ class CachedFileImageDirector {
 public:
 
     ~CachedFileImageDirector() {
-        // Make sure all image caches get destroyed and
-        // temp backing files get deleted.
-        if (!imageList.empty()) {
-            cout << endl << "Cleaning up temporary files." << endl;
-            while (!imageList.empty()) {
-                CachedFileImageBase const *image = imageList.front();
-                //cout << "deleting image " << image << endl;
-                // Remember that this delete call modifies imageList.
-                delete image;
-            }
-        }
-        delete pool;
+        // This is no longer necessary. temp files get unlinked on creation.
+        //// Make sure all image caches get destroyed and
+        //// temp backing files get deleted.
+        //if (!imageList.empty()) {
+        //    cout << endl << "Cleaning up temporary files." << endl;
+        //    while (!imageList.empty()) {
+        //        CachedFileImageBase const *image = imageList.front();
+        //        //cout << "deleting image " << image << endl;
+        //        // Remember that this delete call modifies imageList.
+        //        delete image;
+        //    }
+        //}
+        //delete pool;
     }
 
     // Obtain a reference to the singleton.
