@@ -164,8 +164,10 @@ public:
 
                 LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
                 for (int i = 0; i < (lineLength+1)/2; ++i, ++linePoint) {
-                    if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
-                    else if (((i % spaceBetweenPoints) == 0) && costImage->isInside(*linePoint)) {
+                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) break;
+                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
+                    else if ((i % spaceBetweenPoints) == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
@@ -175,7 +177,9 @@ public:
                 linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
                 for (int i=(lineLength+1)/2; i < lineLength; ++i, ++linePoint) {
-                    if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
+                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) break;
+                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
                     else if (((i % spaceBetweenPoints) == 0) && costImage->isInside(*linePoint)) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
