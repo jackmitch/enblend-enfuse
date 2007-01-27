@@ -68,6 +68,8 @@ using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::importImageAlpha;
 using vigra::initImageIf;
+using vigra::LinearIntensityTransform;
+using vigra::linearRangeMapping;
 using vigra::NumericTraits;
 using vigra::Point2D;
 using vigra::Rect2D;
@@ -103,7 +105,17 @@ typedef vector<Contour*> ContourVector;
 template <typename PixelType, typename ResultType>
 class PixelDifferenceFunctor
 {
+    typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
+    typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
+    typedef LinearIntensityTransform<ResultType> RangeMapper;
+
 public:
+
+    PixelDifferenceFunctor() : rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
+                                                     NumericTraits<PixelComponentType>::max(),
+                                                     ResultType(NumericTraits<ResultPixelComponentType>::min()),
+                                                     ResultType(NumericTraits<ResultPixelComponentType>::max()))) { }
+
     inline ResultType operator()(const PixelType & a, const PixelType & b) const {
         typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
         return diff(a, b, src_is_scalar());
@@ -111,14 +123,14 @@ public:
 
 protected:
     inline ResultType diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
-        ResultType aLum = static_cast<ResultType>(a.luminance());
-        ResultType bLum = static_cast<ResultType>(b.luminance());
-        ResultType aHue = static_cast<ResultType>(a.hue());
-        ResultType bHue = static_cast<ResultType>(b.hue());
-        ResultType lumDiff = std::abs(aLum - bLum);
-        ResultType hueDiff = std::abs(aHue - bHue);
-        if (hueDiff > (NumericTraits<ResultType>::max() / 2)) hueDiff = NumericTraits<ResultType>::max() - hueDiff;
-        return std::max(hueDiff, lumDiff);
+        PixelComponentType aLum = a.luminance();
+        PixelComponentType bLum = b.luminance();
+        PixelComponentType aHue = a.hue();
+        PixelComponentType bHue = b.hue();
+        PixelComponentType lumDiff = std::abs(aLum - bLum);
+        PixelComponentType hueDiff = std::abs(aHue - bHue);
+        if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
+        return rm(std::max(hueDiff, lumDiff));
     }
 
     inline ResultType diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
@@ -127,14 +139,16 @@ protected:
     }
 
     inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
-        return static_cast<ResultType>(std::abs(a - b));
+        return rm(std::abs(a - b));
     }
 
     // This appears necessary because NumericTraits<unsigned int>::Promote is an unsigned int instead of an int.
     inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
-        return static_cast<ResultType>(std::abs(static_cast<int>(a) - static_cast<int>(b)));
+        return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
     }
 
+    RangeMapper rm;
+    
 };
 
 template <typename MaskType>
