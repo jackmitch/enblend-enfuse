@@ -122,11 +122,11 @@ X ctrl-c cleans up temp files right
 
 X enable all pixel types
 X update version number
-- merge into trunk
-- build windows executable
+X merge into trunk
+X build windows executable
     X compile libtiff with 64-bit file i/o api
     X link other vigra-impex graphics libraries
-    - check libtiff warnings
+    X check libtiff warnings
 - create release packages
 - documentation update
     - man page

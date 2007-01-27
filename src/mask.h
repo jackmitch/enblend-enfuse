@@ -127,8 +127,8 @@ protected:
         PixelComponentType bLum = b.luminance();
         PixelComponentType aHue = a.hue();
         PixelComponentType bHue = b.hue();
-        PixelComponentType lumDiff = std::abs(aLum - bLum);
-        PixelComponentType hueDiff = std::abs(aHue - bHue);
+        PixelComponentType lumDiff = (aLum > bLum) ? (aLum - bLum) : (bLum - aLum); //std::abs(aLum - bLum);
+        PixelComponentType hueDiff = (aHue > bHue) ? (aHue - bHue) : (bHue - aHue); //std::abs(aHue - bHue);
         if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
         return rm(std::max(hueDiff, lumDiff));
     }
