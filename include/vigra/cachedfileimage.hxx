@@ -1303,11 +1303,12 @@ void CachedFileImage<PIXELTYPE>::initLineStartArray() {
     //cout << "linesPerBlocksizeLog2=" << linesPerBlocksizeLog2_ << endl;
     //cout << "linesPerBlocksize=" << linesPerBlocksize_ << endl;
 
-    // Need a minimum of 3 lines per block to support 5-line sliding windows.
-    if (linesPerBlocksize_ < 3) {
-        vigra_fail("Image cache block size is too small. Use the -b flag to "
-                "increase the cache block size.");
-    }
+    // This is no longer necessary with SKIPSM pyramid operations.
+    //// Need a minimum of 3 lines per block to support 5-line sliding windows.
+    //if (linesPerBlocksize_ < 3) {
+    //    vigra_fail("Image cache block size is too small. Use the -b flag to "
+    //            "increase the cache block size.");
+    //}
 
     blocksNeeded_ = (int)ceil(((double)height_) / linesPerBlocksize_);
 
