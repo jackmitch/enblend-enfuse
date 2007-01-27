@@ -1,4 +1,4 @@
-.TH enblend 1 "December 11, 2005" "" ""
+.TH enblend 1 "January 27, 2007" "" ""
 .SH NAME
 enblend \- combine images using a multiresolution spline
 .SH SYNOPSIS
@@ -66,6 +66,8 @@ Enblend currently does not blend the zenith or the nadir, so you may still see
 some seams in these areas.
 .IP -z
 Use LZW compression for the output images.
+.IP -x
+Checkpoint partial results to the output file after each blending step.
 .IP input-files
 Two or more TIFF files.
 
@@ -75,13 +77,22 @@ Set the block size for Enblend's image cache. This is the amount of data that
 Enblend will move to and from the disk in one go. The default is 2 MiB which
 should be good for most systems.
 .IP -c
-Use the CIE L*a*b* color space for blending.
+Use the CIECAM02 color appearance model for blending colors.
+Your input TIFF files should have embedded ICC profiles. If no ICC profile is
+present, Enblend will assume that image uses the sRGB color space.
+The difference between using this option and Enblend's default color blending
+algorithm is very slight, and will be most noticeable when you need to blend
+areas of different primary colors together.
 .IP -g
 Gimp (ver. < 2) and Cinepaint exhibit unusual behaviors when loading
 images with unassociated alpha channels. Use the -g flag to work
 around this. With this flag Enblend will create the output image with
 the associated alpha tag set, even though the image is really
 unassociated alpha.
+.IP --gpu
+Use the graphics card to accelerate some computations.
+This is an experimental feature and it may not work on all systems.
+Currently, only mask optimization strategy 1 benefits from this option.
 .IP "-f WIDTHxHEIGHT"
 Set the size of the output image manually. This is useful when the input images are
 cropped TIFF files, such as those produced by Nona.
@@ -89,6 +100,35 @@ cropped TIFF files, such as those produced by Nona.
 Set the size of Enblend's image cache. This is the amount of memory Enblend
 will use for storing image data before swapping to disk.
 The default is 1 GiB.
+.IP "--visualize=FILE"
+Create an output image that visualizes the mask optimization process.
+This shows Enblend's view of the overlap region and how it decided to route
+the seam line.
+If you are experiencing artifacts or unexpected output, it may be useful to
+include this visualization image in your bug report.
+
+.SH MASK GENERATION OPTIONS
+.IP --coarse-mask
+Use a scaled-down version of the input images to create the seam line.
+This is the default.
+.IP --fine-mask
+Use the full-size images to create the seam line. This can be slow.
+Use this option if you have very narrow overlap regions.
+.IP --optimize
+Use a two-strategy approach to route the seam line around mismatches in the
+overlap region. This is the default.
+.IP --no-optimize
+Turn off seam line optimization. Combined with --fine-mask, this will produce
+the same type of mask as Enblend 2.5.
+.IP "--save-mask=FILE"
+Save the generated mask to an image file.
+Use this option if you wish to edit the location of the seam line by hand.
+This will give you a template of the right size that you can edit to make
+your changes.
+Then, use the --load-mask option to blend the project with your custom
+seam line.
+.IP "--load-mask=FILE"
+Instead of generating a mask, use the one in the given file.
 
 .SH ADDITIONAL INFORMATION
 Please see the Enblend web page at:
