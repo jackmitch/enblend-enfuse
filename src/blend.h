@@ -121,7 +121,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
         vector<ImagePyramidType*> *blackLP,
         typename MaskPyramidType::value_type maskPyramidWhiteValue) {
 
-    typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
+    //typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
         cout << "Blending layers:             ";

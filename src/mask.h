@@ -104,16 +104,37 @@ template <typename PixelType, typename ResultType>
 class PixelDifferenceFunctor
 {
 public:
-    ResultType operator()(const PixelType & a, const PixelType & b) const {
-        ResultType aLum = a.luminance();
-        ResultType bLum = b.luminance();
-        ResultType aHue = a.hue();
-        ResultType bHue = b.hue();
+    inline ResultType operator()(const PixelType & a, const PixelType & b) const {
+        typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
+        return diff(a, b, src_is_scalar());
+    }
+
+protected:
+    inline ResultType diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
+        ResultType aLum = static_cast<ResultType>(a.luminance());
+        ResultType bLum = static_cast<ResultType>(b.luminance());
+        ResultType aHue = static_cast<ResultType>(a.hue());
+        ResultType bHue = static_cast<ResultType>(b.hue());
         ResultType lumDiff = std::abs(aLum - bLum);
         ResultType hueDiff = std::abs(aHue - bHue);
         if (hueDiff > (NumericTraits<ResultType>::max() / 2)) hueDiff = NumericTraits<ResultType>::max() - hueDiff;
         return std::max(hueDiff, lumDiff);
     }
+
+    inline ResultType diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
+        typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        return scalar_diff(a, b, src_is_signed());
+    }
+
+    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
+        return static_cast<ResultType>(std::abs(a - b));
+    }
+
+    // This appears necessary because NumericTraits<unsigned int>::Promote is an unsigned int instead of an int.
+    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
+        return static_cast<ResultType>(std::abs(static_cast<int>(a) - static_cast<int>(b)));
+    }
+
 };
 
 template <typename MaskType>

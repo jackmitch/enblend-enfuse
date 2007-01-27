@@ -176,11 +176,11 @@ public:
                 }
                 linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
-                for (int i=(lineLength+1)/2; i < lineLength; ++i, ++linePoint) {
+                for (int i=1; i < 1+(lineLength/2); ++i, ++linePoint) {
                     // Stop searching along the line if we leave the cost image or enter a max-cost region.
                     if (!costImage->isInside(*linePoint)) break;
                     else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
-                    else if (((i % spaceBetweenPoints) == 0) && costImage->isInside(*linePoint)) {
+                    else if ((i % spaceBetweenPoints) == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
@@ -454,37 +454,37 @@ protected:
                 if (lastPointInCostImage) EFbase[4*i] += costImageCost(lastPointEstimate, currentPoint);
                 if (nextPointInCostImage) EFbase[4*i] += costImageCost(currentPoint, nextPointEstimate);
                 PiFbase[4*i] = static_cast<float>((*stateProbabilities)[i]);
-                if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
-                    union {
-                        double d;
-                        #ifdef WORDS_BIGENDIAN
-                            struct { int i, j; } n;
-                        #else
-                            struct { int j, i; } n;
-                        #endif
-                    } eco;
-                    cout << "gpu incoming pi is nan: PiFbase=";
-                    printf("%08x", PiFbase[4*i]);
-                    cout << " spi=";
-                    eco.d = (*stateProbabilities)[i];
-                    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                }
-                if (isnan(EFbase[4*i])) {
-                    union {
-                        double d;
-                        float f;
-                        #ifdef WORDS_BIGENDIAN
-                            struct { int i, j; } n;
-                        #else
-                            struct { int j, i; } n;
-                        #endif
-                    } eco;
-                    eco.n.i = 0;
-                    eco.n.j = 0;
-                    eco.f = EFbase[4*i];
-                    cout << "gpu incoming EF is nan: EFbase=";
-                    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                }
+                //if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
+                //    union {
+                //        double d;
+                //        #ifdef WORDS_BIGENDIAN
+                //            struct { int i, j; } n;
+                //        #else
+                //            struct { int j, i; } n;
+                //        #endif
+                //    } eco;
+                //    cout << "gpu incoming pi is nan: PiFbase=";
+                //    printf("%08x", PiFbase[4*i]);
+                //    cout << " spi=";
+                //    eco.d = (*stateProbabilities)[i];
+                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                //}
+                //if (isnan(EFbase[4*i])) {
+                //    union {
+                //        double d;
+                //        float f;
+                //        #ifdef WORDS_BIGENDIAN
+                //            struct { int i, j; } n;
+                //        #else
+                //            struct { int j, i; } n;
+                //        #endif
+                //    } eco;
+                //    eco.n.i = 0;
+                //    eco.n.j = 0;
+                //    eco.f = EFbase[4*i];
+                //    cout << "gpu incoming EF is nan: EFbase=";
+                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                //}
             }
             for (unsigned int i = localK; i < kMax; ++i) {
                 PiFbase[4*i] = 0.0f;
@@ -509,26 +509,53 @@ protected:
             vector<double> *stateProbabilities = pointStateProbabilities[index];
             unsigned int localK = stateProbabilities->size();
 
+            //bool hasNan = false;
+            //for (unsigned int i = 0; i < localK; ++i) {
+            //    if (isnan(PiFbase[4*i])) hasNan = true;
+            //}
+
+            //if (hasNan) {
+            //    cout << "gpu outgoing pi is nan." << endl;
+            //}
+
             for (unsigned int i = 0; i < localK; ++i) {
+                //if (hasNan) {
+                //    cout << "k=" << i << " spi=" << (*stateProbabilities)[i];
+                //}
                 (*stateProbabilities)[i] = static_cast<double>(PiFbase[4*i]);
-                if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
-                    union {
-                        double d;
-                        float f;
-                        #ifdef WORDS_BIGENDIAN
-                            struct { int i, j; } n;
-                        #else
-                            struct { int j, i; } n;
-                        #endif
-                    } eco;
-                    cout << "gpu outgoing pi is nan: PiFbase=";
-                    eco.n.i = eco.n.j = 0;
-                    eco.f = PiFbase[4*i];
-                    printf("%08x%08x", eco.n.i, eco.n.j);
-                    cout << " spi=";
-                    eco.d = (*stateProbabilities)[i];
-                    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                }
+                //if (hasNan) {
+                //    cout << " newspi=" << (*stateProbabilities)[i];
+                //    union {
+                //        double d;
+                //        float f;
+                //        #ifdef WORDS_BIGENDIAN
+                //            struct { int i, j; } n;
+                //        #else
+                //            struct { int j, i; } n;
+                //        #endif
+                //    } eco;
+                //    cout << " = ";
+                //    eco.d = (*stateProbabilities)[i];
+                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                //}
+                //if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
+                //    union {
+                //        double d;
+                //        float f;
+                //        #ifdef WORDS_BIGENDIAN
+                //            struct { int i, j; } n;
+                //        #else
+                //            struct { int j, i; } n;
+                //        #endif
+                //    } eco;
+                //    cout << "gpu outgoing pi is nan: PiFbase=";
+                //    eco.n.i = eco.n.j = 0;
+                //    eco.f = PiFbase[4*i];
+                //    printf("%08x%08x", eco.n.i, eco.n.j);
+                //    cout << " spi=";
+                //    eco.d = (*stateProbabilities)[i];
+                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                //}
             }
 
             unconvergedPoints++;
@@ -598,23 +625,24 @@ protected:
 
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
-                union {
-                    double d;
-                    #ifdef WORDS_BIGENDIAN
-                        struct { int i, j; } n;
-                    #else
-                        struct { int j, i; } n;
-                    #endif
-                } eco;
+                //union {
+                //    double d;
+                //    #ifdef WORDS_BIGENDIAN
+                //        struct { int i, j; } n;
+                //    #else
+                //        struct { int j, i; } n;
+                //    #endif
+                //} eco;
                 cout << endl << "enblend: optimizer warning: new mean field estimate is outside cost image." << endl;
                 for (unsigned int state = 0; state < localK; ++state) {
                     cout << "    state " << (*stateSpace)[state]
-                         << " weight=";
-                    cout << (*stateProbabilities)[state] << " = ";
-                    eco.d = (*stateProbabilities)[state];
-                    printf("%08x%08x\n", eco.n.i, eco.n.j);
+                         << " weight = ";
+                    cout << (*stateProbabilities)[state] << endl;
+                    //cout << (*stateProbabilities)[state] << " = ";
+                    //eco.d = (*stateProbabilities)[state];
+                    //printf("%08x%08x\n", eco.n.i, eco.n.j);
                 }
-                cout << "    mfEstimate=" << newEstimate << endl;
+                cout << "    new estimate = " << newEstimate << endl;
                 // Skip this point from now on.
                 convergedPoints[index] = true;
                 continue;

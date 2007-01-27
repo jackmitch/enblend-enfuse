@@ -1479,12 +1479,28 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(const int dy) co
                           sizeof(PIXELTYPE) * pixelsToRead, 
                           &bytesRead, 
                           NULL)) {
-#else
-        int itemsRead = fread(blockStart, sizeof(PIXELTYPE), pixelsToRead, tmpFile_);
-        if (itemsRead < pixelsToRead) {
-#endif
+            DWORD dwError = GetLastError();
+            LPVOID lpMsgBuf;
+            FormatMessage(
+                    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                    NULL,
+                    dwError,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR) &lpMsgBuf,
+                    0,
+                    NULL);
+            cerr << endl << lpMsgBuf << endl;
+            LocalFree(lpMsgBuf);
             vigra_fail("enblend: error reading from image swap file.\n");
         }
+#else
+        clearerr(tmpFile_);
+        int itemsRead = fread(blockStart, sizeof(PIXELTYPE), pixelsToRead, tmpFile_);
+        if (itemsRead < pixelsToRead) {
+            perror("enblend");
+            vigra_fail("enblend: error reading from image swap file.\n");
+        }
+#endif
     }
     else {
         // File does not have data for this block.
@@ -1637,12 +1653,28 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
                            sizeof(PIXELTYPE) * pixelsToWrite, 
                            &bytesWritten, 
                            NULL)) {
-#else
-        int itemsWritten = fwrite(blockStart, sizeof(PIXELTYPE), pixelsToWrite, tmpFile_);
-        if (itemsWritten < pixelsToWrite) {
-#endif
+            DWORD dwError = GetLastError();
+            LPVOID lpMsgBuf;
+            FormatMessage(
+                    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                    NULL,
+                    dwError,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                    (LPTSTR) &lpMsgBuf,
+                    0,
+                    NULL);
+            cerr << endl << lpMsgBuf << endl;
+            LocalFree(lpMsgBuf);
             vigra_fail("enblend: error writing to image swap file.\n");
         }
+#else
+        clearerr(tmpFile_);
+        int itemsWritten = fwrite(blockStart, sizeof(PIXELTYPE), pixelsToWrite, tmpFile_);
+        if (itemsWritten < pixelsToWrite) {
+            perror("enblend");
+            vigra_fail("enblend: error writing to image swap file.\n");
+        }
+#endif
     }
 
     // Deallocate lines in block.

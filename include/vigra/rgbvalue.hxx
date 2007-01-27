@@ -704,10 +704,10 @@ operator/=(RGBValue<V1, RIDX1, GIDX1, BIDX1> & l,
 }
 
     /// componentwise scalar multiply-assignment
-template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX, class RV>
 inline
 RGBValue<V, RIDX, GIDX, BIDX> &
-operator*=(RGBValue<V, RIDX, GIDX, BIDX> & l, double r)
+operator*=(RGBValue<V, RIDX, GIDX, BIDX> & l, RV r)
 {
     l.red() *= r;
     l.green() *= r;
@@ -716,10 +716,10 @@ operator*=(RGBValue<V, RIDX, GIDX, BIDX> & l, double r)
 }
 
     /// componentwise scalar divide-assignment
-template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX, class RV>
 inline
 RGBValue<V, RIDX, GIDX, BIDX> &
-operator/=(RGBValue<V, RIDX, GIDX, BIDX> & l, double r)
+operator/=(RGBValue<V, RIDX, GIDX, BIDX> & l, RV r)
 {
     l.red() /= r;
     l.green() /= r;
@@ -729,17 +729,29 @@ operator/=(RGBValue<V, RIDX, GIDX, BIDX> & l, double r)
 
 /// component-wise right shift assignment
 // mihal 20050724
-template <class V>
-inline RGBValue<V> & operator>>=(RGBValue<V> & l, const unsigned int s) {
+template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<V, RIDX, GIDX, BIDX> &
+operator>>=(RGBValue<V, RIDX, GIDX, BIDX> & l, const unsigned int s) {
     l.red() >>= s;
     l.green() >>= s;
     l.blue() >>= s;
     return l;
 }
 
-template <>
-inline RGBValue<double> & operator>>=(RGBValue<double> & l, const unsigned int s) {
-    double scale = (double)(1 << s); //exp2(s);
+template <unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<double, RIDX, GIDX, BIDX> &
+operator>>=(RGBValue<double, RIDX, GIDX, BIDX> & l, const unsigned int s) {
+    double scale = (double)(1 << s);
+    l.red() /= scale;
+    l.green() /= scale;
+    l.blue() /= scale;
+    return l;
+}
+
+template <unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<float, RIDX, GIDX, BIDX> &
+operator>>=(RGBValue<float, RIDX, GIDX, BIDX> & l, const unsigned int s) {
+    float scale = (float)(1 << s);
     l.red() /= scale;
     l.green() /= scale;
     l.blue() /= scale;
@@ -748,17 +760,29 @@ inline RGBValue<double> & operator>>=(RGBValue<double> & l, const unsigned int s
 
 /// component-wise left shift assignment
 // mihal 20050724
-template <class V>
-inline RGBValue<V> & operator<<=(RGBValue<V> & l, const unsigned int s) {
+template <class V, unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<V, RIDX, GIDX, BIDX> &
+operator<<=(RGBValue<V, RIDX, GIDX, BIDX> & l, const unsigned int s) {
     l.red() <<= s;
     l.green() <<= s;
     l.blue() <<= s;
     return l;
 }
 
-template <>
-inline RGBValue<double> & operator<<=(RGBValue<double> & l, const unsigned int s) {
+template <unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<double, RIDX, GIDX, BIDX> &
+operator<<=(RGBValue<double, RIDX, GIDX, BIDX> & l, const unsigned int s) {
     double scale = (double)(1 << s); //exp2(s);
+    l.red() *= scale;
+    l.green() *= scale;
+    l.blue() *= scale;
+    return l;
+}
+
+template <unsigned int RIDX, unsigned int GIDX, unsigned int BIDX>
+inline RGBValue<float, RIDX, GIDX, BIDX> &
+operator<<=(RGBValue<float, RIDX, GIDX, BIDX> & l, const unsigned int s) {
+    float scale = (float)(1 << s); //exp2(s);
     l.red() *= scale;
     l.green() *= scale;
     l.blue() *= scale;
@@ -842,43 +866,64 @@ operator/(RGBValue<V1, R, G, B> const & r1,
 }
 
     /// component-wise left scalar multiplication
-template <class V, unsigned int R, unsigned int G, unsigned int B>
-inline
-typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
-operator*(double v, RGBValue<V, R, G, B> const & r)
-{
-    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
-
-    res *= v;
-
-    return res;
+template <class RV, class V, unsigned int R, unsigned int G, unsigned int B>
+inline typename PromoteTraits<RGBValue<V, R, G, B>, RGBValue<RV, R, G, B> >::Promote
+operator*(RV v, RGBValue<V, R, G, B> const & r) {
+    return r * RGBValue<RV, R, G, B>(v);
 }
 
     /// component-wise right scalar multiplication
-template <class V, unsigned int R, unsigned int G, unsigned int B>
-inline
-typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
-operator*(RGBValue<V, R, G, B> const & r, double v)
-{
-    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
-
-    res *= v;
-
-    return res;
+template <class V, unsigned int R, unsigned int G, unsigned int B, class RV>
+inline typename PromoteTraits<RGBValue<V, R, G, B>, RGBValue<RV, R, G, B> >::Promote
+operator*(RGBValue<V, R, G, B> const & r, RV v) {
+    return r * RGBValue<RV, R, G, B>(v);
 }
 
-    /// component-wise scalar division
-template <class V, unsigned int R, unsigned int G, unsigned int B>
-inline
-typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
-operator/(RGBValue<V, R, G, B> const & r, double v)
-{
-    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
-
-    res /= v;
-
-    return res;
+//    /// component-wise scalar division
+template <class V, unsigned int R, unsigned int G, unsigned int B, class RV>
+inline typename PromoteTraits<RGBValue<V, R, G, B>, RGBValue<RV, R, G, B> >::Promote
+operator/(RGBValue<V, R, G, B> const & r, RV v) {
+    return r / RGBValue<RV, R, G, B>(v);
 }
+
+//    /// component-wise left scalar multiplication
+//template <class V, unsigned int R, unsigned int G, unsigned int B>
+//inline
+//typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
+//operator*(double v, RGBValue<V, R, G, B> const & r)
+//{
+//    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
+//
+//    res *= v;
+//
+//    return res;
+//}
+
+//    /// component-wise right scalar multiplication
+//template <class V, unsigned int R, unsigned int G, unsigned int B>
+//inline
+//typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
+//operator*(RGBValue<V, R, G, B> const & r, double v)
+//{
+//    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
+//
+//    res *= v;
+//
+//    return res;
+//}
+
+//    /// component-wise scalar division
+//template <class V, unsigned int R, unsigned int G, unsigned int B>
+//inline
+//typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote
+//operator/(RGBValue<V, R, G, B> const & r, double v)
+//{
+//    typename NumericTraits<RGBValue<V, R, G, B> >::RealPromote res(r);
+//
+//    res /= v;
+//
+//    return res;
+//}
 
 /// bit-wise and
 // mihal 20050724
@@ -892,39 +937,51 @@ RGBValue<V> operator&(RGBValue<V> const & r1, RGBValue<V> const & r2)
 
 /// component-wise right shift
 // mihal 20050712
-template <class V>
-inline
-RGBValue<V> operator>>(RGBValue<V> const & r, int rs)
+template <class V, unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<V, R, G, B> operator>>(RGBValue<V, R, G, B> const & r, int rs)
 {
-    RGBValue<V> res(r.red() >> rs, r.green() >> rs, r.blue() >> rs);
+    RGBValue<V, R, G, B> res(r.red() >> rs, r.green() >> rs, r.blue() >> rs);
     return res;
 }
 
-template <>
-inline
-RGBValue<double> operator>>(RGBValue<double> const & r, int rs)
+template <unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<double, R, G, B> operator>>(RGBValue<double, R, G, B> const & r, int rs)
 {
     double scale = (double)(1 << rs); //exp2(rs);
-    RGBValue<double> res(r.red() / scale, r.green() / scale, r.blue() / scale);
+    RGBValue<double, R, G, B> res(r.red() / scale, r.green() / scale, r.blue() / scale);
+    return res;
+}
+
+template <unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<float, R, G, B> operator>>(RGBValue<float, R, G, B> const & r, int rs)
+{
+    float scale = (float)(1 << rs); //exp2(rs);
+    RGBValue<float, R, G, B> res(r.red() / scale, r.green() / scale, r.blue() / scale);
     return res;
 }
 
 /// component-wise left shift
 // mihal 20050714
-template <class V>
-inline
-RGBValue<V> operator<<(RGBValue<V> const & r, int ls)
+template <class V, unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<V, R, G, B> operator<<(RGBValue<V, R, G, B> const & r, int ls)
 {
-    RGBValue<V> res(r.red() << ls, r.green() << ls, r.blue() << ls);
+    RGBValue<V, R, G, B> res(r.red() << ls, r.green() << ls, r.blue() << ls);
     return res;
 }
 
-template <>
-inline
-RGBValue<double> operator<<(RGBValue<double> const & r, int ls)
+template <unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<double, R, G, B> operator<<(RGBValue<double, R, G, B> const & r, int ls)
 {
     double scale = (double)(1 << ls); //exp2(ls);
-    RGBValue<double> res(r.red() * scale, r.green() * scale, r.blue() * scale);
+    RGBValue<double, R, G, B> res(r.red() * scale, r.green() * scale, r.blue() * scale);
+    return res;
+}
+
+template <unsigned int R, unsigned int G, unsigned int B>
+inline RGBValue<float, R, G, B> operator<<(RGBValue<float, R, G, B> const & r, int ls)
+{
+    float scale = (float)(1 << ls); //exp2(ls);
+    RGBValue<float, R, G, B> res(r.red() * scale, r.green() * scale, r.blue() * scale);
     return res;
 }
 

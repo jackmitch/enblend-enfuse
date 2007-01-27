@@ -111,24 +111,26 @@ X check that automatic level determination works correctly
 X fix memory estimation messages
 
 X test for black row bug in alpine dam photo
+X wraparound tests
+X testing, testing, testing
+X ctrl-c cleans up temp files right
+
+- test large files on windows
 - vogl's hdr test cases
     - cinepaint crashes loading these images
-X wraparound tests
-- test large files on windows
-X testing, testing, testing
-- ctrl-c cleans up temp files right
+- fix gpu second iteration nan bug
 
-- enable all pixel types
-- documentation update
-    - man page
-    - web page
-- update version number
+X enable all pixel types
+X update version number
 - merge into trunk
 - build windows executable
     X compile libtiff with 64-bit file i/o api
     X link other vigra-impex graphics libraries
     - check libtiff warnings
 - create release packages
+- documentation update
+    - man page
+    - web page
 
 - Stuff for later revisions:
     - make striding argument object factories for BasicImages

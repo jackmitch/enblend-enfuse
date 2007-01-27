@@ -232,20 +232,26 @@ bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEDat
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
     glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedPiData);
+    CHECK_GL();
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
     glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedEData);
+    CHECK_GL();
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
     glUniform1iARB(PiTextureParam, 0);
+    CHECK_GL();
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
     glUniform1iARB(ETextureParam, 1);
+    CHECK_GL();
 
     glUniform1fARB(TempParam, t);
+    CHECK_GL();
     glUniform1fARB(KMaxParam, k);
+    CHECK_GL();
 
     glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -255,9 +261,12 @@ bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEDat
         glTexCoord2f(localWidth, localHeight); glVertex2f(localWidth, localHeight);
         glTexCoord2f(0.0, localHeight);        glVertex2f(0.0, localHeight);
     glEnd();
+    CHECK_GL();
 
     glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+    CHECK_GL();
     glReadPixels(0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedOutData);
+    CHECK_GL();
 
     return true;
 }
