@@ -115,8 +115,8 @@ void import(const ImageImportInfo &info,
     // or not contributing.
     ThresholdingAccessor ata(
             Threshold<ImagePixelComponentType, AlphaPixelType>(
-                    //NumericTraits<AlphaPixelType>::max() / 2,
-                    NumericTraits<ImagePixelComponentType>::max(),
+                    // FIXME this should really consider pixels only == max
+                    NumericTraits<ImagePixelComponentType>::max() / 2,
                     NumericTraits<ImagePixelComponentType>::max(),
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::max()
