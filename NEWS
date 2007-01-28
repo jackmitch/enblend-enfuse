@@ -176,3 +176,28 @@ December 11, 2005
     - Fixed a bug where Enblend would sometimes say "mask transition line
       bounding box undefined."
 
+January 27, 2007
+    Released enblend-3.0
+
+    - New, faster image processing algorithms for computing Gaussian and
+      Laplacian pyramids.
+
+    - Optional optimization of seam line placement to try to avoid mismatches
+      and parallax errors in the image overlap region.
+
+    - Masks can now be saved and loaded from files. This makes it possible
+      to manually edit the location of the seam before multiresolution spline
+      blending is applied.
+
+    - Checkpointing of partial results is now optional. This improves speed.
+
+    - Optional blending using the CIECAM02 color appearance model. Your TIFF
+      files should have embedded ICC profiles in order to use this option.
+      This replaces the CIE L*a*b* color blending in Enblend 2.X that never
+      worked properly.
+
+    - Optional use of the graphics processor to speed up certain computations.
+      This feature is experimental and may not work on all systems.
+
+    - Like other X.0 releases, please consider this a beta.
+

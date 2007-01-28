@@ -1,3 +1,637 @@
+2007-01-27 15:46  acmihal
+
+	* README, doc/enblend.1: Updated README and man page for 3.0
+	  release.
+
+2007-01-27 15:17  acmihal
+
+	* TODO, src/enblend.cc, src/mask.h, src/numerictraits.h: Enabled
+	  all pixel types.  Bugfix for fixed-point overflow.  Fixed cost
+	  image functor for unsigned pixel component types.
+
+2007-01-27 15:17  acmihal
+
+	* include/vigra/cachedfileimage.hxx: Removed minimum limit on image
+	  lines per cache block.
+
+2007-01-27 00:42  acmihal
+
+	* src/: enblend.cc, mask.h, numerictraits.h: Bugfix for cost image
+	  calculation for 16-bit images.
+
+2007-01-26 23:05  acmihal
+
+	* src/assemble.h: Changed assemble alpha threshold to max/2 < alpha
+	  <= max.
+
+2007-01-26 21:00  acmihal
+
+	* .cvsignore, TODO, VIGRA_LICENSE, configure.in,
+	  include/.cvsignore, include/vigra/.cvsignore,
+	  include/vigra/Makefile.am, include/vigra/accessor.hxx,
+	  include/vigra/affinegeometry.hxx, include/vigra/array_vector.hxx,
+	  include/vigra/basicgeometry.hxx, include/vigra/basicimage.hxx,
+	  include/vigra/basicimageview.hxx,
+	  include/vigra/bordertreatment.hxx,
+	  include/vigra/boundarytensor.hxx,
+	  include/vigra/cachedfileimage.hxx, include/vigra/codec.hxx,
+	  include/vigra/colorconversions.hxx,
+	  include/vigra/combineimages.hxx, include/vigra/config.hxx,
+	  include/vigra/contourcirculator.hxx,
+	  include/vigra/convolution.hxx, include/vigra/copyimage.hxx,
+	  include/vigra/cornerdetection.hxx, include/vigra/diff2d.hxx,
+	  include/vigra/distancetransform.hxx,
+	  include/vigra/edgedetection.hxx, include/vigra/eigensystem.hxx,
+	  include/vigra/error.hxx, include/vigra/extraimagetraits.hxx,
+	  include/vigra/fftw.hxx, include/vigra/fftw3.hxx,
+	  include/vigra/fixedpoint.hxx, include/vigra/flatmorphology.hxx,
+	  include/vigra/functorexpression.hxx,
+	  include/vigra/functortraits.hxx, include/vigra/gaborfilter.hxx,
+	  include/vigra/gaussians.hxx,
+	  include/vigra/gradient_energy_tensor.hxx,
+	  include/vigra/imagecontainer.hxx, include/vigra/imageinfo.hxx,
+	  include/vigra/imageiterator.hxx,
+	  include/vigra/imageiteratoradapter.hxx, include/vigra/impex.hxx,
+	  include/vigra/impexalpha.hxx, include/vigra/initimage.hxx,
+	  include/vigra/inspectimage.hxx,
+	  include/vigra/interpolating_accessor.hxx,
+	  include/vigra/iteratoradapter.hxx,
+	  include/vigra/iteratortags.hxx, include/vigra/iteratortraits.hxx,
+	  include/vigra/labelimage.hxx, include/vigra/linear_algebra.hxx,
+	  include/vigra/linear_solve.hxx, include/vigra/localminmax.hxx,
+	  include/vigra/mathutil.hxx, include/vigra/matrix.hxx,
+	  include/vigra/memory.hxx, include/vigra/metaprogramming.hxx,
+	  include/vigra/multi_array.hxx,
+	  include/vigra/multi_convolution.hxx,
+	  include/vigra/multi_impex.hxx, include/vigra/multi_iterator.hxx,
+	  include/vigra/multi_pointoperators.hxx,
+	  include/vigra/navigator.hxx,
+	  include/vigra/nonlineardiffusion.hxx,
+	  include/vigra/numerictraits.hxx,
+	  include/vigra/orientedtensorfilters.hxx,
+	  include/vigra/pixelneighborhood.hxx,
+	  include/vigra/polynomial.hxx, include/vigra/rational.hxx,
+	  include/vigra/recursiveconvolution.hxx,
+	  include/vigra/resampling_convolution.hxx,
+	  include/vigra/resizeimage.hxx, include/vigra/rfftw.hxx,
+	  include/vigra/rgbvalue.hxx,
+	  include/vigra/seededregiongrowing.hxx,
+	  include/vigra/separableconvolution.hxx,
+	  include/vigra/sized_int.hxx, include/vigra/splineimageview.hxx,
+	  include/vigra/splines.hxx, include/vigra/static_assert.hxx,
+	  include/vigra/stdcachedfileimage.hxx,
+	  include/vigra/stdconvolution.hxx, include/vigra/stdimage.hxx,
+	  include/vigra/stdimagefunctions.hxx, include/vigra/symmetry.hxx,
+	  include/vigra/tensorutilities.hxx, include/vigra/tiff.hxx,
+	  include/vigra/tinyvector.hxx, include/vigra/transformimage.hxx,
+	  include/vigra/tuple.hxx, include/vigra/utilities.hxx,
+	  include/vigra/watersheds.hxx, include/vigra/windows.h,
+	  include/vigra_ext/.cvsignore, include/vigra_ext/Correlation.h,
+	  include/vigra_ext/FitPolynom.h,
+	  include/vigra_ext/FunctorAccessor.h,
+	  include/vigra_ext/ImageTransforms.h,
+	  include/vigra_ext/Interpolators.h,
+	  include/vigra_ext/LayerImage.h, include/vigra_ext/LoweSIFT.h,
+	  include/vigra_ext/Makefile.am,
+	  include/vigra_ext/MultiLayerImage.h,
+	  include/vigra_ext/MultiThreadOperations.h,
+	  include/vigra_ext/NearestFeatureTransform.h,
+	  include/vigra_ext/PhaseCorrelation.h,
+	  include/vigra_ext/PointMatching.h, include/vigra_ext/Pyramid.h,
+	  include/vigra_ext/ROI.h, include/vigra_ext/ROIImage.h,
+	  include/vigra_ext/RansacParameterEstimator.h,
+	  include/vigra_ext/VigQuotientEstimator.h,
+	  include/vigra_ext/VignettingCorrection.h,
+	  include/vigra_ext/XMIWrapper.h, include/vigra_ext/blend.h,
+	  include/vigra_ext/impexalpha.hxx, include/vigra_ext/ransac.h,
+	  include/vigra_ext/tiffUtils.h, include/vigra_ext/utils.h,
+	  m4/lrint.m4, m4/lrintf.m4, src/.cvsignore, src/Makefile.am,
+	  src/anneal.h, src/assemble.h, src/blend.h, src/bounds.h,
+	  src/common.h, src/enblend.cc, src/enblend.h, src/enblend.vcproj,
+	  src/fixmath.h, src/float_cast.h, src/gpu.br, src/gpu.cc,
+	  src/gpu.cpp, src/gpu.h, src/mask.h, src/nearest.h,
+	  src/numerictraits.h, src/path.h, src/pyramid.h,
+	  src/vigra_impex/.cvsignore, src/vigra_impex/Makefile.am,
+	  src/vigra_impex/auto_file.hxx, src/vigra_impex/bmp.cxx,
+	  src/vigra_impex/bmp.hxx, src/vigra_impex/byteorder.cxx,
+	  src/vigra_impex/byteorder.hxx, src/vigra_impex/codecmanager.cxx,
+	  src/vigra_impex/codecmanager.hxx, src/vigra_impex/error.hxx,
+	  src/vigra_impex/gif.cxx, src/vigra_impex/gif.hxx,
+	  src/vigra_impex/hdr.cxx, src/vigra_impex/hdr.hxx,
+	  src/vigra_impex/iccjpeg.c, src/vigra_impex/iccjpeg.h,
+	  src/vigra_impex/imageinfo.cxx, src/vigra_impex/jpeg.cxx,
+	  src/vigra_impex/jpeg.hxx, src/vigra_impex/png.cxx,
+	  src/vigra_impex/png.hxx, src/vigra_impex/pnm.cxx,
+	  src/vigra_impex/pnm.hxx, src/vigra_impex/rgbe.c,
+	  src/vigra_impex/rgbe.h, src/vigra_impex/sun.cxx,
+	  src/vigra_impex/sun.hxx, src/vigra_impex/tiff.cxx,
+	  src/vigra_impex/tiff.hxx, src/vigra_impex/viff.cxx,
+	  src/vigra_impex/viff.hxx, src/vigra_impex/vigra_impex.vcproj,
+	  src/vigra_impex/void_vector.cxx, src/vigra_impex/void_vector.hxx,
+	  src/win32helpers/.cvsignore, src/win32helpers/Makefile.am,
+	  src/win32helpers/getopt_long.c, src/win32helpers/getopt_long.h,
+	  src/win32helpers/win32config.h: Merged 3.0-devel branch into
+	  trunk.
+
+2007-01-26 20:53  acmihal
+
+	* TODO, configure.in, include/vigra/cachedfileimage.hxx,
+	  include/vigra/numerictraits.hxx, include/vigra/rgbvalue.hxx,
+	  src/anneal.h, src/blend.h, src/enblend.cc, src/gpu.cc,
+	  src/mask.h, src/numerictraits.h, src/pyramid.h,
+	  src/win32helpers/win32config.h: Enabled all pixel types.  Updated
+	  version number to 3.0.
+
+2007-01-26 15:25  acmihal
+
+	* include/vigra/cachedfileimage.hxx, src/enblend.cc: Fixed sigint
+	  handler segfault on windows.
+
+2007-01-26 14:52  acmihal
+
+	* src/enblend.cc: Working on sigint handler bug.
+
+2007-01-26 14:42  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/enblend.cc,
+	  src/enblend.h: Fixing a segfault in the SIGINT handler.
+
+2007-01-26 12:56  acmihal
+
+	* TODO, src/anneal.h: Fixed out-of-bounds bug in GDA state space
+	  explorer.
+
+2007-01-24 14:22  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/anneal.h,
+	  src/blend.h, src/enblend.cc, src/mask.h, src/pyramid.h: Improved
+	  formatting of output messages.  Bugfixes for saving masks to
+	  files.  Bugfixes for cached file images when math is done on
+	  notifying iterators.	Improved behavior of anneal state space
+	  explorer when it encounters the edge of an overlap region.
+
+2006-12-18 23:37  acmihal
+
+	* TODO, src/anneal.h, src/assemble.h, src/blend.h, src/bounds.h,
+	  src/common.h, src/enblend.cc, src/enblend.h, src/fixmath.h,
+	  src/mask.h, src/nearest.h, src/numerictraits.h, src/path.h,
+	  src/pyramid.h: Updated copyright dates.  Working on fixing memory
+	  estimation messages.	Tracking down another nan bug in the gpu
+	  gda kernel.
+
+2006-12-15 09:49  acmihal
+
+	* src/anneal.h: Tracking down a NaN bug in the GDA kernel.
+
+2006-12-14 01:07  acmihal
+
+	* src/: Makefile.am, anneal.h, common.h, enblend.cc, enblend.h,
+	  mask.h, vigra_impex/Makefile.am: Finished refactoring mask code.
+	  Command-line options for loading, storing, and visualizing masks.
+	  Hunting down a NaN bug in the GDA kernel.
+
+2006-12-13 17:00  acmihal
+
+	* src/mask.h: More mask algorithm code refactoring.
+
+2006-12-12 18:14  acmihal
+
+	* src/: common.h, mask.h, nearest.h: More refactoring of the mask
+	  generation code.
+
+2006-12-10 22:37  acmihal
+
+	* src/: enblend.cc, enblend.h, enblend.vcproj, gpu.cc, gpu.h,
+	  mask.h, win32helpers/getopt_long.c: Fixing up info and error
+	  messages.  Starting to refactor mask generation code to allow
+	  users to select coarse/fine masks with and without optimization.
+
+2006-12-09 00:20  acmihal
+
+	* src/win32helpers/: Makefile.am, getopt_long.c, getopt_long.h:
+	  Code for getopt_long for windows build.
+
+2006-12-08 22:09  acmihal
+
+	* TODO, src/anneal.h, src/common.h, src/enblend.cc, src/gpu.cc,
+	  src/mask.h: Started adding some command-line options to select
+	  the blending mode.
+
+2006-12-08 18:17  acmihal
+
+	* src/: anneal.h, enblend.cc, gpu.cc, gpu.h: GLSL-based GDA kernel.
+
+2006-12-08 00:40  acmihal
+
+	* configure.in, src/Makefile.am, src/anneal.h, src/blend.h,
+	  src/enblend.cc, src/gpu.cc, src/gpu.h: Experimenting with using
+	  GLSL directly for GPU computations.
+
+2006-12-06 00:06  acmihal
+
+	* TODO, src/anneal.h, src/gpu.br, src/gpu.cpp: Packing GDA data
+	  into float4 streams.	Removed the reduce operation.
+
+2006-12-05 20:53  acmihal
+
+	* src/: anneal.h, common.h, gpu.br, gpu.cpp: Moving stream creation
+	  outside of the main loop.
+
+2006-12-05 03:03  acmihal
+
+	* TODO, src/anneal.h: GDA GPU performance analysis.
+
+2006-12-05 02:01  acmihal
+
+	* TODO, configure.in, src/Makefile.am, src/anneal.h, src/blend.h,
+	  src/gpu.br, src/gpu.cpp: Experimenting with BrookGPU for blend
+	  and GDA kernels.
+
+2006-12-01 23:44  acmihal
+
+	* TODO, configure.in, include/vigra/cachedfileimage.hxx,
+	  src/anneal.h, src/blend.h, src/enblend.cc: Experimenting with
+	  moving the blend function onto the GPU.
+
+2006-11-30 21:56  acmihal
+
+	* src/: enblend.vcproj, float_cast.h, vigra_impex/bmp.cxx,
+	  vigra_impex/byteorder.cxx, vigra_impex/codecmanager.cxx,
+	  vigra_impex/gif.cxx, vigra_impex/hdr.cxx,
+	  vigra_impex/imageinfo.cxx, vigra_impex/jpeg.cxx,
+	  vigra_impex/png.cxx, vigra_impex/pnm.cxx, vigra_impex/rgbe.c,
+	  vigra_impex/sun.cxx, vigra_impex/tiff.cxx, vigra_impex/viff.cxx,
+	  vigra_impex/void_vector.cxx: Fast fromRealPromotes.
+	  Unfortunately, a negligible improvement.
+
+2006-11-30 20:28  acmihal
+
+	* TODO, include/vigra/numerictraits.hxx, src/enblend.cc,
+	  src/float_cast.h: Work on fast fromRealPromote.
+
+2006-11-30 19:44  acmihal
+
+	* src/float_cast.h: lrint for fast fromRealPromote.
+
+2006-11-30 19:37  acmihal
+
+	* TODO, configure.in, include/vigra/cachedfileimage.hxx,
+	  m4/lrint.m4, m4/lrintf.m4, src/enblend.cc, src/enblend.h,
+	  src/mask.h, src/win32helpers/win32config.h: More work on contour
+	  segment organization.  Work on fast fromRealPromote.
+
+2006-11-29 01:21  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/anneal.h,
+	  src/common.h, src/mask.h: More work on contour segment
+	  organization.  Mask generation code cleanup.
+
+2006-11-27 02:08  acmihal
+
+	* TODO, include/vigra/diff2d.hxx, src/anneal.h, src/assemble.h,
+	  src/bounds.h, src/common.h, src/enblend.cc, src/enblend.h,
+	  src/mask.h: Replaced EnblendROI with Rect2D.	Work on contour
+	  segment organization code.
+
+2006-11-23 00:46  acmihal
+
+	* src/: enblend.h, mask.h: Working on code to arrange contours into
+	  continuous pieces.
+
+2006-11-17 16:13  acmihal
+
+	* src/mask.h: Working on some code to organize contours before
+	  optimizing them.
+
+2006-11-01 00:14  acmihal
+
+	* TODO, include/vigra_ext/XMIWrapper.h, src/anneal.h,
+	  src/enblend.cc, src/enblend.h, src/mask.h: GDA code cleanup,
+	  cleaned up the TODO.
+
+2006-10-31 18:35  acmihal
+
+	* src/anneal.h: Several different strategies for enumerating the
+	  seam vertex state spaces.
+
+2006-10-24 17:13  acmihal
+
+	* include/vigra/cachedfileimage.hxx, src/enblend.cc: Fixed
+	  indenting.
+
+2006-10-24 17:04  acmihal
+
+	* include/vigra/cachedfileimage.hxx, src/enblend.cc: Bugfixes for
+	  CachedFileImage found during the windows build.
+
+2006-10-24 16:54  acmihal
+
+	* src/mask.h: Fixing the function that creates maskInit.
+
+2006-10-24 14:30  acmihal
+
+	* TODO, include/vigra/array_vector.hxx,
+	  include/vigra/cachedfileimage.hxx, src/anneal.h, src/enblend.cc,
+	  src/enblend.h, src/enblend.vcproj, src/fixmath.h, src/mask.h,
+	  src/nearest.h, src/vigra_impex/pnm.cxx,
+	  src/vigra_impex/vigra_impex.vcproj: Working on the Windows build.
+
+2006-10-23 19:57  acmihal
+
+	* src/anneal.h: GDA bugfixes.
+
+2006-10-19 14:12  acmihal
+
+	* TODO, include/vigra/rgbvalue.hxx, src/Makefile.am, src/anneal.h,
+	  src/mask.h, src/vigra_impex/Makefile.am: GDA optimizations.
+
+2006-10-17 17:06  acmihal
+
+	* TODO, include/vigra/basicimage.hxx,
+	  include/vigra/cachedfileimage.hxx,
+	  include/vigra/imageiteratoradapter.hxx, src/anneal.h, src/mask.h:
+	  GDA optimizations.
+
+2006-10-16 19:55  acmihal
+
+	* TODO, src/anneal.h: GDA code cleanup and misc optimizations.
+
+2006-10-16 18:27  acmihal
+
+	* TODO, include/vigra/imageiteratoradapter.hxx, src/Makefile.am,
+	  src/anneal.h: Changed vigra's LineIterator to use integer math.
+
+2006-10-16 15:24  acmihal
+
+	* src/anneal.h: Tweaking annealing parameters and other minor
+	  optimizations.
+
+2006-10-16 01:35  acmihal
+
+	* src/: anneal.h, mask.h, path.h: Generalized Deterministic
+	  Annealing approach for finding a seam line.  Work in progress.
+
+2006-10-06 22:27  acmihal
+
+	* TODO, src/fixmath.h: Progress indicators for CIECAM transforms.
+
+2006-10-05 00:34  acmihal
+
+	* src/: anneal.h, mask.h, path.h: Work on advanced seam line
+	  generation algorithm.
+
+2006-10-03 13:17  acmihal
+
+	* src/nearest.h: A small optimization for the case where a column
+	  has no features in it.
+
+2006-10-03 00:03  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/anneal.h,
+	  src/mask.h, src/path.h: More work on advanced seam generation.
+
+2006-09-29 03:12  acmihal
+
+	* TODO, src/anneal.h, src/mask.h: Simulated annealing optimization
+	  of mask vertices.
+
+2006-09-29 00:46  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/mask.h: More work on
+	  shortest-path mask generation.
+
+2006-09-27 02:02  acmihal
+
+	* TODO, src/Makefile.am, src/enblend.h, src/mask.h, src/path.h:
+	  Shortest-path-based seam line generation.
+
+2006-09-25 03:01  acmihal
+
+	* TODO, include/vigra_ext/ROI.h, src/enblend.h, src/mask.h,
+	  src/nearest.h: Work on advanced mask generation algorithm.
+
+2006-09-25 03:00  acmihal
+
+	* include/vigra/: cachedfileimage.hxx, stdcachedfileimage.hxx:
+	  Added support for strided iterators to CachedFileImage.
+
+2006-09-24 03:54  acmihal
+
+	* TODO, configure.in, include/vigra/cachedfileimage.hxx,
+	  include/vigra/rgbvalue.hxx, include/vigra_ext/Makefile.am,
+	  include/vigra_ext/XMIWrapper.h, src/assemble.h, src/bounds.h,
+	  src/enblend.h, src/mask.h, src/nearest.h: Working on advanced
+	  seam algorithm.  Strided iterators for cached file images.
+
+2006-09-23 16:37  acmihal
+
+	* TODO, include/vigra/rgbvalue.hxx, src/blend.h, src/enblend.cc,
+	  src/fixmath.h: Finished CIECAM02 color blending feature.
+
+2006-09-22 03:00  acmihal
+
+	* src/: assemble.h, blend.h, enblend.cc, fixmath.h: Work on
+	  blending in CIECAM02 color space.
+
+2006-09-20 02:30  acmihal
+
+	* TODO, include/vigra/numerictraits.hxx, src/Makefile.am,
+	  src/blend.h, src/enblend.h, src/fixmath.h, src/mask.h,
+	  src/numerictraits.h, src/pyramid.h: Finished adding the
+	  EnblendNumericTraits class.
+
+2006-09-19 02:24  acmihal
+
+	* src/: assemble.h, blend.h, bounds.h, enblend.cc, enblend.h,
+	  fixmath.h, mask.h, nearest.h, pyramid.h: Working on an
+	  EnblendNumericTraits class that should help clean up the template
+	  code.
+
+2006-09-18 00:25  acmihal
+
+	* TODO, configure.in, include/vigra/stdcachedfileimage.hxx,
+	  src/assemble.h, src/enblend.cc, src/enblend.h, src/fixmath.h,
+	  src/mask.h, src/nearest.h, src/vigra_impex/tiff.cxx: Made
+	  checkpointing optional, off by default.  Cleaned up code for new
+	  vigra sized_ints.  Cleaned up code for compiling with/without
+	  CachedFileImages.  Added Gimp associated alpha hack to new
+	  vigra_impex.	Started work on CIECAM02 color blending.
+
+2006-09-17 01:58  acmihal
+
+	* TODO, include/vigra/cachedfileimage.hxx, src/nearest.h,
+	  src/pyramid.h: Added comments explaining how the new skipsm
+	  functions work.  Speed improvements for CachedFileImageIterators.
+	  Now they only check for cache misses when the row changes,
+	  instead of when every pixel is accessed.
+
+2006-09-15 02:38  acmihal
+
+	* TODO, src/pyramid.h: SKIPSM-based reduce for images with no alpha
+	  channels.
+
+2006-09-14 23:25  acmihal
+
+	* TODO, include/vigra_ext/FunctorAccessor.h,
+	  include/vigra_ext/impexalpha.hxx, src/assemble.h, src/enblend.h,
+	  src/pyramid.h: Modified Pablo's impexalpha to return actual alpha
+	  channel values.  Changed alpha thresholding to avoid
+	  associated/unassociated alpha problems.  Cleaned up skipsm-based
+	  reduce/expand functions.
+
+2006-09-13 01:52  acmihal
+
+	* TODO, src/pyramid.h, src/vigra_impex/tiff.cxx: Wraparound
+	  boundary conditions for SKIPSM-based expand and reduce.  Turned
+	  off uninteresting impex tiff warnings.
+
+2006-09-11 03:37  acmihal
+
+	* TODO, include/vigra/rgbvalue.hxx, src/pyramid.h: SKIPSM-based
+	  expand operator work-in-progress.  Checking in component-wise
+	  divide operators for rgbvalues.  Fixed an overflow artifact in
+	  expand - need to change this so it only occurs on expand with
+	  add=true.  Made expand's plus/minus parameter a template
+	  parameter.
+
+2006-09-11 02:17  acmihal
+
+	* src/: fixmath.h, pyramid.h: SKIPSM-based expand algorithm
+	  work-in-progress.
+
+2006-09-09 12:31  acmihal
+
+	* TODO, src/fixmath.h, src/pyramid.h: SKIPSM-based reduce function
+	  work-in-progress.  Bugfixes for integer dithering routine.
+
+2006-09-09 04:04  acmihal
+
+	* include/vigra/rgbvalue.hxx, src/Makefile.am, src/enblend.h,
+	  src/fixmath.h, src/pyramid.h, src/vigra_impex/Makefile.am:
+	  Testing a SKIPSM-based implementation of reduce.  Changed dither
+	  to use only integer math.
+
+2006-09-05 00:39  acmihal
+
+	* .cvsignore, TODO, VIGRA_LICENSE, configure.in,
+	  include/.cvsignore, include/vigra/.cvsignore,
+	  include/vigra/Makefile.am, include/vigra/accessor.hxx,
+	  include/vigra/affinegeometry.hxx, include/vigra/array_vector.hxx,
+	  include/vigra/basicgeometry.hxx, include/vigra/basicimage.hxx,
+	  include/vigra/basicimageview.hxx,
+	  include/vigra/bordertreatment.hxx,
+	  include/vigra/boundarytensor.hxx, include/vigra/codec.hxx,
+	  include/vigra/colorconversions.hxx,
+	  include/vigra/combineimages.hxx, include/vigra/config.hxx,
+	  include/vigra/contourcirculator.hxx,
+	  include/vigra/convolution.hxx, include/vigra/copyimage.hxx,
+	  include/vigra/cornerdetection.hxx, include/vigra/diff2d.hxx,
+	  include/vigra/distancetransform.hxx,
+	  include/vigra/edgedetection.hxx, include/vigra/eigensystem.hxx,
+	  include/vigra/error.hxx, include/vigra/extraimagetraits.hxx,
+	  include/vigra/fftw.hxx, include/vigra/fftw3.hxx,
+	  include/vigra/fixedpoint.hxx, include/vigra/flatmorphology.hxx,
+	  include/vigra/functorexpression.hxx,
+	  include/vigra/functortraits.hxx, include/vigra/gaborfilter.hxx,
+	  include/vigra/gaussians.hxx,
+	  include/vigra/gradient_energy_tensor.hxx,
+	  include/vigra/imagecontainer.hxx, include/vigra/imageinfo.hxx,
+	  include/vigra/imageiterator.hxx,
+	  include/vigra/imageiteratoradapter.hxx, include/vigra/impex.hxx,
+	  include/vigra/impexalpha.hxx, include/vigra/initimage.hxx,
+	  include/vigra/inspectimage.hxx,
+	  include/vigra/interpolating_accessor.hxx,
+	  include/vigra/iteratoradapter.hxx,
+	  include/vigra/iteratortags.hxx, include/vigra/iteratortraits.hxx,
+	  include/vigra/labelimage.hxx, include/vigra/linear_algebra.hxx,
+	  include/vigra/linear_solve.hxx, include/vigra/localminmax.hxx,
+	  include/vigra/mathutil.hxx, include/vigra/matrix.hxx,
+	  include/vigra/memory.hxx, include/vigra/metaprogramming.hxx,
+	  include/vigra/multi_array.hxx,
+	  include/vigra/multi_convolution.hxx,
+	  include/vigra/multi_impex.hxx, include/vigra/multi_iterator.hxx,
+	  include/vigra/multi_pointoperators.hxx,
+	  include/vigra/navigator.hxx,
+	  include/vigra/nonlineardiffusion.hxx,
+	  include/vigra/numerictraits.hxx,
+	  include/vigra/orientedtensorfilters.hxx,
+	  include/vigra/pixelneighborhood.hxx,
+	  include/vigra/polynomial.hxx, include/vigra/rational.hxx,
+	  include/vigra/recursiveconvolution.hxx,
+	  include/vigra/resampling_convolution.hxx,
+	  include/vigra/resizeimage.hxx, include/vigra/rfftw.hxx,
+	  include/vigra/rgbvalue.hxx,
+	  include/vigra/seededregiongrowing.hxx,
+	  include/vigra/separableconvolution.hxx,
+	  include/vigra/sized_int.hxx, include/vigra/splineimageview.hxx,
+	  include/vigra/splines.hxx, include/vigra/static_assert.hxx,
+	  include/vigra/stdconvolution.hxx, include/vigra/stdimage.hxx,
+	  include/vigra/stdimagefunctions.hxx, include/vigra/symmetry.hxx,
+	  include/vigra/tensorutilities.hxx, include/vigra/tiff.hxx,
+	  include/vigra/tinyvector.hxx, include/vigra/transformimage.hxx,
+	  include/vigra/tuple.hxx, include/vigra/utilities.hxx,
+	  include/vigra/watersheds.hxx, include/vigra/windows.h,
+	  include/vigra_ext/.cvsignore, include/vigra_ext/Correlation.h,
+	  include/vigra_ext/FitPolynom.h,
+	  include/vigra_ext/FunctorAccessor.h,
+	  include/vigra_ext/ImageTransforms.h,
+	  include/vigra_ext/Interpolators.h,
+	  include/vigra_ext/LayerImage.h, include/vigra_ext/LoweSIFT.h,
+	  include/vigra_ext/Makefile.am,
+	  include/vigra_ext/MultiLayerImage.h,
+	  include/vigra_ext/MultiThreadOperations.h,
+	  include/vigra_ext/NearestFeatureTransform.h,
+	  include/vigra_ext/PhaseCorrelation.h,
+	  include/vigra_ext/PointMatching.h, include/vigra_ext/Pyramid.h,
+	  include/vigra_ext/ROI.h, include/vigra_ext/ROIImage.h,
+	  include/vigra_ext/RansacParameterEstimator.h,
+	  include/vigra_ext/VigQuotientEstimator.h,
+	  include/vigra_ext/VignettingCorrection.h,
+	  include/vigra_ext/blend.h, include/vigra_ext/impexalpha.hxx,
+	  include/vigra_ext/ransac.h, include/vigra_ext/tiffUtils.h,
+	  include/vigra_ext/utils.h, src/.cvsignore, src/assemble.h,
+	  src/enblend.cc, src/enblend.h, src/mask.h, src/nearest.h,
+	  src/pyramid.h, src/vigra_impex/.cvsignore,
+	  src/vigra_impex/Makefile.am, src/vigra_impex/auto_file.hxx,
+	  src/vigra_impex/bmp.cxx, src/vigra_impex/bmp.hxx,
+	  src/vigra_impex/byteorder.cxx, src/vigra_impex/byteorder.hxx,
+	  src/vigra_impex/codecmanager.cxx,
+	  src/vigra_impex/codecmanager.hxx, src/vigra_impex/error.hxx,
+	  src/vigra_impex/gif.cxx, src/vigra_impex/gif.hxx,
+	  src/vigra_impex/hdr.cxx, src/vigra_impex/hdr.hxx,
+	  src/vigra_impex/iccjpeg.c, src/vigra_impex/iccjpeg.h,
+	  src/vigra_impex/imageinfo.cxx, src/vigra_impex/jpeg.cxx,
+	  src/vigra_impex/jpeg.hxx, src/vigra_impex/png.cxx,
+	  src/vigra_impex/png.hxx, src/vigra_impex/pnm.cxx,
+	  src/vigra_impex/pnm.hxx, src/vigra_impex/rgbe.c,
+	  src/vigra_impex/rgbe.h, src/vigra_impex/sun.cxx,
+	  src/vigra_impex/sun.hxx, src/vigra_impex/tiff.cxx,
+	  src/vigra_impex/tiff.hxx, src/vigra_impex/viff.cxx,
+	  src/vigra_impex/viff.hxx, src/vigra_impex/void_vector.cxx,
+	  src/vigra_impex/void_vector.hxx, src/win32helpers/.cvsignore,
+	  src/win32helpers/win32config.h: Updated to latest version of
+	  vigra (with MIT X11 license).
+
+2006-09-04 17:37  acmihal
+
+	* doc/enblend.1, include/vigra/impex.hxx, src/Makefile.am,
+	  src/blend.h, src/enblend.cc, src/enblend.h, src/mask.h,
+	  src/wavelet.h, src/vigra_impex/tiff.cxx: Various uncommitted
+	  changes from experiments with wavelet transforms and active
+	  countour mask generation.
+
+2006-09-04 17:33  acmihal
+
+	* src/fixmath.h: Added scope resolution to Twister reference.
+
+2005-12-10 23:14  acmihal
+
+	* doc/enblend.1: Updated the date on the man page.
+
+2005-12-10 23:01  acmihal
+
+	* ChangeLog: Checking in the ChangeLog for the 2.5 release.
+
 2005-12-10 22:52  acmihal
 
 	* ChangeLog, NEWS, configure.in, src/win32helpers/win32config.h:
@@ -190,6 +824,11 @@
 
 	* src/: Makefile.am, anneal.h, mask.h: Experimenting with simulated
 	  annealing for solving active contours for mask generation.
+
+2004-11-21 01:23  acmihal
+
+	* src/anneal.h: file anneal.h was added on branch
+	  Devel-3_0-branch-20060904 on 2006-09-29 10:12:40 +0000
 
 2004-11-21 01:22  acmihal
 
