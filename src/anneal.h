@@ -678,7 +678,7 @@ protected:
 
             localK = stateSpace->size();
             if (localK < 2) convergedPoints[index] = true;
-            kMax = std::max(kMax, stateProbabilities->size());
+            kMax = std::max((size_t)kMax, stateProbabilities->size());
 
         }
 
