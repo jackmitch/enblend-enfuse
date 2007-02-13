@@ -264,7 +264,7 @@ public:
 
         tCurrent = tInitial;
 
-        while (tCurrent > tFinal) {
+        while ((kMax > 1) && (tCurrent > tFinal)) {
             double epsilon = 1.0 / kMax;
             unsigned int eta = (unsigned int)ceil(log(epsilon)
                              / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
