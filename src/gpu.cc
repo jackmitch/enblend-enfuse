@@ -27,7 +27,7 @@ using std::cout;
 using std::endl;
 
 static GLuint GlutWindowHandle;
-static int MaxTextureSize;
+static GLint MaxTextureSize;
 static GLuint PiTexture;
 static GLuint ETexture;
 static GLuint OutTexture;
@@ -50,11 +50,11 @@ static const char *GDAKernelSource = {
 "   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);"
 "   vec4 An;"
 "   vec4 pi_plus;"
-"   vec4 sum = vec4(0.0f, 0.0f, 0.0f, 0.0f);"
+"   vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);"
 "   float i = 0.0;"
 "   for (i = 0.0; i < KMax; i++) {"
 "       vec2 coord = vec2(i, gl_TexCoord[0].t);"
-"       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0f;"
+"       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0;"
 "       pi_plus = pix + texture2DRect(PiTexture, coord);"
 "       sum += (pi_plus / An);"
 "   }"
@@ -71,9 +71,9 @@ void checkGLErrors(int line, char *file) {
 }
 
 void printInfoLog(GLhandleARB obj) {
-    int infologLength = 0;
-    int charsWritten = 0;
-    char *infoLog;
+  GLint infologLength = 0;
+  GLint charsWritten = 0;
+  char *infoLog;
     glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infologLength);
     if (infologLength > 1) {
         infoLog = new char[infologLength];
@@ -115,7 +115,8 @@ bool checkFramebufferStatus() {
     return false;
 }
 
-bool initGPU() {
+bool initGPU(int *argcp,char **argv) {
+    glutInit(argcp,argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
     GlutWindowHandle = glutCreateWindow("Enblend");
 

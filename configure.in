@@ -18,9 +18,30 @@ AC_C_BIGENDIAN
 AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[])
 AC_CHECK_LIB(lcms,cmsCreateTransform,,AC_MSG_WARN([liblcms is required to compile enblend.]),[])
 AC_CHECK_LIB(xmi,miNewPaintedSet,,AC_MSG_WARN([libxmi is required to compile enblend.]),[])
-AC_CHECK_LIB(glut,glutInitDisplayMode,,AC_MSG_WARN([GLUT is required to compile enblend.]),[-lGL -lGLU])
-AC_CHECK_LIB(GLU,gluBeginCurve,,AC_MSG_WARN([libGLU is required to compile enblend.]),[])
-AC_CHECK_LIB(GL,glBegin,,AC_MSG_WARN([libGL is required to compile enblend.]),[])
+
+# Replaced with custom M4 macros, JD Smith, June, 2007
+#AC_CHECK_LIB(glut,glutInitDisplayMode,,AC_MSG_WARN([GLUT is required to compile enblend.]),[-lGL -lGLU])
+#AC_CHECK_LIB(GLU,gluBeginCurve,,AC_MSG_WARN([libGLU is required to compile enblend.]),[])
+#AC_CHECK_LIB(GL,glBegin,,AC_MSG_WARN([libGL is required to compile enblend.]),[])
+#
+
+AX_CHECK_GL
+AX_CHECK_GLU
+AX_CHECK_GLUT 
+if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then 
+     AC_MSG_WARN([ 
+================================================================================ 
+WARNING: GL/GLU/GLUT not found. 
+
+The GL, GLU, and GLUT libraries are required in order to build enblend. 
+================================================================================ 
+]) 
+fi
+
+# GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
+LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
+CFLAGS="${GL_CFLAGS} $CFLAGS"
+
 AC_CHECK_LIB(GLEW,glewInit,,AC_MSG_WARN([GLEW is required to compile enblend.]),[])
 #AC_CHECK_LIB(sh,main,,AC_MSG_WARN([libsh is required to compile enblend.]),[])
 #AC_CHECK_LIB(brook,main,,AC_MSG_WARN([BrookGPU runtime libraries are required to compile enblend.]),[-logl -lcpu -lgpu])
@@ -30,13 +51,19 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
 AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER(boost/random/mersenne_twister.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
 AC_CHECK_HEADER(boost/static_assert.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp,,AC_MSG_WARN([boost header files are required to compile enblend.]))
+AC_LANG_RESTORE
+
 AC_CHECK_HEADER(lcms.h,,AC_MSG_WARN([lcms header files are required to compile enblend.]))
 AC_CHECK_HEADER(xmi.h,,AC_MSG_WARN([xmi header files are required to compile enblend.]))
-AC_CHECK_HEADER(GL/glew.h,,AC_MSG_WARN([glew header files are required to compile enblend.]))
-AC_CHECK_HEADER(GL/glut.h,,AC_MSG_WARN([glut header files are required to compile enblend.]))
+
+#AC_CHECK_HEADER(GL/glew.h,,AC_MSG_WARN([glew header files are required to compile enblend.]))
+#AC_CHECK_HEADER(GL/glut.h,,AC_MSG_WARN([glut header files are required to compile enblend.]))
 #AC_CHECK_HEADER(GL/gl.h,,AC_MSG_WARN([OpenGL gl.h header file is required to compile enblend.]))
 #AC_CHECK_HEADER(GL/glx.h,,AC_MSG_WARN([OpenGL glx.h header file is required to compile enblend.]))
 #AC_CHECK_HEADER(sh/sh.hpp,,AC_MSG_WARN([libsh header files are required to compile enblend.]))
@@ -72,3 +99,11 @@ AC_CONFIG_FILES([Makefile
                  src/vigra_impex/Makefile
                  src/win32helpers/Makefile])
 AC_OUTPUT
+
+AC_MSG_RESULT([
+ enblend now configured for ${host}
+   Source directory:               ${srcdir}
+   Installation directory:         ${prefix}
+   C compiler:                     ${CC}
+   LIBS needed for configure:      ${LIBS}
+])

@@ -399,7 +399,7 @@ protected:
                     //    printf("%08x         adj\n", 1072693248 - 60801);
                     //    printf("%08x%08x\n", eco.n.i, eco.n.j);
                     //}
-                    if (isnan(piTAn)) {
+                    if (std::isnan(piTAn)) {
                         // exp term is infinity or zero.
                         if (ej > E[i]) piTAn = 0.0;
                         else piTAn = piT;

@@ -1,3 +1,15 @@
+2007-08-04 12:22 dangelo
+	* configure.in, m4/acx_pthread.m4 m4/ax_check_gl.m4,
+	  m4/ax_check_glu.m4, m4/ax_check_glut.m4: proper
+	  detection of OpenGL and related libraries on OSX
+	  (JD Smith)
+	  
+	* src/anneal.h: isnan doesn't work on OSX, use std::isnan instead
+	  (JD Smith)
+	  
+	* src/gpu.h, src/gpu.cc, src/enblend.cc: call glutInit(), use 0.0
+	  instead of 0.0f in gpu code (JD Smith, Edouard Gomez, Pete Woods)
+	  
 2007-01-27 15:46  acmihal
 
 	* README, doc/enblend.1: Updated README and man page for 3.0

@@ -474,7 +474,7 @@ int main(int argc, char** argv) {
     }
 
     if (UseGPU) {
-        initGPU();
+      initGPU(&argc,argv);
     }
 
     if (MaskVectorizeDistance == 0) {

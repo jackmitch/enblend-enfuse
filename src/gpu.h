@@ -25,8 +25,14 @@
 #endif
 
 #define GLEW_STATIC 1
+
+
 #include <GL/glew.h>
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #define CHECK_GL() checkGLErrors(__LINE__, __FILE__)
 
@@ -34,7 +40,7 @@ void checkGLErrors(int line, char *file);
 void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
 
-bool initGPU(void);
+bool initGPU(int *,char **);
 bool configureGPUTextures(unsigned int k, unsigned int vars);
 bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData);
 bool clearGPUTextures();
