@@ -1,3 +1,8 @@
+2007-08-05 11:20 dangelo
+
+        * src/assemble.h: output final image without mask if
+	  output format does not support alpha channels (JPG output)
+
 2007-08-05 10:23 dangelo
 
         * src/enblend.cc, src/anneal.h, src/gpu.cc, src/gpu.h, src/mask.h:

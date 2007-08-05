@@ -90,10 +90,15 @@ void checkpoint(pair<ImageType*, AlphaType*> &p, ImageExportInfo &outputImageInf
             ),
             (p.second)->accessor());
 
-    exportImageAlpha(srcImageRange(*(p.first)),
-                     srcIter((p.second)->upperLeft(), ata),
-                     outputImageInfo);
-
+    try {
+        exportImageAlpha(srcImageRange(*(p.first)),
+                         srcIter((p.second)->upperLeft(), ata),
+                         outputImageInfo);
+    } catch (std::exception & e) {
+        // try to export without alpha channel
+        exportImage(srcImageRange(*(p.first)),
+                    outputImageInfo);
+    }
 };
 
 template <typename DestIterator, typename DestAccessor,
