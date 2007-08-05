@@ -59,6 +59,10 @@
  * Andrew Mihal's modifications are covered by the VIGRA license.
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef HasTIFF
 // NB (jbeda): tiffio.h is going to include this anyway.  Let's include
 // it now so that we can control how it comes in.  Namely, we want
@@ -77,6 +81,7 @@ extern "C"
 {
 #include <tiff.h>
 #include <tiffio.h>
+#include <tiffvers.h>
 }
 
 extern bool GimpAssociatedAlphaHack;
@@ -111,7 +116,11 @@ namespace vigra {
         desc.compressionTypes[4] = "DEFLATE";
 
         // init magic strings
+#if TIFFLIB_VERSION > 20070712
+        desc.magicStrings.resize(3);
+#else
         desc.magicStrings.resize(2);
+#endif
         desc.magicStrings[0].resize(4);
         desc.magicStrings[0][0] = '\115';
         desc.magicStrings[0][1] = '\115';
@@ -122,6 +131,15 @@ namespace vigra {
         desc.magicStrings[1][1] = '\111';
         desc.magicStrings[1][2] = '\052';
         desc.magicStrings[1][3] = '\000';
+
+#if TIFFLIB_VERSION > 20070712
+        // magic for bigtiff
+        desc.magicStrings[2].resize(4);
+        desc.magicStrings[2][0] = '\111';
+        desc.magicStrings[2][1] = '\111';
+        desc.magicStrings[2][2] = '\053';
+        desc.magicStrings[2][3] = '\000';
+#endif
 
         // init file extensions
         desc.fileExtensions.resize(2);

@@ -15,9 +15,23 @@ AC_C_BIGENDIAN
 
 # Checks for libraries.
 #AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[-ljpeg -lz -lm])
-AC_CHECK_LIB(tiff,TIFFOpen,,AC_MSG_WARN([libtiff is required to compile enblend.]),[])
+AC_CHECK_LIB(z,gzopen,,AC_MSG_NOTICE([zlib is required.]),[])
+AC_CHECK_LIB(jpeg,jpeg_finish_compress,[LIBS="-ljpeg ${LIBS}";AC_DEFINE(HasJPEG,1,Define if you have the jpeg library)],AC_MSG_NOTICE([Compiling without support for jpeg files.]),[])
+AC_CHECK_LIB(png,png_init_io,[LIBS="-lpng ${LIBS}";AC_DEFINE(HasPNG,1,Define if you have the png library)],AC_MSG_NOTICE([Compiling without support for png files.]),[])
+AC_CHECK_LIB(tiff,TIFFOpen,[LIBS="-ltiff ${LIBS}";AC_DEFINE(HasTIFF,1,Define if you have the tiff library)],AC_MSG_ERROR([libtiff is required to compile enblend.]),[])
 AC_CHECK_LIB(lcms,cmsCreateTransform,,AC_MSG_WARN([liblcms is required to compile enblend.]),[])
 AC_CHECK_LIB(xmi,miNewPaintedSet,,AC_MSG_WARN([libxmi is required to compile enblend.]),[])
+PKG_CHECK_MODULES(OPENEXR, OpenEXR >= 1.0,
+  [AC_DEFINE(HasEXR,1,Define if you have EXR library)
+  have_exr="yes"],[
+AC_MSG_WARN( "OpenEXR support disabled: " $OPENEXR_PKG_ERRORS )
+  have_exr="no"
+]) #end of PKG_CHECK_MODULES
+
+LIBS="${OPENEXR_LIBS} $LIBS"
+CFLAGS="${OPENEXR_CFLAGS} $CFLAGS"
+CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
+
 
 # Replaced with custom M4 macros, JD Smith, June, 2007
 #AC_CHECK_LIB(glut,glutInitDisplayMode,,AC_MSG_WARN([GLUT is required to compile enblend.]),[-lGL -lGLU])
@@ -29,28 +43,26 @@ AX_CHECK_GL
 AX_CHECK_GLU
 AX_CHECK_GLUT 
 if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then 
-     AC_MSG_WARN([ 
-================================================================================ 
-WARNING: GL/GLU/GLUT not found. 
-
-The GL, GLU, and GLUT libraries are required in order to build enblend. 
-================================================================================ 
-]) 
+     AC_MSG_WARN([WARNING: GL/GLU/GLUT not found, disabling GPU mode])
+else
+    # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
+    LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
+    CFLAGS="${GL_CFLAGS} $CFLAGS"
 fi
 
-# GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
-LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
-CFLAGS="${GL_CFLAGS} $CFLAGS"
 
-AC_CHECK_LIB(GLEW,glewInit,,AC_MSG_WARN([GLEW is required to compile enblend.]),[])
+AC_CHECK_LIB(GLEW,glewInit,,AC_MSG_WARN([GLEW not found. Disabling GPU mode.]),[])
 #AC_CHECK_LIB(sh,main,,AC_MSG_WARN([libsh is required to compile enblend.]),[])
 #AC_CHECK_LIB(brook,main,,AC_MSG_WARN([BrookGPU runtime libraries are required to compile enblend.]),[-logl -lcpu -lgpu])
 
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
+AC_CHECK_HEADER(ext/slist,AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file),AC_MSG_WARN([ext/slist is required to compile enblend]))
 AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
 AC_CHECK_HEADER(tiffio.h,,AC_MSG_WARN([libtiff-devel header files are required to compile enblend.]))
+AC_CHECK_HEADER(jpeglib.h,,AC_MSG_WARN([libjpeg-devel header files are required to compile enblend.]))
+AC_CHECK_HEADER(png.h,,AC_MSG_WARN([libpng-devel header files are required to compile enblend.]))
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
@@ -90,6 +102,9 @@ AC_CHECK_FUNCS([floor memset pow rint sqrt strchr strerror strrchr mkstemp])
 AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
 
+# use a static vigra impex library
+CXXFLAGS="-DVIGRA_STATIC_LIB ${CXXFLAGS}"
+
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  include/Makefile
@@ -104,6 +119,8 @@ AC_MSG_RESULT([
  enblend now configured for ${host}
    Source directory:               ${srcdir}
    Installation directory:         ${prefix}
-   C compiler:                     ${CC}
+   C++ compiler:                   ${CXX}
+   CFLAGS needed for configure:    ${CFLAGS}
+   CXXFLAGS needed for configure:  ${CXXFLAGS}
    LIBS needed for configure:      ${LIBS}
 ])

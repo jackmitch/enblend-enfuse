@@ -42,9 +42,10 @@
 
 #if defined(_WIN32)
 #define VC_EXTRALEAN
-# define NOMINMAX
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
 # include <windows.h>
-# undef NOMINMAX
 #ifdef DIFFERENCE
 # undef DIFFERENCE
 #endif

@@ -4,6 +4,7 @@
 /*       Cognitive Systems Group, University of Hamburg, Germany        */
 /*                                                                      */
 /*    This file is part of the VIGRA computer vision library.           */
+/*    ( Version 1.5.0, Dec 07 2006 )                                    */
 /*    The VIGRA Website is                                              */
 /*        http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/      */
 /*    Please direct questions, bug reports, and contributions to        */
@@ -43,12 +44,12 @@
  *  - Added support for x and y resolution fields.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef HasPNG
 
-#include <stdexcept>
-#include <iostream>
-#include <csetjmp>
-#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/sized_int.hxx"
 #include "void_vector.hxx"
@@ -56,6 +57,8 @@
 #include "png.hxx"
 #include "byteorder.hxx"
 #include "error.hxx"
+#include <stdexcept>
+#include <iostream>
 
 extern "C"
 {
@@ -78,7 +81,7 @@ extern "C" {
 static void PngError( png_structp png_ptr, png_const_charp error_msg )
 {
     png_error_message = std::string(error_msg);
-    std::longjmp( png_ptr->jmpbuf, 1 );
+    longjmp( png_ptr->jmpbuf, 1 );
 }
 
 // called on non-fatal errors
@@ -174,7 +177,7 @@ namespace vigra {
 
         // size of one row
         int rowsize;
-        unsigned char * row_data;
+        void_vector<unsigned char> row_data;
 
         // ctor, dtor
         PngDecoderImpl( const std::string & filename );
@@ -194,7 +197,7 @@ namespace vigra {
 #endif
           bands(0), iccProfileLength(0), iccProfilePtr(0),
           scanline(-1), x_resolution(0), y_resolution(0),
-          n_interlace_passes(0), n_channels(0), row_data(0)
+          n_interlace_passes(0), n_channels(0)
     {
         png_error_message = "";
         // check if the file is a png file
@@ -236,7 +239,6 @@ namespace vigra {
     PngDecoderImpl::~PngDecoderImpl()
     {
         png_destroy_read_struct( &png, &info, NULL );
-        if (row_data) delete[] row_data;
     }
 
     void PngDecoderImpl::init()
@@ -371,7 +373,7 @@ namespace vigra {
         rowsize = png_get_rowbytes(png, info);
 
         // allocate data buffers
-        row_data = new unsigned char[rowsize];
+        row_data.resize(rowsize);
     }
 
     void PngDecoderImpl::nextScanline()
@@ -379,7 +381,7 @@ namespace vigra {
         for (int i=0; i < n_interlace_passes; i++) {
         if (setjmp(png->jmpbuf))
                 vigra_postcondition( false,png_error_message.insert(0, "error in png_read_row(): ").c_str());
-            png_read_row(png, row_data, NULL);
+            png_read_row(png, row_data.begin(), NULL);
         }
     }
 
@@ -464,11 +466,11 @@ namespace vigra {
         switch (pimpl->bit_depth) {
         case 8:
             {
-                return pimpl->row_data + band;
+                return pimpl->row_data.begin() + band;
             }
         case 16:
             {
-                return pimpl->row_data + 2*band;
+                return pimpl->row_data.begin() + 2*band;
             }
         default:
             vigra_fail( "internal error: illegal bit depth." );

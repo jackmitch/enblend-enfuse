@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_LIBGLEW
 #define GLEW_STATIC 1
 
 
@@ -45,5 +46,6 @@ bool configureGPUTextures(unsigned int k, unsigned int vars);
 bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData);
 bool clearGPUTextures();
 bool wrapupGPU(void);
+#endif
 
 #endif /* __GPU_H__ */

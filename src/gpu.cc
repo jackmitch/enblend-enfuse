@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "gpu.h"
+#ifdef HAVE_LIBGLEW
 
 using std::cerr;
 using std::cout;
@@ -289,3 +290,4 @@ bool wrapupGPU() {
     return true;
 }
 
+#endif

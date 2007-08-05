@@ -28,10 +28,10 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
 //#include <list>
-#ifdef _WIN32
-#include <slist>
-#else
+#ifdef HAVE_EXT_SLIST
 #include <ext/slist>
+#else
+#include <slist>
 #endif
 #include <algorithm>
 #include <vector>
@@ -42,7 +42,9 @@
 #include <math.h>
 #endif
 
+#ifdef HAVE_LIBGLEW
 #include "gpu.h"
+#endif
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
 #include "vigra_ext/XMIWrapper.h"
@@ -51,10 +53,10 @@ using std::for_each;
 using std::pair;
 using std::vector;
 //using std::list;
-#ifdef _WIN32
-using std::slist;
-#else
+#ifdef HAVE_EXT_SLIST
 using __gnu_cxx::slist;
+#else
+using std::slist;
 #endif
 
 using boost::lambda::bind;
@@ -260,7 +262,9 @@ public:
         int iterationCount = 0;
         int iterationsPerTick = (numIterations+3) / 4;
 
+#ifdef HAVE_LIBGLEW
         if (UseGPU) configureGPUTextures(kMax, pointStateSpaces.size());
+#endif
 
         tCurrent = tInitial;
 
@@ -295,7 +299,9 @@ public:
 
         }
 
+#ifdef HAVE_LIBGLEW
         if (UseGPU) clearGPUTextures();
+#endif
 
         if (visualizeStateSpaceImage) {
             // Remaining unconverged state space points
@@ -421,6 +427,7 @@ protected:
 
     }
 
+#ifdef HAVE_LIBGLEW
     //virtual void calculateStateProbabilitiesGPU() {
     inline void calculateStateProbabilitiesGPU() {
 
@@ -562,10 +569,12 @@ protected:
         }
 
     }
+#endif
 
     //virtual void iterate() {
     void iterate() {
 
+#ifdef HAVE_LIBGLEW
         if (UseGPU) {
             calculateStateProbabilitiesGPU();
 
@@ -592,8 +601,11 @@ protected:
             //}
 
         } else {
+#endif
             calculateStateProbabilities();
+#ifdef HAVE_LIBGLEW
         }
+#endif
 
         kMax = 1;
         for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {

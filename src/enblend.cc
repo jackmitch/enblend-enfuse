@@ -21,10 +21,10 @@
 #include <config.h>
 #endif
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <win32helpers\win32config.h>
 #define isnan _isnan
-#endif // _WIN32
+#endif // _MSC_VER
 
 // Defines lrint for fast fromRealPromotes
 #include "float_cast.h"
@@ -61,7 +61,7 @@ extern "C" {
 extern "C" char *optarg;
 extern "C" int optind;
 
-#ifndef _WIN32
+#ifndef _MSC_VER
 #include <fenv.h>
 #endif
 
@@ -119,7 +119,9 @@ LCMSHANDLE CIECAMTransform = NULL;
 
 #include "common.h"
 #include "enblend.h"
+#ifdef HAVE_LIBGLEW
 #include "gpu.h"
+#endif
 
 #include "vigra/impex.hxx"
 #include "vigra/sized_int.hxx"
@@ -162,7 +164,9 @@ void printUsageAndExit() {
     cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
     cout << " -c                Use CIECAM02 to blend colors" << endl;
     cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+#ifdef HAVE_LIBGLEW
     cout << " --gpu             Use the graphics card to accelerate some computations." << endl;
+#endif
     cout << " -f WIDTHxHEIGHT   Manually set the size of the output image." << endl
          << "                   Useful for cropped and shifted input TIFF images," << endl
          << "                   such as those produced by Nona." << endl;
@@ -193,11 +197,13 @@ void sigint_handler(int sig) {
     // FIXME what if this occurs in a CFI atomic section?
     // This is no longer necessary, temp files are unlinked during creation.
     //CachedFileImageDirector::v().~CachedFileImageDirector();
+#ifdef HAVE_LIBGLEW
     if (UseGPU) {
         // FIXME what if this occurs in a GL atomic section?
         //cout << "Cleaning up GPU state..." << endl;
         wrapupGPU();
     }
+#endif
     #if !defined(__GW32C__) && !defined(_WIN32)
     struct sigaction action;
     action.sa_handler = SIG_DFL;
@@ -211,7 +217,7 @@ void sigint_handler(int sig) {
 
 int main(int argc, char** argv) {
 
-#ifdef _WIN32
+#ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
     // See changes in vigra numerictraits.hxx
@@ -245,7 +251,9 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     static struct option long_options[] = {
+#ifdef HAVE_LIBGLEW
             {"gpu", no_argument, &UseGPU, 1},
+#endif
             {"coarse-mask", no_argument, &CoarseMask, 1},
             {"fine-mask", no_argument, &CoarseMask, 0},
             {"optimize", no_argument, &OptimizeMask, 1},
@@ -473,9 +481,11 @@ int main(int argc, char** argv) {
         printUsageAndExit();
     }
 
+#ifdef HAVE_LIBGLEW
     if (UseGPU) {
       initGPU(&argc,argv);
     }
+#endif
 
     if (MaskVectorizeDistance == 0) {
         MaskVectorizeDistance = CoarseMask ? 4 : 20;
@@ -829,9 +839,11 @@ int main(int argc, char** argv) {
     if (XYZProfile) cmsCloseProfile(XYZProfile);
     if (InputProfile) cmsCloseProfile(InputProfile);
 
+#ifdef HAVE_LIBGLEW
     if (UseGPU) {
         wrapupGPU();
     }
+#endif
 
     delete[] SaveMaskFileName;
     delete[] LoadMaskFileName;

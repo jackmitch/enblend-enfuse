@@ -22,8 +22,6 @@
 #ifndef VIGRA_ICCJPEG_H
 #define VIGRA_ICCJPEG_H
 
-#ifdef HasJPEG
-
 #include <stdio.h>		/* needed to define "FILE", "NULL" */
 #include "jpeglib.h"
 
@@ -82,4 +80,3 @@ extern boolean read_icc_profile JPP((j_decompress_ptr cinfo,
 
 #endif
 
-#endif

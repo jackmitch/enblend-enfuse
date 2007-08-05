@@ -25,10 +25,10 @@
 #endif
 
 #include <iostream>
-#ifdef _WIN32
-#include <slist>
-#else
+#ifdef HAVE_EXT_SLIST
 #include <ext/slist>
+#else
+#include <slist>
 #endif
 
 #include "common.h"
@@ -54,10 +54,10 @@
 
 using std::make_pair;
 using std::vector;
-#ifdef _WIN32
-using std::slist;
-#else
+#ifdef HAVE_EXT_SLIST
 using __gnu_cxx::slist;
+#else
+using std::slist;
 #endif
 
 using vigra::combineThreeImages;

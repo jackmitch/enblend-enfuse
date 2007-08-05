@@ -50,6 +50,7 @@
 #include <vigra/utilities.hxx>
 
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::list;
 using std::map;

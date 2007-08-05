@@ -1,3 +1,22 @@
+2007-08-05 10:23 dangelo
+
+        * src/enblend.cc, src/anneal.h, src/gpu.cc, src/gpu.h, src/mask.h:
+	  Disable GPU support if GLEW is not available
+
+        * src/vigra_impex: codec_manager.hxx, tiff.cxx, jpeg.cxx, png.cxx,
+	  iccjpeg.c, iccjpeg.h:
+	  Use config.h to determine if required libs are available.
+
+        * src/vigra_impex/exr.cxx, src/vigra_impex/exr.hxx: added OpenEXR coded
+
+	* configure.in: check for libjpeg and libtiff, added OpenEXR check
+
+	* src/float_cast.h: use replacement rintf functions only if the
+	  Microsoft Visual C compiler is used.
+
+	* src/assemble.h, src/numerictraits.h: correct interpretation of
+	  alpha channel when reading floating point images.
+
 2007-08-04 12:22 dangelo
 	* configure.in, m4/acx_pthread.m4 m4/ax_check_gl.m4,
 	  m4/ax_check_glu.m4, m4/ax_check_glut.m4: proper
