@@ -85,8 +85,8 @@ void checkpoint(pair<ImageType*, AlphaType*> &p, ImageExportInfo &outputImageInf
             Threshold<AlphaPixelType, ImagePixelComponentType>(
                     NumericTraits<AlphaPixelType>::zero(),
                     NumericTraits<AlphaPixelType>::zero(),
-                    NumericTraits<ImagePixelComponentType>::max(),
-                    NumericTraits<ImagePixelComponentType>::zero()
+                    AlphaTraits<ImagePixelComponentType>::max(),
+                    AlphaTraits<ImagePixelComponentType>::zero()
             ),
             (p.second)->accessor());
 
@@ -116,10 +116,10 @@ void import(const ImageImportInfo &info,
     ThresholdingAccessor ata(
             Threshold<ImagePixelComponentType, AlphaPixelType>(
                     // FIXME this should really consider pixels only == max
-                    NumericTraits<ImagePixelComponentType>::max() / 2,
-                    NumericTraits<ImagePixelComponentType>::max(),
-                    NumericTraits<AlphaPixelType>::zero(),
-                    NumericTraits<AlphaPixelType>::max()
+                    AlphaTraits<ImagePixelComponentType>::max() / 2,
+                    AlphaTraits<ImagePixelComponentType>::max(),
+                    AlphaTraits<AlphaPixelType>::zero(),
+                    AlphaTraits<AlphaPixelType>::max()
             ),
             alpha.second);
 

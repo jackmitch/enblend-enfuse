@@ -26,6 +26,7 @@
 
 #include "vigra/basicimage.hxx"
 #include "vigra/cachedfileimage.hxx"
+#include "vigra/rgbvalue.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
@@ -155,6 +156,50 @@ DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt32, UInt8, UInt8, double, 8,  0, doub
 //DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt64, UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 17, Int32)
 DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, float,  UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
 DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, double, UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
+
+
+
+// Traits for correctly handling alpha/mask values in floating point files
+// This differs from NumericTraits for floating point values
+#define ALPHA_TRAITS(T1,S) \
+template<> \
+struct AlphaTraits<T1> \
+{ \
+    static T1 max() \
+{ \
+    return S; \
+} \
+    static T1 zero() \
+{ \
+    return 0; \
+} \
+}; \
+template<> \
+struct AlphaTraits<vigra::RGBValue<T1> > \
+{ \
+    static T1 max() \
+{ \
+    return S; \
+} \
+    static T1 zero() \
+{ \
+    return 0; \
+} \
+};
+
+template <class T1>
+struct AlphaTraits;
+
+ALPHA_TRAITS(unsigned char, UCHAR_MAX);
+ALPHA_TRAITS(signed char, SCHAR_MAX);
+ALPHA_TRAITS(unsigned short, USHRT_MAX);
+ALPHA_TRAITS(signed short, SHRT_MAX);
+ALPHA_TRAITS(unsigned int, UINT_MAX);
+ALPHA_TRAITS(signed int, INT_MAX);
+ALPHA_TRAITS(float, 1.0);
+ALPHA_TRAITS(double, 1.0);
+
+#undef ALPHA_TRAITS
 
 } // namespace enblend
 
