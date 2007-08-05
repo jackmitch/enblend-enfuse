@@ -62,7 +62,7 @@
 
 #include	<math.h>
 	
-#elif (defined (WIN32) || defined (_WIN32))
+#elif (defined (_MSC_VER))
 
 /* Win32 doesn't seem to have these functions. 
 ** Therefore implement inline versions of these functions here.
