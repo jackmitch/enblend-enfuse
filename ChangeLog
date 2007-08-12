@@ -1,3 +1,8 @@
+2007-08-12  dangelo
+
+	* src/vigra_impex: exr.hxx exr.cxx: Added OpenEXR codec (forgot
+	  to add last time)
+
 2007-08-05 11:20 dangelo
 
         * src/assemble.h: output final image without mask if
