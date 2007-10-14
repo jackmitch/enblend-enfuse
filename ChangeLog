@@ -1,3 +1,8 @@
+2007-10-14  dangelo
+
+	* src/enblend.cc: extended -f option to allow specification
+	of top and left of the output image
+
 2007-08-12  dangelo
 
 	* src/vigra_impex: exr.hxx exr.cxx: Added OpenEXR codec (forgot

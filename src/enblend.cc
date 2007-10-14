@@ -93,6 +93,8 @@ bool UseLZW = false;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
+int OutputOffsetXCmdLine = 0;
+int OutputOffsetYCmdLine = 0;
 bool Checkpoint = false;
 int UseGPU = 0;
 int OptimizeMask = 1;
@@ -167,9 +169,9 @@ void printUsageAndExit() {
 #ifdef HAVE_LIBGLEW
     cout << " --gpu             Use the graphics card to accelerate some computations." << endl;
 #endif
-    cout << " -f WIDTHxHEIGHT   Manually set the size of the output image." << endl
-         << "                   Useful for cropped and shifted input TIFF images," << endl
-         << "                   such as those produced by Nona." << endl;
+    cout << " -f WIDTHxHEIGHT+x0+y0   Manually set the size and position of the output image." << endl
+         << "                         Useful for cropped and shifted input TIFF images," << endl
+         << "                         such as those produced by Nona." << endl;
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
     cout << " --visualize=FILE  Save the optimizer's results for debugging." << endl;
 
@@ -348,9 +350,15 @@ int main(int argc, char** argv) {
             }
             case 'f': {
                 OutputSizeGiven = true;
-                int nP = sscanf(optarg, "%dx%d", &OutputWidthCmdLine, &OutputHeightCmdLine);
-                if (nP != 2) {
-                    cerr << "enblend: the -f option requires a parameter of the form WIDTHxHEIGHT"
+                int nP = sscanf(optarg, "%dx%d+%d+%d", &OutputWidthCmdLine, &OutputHeightCmdLine, 
+                                                        &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+                if (nP == 4) {
+                    // full geometry string
+                } else if (nP == 2) {
+                    OutputOffsetXCmdLine=0;
+                    OutputOffsetYCmdLine=0;
+                } else {
+                    cerr << "enblend: the -f option requires a parameter of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT"
                          << endl;
                     printUsageAndExit();
                 }
@@ -647,7 +655,8 @@ int main(int argc, char** argv) {
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
-        inputUnion |= Rect2D(Size2D(OutputWidthCmdLine, OutputHeightCmdLine));
+        inputUnion |= Rect2D(OutputOffsetXCmdLine, OutputOffsetYCmdLine,
+                             OutputOffsetXCmdLine + OutputWidthCmdLine, OutputOffsetYCmdLine + OutputHeightCmdLine);
     }
 
     // Create the Info for the output file.
