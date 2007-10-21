@@ -89,7 +89,6 @@ bool OneAtATime = true;
 bool Wraparound = false;
 bool GimpAssociatedAlphaHack = false;
 bool UseCIECAM = false;
-bool UseLZW = false;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
@@ -105,6 +104,7 @@ char *VisualizeMaskFileName = NULL;
 unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
+char *OutputCompression = NULL;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -159,7 +159,10 @@ void printUsageAndExit() {
     cout << " -o filename       Write output to file" << endl;
     cout << " -v                Verbose" << endl;
     cout << " -w                Blend across -180/+180 boundary" << endl;
-    cout << " -z                Use LZW compression" << endl;
+    cout << " --compression=COMP Set compression of the output image." << endl;
+    cout << "                   Valid values for compression are:" << endl;
+    cout << "                   For TIFF files: LZW, DEFLATE" << endl;
+    cout << "                   For JPEG files: 0-100" << endl;
     cout << " -x                Checkpoint partial results" << endl;
 
     cout << endl << "Extended options:" << endl;
@@ -184,6 +187,9 @@ void printUsageAndExit() {
     cout << " --save-mask=FILE  Save the generated mask to the given file." << endl;
     cout << " --load-mask=FILE  Use the mask in the given file instead of generating one." << endl;
 
+    cout << endl << "Depreciated options:" << endl;
+    cout << " -z                Use LZW compression (TIFF only)." << endl
+         << "                   Kept for backward compatability with older scripts" << endl;
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
 
@@ -253,9 +259,7 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     static struct option long_options[] = {
-#ifdef HAVE_LIBGLEW
             {"gpu", no_argument, &UseGPU, 1},
-#endif
             {"coarse-mask", no_argument, &CoarseMask, 1},
             {"fine-mask", no_argument, &CoarseMask, 0},
             {"optimize", no_argument, &OptimizeMask, 1},
@@ -266,6 +270,7 @@ int main(int argc, char** argv) {
             {"gda-kmax", required_argument, 0, 1},
             {"dijkstra-radius", required_argument, 0, 1},
             {"mask-vectorize-distance", required_argument, 0, 1},
+            {"compression", required_argument, 0, 0},
             {0, 0, 0, 0}
     };
 
@@ -282,6 +287,7 @@ int main(int argc, char** argv) {
                     case 5: optionString = &SaveMaskFileName; break;
                     case 6: optionString = &LoadMaskFileName; break;
                     case 7: optionString = &VisualizeMaskFileName; break;
+                    case 11: optionString = &OutputCompression; break;
                 }
 
                 if (*optionString != NULL) {
@@ -431,7 +437,18 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'z': {
-                UseLZW = true;
+                if (OutputCompression != NULL) {
+                    delete OutputCompression;
+                }
+                try {
+                    OutputCompression = new char[4];
+                } catch (std::bad_alloc& e) {
+                    cerr << endl << "enblend: out of memory"
+                         << endl << e.what()
+                         << endl;
+                    exit(1);
+                }
+                OutputCompression = strdup("LZW");
                 break;
             }
             default: {
@@ -661,7 +678,7 @@ int main(int argc, char** argv) {
 
     // Create the Info for the output file.
     ImageExportInfo outputImageInfo(outputFileName);
-    if (UseLZW) outputImageInfo.setCompression("LZW");
+    if (OutputCompression) outputImageInfo.setCompression(OutputCompression);
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
