@@ -1,3 +1,7 @@
+2007-10-31  dangelo
+
+	* configure.in: removed check for ext/slist in configure
+
 2007-10-22  dangelo
 
 	* src/enblend.cc: added --compression option to allow more
