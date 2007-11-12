@@ -128,7 +128,17 @@ void import(const ImageImportInfo &info,
             ),
             alpha.second);
 
-    importImageAlpha(info, image, destIter(alpha.first, ata));
+    if (info.numExtraBands() > 0) {
+        importImageAlpha(info, image, destIter(alpha.first, ata));
+    }
+    else {
+        // Import image without alpha for enfuse. Init the alpha image to 100%.
+        importImage(info, image.first, image.second);
+        initImage(alpha.first,
+                  (alpha.first + Diff2D(info.width(), info.height())),
+                  alpha.second,
+                  AlphaTraits<AlphaPixelType>::max());
+    }
 
 };
 

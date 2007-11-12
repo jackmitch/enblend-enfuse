@@ -1,0 +1,88 @@
+.TH enfuse 1 "November 11, 2007" "" ""
+.SH NAME
+enfuse \- poor man's HDR
+.SH SYNOPSIS
+.B enfuse [OPTIONS] -o output-file input-files...
+.SH DESCRIPTION
+Enfuse merges overlapping images using the Mertens-Kautz-Van Reeth
+exposure fusion algorithm. This is a quick-and-dirty way to produce
+high dynamic range (HDR) images.
+
+The basic idea is that pixels in the input images are weighted according
+to qualities such as proper exposure, good contrast, and high saturation.
+These weights determine how much a given pixel will contribute to the final
+image. A Burt & Adelson multiresolution spline blender is used to combine
+the images according to the weights. The multiresolution blending ensures that
+transitions between regions where different images contribute more heavily
+are difficult to see.
+
+Enfuse expects each input image to have an alpha channel.
+By setting the alpha values of pixels to zero, users can manually remove
+those pixels from consideration when blending.
+If an input image lacks an alpha channel, Enfuse will print a warning and
+continue assuming all pixels should contribute to the final output.
+Any alpha value other than zero is interpreted as "this pixel should contribute
+to the final image".
+
+.SH COMMON OPTIONS
+.IP -h
+Print information on the available options.
+.IP "-l num"
+Use exactly this many levels for pyramid blending. This trades off quality
+of results for faster execution time and lower memory usage. The default is
+to use as many levels as possible given the size of the overlap region.
+Enfuse may still use a smaller number of levels if the geometry of the images
+demands it.
+.IP "-o output-file"
+Required. Specify the name of the output file.
+.IP -v
+Verbose output.
+.IP -w
+Blend around the -180/+180 boundary. Useful for full-360 panoramas.
+Enfuse currently does not blend the zenith or the nadir, so you may still see
+some seams in these areas.
+.IP --compression=COMP
+Write a compressed output file. Valid values are LZW and DEFLATE for TIFF files,
+and numbers from 0-100 for JPEG files.
+
+.SH EXTENDED OPTIONS
+.IP "-b kilobytes"
+Set the block size for Enfuse's image cache. This is the amount of data that
+Enfuse will move to and from the disk in one go. The default is 2 MiB which
+should be good for most systems.
+.IP -c
+Use the CIECAM02 color appearance model for blending colors.
+Your input TIFF files should have embedded ICC profiles. If no ICC profile is
+present, Enfuse will assume that image uses the sRGB color space.
+The difference between using this option and Enfuse's default color blending
+algorithm is very slight, and will be most noticeable when you need to blend
+areas of different primary colors together.
+.IP -g
+Gimp (ver. < 2) and Cinepaint exhibit unusual behaviors when loading
+images with unassociated alpha channels. Use the -g flag to work
+around this. With this flag Enfuse will create the output image with
+the associated alpha tag set, even though the image is really
+unassociated alpha.
+.IP "-f WIDTHxHEIGHT"
+Set the size of the output image manually. This is useful when the input images are
+cropped TIFF files, such as those produced by Nona.
+.IP "-m megabytes"
+Set the size of Enblend's image cache. This is the amount of memory Enblend
+will use for storing image data before swapping to disk.
+The default is 1 GiB.
+
+.SH FUSION OPTIONS
+.IP --wExposure [0.0-1.0]
+Sets the relative weight of the well-exposedness criteria.
+Pixels with luminance close to the middle of the range will contribute more to
+the output image than those with high or low luminance values.
+Currently this is the only criteria implemented in Enfuse.
+.IP -wContrast [0.0-1.0]
+Sets the relative weight of high-contrast pixels. Unimplemented.
+.IP -wSaturation [0.0-1.0]
+Sets the relative weight of high-saturation pixels. Unimplemented.
+
+.SH AUTHOR
+Andrew Mihal <acmihal@users.sourceforge.net>.
+Thanks to Simon Andriot and Pablo Joubert for suggesting the
+Mertens-Kautz-Van Reeth technique and the name "Enfuse".
