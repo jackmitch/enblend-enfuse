@@ -12,13 +12,13 @@
 #define PACKAGE_NAME "enblend"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "enblend 3.0"
+#define PACKAGE_STRING "enblend 3.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "enblend"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.0"
+#define PACKAGE_VERSION "3.1"
 
 /* Version number of package */
-#define VERSION "3.0"
+#define VERSION "3.1"

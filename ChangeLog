@@ -1,3 +1,18 @@
+2007-11-25 dangelo
+
+	* enblend_msvc2003.sln, src/enblend_msvc2003.vcproj,
+	src/enfuse_msvc2003.vcproj,
+	src/vigra_impex/vigra_impex_msvc2003.vcproj: Up to date project files
+	for building with MSVC 2003
+
+	* configure.in, src/win32helpers/win32config: updated version number
+	to 3.1
+
+	* src/anneal.h, src/assemble.h, src/vigra_impex/exr.cxx,
+	src/vigra_impex/png.cxx: fixes for MSVC compilation
+	
+	* AUTHORS, READMEWIN: small documentation updates
+
 2007-10-31  dangelo
 
 	* configure.in: removed check for ext/slist in configure

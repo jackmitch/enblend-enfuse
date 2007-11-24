@@ -39,6 +39,7 @@
 
 #ifdef HasEXR
 
+#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/sized_int.hxx"
 #include "void_vector.hxx"
@@ -49,10 +50,10 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <OpenEXR/ImfRgbaFile.h>
-#include <OpenEXR/ImfStringAttribute.h>
-#include <OpenEXR/ImfMatrixAttribute.h>
-#include <OpenEXR/ImfArray.h>
+#include <ImfRgbaFile.h>
+#include <ImfStringAttribute.h>
+#include <ImfMatrixAttribute.h>
+#include <ImfArray.h>
 
 using namespace Imf;
 using namespace Imath;

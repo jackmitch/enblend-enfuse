@@ -1,6 +1,32 @@
 Instructions for building on Win32
 ==================================
 
+Pablo d'Angelo, Nov. 25, 2007
+
+Instructions for build with MSVC 2003 and dependencies
+downloaded from hugin.panotools.org/sdk
+
+Place dependencies alongside the enblend folder:
+
+build-directory
+ enblend-3.1
+ wxMSW-2.8.4   (only required for tiff, jpeg and png libraries)
+ OpenExr
+ Deploy
+ lcms-1.17
+ libxmi-1.2
+ STLport-5.1.4
+ boost_1_34_1
+
+Then open the enblend_msvc2003 solution and build
+the release configuration. No further configuration
+should be required. Using a later compiler might require
+rebuilding boost and STLport before proceeding. Refer
+to their build instructions for more details.
+
+=====================================================
+Older build instructions:
+
 Joe Beda -- http://www.eightypercent.net
 Last updated Nov. 15, 2004
 

@@ -94,7 +94,7 @@ void checkpoint(pair<ImageType*, AlphaType*> &p, ImageExportInfo &outputImageInf
         exportImageAlpha(srcImageRange(*(p.first)),
                          srcIter((p.second)->upperLeft(), ata),
                          outputImageInfo);
-    } catch (std::exception & e) {
+    } catch (std::exception & ) {
         // try to export without alpha channel
         exportImage(srcImageRange(*(p.first)),
                     outputImageInfo);
