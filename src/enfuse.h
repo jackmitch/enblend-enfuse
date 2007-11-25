@@ -214,7 +214,6 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                         maskImage(*(imageTriple.second)));
 
         delete imageTriple.first;
-        delete imageTriple.second;
 
         typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
             NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
@@ -228,11 +227,12 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                            Param(maxMaskPixelType) * Arg1() / Arg2());
 
         vector<MaskPyramidType*> *maskGP =
-                gaussianPyramid<MaskType, MaskPyramidType,
+                gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
                                 MaskPyramidIntegerBits, MaskPyramidFractionBits,
-                                SKIPSMMaskPixelType>(
-                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)));
+                                SKIPSMMaskPixelType, SKIPSMAlphaPixelType>(
+                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)), maskImage(*(imageTriple.second)));
 
+        delete imageTriple.second;
         delete imageTriple.third;
 
         ConvertScalarToPyramidFunctor<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType,
