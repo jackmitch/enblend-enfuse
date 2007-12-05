@@ -1,3 +1,7 @@
+2007-12-05 dangelo
+
+	* configure.in: turned some warnings into errors
+
 2007-11-25 dangelo
 
 	* enblend_msvc2003.sln, src/enblend_msvc2003.vcproj,
