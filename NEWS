@@ -201,3 +201,13 @@ January 27, 2007
 
     - Like other X.0 releases, please consider this a beta.
 
+December 13, 2007
+    Released enblend-3.1
+
+    - Enfuse program for automatic multi-level exposure blending
+    - Support for PNG and OpenEXR input files.
+    - Correctly interpret alpha channel of float (HDR) images.
+    - Output to jpg possible (8 bit only).
+    - Compression can be specified with the new --compression option
+    - Windows binary does not require a SSE2 capable processor.
+
