@@ -301,6 +301,19 @@ class RGBValue
         return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
     }
 
+    // mihal 20071217 quick-and-dirty saturation calculation
+    value_type saturation() const {
+        value_type max = std::max(red(), std::max(green(), blue()));
+        value_type min = std::min(red(), std::min(green(), blue()));
+        if (max == min) return NumericTraits<value_type>::zero();
+        typename NumericTraits<value_type>::RealPromote l = 0.5 * NumericTraits<value_type>::toRealPromote(max + min);
+        if (l <= 0.5) {
+            return NumericTraits<value_type>::fromRealPromote(NumericTraits<value_type>::max() * (max - min) / (2 * l));
+        } else {
+            return NumericTraits<value_type>::fromRealPromote(NumericTraits<value_type>::max() * (max - min) / (2 - 2*l));
+        }
+    }
+
         /** Calculate magnitude.
         */
     NormType magnitude() const {

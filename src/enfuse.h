@@ -45,6 +45,10 @@
 #include "vigra/stdimage.hxx"
 #include "vigra/transformimage.hxx"
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+
 using std::cout;
 using std::endl;
 using std::list;
@@ -67,6 +71,11 @@ using vigra::NumericTraits;
 using vigra::Size2D;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
+
+using boost::lambda::_1;
+using boost::lambda::_2;
+using boost::lambda::bind;
+using boost::lambda::const_parameters;
 
 namespace enblend {
 
@@ -97,9 +106,11 @@ protected:
 template <typename InputType, typename ResultType>
 class ExposureFunctor {
 public:
+    typedef ResultType result_type;
+
     ExposureFunctor(double w) : weight(w) {}
 
-    inline ResultType operator()(const InputType a) const {
+    inline ResultType operator()(const InputType &a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
@@ -107,7 +118,7 @@ public:
 protected:
 
     template <typename T>
-    inline ResultType f(const T a, VigraTrueType) const {
+    inline ResultType f(const T &a, VigraTrueType) const {
         const T b = NumericTraits<T>::max() / 2;
         const T c = NumericTraits<T>::max() / 5;
         typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
@@ -115,8 +126,37 @@ protected:
     }
 
     template <typename T>
-    inline ResultType f(const T a, VigraFalseType) const {
+    inline ResultType f(const T &a, VigraFalseType) const {
         return f(a.luminance(), VigraTrueType());
+    }
+
+    double weight;
+};
+
+template <typename InputType, typename ResultType>
+class SaturationFunctor {
+public:
+    typedef ResultType result_type;
+
+    SaturationFunctor(double w) : weight(w) {}
+
+    inline ResultType operator()(const InputType &a) const {
+        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        return f(a, srcIsScalar());
+    }
+
+protected:
+
+    template <typename T>
+    inline ResultType f(const T &a, VigraTrueType) const {
+        return NumericTraits<ResultType>::zero();
+    }
+
+    template <typename T>
+    inline ResultType f(const T &a, VigraFalseType) const {
+        typedef typename T::value_type TComponentType;
+        typename NumericTraits<TComponentType>::RealPromote rsa = NumericTraits<TComponentType>::toRealPromote(a.saturation());
+        return NumericTraits<ResultType>::fromRealPromote(weight * rsa / NumericTraits<TComponentType>::max());
     }
 
     double weight;
@@ -132,7 +172,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 
     // TODO: contrast
 
-    // TODO: saturation
+    // Saturation
+    //combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
 
 };
 
@@ -147,8 +188,12 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaType AlphaType;
-    typedef typename FImage::value_type MaskPixelType;
-    typedef FImage MaskType;
+    #ifdef ENBLEND_CACHE_IMAGES
+        typedef CachedFileImage<float> MaskType;
+    #else
+        typedef FImage MaskType;
+    #endif
+    typedef typename MaskType::value_type MaskPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidPixelType ImagePyramidPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidType ImagePyramidType;
     typedef typename EnblendNumericTraits<ImagePixelType>::MaskPyramidPixelType MaskPyramidPixelType;

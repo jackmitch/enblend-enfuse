@@ -99,6 +99,7 @@ char *OutputCompression = NULL;
 double WExposure = 1.0;
 double WContrast = 1.0;
 double WSaturation = 1.0;
+bool WSaturationIsDefault = true;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -278,11 +279,12 @@ int main(int argc, char** argv) {
                 switch (option_index) {
                     case 1: optionDouble = &WExposure; break;
                     case 2: optionDouble = &WContrast; break;
-                    case 3: optionDouble = &WSaturation; break;
+                    case 3: optionDouble = &WSaturation; WSaturationIsDefault = false; break;
                 }
 
-                double value = atof(optarg);
-                if (value < 0.0 || value > 1.0) {
+                char *lastChar = NULL;
+                double value = strtod(optarg, &lastChar);
+                if (lastChar == optarg || value < 0.0 || value > 1.0) {
                     cerr << "enfuse: " << long_options[option_index].name
                          << " must be in the range [0.0, 1.0]." << endl;
                     printUsageAndExit();
@@ -700,6 +702,10 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         } else {
+            if (!WSaturationIsDefault && (WSaturation != 0.0)) {
+                cout << "enfuse: WSaturation is not applicable to grayscale images. This parameter will have no effect." << endl;
+                WSaturation = 0.0;
+            }
             if (strcmp(pixelType,      "UINT8" ) == 0) enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "INT8"  ) == 0) enfuseMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "UINT16") == 0) enfuseMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);

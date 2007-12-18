@@ -187,7 +187,7 @@ void printUsageAndExit() {
     cout << " --save-mask=FILE  Save the generated mask to the given file." << endl;
     cout << " --load-mask=FILE  Use the mask in the given file instead of generating one." << endl;
 
-    cout << endl << "Depreciated options:" << endl;
+    cout << endl << "Deprecated options:" << endl;
     cout << " -z                Use LZW compression (TIFF only)." << endl
          << "                   Kept for backward compatability with older scripts" << endl;
     // deprecated
