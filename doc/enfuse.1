@@ -1,4 +1,4 @@
-.TH enfuse 1 "November 11, 2007" "" ""
+.TH enfuse 1 "December 18, 2007" "" ""
 .SH NAME
 enfuse \- poor man's HDR
 .SH SYNOPSIS
@@ -15,6 +15,29 @@ image. A Burt & Adelson multiresolution spline blender is used to combine
 the images according to the weights. The multiresolution blending ensures that
 transitions between regions where different images contribute more heavily
 are difficult to see.
+
+Enfuse uses three different criteria to judge the quality of a pixel:
+Exposure, saturation, and contrast.
+The
+.B exposure
+criteria favors pixels with luminance close to the middle of the range.
+These pixels are considered better-exposed than those with high or low
+luminance levels.
+The
+.B saturation
+criteria favors highly-saturated pixels.
+The
+.B contrast
+criteria favors high-contrast pixels. This final criteria is currently
+unimplemented and remains an item for future work.
+
+You can adjust how much importance is given to each criteria by setting the weight
+parameters on the command line. For example, if you set --wExposure=1.0 and
+--wSaturation=0.5, Enfuse will favor well-exposed pixels over highly-saturated
+pixels when blending the source images. The impact of these parameters on
+the final result will not always be clear. The quality of the result is subject to your artistic
+interpretation. Playing with the weights may or may not give you a more
+pleasing result. I encourage you to experiment (perhaps using downsized images for speed).
 
 Enfuse expects each input image to have an alpha channel.
 By setting the alpha values of pixels to zero, users can manually remove
@@ -72,15 +95,17 @@ will use for storing image data before swapping to disk.
 The default is 1 GiB.
 
 .SH FUSION OPTIONS
+
 .IP --wExposure [0.0-1.0]
 Sets the relative weight of the well-exposedness criteria.
-Pixels with luminance close to the middle of the range will contribute more to
-the output image than those with high or low luminance values.
-Currently this is the only criteria implemented in Enfuse.
-.IP -wContrast [0.0-1.0]
-Sets the relative weight of high-contrast pixels. Unimplemented.
-.IP -wSaturation [0.0-1.0]
-Sets the relative weight of high-saturation pixels. Unimplemented.
+Increasing this weight relative to the others will make well-exposed pixels
+contribute more to the final output.
+.IP --wSaturation [0.0-1.0]
+Sets the relative weight of high-saturation pixels.
+Increasing this weight makes pixels with high saturation contribute more to the final output.
+.IP --wContrast [0.0-1.0]
+Sets the relative weight of high-contrast pixels. This criteria is
+currently unimplemented, so changing this parameter will have no effect.
 
 .SH AUTHOR
 Andrew Mihal <acmihal@users.sourceforge.net>.

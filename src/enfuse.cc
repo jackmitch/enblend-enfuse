@@ -98,7 +98,7 @@ bool Checkpoint = false;
 char *OutputCompression = NULL;
 double WExposure = 1.0;
 double WContrast = 1.0;
-double WSaturation = 1.0;
+double WSaturation = 0.2;
 bool WSaturationIsDefault = true;
 
 // Globals related to catching SIGINT
@@ -165,9 +165,9 @@ void printUsageAndExit() {
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
 
     cout << endl << "Fusion options:" << endl;
-    cout << " --wExposure       Weight given to well-exposed pixels." << endl;
-    cout << " --wContrast       Weight given to high-contrast pixels (unimplemented)." << endl;
-    cout << " --wSaturation     Weight given to highly-saturated pixels (unimplemented)." << endl;
+    cout << " --wExposure=W     Weight given to well-exposed pixels (from 0 to 1)." << endl;
+    cout << " --wSaturation=W   Weight given to highly-saturated pixels (from 0 to 1)." << endl;
+    cout << " --wContrast=W     Weight given to high-contrast pixels (unimplemented)." << endl;
 
     exit(1);
 }

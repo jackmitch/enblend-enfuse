@@ -306,11 +306,11 @@ class RGBValue
         value_type max = std::max(red(), std::max(green(), blue()));
         value_type min = std::min(red(), std::min(green(), blue()));
         if (max == min) return NumericTraits<value_type>::zero();
-        typename NumericTraits<value_type>::RealPromote l = 0.5 * NumericTraits<value_type>::toRealPromote(max + min);
-        if (l <= 0.5) {
-            return NumericTraits<value_type>::fromRealPromote(NumericTraits<value_type>::max() * (max - min) / (2 * l));
+        typename NumericTraits<value_type>::RealPromote l = NumericTraits<value_type>::toRealPromote(max + min) / NumericTraits<value_type>::max();
+        if (l <= 1.0) {
+            return NumericTraits<value_type>::fromRealPromote((max - min) / l);
         } else {
-            return NumericTraits<value_type>::fromRealPromote(NumericTraits<value_type>::max() * (max - min) / (2 - 2*l));
+            return NumericTraits<value_type>::fromRealPromote((max - min) / (2.0 - l));
         }
     }
 

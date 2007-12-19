@@ -173,7 +173,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     // TODO: contrast
 
     // Saturation
-    //combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
+    combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
 
 };
 
@@ -213,6 +213,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     // Sum of all masks
     MaskType *normImage = new MaskType(inputUnion.size());
 
+    int m = 0;
     while (!imageInfoList.empty()) {
 
         Rect2D imageBB;
@@ -225,11 +226,17 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                                    srcImage(*(imagePair.second)),
                                                    destImage(*mask));
 
+        //std::ostringstream oss;
+        //oss << "mask" << m << ".tif";
+        //ImageExportInfo maskInfo(oss.str().c_str());
+        //exportImage(srcImageRange(*mask), maskInfo);
+
         // Add the mask to the norm image.
         combineTwoImages(srcImageRange(*mask), srcImage(*normImage), destImage(*normImage), Arg1() + Arg2());
 
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
+        ++m;
     }
 
     // Result image. Alpha will be union of all input alphas.
