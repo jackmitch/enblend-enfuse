@@ -5,8 +5,14 @@ enfuse \- poor man's HDR
 .B enfuse [OPTIONS] -o output-file input-files...
 .SH DESCRIPTION
 Enfuse merges overlapping images using the Mertens-Kautz-Van Reeth
-exposure fusion algorithm. This is a quick-and-dirty way to produce
-high dynamic range (HDR) images.
+exposure fusion algorithm. This is a quick way to produce
+blend differently exposed images into a nice output image, without
+producing intermediate HDR images that are then tonemapped to a
+viewable image. This simplified process often works much better than
+the currently known tonemapping algorithms.
+
+Enfuse can also be used to build extended DOF images, by blending a
+focus stack.
 
 The basic idea is that pixels in the input images are weighted according
 to qualities such as proper exposure, good contrast, and high saturation.
@@ -28,8 +34,11 @@ The
 criteria favors highly-saturated pixels.
 The
 .B contrast
-criteria favors high-contrast pixels. This final criteria is currently
-unimplemented and remains an item for future work.
+criteria favors high-contrast pixels. The local gray or color value
+standart deviation is used as a contrast measure.
+The Mertens-Kautz-Van Reeth paper suggest using a laplacian filter, but
+the standard deviation produces much better results for differently
+focussed images.
 
 You can adjust how much importance is given to each criteria by setting the weight
 parameters on the command line. For example, if you set --wExposure=1.0 and
@@ -104,10 +113,34 @@ contribute more to the final output.
 Sets the relative weight of high-saturation pixels.
 Increasing this weight makes pixels with high saturation contribute more to the final output.
 .IP --wContrast [0.0-1.0]
-Sets the relative weight of high-contrast pixels. This criteria is
-currently unimplemented, so changing this parameter will have no effect.
+Sets the relative weight of high-contrast pixels. 
+
+.SH EXPERT OPTIONS
+
+.IP --ContrastWindowSize [3-11]
+Window size for local contrast analysis. Values larger than 5 might result in a
+blurry composite and increased computation times. Values in the range of 3 to 5 have
+given good results on focus stacks.
+
+.IP --HardMask
+Force hard blend masks on the finest scale. This avoids averaging of fine details (only),
+at the expense of increasing the noise. This improves the sharpness of focus stacks considerably.
+
+.SH EXAMPLES
+
+To blend an exposure stack given in files exposure_01.tif, exposure_02.tif, ...
+
+enfuse -o result.tif exposure_*.tif
+
+To blend a focus stack to form an extended depth of field image set
+the contrast weight to 1 and use very low values for exposure and
+saturation criteria to get meaningful results in low contrast areas.
+
+enfuse -o result.tif --wExposure=0.001 --wSaturation=0.001 --wContrast=1 --HardMask focus_*.tif
 
 .SH AUTHOR
 Andrew Mihal <acmihal@users.sourceforge.net>.
 Thanks to Simon Andriot and Pablo Joubert for suggesting the
 Mertens-Kautz-Van Reeth technique and the name "Enfuse".
+The contrast criteria has been added by
+Pablo d'Angelo <dangelo@users.sourceforge.net>

@@ -71,6 +71,8 @@ using vigra::NumericTraits;
 using vigra::Size2D;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;
+using vigra::Kernel1D;
+using vigra::VectorNormFunctor;
 
 using boost::lambda::_1;
 using boost::lambda::_2;
@@ -78,6 +80,77 @@ using boost::lambda::bind;
 using boost::lambda::const_parameters;
 
 namespace enblend {
+
+
+// compute the local variance inside a window
+// TODO: respect alpha mask and properly calculate borders
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor>
+void localVariance(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
+                   DestIterator dest_ul, DestAccessor dest_acc, 
+                   Size2D size)
+{
+    vigra_precondition(size.x > 1 && size.y > 1,
+                       "localVariance(): window for local variance must be at least 2x2");
+
+    typedef typename
+        NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
+    typedef
+        NumericTraits<typename DestAccessor::value_type> DestTraits;
+
+    // calculate width and height of the image
+    int w = src_lr.x - src_ul.x;
+    int h = src_lr.y - src_ul.y;
+
+    vigra_precondition(w >= size.x && h >= size.y,
+                       "localVariance(): kernel larger than image.");
+
+    int x,y;
+    x = 0;
+    y = 0;
+
+    // create iterators for the interior part of the image (where the kernel always fits into the image)
+    Diff2D border(size.x/2, size.y/2);
+    DestIterator yd = dest_ul + border;
+    SrcIterator ys = src_ul + border;
+    SrcIterator send = src_lr - border;
+    int n = size.x*size.y;
+     
+    // iterate over the interior part
+    for(; ys.y < send.y; ++ys.y, ++yd.y)
+    {
+        // create x iterators
+        DestIterator xd(yd);
+        SrcIterator xs(ys);
+
+        for(; xs.x < send.x; ++x, ++xs.x, ++xd.x)
+        {
+            // init the sum
+            SrcSumType sum = NumericTraits<SrcSumType>::zero();
+            SrcSumType sum_sqr = NumericTraits<SrcSumType>::zero();
+
+            // calculate the window, required for border case
+            SrcIterator yys = xs - border;
+            SrcIterator yyend = xs + border;
+
+            for(; yys.y <= yyend.y; ++yys.y)
+            {
+                typename SrcIterator::row_iterator xxs = yys.rowIterator();
+                typename SrcIterator::row_iterator xxe = xxs + size.x;
+
+                for(; xxs < xxe; ++xxs)
+                {
+                    sum += src_acc(xxs);
+                    sum_sqr += src_acc(xxs) * src_acc(xxs);
+                }
+            }
+
+            // store convolution result in destination pixel
+            dest_acc.set(DestTraits::fromRealPromote( (sum_sqr - sum*sum/n) / (n-1)), xd);
+        }
+    }
+}
+
 
 template <typename MaskPixelType>
 class ImageMaskMultiplyFunctor {
@@ -162,18 +235,77 @@ protected:
     double weight;
 };
 
+
+template <typename InputType, typename ScaleType, typename ResultType>
+class ContrastFunctor {
+public:
+    typedef ResultType result_type;
+
+    ContrastFunctor(double w) : weight(w) {}
+
+    inline ResultType operator()(const InputType &a) const {
+        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        return f(a, srcIsScalar());
+    }
+
+protected:
+
+    template <typename T>
+    inline ResultType f(const T &a, VigraTrueType) const {
+        typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
+        return NumericTraits<ResultType>::fromRealPromote(sqrt(weight * ra) / NumericTraits<ScaleType>::max());
+    }
+
+    template <typename T>
+    inline ResultType f(const T &a, VigraFalseType) const {
+        typedef typename T::value_type TComponentType;
+        typedef typename ScaleType::value_type ScaleComponentType;
+        typename NumericTraits<TComponentType>::RealPromote norm = sqrt(a[0] + a[1] + a[2]);
+        return NumericTraits<ResultType>::fromRealPromote(weight * norm / NumericTraits<ScaleComponentType>::max());
+    }
+
+    double weight;
+};
+
+
 template <typename ImageType, typename AlphaType, typename MaskType>
 void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::const_traverser, typename ImageType::ConstAccessor> src,
                 pair<typename AlphaType::const_traverser, typename AlphaType::ConstAccessor> mask,
                 pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
 
     // Exposure
-    transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type, typename MaskType::value_type>(WExposure));
+    if (WExposure) {
+        transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type, typename MaskType::value_type>(WExposure));
+    }
 
-    // TODO: contrast
+    // contrast criteria
+    if (WContrast) {
+        typedef typename ImageType::value_type ImageValueType;
+        typedef typename NumericTraits<ImageValueType>::Promote GradientType;
+
+        #ifdef ENBLEND_CACHE_IMAGES
+            typedef CachedFileImage<GradientType > GradImage;
+        #else
+            typedef BasicImage<GradientType> GradImage;
+        #endif
+
+        GradImage grad(src.second - src.first);
+
+        localVariance(src.first, src.second, src.third, grad.upperLeft(), grad.accessor(), Size2D(ContrastWindowSize ,ContrastWindowSize));
+
+        // use the gray value standart deviation / norm of the color standart deviation as a contrast measure
+        // The standart deviation is scaled by the max pixel value, and tends to be in the
+        // range between 0.1 .. 0.3
+        // use a heuristic multiplier of 5 to bring it into a range similar to the other
+        // criteria
+        ContrastFunctor<GradientType, ImageValueType, typename MaskType::value_type> cf(5.0*WContrast);
+        combineTwoImagesIf(srcImageRange(grad), result, mask, result, const_parameters(bind(cf, _1) + _2));
+    }
 
     // Saturation
-    combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
+    if (WSaturation) {
+        combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
+    }
 
 };
 
@@ -226,10 +358,12 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                                    srcImage(*(imagePair.second)),
                                                    destImage(*mask));
 
-        //std::ostringstream oss;
-        //oss << "mask" << m << ".tif";
-        //ImageExportInfo maskInfo(oss.str().c_str());
-        //exportImage(srcImageRange(*mask), maskInfo);
+        if (Debug) {
+	        std::ostringstream oss;
+        	oss << "mask" << m << ".tif";
+	        ImageExportInfo maskInfo(oss.str().c_str());
+        	exportImage(srcImageRange(*mask), maskInfo);
+	}
 
         // Add the mask to the norm image.
         combineTwoImages(srcImageRange(*mask), srcImage(*normImage), destImage(*normImage), Arg1() + Arg2());
@@ -237,6 +371,48 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
         ++m;
+    }
+
+    typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
+        NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
+
+    if (HardMask) {
+        Size2D sz = normImage->size();
+        typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
+        for (int x=0; x<sz.x; ++x) {
+            for (int y=0; y < sz.y; ++y) {
+                float max = 0;
+                double maxi = 0;
+                int i=0;
+                for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+                    float w = (*(*imageIter).third)(x,y);
+                    if (w > max) {
+                        max = w;
+                        maxi = i;
+                    }
+		    i++;
+                }
+                i=0;
+                for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+                    if (i == maxi) {
+                        (*(*imageIter).third)(x,y) = maxMaskPixelType;
+                    } else {
+                        (*(*imageIter).third)(x,y) = 0.0f;
+                    }
+                    i++;
+                }
+            }
+        }
+        int i = 0;
+        if (Debug) {
+            for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+	        std::ostringstream oss;
+        	oss << "mask" << i << "_wta.tif";
+	        ImageExportInfo maskInfo(oss.str().c_str());
+        	exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+                i++;
+            }
+	}
     }
 
     // Result image. Alpha will be union of all input alphas.
@@ -267,16 +443,19 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
         delete imageTriple.first;
 
-        typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
-            NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
+        if (!HardMask) {
+            // normalize weights.
+            typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
+               NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
-        // Normalize the mask coefficients.
-        // Scale to the range expected by the MaskPyramidPixelType.
-        combineTwoImagesIf(srcImageRange(*(imageTriple.third)),
-                           srcImage(*normImage),
-                           maskImage(*normImage),
-                           destImage(*(imageTriple.third)),
-                           Param(maxMaskPixelType) * Arg1() / Arg2());
+            // Normalize the mask coefficients.
+            // Scale to the range expected by the MaskPyramidPixelType.
+            combineTwoImagesIf(srcImageRange(*(imageTriple.third)),
+                               srcImage(*normImage),
+                               maskImage(*normImage),
+                               destImage(*(imageTriple.third)),
+                               Param(maxMaskPixelType) * Arg1() / Arg2());
+        }
 
         vector<MaskPyramidType*> *maskGP =
                 gaussianPyramid<MaskType, AlphaType, MaskPyramidType,

@@ -618,6 +618,8 @@ namespace detail {
     void exportScalarImage(SrcIterator sul, SrcIterator slr, SrcAccessor sget,
                            Encoder * enc, bool downcast, T zero)
     {
+        write_band( enc, sul, slr, sget, zero );
+/*
         if (!downcast) {
             write_band( enc, sul, slr, sget, zero );
         } else {
@@ -627,6 +629,7 @@ namespace detail {
             write_band( enc, image.upperLeft(),
                         image.lowerRight(), image.accessor(), zero );
         }
+*/
     }
 
     template < class SrcIterator, class SrcAccessor,
@@ -672,7 +675,9 @@ namespace detail {
         int bands = sget.size(sul);
         vigra_precondition(isBandNumberSupported(enc->getFileType(), bands),
            "exportImage(): file format does not support requested number of bands (color channels)");
-        if ( !downcast )
+
+        write_bands( enc, sul, slr, sget, zero );
+/*        if ( !downcast )
         {
             write_bands( enc, sul, slr, sget, zero );
         }
@@ -689,6 +694,7 @@ namespace detail {
 
             write_bands( enc, array, zero );
         }
+*/
     }
 } // namespace detail
 

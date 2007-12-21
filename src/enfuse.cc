@@ -97,9 +97,12 @@ int OutputOffsetYCmdLine = 0;
 bool Checkpoint = false;
 char *OutputCompression = NULL;
 double WExposure = 1.0;
-double WContrast = 1.0;
+double WContrast = 0;
 double WSaturation = 0.2;
 bool WSaturationIsDefault = true;
+int ContrastWindowSize= 5;
+int HardMask=0;
+int Debug=0;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -165,9 +168,18 @@ void printUsageAndExit() {
     cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
 
     cout << endl << "Fusion options:" << endl;
-    cout << " --wExposure=W     Weight given to well-exposed pixels (from 0 to 1)." << endl;
-    cout << " --wSaturation=W   Weight given to highly-saturated pixels (from 0 to 1)." << endl;
-    cout << " --wContrast=W     Weight given to high-contrast pixels (unimplemented)." << endl;
+    cout << " --wExposure=W        Weight given to well-exposed pixels (from 0 to 1)." << endl;
+    cout << " --wSaturation=W      Weight given to highly-saturated pixels (from 0 to 1)." << endl;
+    cout << " --wContrast=W        Weight given to high-contrast pixels (from 0 to 1)." << endl;
+    cout << endl;
+    cout << "Expert options:" << endl;
+    cout << " --ContrastWindowSize=s  Window size for local contrast analysis." << endl;
+    cout << "                         Default: 5, (must be bigger than 3)." << endl;
+    cout << " --HardMask              Force hard blend masks (no averaging) on finest" << endl;
+    cout << "                         scale. This is especially useful for focus" << endl;
+    cout << "                         stacks with thin and high contrast features such" << endl;
+    cout << "                         as insect hairs etc, but will lead to increased noise." << endl;
+    cout << " --debug                 Output intermediate images for debugging." << endl;
 
     exit(1);
 }
@@ -232,6 +244,9 @@ int main(int argc, char** argv) {
             {"wExposure", required_argument, 0, 1},
             {"wContrast", required_argument, 0, 1},
             {"wSaturation", required_argument, 0, 1},
+            {"ContrastWindowSize", required_argument, 0, 2},
+            {"HardMask", no_argument, &HardMask, 1},
+            {"debug", no_argument, &Debug, 1},
             {0, 0, 0, 0}
     };
 
@@ -284,7 +299,7 @@ int main(int argc, char** argv) {
 
                 char *lastChar = NULL;
                 double value = strtod(optarg, &lastChar);
-                if (lastChar == optarg || value < 0.0 || value > 1.0) {
+                if ((lastChar == optarg || value < 0.0 || value > 1.0) && (option_index == 1 || option_index == 2 || option_index==3)) {
                     cerr << "enfuse: " << long_options[option_index].name
                          << " must be in the range [0.0, 1.0]." << endl;
                     printUsageAndExit();
@@ -294,6 +309,19 @@ int main(int argc, char** argv) {
 
                 break;
             }
+            case 2: { /* integer argument, only --ContrastWindowSize so far */
+                cout << "Argument 2: " << optarg << endl;
+                if (long_options[option_index].flag != 0) break;
+                ContrastWindowSize = atoi(optarg);
+                if (ContrastWindowSize < 3) ContrastWindowSize=3;
+                // force uneven window sizes
+                if (ContrastWindowSize % 2 != 1) {
+                    ContrastWindowSize++;
+                    cerr << "Warning changing contrast window size to:" << ContrastWindowSize << endl;
+                }
+                break;
+            }
+            
             case 'b': {
                 int kilobytes = atoi(optarg);
                 if (kilobytes < 1) {
@@ -685,6 +713,7 @@ int main(int argc, char** argv) {
     try {
         if (isColor) {
             if (strcmp(pixelType,      "UINT8" ) == 0) enfuseMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
+#ifndef DEBUG_8BIT_ONLY
             else if (strcmp(pixelType, "INT8"  ) == 0) enfuseMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "UINT16") == 0) enfuseMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "INT16" ) == 0) enfuseMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
@@ -694,6 +723,7 @@ int main(int argc, char** argv) {
             //else if (strcmp(pixelType, "INT64" ) == 0) enfuseMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "FLOAT" ) == 0) enfuseMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "DOUBLE") == 0) enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+#endif
             else {
                 cerr << "enfuse: images with pixel type \""
                      << pixelType
@@ -707,6 +737,7 @@ int main(int argc, char** argv) {
                 WSaturation = 0.0;
             }
             if (strcmp(pixelType,      "UINT8" ) == 0) enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
+#ifndef DEBUG_8BIT_ONLY
             else if (strcmp(pixelType, "INT8"  ) == 0) enfuseMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "UINT16") == 0) enfuseMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "INT16" ) == 0) enfuseMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
@@ -716,6 +747,7 @@ int main(int argc, char** argv) {
             //else if (strcmp(pixelType, "INT64" ) == 0) enfuseMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "FLOAT" ) == 0) enfuseMain<float >(imageInfoList, outputImageInfo, inputUnion);
             else if (strcmp(pixelType, "DOUBLE") == 0) enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
+#endif
             else {
                 cerr << "enfuse: images with pixel type \""
                      << pixelType

@@ -634,7 +634,10 @@ class FindMinMax
         /** init min and max
         */
     FindMinMax()
-    : count(0)
+    : min( NumericTraits<value_type>::zero() ),
+      max( NumericTraits<value_type>::zero() ),
+      count(0)
+
     {}
 
         /** (re-)init functor (clear min, max)

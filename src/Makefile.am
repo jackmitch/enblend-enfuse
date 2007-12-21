@@ -5,8 +5,8 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h common.h enblend.h enblen
 enblend_LDFLAGS = -DENBLEND_CACHE_IMAGES -ffast-math
 #enblend_LDADD = vigra_impex/libvigra_impex.a -lpng -ljpeg -ltiff
 enblend_LDADD = vigra_impex/libvigra_impex.a
-enblend_CXXFLAGS = -g -O3 -ffast-math -Wall -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -DNDEBUG -I${top_srcdir}/include
+enblend_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -I${top_srcdir}/include
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h enfuse.h enfuse.cc fixmath.h float_cast.h numerictraits.h pyramid.h
 enfuse_LDFLAGS = -DENBLEND_CACHE_IMAGES -ffast-math
 enfuse_LDADD = vigra_impex/libvigra_impex.a
-enfuse_CXXFLAGS = -g -O3 -ffast-math -Wall -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -DNDEBUG -I${top_srcdir}/include
+enfuse_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DENBLEND_CACHE_IMAGES -I${top_srcdir}/include

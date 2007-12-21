@@ -1,3 +1,17 @@
+2007-12-21 dangelo
+
+	* configure.in, src/Makefile.am: removed -g from default compilation flags
+
+	* src/enfuse.h, src/enfuse.cc, src/enfuse.1: Implemented variance based
+	local contrast criteria, works great on focus stacks. Further work is
+	needed for images with alpha channel. Only calcuate criteria that are
+	non-zero
+	
+	* include/vigra/inspectimage.hxx: Fixed a compiler warning (was not a bug)
+
+	* include/vigra/impex.hxx: Disable automatic rescaling when saving
+	images to files with different bit depth.
+
 2007-12-05 dangelo
 
 	* configure.in: turned some warnings into errors
