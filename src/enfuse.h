@@ -260,7 +260,7 @@ protected:
     inline ResultType f(const T &a, VigraFalseType) const {
         typedef typename T::value_type TComponentType;
         typedef typename ScaleType::value_type ScaleComponentType;
-        typename NumericTraits<TComponentType>::RealPromote norm = sqrt(a[0] + a[1] + a[2]);
+        typename NumericTraits<TComponentType>::RealPromote norm = sqrt( (double) a[0] + a[1] + a[2]);
         return NumericTraits<ResultType>::fromRealPromote(weight * norm / NumericTraits<ScaleComponentType>::max());
     }
 
