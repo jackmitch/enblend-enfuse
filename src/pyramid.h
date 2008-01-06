@@ -1673,11 +1673,11 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseT
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidValueType;
 
-    for (unsigned int i = 0; i < (v->size() - 1); i++) {
-        // Clear all levels except last.
-        initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
-    }
-    collapsePyramid(false, v);
+    //for (unsigned int i = 0; i < (v->size() - 1); i++) {
+    //    // Clear all levels except last.
+    //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
+    //}
+    //collapsePyramid(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];

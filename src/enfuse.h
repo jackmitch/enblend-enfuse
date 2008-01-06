@@ -345,6 +345,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     // Sum of all masks
     MaskType *normImage = new MaskType(inputUnion.size());
 
+    // Result image. Alpha will be union of all input alphas.
+    pair<ImageType*, AlphaType*> outputPair(NULL, new AlphaType(inputUnion.size()));
+
     int m = 0;
     while (!imageInfoList.empty()) {
 
@@ -359,11 +362,16 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                                    destImage(*mask));
 
         if (Debug) {
-	        std::ostringstream oss;
-        	oss << "mask" << m << ".tif";
-	        ImageExportInfo maskInfo(oss.str().c_str());
-        	exportImage(srcImageRange(*mask), maskInfo);
-	}
+            std::ostringstream oss;
+            oss << "mask" << m << ".tif";
+            ImageExportInfo maskInfo(oss.str().c_str());
+            exportImage(srcImageRange(*mask), maskInfo);
+        }
+
+        // Make output alpha the union of all input alphas.
+        copyImageIf(srcImageRange(*(imagePair.second)),
+                    maskImage(*(imagePair.second)),
+                    destImage(*(outputPair.second)));
 
         // Add the mask to the norm image.
         combineTwoImages(srcImageRange(*mask), srcImage(*normImage), destImage(*normImage), Arg1() + Arg2());
@@ -415,23 +423,18 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 	}
     }
 
-    // Result image. Alpha will be union of all input alphas.
-    pair<ImageType*, AlphaType*> outputPair(NULL, new AlphaType(inputUnion.size()));
-
     Rect2D junkBB;
     unsigned int numLevels = roiBounds<ImagePixelComponentType>(inputUnion, inputUnion, inputUnion, inputUnion, junkBB, Wraparound);
 
     vector<ImagePyramidType*> *resultLP = NULL;
 
+    m = 0;
     while (!imageList.empty()) {
         triple<ImageType*, AlphaType*, MaskType*> imageTriple = imageList.front();
         imageList.erase(imageList.begin());
 
-        // Make output alpha the union of all input alphas.
-        copyImageIf(srcImageRange(*(imageTriple.second)),
-                    maskImage(*(imageTriple.second)),
-                    destImage(*(outputPair.second)));
-
+        // imageLP is constructed using the image's own alpha channel
+        // as the boundary for extrapolation.
         vector<ImagePyramidType*> *imageLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
                                  ImagePyramidIntegerBits, ImagePyramidFractionBits,
@@ -442,12 +445,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                         maskImage(*(imageTriple.second)));
 
         delete imageTriple.first;
+        delete imageTriple.second;
 
         if (!HardMask) {
-            // normalize weights.
-            typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
-               NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
-
             // Normalize the mask coefficients.
             // Scale to the range expected by the MaskPyramidPixelType.
             combineTwoImagesIf(srcImageRange(*(imageTriple.third)),
@@ -457,13 +457,14 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                Param(maxMaskPixelType) * Arg1() / Arg2());
         }
 
+        // maskGP is constructed using the union of the input alpha channels
+        // as the boundary for extrapolation.
         vector<MaskPyramidType*> *maskGP =
                 gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
                                 MaskPyramidIntegerBits, MaskPyramidFractionBits,
                                 SKIPSMMaskPixelType, SKIPSMAlphaPixelType>(
-                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)), maskImage(*(imageTriple.second)));
+                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)), maskImage(*(outputPair.second)));
 
-        delete imageTriple.second;
         delete imageTriple.third;
 
         ConvertScalarToPyramidFunctor<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType,
@@ -499,6 +500,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
             resultLP = imageLP;
         }
 
+        ++m;
     }
 
     collapsePyramid<SKIPSMImagePixelType>(Wraparound, resultLP);
