@@ -85,8 +85,10 @@ namespace enblend {
 // compute the local variance inside a window
 // TODO: respect alpha mask and properly calculate borders
 template <class SrcIterator, class SrcAccessor,
+          class MaskIterator, class MaskAccessor,
           class DestIterator, class DestAccessor>
-void localVariance(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
+void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
+                   MaskIterator mask_ul, MaskAccessor mask_acc, 
                    DestIterator dest_ul, DestAccessor dest_acc, 
                    Size2D size)
 {
@@ -113,8 +115,8 @@ void localVariance(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
     Diff2D border(size.x/2, size.y/2);
     DestIterator yd = dest_ul + border;
     SrcIterator ys = src_ul + border;
+    MaskIterator ym = mask_ul + border;
     SrcIterator send = src_lr - border;
-    int n = size.x*size.y;
      
     // iterate over the interior part
     for(; ys.y < send.y; ++ys.y, ++yd.y)
@@ -122,26 +124,56 @@ void localVariance(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
         // create x iterators
         DestIterator xd(yd);
         SrcIterator xs(ys);
+        MaskIterator xm(ym);
 
-        for(; xs.x < send.x; ++x, ++xs.x, ++xd.x)
+        for(; xs.x < send.x; ++x, ++xs.x, ++xd.x, ++xm.x)
         {
             // init the sum
             SrcSumType sum = NumericTraits<SrcSumType>::zero();
             SrcSumType sum_sqr = NumericTraits<SrcSumType>::zero();
+            int n = 0;
 
             // calculate the window, required for border case
+            // TODO: move border cases into an own loop.
             SrcIterator yys = xs - border;
-            SrcIterator yyend = xs + border;
+            MaskIterator yym = xm - border;
 
-            for(; yys.y <= yyend.y; ++yys.y)
+/*
+            if (yys.x - ys.x < 0) {
+                // left border
+                yys.x = ys.x;
+                yym.x = ym.x;
+            }
+            if (yys.y - ys.y < 0) {
+                // top border
+                yys.y = ys.y;
+                yym.y = ym.y;
+            }
+*/
+            SrcIterator yyend = xs + border;
+/*
+            if (send.x - yyend.x < 0) {
+                // right border
+                yyend.x = send.x;
+            }
+            if (send.y - yyend.y < 0) {
+                // bottom border
+                yyend.y = send.y;
+            }
+*/
+            for(; yys.y <= yyend.y; ++yys.y, ++yym.y)
             {
                 typename SrcIterator::row_iterator xxs = yys.rowIterator();
-                typename SrcIterator::row_iterator xxe = xxs + size.x;
+                typename SrcIterator::row_iterator xxe = yyend.rowIterator();
+                typename MaskIterator::row_iterator xxm = yym.rowIterator();
 
-                for(; xxs < xxe; ++xxs)
+                for(; xxs < xxe; ++xxs, ++xxm)
                 {
-                    sum += src_acc(xxs);
-                    sum_sqr += src_acc(xxs) * src_acc(xxs);
+                    if (mask_acc(xxm)) {
+                        sum += src_acc(xxs);
+                        sum_sqr += src_acc(xxs) * src_acc(xxs);
+                        n++;
+                    }
                 }
             }
 
@@ -291,7 +323,10 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 
         GradImage grad(src.second - src.first);
 
-        localVariance(src.first, src.second, src.third, grad.upperLeft(), grad.accessor(), Size2D(ContrastWindowSize ,ContrastWindowSize));
+        localVarianceIf(src.first, src.second, src.third,
+                        mask.first, mask.second,
+                        grad.upperLeft(), grad.accessor(),
+                        Size2D(ContrastWindowSize ,ContrastWindowSize));
 
         // use the gray value standart deviation / norm of the color standart deviation as a contrast measure
         // The standart deviation is scaled by the max pixel value, and tends to be in the
@@ -378,6 +413,21 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
+        #ifdef ENBLEND_CACHE_IMAGES
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after loading image " << m << " :" << endl;
+            v.printStats("image", imagePair.first);
+            v.printStats("alpha", imagePair.second);
+            v.printStats("weight", mask);
+            v.printStats("normImage", normImage);
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
+        #endif
+
+
         ++m;
     }
 
@@ -385,10 +435,13 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
     if (HardMask) {
+        if (Verbose) {
+            cout << "Creating hard blend mask" << std::endl;
+        }
         Size2D sz = normImage->size();
         typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
-        for (int x=0; x<sz.x; ++x) {
-            for (int y=0; y < sz.y; ++y) {
+        for (int y=0; y < sz.y; ++y) {
+            for (int x=0; x<sz.x; ++x) {
                 float max = 0;
                 double maxi = 0;
                 int i=0;
@@ -402,7 +455,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 }
                 i=0;
                 for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
-                    if (i == maxi) {
+                    if (i == maxi && max > 0) {
                         (*(*imageIter).third)(x,y) = maxMaskPixelType;
                     } else {
                         (*(*imageIter).third)(x,y) = 0.0f;
@@ -421,6 +474,15 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 i++;
             }
 	}
+        #ifdef ENBLEND_CACHE_IMAGES
+        if (Verbose > VERBOSE_CFI_MESSAGES) {
+            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            cout << "Image cache statistics after creating hard mask:" << endl;
+            v.printStats();
+            v.resetCacheMisses();
+            cout << "--------------------------------------------------------------------------------" << endl;
+        }
+        #endif
     }
 
     Rect2D junkBB;

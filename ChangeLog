@@ -1,3 +1,9 @@
+2008-01-06 dangelo
+        * src/enfuse.h: Improved performace of HardMask parameter, added
+        CacheFileImage verbose output
+        * src/enblend.h: Compile only 8 bit paths when DEBUG_8BIT_ONLY is
+        defined. 
+
 2007-12-21 dangelo
 
 	* configure.in, src/Makefile.am: removed -g from default compilation flags

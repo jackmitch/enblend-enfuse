@@ -171,14 +171,14 @@ void printUsageAndExit() {
     cout << " --wExposure=W        Weight given to well-exposed pixels (from 0 to 1)." << endl;
     cout << " --wSaturation=W      Weight given to highly-saturated pixels (from 0 to 1)." << endl;
     cout << " --wContrast=W        Weight given to high-contrast pixels (from 0 to 1)." << endl;
-    cout << endl;
-    cout << "Expert options:" << endl;
-    cout << " --ContrastWindowSize=s  Window size for local contrast analysis." << endl;
-    cout << "                         Default: 5, (must be bigger than 3)." << endl;
     cout << " --HardMask              Force hard blend masks (no averaging) on finest" << endl;
     cout << "                         scale. This is especially useful for focus" << endl;
     cout << "                         stacks with thin and high contrast features such" << endl;
     cout << "                         as insect hairs etc, but will lead to increased noise." << endl;
+    cout << endl;
+    cout << "Expert options:" << endl;
+    cout << " --ContrastWindowSize=s  Window size for local contrast analysis." << endl;
+    cout << "                         Default: 5, (must be bigger than 3)." << endl;
     cout << " --debug                 Output intermediate images for debugging." << endl;
 
     exit(1);
