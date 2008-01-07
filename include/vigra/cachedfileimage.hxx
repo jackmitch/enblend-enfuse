@@ -1709,16 +1709,37 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 /** Create the tmp file to store swapped-out blocks. */
 template <class PIXELTYPE>
 void CachedFileImage<PIXELTYPE>::initTmpfile() const {
-    char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
-#ifndef _WIN32
+
+#ifdef _WIN32
+    const DWORD BUFSIZE=MAX_PATH;
+    char filenameTemplate[BUFSIZE];
+
+
+    if (! GetTempFileNameA(".", // directory for temp files
+                          ".en", // temp file prefix
+                          0, // create unique name
+                          filenameTemplate))  // buffer for name
+   {
+        vigra_fail("enblend: unable to create image swap file name.\n");
+   }
+    
+    hTempFile_ = CreateFileA(filenameTemplate,
+                             GENERIC_READ|GENERIC_WRITE,
+                             FILE_SHARE_READ, // share mode
+                             NULL, // security attributes
+                             CREATE_ALWAYS, // create mode
+                             FILE_FLAG_DELETE_ON_CLOSE|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_TEMPORARY, // file attributes
+                             NULL);
+    if (hTempFile_ == INVALID_HANDLE_VALUE) {
+        vigra_fail(strerror(errno));
+    }
+
+#else
     sigset_t oldsigmask;
     sigprocmask(SIG_BLOCK, &SigintMask, &oldsigmask);
-#endif
 
-#if defined(_WIN32) && defined(HAVE_MKSTEMP)
-#error "Win32 has mkstemp?"
-#endif
+    char filenameTemplate[] = ".enblend_tmpXXXXXX";
 
 #if defined(HAVE_MKSTEMP)
     int tmpFD = mkstemp(filenameTemplate);
@@ -1731,26 +1752,14 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     if (tmpReturn == NULL) {
         vigra_fail("enblend: unable to create image swap file.\n");
     }
-#ifdef _WIN32
-    hTempFile_ = CreateFileA(filenameTemplate,
-                             GENERIC_READ|GENERIC_WRITE,
-                             FILE_SHARE_READ, // share mode
-                             NULL, // security attributes
-                             CREATE_ALWAYS, // create mode
-                             FILE_FLAG_DELETE_ON_CLOSE, // file attributes
-                             NULL);
-#else // _WIN32
     tmpFile_ = fopen(filenameTemplate, "wb+");
-#endif // !_WIN32
 #endif // !HAVE_MKSTEMP
 
-#ifdef _WIN32
-    if (hTempFile_ == INVALID_HANDLE_VALUE) {
-#else
     if (tmpFile_ == NULL) {
-#endif
         vigra_fail(strerror(errno));
     }
+
+#endif // ! _WIN32
 
     unsigned int filenameTemplateLength = (unsigned int)strlen(filenameTemplate) + 1;
     tmpFilename_ = new char[filenameTemplateLength];
