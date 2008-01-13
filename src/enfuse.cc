@@ -169,8 +169,11 @@ void printUsageAndExit() {
 
     cout << endl << "Fusion options:" << endl;
     cout << " --wExposure=W        Weight given to well-exposed pixels (from 0 to 1)." << endl;
+    cout << "                       default value: 1.0" << endl;
     cout << " --wSaturation=W      Weight given to highly-saturated pixels (from 0 to 1)." << endl;
+    cout << "                       default value: 0.2" << endl;
     cout << " --wContrast=W        Weight given to high-contrast pixels (from 0 to 1)." << endl;
+    cout << "                       default value: 0" << endl;
     cout << " --HardMask              Force hard blend masks (no averaging) on finest" << endl;
     cout << "                         scale. This is especially useful for focus" << endl;
     cout << "                         stacks with thin and high contrast features such" << endl;

@@ -23,6 +23,9 @@ Please see the file VIGRA_LICENSE for details.
 
                         ENBLEND
 
+The source code and further information about enblend are available at:
+http://enblend.sf.net
+
 Enblend is a tool for compositing images using a Burt & Adelson multiresolution
 spline. This technique tries to make the seams between the input images
 invisible. The basic idea is that image features should be blended across a
@@ -43,6 +46,13 @@ portions of an input image should not contribute to the final image.
 Enblend does not align images for you. Use a tool like Hugin or PanoTools
 to do this. The TIFFs produced by these programs are exactly what Enblend is
 designed to work with.
+
+                    ENFUSE
+
+Enfuse is a tool for automatic exposure and contrast blending. It can be used
+to fuse an exposure bracketed step automatically into a nicely looking image.
+See enfuse.html (and on windows enfuse_droplet_readme.txt) for more
+information.
 
                         INSTALLATION
 
