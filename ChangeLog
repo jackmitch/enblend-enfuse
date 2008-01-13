@@ -1,3 +1,8 @@
+2008-01-13 dangelo
+
+	* contrib/enfuse_droplet: Added enfuse droplets batch files by Erik
+	Krause
+
 2008-01-07 dangelo
 	* include/vigra_ext/cachedfileimage.hxx,
 	include/vigra_ext/stdcachedfileimage.hxx: Removed old implementations.
