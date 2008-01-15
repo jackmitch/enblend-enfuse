@@ -39,4 +39,18 @@ in such a way that the seam between the images is invisible, or
 at least very difficult to see. Enblend does not line up the
 images for you. Use a tool like Hugin (http://hugin.sf.net) to do that.
 
+Authors:
+========
+
+Enblend developers:
+Andrew Mihal <acmihal@users.sourceforge.net> (primary author)
+Max Lyons
+Pablo d'Angelo
+
+Win32 porting:
+Joe Beda
+Mark - mjz
+
+Windows droplets:
+Erik Krause
 

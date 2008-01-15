@@ -1,3 +1,8 @@
+2008-01-15 dangelo
+
+	* win32/msi/enblend.warsetup, win32/msi/top-banner.bmp,
+	win32/msi/big-banner.bmp: Created win32 installer using WarSetup 3.0
+
 2008-01-13 dangelo
 
 	* contrib/enfuse_droplet: Added enfuse droplets batch files by Erik
