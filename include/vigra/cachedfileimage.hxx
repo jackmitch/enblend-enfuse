@@ -1714,15 +1714,23 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
 #ifdef _WIN32
     const DWORD BUFSIZE=MAX_PATH;
     char filenameTemplate[BUFSIZE];
+    char lpPathBuffer[BUFSIZE];
 
+     // Get the temp path.
+    dwRetVal = GetTempPath(BUFSIZE,     // length of the buffer
+                           lpPathBuffer); // buffer for path 
+    if (dwRetVal > dwBufSize || (dwRetVal == 0))
+    {
+        vigra_fail ("GetTempPath failed.");
+    }
 
-    if (! GetTempFileNameA(".", // directory for temp files
+    if (! GetTempFileNameA(lpPathBuffer, // directory for temp files
                           ".en", // temp file prefix
                           0, // create unique name
                           filenameTemplate))  // buffer for name
-   {
+    {
         vigra_fail("enblend: unable to create image swap file name.\n");
-   }
+    }
     
     hTempFile_ = CreateFileA(filenameTemplate,
                              GENERIC_READ|GENERIC_WRITE,
@@ -1739,7 +1747,24 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     sigset_t oldsigmask;
     sigprocmask(SIG_BLOCK, &SigintMask, &oldsigmask);
 
-    char filenameTemplate[] = ".enblend_tmpXXXXXX";
+    char * filenameTemplate;
+    char * tmpdir = getenv("TMPDIR");
+    if (tmpdir) {
+        int len = strlen(tmpdir) + 22;
+        if (len > 0) {
+            filenameTemplate = (char *) malloc(strlen(tmpdir)+ 22);
+            strncpy(filenameTemplate, tmpdir, len);
+            if (filenameTemplate[len-1] != '/') {
+                strncat(filenameTemplate, "/", len);
+            }
+            strncat(filenameTemplate, ".enblend_tmpXXXXXX", len);
+        } else {
+            filenameTemplate = strdup("/tmp/.enblend_tmpXXXXXX");
+        }
+    } else {
+       filenameTemplate = strdup("/tmp/.enblend_tmpXXXXXX");
+    }
+    
 
 #if defined(HAVE_MKSTEMP)
     int tmpFD = mkstemp(filenameTemplate);
@@ -1768,6 +1793,7 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
 #ifndef _WIN32
     unlink(tmpFilename_);
     sigprocmask(SIG_SETMASK, &oldsigmask, NULL);
+    free(filenameTemplate);
 #endif
 
     // This doesn't seem to help.

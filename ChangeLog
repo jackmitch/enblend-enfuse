@@ -1,3 +1,9 @@
+2008-01-17 dangelo
+
+	* include/vigra/cachedfileimage.hxx: Create temporary files in
+        temporary directory, TMPDIR on Unix, and whatever GetTempPath()
+        returns on Windows.
+
 2008-01-15 dangelo
 
 	* win32/msi/enblend.warsetup, win32/msi/top-banner.bmp,
