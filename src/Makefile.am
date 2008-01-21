@@ -1,4 +1,4 @@
-EXTRA_DIST = enblend.vcproj
+EXTRA_DIST = enblend.vcproj enblend_msvc2003.vcproj enblend_msvc2008.vcproj enfuse_msvc2003.vcproj enfuse_msvc2003.vcproj
 SUBDIRS = vigra_impex win32helpers
 bin_PROGRAMS = enblend enfuse
 enblend_SOURCES = anneal.h assemble.h blend.h bounds.h common.h enblend.h enblend.cc fixmath.h float_cast.h gpu.cc gpu.h mask.h nearest.h numerictraits.h path.h pyramid.h
