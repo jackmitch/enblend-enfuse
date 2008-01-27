@@ -1715,11 +1715,12 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     const DWORD BUFSIZE=MAX_PATH;
     char filenameTemplate[BUFSIZE];
     char lpPathBuffer[BUFSIZE];
+    DWORD dwRetVal;
 
      // Get the temp path.
     dwRetVal = GetTempPath(BUFSIZE,     // length of the buffer
                            lpPathBuffer); // buffer for path 
-    if (dwRetVal > dwBufSize || (dwRetVal == 0))
+    if (dwRetVal > BUFSIZE || (dwRetVal == 0))
     {
         vigra_fail ("GetTempPath failed.");
     }
