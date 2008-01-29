@@ -6,10 +6,12 @@ copy ..\AUTHORS ..\INSTALLDIR
 copy ..\ChangeLog ..\INSTALLDIR
 copy ..\COPYING ..\INSTALLDIR
 copy ..\NEWS ..\INSTALLDIR
+copy ..\INSTALL ..\INSTALLDIR
 copy ..\README ..\INSTALLDIR
 copy ..\TODO ..\INSTALLDIR
 copy ..\VIGRA_LICENSE ..\INSTALLDIR
 copy ..\INSTALLDIR ..\INSTALLDIR
+copy ..\README_WINDOWS.txt ..\INSTALLDIR
 
 copy ..\doc\enblend.html ..\INSTALLDIR
 copy ..\doc\enfuse.html ..\INSTALLDIR
