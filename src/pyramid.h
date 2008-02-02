@@ -40,7 +40,9 @@
 using std::cout;
 using std::vector;
 
+using vigra::Diff2D;
 using vigra::linearRangeMapping;
+using vigra::ImageExportInfo;
 using vigra::NumericTraits;
 using vigra::transformImage;
 using vigra::triple;
@@ -52,6 +54,7 @@ namespace enblend {
 
 #define IMUL6(A) (A * SKIPSMImagePixelType(6))
 #define IMUL5(A) (A * SKIPSMImagePixelType(5))
+#define IMUL4(A) (A * SKIPSMImagePixelType(4))
 #define IMUL11(A) (A * SKIPSMImagePixelType(11))
 #define AMUL6(A) (A * SKIPSMAlphaPixelType(6))
 
@@ -880,37 +883,6 @@ inline void reduce(bool wraparound,
     da.set(cf(SKIPSMImagePixelType(da(dxx)), out11), dxx);          \
     ++dxx.x;
 
-// SKIPSM update routine used when visiting a pixel in the main image body.
-// Same as above, but with hard-coded scaling factors.
-#define SKIPSM_EXPAND_SHIFT                                         \
-    current = SKIPSMImagePixelType(sa(sx));                         \
-    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
-    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
-    out01 = sc0a[srcx];                                             \
-    out11 = sc0b[srcx];                                             \
-    sc1a[srcx] = sc0a[srcx];                                        \
-    sc1b[srcx] = sc0b[srcx];                                        \
-    sc0a[srcx] = sr1 + IMUL6(sr0) + current;                        \
-    sc0b[srcx] = (sr0 + current) * 4;                               \
-    sr1 = sr0;                                                      \
-    sr0 = current;                                                  \
-    out00 += sc0a[srcx];                                            \
-    out10 += sc0b[srcx];                                            \
-    out01 += sc0a[srcx];                                            \
-    out11 += sc0b[srcx];                                            \
-    out00 /= 64;                                                    \
-    out10 /= 64;                                                    \
-    out01 /= 16;                                                    \
-    out11 /= 16;                                                    \
-    da.set(cf(SKIPSMImagePixelType(da(dx)), out00), dx);            \
-    ++dx.x;                                                         \
-    da.set(cf(SKIPSMImagePixelType(da(dx)), out10), dx);            \
-    ++dx.x;                                                         \
-    da.set(cf(SKIPSMImagePixelType(da(dxx)), out01), dxx);          \
-    ++dxx.x;                                                        \
-    da.set(cf(SKIPSMImagePixelType(da(dxx)), out11), dxx);          \
-    ++dxx.x;
-
 // SKIPSM update routine used for the extra row under the main image body.
 #define SKIPSM_EXPAND_ROW_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
@@ -921,7 +893,7 @@ inline void reduce(bool wraparound,
     ++dx.x;                                                         \
     da.set(cf(da(dx), out10), dx);                                  \
     ++dx.x;                                                         \
-    if ((dst_h & 1) == 0) {                                         \
+    if (dst_h_even) {                                               \
         out01 = sc0a[srcx];                                         \
         out11 = sc0b[srcx];                                         \
         out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
@@ -949,7 +921,7 @@ inline void reduce(bool wraparound,
     out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
     da.set(cf(da(dx), out00), dx);                                  \
     da.set(cf(da(dxx), out01), dxx);                                \
-    if ((dst_w & 1) == 0) {                                         \
+    if (dst_w_even) {                                               \
         ++dx.x;                                                     \
         ++dxx.x;                                                    \
         out10 += sc0b[srcx];                                        \
@@ -962,7 +934,8 @@ inline void reduce(bool wraparound,
 
 // SKIPSM update routine used for the extra column to the right
 // of the main image body, with wraparound boundary conditions.
-#define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
+// This version is for the case where the dst image has even width.
+#define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_EVEN(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
     out01 = sc0a[srcx];                                             \
     out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                         \
@@ -977,16 +950,33 @@ inline void reduce(bool wraparound,
     out01 /= SKIPSMImagePixelType(SCALE_OUT01);                     \
     da.set(cf(da(dx), out00), dx);                                  \
     da.set(cf(da(dxx), out01), dxx);                                \
-    if ((dst_w & 1) == 0) {                                         \
-        ++dx.x;                                                     \
-        ++dxx.x;                                                    \
-        out10 += sc0b[srcx];                                        \
-        out11 += sc0b[srcx];                                        \
-        out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
-        out11 /= SKIPSMImagePixelType(SCALE_OUT11);                 \
-        da.set(cf(da(dx), out10), dx);                              \
-        da.set(cf(da(dxx), out11), dxx);                            \
-    }
+    ++dx.x;                                                         \
+    ++dxx.x;                                                        \
+    out10 += sc0b[srcx];                                            \
+    out11 += sc0b[srcx];                                            \
+    out10 /= SKIPSMImagePixelType(SCALE_OUT10);                     \
+    out11 /= SKIPSMImagePixelType(SCALE_OUT11);                     \
+    da.set(cf(da(dx), out10), dx);                                  \
+    da.set(cf(da(dxx), out11), dxx);                                \
+
+// SKIPSM update routine used for the extra column to the right
+// of the main image body, with wraparound boundary conditions.
+// This version is for the case where the dst image has odd width.
+#define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_ODD(SCALE_OUT00, SCALE_OUT01) \
+    out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                              \
+    out01 = sc0a[srcx];                                                  \
+    out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                              \
+    out11 = sc0b[srcx];                                                  \
+    sc1a[srcx] = sc0a[srcx];                                             \
+    sc1b[srcx] = sc0b[srcx];                                             \
+    sc0a[srcx] = sr1 + IMUL6(sr0) + IMUL4(SKIPSMImagePixelType(sa(sy))); \
+    sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) * 4;               \
+    out00 += sc0a[srcx];                                                 \
+    out01 += sc0a[srcx];                                                 \
+    out00 /= SKIPSMImagePixelType(SCALE_OUT00);                          \
+    out01 /= SKIPSMImagePixelType(SCALE_OUT01);                          \
+    da.set(cf(da(dx), out00), dx);                                       \
+    da.set(cf(da(dxx), out01), dxx);                                     \
 
 // SKIPSM update routine for the extra column to the right
 // of the extra row under the main image body.
@@ -994,17 +984,17 @@ inline void reduce(bool wraparound,
     out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                         \
     out00 /= SKIPSMImagePixelType(SCALE_OUT00);                     \
     da.set(cf(da(dx), out00), dx);                                  \
-    if ((dst_w & 1) == 0) {                                         \
+    if (dst_w_even) {                                               \
         out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
         out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
         ++dx.x;                                                     \
         da.set(cf(da(dx), out10), dx);                              \
     }                                                               \
-    if ((dst_h & 1) == 0) {                                         \
+    if (dst_h_even) {                                               \
         out01 = sc0a[srcx];                                         \
         out01 /= SKIPSMImagePixelType(SCALE_OUT01);                 \
         da.set(cf(da(dxx), out01), dxx);                            \
-        if ((dst_w & 1) == 0) {                                     \
+        if (dst_w_even) {                                           \
             out11 = sc0b[srcx];                                     \
             out11 /= SKIPSMImagePixelType(SCALE_OUT11);             \
             ++dxx.x;                                                \
@@ -1091,6 +1081,9 @@ void expand(bool add, bool wraparound,
     int dst_w = dest_lowerright.x - dest_upperleft.x;
     int dst_h = dest_lowerright.y - dest_upperleft.y;
 
+    const bool dst_w_even = ((dst_w & 1) == 0);
+    const bool dst_h_even = ((dst_h & 1) == 0);
+
     // SKIPSM state variables
     SKIPSMImagePixelType current;
     SKIPSMImagePixelType out00, out10, out01, out11;
@@ -1117,15 +1110,25 @@ void expand(bool add, bool wraparound,
 
     // First row
     {
+        // First column
+        srcx = 0;
+        sx = sy;
+        sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
-            sr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
-            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0)));
-        } else {
-            sr0 = SKIPSMImageZero;
+            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+            if (!dst_w_even) {
+                sr1 = IMUL4(sr1);
+            }
+        }
+        else {
             sr1 = SKIPSMImageZero;
         }
+        // sc*[0] are irrelevant
 
-        for (sx = sy, srcx = 0; srcx < src_w; ++srcx, ++sx.x) {
+        srcx = 1;
+        ++sx.x;
+
+        for (; srcx < src_w; ++srcx, ++sx.x) {
             current = SKIPSMImagePixelType(sa(sx));
             sc0a[srcx] = sr1 + IMUL6(sr0) + current;
             sc0b[srcx] = (sr0 + current) * 4;
@@ -1137,8 +1140,14 @@ void expand(bool add, bool wraparound,
 
         // extra column at end of first row
         if (wraparound) {
-            sc0a[srcx] = sr1 + IMUL6(sr0) + SKIPSMImagePixelType(sa(sy));
-            sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) * 4;
+            current = SKIPSMImagePixelType(sa(sy));
+            if (dst_w_even) {
+                sc0a[srcx] = sr1 + IMUL6(sr0) + current;
+                sc0b[srcx] = (sr0 + current) * 4;
+            } else {
+                sc0a[srcx] = sr1 + IMUL6(sr0) + IMUL4(current);
+                // sc*b[srcx] are irrelevant for odd-sized dst images in wraparound mode.
+            }
         } else {
             sc0a[srcx] = sr1 + IMUL6(sr0);
             sc0b[srcx] = sr0 * 4;
@@ -1162,6 +1171,9 @@ void expand(bool add, bool wraparound,
         sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
             sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+            if (!dst_w_even) {
+                sr1 = IMUL4(sr1);
+            }
         } else {
             sr1 = SKIPSMImageZero;
         }
@@ -1175,7 +1187,12 @@ void expand(bool add, bool wraparound,
         // Second column
         if (src_w > 1) {
             if (wraparound) {
-                SKIPSM_EXPAND(56, 56, 16, 16)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND(56, 56, 16, 16)
+                }
+                else {
+                    SKIPSM_EXPAND(77, 56, 22, 16)
+                }
             } else {
                 SKIPSM_EXPAND(49, 56, 14, 16)
             }
@@ -1187,7 +1204,12 @@ void expand(bool add, bool wraparound,
 
             // extra column at end of second row
             if (wraparound) {
-                SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(56, 56, 16, 16)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_EVEN(56, 56, 16, 16)
+                }
+                else {
+                    SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_ODD(77, 22)
+                }
             } else {
                 SKIPSM_EXPAND_COLUMN_END(49, 28, 14, 8)
             }
@@ -1212,7 +1234,12 @@ void expand(bool add, bool wraparound,
             // Second Column
             srcx = 1;
             if (wraparound) {
-                SKIPSM_EXPAND_ROW_END(48, 48, 8, 8)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_ROW_END(48, 48, 8, 8)
+                }
+                else {
+                    SKIPSM_EXPAND_ROW_END(66, 48, 11, 8)
+                }
             } else {
                 SKIPSM_EXPAND_ROW_END(42, 48, 7, 8)
             }
@@ -1224,7 +1251,12 @@ void expand(bool add, bool wraparound,
 
             // extra column at end of row
             if (wraparound) {
-                SKIPSM_EXPAND_ROW_COLUMN_END(48, 48, 8, 8)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_ROW_COLUMN_END(48, 48, 8, 8)
+                }
+                else {
+                    SKIPSM_EXPAND_ROW_COLUMN_END(66, 48, 11, 8)
+                }
             } else {
                 SKIPSM_EXPAND_ROW_COLUMN_END(42, 24, 7, 4)
             }
@@ -1259,10 +1291,13 @@ void expand(bool add, bool wraparound,
         sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
             sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+            if (!dst_w_even) {
+                sr1 = IMUL4(sr1);
+            }
         } else {
             sr1 = SKIPSMImageZero;
         }
-        // sc*[0] are irrelvant
+        // sc*[0] are irrelevant
 
         srcx = 1;
         ++sx.x;
@@ -1272,20 +1307,29 @@ void expand(bool add, bool wraparound,
         // Second column
         if (src_w > 1) {
             if (wraparound) {
-                SKIPSM_EXPAND_SHIFT
+                if (dst_w_even) {
+                    SKIPSM_EXPAND(64, 64, 16, 16)
+                }
+                else {
+                    SKIPSM_EXPAND(88, 64, 22, 16)
+                }
             } else {
                 SKIPSM_EXPAND(56, 64, 14, 16)
             }
 
             // Main columns
             for (srcx = 2, ++sx.x; srcx < src_w; ++srcx, ++sx.x) {
-                //SKIPSM_EXPAND(64, 64, 16, 16)
-                SKIPSM_EXPAND_SHIFT
+                SKIPSM_EXPAND(64, 64, 16, 16)
             }
 
             // extra column at end of row
             if (wraparound) {
-                SKIPSM_EXPAND_COLUMN_END_WRAPAROUND(64, 64, 16, 16)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_EVEN(64, 64, 16, 16)
+                }
+                else {
+                    SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_ODD(88, 22)
+                }
             } else {
                 SKIPSM_EXPAND_COLUMN_END(56, 32, 14, 8)
             }
@@ -1311,7 +1355,12 @@ void expand(bool add, bool wraparound,
             // Second Column
             srcx = 1;
             if (wraparound) {
-                SKIPSM_EXPAND_ROW_END(56, 56, 8, 8)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_ROW_END(56, 56, 8, 8)
+                }
+                else {
+                    SKIPSM_EXPAND_ROW_END(77, 56, 11, 8)
+                }
             } else {
                 SKIPSM_EXPAND_ROW_END(49, 56, 7, 8)
             }
@@ -1323,7 +1372,12 @@ void expand(bool add, bool wraparound,
 
             // extra column at end of row
             if (wraparound) {
-                SKIPSM_EXPAND_ROW_COLUMN_END(56, 56, 8, 8)
+                if (dst_w_even) {
+                    SKIPSM_EXPAND_ROW_COLUMN_END(56, 56, 8, 8)
+                }
+                else {
+                    SKIPSM_EXPAND_ROW_COLUMN_END(77, 56, 11, 8)
+                }
             } else {
                 SKIPSM_EXPAND_ROW_COLUMN_END(49, 28, 7, 4)
             }
@@ -1578,9 +1632,44 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
             cout.flush();
         }
 
+        //if (l == 4) {
+        //    int dst_w = (*((*gp)[l])).width();
+        //    cout << "dst_w=" << dst_w << endl;
+        //    cout << endl << "pre-expand l4 gp:" << endl;
+        //    for (int y = 30; y < 35; y++) {
+        //        cout << "y=" << y << endl;
+        //        for (int x = -4; x < 4; ++x) {
+        //            int modX = (x < 0) ? x+dst_w : x;
+        //            cout << (*((*gp)[l]))(modX,y) << endl;
+        //        }
+        //    }
+        //    int src_w = (*((*gp)[l+1])).width();
+        //    cout << "src_w=" << src_w << endl;
+        //    cout << endl << "l5 gp:" << endl;
+        //    for (int y = 15; y < 18; y++) {
+        //        cout << "y=" << y << endl;
+        //        for (int x = -2; x < 2; ++x) {
+        //            int modX = (x < 0) ? x+src_w : x;
+        //            cout << (*((*gp)[l+1]))(modX,y) << endl;
+        //        }
+        //    }
+        //}
+
         expand<SKIPSMImagePixelType>(false, wraparound,
                 srcImageRange(*((*gp)[l+1])),
                 destImageRange(*((*gp)[l])));
+
+        //if (l == 4) {
+        //    int dst_w = (*((*gp)[l])).width();
+        //    cout << endl << "post-expand l4 gp:" << endl;
+        //    for (int y = 30; y < 35; y++) {
+        //        cout << "y=" << y << endl;
+        //        for (int x = -4; x < 4; ++x) {
+        //            int modX = (x < 0) ? x+dst_w : x;
+        //            cout << (*((*gp)[l]))(modX,y) << endl;
+        //        }
+        //    }
+        //}
     }
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
