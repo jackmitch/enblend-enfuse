@@ -495,19 +495,26 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         triple<ImageType*, AlphaType*, MaskType*> imageTriple = imageList.front();
         imageList.erase(imageList.begin());
 
+        std::ostringstream oss0;
+        oss0 << "imageGP" << m << "_";
+
         // imageLP is constructed using the image's own alpha channel
         // as the boundary for extrapolation.
         vector<ImagePyramidType*> *imageLP =
                 laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
                                  ImagePyramidIntegerBits, ImagePyramidFractionBits,
                                  SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
-                        "imageGP",
+                        oss0.str().c_str(),
                         numLevels, Wraparound,
                         srcImageRange(*(imageTriple.first)),
                         maskImage(*(imageTriple.second)));
 
         delete imageTriple.first;
         delete imageTriple.second;
+
+        //std::ostringstream oss1;
+        //oss1 << "imageLP" << m << "_";
+        //exportPyramid<ImagePyramidType>(imageLP, oss1.str().c_str());
 
         if (!HardMask) {
             // Normalize the mask coefficients.
@@ -529,6 +536,10 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
         delete imageTriple.third;
 
+        //std::ostringstream oss2;
+        //oss2 << "maskGP" << m << "_";
+        //exportPyramid<MaskPyramidType>(maskGP, oss2.str().c_str());
+
         ConvertScalarToPyramidFunctor<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType,
                                       MaskPyramidPixelType,
                                       MaskPyramidIntegerBits,
@@ -547,6 +558,10 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         }
         delete maskGP;
 
+        //std::ostringstream oss3;
+        //oss3 << "multLP" << m << "_";
+        //exportPyramid<ImagePyramidType>(imageLP, oss3.str().c_str());
+
         if (resultLP != NULL) {
             // Add imageLP to resultLP.
             for (unsigned int i = 0; i < imageLP->size(); ++i) {
@@ -562,8 +577,16 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
             resultLP = imageLP;
         }
 
+        //std::ostringstream oss4;
+        //oss4 << "resultLP" << m << "_";
+        //exportPyramid<ImagePyramidType>(resultLP, oss4.str().c_str());
+
         ++m;
     }
+
+    delete normImage;
+
+    //exportPyramid<ImagePyramidType>(resultLP, "resultLP");
 
     collapsePyramid<SKIPSMImagePixelType>(Wraparound, resultLP);
 

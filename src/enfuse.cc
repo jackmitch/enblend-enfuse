@@ -103,6 +103,7 @@ bool WSaturationIsDefault = true;
 int ContrastWindowSize= 5;
 int HardMask=0;
 int Debug=0;
+//int Output16BitImage=0;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -148,41 +149,42 @@ void printUsageAndExit() {
     cout << "Usage: enfuse [options] -o OUTPUT INPUTS" << endl;
     cout << endl;
     cout << "Common options:" << endl;
-    cout << " -h                Print this help message" << endl;
-    cout << " -l number         Number of levels to use (1 to 29)" << endl;
-    cout << " -o filename       Write output to file" << endl;
-    cout << " -v                Verbose" << endl;
-    cout << " -w                Blend across -180/+180 boundary" << endl;
-    cout << " --compression=COMP Set compression of the output image." << endl;
-    cout << "                   Valid values for compression are:" << endl;
-    cout << "                   For TIFF files: LZW, DEFLATE" << endl;
-    cout << "                   For JPEG files: 0-100" << endl;
+    cout << " -h                     Print this help message" << endl;
+    cout << " -l number              Number of levels to use (1 to 29)" << endl;
+    cout << " -o filename            Write output to file" << endl;
+    cout << " -v                     Verbose" << endl;
+    cout << " -w                     Blend across -180/+180 boundary" << endl;
+    cout << " --compression=COMP     Set compression of the output image." << endl;
+    cout << "                          Valid values for compression are:" << endl;
+    cout << "                          For TIFF files: LZW, DEFLATE" << endl;
+    cout << "                          For JPEG files: 0-100" << endl;
 
     cout << endl << "Extended options:" << endl;
-    cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
-    cout << " -c                Use CIECAM02 to blend colors" << endl;
-    cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
-    cout << " -f WIDTHxHEIGHT+x0+y0   Manually set the size and position of the output image." << endl
-         << "                         Useful for cropped and shifted input TIFF images," << endl
-         << "                         such as those produced by Nona." << endl;
-    cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
+    cout << " -b kilobytes           Image cache block size (default=2MiB)" << endl;
+    cout << " -c                     Use CIECAM02 to blend colors" << endl;
+    cout << " -g                     Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout << " -f WIDTHxHEIGHT+x0+y0  Manually set the size and position of the output image." << endl
+         << "                          Useful for cropped and shifted input TIFF images," << endl
+         << "                          such as those produced by Nona." << endl;
+    cout << " -m megabytes           Use this much memory before going to disk (default=1GiB)" << endl;
 
     cout << endl << "Fusion options:" << endl;
-    cout << " --wExposure=W        Weight given to well-exposed pixels (from 0 to 1)." << endl;
-    cout << "                       default value: 1.0" << endl;
-    cout << " --wSaturation=W      Weight given to highly-saturated pixels (from 0 to 1)." << endl;
-    cout << "                       default value: 0.2" << endl;
-    cout << " --wContrast=W        Weight given to high-contrast pixels (from 0 to 1)." << endl;
-    cout << "                       default value: 0" << endl;
-    cout << " --HardMask              Force hard blend masks (no averaging) on finest" << endl;
-    cout << "                         scale. This is especially useful for focus" << endl;
-    cout << "                         stacks with thin and high contrast features such" << endl;
-    cout << "                         as insect hairs etc, but will lead to increased noise." << endl;
+    cout << " --wExposure=W          Weight given to well-exposed pixels (from 0 to 1)." << endl;
+    cout << "                          default value: 1.0" << endl;
+    cout << " --wSaturation=W        Weight given to highly-saturated pixels (from 0 to 1)." << endl;
+    cout << "                          default value: 0.2" << endl;
+    cout << " --wContrast=W          Weight given to high-contrast pixels (from 0 to 1)." << endl;
+    cout << "                          default value: 0" << endl;
+    cout << " --HardMask             Force hard blend masks (no averaging) on finest" << endl;
+    cout << "                          scale. This is especially useful for focus" << endl;
+    cout << "                          stacks with thin and high contrast features such" << endl;
+    cout << "                          as insect hairs etc, but will lead to increased noise." << endl;
     cout << endl;
     cout << "Expert options:" << endl;
-    cout << " --ContrastWindowSize=s  Window size for local contrast analysis." << endl;
-    cout << "                         Default: 5, (must be bigger than 3)." << endl;
-    cout << " --debug                 Output intermediate images for debugging." << endl;
+    cout << " --ContrastWindowSize=s Window size for local contrast analysis." << endl;
+    cout << "                          Default: 5, (must be bigger than 3)." << endl;
+    cout << " --debug                Output intermediate images for debugging." << endl;
+    //cout << " --out16                Save result as a 16bpp image regardless of input pixel type." << endl;
 
     exit(1);
 }
@@ -250,6 +252,7 @@ int main(int argc, char** argv) {
             {"ContrastWindowSize", required_argument, 0, 2},
             {"HardMask", no_argument, &HardMask, 1},
             {"debug", no_argument, &Debug, 1},
+            //{"out16", no_argument, &Output16BitImage, 0},
             {0, 0, 0, 0}
     };
 

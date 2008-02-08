@@ -153,43 +153,43 @@ void printUsageAndExit() {
     cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
     cout << endl;
     cout << "Common options:" << endl;
-    cout << " -a                Pre-assemble non-overlapping images" << endl;
-    cout << " -h                Print this help message" << endl;
-    cout << " -l number         Number of levels to use (1 to 29)" << endl;
-    cout << " -o filename       Write output to file" << endl;
-    cout << " -v                Verbose" << endl;
-    cout << " -w                Blend across -180/+180 boundary" << endl;
-    cout << " --compression=COMP Set compression of the output image." << endl;
-    cout << "                   Valid values for compression are:" << endl;
-    cout << "                   For TIFF files: LZW, DEFLATE" << endl;
-    cout << "                   For JPEG files: 0-100" << endl;
-    cout << " -x                Checkpoint partial results" << endl;
+    cout << " -a                     Pre-assemble non-overlapping images" << endl;
+    cout << " -h                     Print this help message" << endl;
+    cout << " -l number              Number of levels to use (1 to 29)" << endl;
+    cout << " -o filename            Write output to file" << endl;
+    cout << " -v                     Verbose" << endl;
+    cout << " -w                     Blend across -180/+180 boundary" << endl;
+    cout << " --compression=COMP     Set compression of the output image." << endl;
+    cout << "                          Valid values for compression are:" << endl;
+    cout << "                          For TIFF files: LZW, DEFLATE" << endl;
+    cout << "                          For JPEG files: 0-100" << endl;
+    cout << " -x                     Checkpoint partial results" << endl;
 
     cout << endl << "Extended options:" << endl;
-    cout << " -b kilobytes      Image cache block size (default=2MiB)" << endl;
-    cout << " -c                Use CIECAM02 to blend colors" << endl;
-    cout << " -g                Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout << " -b kilobytes           Image cache block size (default=2MiB)" << endl;
+    cout << " -c                     Use CIECAM02 to blend colors" << endl;
+    cout << " -g                     Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
 #ifdef HAVE_LIBGLEW
-    cout << " --gpu             Use the graphics card to accelerate some computations." << endl;
+    cout << " --gpu                  Use the graphics card to accelerate some computations." << endl;
 #endif
-    cout << " -f WIDTHxHEIGHT+x0+y0   Manually set the size and position of the output image." << endl
-         << "                         Useful for cropped and shifted input TIFF images," << endl
-         << "                         such as those produced by Nona." << endl;
-    cout << " -m megabytes      Use this much memory before going to disk (default=1GiB)" << endl;
-    cout << " --visualize=FILE  Save the optimizer's results for debugging." << endl;
+    cout << " -f WIDTHxHEIGHT+x0+y0  Manually set the size and position of the output image." << endl
+         << "                          Useful for cropped and shifted input TIFF images," << endl
+         << "                          such as those produced by Nona." << endl;
+    cout << " -m megabytes           Use this much memory before going to disk (default=1GiB)" << endl;
+    cout << " --visualize=FILE       Save the optimizer's results for debugging." << endl;
 
     cout << endl << "Mask generation options:" << endl;
-    cout << " --coarse-mask     Use an approximation to speedup mask generation. Default." << endl;
-    cout << " --fine-mask       Enables detailed mask generation. Slow. Use this if you" << endl
-         << "                   have very narrow overlap regions." << endl;
-    cout << " --optimize        Turn on mask optimization. This is the default." << endl;
-    cout << " --no-optimize     Turn off mask optimization." << endl;
-    cout << " --save-mask=FILE  Save the generated mask to the given file." << endl;
-    cout << " --load-mask=FILE  Use the mask in the given file instead of generating one." << endl;
+    cout << " --coarse-mask          Use an approximation to speedup mask generation. Default." << endl;
+    cout << " --fine-mask            Enables detailed mask generation. Slow. Use this if you" << endl
+         << "                          have very narrow overlap regions." << endl;
+    cout << " --optimize             Turn on mask optimization. This is the default." << endl;
+    cout << " --no-optimize          Turn off mask optimization." << endl;
+    cout << " --save-mask=FILE       Save the generated mask to the given file." << endl;
+    cout << " --load-mask=FILE       Use the mask in the given file instead of generating one." << endl;
 
     cout << endl << "Deprecated options:" << endl;
-    cout << " -z                Use LZW compression (TIFF only)." << endl
-         << "                   Kept for backward compatability with older scripts" << endl;
+    cout << " -z                     Use LZW compression (TIFF only)." << endl
+         << "                          Kept for backward compatability with older scripts" << endl;
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
 
