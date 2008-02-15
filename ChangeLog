@@ -1,3 +1,8 @@
+2008-02-15 dangelo
+
+	* src/enblend.cc: Switch to fine-mask, if the smallest coarse mask
+        width or height is less than 64 pixels
+
 2008-01-17 dangelo
 
 	* include/vigra/cachedfileimage.hxx: Create temporary files in

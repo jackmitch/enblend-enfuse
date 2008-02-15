@@ -512,9 +512,6 @@ int main(int argc, char** argv) {
     }
 #endif
 
-    if (MaskVectorizeDistance == 0) {
-        MaskVectorizeDistance = CoarseMask ? 4 : 20;
-    }
 
     // Check that more than one input file was given.
     if (inputFileNameList.size() <= 1) {
@@ -536,6 +533,7 @@ int main(int argc, char** argv) {
 
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
+    int minDim = INT_MAX;
     while (inputFileNameIterator != inputFileNameList.end()) {
 
         ImageImportInfo *inputInfo = NULL;
@@ -590,6 +588,7 @@ int main(int argc, char** argv) {
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
             // The first input image.
+            minDim = std::min(inputInfo->width(), inputInfo->height());
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
             pixelType = inputInfo->getPixelType();
@@ -665,9 +664,25 @@ int main(int argc, char** argv) {
                      << endl;
 
             }
+            if (inputInfo->width() < minDim) {
+                minDim = inputInfo->width();
+            }
+            if (inputInfo->height() < minDim) {
+                minDim = inputInfo->height();
+            }
         }
 
         inputFileNameIterator++;
+    }
+
+    // Switch to fine mask, if the smallest coarse mask would be less than 64 pixels wide or high
+    if (minDim / 8 < 64 && CoarseMask) {
+        std::cout << "Input images to small for coarse mask, switching to fine mask." << std::endl;
+        CoarseMask = false;
+    }
+
+    if (MaskVectorizeDistance == 0) {
+        MaskVectorizeDistance = CoarseMask ? 4 : 20;
     }
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
