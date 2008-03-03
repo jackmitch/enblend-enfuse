@@ -308,12 +308,12 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                 pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
 
     // Exposure
-    if (WExposure) {
+    if (WExposure > 0.0) {
         transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type, typename MaskType::value_type>(WExposure));
     }
 
     // contrast criteria
-    if (WContrast) {
+    if (WContrast > 0.0) {
         typedef typename ImageType::value_type ImageValueType;
         typedef typename NumericTraits<ImageValueType>::Promote GradientType;
 
@@ -340,7 +340,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     }
 
     // Saturation
-    if (WSaturation) {
+    if (WSaturation > 0.0) {
         combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
     }
 
@@ -433,6 +433,8 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         ++m;
     }
 
+    const int totalImages = imageList.size();
+
     typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
@@ -444,8 +446,8 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
         for (int y=0; y < sz.y; ++y) {
             for (int x=0; x<sz.x; ++x) {
-                float max = 0;
-                double maxi = 0;
+                float max = 0.0;
+                int maxi = 0;
                 int i=0;
                 for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
                     float w = (*(*imageIter).third)(x,y);
@@ -457,7 +459,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 }
                 i=0;
                 for(imageIter=imageList.begin(); imageIter != imageList.end(); ++imageIter) {
-                    if (i == maxi && max > 0) {
+                    if (max == 0.0) {
+                        (*(*imageIter).third)(x,y) = (MaskPixelType)maxMaskPixelType / totalImages;
+                    } else if (i == maxi) {
                         (*(*imageIter).third)(x,y) = maxMaskPixelType;
                     } else {
                         (*(*imageIter).third)(x,y) = 0.0f;
@@ -521,11 +525,12 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         if (!HardMask) {
             // Normalize the mask coefficients.
             // Scale to the range expected by the MaskPyramidPixelType.
-            combineTwoImagesIf(srcImageRange(*(imageTriple.third)),
-                               srcImage(*normImage),
-                               maskImage(*normImage),
-                               destImage(*(imageTriple.third)),
-                               Param(maxMaskPixelType) * Arg1() / Arg2());
+            combineTwoImages(srcImageRange(*(imageTriple.third)),
+                             srcImage(*normImage),
+                             destImage(*(imageTriple.third)),
+                             ifThenElse(Arg2() > Param(0.0),
+                                        Param(maxMaskPixelType) * Arg1() / Arg2(),
+                                        Param(maxMaskPixelType / totalImages)));
         }
 
         // maskGP is constructed using the union of the input alpha channels
