@@ -107,10 +107,6 @@ void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc
     vigra_precondition(w >= size.x && h >= size.y,
                        "localVariance(): kernel larger than image.");
 
-    int x,y;
-    x = 0;
-    y = 0;
-
     // create iterators for the interior part of the image (where the kernel always fits into the image)
     Diff2D border(size.x/2, size.y/2);
     DestIterator yd = dest_ul + border;
@@ -119,14 +115,14 @@ void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc
     SrcIterator send = src_lr - border;
      
     // iterate over the interior part
-    for(; ys.y < send.y; ++ys.y, ++yd.y)
+    for(; ys.y < send.y; ++ys.y, ++yd.y, ++ym.y)
     {
         // create x iterators
         DestIterator xd(yd);
         SrcIterator xs(ys);
         MaskIterator xm(ym);
 
-        for(; xs.x < send.x; ++x, ++xs.x, ++xd.x, ++xm.x)
+        for(; xs.x < send.x; ++xs.x, ++xd.x, ++xm.x)
         {
             // init the sum
             SrcSumType sum = NumericTraits<SrcSumType>::zero();
@@ -150,7 +146,7 @@ void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc
                 yym.y = ym.y;
             }
 */
-            SrcIterator yyend = xs + border;
+            SrcIterator yyend = xs + border + Diff2D(1, 1);
 /*
             if (send.x - yyend.x < 0) {
                 // right border
@@ -161,7 +157,7 @@ void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc
                 yyend.y = send.y;
             }
 */
-            for(; yys.y <= yyend.y; ++yys.y, ++yym.y)
+            for(; yys.y < yyend.y; ++yys.y, ++yym.y)
             {
                 typename SrcIterator::row_iterator xxs = yys.rowIterator();
                 typename SrcIterator::row_iterator xxe = yyend.rowIterator();
@@ -178,7 +174,11 @@ void localVarianceIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc
             }
 
             // store convolution result in destination pixel
-            dest_acc.set(DestTraits::fromRealPromote( (sum_sqr - sum*sum/n) / (n-1)), xd);
+            // s^2 = (1 / (n-1)) * sum_sqr - (n / (n-1)) * (sum/n)^2
+            //     = (1 / (n-1)) * (sum_sqr - sum^2 / n)
+            SrcSumType ss = (n > 1) ? (sum_sqr - sum*sum/n) / (n-1)
+                                    : NumericTraits<SrcSumType>::zero();
+            dest_acc.set(DestTraits::fromRealPromote(ss), xd);
         }
     }
 }
@@ -291,8 +291,10 @@ protected:
     template <typename T>
     inline ResultType f(const T &a, VigraFalseType) const {
         typedef typename T::value_type TComponentType;
+        typedef typename NumericTraits<TComponentType>::RealPromote RealTComponentType;
         typedef typename ScaleType::value_type ScaleComponentType;
-        typename NumericTraits<TComponentType>::RealPromote norm = sqrt( (double) a[0] + a[1] + a[2]);
+        RealTComponentType sum = (RealTComponentType)a[0] + (RealTComponentType)a[1] + (RealTComponentType)a[2];
+        RealTComponentType norm = sqrt(sum);
         return NumericTraits<ResultType>::fromRealPromote(weight * norm / NumericTraits<ScaleComponentType>::max());
     }
 
@@ -326,7 +328,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         localVarianceIf(src.first, src.second, src.third,
                         mask.first, mask.second,
                         grad.upperLeft(), grad.accessor(),
-                        Size2D(ContrastWindowSize ,ContrastWindowSize));
+                        Size2D(ContrastWindowSize, ContrastWindowSize));
 
         // use the gray value standart deviation / norm of the color standart deviation as a contrast measure
         // The standart deviation is scaled by the max pixel value, and tends to be in the
