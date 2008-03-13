@@ -1,3 +1,9 @@
+2008-03-13 dangelo
+
+	* src/enfuse.cc, src/enfuse.h: Added --wMu and --wSigma options to set
+	the parameters of the gaussian weight function used to compute the
+	exposure criteria
+
 2008-02-15 dangelo
 
 	* src/enblend.cc: Switch to fine-mask, if the smallest coarse mask

@@ -99,6 +99,8 @@ char *OutputCompression = NULL;
 double WExposure = 1.0;
 double WContrast = 0;
 double WSaturation = 0.2;
+double WMu = 0.5;
+double WSigma = 0.2;
 bool WSaturationIsDefault = true;
 int ContrastWindowSize= 5;
 int HardMask=0;
@@ -175,6 +177,10 @@ void printUsageAndExit() {
     cout << "                          default value: 0.2" << endl;
     cout << " --wContrast=W          Weight given to high-contrast pixels (from 0 to 1)." << endl;
     cout << "                          default value: 0" << endl;
+    cout << " --wMu=mu               Mean of gaussian weighting function (from 0 to 1)." << endl;
+    cout << "                          default value: 0.5" << endl;
+    cout << " --wSigma=sigma         Standard deviation of gaussian weighting function (from 0)." << endl;
+    cout << "                          default value: 0.2" << endl;
     cout << " --HardMask             Force hard blend masks (no averaging) on finest" << endl;
     cout << "                          scale. This is especially useful for focus" << endl;
     cout << "                          stacks with thin and high contrast features such" << endl;
@@ -249,6 +255,8 @@ int main(int argc, char** argv) {
             {"wExposure", required_argument, 0, 1},
             {"wContrast", required_argument, 0, 1},
             {"wSaturation", required_argument, 0, 1},
+            {"wMu", required_argument, 0, 1},
+            {"wSigma", required_argument, 0, 1},
             {"ContrastWindowSize", required_argument, 0, 2},
             {"HardMask", no_argument, &HardMask, 1},
             {"debug", no_argument, &Debug, 1},
@@ -301,6 +309,8 @@ int main(int argc, char** argv) {
                     case 1: optionDouble = &WExposure; break;
                     case 2: optionDouble = &WContrast; break;
                     case 3: optionDouble = &WSaturation; WSaturationIsDefault = false; break;
+                    case 4: optionDouble = &WMu; break;
+                    case 5: optionDouble = &WSigma; break;
                 }
 
                 char *lastChar = NULL;

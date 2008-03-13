@@ -108,7 +108,14 @@ The default is 1 GiB.
 .IP --wExposure [0.0-1.0]
 Sets the relative weight of the well-exposedness criteria.
 Increasing this weight relative to the others will make well-exposed pixels
-contribute more to the final output.
+contribute more to the final output. A Gaussian is used to compute the 
+.IP --wMu [0.0-1.0]
+Set the mean (center) of the Gaussian exposure weight curve. 
+Default: 0.5, this gives pixels with value 128 (when using 8 bit images) 
+the highest weight.
+.IP --wSigma [0.0 - 10.0]
+Standard deviation of the Gaussion exposure weight curve.
+Default: 0.2. Low numbers give less weight to pixels that are far from --wMu.
 .IP --wSaturation [0.0-1.0]
 Sets the relative weight of high-saturation pixels.
 Increasing this weight makes pixels with high saturation contribute more to the final output.

@@ -213,7 +213,7 @@ class ExposureFunctor {
 public:
     typedef ResultType result_type;
 
-    ExposureFunctor(double w) : weight(w) {}
+    ExposureFunctor(double w,double m, double s) : weight(w), mu(m), sigma(s){}
 
     inline ResultType operator()(const InputType &a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
@@ -224,8 +224,8 @@ protected:
 
     template <typename T>
     inline ResultType f(const T &a, VigraTrueType) const {
-        const T b = NumericTraits<T>::max() / 2;
-        const T c = NumericTraits<T>::max() / 5;
+        const double b = NumericTraits<T>::max() * mu;
+        const double c = NumericTraits<T>::max() * sigma;
         typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
         return NumericTraits<ResultType>::fromRealPromote(weight * exp(-1 * (ra-b) * (ra-b) / (2 * c * c)));
     }
@@ -235,7 +235,7 @@ protected:
         return f(a.luminance(), VigraTrueType());
     }
 
-    double weight;
+    double weight,mu,sigma;
 };
 
 template <typename InputType, typename ResultType>
@@ -309,7 +309,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 
     // Exposure
     if (WExposure > 0.0) {
-        transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type, typename MaskType::value_type>(WExposure));
+        transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type, 
+                typename MaskType::value_type>(WExposure,WMu,WSigma));
     }
 
     // contrast criteria
