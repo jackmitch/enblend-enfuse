@@ -19,7 +19,7 @@
  */
 
 #include <iostream>
-
+#include <cstdlib>
 #include "gpu.h"
 #ifdef HAVE_LIBGLEW
 

@@ -39,6 +39,7 @@
 #define VIGRA_IMAGEITERATORADAPTER_HXX
 
 #include <iterator>   // iterator tags
+#include <cstdlib>
 
 namespace vigra {
 
