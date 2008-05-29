@@ -108,7 +108,7 @@ namespace vigra {
         desc.pixelTypes[8] = "DOUBLE";
 
         // init compression types
-        desc.compressionTypes.resize(5);
+        desc.compressionTypes.resize(6);
         desc.compressionTypes[0] = "NONE";
         desc.compressionTypes[1] = "RLE";
         desc.compressionTypes[2] = "JPEG";
