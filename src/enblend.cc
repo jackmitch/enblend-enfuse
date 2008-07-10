@@ -458,7 +458,7 @@ int main(int argc, char** argv) {
         }
     }
 
-	// Make sure mandatory output file name parameter given.
+    // Make sure mandatory output file name parameter given.
     if (outputFileName == NULL) {
         cerr << "enblend: no output file specified." << endl;
         printUsageAndExit();
@@ -512,6 +512,13 @@ int main(int argc, char** argv) {
     }
 #endif
 
+    //if (CachedFileImageDirector::v()->getManagedBlocks() < 4) {
+    //    // Max simultaneous image access is in:
+    //    // 4 in any of many calls to combineThreeImages
+    //    // 4 gaussian pyramid init (src image layer, src alpha layer, dest pyramid image layer 0, dest pyramid alpha layer 0)
+    //    // 4 in reduce (src image layer N, src alpha layer N, dest image layer N+1, dest alpha layer N+1)
+    //    // FIXME complain or automatically adjust blocksize to get ManagedBlocks above 4?
+    //}
 
     // Check that more than one input file was given.
     if (inputFileNameList.size() <= 1) {

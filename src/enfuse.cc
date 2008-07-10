@@ -77,6 +77,13 @@ extern "C" int optind;
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
+#define OPTION_DELIMITERS ",;:/"
+
+struct AlternativePercentage {
+    double value;
+    bool isPercentage;
+};
+
 // Globals
 
 // Random number generator for dithering
@@ -102,7 +109,10 @@ double WSaturation = 0.2;
 double WMu = 0.5;
 double WSigma = 0.2;
 bool WSaturationIsDefault = true;
-int ContrastWindowSize= 5;
+int ContrastWindowSize = 5;
+char* GrayscaleProjector = NULL;
+struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {0.0, 0.0, 0.0};
+struct AlternativePercentage MinCurvature = {0.0, false};
 int HardMask=0;
 int Debug=0;
 //int Output16BitImage=0;
@@ -147,52 +157,96 @@ using enblend::enfuseMain;
 
 /** Print the usage information and quit. */
 void printUsageAndExit() {
-    cout << "==== enfuse, version " << VERSION << " ====" << endl;
-    cout << "Usage: enfuse [options] -o OUTPUT INPUTS" << endl;
-    cout << endl;
-    cout << "Common options:" << endl;
-    cout << " -h                     Print this help message" << endl;
-    cout << " -l number              Number of levels to use (1 to 29)" << endl;
-    cout << " -o filename            Write output to file" << endl;
-    cout << " -v                     Verbose" << endl;
-    cout << " -w                     Blend across -180/+180 boundary" << endl;
-    cout << " --compression=COMP     Set compression of the output image." << endl;
-    cout << "                          Valid values for compression are:" << endl;
-    cout << "                          For TIFF files: LZW, DEFLATE" << endl;
-    cout << "                          For JPEG files: 0-100" << endl;
-
-    cout << endl << "Extended options:" << endl;
-    cout << " -b kilobytes           Image cache block size (default=2MiB)" << endl;
-    cout << " -c                     Use CIECAM02 to blend colors" << endl;
-    cout << " -g                     Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
-    cout << " -f WIDTHxHEIGHT+x0+y0  Manually set the size and position of the output image." << endl
-         << "                          Useful for cropped and shifted input TIFF images," << endl
-         << "                          such as those produced by Nona." << endl;
-    cout << " -m megabytes           Use this much memory before going to disk (default=1GiB)" << endl;
-
-    cout << endl << "Fusion options:" << endl;
-    cout << " --wExposure=W          Weight given to well-exposed pixels (from 0 to 1)." << endl;
-    cout << "                          default value: 1.0" << endl;
-    cout << " --wSaturation=W        Weight given to highly-saturated pixels (from 0 to 1)." << endl;
-    cout << "                          default value: 0.2" << endl;
-    cout << " --wContrast=W          Weight given to high-contrast pixels (from 0 to 1)." << endl;
-    cout << "                          default value: 0" << endl;
-    cout << " --wMu=mu               Mean of gaussian weighting function (from 0 to 1)." << endl;
-    cout << "                          default value: 0.5" << endl;
-    cout << " --wSigma=sigma         Standard deviation of gaussian weighting function (from 0)." << endl;
-    cout << "                          default value: 0.2" << endl;
-    cout << " --HardMask             Force hard blend masks (no averaging) on finest" << endl;
-    cout << "                          scale. This is especially useful for focus" << endl;
-    cout << "                          stacks with thin and high contrast features such" << endl;
-    cout << "                          as insect hairs etc, but will lead to increased noise." << endl;
-    cout << endl;
-    cout << "Expert options:" << endl;
-    cout << " --ContrastWindowSize=s Window size for local contrast analysis." << endl;
-    cout << "                          Default: 5, (must be bigger than 3)." << endl;
-    cout << " --debug                Output intermediate images for debugging." << endl;
-    //cout << " --out16                Save result as a 16bpp image regardless of input pixel type." << endl;
+    cout <<
+        "==== enfuse, version " << VERSION << " ====\n" <<
+        "Usage: enfuse [options] -o OUTPUT INPUT...\n" <<
+        "Fuse INPUT images into a single OUTPUT image.\n" <<
+        "\n" <<
+        "Common options:\n" <<
+        "  -h                     Print this help message\n" <<
+        "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
+        "  -o FILENAME            Write output to FILENAME\n" <<
+        "  -v                     Verbosely report progress; repeat to\n" <<
+        "                           increase verbosity\n" <<
+        "  -w                     Blend across -180/+180 degrees boundary\n" <<
+        "  --compression=COMP     Set compression of output image to COMP,\n" <<
+        "                           where COMP is:\n" <<
+        "                             LZW, DEFLATE (for TIFF files)\n" <<
+        "                             0-100 (for JPEG files)\n" <<
+        "\n" <<
+        "Extended options:\n" <<
+        "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
+        (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
+        "  -c                     Use CIECAM02 to blend colors\n" <<
+        "  -g                     Associated-alpha hack for Gimp (before version 2)\n" <<
+        "                           and Cinepaint\n" <<
+        "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
+        "                         Manually set the size and position of the output\n" <<
+        "                           image.  Useful for cropped and shifted input\n" <<
+        "                           TIFF images, such as those produced by Nona.\n" <<
+        "  -m CACHESIZE           Images CACHESIZE in Megabytes.  Default: " <<
+        (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
+        "\n" <<
+        "Fusion options:\n" <<
+        "  --wExposure=WEIGHT     Weight given to well-exposed pixels\n" <<
+        "                           (0 <= WEIGHT <= 1).  Default: " << WExposure << "\n" <<
+        "  --wSaturation=WEIGHT   Weight given to highly-saturated pixels\n" <<
+        "                           (0 <= WEIGHT <= 1).  Default: " << WSaturation << "\n" <<
+        "  --wContrast=WEIGHT     Weight given to high-contrast pixels\n" <<
+        "                           (0 <= WEIGHT <= 1).  Default: " << WContrast << "\n" <<
+        "  --wMu=MEAN             Center aka MEAN of Gaussian weighting\n" <<
+        "                           function (0 <= MEAN <= 1).  Default: " << WMu << "\n" <<
+        "  --wSigma=SIGMA         Standard deviation of Gaussian weighting\n" <<
+        "                           function (SIGMA > 0).  Default: " << WSigma << "\n" <<
+        "  --HardMask             Force hard blend masks and no averaging on finest\n" <<
+        "                           scale.  This is especially useful for focus\n" <<
+        "                           stacks with thin and high contrast features,\n" <<
+        "                           but leads to increased noise.\n" <<
+        "\n" <<
+        "Expert options:\n" <<
+        "  --ContrastWindowSize=SIZE\n" <<
+        "                         Window SIZE for local-contrast analysis.\n" <<
+        "                           (SIZE >= 3).  Default: " << ContrastWindowSize  << "\n" <<
+        "  --GrayProjector=OPERATOR\n" <<
+        "                         Apply grayscale projection OPERATOR, where\n" <<
+        "                           OPERATOR is one of \"average\", \"l-star\",\n" <<
+        "                           \"lightness\", \"value\", \"luminance\", or\n" <<
+        "                           \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\".\n" <<
+        "                           Default: \"average\"\n" <<
+        "  --EdgeScale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
+        "                         Scale on which to look for edges.  Positive\n" <<
+        "                           LCESCALE switches on local contrast enhancement\n" <<
+        "                           by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0).\n" <<
+        "                           Append \"%\" to LCESCALE for values relative to\n" <<
+        "                           EDGESCALE; append \"%\" to LCEFACTOR for relative\n" <<
+        "                           value.  Defaults: " <<
+        FilterConfig.edgeScale << ":" << FilterConfig.lceScale << ":" << FilterConfig.lceFactor << "\n" <<
+        "  --MinCurvature=CURVATURE\n" <<
+        "                         Minimum CURVATURE for an edge to qualify.  Append\n" <<
+        "                           \"%\" for relative values.  Default: " << MinCurvature.value << ".\n" <<
+        "  --debug                Output mask images for debugging\n" <<
+        endl;
 
     exit(1);
+}
+
+/** String tokenizer similar to strtok_r().
+ *  In contrast to strtok_r this function returns an empty string for
+ *  each pair of successive delimiters.  Function strtok_r skips them.
+ */
+char*
+strtoken_r(char *str, const char *delim, char **save_ptr)
+{
+    char *s = str == NULL ? *save_ptr : str;
+    if (s == NULL) return NULL;
+    else
+    {
+        char *token = s;
+        while (*s != 0 && strchr(delim, (int) *s) == NULL) s++;
+        *save_ptr = *s == 0 ? NULL : s + 1;
+        *s = 0;
+        return token;
+    }
 }
 
 /** Make sure all cached file images get destroyed,
@@ -251,15 +305,18 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     static struct option long_options[] = {
-            {"compression", required_argument, 0, 0},
-            {"wExposure", required_argument, 0, 1},
-            {"wContrast", required_argument, 0, 1},
-            {"wSaturation", required_argument, 0, 1},
-            {"wMu", required_argument, 0, 1},
-            {"wSigma", required_argument, 0, 1},
-            {"ContrastWindowSize", required_argument, 0, 2},
-            {"HardMask", no_argument, &HardMask, 1},
-            {"debug", no_argument, &Debug, 1},
+            {"compression", required_argument, 0, 0},        //  0
+            {"wExposure", required_argument, 0, 1},          //  1
+            {"wContrast", required_argument, 0, 1},          //  2
+            {"wSaturation", required_argument, 0, 1},        //  3
+            {"wMu", required_argument, 0, 1},                //  4
+            {"wSigma", required_argument, 0, 1},             //  5
+            {"MinCurvature", required_argument, 0, 0},       //  6
+            {"EdgeScale", required_argument, 0, 0},          //  7
+            {"ContrastWindowSize", required_argument, 0, 2}, //  8
+            {"HardMask", no_argument, &HardMask, 1},         //  9
+            {"GrayProjector", required_argument, 0, 0},      // 10
+            {"debug", no_argument, &Debug, 1},               // 11
             //{"out16", no_argument, &Output16BitImage, 0},
             {0, 0, 0, 0}
     };
@@ -272,9 +329,112 @@ int main(int argc, char** argv) {
             case 0: { /* Long Options with string arguments */
                 if (long_options[option_index].flag != 0) break;
 
+                if (option_index == 6) {
+                    char *tail;
+                    MinCurvature.value = strtod(optarg, &tail);
+                    if (errno == 0) {
+                        if (*tail == 0) {
+                            MinCurvature.isPercentage = false;
+                        } else if (strcmp(tail, "%") == 0) {
+                            MinCurvature.isPercentage = true;
+                        } else {
+                            cerr <<
+                                "enfuse: unrecognized minimum gradient \"" << optarg << "\" specification." <<
+                                endl;
+                            exit(1);
+                        }
+                    } else {
+                            cerr <<
+                                "enfuse: illegal numeric format \"" << optarg << "\" for minimum gradient." <<
+                                endl;
+                            exit(1);
+                    }
+                    break;
+                }
+
+                if (option_index == 7) {
+                    char* s = new char[strlen(optarg) + 1];
+                    strcpy(s, optarg);
+                    char* save_ptr = NULL;
+                    char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                    char* tail;
+
+                    if (token == NULL || *token == 0) {
+                        cerr << "enfuse: no scale given to --EdgeScale.  EdgeScale is required." << endl;
+                        exit(1);
+                    }
+                    FilterConfig.edgeScale = strtod(token, &tail);
+                    if (errno == 0) {
+                        if (*tail != 0) {
+                            cerr <<
+                                "enfuse: could not decode edge scale specification \"" <<
+                                token <<
+                                "\" for EdgeScale." <<
+                                endl;
+                            exit(1);
+                        }
+                    } else {
+                        cerr <<
+                            "enfuse: illegal numeric format \"" << token << "\" for EdgeScale." <<
+                            endl;
+                        exit(1);
+                    }
+
+                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                    if (token != NULL && *token != 0) {
+                        FilterConfig.lceScale = strtod(token, &tail);
+                        if (errno == 0) {
+                            if (strcmp(tail, "%") == 0) {
+                                FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
+                            } else if (*tail != 0) {
+                                cerr <<
+                                    "enfuse: could not decode specification \"" <<
+                                    token <<
+                                    "\" for LCE-scale." <<
+                                    endl;
+                                exit(1);
+                            }
+                        } else {
+                            cerr <<
+                                "enfuse: illegal numeric format \"" << token << "\" for LCE-Scale." <<
+                                endl;
+                            exit(1);
+                        }
+                    }
+
+                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                    if (token != NULL && *token != 0) {
+                        FilterConfig.lceFactor = strtod(token, &tail);
+                        if (errno == 0) {
+                            if (strcmp(tail, "%") == 0) {
+                                FilterConfig.lceFactor /= 100.0;
+                            } else if (*tail != 0) {
+                                cerr <<
+                                    "enfuse: could not decode specification \"" <<
+                                    token <<
+                                    "\" for LCE-factor." <<
+                                    endl;
+                                exit(1);
+                            }
+                        } else {
+                            cerr <<
+                                "enfuse: illegal numeric format \"" << token << "\" for LCE-factor." <<
+                                endl;
+                            exit(1);
+                        }
+                    }
+                    delete [] s;
+                    break;
+                }
+
                 char **optionString = NULL;
                 switch (option_index) {
-                    case 0: optionString = &OutputCompression; break;
+                case 0:
+                    optionString = &OutputCompression;
+                    break;
+                case 10:
+                    optionString = &GrayscaleProjector;
+                    break;
                 }
 
                 if (*optionString != NULL) {
@@ -315,7 +475,8 @@ int main(int argc, char** argv) {
 
                 char *lastChar = NULL;
                 double value = strtod(optarg, &lastChar);
-                if ((lastChar == optarg || value < 0.0 || value > 1.0) && (option_index == 1 || option_index == 2 || option_index==3)) {
+                if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
+                    (option_index == 1 || option_index == 2 || option_index==3)) {
                     cerr << "enfuse: " << long_options[option_index].name
                          << " must be in the range [0.0, 1.0]." << endl;
                     printUsageAndExit();

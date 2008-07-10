@@ -715,6 +715,13 @@ MaskType *createMask(const ImageType* const white,
                 cout.flush();
             }
 
+            if (snake->empty()) {
+                cerr << endl
+                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed before optimization."
+                     << endl;
+                continue;
+            }
+
             // Move snake points to mismatchImage-relative coordinates
             for (Segment::iterator vertexIterator = snake->begin();
                     vertexIterator != snake->end();
@@ -779,7 +786,7 @@ MaskType *createMask(const ImageType* const white,
             // FIXME explain how to fix this problem in the error message!
             if (snake->empty()) {
                 cerr << endl
-                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed."
+                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed after optimization."
                      << endl;
             }
         }
@@ -894,7 +901,7 @@ MaskType *createMask(const ImageType* const white,
         //VisualizeMaskFileName = NULL;
     }
 
-    // Fill contours to get final unoptimized mask.
+    // Fill contours to get final optimized mask.
     MaskType *mask = new MaskType(uBB.size());
     std::for_each(contours.begin(), contours.end(), bind(fillContour<MaskType>, mask, *_1, Diff2D(0,0)));
 

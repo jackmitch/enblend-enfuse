@@ -148,16 +148,20 @@ public:
         //     << " blocksAvailable=" << blocksAvailable << endl;
     }
 
+    long long getAllocation() const {
+        return managedBytes;
+    }
+
     // Get the cache block size.
-    int getBlockSize() {
+    int getBlockSize() const {
         return blocksize;
     }
 
-    int getManagedBlocks() {
+    int getManagedBlocks() const {
         return managedBlocks;
     }
 
-    int getBlocksAvailable() {
+    int getBlocksAvailable() const {
         return blocksAvailable;
     }
 
@@ -338,15 +342,23 @@ protected:
             //     << " candidate_blocks=" << candidate->numBlocksAllocated()
             //     << " image_blocks=" << image->numBlocksAllocated() << endl;
 
-            // Don't try to break close ties - else if blocks cannot be divided up
-            // evenly the remainder will just get rotated around.
-            if (candidate->numBlocksAllocated() > (1+image->numBlocksAllocated())) {
-                //cout << "director.freeBlock(image=" << image << ")"
-                //     << " candidate=" << candidate << " return 1" << endl;
+            //// Don't try to break close ties - else if blocks cannot be divided up
+            //// evenly the remainder will just get rotated around.
+            //if (candidate->numBlocksAllocated() > (1+image->numBlocksAllocated())) {
+            //    //cout << "director.freeBlock(image=" << image << ")"
+            //    //     << " candidate=" << candidate << " return 1" << endl;
+            //    candidate->swapOutBlock();
+            //    // mark candidate as most-recently-missed.
+            //    imageList.erase(i);
+            //    imageList.push_back(candidate);
+            //    return 1;
+            //}
+
+            // 20080221: If an image is at the front of the list, it has not missed recently.
+            // Take a block from it. Don't move it to the end of the list. This only happens
+            // if there is a miss on that image.
+            if (candidate->numBlocksAllocated() > 0) {
                 candidate->swapOutBlock();
-                // mark candidate as most-recently-missed.
-                imageList.erase(i);
-                imageList.push_back(candidate);
                 return 1;
             }
         }
@@ -985,7 +997,7 @@ public:
 
     explicit CachedFileImage(difference_type const & size, value_type const & d = value_type()) {
         vigra_precondition((size.x >= 0) && (size.y >= 0),
-                "CachedFileImage::CachedIfelImage(Diff2D size): "
+                "CachedFileImage::CachedFileImage(Diff2D size): "
                 "size.x and size.y must be >= 0.\n");
         initMembers();
         resize(size.x, size.y, d);
@@ -1539,6 +1551,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(const int dy) co
 
     //cout << "image.after-swap-in this=" << this
     //     << " blocksAllocated=" << blocksAllocated_
+    //     << " mostRecentlyLoadedBlock=" << *mostRecentlyLoadedBlockIterator_
     //     << " blocksInMemory=";
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
     //        std::ostream_iterator<int>(cout, " "));
@@ -1564,7 +1577,7 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 
     // Choose a block to swap out.
     int blockNumber = 0;
-    // This is non longer necessary with SKIPSM-based reduce.
+    // This is no longer necessary with SKIPSM-based reduce.
     //if (blocksAllocated_ == 1 && blocksNeeded_ > 1) {
     //    // Never swap out our only block (if we need more than one).
     //    // Enblend iterates over images in 5-line sliding windows (in reduce).
@@ -1576,13 +1589,15 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
     //} else {
         if (mostRecentlyLoadedBlockIterator_ == blocksInMemory_->begin()) {
             // We're at the beginning of the image.
-            // The last block in memory is the one least likely to be used next.
+            // The last block in memory is the one least likely to be used next,
+            // assuming forward iteration through the image.
             blockNumber = blocksInMemory_->back();
             blocksInMemory_->pop_back();
         } else {
             // Try the block before mostRecentlyLoadedBlockIterator.
             // Keep the m-r-l block for the 5-line sliding window.
-            // The block just before that is least likely to be used next.
+            // The block just before that is least likely to be used next,
+            // assuming forward iteration through the image.
             list<int>::iterator candidate = mostRecentlyLoadedBlockIterator_;
             --candidate;
             blockNumber = *candidate;
@@ -1590,7 +1605,8 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         }
     //}
 
-    //cout << "swapOutBlock image=" << this << " after list remove block=" << blockNumber << ": ";
+    //cout << "swapOutBlock image=" << this << " mRLBI=" << *mostRecentlyLoadedBlockIterator_
+    //     << " after list remove block=" << blockNumber << ": ";
     //std::copy(blocksInMemory_->begin(), blocksInMemory_->end(),
     //        std::ostream_iterator<int>(cout, " "));
     //cout << endl;
