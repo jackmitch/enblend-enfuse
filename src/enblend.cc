@@ -148,7 +148,7 @@ using enblend::enblendMain;
 #endif
 
 /** Print the usage information and quit. */
-void printUsageAndExit() {
+void printUsageAndExit(const bool error=true) {
     cout << "==== enblend, version " << VERSION << " ====" << endl;
     cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
     cout << endl;
@@ -193,7 +193,7 @@ void printUsageAndExit() {
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
 
-    exit(1);
+    exit(error ? 1 : 0);
 }
 
 /** Make sure all cached file images get destroyed,
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'h': {
-                printUsageAndExit();
+                printUsageAndExit(false);
                 break;
             }
             case 'l': {

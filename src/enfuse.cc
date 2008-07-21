@@ -156,7 +156,7 @@ using enblend::enfuseMain;
 #endif
 
 /** Print the usage information and quit. */
-void printUsageAndExit() {
+void printUsageAndExit(const bool error=true) {
     cout <<
         "==== enfuse, version " << VERSION << " ====\n" <<
         "Usage: enfuse [options] -o OUTPUT INPUT...\n" <<
@@ -227,7 +227,7 @@ void printUsageAndExit() {
         "  --debug                Output mask images for debugging\n" <<
         endl;
 
-    exit(1);
+    exit(error ? 1 : 0);
 }
 
 /** String tokenizer similar to strtok_r().
@@ -535,7 +535,7 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'h': {
-                printUsageAndExit();
+                printUsageAndExit(false);
                 break;
             }
             case 'l': {
