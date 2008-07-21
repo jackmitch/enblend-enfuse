@@ -301,16 +301,20 @@ class RGBValue
         return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
     }
 
-    // mihal 20071217 quick-and-dirty saturation calculation
     value_type saturation() const {
-        value_type max = std::max(red(), std::max(green(), blue()));
-        value_type min = std::min(red(), std::min(green(), blue()));
-        if (max == min) return NumericTraits<value_type>::zero();
-        typename NumericTraits<value_type>::RealPromote l = NumericTraits<value_type>::toRealPromote(max + min) / NumericTraits<value_type>::max();
-        if (l <= 1.0) {
-            return NumericTraits<value_type>::fromRealPromote((max - min) / l);
-        } else {
-            return NumericTraits<value_type>::fromRealPromote((max - min) / (2.0 - l));
+        typedef NumericTraits<value_type> ValueTraits;
+        typedef typename ValueTraits::RealPromote RealValue;
+        const RealValue max = ValueTraits::toRealPromote(std::max(red(), std::max(green(), blue())));
+        const RealValue min = ValueTraits::toRealPromote(std::min(red(), std::min(green(), blue())));
+        if (max == min)
+        {
+            return ValueTraits::zero();
+        }
+        else
+        {
+            const RealValue l = (max + min) / ValueTraits::toRealPromote(ValueTraits::max());
+            const RealValue d = max - min;
+            return ValueTraits::fromRealPromote(l <= 1.0 ? d / l : d / (2.0 - l));
         }
     }
 
