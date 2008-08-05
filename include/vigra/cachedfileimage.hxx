@@ -762,12 +762,12 @@ protected:
     }
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
-        // Note that we change i first so that the assigment to y causes us to get notified
-        // about the new y coordinate in the new image.
-        currentRow = NULL;
-        i = r.i;
         x = r.x;
         y = r.y;
+        i = r.i;
+        currentRow = NULL;
+        y.setNotify(this);
+        _notify(y());
         return *this;
     }
 
