@@ -552,7 +552,11 @@ class NotifyingDirectionSelector;
 template <class T, class Notify>
 class NotifyingDirectionSelector<UnstridedArrayTag, T, Notify>
 {
+#ifdef __GNUC__
+friend class Notify::self_type;
+#else
 friend typename Notify::self_type;
+#endif
 protected:
     NotifyingDirectionSelector(T base = 0) : current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : current_(rhs.current_), notify_(NULL) {}
@@ -594,7 +598,11 @@ private:
 
 template <class T, class Notify>
 class NotifyingDirectionSelector<StridedArrayTag, T, Notify> {
+#ifdef __GNUC__ 
+friend class Notify::self_type;
+#else
 friend typename Notify::self_type;
+#endif
 protected:
     NotifyingDirectionSelector(int stride = 1, T base = 0) : stride_(stride), current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_), notify_(NULL) {}
