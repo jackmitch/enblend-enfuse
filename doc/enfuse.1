@@ -1,4 +1,4 @@
-.TH enfuse 1 "June 15, 2008" "" ""
+.TH enfuse 1 "September 8, 2008" "" ""
 .SH NAME
 enfuse \- poor man's HDR
 .SH SYNOPSIS
@@ -73,8 +73,11 @@ Blend around the -180/+180 degrees boundary.  Useful for full-360
 degrees panoramas.  Enfuse currently does not blend the zenith or the
 nadir, so you may still see some seams in these areas.
 .IP --compression=COMP
-Write a compressed output file.  Valid values for COMP are LZW and
-DEFLATE for TIFF files, and numbers from 0-100 for JPEG files.
+Write a compressed output file.  Valid values for COMP are NONE,
+PACKBITS, LZW and DEFLATE for TIFF files,
+and numbers from 0-100 for JPEG files.
+.IP -z
+Use LZW compression for the output image.
 
 .SH EXTENDED OPTIONS
 .IP "-b BLOCKSIZE"
@@ -123,6 +126,10 @@ output.  Valid range: 0 <= WEIGHT <= 1.
 .IP --wContrast=WEIGHT
 Sets the relative weight of high-contrast pixels.  Valid range: 0 <=
 WEIGHT <= 1.
+.IP --HardMask
+Force hard blend masks on the finest scale.  This avoids averaging of
+fine details (only), at the expense of increasing the noise.  This
+improves the sharpness of focus stacks considerably.
 
 .SH EXPERT OPTIONS
 
@@ -131,10 +138,6 @@ Window SIZE for local contrast analysis.  Values larger than 5 might
 result in a blurry composite and increased computation times.  Values
 in the range of 3 to 5 have given good results on focus stacks.  Valid
 range: SIZE >= 3.
-.IP --HardMask
-Force hard blend masks on the finest scale.  This avoids averaging of
-fine details (only), at the expense of increasing the noise.  This
-improves the sharpness of focus stacks considerably.
 .IP --GrayProjector=PROJ
 Use gray projector PROJ for conversion of RGB-images to grayscale
 masks.  Valid values for PROJ are:
@@ -202,7 +205,6 @@ A negative value truncates all curvatures less than -MC to zero.
 Values above MC are left unchanged.  This effectively suppresses weak
 edges.
 
-
 .SH EXAMPLES
 
 To blend an exposure stack given in files exposure_01.tif, exposure_02.tif, ...
@@ -214,6 +216,10 @@ the contrast weight to 1 and use very low values for exposure and
 saturation criteria to get meaningful results in low contrast areas.
 
 enfuse -o result.tif --wExposure=0.001 --wSaturation=0.001 --wContrast=1 --HardMask focus_*.tif
+
+For additional information on blending focus stacks,
+including usage of the expert options, refer to the
+enfuse-focus-stacking texinfo file.
 
 .SH AUTHORS
 Andrew Mihal <acmihal@users.sourceforge.net>.

@@ -552,23 +552,17 @@ class NotifyingDirectionSelector;
 template <class T, class Notify>
 class NotifyingDirectionSelector<UnstridedArrayTag, T, Notify>
 {
-#ifdef __GNUC__
-friend class Notify::self_type;
-#else
-friend typename Notify::self_type;
-#endif
-protected:
+public:
     NotifyingDirectionSelector(T base = 0) : current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : current_(rhs.current_), notify_(NULL) {}
 
-    void setNotify(Notify *n) { notify_ = n; }
-
-public:
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
-        notify_->_notify(current_, rhs.current_);
         current_ = rhs.current_;
+        notify_ = NULL;
         return *this;
     }
+
+    void setNotify(Notify *n) { notify_ = n; }
 
     void operator++() { notify_->_notify(current_, current_+1); ++current_; }
     void operator++(int) { notify_->_notify(current_, current_+1); ++current_; }
@@ -593,29 +587,23 @@ public:
 
 private:
     Notify *notify_;
-
 };
 
 template <class T, class Notify>
 class NotifyingDirectionSelector<StridedArrayTag, T, Notify> {
-#ifdef __GNUC__ 
-friend class Notify::self_type;
-#else
-friend typename Notify::self_type;
-#endif
-protected:
+public:
     NotifyingDirectionSelector(int stride = 1, T base = 0) : stride_(stride), current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_), notify_(NULL) {}
 
-    void setNotify(Notify *n) { notify_ = n; }
-
 public:
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
-        notify_->_notify(current_, rhs.current_);
         stride_ = rhs.stride_;
         current_ = rhs.current_;
+        notify_ = NULL;
         return *this;
     }
+
+    void setNotify(Notify *n) { notify_ = n; }
 
     void operator++() { notify_->_notify(current_, current_+stride_); current_ += stride_; }
     void operator++(int) { notify_->_notify(current_, current_+stride_); current_ += stride_; }

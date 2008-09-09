@@ -1,4 +1,4 @@
-.TH enblend 1 "January 27, 2007" "" ""
+.TH enblend 1 "September 8, 2008" "" ""
 .SH NAME
 enblend \- combine images using a multiresolution spline
 .SH SYNOPSIS
@@ -64,8 +64,12 @@ Verbose output.
 Blend around the -180/+180 boundary. Useful for full-360 panoramas.
 Enblend currently does not blend the zenith or the nadir, so you may still see
 some seams in these areas.
+.IP "--compression=COMP"
+Select the type of compression used for the output image.
+For TIFF files, the valid settings are NONE, PACKBITS, LZW, and DEFLATE.
+The default is NONE. For JPEG files, the valid setting is an integer between 0 and 100.
 .IP -z
-Use LZW compression for the output images.
+Use LZW compression for the output image.
 .IP -x
 Checkpoint partial results to the output file after each blending step.
 .IP input-files

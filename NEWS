@@ -201,12 +201,19 @@ January 27, 2007
 
     - Like other X.0 releases, please consider this a beta.
 
-    Next release
+September 8, 2008
+    Released enblend-enfuse-3.2
 
-    - Enfuse program for automatic multi-level exposure blending
+    - Official release of Enfuse for automatic multi-level exposure blending
+      and focus stack creation.
+
     - Support for PNG and OpenEXR input files.
-    - Correctly interpret alpha channel of float (HDR) images.
-    - Output to jpg possible (8 bit only).
-    - Compression can be specified with the new --compression option
-    - Windows binary does not require a SSE2 capable processor.
+
+    - Bugfix to correctly interpret the alpha channel of float (HDR) images.
+
+    - Support for writing JPEG output files (8 bit only).
+
+    - New --compression option for selecting the compression type of the output image.
+
+    - This release includes a Windows binary that does not require a SSE2-capable processor.
 

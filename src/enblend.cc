@@ -161,8 +161,10 @@ void printUsageAndExit(const bool error=true) {
     cout << " -w                     Blend across -180/+180 boundary" << endl;
     cout << " --compression=COMP     Set compression of the output image." << endl;
     cout << "                          Valid values for compression are:" << endl;
-    cout << "                          For TIFF files: LZW, DEFLATE" << endl;
+    cout << "                          For TIFF files: NONE, PACKBITS, LZW, DEFLATE" << endl;
     cout << "                          For JPEG files: 0-100" << endl;
+    cout << " -z                     Use LZW compression (TIFF only)." << endl
+         << "                          Kept for backward compatability with older scripts" << endl;
     cout << " -x                     Checkpoint partial results" << endl;
 
     cout << endl << "Extended options:" << endl;
@@ -187,9 +189,6 @@ void printUsageAndExit(const bool error=true) {
     cout << " --save-mask=FILE       Save the generated mask to the given file." << endl;
     cout << " --load-mask=FILE       Use the mask in the given file instead of generating one." << endl;
 
-    cout << endl << "Deprecated options:" << endl;
-    cout << " -z                     Use LZW compression (TIFF only)." << endl
-         << "                          Kept for backward compatability with older scripts" << endl;
     // deprecated
     //cout << " -s                Blend images one at a time, in the order given" << endl;
 

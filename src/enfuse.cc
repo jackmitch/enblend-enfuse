@@ -171,8 +171,10 @@ void printUsageAndExit(const bool error=true) {
         "  -w                     Blend across -180/+180 degrees boundary\n" <<
         "  --compression=COMP     Set compression of output image to COMP,\n" <<
         "                           where COMP is:\n" <<
-        "                             LZW, DEFLATE (for TIFF files)\n" <<
+        "                             NONE, PACKBITS, LZW, DEFLATE (for TIFF files)\n" <<
         "                             0-100 (for JPEG files)\n" <<
+        " -z                     Use LZW compression (TIFF only).\n" <<
+        "                          Kept for backward compatability with older scripts\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
@@ -324,7 +326,7 @@ int main(int argc, char** argv) {
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "b:cf:ghl:m:o:vw", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "b:cf:ghl:m:o:vwz", long_options, &option_index)) != -1) {
         switch (c) {
             case 0: { /* Long Options with string arguments */
                 if (long_options[option_index].flag != 0) break;
@@ -588,6 +590,21 @@ int main(int argc, char** argv) {
             }
             case 'x': {
                 Checkpoint = true;
+                break;
+            }
+            case 'z': {
+                if (OutputCompression != NULL) {
+                    delete OutputCompression;
+                }
+                try {
+                    OutputCompression = new char[4];
+                } catch (std::bad_alloc& e) {
+                    cerr << endl << "enblend: out of memory"
+                         << endl << e.what()
+                         << endl;
+                    exit(1);
+                }
+                OutputCompression = strdup("LZW");
                 break;
             }
             default: {

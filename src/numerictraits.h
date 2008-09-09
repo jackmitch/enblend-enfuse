@@ -108,6 +108,7 @@ struct EnblendNumericTraits<IMAGECOMPONENT> { \
     typedef IMAGE<PYRAMIDCOMPONENT> ImagePyramidType; \
     enum {ImagePyramidIntegerBits = PYRAMIDINTEGER}; \
     enum {ImagePyramidFractionBits = PYRAMIDFRACTION}; \
+    typedef SKIPSMIMAGE SKIPSMImagePixelComponentType; \
     typedef SKIPSMIMAGE SKIPSMImagePixelType; \
     typedef SKIPSMALPHA SKIPSMAlphaPixelType; \
     typedef MASKPYRAMID MaskPyramidPixelType; \
@@ -131,6 +132,7 @@ struct EnblendNumericTraits<RGBValue<IMAGECOMPONENT,0,1,2> > { \
     typedef IMAGE<RGBValue<PYRAMIDCOMPONENT,0,1,2> > ImagePyramidType; \
     enum {ImagePyramidIntegerBits = PYRAMIDINTEGER}; \
     enum {ImagePyramidFractionBits = PYRAMIDFRACTION}; \
+    typedef SKIPSMIMAGE SKIPSMImagePixelComponentType; \
     typedef RGBValue<SKIPSMIMAGE,0,1,2> SKIPSMImagePixelType; \
     typedef SKIPSMALPHA SKIPSMAlphaPixelType; \
     typedef MASKPYRAMID MaskPyramidPixelType; \

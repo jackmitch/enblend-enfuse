@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="enblend"
-	ProjectGUID="{A1402918-6CCA-4625-A83B-FF965635D7BE}"
-	RootNamespace="enblend"
+	Name="enfuse"
+	ProjectGUID="{11402918-6CCA-4625-A83B-FF965635D7BE}"
+	RootNamespace="enfuse"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -64,12 +64,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib"
-				OutputFile="$(OutDir)/enblend.exe"
+				AdditionalDependencies="tiff.lib jpeg.lib png.lib zlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib"
+				OutputFile="$(OutDir)/enfuse.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;..\..\wxMSW-2.8.6\lib\vc_lib&quot;;&quot;..\..\lcms-1.17\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Debug&quot;;&quot;..\..\STLport-5.1.4\lib&quot;;..\..\Deploy\lib\Release"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/enblend.pdb"
+				ProgramDatabaseFile="$(OutDir)/enfuse.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -154,7 +154,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libtiff.lib libjpeg.lib libpng.lib zlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib"
-				OutputFile="$(OutDir)/enblend.exe"
+				OutputFile="$(OutDir)/enfuse.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="false"
@@ -196,10 +196,10 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			UniqueIdentifier="{1FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\enblend.cc"
+				RelativePath=".\enfuse.cc"
 				>
 			</File>
 			<File
@@ -210,15 +210,11 @@
 				RelativePath=".\win32helpers\getopt_long.c"
 				>
 			</File>
-			<File
-				RelativePath=".\gpu.cc"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			UniqueIdentifier="{13995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
 				RelativePath=".\anneal.h"
@@ -241,7 +237,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\enblend.h"
+				RelativePath=".\enfuse.h"
 				>
 			</File>
 			<File
@@ -254,10 +250,6 @@
 			</File>
 			<File
 				RelativePath=".\win32helpers\getopt_long.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gpu.h"
 				>
 			</File>
 			<File
@@ -288,7 +280,7 @@
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			UniqueIdentifier="{17DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
 	</Files>
