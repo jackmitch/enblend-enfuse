@@ -12,13 +12,13 @@
 #define PACKAGE_NAME "enblend-enfuse"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "enblend-enfuse 3.2"
+#define PACKAGE_STRING "enblend-enfuse 3.2-cvs"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "enblend-enfuse"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.2"
+#define PACKAGE_VERSION "3.2-cvs"
 
 /* Version number of package */
-#define VERSION "3.2"
+#define VERSION "3.2-cvs"
