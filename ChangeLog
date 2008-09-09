@@ -1,139 +1,343 @@
-2008-03-13 dangelo
+2008-09-08 21:27  acmihal
 
-	* src/enfuse.cc, src/enfuse.h: Added --wMu and --wSigma options to set
-	the parameters of the gaussian weight function used to compute the
-	exposure criteria
+	* NEWS, configure.in, enblend.sln, doc/Makefile.am, doc/auxmac.tex,
+	  doc/enblend.1, doc/enblend.texi, doc/enfuse.1, doc/enfuse.texi,
+	  doc/texinfo.tex, include/vigra/cachedfileimage.hxx,
+	  src/Makefile.am, src/enblend.cc, src/enblend.vcproj,
+	  src/enfuse.cc, src/enfuse.h, src/enfuse.vcproj, src/mga.h,
+	  src/numerictraits.h, src/vigra_impex/vigra_impex.vcproj,
+	  src/win32helpers/win32config.h: - Backed out changes to
+	  cachedfileimage.  - Moved MultiGrayscaleAccessor into its own
+	  file.  - Prepared configuration for 3.2 release.  - Minor
+	  documentation updates.
 
-2008-02-15 dangelo
+2008-08-13 11:01  dangelo
 
-	* src/enblend.cc: Switch to fine-mask, if the smallest coarse mask
-        width or height is less than 64 pixels
+	* include/vigra/cachedfileimage.hxx: enabled compilation of enblend
+	  both with gcc and MSVC.
 
-2008-01-17 dangelo
+2008-08-10 09:25  dangelo
 
-	* include/vigra/cachedfileimage.hxx: Create temporary files in
-        temporary directory, TMPDIR on Unix, and whatever GetTempPath()
-        returns on Windows.
+	* include/vigra/cachedfileimage.hxx: applied patch [ 2045341 ]
+	  current cvs does not build on windows
 
-2008-01-15 dangelo
+2008-08-05 02:59  dangelo
 
-	* win32/msi/enblend.warsetup, win32/msi/top-banner.bmp,
-	win32/msi/big-banner.bmp: Created win32 installer using WarSetup 3.0
+	* include/vigra/cachedfileimage.hxx: revert commit that broke
+	  enblend
 
-2008-01-13 dangelo
+2008-07-20 21:49  acmihal
 
-	* contrib/enfuse_droplet: Added enfuse droplets batch files by Erik
-	Krause
+	* src/: enblend.cc, enfuse.cc: Modified -h parameter to return 0.
+	  Explicitly requesting help is therefore not an error.
 
-	* win32/install.cmd: Copy all required files into the INSTALLDIR
-	folder, ready for zipping and uploading.
+2008-07-20 21:48  acmihal
 
-2008-01-07 dangelo
-	* include/vigra_ext/cachedfileimage.hxx,
-	include/vigra_ext/stdcachedfileimage.hxx: Removed old implementations.
+	* include/vigra/: cachedfileimage.hxx, diff2d.hxx, rational.hxx,
+	  rgbvalue.hxx: - Fixes for compiler warnings courtesy of Christoph
+	  Spiel.  - Fixed a bug in the NotifyingDirectionSelector's
+	  assignment operator.	  This does not affect the behavior of
+	  enblend or enfuse.
 
-	* include/vigra/cachedfileimage.hxx: Use Win32 temp file functions,
-	fixes enfuse bug that prevented using more than a few source images
-	with enfuse.
+2008-07-09 19:04  acmihal
 
-2008-01-06 dangelo
-        * src/enfuse.h: Improved performace of HardMask parameter, added
-        CacheFileImage verbose output
+	* doc/Makefile.am, doc/enfuse-focus-stacking.texi, doc/enfuse.1,
+	  include/vigra/cachedfileimage.hxx, src/assemble.h,
+	  src/enblend.cc, src/enfuse.cc, src/enfuse.h, src/mask.h: -
+	  Applied patch from Christoph Spiel providing a
+	  Laplacian-of-Gaussian   contrast functor.  - Temporary workaround
+	  for segfault in seam optimization when an empty   snake is found.
+	  - Changed cache swapout policy so that not-recently-accessed
+	  images are   not required to hold an average number of blocks.
 
-        * src/enblend.h: Compile only 8 bit paths when DEBUG_8BIT_ONLY is
-        defined. 
+2008-05-29 12:08  dangelo
 
-	* src/vigra_impex/jpeg.cxx: Set default jpeg quality to 98.
+	* src/vigra_impex/tiff.cxx: fixed crash
 
-2007-12-21 dangelo
+2008-05-28 13:08  dangelo
 
-	* configure.in, src/Makefile.am: removed -g from default compilation flags
+	* src/vigra_impex/tiff.cxx: added support for packbits tiff
+	  compression
 
-	* src/enfuse.h, src/enfuse.cc, src/enfuse.1: Implemented variance based
-	local contrast criteria, works great on focus stacks. Further work is
-	needed for images with alpha channel. Only calcuate criteria that are
-	non-zero
-	
-	* include/vigra/inspectimage.hxx: Fixed a compiler warning (was not a bug)
+2008-04-22 15:12  dangelo
 
-	* include/vigra/impex.hxx: Disable automatic rescaling when saving
-	images to files with different bit depth.
+	* include/vigra/imageiteratoradapter.hxx, src/gpu.cc: applied patch
+	  to fix [ 1895675 ] gcc 4.3.0 build failure
 
-2007-12-05 dangelo
+2008-03-13 13:34  dangelo
 
-	* configure.in: turned some warnings into errors
+	* ChangeLog, doc/enfuse.1, src/enfuse.cc, src/enfuse.h: Added --wMu
+	  and --wSigma options to set the parameters of the gaussian weight
+	  function used to compute the exposure criteria
 
-2007-11-25 dangelo
+2008-03-02 23:30  acmihal
+
+	* src/enfuse.h: Fixed bug causing darkening or spotting in smooth
+	  regions when using --wContrast > 0, --wExposure 0, --wSaturation
+	  0.
+
+2008-03-02 21:54  acmihal
+
+	* src/enfuse.h: Bugfix for output artifacts and/or black output
+	  when fusing images with alpha channels and --wContrast > 0.
+
+2008-02-15 02:18  dangelo
+
+	* ChangeLog, src/enblend.cc: Switch to fine-mask, if the smallest
+	  coarse mask width or height is less than 64 pixels
+
+2008-02-07 22:44  acmihal
+
+	* configure.in, src/Makefile.am, src/enblend.cc, src/enfuse.cc,
+	  src/enfuse.h: Removed -DENBLEND_CACHE_IMAGES from Makefile.am, as
+	  this is now set by the --enable_image_cache configure option.
+
+	  Straightened up help messages.
+
+	  Changed the package name from "enblend" to "enblend-enfuse" so
+	  that the release tar will be called "enblend-enfuse-3.1.tar.gz".
+
+2008-02-02 13:59  acmihal
+
+	* src/pyramid.h: Modified wraparound boundary conditions in expand
+	  to account for odd- and even-width pyramid levels. This should
+	  fix the artifacts seen at the -180/+180 boundary with the -w
+	  flag. Additional testing is necessary.
+
+2008-01-28 23:39  dangelo
+
+	* NEWS, win32/install.cmd: updated install script
+
+2008-01-27 09:04  dangelo
+
+	* include/vigra/cachedfileimage.hxx: fixed MSVC compilation error
+
+2008-01-21 14:01  dangelo
+
+	* Makefile.am, src/Makefile.am, src/enblend.cc,
+	  src/vigra_impex/Makefile.am: updated make dist targets
+
+2008-01-17 05:16  dangelo
+
+	* ChangeLog, include/vigra/cachedfileimage.hxx: create temporary
+	  files in TMPDIR or what GetTempPath() returns.
+
+2008-01-15 02:40  dangelo
+
+	* ChangeLog, READMEWIN, README_WINDOWS.txt,
+	  win32/msi/big-banner.bmp, win32/msi/enblend.warsetup,
+	  win32/msi/top-banner.bmp: added Windows MSI installer
+
+2008-01-15 01:22  dangelo
+
+	* README_WINDOWS.txt: short windows readme for displaying after the
+	  installer
+
+2008-01-13 14:12  dangelo
+
+	* ChangeLog, README, src/enblend_msvc2008.vcproj, src/enfuse.cc,
+	  src/enfuse_msvc2008.vcproj, win32/install.cmd: Added install.cmd
+	  script for easier bundling.
+
+2008-01-13 11:44  dangelo
+
+	* ChangeLog, contrib/enfuse_droplet/LICENCE.txt,
+	  contrib/enfuse_droplet/enfuse_droplet.bat,
+	  contrib/enfuse_droplet/enfuse_droplet_360.bat,
+	  contrib/enfuse_droplet/enfuse_droplet_readme.txt: Added enfuse
+	  droplets by Erik Krause
+
+2008-01-13 03:18  dangelo
+
+	* enblend_msvc2008.sln, src/enblend_msvc2008.vcproj,
+	  src/enfuse_msvc2008.vcproj,
+	  src/vigra_impex/vigra_impex_msvc2008.vcproj: added project files
+	  for MSVC 2008
+
+2008-01-07 02:39  dangelo
+
+	* ChangeLog, include/vigra/cachedfileimage.hxx: use native Win32
+	  function to generate tempfile names, mktemp can only generate 27
+	  names on windows).
+
+2008-01-07 02:12  dangelo
+
+	* include/vigra_ext/: cachedfileimage.hxx, stdcachedfileimage.hxx:
+	  removed duplicated cachedfileimage sources
+
+2008-01-06 10:52  dangelo
+
+	* ChangeLog, src/vigra_impex/jpeg.cxx: set default jpeg quality to
+	  98
+
+2008-01-06 04:23  dangelo
+
+	* src/win32helpers/win32config.h: accidentally commited modified
+	  win32 config...
+
+2008-01-06 04:22  dangelo
+
+	* ChangeLog, src/enblend.cc, src/enfuse.cc, src/enfuse.h,
+	  src/win32helpers/win32config.h: speed up HardMask parameter,
+	  added option to compile only 8 bit image support.
+
+2008-01-05 23:08  acmihal
+
+	* src/: enfuse.h, pyramid.h: The union of all source image alpha
+	  channels is now used as the boundary for extrapolation when
+	  creating a Gaussian pyramid for the masks. This fixes the issue
+	  with brightly-colored patches appearing in the output image near
+	  the borders of the input images.
+
+2007-12-31 11:21  dangelo
+
+	* src/enfuse.h: fix compilation with MSVC
+
+2007-12-21 01:11  dangelo
+
+	* ChangeLog, configure.in, doc/enfuse.1, include/vigra/impex.hxx,
+	  include/vigra/inspectimage.hxx, src/Makefile.am, src/enfuse.cc,
+	  src/enfuse.h: Added variance based focus criteria, removed -g
+	  from default compiler options, fixed an annoying (but harmless)
+	  compiler warning
+
+2007-12-18 20:54  acmihal
+
+	* doc/enfuse.1, include/vigra/rgbvalue.hxx, src/enfuse.cc,
+	  src/enfuse.h: - Fixed a bug in the saturation function and
+	  enabled the saturation criteria.  - Updated the man page.
+
+2007-12-18 01:49  acmihal
+
+	* include/vigra/rgbvalue.hxx, src/enblend.cc, src/enfuse.cc,
+	  src/enfuse.h: - Fixed a bug where the wExposure parameter could
+	  be passed without a	parameter or with an unparseable parameter.
+	  - Made the MaskType use CachedFileImage.  - Implemented the
+	  saturation metric. Not working yet.  - Print a warning if
+	  wSaturation is specified for a grayscale project.
+
+2007-12-13 13:33  dangelo
+
+	* NEWS, src/vigra_impex/vigra_impex_msvc2003.vcproj: updated NEWS
+	  file and msvc2003 project
+
+2007-12-05 03:31  dangelo
+
+	* ChangeLog, configure.in: turned some warnings into errors
+
+2007-11-25 12:46  acmihal
+
+	* src/enfuse.h: Now making the weight mask pyramid using the
+	  original image alpha channel, so that extrapolation is used to
+	  create weights beyond the original image border. This should fix
+	  the edge darkening bug reported by Pablo.
+
+2007-11-24 15:46  dangelo
+
+	* AUTHORS, ChangeLog, READMEWIN, configure.in, src/anneal.h,
+	  src/assemble.h, src/vigra_impex/exr.cxx, src/vigra_impex/png.cxx,
+	  src/win32helpers/win32config.h: MSVC compilation fixes,
+	  preparation of 3.1 release
+
+2007-11-24 15:10  dangelo
 
 	* enblend_msvc2003.sln, src/enblend_msvc2003.vcproj,
-	src/enfuse_msvc2003.vcproj,
-	src/vigra_impex/vigra_impex_msvc2003.vcproj: Up to date project files
-	for building with MSVC 2003
+	  src/enfuse_msvc2003.vcproj: added updated MSVC project files,
+	  required dependencies will be available for download in
+	  pre-compiled form
 
-	* configure.in, src/win32helpers/win32config: updated version number
-	to 3.1
+2007-11-11 18:07  acmihal
 
-	* src/anneal.h, src/assemble.h, src/vigra_impex/exr.cxx,
-	src/vigra_impex/png.cxx: fixes for MSVC compilation
-	
-	* AUTHORS, READMEWIN: small documentation updates
+	* doc/Makefile.am, doc/enfuse.1, src/Makefile.am, src/assemble.h,
+	  src/enfuse.cc, src/enfuse.h: Partial implementation of a
+	  Mertens-Kautz-Van Reeth exposure fusion tool.  Currently only the
+	  exposure criteria is implemented. In the original paper, contrast
+	  and saturation criteria are also suggested. This is a
+	  quick-and-dirty approach to creating HDR images requested by
+	  Simon Andriot and Pablo Joubert.
 
-2007-10-31  dangelo
+2007-10-31 00:31  dangelo
 
-	* configure.in: removed check for ext/slist in configure
+	* ChangeLog, configure.in: removed check for ext/slist header
 
-2007-10-22  dangelo
+2007-10-21 15:06  dangelo
 
-	* src/enblend.cc: added --compression option to allow more
-	detailed specification of the compression type and quality
-	(especially for jpeg output)
+	* ChangeLog, src/enblend.cc: added --compression option to allow
+	  more detailed specification of the compression type and quality
+	  (especially for jpeg output)
 
-2007-10-14  dangelo
+2007-10-14 14:07  dangelo
 
-	* src/enblend.cc: extended -f option to allow specification
-	of top and left of the output image
+	* ChangeLog, src/enblend.cc: possibility to set top and left of the
+	  output Rect on the command line
 
-2007-08-12  dangelo
+2007-09-20 09:13  dangelo
 
-	* src/vigra_impex: exr.hxx exr.cxx: Added OpenEXR codec (forgot
-	  to add last time)
+	* Makefile.cvs: use automake --add-missing
 
-2007-08-05 11:20 dangelo
+2007-09-20 08:05  dangelo
 
-        * src/assemble.h: output final image without mask if
-	  output format does not support alpha channels (JPG output)
+	* Makefile.cvs: added a simple Makefile.cvs, used to build
+	  ./configure and friends
 
-2007-08-05 10:23 dangelo
+2007-08-12 01:19  dangelo
 
-        * src/enblend.cc, src/anneal.h, src/gpu.cc, src/gpu.h, src/mask.h:
-	  Disable GPU support if GLEW is not available
+	* ChangeLog, src/vigra_impex/exr.cxx, src/vigra_impex/exr.hxx:
+	  forgot to add OpenExr codec last time
 
-        * src/vigra_impex: codec_manager.hxx, tiff.cxx, jpeg.cxx, png.cxx,
-	  iccjpeg.c, iccjpeg.h:
-	  Use config.h to determine if required libs are available.
+2007-08-05 02:55  dangelo
 
-        * src/vigra_impex/exr.cxx, src/vigra_impex/exr.hxx: added OpenEXR coded
+	* ChangeLog, src/assemble.h: allow saving result to formats without
+	  alpha channel
 
-	* configure.in: check for libjpeg and libtiff, added OpenEXR check
+2007-08-05 01:30  dangelo
+
+	* ChangeLog, configure.in, include/vigra/cachedfileimage.hxx,
+	  include/vigra/windows.h, src/anneal.h, src/enblend.cc,
+	  src/gpu.cc, src/gpu.h, src/mask.h, src/vigra_impex/Makefile.am,
+	  src/vigra_impex/codecmanager.cxx, src/vigra_impex/iccjpeg.c,
+	  src/vigra_impex/iccjpeg.h, src/vigra_impex/jpeg.cxx,
+	  src/vigra_impex/png.cxx, src/vigra_impex/png.hxx,
+	  src/vigra_impex/tiff.cxx: see changelog
+
+2007-08-04 22:43  dangelo
 
 	* src/float_cast.h: use replacement rintf functions only if the
 	  Microsoft Visual C compiler is used.
 
-	* src/assemble.h, src/numerictraits.h: correct interpretation of
+2007-08-04 22:25  dangelo
+
+	* src/: assemble.h, numerictraits.h: correct interpretation of
 	  alpha channel when reading floating point images.
 
-2007-08-04 12:22 dangelo
-	* configure.in, m4/acx_pthread.m4 m4/ax_check_gl.m4,
-	  m4/ax_check_glu.m4, m4/ax_check_glut.m4: proper
-	  detection of OpenGL and related libraries on OSX
-	  (JD Smith)
-	  
-	* src/anneal.h: isnan doesn't work on OSX, use std::isnan instead
-	  (JD Smith)
-	  
-	* src/gpu.h, src/gpu.cc, src/enblend.cc: call glutInit(), use 0.0
-	  instead of 0.0f in gpu code (JD Smith, Edouard Gomez, Pete Woods)
-	  
+2007-08-04 03:39  dangelo
+
+	* ChangeLog, configure.in, m4/acx_pthread.m4, m4/ax_check_gl.m4,
+	  m4/ax_check_glu.m4, m4/ax_check_glut.m4, src/anneal.h,
+	  src/enblend.cc, src/gpu.cc, src/gpu.h: Added patch JD Smith (and
+	  other) to allow compilation on OSX
+
+2007-02-12 20:53  acmihal
+
+	* src/: Makefile.am, vigra_impex/Makefile.am: Integrated Pablo's
+	  patch for building out-of-source.
+
+2007-02-12 20:05  acmihal
+
+	* src/anneal.h: Fixed a potential endless loop in the GDA solver.
+
+2007-02-12 19:59  acmihal
+
+	* src/anneal.h: Added Pablo's patch for compilation on AMD64.
+
+2007-01-27 17:42  acmihal
+
+	* src/Makefile.am: Added missing files to the distribution.
+
+2007-01-27 17:20  acmihal
+
+	* ChangeLog, NEWS: Changelog and news for 3.0 release.
+
 2007-01-27 15:46  acmihal
 
 	* README, doc/enblend.1: Updated README and man page for 3.0
