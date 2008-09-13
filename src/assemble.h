@@ -156,7 +156,9 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*> &imageInfoList,
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
-    if (imageInfoList.empty()) return pair<ImageType*, AlphaType*>(NULL, NULL);
+    if (imageInfoList.empty())
+        return pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
+                                            static_cast<AlphaType*>(NULL));
 
     // Create an image to assemble input images into.
     ImageType *image = new ImageType(inputUnion.size());

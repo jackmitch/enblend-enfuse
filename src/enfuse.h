@@ -578,7 +578,8 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     MaskType *normImage = new MaskType(inputUnion.size());
 
     // Result image. Alpha will be union of all input alphas.
-    pair<ImageType*, AlphaType*> outputPair(NULL, new AlphaType(inputUnion.size()));
+    pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
+                                            new AlphaType(inputUnion.size()));
 
     int m = 0;
     while (!imageInfoList.empty()) {
