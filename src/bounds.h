@@ -114,14 +114,10 @@ unsigned int roiBounds(const Rect2D &inputUnion,
         // Choose a number of levels that makes the mask spread out to the edges
         // of the iBB.
         // Calculate short dimension of iBB.
-        unsigned int shortDimension = min(iBB.width(), iBB.height());
-        while (levels < 30) {
-            unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels + 1);
-            if ((2 * extent) > shortDimension) {
-                // levels + 1 is too many levels.
-                break;
-            }
-            levels++;
+        const unsigned int shortDimension = min(iBB.width(), iBB.height());
+        while (levels < 30
+               && (2 * filterHalfWidth<ImagePixelComponentType>(levels) <= shortDimension)) {
+            ++levels;
         }
 
         if (levels == 1) {
