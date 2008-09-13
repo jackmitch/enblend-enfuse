@@ -425,11 +425,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         typedef typename ImageType::PixelType PixelType;
         typedef typename NumericTraits<PixelType>::ValueType ScalarType;
         typedef typename NumericTraits<ScalarType>::Promote LongScalarType;
-#ifdef ENBLEND_CACHE_IMAGES
-        typedef CachedFileImage<LongScalarType> GradImage;
-#else
-        typedef BasicImage<LongScalarType> GradImage;
-#endif
+        typedef IMAGETYPE<LongScalarType> GradImage;
         typedef typename GradImage::iterator GradIterator;
 
         const typename ImageType::difference_type imageSize = src.second - src.first;
@@ -552,11 +548,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaType AlphaType;
-    #ifdef ENBLEND_CACHE_IMAGES
-        typedef CachedFileImage<float> MaskType;
-    #else
-        typedef FImage MaskType;
-    #endif
+    typedef IMAGETYPE<float> MaskType;
     typedef typename MaskType::value_type MaskPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidPixelType ImagePyramidPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidType ImagePyramidType;

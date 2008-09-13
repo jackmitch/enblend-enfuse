@@ -40,6 +40,14 @@
 #define VERBOSE_CFI_MESSAGES                2
 #define VERBOSE_GDA_MESSAGES                2
 
+// Select our preferred type of image depending on what ./configure
+// tells us.
+#ifdef ENBLEND_CACHE_IMAGES
+#define IMAGETYPE CachedFileImage
+#else
+#define IMAGETYPE BasicImage
+#endif
+
 namespace enblend {
 
 /** The different image overlap classifications. */

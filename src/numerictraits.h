@@ -30,6 +30,8 @@
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
+#include "common.h"
+
 using vigra::BasicImage;
 using vigra::CachedFileImage;
 using vigra::NumericTraits;
@@ -45,12 +47,6 @@ using vigra::UInt8;
 using vigra::UInt16;
 using vigra::UInt32;
 using vigra::UInt64;
-
-#ifdef ENBLEND_CACHE_IMAGES
-    #define IMAGETYPE CachedFileImage
-#else
-    #define IMAGETYPE BasicImage
-#endif
 
 namespace enblend {
 
