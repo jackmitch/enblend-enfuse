@@ -213,9 +213,9 @@ public:
         typedef typename NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
 
         // Convert mask pixel to blend coefficient in range [0.0, 1.0].
-        double maskCoeff = NumericTraits<MaskPixelType>::toRealPromote(maskP) / divisor;
-        RealImagePixelType riP = NumericTraits<ImagePixelType>::toRealPromote(iP);
-        RealImagePixelType blendP = riP * maskCoeff;
+        const double maskCoeff = NumericTraits<MaskPixelType>::toRealPromote(maskP) / divisor;
+        const RealImagePixelType riP = NumericTraits<ImagePixelType>::toRealPromote(iP);
+        const RealImagePixelType blendP = riP * maskCoeff;
         return NumericTraits<ImagePixelType>::fromRealPromote(blendP);
     }
 
@@ -237,6 +237,7 @@ public:
     }
 
 protected:
+    // grayscale
     template <typename T>
     inline ResultType f(const T& a, VigraTrueType) const {
         const double b = NumericTraits<T>::max() * mu;
@@ -245,6 +246,7 @@ protected:
         return NumericTraits<ResultType>::fromRealPromote(weight * exp(-(ra - b) * (ra - b) / (2 * c * c)));
     }
 
+    // RGB
     template <typename T>
     inline ResultType f(const T& a, VigraFalseType) const {
         return f(a.luminance(), VigraTrueType());
@@ -269,11 +271,13 @@ public:
     }
 
 protected:
+    // grayscale
     template <typename T>
     inline ResultType f(const T& a, VigraTrueType) const {
         return NumericTraits<ResultType>::zero();
     }
 
+    // RGB
     template <typename T>
     inline ResultType f(const T& a, VigraFalseType) const {
         typedef typename T::value_type TComponentType;
