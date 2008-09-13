@@ -65,47 +65,95 @@ public:
         return f(i, d, srcIsScalar());
     }
 
+    static const std::string defaultGrayscaleAccessorName() {return "average";}
+
 private:
+    typedef enum {AVERAGE, LSTAR, LIGHTNESS, VALUE, LUMINANCE, MIXER} AccKindType;
+    typedef std::map<std::string, AccKindType> NameMapType;
+    typedef typename NameMapType::const_iterator NameMapConstIterType;
+
 #define CHANNEL_MIXER "channel-mixer"
+
+    void initializeAccessorNameMap() {
+        nameMap["average"] = AVERAGE;
+        nameMap["l-star"] = LSTAR;
+        nameMap["lightness"] = LIGHTNESS;
+        nameMap["value"] = VALUE;
+        nameMap["luminance"] = LUMINANCE;
+        nameMap[CHANNEL_MIXER] = MIXER;
+    }
+
     void initialize(const char* accessorName) {
-        if (accessorName == NULL) kind = AVERAGE;
+        initializeAccessorNameMap();
+        if (accessorName == NULL)
+        {
+            kind = nameMap[defaultGrayscaleAccessorName()];
+        }
         else
         {
-            char dummy;
-            double red, green, blue;
             std::string name(accessorName);
-
             std::transform(name.begin(), name.end(), name.begin(), tolower);
-            if (name == "average") kind = AVERAGE;
-            else if (name == "l-star") kind = LSTAR;
-            else if (name == "lightness") kind = LIGHTNESS;
-            else if (name == "value") kind = VALUE;
-            else if (name == "luminance") kind = LUMINANCE;
-            else if (name == CHANNEL_MIXER)
+            NameMapConstIterType const k = nameMap.find(name);
+            if (k == nameMap.end())
             {
-                cerr << "enfuse: \"" CHANNEL_MIXER "\" is a grayscale projector requiring" << endl
-                     << "enfuse:      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\"." << endl;
-                exit(1);
-            }
-            else if (sscanf(name.c_str(),
-                            CHANNEL_MIXER "%["
-                            OPTION_DELIMITERS "]%lf%["
-                            OPTION_DELIMITERS "]%lf%["
-                            OPTION_DELIMITERS "]%lf",
-                            &dummy, &red, &dummy, &green, &dummy, &blue) == 6)
-            {
-                const double sum = red + green + blue;
+                char dummy;
+                double red, green, blue;
+                if (sscanf(name.c_str(),
+                           CHANNEL_MIXER "%["
+                           OPTION_DELIMITERS "]%lf%["
+                           OPTION_DELIMITERS "]%lf%["
+                           OPTION_DELIMITERS "]%lf",
+                           &dummy, &red, &dummy, &green, &dummy, &blue) == 6)
+                {
+                    check_weights(red, green, blue);
+                    const double sum = red + green + blue;
+                    redWeight = red / sum;
+                    greenWeight = green / sum;
+                    blueWeight = blue / sum;
+                    kind = MIXER;
+                }
+                else
+                {
+                    cerr << "enfuse: unknown grayscale projector \"" << accessorName << "\"." << endl;
+                    exit(1);
+                }
 
-                redWeight = red / sum;
-                greenWeight = green / sum;
-                blueWeight = blue / sum;
-                kind = MIXER;
             }
             else
             {
-                cerr << "enfuse: unknown grayscale projector \"" << name << "\"." << endl;
-                exit(1);
+                kind = k->second;
+                if (kind == MIXER)
+                {
+                    cerr <<
+                        "enfuse: \"" CHANNEL_MIXER "\" is a grayscale projector requiring\n" <<
+                        "enfuse:      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\".\n";
+                    exit(1);
+                }
             }
+        }
+    }
+
+    void check_weights(double red, double green, double blue) const {
+        // TODO: check for isnormal(WEIGHT) before comparison
+        if (red < 0.0)
+        {
+            cerr << "enfuse: nonsensical weight of red channel (" << red << ").\n";
+            exit(1);
+        }
+        if (green < 0.0)
+        {
+            cerr << "enfuse: nonsensical weight of green channel (" << green << ").\n";
+            exit(1);
+        }
+        if (blue < 0.0)
+        {
+            cerr << "enfuse: nonsensical weight of blue channel (" << blue << ").\n";
+            exit(1);
+        }
+        if (red + green + blue == 0.0)
+        {
+            cerr << "enfuse: sum of channel weights is zero.\n";
+            exit(1);
         }
     }
 
@@ -196,7 +244,8 @@ private:
     template <class Iterator, class Difference>
     ResultType f(const Iterator& i, Difference d, VigraTrueType) const {return i[d];}
 
-    enum AccKind {AVERAGE, LSTAR, LIGHTNESS, VALUE, LUMINANCE, MIXER} kind;
+    NameMapType nameMap;
+    AccKindType kind;
     double redWeight, greenWeight, blueWeight;
     vigra::RGB2LabFunctor<double> labfun;
 };

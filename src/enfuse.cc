@@ -214,7 +214,8 @@ void printUsageAndExit(const bool error=true) {
         "                           OPERATOR is one of \"average\", \"l-star\",\n" <<
         "                           \"lightness\", \"value\", \"luminance\", or\n" <<
         "                           \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\".\n" <<
-        "                           Default: \"average\"\n" <<
+        "                           Default: \"" <<
+        enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
         "  --EdgeScale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
         "                         Scale on which to look for edges.  Positive\n" <<
         "                           LCESCALE switches on local contrast enhancement\n" <<
