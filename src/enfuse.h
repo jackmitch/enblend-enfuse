@@ -417,11 +417,13 @@ template <typename ImageType, typename AlphaType, typename MaskType>
 void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::const_traverser, typename ImageType::ConstAccessor> src,
                 pair<typename AlphaType::const_traverser, typename AlphaType::ConstAccessor> mask,
                 pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
+    typedef typename ImageType::value_type ImageValueType;
+    typedef typename MaskType::value_type MaskValueType;
 
     // Exposure
     if (WExposure > 0.0) {
-        transformImageIf(src, mask, result, ExposureFunctor<typename ImageType::value_type,
-                typename MaskType::value_type>(WExposure, WMu, WSigma));
+        ExposureFunctor<ImageValueType, MaskValueType> ef(WExposure, WMu, WSigma);
+        transformImageIf(src, mask, result, ef);
     }
 
     // contrast criteria
@@ -531,13 +533,15 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
             cout << "+ final grad: min = " << minmax.min << ", max = " << minmax.max << endl;
         }
 #endif
-        ContrastFunctor<LongScalarType, ScalarType, typename MaskType::value_type> cf(WContrast);
-        combineTwoImagesIf(srcImageRange(grad), result, mask, result, const_parameters(bind(cf, _1) + _2));
+        ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
+        combineTwoImagesIf(srcImageRange(grad), result, mask, result,
+                           const_parameters(bind(cf, _1) + _2));
     }
 
     // Saturation
     if (WSaturation > 0.0) {
-        combineTwoImagesIf(src, result, mask, result, const_parameters(bind(SaturationFunctor<typename ImageType::value_type, typename MaskType::value_type>(WSaturation), _1) + _2));
+        SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
+        combineTwoImagesIf(src, result, mask, result, const_parameters(bind(sf, _1) + _2));
     }
 };
 
