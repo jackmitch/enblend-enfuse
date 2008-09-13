@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@
 #define _STLP_VERBOSE_AUTO_LINK
 #define _USE_MATH_DEFINES
 #define NOMINMAX
-#define VC_EXTRALEAN 
+#define VC_EXTRALEAN
 #include <windows.h>
 #undef DIFFERENCE
 #endif  //  _WIN32
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
 #else
     fesetround(FE_TONEAREST);
 #endif
-    
+
 #ifndef _WIN32
     sigemptyset(&SigintMask);
     sigaddset(&SigintMask, SIGINT);
@@ -340,15 +340,13 @@ int main(int argc, char** argv) {
                         } else if (strcmp(tail, "%") == 0) {
                             MinCurvature.isPercentage = true;
                         } else {
-                            cerr <<
-                                "enfuse: unrecognized minimum gradient \"" << optarg << "\" specification." <<
-                                endl;
+                            cerr << "enfuse: unrecognized minimum gradient \""
+                                 << optarg << "\" specification." << endl;
                             exit(1);
                         }
                     } else {
-                            cerr <<
-                                "enfuse: illegal numeric format \"" << optarg << "\" for minimum gradient." <<
-                                endl;
+                            cerr << "enfuse: illegal numeric format \""
+                                 << optarg << "\" for minimum gradient." << endl;
                             exit(1);
                     }
                     break;
@@ -362,23 +360,20 @@ int main(int argc, char** argv) {
                     char* tail;
 
                     if (token == NULL || *token == 0) {
-                        cerr << "enfuse: no scale given to --EdgeScale.  EdgeScale is required." << endl;
+                        cerr << "enfuse: no scale given to --EdgeScale.  "
+                             << "EdgeScale is required." << endl;
                         exit(1);
                     }
                     FilterConfig.edgeScale = strtod(token, &tail);
                     if (errno == 0) {
                         if (*tail != 0) {
-                            cerr <<
-                                "enfuse: could not decode edge scale specification \"" <<
-                                token <<
-                                "\" for EdgeScale." <<
-                                endl;
+                            cerr << "enfuse: could not decode edge scale specification \""
+                                 << token << "\" for EdgeScale." << endl;
                             exit(1);
                         }
                     } else {
-                        cerr <<
-                            "enfuse: illegal numeric format \"" << token << "\" for EdgeScale." <<
-                            endl;
+                        cerr << "enfuse: illegal numeric format \""
+                             << token << "\" for EdgeScale." << endl;
                         exit(1);
                     }
 
@@ -389,17 +384,13 @@ int main(int argc, char** argv) {
                             if (strcmp(tail, "%") == 0) {
                                 FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
                             } else if (*tail != 0) {
-                                cerr <<
-                                    "enfuse: could not decode specification \"" <<
-                                    token <<
-                                    "\" for LCE-scale." <<
-                                    endl;
+                                cerr << "enfuse: could not decode specification \""
+                                     << token << "\" for LCE-scale." << endl;
                                 exit(1);
                             }
                         } else {
-                            cerr <<
-                                "enfuse: illegal numeric format \"" << token << "\" for LCE-Scale." <<
-                                endl;
+                            cerr << "enfuse: illegal numeric format \""
+                                 << token << "\" for LCE-Scale." << endl;
                             exit(1);
                         }
                     }
@@ -411,17 +402,13 @@ int main(int argc, char** argv) {
                             if (strcmp(tail, "%") == 0) {
                                 FilterConfig.lceFactor /= 100.0;
                             } else if (*tail != 0) {
-                                cerr <<
-                                    "enfuse: could not decode specification \"" <<
-                                    token <<
-                                    "\" for LCE-factor." <<
-                                    endl;
+                                cerr << "enfuse: could not decode specification \""
+                                     << token << "\" for LCE-factor." << endl;
                                 exit(1);
                             }
                         } else {
-                            cerr <<
-                                "enfuse: illegal numeric format \"" << token << "\" for LCE-factor." <<
-                                endl;
+                            cerr << "enfuse: illegal numeric format \""
+                                 << token << "\" for LCE-factor." << endl;
                             exit(1);
                         }
                     }
@@ -496,11 +483,12 @@ int main(int argc, char** argv) {
                 // force uneven window sizes
                 if (ContrastWindowSize % 2 != 1) {
                     ContrastWindowSize++;
-                    cerr << "Warning changing contrast window size to:" << ContrastWindowSize << endl;
+                    cerr << "Warning changing contrast window size to:" <<
+                        ContrastWindowSize << endl;
                 }
                 break;
             }
-            
+
             case 'b': {
                 int kilobytes = atoi(optarg);
                 if (kilobytes < 1) {
@@ -518,16 +506,18 @@ int main(int argc, char** argv) {
             }
             case 'f': {
                 OutputSizeGiven = true;
-                int nP = sscanf(optarg, "%dx%d+%d+%d", &OutputWidthCmdLine, &OutputHeightCmdLine, 
-                                                        &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+                int nP = sscanf(optarg,
+                                "%dx%d+%d+%d",
+                                &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
                 if (nP == 4) {
                     // full geometry string
                 } else if (nP == 2) {
                     OutputOffsetXCmdLine=0;
                     OutputOffsetYCmdLine=0;
                 } else {
-                    cerr << "enfuse: the -f option requires a parameter of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT"
-                         << endl;
+                    cerr << "enfuse: the -f option requires a parameter "
+                         << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
                     printUsageAndExit();
                 }
                 break;
@@ -642,9 +632,9 @@ int main(int argc, char** argv) {
                 do {
                     _splitpath(finddata.name, NULL, NULL, fname, ext);
                     _makepath(newFile, drive, dir, fname, ext);
-                    
-                    // TODO (jbeda): This will leak -- the right way to 
-                    // fix this is to make this a list of std::string.  
+
+                    // TODO (jbeda): This will leak -- the right way to
+                    // fix this is to make this a list of std::string.
                     // I'll look into this after we get things working
                     // on Win32
                     inputFileNameList.push_back(strdup(newFile));
@@ -771,11 +761,14 @@ int main(int argc, char** argv) {
                      << "." << endl;
                 exit(1);
             }
-            if (!std::equal(iccProfile.begin(), iccProfile.end(), inputInfo->getICCProfile().begin())) {
+            if (!std::equal(iccProfile.begin(),
+                            iccProfile.end(),
+                            inputInfo->getICCProfile().begin())) {
                 ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                 cmsHPROFILE newProfile = NULL;
                 if (!mismatchProfile.empty()) {
-                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(), mismatchProfile.size());
+                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
+                                                       mismatchProfile.size());
                     if (newProfile == NULL) {
                         cerr << endl << "enfuse: error parsing ICC profile data from file\""
                              << *inputFileNameIterator
@@ -806,8 +799,8 @@ int main(int argc, char** argv) {
                 } else {
                     cerr << " no ICC profile." << endl;
                 }
-                cerr << "enfuse: Blending images with different color spaces may have unexpected results."
-                     << endl;
+                cerr << "enfuse: Blending images with different color spaces "
+                     << "may have unexpected results." << endl;
 
             }
         }
@@ -817,8 +810,10 @@ int main(int argc, char** argv) {
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
-        inputUnion |= Rect2D(OutputOffsetXCmdLine, OutputOffsetYCmdLine,
-                             OutputOffsetXCmdLine + OutputWidthCmdLine, OutputOffsetYCmdLine + OutputHeightCmdLine);
+        inputUnion |= Rect2D(OutputOffsetXCmdLine,
+                             OutputOffsetYCmdLine,
+                             OutputOffsetXCmdLine + OutputWidthCmdLine,
+                             OutputOffsetYCmdLine + OutputHeightCmdLine);
     }
 
     // Create the Info for the output file.
@@ -958,7 +953,7 @@ int main(int argc, char** argv) {
             delete *imageInfoIterator++;
         }
 
-        delete[] outputFileName;
+        delete [] outputFileName;
 
     } catch (std::bad_alloc& e) {
         cerr << endl << "enfuse: out of memory"

@@ -108,7 +108,8 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
     vigra_precondition(w >= size.x && h >= size.y,
                        "localStdDevIf(): kernel larger than image.");
 
-    // create iterators for the interior part of the image (where the kernel always fits into the image)
+    // create iterators for the interior part of the image
+    // (where the kernel always fits into the image)
     Diff2D border(size.x / 2, size.y / 2);
     DestIterator yd = dest_ul + border;
     SrcIterator ys = src_ul + border;
@@ -116,14 +117,14 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
     SrcIterator send = src_lr - border;
 
     // iterate over the interior part
-    for(; ys.y < send.y; ++ys.y, ++yd.y, ++ym.y)
+    for (; ys.y < send.y; ++ys.y, ++yd.y, ++ym.y)
     {
         // create x iterators
         DestIterator xd(yd);
         SrcIterator xs(ys);
         MaskIterator xm(ym);
 
-        for(; xs.x < send.x; ++xs.x, ++xd.x, ++xm.x)
+        for (; xs.x < send.x; ++xs.x, ++xd.x, ++xm.x)
         {
             // init the sum
             SrcSumType sum = NumericTraits<SrcSumType>::zero();
@@ -158,13 +159,13 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                 yyend.y = send.y;
             }
 */
-            for(; yys.y < yyend.y; ++yys.y, ++yym.y)
+            for (; yys.y < yyend.y; ++yys.y, ++yym.y)
             {
                 typename SrcIterator::row_iterator xxs = yys.rowIterator();
                 typename SrcIterator::row_iterator xxe = yyend.rowIterator();
                 typename MaskIterator::row_iterator xxm = yym.rowIterator();
 
-                for(; xxs < xxe; ++xxs, ++xxm)
+                for (; xxs < xxe; ++xxs, ++xxm)
                 {
                     if (mask_acc(xxm)) {
                         sum += src_acc(xxs);
@@ -204,20 +205,17 @@ localStdDevIf(triple<SrcIterator, SrcIterator, SrcAccessor> src,
 template <typename MaskPixelType>
 class ImageMaskMultiplyFunctor {
 public:
-    ImageMaskMultiplyFunctor(MaskPixelType d) : divisor(NumericTraits<MaskPixelType>::toRealPromote(d)) {}
+    ImageMaskMultiplyFunctor(MaskPixelType d) :
+        divisor(NumericTraits<MaskPixelType>::toRealPromote(d)) {}
 
     template <typename ImagePixelType>
-    ImagePixelType operator()(const ImagePixelType &iP, const MaskPixelType &maskP) const {
-
+    ImagePixelType operator()(const ImagePixelType& iP, const MaskPixelType& maskP) const {
         typedef typename NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
 
         // Convert mask pixel to blend coefficient in range [0.0, 1.0].
         double maskCoeff = NumericTraits<MaskPixelType>::toRealPromote(maskP) / divisor;
-
         RealImagePixelType riP = NumericTraits<ImagePixelType>::toRealPromote(iP);
-
         RealImagePixelType blendP = riP * maskCoeff;
-
         return NumericTraits<ImagePixelType>::fromRealPromote(blendP);
     }
 
@@ -225,34 +223,38 @@ protected:
     double divisor;
 };
 
+
 template <typename InputType, typename ResultType>
 class ExposureFunctor {
 public:
     typedef ResultType result_type;
 
-    ExposureFunctor(double w,double m, double s) : weight(w), mu(m), sigma(s){}
+    ExposureFunctor(double w, double m, double s) : weight(w), mu(m), sigma(s) {}
 
-    inline ResultType operator()(const InputType &a) const {
+    inline ResultType operator()(const InputType& a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
 
 protected:
     template <typename T>
-    inline ResultType f(const T &a, VigraTrueType) const {
+    inline ResultType f(const T& a, VigraTrueType) const {
         const double b = NumericTraits<T>::max() * mu;
         const double c = NumericTraits<T>::max() * sigma;
         typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
-        return NumericTraits<ResultType>::fromRealPromote(weight * exp(-1 * (ra-b) * (ra-b) / (2 * c * c)));
+        return NumericTraits<ResultType>::fromRealPromote(weight * exp(-(ra - b) * (ra - b) / (2 * c * c)));
     }
 
     template <typename T>
-    inline ResultType f(const T &a, VigraFalseType) const {
+    inline ResultType f(const T& a, VigraFalseType) const {
         return f(a.luminance(), VigraTrueType());
     }
 
-    double weight,mu,sigma;
+    double weight;
+    double mu;
+    double sigma;
 };
+
 
 template <typename InputType, typename ResultType>
 class SaturationFunctor {
@@ -261,21 +263,22 @@ public:
 
     SaturationFunctor(double w) : weight(w) {}
 
-    inline ResultType operator()(const InputType &a) const {
+    inline ResultType operator()(const InputType& a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
 
 protected:
     template <typename T>
-    inline ResultType f(const T &a, VigraTrueType) const {
+    inline ResultType f(const T& a, VigraTrueType) const {
         return NumericTraits<ResultType>::zero();
     }
 
     template <typename T>
-    inline ResultType f(const T &a, VigraFalseType) const {
+    inline ResultType f(const T& a, VigraFalseType) const {
         typedef typename T::value_type TComponentType;
-        typename NumericTraits<TComponentType>::RealPromote rsa = NumericTraits<TComponentType>::toRealPromote(a.saturation());
+        typedef typename NumericTraits<TComponentType>::RealPromote RTComponentType;
+        const RTComponentType rsa = NumericTraits<TComponentType>::toRealPromote(a.saturation());
         return NumericTraits<ResultType>::fromRealPromote(weight * rsa / NumericTraits<TComponentType>::max());
     }
 
@@ -290,7 +293,7 @@ public:
 
     ContrastFunctor(double w) : weight(w) {}
 
-    inline ResultType operator()(const InputType &a) const {
+    inline ResultType operator()(const InputType& a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         typedef typename NumericTraits<ScaleType>::isIntegral scaleIsIntegral;
         return f(a, srcIsScalar(), scaleIsIntegral());
@@ -299,21 +302,21 @@ public:
 protected:
     // grayscale, integral
     template <typename T>
-    inline ResultType f(const T &a, VigraTrueType, VigraTrueType) const {
+    inline ResultType f(const T& a, VigraTrueType, VigraTrueType) const {
         const typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
         return NumericTraits<ResultType>::fromRealPromote(weight * ra / NumericTraits<ScaleType>::max());
     }
 
     // grayscale, floating-point
     template <typename T>
-    inline ResultType f(const T &a, VigraTrueType, VigraFalseType) const {
+    inline ResultType f(const T& a, VigraTrueType, VigraFalseType) const {
         const typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
         return NumericTraits<ResultType>::fromRealPromote(weight * ra);
     }
 
     // RGB, integral
     template <typename T>
-    inline ResultType f(const T &a, VigraFalseType, VigraTrueType) const {
+    inline ResultType f(const T& a, VigraFalseType, VigraTrueType) const {
         typedef typename T::value_type TComponentType;
         typedef typename NumericTraits<TComponentType>::RealPromote RealTComponentType;
         typedef typename ScaleType::value_type ScaleComponentType;
@@ -323,7 +326,7 @@ protected:
 
     // RGB, floating-point
     template <typename T>
-    inline ResultType f(const T &a, VigraFalseType, VigraFalseType) const {
+    inline ResultType f(const T& a, VigraFalseType, VigraFalseType) const {
         typedef typename T::value_type TComponentType;
         typedef typename NumericTraits<TComponentType>::RealPromote RealTComponentType;
         const RealTComponentType ra = static_cast<RealTComponentType>(a.lightness());
@@ -369,7 +372,7 @@ class ClampingFunctor
 {
 public:
     ClampingFunctor(InputType lower, ResultType lowerValue,
-                    InputType upper, ResultType upperValue):
+                    InputType upper, ResultType upperValue) :
         lo(lower), up(upper), loval(lowerValue), upval(upperValue)
         {}
 
@@ -392,7 +395,7 @@ template <typename InputType, typename ResultType>
 class FillInFunctor
 {
 public:
-    FillInFunctor(InputType thr, double s1, double s2):
+    FillInFunctor(InputType thr, double s1, double s2) :
         threshold(thr), scale1(s1), scale2(s2)
         {}
 
@@ -436,16 +439,17 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         if (FilterConfig.edgeScale > 0.0)
         {
 #ifdef DEBUG_LOG
-            cout << "+ Laplacian Edge Detection, scale = " << FilterConfig.edgeScale << " pixels" << endl;
+            cout << "+ Laplacian Edge Detection, scale = "
+                 << FilterConfig.edgeScale << " pixels" << endl;
 #endif
             GradImage laplacian(imageSize);
 
             if (FilterConfig.lceScale > 0.0)
             {
 #ifdef DEBUG_LOG
-                cout <<
-                    "+ Local Contrast Enhancement, (scale, amount) = " << FilterConfig.lceScale <<
-                    " pixels, " << 100.0 * FilterConfig.lceFactor << "%" << endl;
+                cout << "+ Local Contrast Enhancement, (scale, amount) = "
+                     << FilterConfig.lceScale << " pixels, "
+                     << (100.0 * FilterConfig.lceFactor) << "%" << endl;
 #endif
                 GradImage lce(imageSize);
                 gaussianSharpening(src.first, src.second, ga,
@@ -541,8 +545,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
  */
 template <typename ImagePixelType>
 void enfuseMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo &outputImageInfo,
-        Rect2D &inputUnion) {
+        ImageExportInfo& outputImageInfo,
+        Rect2D& inputUnion) {
 
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -602,13 +606,16 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                     destImage(*(outputPair.second)));
 
         // Add the mask to the norm image.
-        combineTwoImages(srcImageRange(*mask), srcImage(*normImage), destImage(*normImage), Arg1() + Arg2());
+        combineTwoImages(srcImageRange(*mask),
+                         srcImage(*normImage),
+                         destImage(*normImage),
+                         Arg1() + Arg2());
 
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            CachedFileImageDirector& v = CachedFileImageDirector::v();
             cout << "Image cache statistics after loading image " << m << " :" << endl;
             v.printStats("image", imagePair.first);
             v.printStats("alpha", imagePair.second);
@@ -640,7 +647,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 float max = 0.0f;
                 int maxi = 0;
                 int i = 0;
-                for(imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+                for (imageIter = imageList.begin();
+                     imageIter != imageList.end();
+                     ++imageIter) {
                     const float w = static_cast<float>((*(*imageIter).third)(x, y));
                     if (w > max) {
                         max = w;
@@ -649,7 +658,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 		    i++;
                 }
                 i = 0;
-                for(imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+                for (imageIter = imageList.begin();
+                     imageIter != imageList.end();
+                     ++imageIter) {
                     if (max == 0.0f) {
                         (*(*imageIter).third)(x, y) = static_cast<MaskPixelType>(maxMaskPixelType) / totalImages;
                     } else if (i == maxi) {
@@ -663,7 +674,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         }
         int i = 0;
         if (Debug) {
-            for(imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
+            for (imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
 	        std::ostringstream oss;
         	oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";
 	        ImageExportInfo maskInfo(oss.str().c_str());
@@ -673,7 +684,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 	}
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector &v = CachedFileImageDirector::v();
+            CachedFileImageDirector& v = CachedFileImageDirector::v();
             cout << "Image cache statistics after creating hard mask:" << endl;
             v.printStats();
             v.resetCacheMisses();
