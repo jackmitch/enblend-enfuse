@@ -84,9 +84,29 @@ using boost::lambda::const_parameters;
 
 namespace enblend {
 
+static inline double square(double x)
+{
+    return x * x;
+}
 
-// compute the local standard deviation inside a window
-// TODO: respect alpha mask and properly calculate borders
+
+static inline double gaussDistribution(double x, double mu, double sigma)
+{
+    return exp(-0.5 * square((x - mu) / sigma));
+}
+
+
+// Keep sum and sum-of-squares together for improved CPU-cache locality.
+template <typename T>
+struct ScratchPad {
+    ScratchPad() : sum(T()), sumSqr(T()), n(size_t()) {}
+
+    T sum;
+    T sumSqr;
+    size_t n;
+};
+
+
 template <class SrcIterator, class SrcAccessor,
           class MaskIterator, class MaskAccessor,
           class DestIterator, class DestAccessor>
@@ -95,94 +115,145 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                    DestIterator dest_ul, DestAccessor dest_acc,
                    Size2D size)
 {
-    vigra_precondition(size.x > 1 && size.y > 1,
-                       "localStdDevIf(): window for local variance must be at least 2x2");
+     typedef typename NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
+     typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+     typedef typename SrcIterator::PixelType SrcPixelType;
+     typedef typename SrcIterator::row_iterator SrcRowIterator;
+     typedef typename MaskIterator::row_iterator MaskRowIterator;
+     typedef typename DestIterator::PixelType DestPixelType;
+     typedef ScratchPad<SrcSumType> ScratchPadType;
+ 
+     vigra_precondition(size.x > 1 && size.y > 1,
+                        "localStdDevIf(): window for local variance must be at least 2x2");
+     vigra_precondition(src_lr.x - src_ul.x >= size.x &&
+                        src_lr.y - src_ul.y >= size.y,
+                        "localStdDevIf(): window larger than image");
+ 
+     const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
+     ScratchPadType* const scratchPad = new ScratchPadType[imageSize.x + 1];
+     vigra_precondition(scratchPad != NULL, "localStdDevIf(): could not allocate scratch pad");
 
-    typedef typename NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
-    typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+     const Diff2D border(size.x / 2, size.y / 2);
+     const Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
+ 
+     SrcIterator srcRow;
+     SrcIterator const srcEnd(src_lr - border);
+     SrcIterator const srcEndXm1(srcEnd - Diff2D(1, 0));
+     MaskIterator maskRow;
+     DestIterator destRow;
+ 
+     // For each row in the source image...
+     for (srcRow = src_ul + border, maskRow = mask_ul + border, destRow = dest_ul + border;
+          srcRow.y < srcEnd.y;
+          ++srcRow.y, ++maskRow.y, ++destRow.y)
+     {
+         // Row's running values
+         SrcSumType sum = NumericTraits<SrcSumType>::zero();
+         SrcSumType sumSqr = NumericTraits<SrcSumType>::zero();
+         size_t n = 0;
+ 
+         SrcIterator const windowSrcUpperLeft(srcRow - border);
+         SrcIterator const windowSrcLowerRight(srcRow + border);
+         SrcIterator windowSrc;
+         MaskIterator const windowMaskUpperLeft(maskRow - border);
+         MaskIterator windowMask;
+         ScratchPadType* spCol;
 
-    // calculate width and height of the image
-    const int w = src_lr.x - src_ul.x;
-    const int h = src_lr.y - src_ul.y;
-
-    vigra_precondition(w >= size.x && h >= size.y,
-                       "localStdDevIf(): kernel larger than image.");
-
-    // create iterators for the interior part of the image
-    // (where the kernel always fits into the image)
-    Diff2D border(size.x / 2, size.y / 2);
-    DestIterator yd = dest_ul + border;
-    SrcIterator ys = src_ul + border;
-    MaskIterator ym = mask_ul + border;
-    SrcIterator send = src_lr - border;
-
-    // iterate over the interior part
-    for (; ys.y < send.y; ++ys.y, ++yd.y, ++ym.y)
-    {
-        // create x iterators
-        DestIterator xd(yd);
-        SrcIterator xs(ys);
-        MaskIterator xm(ym);
-
-        for (; xs.x < send.x; ++xs.x, ++xd.x, ++xm.x)
-        {
-            // init the sum
-            SrcSumType sum = NumericTraits<SrcSumType>::zero();
-            SrcSumType sum_sqr = NumericTraits<SrcSumType>::zero();
-            int n = 0;
-
-            // calculate the window, required for border case
-            // TODO: move border cases into an own loop.
-            SrcIterator yys = xs - border;
-            MaskIterator yym = xm - border;
-
-/*
-            if (yys.x - ys.x < 0) {
-                // left border
-                yys.x = ys.x;
-                yym.x = ym.x;
-            }
-            if (yys.y - ys.y < 0) {
-                // top border
-                yys.y = ys.y;
-                yym.y = ym.y;
-            }
-*/
-            SrcIterator yyend = xs + border + Diff2D(1, 1);
-/*
-            if (send.x - yyend.x < 0) {
-                // right border
-                yyend.x = send.x;
-            }
-            if (send.y - yyend.y < 0) {
-                // bottom border
-                yyend.y = send.y;
-            }
-*/
-            for (; yys.y < yyend.y; ++yys.y, ++yym.y)
-            {
-                typename SrcIterator::row_iterator xxs = yys.rowIterator();
-                typename SrcIterator::row_iterator xxe = yyend.rowIterator();
-                typename MaskIterator::row_iterator xxm = yym.rowIterator();
-
-                for (; xxs < xxe; ++xxs, ++xxm)
-                {
-                    if (mask_acc(xxm)) {
-                        sum += src_acc(xxs);
-                        sum_sqr += src_acc(xxs) * src_acc(xxs);
-                        n++;
-                    }
-                }
-            }
-
-            // store convolution result in destination pixel
-            // s^2 = (1 / (n-1)) * sum_sqr - (n / (n-1)) * (sum/n)^2
-            //     = (1 / (n-1)) * (sum_sqr - sum^2 / n)
-            SrcSumType ss = (n > 1) ? sqrt((sum_sqr - sum*sum/n) / (n-1))
-                                    : NumericTraits<SrcSumType>::zero();
-            dest_acc.set(DestTraits::fromRealPromote(ss), xd);
-        }
-    }
+         // Initialize running-sums of this row
+         for (windowSrc = windowSrcUpperLeft, windowMask = windowMaskUpperLeft,
+                  spCol = scratchPad;
+              windowSrc.x <= windowSrcLowerRight.x;
+              ++windowSrc.x, ++windowMask.x, ++spCol)
+         {
+             SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
+             SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+             size_t nInit = 0;
+ 
+             for (windowSrc.y = windowSrcUpperLeft.y, windowMask.y = windowMaskUpperLeft.y;
+                  windowSrc.y <= windowSrcLowerRight.y;
+                  ++windowSrc.y, ++windowMask.y)
+             {
+                 if (mask_acc(windowMask))
+                 {
+                     const SrcSumType value = src_acc(windowSrc);
+                     sumInit += value;
+                     sumSqrInit += square(value);
+                     ++nInit;
+                 }
+             }
+ 
+             // Set scratch pad's column-wise values
+             spCol->sum = sumInit;
+             spCol->sumSqr = sumSqrInit;
+             spCol->n = nInit;
+ 
+             // Update totals
+             sum += sumInit;
+             sumSqr += sumSqrInit;
+             n += nInit;
+         }
+ 
+         // Write one row of results
+         SrcIterator srcCol(srcRow);
+         MaskIterator maskCol(maskRow);
+         DestIterator destCol(destRow);
+         const ScratchPadType* old(scratchPad);
+         ScratchPadType* next(scratchPad + size.x);
+ 
+         while (true)
+         {
+             // Compute standard deviation
+             if (mask_acc(maskCol))
+             {
+                 const SrcSumType result =
+                     n <= 1 ?
+                     NumericTraits<SrcSumType>::zero() :
+                     sqrt((sumSqr - square(sum) / n) / (n - 1));
+                 dest_acc.set(DestTraits::fromRealPromote(result), destCol);
+             }
+             if (srcCol.x == srcEndXm1.x)
+             {
+                 break;
+             }
+ 
+             // Compute auxilliary values of next column
+             SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
+             SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+             size_t nInit = 0;
+ 
+             for (windowSrc = srcCol + nextUpperRight, windowMask = maskCol + nextUpperRight;
+                  windowSrc.y <= windowSrcLowerRight.y;
+                  ++windowSrc.y, ++windowMask.y)
+             {
+                 if (mask_acc(windowMask))
+                 {
+                     const SrcSumType value = src_acc(windowSrc);
+                     sumInit += value;
+                     sumSqrInit += square(value);
+                     ++nInit;
+                 }
+             }
+ 
+             // Set sums of next column
+             next->sum = sumInit;
+             next->sumSqr = sumSqrInit;
+             next->n = nInit;
+ 
+             // Update totals
+             sum += sumInit - old->sum;
+             sumSqr += sumSqrInit - old->sumSqr;
+             n += nInit - old->n;
+ 
+             // Advance to next column
+             ++srcCol.x;
+             ++maskCol.x;
+             ++destCol.x;
+             ++old;
+             ++next;
+         }
+     }
+ 
+     delete [] scratchPad;
 }
 
 
@@ -243,7 +314,7 @@ protected:
         const double b = NumericTraits<T>::max() * mu;
         const double c = NumericTraits<T>::max() * sigma;
         typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
-        return NumericTraits<ResultType>::fromRealPromote(weight * exp(-(ra - b) * (ra - b) / (2 * c * c)));
+        return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
     }
 
     // RGB
