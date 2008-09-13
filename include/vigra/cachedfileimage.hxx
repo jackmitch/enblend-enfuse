@@ -552,17 +552,23 @@ class NotifyingDirectionSelector;
 template <class T, class Notify>
 class NotifyingDirectionSelector<UnstridedArrayTag, T, Notify>
 {
-public:
+#ifdef __GNUC__
+friend class Notify::self_type;
+#else
+friend typename Notify::self_type;
+#endif
+protected:
     NotifyingDirectionSelector(T base = 0) : current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : current_(rhs.current_), notify_(NULL) {}
 
+    void setNotify(Notify *n) { notify_ = n; }
+
+public:
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
+        notify_->_notify(current_, rhs.current_);
         current_ = rhs.current_;
-        notify_ = NULL;
         return *this;
     }
-
-    void setNotify(Notify *n) { notify_ = n; }
 
     void operator++() { notify_->_notify(current_, current_+1); ++current_; }
     void operator++(int) { notify_->_notify(current_, current_+1); ++current_; }
@@ -587,23 +593,29 @@ public:
 
 private:
     Notify *notify_;
+
 };
 
 template <class T, class Notify>
 class NotifyingDirectionSelector<StridedArrayTag, T, Notify> {
-public:
+#ifdef __GNUC__
+friend class Notify::self_type;
+#else
+friend typename Notify::self_type;
+#endif
+protected:
     NotifyingDirectionSelector(int stride = 1, T base = 0) : stride_(stride), current_(base), notify_(NULL) {}
     NotifyingDirectionSelector(NotifyingDirectionSelector const & rhs) : stride_(rhs.stride_), current_(rhs.current_), notify_(NULL) {}
 
+    void setNotify(Notify *n) { notify_ = n; }
+
 public:
     NotifyingDirectionSelector & operator=(NotifyingDirectionSelector const & rhs) {
+        notify_->_notify(current_, rhs.current_);
         stride_ = rhs.stride_;
         current_ = rhs.current_;
-        notify_ = NULL;
         return *this;
     }
-
-    void setNotify(Notify *n) { notify_ = n; }
 
     void operator++() { notify_->_notify(current_, current_+stride_); current_ += stride_; }
     void operator++(int) { notify_->_notify(current_, current_+stride_); current_ += stride_; }
@@ -711,24 +723,24 @@ public:
 
     index_reference operator[](difference_type const & d) const {
         if (d.y == 0) {
-            return currentRow[x()+d.x];
+            return currentRow[x(d.x)];
         } else {
-            return (*i)(x()+d.x, y()+d.y);
+            return (*i)(x(d.x), y(d.y));
         }
     }
 
     index_reference operator()(int dx, int dy) const {
         if (dy == 0) {
-            return currentRow[x()+dx];
+            return currentRow[x(dx)];
         } else {
-            return (*i)(x()+dx, y()+dy);
+            return (*i)(x(dx), y(dy));
         }
     }
 
     // FIXME pointer is supposed to be a weak_ptr
     pointer operator[](int dy) const {
         //BOOST_STATIC_ASSERT(false);
-        return (*i)[y() + dy] + x();
+        return (*i)[y(dy)] + x();
     }
 
     row_iterator rowIterator() const {
@@ -758,12 +770,12 @@ protected:
     }
 
     CachedFileImageIteratorBase& operator=(const CachedFileImageIteratorBase &r) {
+        // Note that we change i first so that the assignment to y causes us to get notified
+        // about the new y coordinate in the new image.
+        currentRow = NULL;
+        i = r.i;
         x = r.x;
         y = r.y;
-        i = r.i;
-        currentRow = NULL;
-        y.setNotify(this);
-        _notify(y());
         return *this;
     }
 
