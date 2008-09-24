@@ -306,15 +306,19 @@ class RGBValue
         typedef typename ValueTraits::RealPromote RealValue;
         const RealValue max = ValueTraits::toRealPromote(std::max(red(), std::max(green(), blue())));
         const RealValue min = ValueTraits::toRealPromote(std::min(red(), std::min(green(), blue())));
-        if (max == min)
+        // NOTE: See http://www.gamutvision.com/docs/gamutvision_equations.html,
+        // Section "HSV and HSL equations" why we have chosen this conversion.
+        // See also http://en.wikipedia.org/wiki/Saturation_(color_theory).
+        // HSL gives the best representation of lightness, HSV the
+        // best representation of saturation.  And we are hunting for
+        // saturation here.
+        if (max == 0)
         {
             return ValueTraits::zero();
         }
         else
         {
-            const RealValue l = (max + min) / ValueTraits::toRealPromote(ValueTraits::max());
-            const RealValue d = max - min;
-            return ValueTraits::fromRealPromote(l <= 1.0 ? d / l : d / (2.0 - l));
+            return ValueTraits::fromRealPromote((max - min) / max);
         }
     }
 
