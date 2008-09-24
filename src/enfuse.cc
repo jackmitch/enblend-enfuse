@@ -97,6 +97,7 @@ struct AlternativePercentage {
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
+std::string OutputFileName;
 int Verbose = 1;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
@@ -108,8 +109,7 @@ int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
-bool Checkpoint = false;
-char *OutputCompression = NULL;
+std::string OutputCompression;
 double WExposure = 1.0;
 double WContrast = 0.0;
 double WSaturation = 0.2;
@@ -118,14 +118,14 @@ double WMu = 0.5;
 double WSigma = 0.2;
 bool WSaturationIsDefault = true;
 int ContrastWindowSize = 5;
-char* GrayscaleProjector = NULL;
+std::string GrayscaleProjector;
 struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {0.0, 0.0, 0.0};
 struct AlternativePercentage MinCurvature = {0.0, false};
 int EntropyWindowSize = 3;
 struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
-int HardMask=0;
-int Debug=0;
+bool UseHardMask = false;
+int Debug = 0;
 //int Output16BitImage=0;
 
 // Globals related to catching SIGINT
@@ -175,17 +175,17 @@ template <typename InputPixelType, typename ResultPixelType>
 double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
 
 /** Print the usage information and quit. */
-void printUsageAndExit(const bool error=true) {
+void printUsageAndExit(const bool error = true) {
     cout <<
         "==== enfuse, version " << VERSION << " ====\n" <<
         "Usage: enfuse [options] -o OUTPUT INPUT...\n" <<
         "Fuse INPUT images into a single OUTPUT image.\n" <<
         "\n" <<
         "Common options:\n" <<
-        "  -h                     Print this help message\n" <<
+        "  -h, --help             Print this help message\n" <<
         "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
         "  -o FILENAME            Write output to FILENAME\n" <<
-        "  -v                     Verbosely report progress; repeat to\n" <<
+        "  -v, --verbose          Verbosely report progress; repeat to\n" <<
         "                           increase verbosity\n" <<
         "  -w                     Blend across -180/+180 degrees boundary\n" <<
         "  --compression=COMP     Set compression of output image to COMP,\n" <<
@@ -221,6 +221,7 @@ void printUsageAndExit(const bool error=true) {
         "                           function (0 <= MEAN <= 1).  Default: " << WMu << "\n" <<
         "  --wSigma=SIGMA         Standard deviation of Gaussian weighting\n" <<
         "                           function (SIGMA > 0).  Default: " << WSigma << "\n" <<
+        "  --SoftMask             Average over all masks.  This is the default.\n" <<
         "  --HardMask             Force hard blend masks and no averaging on finest\n" <<
         "                           scale.  This is especially useful for focus\n" <<
         "                           stacks with thin and high contrast features,\n" <<
@@ -302,8 +303,430 @@ void sigint_handler(int sig) {
     #endif
 }
 
-int main(int argc, char** argv) {
 
+int process_options(int argc, char** argv) {
+    enum OptionArgumentKind {
+        NoArgument,
+        StringArgument,
+        FloatArgument,
+        IntegerArgument
+    };
+
+    // NOTE: An OptionId is the index of a command line option in
+    // "long_options".  Every change in "enum OptionId" must be
+    // reflected in "long_options" and vice versa.
+    enum OptionId {
+        CompressionId,           //  0
+        WeightExposureId,        //  1
+        WeightContrastId,        //  2
+        WeightSaturationId,      //  3
+        WeightMuId,              //  4
+        WeightSigmaId,           //  5
+        MinCurvatureId,          //  6
+        EdgeScaleId,             //  7
+        ContrastWindowSizeId,    //  8
+        HardMaskId,              //  9
+        GrayProjectorId,         // 10
+        DebugId,                 // 11
+        WeightEntropyId,         // 12
+        EntropyWindowSizeId,     // 13
+        EntropyCutoffId,         // 14
+        SoftMaskId,              // 15
+        VerboseId,               // 16
+        HelpId                   // 17
+    };
+
+    // NOTE: See note attached to "enum OptionId" above.
+    static struct option long_options[] = {
+        {"compression", required_argument, 0, StringArgument},           //  0
+        {"wExposure", required_argument, 0, FloatArgument},              //  1
+        {"wContrast", required_argument, 0, FloatArgument},              //  2
+        {"wSaturation", required_argument, 0, FloatArgument},            //  3
+        {"wMu", required_argument, 0, FloatArgument},                    //  4
+        {"wSigma", required_argument, 0, FloatArgument},                 //  5
+        {"MinCurvature", required_argument, 0, StringArgument},          //  6
+        {"EdgeScale", required_argument, 0, StringArgument},             //  7
+        {"ContrastWindowSize", required_argument, 0, IntegerArgument},   //  8
+        {"HardMask", no_argument, 0, NoArgument},                        //  9
+        {"GrayProjector", required_argument, 0, StringArgument},         // 10
+        {"debug", no_argument, 0, NoArgument},                           // 11
+        {"wEntropy", required_argument, 0, FloatArgument},               // 12
+        {"EntropyWindowSize", required_argument, 0, IntegerArgument},    // 13
+        {"EntropyCutoff", required_argument, 0, StringArgument},         // 14
+        {"SoftMask", no_argument, 0, NoArgument},                        // 15
+        {"verbose", no_argument, 0, NoArgument},                         // 16
+        {"help", no_argument, 0, NoArgument},                            // 17
+        {0, 0, 0, 0}
+    };
+
+    int option_index = 0;
+    int c;
+    while ((c = getopt_long(argc, argv, "b:cf:ghl:m:o:vwz",
+                            long_options, &option_index)) != -1) {
+        switch (c) {
+        case NoArgument: {
+            if (long_options[option_index].flag != 0) break;
+            switch (option_index) {
+            case HardMaskId:
+                UseHardMask = true;
+                break;
+            case SoftMaskId:
+                UseHardMask = false;
+                break;
+            case DebugId:
+                Debug++;
+                break;
+            case VerboseId:
+                Verbose++;
+                break;
+            case HelpId:
+                printUsageAndExit(false);
+                break;          // never reached
+            default:
+                cerr << "enfuse: internal error: unhandled \"NoArgument\" option"
+                     << endl;
+                exit(1);
+            }
+            break;
+        } // end of "case NoArgument"
+
+        case StringArgument: {
+            if (long_options[option_index].flag != 0) break;
+            switch (option_index) {
+            case MinCurvatureId: {
+                char *tail;
+                MinCurvature.value = strtod(optarg, &tail);
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        MinCurvature.isPercentage = false;
+                    } else if (strcmp(tail, "%") == 0) {
+                        MinCurvature.isPercentage = true;
+                    } else {
+                        cerr << "enfuse: unrecognized minimum gradient \""
+                             << optarg << "\" specification." << endl;
+                        exit(1);
+                    }
+                } else {
+                    cerr << "enfuse: illegal numeric format \""
+                         << optarg << "\" for minimum gradient." << endl;
+                    exit(1);
+                }
+                break;
+            }
+
+            case EdgeScaleId: {
+                char* s = new char[strlen(optarg) + 1];
+                strcpy(s, optarg);
+                char* save_ptr = NULL;
+                char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                char* tail;
+
+                if (token == NULL || *token == 0) {
+                    cerr << "enfuse: no scale given to --EdgeScale.  "
+                         << "EdgeScale is required." << endl;
+                    exit(1);
+                }
+                FilterConfig.edgeScale = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail != 0) {
+                        cerr << "enfuse: could not decode edge scale specification \""
+                             << token << "\" for EdgeScale." << endl;
+                        exit(1);
+                    }
+                } else {
+                    cerr << "enfuse: illegal numeric format \""
+                         << token << "\" for EdgeScale." << endl;
+                    exit(1);
+                }
+
+                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    FilterConfig.lceScale = strtod(token, &tail);
+                    if (errno == 0) {
+                        if (strcmp(tail, "%") == 0) {
+                            FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
+                        } else if (*tail != 0) {
+                            cerr << "enfuse: could not decode specification \""
+                                 << token << "\" for LCE-scale." << endl;
+                            exit(1);
+                        }
+                    } else {
+                        cerr << "enfuse: illegal numeric format \""
+                             << token << "\" for LCE-Scale." << endl;
+                        exit(1);
+                    }
+                }
+
+                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    FilterConfig.lceFactor = strtod(token, &tail);
+                    if (errno == 0) {
+                        if (strcmp(tail, "%") == 0) {
+                            FilterConfig.lceFactor /= 100.0;
+                        } else if (*tail != 0) {
+                            cerr << "enfuse: could not decode specification \""
+                                 << token << "\" for LCE-factor." << endl;
+                            exit(1);
+                        }
+                    } else {
+                        cerr << "enfuse: illegal numeric format \""
+                             << token << "\" for LCE-factor." << endl;
+                        exit(1);
+                    }
+                }
+
+                if (save_ptr != NULL && *save_ptr != 0) {
+                    cerr << "enfuse: warning: ignoring trailing garbage \""
+                         << save_ptr << "\" in argument to --EdgeScale" << endl;
+                }
+
+                delete [] s;
+                break;
+            }
+
+            case EntropyCutoffId: {
+                char* s = new char[strlen(optarg) + 1];
+                strcpy(s, optarg);
+                char* save_ptr = NULL;
+                char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                char* tail;
+
+                if (token == NULL || *token == 0) {
+                    cerr << "enfuse: no scale given to --EntropyCutoff.  "
+                         << "LowerCutOff is required." << endl;
+                    exit(1);
+                }
+                EntropyLowerCutoff.value = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        EntropyLowerCutoff.isPercentage = false;
+                    } else if (strcmp(tail, "%") == 0) {
+                        EntropyLowerCutoff.isPercentage = true;
+                    } else {
+                        cerr << "enfuse: unrecognized entropy's lower cutoff \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                } else {
+                    cerr << "enfuse: illegal numeric format \""
+                         << token << "\" of entropy's lower cutoff." << endl;
+                    exit(1);
+                }
+
+                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    EntropyUpperCutoff.value = strtod(token, &tail);
+                    if (errno == 0) {
+                        if (*tail == 0) {
+                            EntropyUpperCutoff.isPercentage = false;
+                        } else if (strcmp(tail, "%") == 0) {
+                            EntropyUpperCutoff.isPercentage = true;
+                        } else {
+                            cerr << "enfuse: unrecognized entropy's upper cutoff \""
+                                 << token << "\"" << endl;
+                            exit(1);
+                        }
+                    } else {
+                        cerr << "enfuse: illegal numeric format \""
+                             << token << "\" of entropy's upper cutoff." << endl;
+                        exit(1);
+                    }
+                }
+
+                if (save_ptr != NULL && *save_ptr != 0) {
+                    cerr << "enfuse: warning: ignoring trailing garbage \""
+                         << save_ptr << "\" in argument to --EntropyCutoff" << endl;
+                }
+
+                delete [] s;
+                break;
+            }
+
+            case CompressionId:
+                OutputCompression = optarg;
+                break;
+
+            case GrayProjectorId:
+                GrayscaleProjector = optarg;
+                break;
+
+            default:
+                cerr << "enfuse: internal error: unhandled \"StringArgument\" option"
+                     << endl;
+                exit(1);
+            }
+            break;
+        } // end of "case StringArgument"
+
+        case FloatArgument: {
+            if (long_options[option_index].flag != 0) break;
+            double *optionDouble = NULL;
+            switch (option_index) {
+            case WeightExposureId:
+                optionDouble = &WExposure;
+                break;
+            case WeightContrastId:
+                optionDouble = &WContrast;
+                break;
+            case WeightSaturationId:
+                optionDouble = &WSaturation;
+                WSaturationIsDefault = false;
+                break;
+            case WeightMuId:
+                optionDouble = &WMu;
+                break;
+            case WeightSigmaId:
+                optionDouble = &WSigma;
+                break;
+            case WeightEntropyId:
+                optionDouble = &WEntropy;
+                break;
+            default:
+                cerr << "enfuse: internal error: unhandled \"FloatArgument\" option"
+                     << endl;
+                exit(1);
+            }
+
+            char *lastChar = NULL;
+            double value = strtod(optarg, &lastChar);
+            if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
+                (option_index == WeightExposureId || option_index == WeightContrastId ||
+                 option_index == WeightSaturationId || option_index == WeightEntropyId)) {
+                cerr << "enfuse: " << long_options[option_index].name
+                     << " must be in the range [0.0, 1.0]." << endl;
+                printUsageAndExit();
+            }
+
+            *optionDouble = value;
+            break;
+        } // end of "case FloatArgument"
+
+        case IntegerArgument: {
+            if (long_options[option_index].flag != 0) break;
+            switch (option_index) {
+            case ContrastWindowSizeId:
+                ContrastWindowSize = atoi(optarg);
+                if (ContrastWindowSize < 3) {
+                    cerr << "enfuse: warning: contrast window size \""
+                         << ContrastWindowSize << "\" is too small; will use size = 3"
+                         << endl;
+                    ContrastWindowSize = 3;
+                }
+                if (ContrastWindowSize % 2 != 1) {
+                    cerr << "enfuse: warning: contrast window size \""
+                         << ContrastWindowSize << "\" is even; increasing size to next odd number"
+                         << endl;
+                    ContrastWindowSize++;
+                }
+                break;
+
+            case EntropyWindowSizeId:
+                EntropyWindowSize = atoi(optarg);
+                if (EntropyWindowSize < 3) {
+                    cerr << "enfuse: warning: entropy window size \""
+                         << EntropyWindowSize << "\" is too small; will use size = 3"
+                         << endl;
+                    EntropyWindowSize = 3;
+                }
+                if (EntropyWindowSize % 2 != 1) {
+                    cerr << "enfuse: warning: entropy window size \""
+                         << EntropyWindowSize << "\" is even; increasing size to next odd number"
+                         << endl;
+                    EntropyWindowSize++;
+                }
+                break;
+
+            default:
+                cerr << "enfuse: internal error: unhandled \"IntegerArgument\" option"
+                     << endl;
+                exit(1);
+            }
+            break;
+        } // end of "case IntegerArgument"
+
+        case 'b': {
+            const int kilobytes = atoi(optarg);
+            if (kilobytes < 1) {
+                cerr << "enfuse: cache block size must be 1 or more." << endl;
+                printUsageAndExit();
+            }
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
+            break;
+        }
+        case 'c':
+            UseCIECAM = true;
+            break;
+        case 'f': {
+            OutputSizeGiven = true;
+            const int nP = sscanf(optarg,
+                                  "%dx%d+%d+%d",
+                                  &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                  &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+            if (nP == 4) {
+                ; // ok: full geometry string
+            } else if (nP == 2) {
+                OutputOffsetXCmdLine = 0;
+                OutputOffsetYCmdLine = 0;
+            } else {
+                cerr << "enfuse: the -f option requires a parameter "
+                     << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
+                printUsageAndExit();
+            }
+            break;
+        }
+        case 'g':
+            GimpAssociatedAlphaHack = true;
+            break;
+        case 'h':
+            printUsageAndExit(false);
+            break;
+        case 'l': {
+            const int levels = atoi(optarg);
+            if (levels < 1 || levels > 29) {
+                cerr << "enfuse: levels must in the range 1 to 29." << endl;
+                printUsageAndExit();
+            }
+            ExactLevels = static_cast<unsigned int>(levels);
+            break;
+        }
+        case 'm': {
+            const int megabytes = atoi(optarg);
+            if (megabytes < 1) {
+                cerr << "enfuse: memory limit must be 1 or more." << endl;
+                printUsageAndExit();
+            }
+            CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            break;
+        }
+        case 'o':
+            if (!OutputFileName.empty()) {
+                cerr << "enfuse: more than one output file specified." << endl;
+                printUsageAndExit();
+                break;
+            }
+            OutputFileName = optarg;
+            break;
+        case 'v':
+            Verbose++;
+            break;
+        case 'w':
+            Wraparound = true;
+            break;
+        case 'z':
+            OutputCompression = "LZW";
+            break;
+
+        default:
+            printUsageAndExit();
+            break;
+        }
+    }
+
+    return optind;
+}
+
+
+int main(int argc, char** argv) {
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
@@ -330,417 +753,21 @@ int main(int argc, char** argv) {
     //TIFFSetWarningHandler(NULL);
     //TIFFSetErrorHandler(NULL);
 
-    // The name of the output file.
-    char *outputFileName = NULL;
-
     // List of input files.
     list<char*> inputFileNameList;
     list<char*>::iterator inputFileNameIterator;
 
-    static struct option long_options[] = {
-            {"compression", required_argument, 0, 0},        //  0
-            {"wExposure", required_argument, 0, 1},          //  1
-            {"wContrast", required_argument, 0, 1},          //  2
-            {"wSaturation", required_argument, 0, 1},        //  3
-            {"wMu", required_argument, 0, 1},                //  4
-            {"wSigma", required_argument, 0, 1},             //  5
-            {"MinCurvature", required_argument, 0, 0},       //  6
-            {"EdgeScale", required_argument, 0, 0},          //  7
-            {"ContrastWindowSize", required_argument, 0, 2}, //  8
-            {"HardMask", no_argument, &HardMask, 1},         //  9
-            {"GrayProjector", required_argument, 0, 0},      // 10
-            {"debug", no_argument, &Debug, 1},               // 11
-            {"wEntropy", required_argument, 0, 1},           // 12
-            {"EntropyWindowSize", required_argument, 0, 2},  // 13
-            {"EntropyCutoff", required_argument, 0, 0},      // 14
-            //{"out16", no_argument, &Output16BitImage, 0},
-            {0, 0, 0, 0}
-    };
-
-    // Parse command line.
-    int option_index = 0;
-    int c;
-    while ((c = getopt_long(argc, argv, "b:cf:ghl:m:o:vwz", long_options, &option_index)) != -1) {
-        switch (c) {
-            case 0: { /* Long Options with string arguments */
-                if (long_options[option_index].flag != 0) break;
-
-                if (option_index == 6) {
-                    char *tail;
-                    MinCurvature.value = strtod(optarg, &tail);
-                    if (errno == 0) {
-                        if (*tail == 0) {
-                            MinCurvature.isPercentage = false;
-                        } else if (strcmp(tail, "%") == 0) {
-                            MinCurvature.isPercentage = true;
-                        } else {
-                            cerr << "enfuse: unrecognized minimum gradient \""
-                                 << optarg << "\" specification." << endl;
-                            exit(1);
-                        }
-                    } else {
-                            cerr << "enfuse: illegal numeric format \""
-                                 << optarg << "\" for minimum gradient." << endl;
-                            exit(1);
-                    }
-                    break;
-                }
-
-                if (option_index == 7) {
-                    char* s = new char[strlen(optarg) + 1];
-                    strcpy(s, optarg);
-                    char* save_ptr = NULL;
-                    char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
-                    char* tail;
-
-                    if (token == NULL || *token == 0) {
-                        cerr << "enfuse: no scale given to --EdgeScale.  "
-                             << "EdgeScale is required." << endl;
-                        exit(1);
-                    }
-                    FilterConfig.edgeScale = strtod(token, &tail);
-                    if (errno == 0) {
-                        if (*tail != 0) {
-                            cerr << "enfuse: could not decode edge scale specification \""
-                                 << token << "\" for EdgeScale." << endl;
-                            exit(1);
-                        }
-                    } else {
-                        cerr << "enfuse: illegal numeric format \""
-                             << token << "\" for EdgeScale." << endl;
-                        exit(1);
-                    }
-
-                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
-                    if (token != NULL && *token != 0) {
-                        FilterConfig.lceScale = strtod(token, &tail);
-                        if (errno == 0) {
-                            if (strcmp(tail, "%") == 0) {
-                                FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
-                            } else if (*tail != 0) {
-                                cerr << "enfuse: could not decode specification \""
-                                     << token << "\" for LCE-scale." << endl;
-                                exit(1);
-                            }
-                        } else {
-                            cerr << "enfuse: illegal numeric format \""
-                                 << token << "\" for LCE-Scale." << endl;
-                            exit(1);
-                        }
-                    }
-
-                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
-                    if (token != NULL && *token != 0) {
-                        FilterConfig.lceFactor = strtod(token, &tail);
-                        if (errno == 0) {
-                            if (strcmp(tail, "%") == 0) {
-                                FilterConfig.lceFactor /= 100.0;
-                            } else if (*tail != 0) {
-                                cerr << "enfuse: could not decode specification \""
-                                     << token << "\" for LCE-factor." << endl;
-                                exit(1);
-                            }
-                        } else {
-                            cerr << "enfuse: illegal numeric format \""
-                                 << token << "\" for LCE-factor." << endl;
-                            exit(1);
-                        }
-                    }
-
-                    if (save_ptr != NULL && *save_ptr != 0) {
-                        cerr << "enfuse: warning: ignoring trailing garbage \""
-                             << save_ptr << "\" in argument to --EdgeScale" << endl;
-                    }
-
-                    delete [] s;
-                    break;
-                }
-
-                if (option_index == 14) {
-                    char* s = new char[strlen(optarg) + 1];
-                    strcpy(s, optarg);
-                    char* save_ptr = NULL;
-                    char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
-                    char* tail;
-
-                    if (token == NULL || *token == 0) {
-                        cerr <<
-                            "enfuse: no scale given to --EntropyCutoff.  " <<
-                            "LowerCutOff is required.\n";
-                        exit(1);
-                    }
-                    EntropyLowerCutoff.value = strtod(token, &tail);
-                    if (errno == 0) {
-                        if (*tail == 0) {
-                            EntropyLowerCutoff.isPercentage = false;
-                        } else if (strcmp(tail, "%") == 0) {
-                            EntropyLowerCutoff.isPercentage = true;
-                        } else {
-                            cerr <<
-                                "enfuse: unrecognized entropy's lower cutoff \"" <<
-                                token << "\"\n";
-                            exit(1);
-                        }
-                    } else {
-                            cerr <<
-                                "enfuse: illegal numeric format \"" << token <<
-                                "\" of entropy's lower cutoff.\n";
-                            exit(1);
-                    }
-
-                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
-                    if (token != NULL && *token != 0) {
-                        EntropyUpperCutoff.value = strtod(token, &tail);
-                        if (errno == 0) {
-                            if (*tail == 0) {
-                                EntropyUpperCutoff.isPercentage = false;
-                            } else if (strcmp(tail, "%") == 0) {
-                                EntropyUpperCutoff.isPercentage = true;
-                            } else {
-                                cerr <<
-                                    "enfuse: unrecognized entropy's upper cutoff \"" <<
-                                    token << "\"\n";
-                                exit(1);
-                            }
-                        } else {
-                            cerr <<
-                                "enfuse: illegal numeric format \"" << token <<
-                                "\" of entropy's upper cutoff.\n";
-                            exit(1);
-                        }
-                    }
-
-                    if (save_ptr != NULL && *save_ptr != 0) {
-                        cerr <<
-                            "enfuse: warning: ignoring trailing garbage \"" << save_ptr <<
-                            "\" in argument to --EntropyCutoff\n";
-                    }
-
-                    delete [] s;
-                    break;
-                }
-
-                char **optionString = NULL;
-                switch (option_index) {
-                case 0:
-                    optionString = &OutputCompression;
-                    break;
-                case 10:
-                    optionString = &GrayscaleProjector;
-                    break;
-                }
-
-                if (*optionString != NULL) {
-                    cerr << "enfuse: more than one "
-                         << long_options[option_index].name
-                         << " output file specified."
-                         << endl;
-                    printUsageAndExit();
-                    break;
-                }
-
-                int len = strlen(optarg) + 1;
-
-                try {
-                    *optionString = new char[len];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enfuse: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-
-                strncpy(*optionString, optarg, len);
-
-                break;
-            }
-            case 1: { /* Long options with float arguments */
-                if (long_options[option_index].flag != 0) break;
-
-                double *optionDouble = NULL;
-                switch (option_index) {
-                    case 1: optionDouble = &WExposure; break;
-                    case 2: optionDouble = &WContrast; break;
-                    case 3: optionDouble = &WSaturation; WSaturationIsDefault = false; break;
-                    case 4: optionDouble = &WMu; break;
-                    case 5: optionDouble = &WSigma; break;
-                    case 12: optionDouble = &WEntropy; break;
-                }
-
-                char *lastChar = NULL;
-                double value = strtod(optarg, &lastChar);
-                if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
-                    (option_index == 1 || option_index == 2 ||
-                     option_index == 3 || option_index == 12)) {
-                    cerr << "enfuse: " << long_options[option_index].name
-                         << " must be in the range [0.0, 1.0]." << endl;
-                    printUsageAndExit();
-                }
-
-                *optionDouble = value;
-
-                break;
-            }
-            case 2: { /* integer arguments */
-                switch (option_index) {
-                case 8:
-                    if (long_options[option_index].flag != 0) break;
-                    ContrastWindowSize = atoi(optarg);
-                    if (ContrastWindowSize < 3) {
-                        cerr <<
-                            "enfuse: warning: contrast window size \"" <<
-                            ContrastWindowSize <<
-                            "\" is too small; will use size = 3\n";
-                        ContrastWindowSize = 3;
-                    }
-                    if (ContrastWindowSize % 2 != 1) {
-                        cerr <<
-                            "enfuse: warning: contrast window size \"" <<
-                            ContrastWindowSize <<
-                            "\" is even; increasing size to next odd number\n";
-                        ContrastWindowSize++;
-                    }
-                    break;
-
-                case 13:
-                    if (long_options[option_index].flag != 0) break;
-                    EntropyWindowSize = atoi(optarg);
-                    if (EntropyWindowSize < 3) {
-                        cerr <<
-                            "enfuse: warning: entropy window size \"" <<
-                            EntropyWindowSize <<
-                            "\" is too small; will use size = 3\n";
-                        EntropyWindowSize = 3;
-                    }
-                    if (EntropyWindowSize % 2 != 1) {
-                        cerr <<
-                            "enfuse: warning: entropy window size \"" <<
-                            EntropyWindowSize <<
-                            "\" is even; increasing size to next odd number\n";
-                        EntropyWindowSize++;
-                    }
-                    break;
-                }
-                break;
-            }
-
-            case 'b': {
-                int kilobytes = atoi(optarg);
-                if (kilobytes < 1) {
-                    cerr << "enfuse: cache block size must be 1 or more."
-                         << endl;
-                    printUsageAndExit();
-                }
-                CachedFileImageDirector::v().setBlockSize(
-                        (long long)kilobytes << 10);
-                break;
-            }
-            case 'c': {
-                UseCIECAM = true;
-                break;
-            }
-            case 'f': {
-                OutputSizeGiven = true;
-                int nP = sscanf(optarg,
-                                "%dx%d+%d+%d",
-                                &OutputWidthCmdLine, &OutputHeightCmdLine,
-                                &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
-                if (nP == 4) {
-                    // full geometry string
-                } else if (nP == 2) {
-                    OutputOffsetXCmdLine=0;
-                    OutputOffsetYCmdLine=0;
-                } else {
-                    cerr << "enfuse: the -f option requires a parameter "
-                         << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
-                    printUsageAndExit();
-                }
-                break;
-            }
-            case 'g': {
-                GimpAssociatedAlphaHack = true;
-                break;
-            }
-            case 'h': {
-                printUsageAndExit(false);
-                break;
-            }
-            case 'l': {
-                int levels = atoi(optarg);
-                if (levels < 1 || levels > 29) {
-                    cerr << "enfuse: levels must in the range 1 to 29."
-                         << endl;
-                    printUsageAndExit();
-                }
-                ExactLevels = (unsigned int)levels;
-                break;
-            }
-            case 'm': {
-                int megabytes = atoi(optarg);
-                if (megabytes < 1) {
-                    cerr << "enfuse: memory limit must be 1 or more."
-                         << endl;
-                    printUsageAndExit();
-                }
-                CachedFileImageDirector::v().setAllocation(
-                        (long long)megabytes << 20);
-                break;
-            }
-            case 'o': {
-                if (outputFileName != NULL) {
-                    cerr << "enfuse: more than one output file specified."
-                         << endl;
-                    printUsageAndExit();
-                    break;
-                }
-                int len = strlen(optarg) + 1;
-                try {
-                    outputFileName = new char[len];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enfuse: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-                strncpy(outputFileName, optarg, len);
-                break;
-            }
-            case 'v': {
-                Verbose++;
-                break;
-            }
-            case 'w': {
-                Wraparound = true;
-                break;
-            }
-            case 'x': {
-                Checkpoint = true;
-                break;
-            }
-            case 'z': {
-                if (OutputCompression != NULL) {
-                    delete OutputCompression;
-                }
-                try {
-                    OutputCompression = new char[4];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enblend: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-                OutputCompression = strdup("LZW");
-                break;
-            }
-            default: {
-                printUsageAndExit();
-                break;
-            }
-        }
+    int optind;
+    try {optind = process_options(argc, argv);}
+    catch (StdException& e) {
+        cerr << "enblend: error while processing command line options\n"
+             << "enblend:     " << e.what()
+             << endl;
+        exit(1);
     }
 
     // Make sure mandatory output file name parameter given.
-    if (outputFileName == NULL) {
+    if (OutputFileName.empty()) {
         cerr << "enfuse: no output file specified." << endl;
         printUsageAndExit();
     }
@@ -783,17 +810,16 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << "enfuse: no input files specified." << endl;
-        printUsageAndExit();
+        cerr << "enfuse: no input files specified.\n";
     }
 
     // Check that more than one input file was given.
     if (inputFileNameList.size() <= 1) {
-        cerr << "enfuse: only one input file given. "
-             << "Enfuse needs two or more overlapping input images in order "
-             << "to do blending calculations. The output will be the same as "
-             << "the input."
-             << endl;
+        cerr <<
+            "enfuse: only one input file given. " <<
+            "Enfuse needs two or more overlapping input images in order " <<
+            "to do blending calculations. The output will be the same as " <<
+            "the input.\n";
     }
 
     // List of info structures for each input image.
@@ -952,8 +978,10 @@ int main(int argc, char** argv) {
     }
 
     // Create the Info for the output file.
-    ImageExportInfo outputImageInfo(outputFileName);
-    if (OutputCompression) outputImageInfo.setCompression(OutputCompression);
+    ImageExportInfo outputImageInfo(OutputFileName.c_str());
+    if (!OutputCompression.empty()) {
+        outputImageInfo.setCompression(OutputCompression.c_str());
+    }
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
@@ -1026,7 +1054,7 @@ int main(int argc, char** argv) {
         encoder(outputImageInfo);
     } catch (StdException & e) {
         cerr << endl << "enfuse: error opening output file \""
-             << outputFileName
+             << OutputFileName
              << "\":"
              << endl << e.what()
              << endl;
@@ -1087,9 +1115,6 @@ int main(int argc, char** argv) {
         while (imageInfoIterator != imageInfoList.end()) {
             delete *imageInfoIterator++;
         }
-
-        delete [] outputFileName;
-
     } catch (std::bad_alloc& e) {
         cerr << endl << "enfuse: out of memory"
              << endl << e.what()

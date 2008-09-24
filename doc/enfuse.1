@@ -56,7 +56,7 @@ than zero is interpreted as "this pixel should contribute to the final
 image".
 
 .SH COMMON OPTIONS
-.IP -h
+.IP "\-h, \-\-help"
 Print information on the available options.
 .IP "-l LEVELS"
 Use exactly this many LEVELS for pyramid blending.  This trades off
@@ -66,7 +66,7 @@ overlap region.  Enfuse may still use a smaller number of levels if
 the geometry of the images demands it.
 .IP "-o OUTPUT-FILE"
 Required option.  Specify the name of the OUTPUT-FILE.
-.IP -v
+.IP "\-v, \-\-verbose"
 Verbose output.
 .IP -w
 Blend around the -180/+180 degrees boundary.  Useful for full-360
@@ -129,6 +129,8 @@ WEIGHT <= 1.
 .IP --wEntropy=WEIGHT
 Sets the relative weight of high-entropy pixels.  Valid range: 0 <=
 WEIGHT <= 1.
+.IP --SoftMask
+Consider all masks when fusing.  This is the default.
 .IP --HardMask
 Force hard blend masks on the finest scale.  This avoids averaging of
 fine details (only), at the expense of increasing the noise.  This

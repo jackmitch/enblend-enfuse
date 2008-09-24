@@ -146,7 +146,9 @@ Fuse the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
 
 @table @code
 @item -h
+@itemx --help
 @cindex option @option{-h}
+@cindex option @option{--help}
 Print information on the available options.
 
 @item -l @var{LEVELS}
@@ -162,8 +164,11 @@ levels if the geometry of the images demands it.
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v
+@itemx --verbose
 @cindex option @option{-v}
-Verbose progress reporting.
+@cindex option @option{--verbose}
+Increase the verbosity of progress reporting.  Giving one or more
+@option{-v} options will make Enfuse more verbose.
 
 @item -w
 @cindex option @option{-w}
@@ -390,6 +395,9 @@ Valid range:
 $\mathit{SIZE} \ge 3$.
 @end tex
 
+@item --SoftMask
+@cindex option @option{--SoftMask}
+Consider all masks when fusing.  This is the default.
 
 @item --HardMask
 @cindex option @option{--HardMask}

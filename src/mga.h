@@ -47,7 +47,7 @@ class MultiGrayscaleAccessor
 public:
     typedef ResultType value_type;
 
-    MultiGrayscaleAccessor(const char* accessorName) {
+    MultiGrayscaleAccessor(const std::string& accessorName) {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         initializeTypeSpecific(srcIsScalar());
         initialize(accessorName);
@@ -88,9 +88,9 @@ private:
         nameMap[CHANNEL_MIXER] = MIXER;
     }
 
-    void initialize(const char* accessorName) {
+    void initialize(const std::string& accessorName) {
         initializeAccessorNameMap();
-        if (accessorName == NULL)
+        if (accessorName.empty())
         {
             kind = nameMap[defaultGrayscaleAccessorName()];
         }

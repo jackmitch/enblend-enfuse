@@ -1194,7 +1194,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
-    if (HardMask) {
+    if (UseHardMask) {
         if (Verbose) {
             cout << "Creating hard blend mask" << std::endl;
         }
@@ -1282,7 +1282,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         //oss1 << "imageLP" << m << "_";
         //exportPyramid<ImagePyramidType>(imageLP, oss1.str().c_str());
 
-        if (!HardMask) {
+        if (!UseHardMask) {
             // Normalize the mask coefficients.
             // Scale to the range expected by the MaskPyramidPixelType.
             combineTwoImages(srcImageRange(*(imageTriple.third)),
