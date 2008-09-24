@@ -122,26 +122,26 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
      typedef typename MaskIterator::row_iterator MaskRowIterator;
      typedef typename DestIterator::PixelType DestPixelType;
      typedef ScratchPad<SrcSumType> ScratchPadType;
- 
+
      vigra_precondition(size.x > 1 && size.y > 1,
                         "localStdDevIf(): window for local variance must be at least 2x2");
      vigra_precondition(src_lr.x - src_ul.x >= size.x &&
                         src_lr.y - src_ul.y >= size.y,
                         "localStdDevIf(): window larger than image");
- 
+
      const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
      ScratchPadType* const scratchPad = new ScratchPadType[imageSize.x + 1];
      vigra_precondition(scratchPad != NULL, "localStdDevIf(): could not allocate scratch pad");
 
      const Diff2D border(size.x / 2, size.y / 2);
      const Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
- 
+
      SrcIterator srcRow;
      SrcIterator const srcEnd(src_lr - border);
      SrcIterator const srcEndXm1(srcEnd - Diff2D(1, 0));
      MaskIterator maskRow;
      DestIterator destRow;
- 
+
      // For each row in the source image...
      for (srcRow = src_ul + border, maskRow = mask_ul + border, destRow = dest_ul + border;
           srcRow.y < srcEnd.y;
@@ -151,7 +151,7 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
          SrcSumType sum = NumericTraits<SrcSumType>::zero();
          SrcSumType sumSqr = NumericTraits<SrcSumType>::zero();
          size_t n = 0;
- 
+
          SrcIterator const windowSrcUpperLeft(srcRow - border);
          SrcIterator const windowSrcLowerRight(srcRow + border);
          SrcIterator windowSrc;
@@ -168,7 +168,7 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
              SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
              SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
              size_t nInit = 0;
- 
+
              for (windowSrc.y = windowSrcUpperLeft.y, windowMask.y = windowMaskUpperLeft.y;
                   windowSrc.y <= windowSrcLowerRight.y;
                   ++windowSrc.y, ++windowMask.y)
@@ -181,25 +181,25 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                      ++nInit;
                  }
              }
- 
+
              // Set scratch pad's column-wise values
              spCol->sum = sumInit;
              spCol->sumSqr = sumSqrInit;
              spCol->n = nInit;
- 
+
              // Update totals
              sum += sumInit;
              sumSqr += sumSqrInit;
              n += nInit;
          }
- 
+
          // Write one row of results
          SrcIterator srcCol(srcRow);
          MaskIterator maskCol(maskRow);
          DestIterator destCol(destRow);
          const ScratchPadType* old(scratchPad);
          ScratchPadType* next(scratchPad + size.x);
- 
+
          while (true)
          {
              // Compute standard deviation
@@ -215,12 +215,12 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
              {
                  break;
              }
- 
+
              // Compute auxilliary values of next column
              SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
              SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
              size_t nInit = 0;
- 
+
              for (windowSrc = srcCol + nextUpperRight, windowMask = maskCol + nextUpperRight;
                   windowSrc.y <= windowSrcLowerRight.y;
                   ++windowSrc.y, ++windowMask.y)
@@ -233,17 +233,17 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                      ++nInit;
                  }
              }
- 
+
              // Set sums of next column
              next->sum = sumInit;
              next->sumSqr = sumSqrInit;
              next->n = nInit;
- 
+
              // Update totals
              sum += sumInit - old->sum;
              sumSqr += sumSqrInit - old->sumSqr;
              n += nInit - old->n;
- 
+
              // Advance to next column
              ++srcCol.x;
              ++maskCol.x;
@@ -252,8 +252,376 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
              ++next;
          }
      }
- 
+
      delete [] scratchPad;
+}
+
+
+template <typename InputPixelType, typename ResultPixelType>
+class Histogram
+{
+    enum {GRAY = 0, CHANNELS = 3};
+
+public:
+    typedef NumericTraits<InputPixelType> InputPixelTraits;
+    typedef typename InputPixelTraits::ValueType KeyType; // scalar values are our keys
+    typedef typename InputPixelTraits::isScalar pixelIsScalar;
+    typedef unsigned DataType;  // pixel counts are our data
+    typedef NumericTraits<ResultPixelType> ResultPixelTraits;
+    typedef typename ResultPixelTraits::ValueType ResultType;
+    typedef map<KeyType, DataType> MapType;
+    typedef pair<KeyType, DataType> PairType;
+    typedef typename MapType::const_iterator MapConstIterator;
+    typedef typename MapType::iterator MapIterator;
+    typedef typename MapType::size_type MapSizeType;
+
+    Histogram() {clear();}
+
+    void clear() {
+        for (int channel = 0; channel < CHANNELS; ++channel) {
+            totalCount[channel] = DataType();
+            histogram[channel].clear();
+        }
+    }
+
+    static void setPrecomputedEntropySize(size_t size) {
+        // PERFORMANCE: setPrecomputedEntropySize is a pure
+        // performance enhancer otherwise the function is completely
+        // redundant.  It derives its existence from the facts that
+        // computing the entropy "p * log(p)" given the probability
+        // "p" is an expensive operation _and_ most of the time the
+        // moving window is filled completely, i.e., no pixel is
+        // masked.
+        precomputedSize = size;
+        delete [] precomputedLog;
+        delete [] precomputedEntropy;
+        if (size == 0)
+        {
+            precomputedLog = NULL;
+            precomputedEntropy = NULL;
+        }
+        else
+        {
+            precomputedLog = new double[size + 1];
+            vigra_precondition(precomputedLog != NULL,
+                               "Histogram::setPrecomputedSize: failed to allocate log-preevaluate memory");
+            precomputedEntropy = new double[size + 1];
+            vigra_precondition(precomputedEntropy != NULL,
+                               "Histogram::setPrecomputedSize: failed to allocate entropy-preevaluate memory");
+            precomputedLog[0] = 0.0; // just to have a reliable value
+            precomputedEntropy[0] = 0.0;
+            for (size_t i = 1; i <= size; ++i)
+            {
+                const double p = static_cast<double>(i) / static_cast<double>(size);
+                precomputedLog[i] = static_cast<double>(i);
+                precomputedEntropy[i] = p * log(p);
+            }
+        }
+    }
+
+    Histogram& operator=(const Histogram& other) {
+        if (this != &other)
+        {
+            for (int channel = 0; channel < CHANNELS; ++channel)
+            {
+                totalCount[channel] = other.totalCount[channel];
+                histogram[channel] = other.histogram[channel];
+            }
+        }
+        return *this;
+    }
+
+    void insert(const InputPixelType& x) {insertFun(x, pixelIsScalar());}
+    void insert(const Histogram* other) {insertFun(other, pixelIsScalar());}
+
+    void erase(const InputPixelType& x) {eraseFun(x, pixelIsScalar());}
+    void erase(const Histogram* other) {eraseFun(other, pixelIsScalar());}
+
+    ResultPixelType entropy() const {return entropyFun(pixelIsScalar());}
+
+protected:
+    void insertInChannel(int channel, const PairType& keyval) {
+        // PERFORMANCE: The actual insertion code below code is a much
+        // faster version of
+        //     MapIterator const i = histogram[channel].find(keyval.first);
+        //     if (i == histogram[channel].end())
+        //         histogram[channel].insert(keyval);
+        //     else i->second += keyval.second;
+        MapIterator const lowerBound = histogram[channel].lower_bound(keyval.first);
+        const DataType count = keyval.second;
+        if (lowerBound != histogram[channel].end() &&
+            !(histogram[channel].key_comp()(keyval.first, lowerBound->first)))
+        {
+            lowerBound->second += count;
+        }
+        else
+        {
+            histogram[channel].insert(lowerBound, keyval);
+        }
+        totalCount[channel] += count;
+    }
+
+    void eraseInChannel(int channel, const PairType& keyval) {
+        MapIterator const i = histogram[channel].find(keyval.first);
+        assert(i != histogram[channel].end());
+        DataType& c = i->second;
+        const DataType count = keyval.second;
+        if (c > count)
+        {
+            c -= count;
+        }
+        else
+        {
+            // PERFORMANCE: It is _much_ faster to erase unneeded bins
+            // right away than it is e.g. to periodically (think of
+            // every column) cleaning up the whole map while wasting
+            // time in lots of comparisons until then.
+            histogram[channel].erase(i);
+        }
+        totalCount[channel] -= count;
+    }
+
+    double entropyOfChannel(int channel) const {
+        const DataType total = totalCount[channel];
+        const MapSizeType actualBins = histogram[channel].size();
+        if (total == 0 || actualBins <= 1)
+        {
+            return 0.0;
+        }
+        else
+        {
+            double e = 0.0;
+            MapConstIterator const end = histogram[channel].end();
+            if (total == precomputedSize)
+            {
+                for (MapConstIterator i = histogram[channel].begin(); i != end; ++i)
+                {
+                    e += precomputedEntropy[i->second];
+                }
+                return -e / precomputedLog[actualBins];
+            }
+            else
+            {
+                for (MapConstIterator i = histogram[channel].begin(); i != end; ++i)
+                {
+                    const double p = i->second / static_cast<double>(total);
+                    e += p * log(p);
+                }
+                return -e / log(static_cast<double>(actualBins));
+            }
+        }
+    }
+
+    // Grayscale
+    void insertFun(const InputPixelType& x, VigraTrueType) {
+        insertInChannel(GRAY, PairType(x, 1U));
+    }
+
+    void insertFun(const Histogram* other, VigraTrueType) {
+        MapConstIterator const end = other->histogram[GRAY].end();
+        for (MapConstIterator i = other->histogram[GRAY].begin(); i != end; ++i)
+        {
+            insertInChannel(GRAY, *i);
+        }
+    }
+
+    void eraseFun(const InputPixelType& x, VigraTrueType) {
+        eraseInChannel(GRAY, PairType(x, 1U));
+    }
+
+    void eraseFun(const Histogram* other, VigraTrueType) {
+        MapConstIterator const end = other->histogram[GRAY].end();
+        for (MapConstIterator i = other->histogram[GRAY].begin(); i != end; ++i)
+        {
+            eraseInChannel(GRAY, *i);
+        }
+    }
+
+    ResultPixelType entropyFun(VigraTrueType) const {
+        const double max = static_cast<double>(NumericTraits<KeyType>::max());
+        return ResultPixelType(ResultPixelTraits::fromRealPromote(entropyOfChannel(GRAY) * max));
+    }
+
+    // RGB
+    void insertFun(const InputPixelType& x, VigraFalseType) {
+        for (int channel = 0; channel < CHANNELS; ++channel) {
+            insertInChannel(channel, PairType(x[channel], 1U));
+        }
+    }
+
+    void insertFun(const Histogram* other, VigraFalseType) {
+        for (int channel = 0; channel < CHANNELS; ++channel)
+        {
+            MapConstIterator const end = other->histogram[channel].end();
+            for (MapConstIterator i = other->histogram[channel].begin(); i != end; ++i)
+            {
+                insertInChannel(channel, *i);
+            }
+        }
+    }
+
+    void eraseFun(const InputPixelType& x, VigraFalseType) {
+        for (int channel = 0; channel < CHANNELS; ++channel) {
+            eraseInChannel(channel, PairType(x[channel], 1U));
+        }
+    }
+
+    void eraseFun(const Histogram* other, VigraFalseType) {
+        for (int channel = 0; channel < CHANNELS; ++channel)
+        {
+            MapConstIterator const end = other->histogram[channel].end();
+            for (MapConstIterator i = other->histogram[channel].begin(); i != end; ++i)
+            {
+                eraseInChannel(channel, *i);
+            }
+        }
+    }
+
+    ResultPixelType entropyFun(VigraFalseType) const {
+        const double max = static_cast<double>(NumericTraits<KeyType>::max());
+        return ResultPixelType(NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(0) * max),
+                               NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(1) * max),
+                               NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(2) * max));
+    }
+
+private:
+    static size_t precomputedSize;
+    static double* precomputedLog;
+    static double* precomputedEntropy;
+    MapType histogram[CHANNELS];
+    DataType totalCount[CHANNELS];
+};
+
+
+template <class SrcIterator, class SrcAccessor,
+          class MaskIterator, class MaskAccessor,
+          class DestIterator, class DestAccessor>
+void localEntropyIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
+                    MaskIterator mask_ul, MaskAccessor mask_acc,
+                    DestIterator dest_ul, DestAccessor dest_acc,
+                    Size2D size)
+{
+    typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+    typedef typename SrcIterator::PixelType SrcPixelType;
+    typedef typename SrcIterator::row_iterator SrcRowIterator;
+    typedef typename MaskIterator::row_iterator MaskRowIterator;
+    typedef typename DestIterator::PixelType DestPixelType;
+    typedef Histogram<SrcPixelType, DestPixelType> ScratchPadType;
+
+    vigra_precondition(src_lr.x - src_ul.x >= size.x &&
+                       src_lr.y - src_ul.y >= size.y,
+                       "localEntropyIf(): window larger than image");
+
+    const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
+    ScratchPadType* const scratchPad = new ScratchPadType[imageSize.y + 1];
+    vigra_precondition(scratchPad != NULL,
+                       "localEntropyIf(): could not allocate scratch pad");
+
+    ScratchPadType::setPrecomputedEntropySize(size.x * size.y);
+
+    const Diff2D border(size.x / 2, size.y / 2);
+    const Diff2D deltaX(size.x / 2, 0);
+    const Diff2D deltaXp1(size.x / 2 + 1, 0);
+    const Diff2D deltaY(0, size.y / 2);
+
+    // Fill scratch pad for the first time.
+    {
+        SrcIterator srcRow(src_ul + deltaX);
+        SrcIterator const srcEnd(src_lr - deltaX);
+        MaskIterator maskRow(mask_ul + deltaX);
+        ScratchPadType* spRow(scratchPad);
+
+        for (; srcRow.y < srcEnd.y; ++srcRow.y, ++maskRow.y, ++spRow)
+        {
+            SrcIterator srcCol(srcRow - deltaX);
+            SrcIterator srcColEnd(srcRow + deltaX);
+            MaskIterator maskCol(maskRow - deltaX);
+
+            for (; srcCol.x <= srcColEnd.x; ++srcCol.x, ++maskCol.x)
+            {
+                if (mask_acc(maskCol))
+                {
+                    spRow->insert(src_acc(srcCol));
+                }
+            }
+        }
+    }
+
+    // Iterate through the image
+    {
+        SrcIterator srcCol(src_ul + border);
+        SrcIterator const srcEnd(src_lr - border);
+        MaskIterator maskCol(mask_ul + border);
+        DestIterator destCol(dest_ul + border);
+
+        ScratchPadType hist;
+
+        // For each column in the source image...
+        for (; srcCol.x < srcEnd.x; ++srcCol.x, ++maskCol.x, ++destCol.x)
+        {
+            SrcIterator srcRow(srcCol);
+            MaskIterator maskRow(maskCol);
+            DestIterator destRow(destCol);
+            ScratchPadType* spRow(scratchPad + border.y);
+
+            // Initialize running histogram of this column
+            hist.clear();
+            for (ScratchPadType* s = spRow - border.y; s <= spRow + border.y; ++s)
+            {
+                hist.insert(s);
+            }
+
+            // Write one column of results
+            for (; srcRow.y < srcEnd.y; ++srcRow.y, ++maskRow.y, ++destRow.y, ++spRow)
+            {
+                // Compute entropy
+                if (mask_acc(maskRow))
+                {
+                    dest_acc.set(hist.entropy(), destRow);
+                }
+
+                // Update running histogram to next row
+                hist.erase(spRow - border.y); // remove oldest row
+                hist.insert(spRow + border.y + 1); // add next row
+            }
+
+            // Update scratch pad to next column
+            for (srcRow = srcCol - deltaY, maskRow = maskCol - deltaY, spRow = scratchPad;
+                 srcRow.y < src_lr.y;
+                 ++srcRow.y, ++maskRow.y, ++spRow)
+            {
+                if (mask_acc(maskRow - deltaX))
+                {
+                    // remove oldest column
+                    spRow->erase(src_acc(srcRow - deltaX));
+                }
+                if (mask_acc(maskRow + deltaXp1))
+                {
+                    // add next column
+                    spRow->insert(src_acc(srcRow + deltaXp1));
+                }
+            }
+        }
+    }
+
+    ScratchPadType::setPrecomputedEntropySize(0);
+    delete [] scratchPad;
+}
+
+
+template <typename SrcIterator, typename SrcAccessor,
+          typename MaskIterator, typename MaskAccessor,
+          typename DestIterator, typename DestAccessor>
+inline void
+localEntropyIf(triple<SrcIterator, SrcIterator, SrcAccessor> src,
+               pair<MaskIterator, MaskAccessor> mask,
+               pair<DestIterator, DestAccessor> dest,
+               Size2D size)
+{
+    localEntropyIf(src.first, src.second, src.third,
+                   mask.first, mask.second,
+                   dest.first, dest.second,
+                   size);
 }
 
 
@@ -412,6 +780,38 @@ protected:
 };
 
 
+template <typename InputType, typename ResultType>
+class EntropyFunctor {
+public:
+    typedef NumericTraits<InputType> InputTraits;
+    typedef NumericTraits<ResultType> ResultTraits;
+    typedef ResultType result_type;
+
+    EntropyFunctor(double w) : weight(w) {}
+
+    ResultType operator()(const InputType& x) const {
+        typedef typename InputTraits::isScalar srcIsScalar;
+        return entropy(x, srcIsScalar());
+    }
+
+protected:
+    // Grayscale
+    ResultType entropy(const InputType& x, VigraTrueType) const {
+        return ResultTraits::fromRealPromote(weight * ResultTraits::toRealPromote(x));
+    }
+
+    // RGB
+    ResultType entropy(const InputType& x, VigraFalseType) const {
+        const typename ResultTraits::RealPromote minimum =
+            ResultTraits::toRealPromote(std::min(std::min(x.red(), x.green()), x.blue()));
+        return ResultTraits::fromRealPromote(weight * minimum);
+    }
+
+private:
+    double weight;
+};
+
+
 template <typename ValueType>
 struct MagnitudeAccessor
 {
@@ -446,15 +846,35 @@ template <typename InputType, typename ResultType>
 class ClampingFunctor
 {
 public:
+    typedef NumericTraits<InputType> InputTraits;
+
     ClampingFunctor(InputType lower, ResultType lowerValue,
                     InputType upper, ResultType upperValue) :
         lo(lower), up(upper), loval(lowerValue), upval(upperValue)
         {}
 
     ResultType operator()(const InputType& x) const {
-        if (x <= lo) return loval;
-        else if (x >= up) return upval;
-        else return x;
+        typedef typename InputTraits::isScalar srcIsScalar;
+        return clamp(x, srcIsScalar());
+    }
+
+protected:
+    // Grayscale
+    ResultType clamp(const InputType& x, VigraTrueType) const {
+        return x <= lo ? loval : (x >= up ? upval : x);
+    }
+
+    // RGB
+    ResultType clamp(const InputType& x, VigraFalseType) const {
+        return ResultType(x.red() <= lo.red() ?
+                          loval.red() :
+                          (x.red() >= up.red() ? upval.red() : x.red()),
+                          x.green() <= lo.green() ?
+                          loval.green() :
+                          (x.green() >= up.green() ? upval.green() : x.green()),
+                          x.red() <= lo.red() ?
+                          loval.blue() :
+                          (x.blue() >= up.blue() ? upval.blue() : x.blue()));
     }
 
 private:
@@ -491,6 +911,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     typedef typename ImageType::value_type ImageValueType;
     typedef typename MaskType::value_type MaskValueType;
 
+    const typename ImageType::difference_type imageSize = src.second - src.first;
+
     // Exposure
     if (WExposure > 0.0) {
         ExposureFunctor<ImageValueType, MaskValueType> ef(WExposure, WMu, WSigma);
@@ -505,7 +927,6 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         typedef IMAGETYPE<LongScalarType> GradImage;
         typedef typename GradImage::iterator GradIterator;
 
-        const typename ImageType::difference_type imageSize = src.second - src.first;
         GradImage grad(imageSize);
         MultiGrayscaleAccessor<PixelType, LongScalarType> ga(GrayscaleProjector);
 
@@ -612,9 +1033,68 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     // Saturation
     if (WSaturation > 0.0) {
         SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
-        combineTwoImagesIf(src, result, mask, result, const_parameters(bind(sf, _1) + _2));
+        combineTwoImagesIf(src, result, mask, result,
+                           const_parameters(bind(sf, _1) + _2));
+    }
+
+    // Entropy
+    if (WEntropy > 0.0) {
+        typedef typename ImageType::PixelType PixelType;
+        typedef typename NumericTraits<PixelType>::ValueType ScalarType;
+        typedef IMAGETYPE<PixelType> Image;
+        Image entropy(imageSize);
+
+        if (EntropyLowerCutoff.value > 0.0 ||
+            (EntropyLowerCutoff.isPercentage && EntropyLowerCutoff.value < 100.0) ||
+            (!EntropyLowerCutoff.isPercentage && EntropyUpperCutoff.value < NumericTraits<ScalarType>::max()))
+        {
+            const ScalarType lowerCutoff =
+                EntropyLowerCutoff.isPercentage ?
+                EntropyLowerCutoff.value *
+                static_cast<double>(NumericTraits<ScalarType>::max()) /
+                100.0 :
+                EntropyLowerCutoff.value;
+            const ScalarType upperCutoff =
+                EntropyUpperCutoff.isPercentage ?
+                EntropyUpperCutoff.value *
+                static_cast<double>(NumericTraits<ScalarType>::max()) /
+                100.0 :
+                EntropyUpperCutoff.value;
+#ifdef DEBUG_ENTROPY
+            cout <<
+                "+ EntropyLowerCutoff.value = " << EntropyLowerCutoff.value << ", " <<
+                "lowerCutoff = " << static_cast<double>(lowerCutoff) << "\n" <<
+                "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value << ", " <<
+                "upperCutoff = " << static_cast<double>(upperCutoff) << endl;
+#endif
+            Image trunc(imageSize);
+            ClampingFunctor<PixelType, PixelType>
+                cf(PixelType(lowerCutoff),
+                   PixelType(ScalarType()),
+                   PixelType(upperCutoff),
+                   PixelType(NumericTraits<ScalarType>::max()));
+            transformImage(src.first, src.second, src.third,
+                           trunc.upperLeft(), trunc.accessor(),
+                           cf);
+            localEntropyIf(trunc.upperLeft(), trunc.lowerRight(), trunc.accessor(),
+                           mask.first, mask.second,
+                           entropy.upperLeft(), entropy.accessor(),
+                           Size2D(EntropyWindowSize, EntropyWindowSize));
+        }
+        else
+        {
+            localEntropyIf(src.first, src.second, src.third,
+                           mask.first, mask.second,
+                           entropy.upperLeft(), entropy.accessor(),
+                           Size2D(EntropyWindowSize, EntropyWindowSize));
+        }
+
+        EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
+        combineTwoImagesIf(srcImageRange(entropy), result, mask, result,
+                           const_parameters(bind(ef, _1) + _2));
     }
 };
+
 
 /** Enfuse's main blending loop. Templatized to handle different image types.
  */
@@ -727,7 +1207,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                         max = w;
                         maxi = i;
                     }
-		    i++;
+                    i++;
                 }
                 i = 0;
                 for (imageIter = imageList.begin();
@@ -747,13 +1227,13 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         int i = 0;
         if (Debug) {
             for (imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
-	        std::ostringstream oss;
-        	oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";
-	        ImageExportInfo maskInfo(oss.str().c_str());
-        	exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+                std::ostringstream oss;
+                oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";
+                ImageExportInfo maskInfo(oss.str().c_str());
+                exportImage(srcImageRange(*(imageIter->third)), maskInfo);
                 i++;
             }
-	}
+        }
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();

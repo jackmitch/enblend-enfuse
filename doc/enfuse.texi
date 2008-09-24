@@ -86,7 +86,7 @@ between regions where different images contribute are difficult to
 see.
 
 Enfuse uses three different criteria to judge the quality of a pixel:
-exposure, saturation, and contrast.
+exposure, saturation, contrast, and entropy.
 
 @table @asis
 @item Exposure
@@ -333,6 +333,28 @@ Sets the relative @var{WEIGHT} of high-contrast pixels.  Valid range:
     <mi mathvariant="italic">WEIGHT</mi>
     <mo>&le;</mo>
     <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+
+@item --wEntropy=@var{WEIGHT}
+@cindex option @option{--wEntropy}
+Sets the relative @var{WEIGHT} of high entropy pixels.  Valid range:
+@ifinfo
+0 @leq{} @var{WEIGHT} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">WEIGHT</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
 </math>
 @end html
 @tex
@@ -701,8 +723,9 @@ The contrast criteria was added by Pablo d'Angelo
 @email{dangelo@@users.sourceforge.net}.
 
 @item
-Dr. Christoph L. Spiel added the gray projectors and the
-@acronym{LoG}-based edge detection.
+Dr. Christoph L. Spiel added the gray projectors, the
+@acronym{LoG}-based edge detection, an O(1)-algorithm for the
+calculation of local contrast, and the entropy weighting.
 @end itemize
 
 

@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <sstream>
 #include <vector>
 
 #ifndef _WIN32
@@ -82,6 +83,12 @@ extern "C" int optind;
 struct AlternativePercentage {
     double value;
     bool isPercentage;
+    std::string str() const {
+        std::ostringstream oss;
+        oss << value;
+        if (isPercentage) {oss << "%";}
+        return oss.str();
+    }
 };
 
 // Globals
@@ -104,8 +111,9 @@ int OutputOffsetYCmdLine = 0;
 bool Checkpoint = false;
 char *OutputCompression = NULL;
 double WExposure = 1.0;
-double WContrast = 0;
+double WContrast = 0.0;
 double WSaturation = 0.2;
+double WEntropy = 0.0;
 double WMu = 0.5;
 double WSigma = 0.2;
 bool WSaturationIsDefault = true;
@@ -113,6 +121,9 @@ int ContrastWindowSize = 5;
 char* GrayscaleProjector = NULL;
 struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {0.0, 0.0, 0.0};
 struct AlternativePercentage MinCurvature = {0.0, false};
+int EntropyWindowSize = 3;
+struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
+struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 int HardMask=0;
 int Debug=0;
 //int Output16BitImage=0;
@@ -155,6 +166,14 @@ using enblend::enfuseMain;
 #define strdup _strdup
 #endif
 
+// Initialize data structures for precomputed entropy and logarithm.
+template <typename InputPixelType, typename ResultPixelType>
+size_t enblend::Histogram<InputPixelType, ResultPixelType>::precomputedSize = 0;
+template <typename InputPixelType, typename ResultPixelType>
+double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedLog = NULL;
+template <typename InputPixelType, typename ResultPixelType>
+double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
+
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error=true) {
     cout <<
@@ -196,6 +215,8 @@ void printUsageAndExit(const bool error=true) {
         "                           (0 <= WEIGHT <= 1).  Default: " << WSaturation << "\n" <<
         "  --wContrast=WEIGHT     Weight given to high-contrast pixels\n" <<
         "                           (0 <= WEIGHT <= 1).  Default: " << WContrast << "\n" <<
+        "  --wEntropy=WEIGHT      Weight given to high entropy regions\n" <<
+        "                           (0 <= WEIGHT <= 1).  Default: " << WEntropy << "\n" <<
         "  --wMu=MEAN             Center aka MEAN of Gaussian weighting\n" <<
         "                           function (0 <= MEAN <= 1).  Default: " << WMu << "\n" <<
         "  --wSigma=SIGMA         Standard deviation of Gaussian weighting\n" <<
@@ -226,7 +247,16 @@ void printUsageAndExit(const bool error=true) {
         FilterConfig.edgeScale << ":" << FilterConfig.lceScale << ":" << FilterConfig.lceFactor << "\n" <<
         "  --MinCurvature=CURVATURE\n" <<
         "                         Minimum CURVATURE for an edge to qualify.  Append\n" <<
-        "                           \"%\" for relative values.  Default: " << MinCurvature.value << ".\n" <<
+        "                           \"%\" for relative values.  Default: " << MinCurvature.str() << ".\n" <<
+        "  --EntropyWindowSize=SIZE\n" <<
+        "                         Window SIZE for local entropy analysis.\n" <<
+        "                           (SIZE >= 3).  Default: " << EntropyWindowSize  << "\n" <<
+        "  --EntropyCutoff=LOWERCUTOFF[:UPPERCUTOFF]\n" <<
+        "                         LOWERCUTOFF is the value below of which pixels a treated\n" <<
+        "                           as black and UPPERCUTOFF is the value above of which\n" <<
+        "                           pixels are treated as white in the entropy weighting.\n" <<
+        "                           Append \"%\" signs for relative values.  Default: " <<
+        EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
         "  --debug                Output mask images for debugging\n" <<
         endl;
 
@@ -320,6 +350,9 @@ int main(int argc, char** argv) {
             {"HardMask", no_argument, &HardMask, 1},         //  9
             {"GrayProjector", required_argument, 0, 0},      // 10
             {"debug", no_argument, &Debug, 1},               // 11
+            {"wEntropy", required_argument, 0, 1},           // 12
+            {"EntropyWindowSize", required_argument, 0, 2},  // 13
+            {"EntropyCutoff", required_argument, 0, 0},      // 14
             //{"out16", no_argument, &Output16BitImage, 0},
             {0, 0, 0, 0}
     };
@@ -417,6 +450,70 @@ int main(int argc, char** argv) {
                     break;
                 }
 
+                if (option_index == 14) {
+                    char* s = new char[strlen(optarg) + 1];
+                    strcpy(s, optarg);
+                    char* save_ptr = NULL;
+                    char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                    char* tail;
+
+                    if (token == NULL || *token == 0) {
+                        cerr <<
+                            "enfuse: no scale given to --EntropyCutoff.  " <<
+                            "LowerCutOff is required.\n";
+                        exit(1);
+                    }
+                    EntropyLowerCutoff.value = strtod(token, &tail);
+                    if (errno == 0) {
+                        if (*tail == 0) {
+                            EntropyLowerCutoff.isPercentage = false;
+                        } else if (strcmp(tail, "%") == 0) {
+                            EntropyLowerCutoff.isPercentage = true;
+                        } else {
+                            cerr <<
+                                "enfuse: unrecognized entropy's lower cutoff \"" <<
+                                token << "\"\n";
+                            exit(1);
+                        }
+                    } else {
+                            cerr <<
+                                "enfuse: illegal numeric format \"" << token <<
+                                "\" of entropy's lower cutoff.\n";
+                            exit(1);
+                    }
+
+                    token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                    if (token != NULL && *token != 0) {
+                        EntropyUpperCutoff.value = strtod(token, &tail);
+                        if (errno == 0) {
+                            if (*tail == 0) {
+                                EntropyUpperCutoff.isPercentage = false;
+                            } else if (strcmp(tail, "%") == 0) {
+                                EntropyUpperCutoff.isPercentage = true;
+                            } else {
+                                cerr <<
+                                    "enfuse: unrecognized entropy's upper cutoff \"" <<
+                                    token << "\"\n";
+                                exit(1);
+                            }
+                        } else {
+                            cerr <<
+                                "enfuse: illegal numeric format \"" << token <<
+                                "\" of entropy's upper cutoff.\n";
+                            exit(1);
+                        }
+                    }
+
+                    if (save_ptr != NULL && *save_ptr != 0) {
+                        cerr <<
+                            "enfuse: warning: ignoring trailing garbage \"" << save_ptr <<
+                            "\" in argument to --EntropyCutoff\n";
+                    }
+
+                    delete [] s;
+                    break;
+                }
+
                 char **optionString = NULL;
                 switch (option_index) {
                 case 0:
@@ -461,12 +558,14 @@ int main(int argc, char** argv) {
                     case 3: optionDouble = &WSaturation; WSaturationIsDefault = false; break;
                     case 4: optionDouble = &WMu; break;
                     case 5: optionDouble = &WSigma; break;
+                    case 12: optionDouble = &WEntropy; break;
                 }
 
                 char *lastChar = NULL;
                 double value = strtod(optarg, &lastChar);
                 if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
-                    (option_index == 1 || option_index == 2 || option_index==3)) {
+                    (option_index == 1 || option_index == 2 ||
+                     option_index == 3 || option_index == 12)) {
                     cerr << "enfuse: " << long_options[option_index].name
                          << " must be in the range [0.0, 1.0]." << endl;
                     printUsageAndExit();
@@ -476,16 +575,45 @@ int main(int argc, char** argv) {
 
                 break;
             }
-            case 2: { /* integer argument, only --ContrastWindowSize so far */
-                cout << "Argument 2: " << optarg << endl;
-                if (long_options[option_index].flag != 0) break;
-                ContrastWindowSize = atoi(optarg);
-                if (ContrastWindowSize < 3) ContrastWindowSize=3;
-                // force uneven window sizes
-                if (ContrastWindowSize % 2 != 1) {
-                    ContrastWindowSize++;
-                    cerr << "Warning changing contrast window size to:" <<
-                        ContrastWindowSize << endl;
+            case 2: { /* integer arguments */
+                switch (option_index) {
+                case 8:
+                    if (long_options[option_index].flag != 0) break;
+                    ContrastWindowSize = atoi(optarg);
+                    if (ContrastWindowSize < 3) {
+                        cerr <<
+                            "enfuse: warning: contrast window size \"" <<
+                            ContrastWindowSize <<
+                            "\" is too small; will use size = 3\n";
+                        ContrastWindowSize = 3;
+                    }
+                    if (ContrastWindowSize % 2 != 1) {
+                        cerr <<
+                            "enfuse: warning: contrast window size \"" <<
+                            ContrastWindowSize <<
+                            "\" is even; increasing size to next odd number\n";
+                        ContrastWindowSize++;
+                    }
+                    break;
+
+                case 13:
+                    if (long_options[option_index].flag != 0) break;
+                    EntropyWindowSize = atoi(optarg);
+                    if (EntropyWindowSize < 3) {
+                        cerr <<
+                            "enfuse: warning: entropy window size \"" <<
+                            EntropyWindowSize <<
+                            "\" is too small; will use size = 3\n";
+                        EntropyWindowSize = 3;
+                    }
+                    if (EntropyWindowSize % 2 != 1) {
+                        cerr <<
+                            "enfuse: warning: entropy window size \"" <<
+                            EntropyWindowSize <<
+                            "\" is even; increasing size to next odd number\n";
+                        EntropyWindowSize++;
+                    }
+                    break;
                 }
                 break;
             }
@@ -605,7 +733,7 @@ int main(int argc, char** argv) {
         }
     }
 
-	// Make sure mandatory output file name parameter given.
+    // Make sure mandatory output file name parameter given.
     if (outputFileName == NULL) {
         cerr << "enfuse: no output file specified." << endl;
         printUsageAndExit();

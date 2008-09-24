@@ -126,6 +126,9 @@ output.  Valid range: 0 <= WEIGHT <= 1.
 .IP --wContrast=WEIGHT
 Sets the relative weight of high-contrast pixels.  Valid range: 0 <=
 WEIGHT <= 1.
+.IP --wEntropy=WEIGHT
+Sets the relative weight of high-entropy pixels.  Valid range: 0 <=
+WEIGHT <= 1.
 .IP --HardMask
 Force hard blend masks on the finest scale.  This avoids averaging of
 fine details (only), at the expense of increasing the noise.  This
@@ -136,8 +139,8 @@ improves the sharpness of focus stacks considerably.
 .IP --ContrastWindowSize=SIZE
 Window SIZE for local contrast analysis.  Values larger than 5 might
 result in a blurry composite and increased computation times.  Values
-in the range of 3 to 5 have given good results on focus stacks.  Valid
-range: SIZE >= 3.
+in the range of 3 to 5 have given good results on focus stacks.
+Default: 5.  Valid range: SIZE >= 3.
 .IP --GrayProjector=PROJ
 Use gray projector PROJ for conversion of RGB-images to grayscale
 masks.  Valid values for PROJ are:
@@ -192,7 +195,7 @@ GaussianSmooth(original, LCESCALE)
 LCESCALE defaults to 0 pixels and LCEFACTOR defaults to 0.  Append "%"
 to LCESCALE to specify the radius as a precentage of EDGESCALE.
 Append "%" to LCEFACTOR to specify the weight as a percentage.
-.IP --MinCurvature MC
+.IP --MinCurvature=MC
 Define the minimum curvature for the LoG edge detection.  Default: 0.
 Append a "%" to specify the minimum curvature relative to maximum
 pixel value in the source image (e.g. 255 or 65535).
@@ -204,6 +207,14 @@ values above it.
 A negative value truncates all curvatures less than -MC to zero.
 Values above MC are left unchanged.  This effectively suppresses weak
 edges.
+.IP --EntropyWindowSize=SIZE
+Window SIZE for local entropy analysis.  Default: 3.  Valid
+range: SIZE >= 3.
+.IP --EntropyCutoff=LOWERCUTOFF[:UPPERCUTOFF]
+Value below of which pixels a treated as black in the entropy
+weighting.  Append "%" to LOWERCUTOFF[ or UPPERCUTOFF for relative
+values.  Default: 0%:100%.
+
 
 .SH EXAMPLES
 
@@ -227,5 +238,6 @@ Thanks to Simon Andriot and Pablo Joubert for suggesting the
 Mertens-Kautz-Van Reeth technique and the name "Enfuse".
 The contrast criteria has been added by
 Pablo d'Angelo <dangelo@users.sourceforge.net>
-Dr. Christoph L. Spiel added the gray projectors and the LoG-based edge
-detection.
+Dr. Christoph L. Spiel added the gray projectors, the LoG-based edge
+detection, an O(1)-algorithm for the calculation of local contrast,
+and the entropy weighting.
