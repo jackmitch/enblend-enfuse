@@ -446,6 +446,12 @@ int main(int argc, char** argv) {
                             exit(1);
                         }
                     }
+
+                    if (save_ptr != NULL && *save_ptr != 0) {
+                        cerr << "enfuse: warning: ignoring trailing garbage \""
+                             << save_ptr << "\" in argument to --EdgeScale" << endl;
+                    }
+
                     delete [] s;
                     break;
                 }
