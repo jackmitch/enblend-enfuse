@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2008 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -51,6 +51,11 @@ public:
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
         initializeTypeSpecific(srcIsScalar());
         initialize(accessorName);
+    }
+
+    ResultType operator()(const InputType& x) const {
+        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        return f(x, srcIsScalar());
     }
 
     template <class Iterator>
@@ -164,79 +169,59 @@ private:
         labfun = vigra::RGB2LabFunctor<double>(NumericTraits<ValueType>::max());
     }
 
-    template <class Iterator>
-    ResultType f(const Iterator& i, VigraFalseType) const {
+    ResultType project(const InputType& x) const {
         typedef typename InputType::value_type ValueType;
         switch (kind)
         {
         case AVERAGE:
             return NumericTraits<ResultType>::fromRealPromote
-                ((NumericTraits<ValueType>::toRealPromote((*i).red()) +
-                  NumericTraits<ValueType>::toRealPromote((*i).green()) +
-                  NumericTraits<ValueType>::toRealPromote((*i).blue())) /
+                ((NumericTraits<ValueType>::toRealPromote(x.red()) +
+                  NumericTraits<ValueType>::toRealPromote(x.green()) +
+                  NumericTraits<ValueType>::toRealPromote(x.blue())) /
                  3.0);
         case LSTAR:
         {
             typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
-            const LABResultType y = labfun.operator()(*i) / 100.0;
+            const LABResultType y = labfun.operator()(x) / 100.0;
             return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
         }
         case LIGHTNESS:
             return NumericTraits<ResultType>::fromRealPromote
-                ((std::min((*i).red(), std::min((*i).green(), (*i).blue())) +
-                  std::max((*i).red(), std::max((*i).green(), (*i).blue()))) /
+                ((std::min(x.red(), std::min(x.green(), x.blue())) +
+                  std::max(x.red(), std::max(x.green(), x.blue()))) /
                  2.0);
         case VALUE:
-            return std::max((*i).red(), std::max((*i).green(), (*i).blue()));
+            return std::max(x.red(), std::max(x.green(), x.blue()));
         case LUMINANCE:
-            return NumericTraits<ResultType>::fromRealPromote((*i).luminance());
+            return NumericTraits<ResultType>::fromRealPromote(x.luminance());
         case MIXER:
             return NumericTraits<ResultType>::fromRealPromote
-                (redWeight * NumericTraits<ValueType>::toRealPromote((*i).red()) +
-                 greenWeight * NumericTraits<ValueType>::toRealPromote((*i).green()) +
-                 blueWeight * NumericTraits<ValueType>::toRealPromote((*i).blue()));
+                (redWeight * NumericTraits<ValueType>::toRealPromote(x.red()) +
+                 greenWeight * NumericTraits<ValueType>::toRealPromote(x.green()) +
+                 blueWeight * NumericTraits<ValueType>::toRealPromote(x.blue()));
         }
 
         // never reached
         return ResultType();
+    }
+
+    // RGB
+    ResultType f(const InputType& x, VigraFalseType) const {
+        return project(x);
+    }
+
+    template <class Iterator>
+    ResultType f(const Iterator& i, VigraFalseType) const {
+        return project(*i);
     }
 
     template <class Iterator, class Difference>
     ResultType f(const Iterator& i, Difference d, VigraFalseType) const {
-        typedef typename InputType::value_type ValueType;
-        switch (kind)
-        {
-        case AVERAGE:
-            return NumericTraits<ResultType>::fromRealPromote
-                ((NumericTraits<ValueType>::toRealPromote(i[d].red()) +
-                  NumericTraits<ValueType>::toRealPromote(i[d].green()) +
-                  NumericTraits<ValueType>::toRealPromote(i[d].blue())) /
-                 3.0);
-        case LSTAR:
-        {
-            typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
-            const LABResultType y = labfun.operator()(i[d]) / 100.0;
-            return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
-        }
-        case LIGHTNESS:
-            return NumericTraits<ResultType>::fromRealPromote
-                ((std::min(i[d].red(), std::min(i[d].green(), i[d].blue())) +
-                  std::max(i[d].red(), std::max(i[d].green(), i[d].blue()))) /
-                 2.0);
-        case VALUE:
-            return std::max(i[d].red(), std::max(i[d].green(), i[d].blue()));
-        case LUMINANCE:
-            return NumericTraits<ResultType>::fromRealPromote(i[d].luminance());
-        case MIXER:
-            return NumericTraits<ResultType>::fromRealPromote
-                (redWeight * NumericTraits<ValueType>::toRealPromote(i[d].red()) +
-                 greenWeight * NumericTraits<ValueType>::toRealPromote(i[d].green()) +
-                 blueWeight * NumericTraits<ValueType>::toRealPromote(i[d].blue()));
-        }
-
-        // never reached
-        return ResultType();
+        return project(i[d]);
     }
+
+    // grayscale
+    ResultType f(const InputType& x, VigraTrueType) const {return x;}
 
     template <class Iterator>
     ResultType f(const Iterator& i, VigraTrueType) const {return *i;}
@@ -252,4 +237,4 @@ private:
 
 } // namespace enblend
 
-#endif /* __ENMIX_H__ */
+#endif /* __MGA_H__ */

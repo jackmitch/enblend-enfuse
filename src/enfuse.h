@@ -663,12 +663,13 @@ protected:
 };
 
 
-template <typename InputType, typename ResultType>
+template <typename InputType, typename InputAccessor, typename ResultType>
 class ExposureFunctor {
 public:
     typedef ResultType result_type;
 
-    ExposureFunctor(double w, double m, double s) : weight(w), mu(m), sigma(s) {}
+    ExposureFunctor(double w, double m, double s, InputAccessor a) :
+        weight(w), mu(m), sigma(s), acc(a) {}
 
     inline ResultType operator()(const InputType& a) const {
         typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
@@ -679,21 +680,24 @@ protected:
     // grayscale
     template <typename T>
     inline ResultType f(const T& a, VigraTrueType) const {
+        typedef typename NumericTraits<T>::RealPromote RealType;
+        const RealType ra = NumericTraits<T>::toRealPromote(a);
         const double b = NumericTraits<T>::max() * mu;
         const double c = NumericTraits<T>::max() * sigma;
-        typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
-        return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+        return NumericTraits<ResultType>::fromRealPromote(weight *
+                                                          gaussDistribution(ra, b, c));
     }
 
     // RGB
     template <typename T>
     inline ResultType f(const T& a, VigraFalseType) const {
-        return f(a.luminance(), VigraTrueType());
+        return f(acc.operator()(a), VigraTrueType());
     }
 
     double weight;
     double mu;
     double sigma;
+    InputAccessor acc;
 };
 
 
@@ -909,20 +913,22 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                 pair<typename AlphaType::const_traverser, typename AlphaType::ConstAccessor> mask,
                 pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
     typedef typename ImageType::value_type ImageValueType;
+    typedef typename ImageType::PixelType PixelType;
+    typedef typename NumericTraits<PixelType>::ValueType ScalarType;
     typedef typename MaskType::value_type MaskValueType;
 
     const typename ImageType::difference_type imageSize = src.second - src.first;
 
     // Exposure
     if (WExposure > 0.0) {
-        ExposureFunctor<ImageValueType, MaskValueType> ef(WExposure, WMu, WSigma);
+        typedef MultiGrayscaleAccessor<ImageValueType, ScalarType> MultiGrayAcc;
+        MultiGrayAcc ga(GrayscaleProjector);
+        ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType> ef(WExposure, WMu, WSigma, ga);
         transformImageIf(src, mask, result, ef);
     }
 
-    // contrast criteria
+    // Contrast
     if (WContrast > 0.0) {
-        typedef typename ImageType::PixelType PixelType;
-        typedef typename NumericTraits<PixelType>::ValueType ScalarType;
         typedef typename NumericTraits<ScalarType>::Promote LongScalarType;
         typedef IMAGETYPE<LongScalarType> GradImage;
         typedef typename GradImage::iterator GradIterator;

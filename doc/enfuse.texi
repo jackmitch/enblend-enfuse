@@ -401,7 +401,9 @@ considerably improving the sharpness of focus stacks.
 @cindex option @option{--GrayProjector}
 @cindex gray projector
 Use gray projector @var{PROJ} for conversion of @acronym{RGB} images
-to grayscale masks.  Valid values for @var{PROJ} are:
+to grayscale masks.  Enfuse uses grayscale projections of color images
+in exposure weighting and contrast weighting.  Valid values for
+@var{PROJ} are:
 
 @table @samp
 @item average
