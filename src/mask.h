@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -114,78 +114,78 @@ public:
     PixelDifferenceFunctor() : rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
                                                      NumericTraits<PixelComponentType>::max(),
                                                      ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                                                     ResultType(NumericTraits<ResultPixelComponentType>::max()))) { }
+                                                     ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
 
-    inline ResultType operator()(const PixelType & a, const PixelType & b) const {
+    inline ResultType operator()(const PixelType& a, const PixelType& b) const {
         typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
         return diff(a, b, src_is_scalar());
     }
 
 protected:
-    inline ResultType diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
+    inline ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
         PixelComponentType aLum = a.luminance();
         PixelComponentType bLum = b.luminance();
         PixelComponentType aHue = a.hue();
         PixelComponentType bHue = b.hue();
-        PixelComponentType lumDiff = (aLum > bLum) ? (aLum - bLum) : (bLum - aLum); //std::abs(aLum - bLum);
-        PixelComponentType hueDiff = (aHue > bHue) ? (aHue - bHue) : (bHue - aHue); //std::abs(aHue - bHue);
-        if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
+        PixelComponentType lumDiff = (aLum > bLum) ? (aLum - bLum) : (bLum - aLum);
+        PixelComponentType hueDiff = (aHue > bHue) ? (aHue - bHue) : (bHue - aHue);
+        if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2))
+            hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
         return rm(std::max(hueDiff, lumDiff));
     }
 
-    inline ResultType diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
+    inline ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
         typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
         return scalar_diff(a, b, src_is_signed());
     }
 
-    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraTrueType) const {
+    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
         return rm(std::abs(a - b));
     }
 
     // This appears necessary because NumericTraits<unsigned int>::Promote is an unsigned int instead of an int.
-    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraFalseType) const {
+    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
         return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
     }
 
     RangeMapper rm;
-    
+
 };
 
 template <typename MaskType>
-void fillContour(MaskType *mask, Contour & contour, Diff2D offset) {
-
+void fillContour(MaskType* mask, Contour& contour, Diff2D offset) {
     typedef typename MaskType::PixelType MaskPixelType;
 
     miPixel pixels[2];
     pixels[0] = NumericTraits<MaskPixelType>::max();
     pixels[1] = NumericTraits<MaskPixelType>::max();
-    miGC *pGC = miNewGC(2, pixels);
-    miPaintedSet *paintedSet = miNewPaintedSet();
+    miGC* pGC = miNewGC(2, pixels);
+    miPaintedSet* paintedSet = miNewPaintedSet();
 
     int totalPoints = 0;
     for (Contour::iterator currentSegment = contour.begin();
-            currentSegment != contour.end();
-            ++currentSegment) {
+         currentSegment != contour.end();
+         ++currentSegment) {
         totalPoints += (*currentSegment)->size();
     }
 
-    miPoint *points = new miPoint[totalPoints];
+    miPoint* points = new miPoint[totalPoints];
 
     int i = 0;
     for (Contour::iterator currentSegment = contour.begin();
-            currentSegment != contour.end();
-            ++currentSegment) {
+         currentSegment != contour.end();
+         ++currentSegment) {
         for (Segment::iterator vertexIterator = (*currentSegment)->begin();
-                vertexIterator != (*currentSegment)->end();
-                ++vertexIterator) {
-
+             vertexIterator != (*currentSegment)->end();
+             ++vertexIterator) {
             points[i].x = vertexIterator->second.x;
             points[i].y = vertexIterator->second.y;
             ++i;
         }
     }
 
-    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN, totalPoints, points);
+    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN,
+                  totalPoints, points);
 
     delete[] points;
 
@@ -196,38 +196,37 @@ void fillContour(MaskType *mask, Contour & contour, Diff2D offset) {
 }
 
 template <typename MaskType>
-void maskBounds(MaskType *mask, Rect2D & uBB, Rect2D & mBB) {
-
+void maskBounds(MaskType* mask, Rect2D& uBB, Rect2D& mBB) {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
     typedef typename MaskType::Accessor MaskAccessor;
 
     // Find the bounding box of the mask transition line and put it in mBB.
     // mBB starts out as empty rect
-    mBB = Rect2D(Point2D(mask->size()), Point2D(0,0));
+    mBB = Rect2D(Point2D(mask->size()), Point2D(0, 0));
 
     MaskIteratorType myPrev = mask->upperLeft();
-    MaskIteratorType my = mask->upperLeft() + Diff2D(0,1);
+    MaskIteratorType my = mask->upperLeft() + Diff2D(0, 1);
     MaskIteratorType mend = mask->lowerRight();
     MaskIteratorType mxLeft = myPrev;
-    MaskIteratorType mx = myPrev + Diff2D(1,0);
+    MaskIteratorType mx = myPrev + Diff2D(1, 0);
     for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x) {
-        if (*mxLeft != *mx) mBB |= Rect2D(x-1, 0, x+1, 1);
+        if (*mxLeft != *mx) mBB |= Rect2D(x - 1, 0, x + 1, 1);
     }
     for (int y = 1; my.y < mend.y; ++y, ++my.y, ++myPrev.y) {
         mxLeft = my;
-        mx = my + Diff2D(1,0);
+        mx = my + Diff2D(1, 0);
         MaskIteratorType mxUpLeft = myPrev;
-        MaskIteratorType mxUp = myPrev + Diff2D(1,0);
+        MaskIteratorType mxUp = myPrev + Diff2D(1, 0);
 
         if (*mxUpLeft != *mxLeft) {
             // Transition line is between mxUpLeft and mxLeft.
-            mBB |= Rect2D(0, y-1, 1, y+1);
+            mBB |= Rect2D(0, y - 1, 1, y + 1);
         }
 
         for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x, ++mxUp.x) {
-            if (*mxLeft != *mx) mBB |= Rect2D(x-1, y, x+1, y+1);
-            if (*mxUp != *mx) mBB |= Rect2D(x, y-1, x+1, y+1);
+            if (*mxLeft != *mx) mBB |= Rect2D(x - 1, y, x + 1, y + 1);
+            if (*mxUp != *mx) mBB |= Rect2D(x, y - 1, x + 1, y + 1);
         }
     }
 
@@ -264,14 +263,13 @@ void maskBounds(MaskType *mask, Rect2D & uBB, Rect2D & mBB) {
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
-MaskType *createMask(const ImageType* const white,
-        const ImageType* const black,
-        const AlphaType* const whiteAlpha,
-        const AlphaType* const blackAlpha,
-        const Rect2D& uBB,
-        const Rect2D& iBB,
-        const bool wraparound) {
-
+MaskType* createMask(const ImageType* const white,
+                     const ImageType* const black,
+                     const AlphaType* const whiteAlpha,
+                     const AlphaType* const blackAlpha,
+                     const Rect2D& uBB,
+                     const Rect2D& iBB,
+                     const bool wraparound) {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
@@ -279,7 +277,7 @@ MaskType *createMask(const ImageType* const white,
 
     if (LoadMaskFileName != NULL) {
         // Read mask from a file instead of calculating it.
-        MaskType *mask = new MaskType(uBB.size());
+        MaskType* mask = new MaskType(uBB.size());
         ImageImportInfo maskInfo(LoadMaskFileName);
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
             cerr << "enblend: load-mask warning: mask " << LoadMaskFileName << " has size "
@@ -314,7 +312,7 @@ MaskType *createMask(const ImageType* const white,
     // 1 = outside both black and white image, or inside both images.
     // 255 = inside white image only.
     // 0 = inside black image only.
-    MaskType *nftInputImage = new MaskType(nftInputSize);
+    MaskType* nftInputImage = new MaskType(nftInputSize);
 
     // mem usage before: 0
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
@@ -324,24 +322,24 @@ MaskType *createMask(const ImageType* const white,
                      stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
                      nftInputBB.apply(destImage(*nftInputImage)),
                      ifThenElse(Arg1() ^ Arg2(),
-                            ifThenElse(Arg1(),
-                                    Param(NumericTraits<MaskPixelType>::max()),
-                                    Param(NumericTraits<MaskPixelType>::zero())),
-                            Param(NumericTraits<MaskPixelType>::one())));
+                                ifThenElse(Arg1(),
+                                           Param(NumericTraits<MaskPixelType>::max()),
+                                           Param(NumericTraits<MaskPixelType>::zero())),
+                                Param(NumericTraits<MaskPixelType>::one())));
 
     Size2D nftOutputSize;
     Diff2D nftOutputOffset;
     if (!CoarseMask && !OptimizeMask) {
         // If we're not going to vectorize the mask.
         nftOutputSize = nftInputSize;
-        nftOutputOffset = Diff2D(0,0);
+        nftOutputOffset = Diff2D(0, 0);
     } else {
         // Add 1-pixel border all around the image for the vectorization algorithm.
-        nftOutputSize = nftInputSize + Diff2D(2,2);
-        nftOutputOffset = Diff2D(1,1);
+        nftOutputSize = nftInputSize + Diff2D(2, 2);
+        nftOutputOffset = Diff2D(1, 1);
     }
 
-    MaskType *nftOutputImage = new MaskType(nftOutputSize);
+    MaskType* nftOutputImage = new MaskType(nftOutputSize);
 
     // mem usage before: CoarseMask: 1/8 * uBB * MaskType
     //                   !CoarseMask: uBB * MaskType
@@ -349,12 +347,12 @@ MaskType *createMask(const ImageType* const white,
     //                  !CoarseMask: 2 * uBB * MaskType
 
     nearestFeatureTransform(wraparound,
-            srcImageRange(*nftInputImage),
-            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
-            NumericTraits<MaskPixelType>::one());
+                            srcImageRange(*nftInputImage),
+                            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
+                            NumericTraits<MaskPixelType>::one());
 
-//ImageExportInfo nftmaskinfo("enblend_nft.tif");
-//exportImage(srcImageRange(*nftOutputImage), nftmaskinfo);
+    //ImageExportInfo nftmaskinfo("enblend_nft.tif");
+    //exportImage(srcImageRange(*nftOutputImage), nftmaskinfo);
 
     // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
     //                     !CoarseMask: uBB * UInt32 * 2
@@ -383,11 +381,11 @@ MaskType *createMask(const ImageType* const white,
 
         for (int x = 1; mx.x < mend.x; ++x, ++mx.x) {
             if ((*mx == NumericTraits<MaskPixelType>::max())
-                    && (lastColor == NumericTraits<MaskPixelType>::zero())) {
+                && (lastColor == NumericTraits<MaskPixelType>::zero())) {
                 // Found the corner of a previously unvisited white region.
                 // Create a Segment to hold the border of this region.
                 vector<Point2D> excessPoints;
-                Segment *snake = new Segment();
+                Segment* snake = new Segment();
                 rawSegments.push_back(snake);
 
                 // Walk around border of white region.
@@ -402,19 +400,18 @@ MaskType *createMask(const ImageType* const white,
 
                     // See if currentPoint lies on border.
                     if ((currentPoint.x == borderUL.x) || (currentPoint.x == borderLR.x)
-                            || (currentPoint.y == borderUL.y) || (currentPoint.y == borderLR.y)) {
-
+                        || (currentPoint.y == borderUL.y) || (currentPoint.y == borderLR.y)) {
                         // See if currentPoint is in a corner.
                         if ((currentPoint.x == borderUL.x && currentPoint.y == borderUL.y)
-                                || (currentPoint.x == borderUL.x && currentPoint.y == borderLR.y)
-                                || (currentPoint.x == borderLR.x && currentPoint.y == borderUL.y)
-                                || (currentPoint.x == borderLR.x && currentPoint.y == borderLR.y)) {
+                            || (currentPoint.x == borderUL.x && currentPoint.y == borderLR.y)
+                            || (currentPoint.x == borderLR.x && currentPoint.y == borderUL.y)
+                            || (currentPoint.x == borderLR.x && currentPoint.y == borderLR.y)) {
                             snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         }
                         else if (!lastPointFrozen
-                                || ((nextPoint.x != borderUL.x) && (nextPoint.x != borderLR.x)
-                                        && (nextPoint.y != borderUL.y) && (nextPoint.y != borderLR.y))) {
+                                 || ((nextPoint.x != borderUL.x) && (nextPoint.x != borderLR.x)
+                                     && (nextPoint.y != borderUL.y) && (nextPoint.y != borderLR.y))) {
                             snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         }
@@ -438,22 +435,22 @@ MaskType *createMask(const ImageType* const white,
 
                 // Paint the border so this region will not be found again
                 for (Segment::iterator vertexIterator = snake->begin();
-                         vertexIterator != snake->end(); ++vertexIterator) {
+                     vertexIterator != snake->end(); ++vertexIterator) {
                     (*nftOutputImage)[vertexIterator->second] = NumericTraits<MaskPixelType>::one();
 
                     // While we're at it, convert vertices to uBB-relative coordinates.
-                    vertexIterator->second = nftStride * (vertexIterator->second + Diff2D(-1, -1));
+                    vertexIterator->second =
+                        nftStride * (vertexIterator->second + Diff2D(-1, -1));
 
                     // While we're at it, mark vertices outside the union region as not moveable.
                     if (vertexIterator->first
-                            && ((*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())
-                            && ((*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())) {
-
+                        && ((*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())
+                        && ((*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero())) {
                         vertexIterator->first = false;
                     }
                 }
                 for (vector<Point2D>::iterator vertexIterator = excessPoints.begin();
-                        vertexIterator != excessPoints.end(); ++vertexIterator) {
+                     vertexIterator != excessPoints.end(); ++vertexIterator) {
                     // These are points on the border of the white region that are
                     // not in the snake. Recolor them so that this white region will
                     // not be found again.
@@ -472,8 +469,8 @@ MaskType *createMask(const ImageType* const white,
 
     if (!OptimizeMask) {
         // Simply fill contours to get final unoptimized mask.
-        MaskType *mask = new MaskType(uBB.size());
-        fillContour(mask, rawSegments, Diff2D(0,0));
+        MaskType* mask = new MaskType(uBB.size());
+        fillContour(mask, rawSegments, Diff2D(0, 0));
         // delete all segments in rawSegments
         std::for_each(rawSegments.begin(), rawSegments.end(), bind(delete_ptr(), _1));
         return mask;
@@ -482,17 +479,19 @@ MaskType *createMask(const ImageType* const white,
     // Convert rawContours snakes into segments with unbroken runs of moveable vertices.
     ContourVector contours;
     for (Contour::iterator segments = rawSegments.begin();
-            segments != rawSegments.end(); ++segments) {
-        Segment *snake = *segments;
+         segments != rawSegments.end(); ++segments) {
+        Segment* snake = *segments;
 
         // Snake becomes multiple separate segments in one contour
-        Contour *currentContour = new Contour();
+        Contour* currentContour = new Contour();
         contours.push_back(currentContour);
 
         // Check if snake is a closed contour
         bool closedContour = true;
         Segment::iterator vertexIterator = snake->begin();
-        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+        for (Segment::iterator vertexIterator = snake->begin();
+             vertexIterator != snake->end();
+             ++vertexIterator) {
             if (!vertexIterator->first) {
                 closedContour = false;
                 break;
@@ -521,16 +520,19 @@ MaskType *createMask(const ImageType* const white,
 
         // Find last moveable vertex.
         Segment::iterator lastMoveableVertex = snake->begin();
-        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
+        for (Segment::iterator vertexIterator = snake->begin();
+             vertexIterator != snake->end();
+             ++vertexIterator) {
             if (vertexIterator->first) lastMoveableVertex = vertexIterator;
         }
 
-        Segment *currentSegment = NULL;
+        Segment* currentSegment = NULL;
         bool insideMoveableSegment = false;
         bool passedLastMoveableVertex = false;
         Segment::iterator lastNonmoveableVertex = snake->begin();
-        for (Segment::iterator vertexIterator = snake->begin(); vertexIterator != snake->end(); ++vertexIterator) {
-
+        for (Segment::iterator vertexIterator = snake->begin();
+             vertexIterator != snake->end();
+             ++vertexIterator) {
             // Create a new segment if necessary.
             if (currentSegment == NULL) {
                 currentSegment = new Segment();
@@ -560,7 +562,9 @@ MaskType *createMask(const ImageType* const white,
                 // Beginning a new moveable segment.
                 insideMoveableSegment = true;
             }
-            else if (insideMoveableSegment && !vertexIterator->first && !passedLastMoveableVertex) {
+            else if (insideMoveableSegment
+                     && !vertexIterator->first
+                     && !passedLastMoveableVertex) {
                 // End of currentSegment.
                 insideMoveableSegment = false;
                 // Correct for the push_fronts we've been doing
@@ -579,7 +583,9 @@ MaskType *createMask(const ImageType* const white,
     rawSegments.clear();
 
     int totalSegments = 0;
-    for (ContourVector::iterator currentContour = contours.begin(); currentContour != contours.end(); ++currentContour) {
+    for (ContourVector::iterator currentContour = contours.begin();
+         currentContour != contours.end();
+         ++currentContour) {
         totalSegments += (*currentContour)->size();
     }
 
@@ -596,22 +602,20 @@ MaskType *createMask(const ImageType* const white,
     Rect2D vBB;
     bool initializedVBB = false;
     for (ContourVector::iterator currentContour = contours.begin();
-            currentContour != contours.end();
-            ++currentContour) {
-
+         currentContour != contours.end();
+         ++currentContour) {
         for (Contour::iterator currentSegment = (*currentContour)->begin();
-                currentSegment != (*currentContour)->end();
-                ++currentSegment) {
-
+             currentSegment != (*currentContour)->end();
+             ++currentSegment) {
             Segment::iterator lastVertex = (*currentSegment)->begin();
             bool foundFirstMoveableVertex = false;
             for (Segment::iterator vertexIterator = (*currentSegment)->begin();
-                    vertexIterator != (*currentSegment)->end();
-                    ++vertexIterator) {
+                 vertexIterator != (*currentSegment)->end();
+                 ++vertexIterator) {
 
                 if (vertexIterator->first) {
                     if (!initializedVBB) {
-                        vBB = Rect2D(vertexIterator->second, Size2D(1,1));
+                        vBB = Rect2D(vertexIterator->second, Size2D(1, 1));
                         initializedVBB = true;
                     } else {
                         vBB |= vertexIterator->second;
@@ -636,7 +640,8 @@ MaskType *createMask(const ImageType* const white,
     vBB.moveBy(uBB.upperLeft());
 
     // Make sure that vBB is bigger than iBB by one pixel in each direction.
-    // This will create a max-cost border to keep the seam line from leaving the intersection region.
+    // This will create a max-cost border to keep the seam line from
+    // leaving the intersection region.
     Rect2D iBBPlus = iBB;
     iBBPlus.addBorder(1);
     vBB |= iBBPlus;
@@ -653,12 +658,13 @@ MaskType *createMask(const ImageType* const white,
 
     if (CoarseMask) {
         // Prepare to stride by two over uvBB to create cost image.
-        // Push ul corner of vBB so that there is an even number of pixels between vBB and uvBB.
+        // Push ul corner of vBB so that there is an even number of
+        // pixels between vBB and uvBB.
         if (uvBBOffset.x % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(-1, 0));
         if (uvBBOffset.y % 2) vBB.setUpperLeft(vBB.upperLeft() + Diff2D(0, -1));
         uvBBStrideOffset = (uvBB.upperLeft() - vBB.upperLeft()) / 2;
         mismatchImageStride = 2;
-        mismatchImageSize = (vBB.size() + Diff2D(1, 1)) / 2; 
+        mismatchImageSize = (vBB.size() + Diff2D(1, 1)) / 2;
     } else {
         uvBBStrideOffset = uvBBOffset;
         mismatchImageStride = 1;
@@ -667,10 +673,10 @@ MaskType *createMask(const ImageType* const white,
 
     typedef UInt8 MismatchImagePixelType;
     EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage(mismatchImageSize,
-            NumericTraits<MismatchImagePixelType>::max());
+                                                                          NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
-    EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType *visualizeImage = NULL;
+    EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType* visualizeImage = NULL;
     if (VisualizeMaskFileName) {
         visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
     }
@@ -703,12 +709,11 @@ MaskType *createMask(const ImageType* const white,
     for (ContourVector::iterator currentContour = contours.begin();
             currentContour != contours.end();
             ++currentContour) {
-
         for (Contour::iterator currentSegment = (*currentContour)->begin();
                 currentSegment != (*currentContour)->end();
                 ++currentSegment) {
 
-            Segment *snake = *currentSegment;
+            Segment* snake = *currentSegment;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
                 cout << "Strategy 1, s" << segmentNumber++ << ":";
@@ -717,7 +722,9 @@ MaskType *createMask(const ImageType* const white,
 
             if (snake->empty()) {
                 cerr << endl
-                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed before optimization."
+                     << "enblend: Seam s"
+                     << (segmentNumber - 1)
+                     << " is a tiny closed contour and was removed before optimization."
                      << endl;
                 continue;
             }
@@ -726,7 +733,9 @@ MaskType *createMask(const ImageType* const white,
             for (Segment::iterator vertexIterator = snake->begin();
                     vertexIterator != snake->end();
                     ++vertexIterator) {
-                vertexIterator->second = (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
+                vertexIterator->second =
+                    (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft())
+                    / mismatchImageStride;
             }
 
             annealSnake(&mismatchImage, snake, visualizeImage);
@@ -736,8 +745,8 @@ MaskType *createMask(const ImageType* const white,
             for (Segment::iterator vertexIterator = snake->begin();
                     vertexIterator != snake->end(); ) {
 
-                if (vertexIterator->first &&
-                        (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
+                if (vertexIterator->first
+                    && (mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max())) {
                     // Vertex is still in max-cost region. Delete it.
                     if (vertexIterator == snake->begin()) {
                         snake->pop_front();
@@ -765,7 +774,8 @@ MaskType *createMask(const ImageType* const white,
                             snake->push_front(make_pair(true, vertexIterator->second));
                             lastVertex = snake->begin();
                         } else {
-                            lastVertex = snake->insert_after(lastVertex, make_pair(true, vertexIterator->second));
+                            lastVertex = snake->insert_after(lastVertex,
+                                                             make_pair(true, vertexIterator->second));
                         }
                     }
 
@@ -786,7 +796,9 @@ MaskType *createMask(const ImageType* const white,
             // FIXME explain how to fix this problem in the error message!
             if (snake->empty()) {
                 cerr << endl
-                     << "enblend: Seam s" << (segmentNumber-1) << " is a tiny closed contour and was removed after optimization."
+                     << "enblend: Seam s"
+                     << (segmentNumber - 1)
+                     << " is a tiny closed contour and was removed after optimization."
                      << endl;
             }
         }
@@ -810,7 +822,7 @@ MaskType *createMask(const ImageType* const white,
                            stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
                            srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
                            destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                           ifThenElse(Arg1() ^ Arg2(), Param(RGBValue<MismatchImagePixelType>(128,0,0)), Arg3()));
+                           ifThenElse(Arg1() ^ Arg2(), Param(RGBValue<MismatchImagePixelType>(128, 0, 0)), Arg3()));
     }
 
     Rect2D withinMismatchImage(mismatchImageSize);
@@ -818,14 +830,12 @@ MaskType *createMask(const ImageType* const white,
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
     segmentNumber = 0;
     for (ContourVector::iterator currentContour = contours.begin();
-            currentContour != contours.end();
-            ++currentContour) {
-
+         currentContour != contours.end();
+         ++currentContour) {
         for (Contour::iterator currentSegment = (*currentContour)->begin();
-                currentSegment != (*currentContour)->end();
-                ++currentSegment) {
-
-            Segment *snake = *currentSegment;
+             currentSegment != (*currentContour)->end();
+             ++currentSegment) {
+            Segment* snake = *currentSegment;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
                 cout << " s" << segmentNumber++;
@@ -842,8 +852,8 @@ MaskType *createMask(const ImageType* const white,
                     Point2D currentPoint = currentVertex->second;
                     Point2D nextPoint = nextVertex->second;
 
-                    Rect2D pointSurround(currentPoint, Size2D(1,1));
-                    pointSurround |= Rect2D(nextPoint, Size2D(1,1));
+                    Rect2D pointSurround(currentPoint, Size2D(1, 1));
+                    pointSurround |= Rect2D(nextPoint, Size2D(1, 1));
                     pointSurround.addBorder(DijkstraRadius);
                     pointSurround &= withinMismatchImage;
 
@@ -852,26 +862,29 @@ MaskType *createMask(const ImageType* const white,
                     BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
                     copyImage(pointSurround.apply(srcImageRange(mismatchImage)), destImage(mismatchROIImage));
 
-                    vector<Point2D> *shortPath = minCostPath(srcImageRange(mismatchROIImage),
-                            Point2D(nextPoint - pointSurround.upperLeft()),
-                            Point2D(currentPoint - pointSurround.upperLeft()));
+                    vector<Point2D>* shortPath = minCostPath(srcImageRange(mismatchROIImage),
+                                                             Point2D(nextPoint - pointSurround.upperLeft()),
+                                                             Point2D(currentPoint - pointSurround.upperLeft()));
 
                     for (vector<Point2D>::iterator shortPathPoint = shortPath->begin();
-                            shortPathPoint != shortPath->end();
-                            ++shortPathPoint) {
-                        snake->insert_after(currentVertex, make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
+                         shortPathPoint != shortPath->end();
+                         ++shortPathPoint) {
+                        snake->insert_after(currentVertex,
+                                            make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
 
                         if (visualizeImage) {
                             (*visualizeImage)[*shortPathPoint + pointSurround.upperLeft()] =
-                                    RGBValue<MismatchImagePixelType>(255, 255, 0);
+                                RGBValue<MismatchImagePixelType>(255, 255, 0);
                         }
                     }
 
                     delete shortPath;
 
                     if (visualizeImage) {
-                        (*visualizeImage)[currentPoint] = RGBValue<MismatchImagePixelType>(0, currentVertex->first ? 200 : 230, 0);
-                        (*visualizeImage)[nextPoint] = RGBValue<MismatchImagePixelType>(0, nextVertex->first ? 200 : 230, 0);
+                        (*visualizeImage)[currentPoint] =
+                            RGBValue<MismatchImagePixelType>(0, currentVertex->first ? 200 : 230, 0);
+                        (*visualizeImage)[nextPoint] =
+                            RGBValue<MismatchImagePixelType>(0, nextVertex->first ? 200 : 230, 0);
                     }
 
                 }
@@ -882,9 +895,10 @@ MaskType *createMask(const ImageType* const white,
 
             // Move snake vertices from mismatchImage-relative coordinates to uBB-relative coordinates.
             for (Segment::iterator currentVertex = snake->begin();
-                    currentVertex != snake->end();
-                    ++currentVertex) {
-                currentVertex->second = (currentVertex->second * mismatchImageStride) + vBB.upperLeft() - uBB.upperLeft();
+                 currentVertex != snake->end();
+                 ++currentVertex) {
+                currentVertex->second =
+                    (currentVertex->second * mismatchImageStride) + vBB.upperLeft() - uBB.upperLeft();
             }
         }
     }
@@ -902,13 +916,14 @@ MaskType *createMask(const ImageType* const white,
     }
 
     // Fill contours to get final optimized mask.
-    MaskType *mask = new MaskType(uBB.size());
-    std::for_each(contours.begin(), contours.end(), bind(fillContour<MaskType>, mask, *_1, Diff2D(0,0)));
+    MaskType* mask = new MaskType(uBB.size());
+    std::for_each(contours.begin(), contours.end(),
+                  bind(fillContour<MaskType>, mask, *_1, Diff2D(0, 0)));
 
     // Clean up contours
     std::for_each(contours.begin(), contours.end(),
-            bind(boost::lambda::ll::for_each(), bind(call_begin(), (*_1)), bind(call_end(), (*_1)),
-                    protect(bind(delete_ptr(), _1))));
+                  bind(boost::lambda::ll::for_each(), bind(call_begin(), (*_1)), bind(call_end(), (*_1)),
+                       protect(bind(delete_ptr(), _1))));
 
     std::for_each(contours.begin(), contours.end(), bind(delete_ptr(), _1));
 

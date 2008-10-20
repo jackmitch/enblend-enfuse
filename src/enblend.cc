@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@
 #define _STLP_VERBOSE_AUTO_LINK
 #define _USE_MATH_DEFINES
 #define NOMINMAX
-#define VC_EXTRALEAN 
+#define VC_EXTRALEAN
 #include <windows.h>
 #undef DIFFERENCE
 #endif  //  _WIN32
@@ -148,7 +148,7 @@ using enblend::enblendMain;
 #endif
 
 /** Print the usage information and quit. */
-void printUsageAndExit(const bool error=true) {
+void printUsageAndExit(const bool error = true) {
     cout << "==== enblend, version " << VERSION << " ====" << endl;
     cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
     cout << endl;
@@ -223,16 +223,15 @@ void sigint_handler(int sig) {
 }
 
 int main(int argc, char** argv) {
-
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
     // See changes in vigra numerictraits.hxx
-    _controlfp( _RC_NEAR, _MCW_RC );
+    _controlfp(_RC_NEAR, _MCW_RC);
 #else
     fesetround(FE_TONEAREST);
 #endif
-    
+
 #ifndef _WIN32
     sigemptyset(&SigintMask);
     sigaddset(&SigintMask, SIGINT);
@@ -258,25 +257,26 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     static struct option long_options[] = {
-            {"gpu", no_argument, &UseGPU, 1},
-            {"coarse-mask", no_argument, &CoarseMask, 1},
-            {"fine-mask", no_argument, &CoarseMask, 0},
-            {"optimize", no_argument, &OptimizeMask, 1},
-            {"no-optimize", no_argument, &OptimizeMask, 0},
-            {"save-mask", required_argument, 0, 0},
-            {"load-mask", required_argument, 0, 0},
-            {"visualize", required_argument, 0, 0},
-            {"gda-kmax", required_argument, 0, 1},
-            {"dijkstra-radius", required_argument, 0, 1},
-            {"mask-vectorize-distance", required_argument, 0, 1},
-            {"compression", required_argument, 0, 0},
-            {0, 0, 0, 0}
+        {"gpu", no_argument, &UseGPU, 1},
+        {"coarse-mask", no_argument, &CoarseMask, 1},
+        {"fine-mask", no_argument, &CoarseMask, 0},
+        {"optimize", no_argument, &OptimizeMask, 1},
+        {"no-optimize", no_argument, &OptimizeMask, 0},
+        {"save-mask", required_argument, 0, 0},
+        {"load-mask", required_argument, 0, 0},
+        {"visualize", required_argument, 0, 0},
+        {"gda-kmax", required_argument, 0, 1},
+        {"dijkstra-radius", required_argument, 0, 1},
+        {"mask-vectorize-distance", required_argument, 0, 1},
+        {"compression", required_argument, 0, 0},
+        {0, 0, 0, 0}
     };
 
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz",
+                            long_options, &option_index)) != -1) {
         switch (c) {
             case 0: { /* Long Options with string arguments */
                 if (long_options[option_index].flag != 0) break;
@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
                     printUsageAndExit();
                 }
                 CachedFileImageDirector::v().setBlockSize(
-                        (long long)kilobytes << 10);
+                        (long long) kilobytes << 10);
                 break;
             }
             case 'c': {
@@ -355,8 +355,9 @@ int main(int argc, char** argv) {
             }
             case 'f': {
                 OutputSizeGiven = true;
-                int nP = sscanf(optarg, "%dx%d+%d+%d", &OutputWidthCmdLine, &OutputHeightCmdLine, 
-                                                        &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+                int nP = sscanf(optarg, "%dx%d+%d+%d",
+                                &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
                 if (nP == 4) {
                     // full geometry string
                 } else if (nP == 2) {
@@ -384,7 +385,7 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
-                ExactLevels = (unsigned int)levels;
+                ExactLevels = (unsigned int) levels;
                 break;
             }
             case 'm': {
@@ -394,8 +395,7 @@ int main(int argc, char** argv) {
                          << endl;
                     printUsageAndExit();
                 }
-                CachedFileImageDirector::v().setAllocation(
-                        (long long)megabytes << 20);
+                CachedFileImageDirector::v().setAllocation((long long) megabytes << 20);
                 break;
             }
             case 'o': {
@@ -485,9 +485,9 @@ int main(int argc, char** argv) {
                 do {
                     _splitpath(finddata.name, NULL, NULL, fname, ext);
                     _makepath(newFile, drive, dir, fname, ext);
-                    
-                    // TODO (jbeda): This will leak -- the right way to 
-                    // fix this is to make this a list of std::string.  
+
+                    // TODO (jbeda): This will leak -- the right way to
+                    // fix this is to make this a list of std::string.
                     // I'll look into this after we get things working
                     // on Win32
                     inputFileNameList.push_back(strdup(newFile));
@@ -533,7 +533,7 @@ int main(int argc, char** argv) {
     list<ImageImportInfo*>::iterator imageInfoIterator;
 
     bool isColor = false;
-    const char *pixelType = NULL;
+    const char* pixelType = NULL;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
@@ -542,7 +542,7 @@ int main(int argc, char** argv) {
     int minDim = INT_MAX;
     while (inputFileNameIterator != inputFileNameList.end()) {
 
-        ImageImportInfo *inputInfo = NULL;
+        ImageImportInfo* inputInfo = NULL;
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
         } catch (StdException& e) {
@@ -631,11 +631,13 @@ int main(int argc, char** argv) {
                      << "." << endl;
                 exit(1);
             }
-            if (!std::equal(iccProfile.begin(), iccProfile.end(), inputInfo->getICCProfile().begin())) {
+            if (!std::equal(iccProfile.begin(), iccProfile.end(),
+                            inputInfo->getICCProfile().begin())) {
                 ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                 cmsHPROFILE newProfile = NULL;
                 if (!mismatchProfile.empty()) {
-                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(), mismatchProfile.size());
+                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
+                                                       mismatchProfile.size());
                     if (newProfile == NULL) {
                         cerr << endl << "enblend: error parsing ICC profile data from file\""
                              << *inputFileNameIterator
@@ -681,7 +683,8 @@ int main(int argc, char** argv) {
         inputFileNameIterator++;
     }
 
-    // Switch to fine mask, if the smallest coarse mask would be less than 64 pixels wide or high
+    // Switch to fine mask, if the smallest coarse mask would be less
+    // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
         std::cout << "Input images to small for coarse mask, switching to fine mask." << std::endl;
         CoarseMask = false;
@@ -694,7 +697,8 @@ int main(int argc, char** argv) {
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
         inputUnion |= Rect2D(OutputOffsetXCmdLine, OutputOffsetYCmdLine,
-                             OutputOffsetXCmdLine + OutputWidthCmdLine, OutputOffsetYCmdLine + OutputHeightCmdLine);
+                             OutputOffsetXCmdLine + OutputWidthCmdLine,
+                             OutputOffsetYCmdLine + OutputHeightCmdLine);
     }
 
     // Create the Info for the output file.
@@ -870,7 +874,7 @@ int main(int argc, char** argv) {
             delete *imageInfoIterator++;
         }
 
-        delete[] outputFileName;
+        delete [] outputFileName;
 
     } catch (std::bad_alloc& e) {
         cerr << endl << "enblend: out of memory"
