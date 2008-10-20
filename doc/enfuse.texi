@@ -145,11 +145,18 @@ Fuse the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
 ...
 
 @table @code
+@item -V
+@itemx --version
+@cindex option @option{-V}
+@cindex option @option{--version}
+Output information on the Enfuse version and some configuration
+details like extra features that have been compiled in.
+
 @item -h
 @itemx --help
 @cindex option @option{-h}
 @cindex option @option{--help}
-Print information on the available options.
+Print information on the available options and exit.
 
 @item -l @var{LEVELS}
 @cindex option @option{-l}

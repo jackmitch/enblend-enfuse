@@ -174,15 +174,36 @@ double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedLog = NU
 template <typename InputPixelType, typename ResultPixelType>
 double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
 
+/** Print information on the current version and some configuration
+ * details. */
+void printVersionAndExit() {
+    cout <<
+        "enfuse " << VERSION << "\n" <<
+#ifdef ENBLEND_CACHE_IMAGES
+        "Extra feature: image cache\n" <<
+#endif
+        "\n" <<
+        "Copyright (C) 2004-2008 Andrew Mihal.\n" <<
+        "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
+        "This is free software: you are free to change and redistribute it.\n" <<
+        "There is NO WARRANTY, to the extent permitted by law.\n" <<
+        "\n" <<
+        "Written by Andrew Mihal and others." <<
+        endl;
+
+    exit(0);
+}
+
+
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
     cout <<
-        "==== enfuse, version " << VERSION << " ====\n" <<
         "Usage: enfuse [options] -o OUTPUT INPUT...\n" <<
         "Fuse INPUT images into a single OUTPUT image.\n" <<
         "\n" <<
         "Common options:\n" <<
-        "  -h, --help             Print this help message\n" <<
+        "  -V, --version          Output version information and exit\n" <<
+        "  -h, --help             Print this help message and exit\n" <<
         "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
         "  -o FILENAME            Write output to FILENAME\n" <<
         "  -v, --verbose          Verbosely report progress; repeat to\n" <<
@@ -333,7 +354,8 @@ int process_options(int argc, char** argv) {
         EntropyCutoffId,         // 14
         SoftMaskId,              // 15
         VerboseId,               // 16
-        HelpId                   // 17
+        HelpId,                  // 17
+        VersionId                // 18
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -356,12 +378,13 @@ int process_options(int argc, char** argv) {
         {"SoftMask", no_argument, 0, NoArgument},                        // 15
         {"verbose", no_argument, 0, NoArgument},                         // 16
         {"help", no_argument, 0, NoArgument},                            // 17
+        {"version", no_argument, 0, NoArgument},                         // 18
         {0, 0, 0, 0}
     };
 
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "b:cf:ghl:m:o:vwz",
+    while ((c = getopt_long(argc, argv, "Vb:cf:ghl:m:o:vwz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -381,6 +404,9 @@ int process_options(int argc, char** argv) {
                 break;
             case HelpId:
                 printUsageAndExit(false);
+                break;          // never reached
+            case VersionId:
+                printVersionAndExit();
                 break;          // never reached
             default:
                 cerr << "enfuse: internal error: unhandled \"NoArgument\" option"
@@ -644,6 +670,9 @@ int process_options(int argc, char** argv) {
             break;
         } // end of "case IntegerArgument"
 
+        case 'V':
+            printVersionAndExit();
+            break;          // never reached
         case 'b': {
             const int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
