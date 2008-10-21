@@ -150,48 +150,53 @@ using enblend::enblendMain;
 
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
-    cout << "==== enblend, version " << VERSION << " ====" << endl;
-    cout << "Usage: enblend [options] -o OUTPUT INPUTS" << endl;
-    cout << endl;
-    cout << "Common options:" << endl;
-    cout << " -a                     Pre-assemble non-overlapping images" << endl;
-    cout << " -h, --help             Print this help message" << endl;
-    cout << " -l number              Number of levels to use (1 to 29)" << endl;
-    cout << " -o filename            Write output to file" << endl;
-    cout << " -v, --verbose          Verbose" << endl;
-    cout << " -w                     Blend across -180/+180 boundary" << endl;
-    cout << " --compression=COMP     Set compression of the output image." << endl;
-    cout << "                          Valid values for compression are:" << endl;
-    cout << "                          For TIFF files: NONE, PACKBITS, LZW, DEFLATE" << endl;
-    cout << "                          For JPEG files: 0-100" << endl;
-    cout << " -z                     Use LZW compression (TIFF only)." << endl
-         << "                          Kept for backward compatability with older scripts" << endl;
-    cout << " -x                     Checkpoint partial results" << endl;
-
-    cout << endl << "Extended options:" << endl;
-    cout << " -b kilobytes           Image cache block size (default=2MiB)" << endl;
-    cout << " -c                     Use CIECAM02 to blend colors" << endl;
-    cout << " -g                     Associated alpha hack for Gimp (ver. < 2) and Cinepaint" << endl;
+    cout <<
+        "==== enblend, version " << VERSION << " ====" <<
+        "Usage: enblend [options] -o OUTPUT INPUT...\n" <<
+        "Blend INPUT images into a single OUTPUT image.\n" <<
+        "\n" <<
+        "Common options:\n" <<
+        "  -a                     Pre-assemble non-overlapping images\n" <<
+        "  -h, --help             Print this help message and exit\n" <<
+        "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
+        "  -o FILENAME            Write output to FILENAME\n" <<
+        "  -v, --verbose          Verbosely report progress; repeat to\n" <<
+        "                            increase verbosity\n" <<
+        "  -w                     Blend across -180/+180 degrees boundary\n" <<
+        "  -x                     Checkpoint partial results\n" <<
+        "  -z                     Use LZW compression (TIFF only).\n" <<
+        "                           Kept for backward compatability with older scripts\n" <<
+        "  --compression=COMP     Set compression of output image to COMP,\n" <<
+        "                           where COMP is:\n" <<
+        "                             NONE, PACKBITS, LZW, DEFLATE (for TIFF files)\n" <<
+        "                             0-100 (for JPEG files)\n" <<
+        "\n" <<
+        "Extended options:\n" <<
+        "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
+        (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
+        "  -c                     Use CIECAM02 to blend colors\n" <<
+        "  -g                     Associated-alpha hack for Gimp (before version 2)\n" <<
+        "                           and Cinepaint\n" <<
 #ifdef HAVE_LIBGLEW
-    cout << " --gpu                  Use the graphics card to accelerate some computations." << endl;
+        "  --gpu                  Use the graphics card to accelerate some computations\n" <<
 #endif
-    cout << " -f WIDTHxHEIGHT+x0+y0  Manually set the size and position of the output image." << endl
-         << "                          Useful for cropped and shifted input TIFF images," << endl
-         << "                          such as those produced by Nona." << endl;
-    cout << " -m megabytes           Use this much memory before going to disk (default=1GiB)" << endl;
-    cout << " --visualize=FILE       Save the optimizer's results for debugging." << endl;
-
-    cout << endl << "Mask generation options:" << endl;
-    cout << " --coarse-mask          Use an approximation to speedup mask generation. Default." << endl;
-    cout << " --fine-mask            Enables detailed mask generation. Slow. Use this if you" << endl
-         << "                          have very narrow overlap regions." << endl;
-    cout << " --optimize             Turn on mask optimization. This is the default." << endl;
-    cout << " --no-optimize          Turn off mask optimization." << endl;
-    cout << " --save-mask=FILE       Save the generated mask to the given file." << endl;
-    cout << " --load-mask=FILE       Use the mask in the given file instead of generating one." << endl;
-
-    // deprecated
-    //cout << " -s                Blend images one at a time, in the order given" << endl;
+        "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
+        "                         Manually set the size and position of the output\n" <<
+        "                           image.  Useful for cropped and shifted input\n" <<
+        "                           TIFF images, such as those produced by Nona.\n" <<
+        "  -m CACHESIZE           Images CACHESIZE in Megabytes.  Default: " <<
+        (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
+        "  --visualize=FILENAME   Save results of optimizer FILENAME\n" <<
+        "\n" <<
+        "Mask generation options:\n" <<
+        "  --coarse-mask          Use an approximation to speedup mask generation.  Default\n" <<
+        "  --fine-mask            Enable detailed mask generation.  Slow!  Use if\n" <<
+        "                           overlap regions are very narrow.\n" <<
+        "  --optimize             Turn on mask optimization.  This is the default.\n" <<
+        "  --no-optimize          Turn off mask optimization.\n" <<
+        "  --save-mask=FILENAME   Save the generated mask to FILENAME.\n" <<
+        "  --load-mask=FILENAME   Use the mask in FILENAME instead of generating one.\n" <<
+        endl;
 
     exit(error ? 1 : 0);
 }
