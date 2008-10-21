@@ -789,8 +789,8 @@ int main(int argc, char** argv) {
     int optind;
     try {optind = process_options(argc, argv);}
     catch (StdException& e) {
-        cerr << "enblend: error while processing command line options\n"
-             << "enblend:     " << e.what()
+        cerr << "enfuse: error while processing command line options\n"
+             << "enfuse:     " << e.what()
              << endl;
         exit(1);
     }
