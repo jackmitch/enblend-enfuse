@@ -137,7 +137,9 @@ Write a compressed output file.  Valid values for @var{COMP} are
 levels from 0--100 for @acronym{JPEG} files.
 
 @item -h
+@itemx --help
 @cindex option @option{-h}
+@cindex option @option{--help}
 Print information on the available options.
 
 @item -l @var{LEVELS}
@@ -153,7 +155,9 @@ of levels if the geometry of the images demands.
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v
+@itemx --verbose
 @cindex option @option{-v}
+@cindex option @option{--verbose}
 Verbose progress reporting.
 
 @item -w

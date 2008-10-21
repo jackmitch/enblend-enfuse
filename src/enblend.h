@@ -223,7 +223,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
             // Mem used during mask generation:
             long long nftBytes = 0;
-            if (LoadMaskFileName) {
+            if (!LoadMaskFileName.empty()) {
                 nftBytes = 0;
             } else if (CoarseMask) {
                 nftBytes =
@@ -236,7 +236,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             }
 
             long long optBytes = 0;
-            if (LoadMaskFileName) {
+            if (!LoadMaskFileName.empty()) {
                 optBytes = 0;
             } else if (!OptimizeMask) {
                 optBytes = 0;
@@ -245,7 +245,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             } else {
                 optBytes = iBB.area() * sizeof(UInt8);
             }
-            if (VisualizeMaskFileName) optBytes *= 2;
+            if (!VisualizeMaskFileName.empty()) optBytes *= 2;
 
             long long bytesDuringMask = bytes + std::max(nftBytes, optBytes);
             long long bytesAfterMask = bytes + uBB.area() * sizeof(MaskPixelType);
@@ -270,8 +270,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         Rect2D mBB;
         maskBounds(mask, uBB, mBB);
 
-        if (SaveMaskFileName != NULL) {
-            ImageExportInfo maskInfo(SaveMaskFileName);
+        if (!SaveMaskFileName.empty()) {
+            ImageExportInfo maskInfo(SaveMaskFileName.c_str());
             maskInfo.setPosition(uBB.upperLeft());
             exportImage(srcImageRange(*mask), maskInfo);
         }

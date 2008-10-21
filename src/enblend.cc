@@ -84,6 +84,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 int Verbose = 1;
+std::string OutputFileName;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 bool Wraparound = false;
@@ -95,16 +96,16 @@ int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
 bool Checkpoint = false;
-int UseGPU = 0;
-int OptimizeMask = 1;
-int CoarseMask = 1;
-char *SaveMaskFileName = NULL;
-char *LoadMaskFileName = NULL;
-char *VisualizeMaskFileName = NULL;
+bool UseGPU = false;
+bool OptimizeMask = true;
+bool CoarseMask = true;
+std::string SaveMaskFileName;
+std::string LoadMaskFileName;
+std::string VisualizeMaskFileName;
 unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
-char *OutputCompression = NULL;
+std::string OutputCompression;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -154,10 +155,10 @@ void printUsageAndExit(const bool error = true) {
     cout << endl;
     cout << "Common options:" << endl;
     cout << " -a                     Pre-assemble non-overlapping images" << endl;
-    cout << " -h                     Print this help message" << endl;
+    cout << " -h, --help             Print this help message" << endl;
     cout << " -l number              Number of levels to use (1 to 29)" << endl;
     cout << " -o filename            Write output to file" << endl;
-    cout << " -v                     Verbose" << endl;
+    cout << " -v, --verbose          Verbose" << endl;
     cout << " -w                     Blend across -180/+180 boundary" << endl;
     cout << " --compression=COMP     Set compression of the output image." << endl;
     cout << "                          Valid values for compression are:" << endl;
@@ -222,6 +223,240 @@ void sigint_handler(int sig) {
     #endif
 }
 
+
+int process_options(int argc, char** argv) {
+    enum OptionArgumentKind {
+        NoArgument,
+        StringArgument,
+        FloatArgument,
+        IntegerArgument
+    };
+
+    // NOTE: An OptionId is the index of a command line option in
+    // "long_options".  Every change in "enum OptionId" must be
+    // reflected in "long_options" and vice versa.
+    enum OptionId {
+        UseGpuId,                   //  0
+        CoarseMaskId,               //  1
+        FineMaskId,                 //  2
+        OptimizeMaskId,             //  3
+        NoOptimizeMaskId,           //  4
+        SaveMaskId,                 //  5
+        LoadMaskId,                 //  6
+        VisualizeId,                //  7
+        GdaKmaxId,                  //  8
+        DijkstraRadiusId,           //  9
+        MaskVectorizeDistanceId,    // 10
+        CompressionId,              // 11
+        VerboseId,                  // 12
+        HelpId                      // 13
+    };
+
+    // NOTE: See note attached to "enum OptionId" above.
+    static struct option long_options[] = {
+        {"gpu", no_argument, 0, NoArgument},                                   //  0
+        {"coarse-mask", no_argument, 0, NoArgument},                           //  1
+        {"fine-mask", no_argument, 0, NoArgument},                             //  2
+        {"optimize", no_argument, 0, NoArgument},                              //  3
+        {"no-optimize", no_argument, 0, NoArgument},                           //  4
+        {"save-mask", required_argument, 0, StringArgument},                   //  5
+        {"load-mask", required_argument, 0, StringArgument},                   //  6
+        {"visualize", required_argument, 0, StringArgument},                   //  7
+        {"gda-kmax", required_argument, 0, IntegerArgument},                   //  8
+        {"dijkstra-radius", required_argument, 0, IntegerArgument},            //  9
+        {"mask-vectorize-distance", required_argument, 0, IntegerArgument},    // 10
+        {"compression", required_argument, 0, StringArgument},                 // 11
+        {"verbose", no_argument, 0, NoArgument},                               // 12
+        {"help", no_argument, 0, NoArgument},                                  // 13
+        {0, 0, 0, 0}
+    };
+
+    // Parse command line.
+    int option_index = 0;
+    int c;
+    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz",
+                            long_options, &option_index)) != -1) {
+        switch (c) {
+        case NoArgument: {
+            if (long_options[option_index].flag != 0) break;
+            switch (option_index) {
+            case UseGpuId:
+                UseGPU = true;
+                break;
+            case CoarseMaskId:
+                CoarseMask = true;
+                break;
+            case FineMaskId:
+                CoarseMask = false;
+                break;
+            case OptimizeMaskId:
+                OptimizeMask = true;
+                break;
+            case NoOptimizeMaskId:
+                OptimizeMask = false;
+                break;
+            case VerboseId:
+                Verbose++;
+                break;
+            case HelpId:
+                printUsageAndExit(false);
+                break;          // never reached
+            default:
+                cerr << "enblend: internal error: unhandled \"NoArgument\" option"
+                     << endl;
+                exit(1);
+            }
+            break;
+        } // end of "case NoArgument"
+
+        case StringArgument: {
+            if (long_options[option_index].flag != 0) break;
+            switch (option_index) {
+            case SaveMaskId:
+                SaveMaskFileName = optarg;
+                break;
+            case LoadMaskId:
+                LoadMaskFileName = optarg;
+                break;
+            case VisualizeId:
+                VisualizeMaskFileName = optarg;
+                break;
+            case CompressionId:
+                OutputCompression = optarg;
+                break;
+            default:
+                cerr << "enblend: internal error: unhandled \"StringArgument\" option"
+                     << endl;
+                exit(1);
+            }
+            break;
+        } // end of "case StringArgument"
+
+        // case FloatArgument: {
+        // ...
+        // } // end of "case FloatArgument"
+
+        case IntegerArgument: {
+            if (long_options[option_index].flag != 0) break;
+            unsigned int* optionUInt = NULL;
+            switch (option_index) {
+            case GdaKmaxId:
+                optionUInt = &GDAKmax;
+                break;
+            case DijkstraRadiusId:
+                optionUInt = &DijkstraRadius;
+                break;
+            case MaskVectorizeDistanceId:
+                optionUInt = &MaskVectorizeDistance;
+                break;
+            default:
+                cerr << "enblend: internal error: unhandled \"IntegerArgument\" option"
+                     << endl;
+                exit(1);
+            }
+
+            const int value = atoi(optarg);
+            if (value < 1) {
+                cerr << "enblend: " << long_options[option_index].name
+                     << " must be 1 or more." << endl;
+                printUsageAndExit();
+            }
+            *optionUInt = static_cast<unsigned int>(value);
+            break;
+        } // end of "case IntegerArgument"
+
+        case 'a':
+            OneAtATime = false;
+            break;
+        case 'b': {
+            const int kilobytes = atoi(optarg);
+            if (kilobytes < 1) {
+                cerr << "enblend: cache block size must be 1 or more." << endl;
+                printUsageAndExit();
+            }
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes << 10));
+            break;
+        }
+        case 'c':
+            UseCIECAM = true;
+            break;
+        case 'f': {
+            OutputSizeGiven = true;
+            const int nP = sscanf(optarg, "%dx%d+%d+%d",
+                                  &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                  &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+            if (nP == 4) {
+                ; // full geometry string
+            } else if (nP == 2) {
+                OutputOffsetXCmdLine=0;
+                OutputOffsetYCmdLine=0;
+            } else {
+                cerr << "enblend: the -f option requires a parameter "
+                     << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
+                printUsageAndExit();
+            }
+            break;
+        }
+        case 'g':
+            GimpAssociatedAlphaHack = true;
+            break;
+        case 'h':
+            printUsageAndExit(false);
+            break;
+        case 'l': {
+            const int levels = atoi(optarg);
+            if (levels < 1 || levels > 29) {
+                cerr << "enblend: levels must in the range 1 to 29." << endl;
+                printUsageAndExit();
+            }
+            ExactLevels = static_cast<unsigned int>(levels);
+            break;
+        }
+        case 'm': {
+            const int megabytes = atoi(optarg);
+            if (megabytes < 1) {
+                cerr << "enblend: memory limit must be 1 or more." << endl;
+                printUsageAndExit();
+            }
+            CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            break;
+        }
+        case 'o':
+            if (!OutputFileName.empty()) {
+                cerr << "enblend: more than one output file specified." << endl;
+                printUsageAndExit();
+                break;
+            }
+            OutputFileName = optarg;
+            break;
+        case 's':
+            // Deprecated sequential blending flag.
+            OneAtATime = true;
+            cerr << "enblend: warning: Flag \"-s\" is deprecated." << endl;
+            break;
+        case 'v':
+            Verbose++;
+            break;
+        case 'w':
+            Wraparound = true;
+            break;
+        case 'x':
+            Checkpoint = true;
+            break;
+        case 'z':
+            OutputCompression = "LZW";
+            break;
+
+        default:
+            printUsageAndExit();
+            break;
+        }
+    }
+
+    return optind;
+}
+
+
 int main(int argc, char** argv) {
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
@@ -249,216 +484,21 @@ int main(int argc, char** argv) {
     //TIFFSetWarningHandler(NULL);
     //TIFFSetErrorHandler(NULL);
 
-    // The name of the output file.
-    char *outputFileName = NULL;
-
     // List of input files.
     list<char*> inputFileNameList;
     list<char*>::iterator inputFileNameIterator;
 
-    static struct option long_options[] = {
-        {"gpu", no_argument, &UseGPU, 1},
-        {"coarse-mask", no_argument, &CoarseMask, 1},
-        {"fine-mask", no_argument, &CoarseMask, 0},
-        {"optimize", no_argument, &OptimizeMask, 1},
-        {"no-optimize", no_argument, &OptimizeMask, 0},
-        {"save-mask", required_argument, 0, 0},
-        {"load-mask", required_argument, 0, 0},
-        {"visualize", required_argument, 0, 0},
-        {"gda-kmax", required_argument, 0, 1},
-        {"dijkstra-radius", required_argument, 0, 1},
-        {"mask-vectorize-distance", required_argument, 0, 1},
-        {"compression", required_argument, 0, 0},
-        {0, 0, 0, 0}
-    };
-
-    // Parse command line.
-    int option_index = 0;
-    int c;
-    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz",
-                            long_options, &option_index)) != -1) {
-        switch (c) {
-            case 0: { /* Long Options with string arguments */
-                if (long_options[option_index].flag != 0) break;
-
-                char **optionString = NULL;
-                switch (option_index) {
-                    case 5: optionString = &SaveMaskFileName; break;
-                    case 6: optionString = &LoadMaskFileName; break;
-                    case 7: optionString = &VisualizeMaskFileName; break;
-                    case 11: optionString = &OutputCompression; break;
-                }
-
-                if (*optionString != NULL) {
-                    cerr << "enblend: more than one "
-                         << long_options[option_index].name
-                         << " output file specified."
-                         << endl;
-                    printUsageAndExit();
-                    break;
-                }
-
-                int len = strlen(optarg) + 1;
-
-                try {
-                    *optionString = new char[len];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enblend: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-
-                strncpy(*optionString, optarg, len);
-
-                break;
-            }
-            case 1: { /* Long options with unsigned integer arguments */
-                if (long_options[option_index].flag != 0) break;
-
-                unsigned int *optionUInt = NULL;
-                switch (option_index) {
-                    case 8:  optionUInt = &GDAKmax; break;
-                    case 9:  optionUInt = &DijkstraRadius; break;
-                    case 10: optionUInt = &MaskVectorizeDistance; break;
-                }
-
-                int value = atoi(optarg);
-                if (value < 1) {
-                    cerr << "enblend: " << long_options[option_index].name
-                         << " must be 1 or more." << endl;
-                    printUsageAndExit();
-                }
-
-                *optionUInt = static_cast<unsigned int>(value);
-
-                break;
-            }
-            case 'a': {
-                OneAtATime = false;
-                break;
-            }
-            case 'b': {
-                int kilobytes = atoi(optarg);
-                if (kilobytes < 1) {
-                    cerr << "enblend: cache block size must be 1 or more."
-                         << endl;
-                    printUsageAndExit();
-                }
-                CachedFileImageDirector::v().setBlockSize(
-                        (long long) kilobytes << 10);
-                break;
-            }
-            case 'c': {
-                UseCIECAM = true;
-                break;
-            }
-            case 'f': {
-                OutputSizeGiven = true;
-                int nP = sscanf(optarg, "%dx%d+%d+%d",
-                                &OutputWidthCmdLine, &OutputHeightCmdLine,
-                                &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
-                if (nP == 4) {
-                    // full geometry string
-                } else if (nP == 2) {
-                    OutputOffsetXCmdLine=0;
-                    OutputOffsetYCmdLine=0;
-                } else {
-                    cerr << "enblend: the -f option requires a parameter of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT"
-                         << endl;
-                    printUsageAndExit();
-                }
-                break;
-            }
-            case 'g': {
-                GimpAssociatedAlphaHack = true;
-                break;
-            }
-            case 'h': {
-                printUsageAndExit(false);
-                break;
-            }
-            case 'l': {
-                int levels = atoi(optarg);
-                if (levels < 1 || levels > 29) {
-                    cerr << "enblend: levels must in the range 1 to 29."
-                         << endl;
-                    printUsageAndExit();
-                }
-                ExactLevels = (unsigned int) levels;
-                break;
-            }
-            case 'm': {
-                int megabytes = atoi(optarg);
-                if (megabytes < 1) {
-                    cerr << "enblend: memory limit must be 1 or more."
-                         << endl;
-                    printUsageAndExit();
-                }
-                CachedFileImageDirector::v().setAllocation((long long) megabytes << 20);
-                break;
-            }
-            case 'o': {
-                if (outputFileName != NULL) {
-                    cerr << "enblend: more than one output file specified."
-                         << endl;
-                    printUsageAndExit();
-                    break;
-                }
-                int len = strlen(optarg) + 1;
-                try {
-                    outputFileName = new char[len];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enblend: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-                strncpy(outputFileName, optarg, len);
-                break;
-            }
-            case 's': {
-                // Deprecated sequential blending flag.
-                OneAtATime = true;
-                cerr << "enblend: the -s flag is deprecated." << endl;
-                break;
-            }
-            case 'v': {
-                Verbose++;
-                break;
-            }
-            case 'w': {
-                Wraparound = true;
-                break;
-            }
-            case 'x': {
-                Checkpoint = true;
-                break;
-            }
-            case 'z': {
-                if (OutputCompression != NULL) {
-                    delete OutputCompression;
-                }
-                try {
-                    OutputCompression = new char[4];
-                } catch (std::bad_alloc& e) {
-                    cerr << endl << "enblend: out of memory"
-                         << endl << e.what()
-                         << endl;
-                    exit(1);
-                }
-                OutputCompression = strdup("LZW");
-                break;
-            }
-            default: {
-                printUsageAndExit();
-                break;
-            }
-        }
+    int optind;
+    try {optind = process_options(argc, argv);}
+    catch (StdException& e) {
+        cerr << "enblend: error while processing command line options\n"
+             << "enblend:     " << e.what()
+             << endl;
+        exit(1);
     }
 
     // Make sure mandatory output file name parameter given.
-    if (outputFileName == NULL) {
+    if (OutputFileName.empty()) {
         cerr << "enblend: no output file specified." << endl;
         printUsageAndExit();
     }
@@ -702,8 +742,10 @@ int main(int argc, char** argv) {
     }
 
     // Create the Info for the output file.
-    ImageExportInfo outputImageInfo(outputFileName);
-    if (OutputCompression) outputImageInfo.setCompression(OutputCompression);
+    ImageExportInfo outputImageInfo(OutputFileName.c_str());
+    if (!OutputCompression.empty()) {
+        outputImageInfo.setCompression(OutputCompression.c_str());
+    }
 
     // Pixel type of the output image is the same as the input images.
     outputImageInfo.setPixelType(pixelType);
@@ -776,7 +818,7 @@ int main(int argc, char** argv) {
         encoder(outputImageInfo);
     } catch (StdException & e) {
         cerr << endl << "enblend: error opening output file \""
-             << outputFileName
+             << OutputFileName
              << "\":"
              << endl << e.what()
              << endl;
@@ -784,8 +826,8 @@ int main(int argc, char** argv) {
     }
 
     // Sanity check on the LoadMaskFileName
-    if (LoadMaskFileName) try {
-        ImageImportInfo maskInfo(LoadMaskFileName);
+    if (!LoadMaskFileName.empty()) try {
+        ImageImportInfo maskInfo(LoadMaskFileName.c_str());
     } catch (StdException& e) {
         cerr << endl << "enblend: error opening load-mask input file \""
              << LoadMaskFileName << "\":"
@@ -795,8 +837,8 @@ int main(int argc, char** argv) {
     }
 
     // Sanity check on the SaveMaskFileName
-    if (SaveMaskFileName) try {
-        ImageExportInfo maskInfo(SaveMaskFileName);
+    if (!SaveMaskFileName.empty()) try {
+        ImageExportInfo maskInfo(SaveMaskFileName.c_str());
         encoder(maskInfo);
     } catch (StdException& e) {
         cerr << endl << "enblend: error opening save-mask output file \""
@@ -807,8 +849,8 @@ int main(int argc, char** argv) {
     }
 
     // Sanity check on the VisualizeMaskFileName
-    if (VisualizeMaskFileName) try {
-        ImageExportInfo maskInfo(VisualizeMaskFileName);
+    if (!VisualizeMaskFileName.empty()) try {
+        ImageExportInfo maskInfo(VisualizeMaskFileName.c_str());
         encoder(maskInfo);
     } catch (StdException& e) {
         cerr << endl << "enblend: error opening visualize output file \""
@@ -818,7 +860,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    if (VisualizeMaskFileName && !OptimizeMask) {
+    if (!VisualizeMaskFileName.empty() && !OptimizeMask) {
         cerr << endl << "enblend: --visualize does nothing without --optimize."
              << endl;
     }
@@ -874,8 +916,6 @@ int main(int argc, char** argv) {
             delete *imageInfoIterator++;
         }
 
-        delete [] outputFileName;
-
     } catch (std::bad_alloc& e) {
         cerr << endl << "enblend: out of memory"
              << endl << e.what()
@@ -899,10 +939,6 @@ int main(int argc, char** argv) {
         wrapupGPU();
     }
 #endif
-
-    delete[] SaveMaskFileName;
-    delete[] LoadMaskFileName;
-    delete[] VisualizeMaskFileName;
 
     // Success.
     return 0;

@@ -275,10 +275,10 @@ MaskType* createMask(const ImageType* const white,
     typedef typename MaskType::traverser MaskIteratorType;
     typedef typename MaskType::Accessor MaskAccessor;
 
-    if (LoadMaskFileName != NULL) {
+    if (!LoadMaskFileName.empty()) {
         // Read mask from a file instead of calculating it.
         MaskType* mask = new MaskType(uBB.size());
-        ImageImportInfo maskInfo(LoadMaskFileName);
+        ImageImportInfo maskInfo(LoadMaskFileName.c_str());
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
             cerr << "enblend: load-mask warning: mask " << LoadMaskFileName << " has size "
                  << "(" << maskInfo.width() << "x" << maskInfo.height() << ")"
@@ -286,8 +286,7 @@ MaskType* createMask(const ImageType* const white,
                  << " Make sure this is the right mask for the given images." << endl;
         }
         importImage(maskInfo, destImage(*mask));
-        delete[] LoadMaskFileName;
-        LoadMaskFileName = NULL;
+        LoadMaskFileName = "";
         return mask;
     }
 
@@ -677,7 +676,7 @@ MaskType* createMask(const ImageType* const white,
 
     // Visualization of optimization output
     EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType* visualizeImage = NULL;
-    if (VisualizeMaskFileName) {
+    if (!VisualizeMaskFileName.empty()) {
         visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
     }
 
@@ -908,11 +907,9 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (visualizeImage) {
-        ImageExportInfo visualizeInfo(VisualizeMaskFileName);
+        ImageExportInfo visualizeInfo(VisualizeMaskFileName.c_str());
         exportImage(srcImageRange(*visualizeImage), visualizeInfo);
         delete visualizeImage;
-        //delete[] VisualizeMaskFileName;
-        //VisualizeMaskFileName = NULL;
     }
 
     // Fill contours to get final optimized mask.
