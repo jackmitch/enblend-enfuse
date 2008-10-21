@@ -122,6 +122,13 @@ Assemble the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
 @cindex Common Options
 
 @table @code
+@item -V
+@itemx --version
+@cindex option @option{-V}
+@cindex option @option{--version}
+Output information on the Enblend version and some configuration
+details like extra features that have been compiled in.
+
 @item -a
 @cindex option @option{-a}
 Pre-assemble non-overlapping images before each blending iteration.

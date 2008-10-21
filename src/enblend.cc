@@ -148,14 +148,39 @@ using enblend::enblendMain;
 #define strdup _strdup
 #endif
 
+
+/** Print information on the current version and some configuration
+ * details. */
+void printVersionAndExit() {
+    cout <<
+        "enblend " << VERSION << "\n" <<
+#ifdef ENBLEND_CACHE_IMAGES
+        "Extra feature: image cache\n" <<
+#endif
+#ifdef HAVE_LIBGLEW
+        "Extra feature: GPU acceleration\n" <<
+#endif
+        "\n" <<
+        "Copyright (C) 2004-2008 Andrew Mihal.\n" <<
+        "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
+        "This is free software: you are free to change and redistribute it.\n" <<
+        "There is NO WARRANTY, to the extent permitted by law.\n" <<
+        "\n" <<
+        "Written by Andrew Mihal and others." <<
+        endl;
+
+    exit(0);
+}
+
+
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
     cout <<
-        "==== enblend, version " << VERSION << " ====" <<
         "Usage: enblend [options] -o OUTPUT INPUT...\n" <<
         "Blend INPUT images into a single OUTPUT image.\n" <<
         "\n" <<
         "Common options:\n" <<
+        "  -V, --version          Output version information and exit\n" <<
         "  -a                     Pre-assemble non-overlapping images\n" <<
         "  -h, --help             Print this help message and exit\n" <<
         "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
@@ -254,7 +279,8 @@ int process_options(int argc, char** argv) {
         MaskVectorizeDistanceId,    // 10
         CompressionId,              // 11
         VerboseId,                  // 12
-        HelpId                      // 13
+        HelpId,                     // 13
+        VersionId                   // 14
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -273,13 +299,14 @@ int process_options(int argc, char** argv) {
         {"compression", required_argument, 0, StringArgument},                 // 11
         {"verbose", no_argument, 0, NoArgument},                               // 12
         {"help", no_argument, 0, NoArgument},                                  // 13
+        {"version", no_argument, 0, NoArgument},                               // 14
         {0, 0, 0, 0}
     };
 
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "ab:cf:ghl:m:o:svwxz",
+    while ((c = getopt_long(argc, argv, "Vab:cf:ghl:m:o:svwxz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -305,6 +332,9 @@ int process_options(int argc, char** argv) {
                 break;
             case HelpId:
                 printUsageAndExit(false);
+                break;          // never reached
+            case VersionId:
+                printVersionAndExit();
                 break;          // never reached
             default:
                 cerr << "enblend: internal error: unhandled \"NoArgument\" option"
@@ -370,6 +400,9 @@ int process_options(int argc, char** argv) {
             break;
         } // end of "case IntegerArgument"
 
+        case 'V':
+            printVersionAndExit();
+            break;          // never reached
         case 'a':
             OneAtATime = false;
             break;
