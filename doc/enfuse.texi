@@ -355,7 +355,7 @@ $0 \le \mathit{WEIGHT} \le 1$.
 @cindex option @option{--wEntropy}
 Sets the relative @var{WEIGHT} of high entropy pixels.  Valid range:
 @ifinfo
-0 @leq{} @var{WEIGHT} @leq{} 1.
+0 <= @var{WEIGHT} <= 1.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
