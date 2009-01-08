@@ -156,18 +156,20 @@ template <typename MaskType>
 void fillContour(MaskType* mask, Contour& contour, Diff2D offset) {
     typedef typename MaskType::PixelType MaskPixelType;
 
-    miPixel pixels[2];
-    pixels[0] = NumericTraits<MaskPixelType>::max();
-    pixels[1] = NumericTraits<MaskPixelType>::max();
-    miGC* pGC = miNewGC(2, pixels);
-    miPaintedSet* paintedSet = miNewPaintedSet();
-
     int totalPoints = 0;
     for (Contour::iterator currentSegment = contour.begin();
          currentSegment != contour.end();
          ++currentSegment) {
         totalPoints += (*currentSegment)->size();
     }
+
+    if (totalPoints == 0) return;
+
+    miPixel pixels[2];
+    pixels[0] = NumericTraits<MaskPixelType>::max();
+    pixels[1] = NumericTraits<MaskPixelType>::max();
+    miGC* pGC = miNewGC(2, pixels);
+    miPaintedSet* paintedSet = miNewPaintedSet();
 
     miPoint* points = new miPoint[totalPoints];
 
@@ -835,6 +837,8 @@ MaskType* createMask(const ImageType* const white,
              currentSegment != (*currentContour)->end();
              ++currentSegment) {
             Segment* snake = *currentSegment;
+
+            if (snake->empty()) continue;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
                 cout << " s" << segmentNumber++;
