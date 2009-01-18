@@ -69,6 +69,15 @@ public:
         // Convert mask pixel to blend coefficient in range [0.0, 1.0].
         double whiteCoeff =
                 NumericTraits<MaskPixelType>::toRealPromote(maskP) / white;
+        // Sometimes masked image data is invalid.  For floating point samples
+        // this includes possible NaN's in the data.   In that case, computing
+        // the output sample will result in a NaN output if the weight on that
+        // pixel is 0 (since 0*NaN = NaN )
+        // Handle this by explicitly ignoring fully masked pixels
+        if (whiteCoeff>=1.0)
+            return wP;
+        if (whiteCoeff<=0.0)
+            return bP;
         double blackCoeff = 1.0 - whiteCoeff;
 
         RealImagePixelType rwP = NumericTraits<ImagePixelType>::toRealPromote(wP);

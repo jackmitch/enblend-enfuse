@@ -46,6 +46,8 @@ Enblend developers:
 Andrew Mihal <acmihal@users.sourceforge.net> (primary author)
 Max Lyons
 Pablo d'Angelo
+Christoph Spiel
+Brent Townshend
 
 Win32 porting:
 Joe Beda

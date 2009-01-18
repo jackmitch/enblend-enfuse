@@ -111,6 +111,7 @@ template <typename CostImage, typename VisualizeImage>
 class GDAConfiguration {
 public:
     typedef typename CostImage::PixelType CostImagePixelType;
+    typedef typename NumericTraits<CostImagePixelType>::Promote CostImagePromoteType;
     typedef typename CostImage::const_traverser CostIterator;
 
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v, VisualizeImage* const vi)

@@ -124,7 +124,7 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
                 WorkingPixelType neighborCost = std::max(NumericTraits<WorkingPixelType>::one(),
                                                          NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
                 //cout << "neighborCost=" << neighborCost << endl;
-                if (neighborCost == NumericTraits<CostPixelType>::max()) neighborCost <<= 16;
+                if (neighborCost == NumericTraits<CostPixelType>::max()) neighborCost *= 65536; // Can't use << since neighborCost may be floating-point
 
                 if ((i & 1) == 0) {
                     // neighbor is diagonal

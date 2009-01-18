@@ -78,7 +78,20 @@ protected:
 
     // Convert a real pixel type to a real pyramid value type.
     inline PyramidPixelType doConvert(const SrcPixelType &v, VigraFalseType, VigraFalseType) const {
-        return v;
+        // Convert real data using a log transform.   These achieves two purposes:
+        //  1. During blending, even completely non-negative images can result in negative pixels.
+        //     A log transform followed by the exp inverse guarantees all-positive output
+        //  2. For HDR data, the log transform put the samples closer to a perceptual space making
+        //     the blending a little more pleasing.   Ideally, all blending should be done in
+        //     a strictly perceptually-linear space, such as Luv or Lab
+        // Check for non-positive values -- they shouldn't be in the input, but if they are
+        // we need to handle them or log will return a NaN
+        if (v<=0)
+            // No really good choice for this value since the input data could be scaled arbitrarily
+            // But in practice this seems about right -- a small pixel but not too extreme
+            return log(1e-5);   
+        else
+            return log(v);
     }
 
     inline PyramidPixelType convertDoubleToFixedPoint(const double &v) const {
@@ -153,7 +166,8 @@ protected:
 
     // Convert a real pyramid pixel to a real image pixel.
     inline DestPixelType doConvert(const PyramidPixelType &v, VigraFalseType, VigraFalseType) const {
-        return v;
+        // Undo logarithmic mapping that was done in building the pyramid
+        return exp(v);
     }
 
     // Dithering is used to fool the eye into seeing gradients that are finer
@@ -172,9 +186,8 @@ protected:
             } else {
                 return floor(v);
             }
-        } else {
-            return v;
         }
+        return v;
     }
 
     inline double convertFixedPointToDouble(const PyramidPixelType &v) const {

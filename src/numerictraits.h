@@ -201,4 +201,4 @@ ALPHA_TRAITS(double, 1.0);
 
 } // namespace enblend
 
-#endif /* __FIXMATH_H__ */
+#endif /* __NUMERICTRAITS_H__ */
