@@ -1696,14 +1696,14 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
                     NULL);
             cerr << endl << lpMsgBuf << endl;
             LocalFree(lpMsgBuf);
-            vigra_fail("enblend: error writing to image swap file.\n");
+            vigra_fail("enblend: error writing to image swap file.\nMost likely cause: No space for temporary files.\nMake sure that there is enough space in the temporary directory\n");
         }
 #else
         clearerr(tmpFile_);
         int itemsWritten = fwrite(blockStart, sizeof(PIXELTYPE), pixelsToWrite, tmpFile_);
         if (itemsWritten < pixelsToWrite) {
             perror("enblend");
-            vigra_fail("enblend: error writing to image swap file.\n");
+            vigra_fail("enblend: error writing to image swap file.\nMost likely cause: No space for temporary files.\nMake sure that there is enough space in the temporary directory\n");
         }
 #endif
     }
