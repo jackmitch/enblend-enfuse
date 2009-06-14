@@ -3,7 +3,7 @@
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
- *  $Id: MultiThreadOperations.h,v 1.2 2007-01-27 05:00:35 acmihal Exp $
+ *  $Id: MultiThreadOperations.h,v 1.2 2007/01/27 05:00:35 acmihal Exp $
  *
  *  This is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public
