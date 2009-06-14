@@ -78,7 +78,10 @@ extern "C" int optind;
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
-#define OPTION_DELIMITERS ",;:/"
+// Size of the buffer we reserve for (library) error messages
+#define ERROR_MESSAGE_SIZE 256
+
+#define OPTION_DELIMITERS ";:/"
 
 struct AlternativePercentage {
     double value;
@@ -421,6 +424,7 @@ int process_options(int argc, char** argv) {
             switch (option_index) {
             case MinCurvatureId: {
                 char *tail;
+                errno = 0;
                 MinCurvature.value = strtod(optarg, &tail);
                 if (errno == 0) {
                     if (*tail == 0) {
@@ -433,8 +437,12 @@ int process_options(int argc, char** argv) {
                         exit(1);
                     }
                 } else {
+                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << "enfuse: illegal numeric format \""
-                         << optarg << "\" for minimum gradient." << endl;
+                         << optarg << "\" for minimum gradient: "
+                         << errmsg << endl;
+                    delete [] errmsg;
                     exit(1);
                 }
                 break;
@@ -452,51 +460,69 @@ int process_options(int argc, char** argv) {
                          << "EdgeScale is required." << endl;
                     exit(1);
                 }
+                errno = 0;
                 FilterConfig.edgeScale = strtod(token, &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
-                        cerr << "enfuse: could not decode edge scale specification \""
+                        cerr << "enfuse: could not decode \"" << tail
+                             << "\" in edge scale specification \""
                              << token << "\" for EdgeScale." << endl;
                         exit(1);
                     }
                 } else {
+                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << "enfuse: illegal numeric format \""
-                         << token << "\" for EdgeScale." << endl;
+                         << token << "\" for EdgeScale: "
+                         << errmsg << endl;
+                    delete [] errmsg;
                     exit(1);
                 }
 
                 token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
+                    errno = 0;
                     FilterConfig.lceScale = strtod(token, &tail);
                     if (errno == 0) {
                         if (strcmp(tail, "%") == 0) {
                             FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
                         } else if (*tail != 0) {
-                            cerr << "enfuse: could not decode specification \""
-                                 << token << "\" for LCE-scale." << endl;
+                            cerr << "enfuse: could not decode \"" << tail
+                                 << "\" in specification \"" << token
+                                 << "\" for LCE-scale." << endl;
                             exit(1);
                         }
                     } else {
+                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << "enfuse: illegal numeric format \""
-                             << token << "\" for LCE-Scale." << endl;
+                             << token << "\" for LCE-Scale: "
+                             << errmsg << endl;
+                        delete [] errmsg;
                         exit(1);
                     }
                 }
 
                 token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
+                    errno = 0;
                     FilterConfig.lceFactor = strtod(token, &tail);
                     if (errno == 0) {
                         if (strcmp(tail, "%") == 0) {
                             FilterConfig.lceFactor /= 100.0;
                         } else if (*tail != 0) {
-                            cerr << "enfuse: could not decode specification \""
-                                 << token << "\" for LCE-factor." << endl;
+                            cerr << "enfuse: could not decode \"" << tail
+                                 << "\" in specification \"" << token
+                                 << "\" for LCE-factor." << endl;
                             exit(1);
                         }
                     } else {
+                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << "enfuse: illegal numeric format \""
-                             << token << "\" for LCE-factor." << endl;
+                             << token << "\" for LCE-factor: "
+                             << errmsg << endl;
+                        delete [] errmsg;
                         exit(1);
                     }
                 }
@@ -522,6 +548,7 @@ int process_options(int argc, char** argv) {
                          << "LowerCutOff is required." << endl;
                     exit(1);
                 }
+                errno = 0;
                 EntropyLowerCutoff.value = strtod(token, &tail);
                 if (errno == 0) {
                     if (*tail == 0) {
@@ -530,17 +557,22 @@ int process_options(int argc, char** argv) {
                         EntropyLowerCutoff.isPercentage = true;
                     } else {
                         cerr << "enfuse: unrecognized entropy's lower cutoff \""
-                             << token << "\"" << endl;
+                             << tail << "\" in \"" << token << "\"" << endl;
                         exit(1);
                     }
                 } else {
+                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << "enfuse: illegal numeric format \""
-                         << token << "\" of entropy's lower cutoff." << endl;
+                         << token << "\" of entropy's lower cutoff: "
+                         << errmsg << endl;
+                    delete [] errmsg;
                     exit(1);
                 }
 
                 token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
+                    errno = 0;
                     EntropyUpperCutoff.value = strtod(token, &tail);
                     if (errno == 0) {
                         if (*tail == 0) {
@@ -549,12 +581,16 @@ int process_options(int argc, char** argv) {
                             EntropyUpperCutoff.isPercentage = true;
                         } else {
                             cerr << "enfuse: unrecognized entropy's upper cutoff \""
-                                 << token << "\"" << endl;
+                                 << tail << "\" in \"" << token << "\"" << endl;
                             exit(1);
                         }
                     } else {
+                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
+                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << "enfuse: illegal numeric format \""
-                             << token << "\" of entropy's upper cutoff." << endl;
+                             << token << "\" of entropy's upper cutoff: "
+                             << errmsg << endl;
+                        delete [] errmsg;
                         exit(1);
                     }
                 }
