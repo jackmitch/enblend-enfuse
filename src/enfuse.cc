@@ -181,12 +181,12 @@ double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy 
  * details. */
 void printVersionAndExit() {
     cout <<
-        "enfuse " << VERSION << "\n" <<
+        "enfuse " << VERSION << ".\n" <<
 #ifdef ENBLEND_CACHE_IMAGES
-        "Extra feature: image cache\n" <<
+        "Extra feature: image cache.\n" <<
 #endif
         "\n" <<
-        "Copyright (C) 2004-2008 Andrew Mihal.\n" <<
+        "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
         "There is NO WARRANTY, to the extent permitted by law.\n" <<
@@ -205,84 +205,87 @@ void printUsageAndExit(const bool error = true) {
         "Fuse INPUT images into a single OUTPUT image.\n" <<
         "\n" <<
         "Common options:\n" <<
-        "  -V, --version          Output version information and exit\n" <<
-        "  -h, --help             Print this help message and exit\n" <<
-        "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
-        "  -o FILENAME            Write output to FILENAME\n" <<
-        "  -v, --verbose          Verbosely report progress; repeat to\n" <<
-        "                           increase verbosity\n" <<
-        "  -w                     Blend across -180/+180 degrees boundary\n" <<
-        "  --compression=COMP     Set compression of output image to COMP,\n" <<
-        "                           where COMP is:\n" <<
-        "                             NONE, PACKBITS, LZW, DEFLATE (for TIFF files)\n" <<
-        "                             0-100 (for JPEG files)\n" <<
-        " -z                     Use LZW compression (TIFF only).\n" <<
-        "                          Kept for backward compatability with older scripts\n" <<
+        "  -V, --version          output version information and exit\n" <<
+        "  -h, --help             print this help message and exit\n" <<
+        "  -l LEVELS              number of blending levels to use (1 to 29)\n" <<
+        "  -o FILENAME            write output to FILENAME\n" <<
+        "  -v, --verbose          verbosely report progress; repeat to\n" <<
+        "                         increase verbosity\n" <<
+        "  -w                     blend across -180/+180 degrees boundary\n" <<
+        "  --compression=COMP     set compression of output image to COMP,\n" <<
+        "                         where COMP is:\n" <<
+        "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                           0 to 100 for JPEG files\n" <<
+        " -z                      use LZW compression (TIFF only); kept for\n" <<
+        "                         backward compatability with older scripts\n" <<
         "\n" <<
         "Extended options:\n" <<
-        "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
+        "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
-        "  -c                     Use CIECAM02 to blend colors\n" <<
-        "  -g                     Associated-alpha hack for Gimp (before version 2)\n" <<
-        "                           and Cinepaint\n" <<
+        "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
+        "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
-        "                         Manually set the size and position of the output\n" <<
-        "                           image.  Useful for cropped and shifted input\n" <<
-        "                           TIFF images, such as those produced by Nona.\n" <<
-        "  -m CACHESIZE           Images CACHESIZE in Megabytes.  Default: " <<
+        "                         manually set the size and position of the output\n" <<
+        "                         image; useful for cropped and shifted input\n" <<
+        "                         TIFF images, such as those produced by Nona\n" <<
+        "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
         "\n" <<
         "Fusion options:\n" <<
-        "  --wExposure=WEIGHT     Weight given to well-exposed pixels\n" <<
-        "                           (0 <= WEIGHT <= 1).  Default: " << WExposure << "\n" <<
-        "  --wSaturation=WEIGHT   Weight given to highly-saturated pixels\n" <<
-        "                           (0 <= WEIGHT <= 1).  Default: " << WSaturation << "\n" <<
-        "  --wContrast=WEIGHT     Weight given to high-contrast pixels\n" <<
-        "                           (0 <= WEIGHT <= 1).  Default: " << WContrast << "\n" <<
-        "  --wEntropy=WEIGHT      Weight given to high entropy regions\n" <<
-        "                           (0 <= WEIGHT <= 1).  Default: " << WEntropy << "\n" <<
-        "  --wMu=MEAN             Center aka MEAN of Gaussian weighting\n" <<
-        "                           function (0 <= MEAN <= 1).  Default: " << WMu << "\n" <<
-        "  --wSigma=SIGMA         Standard deviation of Gaussian weighting\n" <<
-        "                           function (SIGMA > 0).  Default: " << WSigma << "\n" <<
-        "  --SoftMask             Average over all masks.  This is the default.\n" <<
-        "  --HardMask             Force hard blend masks and no averaging on finest\n" <<
-        "                           scale.  This is especially useful for focus\n" <<
-        "                           stacks with thin and high contrast features,\n" <<
-        "                           but leads to increased noise.\n" <<
+        "  --wExposure=WEIGHT     weight given to well-exposed pixels\n" <<
+        "                         (0 <= WEIGHT <= 1); default: " << WExposure << "\n" <<
+        "  --wSaturation=WEIGHT   weight given to highly-saturated pixels\n" <<
+        "                         (0 <= WEIGHT <= 1); default: " << WSaturation << "\n" <<
+        "  --wContrast=WEIGHT     weight given to high-contrast pixels\n" <<
+        "                         (0 <= WEIGHT <= 1); default: " << WContrast << "\n" <<
+        "  --wEntropy=WEIGHT      weight given to high entropy regions\n" <<
+        "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
+        "  --wMu=MEAN             center aka MEAN of gaussian weighting\n" <<
+        "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
+        "  --wSigma=SIGMA         standard deviation of gaussian weighting\n" <<
+        "                         function (SIGMA > 0); default: " << WSigma << "\n" <<
+        "  --SoftMask             average over all masks; this is the default\n" <<
+        "  --HardMask             force hard blend masks and no averaging on finest\n" <<
+        "                         scale; this is especially useful for focus\n" <<
+        "                         stacks with thin and high contrast features,\n" <<
+        "                         but leads to increased noise\n" <<
         "\n" <<
         "Expert options:\n" <<
         "  --ContrastWindowSize=SIZE\n" <<
-        "                         Window SIZE for local-contrast analysis.\n" <<
-        "                           (SIZE >= 3).  Default: " << ContrastWindowSize  << "\n" <<
+        "                         set window SIZE for local-contrast analysis\n" <<
+        "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
         "  --GrayProjector=OPERATOR\n" <<
-        "                         Apply grayscale projection OPERATOR, where\n" <<
-        "                           OPERATOR is one of \"average\", \"l-star\",\n" <<
-        "                           \"lightness\", \"value\", \"luminance\", or\n" <<
-        "                           \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\".\n" <<
-        "                           Default: \"" <<
+        "                         apply grayscale projection OPERATOR, where\n" <<
+        "                         OPERATOR is one of \"average\", \"l-star\",\n" <<
+        "                         \"lightness\", \"value\", \"luminance\", or\n" <<
+        "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
+        "                         default: \"" <<
         enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
         "  --EdgeScale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
-        "                         Scale on which to look for edges.  Positive\n" <<
-        "                           LCESCALE switches on local contrast enhancement\n" <<
-        "                           by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0).\n" <<
-        "                           Append \"%\" to LCESCALE for values relative to\n" <<
-        "                           EDGESCALE; append \"%\" to LCEFACTOR for relative\n" <<
-        "                           value.  Defaults: " <<
+        "                         set scale on which to look for edges; positive\n" <<
+        "                         LCESCALE switches on local contrast enhancement\n" <<
+        "                         by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0);\n" <<
+        "                         append \"%\" to LCESCALE for values relative to\n" <<
+        "                         EDGESCALE; append \"%\" to LCEFACTOR for relative\n" <<
+        "                         value; defaults: " <<
         FilterConfig.edgeScale << ":" << FilterConfig.lceScale << ":" << FilterConfig.lceFactor << "\n" <<
         "  --MinCurvature=CURVATURE\n" <<
-        "                         Minimum CURVATURE for an edge to qualify.  Append\n" <<
-        "                           \"%\" for relative values.  Default: " << MinCurvature.str() << ".\n" <<
+        "                         minimum CURVATURE for an edge to qualify; append\n" <<
+        "                         \"%\" for relative values; default: " << MinCurvature.str() << "\n" <<
         "  --EntropyWindowSize=SIZE\n" <<
-        "                         Window SIZE for local entropy analysis.\n" <<
-        "                           (SIZE >= 3).  Default: " << EntropyWindowSize  << "\n" <<
+        "                         set window SIZE for local entropy analysis\n" <<
+        "                         (SIZE >= 3); default: " << EntropyWindowSize  << "\n" <<
         "  --EntropyCutoff=LOWERCUTOFF[:UPPERCUTOFF]\n" <<
-        "                         LOWERCUTOFF is the value below of which pixels a treated\n" <<
-        "                           as black and UPPERCUTOFF is the value above of which\n" <<
-        "                           pixels are treated as white in the entropy weighting.\n" <<
-        "                           Append \"%\" signs for relative values.  Default: " <<
+        "                         LOWERCUTOFF is the value below of which pixels are\n" <<
+        "                         treated as black and UPPERCUTOFF is the value above\n" <<
+        "                         of which pixels are treated as white in the entropy\n" <<
+        "                         weighting; append \"%\" signs for relative values;\n" <<
+        "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
-        "  --debug                Output mask images for debugging\n" <<
+        "  --debug                output mask images for debugging\n" <<
+        "\n" <<
+        "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;
 
     exit(error ? 1 : 0);

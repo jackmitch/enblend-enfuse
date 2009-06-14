@@ -4,7 +4,6 @@
 
 \.a$
 \.o$
-\.info$
 /\.deps/
 ^autom4te.cache/
 (^|/)Makefile$

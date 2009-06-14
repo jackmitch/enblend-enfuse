@@ -13,8 +13,7 @@ enfuse_TEXINFOS = auxmac.texi \
                   tuning-memory-usage.texi \
                   understanding-masks.texi
 
-#man_MANS = enblend.1 enfuse.1
-#EXTRA_DIST = enblend.1 enfuse.1 enblend.texi enfuse.texi
+AM_MAKEINFOFLAGS=@AM_MAKEINFOFLAGS@
 
 # created by make(1), user pobably wants to rebuild (often?)
 MOSTLYCLEANFILES =
@@ -32,35 +31,40 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
 DISTCLEANFILES = texinfo.tex
 
 # e.g. *.info
-MAINTAINERCLEANFILES =
+MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 
-#
+# Implicit Rules
+
+.gp.txt:
+	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+
+.gp.png:
+	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+
+.gp.eps:
+	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+
+.gp.pdf:
+	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
 
 
-%.txt %.png %.eps %.pdf: %.gp config.gp config-edge.gp
-	$(GNUPLOT) $<
-
-
-%.txt: %.fig
+.fig.txt:
 	$(SED) --expression='1,/---BEGIN-TEXT---/d' \
                --expression='/---END-TEXT---/,$$d' \
                --expression='s/^# \?//' < $< > $@
 
-
-%.png: %.fig
+.fig.png:
 	$(FIG2DEV) -L png $< $@
 
-
-%.eps: %.fig
+.fig.eps:
 	$(FIG2DEV) -L eps $< $@
 
-
-%.pdf: %.fig
+.fig.pdf:
 	$(FIG2DEV) -L pdf $< $@
 
-#
 
+# Explicit Rules
 
 enfuse.info: entropy.txt \
              entropy-cutoff.txt \

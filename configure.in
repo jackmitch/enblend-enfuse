@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(enblend-enfuse, 3.2-staging, [https://code.launchpad.net/~cspiel/enblend/staging])
+AC_INIT(enblend-enfuse, 3.2-staging, [https://bugs.launchpad.net/enblend])
 AC_CONFIG_SRCDIR([src/enblend.cc])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE
@@ -13,7 +13,7 @@ CXXFLAGS=$CXXFLAGS_ORIG
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_LANG(C++)
-#CXXFLAGS = 
+#CXXFLAGS =
 
 AC_C_BIGENDIAN
 
@@ -45,8 +45,8 @@ CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
 
 AX_CHECK_GL
 AX_CHECK_GLU
-AX_CHECK_GLUT 
-if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then 
+AX_CHECK_GLUT
+if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then
      AC_MSG_WARN([WARNING: GL/GLU/GLUT not found, disabling GPU mode])
 else
     # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
@@ -66,7 +66,7 @@ AC_HEADER_STDC
 # it is available anyhow (Its part of the GNU stl implementation)
 #AC_CHECK_HEADER(ext/slist,AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file),AC_MSG_WARN([ext/slist is required to compile enblend]))
 AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file)
-AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fenv.h limits.h stdlib.h string.h unistd.h])
 AC_CHECK_HEADER(tiffio.h,,AC_MSG_ERROR([libtiff-devel header files are required to compile enblend.]))
 AC_CHECK_HEADER(jpeglib.h,,AC_MSG_ERROR([libjpeg-devel header files are required to compile enblend.]))
 AC_CHECK_HEADER(png.h,,AC_MSG_ERROR([libpng-devel header files are required to compile enblend.]))
@@ -100,60 +100,88 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FSEEKO
 AC_FUNC_MALLOC
-#AC_FUNC_SETVBUF_REVERSED
-AC_TYPE_SIGNAL
+AC_FUNC_STRERROR_R
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS([floor memset pow rint sqrt strchr strerror strrchr mkstemp])
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS([fesetround floor memset mktemp sqrt strchr strcspn strdup strrchr])
 
 # lrint and lrintf
 AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
 
 # Documentation
+AM_MISSING_PROG([HELP2MAN], [help2man])
+
 AC_ARG_WITH(GDFONTPATH,
-        AC_HELP_STRING([--with-gdfontpath=<path>],
-                       [  set path to TrueType fonts]),
-        [GDFONTPATH="$withval"],
-        [GDFONTPATH=/usr/share/fonts/truetype/freefont])
+            AC_HELP_STRING([--with-ttf-path=<PATH>],
+                           [set path to TrueType fonts]),
+            [GDFONTPATH="$withval"],
+            [GDFONTPATH="/usr/share/fonts/truetype/freefont"])
 AC_ARG_VAR(GDFONTPATH, [path to TrueType fonts])
+
 AC_CHECK_PROG(GNUPLOT, gnuplot, gnuplot)
 AC_CHECK_PROG(FIG2DEV, fig2dev, fig2dev)
-AC_CHECK_PROG(SED, sed, sed)
+AC_PROG_SED
+
+AC_MSG_CHECKING([checking whether split documentation files])
+split_doc_default="yes"
+AC_ARG_ENABLE([split-doc],
+              AC_HELP_STRING([--enable-split-doc],
+                             [split documentation [[yes]]]),
+              [split_doc=$enableval],
+              [split_doc=$split_doc_default])
+if test "x$split_doc" = "xyes"; then
+  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS"
+  AC_MSG_RESULT(yes)
+else
+  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split"
+  AC_MSG_RESULT(no)
+  split_doc=no
+fi
+AC_SUBST(AM_MAKEINFOFLAGS)
 
 # use a static vigra impex library
 CXXFLAGS="-DVIGRA_STATIC_LIB ${CXXFLAGS}"
 
 AC_MSG_CHECKING(whether to enable debugging)
 debug_default="no"
-AC_ARG_ENABLE(debug, [  --enable-debug=[no/yes] turn on debugging
-                       [default=$debug_default]],, enable_debug=$debug_default)
+AC_ARG_ENABLE(debug,
+              AC_HELP_STRING([--enable-debug],
+                             [turn on debugging [[no]]]),
+              [enable_debug=$enableval],
+              [enable_debug=$debug_default])
 if test "x$enable_debug" = "xyes"; then
   CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
   AC_MSG_RESULT(yes)
 else
   CXXFLAGS="$CXXFLAGS -O3 -ffast-math -DNDEBUG -Wall"
   AC_MSG_RESULT(no)
+  enable_debug=no
 fi
 
 AC_MSG_CHECKING(whether to enable image cache)
 image_cache_default="yes"
-AC_ARG_ENABLE(image_cache, [  --enable-image-cache=[no/yes] enable image cache, allows processing of large files
-                       [default=$image_cache_default]],, enable_image_cache=$image_cache_default)
+AC_ARG_ENABLE(image_cache,
+              AC_HELP_STRING([--enable-image-cache],
+                             [allow for processing of large images [[yes]]]),
+              [enable_image_cache=$enableval],
+              [enable_image_cache=$image_cache_default])
 if test "x$enable_image_cache" = "xyes"; then
   CXXFLAGS="$CXXFLAGS -DENBLEND_CACHE_IMAGES"
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
+  enable_image_cache=no
 fi
 
 AC_CONFIG_FILES([Makefile
-                 doc/Makefile
                  include/Makefile
                  include/vigra/Makefile
                  include/vigra_ext/Makefile
                  src/Makefile
                  src/vigra_impex/Makefile
-                 src/win32helpers/Makefile])
+                 src/win32helpers/Makefile
+                 doc/Makefile])
 AC_OUTPUT
 
 AC_MSG_RESULT([
@@ -164,4 +192,9 @@ AC_MSG_RESULT([
    CFLAGS needed for configure:    ${CFLAGS}
    CXXFLAGS needed for configure:  ${CXXFLAGS}
    LIBS needed for configure:      ${LIBS}
+
+ feature selection:
+   split *.info and *.html files:  ${split_doc}
+   enable debugging support:       ${enable_debug}
+   use image cache:                ${enable_image_cache}
 ])

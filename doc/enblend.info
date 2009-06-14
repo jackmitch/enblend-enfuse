@@ -1,0 +1,1121 @@
+This is enblend.info, produced by makeinfo version 4.11 from
+enblend.texi.
+
+This manual is for Enblend (version 3.2-staging, 16 March 2009), a tool
+for compositing images in such a way that the seam between the images
+is invisible, or at least very difficult to see.
+
+   Copyright (C) 2004-2009 Andrew Mihal.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.2 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts and no
+     Back-Cover Texts.  A copy of the license is included in the section
+     entitled "GNU Free Documentation License".
+
+
+File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
+
+Enblend
+*******
+
+This manual is for Enblend (version 3.2-staging, 16 March 2009), a tool
+for compositing images n such a way that the seam between the images is
+invisible, or at least very difficult to see.
+
+* Menu:
+
+* Overview::                    Overview of Enbelnd's features
+* Invocation::                  Command line options and arguments
+* Understanding Masks::         How to interpret masks and mask files
+* Tuning Memory Usage::         Balancing RAM and swap
+* Helpful Programs::            Useful other programs
+* Authors::                     Major Contributors
+* FDL::                         GNU Free Documentation License
+* Program Index::               Names of programs referenced
+* Option Index::                Index of all options
+* General Index::               Topic index
+
+
+File: enblend.info,  Node: Overview,  Next: Invocation,  Prev: Top,  Up: Top
+
+1 Overview
+**********
+
+Enblend overlays multiple TIFF images using the Burt-Adelson
+multiresolution spline algorithm.(1)  This technique tries to make the
+seams between the input images invisible.  The basic idea is that image
+features should be blended across a transition zone proportional in
+size to the spatial frequency of the features.  For example, objects
+like trees and windowpanes have rapid changes in color.  By blending
+these features in a narrow zone, you will not be able to see the seam
+because the eye already expects to see color changes at the edge of
+these features.  Clouds and sky are the opposite.  These features have
+to be blended across a wide transition zone because any sudden change
+in color will be immediately noticeable.
+
+   Enblend expects each input file to have an alpha channel.  The alpha
+channel should indicate the region of the file that has valid image
+data.  Enblend compares the alpha regions in the input files to find
+the areas where images overlap.  Alpha channels can be used to indicate
+to Enblend that certain portions of an input image should not
+contribute to the final image.
+
+   Enblend does _not_ align images.  Use a tool as `hugin' or PanoTools
+to do this.  The TIFF files produced by these programs are exactly what
+Enblend is designed to work with.  Sometimes these GUIs allow you to
+select feathering for the edges of your images.  This treatment is
+detrimental to Enblend.  Turn off feathering by deselecting it or
+setting the feather width to zero.
+
+   Enblend blends the images in the order they are specified on the
+command line.  You should order your images according to the way that
+they overlap, for example from left-to-right across the panorama.  If
+you are making a multi-row panorama, we recommend blending each
+horizontal row individually, and then running Enblend a last time to
+blend all of the rows together vertically.
+
+   Find out more about Enblend on its web page
+(http://enblend.sourceforge.net/).
+
+   ---------- Footnotes ----------
+
+   (1) Peter J. Burt and Edward H. Adelson, "A Multiresolution Spline
+With Application to Image Mosaics", ACM Transactions on Graphics, Vol.
+2, No. 4, October 1983, pages 217-236.
+
+
+File: enblend.info,  Node: Invocation,  Next: Understanding Masks,  Prev: Overview,  Up: Top
+
+2 Invocation
+************
+
+`enblend' [OPTIONS] `-o' OUTPUT-FILE INPUT-FILES...
+
+Assemble the sequence of images INPUT-FILES... into OUTPUT-FILE.
+
+* Menu:
+
+* Common Options::              General options
+* Extended Options::            Memory and GPU control
+* Mask Generation Options::     Mask generation control
+
+
+File: enblend.info,  Node: Common Options,  Next: Extended Options,  Up: Invocation
+
+2.1 Common Options
+==================
+
+Common options control some overall features of Enblend.
+
+`-a'
+     Pre-assemble non-overlapping images before each blending iteration.
+
+     This overrides the default behavior which is to blend the images
+     sequentially in the order given on the command line.  Enblend will
+     use fewer blending iterations, but it will do more work in each
+     iteration.
+
+`--compression=COMPRESSION'
+     Write a compressed output file.
+
+     Depending on the output file format Enblend accepts different
+     values for COMPRESSION.
+
+    JPEG
+          COMPRESSION is a JPEG quality level ranging from 0-100.
+
+    TIFF
+          COMPRESSION is one of the keywords:
+         `NONE'
+               Do not compress.  This is the default.
+
+         `DEFLATE'
+               Use the Deflate compression scheme also called
+               ZIP-in-TIFF.  Deflate is a lossless data compression
+               algorithm that uses a combination of the LZ77 algorithm
+               and Huffman coding.
+
+         `LZW'
+               Use Lempel-Ziv-Welch (LZW) adaptive compression scheme.
+               LZW compression is lossless.
+
+         `PACKBITS'
+               Use PackBits compression scheme.  PackBits is particular
+               variant of run-length compression.  It is lossless.
+
+    Any other format
+          Other formats like the PNG do not accept a COMPRESSION
+          setting.
+
+`-h'
+`--help'
+     Print information on the available options and exit.
+
+`-l LEVELS'
+     Use exactly this many LEVELS for pyramid blending.
+
+     This trades off quality of results for shorter execution time and
+     lower memory usage.  The default is to use as many levels as is
+     possible given the size of the overlap regions.  Enblend may still
+     use a smaller number of levels if the geometry of the images
+     demands.
+
+`-o OUTPUT-FILE'
+     Required option that specifies the name of the OUTPUT-FILE.
+
+`-v'
+`--verbose'
+     Increase the verbosity of progress reporting.  Giving one or more
+     `-v' options will make Enblend more verbose.
+
+`-V'
+`--version'
+     Output information on the Enblend version and some configuration
+     details like extra features that have been compiled in.
+
+`-w'
+     Blend around the +/-180o boundary.  Useful for full 360o
+     panoramas.  Version 3.2-staging of Enblend, the one described
+     here, does not blend neither zenith nor or nadir, so you may still
+     see some seams in these areas.
+
+`-x'
+     Checkpoint partial results to the output file after each blending
+     step.
+
+`-z'
+     This option has been deprecated.  It is kept for backward
+     compatability with older scripts.  Use `--compression=LZW' instead.
+
+
+File: enblend.info,  Node: Extended Options,  Next: Mask Generation Options,  Prev: Common Options,  Up: Invocation
+
+2.2 Extended Options
+====================
+
+Extended options control the image cache, the color model, and the
+cropping of the output image.
+
+`-b BLOCKSIZE'
+     Set the BLOCKSIZE in kilobytes (KB) of Enblend's image cache.
+
+     This is the amount of data that Enblend will move to and from the
+     disk in one go.  The default is 2048KB, which should be ok for most
+     systems.
+
+`-c'
+     Use the CIECAM02 color appearance model for blending colors.
+
+     The input files should have embedded ICC profiles if this option
+     is specified.  If no ICC profile is present, Enblend will assume
+     that the image uses the sRGB color space.  The difference between
+     this option and Enblend's default color blending algorithm is very
+     slight and will be only noticeable when areas of different primary
+     colors are blended together.
+
+`-g'
+     Gimp (before version 2.0) and Cinepaint (*note Helpful Programs::)
+     exhibit unusual behavior when loading images with unassociated
+     alpha channels.  Use option `-g' to work around this problem.
+     With this flag Enblend creates the output image with the
+     associated alpha tag set, even though the image is really
+     unassociated alpha.
+
+`--gpu'
+     Use the graphics card to accelerate some computations.
+
+     This is an experimental feature that may not work on all systems.
+     In this version of Enblend, 3.2-staging, only mask optimization
+     strategy 1 benefits from this option.
+
+`-f WIDTHxHEIGHT'
+`-f WIDTHxHEIGHT+xXOFFSET+yYOFFSET'
+     Set the size of the output image manually to WIDTHxHEIGHT.
+     Optionally specify the X-OFFSET and Y-OFFSET, too.
+
+     This option is useful when the input images are cropped TIFF
+     files, such as those produced by `nona'.  The stitcher `nona' is
+     part of Hugin.  *Note Helpful Programs::.
+
+`-m CACHESIZE'
+     Set the CACHESIZE in megabytes (MB) of Enblend's image cache.
+
+     This is the amount of memory Enblend will use for storing image
+     data before swapping to disk.  The default is 1024MB which is good
+     for systems with 3-4gigabytes (GB) of RAM.
+
+`--visualize=IMAGE-FILE'
+     Create an IMAGE-FILE that visualizes the mask optimization process.
+
+     This shows Enblend's view of the overlap region and how it decided
+     to route the seam line.  If you are experiencing artifacts or
+     unexpected output, it may be useful to include this visualization
+     image in your bug report.
+
+
+File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up: Invocation
+
+2.3 Mask Generation Options
+===========================
+
+These options control the generation and the usage of masks.
+
+`--coarse-mask'
+     Use a scaled-down version of the input images to create the seam
+     line.  This is the default.
+
+`--fine-mask'
+     Use the full-size images to create the seam line.  This can be
+     slow.  Use `--fine-mask' if you have very narrow overlap regions.
+
+`--load-mask=IMAGE-FILE'
+     Instead of generating a mask, use the one in IMAGE-FILE.
+
+`--no-optimize'
+     Turn off seam line optimization.  Combined with `--fine-mask' this
+     will produce the same type of mask as Enblend version 2.5.
+
+`--optimize'
+     Use a two-strategy approach to route the seam line around
+     mismatches in the overlap region.  This is the default.
+
+`--save-mask=IMAGE-FILE'
+     Save the generated mask to IMAGE-FILE.
+
+     Use this option if you wish to edit the location of the seam line
+     by hand.  This will give you a template of the right size that you
+     can edit to make your changes.  Later, use `--load-mask' to blend
+     the project with your custom seam line.
+
+
+File: enblend.info,  Node: Understanding Masks,  Next: Tuning Memory Usage,  Prev: Invocation,  Up: Top
+
+3 Understanding Masks
+*********************
+
+A "binary mask" indicates for every pixel of an image if this pixel
+must be considered in further processing or ignored.  For a "weight
+mask", the value of the mask determines how much the pixel contributes,
+zero again meaning "no contribution".
+
+   Masks arise in two places: as part of the input files and as separate
+files, showing the actual pixel weights prior to image blendung or
+fusion.  We shall explore both occurrences in the next sections.
+
+3.1 Masks in Input Files
+========================
+
+Each of the input files for Enfuse and Enblend can contain its own
+mask.  Both applications interpret them as binary masks no matter how
+many bits per image pixel they contain.
+
+   Use ImageMagick's `identify' or, for TIFF files, `tiffinfo' to
+inquire quickly whether a file contains a mask.  *note Helpful
+Programs:: shows where to find these programs on the web.
+
+     $ identify -format "%f %m %wx%h %r %q-bit" remapped-0000.tif
+     remapped-0000.tif TIFF 800x533 DirectClassRGBMatte 8-bit
+                                                  ^^^^^ mask
+
+     $ tiffinfo remapped-0000.tif
+     TIFF Directory at offset 0x1a398a (1718666)
+       Subfile Type: (0 = 0x0)
+       Image Width: 800 Image Length: 533
+       Resolution: 150, 150 pixels/inch
+       Position: 0, 0
+       Bits/Sample: 8
+       Sample Format: unsigned integer
+       Compression Scheme: PackBits
+       Photometric Interpretation: RGB color
+       Extra Samples: 1<unassoc-alpha>            <<<<< mask
+       Orientation: row 0 top, col 0 lhs
+       Samples/Pixel: 4                           <<<<< R, G, B, and mask
+       Rows/Strip: 327
+       Planar Configuration: single image plane
+
+The "Matte" part of the image class and the "Extra Samples" line tell
+us that the file features a mask.  Also, many interactive image
+manipulation programs show the mask as a separate channel, sometimes
+called "Alpha".  There, the white (high mask value) parts of the mask
+enable pixels and black (low mask value) parts suppress them.
+
+   The multitude of terms all describing the concept of a mask is
+confusing.
+
+Mask
+     A mask defines a selection of pixels.  A value of zero represents
+     an unselected pixel.  The maximum value ("white") represents a
+     selected pixel and the values between zero and the maximum are
+     partially selected pixels.  See Gimp-Savy
+     (http://gimp-savvy.com/BOOK/index.html?node42.html).
+
+Alpha Channel
+     The alpha channel stores the transpacency value for each pixel,
+     typically in the range from zero to one.  A value of zero means the
+     pixel is completely transparent, thus does not contribute to the
+     image.  A value of one on the other hand means the pixel is
+     completely opaque.
+
+Matte
+     The notion "matte" as used by ImageMagick refers to an inverted
+     alpha channel, more precisely: 1 - alpha.  See ImageMagick
+     (http://www.imagemagick.org/Usage/channels/#trans) for further
+     explanations.
+
+   Enblend and Enfuse only consider pixels that have an associated mask
+value different from zero.  If an input image does not have an alpha
+channel, Enblend warns and assumes a mask of all non-zero values, this
+is, it will use every pixel of the input image for fusion.
+
+   Stitchers like `nona' add a mask to their output images.
+
+   Sometimes it is helpful to manually modify a mask before fusion.  For
+example to suppress unwanted objects (insects and cars come into mind)
+that moved across the scene during the exposures.  If the masks of all
+input images are black at a certain position, the output image will
+have a hole there.
+
+3.2 Weight Mask Files
+=====================
+
+...
+
+
+File: enblend.info,  Node: Tuning Memory Usage,  Next: Helpful Programs,  Prev: Understanding Masks,  Up: Top
+
+4 Tuning Memory Usage
+*********************
+
+The default configuration of Enfuse assumes a system with 3-4GB of RAM.
+
+   If Enfuse has been compiled with the C++-preprocessor symbol
+`ENBLEND_CACHE_IMAGES' it uses its own image cache, whose size is user
+configurable with the option `-m CACHE-SIZE' (*note Extended
+Options::).  Furthermore, option `-b BUFFER-SIZE' (*note Extended
+Options::) allows for fine-tuning the size of a single buffer inside
+the image cache.  Note that CACHE-SIZE is given in megabytes, whereas
+BUFFER-SIZE is given in kilobytes.
+
+   Usually the user lets the operating system take care of the memory
+management of all processes.  However, a user of Enfuse might want to
+control the balance between the operating systems' Virtual Memory
+System and Enfuse's image cache for several reasons.
+
+   * Paging in or out parts of a process' image runs at kernel level and
+     thus can make user processes appear unresponsive or "jumpy".  The
+     caching mechanism of Enfuse of course runs as a user process,
+     which is why it has less detrimental effects on the system's
+     overall responsiveness.
+
+   * Enfuse's image cache has been optimized for accesses to image data.
+     And all algorithms in Enfuse have been carefully arranged to play
+     nice with the image cache.  An operating system's cache has no
+     knowledge of these particular memory access patterns.
+
+   * The disk access of the operating system to the swap device has been
+     highly optimized.  Enfuse on the other hand uses the standard
+     IO-layer which is a slower interface.
+
+   * Limiting the amount of image cache prevents Enfuse from eating up
+     most or all RAM, thereby forcing all user applications into the
+     swap device.
+
+The CACHE-SIZE should be set in a way as to reconcile all of the above
+aspects even for the biggest data sets (this is many images and large
+images).
+
+   Suggested cache- and buffer-sizes for different amounts of available
+RAM.
+
+      RAM  | CACHE-SIZE | BUFFER-SIZE | Comment
+      MB   |     MB     |     KB      |
+     ------+------------+-------------+---------
+      4096 | 1024       | 2048        | default
+      2048 | 512--1024  | 1024        |
+      1024 | 256--512   | 256--512    |
+
+Table 4.1: Suggested cache-size settings
+
+
+File: enblend.info,  Node: Helpful Programs,  Next: Authors,  Prev: Tuning Memory Usage,  Up: Top
+
+5 Helpful Additional Programs
+*****************************
+
+Several libraries and programs have proven helpful when working with
+Enfuse and Enblend.
+
+*Raw Image Conversion*
+        * DCRaw (http://www.cybercom.net/~dcoffin/dcraw/) is a
+          universal raw-converter.
+
+        * UFRaw (http://ufraw.sourceforge.net/), a raw converter based
+          on DCRaw, adds a GUI (`ufraw'), versatile batch processing
+          (`ufraw-batch'), and some additional features like, for
+          example, cropping, noise reduction with wavelets, and
+          automatic lens error correction.
+
+*Image Alignment and Rendering*
+        * ALE (http://auricle.dyndns.org/ALE/), David Hilvert's
+          anti-lamenessing engine for the real die-hard command-line
+          users aligns, filters, and renders images.
+
+        * Hugin (http://hugin.sourceforge.net/) is a GUI that aligns
+          and stitches images.
+
+          It comes with several command line tools, like `nona' to
+          stitch panorama images, `align_image_stack' to align
+          overlapping images for HDR or create focus stacks, and
+          `fulla' to correct lens errors.
+
+        * PanoTools (http://panotools.sourceforge.net/) the successor of
+          Helmut Dersch's original PanoTools
+          (http://www.all-in-one.ee/~dersch/) offers a set of
+          command-line dirven applications to create panoramas.  Most
+          notable are `PTOptimizer' and `PTmender'.
+
+*Image Manipulation*
+        * CinePaint (http://www.cinepaint.org/) is a branch of an early
+          Gimp forked off at version 1.0.4.  It sports much less
+          features than the current Gimp, but offers 8bit, 16bit and
+          32bit color channels, HDR (for example floating-point TIFF,
+          and OpenEXR), and a tightly integrated color management
+          system.
+
+        * The Gimp (www.gimp.org/) is a general purpose image
+          manipulation program.  At the time of this writing it is
+          still limited to images with only 8bits per channel.
+
+        * ImageMagick (http://www.imagemagick.org/) and its clone
+          GraphicsMagick (http://www.graphicsmagick.org/) are general
+          purpose command-line driven image manipulation programs.
+
+*High Dynamic Range*
+        * OpenEXR (http://www.openexr.com/) offers libraries and some
+          programs to work with the EXR HDR format.
+
+        * PFSTools (http://pfstools.sourceforge.net/) create, modify,
+          and tonemap high-dynamic range images.
+
+*Libraries*
+        * LibJPEG (http://www.ijg.org/) is a library for handling the
+          JPEG (JFIF) image format.
+
+        * LibPNG (http://www.libpng.org/pub/png/libpng.html) is a
+          library that handles the Portable Network Graphics (PNG)
+          image format.
+
+        * LibTIFF (http://www.remotesensing.org/libtiff/) offers a
+          library and utility programs to manipulate the ubiquitous
+          Tagged Image File Format, TIFF.
+
+          The nifty `tiffinfo' command quickly inquires the properties
+          of TIFF files.
+
+*Meta-Data Handling*
+        * EXIFTool (http://www.sno.phy.queensu.ca/~phil/exiftool/)
+          reads and writes EXIF meta data.  In particular it copies
+          meta data from one image to another.
+
+        * LittleCMS (http://www.littlecms.com/) is the color management
+          library used by Hugin, DCRaw, UFRaw, Enblend, and Enfuse.  It
+          supplies some binaries, too.  `tifficc', an ICC color profile
+          applier, is of particular interest.
+
+
+File: enblend.info,  Node: Authors,  Next: FDL,  Prev: Helpful Programs,  Up: Top
+
+Appendix A Authors
+******************
+
+   * Andrew Mihal <acmihal@users.sourceforge.net>.
+
+
+File: enblend.info,  Node: FDL,  Next: Program Index,  Prev: Authors,  Up: Top
+
+Appendix B GNU Free Documentation License
+*****************************************
+
+Version 1.2, November 2002
+
+     Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
+     51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft", which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it
+     can be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
+     accept the license if you copy, modify or distribute the work in a
+     way requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.  If a section does not fit the above definition of
+     Secondary then it is not allowed to be designated as Invariant.
+     The Document may contain zero Invariant Sections.  If the Document
+     does not identify any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup, or absence of
+     markup, has been arranged to thwart or discourage subsequent
+     modification by readers is not Transparent.  An image format is
+     not Transparent if used for any substantial amount of text.  A
+     copy that is not "Transparent" is called "Opaque".
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML, PostScript or PDF designed for
+     human modification.  Examples of transparent image formats include
+     PNG, XCF and JPG.  Opaque formats include proprietary formats that
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML, PostScript or PDF
+     produced by some word processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a computer-network location from
+     which the general network-using public has access to download
+     using public-standard network protocols a complete Transparent
+     copy of the Document, free of added material.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section Entitled "Endorsements", provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements", and any sections Entitled "Dedications".  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow this
+     License in all other respects regarding verbatim copying of that
+     document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided for under this License.  Any other
+     attempt to copy, modify, sublicense or distribute the Document is
+     void, and will automatically terminate your rights under this
+     License.  However, parties who have received copies, or rights,
+     from you under this License will not have their licenses
+     terminated so long as such parties remain in full compliance.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     `http://www.gnu.org/copyleft/'.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.
+
+
+File: enblend.info,  Node: Program Index,  Next: Option Index,  Prev: FDL,  Up: Top
+
+Program Index
+*************
+
+ [index ]
+* Menu:
+
+* ALE:                                   Helpful Programs.     (line 20)
+* align_image_stack:                     Helpful Programs.     (line 27)
+* Anti-Lamenessing Engine:               Helpful Programs.     (line 20)
+* cinepaint:                             Helpful Programs.     (line 39)
+* CinePaint:                             Helpful Programs.     (line 39)
+* dcraw:                                 Helpful Programs.     (line 10)
+* DCRaw:                                 Helpful Programs.     (line 10)
+* exiftool:                              Helpful Programs.     (line 77)
+* EXIFTool:                              Helpful Programs.     (line 77)
+* fulla:                                 Helpful Programs.     (line 27)
+* gimp:                                  Helpful Programs.     (line 46)
+* Gimp:                                  Helpful Programs.     (line 46)
+* GraphicsMagick:                        Helpful Programs.     (line 50)
+* hugin:                                 Helpful Programs.     (line 24)
+* Hugin <1>:                             Helpful Programs.     (line 24)
+* Hugin:                                 Extended Options.     (line 46)
+* hugin:                                 Overview.             (line 25)
+* identify:                              Understanding Masks.  (line 22)
+* ImageMagick:                           Helpful Programs.     (line 50)
+* LibJPEG:                               Helpful Programs.     (line 62)
+* LibPNG:                                Helpful Programs.     (line 65)
+* LibTIFF:                               Helpful Programs.     (line 69)
+* LittleCMS, TiffICC:                    Helpful Programs.     (line 81)
+* nona <1>:                              Helpful Programs.     (line 27)
+* nona:                                  Extended Options.     (line 46)
+* OpenEXR:                               Helpful Programs.     (line 55)
+* PanoTools <1>:                         Helpful Programs.     (line 32)
+* PanoTools:                             Overview.             (line 25)
+* PFSTools:                              Helpful Programs.     (line 58)
+* PTmender:                              Helpful Programs.     (line 32)
+* PTOptimizer:                           Helpful Programs.     (line 32)
+* tifficc:                               Helpful Programs.     (line 81)
+* tiffinfo <1>:                          Helpful Programs.     (line 73)
+* tiffinfo:                              Understanding Masks.  (line 22)
+* ufraw:                                 Helpful Programs.     (line 13)
+* UFRaw:                                 Helpful Programs.     (line 13)
+* ufraw-batch:                           Helpful Programs.     (line 13)
+
+
+File: enblend.info,  Node: Option Index,  Next: General Index,  Prev: Program Index,  Up: Top
+
+Option Index
+************
+
+ [index ]
+* Menu:
+
+* --coarse-mask:                         Mask Generation Options.
+                                                               (line  9)
+* --compression:                         Common Options.       (line 17)
+* --fine-mask:                           Mask Generation Options.
+                                                               (line 13)
+* --gpu:                                 Extended Options.     (line 35)
+* --help:                                Common Options.       (line 50)
+* --load-mask:                           Mask Generation Options.
+                                                               (line 17)
+* --no-optimize:                         Mask Generation Options.
+                                                               (line 20)
+* --optimize:                            Mask Generation Options.
+                                                               (line 24)
+* --save-mask:                           Mask Generation Options.
+                                                               (line 28)
+* --verbose:                             Common Options.       (line 66)
+* --version:                             Common Options.       (line 71)
+* --visualize:                           Extended Options.     (line 58)
+* -a:                                    Common Options.       (line  9)
+* -b <1>:                                Tuning Memory Usage.  (line  6)
+* -b:                                    Extended Options.     (line 10)
+* -c:                                    Extended Options.     (line 17)
+* -f:                                    Extended Options.     (line 43)
+* -g:                                    Extended Options.     (line 27)
+* -h:                                    Common Options.       (line 50)
+* -l:                                    Common Options.       (line 53)
+* -m <1>:                                Tuning Memory Usage.  (line  6)
+* -m:                                    Extended Options.     (line 51)
+* -o:                                    Common Options.       (line 62)
+* -V:                                    Common Options.       (line 71)
+* -v:                                    Common Options.       (line 66)
+* -w:                                    Common Options.       (line 75)
+* -x:                                    Common Options.       (line 81)
+* -z:                                    Common Options.       (line 85)
+
+
+File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
+
+General Index
+*************
+
+ [index ]
+* Menu:
+
+* alpha channels, unassociated:          Extended Options.     (line 27)
+* binary mask:                           Understanding Masks.  (line  6)
+* CIECAM02:                              Extended Options.     (line 17)
+* Cinepaint:                             Extended Options.     (line 27)
+* coarse mask:                           Mask Generation Options.
+                                                               (line  9)
+* color appearance model:                Extended Options.     (line 17)
+* compression, deflate:                  Common Options.       (line 31)
+* compression, LZW:                      Common Options.       (line 37)
+* compression, packbits:                 Common Options.       (line 41)
+* deflate compression:                   Common Options.       (line 31)
+* ENBLEND_CACHE_IMAGES (preprocessor symbol): Tuning Memory Usage.
+                                                               (line  8)
+* FDL:                                   FDL.                  (line  6)
+* fine mask:                             Mask Generation Options.
+                                                               (line 13)
+* general index:                         General Index.        (line  6)
+* Gimp:                                  Extended Options.     (line 27)
+* GNU Free Documentation License:        FDL.                  (line  6)
+* helpful programs:                      Helpful Programs.     (line  6)
+* image cache, block size:               Extended Options.     (line 10)
+* image cache, cache size:               Extended Options.     (line 51)
+* index, general:                        General Index.        (line  6)
+* index, option:                         Option Index.         (line  6)
+* index, program:                        Program Index.        (line  6)
+* input masks:                           Understanding Masks.  (line 18)
+* invocation:                            Invocation.           (line  6)
+* load mask:                             Mask Generation Options.
+                                                               (line 17)
+* LZW compression:                       Common Options.       (line 37)
+* mask, binary:                          Understanding Masks.  (line  6)
+* mask, coarse:                          Mask Generation Options.
+                                                               (line  9)
+* mask, fine:                            Mask Generation Options.
+                                                               (line 13)
+* mask, load:                            Mask Generation Options.
+                                                               (line 17)
+* mask, save:                            Mask Generation Options.
+                                                               (line 28)
+* mask, visualization:                   Extended Options.     (line 58)
+* mask, weight:                          Understanding Masks.  (line  6)
+* masks, input files:                    Understanding Masks.  (line 18)
+* masks, undestanding:                   Understanding Masks.  (line  6)
+* masks, weight:                         Understanding Masks.  (line 91)
+* memory, tuning usage of:               Tuning Memory Usage.  (line  6)
+* optimize seam:                         Mask Generation Options.
+                                                               (line 20)
+* option index:                          Option Index.         (line  6)
+* options, common:                       Common Options.       (line  6)
+* options, extended:                     Extended Options.     (line  6)
+* options, mask generation:              Mask Generation Options.
+                                                               (line  6)
+* output image, set size of:             Extended Options.     (line 43)
+* overview:                              Overview.             (line  6)
+* packbits compression:                  Common Options.       (line 41)
+* program index:                         Program Index.        (line  6)
+* programs, helpful additional:          Helpful Programs.     (line  6)
+* save mask:                             Mask Generation Options.
+                                                               (line 28)
+* seam optimization:                     Mask Generation Options.
+                                                               (line 20)
+* undestanding masks:                    Understanding Masks.  (line  6)
+* weight mask:                           Understanding Masks.  (line  6)
+* weight masks:                          Understanding Masks.  (line 91)
+
+
+
+Tag Table:
+Node: Top709
+Node: Overview1571
+Ref: Overview-Footnote-13666
+Node: Invocation3847
+Node: Common Options4258
+Node: Extended Options7046
+Node: Mask Generation Options9599
+Node: Understanding Masks10797
+Node: Tuning Memory Usage14578
+Ref: tab:cache-size-settings16657
+Node: Helpful Programs16965
+Node: Authors20576
+Node: FDL20752
+Node: Program Index41733
+Node: Option Index44572
+Node: General Index47158
+
+End Tag Table

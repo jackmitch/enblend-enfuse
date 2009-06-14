@@ -153,15 +153,15 @@ using enblend::enblendMain;
  * details. */
 void printVersionAndExit() {
     cout <<
-        "enblend " << VERSION << "\n" <<
+        "enblend " << VERSION << ".\n" <<
 #ifdef ENBLEND_CACHE_IMAGES
-        "Extra feature: image cache\n" <<
+        "Extra feature: image cache.\n" <<
 #endif
 #ifdef HAVE_LIBGLEW
-        "Extra feature: GPU acceleration\n" <<
+        "Extra feature: GPU acceleration.\n" <<
 #endif
         "\n" <<
-        "Copyright (C) 2004-2008 Andrew Mihal.\n" <<
+        "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
         "There is NO WARRANTY, to the extent permitted by law.\n" <<
@@ -180,47 +180,50 @@ void printUsageAndExit(const bool error = true) {
         "Blend INPUT images into a single OUTPUT image.\n" <<
         "\n" <<
         "Common options:\n" <<
-        "  -V, --version          Output version information and exit\n" <<
-        "  -a                     Pre-assemble non-overlapping images\n" <<
-        "  -h, --help             Print this help message and exit\n" <<
-        "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
-        "  -o FILENAME            Write output to FILENAME\n" <<
-        "  -v, --verbose          Verbosely report progress; repeat to\n" <<
-        "                            increase verbosity\n" <<
-        "  -w                     Blend across -180/+180 degrees boundary\n" <<
-        "  -x                     Checkpoint partial results\n" <<
-        "  -z                     Use LZW compression (TIFF only).\n" <<
-        "                           Kept for backward compatability with older scripts\n" <<
-        "  --compression=COMP     Set compression of output image to COMP,\n" <<
-        "                           where COMP is:\n" <<
-        "                             NONE, PACKBITS, LZW, DEFLATE (for TIFF files)\n" <<
-        "                             0-100 (for JPEG files)\n" <<
+        "  -V, --version          output version information and exit\n" <<
+        "  -a                     pre-assemble non-overlapping images\n" <<
+        "  -h, --help             print this help message and exit\n" <<
+        "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
+        "  -o FILENAME            write output to FILENAME\n" <<
+        "  -v, --verbose          verbosely report progress; repeat to\n" <<
+        "                         increase verbosity\n" <<
+        "  -w                     blend across -180/+180 degrees boundary\n" <<
+        "  -x                     checkpoint partial results\n" <<
+        "  -z                     use LZW compression (TIFF only); kept for\n" <<
+        "                         backward compatability with older scripts\n" <<
+        "  --compression=COMP     set compression of output image to COMP,\n" <<
+        "                         where COMP is:\n" <<
+        "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                           0 to 100 for JPEG files\n" <<
         "\n" <<
         "Extended options:\n" <<
-        "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
+        "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
-        "  -c                     Use CIECAM02 to blend colors\n" <<
-        "  -g                     Associated-alpha hack for Gimp (before version 2)\n" <<
-        "                           and Cinepaint\n" <<
+        "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
+        "                         and Cinepaint\n" <<
 #ifdef HAVE_LIBGLEW
-        "  --gpu                  Use the graphics card to accelerate some computations\n" <<
+        "  --gpu                  use graphics card to accelerate some computations\n" <<
 #endif
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
-        "                         Manually set the size and position of the output\n" <<
-        "                           image.  Useful for cropped and shifted input\n" <<
-        "                           TIFF images, such as those produced by Nona.\n" <<
-        "  -m CACHESIZE           Images CACHESIZE in Megabytes.  Default: " <<
+        "                         manually set the size and position of the output\n" <<
+        "                         image; useful for cropped and shifted input\n" <<
+        "                         TIFF images, such as those produced by Nona\n" <<
+        "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
-        "  --visualize=FILENAME   Save results of optimizer FILENAME\n" <<
+        "  --visualize=FILENAME   save results of optimizer in FILENAME\n" <<
         "\n" <<
         "Mask generation options:\n" <<
-        "  --coarse-mask          Use an approximation to speedup mask generation.  Default\n" <<
-        "  --fine-mask            Enable detailed mask generation.  Slow!  Use if\n" <<
-        "                           overlap regions are very narrow.\n" <<
-        "  --optimize             Turn on mask optimization.  This is the default.\n" <<
-        "  --no-optimize          Turn off mask optimization.\n" <<
-        "  --save-mask=FILENAME   Save the generated mask to FILENAME.\n" <<
-        "  --load-mask=FILENAME   Use the mask in FILENAME instead of generating one.\n" <<
+        "  --coarse-mask          use an approximation to speedup mask generation;\n" <<
+        "                         this is the default\n" <<
+        "  --fine-mask            enable detailed mask generation (slow!); use if\n" <<
+        "                         overlap regions are very narrow\n" <<
+        "  --optimize             turn on mask optimization; this is the default\n" <<
+        "  --no-optimize          turn off mask optimization\n" <<
+        "  --save-mask=FILENAME   save the generated mask to FILENAME\n" <<
+        "  --load-mask=FILENAME   use the mask in FILENAME instead of generating one\n" <<
+        "\n" <<
+        "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;
 
     exit(error ? 1 : 0);
