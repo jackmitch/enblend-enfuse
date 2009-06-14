@@ -25,7 +25,8 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
              laplacian-of-gaussian.{txt,png,eps,pdf} \
              local-analysis-window.{txt,png,eps,pdf} \
              sharp-edge.{txt,png,eps,pdf} \
-             smooth-edge.{txt,png,eps,pdf}
+             smooth-edge.{txt,png,eps,pdf} \
+             *.xhtml *.msg
 
 # created by configure(1)
 DISTCLEANFILES = texinfo.tex
@@ -34,19 +35,39 @@ DISTCLEANFILES = texinfo.tex
 MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 
+# Phony Targets
+
+# The public id is in "tidy.cfg".
+DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+
+.PHONY: xhtml
+xhtml: html
+	for x in *.html; do \
+	  if test -d $$x; then \
+	    for y in $$x/*; do \
+	      tidy -config tidy.cfg -file $${y/.html/.msg} $$y | \
+	        $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${y/.html/.xhtml}; \
+            done; \
+	  else \
+	    tidy -config tidy.cfg -file $${x/.html/.msg} $$x | \
+	      $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${x/.html/.xhtml}; \
+          fi; \
+	done
+
+
 # Implicit Rules
 
 .gp.txt:
-	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
 
 .gp.png:
-	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
 
 .gp.eps:
-	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
 
 .gp.pdf:
-	GDFONTPATH=@GDFONTPATH@ $(GNUPLOT) $<
+	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
 
 
 .fig.txt:

@@ -112,6 +112,7 @@ AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
 
 # Documentation
+can_build_doc=yes
 AM_MISSING_PROG([HELP2MAN], [help2man])
 
 AC_CHECK_PROG(GNUPLOT,
@@ -119,27 +120,29 @@ AC_CHECK_PROG(GNUPLOT,
               gnuplot,
               false)
 if test "x$GNUPLOT" = xfalse; then
-  AC_MSG_WARN(Cannot find gnuplot.  Check out http://www.gnuplot.info/.)
+  AC_MSG_WARN(Cannot find gnuplot; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc gnuplot"
 fi
 
-AC_ARG_WITH(GDFONTPATH,
+AC_ARG_WITH([ttf-path],
             AC_HELP_STRING([--with-ttf-path=<PATH>],
                            [set path to TrueType fonts]),
             [GDFONTPATH="$withval"],
-            [GDFONTPATH="/usr/share/fonts/truetype/freefont"])
+            [GDFONTPATH="/opt/local/share/fonts/freefont-ttf:/sw/share/fonts/freefont-ttf:/usr/X11/lib/X11/fonts/TTF:/usr/X11R6/lib/X11/fonts/TTF:/usr/share/fonts/truetype/freefont"])
 AC_ARG_VAR(GDFONTPATH, [path to TrueType fonts])
 have_freesans_font=no
 orig_ifs="$IFS"
 IFS=':'
-for dir in "$GDFONTPATH"; do \
-  if test -f $dir/FreeSans.ttf; then \
+for dir in $GDFONTPATH; do \
+  if test -f "$dir/FreeSans.ttf"; then \
     have_freesans_font=yes; \
     break; \
   fi; \
 done
 IFS="$orig_ifs"
 if test $have_freesans_font != yes; then
-  AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; Gnuplot will curse.)
+  AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; Text in the documentation's figures could look strange.)
 fi
 
 AC_CHECK_PROG(FIG2DEV,
@@ -147,11 +150,61 @@ AC_CHECK_PROG(FIG2DEV,
               fig2dev,
               false)
 if test "x$FIG2DEV" = xfalse; then
-  AC_MSG_WARN(Cannot find fig2dev.  Check out http://www.xfig.org/ for Transfig.)
+  AC_MSG_WARN(Cannot find fig2dev; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc fig2dev"
 fi
 
 AC_PROG_SED
 
+# These variables are mentioned in the AutoMake documentaiton as being
+# influential to the documentation build process.
+AC_CHECK_PROG(MAKEINFO,
+              makeinfo,
+              makeinfo,
+              false)
+if test "x$MAKEINFO" = xfalse; then
+  AC_MSG_WARN(Cannot find makeinfo; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc makeinfo"
+fi
+
+AC_CHECK_PROG(TEXI2DVI,
+              texi2dvi,
+              texi2dvi,
+              false)
+if test "x$TEXI2DVI" = xfalse; then
+  AC_MSG_WARN(Cannot find texi2dvi; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc texi2dvi"
+fi
+
+AC_CHECK_PROG(TEXI2PDF,
+              texi2pdf,
+              texi2pdf,
+              false)
+if test "x$TEXI2PDF" = xfalse; then
+  AC_MSG_WARN(Cannot find texi2pdf; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc texi2pdf"
+fi
+
+AC_CHECK_PROG(DVIPS,
+              dvips,
+              dvips,
+              false)
+if test "x$DVIPS" = xfalse; then
+  AC_MSG_WARN(Cannot find dvips; will not be able to build documentation.)
+  can_build_doc=no
+  missing_for_doc="$missing_for_doc dvips"
+fi
+
+AM_CONDITIONAL([BUILD_DOC], [test $can_build_doc = yes])
+if test $can_build_doc = no; then
+  no_doc_reason=", because of missing$missing_for_doc"
+fi
+
+AM_MAKEINFOFLAGS="--css-include=default.css"
 AC_MSG_CHECKING([checking whether split documentation files])
 split_doc_default="yes"
 AC_ARG_ENABLE([split-doc],
@@ -166,7 +219,7 @@ if test "x$split_doc" = "xyes" \
   AC_MSG_RESULT(yes)
   split_doc=yes
 else
-  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split"
+  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split --no-headers"
   AC_MSG_RESULT(no)
   split_doc=no
 fi
@@ -231,8 +284,10 @@ AC_MSG_RESULT([
    CXXFLAGS needed for configure:  ${CXXFLAGS}
    LIBS needed for configure:      ${LIBS}
 
+ can build all documentation:      ${can_build_doc}${no_doc_reason}
+
  feature selection:
-   split *.info and *.html files:  ${split_doc}
-   enable debugging support:       ${enable_debug}
-   use image cache:                ${enable_image_cache}
+   split *.info and *.html files:  $split_doc
+   enable debugging support:       $enable_debug
+   use image cache:                $enable_image_cache
 ])

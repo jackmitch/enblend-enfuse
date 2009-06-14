@@ -915,7 +915,7 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
- [image src="local-analysis-window.png" text="    window size = 3                 window size = 5
+    window size = 3                 window size = 5
 
      |   |   |   |               |   |   |   |   |   |
     -+---+---+---+-             -+---+---+---+---+---+-
@@ -930,7 +930,6 @@ sizes.
                                  | N | N | N | N | N |
                                 -+---+---+---+---+---+-
                                  |   |   |   |   |   |
-" ]
 
 Figure 3.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
@@ -2785,8 +2784,8 @@ General Index
                                                               (line   8)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  73)
-* expectation value:                     Standard Deviation.  (line  57)
+* estimators:                            Standard Deviation.  (line  72)
+* expectation value:                     Standard Deviation.  (line  56)
 * expert focus stacking ttops:           Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -2866,7 +2865,7 @@ General Index
 * packbits compression:                  Common Options.      (line  33)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  54)
+* probability function:                  Standard Deviation.  (line  53)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
@@ -2882,14 +2881,14 @@ General Index
 * series, polarization:                  Polarization Series. (line   6)
 * series, simple:                        Repetition.          (line   6)
 * simple series:                         Repetition.          (line   6)
-* standard deviation:                    Standard Deviation.  (line  63)
-* statistical moments:                   Standard Deviation.  (line  54)
+* standard deviation:                    Standard Deviation.  (line  62)
+* statistical moments:                   Standard Deviation.  (line  53)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * undestanding masks:                    Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  60)
+* variance:                              Standard Deviation.  (line  59)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
 * weighted average:                      Weighted Average.    (line   6)
@@ -2938,45 +2937,45 @@ Node: Saturation Weighting33727
 Node: Contrast Weighting34823
 Node: Standard Deviation36152
 Ref: Figure:local-analysis-window36593
-Ref: Standard Deviation-Footnote-139484
-Node: Laplacian of Gaussian39633
-Ref: Figure:laplacian-of-gaussian41206
-Node: Blend SDev and LoG44654
-Node: Scaling and Choice of Mode46285
-Node: Entropy Weighting47127
-Ref: Figure:entropy48092
-Node: Understanding Masks52071
-Node: Tuning Memory Usage55860
-Ref: tab:cache-size-settings57934
-Node: Applications58242
-Node: What Images58964
-Node: Repetition62083
-Node: Exposure Series63140
-Node: Exposure Series Tips65342
-Node: Exposure Series Misconceptions66451
-Ref: Exposure Series Misconceptions-Footnote-168219
-Node: Flash Exposure Series68432
-Node: Polarization Series68674
-Node: Focus Stacks69108
-Node: Why Focus Stacks69990
-Node: Preparing Focus Stacks71317
-Node: Contrast Based Fusing72057
-Node: Basic Focus Stacking73298
-Node: Advanced Focus Stacking74654
-Node: Local Contrast Problem75351
-Ref: Figure:sharp-edge76551
-Ref: Figure:smooth-edge78150
-Node: Laplacian Edge Detection80586
-Node: Local Contrast Enhancement81667
-Node: Suppressing Noise or Recognizing Faint Edges82583
-Node: Expert Stacking85043
-Node: Helpful Programs86542
-Node: Authors90145
-Node: FDL90742
-Node: List of Tables111723
-Node: List of Figures111987
-Node: Program Index112572
-Node: Option Index115495
-Node: General Index118049
+Ref: Standard Deviation-Footnote-139432
+Node: Laplacian of Gaussian39581
+Ref: Figure:laplacian-of-gaussian41154
+Node: Blend SDev and LoG44602
+Node: Scaling and Choice of Mode46233
+Node: Entropy Weighting47075
+Ref: Figure:entropy48040
+Node: Understanding Masks52019
+Node: Tuning Memory Usage55808
+Ref: tab:cache-size-settings57882
+Node: Applications58190
+Node: What Images58912
+Node: Repetition62031
+Node: Exposure Series63088
+Node: Exposure Series Tips65290
+Node: Exposure Series Misconceptions66399
+Ref: Exposure Series Misconceptions-Footnote-168167
+Node: Flash Exposure Series68380
+Node: Polarization Series68622
+Node: Focus Stacks69056
+Node: Why Focus Stacks69938
+Node: Preparing Focus Stacks71265
+Node: Contrast Based Fusing72005
+Node: Basic Focus Stacking73246
+Node: Advanced Focus Stacking74602
+Node: Local Contrast Problem75299
+Ref: Figure:sharp-edge76499
+Ref: Figure:smooth-edge78098
+Node: Laplacian Edge Detection80534
+Node: Local Contrast Enhancement81615
+Node: Suppressing Noise or Recognizing Faint Edges82531
+Node: Expert Stacking84991
+Node: Helpful Programs86490
+Node: Authors90093
+Node: FDL90690
+Node: List of Tables111671
+Node: List of Figures111935
+Node: Program Index112520
+Node: Option Index115443
+Node: General Index117997
 
 End Tag Table
