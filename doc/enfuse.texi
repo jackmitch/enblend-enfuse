@@ -1,20 +1,42 @@
 \input auxmac
 \input texinfo
-@c %** start of header
+
+
+@c
+@c Header
+@c
+
+@c %**start of header
 @setfilename enfuse.info
-@settitle Fusing Multiple Images with Enfuse
-@c %** end of header
+@settitle Fusing Multiple Images with Enfuse@tie{}@value{VERSION}
+@include auxmac.texi
+@include enfuse-version.texi
+
+@c Define a new index for options.
+@defcodeindex op
+@c %**end of header
 
 
 @c
 @c Summary Description and Copyright
 @c
 
-@ifinfo
-This file documents Enfuse version 3.1.
+@copying
+This manual is for Enfuse (version@tie{}@value{VERSION},
+@value{UPDATED}), a program to merge different exposures of the same
+scene to produce an image that looks much like a tonemapped image.
 
-Copyright @copyright{} 2004-2008 Andrew Mihal.
-@end ifinfo
+Copyright @copyright{} 2004--2009 Andrew Mihal.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the @acronym{GNU} Free Documentation License,
+Version@tie{}1.2 or any later version published by the Free Software
+Foundation; with no Invariant Sections, no Front-Cover Texts and no
+Back-Cover Texts.  A copy of the license is included in the section
+entitled ``@acronym{GNU} Free Documentation License''.
+@end quotation
+@end copying
 
 
 @c
@@ -22,13 +44,42 @@ Copyright @copyright{} 2004-2008 Andrew Mihal.
 @c
 
 @titlepage
-@sp 10
-@center @titlefont{Fusing Multiple Images with Enfuse}
+@title Enfuse
+@subtitle Fusing Multiple Images
+@subtitle with Enfuse version @value{VERSION}, @value{UPDATED}
+
+@author Andrew Mihal
 
 @page
 @vskip 0pt plus 1fill
-Copyright @copyright{} 2004-2008 Andrew Mihal
+@insertcopying
 @end titlepage
+
+
+@ifnothtml
+@summarycontents
+@end ifnothtml
+@contents
+
+
+@c For the TeX output the List-of-Tables and List-of-Figures appear
+@c right after the Table-of-Contents.  In all other formats they go
+@c right before the indices.
+@iftex
+@c Adjust page number so that we get roman numerals for the
+@c List-of-Tables and List-of-Figures.  This screws up Texinfo's page
+@c count so that we must undo it later.
+@tex
+\global\pageno=-4
+@end tex
+
+@unnumbered List of Tables
+@listoffloats Table
+
+
+@unnumbered List of Figures
+@listoffloats Figure
+@end iftex
 
 
 @c
@@ -36,30 +87,123 @@ Copyright @copyright{} 2004-2008 Andrew Mihal
 @c
 
 @ifnottex
-@node Top, Overview, (dir), (dir)
+@node Top
 @top Enfuse
 
-Using Enfuse
-
-This file documents Enfuse version 3.1.
-
-This document is distributed under the terms of the GNU Free
-Documentation License.
+This manual is for Enfuse (version@tie{}@value{VERSION},
+@value{UPDATED}), a program to merge different exposures of the same
+scene to produce an image that looks much like a tonemapped image.
 @end ifnottex
 
 @menu
-* Overview::                    Overview
-* Invocation::                  Invocation
-* Examples::                    Examples
-* Authors::                     Authors
-* Index::                       Index
+* Overview::                    Overview of Enfuse's features
+* Invocation::                  Command line options and arguments
+* Weighting Functions::         Description of all weighting functions
+* Understanding Masks::         How to interpret masks and @file{mask####.tif} files
+* Tuning Memory Usage::         Balancing @acronym{RAM} and swap
+* Applications::                Possible applications of Enfuse
+* Helpful Programs::            Useful other programs
+* Authors::                     Major contributors
+* FDL::                         @acronym{GNU} Free Documentation License
+* List of Tables::              List of all tables
+* List of Figures::             List of all figures
+* Program Index::               Names of programs referenced
+* Option Index::                Index of all options
+* General Index::               Topic index
+
+@detailmenu
+
+--- The Detailed Node Listing ---
+
+Overview
+
+Invocation
+
+* Common Options::              General options
+* Extended Options::            Memory control and others
+* Fusion Options::              Image fusion control
+* Expert Options::              Contrast and entropy selection configuration
+* Option Delimiters::           How to separate options' arguments
+
+Weighting Functions
+
+* Weighting Pixels::            General concept of weighting pixels
+* Exposure Weighting::          Weighting by exposure
+* Saturation Weighting::        Weighting by saturation
+* Contrast Weighting::          Weighting by local contrast
+* Entropy Weighting::           Weighting by local entropy
+
+Weighting Algorithms
+
+* Weighted Average::            Enfuse's default weighting algorithm
+* Disabling Averaging::         ``Super Trouper'' weighting for focus stacks
+
+Contrast Weighting
+
+* Standard Deviation::          Standard deviation (@acronym{SDev}) in a square of pixels
+* Laplacian of Gaussian::       @acronym{LoG}, a second derivative method
+* Blend SDev and LoG::          Mix both methods
+* Scaling and Choice of Mode::  How parameters do not scale; neither does mode
+
+Understanding Masks
+
+Tuning Memory Usage
+
+Applications
+
+* What Images::                 What makes images fusable?
+* Repetition::                  Just taking the same shot multiple times
+* Exposure Series::             Varying the exposure time
+* Flash Exposure Series::       Varying the flash output
+* Polarization Series::         Changing the polarizer angle
+* Focus Stacks::                Stacking images with different in-focus distance
+
+Exposure Series
+
+* Exposure Series Tips::            Some hints for beginners
+* Exposure Series Misconceptions::  What works despite the hype
+
+Focus Stacks
+
+* Why Focus Stacks::            Why take the hassle?
+* Preparing Focus Stacks::      How to get suitable input images
+* Contrast Based Fusing::       Fundamental command line options
+* Basic Focus Stacking::        Simple, standard deviation method
+* Advanced Focus Stacking::     Advanced, Laplacian technique
+* Expert Stacking::             Tips for focus stacking experts
+
+Advanced Focus Stacking
+
+* Local Contrast Problem::      What is the problem Kenneth?
+* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+
+Helpful Programs
+
+Authors
+
+FDL
+@end detailmenu
 @end menu
 
 
-@node Overview, Invocation, Top, Top
-@chapter Overview
-@cindex Overview
+@c
+@c Document Body
+@c
 
+@node Overview
+@chapter Overview
+
+@c Undo the roman page numbering we used for the Table-of-Contents,
+@c the List-of-Tables, and the List-of-Figures.
+@tex
+\global\pageno=1
+@end tex
+
+@cindex overview
+
+@cindex Mertens-Kautz-Van Reeth exposure fusion
 Enfuse merges overlapping images using the Mertens-Kautz-Van Reeth
 exposure fusion algorithm.@footnote{Tom Mertens, Jan Kautz, and Frank
 van Reeth, ``Exposure Fusion'', Proceedings of the 15th Pacific
@@ -67,52 +211,79 @@ Conference on Computer Graphics and Applications, pages 382--390.}
 This is a quick way for example to blend differently exposed images
 into a nice output image, without producing intermediate high-dynamic
 range (@acronym{HDR}) images that are then tonemapped to a viewable
-image.  This simplified process often works much better than the
-currently known tonemapping algorithms.
+image.  This simplified process often works much better than
+tonemapping algorithms.
 
 Enfuse can also be used to build extended depth-of-field
 (@acronym{DOF}) images by blending a focus stack.
 
-The basic idea is that pixels in the input images are weighted
-according to qualities such as proper exposure, good contrast, or high
-saturation.  These weights determine how much a given pixel will
-contribute to the final image.  A Burt-Adelson multiresolution spline
-blender@footnote{Peter J. Burt and Edward H. Adelson, ``A
-Multiresolution Spline With Application to Image Mosaics'',
-@acronym{ACM} Transactions on Graphics, Vol@:. 2, No@:. 4, October
-1983, pages 217--236.} is used to combine the images according to the
-weights.  The multiresolution blending ensures that transitions
-between regions where different images contribute are difficult to
-see.
+The idea is that pixels in the input images are weighted according to
+qualities such as, for example, proper exposure, good contrast, or
+high saturation.  These weights determine how much a given pixel will
+contribute to the final image.
 
-Enfuse uses three different criteria to judge the quality of a pixel:
-exposure, saturation, contrast, and entropy.
+@cindex Burt-Adelson multiresolution spline
+A Burt-Adelson multiresolution spline blender@footnote{Peter J. Burt
+and Edward H. Adelson, ``A Multiresolution Spline With Application to
+Image Mosaics'', @acronym{ACM} Transactions on Graphics, @abbr{Vol@.}
+2, @abbr{No@.} 4, October 1983, pages 217--236.} is used to combine
+the images according to the weights.  The multiresolution blending
+ensures that transitions between regions where different images
+contribute are difficult to spot.
 
+Enfuse uses up to four criteria to judge the quality of a pixel, which
+@ref{Table:weighting-criteria} briefly describes.
+
+@float Table,Table:weighting-criteria
 @table @asis
 @item Exposure
+@cindex weighting, exposure
 The exposure criteria favors pixels with luminance close to the middle
-of the range.  These pixels are considered better-exposed than those
+of the range.  These pixels are considered better exposed as those
 with high or low luminance levels.
 
 @item Saturation
-The saturation criteria favors highly-saturated pixels.
+@cindex weighting, saturation
+The saturation criteria favors highly-saturated pixels.  (Note that
+saturation is only defined for color pixels.)
 
 @item Contrast
-The contrast criteria favors high-contrast pixels.  Enfuse can use
-standard deviation or Laplacian magnitude or a blend of both as local
-contrast measure.
+@cindex weighting, contrast
+The contrast criteria favors pixels inside a high-contrast
+neighborhood.  Enfuse can use standard deviation or Laplacian
+magnitude or a blend of both as local contrast measure.
+
+@item Entropy
+@cindex weighting, entropy
+The entropy criteria prefers pixels inside a high-entropy
+neighborhood.  In addition, Enfuse allows the user to mitigate the
+problem of noisy images when using entropy weighting by setting a
+black threshold.
 @end table
+
+@caption{Enfuse's four weighting criteria.}
+
+@shortcaption{Weighting criteria}
+@end float
+
+For the concept of pixel weighting and details on the different
+weighting functions see @ref{Weighting Functions}.
 
 Adjust how much importance is given to each criterion by setting the
 weight parameters on the command line.  For example, if you set
 @samp{--wExposure=1.0} and @samp{--wSaturation=0.5}, Enfuse will favor
 well-exposed pixels over highly-saturated pixels when blending the
-source images.  The impact of these parameters on the final result
-will not always be clear.  The quality of the result is subject to
-your artistic interpretation.  Playing with the weights may or may not
-give you a more pleasing result.  The authors encourage you to
-experiment, perhaps using downsized images for speed.
+source images.  The effect of these parameters on the final result
+will not always be clear in advance.  The quality of the result is
+subject to your artistic interpretation.  Playing with the weights may
+or may not give a more pleasing result.  The authors encourage you to
+experiment, perhaps using down-sized@footnote{Downsampling with a good
+interpolator reduces noise, which might not desired to judge the image
+quality of the original-size image.  Cropping might be an alternative,
+though.} or cropped images for speed.
 
+@cindex alpha channel
+@cindex channel, alpha
 Enfuse expects but does not require each input image to have an alpha
 channel.  By setting the alpha values of pixels to zero, users can
 manually remove those pixels from consideration when blending.  If an
@@ -121,241 +292,274 @@ continue assuming all pixels should contribute to the final output.
 Any alpha value other than zero is interpreted as ``this pixel should
 contribute to the final image''.
 
+Find out more about Enfuse on its
+@uref{http://@/enblend.sourceforge.net/, web page}.
 
-@node Invocation, Examples, Overview, Top
+
+@node Invocation
 @chapter Invocation
-@cindex Invocation
+@cindex invocation
 
-@command{enfuse} [@var{OPTIONS}] @option{-o OUTPUT-FILE} @var{INPUT-FILE}...
+@command{enfuse} [@var{OPTIONS}] @code{-o} @var{OUTPUT-FILE}
+@var{INPUT-FILES}@enddots{}
 
-Fuse the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
+@noindent
+Fuse the sequence of images @var{INPUT-FILES}@dots{} into
+@var{OUTPUT-FILE}.
 
 @menu
 * Common Options::              General options
-* Extended Options::            Memory control
+* Extended Options::            Memory control and others
 * Fusion Options::              Image fusion control
-* Expert Options::              Contrast selection configuration
+* Expert Options::              Contrast and entropy selection configuration
+* Option Delimiters::           How to separate options' arguments
 @end menu
 
 
-@node Common Options, Extended Options, Invocation, Invocation
+@node Common Options
 @section Common Options
-@cindex Common Options
+@cindex options, common
 
-...
+Common options control some overall features of Enfuse.
 
 @table @code
-@item -V
-@itemx --version
-@cindex option @option{-V}
-@cindex option @option{--version}
-Output information on the Enfuse version and some configuration
-details like extra features that have been compiled in.
+@item --compression=@var{COMPRESSION}
+@opindex --compression
+@cindex output file compression
+@cindex compression
+Write a compressed output file.
+
+Depending on the output file format Enfuse accepts different values
+for @var{COMPRESSION}.
+
+@table @asis
+@item @acronym{JPEG}
+@var{COMPRESSION} is a @acronym{JPEG} quality level ranging from
+0--100.
+
+@item @acronym{TIFF}
+@var{COMPRESSION} is one of the keywords:
+@table @samp
+@item NONE
+Do not compress.  This is the default.
+
+@item DEFLATE
+@cindex deflate compression
+@cindex compression, deflate
+Use the Deflate compression scheme also called
+@acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
+compression algorithm that uses a combination of the @acronym{LZ77}
+algorithm and Huffman coding.
+
+@item LZW
+@cindex @acronym{LZW} compression
+@cindex compression, @acronym{LZW}
+Use Lempel-Ziv-Welch (@acronym{LZW}) adaptive compression scheme.
+@acronym{LZW} compression is lossless.
+
+@item PACKBITS
+@cindex packbits compression
+@cindex compression, packbits
+Use PackBits compression scheme.  PackBits is a particular variant of
+run-length compression; it is lossless.
+@end table
+
+@item Any other format
+Other formats like the @acronym{PNG} do not accept a @var{COMPRESSION}
+setting.
+@end table
 
 @item -h
 @itemx --help
-@cindex option @option{-h}
-@cindex option @option{--help}
-Print information on the available options and exit.
+@opindex -h
+@opindex --help
+Print information on the available options then exit.
 
 @item -l @var{LEVELS}
-@cindex option @option{-l}
-Use exactly this many @var{LEVELS} for pyramid blending.  This trades
-off quality of results for shorter execution time and lower memory
-usage.  The default is to use as many levels as possible given the
-size of the overlap region.  Enfuse may still use a smaller number of
-levels if the geometry of the images demands it.
+@opindex -l
+@cindex pyramid levels
+@cindex levels, pyramid
+Use exactly this many @var{LEVELS} for pyramid blending.
+
+This option allows to trades off quality of results for slightly
+shorter execution time and lower memory usage.  The default is to use
+as many levels as possible given the size of the overlap region.
+Enfuse may still use a smaller number of levels if the geometry of the
+images demands it.
 
 @item -o @var{OUTPUT-FILE}
-@cindex option @option{-o}
+@opindex -o
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v
 @itemx --verbose
-@cindex option @option{-v}
-@cindex option @option{--verbose}
+@opindex -v
+@opindex --verbose
 Increase the verbosity of progress reporting.  Giving one or more
 @option{-v} options will make Enfuse more verbose.
 
-@item -w
-@cindex option @option{-w}
-Blend around the @minus{}180/+180 degree boundary.  Useful for
-full 360 degree panoramas.  Enfuse currently does not blend
-neither zenith nor or nadir, so you may still see some seams in these
-areas.
+@item -V
+@itemx --version
+@opindex -V
+@opindex --version
+Output information on the Enfuse version and some configuration
+details like extra features that have been compiled in.
 
-@item --compression=@var{COMP}
-@cindex option @option{--compression}
-Write a compressed output file.  Valid values for @var{COMP} are
-@samp{LZW} and @samp{DEFLATE} for @acronym{TIFF}-files, and quality
-levels from 0--100 for @acronym{JPEG} files.
+@item -w
+@opindex -w
+@cindex 360@textdegree{} panorama
+Blend around the @plusminus{}180@textdegree{} boundary.  This is
+useful for full 360@textdegree{} panoramas.
+
+Version@tie{}@value{VERSION} of Enfuse, the one described here, does
+not blend neither zenith nor or nadir, so you may still see some seams
+in these areas.
 @end table
 
 
-@node Extended Options, Fusion Options, Common Options, Invocation
+@node Extended Options
 @section Extended Options
-@cindex Extended Options
+@cindex options, extended
 
-...
+Extended options control the image cache, the color model, and the
+cropping of the output image.
 
 @table @code
 @item -b @var{BLOCKSIZE}
-@cindex option @option{-b}
-Set the @var{BLOCKSIZE} in Kilobytes for Enfuse's image cache.  This
-is the amount of data that Enfuse will move to and from the disk in
-one go.  The default is 2048@dmn{KB}, which should be ok for most
+@opindex -b
+@cindex image cache, block size
+Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enfuse's image
+cache.
+
+This is the amount of data that Enfuse will move to and from the disk
+in one go.  The default is 2048@dmn{KB}, which should be ok for most
 systems.
 
+See @ref{Tuning Memory Usage} for details.
+
 @item -c
-@cindex option @option{-c}
+@opindex -c
+@cindex color appearance model
+@cindex @acronym{CIECAM02}
 Use the @acronym{CIECAM02} color appearance model for blending colors.
-Your input files should have embedded @acronym{ICC} profiles when this
+
+The input files should have embedded @acronym{ICC} profiles when this
 option is specified.  If no @acronym{ICC} profile is present, Enfuse
 will assume that the image uses the @acronym{sRGB} color space.  The
 difference between this option and Enfuse's default color blending
-algorithm is very slight, and will be only noticeable when areas of
+algorithm is slight, and will be only noticeable when areas of
 different primary colors are blended together.
 
+@item -d
+@itemx --depth=@var{DEPTH}
+@opindex -d
+@opindex --depth
+@cindex bits per channel
+Force the number of bits per channel and the numeric format of the
+output image.
+
+All @var{DEPTH} specifications are valid in lowercase as well as
+uppercase letters.  For integer format use
+
+@table @asis
+@item @code{8}, @code{uint8}
+Unsigned 8@tie{}bit; range: 0..255
+@item @code{int16}
+Signed 16 bit; range: @minus{}32768..32767
+@item @code{16}, @code{uint16}
+Unsigned 16@tie{}bit; range: 0..65536
+@item @code{int32}
+Signed 32@tie{}bit; range: @minus{}2147483648..2147483647
+@item @code{32}, @code{uint32}
+Unsigned 32@tie{}bit; range: 0..4294967295
+@end table
+
+For floating-point format use
+
+@table @asis
+@item @code{r32}, @code{real32}, @code{float}
+@acronym{IEEE754} single precision floating-point, 32@tie{}bits wide,
+24@tie{}bit significant
+@itemize
+@item
+Minimal normalized value: @semilog{1.2, -38}
+@item
+Epsilon: @semilog{1.2, -7}
+@item
+Maximal finite value: @semilog{3.4, 38}
+@end itemize
+@item @code{r64}, @code{real64}, @code{double}
+@acronym{IEEE754} double precision floating-point, 64@tie{}bits wide,
+53@tie{}bit significant
+@itemize
+@item
+Minimal normalized value: @semilog{2.2, -308}
+@item
+Epsilon: @semilog{2.2, -16}
+@item
+Maximal finite value: @semilog{1.8, 308}
+@end itemize
+@end table
+
+If the requested @var{DEPTH} is not supported by the output file
+format, Enfuse warns and chooses the @var{DEPTH} that matches best.
+
 @item -g
-@cindex option @option{-g}
-Gimp (before @w{version 2.0}) and Cinepaint exhibit unusual behavior
-when loading images with unassociated alpha channels.  Use option
-@option{-g} to work around this problem.  With this flag Enfuse will
-create the output image with the associated alpha tag set, even though
-the image is really unassociated alpha.
+@opindex -g
+@cindex alpha channels, unassociated
+Save alpha channel as ``associated''.
+
+@pindex Gimp
+@pindex CinePaint
+Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
+Programs}) exhibit unusual behavior when loading images with
+unassociated alpha channels.  Use option @option{-g} to work around
+this problem.  With this flag Enfuse will create the output image with
+the associated alpha tag set, even though the image is really
+unassociated alpha.
 
 @item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
-@cindex option @option{-f}
-Set the size of the output image manually to @var{WIDTH}x@var{HEIGHT}.
-Optionally specify the @var{XOFFSET} and @var{YOFFSET}, too.  This is
-useful when the input images are cropped @acronym{TIFF} files, such as
-those produced by @command{nona}.
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{X-OFFSET}+y@var{Y-OFFSET}
+@opindex -f
+@cindex output image, set size of
+Set the size of the output image manually to
+@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
+@var{X-OFFSET} and @var{Y-OFFSET}, too.
+
+@pindex @command{nona}
+@pindex Hugin
+This option is useful when the input images are cropped @acronym{TIFF}
+files, such as those produced by @command{nona}.  The stitcher
+@command{nona} is part of Hugin.  @xref{Helpful Programs}.
 
 @item -m @var{CACHESIZE}
-@cindex option @option{-m}
-Set the @var{CACHESIZE} in Megabytes of Enfuse's image cache.  This is
-the amount of memory Enfuse will use for storing image data before
-swapping to disk.  The default is 1024@dmn{MB}.
+@opindex -m
+@cindex image cache, cache size
+Set the @var{CACHESIZE} in megabytes (@acronym{MB}) of Enfuse's image
+cache.
+
+This is the amount of memory Enfuse will use for storing image data
+before swapping to disk.  The default is 1024@dmn{MB}, which is good
+for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+
+See @ref{Tuning Memory Usage} for details.
 @end table
 
 
-@node Fusion Options, Expert Options, Extended Options, Invocation
+@node Fusion Options
 @section Fusion Options
-@cindex Fusion Options
+@cindex options, fusion
 
-...
+Fusion options define the proportion to which each input image's pixel
+contributes to the output image.
 
 @table @code
-@item --wExposure=@var{WEIGHT}
-@cindex option @option{--wExposure}
-Sets the relative @var{WEIGHT} of the well-exposedness criterion.
-Increasing this weight relative to the others will make well-exposed
-pixels contribute more to the final output.  Valid range:
-@ifinfo
-0 <= @var{WEIGHT} <= 1.
-@end ifinfo
-@html
-<math>
-    <mn>0</mn>
-    <mo>&le;</mo>
-    <mi mathvariant="italic">WEIGHT</mi>
-    <mo>&le;</mo>
-    <mn>1</mn>.
-</math>
-@end html
-@tex
-$0 \le \mathit{WEIGHT} \le 1$.
-@end tex
-
-@item --wMu=@var{MEAN}
-@cindex option @option{--wMu}
-Set the @var{MEAN} (this is, the center) of the Gaussian exposure
-weight curve.  The default value is 0.5, which for example gives
-pixels with @w{value 128} (when using 8-bit images) the highest
-weight.  Valid range:
-@ifinfo
-0 <= @var{MEAN} <= 1.
-@end ifinfo
-@html
-<math>
-    <mn>0</mn>
-    <mo>&le;</mo>
-    <mi mathvariant="italic">MEAN</mi>
-    <mo>&le;</mo>
-    <mn>1</mn>.
-</math>
-@end html
-@tex
-$0 \le \mathit{MEAN} \le 1$.
-@end tex
-
-@item --wSigma=@var{STD-DEV}
-@cindex option @option{--wSigma}
-Standard deviation @var{STD-DEV} of the Gaussian exposure weight
-curve.  Default: 0.2.  Low numbers give less weight to pixels that are
-far from @option{--wMu} and vice versa.  Valid range:
-@ifinfo
-0 <= @var{STD-DEV} <= 1.
-@end ifinfo
-@html
-<math>
-    <mn>0</mn>
-    <mo>&le;</mo>
-    <mi mathvariant="italic">STD-DEV</mi>
-    <mo>&le;</mo>
-    <mn>1</mn>.
-</math>
-@end html
-@tex
-$0 \le \mathit{STD-DEV} \le 1$.
-@end tex
-
-@item --wSaturation=@var{WEIGHT}
-@cindex option @option{--wSaturation}
-Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
-this weight makes pixels with high saturation contribute more to the
-final output.  Valid range:
-@ifinfo
-0 <= @var{WEIGHT} <= 1.
-@end ifinfo
-@html
-<math>
-    <mn>0</mn>
-    <mo>&le;</mo>
-    <mi mathvariant="italic">WEIGHT</mi>
-    <mo>&le;</mo>
-    <mn>1</mn>.
-</math>
-@end html
-@tex
-$0 \le \mathit{WEIGHT} \le 1$.
-@end tex
-
 @item --wContrast=@var{WEIGHT}
-@cindex option @option{--wContrast}
-Sets the relative @var{WEIGHT} of high-contrast pixels.  Valid range:
+@opindex --wContrast
+Sets the relative @var{WEIGHT} of high-contrast pixels.  Default: 0.0.
+Valid range:
 @ifinfo
-0 <= @var{WEIGHT} <= 1.
-@end ifinfo
-@html
-<math>
-    <mn>0</mn>
-    <mo>&le;</mo>
-    <mi mathvariant="italic">WEIGHT</mi>
-    <mo>&le;</mo>
-    <mn>1</mn>.
-</math>
-@end html
-@tex
-$0 \le \mathit{WEIGHT} \le 1$.
-@end tex
-
-@item --wEntropy=@var{WEIGHT}
-@cindex option @option{--wEntropy}
-Sets the relative @var{WEIGHT} of high entropy pixels.  Valid range:
-@ifinfo
-0 <= @var{WEIGHT} <= 1.
+0 @leq{} @var{WEIGHT} @leq{} 1.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
@@ -372,55 +576,354 @@ Sets the relative @var{WEIGHT} of high entropy pixels.  Valid range:
 @tex
 $0 \le \mathit{WEIGHT} \le 1$.
 @end tex
+See @ref{Contrast Weighting} and @ref{Expert Options, Option
+ContrastWindowSize}.
+
+@item --wEntropy=@var{WEIGHT}
+@opindex --wEntropy
+Sets the relative @var{WEIGHT} of high entropy pixels.  Default: 0.0.
+Valid range:
+@ifinfo
+0 @leq{} @var{WEIGHT} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">WEIGHT</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+See @ref{Entropy Weighting} and @ref{Expert Options, Options
+EntropyWindowSize and EntropyCutoff}.
+
+@item --wExposure=@var{WEIGHT}
+@opindex --wExposure
+Sets the relative @var{WEIGHT} of the well-exposedness criterion.
+Increasing this weight relative to the others will make well exposed
+pixels contribute more to the final output.  Default: 1.0.  Valid
+range:
+@ifinfo
+0 @leq{} @var{WEIGHT} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">WEIGHT</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+@xref{Exposure Weighting}.
+
+@item --wMu=@var{MEAN}
+@opindex --wMu
+Set the @var{MEAN} (this is, the center) of the Gaussian exposure
+weight curve.  Default: 0.5.  Valid range:
+@ifinfo
+0 @leq{} @var{MEAN} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">MEAN</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{MEAN} \le 1$.
+@end tex
+
+Use this option to fine-tune exposure weighting (@pxref{Exposure
+Weighting}).
+
+@item --wSaturation=@var{WEIGHT}
+@opindex --wSaturation
+Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
+this weight makes pixels with high saturation contribute more to the
+final output.  Default: 0.2.  Valid range:
+@ifinfo
+0 @leq{} @var{WEIGHT} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">WEIGHT</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+Saturation weighting is only defined for color images.
+@xref{Saturation Weighting}.
+
+@item --wSigma=@var{STD-DEV}
+@opindex --wSigma
+Standard deviation @var{STD-DEV} of the Gaussian exposure weight
+curve.  Default: 0.2.  Low numbers give less weight to pixels that are
+far from @option{--wMu} and vice versa.  Valid range:
+@ifinfo
+0 @leq{} @var{STD-DEV} @leq{} 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">STD-DEV</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{STD-DEV} \le 1$.
+@end tex
+
+Use this option to fine-tune exposure weighting (@pxref{Exposure
+Weighting}).
 @end table
 
 
-@node Expert Options,  , Fusion Options, Invocation
+@node Expert Options
 @section Expert Options
-@cindex Expert Options
+@cindex options, expert
 
-...
+Expert options influence the workings of Enfuse that require the user
+to read the manual before applying them successfully.
 
 @table @code
 @item --ContrastWindowSize=@var{SIZE}
-@cindex option @option{--ContrastWindowSize}
-Window @var{SIZE} for local contrast analysis.  Values larger than 5
-might result in a blurry composite and increased computation times.
-Values in the range of 3 to 5 have given good results on focus stacks.
+@opindex --ContrastWindowSize
+Set the window @var{SIZE} for local contrast analysis.  The window
+will be a square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
+
+For contrast analysis @var{SIZE} values larger than 5 might result in
+a blurry composite image.  Values of 3 and 5 have given good results
+on focus stacks.
+
 Valid range:
 @ifinfo
-@var{SIZE} >= 3.
+@var{SIZE} @geq{} 3.
 @end ifinfo
 @html
-<math>
-    <mi mathvariant="italic">SIZE</mi>
-    <mo>&ge;</mo>
-    <mn>3</mn>.
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">SIZE</mi>
+        <mo>&ge;</mo>
+        <mn>3</mn>
+        <mtext>.</mtext>
+    </mrow>
 </math>
 @end html
 @tex
 $\mathit{SIZE} \ge 3$.
 @end tex
 
-@item --SoftMask
-@cindex option @option{--SoftMask}
-Consider all masks when fusing.  This is the default.
+Given an even @var{SIZE} Enfuse will automatically use the next odd
+number.
 
-@item --HardMask
-@cindex option @option{--HardMask}
-Force hard blend masks on the finest scale.  This avoids averaging of
-fine details (only) at the expense of increasing the noise,
-considerably improving the sharpness of focus stacks.
+See also @ref{Fusion Options, Option --wContrast} and
+@option{--HardMask} below.
 
-@item --GrayProjector=@var{PROJ}
-@cindex option @option{--GrayProjector}
+@item --EdgeScale=@var{EDGE-SCALE}
+@itemx --EdgeScale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
+@opindex --EdgeScale
+A non-zero value for @var{EDGE-SCALE} switches on the
+Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
+@var{EDGE-SCALE} is the radius of the Gaussian used in the search for
+edges.  Default: 0 pixels.
+
+A positive @var{LCE-SCALE} turns on local contrast enhancement
+(@acronym{LCE}) before the @acronym{LoG} edge detection.
+@var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
+step, @var{LCE-FACTOR} is the weight factor (``strength'').
+@ifinfo
+@display
+@math{enhanced =   (1 + LCE-FACTOR) * original
+           - LCE-FACTOR * GaussianSmooth(original, LCE-SCALE)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mtable>
+        <mtr>
+            <mtd>
+                <mi mathvariant="italic">enhanced</mi>
+            </mtd>
+            <mtd>
+                <mo>=</mo>
+            </mtd>
+            <mtd>
+                <mrow>
+                    <mo>(</mo>
+                    <mn>1</mn>
+                    <mo>+</mo>
+                    <mi mathvariant="italic">LCE-FACTOR</mi>
+                    <mo>)</mo>
+                </mrow>
+                <mo>&times;</mo>
+                <mi mathvariant="italic">original</mi>
+            </mtd>
+        </mtr>
+        <mtr>
+            <mtd></mtd>
+            <mtd></mtd>
+            <mtd>
+                <mo>-</mo>
+                <mrow>
+                    <mi mathvariant="italic">LCE-FACTOR</mi>
+                    <mo>&times;</mo>
+                    <mrow>
+                        <mo>GaussianSmooth</mo>
+                        <mo>&ApplyFunction;</mo>
+                        <mfenced>
+                            <mi mathvariant="italic">original</mi>
+                            <mi mathvariant="italic">LCE-SCALE</mi>
+                        </mfenced>
+                    </mrow>
+                </mrow>
+            </mtd>
+        </mtr>
+    </mtable>
+</math>
+@end html
+@tex
+$$
+    \eqalign{enhanced & = (1 + \mathit{LCE-FACTOR}) \; \mathit{original}\cr
+                      & - \mathit{LCE-FACTOR} \;
+                          \mathrm{GaussianSmooth}(\mathit{original},
+                                                  \mathit{LCE-SCALE})\cr}
+$$
+@end tex
+
+@var{LCE-SCALE} defaults to 0 pixels and @var{LCE-FACTOR} defaults to
+0.  Append @samp{%} to @var{LCE-SCALE} to specify the radius as a
+percentage of @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR}
+to specify the weight as a percentage.
+
+@item --EntropyCutoff=@var{LOWER-CUTOFF}
+@itemx --EntropyCutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
+@opindex --EntropyCutoff
+The first form defines the lower cutoff value below of which pixels
+are treated as pure black when calculating the local entropy.  The
+second form also defines the upper cutoff value above of which pixels
+are treated as pure white.
+
+For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
+separately and independently to each channel.
+
+Defaults: 0% for @var{LOWER-CUTOFF} and 100% for @var{UPPER-CUTOFF},
+this is, all pixels' values are taken into account.  Append a @samp{%}
+to specify the cutoff relative to maximum pixel value in the source
+image (for example 255 or 65535).  @ref{Figure:entropy-cutoff} shows
+an example.
+
+@float Figure,Figure:entropy-cutoff
+@image{entropy-cutoff}
+
+@caption{Linear lightness@tie{}@var{Y} in comparison with an
+entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and
+@var{UPPER-CUTOFF} = 90% which are rather extreme values.}
+
+@shortcaption{Entropy cutoff function}
+@end float
+
+Note that a high @var{LOWER-CUTOFF} value lightens the resulting
+image, as dark (and presumably noisy) pixels are averaged with
+@emph{equal} weights.  With @samp{--EntropyCutoff=0}, the default, on
+the other hand, ``noise'' might be interpreted as high entropy and the
+noisy pixels get a high weight, which in turn renders the resulting
+image darker.  Analogously, a low @var{UPPER-CUTOFF} darkens the
+output image.
+
+@item --EntropyWindowSize=@var{SIZE}
+@opindex --EntropyWindowSize
+Window @var{SIZE} for local entropy analysis.  The window will be a
+square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
+
+In the entropy calculation @var{SIZE} values of 3 to 7 yield an
+acceptable compromise of the locality of the information and the
+significance of the local entropy value itself.
+
+Valid range:
+@ifinfo
+@var{SIZE} @geq{} 3.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">SIZE</mi>
+        <mo>&ge;</mo>
+        <mn>3</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$\mathit{SIZE} \ge 3$.
+@end tex
+
+Given an even @var{SIZE} Enfuse will automatically use the next odd
+number.
+
+@item --GrayProjector=@var{PROJECTOR}
+@opindex --GrayProjector
 @cindex gray projector
-Use gray projector @var{PROJ} for conversion of @acronym{RGB} images
-to grayscale masks.  Enfuse uses grayscale projections of color images
-in exposure weighting and contrast weighting.  Valid values for
-@var{PROJ} are:
+Use gray projector@tie{}@var{PROJECTOR} for conversion of
+@acronym{RGB} images to grayscale masks:
+@ifinfo
+@math{(R, G, B) --> Y.}
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mfenced>
+            <mi>R</mi>
+            <mi>G</mi>
+            <mi>B</mi>
+        </mfenced>
+        <mo>&rightarrow;</mo>
+        <mi>Y</mi>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$(R, G, B) \rightarrow Y.$
+@end tex
+In version@tie{}@value{VERSION} of Enfuse, the option is effective for
+exposure weighting contrast weighting.  Default: @samp{average}.
 
-@table @samp
+Valid values for @var{PROJECTOR} are:
+
+@table @code
 @item average
 @cindex gray projector, @samp{average}
 Average red, green, and blue channel with equal weights.  This is the
@@ -431,137 +934,160 @@ default and it often is a good projector for gamma = 1 data.
 @end display
 @end ifinfo
 @html
-<br>
-<math>
-    <mi>Y</mi>
-    <mo>=</mo>
-    <mfrac>
-        <mrow>
-            <mi>R</mi>
-            <mo>+</mo>
-            <mi>G</mi>
-            <mo>+</mo>
-            <mi>B</mi>
-        </mrow>
-        <mn>3</mn>
-    </mfrac>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mfrac>
+            <mrow>
+                <mi>R</mi>
+                <mo>+</mo>
+                <mi>G</mi>
+                <mo>+</mo>
+                <mi>B</mi>
+            </mrow>
+            <mn>3</mn>
+        </mfrac>
+    </mrow>
 </math>
 @end html
 @tex
-$$Y = {R + G + B \over 3}$$
+$$
+    Y = {R + G + B \over 3}
+$$
 @end tex
 
 @item l-star
 @cindex gray projector, @samp{l-star}
-Use the L*-channel of the L*a*b*-conversion of the image as its
+@cindex L*a*b* conversion
+@cindex conversion, L*a*b*
+Use the L-channel of the L*a*b*-conversion of the image as its
 grayscale representation.  This is a useful projector for gamma = 1
 data.  It reveals minute contrast variations even in the shadows and
 the highlights.  This projector is computationally expensive.
 
+See @uref{http://@/en.wikipedia.org/@/wiki/@/Lab_color_space,
+Wikipedia} for a detailed description of the @acronym{Lab} color
+space.
+
 @item lightness
 @cindex gray projector, @samp{lightness}
 Compute the lightness of each @acronym{RGB} pixel as in an
-@acronym{HSL}-conversion of the image.
+Hue-Saturation-Lightness (@acronym{HSL}) conversion of the image.
 @ifinfo
 @display
 @math{Y = (max(R, G, B) + min(R, G, B)) / 2}
 @end display
 @end ifinfo
 @html
-<br>
-<math>
-    <mi>Y</mi>
-    <mo>=</mo>
-    <mfrac>
-        <mrow>
-            <mi>max</mi>
-            <mo>&ApplyFunction;</mo>
-            <mo>(</mo>
-            <mi>R</mi>
-            <mo>,</mo>
-            <mi>G</mi>
-            <mo>,</mo>
-            <mi>B</mi>
-            <mo>)</mo>
-            <mo>+</mo>
-            <mi>max</mi>
-            <mo>&ApplyFunction;</mo>
-            <mo>(</mo>
-            <mi>R</mi>
-            <mo>,</mo>
-            <mi>G</mi>
-            <mo>,</mo>
-            <mi>B</mi>
-            <mo>)</mo>
-        </mrow>
-        <mn>2</mn>
-    </mfrac>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mfrac>
+            <mrow>
+                <mrow>
+                    <mo>max</mo>
+                    <mo>&ApplyFunction;</mo>
+                    <mfenced>
+                        <mi>R</mi>
+                        <mi>G</mi>
+                        <mi>B</mi>
+                    </mfenced>
+                </mrow>
+                <mo>+</mo>
+                <mrow>
+                    <mo>min</mo>
+                    <mo>&ApplyFunction;</mo>
+                    <mfenced>
+                        <mi>R</mi>
+                        <mi>G</mi>
+                        <mi>B</mi>
+                    </mfenced>
+                </mrow>
+            </mrow>
+            <mn>2</mn>
+        </mfrac>
+    </mrow>
 </math>
 @end html
 @tex
-$$Y = {\max(R, G, B) + \min(R, G, B) \over 2}$$
+$$
+    Y = {\max(R, G, B) + \min(R, G, B) \over 2}
+$$
 @end tex
 
 @item value
 @cindex gray projector, @samp{value}
-Take the Value-channel of the @acronym{HSV} conversion of the image.
+Take the Value-channel of the Hue-Saturation-Value (@acronym{HSV})
+conversion of the image.
 @ifinfo
 @display
 @math{Y = max(R, G, B)}
 @end display
 @end ifinfo
 @html
-<br>
-<math>
-    <mi>Y</mi>
-    <mo>=</mo>
-    <mi>max</mi>
-    <mo>&ApplyFunction;</mo>
-    <mo>(</mo>
-    <mi>R</mi>
-    <mo>,</mo>
-    <mi>G</mi>
-    <mo>,</mo>
-    <mi>B</mi>
-    <mo>)</mo>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mrow>
+            <mo>max</mo>
+            <mo>&ApplyFunction;</mo>
+            <mfenced>
+                <mi>R</mi>
+                <mi>G</mi>
+                <mi>B</mi>
+            </mfenced>
+        </mrow>
+    </mrow>
 </math>
 @end html
 @tex
-$$Y = \max(R, G, B)$$
+$$
+    Y = \max(R, G, B)
+$$
 @end tex
 
 @item luminance
 @cindex gray projector, @samp{luminance}
 Use the weighted average of the @acronym{RGB} pixel's channels as
-defined by @acronym{CIE} and the @acronym{JPEG} standard.
+defined by @acronym{CIE} (``Commission Internationale de
+l'@'Eclairage'') and the @acronym{JPEG} standard.
 @ifinfo
 @display
 @math{Y = 0.30 * R + 0.59 * G + 0.11 * B}
 @end display
 @end ifinfo
 @html
-<br>
-<math>
-    <mi>Y</mi>
-    <mo>=</mo>
-    <mn>0.30</mn>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.333em"/>
-    <mi>R</mi>
-    <mo>+</mo>
-    <mn>0.59</mn>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.333em"/>
-    <mi>G</mi>
-    <mo>+</mo>
-    <mn>0.11</mn>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.333em"/>
-    <mi>B</mi>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mrow>
+            <mn>0.30</mn>
+            <mo>&InvisibleTimes;</mo>
+            <mi>R</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mn>0.59</mn>
+            <mo>&InvisibleTimes;</mo>
+            <mi>G</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mn>0.11</mn>
+            <mo>&InvisibleTimes;</mo>
+            <mi>B</mi>
+        </mrow>
+    </mrow>
 </math>
 @end html
 @tex
-$$Y = 0.30 \, R + 0.59 \, G + 0.11 \, B$$
+$$
+    Y = 0.30 \, R + 0.59 \, G + 0.11 \, B
+$$
 @end tex
 
 @item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
@@ -573,30 +1099,36 @@ Weight the channels as given.
 @end display
 @end ifinfo
 @html
-<br>
-<math>
-    <mi>Y</mi>
-    <mo>=</mo>
-    <mi mathvariant="italic">RED-WEIGHT</mi>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.5em"/>
-    <mi>R</mi>
-    <mo>+</mo>
-    <mi mathvariant="italic">GREEN-WEIGHT</mi>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.5em"/>
-    <mi>G</mi>
-    <mo>+</mo>
-    <mi mathvariant="italic">BLUE-WEIGHT</mi>
-    <mo>&InvisibleTimes;</mo>
-    <mspace width="0.5em"/>
-    <mi>B</mi>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mrow>
+            <mi mathvariant="italic">RED-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>R</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mi mathvariant="italic">GREEN-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>G</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mi mathvariant="italic">BLUE-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>B</mi>
+        </mrow>
+    </mrow>
 </math>
 @end html
 @tex
-$$Y = \mathit{RED-WEIGHT} \; R +
-      \mathit{GREEN-WEIGHT} \; G +
-      \mathit{BLUE-WEIGHT} \; B$$
+$$
+    Y = \mathit{RED-WEIGHT} \; R +
+        \mathit{GREEN-WEIGHT} \; G +
+        \mathit{BLUE-WEIGHT} \; B
+$$
 @end tex
 
 The weights are automatically normalized to one, so
@@ -612,124 +1144,2506 @@ The three weights @var{RED-WEIGHT}, @var{GREEN-WEIGHT}, and
 channel.  The sum of all weights is normalized to one.
 @end table
 
-Default: @samp{average}.
+@item --HardMask
+@opindex --HardMask
+Force hard blend masks on the finest scale.  This is the opposite flag
+of @option{--SoftMask}.
 
-@item --EdgeScale=@var{EDGE-SCALE}
-@itemx --EdgeScale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
-@cindex option @option{--EdgeScale}
-A non-zero value for @var{EDGE-SCALE} switches on the
-Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
-@var{EDGE-SCALE} is the radius of the Gaussian used in the search for
-edges.  Default: 0 pixels.
+This blending mode avoids averaging of fine details (only) at the
+expense of increasing the noise.  However it considerably improvs the
+sharpness of focus stacks.  Blending with hard masks has solely proven
+useful with focus stacks.
 
-A positive @var{LCE-SCALE} turns on local contrast enhancement
-(@acronym{LCE}) prior to the @acronym{LoG} edge detection.
-@var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
-step, @var{LCE-FACTOR} is the weight factor (``strength'').
-@ifinfo
-@display
-@math{enhanced =   (1 + LCE-FACTOR) * original
-                 - LCE-FACTOR * GaussianSmooth(original, LCE-SCALE)}
-@end display
-@end ifinfo
-@html
-<br>
-<math>
-    <mtable>
-        <mtr>
-            <mtd>
-                <mi mathvariant="italic">enhanced</mi>
-            </mtd>
-            <mtd>
-                <mo>=</mo>
-            </mtd>
-            <mtd>
-                <mo>(</mo>
-                <mn>1</mn>
-                <mo>+</mo>
-                <mi mathvariant="italic">LCE-FACTOR</mi>
-                <mo>)</mo>
-                <mo>&InvisibleTimes;</mo>
-                <mspace width="0.5em"/>
-                <mi mathvariant="italic">original</mi>
-            </mtd>
-        </mtr>
-        <mtr>
-            <mtd></mtd>
-            <mtd></mtd>
-            <mtd>
-                <mo>-</mo>
-                <mi mathvariant="italic">LCE-FACTOR</mi>
-                <mo>&InvisibleTimes;</mo>
-                <mspace width="0.5em"/>
-                <mi>GaussianSmooth</mi>
-                <mo>&ApplyFunction;</mo>
-                <mo>(</mo>
-                <mi mathvariant="italic">original</mi>
-                <mo>,</mo>
-                <mi mathvariant="italic">LCE-SCALE</mi>
-                <mo>)</mo>
-            </mtd>
-        </mtr>
-    </mtable>
-</math>
-@end html
-@tex
-$$
-\eqalign{enhanced & = (1 + \mathit{LCE-FACTOR}) \; \mathit{original}\cr
-                  & - \mathit{LCE-FACTOR} \;
-                      \mathrm{GaussianSmooth}(\mathit{original},
-                                              \mathit{LCE-SCALE})\cr}
-$$
-@end tex
-
-@var{LCE-SCALE} defaults to 0 pixels and @var{LCE-FACTOR} defaults to
-0.  Append @samp{%} to @var{LCE-SCALE} to specify the radius as a
-percentage of @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR}
-to specify the weight as a percentage.
+See also @ref{Fusion Options, Option --wContrast} and
+@option{--ContrastWindowSize} above.
 
 @item --MinCurvature=@var{CURVATURE}
-@cindex option @option{--MinCurvature}
+@opindex --MinCurvature
 Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
 detection.  Default: 0.  Append a @samp{%} to specify the minimum
 curvature relative to maximum pixel value in the source image (for
 example 255 or 65535).
 
-A positive value lets enfuse use the local contrast data (controlled
+A positive value makes Enfuse use the local contrast data (controlled
 with @option{--ContrastWindowSize}) for curvatures less than
 @var{CURVATURE} and @acronym{LoG} data for values above it.
 
 A negative value truncates all curvatures less than
 @minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
 left unchanged.  This effectively suppresses weak edges.
+
+@item --SoftMask
+@opindex --SoftMask
+Consider all masks when fusing.  This is the default.
 @end table
 
 
-@node Examples, Authors, Invocation, Top
-@chapter Examples
+@node Option Delimiters
+@section Option Delimiters
+@cindex option delimiters
+@cindex delimiters, option
 
-To blend an exposure stack given in files @file{exposure-01.tif},
-@file{exposure-02.tif}, ...
+Enfuse allows the arguments supplied to the program's options to be
+separated by different separators.  The online documentation and this
+manual, however, exclusively use the colon @samp{:} in every syntax
+definition and in all examples.  Valid delimiters are the the
+semicolon @samp{;}, the colon @samp{:}, and the slash @samp{/}.  All
+delimiters may be mixed within any option.
 
-@example
-enfuse -o result.tif exposure-*.tif
-@end example
+@noindent
+Examples:
 
-To blend a focus stack to form an extended depth of field image set
-the contrast weight to 1 and use very low values for exposure and
-saturation criteria to get meaningful results in low contrast areas.
+@table @samp
+@item --EdgeScale=0.667:6.67:3.5
+Separate all arguments with colons.
 
-@example
-enfuse -o result.tif --wExposure=0.001 --wSaturation=0.001 --wContrast=1 --HardMask focus-*.tif
-@end example
+@item --EdgeScale=0.667;6.67;3.5
+Use semi-colons.
+
+@item --EdgeScale=0.667;6.67/3.5
+Mix semicolon and slash in weird ways.
+
+@item --EntropyCutoff=3%/99%
+All delimiters also work in conjuction with percentages.
+
+@item --GrayProjector=channel-mixer:3/6/1
+Separate arguments with a colon and two slashes.
+
+@item --GrayProjector=channel-mixer/30;60:10
+Go wild and Enfuse will understand.
+@end table
 
 
-@node Authors,  , Examples, Top
-@chapter Authors
+@node Weighting Functions
+@chapter Weighting Functions
+@cindex weighting functions
 
-@itemize @bullet
+As has been noted in the Overview (@pxref{Overview}), Enfuse supports
+four different types of weighting.  The following subsections describe
+the concept of weighting and all weighting functions in detail.
+
+@menu
+* Weighting Pixels::            General concept of weighting pixels
+* Exposure Weighting::          Weighting by exposure
+* Saturation Weighting::        Weighting by saturation
+* Contrast Weighting::          Weighting by local contrast
+* Entropy Weighting::           Weighting by local entropy
+@end menu
+
+
+@node Weighting Pixels
+@section Weighting Pixels
+@cindex weighting, general concept of
+
+Image fusion maps each pixel@tie{}@math{P(i, x, y)} of every input
+image @math{i} to a single pixel@tie{}@math{Q(x, y)} in the output
+image:
+@ifinfo
+@display
+@math{P(i, x, y) --> Q(x, y),}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mi>P</mi>
+            <mfenced>
+                <mi>i</mi>
+                <mi>x</mi>
+                <mi>y</mi>
+            </mfenced>
+        </mrow>
+        <mo>&rightarrow;</mo>
+        <mrow>
+            <mi>Q</mi>
+            <mfenced>
+                <mi>x</mi>
+                <mi>y</mi>
+            </mfenced>
+        </mrow>
+        <mtext>,</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    P(i, x, y) \rightarrow Q(x, y),
+$$
+@end tex
+@noindent
+where @math{x} runs from 1 to the common width of the images, @math{y}
+from 1 to the common height, and @math{i} from 1 to the number of
+input images@tie{}@math{n}.
+
+Enfuse allows for weighting the contribution of each @math{P(i, x, y)}
+to the final @math{Q(x, y)}:
+@ifinfo
+@display
+@math{w(P(1, x, y)) * P(1, x, y) +
+... +
+w(P(n, x, y)) * P(n, x, y)
+--> Q(x, y),}@w{                                                  }(W)
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mi>w</mi>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mrow>
+                    <mi>P</mi>
+                    <mfenced>
+                        <mi>1</mi>
+                        <mi>x</mi>
+                        <mi>y</mi>
+                    </mfenced>
+                </mrow>
+                <mo>)</mo>
+            </mrow>
+            <mo>&times;</mo>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>1</mi>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+            </mrow>
+            <mo>+</mo>
+            <mo>...</mo>
+            <mo>+</mo>
+            <mi>w</mi>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mrow>
+                    <mi>P</mi>
+                    <mfenced>
+                        <mi>n</mi>
+                        <mi>x</mi>
+                        <mi>y</mi>
+                    </mfenced>
+                </mrow>
+                <mo>)</mo>
+            </mrow>
+            <mo>&times;</mo>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>n</mi>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+            </mrow>
+        </mrow>
+        <mo>&rightarrow;</mo>
+        <mrow>
+            <mi>Q</mi>
+            <mfenced>
+                <mi>i</mi>
+                <mi>x</mi>
+                <mi>y</mi>
+            </mfenced>
+        </mrow>
+        <mtext>,</mtext>
+        <mspace width="4em"/>
+        <mtext>(W)</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w(P(1, x, y)) P(1, x, y) + \ldots + w(P(n, x, y)) P(n, x, y)
+    \rightarrow
+    Q(x, y),\hskip4em\hbox{(W)}
+$$
+@end tex
+@noindent
+where
+
+@itemize
 @item
-Andrew Mihal @email{acmihal@@users.sourceforge.net}.
+each @math{w} is non-negative to yield a physical intensity and
+
+@item
+the sum of all @math{w} is one to leave the total intensity unchanged.
+@end itemize
+
+@noindent
+The pixel weights@tie{}@math{w} themselves are weighted sums with the
+same constraints
+@ifinfo
+@display
+@math{w(P) = w_exp * f_exp(P) +
+       w_sat * f_sat(P) +
+       w_cont * f_cont(P, r_cont) +
+       w_ent * f_ent(P, r_ent),}
+@end display
+@noindent
+where we have abbreviated @math{P(i, x, y)} to @math{P} for
+simplicity.  The user defines the constants@tie{}@math{w_exp},
+@math{w_sat}, @math{w_cont}, and @math{w_ent} with the options
+@option{--wExposure}, @option{--wSaturation}, @option{--wContrast},
+and @option{--wEntropy}.  The functions@tie{}@math{f_exp},
+@math{f_sat}, @math{f_cont}, and @math{f_ent} along with the window
+sizes@tie{}@math{r_cont} and @math{r_ent} are explained in the next
+sections.
+@end ifinfo
+@html
+</p>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mtable>
+        <mtr>
+            <mtd>
+                <mi>w</mi>
+                <mo>&ApplyFunction;</mo>
+                <mrow>
+                    <mo>(</mo>
+                    <mi>P</mi>
+                    <mo>)</mo>
+                </mrow>
+            </mtd>
+            <mtd>
+                <mo>=</mo>
+            </mtd>
+            <mtd>
+                <msub>
+                    <mi>w</mi>
+                    <mtext>exp</mtext>
+                </msub>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mi>f</mi>
+                        <mtext>exp</mtext>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mrow>
+                        <mo>(</mo>
+                        <mi>P</mi>
+                        <mo>)</mo>
+                    </mrow>
+                    <mo>+</mo>
+                </mrow>
+            </mtd>
+        </mtr>
+        <mtr>
+            <mtd></mtd>
+            <mtd></mtd>
+            <mtd>
+                <msub>
+                    <mi>w</mi>
+                    <mtext>sat</mtext>
+                </msub>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mi>f</mi>
+                        <mtext>sat</mtext>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mrow>
+                        <mo>(</mo>
+                        <mi>P</mi>
+                        <mo>)</mo>
+                    </mrow>
+                    <mo>+</mo>
+                </mrow>
+            </mtd>
+        </mtr>
+        <mtr>
+            <mtd></mtd>
+            <mtd></mtd>
+            <mtd>
+                <msub>
+                    <mi>w</mi>
+                    <mtext>cont</mtext>
+                </msub>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mi>f</mi>
+                        <mtext>cont</mtext>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mfenced>
+                        <mi>P</mi>
+                        <msub>
+                            <mi>r</mi>
+                            <mtext>cont</mtext>
+                        </msub>
+                    </mfenced>
+                </mrow>
+                <mo>+</mo>
+            </mtd>
+        </mtr>
+        <mtr>
+            <mtd></mtd>
+            <mtd></mtd>
+            <mtd>
+                <msub>
+                    <mi>w</mi>
+                    <mtext>ent</mtext>
+                </msub>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mi>f</mi>
+                        <mtext>ent</mtext>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mfenced>
+                        <mi>P</mi>
+                        <msub>
+                            <mi>r</mi>
+                            <mtext>ent</mtext>
+                        </msub>
+                    </mfenced>
+                </mrow>
+            </mtd>
+        </mtr>
+    </mtable>
+</math>
+
+<p>where we have abbreviated <math
+xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mi>P</mi> <mfenced> <mi>i</mi> <mi>x</mi> <mi>y</mi> </mfenced>
+</math> to <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <mi>P</mi> </math> for simplicity.  The user defines
+the constants&nbsp;<math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>w</mi> <mtext>exp</mtext> </msub>
+</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>w</mi> <mtext>sat</mtext> </msub>
+</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>w</mi> <mtext>cont</mtext> </msub>
+</math>, and <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>w</mi> <mtext>ent</mtext> </msub> </math>
+with the options `<tt>--wExposure</tt>', `<tt>--wSaturation</tt>',
+`<tt>--wContrast</tt>', and `<tt>--wEntropy</tt>' respectively.  The
+functions&nbsp;<math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>f</mi> <mtext>exp</mtext> </msub>
+</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>f</mi> <mtext>sat</mtext> </msub>
+</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>f</mi> <mtext>cont</mtext> </msub>
+</math>, and <math xmlns="http://www.w3.org/1998/Math/MathML"
+display="inline"> <msub> <mi>f</mi> <mtext>ent</mtext> </msub> </math>
+along with the window sizes&nbsp;<math
+xmlns="http://www.w3.org/1998/Math/MathML" display="inline"> <msub>
+<mi>r</mi> <mtext>cont</mtext> </msub> </math> and <math
+xmlns="http://www.w3.org/1998/Math/MathML" display="inline"> <msub>
+<mi>r</mi> <mtext>ent</mtext> </msub> </math> are explained in the
+next sections.</p><p>
+@end html
+@tex
+$$
+    \eqalign{w(P) \quad = \quad
+        & w_{\mathrm{exp}} \; f_{\mathrm{exp}}(P) + \cr
+        & w_{\mathrm{sat}} \; f_{\mathrm{sat}}(P) + \cr
+        & w_{\mathrm{cont}} \; f_{\mathrm{cont}}(P, r_{\mathrm{cont}}) + \cr
+        & w_{\mathrm{ent}} \; f_{\mathrm{ent}}(P, r_{\mathrm{ent}}), \cr}
+$$
+
+\noindent where we have abbreviated $P(i, x, y)$ to $P$ for
+simplicity.  The user defines the constants~$w_{\mathrm{exp}}$,
+$w_{\mathrm{sat}}$, $w_{\mathrm{cont}}$, and $w_{\mathrm{ent}}$ with
+the options `{\tt --wExposure}', `{\tt --wSaturation}', `{\tt
+--wContrast}', and `{\tt --wEntropy}' respectively.  The
+functions~$f_{\mathrm{exp}}$, $f_{\mathrm{sat}}$, $f_{\mathrm{cont}}$,
+and $f_{\mathrm{ent}}$ along with the window sizes~$r_{\mathrm{cont}}$
+and $r_{\mathrm{ent}}$ are explained in the next sections.
+@end tex
+
+@menu
+* Weighted Average::            Enfuse's default weighting algorithm
+* Disabling Averaging::         ``Super Trouper'' weighting for focus stacks
+@end menu
+
+
+@node Weighted Average
+@subsection Weighted Average
+@cindex weighted average
+@cindex average, weighted
+
+By default, Enfuse uses a weighted average, where @emph{each} pixel
+contributes as much as its weight demands.  Of course the weights can
+be extreme, favouring only a few pixels or even only one pixel in the
+input stack.  Extremes are untypical, however.
+
+Equal weights are another extreme that turns (W) into an arithmetic
+average.  this is why we sometimes speak of the ``averaging property''
+of this weighting algorithm, like smoothing out noise.
+
+
+
+@node Disabling Averaging
+@subsection Disabling Averaging: Option@tie{}@option{--HardMask}
+@cindex disabling averaging
+@cindex averaging, disabling
+@opindex --HardMask
+
+The weighted average computation as described above has proven to be
+widely successful with the exception of one special case: focus
+stacking (@pxref{Focus Stacks}), where the averaging noticeably
+softens the final image.
+
+Use @option{--HardMask} to switch Enfuse into a different (``Super
+Trouper'') weighting mode, where the pixel with the highest weight
+wins, this is, gets weight@tie{}one, and all other pixels get the
+weight of zero
+(@uref{http://@/en.wikipedia.org/@/wiki/@/The_Winner_Takes_It_All,,``The
+Winner Takes It All.''}).  With @option{--HardMask} Equation@tie{}(W)
+becomes
+@ifinfo
+@display
+@math{P(i, x, y) --> Q(x, y),}
+@end display
+@noindent
+where
+@display
+@math{w(P(i, x, y)) >= w(P(j, x, y))} for all @math{1 <= j <= n}.
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>i</mi>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+            </mrow>
+            <mo>&rightarrow;</mo>
+            <mrow>
+                <mi>Q</mi>
+                <mfenced>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+            </mrow>
+            <mtext>,</mtext>
+        </mrow>
+        <mtext>&ThickSpace;where&ThickSpace;</mtext>
+        <mrow>
+            <mi>w</mi>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>i</mi>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+                <mo>)</mo>
+            </mrow>
+            <mo>&ge;</mo>
+            <mi>w</mi>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>j</mi>
+                    <mi>x</mi>
+                    <mi>y</mi>
+                </mfenced>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mtext>&ThickSpace;for all&ThickSpace;</mtext>
+        <mrow>
+            <mn>1</mn>
+            <mo>&le;</mo>
+            <mi>j</mi>
+            <mo>&le;</mo>
+            <mi>n</mi>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    P(i, x, y) \rightarrow Q(x, y),
+    \hbox{ where } w(P(i, x, y)) \ge w(P(j, x, y))
+    \hbox{ for all } 1 \le j \le n.
+$$
+@end tex
+
+@noindent
+Note that this ``averaging'' scheme lacks the nice noise-reduction
+property of the weighted average@tie{}(W), because only a single input
+pixel contributes to the output.
+
+
+@node Exposure Weighting
+@section Exposure Weighting
+@cindex weighting, exposure
+
+Exposure weighting prefers pixels with a luminance@tie{}@math{Y} close
+to the center of the normalized, real-valued luminance
+interval@tie{}@math{[0, 1]}.
+
+@acronym{RGB}-pixels get converted to luminance using the grayscale
+projector given by @option{--Gray@/Projector}, which defaults to
+@code{average}.  Grayscale pixels are identified with luminance.
+
+In the normalized luminance interval 0.0 represents pure black and 1.0
+represents pure white independently of the data type of the input
+image.  This is, for a @acronym{JPEG} image the luminance@tie{}255
+maps to 1.0 in the normalized interval and for a 32@dmn{bit}
+@acronym{TIFF} picture the highest luminance value@tie{}4294967295
+also maps to 1.0.  The middle if the luminance interval, 0.5, is where
+a neutral gray tone ends up with every camera that had no exposure
+correction dialed in, for example the image of a gray- or white-card.
+
+The exposure weighting algorithm only looks at a single pixel at a
+time; the pixel's neighborhood is not taken into account.
+
+The weighting function is the Gaussian
+@ifinfo
+@display
+@math{w_exp(Y) = exp(-0.5 * ((Y - Mu) / Sigma)^2),}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <msub>
+                <mi>w</mi>
+                <mtext>exp</mtext>
+            </msub>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mi>Y</mi>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mtext>exp</mtext>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mo>-</mo>
+                <mfrac>
+                    <mn>1</mn>
+                    <mn>2</mn>
+                </mfrac>
+                <mo>&InvisibleTimes;</mo>
+                <msup>
+                    <mrow>
+                        <mo>(</mo>
+                        <mfrac>
+                            <mrow>
+                                <mi>Y</mi>
+                                <mo>-</mo>
+                                <mi mathvariant="italic">Mu</mi>
+                            </mrow>
+                            <mi mathvariant="italic">Sigma</mi>
+                        </mfrac>
+                        <mo>)</mo>
+                    </mrow>
+                    <mn>2</mn>
+                </msup>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}}(Y) =
+    \exp\left(-{1 \over 2}
+              \left(Y - \mathit{Mu} \over \mathit{Sigma} \right)^2\right),
+$$
+@end tex
+@noindent
+whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
+by the command line options@tie{}@option{--wMu} and @option{--wSigma}
+respectively.  @math{Mu} defaults to 0.5, the middle of the luminance
+interval.  @math{Sigma} defaults to 0.2.  @ref{Figure:gaussian} shows
+a Gaussian with these parameters.
+
+@float Figure,Figure:gaussian
+@image{gaussian}
+
+@caption{Gaussian function with Enfuse's default parameters @var{Mu} =
+0.5 and @var{Sigma} = 0.2.}
+
+@shortcaption{Gaussian function}
+@end float
+
+The options@tie{}@option{--wMu} and @option{--wSigma} are for
+fine-tuning the final result without changing the set of input images.
+Option@tie{}@option{--wMu} sets the point @var{Mu} of optimum
+exposure.  The default is @var{Mu} = 0.5, exactly the middle between
+pure black (0.0) and pure white (1.0).  Increasing @var{Mu} makes
+Enfuse prefer lighter pixels, rendering the final image lighter and
+vice versa.  Option@tie{}@option{--wSigma} defines the range
+@var{Sigma} of acceptable exposures.  The default is @var{Sigma} =
+0.2, which means at @var{Mu} @plusminus{} 0.2 the weight will be
+approximately 0.88.  Small values of @var{Sigma} penalize exposures
+deviant from @var{Mu} more and vice versa.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wExposure
+@ref{Fusion Options}
+
+@item --wMu
+@ref{Fusion Options}
+
+@item --wSigma
+@ref{Fusion Options}
+
+@item --GrayProjector
+@ref{Expert Options}
+@end table
+
+
+@node Saturation Weighting
+@section Saturation Weighting
+@cindex weighting, saturation
+
+Saturation weighting prefers pixels with a high saturation.
+
+Enfuse computes the saturation of a pixel according to the following
+algorithm.
+
+@example
+@group
+@var{max} := maximum(@var{R}, @var{G}, @var{B})
+@var{min} := minimum(@var{R}, @var{G}, @var{B})
+@b{if} @var{max} = @var{min} @b{then}
+    @var{saturation} := 0
+@b{else}
+    @var{sum} := @var{max} + @var{min}
+    @var{difference} := @var{max} - @var{min}
+    @b{if} @var{sum} @leq{} 1 @b{then}
+        @var{saturation} := @var{difference} / @var{sum}
+    @b{else}
+        @var{saturation} := @var{difference} / (2 - @var{sum})
+    @b{end if}
+@b{end if}
+@end group
+@end example
+
+@noindent
+Obviously, saturation weighting can only be defined for @acronym{RGB}
+images, not for grayscale ones!  If you need something similar check
+out @ref{Entropy Weighting}; entropy weighting works for both
+@acronym{RGB} and grayscale pictures.
+
+The saturation weighting algorithm only looks at a single pixel at a
+time; the pixel's neighborhood is not taken into account.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wSaturation
+@ref{Fusion Options}
+@end table
+
+
+@node Contrast Weighting
+@section Contrast Weighting
+@cindex weighting, contrast
+
+Contrast weighting favors pixels inside a high contrast neighborhood.
+The notion of ``high contrast'' is defined either by two different
+criteria or by a blend of both:
+
+@itemize
+@item
+The standard deviation (@acronym{SDev}) of all the pixels in the local
+analysis window is large.  @xref{Standard Deviation}.
+
+@item
+The Laplacian-of-Gaussian (@acronym{LoG}) has a large magnitude.
+@xref{Laplacian of Gaussian}.
+
+@item
+If the @acronym{LoG} magnitude is below a given threshold, use
+@acronym{SDev} data, otherwise stick with @acronym{LoG}.
+@xref{Blend SDev and LoG}.
+@end itemize
+
+Enfuse converts every @acronym{RGB} image to grayscale before it
+determines its contrast.  Option@tie{}@option{--GrayProjector}
+(@pxref{Expert Options}) controls the projector function.  Depending
+on the subject one of several grayscale projectors may yield the best
+black-and-white contrast for image fusion.
+
+In the following sections we describe each algorithm in detail.
+
+@menu
+* Standard Deviation::          Standard deviation (@acronym{SDev})
+* Laplacian of Gaussian::       @acronym{LoG}, a second derivative method
+* Blend SDev and LoG::          Mix and match @acronym{SDev} and @acronym{LoG}
+* Scaling and Choice of Mode::  How parameters do not scale; neither does mode
+@end menu
+
+
+@node Standard Deviation
+@subsection Standard Deviation
+@cindex weighting, contrast using standard deviation
+@cindex contrast weighting using standard deviation
+
+@cindex local analysis window
+@cindex window, local-analysis
+The pixel under consideration@tie{}C sits exactly in the center of a
+square, the so-called @dfn{local analysis window}.  It always has an
+uneven edge length.  The user sets the size with
+option@tie{}@option{--ContrastWindowSize}.
+@ref{Figure:local-analysis-window} shows two windows with different
+sizes.
+
+@float Figure,Figure:local-analysis-window
+@image{local-analysis-window}
+
+@caption{Examples of local analysis windows for the sizes 3 and 5.
+``C'' marks the center where the pixel gets the weight.  ``N'' are
+neighboring pixels, which all contribute equally to the weight.}
+
+@shortcaption{Local analysis window}
+@end float
+
+During the analysis Enfuse scans the local analysis window across all
+rows and all columns@footnote{In the current implementation a
+@code{floor(ContrastWindowSize / 2)} wide border around the images
+remains unprocessed and gets a weight of zero.} of each of the input
+images to compute the contrast weight of every pixel.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wContrast
+@ref{Fusion Options}
+
+@item --HardMask
+@ref{Fusion Options}
+
+@item --ContrastWindowSize
+@ref{Expert Options}
+
+@item --GrayProjector
+@ref{Expert Options}
+@end table
+
+
+@subsubsection Statistical Moments
+@cindex statistical moments
+
+@cindex probability function
+We start with the @dfn{probability function} @math{w} of the random
+variable@tie{}@math{X}:
+@ifinfo
+@display
+@math{w: x --> p(@{omega: X(omega) = x@})}.
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>w</mi>
+        <mo>:</mo>
+        <mrow>
+            <mi>x</mi>
+            <mo>&rightarrow;</mo>
+            <mi>p</mi>
+            <mo>&ApplyFunction;</mo>
+            <mo>(</mo>
+            <mrow>
+                <mo>{</mo>
+                <mrow>
+                    <mi>&omega;</mi>
+                    <mo>:</mo>
+                    <mrow>
+                        <mi>X</mi>
+                        <mo>&ApplyFunction;</mo>
+                        <mrow>
+                            <mo>(</mo>
+                            <mi>&omega;</mi>
+                            <mo>)</mo>
+                        </mrow>
+                        <mo>=</mo>
+                        <mi>x</mi>
+                    </mrow>
+                </mrow>
+                <mo>}</mo>
+            </mrow>
+            <mo>)</mo>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w: x \rightarrow p(\{\omega: X(\omega) = x\}).
+$$
+@end tex
+@noindent
+It associates a probability@tie{}@math{p} with each of the @math{n}
+different possible outcomes@tie{}@inlineomega{} of the random
+variable@tie{}@math{X}.
+@cindex expectation value
+Based on @math{w}, we define the @dfn{expectation value} or ``First
+Moment'' of the random variable@tie{}@math{X}:
+@ifinfo
+@display
+@math{Ex X := sum(x_i * w(x_i), i = 1..n).}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mo mathvariant="sans-serif">Ex</mo>
+            <mo>&ApplyFunction;</mo>
+            <mi>X</mi>
+        </mrow>
+        <mo>:=</mo>
+        <mrow>
+            <munderover>
+                <mo>&sum;</mo>
+                <mrow>
+                    <mi>i</mi>
+                    <mo>=</mo>
+                    <mn>1</mn>
+                </mrow>
+                <mi>n</mi>
+            </munderover>
+            <msub>
+                <mi>x</mi>
+                <mi>i</mi>
+            </msub>
+            <mo>&times;</mo>
+            <mi>w</mi>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <msub>
+                    <mi>x</mi>
+                    <mi>i</mi>
+                </msub>
+                <mo>)</mo>
+            </mrow>
+            <mtext>.</mtext>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \hbox{\sf Ex } X := \sum_{i = 1}^n x_i w(x_i).
+$$
+@end tex
+@cindex variance
+@noindent
+Using the definition of the expectation value, we define the
+@dfn{variance}, or ``Second Moment'' as
+@ifinfo
+@display
+@math{Var X := Ex((X - Ex X)^2)},
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mo mathvariant="sans-serif">Var</mo>
+        <mo>&ApplyFunction;</mo>
+        <mi>X</mi>
+    </mrow>
+    <mo>:=</mo>
+    <mrow>
+        <mo mathvariant="sans-serif">Ex</mo>
+        <mo>&ApplyFunction;</mo>
+        <mrow>
+            <mo>(</mo>
+            <msup>
+                <mrow>
+                    <mo>(</mo>
+                    <mi>X</mi>
+                    <mo>-</mo>
+                    <mrow>
+                        <mo mathvariant="sans-serif">Ex</mo>
+                        <mo>&ApplyFunction;</mo>
+                        <mi>X</mi>
+                    </mrow>
+                    <mo>)</mo>
+                </mrow>
+                <mn>2</mn>
+            </msup>
+            <mo>)</mo>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \hbox{\sf Var } X := \hbox{\sf Ex}\left( (X - \hbox{\sf Ex } X)^2 \right),
+$$
+@end tex
+@cindex standard deviation
+@noindent
+and the @dfn{standard deviation} as
+@ifinfo
+@display
+@math{Sdev X := sqrt(Var X)}.
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mo>&sigma;</mo>
+            <mo>&ApplyFunction;</mo>
+            <mi>X</mi>
+        </mrow>
+        <mo>:=</mo>
+        <msqrt>
+            <mo mathvariant="sans-serif">Var</mo>
+            <mo>&ApplyFunction;</mo>
+            <mi>X</mi>
+        </msqrt>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \sigma X := \sqrt{\hbox{\sf Var } X}.
+$$
+@end tex
+Obviously, the variance of @math{X} is the expectation value of the
+squared deviation from the expectation value of @math{X} itself.  Note
+that the variance's dimension is @math{X}'s dimension squared; the
+standard deviation rectifies the dimension to make it comparable with
+@math{X} itself again.
+
+
+@subsubsection Estimators
+@cindex estimators
+
+In Enfuse, we assume that @math{X} follows a uniform probability
+function@tie{}@math{w(x)} = const.  This is, all pixel values in the
+local analysis window are considered to be equally probable.  Thus,
+the expectation value and the variance can be estimated from the pixel
+values like this
+@ifinfo
+@display
+@math{Ex X = sum(x_i, i = 1..n) / n.}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mo mathvariant="sans-serif">Ex</mo>
+            <mo>&ApplyFunction;</mo>
+            <mi>X</mi>
+        </mrow>
+        <mo>:=</mo>
+        <mrow>
+            <mfrac>
+                <mn>1</mn>
+                <mi>n</mi>
+            </mfrac>
+            <mo>&InvisibleTimes;</mo>
+            <mrow>
+                <munderover>
+                    <mo>&sum;</mo>
+                    <mrow>
+                        <mi>i</mi>
+                        <mo>=</mo>
+                        <mn>1</mn>
+                    </mrow>
+                    <mi>n</mi>
+                </munderover>
+                <msub>
+                    <mi>x</mi>
+                    <mi>i</mi>
+                </msub>
+            </mrow>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \hbox{\sf Ex } X := {1 \over n} \sum_{i = 1}^n x_i.
+$$
+@end tex
+@noindent
+In other words: the expectation value is the arithmetic mean of the
+lightness of all pixels in the local analysis window.  Analogously,
+the variance becomes
+@ifinfo
+@display
+@math{Var X = sum((x_i - Ex x)^2, i = 1..n) / (n - 1).}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mo mathvariant="sans-serif">Var</mo>
+            <mo>&ApplyFunction;</mo>
+            <mi>X</mi>
+        </mrow>
+        <mo>:=</mo>
+        <mfrac>
+            <mn>1</mn>
+            <mrow>
+                <mi>n</mi>
+                <mo>-</mo>
+                <mn>1</mn>
+            </mrow>
+        </mfrac>
+        <mo>&InvisibleTimes;</mo>
+        <mrow>
+            <mo mathvariant="sans-serif">Ex</mo>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <msup>
+                    <mrow>
+                        <mo>(</mo>
+                        <mi>X</mi>
+                        <mo>-</mo>
+                        <mrow>
+                            <mo mathvariant="sans-serif">Ex</mo>
+                            <mo>&ApplyFunction;</mo>
+                            <mi>X</mi>
+                        </mrow>
+                        <mo>)</mo>
+                    </mrow>
+                    <mn>2</mn>
+                </msup>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \hbox{\sf Var } X :=
+    {1 \over {n - 1}} \, \hbox{\sf Ex}\left( (X - \hbox{\sf Ex } X)^2 \right).
+$$
+@end tex
+
+
+@node Laplacian of Gaussian
+@subsection Laplacian of Gaussian
+@cindex weighting, contrast using laplacian-of--gaussian
+@cindex contrast weighting using laplacian-of--gaussian
+
+@cindex Laplacian of Gaussian
+@cindex LoG
+The @dfn{Laplacian of Gaussian} (@acronym{LoG}) is an operator to
+detect edges in an image.  Sometimes the @acronym{LoG}-operator is
+also called Marr-Hildreth operator.  A Laplacian-of-Gaussian operator,
+@uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
+@code{vigra::@/laplacian@/Of@/Gaussian}} is part of the
+package@tie{}@uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/,
+Vigra} that Enfuse is built upon and is used for edge detection if
+option@tie{}@option{--EdgeScale} is non-zero and
+@option{--MinCurvature} equal to or less than zero.
+
+Let the Gaussian function be
+@ifinfo
+@display
+@math{g(x, y) = 1/pi * exp((x^2 + y^2) / (2 * sigma^2))/(2 * sigma^2)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mi>g</mi>
+            <mfenced>
+                <mi>x</mi>
+                <mi>y</mi>
+            </mfenced>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <mn>1</mn>
+                <mrow>
+                    <mn>2</mn>
+                    <mo>&InvisibleTimes;</mo>
+                    <mi>&pi;</mi>
+                    <mo>&InvisibleTimes;</mo>
+                    <msup>
+                        <mi>&sigma;</mi>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+            </mfrac>
+            <mo>&InvisibleTimes;</mo>
+            <mtext>exp</mtext>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mo>-</mo>
+                <mfrac>
+                    <mrow>
+                        <msup>
+                            <mi>x</mi>
+                            <mn>2</mn>
+                        </msup>
+                        <mo>+</mo>
+                        <msup>
+                            <mi>y</mi>
+                            <mn>2</mn>
+                        </msup>
+                    </mrow>
+                    <mrow>
+                        <mn>2</mn>
+                        <mo>&InvisibleTimes;</mo>
+                        <msup>
+                            <mi>&sigma;</mi>
+                            <mn>2</mn>
+                        </msup>
+                    </mrow>
+                </mfrac>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    g(x, y) =
+    {1 \over {2 \pi \sigma^2}} \,
+    {\exp\left(-{{x^2 + y^2} \over {2 \sigma^2}}\right)}
+$$
+@end tex
+@noindent
+The parameter@tie{}@inlinesigma{}, the argument of
+option@tie{}@option{--EdgeScale}, is the length scale on which edges
+are detected by @math{g(x, y)}.  We apply the Laplacian operator in
+Cartesian coordinates
+@ifinfo
+@display
+@math{Delta := Nabla o Nabla = (d^2/dx^2 + d^2/dy^2)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mi>&Delta;</mi>
+        </mrow>
+        <mo>&equiv;</mo>
+        <mrow>
+            <mi>&nabla;</mi>
+            <mo>&CenterDot;</mo>
+            <mi>&nabla;</mi>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <msup>
+                    <mo>&PartialD;</mo>
+                    <mn>2</mn>
+                </msup>
+                <mrow>
+                    <mo>&PartialD;</mo>
+                    <msup>
+                        <mi>x</mi>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+            </mfrac>
+            <mo>+</mo>
+            <mfrac>
+                <msup>
+                    <mo>&PartialD;</mo>
+                    <mn>2</mn>
+                </msup>
+                <mrow>
+                    <mo>&PartialD;</mo>
+                    <msup>
+                        <mi>y</mi>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+            </mfrac>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \bigtriangleup \equiv \nabla \cdot \nabla =
+    {\partial^2 \over \partial x^2} + {\partial^2 \over \partial y^2}
+$$
+@end tex
+to @math{g(x, y)}, to arrive at a continous representation of the
+two-dimensional filter kernel
+@ifinfo
+@display
+@math{k(x, y) = (xi^2 - 1) * exp(-xi^2) / (pi * sigma^4),}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <mi>k</mi>
+            <mfenced>
+                <mi>x</mi>
+                <mi>y</mi>
+            </mfenced>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <mrow>
+                    <msup>
+                        <mi>&xi;</mi>
+                        <mn>2</mn>
+                    </msup>
+                    <mo>-</mo>
+                    <mn>1</mn>
+                </mrow>
+                <mrow>
+                    <mi>&pi;</mi>
+                    <mo>&InvisibleTimes;</mo>
+                    <msup>
+                        <mi>&sigma;</mi>
+                        <mn>4</mn>
+                    </msup>
+                </mrow>
+            </mfrac>
+            <mo>&InvisibleTimes;</mo>
+            <mo>exp</mo>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mo>-</mo>
+                <msup>
+                    <mi>&xi;</mi>
+                    <mn>2</mn>
+                </msup>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mtext>,</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    k(x, y) = {{\xi^2 - 1} \over {\pi \sigma^4}} \exp(-\xi^2),
+$$
+@end tex
+where we have used the dimensionless distance@tie{}@inlinexi{} from
+the origin
+@ifinfo
+@display
+@math{xi^2 = (x^2 + y^2) / (2 * sigma^2).}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <msup>
+                <mi>&xi;</mi>
+                <mn>2</mn>
+            </msup>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <mrow>
+                    <msup>
+                        <mi>x</mi>
+                        <mn>2</mn>
+                    </msup>
+                    <mo>+</mo>
+                    <msup>
+                        <mi>y</mi>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+                <mrow>
+                    <mn>2</mn>
+                    <mo>&InvisibleTimes;</mo>
+                    <msup>
+                        <mi>&sigma;</mi>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+            </mfrac>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \xi^2 = {{x^2 + y^2} \over {2 \sigma^2}}.
+$$
+@end tex
+@noindent
+Enfuse uses a discrete approximation of @math{k} in the convolution
+with the image.  The operator is radially symmetric with respect to
+the origin, which is why we can easily plot it in
+@ref{Figure:laplacian-of-gaussian}, setting
+@ifinfo
+@math{R = sqrt(x^2 + y^2)}.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi>R</mi>
+        <mo>=</mo>
+        <mrow>
+            <msqrt>
+                <msup>
+                    <mi>x</mi>
+                    <mn>2</mn>
+                </msup>
+                <mo>+</mo>
+                <msup>
+                    <mi>y</mi>
+                    <mn>2</mn>
+                </msup>
+            </msqrt>
+        </mrow>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$R = \sqrt{x^2 + y^2}$.
+@end tex
+
+@float Figure,Figure:laplacian-of-gaussian
+@image{laplacian-of-gaussian}
+
+@caption{Laplacian-of-Gaussian function for @inlinesigma{} = 0.5.}
+
+@shortcaption{Laplacian-of-Gaussian}
+@end float
+
+@noindent
+See also
+@uref{http://@/homepages.inf.ed.ac.uk/@/rbf/@/HIPR2/@/log.htm,
+@acronym{HIPR2}: Laplacian of Gaussian}.
+
+Sometimes the @acronym{LoG} is plagued by noise in the input images.
+After all it is a numerical approximation of the second derivative and
+deriving always ``roughens'' a function.  The (normalized) mask files
+relentlessly disclose such problems.  Use
+option@tie{}@option{--MinCurvature} with a @emph{negative}
+argument@tie{}@var{CURVATURE} to suppress all edges with a curvature
+below @minus{}@var{CURVATURE} (which is a positive value).  Check the
+effects with the mask files and particularly the
+@file{mask####_wta.tif} files if using
+option@tie{}@option{--HardMask}.
+
+To indicate the @var{CURVATURE} in relative terms, which is
+particularly comprehensible for humans, append a percent sign
+(@samp{%}).  Try minimum curvatures starting from @minus{}0.5% to
+@minus{}3%.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wContrast
+@ref{Fusion Options}
+
+@item --HardMask
+@ref{Fusion Options}
+
+@item --EdgeScale
+@ref{Expert Options}
+
+@item --MinCurvature
+@ref{Expert Options}
+@end table
+
+@node Blend SDev and LoG
+@subsection Blend Standard Deviation and Laplacian of Gaussian
+@cindex weighting, contrast using a blend of methods
+@cindex contrast weighting using a blend of methods
+
+Enfuse can team the standard deviation computation and Laplacian of
+Gaussian to deliver the best of both methods.  Use a @emph{positive}
+argument@tie{}@var{CURVATURE} with option@tie{}@option{--MinCurvature}
+to combine both algorithms.  In this mode of operation Enfuse computes
+the @acronym{SDev}-weight and the @acronym{LoG}-weight, then uses the
+@acronym{LoG} to decide whether to go with that value or prefer the
+@acronym{SDev} data.  If the @acronym{LoG} is greater than
+@var{CURVATURE} Enfuse uses the weight delivered by the @acronym{LoG},
+otherwise the @acronym{SDev}-weight is rescaled such that its maximum
+is equal to @var{CURVATURE} and the scaled @acronym{SDev} is used as
+weight.
+
+This technique merges the two edge detection methods where the are
+best.  The @acronym{LoG} excels with clear edges and cannot be fooled
+by strong but smooth gradients.  However, it is bad at detecting faint
+edges and it is susceptible to noise.  The @acronym{SDev} on the othe
+hand shines with even the most marginal edges and resists noise quite
+well.  Its weakness is that is is easily deceived by strong and smooth
+gradients.  Tuning @var{CURVATURE} the user can pick the best
+threshold for a given set of images.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wContrast
+@ref{Fusion Options}
+
+@item --HardMask
+@ref{Fusion Options}
+
+@item --ContrastWindowSize
+@ref{Expert Options}
+
+@item --GrayProjector
+@ref{Expert Options}
+
+@item --EdgeScale
+@ref{Expert Options}
+
+@item --MinCurvature
+@ref{Expert Options}
+@end table
+
+
+@node Scaling and Choice of Mode
+@subsection Scaling and Choice of Mode
+@cindex scaling of parameters
+@cindex mode of operation (@acronym{SDev}, @acronym{LoG}, @dots{})
+
+Experience has shown that neither the parameters @var{EDGESCALE} and
+@var{CURVATURE} nor the mode of operation (@acronym{SDev}-only,
+@acronym{LoG}-only, or a blend of both) scales to different image
+sizes.  In practice this means that if you start with a set of reduced
+size images, say 2808@classictimes{}1872 pixels, carefully optimize
+@var{EDGESCALE}, @var{CURVATURE} and so on, moreover find
+@acronym{LoG}-only the best mode and then switch to the original
+resolution of 5616@classictimes{}3744 pixels, multiplying (or
+dividing) the parameters by four and sticking to @acronym{LoG}-only
+might @emph{not} result in the best fused image.  For best quality
+perform the parameter optimization and the search for the most
+appropriate mode at the final resolution.
+
+
+@node Entropy Weighting
+@section Entropy Weighting
+@cindex weighting, entropy
+
+Entropy weighting prefers pixels inside a high entropy neighborhood.
+
+@cindex entropy, definition
+Let @math{S} be an @math{n}-ary source.  Watching the output of
+@math{S} an observer on average gains the information
+@ifinfo
+@display
+@math{H_a(n) := sum(p(x) * log_a(1 / p(x)), x in S)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <msub>
+                <mi>H</mi>
+                <mi>a</mi>
+            </msub>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mi>n</mi>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mo>:=</mo>
+        <mrow>
+            <munder>
+                <mo>&Sum;</mo>
+                <mrow>
+                    <mi>x</mi>
+                    <mo>&Element;</mo>
+                    <mi>S</mi>
+                </mrow>
+            </munder>
+            <mrow>
+                <mi>p</mi>
+                <mo>&ApplyFunction;</mo>
+                <mrow>
+                    <mo>(</mo>
+                    <mi>x</mi>
+                    <mo>)</mo>
+                </mrow>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mtext>log</mtext>
+                        <mi>a</mi>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mrow>
+                        <mo>(</mo>
+                        <mn>1</mn>
+                        <mo>/</mo>
+                        <mrow>
+                            <mi>p</mi>
+                            <mo>&ApplyFunction;</mo>
+                            <mrow>
+                                <mo>(</mo>
+                                <mi>x</mi>
+                                <mo>)</mo>
+                            </mrow>
+                        </mrow>
+                        <mo>)</mo>
+                    </mrow>
+                </mrow>
+            </mrow>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    H_a(n) := \sum_{x \in S} p(x) \log_a(1 / p(x))
+$$
+@end tex
+@cindex entropy
+@noindent
+per emitted message, where we assume the knowledge of the probability
+function@tie{}@math{p(S)}.  The expectation value@tie{}@math{H_a(n)}
+is called @dfn{entropy} of the source@tie{}@math{S}.  Entropy measures
+our uncertainty if we are to guess which message gets chosen by the
+source in the future.  The unit of the entropy depends on the choice
+of the constant@tie{}@math{a > 1}.  Obviously
+@ifinfo
+@display
+@math{H_b(n) = H_a(n) / log_a(b)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <msub>
+                <mi>H</mi>
+                <mi>b</mi>
+            </msub>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mi>n</mi>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+        <mo>=</mo>
+        <mrow>
+            <mrow>
+                <msub>
+                    <mi>H</mi>
+                    <mi>a</mi>
+                </msub>
+                <mo>&ApplyFunction;</mo>
+                <mrow>
+                    <mo>(</mo>
+                    <mi>n</mi>
+                    <mo>)</mo>
+                </mrow>
+            </mrow>
+            <mo>/</mo>
+            <mrow>
+                <msub>
+                    <mtext>log</mtext>
+                    <mi>a</mi>
+                </msub>
+                <mo>&ApplyFunction;</mo>
+                <mrow>
+                    <mo>(</mo>
+                    <mi>b</mi>
+                    <mo>)</mo>
+                </mrow>
+            </mrow>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    H_b(n) = H_a(n) / \log_a(b)
+$$
+@end tex
+@noindent
+holds for all @math{b > 1}.  We use @math{a = 2} for entropy weighting
+and set the entropy of the ``impossible message'' to zero according to
+@ifinfo
+@display
+@math{lim(p * log_a(1 / p), p -> 0) = 0.}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mrow>
+            <munder>
+                <mtext>lim</mtext>
+                <mrow>
+                    <mi>p</mi>
+                    <mo>&rightarrow;</mo>
+                    <mn>0</mn>
+                </mrow>
+            </munder>
+            <mrow>
+                <mi>p</mi>
+                <mo>&times;</mo>
+                <mrow>
+                    <msub>
+                        <mtext>log</mtext>
+                        <mi>a</mi>
+                    </msub>
+                    <mo>&ApplyFunction;</mo>
+                    <mrow>
+                        <mo>(</mo>
+                        <mn>1</mn>
+                        <mo>/</mo>
+                        <mi>p</mi>
+                        <mo>)</mo>
+                    </mrow>
+                </mrow>
+            </mrow>
+        </mrow>
+        <mo>=</mo>
+        <mn>0</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \lim_{p \rightarrow 0} \, p \, \log_a(1 / p) = 0.
+$$
+@end tex
+@noindent
+@ref{Figure:entropy} shows an entropy function.
+
+@float Figure,Figure:entropy
+@image{entropy}
+
+@caption{Entropy function@tie{}H for an experiment with exactly two
+outcomes.}
+
+@shortcaption{Entropy function}
+@end float
+
+For more on (information) entropy visit
+@uref{http://@/en.wikipedia.org/@/wiki/@/Information_entropy,
+Wikipedia}.
+
+Enfuse computes a pixel's entropy by considering the pixel itself and
+its surrounding pixels quite similar to @ref{Contrast Weighting}.  The
+size of the window is set by @option{--EntropyWindowSize}.  Choosing
+the right size is difficult, because there is a serious tradeoff
+between the locality of the data and the size of the sample used to
+compute @math{H}.  A large window results in a large sample size and
+therefore in a reliable entropy, but considering pixels far away from
+the center degrades @math{H} into a non-local measure.  For small
+windows the opposite holds true.
+
+Another difficulty arises from the use of entropy as a weighting
+function in dark parts of an image, this is, in areas where the
+signal-to-noise ratio is low.  Without any precautions high noise is
+taken to be high entropy, which might not be desired.
+Use option@tie{}@option{--EntropyCutoff} to control the black level
+when computing the entropy.
+
+On the other extreme side of lightness, very light parts of an image,
+the sensor might already have overflown without the signal reaching
+1.0 in the normalized luminance interval.  For these pixels the
+entropy is zero and Enfuse can be told of the threshold by properly
+setting the second argument of @option{--EntropyCutoff}.
+
+@optionsummaryheading{}
+
+@table @option
+@item --wEntropy
+@ref{Fusion Options}
+
+@item --EntropyWindowSize
+@ref{Expert Options}
+
+@item --EntropyCutoff
+@ref{Expert Options}
+@end table
+
+
+@node Understanding Masks
+@chapter Understanding Masks
+@cindex undestanding masks
+@cindex masks, undestanding
+
+@include understanding-masks.texi
+
+
+@node Tuning Memory Usage
+@chapter Tuning Memory Usage
+@cindex memory, tuning usage of
+@opindex -b
+@opindex -m
+
+@include tuning-memory-usage.texi
+
+
+@node Applications
+@chapter Applications of Enfuse
+@cindex applications of enfuse
+
+The section describes some of the novel possibilities that Enfuse
+offers the photographer.  In contrast to the previous chapters it
+centers around the image effects.
+
+@menu
+* What Images::                 What makes images fusable?
+* Repetition::                  Just taking the same shot multiple times
+* Exposure Series::             Varying the exposure time
+* Flash Exposure Series::       Varying the flash output
+* Polarization Series::         Changing the polarizer angle
+* Focus Stacks::                Stacking images with different in-focus distance
+@end menu
+
+@node What Images
+@section What Makes Images Fusable?
+@cindex images, fusable
+
+Images should align well to be suitable for fusion.  However, there is
+no hard mathematical rule what ``well'' means.  The alignment
+requirements for 16@dmn{MPixel} images to yield a sharp
+4"@classictimes{}6" print at 300@dmn{dpi} (``dpi'' means dots per
+inch) or even for web presentation are relatively low, whereas the
+alignment of 8@dmn{MPixel} images for a 12"@classictimes{}18" print
+ought to be tight.
+
+@pindex Hugin
+If the input images need to be aligned, Hugin (@pxref{Helpful
+Programs}) is the tool of choice.  It produces images exactly in the
+format that Enfuse expects.
+
+Sometimes images naturally align extremely well so that no
+re-alignment is required.  An image series with preprogrammed exposure
+steps taken in rapid succession where the camera is mounted on a heavy
+tripod and a humongous ball head, mirror lockup and a cable release
+are used comes into mind.
+
+When in doubt what will work, try it, and judge for yourself.
+
+@noindent
+Useful ideas for a good alignment:
+
+@itemize
+@item
+Fix all camera parameters that are not explicitely varied.
+
+@table @emph
+@item Aperture
+Engage full manual (@key{M}) or aperture-priority (@key{A}) mode.
+
+@item Auto-focus
+Disable ``Auto Focus''.  Be aware that the auto-focus function could
+be linked to shutter-release button position ``half pressed'' or to
+the shutter release in insidious ways.
+
+@item Closed eyepiece
+(This applies only to single lens reflex cameras.) Close the eyepiece
+when using a cable release to suppress variations in stray light.
+
+@item Exposure time/Shutter speed
+Use the shortest possible exposure time or, in other words, use the
+fastest shutter speed to avoid blur caused by camera shake or motion
+blur.
+
+@item Flash power
+Explicitely control the flash power of @emph{all} flashes.  This is
+sometimes called ``flash exposure lock''.
+
+@item Sensitivity
+Disable ``Auto @acronym{ISO}''.
+
+@item White balance
+Disable ``Auto White Balance''.  Instead use the most suitable fixed
+white balance or take the white balance off a white card.  When in
+doubt use the setting ``Daylight'' or equivalent.
+@end table
+
+@item
+Steady the camera by any means.
+
+@itemize
+@item
+Apply your best camera bracing technique combined with controlled
+breathing.
+
+@item
+Prefer a monopod or better rigid tripod with a heavy head.
+
+@item
+(This applies to cameras with a moving mirror only.)  Engage ``mirror
+lockup''.
+
+@item
+Consider automatic bracketing when applicable.
+
+@item
+Activate camera- or lens-based image stabilization if you are sure
+that it improves the image quality in your particular case, otherwise
+disengage the feature.
+
+For some lens-based image stabilization systems it is known that they
+``lock'' into different positions every time they are activated.
+Moreover, some stabilization systems decrease the image quality when
+the lens is mounted on a tripod.
+@end itemize
+
+@item
+Fire in rapid succession.
+@end itemize
+
+@c http://www.usa.canon.com/dlc/controller?act=GetArticleAct&articleID=1786
+
+
+@node Repetition
+@section Repetition -- Noise Reduction
+@cindex simple series
+@cindex series, simple
+@cindex noise reduction
+
+@mainpurpose Reduce noise
+
+@noindent
+With the default settings Enfuse computes a weighted average of the
+input pixels.  For a series of images, repeated with identical
+settings this results in a reduction of (photon shot) noise.  In other
+words, the dynamic range increases slightly, because the higher
+signal-to-noise ratio makes darker shades usable.  Furthermore, smooth
+or glossy surfaces get a ``cleaner'' look and edges become visually
+sharper.  The nitty-gritty reportage look that sometimes stems from a
+high sensitivity setting disappears.
+
+Averaged images and therefore low-noise images are the base for a
+multitude of techniques like for example differences.  The most
+prominent method in this class is dark-frame subtraction.
+
+The defaults set @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}.
+Eliminating the saturation component with @samp{--wSaturation=0.0} can
+be worth an extra run.
+
+
+@node Exposure Series
+@section Exposure Series -- Dynamic Range Increase
+@cindex exposure series
+@cindex series, exposure
+@cindex dynamic range increase
+
+@mainpurpose Increase manageable dynamic range
+
+@noindent
+An exposure series is a set of images taken with identical parameters
+except for the exposure time.  Some cameras even provide special
+functions to automate recording exposure series.  See the instruction
+manual of your model for details.
+
+Enfuse's defaults, @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}
+are well suited for fusion of @emph{color} images.  Remember that
+saturation weighting only works for @acronym{RGB} data.
+Option@tie{}@option{--wSaturation} helps controlling burnt-out
+highlights as these are heavily desaturated.  If no image suffers from
+troublesome highlights, the relative saturation weight can be reduced
+and even be set to zero.  For black and white images
+@option{--wEntropy} can be an alternative to @option{--wSaturation}
+because it suppresses overexposed pixels as these contain little
+information.  However, entropy weighting is not limited to grayscale
+data.  It has been successfully applied to @acronym{RGB} images, too.
+Note that saturation weighting considers @emph{each} color channel of
+an @acronym{RGB} image separately and chooses the channel with the
+minimum entropy as representative for the whole pixel.
+
+Enfuse offers the photographer tremendous flexibility on fusing
+differenly exposed images.  Whether you combine only two pictures or a
+series of 21, Enfuse imposes no limits on you.  Accordingly, the
+photographic effects achieved range from subtle to surreal like the
+late 1980s ``Max Headroom'' @acronym{TV}-Series to really unreal.
+Like some time ago in the chemical days of photography a new developer
+opened unseen possibilities for artists, exposure fusion extends a
+photographer's expressive space in the digital age.  Whether the
+results look good or bad, whether the images are dull or exciting is
+entirely up the artist.
+
+In the next sections we give assistance to starters and rectify
+several misconceptions about Enfuse.
+
+@menu
+* Exposure Series Tips::            Some hints for beginners
+* Exposure Series Misconceptions::  What works despite the hype
+@end menu
+
+
+@node Exposure Series Tips
+@subsection Tips For Beginners
+@cindex exposure series, tips for beginners
+
+Here are some tips to get you in business quickly.
+
+@table @emph
+@item Include the best single exposure.
+Include the exposure you would have taken if you did not use Enfuse in
+your series.  It gives you a solid starting point.  Think of the other
+images as augmenting this best single exposure to bring out the
+light and dark features you would like to see.
+
+@item Begin with as little images as possible.
+Pre-visualizing the results of Enfuse is difficult.  The more images
+enter the fusion process and the wider their @acronym{EV}-spacing is,
+the more challenging thinking of the output image becomes.  Therefore,
+start off with as little images as possible.
+
+You can take a larger series of images and only use part of it.
+
+@item Start with a moderate @acronym{EV}-spacing.
+As has been pointed out in the previous item, a wide
+@acronym{EV}-spacing makes pre-visualization harder.  So set out with
+a spacing of 2/3@dmn{EV} to 1+1/3@dmn{EV}.
+@end table
+
+
+@node Exposure Series Misconceptions
+@subsection Common Misconceptions
+@cindex exposure series, common misconceptions
+
+Here are some surprisingly common misconceptions about exposure
+series.
+
+@table @emph
+@item A single image cannot be the source of an exposure series.
+@cindex digital blending
+@cindex blending exposures
+Raw-files in particular lend themselves to be converted multiple times
+and the results being fused together.  The technique is simpler,
+faster, and usually even looks better than
+@uref{http://@/luminous-landscape.com/@/tutorials/@/digital-blending.shtml,
+digital blending} (as opposed to using a graduated neutral density
+filter) or
+@uref{http://@/www.gimpguru.org/@/Tutorials/@/BlendingExposures/,
+blending exposures} in an image manipulation program.  Moreover,
+perfect alignment comes free of charge!
+
+@item An exposure series must feature symmetric exposures.
+Twice wrong!  Neither do the exposures have to be ``symmetric'' like
+@{0@dmn{EV}, @minus{}2/3@dmn{EV}, +2/3@dmn{EV}@}, nor does the number
+of exposures have to be odd.  Series like
+@{@minus{}1@minus{}1/3@dmn{EV}, @minus{}1/3@dmn{EV}, +1/3@dmn{EV}@} or
+@{@minus{}1@dmn{EV}, 1@dmn{EV}@} might be just right.  By the way, the
+order in which the images were taken does not matter either.
+
+@item An exposure series must cover the whole dynamic range of the scene.
+@cindex light probe
+Unless you do not want to cover the whole range, you do not have to.
+Some @acronym{HDR} programs require the user to take a light
+probe,@footnote{@uref{http://@/www.debevec.org/, Paul E.@tie{}Debevec}
+defines: ``A @dfn{light probe} image is an omnidirectional, high
+dynamic range image that records the incident illumination conditions
+at a particular point in space.''} whereas Enfuse offers the user
+complete freedom of exposure.
+
+@item All exposure values must be different.
+You can repeat any exposure as often as you like.  That way you
+combine and exposure series with parts of @ref{Repetition},
+emphasizing the multiply occuring exposures and reducing noise.
+@end table
+
+
+@node Flash Exposure Series
+@section Flash Exposure Series -- Directed Lighting
+@cindex flash exposure series
+@cindex series, flash exposure
+@cindex dynamic range increase
+
+@mainpurpose ???
+
+...
+
+
+@node Polarization Series
+@section Polarization Series -- Saturation Enhancement
+@cindex polarization series
+@cindex series, polarization
+@cindex saturation enhancement
+
+@mainpurpose Reflection suppression, saturation enhancement
+
+In the current implementation of Enfuse it is not possible in general
+to fuse a polarization series.  Na@"{@dotless{i}}vely abusing
+@option{--wSaturation} will not work.
+
+
+@node Focus Stacks
+@section Focus Stacks -- Depth-of-Field Increase
+@cindex focus stacks
+@cindex depth-of-focus increase
+
+@mainpurpose Synthetic Depth-of-Field Increase
+
+A @dfn{focus stack} is a series of images where the distance of the
+focal plane from the sensor varies.  Sloppyly speaking, the images
+were focussed at different distances.  Fusing such a stack increases
+the depth-of-field (@acronym{DOF}) beyond the physical limits of
+diffraction.
+
+@menu
+* Why Focus Stacks::            Why take the hassle?
+* Preparing Focus Stacks::      How to get suitable input images
+* Contrast Based Fusing::       Fundamental command line options
+* Basic Focus Stacking::        Simple, standard deviation method
+* Advanced Focus Stacking::     Advanced, Laplacian technique
+* Expert Stacking::             Tips for focus stacking experts
+@end menu
+
+
+@node Why Focus Stacks
+@subsection Why create focus stacks?
+@cindex focus stacks, why create them
+
+Given
+
+@itemize
+@item
+a fixed sensor or film size,
+@item
+a lens' particular focal length, and
+@item
+@cindex circle-of-confusion
+@cindex @acronym{CoC}
+a notion about ``sharpness'', technically speaking the size of the
+circle-of-confusion (@acronym{CoC})
+@end itemize
+
+@cindex depth-of-field
+@cindex @acronym{DOF}
+@noindent
+the photographer controls the depth-of-field with the aperture.
+Smaller apertures -- this is larger aperture numbers -- increase the
+@acronym{DOF} and vice versa.  However, smaller apertures increase
+diffraction which in turn renders the image unsharp.  So, there is an
+optimum aperture where the photographer gets maximum @acronym{DOF}.
+Sadly, for some purposes like macro shots it is not enough.  One way
+out is to combine the sharp parts of images focused at different
+distances, thereby artifically increasing the total @acronym{DOF}.
+This is exactly what Enfuse can do.
+
+@cindex sweet spot aperture
+@cindex aperture, sweet spot
+All lenses have a so called ``sweet spot'' aperture, where their
+resolution is best.  Taking pictures at this aperture the photographer
+squeezes the maximum quality out of the lens.  But: the ``sweet spot''
+aperture often is only one or two stops away from wide open.  Wouldn't
+it be great to be able combine these best-possible images to form one
+high-quality, sufficient-@acronym{DOF} image?  Welcome to Enfuse's
+contrast selection abilities.
+
+
+@node Preparing Focus Stacks
+@subsection Preparing Focus Stacks
+@cindex focus stacks, preparation
+
+We are going to combine images with limited @acronym{DOF} to increase
+their in-focus parts.  The whole process is about image sharpness.
+Therefore, the input images must align very well, not just well, but
+very well.  For optimum results the maximum controlpoint distance in
+Hugin (@pxref{Helpful Programs}) should not exceed
+0.3--0.5@dmn{pixels} to ensure perfect blending.
+
+As in all image fusion operations it is preferable to use 16@dmn{bit}
+linear (gamma = 1) images throughout, but 8@dmn{bit} gamma encoded
+images will do.  Naturally, high @acronym{SNR} input data always is
+welcome.
+
+
+@node Contrast Based Fusing
+@subsection Contrast Based Fusing
+@cindex contrased-based fusing
+@cindex fusing, contrased-based
+@cindex focus stacks, fusing
+
+A bare bones call to Enfuse for focus stacking could look like this.
+
+@example
+enfuse \
+    --wExposure=0 \
+    --wSaturation=0 \
+    --wContrast=1 \
+    --HardMask \
+    @dots{} \
+    -o output.tif \
+    input-<0000-9999>.tif
+@end example
+
+@noindent
+Here is what the option cause.
+
+@table @option
+@item --wExposure=0
+Switch @strong{off} exposure based pixel selection.  The default
+weight is 1.
+
+@item --wSaturation=0
+Switch @strong{off} saturation based pixel selection.  The default
+weight is 0.2.
+
+@item --wContrast=1
+Switch @strong{on} pixel selection based on contrast.
+
+@item --HardMask
+Select the best pixel from the image stack and ignore all others.
+Without this option Enfuse uses all pixels in the stack and weights
+them according to their respective quality, which in our case would be
+contrast.  Without @option{--HardMask} the result will always look a
+bit soft.  @xref{Contrast Weighting}.
+@end table
+
+@noindent
+If you want to see some entertaining progress messages -- contrast
+weighting takes a while --, also pass the @option{-v}@tie{}option
+for a verbose progress report.
+
+
+@node Basic Focus Stacking
+@subsection Basic Focus Stacking
+@cindex basic focus stacking
+@cindex focus stacking, basic
+
+For a large class of image stacks Enfuse's default algorithm, as
+selected in @ref{Contrast Based Fusing}, to determine the sharpness
+produces nice results.  The algorithm uses a moving square window, the
+so called contrast window.  It computes the standard deviation of the
+pixels inside of the window.  The program then selects the window's
+center pixel of the image in the stack where the standard deviation is
+largest, this is the local contrast reaches the maximum.
+
+However, the algorithm fails to deliver good masks for images which
+exhibit high contrast edges on the scale of the contrast window size.
+The typical artifacts that show up are
+
+@itemize
+@item
+faint dark seams on the light side of the high contrast edges and
+
+@item
+extremely soft, slighly lighter seams on the dark side of the high
+contrast edges,
+@end itemize
+
+@noindent
+where the distance of the seams from the middle of the edge is
+comparable to the contrast window size.
+
+If your results do not show any of this artifacts, stick with the
+basic algorithm.  Advanced focus stacking as described in the next
+sections delivers superior results in case of artifacts, though
+requires manually tuning several parameters.
+
+
+@node Advanced Focus Stacking
+@subsection Advanced Focus Stacking
+@cindex advanced focus stacking
+@cindex focus stacking, advanced
+
+If your fused image shows any of the defects described in the previous
+section, you can try a more difficult to use algorithm that
+effectively works around the seam artifacts.  It is described in the
+next section.
+
+@menu
+* Local Contrast Problem::      What is the problem Kenneth?
+* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+@end menu
+
+
+@node Local Contrast Problem
+@subsubsection A Detailed Look at the Problem
+@cindex local contrast problem
+@cindex problem, local contrast
+
+Let us use an example to illustrate the problem of relating the
+sharpness with the local contrast variations.  Say we use a
+5@classictimes{}5 contrast window.  Moreover, let @code{sharp_edge}
+and @code{smooth_edge} be two specific configurations:
+
+@example
+sharp_edge =  #(    0,    0,  200,    0,    0;
+                    0,  225,    0,    0,    0;
+                    0,  255,    0,    0,    0;
+                  215,    0,    0,    0,    0;
+                  200,    0,    0,    0,    0)
+@end example
+
+@example
+smooth_edge = #(    0,   62,  125,  187,  250;
+                    1,   63,  126,  188,  251;
+                    2,   65,  127,  190,  252;
+                    3,   66,  128,  191,  253;
+                    5,   67,  130,  192,  255)
+@end example
+
+where @samp{;} separates the rows and @samp{,} separates the colons.
+This is in fact @uref{http://@/www.ava.fmi.fi/@/~pjanhune/@/tela/,
+Tela} syntax.
+
+Images@tie{}@ref{Figure:sharp-edge} and @ref{Figure:smooth-edge} show
+plots of the matrices @code{sharp_edge} and @code{smooth_edge}.
+
+@float Figure,Figure:sharp-edge
+@image{sharp-edge}
+
+@caption{3D plot augmented by contour plot of the matrix
+@code{sharp_edge}.}
+
+@shortcaption{Sharp edge}
+@end float
+
+@float Figure,Figure:smooth-edge
+@image{smooth-edge}
+
+@caption{3D plot augmented by contour plot of the matrix
+@code{smooth_edge}.}
+
+@shortcaption{Smooth edge}
+@end float
+
+@noindent
+Our intuition lets us ``see'' an extremely sharp edge in the first
+matrix, whereas the second one describes an extraordinarily smooth
+diagonal intensity ramp.  Which one will be selected?  Well,
+@code{sharp_edge} has a standard deviation of 88.07 and
+@code{smooth_edge} has 88.41.  Thus, @code{smooth_edge} wins,
+contradicting our intuition and even worse our intention!
+
+Sadly, configurations like @code{smooth_edge} occur more often with
+high-quality, good
+@uref{http://@/www.luminous-landscape.com/@/essays/@/bokeh.shtml,
+bokeh} lenses.  In fact they are the very manifestation of ``good
+bokeh''.  Therefore, Laplacian edge detection plays an important role
+when working with high-quality lenses.
+
+
+@node Laplacian Edge Detection
+@subsubsection Laplacian Edge Detection
+@cindex laplacian edge detection
+@cindex edge detection, laplacian
+
+Enfuse provides a Laplacian-based algorithm that can help in
+situations where weighting based on the standard deviation fails.  It
+is activated with a positive value for @var{SCALE} in
+@code{--EdgeScale}=@/@var{SCALE}.  The Laplacian will detect
+two-dimensional @emph{curvature} on the scale of @var{SCALE}.  Here
+and in the following we simply speak of ``curvature'' where we mean
+``magnitude of curvature''.  This is, we shall not distinguish between
+convex and concave edges.  Enfuse always use the magnitude of
+curvature for weighting.
+
+Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
+0.5@dmn{pixels}, where 0.3@dmn{pixels} is a good starting point.  To
+find the best value for @var{SCALE} though, usually some
+experimentation will be necessary.  Use the
+@option{--debug}@tie{}option to get all @file{mask####.tif} and
+@file{mask####_wta.tif} files (@pxref{Understanding Masks}) and check
+how different scales affect the artifacts.
+
+
+@node Local Contrast Enhancement
+@subsubsection Local Contrast Enhancement
+@cindex local contrast enhancement
+@cindex contrast enhancement, local
+
+Sometimes Enfuse misses smoother edges with @option{--EdgeScale} and a
+little local contrast enhancement (@acronym{LCE}) helps.  Set
+@code{--EdgeScale}=@/@var{SCALE}:@/@var{LCE-SCALE}:@/@var{LCE-FACTOR}.
+where @var{LCE-SCALE} and @var{LCE-FACTOR} work like the
+@uref{http://@/www.cambridgeincolour.com/@/tutorials/@/unsharp-mask.htm,
+unsharp mask} filters in various image manipulation programs.  Start
+with @var{LCE-SCALE} ten times the value of @var{SCALE} and a
+@var{LCE-FACTOR} of 2--5.
+
+@var{LCE-SCALE} can be specified as a percentage of @var{SCALE}.
+@var{LCE-FACTOR} also can be specified as a percentage.  Examples:
+
+@example
+--EdgeScale=0.3:3.0:3
+--EdgeScale=0.3:1000%:3.0
+--EdgeScale=0.3:3:300%
+--EdgeScale=0.3:1000%:300%
+@end example
+
+@noindent
+By default @acronym{LCE} is turned off.
+
+
+@node Suppressing Noise or Recognizing Faint Edges
+@subsubsection Suppressing Noise or Recognizing Faint Edges
+@cindex advanced focus stacking, suppressing noise
+@cindex advanced focus stacking, recognizing faint edges
+
+The Laplacian-based algorithm much better resists the seam problem
+than the local-contrast algorithm, but it has two shortcomings:
+
+@enumerate
+@item
+The Laplacian is very susceptible to noise and
+@item
+it fails to recognize faint edges.
+@end enumerate
+
+@noindent
+The @option{--MinCurvature} option helps to mitigate both flaws.
+
+The argument to @code{--MinCurvature}=@var{CURVATURE} either is an
+absolute lightness value, for example 0..255 for 8@dmn{bit} data and
+0..65535 for 16@dmn{bit} data, or, when given with a @samp{%}-sign it
+is a relative lightness value ranging from 0% to 100%.
+
+To suppress unreal edges or counter excessive noise use the
+@option{--MinCurvature} option with a @emph{negative} curvature
+measure @var{CURVATURE}.  This forces all curvatures less than
+@minus{}@var{CURVATURE} to zero.
+
+A @emph{positive} curvature measure @var{CURVATURE} makes Enfuse merge
+the @acronym{LoG} data with the local-contrast data.  Every curvature
+larger or equal to @var{CURVATURE} is left unchanged and every
+curvature less than @var{CURVATURE} gets replaced by the rescaled
+local-contrast data such that the largest local contrast is just below
+@var{CURVATURE}.  This combines the best parts of both techniques and
+ensures a precise edge detection over the whole range of edge
+curvatures.
+
+@noindent
+@strong{Summary}
+
+@table @asis
+@item -@/-EdgeScale=0.3
+Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
+default grayscale projector: @code{average}.
+
+@item -@/-EdgeScale=0.3 -@/-GrayProjector=l-star
+Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
+L*-grayscale projector.
+
+@item -@/-EdgeScale=0.3:3:300%
+Use @acronym{LoG} to detect edges on a scale of 0.3 pixels,
+pre-sharpen the input images by 300% on a scale of 3 pixels.  Apply
+the default grayscale projector: @code{average}.
+
+@item -@/-EdgeScale=0.3 -@/-MinCurvature=@minus{}0.5%
+Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
+default grayscale projector: @code{average} and throw away all edges
+with a curvature of less than 0.5%.
+
+@item -@/-EdgeScale=0.3 -@/-MinCurvature=0.5% -@/-ContrastWindowSize=7
+Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
+default grayscale projector: @code{average} and throw away all edges
+with a curvature of less than 0.5% and replace the @acronym{LoG} data
+between 0% and 0.5% with @acronym{SDev} data.  Usa a window of
+7@classictimes{}7 pixel window to compute the @acronym{SDev}.
+@end table
+
+
+@node Expert Stacking
+@subsection Tips For Focus Stacking Experts
+@cindex expert focus stacking ttops
+@cindex tips, focus stacking experts
+
+We have collected some advice of which even focus stacking adepts can
+benefit.
+
+@itemize
+@item
+@cindex sensor, use of clean
+Ensure that the sensor is clean.
+
+Aligning focus stacks requires varying the viewing angle, which
+corresponds to a changing focal length.  Hence, the same pixel on the
+sensor gets mapped onto different positions in the final image.  Dirt
+spots will occur not only once but as many times as there are images
+in the stack -- something unfunny to correct in postprocessing.
+
+@cindex dark frame
+@cindex subtraction of dark frame
+@cindex hot pixels
+@cindex pixels, hot
+Along the same lines the photographer may want to consider to prepare
+dark frames before and possibly also after the shoot of the focus
+stack to subtract hot pixels before fusion.
+
+@item
+@opindex --HardMask
+Prefer a low-sensitivity setting on the camera to get low-noise
+images.
+
+Fusing with @option{--HardMask} does not average and thus does not
+suppress any noise in the input images.
+
+@item
+If the transition of in-focus to out-of-focus areas is too abrupt,
+record the images with closest and farthest focusing distances twice:
+first with the intended working aperture and a second time with a
+small aperture (large aperture number).
+
+@cindex natural sharp-unsharp transition
+@cindex transition, natural sharp-unsharp
+The small aperture will give the fused image a more natural in-focus
+to out-of-focus transition and the working-aperture shots supply the
+detail in the in-focus regions.
+@end itemize
+
+
+@node Helpful Programs
+@chapter Helpful Additional Programs
+@cindex helpful programs
+@cindex programs, helpful additional
+
+@include helpful-programs.texi
+
+
+@node Authors
+@appendix Authors
+@cindex authors, list of
+
+@itemize
+@item
+Andrew Mihal (@email{acmihal@@users.sourceforge.net}) has written
+Enfuse.
 
 @item
 Thanks to Simon Andriot and Pablo Joubert for suggesting the
@@ -737,25 +3651,68 @@ Mertens-Kautz-Van Reeth technique and the name ``Enfuse''.
 
 @item
 The contrast criteria was added by Pablo d'Angelo
-@email{dangelo@@users.sourceforge.net}.
+(@email{dangelo@@users.sourceforge.net}).
 
 @item
 Dr. Christoph L. Spiel added the gray projectors, the
-@acronym{LoG}-based edge detection, an O(1)-algorithm for the
-calculation of local contrast, and the entropy weighting.
+@acronym{LoG}-based edge detection, an O(n)-algorithm for the
+calculation of local contrast, and entropy weighting.
 @end itemize
+
+
+@node FDL
+@appendix @acronym{GNU} Free Documentation License
+@cindex @acronym{FDL}
+@cindex @acronym{GNU} Free Documentation License
+
+@include fdl.texi
 
 
 @c
 @c End of Document
 @c
 
-@node Index,  , Top, Top
-@unnumbered Index
+@c The List-of-Tables and List-of-Figures go right before the indices
+@c in all formats but TeX.  For the TeX output they appear right after
+@c the Table-of-Contents.
+@ifnottex
+@node List of Tables
+@unnumbered List of Tables
+@listoffloats Table
+
+
+@node List of Figures
+@unnumbered List of Figures
+@listoffloats Figure
+@end ifnottex
+
+
+@node Program Index
+@unnumbered Program Index
+@cindex program index
+@cindex index, program
+
+@printindex pg
+
+
+@node Option Index
+@unnumbered Option Index
+@cindex option index
+@cindex index, option
+
+@printindex op
+
+
+@node General Index
+@unnumbered General Index
+@cindex general index
+@cindex index, general
 
 @printindex cp
 
-@ifnothtml
-@contents
-@end ifnothtml
 @bye
+
+
+@c Local variables:
+@c eval: (visit-tags-table "TAGS")
+@c End:

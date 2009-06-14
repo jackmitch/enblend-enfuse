@@ -1,20 +1,43 @@
 \input auxmac
 \input texinfo
-@c %** start of header
+
+
+@c
+@c Header
+@c
+
+@c %**start of header
 @setfilename enblend.info
-@settitle Combining Multiple Images with Enblend
-@c %** end of header
+@settitle Combining Multiple Images with Enblend@tie{}@value{VERSION}
+@include auxmac.texi
+@include enblend-version.texi
+
+@c Define a new index for options.
+@defcodeindex op
+@c %**end of header
 
 
 @c
 @c Summary Description and Copyright
 @c
 
-@ifinfo
-This file documents Enblend version 3.1.
+@copying
+This manual is for Enblend (version@tie{}@value{VERSION},
+@value{UPDATED}), a tool for compositing images in such a way that the
+seam between the images is invisible, or at least very difficult to
+see.
 
-Copyright @copyright{} 2004-2008 Andrew Mihal
-@end ifinfo
+Copyright @copyright{} 2004--2009 Andrew Mihal.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the @acronym{GNU} Free Documentation License,
+Version@tie{}1.2 or any later version published by the Free Software
+Foundation; with no Invariant Sections, no Front-Cover Texts and no
+Back-Cover Texts.  A copy of the license is included in the section
+entitled ``@acronym{GNU} Free Documentation License''.
+@end quotation
+@end copying
 
 
 @c
@@ -22,13 +45,19 @@ Copyright @copyright{} 2004-2008 Andrew Mihal
 @c
 
 @titlepage
-@sp 10
-@center @titlefont{Combining Multiple Images with Enblend}
+@title Enblend
+@subtitle Combining Multiple Images
+@subtitle with Enblend version @value{VERSION}, @value{UPDATED}
+
+@author Andrew Mihal
 
 @page
 @vskip 0pt plus 1fill
-Copyright @copyright{} 2004-2008 Andrew Mihal
+@insertcopying
 @end titlepage
+
+
+@contents
 
 
 @c
@@ -36,22 +65,26 @@ Copyright @copyright{} 2004-2008 Andrew Mihal
 @c
 
 @ifnottex
-@node Top, Overview, (dir), (dir)
+@node Top
 @top Enblend
 
-Using Enblend
-
-This file documents Enblend version 3.1.
-
-This document is distributed under the terms of the GNU Free
-Documentation License.
+This manual is for Enblend (version@tie{}@value{VERSION},
+@value{UPDATED}), a tool for compositing images n such a way that the
+seam between the images is invisible, or at least very difficult to
+see.
 @end ifnottex
 
 @menu
-* Overview::                    Overview
-* Invocation::                  Invocation
-* Authors::                     Authors
-* Index::                       Index
+* Overview::                    Overview of Enbelnd's features
+* Invocation::                  Command line options and arguments
+* Understanding Masks::         How to interpret masks and mask files
+* Tuning Memory Usage::         Balancing @acronym{RAM} and swap
+* Helpful Programs::            Useful other programs
+* Authors::                     Major Contributors
+* FDL::                         @acronym{GNU} Free Documentation License
+* Program Index::               Names of programs referenced
+* Option Index::                Index of all options
+* General Index::               Topic index
 @end menu
 
 
@@ -59,24 +92,25 @@ Documentation License.
 @c Document Body
 @c
 
-@node Overview, Invocation, Top, Top
+@node Overview
 @chapter Overview
-@cindex Overview
+@cindex overview
 
 Enblend overlays multiple @acronym{TIFF} images using the Burt-Adelson
 multiresolution spline algorithm.@footnote{Peter J. Burt and Edward
 H. Adelson, ``A Multiresolution Spline With Application to Image
-Mosaics'', @acronym{ACM} Transactions on Graphics, Vol.@: 2, No.@: 4,
-October 1983, pages 217--236.}  This technique tries to make the seams
-between the input images invisible.  The basic idea is that image
-features should be blended across a transition zone proportional in
-size to the spatial frequency of the features.  For example, objects
-like trees and windowpanes have rapid changes in color.  By blending
-these features in a narrow zone, you will not be able to see the seam
-because the eye already expects to see color changes at the edge of
-these features.  Clouds and sky are the opposite.  These features have
-to be blended across a wide transition zone because any sudden change
-in color will be immediately noticeable.
+Mosaics'', @acronym{ACM} Transactions on Graphics, @abbr{Vol@.} 2,
+@abbr{No@.} 4, October 1983, pages 217--236.}  This technique tries to
+make the seams between the input images invisible.  The basic idea is
+that image features should be blended across a transition zone
+proportional in size to the spatial frequency of the features.  For
+example, objects like trees and windowpanes have rapid changes in
+color.  By blending these features in a narrow zone, you will not be
+able to see the seam because the eye already expects to see color
+changes at the edge of these features.  Clouds and sky are the
+opposite.  These features have to be blended across a wide transition
+zone because any sudden change in color will be immediately
+noticeable.
 
 Enblend expects each input file to have an alpha channel.  The alpha
 channel should indicate the region of the file that has valid image
@@ -85,7 +119,9 @@ the areas where images overlap.  Alpha channels can be used to
 indicate to Enblend that certain portions of an input image should not
 contribute to the final image.
 
-Enblend does @emph{not} align images.  Use a tool like @command{hugin}
+@pindex @command{hugin}
+@pindex PanoTools
+Enblend does @emph{not} align images.  Use a tool as @command{hugin}
 or PanoTools to do this.  The @acronym{TIFF} files produced by these
 programs are exactly what Enblend is designed to work with.  Sometimes
 these @acronym{GUI}s allow you to select feathering for the edges of
@@ -100,15 +136,19 @@ horizontal row individually, and then running Enblend a last time to
 blend all of the rows together vertically.
 
 Find out more about Enblend on its
-@uref{http://enblend.sourceforge.net/, webpage}.
+@uref{http://@/enblend.sourceforge.net/, web page}.
 
-@node Invocation, Authors, Overview, Top
+
+@node Invocation
 @chapter Invocation
-@cindex Invocation
+@cindex invocation
 
-@command{enblend} [@var{OPTIONS}] @option{-o OUTPUT-FILE} @var{INPUT-FILE}...
+@command{enblend} [@var{OPTIONS}] @code{-o} @var{OUTPUT-FILE}
+@var{INPUT-FILES}@enddots{}
 
-Assemble the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
+@noindent
+Assemble the sequence of images@tie{}@var{INPUT-FILES}@enddots{} into
+@var{OUTPUT-FILE}.
 
 @menu
 * Common Options::              General options
@@ -117,133 +157,282 @@ Assemble the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
 @end menu
 
 
-@node Common Options, Extended Options, Invocation, Invocation
+@node Common Options
 @section Common Options
-@cindex Common Options
+@cindex options, common
+
+Common options control some overall features of Enblend.
 
 @table @code
-@item -V
-@itemx --version
-@cindex option @option{-V}
-@cindex option @option{--version}
-Output information on the Enblend version and some configuration
-details like extra features that have been compiled in.
-
 @item -a
-@cindex option @option{-a}
+@opindex -a
 Pre-assemble non-overlapping images before each blending iteration.
-This overrides the default behavior which is to blend the images
-sequentially in the order given on the command line.  Enblend will
-perform fewer blending iterations, but it will do more work in each
-iteration.
 
-@item --compression=@var{COMP}
-@cindex option @option{--compression}
-Write a compressed output file.  Valid values for @var{COMP} are
-@samp{LZW} and @samp{DEFLATE} for @acronym{TIFF}-files, and quality
-levels from 0--100 for @acronym{JPEG} files.
+This overrides the default behavior which is to blend the images
+sequentially in the order given on the command line.  Enblend will use
+fewer blending iterations, but it will do more work in each iteration.
+
+@item --compression=@var{COMPRESSION}
+@opindex --compression
+Write a compressed output file.
+
+Depending on the output file format Enblend accepts different values
+for @var{COMPRESSION}.
+
+@table @asis
+@item @acronym{JPEG}
+@var{COMPRESSION} is a @acronym{JPEG} quality level ranging from
+0--100.
+
+@item @acronym{TIFF}
+@var{COMPRESSION} is one of the keywords:
+@table @samp
+@item NONE
+Do not compress.  This is the default.
+
+@item DEFLATE
+@cindex deflate compression
+@cindex compression, deflate
+Use the Deflate compression scheme also called
+@acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
+compression algorithm that uses a combination of the @acronym{LZ77}
+algorithm and Huffman coding.
+
+@item LZW
+@cindex @acronym{LZW} compression
+@cindex compression, @acronym{LZW}
+Use Lempel-Ziv-Welch (@acronym{LZW}) adaptive compression scheme.
+@acronym{LZW} compression is lossless.
+
+@item PACKBITS
+@cindex packbits compression
+@cindex compression, packbits
+Use PackBits compression scheme.  PackBits is particular variant of
+run-length compression.  It is lossless.
+@end table
+
+@item Any other format
+Other formats like the @acronym{PNG} do not accept a @var{COMPRESSION}
+setting.
+@end table
 
 @item -h
 @itemx --help
-@cindex option @option{-h}
-@cindex option @option{--help}
-Print information on the available options.
+@opindex -h
+@opindex --help
+Print information on the available options and exit.
 
 @item -l @var{LEVELS}
-@cindex option @option{-l}
-Use exactly this many @var{LEVELS} for pyramid blending.  This trades
-off quality of results for shorter execution time and lower memory
-usage.  The default is to use as many levels as is possible given the
-size of the overlap regions.  Enblend may still use a smaller number
-of levels if the geometry of the images demands.
+@opindex -l
+Use exactly this many @var{LEVELS} for pyramid blending.
+
+This trades off quality of results for shorter execution time and
+lower memory usage.  The default is to use as many levels as is
+possible given the size of the overlap regions.  Enblend may still use
+a smaller number of levels if the geometry of the images demands.
 
 @item -o @var{OUTPUT-FILE}
-@cindex option @option{-o}
+@opindex -o
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v
 @itemx --verbose
-@cindex option @option{-v}
-@cindex option @option{--verbose}
-Verbose progress reporting.
+@opindex -v
+@opindex --verbose
+Increase the verbosity of progress reporting.  Giving one or more
+@option{-v} options will make Enblend more verbose.
+
+@item -V
+@itemx --version
+@opindex -V
+@opindex --version
+Output information on the Enblend version and some configuration
+details like extra features that have been compiled in.
 
 @item -w
-@cindex option @option{-w}
-Blend around the @minus{}180/+180 degree boundary.  Useful for
-full 360 degree panoramas.  Enblend currently does not blend
-neither zenith nor or nadir, so you may still see some seams in these
-areas.
+@opindex -w
+Blend around the @plusminus{}180@textdegree{} boundary.  Useful for
+full 360@textdegree{} panoramas.  Version@tie{}@value{VERSION} of
+Enblend, the one described here, does not blend neither zenith nor or
+nadir, so you may still see some seams in these areas.
 
 @item -x
-@cindex option @option{-x}
+@opindex -x
 Checkpoint partial results to the output file after each blending
 step.
 
 @item -z
-@cindex option @option{-z}
+@opindex -z
 This option has been deprecated.  It is kept for backward
 compatability with older scripts.  Use @option{--compression=LZW}
 instead.
-
-@acronym{LZW} compress the output image.
 @end table
 
 
-@node Extended Options, Mask Generation Options, Common Options, Invocation
+@node Extended Options
 @section Extended Options
-@cindex Extended Options
+@cindex options, extended
 
-...
+Extended options control the image cache, the color model, and the
+cropping of the output image.
 
 @table @code
 @item -b @var{BLOCKSIZE}
-@cindex option @option{-b}
-Set the @var{BLOCKSIZE} in Kilobytes for Enblend's image cache.  This
-is the amount of data that Enblend will move to and from the disk in
-one go.  The default is 2048@dmn{KB}, which should be ok for most
+@opindex -b
+@cindex image cache, block size
+Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enblend's image
+cache.
+
+This is the amount of data that Enblend will move to and from the disk
+in one go.  The default is 2048@dmn{KB}, which should be ok for most
 systems.
 
 @item -c
-@cindex option @option{-c}
+@opindex -c
+@cindex color appearance model
+@cindex @acronym{CIECAM02}
 Use the @acronym{CIECAM02} color appearance model for blending colors.
-Your input files ought to have embedded @acronym{ICC} profiles if this
+
+The input files should have embedded @acronym{ICC} profiles if this
 option is specified.  If no @acronym{ICC} profile is present, Enblend
 will assume that the image uses the @acronym{sRGB} color space.  The
 difference between this option and Enblend's default color blending
 algorithm is very slight and will be only noticeable when areas of
 different primary colors are blended together.
 
+@item -d
+@itemx --depth=@var{DEPTH}
+@opindex -d
+@opindex --depth
+@cindex bits per channel
+Force the number of bits per channel and the numeric format of the
+output image.
+
+All @var{DEPTH} specifications are valid in lowercase as well as
+uppercase letters.  For integer format use
+
+@table @asis
+@item @code{8}, @code{uint8}
+Unsigned 8@tie{}bit; range: 0..255
+@item @code{int16}
+Signed 16 bit; range: @minus{}32768..32767
+@item @code{16}, @code{uint16}
+Unsigned 16@tie{}bit; range: 0..65536
+@item @code{int32}
+Signed 32@tie{}bit; range: @minus{}2147483648..2147483647
+@item @code{32}, @code{uint32}
+Unsigned 32@tie{}bit; range: 0..4294967295
+@end table
+
+For floating-point format use
+
+@c Minimum positive normalized value: 2^(2 - 2^k)
+@c Epsilon: 2^(1 - n)
+@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+@c
+@table @asis
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@item @code{r16}, @code{real16}, @code{half}
+@cindex @acronym{OpenEXR} half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#features,
+@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
+10@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+
+
+@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
+@item @code{r32}, @code{real32}, @code{float}
+@cindex @acronym{IEEE754} single precision float
+@cindex single precision float, @acronym{IEEE754}
+@acronym{IEEE754} single precision floating-point, 32@tie{}bits wide,
+24@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{1.2, -38}
+@item
+Epsilon: @semilog{1.2, -7}
+@item
+Maximum finite value: @semilog{3.4, 38}
+@end itemize
+
+@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
+@item @code{r64}, @code{real64}, @code{double}
+@cindex @acronym{IEEE754} double precision float
+@cindex double precision float, @acronym{IEEE754}
+@acronym{IEEE754} double precision floating-point, 64@tie{}bits wide,
+53@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{2.2, -308}
+@item
+Epsilon: @semilog{2.2, -16}
+@item
+Maximum finite value: @semilog{1.8, 308}
+@end itemize
+@end table
+
+If the requested @var{DEPTH} is not supported by the output file
+format, Enblend warns and chooses the @var{DEPTH} that matches best.
+
 @item -g
-@cindex option @option{-g}
-Gimp (before @w{version 2.0}) and Cinepaint exhibit unusual behavior
-when loading images with unassociated alpha channels.  Use option
-@option{-g} to work around this problem.  With this flag Enblend
-creates the output image with the associated alpha tag set, even
-though the image is really unassociated alpha.
+@opindex -g
+@cindex alpha channels, unassociated
+
+@cindex Gimp
+@cindex Cinepaint
+Gimp (before version@tie{}2.0) and Cinepaint (@pxref{Helpful
+Programs}) exhibit unusual behavior when loading images with
+unassociated alpha channels.  Use option @option{-g} to work around
+this problem.  With this flag Enblend creates the output image with
+the associated alpha tag set, even though the image is really
+unassociated alpha.
 
 @item --gpu
-@cindex option @option{--gpu}
-Use the graphics card to accelerate some computations.  This is an
-experimental feature that may not work on all systems.  Currently,
-only mask optimization @w{strategy 1} benefits from this option.
+@opindex --gpu
+Use the graphics card to accelerate some computations.
+
+This is an experimental feature that may not work on all systems.  In
+this version of Enblend, @value{VERSION}, only mask optimization
+strategy@tie{}1 benefits from this option.
 
 @item -f @var{WIDTH}x@var{HEIGHT}
-@item -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
-@cindex option @option{-f}
-Set the size of the output image manually to @var{WIDTH}x@var{HEIGHT}.
-Optionally specify the @var{XOFFSET} and @var{YOFFSET}, too.  This is
-useful when the input images are cropped @acronym{TIFF} files, such as
-those produced by @command{nona}.
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
+@opindex -f
+@cindex output image, set size of
+Set the size of the output image manually to
+@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
+@var{X-OFFSET} and @var{Y-OFFSET}, too.
+
+@pindex @command{nona}
+@pindex Hugin
+This option is useful when the input images are cropped @acronym{TIFF}
+files, such as those produced by @command{nona}.  The stitcher
+@command{nona} is part of Hugin.  @xref{Helpful Programs}.
 
 @item -m @var{CACHESIZE}
-@cindex option @option{-m}
-Set the @var{CACHESIZE} in Megabytes of Enblend's image cache.  This
-is the amount of memory Enblend will use for storing image data before
-swapping to disk.  The default is 1024@dmn{MB}.
+@opindex -m
+@cindex image cache, cache size
+Set the @var{CACHESIZE} in megabytes (@acronym{MB}) of Enblend's image
+cache.
 
-@item --visualize=@var{IMAGE}
-@cindex option @option{--visualize}
-Create an @var{IMAGE} that visualizes the mask optimization process.
+This is the amount of memory Enblend will use for storing image data
+before swapping to disk.  The default is 1024@dmn{MB} which is good
+for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+
+@item --visualize=@var{IMAGE-FILE}
+@opindex --visualize
+@cindex mask, visualization
+Create an @var{IMAGE-FILE} that visualizes the mask optimization
+process.
+
 This shows Enblend's view of the overlap region and how it decided to
 route the seam line.  If you are experiencing artifacts or unexpected
 output, it may be useful to include this visualization image in your
@@ -251,66 +440,127 @@ bug report.
 @end table
 
 
-@node Mask Generation Options,  , Extended Options, Invocation
+@node Mask Generation Options
 @section Mask Generation Options
-@cindex Mask Generation Options
+@cindex options, mask generation
 
-...
+These options control the generation and the usage of masks.
 
 @table @code
 @item --coarse-mask
-@cindex option @option{--coarse-mask}
+@opindex --coarse-mask
+@cindex mask, coarse
+@cindex coarse mask
 Use a scaled-down version of the input images to create the seam line.
 This is the default.
 
 @item --fine-mask
-@cindex option @option{--fine-mask}
+@opindex --fine-mask
+@cindex mask, fine
+@cindex fine mask
 Use the full-size images to create the seam line.  This can be slow.
 Use @option{--fine-mask} if you have very narrow overlap regions.
 
+@item --load-mask=@var{IMAGE-FILE}
+@opindex --load-mask
+@cindex mask, load
+@cindex load mask
+Instead of generating a mask, use the one in @var{IMAGE-FILE}.
+
+@item --no-optimize
+@opindex --no-optimize
+@cindex optimize seam
+@cindex seam optimization
+Turn off seam line optimization.  Combined with @option{--fine-mask}
+this will produce the same type of mask as Enblend version@tie{}2.5.
+
 @item --optimize
-@cindex option @option{--optimize}
+@opindex --optimize
+@cindex optimize seam
+@cindex seam optimization
 Use a two-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
 
-@item --no-optimize
-@cindex option @option{--no-optimize}
-Turn off seam line optimization.  Combined with @option{--fine-mask}
-this will produce the same type of mask as Enblend @w{version 2.5}.
+@item --save-mask=@var{IMAGE-FILE}
+@opindex --save-mask
+@cindex mask, save
+@cindex save mask
+Save the generated mask to @var{IMAGE-FILE}.
 
-@item --save-mask=@var{IMAGE}
-@cindex option @option{--save-mask}
-Save the generated mask to @var{IMAGE}.  Use this option if you wish
-to edit the location of the seam line by hand.  This will give you a
-template of the right size that you can edit to make your changes.
-Later, use @option{--load-mask} to blend the project with your custom
-seam line.
-
-@item --load-mask=@var{IMAGE}
-@cindex option @option{--load-mask}
-Instead of generating a mask, use the one in @var{IMAGE}.
+Use this option if you wish to edit the location of the seam line by
+hand.  This will give you a template of the right size that you can
+edit to make your changes.  Later, use @option{--load-mask} to blend
+the project with your custom seam line.
 @end table
 
 
-@node Authors,  , Invocation, Top
-@chapter Authors
+@node Understanding Masks
+@chapter Understanding Masks
+@cindex undestanding masks
+@cindex masks, undestanding
 
-@itemize @bullet
+@include understanding-masks.texi
+
+
+@node Tuning Memory Usage
+@chapter Tuning Memory Usage
+@cindex memory, tuning usage of
+@opindex -b
+@opindex -m
+
+@include tuning-memory-usage.texi
+
+
+@node Helpful Programs
+@chapter Helpful Additional Programs
+@cindex helpful programs
+@cindex programs, helpful additional
+
+@include helpful-programs.texi
+
+
+@node Authors
+@appendix Authors
+
+@itemize
 @item
 Andrew Mihal @email{acmihal@@users.sourceforge.net}.
 @end itemize
+
+
+@node FDL
+@appendix @acronym{GNU} Free Documentation License
+@cindex @acronym{FDL}
+@cindex @acronym{GNU} Free Documentation License
+
+@include fdl.texi
 
 
 @c
 @c End of Document
 @c
 
-@node Index,  , Top, Top
-@unnumbered Index
+@node Program Index
+@unnumbered Program Index
+@cindex program index
+@cindex index, program
+
+@printindex pg
+
+
+@node Option Index
+@unnumbered Option Index
+@cindex option index
+@cindex index, option
+
+@printindex op
+
+
+@node General Index
+@unnumbered General Index
+@cindex general index
+@cindex index, general
 
 @printindex cp
 
-@ifnothtml
-@contents
-@end ifnothtml
 @bye

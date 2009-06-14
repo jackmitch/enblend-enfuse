@@ -1,0 +1,149 @@
+Several libraries and programs have proven helpful when working with
+Enfuse and Enblend.
+
+@table @strong
+@item Raw Image Conversion
+
+@itemize
+@item
+@pindex DCRaw
+@pindex @command{dcraw}
+@uref{http://www.cybercom.net/@/~dcoffin/@/dcraw/, DCRaw} is a
+universal raw-converter.
+
+@item
+@pindex UFRaw
+@pindex @command{ufraw}
+@pindex @command{ufraw-batch}
+@uref{http://ufraw.sourceforge.net/, UFRaw}, a raw converter based on
+DCRaw, adds a @acronym{GUI} (@command{ufraw}), versatile batch
+processing (@command{ufraw-batch}), and some additional features like,
+for example, cropping, noise reduction with wavelets, and automatic
+lens error correction.
+@end itemize
+
+
+@item Image Alignment and Rendering
+
+@itemize
+@item
+@pindex ALE
+@pindex Anti-Lamenessing Engine
+@uref{http://auricle.dyndns.org/ALE/, ALE}, David Hilvert's
+anti-lamenessing engine for the real die-hard command-line users
+aligns, filters, and renders images.
+
+@item
+@pindex Hugin
+@pindex @command{hugin}
+@uref{http://hugin.sourceforge.net/, Hugin} is a @acronym{GUI} that
+aligns and stitches images.
+
+@pindex @command{nona}
+@pindex @command{align_image_stack}
+@pindex @command{fulla}
+It comes with several command line tools, like @command{nona} to
+stitch panorama images, @command{align_image_stack} to align
+overlapping images for @acronym{HDR} or create focus stacks, and
+@command{fulla} to correct lens errors.
+
+@item
+@pindex PanoTools
+@pindex @command{PTOptimizer}
+@pindex @command{PTmender}
+@uref{http://panotools.sourceforge.net/, PanoTools} the successor of
+Helmut Dersch's @uref{http://www.all-in-one.ee/@/~dersch/, original
+PanoTools} offers a set of command-line dirven applications to create
+panoramas.  Most notable are @command{PTOptimizer} and @command{PTmender}.
+@end itemize
+
+
+@item Image Manipulation
+
+@itemize
+@item
+@pindex CinePaint
+@pindex @command{cinepaint}
+@uref{http://www.cinepaint.org/, CinePaint} is a branch of an early
+Gimp forked off at version@tie{}1.0.4.  It sports much less features
+than the current Gimp, but offers 8@dmn{bit}, 16@dmn{bit} and
+32@dmn{bit} color channels, @acronym{HDR} (for example floating-point
+@acronym{TIFF}, and @acronym{OpenEXR}), and a tightly integrated color
+management system.
+
+@item
+@pindex Gimp
+@pindex @command{gimp}
+The @uref{www.gimp.org/, Gimp} is a general purpose image manipulation
+program.  At the time of this writing it is still limited to
+images with only 8@dmn{bits} per channel.
+
+@item
+@pindex ImageMagick
+@pindex GraphicsMagick
+@uref{http://www.imagemagick.org/, ImageMagick} and its clone
+@uref{http://www.graphicsmagick.org/, GraphicsMagick} are general
+purpose command-line driven image manipulation programs.
+@end itemize
+
+
+@item High Dynamic Range
+
+@itemize
+@item
+@pindex OpenEXR
+@uref{http://www.openexr.com/, OpenEXR} offers libraries and some
+programs to work with the EXR @acronym{HDR} format.
+
+@item
+@pindex PFSTools
+@uref{http://pfstools.sourceforge.net/, PFSTools} create, modify, and
+tonemap high-dynamic range images.
+@end itemize
+
+
+@item Libraries
+
+@itemize
+@item
+@pindex LibJPEG
+@uref{http://www.ijg.org/, LibJPEG} is a library for handling the JPEG
+(JFIF) image format.
+
+@item
+@pindex LibPNG
+@uref{http://www.libpng.org/@/pub/@/png/@/libpng.html, LibPNG} is a
+library that handles the Portable Network Graphics (@acronym{PNG})
+image format.
+
+@item
+@pindex LibTIFF
+@uref{http://www.remotesensing.org/@/libtiff/, LibTIFF} offers a
+library and utility programs to manipulate the ubiquitous Tagged Image
+File Format, @acronym{TIFF}.
+
+@pindex @command{tiffinfo}
+The nifty @command{tiffinfo} command quickly inquires the properties
+of TIFF files.
+@end itemize
+
+
+@item Meta-Data Handling
+
+@itemize
+@item
+@pindex EXIFTool
+@pindex @command{exiftool}
+@uref{http://www.sno.phy.queensu.ca/@/~phil/@/exiftool/, EXIFTool}
+reads and writes @acronym{EXIF} meta data.  In particular it copies
+meta data from one image to another.
+
+@item
+@pindex LittleCMS, TiffICC
+@pindex @command{tifficc}
+@uref{http://www.littlecms.com/, LittleCMS} is the color management
+library used by Hugin, DCRaw, UFRaw, Enblend, and Enfuse.  It supplies
+some binaries, too.  @command{tifficc}, an @acronym{ICC} color profile
+applier, is of particular interest.
+@end itemize
+@end table

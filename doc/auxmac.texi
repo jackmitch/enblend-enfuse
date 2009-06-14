@@ -1,0 +1,144 @@
+@c
+@c Macro Definitions
+@c
+
+@c Operators
+
+@macro classictimes
+@ifinfo
+x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
+@end ifinfo
+@html
+&times;
+@end html
+@tex
+\\ifmmode\\times\\else$\\times$\\fi% gobble following newline  -- The Tricks of a TeX Wizard.
+@end tex
+@end macro
+
+
+@c Required for older versions of makeinfo.  The definition of @geq
+@c for TeX lives in auxmac.tex.
+@ifnottex
+@macro geq
+@ifinfo
+>=@c
+@end ifinfo
+@html
+&ge;
+@end html
+@end macro
+@end ifnottex
+
+
+@c Required for older versions of makeinfo.  The definition of @leq
+@c for TeX lives in auxmac.tex.
+@ifnottex
+@macro leq
+@ifinfo
+<=@c
+@end ifinfo
+@html
+&le;
+@end html
+@end macro
+@end ifnottex
+
+
+@macro plusminus
+@ifinfo
++/-@c
+@end ifinfo
+@html
+&plusmn;
+@end html
+@tex
+\\ifmmode\\pm\\else$\\pm$\\fi%
+@end tex
+@end macro
+
+
+@c Special Characters
+
+@macro inlineomega
+@ifinfo
+@math{omega}@c
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mi>&omega;</mi>
+</math>
+@end html
+@tex
+$\\omega$%
+@end tex
+@end macro
+
+
+@macro inlinesigma
+@ifinfo
+@math{sigma}@c
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mi>&sigma;</mi>
+</math>
+@end html
+@tex
+$\\sigma$%
+@end tex
+@end macro
+
+
+@macro inlinexi
+@ifinfo
+@math{xi}@c
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mi>&xi;</mi>
+</math>
+@end html
+@tex
+$\\xi$%
+@end tex
+@end macro
+
+
+@c Text Fragments
+
+@macro mainpurpose
+@ifinfo
+@strong{Main Purpose}:
+@end ifinfo
+@ifnotinfo
+@strong{Main Purpose: }
+@end ifnotinfo
+@end macro
+
+
+@macro optionsummaryheading
+@need 600          @c ensure we have at least 43pt of vertical space
+@noindent
+@strong{Summary of influential options}
+@end macro
+
+
+@macro semilog{significant, exponent}
+@ifinfo
+\significant\*10^\exponent\@c
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mn>\significant\</mn>
+    <mo>&times;</mo>
+    <msup>
+        <mn>10</mn>
+        <mn>\exponent\</mn>
+    </msup>
+</math>
+@end html
+@tex
+\\hbox{$\significant\ \\times 10^{\exponent\}$}%
+@end tex
+@end macro

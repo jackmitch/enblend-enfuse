@@ -1,0 +1,3 @@
+@set VERSION 3.2-cvs
+@set UPDATED Thu Sep 25 07:35:21 UTC 2008
+@set EDITION 3.2.1
