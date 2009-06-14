@@ -3125,7 +3125,7 @@ your series.  It gives you a solid starting point.  Think of the other
 images as augmenting this best single exposure to bring out the
 light and dark features you would like to see.
 
-@item Begin with as little images as possible.
+@item Begin with as little a number of images as possible.
 Pre-visualizing the results of Enfuse is difficult.  The more images
 enter the fusion process and the wider their @acronym{EV}-spacing is,
 the more challenging thinking of the output image becomes.  Therefore,

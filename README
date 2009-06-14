@@ -1,6 +1,115 @@
-Copyright (C) 2004-2007 Andrew Mihal.
+Copyright (C) 2004-2009 Andrew Mihal.
 
 This file is part of Enblend.
+
+
+* Programs
+
+This packages contains the programs Enblend and Enfuse.  The source
+code and further information about enblend are available at:
+        http://enblend.sf.net
+
+** Enblend
+
+Enblend is a tool for compositing images using a Burt&Adelson
+multiresolution spline.  This technique tries to make the seams
+between the input images invisible.  The basic idea is that image
+features should be blended across a transition zone proportional in
+size to the spatial frequency of the features.  For example, objects
+like trees and windowpanes have rapid changes in color.  By blending
+these features in a narrow zone, you will not be able to see the seam
+because the eye already expects to see color changes at the edge of
+these features.  Clouds and sky are the opposite.  These features have
+to be blended across a wide transition zone because any sudden change
+in color will be immediately noticeable.
+
+Enblend expects each input file to have an alpha channel.  The alpha
+channel should indicate the region of the file that has valid image
+data.  Enblend compares the alpha regions in the input files to find
+the areas where images overlap.  Alpha channels can be used to
+indicate to Enblend that certain portions of an input image should not
+contribute to the final image.
+
+Enblend does not align images for you.  Use a tool like Hugin or
+PanoTools to do this.  The files produced by these programs are
+exactly what Enblend is designed to work with.
+
+** Enfuse
+
+Enfuse is a tool for automatic exposure blending, contrast blending
+and much more.  It can be used to fuse an exposure bracketed step
+automatically into a nicely looking image.  See
+        doc/enfuse.info
+and on Windows also
+        contrib/enfuse_droplet/enfuse_droplet_readme.txt
+for more information.
+
+
+* Installation
+
+Also see INSTALL for further information.
+
+** Tarball
+
+        ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+
+** CVS/Bazaar
+
+        make --makefile=Makefile.cvs
+        ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+
+* Specific Configuration Options
+
+Among the usual configuration options of the GNU autoconf system, the
+./configure script offers the following options to tailor Enblend and
+Enfuse.
+
+** --enable-image-cache=YES/no
+
+Activate the image-cache feature, which allows for processing of large
+images.  The image cache handles swapping parts of the images to disk.
+The default is "yes", enable the image cache.
+
+** --enable-debug=yes/NO
+
+Compile without optimizations and enable all debug-checking code.  The
+default is "no", build an optimized version without debugging symbols.
+
+** --enable-split-doc=YES/no
+
+Split the documentation files in INFO or HTML format into small
+pieces.  The default is "yes", split documentation.
+
+** --with-ttf-path=<PATH>
+
+Set path to TrueType fonts.  This is only required for building the
+documentation.
+
+
+* Documentation
+
+The distribution includes some basic documentation in
+        doc/enblend.info
+        doc/enfuse.info
+and the manual pages in
+        src/enblend.1
+        src/enfuse.1
+
+After the configuration you can build documentation in PostScript,
+PDF, and HTML format.
+        make ps
+        make pdf
+        make html
+Note that some additional tools are required to build these formats.
+
+
+* License
 
 Enblend is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,43 +130,8 @@ VIGRA is Copyright 1998-2002 by Ullrich Koethe
 Cognitive Systems Group, University of Hamburg, Germany
 Please see the file VIGRA_LICENSE for details.
 
-                        ENBLEND
 
-The source code and further information about enblend are available at:
-http://enblend.sf.net
 
-Enblend is a tool for compositing images using a Burt & Adelson multiresolution
-spline. This technique tries to make the seams between the input images
-invisible. The basic idea is that image features should be blended across a
-transition zone proportional in size to the spatial frequency of the features.
-For example, objects like trees and windowpanes have rapid changes in color.
-By blending these features in a narrow zone, you will not be able to see the
-seam because the eye already expects to see color changes at the edge of these
-features. Clouds and sky are the opposite. These features have to be blended
-across a wide transition zone because any sudden change in color will be
-immediately noticeable.
-
-Enblend expects each input TIFF to have an alpha channel. The alpha channel
-should indicate the region of the file that has valid image data. Enblend
-compares the alpha regions in the input files to find the areas where images
-overlap. Alpha channels can be used to indicate to Enblend that certain
-portions of an input image should not contribute to the final image.
-
-Enblend does not align images for you. Use a tool like Hugin or PanoTools
-to do this. The TIFFs produced by these programs are exactly what Enblend is
-designed to work with.
-
-                    ENFUSE
-
-Enfuse is a tool for automatic exposure and contrast blending. It can be used
-to fuse an exposure bracketed step automatically into a nicely looking image.
-See enfuse.html (and on windows enfuse_droplet_readme.txt) for more
-information.
-
-                        INSTALLATION
-
-./configure
-make
-make install
-
-See INSTALL for more information.
+Local Variables:
+mode: outline
+End:
