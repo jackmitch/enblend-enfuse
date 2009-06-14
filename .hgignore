@@ -14,5 +14,13 @@
 ^config\.
 ^configure$
 ^depcomp$
+^mdate.sh$
 ^stamp-h1$
+^texinfo.tex$
 
+^doc/stamp-(1|vti)$
+^doc/enblend\.html/
+^doc/enblend\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
+^doc/enfuse\.html/
+^doc/enfuse\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
+^doc/(entropy-cutoff|entropy|gaussian|laplacian-of-gaussian|local-analysis-window|sharp-edge|smooth-edge)\.(eps|pdf|png|txt)$

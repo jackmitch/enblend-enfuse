@@ -2,14 +2,12 @@ info_TEXINFOS = enblend.texi \
                 enfuse.texi
 
 enblend_TEXINFOS = auxmac.texi \
-                   enblend-version.texi \
                    fdl.texi \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
                    understanding-masks.texi
 
 enfuse_TEXINFOS = auxmac.texi \
-                  enfuse-version.texi \
                   fdl.texi \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
@@ -18,7 +16,7 @@ enfuse_TEXINFOS = auxmac.texi \
 #man_MANS = enblend.1 enfuse.1
 #EXTRA_DIST = enblend.1 enfuse.1 enblend.texi enfuse.texi
 
-# created by make(1), want to rebuild
+# created by make(1), user pobably wants to rebuild (often?)
 MOSTLYCLEANFILES =
 
 # created by make(1)
@@ -71,3 +69,20 @@ enfuse.info: entropy.txt \
              local-analysis-window.txt \
              sharp-edge.txt \
              smooth-edge.txt
+
+enfuse.dvi: entropy.eps \
+            entropy-cutoff.eps \
+            gaussian.eps \
+            laplacian-of-gaussian.eps \
+            local-analysis-window.eps \
+            sharp-edge.eps \
+            smooth-edge.eps
+
+enfuse.html \
+enfuse.pdf: entropy.png \
+            entropy-cutoff.png \
+            gaussian.png \
+            laplacian-of-gaussian.png \
+            local-analysis-window.png \
+            sharp-edge.png \
+            smooth-edge.png

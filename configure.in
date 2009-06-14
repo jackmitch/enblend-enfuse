@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(enblend-enfuse, 3.2-cvs, [acmihal@users.sourceforge.net])
+AC_INIT(enblend-enfuse, 3.2-staging, [https://code.launchpad.net/~cspiel/enblend/staging])
 AC_CONFIG_SRCDIR([src/enblend.cc])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE

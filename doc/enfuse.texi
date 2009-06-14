@@ -10,7 +10,7 @@
 @setfilename enfuse.info
 @settitle Fusing Multiple Images with Enfuse@tie{}@value{VERSION}
 @include auxmac.texi
-@include enfuse-version.texi
+@include versenfuse.texi
 
 @c Define a new index for options.
 @defcodeindex op
@@ -450,6 +450,7 @@ difference between this option and Enfuse's default color blending
 algorithm is slight, and will be only noticeable when areas of
 different primary colors are blended together.
 
+@ifset outputBitDepthOption
 @item -d
 @itemx --depth=@var{DEPTH}
 @opindex -d
@@ -503,6 +504,7 @@ Maximal finite value: @semilog{1.8, 308}
 
 If the requested @var{DEPTH} is not supported by the output file
 format, Enfuse warns and chooses the @var{DEPTH} that matches best.
+@end ifset
 
 @item -g
 @opindex -g
@@ -1967,7 +1969,7 @@ variable@tie{}@math{X}:
             <mo>&ApplyFunction;</mo>
             <mo>(</mo>
             <mrow>
-                <mo>{</mo>
+                <mo>&lcub;</mo>
                 <mrow>
                     <mi>&omega;</mi>
                     <mo>:</mo>
@@ -1983,7 +1985,7 @@ variable@tie{}@math{X}:
                         <mi>x</mi>
                     </mrow>
                 </mrow>
-                <mo>}</mo>
+                <mo>&rcub;</mo>
             </mrow>
             <mo>)</mo>
         </mrow>
@@ -3711,8 +3713,3 @@ calculation of local contrast, and entropy weighting.
 @printindex cp
 
 @bye
-
-
-@c Local variables:
-@c eval: (visit-tags-table "TAGS")
-@c End:
