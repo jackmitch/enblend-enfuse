@@ -1,7 +1,7 @@
 This is enblend.info, produced by makeinfo version 4.11 from
 enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 19 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 24 March 2009), a tool
 for compositing images in such a way that the seam between the images
 is invisible, or at least very difficult to see.
 
@@ -20,7 +20,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 19 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 24 March 2009), a tool
 for compositing images n such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -172,8 +172,10 @@ Common options control some overall features of Enblend.
 
 `-V'
 `--version'
-     Output information on the Enblend version and some configuration
-     details like extra features that have been compiled in.
+     Output information on the Enblend version.
+
+     Team this option with `--verbose' to inquire configuration details
+     like the extra features that have been compiled in.
 
 `-w'
      Blend around the +/-180o boundary.  Useful for full 360o
@@ -219,6 +221,25 @@ cropping of the output image.
 `--depth=DEPTH'
      Force the number of bits per channel and the numeric format of the
      output image.
+
+     Enblend always uses a sensible way to change the channel depth to
+     assure highest image quality (at the expense of memory) whether
+     requantization is implicit because of the output format or explicit
+     with option `--depth'.
+
+        * If the output-channel width is larger than the input-channel
+          width of the input images, the input images' channels are
+          widened to the output channel depth immediately after
+          loading, this is, as soon as possible.  Enblend then performs
+          all blending operations at the output-channel width, thereby
+          preserving minute color details which can appear in the
+          blending areas.
+
+        * If the output-channel width is smaller than the input-channel
+          width of the input images, the output image's channels are
+          narrowed only right before it is written to disk, this is, as
+          late as possible.  Thus the data benefits from the wider
+          input channels for the longest time.
 
      All DEPTH specifications are valid in lowercase as well as
      uppercase letters.  For integer format use
@@ -988,43 +1009,43 @@ Program Index
  [index ]
 * Menu:
 
-* ALE:                                   Helpful Programs.     (line 20)
-* align_image_stack:                     Helpful Programs.     (line 27)
-* Anti-Lamenessing Engine:               Helpful Programs.     (line 20)
-* cinepaint:                             Helpful Programs.     (line 39)
-* CinePaint:                             Helpful Programs.     (line 39)
-* dcraw:                                 Helpful Programs.     (line 10)
-* DCRaw:                                 Helpful Programs.     (line 10)
-* exiftool:                              Helpful Programs.     (line 77)
-* EXIFTool:                              Helpful Programs.     (line 77)
-* fulla:                                 Helpful Programs.     (line 27)
-* gimp:                                  Helpful Programs.     (line 46)
-* Gimp:                                  Helpful Programs.     (line 46)
-* GraphicsMagick:                        Helpful Programs.     (line 50)
-* hugin:                                 Helpful Programs.     (line 24)
-* Hugin <1>:                             Helpful Programs.     (line 24)
-* Hugin:                                 Extended Options.     (line 92)
-* hugin:                                 Overview.             (line 25)
-* identify:                              Understanding Masks.  (line 22)
-* ImageMagick:                           Helpful Programs.     (line 50)
-* LibJPEG:                               Helpful Programs.     (line 62)
-* LibPNG:                                Helpful Programs.     (line 65)
-* LibTIFF:                               Helpful Programs.     (line 69)
-* LittleCMS, TiffICC:                    Helpful Programs.     (line 81)
-* nona <1>:                              Helpful Programs.     (line 27)
-* nona:                                  Extended Options.     (line 92)
-* OpenEXR:                               Helpful Programs.     (line 55)
-* PanoTools <1>:                         Helpful Programs.     (line 32)
-* PanoTools:                             Overview.             (line 25)
-* PFSTools:                              Helpful Programs.     (line 58)
-* PTmender:                              Helpful Programs.     (line 32)
-* PTOptimizer:                           Helpful Programs.     (line 32)
-* tifficc:                               Helpful Programs.     (line 81)
-* tiffinfo <1>:                          Helpful Programs.     (line 73)
-* tiffinfo:                              Understanding Masks.  (line 22)
-* ufraw:                                 Helpful Programs.     (line 13)
-* UFRaw:                                 Helpful Programs.     (line 13)
-* ufraw-batch:                           Helpful Programs.     (line 13)
+* ALE:                                   Helpful Programs.    (line  20)
+* align_image_stack:                     Helpful Programs.    (line  27)
+* Anti-Lamenessing Engine:               Helpful Programs.    (line  20)
+* cinepaint:                             Helpful Programs.    (line  39)
+* CinePaint:                             Helpful Programs.    (line  39)
+* dcraw:                                 Helpful Programs.    (line  10)
+* DCRaw:                                 Helpful Programs.    (line  10)
+* exiftool:                              Helpful Programs.    (line  77)
+* EXIFTool:                              Helpful Programs.    (line  77)
+* fulla:                                 Helpful Programs.    (line  27)
+* gimp:                                  Helpful Programs.    (line  46)
+* Gimp:                                  Helpful Programs.    (line  46)
+* GraphicsMagick:                        Helpful Programs.    (line  50)
+* hugin:                                 Helpful Programs.    (line  24)
+* Hugin <1>:                             Helpful Programs.    (line  24)
+* Hugin:                                 Extended Options.    (line 111)
+* hugin:                                 Overview.            (line  25)
+* identify:                              Understanding Masks. (line  22)
+* ImageMagick:                           Helpful Programs.    (line  50)
+* LibJPEG:                               Helpful Programs.    (line  62)
+* LibPNG:                                Helpful Programs.    (line  65)
+* LibTIFF:                               Helpful Programs.    (line  69)
+* LittleCMS, TiffICC:                    Helpful Programs.    (line  81)
+* nona <1>:                              Helpful Programs.    (line  27)
+* nona:                                  Extended Options.    (line 111)
+* OpenEXR:                               Helpful Programs.    (line  55)
+* PanoTools <1>:                         Helpful Programs.    (line  32)
+* PanoTools:                             Overview.            (line  25)
+* PFSTools:                              Helpful Programs.    (line  58)
+* PTmender:                              Helpful Programs.    (line  32)
+* PTOptimizer:                           Helpful Programs.    (line  32)
+* tifficc:                               Helpful Programs.    (line  81)
+* tiffinfo <1>:                          Helpful Programs.    (line  73)
+* tiffinfo:                              Understanding Masks. (line  22)
+* ufraw:                                 Helpful Programs.    (line  13)
+* UFRaw:                                 Helpful Programs.    (line  13)
+* ufraw-batch:                           Helpful Programs.    (line  13)
 
 
 File: enblend.info,  Node: Option Index,  Next: General Index,  Prev: Program Index,  Up: Top
@@ -1041,7 +1062,7 @@ Option Index
 * --depth:                               Extended Options.    (line  28)
 * --fine-mask:                           Mask Generation Options.
                                                               (line  13)
-* --gpu:                                 Extended Options.    (line  81)
+* --gpu:                                 Extended Options.    (line 100)
 * --help:                                Common Options.      (line  50)
 * --load-mask:                           Mask Generation Options.
                                                               (line  17)
@@ -1053,24 +1074,24 @@ Option Index
                                                               (line  28)
 * --verbose:                             Common Options.      (line  66)
 * --version:                             Common Options.      (line  71)
-* --visualize:                           Extended Options.    (line 104)
+* --visualize:                           Extended Options.    (line 123)
 * -a:                                    Common Options.      (line   9)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
 * -c:                                    Extended Options.    (line  17)
 * -d:                                    Extended Options.    (line  28)
-* -f:                                    Extended Options.    (line  89)
-* -g:                                    Extended Options.    (line  73)
+* -f:                                    Extended Options.    (line 108)
+* -g:                                    Extended Options.    (line  92)
 * -h:                                    Common Options.      (line  50)
 * -l:                                    Common Options.      (line  53)
 * -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line  97)
+* -m:                                    Extended Options.    (line 116)
 * -o:                                    Common Options.      (line  62)
 * -V:                                    Common Options.      (line  71)
 * -v:                                    Common Options.      (line  66)
-* -w:                                    Common Options.      (line  75)
-* -x:                                    Common Options.      (line  81)
-* -z:                                    Common Options.      (line  85)
+* -w:                                    Common Options.      (line  77)
+* -x:                                    Common Options.      (line  83)
+* -z:                                    Common Options.      (line  87)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -1078,13 +1099,15 @@ File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
 General Index
 *************
 
+ [index ]
 * Menu:
 
-* alpha channels, unassociated:          Extended Options.    (line  73)
+* alpha channels, unassociated:          Extended Options.    (line  92)
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Extended Options.    (line  28)
+* channel width:                         Extended Options.    (line  28)
 * CIECAM02:                              Extended Options.    (line  17)
-* Cinepaint:                             Extended Options.    (line  73)
+* Cinepaint:                             Extended Options.    (line  92)
 * coarse mask:                           Mask Generation Options.
                                                               (line   9)
 * color appearance model:                Extended Options.    (line  17)
@@ -1092,20 +1115,20 @@ General Index
 * compression, LZW:                      Common Options.      (line  37)
 * compression, packbits:                 Common Options.      (line  41)
 * deflate compression:                   Common Options.      (line  31)
-* double precision float, IEEE754:       Extended Options.    (line  61)
+* double precision float, IEEE754:       Extended Options.    (line  80)
 * ENBLEND_CACHE_IMAGES (preprocessor symbol): Tuning Memory Usage.
                                                               (line   8)
 * FDL:                                   FDL.                 (line   6)
 * fine mask:                             Mask Generation Options.
                                                               (line  13)
 * general index:                         General Index.       (line   6)
-* Gimp:                                  Extended Options.    (line  73)
+* Gimp:                                  Extended Options.    (line  92)
 * GNU Free Documentation License:        FDL.                 (line   6)
 * helpful programs:                      Helpful Programs.    (line   6)
-* IEEE754 double precision float:        Extended Options.    (line  61)
-* IEEE754 single precision float:        Extended Options.    (line  52)
+* IEEE754 double precision float:        Extended Options.    (line  80)
+* IEEE754 single precision float:        Extended Options.    (line  71)
 * image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line  97)
+* image cache, cache size:               Extended Options.    (line 116)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
 * index, program:                        Program Index.       (line   6)
@@ -1123,7 +1146,7 @@ General Index
                                                               (line  17)
 * mask, save:                            Mask Generation Options.
                                                               (line  28)
-* mask, visualization:                   Extended Options.    (line 104)
+* mask, visualization:                   Extended Options.    (line 123)
 * mask, weight:                          Understanding Masks. (line   6)
 * masks, input files:                    Understanding Masks. (line  18)
 * masks, undestanding:                   Understanding Masks. (line   6)
@@ -1136,7 +1159,7 @@ General Index
 * options, extended:                     Extended Options.    (line   6)
 * options, mask generation:              Mask Generation Options.
                                                               (line   6)
-* output image, set size of:             Extended Options.    (line  89)
+* output image, set size of:             Extended Options.    (line 108)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  41)
 * program index:                         Program Index.       (line   6)
@@ -1145,7 +1168,7 @@ General Index
                                                               (line  28)
 * seam optimization:                     Mask Generation Options.
                                                               (line  20)
-* single precision float, IEEE754:       Extended Options.    (line  52)
+* single precision float, IEEE754:       Extended Options.    (line  71)
 * undestanding masks:                    Understanding Masks. (line   6)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
@@ -1158,16 +1181,16 @@ Node: Overview1571
 Ref: Overview-Footnote-13666
 Node: Invocation3847
 Node: Common Options4258
-Node: Extended Options7046
-Node: Mask Generation Options10833
-Node: Understanding Masks12031
-Node: Tuning Memory Usage15812
-Ref: tab:cache-size-settings17891
-Node: Helpful Programs18199
-Node: Authors21810
-Node: FDL21986
-Node: Program Index42967
-Node: Option Index45806
-Node: General Index48538
+Node: Extended Options7093
+Node: Mask Generation Options11889
+Node: Understanding Masks13087
+Node: Tuning Memory Usage16868
+Ref: tab:cache-size-settings18947
+Node: Helpful Programs19255
+Node: Authors22866
+Node: FDL23042
+Node: Program Index44023
+Node: Option Index46862
+Node: General Index49594
 
 End Tag Table

@@ -240,14 +240,16 @@ Required option that specifies the name of the @var{OUTPUT-FILE}.
 @opindex -v
 @opindex --verbose
 Increase the verbosity of progress reporting.  Giving one or more
-@option{-v} options will make Enblend more verbose.
+@option{--verbose}@tie{}options will make Enblend more verbose.
 
 @item -V
 @itemx --version
 @opindex -V
 @opindex --version
-Output information on the Enblend version and some configuration
-details like extra features that have been compiled in.
+Output information on the Enblend version.
+
+Team this option with @option{--verbose} to inquire configuration
+details like the extra features that have been compiled in.
 
 @item -w
 @opindex -w

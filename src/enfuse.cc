@@ -182,11 +182,19 @@ double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy 
 /** Print information on the current version and some configuration
  * details. */
 void printVersionAndExit() {
-    cout <<
-        "enfuse " << VERSION << ".\n" <<
+    cout << "enfuse " << VERSION << "\n";
+
+    if (Verbose >= 2) {
 #ifdef ENBLEND_CACHE_IMAGES
-        "Extra feature: image cache.\n" <<
+        cout << "Extra feature: image cache\n";
 #endif
+        cout <<
+            "\n" <<
+            "Supported image formats: " << vigra::impexListFormats() << "\n" <<
+            "Supported file extensions: " << vigra::impexListExtensions() << "\n";
+    }
+
+    cout <<
         "\n" <<
         "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
@@ -394,6 +402,10 @@ int process_options(int argc, char** argv) {
         {0, 0, 0, 0}
     };
 
+    bool justPrintVersion = false;
+    bool justPrintUsage = false;
+
+    // Parse command line.
     int option_index = 0;
     int c;
     while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vwz",
@@ -415,11 +427,11 @@ int process_options(int argc, char** argv) {
                 Verbose++;
                 break;
             case HelpId:
-                printUsageAndExit(false);
-                break;          // never reached
+                justPrintUsage = true;
+                break;
             case VersionId:
-                printVersionAndExit();
-                break;          // never reached
+                justPrintVersion = true;
+                break;
             default:
                 cerr << "enfuse: internal error: unhandled \"NoArgument\" option"
                      << endl;
@@ -720,8 +732,8 @@ int process_options(int argc, char** argv) {
         } // end of "case IntegerArgument"
 
         case 'V':
-            printVersionAndExit();
-            break;          // never reached
+            justPrintVersion = true;
+            break;
         case 'b': {
             const int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
@@ -759,7 +771,7 @@ int process_options(int argc, char** argv) {
             GimpAssociatedAlphaHack = true;
             break;
         case 'h':
-            printUsageAndExit(false);
+            justPrintUsage = true;
             break;
         case 'l': {
             const int levels = atoi(optarg);
@@ -801,6 +813,16 @@ int process_options(int argc, char** argv) {
             printUsageAndExit();
             break;
         }
+    }
+
+    if (justPrintUsage) {
+        printUsageAndExit(false);
+        // never reached
+    }
+
+    if (justPrintVersion) {
+        printVersionAndExit();
+        // never reached
     }
 
     return optind;

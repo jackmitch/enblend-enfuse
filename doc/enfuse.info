@@ -1,6 +1,6 @@
 This is enfuse.info, produced by makeinfo version 4.11 from enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 19 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 24 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -19,7 +19,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 19 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 24 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -284,8 +284,10 @@ Common options control some overall features of Enfuse.
 
 `-V'
 `--version'
-     Output information on the Enfuse version and some configuration
-     details like extra features that have been compiled in.
+     Output information on the Enfuse version.
+
+     Team this option with `--verbose' to inquire configuration details
+     like the extra features that have been compiled in.
 
 `-w'
      Blend around the +/-180o boundary.  This is useful for full 360o
@@ -328,6 +330,24 @@ cropping of the output image.
      Force the number of bits per channel and the numeric format of the
      output image.
 
+     Enfuse always uses a sensible way to change the channel depth to
+     assure highest image quality (at the expense of memory) whether
+     requantization is implicit because of the output format or explicit
+     with option `--depth'.
+
+        * If the output-channel width is larger than the input-channel
+          width of the input images, the input images' channels are
+          widened to the output channel depth immediately after
+          loading, this is, as soon as possible.  Enfuse then performs
+          all blending operations at the output-channel width, thereby
+          preserving minute color details which can appear in the
+          blending areas.
+
+        * If the output-channel width is smaller than the input-channel
+          width of the input images, the output image's channels are
+          narrowed only right before it is written to disk, this is, as
+          late as possible.  Thus the data benefits from the wider
+          input channels for the longest time.
      All DEPTH specifications are valid in lowercase as well as
      uppercase letters.  For integer format use
 
@@ -961,6 +981,7 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
+    window size = 3                 window size = 5
 
      |   |   |   |               |   |   |   |   |   |
     -+---+---+---+-             -+---+---+---+---+---+-
@@ -975,7 +996,7 @@ sizes.
                                  | N | N | N | N | N |
                                 -+---+---+---+---+---+-
                                  |   |   |   |   |   |
-"
+
 Figure 3.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
 neighboring pixels, which all contribute equally to the weight.
@@ -2680,44 +2701,44 @@ Program Index
  [index ]
 * Menu:
 
-* ALE:                                   Helpful Programs.     (line 20)
-* align_image_stack:                     Helpful Programs.     (line 27)
-* Anti-Lamenessing Engine:               Helpful Programs.     (line 20)
-* cinepaint:                             Helpful Programs.     (line 39)
-* CinePaint <1>:                         Helpful Programs.     (line 39)
-* CinePaint:                             Extended Options.     (line 77)
-* dcraw:                                 Helpful Programs.     (line 10)
-* DCRaw:                                 Helpful Programs.     (line 10)
-* exiftool:                              Helpful Programs.     (line 77)
-* EXIFTool:                              Helpful Programs.     (line 77)
-* fulla:                                 Helpful Programs.     (line 27)
-* gimp:                                  Helpful Programs.     (line 46)
-* Gimp <1>:                              Helpful Programs.     (line 46)
-* Gimp:                                  Extended Options.     (line 77)
-* GraphicsMagick:                        Helpful Programs.     (line 50)
-* hugin:                                 Helpful Programs.     (line 24)
-* Hugin <1>:                             Helpful Programs.     (line 24)
-* Hugin <2>:                             What Images.          (line 13)
-* Hugin:                                 Extended Options.     (line 89)
-* identify:                              Understanding Masks.  (line 22)
-* ImageMagick:                           Helpful Programs.     (line 50)
-* LibJPEG:                               Helpful Programs.     (line 62)
-* LibPNG:                                Helpful Programs.     (line 65)
-* LibTIFF:                               Helpful Programs.     (line 69)
-* LittleCMS, TiffICC:                    Helpful Programs.     (line 81)
-* nona <1>:                              Helpful Programs.     (line 27)
-* nona:                                  Extended Options.     (line 89)
-* OpenEXR:                               Helpful Programs.     (line 55)
-* PanoTools:                             Helpful Programs.     (line 32)
-* PFSTools:                              Helpful Programs.     (line 58)
-* PTmender:                              Helpful Programs.     (line 32)
-* PTOptimizer:                           Helpful Programs.     (line 32)
-* tifficc:                               Helpful Programs.     (line 81)
-* tiffinfo <1>:                          Helpful Programs.     (line 73)
-* tiffinfo:                              Understanding Masks.  (line 22)
-* ufraw:                                 Helpful Programs.     (line 13)
-* UFRaw:                                 Helpful Programs.     (line 13)
-* ufraw-batch:                           Helpful Programs.     (line 13)
+* ALE:                                   Helpful Programs.    (line  20)
+* align_image_stack:                     Helpful Programs.    (line  27)
+* Anti-Lamenessing Engine:               Helpful Programs.    (line  20)
+* cinepaint:                             Helpful Programs.    (line  39)
+* CinePaint <1>:                         Helpful Programs.    (line  39)
+* CinePaint:                             Extended Options.    (line  95)
+* dcraw:                                 Helpful Programs.    (line  10)
+* DCRaw:                                 Helpful Programs.    (line  10)
+* exiftool:                              Helpful Programs.    (line  77)
+* EXIFTool:                              Helpful Programs.    (line  77)
+* fulla:                                 Helpful Programs.    (line  27)
+* gimp:                                  Helpful Programs.    (line  46)
+* Gimp <1>:                              Helpful Programs.    (line  46)
+* Gimp:                                  Extended Options.    (line  95)
+* GraphicsMagick:                        Helpful Programs.    (line  50)
+* hugin:                                 Helpful Programs.    (line  24)
+* Hugin <1>:                             Helpful Programs.    (line  24)
+* Hugin <2>:                             What Images.         (line  13)
+* Hugin:                                 Extended Options.    (line 107)
+* identify:                              Understanding Masks. (line  22)
+* ImageMagick:                           Helpful Programs.    (line  50)
+* LibJPEG:                               Helpful Programs.    (line  62)
+* LibPNG:                                Helpful Programs.    (line  65)
+* LibTIFF:                               Helpful Programs.    (line  69)
+* LittleCMS, TiffICC:                    Helpful Programs.    (line  81)
+* nona <1>:                              Helpful Programs.    (line  27)
+* nona:                                  Extended Options.    (line 107)
+* OpenEXR:                               Helpful Programs.    (line  55)
+* PanoTools:                             Helpful Programs.    (line  32)
+* PFSTools:                              Helpful Programs.    (line  58)
+* PTmender:                              Helpful Programs.    (line  32)
+* PTOptimizer:                           Helpful Programs.    (line  32)
+* tifficc:                               Helpful Programs.    (line  81)
+* tiffinfo <1>:                          Helpful Programs.    (line  73)
+* tiffinfo:                              Understanding Masks. (line  22)
+* ufraw:                                 Helpful Programs.    (line  13)
+* UFRaw:                                 Helpful Programs.    (line  13)
+* ufraw-batch:                           Helpful Programs.    (line  13)
 
 
 File: enfuse.info,  Node: Option Index,  Next: General Index,  Prev: Program Index,  Up: Top
@@ -2753,16 +2774,16 @@ Option Index
 * -b:                                    Extended Options.    (line  10)
 * -c:                                    Extended Options.    (line  19)
 * -d:                                    Extended Options.    (line  30)
-* -f:                                    Extended Options.    (line  86)
-* -g:                                    Extended Options.    (line  75)
+* -f:                                    Extended Options.    (line 104)
+* -g:                                    Extended Options.    (line  93)
 * -h:                                    Common Options.      (line  43)
 * -l:                                    Common Options.      (line  46)
 * -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line  94)
+* -m:                                    Extended Options.    (line 112)
 * -o:                                    Common Options.      (line  55)
 * -V:                                    Common Options.      (line  64)
 * -v:                                    Common Options.      (line  59)
-* -w:                                    Common Options.      (line  68)
+* -w:                                    Common Options.      (line  70)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2773,7 +2794,7 @@ General Index
  [index ]
 * Menu:
 
-* 360o panorama:                         Common Options.      (line  68)
+* 360o panorama:                         Common Options.      (line  70)
 * advanced focus stacking:               Advanced Focus Stacking.
                                                               (line   6)
 * advanced focus stacking, recognizing faint edges: Suppressing Noise or Recognizing Faint Edges.
@@ -2781,7 +2802,7 @@ General Index
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
 * alpha channel:                         Overview.            (line  64)
-* alpha channels, unassociated:          Extended Options.    (line  75)
+* alpha channels, unassociated:          Extended Options.    (line  93)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
 * authors, list of:                      Authors.             (line   6)
@@ -2823,7 +2844,7 @@ General Index
                                                               (line   9)
 * disabling averaging:                   Disabling Averaging. (line   6)
 * DOF:                                   Why Focus Stacks.    (line  15)
-* double precision float, IEEE754:       Extended Options.    (line  63)
+* double precision float, IEEE754:       Extended Options.    (line  81)
 * dynamic range increase <1>:            Flash Exposure Series.
                                                               (line   6)
 * dynamic range increase:                Exposure Series.     (line   6)
@@ -2833,8 +2854,8 @@ General Index
                                                               (line   8)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  73)
-* expectation value:                     Standard Deviation.  (line  57)
+* estimators:                            Standard Deviation.  (line  72)
+* expectation value:                     Standard Deviation.  (line  56)
 * expert focus stacking ttops:           Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -2867,10 +2888,10 @@ General Index
 * gray projector, value:                 Expert Options.      (line 153)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
-* IEEE754 double precision float:        Extended Options.    (line  63)
-* IEEE754 single precision float:        Extended Options.    (line  54)
+* IEEE754 double precision float:        Extended Options.    (line  81)
+* IEEE754 single precision float:        Extended Options.    (line  72)
 * image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line  94)
+* image cache, cache size:               Extended Options.    (line 112)
 * images, fusable:                       What Images.         (line   6)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
@@ -2911,12 +2932,12 @@ General Index
 * options, extended:                     Extended Options.    (line   6)
 * options, fusion:                       Fusion Options.      (line   6)
 * output file compression:               Common Options.      (line   9)
-* output image, set size of:             Extended Options.    (line  86)
+* output image, set size of:             Extended Options.    (line 104)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  33)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  54)
+* probability function:                  Standard Deviation.  (line  53)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
@@ -2932,15 +2953,15 @@ General Index
 * series, polarization:                  Polarization Series. (line   6)
 * series, simple:                        Repetition.          (line   6)
 * simple series:                         Repetition.          (line   6)
-* single precision float, IEEE754:       Extended Options.    (line  54)
-* standard deviation:                    Standard Deviation.  (line  63)
-* statistical moments:                   Standard Deviation.  (line  54)
+* single precision float, IEEE754:       Extended Options.    (line  72)
+* standard deviation:                    Standard Deviation.  (line  62)
+* statistical moments:                   Standard Deviation.  (line  53)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * undestanding masks:                    Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  60)
+* variance:                              Standard Deviation.  (line  59)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
 * weighted average:                      Weighted Average.    (line   6)
@@ -2974,60 +2995,60 @@ Ref: Overview-Footnote-27734
 Ref: Overview-Footnote-37915
 Node: Invocation8097
 Node: Common Options8646
-Node: Extended Options10945
-Node: Fusion Options14269
-Node: Expert Options16143
-Ref: Figure:entropy-cutoff18525
-Node: Option Delimiters25521
-Node: Weighting Functions26486
-Node: Weighting Pixels27150
-Node: Weighted Average28652
-Node: Disabling Averaging29243
-Node: Exposure Weighting30192
-Ref: Figure:gaussian31670
-Node: Saturation Weighting34960
-Node: Contrast Weighting36056
-Node: Standard Deviation37385
-Ref: Figure:local-analysis-window37826
-Ref: Standard Deviation-Footnote-140717
-Node: Laplacian of Gaussian40866
-Ref: Figure:laplacian-of-gaussian42439
-Node: Blend SDev and LoG45887
-Node: Scaling and Choice of Mode47518
-Node: Entropy Weighting48360
-Ref: Figure:entropy49325
-Node: Understanding Masks53304
-Node: Tuning Memory Usage57093
-Ref: tab:cache-size-settings59167
-Node: Applications59475
-Node: What Images60197
-Node: Repetition63316
-Node: Exposure Series64373
-Node: Exposure Series Tips66575
-Node: Exposure Series Misconceptions67684
-Ref: Exposure Series Misconceptions-Footnote-169452
-Node: Flash Exposure Series69665
-Node: Polarization Series69907
-Node: Focus Stacks70341
-Node: Why Focus Stacks71223
-Node: Preparing Focus Stacks72550
-Node: Contrast Based Fusing73290
-Node: Basic Focus Stacking74531
-Node: Advanced Focus Stacking75887
-Node: Local Contrast Problem76584
-Ref: Figure:sharp-edge77784
-Ref: Figure:smooth-edge79383
-Node: Laplacian Edge Detection81819
-Node: Local Contrast Enhancement82900
-Node: Suppressing Noise or Recognizing Faint Edges83816
-Node: Expert Stacking86276
-Node: Helpful Programs87775
-Node: Authors91378
-Node: FDL91975
-Node: List of Tables112956
-Node: List of Figures113220
-Node: Program Index113805
-Node: Option Index116728
-Node: General Index119428
+Node: Extended Options10992
+Node: Fusion Options15322
+Node: Expert Options17196
+Ref: Figure:entropy-cutoff19578
+Node: Option Delimiters26574
+Node: Weighting Functions27539
+Node: Weighting Pixels28203
+Node: Weighted Average29705
+Node: Disabling Averaging30296
+Node: Exposure Weighting31245
+Ref: Figure:gaussian32723
+Node: Saturation Weighting36013
+Node: Contrast Weighting37109
+Node: Standard Deviation38438
+Ref: Figure:local-analysis-window38879
+Ref: Standard Deviation-Footnote-141718
+Node: Laplacian of Gaussian41867
+Ref: Figure:laplacian-of-gaussian43440
+Node: Blend SDev and LoG46888
+Node: Scaling and Choice of Mode48519
+Node: Entropy Weighting49361
+Ref: Figure:entropy50326
+Node: Understanding Masks54305
+Node: Tuning Memory Usage58094
+Ref: tab:cache-size-settings60168
+Node: Applications60476
+Node: What Images61198
+Node: Repetition64317
+Node: Exposure Series65374
+Node: Exposure Series Tips67576
+Node: Exposure Series Misconceptions68685
+Ref: Exposure Series Misconceptions-Footnote-170453
+Node: Flash Exposure Series70666
+Node: Polarization Series70908
+Node: Focus Stacks71342
+Node: Why Focus Stacks72224
+Node: Preparing Focus Stacks73551
+Node: Contrast Based Fusing74291
+Node: Basic Focus Stacking75532
+Node: Advanced Focus Stacking76888
+Node: Local Contrast Problem77585
+Ref: Figure:sharp-edge78785
+Ref: Figure:smooth-edge80384
+Node: Laplacian Edge Detection82820
+Node: Local Contrast Enhancement83901
+Node: Suppressing Noise or Recognizing Faint Edges84817
+Node: Expert Stacking87277
+Node: Helpful Programs88776
+Node: Authors92379
+Node: FDL92976
+Node: List of Tables113957
+Node: List of Figures114221
+Node: Program Index114806
+Node: Option Index117729
+Node: General Index120429
 
 End Tag Table
