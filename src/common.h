@@ -45,6 +45,7 @@
 #define VERBOSE_PYRAMID_MESSAGES            0
 #define VERBOSE_CFI_MESSAGES                2
 #define VERBOSE_GDA_MESSAGES                2
+#define VERBOSE_VERSION_REPORTING           1
 
 // Select our preferred type of image depending on what ./configure
 // tells us.

@@ -83,7 +83,7 @@ extern "C" int optind;
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 1;
+int Verbose = 0;
 std::string OutputFileName;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
@@ -155,7 +155,7 @@ using enblend::enblendMain;
 void printVersionAndExit() {
     cout << "enblend " << VERSION << "\n";
 
-    if (Verbose >= 2) {
+    if (Verbose >= VERBOSE_VERSION_REPORTING) {
 #ifdef ENBLEND_CACHE_IMAGES
         cout << "Extra feature: image cache\n";
 #endif
@@ -809,7 +809,8 @@ int main(int argc, char** argv) {
     // Switch to fine mask, if the smallest coarse mask would be less
     // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
-        cout << "Input images to small for coarse mask, switching to fine mask." << endl;
+        cerr << "enblend: warning: Input images to small for coarse mask, switching to fine mask."
+             << endl;
         CoarseMask = false;
     }
 

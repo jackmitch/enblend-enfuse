@@ -101,7 +101,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName;
-int Verbose = 1;
+int Verbose = 0;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 bool Wraparound = false;
@@ -184,7 +184,7 @@ double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy 
 void printVersionAndExit() {
     cout << "enfuse " << VERSION << "\n";
 
-    if (Verbose >= 2) {
+    if (Verbose >= VERBOSE_VERSION_REPORTING) {
 #ifdef ENBLEND_CACHE_IMAGES
         cout << "Extra feature: image cache\n";
 #endif
