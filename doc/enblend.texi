@@ -231,8 +231,10 @@ lower memory usage.  The default is to use as many levels as is
 possible given the size of the overlap regions.  Enblend may still use
 a smaller number of levels if the geometry of the images demands.
 
-@item -o @var{OUTPUT-FILE}
+@item -o
+@itemx --output=@var{OUTPUT-FILE}
 @opindex -o
+@opindex --output
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v

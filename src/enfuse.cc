@@ -218,7 +218,7 @@ void printUsageAndExit(const bool error = true) {
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending levels to use (1 to 29)\n" <<
-        "  -o FILENAME            write output to FILENAME\n" <<
+        "  -o, --output=FILENAME  write output to FILENAME\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
@@ -374,7 +374,8 @@ int process_options(int argc, char** argv) {
         VerboseId,               // 16
         HelpId,                  // 17
         VersionId,               // 18
-        DepthId                  // 19
+        DepthId,                 // 19
+        OutputId                 // 20
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -399,6 +400,7 @@ int process_options(int argc, char** argv) {
         {"help", no_argument, 0, NoArgument},                            // 17
         {"version", no_argument, 0, NoArgument},                         // 18
         {"depth", required_argument, 0, StringArgument},                 // 19
+        {"output", required_argument, 0, StringArgument},                // 20
         {0, 0, 0, 0}
     };
 
@@ -635,6 +637,15 @@ int process_options(int argc, char** argv) {
 
             case DepthId:
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                break;
+
+            case OutputId:
+                if (OutputFileName.empty()) {
+                    OutputFileName = optarg;
+                } else {
+                    cerr << "enfuse: more than one output file specified." << endl;
+                    exit(1);
+                }
                 break;
 
             default:
@@ -1183,7 +1194,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    if (OutputPixelType != "") {
+    if (!OutputPixelType.empty()) {
         pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
     }
 
@@ -1197,8 +1208,6 @@ int main(int argc, char** argv) {
             else if (pixelType == "INT16")  enfuseMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enfuseMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT32")  enfuseMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "UINT64") enfuseMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "INT64")  enfuseMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "FLOAT")  enfuseMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
@@ -1222,8 +1231,6 @@ int main(int argc, char** argv) {
             else if (pixelType == "INT16")  enfuseMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enfuseMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT32")  enfuseMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "UINT64") enfuseMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "INT64")  enfuseMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "FLOAT")  enfuseMain<float >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "DOUBLE") enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif

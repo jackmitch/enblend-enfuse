@@ -1,7 +1,7 @@
 This is enblend.info, produced by makeinfo version 4.11 from
 enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 24 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 25 March 2009), a tool
 for compositing images in such a way that the seam between the images
 is invisible, or at least very difficult to see.
 
@@ -20,7 +20,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 24 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 25 March 2009), a tool
 for compositing images n such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -162,13 +162,14 @@ Common options control some overall features of Enblend.
      use a smaller number of levels if the geometry of the images
      demands.
 
-`-o OUTPUT-FILE'
+`-o'
+`--output=OUTPUT-FILE'
      Required option that specifies the name of the OUTPUT-FILE.
 
 `-v'
 `--verbose'
      Increase the verbosity of progress reporting.  Giving one or more
-     `-v' options will make Enblend more verbose.
+     `--verbose' options will make Enblend more verbose.
 
 `-V'
 `--version'
@@ -1070,10 +1071,11 @@ Option Index
                                                               (line  20)
 * --optimize:                            Mask Generation Options.
                                                               (line  24)
+* --output:                              Common Options.      (line  63)
 * --save-mask:                           Mask Generation Options.
                                                               (line  28)
-* --verbose:                             Common Options.      (line  66)
-* --version:                             Common Options.      (line  71)
+* --verbose:                             Common Options.      (line  67)
+* --version:                             Common Options.      (line  72)
 * --visualize:                           Extended Options.    (line 123)
 * -a:                                    Common Options.      (line   9)
 * -b <1>:                                Tuning Memory Usage. (line   6)
@@ -1086,12 +1088,12 @@ Option Index
 * -l:                                    Common Options.      (line  53)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 116)
-* -o:                                    Common Options.      (line  62)
-* -V:                                    Common Options.      (line  71)
-* -v:                                    Common Options.      (line  66)
-* -w:                                    Common Options.      (line  77)
-* -x:                                    Common Options.      (line  83)
-* -z:                                    Common Options.      (line  87)
+* -o:                                    Common Options.      (line  63)
+* -V:                                    Common Options.      (line  72)
+* -v:                                    Common Options.      (line  67)
+* -w:                                    Common Options.      (line  78)
+* -x:                                    Common Options.      (line  84)
+* -z:                                    Common Options.      (line  88)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -1181,16 +1183,16 @@ Node: Overview1571
 Ref: Overview-Footnote-13666
 Node: Invocation3847
 Node: Common Options4258
-Node: Extended Options7093
-Node: Mask Generation Options11889
-Node: Understanding Masks13087
-Node: Tuning Memory Usage16868
-Ref: tab:cache-size-settings18947
-Node: Helpful Programs19255
-Node: Authors22866
-Node: FDL23042
-Node: Program Index44023
-Node: Option Index46862
-Node: General Index49594
+Node: Extended Options7111
+Node: Mask Generation Options11907
+Node: Understanding Masks13105
+Node: Tuning Memory Usage16886
+Ref: tab:cache-size-settings18965
+Node: Helpful Programs19273
+Node: Authors22884
+Node: FDL23060
+Node: Program Index44041
+Node: Option Index46880
+Node: General Index49685
 
 End Tag Table

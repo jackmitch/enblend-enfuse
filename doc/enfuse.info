@@ -1,6 +1,6 @@
 This is enfuse.info, produced by makeinfo version 4.11 from enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 24 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 25 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -19,7 +19,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 24 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 25 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -274,13 +274,14 @@ Common options control some overall features of Enfuse.
      region.  Enfuse may still use a smaller number of levels if the
      geometry of the images demands it.
 
-`-o OUTPUT-FILE'
+`-o'
+`--output=OUTPUT-FILE'
      Required option that specifies the name of the OUTPUT-FILE.
 
 `-v'
 `--verbose'
      Increase the verbosity of progress reporting.  Giving one or more
-     `-v' options will make Enfuse more verbose.
+     `--verbos' options will make Enfuse more verbose.
 
 `-V'
 `--version'
@@ -2761,9 +2762,10 @@ Option Index
 * --HardMask:                            Expert Options.      (line 178)
 * --help:                                Common Options.      (line  43)
 * --MinCurvature:                        Expert Options.      (line 190)
+* --output:                              Common Options.      (line  56)
 * --SoftMask:                            Expert Options.      (line 204)
-* --verbose:                             Common Options.      (line  59)
-* --version:                             Common Options.      (line  64)
+* --verbose:                             Common Options.      (line  60)
+* --version:                             Common Options.      (line  65)
 * --wContrast:                           Fusion Options.      (line  10)
 * --wEntropy:                            Fusion Options.      (line  15)
 * --wExposure:                           Fusion Options.      (line  20)
@@ -2780,10 +2782,10 @@ Option Index
 * -l:                                    Common Options.      (line  46)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 112)
-* -o:                                    Common Options.      (line  55)
-* -V:                                    Common Options.      (line  64)
-* -v:                                    Common Options.      (line  59)
-* -w:                                    Common Options.      (line  70)
+* -o:                                    Common Options.      (line  56)
+* -V:                                    Common Options.      (line  65)
+* -v:                                    Common Options.      (line  60)
+* -w:                                    Common Options.      (line  71)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2791,10 +2793,9 @@ File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
 General Index
 *************
 
- [index ]
 * Menu:
 
-* 360o panorama:                         Common Options.      (line  70)
+* 360o panorama:                         Common Options.      (line  71)
 * advanced focus stacking:               Advanced Focus Stacking.
                                                               (line   6)
 * advanced focus stacking, recognizing faint edges: Suppressing Noise or Recognizing Faint Edges.
@@ -2995,60 +2996,60 @@ Ref: Overview-Footnote-27734
 Ref: Overview-Footnote-37915
 Node: Invocation8097
 Node: Common Options8646
-Node: Extended Options10992
-Node: Fusion Options15322
-Node: Expert Options17196
-Ref: Figure:entropy-cutoff19578
-Node: Option Delimiters26574
-Node: Weighting Functions27539
-Node: Weighting Pixels28203
-Node: Weighted Average29705
-Node: Disabling Averaging30296
-Node: Exposure Weighting31245
-Ref: Figure:gaussian32723
-Node: Saturation Weighting36013
-Node: Contrast Weighting37109
-Node: Standard Deviation38438
-Ref: Figure:local-analysis-window38879
-Ref: Standard Deviation-Footnote-141718
-Node: Laplacian of Gaussian41867
-Ref: Figure:laplacian-of-gaussian43440
-Node: Blend SDev and LoG46888
-Node: Scaling and Choice of Mode48519
-Node: Entropy Weighting49361
-Ref: Figure:entropy50326
-Node: Understanding Masks54305
-Node: Tuning Memory Usage58094
-Ref: tab:cache-size-settings60168
-Node: Applications60476
-Node: What Images61198
-Node: Repetition64317
-Node: Exposure Series65374
-Node: Exposure Series Tips67576
-Node: Exposure Series Misconceptions68685
-Ref: Exposure Series Misconceptions-Footnote-170453
-Node: Flash Exposure Series70666
-Node: Polarization Series70908
-Node: Focus Stacks71342
-Node: Why Focus Stacks72224
-Node: Preparing Focus Stacks73551
-Node: Contrast Based Fusing74291
-Node: Basic Focus Stacking75532
-Node: Advanced Focus Stacking76888
-Node: Local Contrast Problem77585
-Ref: Figure:sharp-edge78785
-Ref: Figure:smooth-edge80384
-Node: Laplacian Edge Detection82820
-Node: Local Contrast Enhancement83901
-Node: Suppressing Noise or Recognizing Faint Edges84817
-Node: Expert Stacking87277
-Node: Helpful Programs88776
-Node: Authors92379
-Node: FDL92976
-Node: List of Tables113957
-Node: List of Figures114221
-Node: Program Index114806
-Node: Option Index117729
-Node: General Index120429
+Node: Extended Options11009
+Node: Fusion Options15339
+Node: Expert Options17213
+Ref: Figure:entropy-cutoff19595
+Node: Option Delimiters26591
+Node: Weighting Functions27556
+Node: Weighting Pixels28220
+Node: Weighted Average29722
+Node: Disabling Averaging30313
+Node: Exposure Weighting31262
+Ref: Figure:gaussian32740
+Node: Saturation Weighting36030
+Node: Contrast Weighting37126
+Node: Standard Deviation38455
+Ref: Figure:local-analysis-window38896
+Ref: Standard Deviation-Footnote-141735
+Node: Laplacian of Gaussian41884
+Ref: Figure:laplacian-of-gaussian43457
+Node: Blend SDev and LoG46905
+Node: Scaling and Choice of Mode48536
+Node: Entropy Weighting49378
+Ref: Figure:entropy50343
+Node: Understanding Masks54322
+Node: Tuning Memory Usage58111
+Ref: tab:cache-size-settings60185
+Node: Applications60493
+Node: What Images61215
+Node: Repetition64334
+Node: Exposure Series65391
+Node: Exposure Series Tips67593
+Node: Exposure Series Misconceptions68702
+Ref: Exposure Series Misconceptions-Footnote-170470
+Node: Flash Exposure Series70683
+Node: Polarization Series70925
+Node: Focus Stacks71359
+Node: Why Focus Stacks72241
+Node: Preparing Focus Stacks73568
+Node: Contrast Based Fusing74308
+Node: Basic Focus Stacking75549
+Node: Advanced Focus Stacking76905
+Node: Local Contrast Problem77602
+Ref: Figure:sharp-edge78802
+Ref: Figure:smooth-edge80401
+Node: Laplacian Edge Detection82837
+Node: Local Contrast Enhancement83918
+Node: Suppressing Noise or Recognizing Faint Edges84834
+Node: Expert Stacking87294
+Node: Helpful Programs88793
+Node: Authors92396
+Node: FDL92993
+Node: List of Tables113974
+Node: List of Figures114238
+Node: Program Index114823
+Node: Option Index117746
+Node: General Index120519
 
 End Tag Table

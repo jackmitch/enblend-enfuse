@@ -387,8 +387,10 @@ as many levels as possible given the size of the overlap region.
 Enfuse may still use a smaller number of levels if the geometry of the
 images demands it.
 
-@item -o @var{OUTPUT-FILE}
+@item -o
+@itemx --output=@var{OUTPUT-FILE}
 @opindex -o
+@opindex --output
 Required option that specifies the name of the @var{OUTPUT-FILE}.
 
 @item -v

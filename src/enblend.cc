@@ -193,7 +193,7 @@ void printUsageAndExit(const bool error = true) {
         "  -a                     pre-assemble non-overlapping images\n" <<
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
-        "  -o FILENAME            write output to FILENAME\n" <<
+        "  -o, --output=FILENAME  write output to FILENAME\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
@@ -295,7 +295,8 @@ int process_options(int argc, char** argv) {
         VerboseId,                  // 12
         HelpId,                     // 13
         VersionId,                  // 14
-        DepthId                     // 15
+        DepthId,                    // 15
+        OutputId                    // 16
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -316,6 +317,7 @@ int process_options(int argc, char** argv) {
         {"help", no_argument, 0, NoArgument},                                  // 13
         {"version", no_argument, 0, NoArgument},                               // 14
         {"depth", required_argument, 0, StringArgument},                       // 15
+        {"output", required_argument, 0, StringArgument},                      // 16
         {0, 0, 0, 0}
     };
 
@@ -380,6 +382,14 @@ int process_options(int argc, char** argv) {
                 break;
             case DepthId:
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                break;
+            case OutputId:
+                if (OutputFileName.empty()) {
+                    OutputFileName = optarg;
+                } else {
+                    cerr << "enblend: more than one output file specified." << endl;
+                    exit(1);
+                }
                 break;
             default:
                 cerr << "enblend: internal error: unhandled \"StringArgument\" option"
@@ -485,12 +495,12 @@ int process_options(int argc, char** argv) {
             break;
         }
         case 'o':
-            if (!OutputFileName.empty()) {
+            if (OutputFileName.empty()) {
+                OutputFileName = optarg;
+            } else {
                 cerr << "enblend: more than one output file specified." << endl;
-                printUsageAndExit();
-                break;
+                exit(1);
             }
-            OutputFileName = optarg;
             break;
         case 's':
             // Deprecated sequential blending flag.
@@ -953,11 +963,10 @@ int main(int argc, char** argv) {
     }
 
     if (!VisualizeMaskFileName.empty() && !OptimizeMask) {
-        cerr << endl << "enblend: --visualize does nothing without --optimize."
-             << endl;
+        cerr << "enblend: warning: \"--visualize\" does nothing without \"--optimize\".\n";
     }
 
-    if (OutputPixelType != "") {
+    if (!OutputPixelType.empty()) {
         pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
     }
 
@@ -971,8 +980,6 @@ int main(int argc, char** argv) {
             else if (pixelType == "INT16")  enblendMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enblendMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT32")  enblendMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "UINT64") enblendMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "INT64")  enblendMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "FLOAT")  enblendMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
@@ -991,8 +998,6 @@ int main(int argc, char** argv) {
             else if (pixelType == "INT16")  enblendMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enblendMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT32")  enblendMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "UINT64") enblendMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
-            //else if (pixelType == "INT64")  enblendMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "FLOAT")  enblendMain<float >(imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "DOUBLE") enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
