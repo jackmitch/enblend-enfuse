@@ -895,7 +895,7 @@ int main(int argc, char** argv) {
     list<ImageImportInfo*>::iterator imageInfoIterator;
 
     bool isColor = false;
-    const char *pixelType = NULL;
+    std::string pixelType;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
@@ -975,17 +975,17 @@ int main(int argc, char** argv) {
             if (isColor != inputInfo->isColor()) {
                 cerr << "enfuse: Input image \""
                      << *inputFileNameIterator << "\" is "
-                     << (inputInfo->isColor() ? "color" : "grayscale")
-                     << " but previous images are "
+                     << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
+                     << "enfuse:   but previous images are "
                      << (isColor ? "color" : "grayscale")
                      << "." << endl;
                 exit(1);
             }
-            if (strcmp(pixelType, inputInfo->getPixelType())) {
+            if (pixelType != inputInfo->getPixelType()) {
                 cerr << "enfuse: Input image \""
                      << *inputFileNameIterator << "\" has pixel type "
-                     << inputInfo->getPixelType()
-                     << " but previous images have pixel type "
+                     << inputInfo->getPixelType() << ",\n"
+                     << "enfuse:   but previous images have pixel type "
                      << pixelType
                      << "." << endl;
                 exit(1);
@@ -1052,7 +1052,7 @@ int main(int argc, char** argv) {
     }
 
     // Pixel type of the output image is the same as the input images.
-    outputImageInfo.setPixelType(pixelType);
+    outputImageInfo.setPixelType(pixelType.c_str());
 
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);
@@ -1132,17 +1132,17 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if (strcmp(pixelType,      "UINT8" ) == 0) enfuseMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enfuseMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enfuseMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enfuseMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enfuseMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enfuseMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enfuseMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enfuseMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enfuseMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enfuseMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enfuseMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enfuseMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enfuseMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enfuseMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enfuseMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "UINT64") enfuseMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "INT64")  enfuseMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enfuseMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << "enfuse: images with pixel type \""
@@ -1153,20 +1153,21 @@ int main(int argc, char** argv) {
             }
         } else {
             if (!WSaturationIsDefault && (WSaturation != 0.0)) {
-                cout << "enfuse: WSaturation is not applicable to grayscale images. This parameter will have no effect." << endl;
+                cout << "enfuse: warning: WSaturation is not applicable to grayscale images.\n"
+                     << "enfuse: warning:   This parameter will have no effect." << endl;
                 WSaturation = 0.0;
             }
-            if (strcmp(pixelType,      "UINT8" ) == 0) enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enfuseMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enfuseMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enfuseMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enfuseMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enfuseMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enfuseMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enfuseMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enfuseMain<float >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enfuseMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enfuseMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enfuseMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enfuseMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enfuseMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "UINT64") enfuseMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "INT64")  enfuseMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enfuseMain<float >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << "enfuse: images with pixel type \""

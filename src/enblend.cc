@@ -614,7 +614,7 @@ int main(int argc, char** argv) {
     list<ImageImportInfo*>::iterator imageInfoIterator;
 
     bool isColor = false;
-    const char* pixelType = NULL;
+    std::string pixelType;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
@@ -697,17 +697,17 @@ int main(int argc, char** argv) {
             if (isColor != inputInfo->isColor()) {
                 cerr << "enblend: Input image \""
                      << *inputFileNameIterator << "\" is "
-                     << (inputInfo->isColor() ? "color" : "grayscale")
-                     << " but previous images are "
+                     << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
+                     << "enblend:   but previous images are "
                      << (isColor ? "color" : "grayscale")
                      << "." << endl;
                 exit(1);
             }
-            if (strcmp(pixelType, inputInfo->getPixelType())) {
+            if (pixelType != inputInfo->getPixelType()) {
                 cerr << "enblend: Input image \""
                      << *inputFileNameIterator << "\" has pixel type "
-                     << inputInfo->getPixelType()
-                     << " but previous images have pixel type "
+                     << inputInfo->getPixelType() << ",\n"
+                     << "enblend:   but previous images have pixel type "
                      << pixelType
                      << "." << endl;
                 exit(1);
@@ -789,7 +789,7 @@ int main(int argc, char** argv) {
     }
 
     // Pixel type of the output image is the same as the input images.
-    outputImageInfo.setPixelType(pixelType);
+    outputImageInfo.setPixelType(pixelType.c_str());
 
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);
@@ -909,17 +909,17 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if (strcmp(pixelType,      "UINT8" ) == 0) enblendMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enblendMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enblendMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enblendMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enblendMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enblendMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enblendMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enblendMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enblendMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "UINT64") enblendMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "INT64")  enblendMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << "enblend: images with pixel type \""
@@ -929,17 +929,17 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         } else {
-            if (strcmp(pixelType,      "UINT8" ) == 0) enblendMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enblendMain<float >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enblendMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enblendMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enblendMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enblendMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enblendMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enblendMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enblendMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "UINT64") enblendMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
+            //else if (pixelType == "INT64")  enblendMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<float >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << "enblend: images with pixel type \""
