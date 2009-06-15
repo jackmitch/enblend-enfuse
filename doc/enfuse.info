@@ -1,7 +1,6 @@
-This is ../../doc/enfuse.info, produced by makeinfo version 4.11 from
-../../doc/enfuse.texi.
+This is enfuse.info, produced by makeinfo version 4.11 from enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 29 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 30 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -20,7 +19,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 29 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 30 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -1004,6 +1003,21 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
+    window size = 3                 window size = 5
+
+     |   |   |   |               |   |   |   |   |   |
+    -+---+---+---+-             -+---+---+---+---+---+-
+     | N | N | N |               | N | N | N | N | N |
+    -+---+---+---+-             -+---+---+---+---+---+-
+     | N | C | N |               | N | N | N | N | N |
+    -+---+---+---+-             -+---+---+---+---+---+-
+     | N | N | N |               | N | N | C | N | N |
+    -+---+---+---+-             -+---+---+---+---+---+-
+     |   |   |   |               | N | N | N | N | N |
+                                -+---+---+---+---+---+-
+                                 | N | N | N | N | N |
+                                -+---+---+---+---+---+-
+                                 |   |   |   |   |   |
 
 Figure 3.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
@@ -2864,8 +2878,8 @@ General Index
                                                               (line   8)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  58)
-* expectation value:                     Standard Deviation.  (line  42)
+* estimators:                            Standard Deviation.  (line  72)
+* expectation value:                     Standard Deviation.  (line  56)
 * expert focus stacking ttops:           Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -2951,7 +2965,7 @@ General Index
 * packbits compression:                  Common Options.      (line  33)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  39)
+* probability function:                  Standard Deviation.  (line  53)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
@@ -2968,14 +2982,14 @@ General Index
 * series, simple:                        Repetition.          (line   6)
 * simple series:                         Repetition.          (line   6)
 * single precision float, IEEE754:       Extended Options.    (line  73)
-* standard deviation:                    Standard Deviation.  (line  48)
-* statistical moments:                   Standard Deviation.  (line  39)
+* standard deviation:                    Standard Deviation.  (line  62)
+* statistical moments:                   Standard Deviation.  (line  53)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * undestanding masks:                    Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  45)
+* variance:                              Standard Deviation.  (line  59)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
 * weight, contrast:                      Fusion Options.      (line  10)
@@ -3005,69 +3019,69 @@ General Index
 
 
 Tag Table:
-Node: Top718
-Node: Overview4282
-Ref: Table:weighting-criteria5470
-Ref: Overview-Footnote-17585
-Ref: Overview-Footnote-27754
-Ref: Overview-Footnote-37935
-Node: Invocation8117
-Node: Common Options8673
-Ref: Common Options-Footnote-111075
-Node: Extended Options11266
-Node: Fusion Options16060
-Node: Expert Options17935
-Ref: Figure:entropy-cutoff20317
-Node: Option Delimiters27313
-Node: Weighting Functions28278
-Node: Weighting Pixels28942
-Node: Weighted Average30444
-Node: Disabling Averaging31035
-Node: Exposure Weighting31984
-Ref: Figure:gaussian33462
-Node: Saturation Weighting36752
-Node: Contrast Weighting37848
-Node: Standard Deviation39177
-Ref: Figure:local-analysis-window39618
-Ref: Standard Deviation-Footnote-141727
-Node: Laplacian of Gaussian41876
-Ref: Figure:laplacian-of-gaussian43449
-Node: Blend SDev and LoG46897
-Node: Scaling and Choice of Mode48528
-Node: Entropy Weighting49370
-Ref: Figure:entropy50335
-Node: Understanding Masks54314
-Node: Tuning Memory Usage58103
-Ref: tab:cache-size-settings60177
-Node: Applications60485
-Node: What Images61207
-Node: Repetition64326
-Node: Exposure Series65383
-Node: Exposure Series Tips67585
-Node: Exposure Series Misconceptions68694
-Ref: Exposure Series Misconceptions-Footnote-170462
-Node: Flash Exposure Series70675
-Node: Polarization Series70917
-Node: Focus Stacks71351
-Node: Why Focus Stacks72233
-Node: Preparing Focus Stacks73560
-Node: Contrast Based Fusing74300
-Node: Basic Focus Stacking75541
-Node: Advanced Focus Stacking76897
-Node: Local Contrast Problem77594
-Ref: Figure:sharp-edge78794
-Ref: Figure:smooth-edge80393
-Node: Laplacian Edge Detection82829
-Node: Local Contrast Enhancement83910
-Node: Suppressing Noise or Recognizing Faint Edges84826
-Node: Expert Stacking87286
-Node: Helpful Programs88785
-Node: Authors92395
-Node: FDL92992
-Node: List of Tables113973
-Node: List of Figures114237
-Node: Program Index114822
-Node: Option Index117745
-Node: General Index120518
+Node: Top698
+Node: Overview4262
+Ref: Table:weighting-criteria5450
+Ref: Overview-Footnote-17565
+Ref: Overview-Footnote-27734
+Ref: Overview-Footnote-37915
+Node: Invocation8097
+Node: Common Options8653
+Ref: Common Options-Footnote-111055
+Node: Extended Options11246
+Node: Fusion Options16040
+Node: Expert Options17915
+Ref: Figure:entropy-cutoff20297
+Node: Option Delimiters27293
+Node: Weighting Functions28258
+Node: Weighting Pixels28922
+Node: Weighted Average30424
+Node: Disabling Averaging31015
+Node: Exposure Weighting31964
+Ref: Figure:gaussian33442
+Node: Saturation Weighting36732
+Node: Contrast Weighting37828
+Node: Standard Deviation39157
+Ref: Figure:local-analysis-window39598
+Ref: Standard Deviation-Footnote-142437
+Node: Laplacian of Gaussian42586
+Ref: Figure:laplacian-of-gaussian44159
+Node: Blend SDev and LoG47607
+Node: Scaling and Choice of Mode49238
+Node: Entropy Weighting50080
+Ref: Figure:entropy51045
+Node: Understanding Masks55024
+Node: Tuning Memory Usage58813
+Ref: tab:cache-size-settings60887
+Node: Applications61195
+Node: What Images61917
+Node: Repetition65036
+Node: Exposure Series66093
+Node: Exposure Series Tips68295
+Node: Exposure Series Misconceptions69404
+Ref: Exposure Series Misconceptions-Footnote-171172
+Node: Flash Exposure Series71385
+Node: Polarization Series71627
+Node: Focus Stacks72061
+Node: Why Focus Stacks72943
+Node: Preparing Focus Stacks74270
+Node: Contrast Based Fusing75010
+Node: Basic Focus Stacking76251
+Node: Advanced Focus Stacking77607
+Node: Local Contrast Problem78304
+Ref: Figure:sharp-edge79504
+Ref: Figure:smooth-edge81103
+Node: Laplacian Edge Detection83539
+Node: Local Contrast Enhancement84620
+Node: Suppressing Noise or Recognizing Faint Edges85536
+Node: Expert Stacking87996
+Node: Helpful Programs89495
+Node: Authors93105
+Node: FDL93702
+Node: List of Tables114683
+Node: List of Figures114947
+Node: Program Index115532
+Node: Option Index118455
+Node: General Index121228
 
 End Tag Table

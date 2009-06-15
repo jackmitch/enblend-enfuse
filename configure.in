@@ -47,6 +47,11 @@ LIBS="${OPENEXR_LIBS} $LIBS"
 CFLAGS="${OPENEXR_CFLAGS} $CFLAGS"
 CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
 
+if test "x$GXX" = xyes; then
+    # Fixes SourceForge bug id 2121647 on some systems with newer GCCs.
+    CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
+fi
+
 
 AX_CHECK_GL
 AX_CHECK_GLU
@@ -69,7 +74,9 @@ AC_HEADER_STDC
 
 # The check for ext/slist fails on OSX, just remove it and declare that
 # it is available anyhow (Its part of the GNU stl implementation)
-#AC_CHECK_HEADER(ext/slist,AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file),AC_MSG_WARN([ext/slist is required to compile enblend]))
+#AC_CHECK_HEADER(ext/slist,
+#                AC_DEFINE(HAVE_EXT_SLIST, 1, Define if you have the <ext/slist> header file),
+#                AC_MSG_WARN([ext/slist is required to compile enblend]))
 AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file)
 
 AC_CHECK_HEADERS([fenv.h limits.h stdlib.h string.h unistd.h])
