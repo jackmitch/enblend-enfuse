@@ -1156,15 +1156,23 @@ int main(int argc, char** argv) {
         const std::string bestPixelType =
             enblend::bestPixelType(outputFileType, neededPixelType);
         if (neededPixelType != bestPixelType) {
-            cerr << command << ": warning: "
+            cerr << command
+                 << ": warning: "
                  << (OutputPixelType.empty() ? "deduced" : "requested")
-                 << " output pixel type is \"" << enblend::toLowercase(neededPixelType) << "\", but\n"
-                 << command << ": warning:   image type \"" << enblend::toLowercase(outputFileType)
-                 << "\" supports \"" << enblend::toLowercase(bestPixelType) << "\" at best;\n"
-                 << command << ": warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
+                 << " output pixel type is \""
+                 << enblend::toLowercase(neededPixelType)
+                 << "\", but image type \""
+                 << enblend::toLowercase(outputFileType)
+                 << "\"\n"
+                 << command << ": warning:   supports \""
+                 << enblend::toLowercase(bestPixelType)
+                 << "\" at best;  will use \""
+                 << enblend::toLowercase(bestPixelType)
+                 << "\""
                  << endl;
         }
         outputImageInfo.setPixelType(bestPixelType.c_str());
+        pixelType = enblend::maxPixelType(pixelType, bestPixelType);
     }
 
     // Set the output image ICC profile

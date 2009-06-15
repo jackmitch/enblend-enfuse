@@ -74,9 +74,9 @@ management system.
 @item
 @pindex Gimp
 @pindex @command{gimp}
-The @uref{www.gimp.org/, Gimp} is a general purpose image manipulation
-program.  At the time of this writing it is still limited to
-images with only 8@dmn{bits} per channel.
+The @uref{http://www.gimp.org/, Gimp} is a general purpose image
+manipulation program.  At the time of this writing it is still limited
+to images with only 8@dmn{bits} per channel.
 
 @item
 @pindex ImageMagick

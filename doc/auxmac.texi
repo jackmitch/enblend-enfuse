@@ -139,6 +139,6 @@ $\\xi$%
 </math>
 @end html
 @tex
-\\hbox{$\significant\ \\times 10^{\exponent\}$}%
+\\ifmmode\significant\ \\times 10^{\exponent\}\\else$\significant\ \\times 10^{\exponent\}$\\fi%
 @end tex
 @end macro

@@ -57,6 +57,9 @@ entitled ``@acronym{GNU} Free Documentation License''.
 @end titlepage
 
 
+@c @ifnothtml
+@c @summarycontents
+@c @end ifnothtml
 @contents
 
 
@@ -96,6 +99,7 @@ see.
 @chapter Overview
 @cindex overview
 
+@cindex Burt-Adelson multiresolution spline
 Enblend overlays multiple @acronym{TIFF} images using the Burt-Adelson
 multiresolution spline algorithm.@footnote{Peter J. Burt and Edward
 H. Adelson, ``A Multiresolution Spline With Application to Image
@@ -121,6 +125,7 @@ contribute to the final image.
 
 @pindex @command{hugin}
 @pindex PanoTools
+@cindex feathering, detrimental effect of
 Enblend does @emph{not} align images.  Use a tool as @command{hugin}
 or PanoTools to do this.  The @acronym{TIFF} files produced by these
 programs are exactly what Enblend is designed to work with.  Sometimes
@@ -143,7 +148,7 @@ Find out more about Enblend on its
 @chapter Invocation
 @cindex invocation
 
-@command{enblend} [@var{OPTIONS}] @code{-o} @var{OUTPUT-FILE}
+@command{enblend} [@var{OPTIONS}] @code{--output=}@var{OUTPUT-FILE}
 @var{INPUT-FILES}@enddots{}
 
 @noindent
@@ -174,6 +179,8 @@ fewer blending iterations, but it will do more work in each iteration.
 
 @item --compression=@var{COMPRESSION}
 @opindex --compression
+@cindex output file compression
+@cindex compression
 Write a compressed output file.
 
 Depending on the output file format Enblend accepts different values
@@ -181,6 +188,8 @@ for @var{COMPRESSION}.
 
 @table @asis
 @item @acronym{JPEG}
+@cindex @acronym{JPEG} compression
+@cindex compression, @acronym{JPEG}
 @var{COMPRESSION} is a @acronym{JPEG} quality level ranging from
 0--100.
 
@@ -224,12 +233,19 @@ Print information on the available options and exit.
 
 @item -l @var{LEVELS}
 @opindex -l
-Use exactly this many @var{LEVELS} for pyramid blending.
+@cindex pyramid levels
+@cindex levels, pyramid
+Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
+Jackson correctly @url{http://stargate.wikia.com@//wiki@//The_Tomb,
+noted} actually, it is not a pyramid.  ``Ziggaurat, it's a
+@url{http://en.wikipedia.org@//wiki@//Ziggaurat, Ziggaurat}.}
+blending.
 
-This trades off quality of results for shorter execution time and
-lower memory usage.  The default is to use as many levels as is
-possible given the size of the overlap regions.  Enblend may still use
-a smaller number of levels if the geometry of the images demands.
+This option allows to trade off quality of results for slightly
+shorter execution time and lower memory usage.  The default is to use
+as many levels as is possible given the size of the overlap regions.
+Enblend may still use a smaller number of levels if the geometry of
+the images demands.
 
 @item -o
 @itemx --output=@var{OUTPUT-FILE}
@@ -256,9 +272,11 @@ details like the extra features that have been compiled in.
 @item -w
 @opindex -w
 Blend around the @plusminus{}180@textdegree{} boundary.  Useful for
-full 360@textdegree{} panoramas.  Version@tie{}@value{VERSION} of
-Enblend, the one described here, does not blend neither zenith nor or
-nadir, so you may still see some seams in these areas.
+full 360@textdegree{} panoramas.
+
+Version@tie{}@value{VERSION} of Enblend, the one described here, does
+not blend neither zenith nor or nadir, so you may still see some seams
+in these areas.
 
 @item -x
 @opindex -x
@@ -291,6 +309,8 @@ This is the amount of data that Enblend will move to and from the disk
 in one go.  The default is 2048@dmn{KB}, which should be ok for most
 systems.
 
+See @ref{Tuning Memory Usage} for details.
+
 @item -c
 @opindex -c
 @cindex color appearance model
@@ -313,8 +333,8 @@ different primary colors are blended together.
 Force the number of bits per channel and the numeric format of the
 output image.
 
-Enblend always uses a sensible way to change the channel depth to
-assure highest image quality (at the expense of memory) whether
+Enblend always uses a smart way to change the channel depth to assure
+highest image quality (at the expense of memory) whether
 requantization is implicit because of the output format or explicit
 with option@tie{}@option{--depth}.
 
@@ -322,7 +342,7 @@ with option@tie{}@option{--depth}.
 @item
 If the output-channel width is larger than the input-channel width of
 the input images, the input images' channels are widened to the output
-channel depth immediately after loading, this is, as soon as possible.
+channel width immediately after loading, this is, as soon as possible.
 Enblend then performs all blending operations at the output-channel
 width, thereby preserving minute color details which can appear in the
 blending areas.
@@ -357,24 +377,6 @@ For floating-point format use
 @c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
 @c
 @table @asis
-@ifset open_exr
-@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-@item @code{r16}, @code{real16}, @code{half}
-@cindex @acronym{OpenEXR} half precision float
-@cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#features,
-@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
-10@tie{}bit significant
-@itemize
-@item
-Minimum normalized value: @semilog{9.3, -10}
-@item
-Epsilon: @semilog{2.0, -3}
-@item
-Maximum finite value: @semilog{4.3, 9}
-@end itemize
-@end ifset
-
 @c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
 @item @code{r32}, @code{real32}, @code{float}
 @cindex @acronym{IEEE754} single precision float
@@ -409,12 +411,36 @@ Maximum finite value: @semilog{1.8, 308}
 If the requested @var{DEPTH} is not supported by the output file
 format, Enblend warns and chooses the @var{DEPTH} that matches best.
 
+@cindex @acronym{OpenEXR}, data format
+The @acronym{OpenEXR} data format is treated as
+@acronym{IEEE754}@tie{}float internally.
+
+@smalldisplay
+Externally, this is on disk, @acronym{OpenEXR} data is represented by
+``half'' precision floating-point numbers.
+
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@cindex @acronym{OpenEXR}, half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#features,
+@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
+10@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+@end smalldisplay
+
 @item -g
 @opindex -g
-@cindex alpha channels, unassociated
+@cindex alpha channel, unassociated
 
-@cindex Gimp
-@cindex Cinepaint
+@pindex Gimp
+@pindex Cinepaint
 Gimp (before version@tie{}2.0) and Cinepaint (@pxref{Helpful
 Programs}) exhibit unusual behavior when loading images with
 unassociated alpha channels.  Use option @option{-g} to work around
@@ -424,11 +450,18 @@ unassociated alpha.
 
 @item --gpu
 @opindex --gpu
-Use the graphics card to accelerate some computations.
+@cindex graphics processing unit
+@cindex @acronym{GPU}
+Use the graphics card -- in fact the graphics processing unit
+(@acronym{GPU}) -- to accelerate some computations.
 
 This is an experimental feature that may not work on all systems.  In
 this version of Enblend, @value{VERSION}, only mask optimization
 strategy@tie{}1 benefits from this option.
+
+Note that @acronym{GPU}-support must have been compiled in the Enblend
+binary for this option being available.  Find out about this feature
+with @code{enblend --version --verbose}.
 
 @item -f @var{WIDTH}x@var{HEIGHT}
 @itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
@@ -453,6 +486,8 @@ cache.
 This is the amount of memory Enblend will use for storing image data
 before swapping to disk.  The default is 1024@dmn{MB} which is good
 for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+
+See @ref{Tuning Memory Usage} for details.
 
 @item --visualize=@var{IMAGE-FILE}
 @opindex --visualize

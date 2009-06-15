@@ -68,6 +68,17 @@ using vigra_ext::WriteFunctorAccessor;
 
 namespace enblend {
 
+template <typename T> struct IntegralSelect {typedef T Result;};
+template <> struct IntegralSelect<float> {typedef vigra::UInt32 Result;};
+template <> struct IntegralSelect<double> {typedef vigra::UInt32 Result;};
+template <> struct IntegralSelect<vigra::RGBValue<float> > {
+    typedef vigra::RGBValue<vigra::UInt32> Result;
+};
+template <> struct IntegralSelect<vigra::RGBValue<double> > {
+    typedef vigra::RGBValue<vigra::UInt32> Result;
+};
+
+
 template <typename ImageType, typename AlphaType, typename Accessor>
 void
 exportImagePreferablyWithAlpha(const ImageType* image,
@@ -99,25 +110,27 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
     typedef typename AlphaType::Accessor AlphaAccessor;
     typedef typename AlphaType::PixelType AlphaPixelType;
 
-    typedef ReadFunctorAccessor<
-        Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
-        ThresholdingAccessor;
-
     ImageType* image = p.first;
     AlphaType* mask = p.second;
 
-    ThresholdingAccessor ata(
-        Threshold<AlphaPixelType, ImagePixelComponentType>(
-            AlphaTraits<AlphaPixelType>::zero(),
-            AlphaTraits<AlphaPixelType>::zero(),
-            AlphaTraits<ImagePixelComponentType>::max(),
-            AlphaTraits<ImagePixelComponentType>::zero()),
-        mask->accessor());
+    ReadFunctorAccessor<Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
+        ata(Threshold<AlphaPixelType, ImagePixelComponentType>
+            (AlphaTraits<AlphaPixelType>::zero(),
+             AlphaTraits<AlphaPixelType>::zero(),
+             AlphaTraits<ImagePixelComponentType>::max(),
+             AlphaTraits<ImagePixelComponentType>::zero()),
+            mask->accessor());
 
     const pair<double, double> outputRange =
         enblend::rangeOfPixelType(outputImageInfo.getPixelType());
-    const ImagePixelComponentType inputMin = NumericTraits<ImagePixelComponentType>::min();
-    const ImagePixelComponentType inputMax = NumericTraits<ImagePixelComponentType>::max();
+    const ImagePixelComponentType inputMin =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        NumericTraits<ImagePixelComponentType>::min() :
+        0.0;
+    const ImagePixelComponentType inputMax =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        NumericTraits<ImagePixelComponentType>::max() :
+        1.0;
 #ifdef DEBUG
     cerr << "+ checkpoint: input range:  ("
          << static_cast<double>(inputMin) << ", "
@@ -144,18 +157,38 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
             ImageType lowDepthImage(image->width(), image->height());
             transformImage(srcImageRange(*image),
                            destImage(lowDepthImage),
-                           linearRangeMapping(
-                               ImagePixelType(inputMin),
-                               ImagePixelType(inputMax),
-                               ImagePixelType(outputRange.first),
-                               ImagePixelType(outputRange.second)));
-
+                           linearRangeMapping(ImagePixelType(inputMin),
+                                              ImagePixelType(inputMax),
+                                              ImagePixelType(outputRange.first),
+                                              ImagePixelType(outputRange.second)));
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
-        cerr << command << ": internal error: requested channel widening, but widening\n"
-             << command << ": internal error:   should have been done before\n";
-        exit(1);
+        cerr << command
+             << ": info: rescaling floating-point data for output as \""
+             << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+
+        typedef typename IntegralSelect<ImagePixelType>::Result IntegralPixelType;
+        typedef typename EnblendNumericTraits<IntegralPixelType>::ImagePixelComponentType
+            IntegralPixelComponentType;
+
+        IMAGETYPE<IntegralPixelType> integralImage(image->width(), image->height());
+
+        ReadFunctorAccessor<Threshold<AlphaPixelType, IntegralPixelComponentType>, AlphaAccessor>
+            ata(Threshold<AlphaPixelType, IntegralPixelComponentType>
+                (AlphaTraits<AlphaPixelType>::zero(),
+                 AlphaTraits<AlphaPixelType>::zero(),
+                 AlphaTraits<IntegralPixelComponentType>::max(),
+                 AlphaTraits<IntegralPixelComponentType>::zero()),
+                mask->accessor());
+
+        transformImage(srcImageRange(*image),
+                       destImage(integralImage),
+                       linearRangeMapping(ImagePixelType(inputMin),
+                                          ImagePixelType(inputMax),
+                                          IntegralPixelType(outputRange.first),
+                                          IntegralPixelType(outputRange.second)));
+        exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
     }
 }
 
@@ -197,14 +230,21 @@ import(const ImageImportInfo& info,
 
     // Performance Optimization: Transform only if ranges do not
     // match.
-    if (inputRange.first != static_cast<double>(NumericTraits<ImagePixelComponentType>::min()) ||
-        inputRange.second != static_cast<double>(NumericTraits<ImagePixelComponentType>::max())) {
+    const double min =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(NumericTraits<ImagePixelComponentType>::min()) :
+        0.0;
+    const double max =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(NumericTraits<ImagePixelComponentType>::max()) :
+        1.0;
+    if (inputRange.first != min || inputRange.second != max) {
         transformImage(srcIterRange(image.first, image.first + extent, image.second),
                        destIter(image.first, image.second),
                        linearRangeMapping(ImagePixelType(inputRange.first),
                                           ImagePixelType(inputRange.second),
-                                          ImagePixelType(NumericTraits<ImagePixelComponentType>::min()),
-                                          ImagePixelType(NumericTraits<ImagePixelComponentType>::max())));
+                                          ImagePixelType(min),
+                                          ImagePixelType(max)));
     }
 }
 

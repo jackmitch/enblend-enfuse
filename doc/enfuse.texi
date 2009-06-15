@@ -300,11 +300,11 @@ Find out more about Enfuse on its
 @chapter Invocation
 @cindex invocation
 
-@command{enfuse} [@var{OPTIONS}] @code{-o} @var{OUTPUT-FILE}
+@command{enfuse} [@var{OPTIONS}] @code{--output=}@var{OUTPUT-FILE}
 @var{INPUT-FILES}@enddots{}
 
 @noindent
-Fuse the sequence of images @var{INPUT-FILES}@dots{} into
+Fuse the sequence of images @tie{}@var{INPUT-FILES}@dots{} into
 @var{OUTPUT-FILE}.
 
 @menu
@@ -334,6 +334,8 @@ for @var{COMPRESSION}.
 
 @table @asis
 @item @acronym{JPEG}
+@cindex @acronym{JPEG} compression
+@cindex compression, @acronym{JPEG}
 @var{COMPRESSION} is a @acronym{JPEG} quality level ranging from
 0--100.
 
@@ -379,9 +381,13 @@ Print information on the available options then exit.
 @opindex -l
 @cindex pyramid levels
 @cindex levels, pyramid
-Use exactly this many @var{LEVELS} for pyramid blending.
+Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
+Jackson correctly @url{http://stargate.wikia.com@//wiki@//The_Tomb,
+noted} actually, it is not a pyramid.  ``Ziggaurat, it's a
+@url{http://en.wikipedia.org@//wiki@//Ziggaurat, Ziggaurat}.}
+blending.
 
-This option allows to trades off quality of results for slightly
+This option allows to trade off quality of results for slightly
 shorter execution time and lower memory usage.  The default is to use
 as many levels as possible given the size of the overlap region.
 Enfuse may still use a smaller number of levels if the geometry of the
@@ -459,11 +465,12 @@ different primary colors are blended together.
 @opindex -d
 @opindex --depth
 @cindex bits per channel
+@cindex channel width
 Force the number of bits per channel and the numeric format of the
 output image.
 
-Enfuse always uses a sensible way to change the channel depth to
-assure highest image quality (at the expense of memory) whether
+Enfuse always uses a smart way to change the channel depth to assure
+highest image quality (at the expense of memory) whether
 requantization is implicit because of the output format or explicit
 with option@tie{}@option{--depth}.
 
@@ -471,7 +478,7 @@ with option@tie{}@option{--depth}.
 @item
 If the output-channel width is larger than the input-channel width of
 the input images, the input images' channels are widened to the output
-channel depth immediately after loading, this is, as soon as possible.
+channel widthth immediately after loading, this is, as soon as possible.
 Enfuse then performs all blending operations at the output-channel
 width, thereby preserving minute color details which can appear in the
 blending areas.
@@ -482,6 +489,7 @@ the input images, the output image's channels are narrowed only right
 before it is written to disk, this is, as late as possible.  Thus the
 data benefits from the wider input channels for the longest time.
 @end itemize
+
 All @var{DEPTH} specifications are valid in lowercase as well as
 uppercase letters.  For integer format use
 
@@ -505,24 +513,6 @@ For floating-point format use
 @c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
 @c
 @table @asis
-@ifset open_exr
-@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-@item @code{r16}, @code{real16}, @code{half}
-@cindex @acronym{OpenEXR} half precision float
-@cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#features,
-@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
-10@tie{}bit significant
-@itemize
-@item
-Minimum normalized value: @semilog{9.3, -10}
-@item
-Epsilon: @semilog{2.0, -3}
-@item
-Maximum finite value: @semilog{4.3, 9}
-@end itemize
-@end ifset
-
 @c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
 @item @code{r32}, @code{real32}, @code{float}
 @cindex @acronym{IEEE754} single precision float
@@ -557,9 +547,33 @@ Maximal finite value: @semilog{1.8, 308}
 If the requested @var{DEPTH} is not supported by the output file
 format, Enfuse warns and chooses the @var{DEPTH} that matches best.
 
+@cindex @acronym{OpenEXR}, data format
+The @acronym{OpenEXR} data format is treated as
+@acronym{IEEE754}@tie{}float internally.
+
+@smalldisplay
+Externally, this is on disk, @acronym{OpenEXR} data is represented by
+``half'' precision floating-point numbers.
+
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@cindex @acronym{OpenEXR}, half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#features,
+@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
+10@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+@end smalldisplay
+
 @item -g
 @opindex -g
-@cindex alpha channels, unassociated
+@cindex alpha channel, unassociated
 Save alpha channel as ``associated''.
 
 @pindex Gimp
@@ -609,6 +623,7 @@ contributes to the output image.
 @table @code
 @item --wContrast=@var{WEIGHT}
 @opindex --wContrast
+@cindex weight, contrast
 Sets the relative @var{WEIGHT} of high-contrast pixels.  Default: 0.0.
 Valid range:
 @ifinfo
@@ -634,6 +649,7 @@ ContrastWindowSize}.
 
 @item --wEntropy=@var{WEIGHT}
 @opindex --wEntropy
+@cindex weight, entropy
 Sets the relative @var{WEIGHT} of high entropy pixels.  Default: 0.0.
 Valid range:
 @ifinfo
@@ -659,8 +675,9 @@ EntropyWindowSize and EntropyCutoff}.
 
 @item --wExposure=@var{WEIGHT}
 @opindex --wExposure
+@cindex weight, exposure
 Sets the relative @var{WEIGHT} of the well-exposedness criterion.
-Increasing this weight relative to the others will make well exposed
+Increasing this weight relative to the others will make well-exposed
 pixels contribute more to the final output.  Default: 1.0.  Valid
 range:
 @ifinfo
@@ -711,6 +728,7 @@ Weighting}).
 
 @item --wSaturation=@var{WEIGHT}
 @opindex --wSaturation
+@cindex weight, saturation
 Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
 final output.  Default: 0.2.  Valid range:

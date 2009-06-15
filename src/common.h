@@ -144,14 +144,16 @@ outputPixelTypeOfString(const char* anOutputDepth)
 std::string
 bestPixelType(const std::string& aFileType, const std::string& aPixelType)
 {
-    if (aFileType == "BMP" ||
-        aFileType == "JPEG" ||
-        aFileType == "RAS") return "UINT8";
+    if (aFileType == "BMP" || aFileType == "JPEG" || aFileType == "RAS")
+        return "UINT8";
     else if (aFileType == "PNG" &&
-             (aPixelType == "UINT32" ||
-              aPixelType == "FLOAT" ||
-              aPixelType == "DOUBLE")) return "UINT16";
-    else return aPixelType;
+             (aPixelType == "INT32" || aPixelType == "UINT32" ||
+              aPixelType == "FLOAT" || aPixelType == "DOUBLE"))
+        return "UINT16";
+    else if (aFileType == "EXR")
+        return "FLOAT";
+    else
+        return aPixelType;
 }
 
 
@@ -177,8 +179,8 @@ rangeOfPixelType(const std::string& aPixelType)
         ("UINT16", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt16>::max()))
         ("UINT32", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt32>::max()))
 
-        ("FLOAT", std::make_pair(0.0, 1.0 + vigra::NumericTraits<vigra::UInt32>::max()))
-        ("DOUBLE", std::make_pair(0.0, 2.0 + vigra::NumericTraits<vigra::UInt32>::max()));
+        ("FLOAT", std::make_pair(0.0, 1.0))
+        ("DOUBLE", std::make_pair(0.0, 1.0));
 
     assert(!aPixelType.empty());
     Str2PairMapType::const_iterator r = rangeMap.find(aPixelType);
@@ -215,7 +217,11 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
     const range_t range1 = rangeOfPixelType(aPixelType);
     const range_t range2 = rangeOfPixelType(anotherPixelType);
 
-    if (range1.first <= range2.first && range1.second >= range2.second) {
+    if (aPixelType == "DOUBLE" || anotherPixelType == "DOUBLE") {
+        return "DOUBLE";
+    } else if (aPixelType == "FLOAT" || anotherPixelType == "FLOAT") {
+        return "FLOAT";
+    } else if (range1.first <= range2.first && range1.second >= range2.second) {
         return aPixelType;      // first includes second
     } else if (range2.first <= range1.first && range2.second >= range1.second) {
         return anotherPixelType; // second includes first
@@ -226,10 +232,7 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
         typedef std::vector<std::string> string_array;
         typedef string_array::const_iterator string_array_ci;
 
-        if (aPixelType == "FLOAT" || anotherPixelType == "FLOAT" ||
-            aPixelType == "DOUBLE" || anotherPixelType == "DOUBLE") {
-            return "DOUBLE";
-        } else if (range1.first < 0 || range2.first < 0) {
+        if (range1.first < 0 || range2.first < 0) {
             const string_array types = list_of("INT8")("INT16")("INT32");
             for (string_array_ci i = types.begin(); i != types.end(); ++i) {
                 if (includesBothRanges(*i, range1, range2)) {
