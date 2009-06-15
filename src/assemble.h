@@ -137,7 +137,8 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
 #endif
             exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
         } else {
-            cerr << "info: narrowing channel width for output as \""
+            cerr << command
+                 << ": info: narrowing channel width for output as \""
                  << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
 
             ImageType lowDepthImage(image->width(), image->height());
@@ -152,8 +153,8 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
-        cerr << "internal error: requested channel widening, but widening\n"
-             << "internal error:   should have been done before\n";
+        cerr << command << ": internal error: requested channel widening, but widening\n"
+             << command << ": internal error:   should have been done before\n";
         exit(1);
     }
 }
@@ -233,13 +234,15 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
 
     if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
         if (OneAtATime) {
-            cout << "Loading next image: "
+            cerr << command
+                 << ": info: loading next image: "
                  << imageInfoList.front()->getFileName()
                  << endl;
         } else {
-            cout << "Combining non-overlapping images: "
+            cerr << command
+                 << ": info: combining non-overlapping images: "
                  << imageInfoList.front()->getFileName();
-            cout.flush();
+            cerr.flush();
         }
     }
 
@@ -289,8 +292,8 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
                 // Copy src and srcA into image and imageA.
 
                 if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
-                    cout << " " << info->getFileName();
-                    cout.flush();
+                    cerr << " " << info->getFileName();
+                    cerr.flush();
                 }
 
                 const Diff2D srcPos = info->getPosition();
@@ -318,7 +321,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     }
 
     if (Verbose > VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) {
-        cout << endl;
+        cerr << endl;
     }
 
     // Calculate bounding box of image.
@@ -328,7 +331,10 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     bb = unionRect();
 
     if (Verbose > VERBOSE_ABB_MESSAGES) {
-        cout << "assembled images bounding box: " << unionRect() << endl;
+        cerr << command
+             << ": info: assembled images bounding box: "
+             << unionRect()
+             << endl;
     }
 
     return pair<ImageType*, AlphaType*>(image, imageA);

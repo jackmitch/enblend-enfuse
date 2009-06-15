@@ -95,6 +95,7 @@ struct AlternativePercentage {
 };
 
 // Globals
+const std::string command("enfuse");
 
 // Random number generator for dithering
 boost::mt19937 Twister;
@@ -437,7 +438,7 @@ int process_options(int argc, char** argv) {
                 justPrintVersion = true;
                 break;
             default:
-                cerr << "enfuse: internal error: unhandled \"NoArgument\" option"
+                cerr << command << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -457,14 +458,14 @@ int process_options(int argc, char** argv) {
                     } else if (strcmp(tail, "%") == 0) {
                         MinCurvature.isPercentage = true;
                     } else {
-                        cerr << "enfuse: unrecognized minimum gradient \""
+                        cerr << command << ": unrecognized minimum gradient \""
                              << optarg << "\" specification." << endl;
                         exit(1);
                     }
                 } else {
                     char* errmsg = new char[ERROR_MESSAGE_SIZE];
                     strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                    cerr << "enfuse: illegal numeric format \""
+                    cerr << command << ": illegal numeric format \""
                          << optarg << "\" for minimum gradient: "
                          << errmsg << endl;
                     delete [] errmsg;
@@ -481,7 +482,7 @@ int process_options(int argc, char** argv) {
                 char* tail;
 
                 if (token == NULL || *token == 0) {
-                    cerr << "enfuse: no scale given to --EdgeScale.  "
+                    cerr << command << ": no scale given to --EdgeScale.  "
                          << "EdgeScale is required." << endl;
                     exit(1);
                 }
@@ -489,7 +490,7 @@ int process_options(int argc, char** argv) {
                 FilterConfig.edgeScale = strtod(token, &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
-                        cerr << "enfuse: could not decode \"" << tail
+                        cerr << command << ": could not decode \"" << tail
                              << "\" in edge scale specification \""
                              << token << "\" for EdgeScale." << endl;
                         exit(1);
@@ -497,7 +498,7 @@ int process_options(int argc, char** argv) {
                 } else {
                     char* errmsg = new char[ERROR_MESSAGE_SIZE];
                     strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                    cerr << "enfuse: illegal numeric format \""
+                    cerr << command << ": illegal numeric format \""
                          << token << "\" for EdgeScale: "
                          << errmsg << endl;
                     delete [] errmsg;
@@ -512,7 +513,7 @@ int process_options(int argc, char** argv) {
                         if (strcmp(tail, "%") == 0) {
                             FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
                         } else if (*tail != 0) {
-                            cerr << "enfuse: could not decode \"" << tail
+                            cerr << command << ": could not decode \"" << tail
                                  << "\" in specification \"" << token
                                  << "\" for LCE-scale." << endl;
                             exit(1);
@@ -520,7 +521,7 @@ int process_options(int argc, char** argv) {
                     } else {
                         char* errmsg = new char[ERROR_MESSAGE_SIZE];
                         strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                        cerr << "enfuse: illegal numeric format \""
+                        cerr << command << ": illegal numeric format \""
                              << token << "\" for LCE-Scale: "
                              << errmsg << endl;
                         delete [] errmsg;
@@ -536,7 +537,7 @@ int process_options(int argc, char** argv) {
                         if (strcmp(tail, "%") == 0) {
                             FilterConfig.lceFactor /= 100.0;
                         } else if (*tail != 0) {
-                            cerr << "enfuse: could not decode \"" << tail
+                            cerr << command << ": could not decode \"" << tail
                                  << "\" in specification \"" << token
                                  << "\" for LCE-factor." << endl;
                             exit(1);
@@ -544,7 +545,7 @@ int process_options(int argc, char** argv) {
                     } else {
                         char* errmsg = new char[ERROR_MESSAGE_SIZE];
                         strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                        cerr << "enfuse: illegal numeric format \""
+                        cerr << command << ": illegal numeric format \""
                              << token << "\" for LCE-factor: "
                              << errmsg << endl;
                         delete [] errmsg;
@@ -553,7 +554,7 @@ int process_options(int argc, char** argv) {
                 }
 
                 if (save_ptr != NULL && *save_ptr != 0) {
-                    cerr << "enfuse: warning: ignoring trailing garbage \""
+                    cerr << command << ": warning: ignoring trailing garbage \""
                          << save_ptr << "\" in argument to --EdgeScale" << endl;
                 }
 
@@ -569,7 +570,7 @@ int process_options(int argc, char** argv) {
                 char* tail;
 
                 if (token == NULL || *token == 0) {
-                    cerr << "enfuse: no scale given to --EntropyCutoff.  "
+                    cerr << command << ": no scale given to --EntropyCutoff.  "
                          << "LowerCutOff is required." << endl;
                     exit(1);
                 }
@@ -581,14 +582,14 @@ int process_options(int argc, char** argv) {
                     } else if (strcmp(tail, "%") == 0) {
                         EntropyLowerCutoff.isPercentage = true;
                     } else {
-                        cerr << "enfuse: unrecognized entropy's lower cutoff \""
+                        cerr << command << ": unrecognized entropy's lower cutoff \""
                              << tail << "\" in \"" << token << "\"" << endl;
                         exit(1);
                     }
                 } else {
                     char* errmsg = new char[ERROR_MESSAGE_SIZE];
                     strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                    cerr << "enfuse: illegal numeric format \""
+                    cerr << command << ": illegal numeric format \""
                          << token << "\" of entropy's lower cutoff: "
                          << errmsg << endl;
                     delete [] errmsg;
@@ -605,14 +606,14 @@ int process_options(int argc, char** argv) {
                         } else if (strcmp(tail, "%") == 0) {
                             EntropyUpperCutoff.isPercentage = true;
                         } else {
-                            cerr << "enfuse: unrecognized entropy's upper cutoff \""
+                            cerr << command << ": unrecognized entropy's upper cutoff \""
                                  << tail << "\" in \"" << token << "\"" << endl;
                             exit(1);
                         }
                     } else {
                         char* errmsg = new char[ERROR_MESSAGE_SIZE];
                         strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
-                        cerr << "enfuse: illegal numeric format \""
+                        cerr << command << ": illegal numeric format \""
                              << token << "\" of entropy's upper cutoff: "
                              << errmsg << endl;
                         delete [] errmsg;
@@ -621,7 +622,7 @@ int process_options(int argc, char** argv) {
                 }
 
                 if (save_ptr != NULL && *save_ptr != 0) {
-                    cerr << "enfuse: warning: ignoring trailing garbage \""
+                    cerr << command << ": warning: ignoring trailing garbage \""
                          << save_ptr << "\" in argument to --EntropyCutoff" << endl;
                 }
 
@@ -645,13 +646,13 @@ int process_options(int argc, char** argv) {
                 if (OutputFileName.empty()) {
                     OutputFileName = optarg;
                 } else {
-                    cerr << "enfuse: more than one output file specified." << endl;
+                    cerr << command << ": more than one output file specified." << endl;
                     exit(1);
                 }
                 break;
 
             default:
-                cerr << "enfuse: internal error: unhandled \"StringArgument\" option"
+                cerr << command << ": internal error: unhandled \"StringArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -682,7 +683,7 @@ int process_options(int argc, char** argv) {
                 optionDouble = &WEntropy;
                 break;
             default:
-                cerr << "enfuse: internal error: unhandled \"FloatArgument\" option"
+                cerr << command << ": internal error: unhandled \"FloatArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -692,7 +693,7 @@ int process_options(int argc, char** argv) {
             if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
                 (option_index == WeightExposureId || option_index == WeightContrastId ||
                  option_index == WeightSaturationId || option_index == WeightEntropyId)) {
-                cerr << "enfuse: " << long_options[option_index].name
+                cerr << command << ": " << long_options[option_index].name
                      << " must be in the range [0.0, 1.0]." << endl;
                 exit(1);
             }
@@ -707,13 +708,13 @@ int process_options(int argc, char** argv) {
             case ContrastWindowSizeId:
                 ContrastWindowSize = atoi(optarg);
                 if (ContrastWindowSize < 3) {
-                    cerr << "enfuse: warning: contrast window size \""
+                    cerr << command << ": warning: contrast window size \""
                          << ContrastWindowSize << "\" is too small; will use size = 3"
                          << endl;
                     ContrastWindowSize = 3;
                 }
                 if (ContrastWindowSize % 2 != 1) {
-                    cerr << "enfuse: warning: contrast window size \""
+                    cerr << command << ": warning: contrast window size \""
                          << ContrastWindowSize << "\" is even; increasing size to next odd number"
                          << endl;
                     ContrastWindowSize++;
@@ -723,13 +724,13 @@ int process_options(int argc, char** argv) {
             case EntropyWindowSizeId:
                 EntropyWindowSize = atoi(optarg);
                 if (EntropyWindowSize < 3) {
-                    cerr << "enfuse: warning: entropy window size \""
+                    cerr << command << ": warning: entropy window size \""
                          << EntropyWindowSize << "\" is too small; will use size = 3"
                          << endl;
                     EntropyWindowSize = 3;
                 }
                 if (EntropyWindowSize % 2 != 1) {
-                    cerr << "enfuse: warning: entropy window size \""
+                    cerr << command << ": warning: entropy window size \""
                          << EntropyWindowSize << "\" is even; increasing size to next odd number"
                          << endl;
                     EntropyWindowSize++;
@@ -737,7 +738,7 @@ int process_options(int argc, char** argv) {
                 break;
 
             default:
-                cerr << "enfuse: internal error: unhandled \"IntegerArgument\" option"
+                cerr << command << ": internal error: unhandled \"IntegerArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -750,7 +751,9 @@ int process_options(int argc, char** argv) {
         case 'b': {
             int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
-                cerr << "enfuse: cache block size must be 1 KB or more; will use 1 KB" << endl;
+                cerr << command
+                     << ": warning: cache block size must be 1 KB or more; will use 1 KB"
+                     << endl;
                 kilobytes = 1;
             }
             CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
@@ -774,7 +777,7 @@ int process_options(int argc, char** argv) {
                 OutputOffsetXCmdLine = 0;
                 OutputOffsetYCmdLine = 0;
             } else {
-                cerr << "enfuse: option \"-f\" requires a parameter\n"
+                cerr << command << ": option \"-f\" requires a parameter\n"
                      << "Try \"enfuse --help\" for more information." << endl;
                 exit(1);
             }
@@ -789,7 +792,7 @@ int process_options(int argc, char** argv) {
         case 'l': {
             int levels = atoi(optarg);
             if (levels < 1) {
-                cerr << "enfuse: warning: too few levels; will use 1" << endl;
+                cerr << command << ": warning: too few levels; will use one level" << endl;
                 levels = 1;
             }
             // We take care of the "too many levels" case in "bounds.h".
@@ -799,7 +802,7 @@ int process_options(int argc, char** argv) {
         case 'm': {
             int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << "enblend: warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                cerr << command << ": warning: memory limit less than 1 MB; will use 1 MB" << endl;
                 megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
@@ -809,7 +812,7 @@ int process_options(int argc, char** argv) {
             if (OutputFileName.empty()) {
                 OutputFileName = optarg;
             } else {
-                cerr << "enfuse: more than one output file specified." << endl;
+                cerr << command << ": more than one output file specified." << endl;
                 exit(1);
             }
             break;
@@ -820,15 +823,15 @@ int process_options(int argc, char** argv) {
             Wraparound = true;
             break;
         case 'z':
-            cerr << "enfuse: info: flag \"-z\" is deprecated;\n"
-                 << "enfuse: info: use \"--compression=LZW\" instead"
+            cerr << command << ": info: flag \"-z\" is deprecated;\n"
+                 << command << ": info: use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
             break;
         case '?':
             switch (optopt) {
                 case 0: // unknown long option
-                    cerr << "enfuse: unknown option \"" << argv[optind - 1] << "\"\n";
+                    cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
                     break;
                 case 'b':           // FALLTHROUGH
                 case 'd':           // FALLTHROUGH
@@ -836,10 +839,10 @@ int process_options(int argc, char** argv) {
                 case 'l':           // FALLTHROUGH
                 case 'm':           // FALLTHROUGH
                 case 'o':
-                    cerr << "enfuse: option \"-" << optopt << "\" requires an argument" << endl;
+                    cerr << command << ": option \"-" << optopt << "\" requires an argument" << endl;
                     break;
                 default:
-                    cerr << "enfuse: unknown option ";
+                    cerr << command << ": unknown option ";
                     if (isprint(optopt)) {
                         cerr << "\"-" << static_cast<char>(optopt) << "\"";
                     } else {
@@ -851,7 +854,7 @@ int process_options(int argc, char** argv) {
             exit(1);
 
         default:
-            cerr << "enfuse: internal error: unhandled command line option" << endl;
+            cerr << command << ": internal error: unhandled command line option" << endl;
             exit(1);
         }
     }
@@ -904,15 +907,15 @@ int main(int argc, char** argv) {
     int optind;
     try {optind = process_options(argc, argv);}
     catch (StdException& e) {
-        cerr << "enfuse: error while processing command line options\n"
-             << "enfuse:     " << e.what()
+        cerr << command << ": error while processing command line options\n"
+             << command << ":     " << e.what()
              << endl;
         exit(1);
     }
 
     // Make sure mandatory output file name parameter given.
     if (OutputFileName.empty()) {
-        cerr << "enfuse: no output file specified." << endl;
+        cerr << command << ": no output file specified." << endl;
         exit(1);
     }
 
@@ -954,17 +957,19 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << "enfuse: no input files specified.\n";
+        cerr << command << ": no input files specified.\n";
         exit(1);
     }
 
     // Check that more than one input file was given.
     if (inputFileNameList.size() <= 1) {
-        cerr <<
-            "enfuse: only one input file given. " <<
-            "Enfuse needs two or more overlapping input images in order " <<
-            "to do blending calculations. The output will be the same as " <<
-            "the input.\n";
+        cerr << command
+             << ": warning: only one input file given.\n"
+             << command
+             << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
+             << command
+             << ": warning: blending calculations.  The output will be the same as the input."
+             << endl;
     }
 
     // List of info structures for each input image.
@@ -984,7 +989,7 @@ int main(int argc, char** argv) {
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
         } catch (StdException& e) {
-            cerr << endl << "enfuse: error opening input file \""
+            cerr << endl << command << ": error opening input file \""
                  << *inputFileNameIterator << "\":"
                  << endl << e.what()
                  << endl;
@@ -995,16 +1000,21 @@ int main(int argc, char** argv) {
         imageInfoList.push_back(inputInfo);
 
         if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
-            cout << "Input image \""
+            cerr << command
+                 << ": info: input image \""
                  << *inputFileNameIterator
                  << "\" ";
 
-            if (inputInfo->isColor()) cout << "RGB ";
+            if (inputInfo->isColor()) {
+                cerr << "RGB ";
+            }
 
-            if (!inputInfo->getICCProfile().empty()) cout << "ICC ";
+            if (!inputInfo->getICCProfile().empty()) {
+                cerr << "ICC ";
+            }
 
-            cout << inputInfo->getPixelType() << " "
-                 << "position="
+            cerr << inputInfo->getPixelType()
+                 << " position="
                  << inputInfo->getPosition().x
                  << "x"
                  << inputInfo->getPosition().y
@@ -1018,10 +1028,13 @@ int main(int argc, char** argv) {
 
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
-            cout << "enfuse: Input image \""
-                 << *inputFileNameIterator << "\" does not have an alpha "
-                 << "channel. Assuming all pixels should "
-                 << "contribute to the final image."
+            cerr << command
+                 << ": warning: input image \""
+                 << *inputFileNameIterator
+                 << "\" does not have an alpha channel;\n"
+                 << command
+                 << ": warning: assuming all pixels should "
+                 << "contribute to the final image"
                  << endl;
         }
 
@@ -1038,7 +1051,8 @@ int main(int argc, char** argv) {
             if (!iccProfile.empty()) {
                 InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
                 if (InputProfile == NULL) {
-                    cerr << endl << "enfuse: error parsing ICC profile data from file\""
+                    cerr << endl
+                         << command << ": error parsing ICC profile data from file \""
                          << *inputFileNameIterator
                          << "\"" << endl;
                     exit(1);
@@ -1050,21 +1064,21 @@ int main(int argc, char** argv) {
             inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
-                cerr << "enfuse: Input image \""
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" is "
                      << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                     << "enfuse:   but previous images are "
+                     << command << ":   but previous images are "
                      << (isColor ? "color" : "grayscale")
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
             if (pixelType != inputInfo->getPixelType()) {
-                cerr << "enfuse: Input image \""
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" has pixel type "
                      << inputInfo->getPixelType() << ",\n"
-                     << "enfuse:   but previous images have pixel type "
+                     << command << ":   but previous images have pixel type "
                      << pixelType
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
             if (!std::equal(iccProfile.begin(),
@@ -1076,14 +1090,15 @@ int main(int argc, char** argv) {
                     newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
                                                        mismatchProfile.size());
                     if (newProfile == NULL) {
-                        cerr << endl << "enfuse: error parsing ICC profile data from file\""
+                        cerr << endl
+                             << command << ": error parsing ICC profile data from file \""
                              << *inputFileNameIterator
                              << "\"" << endl;
                         exit(1);
                     }
                 }
 
-                cerr << endl << "enfuse: Input image \""
+                cerr << endl << command << ": input image \""
                      << *inputFileNameIterator
                      << "\" has ";
                 if (newProfile) {
@@ -1101,13 +1116,15 @@ int main(int argc, char** argv) {
                          << cmsTakeProductName(InputProfile)
                          << " "
                          << cmsTakeProductDesc(InputProfile)
-                         << "\"." << endl;
+                         << "\"" << endl;
                 } else {
-                    cerr << " no ICC profile." << endl;
+                    cerr << " no ICC profile" << endl;
                 }
-                cerr << "enfuse: Blending images with different color spaces "
-                     << "may have unexpected results." << endl;
-
+                cerr << command
+                     << ": warning: blending images with different color spaces\n"
+                     << command
+                     << ": warning:     may have unexpected results"
+                     << endl;
             }
         }
 
@@ -1139,12 +1156,12 @@ int main(int argc, char** argv) {
         const std::string bestPixelType =
             enblend::bestPixelType(outputFileType, neededPixelType);
         if (neededPixelType != bestPixelType) {
-            cerr << "enfuse: warning: "
+            cerr << command << ": warning: "
                  << (OutputPixelType.empty() ? "deduced" : "requested")
                  << " output pixel type is \"" << enblend::toLowercase(neededPixelType) << "\", but\n"
-                 << "enfuse: warning:   image type \"" << enblend::toLowercase(outputFileType)
+                 << command << ": warning:   image type \"" << enblend::toLowercase(outputFileType)
                  << "\" supports \"" << enblend::toLowercase(bestPixelType) << "\" at best;\n"
-                 << "enfuse: warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
+                 << command << ": warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
                  << endl;
         }
         outputImageInfo.setPixelType(bestPixelType.c_str());
@@ -1155,7 +1172,9 @@ int main(int argc, char** argv) {
 
     if (UseCIECAM) {
         if (InputProfile == NULL) {
-            cerr << "enfuse: Input images do not have ICC profiles. Assuming sRGB." << endl;
+            cerr << command
+                 << ": warning: input images do not have ICC profiles; assuming sRGB."
+                 << endl;
             InputProfile = cmsCreate_sRGBProfile();
         }
         XYZProfile = cmsCreateXYZProfile();
@@ -1164,11 +1183,11 @@ int main(int argc, char** argv) {
                                                  XYZProfile, TYPE_XYZ_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (InputToXYZTransform == NULL) {
-            cerr << "enfuse: Error building color transform from \""
+            cerr << command << ": error building color transform from \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\" to XYZ." << endl;
+                 << "\" to XYZ" << endl;
             exit(1);
         }
 
@@ -1176,11 +1195,12 @@ int main(int argc, char** argv) {
                                                  InputProfile, TYPE_RGB_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (XYZToInputTransform == NULL) {
-            cerr << "enfuse: Error building color transform from XYZ to \""
+            cerr << command
+                 << ": error building color transform from XYZ to \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\"." << endl;
+                 << "\"" << endl;
             exit(1);
         }
 
@@ -1195,14 +1215,20 @@ int main(int argc, char** argv) {
 
         CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
         if (!CIECAMTransform) {
-            cerr << endl << "enfuse: Error initializing CIECAM02 transform." << endl;
+            cerr << endl
+                 << command
+                 << ": error initializing CIECAM02 transform"
+                 << endl;
             exit(1);
         }
     }
 
     // The size of the output image.
     if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        cout << "Output image size: " << inputUnion << endl;
+        cerr << command
+             << ": info: output image size: "
+             << inputUnion
+             << endl;
     }
 
     // Set the output image position and resolution.
@@ -1217,10 +1243,14 @@ int main(int argc, char** argv) {
         // is done.
         encoder(outputImageInfo);
     } catch (StdException & e) {
-        cerr << endl << "enfuse: error opening output file \""
+        cerr << endl
+             << command
+             << ": error opening output file \""
              << OutputFileName
-             << "\":"
-             << endl << e.what()
+             << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
@@ -1243,16 +1273,19 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enfuse: RGB images with pixel type \""
+                cerr << command << ": RGB images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
         } else {
             if (!WSaturationIsDefault && (WSaturation != 0.0)) {
-                cout << "enfuse: warning: WSaturation is not applicable to grayscale images.\n"
-                     << "enfuse: warning:   This parameter will have no effect." << endl;
+                cerr << command
+                     << ": warning: --WSaturation is not applicable to grayscale images;\n"
+                     << command
+                     << ": warning:   this parameter will have no effect"
+                     << endl;
                 WSaturation = 0.0;
             }
             if      (pixelType == "UINT8")  enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
@@ -1266,9 +1299,10 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enfuse: black&white images with pixel type \""
+                cerr << command
+                     << ": black&white images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
@@ -1281,13 +1315,15 @@ int main(int argc, char** argv) {
             delete *imageInfoIterator++;
         }
     } catch (std::bad_alloc& e) {
-        cerr << endl << "enfuse: out of memory"
-             << endl << e.what()
+        cerr << endl
+             << command << ": out of memory\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     } catch (StdException& e) {
-        cerr << endl << "enfuse: an exception occured"
-             << endl << e.what()
+        cerr << endl
+             << command << ": an exception occured\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     }

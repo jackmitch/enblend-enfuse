@@ -274,36 +274,39 @@ public:
     }
 
     // Print general stats about allocated blocks and cache misses.
-    void printStats() {
-        cout << "Summary: cache misses="
-             << cacheMisses
-             << "  blocks managed="
-             << managedBlocks
-             << "  allocated="
-             << (managedBlocks - blocksAvailable)
-             << "  free="
-             << blocksAvailable
-             << endl;
+    void printStats(std::ostream& out, const std::string& label) {
+        out << label
+            << "summary: cache misses="
+            << cacheMisses
+            << "  blocks managed="
+            << managedBlocks
+            << "  allocated="
+            << (managedBlocks - blocksAvailable)
+            << "  free="
+            << blocksAvailable
+            << endl;
     }
 
     // Print stats about a particular image.
-    void printStats(const char * imageName, const CachedFileImageBase * image) {
-        cout << imageName << " " << image << ":"
-             << " cache misses=" << imageToMissMap[image]
-             << "  blocks allocated=" << image->numBlocksAllocated()
-             << "  blocks required=" << image->numBlocksNeeded()
-             << endl;
+    void printStats(std::ostream& out,
+                    const std::string& imageName, const CachedFileImageBase* image) {
+        out << imageName << " " << image << ":"
+            << " cache misses=" << imageToMissMap[image]
+            << "  blocks allocated=" << image->numBlocksAllocated()
+            << "  blocks required=" << image->numBlocksNeeded()
+            << endl;
     }
 
     // Print stats about a particular image.
     // Add an integer suffix to the image's name.
-    void printStats(const char * imageName, const int imageNumber,
-            const CachedFileImageBase * image) {
-        cout << imageName << imageNumber << " " << image << ":"
-             << " cache misses=" << imageToMissMap[image]
-             << "  blocks allocated=" << image->numBlocksAllocated()
-             << "  blocks required=" << image->numBlocksNeeded()
-             << endl;
+    void printStats(std::ostream& out,
+                    const std::string& imageName, const int imageNumber,
+                    const CachedFileImageBase* image) {
+        out << imageName << imageNumber << " " << image << ":"
+            << " cache misses=" << imageToMissMap[image]
+            << "  blocks allocated=" << image->numBlocksAllocated()
+            << "  blocks required=" << image->numBlocksNeeded()
+            << endl;
     }
 
     // Print stats on all images.

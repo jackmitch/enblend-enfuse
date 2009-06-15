@@ -238,7 +238,7 @@ namespace vigra
                                 "did not find a matching file type." );
 
 #ifdef DEBUG
-            std::cerr << "detected " << fileType
+            std::cerr << "+ detected " << fileType
                       << " file format by magicstring of " << filename
                       << std::endl;
 #endif

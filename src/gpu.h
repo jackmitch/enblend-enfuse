@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,15 +37,20 @@
 
 #define CHECK_GL() checkGLErrors(__LINE__, __FILE__)
 
-void checkGLErrors(int line, char *file);
+void checkGLErrors(int line, char* file);
 void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
 
-bool initGPU(int *,char **);
+bool initGPU(int*, char**);
 bool configureGPUTextures(unsigned int k, unsigned int vars);
-bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData);
+bool gpuGDAKernel(unsigned int k, unsigned int vars, double t,
+                  float* packedEData, float* packedPiData, float* packedOutData);
 bool clearGPUTextures();
 bool wrapupGPU(void);
 #endif
 
 #endif /* __GPU_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

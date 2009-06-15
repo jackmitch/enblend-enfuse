@@ -78,6 +78,7 @@ extern "C" int optind;
 #include <lcms.h>
 
 // Globals
+const std::string command("enblend");
 
 // Random number generator for dithering
 boost::mt19937 Twister;
@@ -246,7 +247,7 @@ void printUsageAndExit(const bool error = true) {
  *  if we are killed.
  */
 void sigint_handler(int sig) {
-    cout << endl << "Interrupted." << endl;
+    cerr << endl << "Interrupted." << endl;
     // FIXME what if this occurs in a CFI atomic section?
     // This is no longer necessary, temp files are unlinked during creation.
     //CachedFileImageDirector::v().~CachedFileImageDirector();
@@ -360,7 +361,7 @@ int process_options(int argc, char** argv) {
                 justPrintVersion = true;
                 break;
             default:
-                cerr << "enblend: internal error: unhandled \"NoArgument\" option"
+                cerr << command << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -389,12 +390,12 @@ int process_options(int argc, char** argv) {
                 if (OutputFileName.empty()) {
                     OutputFileName = optarg;
                 } else {
-                    cerr << "enblend: more than one output file specified." << endl;
+                    cerr << command << ": more than one output file specified." << endl;
                     exit(1);
                 }
                 break;
             default:
-                cerr << "enblend: internal error: unhandled \"StringArgument\" option"
+                cerr << command << ": internal error: unhandled \"StringArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -419,14 +420,14 @@ int process_options(int argc, char** argv) {
                 optionUInt = &MaskVectorizeDistance;
                 break;
             default:
-                cerr << "enblend: internal error: unhandled \"IntegerArgument\" option"
+                cerr << command << ": internal error: unhandled \"IntegerArgument\" option"
                      << endl;
                 exit(1);
             }
 
             int value = atoi(optarg);
             if (value < 1) {
-                cerr << "enblend: warning: " << long_options[option_index].name
+                cerr << command << ": warning: " << long_options[option_index].name
                      << " must be 1 or more; will use 1" << endl;
                 value = 1;
             }
@@ -443,7 +444,9 @@ int process_options(int argc, char** argv) {
         case 'b': {
             int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
-                cerr << "enblend: cache block size must be 1 KB or more; will use 1 KB" << endl;
+                cerr << command
+                     << ": warning: cache block size must be 1 KB or more; will use 1 KB"
+                     << endl;
                 kilobytes = 1;
             }
             CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes << 10));
@@ -466,7 +469,7 @@ int process_options(int argc, char** argv) {
                 OutputOffsetXCmdLine=0;
                 OutputOffsetYCmdLine=0;
             } else {
-                cerr << "enblend: option \"-f\" requires a parameter\n"
+                cerr << command << ": option \"-f\" requires a parameter\n"
                      << "Try \"enblend --help\" for more information." << endl;
                 exit(1);
             }
@@ -481,7 +484,7 @@ int process_options(int argc, char** argv) {
         case 'l': {
             int levels = atoi(optarg);
             if (levels < 1) {
-                cerr << "enblend: warning: too few levels; will use one level" << endl;
+                cerr << command << ": warning: too few levels; will use one level" << endl;
                 levels = 1;
             }
             // We take care of the "too many levels" case in "bounds.h".
@@ -491,7 +494,7 @@ int process_options(int argc, char** argv) {
         case 'm': {
             int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << "enblend: warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                cerr << command << ": warning: memory limit less than 1 MB; will use 1 MB" << endl;
                 megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
@@ -501,14 +504,14 @@ int process_options(int argc, char** argv) {
             if (OutputFileName.empty()) {
                 OutputFileName = optarg;
             } else {
-                cerr << "enblend: more than one output file specified." << endl;
+                cerr << command << ": more than one output file specified." << endl;
                 exit(1);
             }
             break;
         case 's':
             // Deprecated sequential blending flag.
             OneAtATime = true;
-            cerr << "enblend: warning: flag \"-s\" is deprecated." << endl;
+            cerr << command << ": warning: flag \"-s\" is deprecated." << endl;
             break;
         case 'v':
             Verbose++;
@@ -520,25 +523,25 @@ int process_options(int argc, char** argv) {
             Checkpoint = true;
             break;
         case 'z':
-            cerr << "enblend: info: flag \"-z\" is deprecated;\n"
-                 << "enblend: info: use \"--compression=LZW\" instead"
+            cerr << command << ": info: flag \"-z\" is deprecated;\n"
+                 << command << ": info: use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
             break;
         case '?':
             switch (optopt) {
                 case 0: // unknown long option
-                    cerr << "enblend: unknown option \"" << argv[optind - 1] << "\"\n";
+                    cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
                     break;
                 case 'b':           // FALLTHROUGH
                 case 'f':           // FALLTHROUGH
                 case 'l':           // FALLTHROUGH
                 case 'm':           // FALLTHROUGH
                 case 'o':
-                    cerr << "enblend: option \"-" << optopt << "\" requires an argument" << endl;
+                    cerr << command << ": option \"-" << optopt << "\" requires an argument" << endl;
                     break;
                 default:
-                    cerr << "enblend: unknown option ";
+                    cerr << command << ": unknown option ";
                     if (isprint(optopt)) {
                         cerr << "\"-" << static_cast<char>(optopt) << "\"";
                     } else {
@@ -550,7 +553,7 @@ int process_options(int argc, char** argv) {
             exit(1);
 
         default:
-            cerr << "enblend: internal error: unhandled command line option" << endl;
+            cerr << command << ": internal error: unhandled command line option" << endl;
             exit(1);
         }
     }
@@ -603,15 +606,15 @@ int main(int argc, char** argv) {
     int optind;
     try {optind = process_options(argc, argv);}
     catch (StdException& e) {
-        cerr << "enblend: error while processing command line options\n"
-             << "enblend:     " << e.what()
+        cerr << command << ": error while processing command line options\n"
+             << command << ":     " << e.what()
              << endl;
         exit(1);
     }
 
     // Make sure mandatory output file name parameter given.
     if (OutputFileName.empty()) {
-        cerr << "enblend: no output file specified" << endl;
+        cerr << command << ": no output file specified" << endl;
         exit(1);
     }
 
@@ -653,15 +656,19 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << "enblend: no input files specified" << endl;
+        cerr << command << ": no input files specified" << endl;
         exit(1);
     }
 
-#ifdef HAVE_LIBGLEW
     if (UseGPU) {
+#ifdef HAVE_LIBGLEW
       initGPU(&argc, argv);
-    }
+#else
+      cerr << command
+           << ": warning: no GPU support compiled in; option \"--gpu\" has no effect"
+           << endl;
 #endif
+    }
 
     //if (CachedFileImageDirector::v()->getManagedBlocks() < 4) {
     //    // Max simultaneous image access is in:
@@ -673,10 +680,12 @@ int main(int argc, char** argv) {
 
     // Check that more than one input file was given.
     if (inputFileNameList.size() <= 1) {
-        cerr << "enblend: only one input file given. "
-             << "Enblend needs two or more overlapping input images in order "
-             << "to do blending calculations. The output will be the same as "
-             << "the input."
+        cerr << command
+             << ": warning: only one input file given.\n"
+             << command
+             << ": warning: Enblend needs two or more overlapping input images in order to do\n"
+             << command
+             << ": warning: blending calculations.  The output will be the same as the input."
              << endl;
     }
 
@@ -698,7 +707,7 @@ int main(int argc, char** argv) {
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
         } catch (StdException& e) {
-            cerr << endl << "enblend: error opening input file \""
+            cerr << endl << command << ": error opening input file \""
                  << *inputFileNameIterator << "\":"
                  << endl << e.what()
                  << endl;
@@ -709,16 +718,21 @@ int main(int argc, char** argv) {
         imageInfoList.push_back(inputInfo);
 
         if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
-            cout << "Input image \""
+            cerr << command
+                 << ": info: input image \""
                  << *inputFileNameIterator
                  << "\" ";
 
-            if (inputInfo->isColor()) cout << "RGB ";
+            if (inputInfo->isColor()) {
+                cerr << "RGB ";
+            }
 
-            if (!inputInfo->getICCProfile().empty()) cout << "ICC ";
+            if (!inputInfo->getICCProfile().empty()) {
+                cerr << "ICC ";
+            }
 
-            cout << inputInfo->getPixelType() << " "
-                 << "position="
+            cerr << inputInfo->getPixelType()
+                 << " position="
                  << inputInfo->getPosition().x
                  << "x"
                  << inputInfo->getPosition().y
@@ -732,10 +746,13 @@ int main(int argc, char** argv) {
 
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
-            cerr << "enblend: Input image \""
-                 << *inputFileNameIterator << "\" does not have an alpha "
-                 << "channel. This is required to determine which pixels "
-                 << "contribute to the final image."
+            cerr << command
+                 << ": warning: input image \""
+                 << *inputFileNameIterator
+                 << "\" does not have an alpha channel;\n"
+                 << command
+                 << ": warning: assuming all pixels should "
+                 << "contribute to the final image"
                  << endl;
             exit(1);
         }
@@ -754,7 +771,8 @@ int main(int argc, char** argv) {
             if (!iccProfile.empty()) {
                 InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
                 if (InputProfile == NULL) {
-                    cerr << endl << "enblend: error parsing ICC profile data from file\""
+                    cerr << endl
+                         << command << ": error parsing ICC profile data from file \""
                          << *inputFileNameIterator
                          << "\"" << endl;
                     exit(1);
@@ -766,21 +784,21 @@ int main(int argc, char** argv) {
             inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
-                cerr << "enblend: Input image \""
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" is "
                      << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                     << "enblend:   but previous images are "
+                     << command << ":   but previous images are "
                      << (isColor ? "color" : "grayscale")
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
             if (pixelType != inputInfo->getPixelType()) {
-                cerr << "enblend: Input image \""
+                cerr << command << ": Input image \""
                      << *inputFileNameIterator << "\" has pixel type "
                      << inputInfo->getPixelType() << ",\n"
-                     << "enblend:   but previous images have pixel type "
+                     << command << ":   but previous images have pixel type "
                      << pixelType
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
             if (!std::equal(iccProfile.begin(), iccProfile.end(),
@@ -791,14 +809,15 @@ int main(int argc, char** argv) {
                     newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
                                                        mismatchProfile.size());
                     if (newProfile == NULL) {
-                        cerr << endl << "enblend: error parsing ICC profile data from file\""
+                        cerr << endl
+                             << command << ": error parsing ICC profile data from file \""
                              << *inputFileNameIterator
                              << "\"" << endl;
                         exit(1);
                     }
                 }
 
-                cerr << endl << "enblend: Input image \""
+                cerr << endl << command << ": Input image \""
                      << *inputFileNameIterator
                      << "\" has ";
                 if (newProfile) {
@@ -818,11 +837,13 @@ int main(int argc, char** argv) {
                          << cmsTakeProductDesc(InputProfile)
                          << "\"." << endl;
                 } else {
-                    cerr << " no ICC profile." << endl;
+                    cerr << " no ICC profile" << endl;
                 }
-                cerr << "enblend: Blending images with different color spaces may have unexpected results."
+                cerr << command
+                     << ": warning: blending images with different color spaces\n"
+                     << command
+                     << ": warning:     may have unexpected results"
                      << endl;
-
             }
             if (inputInfo->width() < minDim) {
                 minDim = inputInfo->width();
@@ -838,7 +859,8 @@ int main(int argc, char** argv) {
     // Switch to fine mask, if the smallest coarse mask would be less
     // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
-        cerr << "enblend: warning: Input images to small for coarse mask, switching to fine mask."
+        cerr << command
+             << ": warning: input images to small for coarse mask; switching to fine mask"
              << endl;
         CoarseMask = false;
     }
@@ -871,12 +893,12 @@ int main(int argc, char** argv) {
         const std::string bestPixelType =
             enblend::bestPixelType(outputFileType, neededPixelType);
         if (neededPixelType != bestPixelType) {
-            cerr << "enblend: warning: "
+            cerr << command << ": warning: "
                  << (OutputPixelType.empty() ? "deduced" : "requested")
                  << " output pixel type is \"" << enblend::toLowercase(neededPixelType) << "\", but\n"
-                 << "enblend: warning:   image type \"" << enblend::toLowercase(outputFileType)
+                 << command << ": warning:   image type \"" << enblend::toLowercase(outputFileType)
                  << "\" supports \"" << enblend::toLowercase(bestPixelType) << "\" at best;\n"
-                 << "enblend: warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
+                 << command << ": warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
                  << endl;
         }
         outputImageInfo.setPixelType(bestPixelType.c_str());
@@ -887,7 +909,9 @@ int main(int argc, char** argv) {
 
     if (UseCIECAM) {
         if (InputProfile == NULL) {
-            cerr << "enblend: Input images do not have ICC profiles. Assuming sRGB." << endl;
+            cerr << command
+                 << ": warning: input images do not have ICC profiles; assuming sRGB"
+                 << endl;
             InputProfile = cmsCreate_sRGBProfile();
         }
         XYZProfile = cmsCreateXYZProfile();
@@ -896,11 +920,11 @@ int main(int argc, char** argv) {
                                                  XYZProfile, TYPE_XYZ_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (InputToXYZTransform == NULL) {
-            cerr << "enblend: Error building color transform from \""
+            cerr << command << ": error building color transform from \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\" to XYZ." << endl;
+                 << "\" to XYZ" << endl;
             exit(1);
         }
 
@@ -908,11 +932,11 @@ int main(int argc, char** argv) {
                                                  InputProfile, TYPE_RGB_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (XYZToInputTransform == NULL) {
-            cerr << "enblend: Error building color transform from XYZ to \""
+            cerr << command << ": error building color transform from XYZ to \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\"." << endl;
+                 << "\"" << endl;
             exit(1);
         }
 
@@ -927,14 +951,20 @@ int main(int argc, char** argv) {
 
         CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
         if (!CIECAMTransform) {
-            cerr << endl << "enblend: Error initializing CIECAM02 transform." << endl;
+            cerr << endl
+                 << command
+                 << ": error initializing CIECAM02 transform"
+                 << endl;
             exit(1);
         }
     }
 
     // The size of the output image.
     if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        cout << "Output image size: " << inputUnion << endl;
+        cerr << command
+             << ": info: output image size: "
+             << inputUnion
+             << endl;
     }
 
     // Set the output image position and resolution.
@@ -949,10 +979,14 @@ int main(int argc, char** argv) {
         // is done.
         encoder(outputImageInfo);
     } catch (StdException & e) {
-        cerr << endl << "enblend: error opening output file \""
+        cerr << endl
+             << command
+             << ": error opening output file \""
              << OutputFileName
-             << "\":"
-             << endl << e.what()
+             << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
@@ -961,9 +995,13 @@ int main(int argc, char** argv) {
     if (!LoadMaskFileName.empty()) try {
         ImageImportInfo maskInfo(LoadMaskFileName.c_str());
     } catch (StdException& e) {
-        cerr << endl << "enblend: error opening load-mask input file \""
-             << LoadMaskFileName << "\":"
-             << endl << e.what()
+        cerr << endl
+             << command
+             << ": error opening load-mask input file \""
+             << LoadMaskFileName << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
@@ -973,9 +1011,13 @@ int main(int argc, char** argv) {
         ImageExportInfo maskInfo(SaveMaskFileName.c_str());
         encoder(maskInfo);
     } catch (StdException& e) {
-        cerr << endl << "enblend: error opening save-mask output file \""
-             << SaveMaskFileName << "\":"
-             << endl << e.what()
+        cerr << endl
+             << command
+             << ": error opening save-mask output file \""
+             << SaveMaskFileName << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
@@ -985,15 +1027,21 @@ int main(int argc, char** argv) {
         ImageExportInfo maskInfo(VisualizeMaskFileName.c_str());
         encoder(maskInfo);
     } catch (StdException& e) {
-        cerr << endl << "enblend: error opening visualize output file \""
-             << VisualizeMaskFileName << "\":"
-             << endl << e.what()
+        cerr << endl
+             << command
+             << ": error opening visualize output file \""
+             << VisualizeMaskFileName << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
 
     if (!VisualizeMaskFileName.empty() && !OptimizeMask) {
-        cerr << "enblend: warning: \"--visualize\" does nothing without \"--optimize\".\n";
+        cerr << command
+             << ": warning: \"--visualize\" does nothing without \"--optimize\""
+             << endl;
     }
 
     if (!OutputPixelType.empty()) {
@@ -1014,9 +1062,9 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: RGB images with pixel type \""
+                cerr << command << ": RGB images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
@@ -1032,9 +1080,9 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: black&white images with pixel type \""
+                cerr << command << ": black&white images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
@@ -1048,13 +1096,15 @@ int main(int argc, char** argv) {
         }
 
     } catch (std::bad_alloc& e) {
-        cerr << endl << "enblend: out of memory"
-             << endl << e.what()
+        cerr << endl
+             << command << ": out of memory\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     } catch (StdException& e) {
-        cerr << endl << "enblend: an exception occured"
-             << endl << e.what()
+        cerr << endl
+             << command << ": an exception occured\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     }

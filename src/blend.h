@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,7 +31,7 @@
 
 //#include <sh/sh.hpp>
 
-using std::cout;
+using std::cerr;
 using std::vector;
 
 using vigra::combineThreeImages;
@@ -133,8 +133,8 @@ void blend(vector<MaskPyramidType*> *maskGP,
     //typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
-        cout << "Blending layers:             ";
-        cout.flush();
+        cerr << command << ": info: blending layers:             ";
+        cerr.flush();
     }
 
 /*
@@ -167,8 +167,8 @@ void blend(vector<MaskPyramidType*> *maskGP,
     for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
 
         if (Verbose > VERBOSE_BLEND_MESSAGES) {
-            cout << " l" << layer;
-            cout.flush();
+            cerr << " l" << layer;
+            cerr.flush();
         }
 
         //if (!UseGPU) {
@@ -268,7 +268,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
     }
 
     if (Verbose > VERBOSE_BLEND_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
 };
@@ -276,3 +276,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
 } // namespace enblend
 
 #endif /* __BLEND_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

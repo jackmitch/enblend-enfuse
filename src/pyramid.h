@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -88,34 +88,34 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *
  *  *************************************************************************************************
  *  1-D explanation of algorithm:
- *  
+ *
  *  src image pixels:     A    B    C    D    E    F    G
  *  dst image pixels:     W         X         Y         Z
- *  
+ *
  *  Algorithm iterates over src image pixels from left to right.
  *  At even src image pixels, the output of the previous dst image pixel is calculated.
  *  For example, when visiting E, the value of X is written to the dst image.
- *  
+ *
  *  State variables before visiting E:
  *  sr0 = C
  *  sr1 = A + 4B
  *  srp = 4D
- *  
+ *
  *  State variables after visiting E:
  *  sr0 = E
  *  sr1 = C + 4D
  *  srp = 4D
  *  X = A + 4B + 6C + 4D + E
- *  
+ *
  *  Updates when visiting even source pixel:
  *  (all updates occur in parallel)
  *  sr0 <= current
  *  sr1 <= sr0 + srp
  *  dst(-1) <= sr1 + 6*sr0 + srp + current
- *  
+ *
  *  Updates when visiting odd source pixel:
  *  srp <= 4*current
- *  
+ *
  *  *************************************************************************************************
  *  2-D explanation:
  *
@@ -124,10 +124,10 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *                      K  L  M  N  O                           d     e     f
  *                      P  Q  R  S  T
  *                      U  V  W  X  Y                           g     h     i
- *  
+ *
  *  Algorithm visits all src image pixels from left to right and top to bottom.
  *  When visiting src pixel Y, the value of e will be written to the dst image.
- *  
+ *
  *  State variables before visiting Y:
  *  sr0 = W
  *  sr1 = U + 4V
@@ -135,7 +135,7 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *  sc0[2] = K + 4L + 6M + 4N + O
  *  sc1[2] = (A + 4B + 6C + 4D + E) + 4*(F + 4G + 6H + 4I + J)
  *  scp[2] = 4*(P + 4Q + 6R + 4S + T)
- *  
+ *
  *  State variables after visiting Y:
  *  sr0 = Y
  *  sr1 = W + 4X
@@ -148,7 +148,7 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *      + 6 * (K + 4L + 6M + 4N + O)
  *      + 4 * (P + 4Q + 6R + 4S + T)
  *      + 1 * (U + 4V + 6W + 4X + Y)
- *  
+ *
  *  Updates when visiting (even x, even y) source pixel:
  *  (all updates occur in parallel)
  *  sr0 <= current
@@ -156,15 +156,15 @@ unsigned int filterHalfWidth(const unsigned int levels) {
  *  sc0[x] <= sr1 + 6*sr0 + srp + current
  *  sc1[x] <= sc0[x] + scp[x]
  *  dst(-1,-1) <= sc1[x] + 6*sc0[x] + scp + (new sc0[x])
- *  
+ *
  *  Updates when visiting (odd x, even y) source pixel:
  *  srp <= 4*current
- *  
+ *
  *  Updates when visiting (even x, odd y) source pixel:
  *  sr0 <= current
  *  sr1 <= sr0 + srp
  *  scp[x] <= 4*(sr1 + 6*sr0 + srp + current)
- *  
+ *
  *  Updates when visting (odd x, odd y) source pixel:
  *  srp <= 4*current
  */
@@ -1459,7 +1459,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Generating Gaussian pyramid:  g0";
+        cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
@@ -1468,8 +1468,8 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     for (unsigned int l = 1; l < numLevels; l++) {
 
         if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-            cout << " g" << l;
-            cout.flush();
+            cerr << " g" << l;
+            cerr.flush();
         }
 
         // Size of next level
@@ -1499,7 +1499,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     delete lastA;
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
     return gp;
@@ -1549,7 +1549,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Generating Gaussian pyramid:  g0";
+        cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
@@ -1557,8 +1557,8 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     for (unsigned int l = 1; l < numLevels; l++) {
 
         if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-            cout << " g" << l;
-            cout.flush();
+            cerr << " g" << l;
+            cerr.flush();
         }
 
         // Size of next level
@@ -1575,7 +1575,7 @@ vector<PyramidImageType*> *gaussianPyramid(unsigned int numLevels,
     }
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
     return gp;
@@ -1619,8 +1619,8 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
     //exportPyramid(gp, exportName);
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Generating Laplacian pyramid:";
-        cout.flush();
+        cerr << command << ": info: generating Laplacian pyramid:";
+        cerr.flush();
     }
 
     // For each level, subtract the expansion of the next level.
@@ -1628,8 +1628,8 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
     for (unsigned int l = 0; l < (numLevels-1); l++) {
 
         if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-            cout << " l" << l;
-            cout.flush();
+            cerr << " l" << l;
+            cerr.flush();
         }
 
         //if (l == 4) {
@@ -1673,7 +1673,7 @@ vector<PyramidImageType*> *laplacianPyramid(const char* exportName, unsigned int
     }
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << " l" << (numLevels-1) << endl;
+        cerr << " l" << (numLevels-1) << endl;
     }
 
     //exportPyramid(gp, exportName);
@@ -1703,9 +1703,9 @@ template <typename SKIPSMImagePixelType, typename PyramidImageType>
 void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << "Collapsing Laplacian pyramid: "
+        cerr << command << ": info: collapsing Laplacian pyramid: "
              << "l" << p->size()-1;
-        cout.flush();
+        cerr.flush();
     }
 
     // For each level, add the expansion of the next level.
@@ -1713,8 +1713,8 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
     for (int l = (p->size()-2); l >= 0; l--) {
 
         if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-            cout << " l" << l;
-            cout.flush();
+            cerr << " l" << l;
+            cerr.flush();
         }
 
         expand<SKIPSMImagePixelType>(true, wraparound,
@@ -1723,7 +1723,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
     }
 
     if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
 };
@@ -1795,3 +1795,7 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix) {
 } // namespace enblend
 
 #endif /* __PYRAMID_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

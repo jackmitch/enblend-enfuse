@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -210,9 +210,12 @@ void nearestFeatureTransform(bool wraparound,
     // Initialize dnfColumn top-down. Store the distance to the nearest feature
     // in the same column and above us.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << "Creating blend mask: 1/6";
-        else cout << "Creating blend mask: 1/4";
-        cout.flush();
+        if (wraparound) {
+            cerr << command << ": info: creating blend mask: 1/6";
+        } else {
+            cerr << command << ": info: creating blend mask: 1/4";
+        }
+        cerr.flush();
     }
     // Initialization.
     for (int i = 0; i < w; i++) {
@@ -259,9 +262,12 @@ void nearestFeatureTransform(bool wraparound,
     // If this is smaller than the value caluclated in the top-down pass,
     // overwrite that value.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 2/6";
-        else cout << " 2/4";
-        cout.flush();
+        if (wraparound) {
+            cerr << " 2/6";
+        } else {
+            cerr << " 2/4";
+        }
+        cerr.flush();
     }
     // Initialization.
     for (int i = 0; i < w; i++) {
@@ -270,7 +276,7 @@ void nearestFeatureTransform(bool wraparound,
         //lastFeature[i] = sa(src_upperleft);
         foundFirstFeature[i] = false;
         // before commenting out this and previous lastFeatureDeltaY init: 18.69
-        // after: 
+        // after:
         //lastFeatureDeltaY[i] = 0;
     }
     sy = src_lowerright;
@@ -323,9 +329,12 @@ void nearestFeatureTransform(bool wraparound,
 
     // Calculate dnfLeft for each pixel.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 3/6";
-        else cout << " 3/4";
-        cout.flush();
+        if (wraparound) {
+            cerr << " 3/6";
+        } else {
+            cerr << " 3/4";
+        }
+        cerr.flush();
     }
     sy = src_upperleft;
     send = src_lowerright;
@@ -336,10 +345,9 @@ void nearestFeatureTransform(bool wraparound,
     for (; sy.y < send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
 
         // Indicate halfway mark when wraparound is true.
-        if (Verbose > VERBOSE_NFT_MESSAGES
-                && wraparound && (sy.y == smidpoint.y)) {
-            cout << " 4/6";
-            cout.flush();
+        if (Verbose > VERBOSE_NFT_MESSAGES && wraparound && sy.y == smidpoint.y) {
+            cerr << " 4/6";
+            cerr.flush();
         }
 
         potentialFeatureList.clear();
@@ -423,9 +431,12 @@ void nearestFeatureTransform(bool wraparound,
     // column or any column to the right. If this is smaller than dnflx,
     // Then recolor the pixel to the color of the nearest feature to the right.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 5/6";
-        else cout << " 4/4";
-        cout.flush();
+        if (wraparound) {
+            cerr << " 5/6";
+        } else {
+            cerr << " 4/4";
+        }
+        cerr.flush();
     }
     sy = src_lowerright;
     send = src_upperleft;
@@ -440,10 +451,9 @@ void nearestFeatureTransform(bool wraparound,
         --dy.y;
 
         // Indicate halfway mark when wraparound is true.
-        if (Verbose > VERBOSE_NFT_MESSAGES
-                && wraparound && (sy.y == smidpoint.y)) {
-            cout << " 6/6";
-            cout.flush();
+        if (Verbose > VERBOSE_NFT_MESSAGES && wraparound && sy.y == smidpoint.y) {
+            cerr << " 6/6";
+            cerr.flush();
         }
 
         potentialFeatureList.clear();
@@ -530,7 +540,7 @@ void nearestFeatureTransform(bool wraparound,
     delete [] lastFeatureDeltaY;
 
     if (Verbose > VERBOSE_NFT_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
     return;
@@ -553,3 +563,7 @@ inline void nearestFeatureTransform(bool wraparound,
 } // namespace enblend
 
 #endif /* __NEAREST_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

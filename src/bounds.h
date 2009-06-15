@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,7 +28,6 @@
 #include "pyramid.h"
 
 using std::cerr;
-using std::cout;
 using std::endl;
 using std::min;
 
@@ -121,11 +120,11 @@ unsigned int roiBounds(const Rect2D &inputUnion,
         }
 
         if (levels == 1) {
-            cerr << "enblend: overlap region is too small to make "
+            cerr << command
+                 << ": info: overlap region is too small to make "
                  << "more than one pyramid level."
                  << endl;
         }
-
     } else {
         levels = ExactLevels;
     }
@@ -159,16 +158,17 @@ unsigned int roiBounds(const Rect2D &inputUnion,
     }
 
     if (allowableLevels < ExactLevels) {
-        cerr << "enblend: image geometry precludes using more than "
+        cerr << command
+             <<": warning: image geometry precludes using more than "
              << allowableLevels
-             << " levels." << endl;
+             << " levels" << endl;
     }
 
     if (Verbose > VERBOSE_NUMLEVELS_MESSAGES) {
-        cout << "Using " << allowableLevels << " blending levels" << endl;
+        cerr << command << ": info: using " << allowableLevels << " blending levels" << endl;
     }
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cout << "Region of Interest bounding box: " << roiBB << endl;
+        cerr << command << ": info: region of Interest bounding box: " << roiBB << endl;
     }
 
     return allowableLevels;
@@ -177,3 +177,7 @@ unsigned int roiBounds(const Rect2D &inputUnion,
 } // namespace enblend
 
 #endif /* __BOUNDS_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

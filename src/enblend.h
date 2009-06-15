@@ -100,7 +100,9 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
     //sigprocmask(SIG_SETMASK, &oldsigmask, NULL);
 
-    if (Checkpoint) checkpoint(blackPair, outputImageInfo);
+    if (Checkpoint) {
+        checkpoint(blackPair, outputImageInfo);
+    }
 
     // mem usage before = 0
     // mem xsection = OneAtATime: inputUnion*imageValueType + inputUnion*AlphaValueType
@@ -110,12 +112,12 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     #ifdef ENBLEND_CACHE_IMAGES
     if (Verbose > VERBOSE_CFI_MESSAGES) {
         CachedFileImageDirector& v = CachedFileImageDirector::v();
-        cout << "Image cache statistics after loading black image:" << endl;
-        v.printStats("blackImage", blackPair.first);
-        v.printStats("blackAlpha", blackPair.second);
-        v.printStats();
+        cerr << command
+             << ": info: image cache statistics after loading black image\n";
+        v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+        v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+        v.printStats(cerr, command + ": info: ");
         v.resetCacheMisses();
-        cout << "--------------------------------------------------------------------------------" << endl;
     }
     #endif
 
@@ -134,14 +136,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after loading white image:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            v.printStats();
+            cerr << command
+                 <<": info: image cache statistics after loading white image\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -149,7 +151,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         Rect2D uBB = blackBB | whiteBB;
 
         if (Verbose > VERBOSE_UBB_MESSAGES) {
-            cout << "image union bounding box: " << uBB << endl;
+            cerr << command
+                 << ": info: image union bounding box: "
+                 << uBB
+                 << endl;
         }
 
         // Intersection bounding box of whiteImage and blackImage.
@@ -157,11 +162,13 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         bool iBBValid = !iBB.isEmpty();
 
         if (Verbose > VERBOSE_IBB_MESSAGES) {
+            cerr << command << ": info: image intersection bounding box: ";
             if (iBBValid) {
-                cout << "image intersection bounding box: " << iBB << endl;
+                cerr << iBB;
             } else {
-                cout << "image intersection bounding box: (no intersection)" << endl;
+                cerr << "(no intersection)";
             }
+            cerr << endl;
         }
 
         // Determine what kind of overlap we have.
@@ -173,15 +180,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             // White image is redundant.
             delete whitePair.first;
             delete whitePair.second;
-            cerr << "enblend: some images are redundant and will not be blended."
+            cerr << command << ": warning: some images are redundant and will not be blended"
                  << endl;
             continue;
         }
         else if (overlap == NoOverlap && ExactLevels == 0) {
             // Images do not actually overlap.
-            cerr << "enblend: images do not overlap - they will be combined without blending."
-                 << endl;
-            cerr << "enblend: use the -l flag to force blending with a certain number of levels."
+            cerr << command << ": images do not overlap - they will be combined without blending\n"
+                 << command << ": use the \"-l\" flag to force blending with a certain number of levels"
                  << endl;
 
             // Copy white image into black image verbatim.
@@ -198,10 +204,11 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             // Checkpoint results.
             if (Checkpoint) {
                 if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+                    cerr << command << ": info: ";
                     if (imageInfoList.empty()) {
-                        cout << "Writing final output..." << endl;
+                        cerr << "writing final output" << endl;
                     } else {
-                        cout << "Checkpointing..." << endl;
+                        cerr << "checkpointing" << endl;
                     }
                 }
                 checkpoint(blackPair, outputImageInfo);
@@ -252,9 +259,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
             bytes = std::max(bytesDuringMask, bytesAfterMask);
 
-            int mbytes = (int)ceil(bytes / 1000000.0);
-            cout << "Estimated space required for mask generation: "
-                 << mbytes
+            cerr << command << ": info: estimated space required for mask generation: "
+                 << static_cast<int>(ceil(bytes / 1000000.0))
                  << "MB" << endl;
         }
 
@@ -283,15 +289,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after mask generation:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            v.printStats("mask", mask);
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after mask generation\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(cerr, command + ": info:     mask", mask);
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -319,9 +325,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                 + (4 * roiBB.width()) * (sizeof(SKIPSMImagePixelType)
                                          + sizeof(SKIPSMAlphaPixelType));
 
-            int mbytes = (int) ceil(bytes / 1000000.0);
-            cout << "Estimated space required for this blend step: "
-                 << mbytes
+            cerr << command << ": info: estimated space required for this blend step: "
+                 << static_cast<int>(ceil(bytes / 1000000.0))
                  << "MB" << endl;
         }
 
@@ -345,18 +350,18 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating mask pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
-            v.printStats("mask", mask);
+            cerr << command
+                 << ": info: image cache statistics after calculating mask pyramid\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(cerr, command + ": info:     mask", mask);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
+                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
-            v.printStats();
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -392,20 +397,20 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating white pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteImage", whitePair.first);
-            v.printStats("whiteAlpha", whitePair.second);
+            cerr << command
+                 << ": info: image cache statistics after calculating white pyramid\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
+                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
+                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
-            v.printStats();
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
@@ -430,22 +435,22 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after calculating black pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats("whiteAlpha", whitePair.second);
+            cerr << command
+                 << ": info: image cache statistics after calculating black pyramid\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
+                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
+                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
+                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats();
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
         //exportPyramid(blackLP, "enblend_black_lp");
@@ -475,21 +480,21 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after blending pyramids:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
+            cerr << command
+                 << ": info: image cache statistics after blending pyramids\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats("maskGP", i, (*maskGP)[i]);
+                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats("whiteLP", i, (*whiteLP)[i]);
+                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
+                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats();
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -517,15 +522,15 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after collapsing black pyramid:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
+            cerr << command
+                 << ": info: image cache statistics after collapsing black pyramid\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats("blackLP", i, (*blackLP)[i]);
+                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats();
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -547,10 +552,11 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Checkpoint results.
         if (Checkpoint) {
             if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+                cerr << command << ": info: ";
                 if (imageInfoList.empty()) {
-                    cout << "Writing final output..." << endl;
+                    cerr << "writing final output" << endl;
                 } else {
-                    cout << "Checkpointing..." << endl;
+                    cerr << "checkpointing" << endl;
                 }
             }
             checkpoint(blackPair, outputImageInfo);
@@ -559,12 +565,12 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after checkpointing:" << endl;
-            v.printStats("blackImage", blackPair.first);
-            v.printStats("blackAlpha", blackPair.second);
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after checkpointing\n";
+            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
 
@@ -575,7 +581,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
-            cout << "Writing final output..." << endl;
+            cerr << command << ": info: writing final output" << endl;
         }
         checkpoint(blackPair, outputImageInfo);
     }
@@ -587,3 +593,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 } // namespace enblend
 
 #endif /* __ENBLEND_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

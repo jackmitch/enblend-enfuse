@@ -1174,17 +1174,17 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after loading image " << m << " :" << endl;
-            v.printStats("image", imagePair.first);
-            v.printStats("alpha", imagePair.second);
-            v.printStats("weight", mask);
-            v.printStats("normImage", normImage);
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after loading image "
+                 << m << "\n";
+            v.printStats(cerr, command + ": info:     image", imagePair.first);
+            v.printStats(cerr, command + ": info:     alpha", imagePair.second);
+            v.printStats(cerr, command + ": info:     weight", mask);
+            v.printStats(cerr, command + ": info:     normImage", normImage);
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
-
 
         ++m;
     }
@@ -1196,7 +1196,8 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
     if (UseHardMask) {
         if (Verbose) {
-            cout << "Creating hard blend mask" << std::endl;
+            cerr << command
+                 << ": info: creating hard blend mask" << endl;
         }
         Size2D sz = normImage->size();
         typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
@@ -1243,16 +1244,17 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after creating hard mask:" << endl;
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after creating hard mask\n";
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
         #endif
     }
 
     Rect2D junkBB;
-    unsigned int numLevels = roiBounds<ImagePixelComponentType>(inputUnion, inputUnion, inputUnion, inputUnion, junkBB, Wraparound);
+    unsigned int numLevels =
+        roiBounds<ImagePixelComponentType>(inputUnion, inputUnion, inputUnion, inputUnion, junkBB, Wraparound);
 
     vector<ImagePyramidType*> *resultLP = NULL;
 
@@ -1381,3 +1383,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 } // namespace enblend
 
 #endif /* __ENFUSE_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

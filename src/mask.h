@@ -247,17 +247,21 @@ void maskBounds(MaskType* mask, Rect2D& uBB, Rect2D& mBB) {
             // Set mBB to the full size of the mask.
             mBB = uBB;
             // Explain why the black image disappears completely.
-            cerr << "enblend: the previous images are completely overlapped by the current images"
+            cerr << command
+                 << ": warning: previous images are completely overlapped by the current images"
                  << endl;
         }
     } else {
         // mBB is defined relative to inputUnion origin
-        //cout << "mBB relative to mask: " << mBB << endl;
+        //cerr << command << ": info: mBB relative to mask: " << mBB << endl;
         mBB.moveBy(uBB.upperLeft());
     }
 
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cout << "Mask transition line bounding box: " << mBB << endl;
+        cerr << command
+             << ": info: mask transition line bounding box: "
+             << mBB
+             << endl;
     }
 
 }
@@ -282,10 +286,14 @@ MaskType* createMask(const ImageType* const white,
         MaskType* mask = new MaskType(uBB.size());
         ImageImportInfo maskInfo(LoadMaskFileName.c_str());
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
-            cerr << "enblend: load-mask warning: mask " << LoadMaskFileName << " has size "
-                 << "(" << maskInfo.width() << "x" << maskInfo.height() << ")"
-                 << " but image union has size " << uBB.size() << "."
-                 << " Make sure this is the right mask for the given images." << endl;
+            cerr << command
+                 << ": warning: mask \"" << LoadMaskFileName << "\" has size "
+                 << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
+                 << command
+                 << ": warning:     but image union has size " << uBB.size() << ";\n"
+                 << command
+                 << ": warning:     make sure this is the right mask for the given images"
+                 << endl;
         }
         importImage(maskInfo, destImage(*mask));
         LoadMaskFileName = "";
@@ -591,11 +599,13 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (Verbose > VERBOSE_MASK_MESSAGES) {
+        cerr << command << ": info: optimizing ";
         if (totalSegments == 1) {
-            cout << "Optimizing 1 distinct seam." << endl;
+            cerr << "1 distinct seam";
         } else {
-            cout << "Optimizing " << totalSegments << " distinct seams." << endl;
+            cerr << totalSegments << " distinct seams";
         }
+        cerr << endl;
     }
 
     // Find extent of moveable snake vertices, and vertices bordering moveable vertices
@@ -717,15 +727,18 @@ MaskType* createMask(const ImageType* const white,
             Segment* snake = *currentSegment;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
-                cout << "Strategy 1, s" << segmentNumber++ << ":";
-                cout.flush();
+                cerr << command
+                     << ": info: strategy 1, s"
+                     << segmentNumber++ << ":";
+                cerr.flush();
             }
 
             if (snake->empty()) {
                 cerr << endl
-                     << "enblend: Seam s"
+                     << command
+                     << ": warning: seam s"
                      << (segmentNumber - 1)
-                     << " is a tiny closed contour and was removed before optimization."
+                     << " is a tiny closed contour and was removed before optimization"
                      << endl;
                 continue;
             }
@@ -789,7 +802,7 @@ MaskType* createMask(const ImageType* const white,
             }
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
-                cout << endl;
+                cerr << endl;
             }
 
             // Print an explanation if every vertex in a closed contour ended up in the
@@ -797,17 +810,19 @@ MaskType* createMask(const ImageType* const white,
             // FIXME explain how to fix this problem in the error message!
             if (snake->empty()) {
                 cerr << endl
-                     << "enblend: Seam s"
+                     << command
+                     << ": seam s"
                      << (segmentNumber - 1)
-                     << " is a tiny closed contour and was removed after optimization."
+                     << " is a tiny closed contour and was removed after optimization"
                      << endl;
             }
         }
     }
 
     if (Verbose > VERBOSE_MASK_MESSAGES) {
-        cout << "Strategy 2:";
-        cout.flush();
+        cerr << command
+             << ": info: strategy 2:";
+        cerr.flush();
     }
 
     // Adjust cost image for the shortest path algorithm.
@@ -841,8 +856,8 @@ MaskType* createMask(const ImageType* const white,
             if (snake->empty()) continue;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
-                cout << " s" << segmentNumber++;
-                cout.flush();
+                cerr << " s" << segmentNumber++; // HUH?  -- cls on Fri Mar 27 09:20:21 UTC 2009
+                cerr.flush();
             }
 
             for (Segment::iterator currentVertex = snake->begin(); ; ) {
@@ -907,7 +922,7 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (Verbose > VERBOSE_MASK_MESSAGES) {
-        cout << endl;
+        cerr << endl;
     }
 
     if (visualizeImage) {
@@ -934,3 +949,7 @@ MaskType* createMask(const ImageType* const white,
 } // namespace enblend
 
 #endif /* __MASK_H__ */
+
+// Local Variables:
+// mode: c++
+// End:
