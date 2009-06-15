@@ -41,13 +41,10 @@ namespace enblend {
  *  or not at all (NoOverlap).
  */
 template <typename SrcImageIterator, typename SrcAccessor>
-Overlap inspectOverlap(
-        SrcImageIterator src1_upperleft,
-        SrcImageIterator src1_lowerright,
-        SrcAccessor s1a,
-        SrcImageIterator src2_upperleft,
-        SrcAccessor s2a) {
-
+Overlap
+inspectOverlap(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor s1a,
+               SrcImageIterator src2_upperleft, SrcAccessor s2a)
+{
     SrcImageIterator s1y = src1_upperleft;
     SrcImageIterator s2y = src2_upperleft;
     SrcImageIterator send = src1_lowerright;
@@ -85,9 +82,10 @@ Overlap inspectOverlap(
 
 // Argument object factory version.
 template <typename SrcImageIterator, typename SrcAccessor>
-Overlap inspectOverlap(
-        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
-        pair<SrcImageIterator, SrcAccessor> src2) {
+Overlap
+inspectOverlap(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+               pair<SrcImageIterator, SrcAccessor> src2)
+{
     return inspectOverlap(src1.first, src1.second, src1.third,
                           src2.first, src2.second);
 };
@@ -98,47 +96,43 @@ Overlap inspectOverlap(
  *  for the case that the ROI wraps around the left and right edges.
  */
 template <typename ImagePixelComponentType>
-unsigned int roiBounds(const Rect2D &inputUnion,
-        const Rect2D &iBB,
-        const Rect2D &mBB,
-        const Rect2D &uBB,
-        Rect2D &roiBB,
-        bool wraparoundForMask) {
-
+unsigned int
+roiBounds(const Rect2D &inputUnion,
+          const Rect2D &iBB, const Rect2D &mBB, const Rect2D &uBB,
+          Rect2D &roiBB,
+          bool wraparoundForMask)
+{
     unsigned int levels = 1;
 
-    if (ExactLevels == 0) {
-        // Estimate the number of blending levels to use based on the size of the iBB.
-        // Assume the transition line runs approximately down the center of the iBB.
-        // Choose a number of levels that makes the mask spread out to the edges
-        // of the iBB.
-        // Calculate short dimension of iBB.
+    if (ExactLevels <= 0) {
+        // Estimate the number of blending levels to use based on the
+        // size of the iBB.  Assume the transition line runs
+        // approximately down the center of the iBB.  Choose a number
+        // of levels that makes the mask spread out to the edges of
+        // the iBB.
         const unsigned int shortDimension = min(iBB.width(), iBB.height());
-        while (levels < 30
-               && (2 * filterHalfWidth<ImagePixelComponentType>(levels) <= shortDimension)) {
+        while (levels <= 29 &&
+               (2 * filterHalfWidth<ImagePixelComponentType>(levels) <= shortDimension)) {
             ++levels;
         }
 
         if (levels == 1) {
             cerr << command
-                 << ": info: overlap region is too small to make "
-                 << "more than one pyramid level."
+                 << ": info: overlap region is too small to make more than one pyramid level"
                  << endl;
         }
     } else {
         levels = ExactLevels;
     }
 
-    unsigned int extent = filterHalfWidth<ImagePixelComponentType>(levels);
     roiBB = mBB;
-    roiBB.addBorder(extent);
+    roiBB.addBorder(filterHalfWidth<ImagePixelComponentType>(levels));
 
     if (wraparoundForMask &&
-            (roiBB.left() < 0 || roiBB.right() > uBB.right())) {
-        // If the ROI goes off either edge of the uBB,
-        // and the uBB is the full size of the output image,
-        // and the wraparound flag is specified,
-        // then make roiBB the full width of uBB.
+        (roiBB.left() < 0 || roiBB.right() > uBB.right())) {
+        // If the ROI goes off either edge of the uBB, and the uBB is
+        // the full size of the output image, and the wraparound flag
+        // is specified, then make roiBB the full width of uBB.
         roiBB.setUpperLeft(Point2D(0, roiBB.top()));
         roiBB.setLowerRight(Point2D(uBB.right(), roiBB.bottom()));
     }
@@ -149,7 +143,7 @@ unsigned int roiBounds(const Rect2D &inputUnion,
     // Verify the number of levels based on the size of the ROI.
     unsigned int roiShortDimension = min(roiBB.width(), roiBB.height());
     unsigned int allowableLevels;
-    for (allowableLevels = 1; allowableLevels < levels; allowableLevels++) {
+    for (allowableLevels = 1; allowableLevels <= levels; allowableLevels++) {
         if (roiShortDimension <= 8) {
             // ROI dimensions preclude using more levels than allowableLevels.
             break;
@@ -157,7 +151,7 @@ unsigned int roiBounds(const Rect2D &inputUnion,
         roiShortDimension = (roiShortDimension + 1) >> 1;
     }
 
-    if (allowableLevels < ExactLevels) {
+    if (ExactLevels > allowableLevels) {
         cerr << command
              <<": warning: image geometry precludes using more than "
              << allowableLevels
