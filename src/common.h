@@ -22,7 +22,10 @@
 
 #include <map>
 #include <stdexcept>
+
 #include <boost/assign/list_inserter.hpp>
+#include <boost/assign/list_of.hpp>
+
 #include "vigra/numerictraits.hxx"
 
 
@@ -152,11 +155,14 @@ bestPixelType(const std::string& aFileType, const std::string& aPixelType)
 }
 
 
+typedef std::pair<double, double> range_t;
+
+
 /** Answer the maximum range of values aPixelType can represent. */
-std::pair<double, double>
+range_t
 rangeOfPixelType(const std::string& aPixelType)
 {
-    typedef std::map<std::string, std::pair<double, double> > Str2PairMapType;
+    typedef std::map<std::string, range_t> Str2PairMapType;
     Str2PairMapType rangeMap;
 
     boost::assign::insert(rangeMap)
@@ -187,42 +193,55 @@ rangeOfPixelType(const std::string& aPixelType)
 }
 
 
+/** Answer whether aPixelType defines a range that is so larges that
+ *  it includes both aRange and anotherRange. */
+bool
+includesBothRanges(const std::string& aPixelType,
+                   const range_t& aRange,
+                   const range_t& anotherRange)
+{
+    const range_t range = rangeOfPixelType(aPixelType);
+
+    return (aRange.first >= range.first && aRange.second <= range.second &&
+            anotherRange.first >= range.first && anotherRange.second <= range.second);
+}
+
+
 /** Answer the smallest pixel type that is larger or equal to both
  *  aPixelType and anotherPixelType. */
 std::string
 maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
 {
-    const std::pair<double, double> range1 = rangeOfPixelType(aPixelType);
-    const std::pair<double, double> range2 = rangeOfPixelType(anotherPixelType);
+    const range_t range1 = rangeOfPixelType(aPixelType);
+    const range_t range2 = rangeOfPixelType(anotherPixelType);
 
     if (range1.first <= range2.first && range1.second >= range2.second) {
         return aPixelType;      // first includes second
     } else if (range2.first <= range1.first && range2.second >= range1.second) {
         return anotherPixelType; // second includes first
     } else {
-        // Look for the "least common multiple" of both tpyes
+        // Types are different: look for the smallest containing type
+        using namespace boost::assign;
+
+        typedef std::vector<std::string> string_array;
+        typedef string_array::const_iterator string_array_ci;
+
         if (aPixelType == "FLOAT" || anotherPixelType == "FLOAT" ||
             aPixelType == "DOUBLE" || anotherPixelType == "DOUBLE") {
             return "DOUBLE";
         } else if (range1.first < 0 || range2.first < 0) {
-            // Scan signed types
-            std::string types[] = {"INT8", "INT16", "INT32"};
-            for (int i = 0; i < 3; ++i) {
-                const std::pair<double, double> x = rangeOfPixelType(types[i]);
-                if (range1.first >= x.first && range1.second <= x.second &&
-                    range2.first >= x.first && range2.second <= x.second) {
-                    return types[i];
+            const string_array types = list_of("INT8")("INT16")("INT32");
+            for (string_array_ci i = types.begin(); i != types.end(); ++i) {
+                if (includesBothRanges(*i, range1, range2)) {
+                    return *i;
                 }
             }
             return "INT32";
         } else {
-            // Scan unsigned types
-            std::string types[] = {"UINT8", "UINT16", "UINT32"};
-            for (int i = 0; i < 3; ++i) {
-                const std::pair<double, double> x = rangeOfPixelType(types[i]);
-                if (range1.first >= x.first && range1.second <= x.second &&
-                    range2.first >= x.first && range2.second <= x.second) {
-                    return types[i];
+            const string_array types = list_of("UINT8")("UINT16")("UINT32");
+            for (string_array_ci i = types.begin(); i != types.end(); ++i) {
+                if (includesBothRanges(*i, range1, range2)) {
+                    return *i;
                 }
             }
             return "UINT32";

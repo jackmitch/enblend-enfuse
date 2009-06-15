@@ -173,8 +173,7 @@ import(const ImageImportInfo& info,
 
     const Diff2D extent = Diff2D(info.width(), info.height());
     const std::string pixelType = info.getPixelType();
-    const std::pair<double, double> inputRange =
-        enblend::rangeOfPixelType(pixelType);
+    const range_t inputRange = enblend::rangeOfPixelType(pixelType);
 
     if (info.numExtraBands() > 0) {
         // Threshold the alpha mask so that all pixels are either
