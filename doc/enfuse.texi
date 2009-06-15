@@ -450,7 +450,6 @@ difference between this option and Enfuse's default color blending
 algorithm is slight, and will be only noticeable when areas of
 different primary colors are blended together.
 
-@ifset outputBitDepthOption
 @item -d
 @itemx --depth=@var{DEPTH}
 @opindex -d
@@ -477,8 +476,33 @@ Unsigned 32@tie{}bit; range: 0..4294967295
 
 For floating-point format use
 
+@c Minimum positive normalized value: 2^(2 - 2^k)
+@c Epsilon: 2^(1 - n)
+@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+@c
 @table @asis
+@ifset open_exr
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@item @code{r16}, @code{real16}, @code{half}
+@cindex @acronym{OpenEXR} half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#features,
+@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
+10@tie{}bit significant
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+@end ifset
+
+@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
 @item @code{r32}, @code{real32}, @code{float}
+@cindex @acronym{IEEE754} single precision float
+@cindex single precision float, @acronym{IEEE754}
 @acronym{IEEE754} single precision floating-point, 32@tie{}bits wide,
 24@tie{}bit significant
 @itemize
@@ -489,7 +513,11 @@ Epsilon: @semilog{1.2, -7}
 @item
 Maximal finite value: @semilog{3.4, 38}
 @end itemize
+
+@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
 @item @code{r64}, @code{real64}, @code{double}
+@cindex @acronym{IEEE754} double precision float
+@cindex double precision float, @acronym{IEEE754}
 @acronym{IEEE754} double precision floating-point, 64@tie{}bits wide,
 53@tie{}bit significant
 @itemize
@@ -504,7 +532,6 @@ Maximal finite value: @semilog{1.8, 308}
 
 If the requested @var{DEPTH} is not supported by the output file
 format, Enfuse warns and chooses the @var{DEPTH} that matches best.
-@end ifset
 
 @item -g
 @opindex -g

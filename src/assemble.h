@@ -61,16 +61,35 @@ using vigra::NumericTraits;
 using vigra::Rect2D;
 using vigra::Threshold;
 using vigra::transformImage;
+using vigra::linearRangeMapping;
 
 using vigra_ext::ReadFunctorAccessor;
 using vigra_ext::WriteFunctorAccessor;
 
 namespace enblend {
 
+template <typename ImageType, typename AlphaType, typename Accessor>
+void exportImagePreferablyWithAlpha(const ImageType* image,
+                                    const AlphaType* mask,
+                                    const Accessor& accessor,
+                                    const ImageExportInfo& outputImageInfo)
+{
+    try {
+        exportImageAlpha(srcImageRange(*image),
+                         srcIter(mask->upperLeft(), accessor),
+                         outputImageInfo);
+    } catch (std::exception&) {
+        // Oh well, there is no alpha-channel.  So we export without it.
+        exportImage(srcImageRange(*image), outputImageInfo);
+    }
+}
+
+
 /** Write output images.
  */
 template <typename ImageType, typename AlphaType>
-void checkpoint(pair<ImageType*, AlphaType*>& p, ImageExportInfo& outputImageInfo) {
+void checkpoint(const pair<ImageType*, AlphaType*>& p,
+                const ImageExportInfo& outputImageInfo) {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
         ImagePixelComponentType;
@@ -81,24 +100,75 @@ void checkpoint(pair<ImageType*, AlphaType*>& p, ImageExportInfo& outputImageInf
         Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
         ThresholdingAccessor;
 
+    ImageType* image = p.first;
+    AlphaType* mask = p.second;
+
     ThresholdingAccessor ata(
         Threshold<AlphaPixelType, ImagePixelComponentType>(
-            NumericTraits<AlphaPixelType>::zero(),
-            NumericTraits<AlphaPixelType>::zero(),
+            AlphaTraits<AlphaPixelType>::zero(),
+            AlphaTraits<AlphaPixelType>::zero(),
             AlphaTraits<ImagePixelComponentType>::max(),
-            AlphaTraits<ImagePixelComponentType>::zero()
-            ),
-        (p.second)->accessor());
+            AlphaTraits<ImagePixelComponentType>::zero()),
+        mask->accessor());
 
-    try {
-        exportImageAlpha(srcImageRange(*(p.first)),
-                         srcIter((p.second)->upperLeft(), ata),
-                         outputImageInfo);
-    } catch (std::exception&) {
-        // try to export without alpha channel
-        exportImage(srcImageRange(*(p.first)), outputImageInfo);
+    const pair<double, double> outputRange =
+        enblend::rangeOfPixelType(outputImageInfo.getPixelType());
+    const ImagePixelComponentType inputMin = NumericTraits<ImagePixelComponentType>::min();
+    const ImagePixelComponentType inputMax = NumericTraits<ImagePixelComponentType>::max();
+#ifdef DEBUG
+    cerr << "+ checkpoint: input range:  ("
+         << static_cast<double>(inputMin) << ", "
+         << static_cast<double>(inputMax) << ")\n"
+         << "+ checkpoint: output range: ("
+         << outputRange.first << ", " << outputRange.second << ")" << endl;
+#endif
+
+    if (inputMin <= outputRange.first && inputMax >= outputRange.second) {
+        if (inputMin == outputRange.first && inputMax == outputRange.second) {
+            // No rescaling is necessary here: We skip the redundant
+            // transformation of the input to the output range and
+            // leave the channel width alone.
+            ;
+#ifdef DEBUG
+            cerr << "+ checkpoint: leaving channel width alone" << endl;
+#endif
+            exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
+        } else {
+            cerr << "info: narrowing channel width for output as \""
+                 << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+
+            ImageType lowDepthImage(image->width(), image->height());
+            transformImage(srcImageRange(*image),
+                           destImage(lowDepthImage),
+                           linearRangeMapping(
+                               ImagePixelType(inputMin),
+                               ImagePixelType(inputMax),
+                               ImagePixelType(outputRange.first),
+                               ImagePixelType(outputRange.second)));
+
+            exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
+        }
+    } else {
+        // We are forced to increase the bit-depth.  Therefore, we
+        // need a new image capable of holding the required depth.
+        typedef typename NumericTraits<ImagePixelType>::RealPromote ImagePixelPromoteType;
+        typedef IMAGETYPE<ImagePixelPromoteType> HighDepthImageType;
+
+        cerr << "warning: widening channel width for output as \""
+             << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+
+        HighDepthImageType highDepthImage(image->width(), image->height());
+        transformImage(srcImageRange(*image),
+                       destImage(highDepthImage),
+                       linearRangeMapping(
+                           ImagePixelType(inputMin),
+                           ImagePixelType(inputMax),
+                           ImagePixelPromoteType(outputRange.first),
+                           ImagePixelPromoteType(outputRange.second)));
+
+        exportImagePreferablyWithAlpha(&highDepthImage, mask, ata, outputImageInfo);
     }
-};
+}
 
 
 template <typename DestIterator, typename DestAccessor,
@@ -129,16 +199,15 @@ void import(const ImageImportInfo& info,
 
     if (info.numExtraBands() > 0) {
         importImageAlpha(info, image, destIter(alpha.first, ata));
-    }
-    else {
-        // Import image without alpha for enfuse. Init the alpha image to 100%.
+    } else {
+        // Import image without alpha.  Initialize the alpha image to 100%.
         importImage(info, image.first, image.second);
         initImage(alpha.first,
                   (alpha.first + Diff2D(info.width(), info.height())),
                   alpha.second,
                   AlphaTraits<AlphaPixelType>::max());
     }
-};
+}
 
 
 /** Find images that don't overlap and assemble them into one image.
@@ -155,9 +224,10 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
-    if (imageInfoList.empty())
+    if (imageInfoList.empty()) {
         return pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
                                             static_cast<AlphaType*>(NULL));
+    }
 
     // Create an image to assemble input images into.
     ImageType* image = new ImageType(inputUnion.size());
@@ -261,8 +331,12 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
     }
 
     return pair<ImageType*, AlphaType*>(image, imageA);
-};
+}
 
 } // namespace enblend
 
 #endif /* __ASSEMBLE_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

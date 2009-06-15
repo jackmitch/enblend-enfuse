@@ -1,7 +1,7 @@
 This is enblend.info, produced by makeinfo version 4.11 from
 enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 16 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 19 March 2009), a tool
 for compositing images in such a way that the seam between the images
 is invisible, or at least very difficult to see.
 
@@ -20,7 +20,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 16 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 19 March 2009), a tool
 for compositing images n such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -214,6 +214,52 @@ cropping of the output image.
      this option and Enblend's default color blending algorithm is very
      slight and will be only noticeable when areas of different primary
      colors are blended together.
+
+`-d'
+`--depth=DEPTH'
+     Force the number of bits per channel and the numeric format of the
+     output image.
+
+     All DEPTH specifications are valid in lowercase as well as
+     uppercase letters.  For integer format use
+
+    `8', `uint8'
+          Unsigned 8 bit; range: 0..255
+
+    `int16'
+          Signed 16 bit; range: -32768..32767
+
+    `16', `uint16'
+          Unsigned 16 bit; range: 0..65536
+
+    `int32'
+          Signed 32 bit; range: -2147483648..2147483647
+
+    `32', `uint32'
+          Unsigned 32 bit; range: 0..4294967295
+
+     For floating-point format use
+
+    `r32', `real32', `float'
+          IEEE754 single precision floating-point, 32 bits wide, 24 bit
+          significant
+             * Minimum normalized value: 1.2*10^-38
+
+             * Epsilon: 1.2*10^-7
+
+             * Maximum finite value: 3.4*10^38
+
+    `r64', `real64', `double'
+          IEEE754 double precision floating-point, 64 bits wide, 53 bit
+          significant
+             * Minimum normalized value: 2.2*10^-308
+
+             * Epsilon: 2.2*10^-16
+
+             * Maximum finite value: 1.8*10^308
+
+     If the requested DEPTH is not supported by the output file format,
+     Enblend warns and chooses the DEPTH that matches best.
 
 `-g'
      Gimp (before version 2.0) and Cinepaint (*note Helpful Programs::)
@@ -957,7 +1003,7 @@ Program Index
 * GraphicsMagick:                        Helpful Programs.     (line 50)
 * hugin:                                 Helpful Programs.     (line 24)
 * Hugin <1>:                             Helpful Programs.     (line 24)
-* Hugin:                                 Extended Options.     (line 46)
+* Hugin:                                 Extended Options.     (line 92)
 * hugin:                                 Overview.             (line 25)
 * identify:                              Understanding Masks.  (line 22)
 * ImageMagick:                           Helpful Programs.     (line 50)
@@ -966,7 +1012,7 @@ Program Index
 * LibTIFF:                               Helpful Programs.     (line 69)
 * LittleCMS, TiffICC:                    Helpful Programs.     (line 81)
 * nona <1>:                              Helpful Programs.     (line 27)
-* nona:                                  Extended Options.     (line 46)
+* nona:                                  Extended Options.     (line 92)
 * OpenEXR:                               Helpful Programs.     (line 55)
 * PanoTools <1>:                         Helpful Programs.     (line 32)
 * PanoTools:                             Overview.             (line 25)
@@ -990,39 +1036,41 @@ Option Index
 * Menu:
 
 * --coarse-mask:                         Mask Generation Options.
-                                                               (line  9)
-* --compression:                         Common Options.       (line 17)
+                                                              (line   9)
+* --compression:                         Common Options.      (line  17)
+* --depth:                               Extended Options.    (line  28)
 * --fine-mask:                           Mask Generation Options.
-                                                               (line 13)
-* --gpu:                                 Extended Options.     (line 35)
-* --help:                                Common Options.       (line 50)
+                                                              (line  13)
+* --gpu:                                 Extended Options.    (line  81)
+* --help:                                Common Options.      (line  50)
 * --load-mask:                           Mask Generation Options.
-                                                               (line 17)
+                                                              (line  17)
 * --no-optimize:                         Mask Generation Options.
-                                                               (line 20)
+                                                              (line  20)
 * --optimize:                            Mask Generation Options.
-                                                               (line 24)
+                                                              (line  24)
 * --save-mask:                           Mask Generation Options.
-                                                               (line 28)
-* --verbose:                             Common Options.       (line 66)
-* --version:                             Common Options.       (line 71)
-* --visualize:                           Extended Options.     (line 58)
-* -a:                                    Common Options.       (line  9)
-* -b <1>:                                Tuning Memory Usage.  (line  6)
-* -b:                                    Extended Options.     (line 10)
-* -c:                                    Extended Options.     (line 17)
-* -f:                                    Extended Options.     (line 43)
-* -g:                                    Extended Options.     (line 27)
-* -h:                                    Common Options.       (line 50)
-* -l:                                    Common Options.       (line 53)
-* -m <1>:                                Tuning Memory Usage.  (line  6)
-* -m:                                    Extended Options.     (line 51)
-* -o:                                    Common Options.       (line 62)
-* -V:                                    Common Options.       (line 71)
-* -v:                                    Common Options.       (line 66)
-* -w:                                    Common Options.       (line 75)
-* -x:                                    Common Options.       (line 81)
-* -z:                                    Common Options.       (line 85)
+                                                              (line  28)
+* --verbose:                             Common Options.      (line  66)
+* --version:                             Common Options.      (line  71)
+* --visualize:                           Extended Options.    (line 104)
+* -a:                                    Common Options.      (line   9)
+* -b <1>:                                Tuning Memory Usage. (line   6)
+* -b:                                    Extended Options.    (line  10)
+* -c:                                    Extended Options.    (line  17)
+* -d:                                    Extended Options.    (line  28)
+* -f:                                    Extended Options.    (line  89)
+* -g:                                    Extended Options.    (line  73)
+* -h:                                    Common Options.      (line  50)
+* -l:                                    Common Options.      (line  53)
+* -m <1>:                                Tuning Memory Usage. (line   6)
+* -m:                                    Extended Options.    (line  97)
+* -o:                                    Common Options.      (line  62)
+* -V:                                    Common Options.      (line  71)
+* -v:                                    Common Options.      (line  66)
+* -w:                                    Common Options.      (line  75)
+* -x:                                    Common Options.      (line  81)
+* -z:                                    Common Options.      (line  85)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -1030,73 +1078,77 @@ File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
 General Index
 *************
 
- [index ]
 * Menu:
 
-* alpha channels, unassociated:          Extended Options.     (line 27)
-* binary mask:                           Understanding Masks.  (line  6)
-* CIECAM02:                              Extended Options.     (line 17)
-* Cinepaint:                             Extended Options.     (line 27)
+* alpha channels, unassociated:          Extended Options.    (line  73)
+* binary mask:                           Understanding Masks. (line   6)
+* bits per channel:                      Extended Options.    (line  28)
+* CIECAM02:                              Extended Options.    (line  17)
+* Cinepaint:                             Extended Options.    (line  73)
 * coarse mask:                           Mask Generation Options.
-                                                               (line  9)
-* color appearance model:                Extended Options.     (line 17)
-* compression, deflate:                  Common Options.       (line 31)
-* compression, LZW:                      Common Options.       (line 37)
-* compression, packbits:                 Common Options.       (line 41)
-* deflate compression:                   Common Options.       (line 31)
+                                                              (line   9)
+* color appearance model:                Extended Options.    (line  17)
+* compression, deflate:                  Common Options.      (line  31)
+* compression, LZW:                      Common Options.      (line  37)
+* compression, packbits:                 Common Options.      (line  41)
+* deflate compression:                   Common Options.      (line  31)
+* double precision float, IEEE754:       Extended Options.    (line  61)
 * ENBLEND_CACHE_IMAGES (preprocessor symbol): Tuning Memory Usage.
-                                                               (line  8)
-* FDL:                                   FDL.                  (line  6)
+                                                              (line   8)
+* FDL:                                   FDL.                 (line   6)
 * fine mask:                             Mask Generation Options.
-                                                               (line 13)
-* general index:                         General Index.        (line  6)
-* Gimp:                                  Extended Options.     (line 27)
-* GNU Free Documentation License:        FDL.                  (line  6)
-* helpful programs:                      Helpful Programs.     (line  6)
-* image cache, block size:               Extended Options.     (line 10)
-* image cache, cache size:               Extended Options.     (line 51)
-* index, general:                        General Index.        (line  6)
-* index, option:                         Option Index.         (line  6)
-* index, program:                        Program Index.        (line  6)
-* input masks:                           Understanding Masks.  (line 18)
-* invocation:                            Invocation.           (line  6)
+                                                              (line  13)
+* general index:                         General Index.       (line   6)
+* Gimp:                                  Extended Options.    (line  73)
+* GNU Free Documentation License:        FDL.                 (line   6)
+* helpful programs:                      Helpful Programs.    (line   6)
+* IEEE754 double precision float:        Extended Options.    (line  61)
+* IEEE754 single precision float:        Extended Options.    (line  52)
+* image cache, block size:               Extended Options.    (line  10)
+* image cache, cache size:               Extended Options.    (line  97)
+* index, general:                        General Index.       (line   6)
+* index, option:                         Option Index.        (line   6)
+* index, program:                        Program Index.       (line   6)
+* input masks:                           Understanding Masks. (line  18)
+* invocation:                            Invocation.          (line   6)
 * load mask:                             Mask Generation Options.
-                                                               (line 17)
-* LZW compression:                       Common Options.       (line 37)
-* mask, binary:                          Understanding Masks.  (line  6)
+                                                              (line  17)
+* LZW compression:                       Common Options.      (line  37)
+* mask, binary:                          Understanding Masks. (line   6)
 * mask, coarse:                          Mask Generation Options.
-                                                               (line  9)
+                                                              (line   9)
 * mask, fine:                            Mask Generation Options.
-                                                               (line 13)
+                                                              (line  13)
 * mask, load:                            Mask Generation Options.
-                                                               (line 17)
+                                                              (line  17)
 * mask, save:                            Mask Generation Options.
-                                                               (line 28)
-* mask, visualization:                   Extended Options.     (line 58)
-* mask, weight:                          Understanding Masks.  (line  6)
-* masks, input files:                    Understanding Masks.  (line 18)
-* masks, undestanding:                   Understanding Masks.  (line  6)
-* masks, weight:                         Understanding Masks.  (line 91)
-* memory, tuning usage of:               Tuning Memory Usage.  (line  6)
+                                                              (line  28)
+* mask, visualization:                   Extended Options.    (line 104)
+* mask, weight:                          Understanding Masks. (line   6)
+* masks, input files:                    Understanding Masks. (line  18)
+* masks, undestanding:                   Understanding Masks. (line   6)
+* masks, weight:                         Understanding Masks. (line  91)
+* memory, tuning usage of:               Tuning Memory Usage. (line   6)
 * optimize seam:                         Mask Generation Options.
-                                                               (line 20)
-* option index:                          Option Index.         (line  6)
-* options, common:                       Common Options.       (line  6)
-* options, extended:                     Extended Options.     (line  6)
+                                                              (line  20)
+* option index:                          Option Index.        (line   6)
+* options, common:                       Common Options.      (line   6)
+* options, extended:                     Extended Options.    (line   6)
 * options, mask generation:              Mask Generation Options.
-                                                               (line  6)
-* output image, set size of:             Extended Options.     (line 43)
-* overview:                              Overview.             (line  6)
-* packbits compression:                  Common Options.       (line 41)
-* program index:                         Program Index.        (line  6)
-* programs, helpful additional:          Helpful Programs.     (line  6)
+                                                              (line   6)
+* output image, set size of:             Extended Options.    (line  89)
+* overview:                              Overview.            (line   6)
+* packbits compression:                  Common Options.      (line  41)
+* program index:                         Program Index.       (line   6)
+* programs, helpful additional:          Helpful Programs.    (line   6)
 * save mask:                             Mask Generation Options.
-                                                               (line 28)
+                                                              (line  28)
 * seam optimization:                     Mask Generation Options.
-                                                               (line 20)
-* undestanding masks:                    Understanding Masks.  (line  6)
-* weight mask:                           Understanding Masks.  (line  6)
-* weight masks:                          Understanding Masks.  (line 91)
+                                                              (line  20)
+* single precision float, IEEE754:       Extended Options.    (line  52)
+* undestanding masks:                    Understanding Masks. (line   6)
+* weight mask:                           Understanding Masks. (line   6)
+* weight masks:                          Understanding Masks. (line  91)
 
 
 
@@ -1107,15 +1159,15 @@ Ref: Overview-Footnote-13666
 Node: Invocation3847
 Node: Common Options4258
 Node: Extended Options7046
-Node: Mask Generation Options9599
-Node: Understanding Masks10797
-Node: Tuning Memory Usage14578
-Ref: tab:cache-size-settings16657
-Node: Helpful Programs16965
-Node: Authors20576
-Node: FDL20752
-Node: Program Index41733
-Node: Option Index44572
-Node: General Index47158
+Node: Mask Generation Options10833
+Node: Understanding Masks12031
+Node: Tuning Memory Usage15812
+Ref: tab:cache-size-settings17891
+Node: Helpful Programs18199
+Node: Authors21810
+Node: FDL21986
+Node: Program Index42967
+Node: Option Index45806
+Node: General Index48538
 
 End Tag Table

@@ -1,6 +1,6 @@
 This is enfuse.info, produced by makeinfo version 4.11 from enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 17 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 19 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -19,7 +19,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 17 March 2009), a
+This manual is for Enfuse (version 3.2-staging, 19 March 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -322,6 +322,52 @@ cropping of the output image.
      this option and Enfuse's default color blending algorithm is
      slight, and will be only noticeable when areas of different
      primary colors are blended together.
+
+`-d'
+`--depth=DEPTH'
+     Force the number of bits per channel and the numeric format of the
+     output image.
+
+     All DEPTH specifications are valid in lowercase as well as
+     uppercase letters.  For integer format use
+
+    `8', `uint8'
+          Unsigned 8 bit; range: 0..255
+
+    `int16'
+          Signed 16 bit; range: -32768..32767
+
+    `16', `uint16'
+          Unsigned 16 bit; range: 0..65536
+
+    `int32'
+          Signed 32 bit; range: -2147483648..2147483647
+
+    `32', `uint32'
+          Unsigned 32 bit; range: 0..4294967295
+
+     For floating-point format use
+
+    `r32', `real32', `float'
+          IEEE754 single precision floating-point, 32 bits wide, 24 bit
+          significant
+             * Minimal normalized value: 1.2*10^-38
+
+             * Epsilon: 1.2*10^-7
+
+             * Maximal finite value: 3.4*10^38
+
+    `r64', `real64', `double'
+          IEEE754 double precision floating-point, 64 bits wide, 53 bit
+          significant
+             * Minimal normalized value: 2.2*10^-308
+
+             * Epsilon: 2.2*10^-16
+
+             * Maximal finite value: 1.8*10^308
+
+     If the requested DEPTH is not supported by the output file format,
+     Enfuse warns and chooses the DEPTH that matches best.
 
 `-g'
      Save alpha channel as "associated".
@@ -915,7 +961,6 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
-    window size = 3                 window size = 5
 
      |   |   |   |               |   |   |   |   |   |
     -+---+---+---+-             -+---+---+---+---+---+-
@@ -930,7 +975,7 @@ sizes.
                                  | N | N | N | N | N |
                                 -+---+---+---+---+---+-
                                  |   |   |   |   |   |
-
+"
 Figure 3.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
 neighboring pixels, which all contribute equally to the weight.
@@ -2640,7 +2685,7 @@ Program Index
 * Anti-Lamenessing Engine:               Helpful Programs.     (line 20)
 * cinepaint:                             Helpful Programs.     (line 39)
 * CinePaint <1>:                         Helpful Programs.     (line 39)
-* CinePaint:                             Extended Options.     (line 31)
+* CinePaint:                             Extended Options.     (line 77)
 * dcraw:                                 Helpful Programs.     (line 10)
 * DCRaw:                                 Helpful Programs.     (line 10)
 * exiftool:                              Helpful Programs.     (line 77)
@@ -2648,12 +2693,12 @@ Program Index
 * fulla:                                 Helpful Programs.     (line 27)
 * gimp:                                  Helpful Programs.     (line 46)
 * Gimp <1>:                              Helpful Programs.     (line 46)
-* Gimp:                                  Extended Options.     (line 31)
+* Gimp:                                  Extended Options.     (line 77)
 * GraphicsMagick:                        Helpful Programs.     (line 50)
 * hugin:                                 Helpful Programs.     (line 24)
 * Hugin <1>:                             Helpful Programs.     (line 24)
 * Hugin <2>:                             What Images.          (line 13)
-* Hugin:                                 Extended Options.     (line 43)
+* Hugin:                                 Extended Options.     (line 89)
 * identify:                              Understanding Masks.  (line 22)
 * ImageMagick:                           Helpful Programs.     (line 50)
 * LibJPEG:                               Helpful Programs.     (line 62)
@@ -2661,7 +2706,7 @@ Program Index
 * LibTIFF:                               Helpful Programs.     (line 69)
 * LittleCMS, TiffICC:                    Helpful Programs.     (line 81)
 * nona <1>:                              Helpful Programs.     (line 27)
-* nona:                                  Extended Options.     (line 43)
+* nona:                                  Extended Options.     (line 89)
 * OpenEXR:                               Helpful Programs.     (line 55)
 * PanoTools:                             Helpful Programs.     (line 32)
 * PFSTools:                              Helpful Programs.     (line 58)
@@ -2685,6 +2730,7 @@ Option Index
 
 * --compression:                         Common Options.      (line   9)
 * --ContrastWindowSize:                  Expert Options.      (line  10)
+* --depth:                               Extended Options.    (line  30)
 * --EdgeScale:                           Expert Options.      (line  27)
 * --EntropyCutoff:                       Expert Options.      (line  46)
 * --EntropyWindowSize:                   Expert Options.      (line 111)
@@ -2706,12 +2752,13 @@ Option Index
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
 * -c:                                    Extended Options.    (line  19)
-* -f:                                    Extended Options.    (line  40)
-* -g:                                    Extended Options.    (line  29)
+* -d:                                    Extended Options.    (line  30)
+* -f:                                    Extended Options.    (line  86)
+* -g:                                    Extended Options.    (line  75)
 * -h:                                    Common Options.      (line  43)
 * -l:                                    Common Options.      (line  46)
 * -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line  48)
+* -m:                                    Extended Options.    (line  94)
 * -o:                                    Common Options.      (line  55)
 * -V:                                    Common Options.      (line  64)
 * -v:                                    Common Options.      (line  59)
@@ -2734,7 +2781,7 @@ General Index
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
 * alpha channel:                         Overview.            (line  64)
-* alpha channels, unassociated:          Extended Options.    (line  29)
+* alpha channels, unassociated:          Extended Options.    (line  75)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
 * authors, list of:                      Authors.             (line   6)
@@ -2743,6 +2790,7 @@ General Index
 * basic focus stacking:                  Basic Focus Stacking.
                                                               (line   6)
 * binary mask:                           Understanding Masks. (line   6)
+* bits per channel:                      Extended Options.    (line  30)
 * blending exposures:                    Exposure Series Misconceptions.
                                                               (line   9)
 * Burt-Adelson multiresolution spline:   Overview.            (line  21)
@@ -2775,6 +2823,7 @@ General Index
                                                               (line   9)
 * disabling averaging:                   Disabling Averaging. (line   6)
 * DOF:                                   Why Focus Stacks.    (line  15)
+* double precision float, IEEE754:       Extended Options.    (line  63)
 * dynamic range increase <1>:            Flash Exposure Series.
                                                               (line   6)
 * dynamic range increase:                Exposure Series.     (line   6)
@@ -2784,8 +2833,8 @@ General Index
                                                               (line   8)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  72)
-* expectation value:                     Standard Deviation.  (line  56)
+* estimators:                            Standard Deviation.  (line  73)
+* expectation value:                     Standard Deviation.  (line  57)
 * expert focus stacking ttops:           Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -2818,8 +2867,10 @@ General Index
 * gray projector, value:                 Expert Options.      (line 153)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
+* IEEE754 double precision float:        Extended Options.    (line  63)
+* IEEE754 single precision float:        Extended Options.    (line  54)
 * image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line  48)
+* image cache, cache size:               Extended Options.    (line  94)
 * images, fusable:                       What Images.         (line   6)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
@@ -2860,12 +2911,12 @@ General Index
 * options, extended:                     Extended Options.    (line   6)
 * options, fusion:                       Fusion Options.      (line   6)
 * output file compression:               Common Options.      (line   9)
-* output image, set size of:             Extended Options.    (line  40)
+* output image, set size of:             Extended Options.    (line  86)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  33)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  53)
+* probability function:                  Standard Deviation.  (line  54)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
@@ -2881,14 +2932,15 @@ General Index
 * series, polarization:                  Polarization Series. (line   6)
 * series, simple:                        Repetition.          (line   6)
 * simple series:                         Repetition.          (line   6)
-* standard deviation:                    Standard Deviation.  (line  62)
-* statistical moments:                   Standard Deviation.  (line  53)
+* single precision float, IEEE754:       Extended Options.    (line  54)
+* standard deviation:                    Standard Deviation.  (line  63)
+* statistical moments:                   Standard Deviation.  (line  54)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * undestanding masks:                    Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  59)
+* variance:                              Standard Deviation.  (line  60)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
 * weighted average:                      Weighted Average.    (line   6)
@@ -2923,59 +2975,59 @@ Ref: Overview-Footnote-37915
 Node: Invocation8097
 Node: Common Options8646
 Node: Extended Options10945
-Node: Fusion Options13036
-Node: Expert Options14910
-Ref: Figure:entropy-cutoff17292
-Node: Option Delimiters24288
-Node: Weighting Functions25253
-Node: Weighting Pixels25917
-Node: Weighted Average27419
-Node: Disabling Averaging28010
-Node: Exposure Weighting28959
-Ref: Figure:gaussian30437
-Node: Saturation Weighting33727
-Node: Contrast Weighting34823
-Node: Standard Deviation36152
-Ref: Figure:local-analysis-window36593
-Ref: Standard Deviation-Footnote-139432
-Node: Laplacian of Gaussian39581
-Ref: Figure:laplacian-of-gaussian41154
-Node: Blend SDev and LoG44602
-Node: Scaling and Choice of Mode46233
-Node: Entropy Weighting47075
-Ref: Figure:entropy48040
-Node: Understanding Masks52019
-Node: Tuning Memory Usage55808
-Ref: tab:cache-size-settings57882
-Node: Applications58190
-Node: What Images58912
-Node: Repetition62031
-Node: Exposure Series63088
-Node: Exposure Series Tips65290
-Node: Exposure Series Misconceptions66399
-Ref: Exposure Series Misconceptions-Footnote-168167
-Node: Flash Exposure Series68380
-Node: Polarization Series68622
-Node: Focus Stacks69056
-Node: Why Focus Stacks69938
-Node: Preparing Focus Stacks71265
-Node: Contrast Based Fusing72005
-Node: Basic Focus Stacking73246
-Node: Advanced Focus Stacking74602
-Node: Local Contrast Problem75299
-Ref: Figure:sharp-edge76499
-Ref: Figure:smooth-edge78098
-Node: Laplacian Edge Detection80534
-Node: Local Contrast Enhancement81615
-Node: Suppressing Noise or Recognizing Faint Edges82531
-Node: Expert Stacking84991
-Node: Helpful Programs86490
-Node: Authors90093
-Node: FDL90690
-Node: List of Tables111671
-Node: List of Figures111935
-Node: Program Index112520
-Node: Option Index115443
-Node: General Index117997
+Node: Fusion Options14269
+Node: Expert Options16143
+Ref: Figure:entropy-cutoff18525
+Node: Option Delimiters25521
+Node: Weighting Functions26486
+Node: Weighting Pixels27150
+Node: Weighted Average28652
+Node: Disabling Averaging29243
+Node: Exposure Weighting30192
+Ref: Figure:gaussian31670
+Node: Saturation Weighting34960
+Node: Contrast Weighting36056
+Node: Standard Deviation37385
+Ref: Figure:local-analysis-window37826
+Ref: Standard Deviation-Footnote-140717
+Node: Laplacian of Gaussian40866
+Ref: Figure:laplacian-of-gaussian42439
+Node: Blend SDev and LoG45887
+Node: Scaling and Choice of Mode47518
+Node: Entropy Weighting48360
+Ref: Figure:entropy49325
+Node: Understanding Masks53304
+Node: Tuning Memory Usage57093
+Ref: tab:cache-size-settings59167
+Node: Applications59475
+Node: What Images60197
+Node: Repetition63316
+Node: Exposure Series64373
+Node: Exposure Series Tips66575
+Node: Exposure Series Misconceptions67684
+Ref: Exposure Series Misconceptions-Footnote-169452
+Node: Flash Exposure Series69665
+Node: Polarization Series69907
+Node: Focus Stacks70341
+Node: Why Focus Stacks71223
+Node: Preparing Focus Stacks72550
+Node: Contrast Based Fusing73290
+Node: Basic Focus Stacking74531
+Node: Advanced Focus Stacking75887
+Node: Local Contrast Problem76584
+Ref: Figure:sharp-edge77784
+Ref: Figure:smooth-edge79383
+Node: Laplacian Edge Detection81819
+Node: Local Contrast Enhancement82900
+Node: Suppressing Noise or Recognizing Faint Edges83816
+Node: Expert Stacking86276
+Node: Helpful Programs87775
+Node: Authors91378
+Node: FDL91975
+Node: List of Tables112956
+Node: List of Figures113220
+Node: Program Index113805
+Node: Option Index116728
+Node: General Index119428
 
 End Tag Table

@@ -106,6 +106,7 @@ unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 std::string OutputCompression;
+std::string OutputPixelType;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -200,6 +201,8 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -d, --depth=DEPTH      Set the number of bits per channel of the output image.\n" <<
+        "                         DEPTH is 8, 16, 32, r32, or r64.\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
 #ifdef HAVE_LIBGLEW
@@ -283,7 +286,8 @@ int process_options(int argc, char** argv) {
         CompressionId,              // 11
         VerboseId,                  // 12
         HelpId,                     // 13
-        VersionId                   // 14
+        VersionId,                  // 14
+        DepthId                     // 15
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -303,13 +307,14 @@ int process_options(int argc, char** argv) {
         {"verbose", no_argument, 0, NoArgument},                               // 12
         {"help", no_argument, 0, NoArgument},                                  // 13
         {"version", no_argument, 0, NoArgument},                               // 14
+        {"depth", required_argument, 0, StringArgument},                       // 15
         {0, 0, 0, 0}
     };
 
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "Vab:cf:ghl:m:o:svwxz",
+    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:svwxz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -361,6 +366,9 @@ int process_options(int argc, char** argv) {
                 break;
             case CompressionId:
                 OutputCompression = optarg;
+                break;
+            case DepthId:
+                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
                 break;
             default:
                 cerr << "enblend: internal error: unhandled \"StringArgument\" option"
@@ -420,6 +428,9 @@ int process_options(int argc, char** argv) {
         }
         case 'c':
             UseCIECAM = true;
+            break;
+        case 'd':
+            OutputPixelType = enblend::outputPixelTypeOfString(optarg);
             break;
         case 'f': {
             OutputSizeGiven = true;
@@ -788,8 +799,27 @@ int main(int argc, char** argv) {
         outputImageInfo.setCompression(OutputCompression.c_str());
     }
 
-    // Pixel type of the output image is the same as the input images.
-    outputImageInfo.setPixelType(pixelType.c_str());
+    // If not overridden by the command line, the pixel type of the
+    // output image is the same as the input images'.  If the pixel
+    // type is not supported by the output format, replace it with the
+    // best match.
+    {
+        const std::string outputFileType = enblend::getFileType(OutputFileName);
+        const std::string neededPixelType =
+            OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
+        const std::string bestPixelType =
+            enblend::maxPixelType(outputFileType, neededPixelType);
+        if (neededPixelType != bestPixelType) {
+            cerr << "enblend: warning: "
+                 << (OutputPixelType.empty() ? "deduced" : "requested")
+                 << " output pixel type is \"" << enblend::toLowercase(neededPixelType) << "\", but\n"
+                 << "enblend: warning:   image type \"" << enblend::toLowercase(outputFileType)
+                 << "\" supports \"" << enblend::toLowercase(bestPixelType) << "\" at best;\n"
+                 << "enblend: warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
+                 << endl;
+        }
+        outputImageInfo.setPixelType(bestPixelType.c_str());
+    }
 
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);

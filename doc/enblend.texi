@@ -300,7 +300,6 @@ difference between this option and Enblend's default color blending
 algorithm is very slight and will be only noticeable when areas of
 different primary colors are blended together.
 
-@ifset outputBitDepthOption
 @item -d
 @itemx --depth=@var{DEPTH}
 @opindex -d
@@ -332,6 +331,7 @@ For floating-point format use
 @c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
 @c
 @table @asis
+@ifset open_exr
 @c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
 @item @code{r16}, @code{real16}, @code{half}
 @cindex @acronym{OpenEXR} half precision float
@@ -347,7 +347,7 @@ Epsilon: @semilog{2.0, -3}
 @item
 Maximum finite value: @semilog{4.3, 9}
 @end itemize
-
+@end ifset
 
 @c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
 @item @code{r32}, @code{real32}, @code{float}
@@ -382,7 +382,6 @@ Maximum finite value: @semilog{1.8, 308}
 
 If the requested @var{DEPTH} is not supported by the output file
 format, Enblend warns and chooses the @var{DEPTH} that matches best.
-@end ifset
 
 @item -g
 @opindex -g

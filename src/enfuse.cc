@@ -113,6 +113,7 @@ int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
 std::string OutputCompression;
+std::string OutputPixelType;
 double WExposure = 1.0;
 double WContrast = 0.0;
 double WSaturation = 0.2;
@@ -177,6 +178,7 @@ double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedLog = NU
 template <typename InputPixelType, typename ResultPixelType>
 double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
 
+
 /** Print information on the current version and some configuration
  * details. */
 void printVersionAndExit() {
@@ -223,6 +225,8 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -d, --depth=DEPTH      Set the number of bits per channel of the output image.\n" <<
+        "                         DEPTH is 8, 16, 32, r32, or r64.\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -361,7 +365,8 @@ int process_options(int argc, char** argv) {
         SoftMaskId,              // 15
         VerboseId,               // 16
         HelpId,                  // 17
-        VersionId                // 18
+        VersionId,               // 18
+        DepthId                  // 19
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -385,12 +390,13 @@ int process_options(int argc, char** argv) {
         {"verbose", no_argument, 0, NoArgument},                         // 16
         {"help", no_argument, 0, NoArgument},                            // 17
         {"version", no_argument, 0, NoArgument},                         // 18
+        {"depth", required_argument, 0, StringArgument},                 // 19
         {0, 0, 0, 0}
     };
 
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "Vb:cf:ghl:m:o:vwz",
+    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vwz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -615,6 +621,10 @@ int process_options(int argc, char** argv) {
                 GrayscaleProjector = optarg;
                 break;
 
+            case DepthId:
+                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                break;
+
             default:
                 cerr << "enfuse: internal error: unhandled \"StringArgument\" option"
                      << endl;
@@ -723,6 +733,9 @@ int process_options(int argc, char** argv) {
         }
         case 'c':
             UseCIECAM = true;
+            break;
+        case 'd':
+            OutputPixelType = enblend::outputPixelTypeOfString(optarg);
             break;
         case 'f': {
             OutputSizeGiven = true;
@@ -1051,8 +1064,27 @@ int main(int argc, char** argv) {
         outputImageInfo.setCompression(OutputCompression.c_str());
     }
 
-    // Pixel type of the output image is the same as the input images.
-    outputImageInfo.setPixelType(pixelType.c_str());
+    // If not overridden by the command line, the pixel type of the
+    // output image is the same as the input images'.  If the pixel
+    // type is not supported by the output format, replace it with the
+    // best match.
+    {
+        const std::string outputFileType = enblend::getFileType(OutputFileName);
+        const std::string neededPixelType =
+            OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
+        const std::string bestPixelType =
+            enblend::maxPixelType(outputFileType, neededPixelType);
+        if (neededPixelType != bestPixelType) {
+            cerr << "enfuse: warning: "
+                 << (OutputPixelType.empty() ? "deduced" : "requested")
+                 << " output pixel type is \"" << enblend::toLowercase(neededPixelType) << "\", but\n"
+                 << "enfuse: warning:   image type \"" << enblend::toLowercase(outputFileType)
+                 << "\" supports \"" << enblend::toLowercase(bestPixelType) << "\" at best;\n"
+                 << "enfuse: warning:   will use \"" << enblend::toLowercase(bestPixelType) << "\""
+                 << endl;
+        }
+        outputImageInfo.setPixelType(bestPixelType.c_str());
+    }
 
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);
