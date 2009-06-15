@@ -134,6 +134,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::hex;
 using std::list;
 
 using vigra::CachedFileImageDirector;
@@ -327,6 +328,7 @@ int process_options(int argc, char** argv) {
     // Parse command line.
     int option_index = 0;
     int c;
+    opterr = 0;       // we have our own "unrecognized option" message
     while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:svwxz",
                             long_options, &option_index)) != -1) {
         switch (c) {
@@ -422,11 +424,11 @@ int process_options(int argc, char** argv) {
                 exit(1);
             }
 
-            const int value = atoi(optarg);
+            int value = atoi(optarg);
             if (value < 1) {
-                cerr << "enblend: " << long_options[option_index].name
-                     << " must be 1 or more." << endl;
-                printUsageAndExit();
+                cerr << "enblend: warning: " << long_options[option_index].name
+                     << " must be 1 or more; will use 1" << endl;
+                value = 1;
             }
             *optionUInt = static_cast<unsigned int>(value);
             break;
@@ -439,10 +441,10 @@ int process_options(int argc, char** argv) {
             OneAtATime = false;
             break;
         case 'b': {
-            const int kilobytes = atoi(optarg);
+            int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
-                cerr << "enblend: cache block size must be 1 or more." << endl;
-                printUsageAndExit();
+                cerr << "enblend: cache block size must be 1 KB or more; will use 1 KB" << endl;
+                kilobytes = 1;
             }
             CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes << 10));
             break;
@@ -459,14 +461,14 @@ int process_options(int argc, char** argv) {
                                   &OutputWidthCmdLine, &OutputHeightCmdLine,
                                   &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
             if (nP == 4) {
-                ; // full geometry string
+                ; // OK - full geometry string
             } else if (nP == 2) {
                 OutputOffsetXCmdLine=0;
                 OutputOffsetYCmdLine=0;
             } else {
-                cerr << "enblend: the -f option requires a parameter "
-                     << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
-                printUsageAndExit();
+                cerr << "enblend: option \"-f\" requires a parameter\n"
+                     << "Try \"enblend --help\" for more information." << endl;
+                exit(1);
             }
             break;
         }
@@ -477,19 +479,20 @@ int process_options(int argc, char** argv) {
             justPrintUsage = true;
             break;
         case 'l': {
-            const int levels = atoi(optarg);
-            if (levels < 1 || levels > 29) {
-                cerr << "enblend: levels must in the range 1 to 29." << endl;
-                printUsageAndExit();
+            int levels = atoi(optarg);
+            if (levels < 1) {
+                cerr << "enblend: warning: too few levels; will use one level" << endl;
+                levels = 1;
             }
+            // We take care of the "too many levels" case in "bounds.h".
             ExactLevels = static_cast<unsigned int>(levels);
             break;
         }
         case 'm': {
-            const int megabytes = atoi(optarg);
+            int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << "enblend: memory limit must be 1 or more." << endl;
-                printUsageAndExit();
+                cerr << "enblend: warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
             break;
@@ -505,7 +508,7 @@ int process_options(int argc, char** argv) {
         case 's':
             // Deprecated sequential blending flag.
             OneAtATime = true;
-            cerr << "enblend: warning: Flag \"-s\" is deprecated." << endl;
+            cerr << "enblend: warning: flag \"-s\" is deprecated." << endl;
             break;
         case 'v':
             Verbose++;
@@ -517,12 +520,38 @@ int process_options(int argc, char** argv) {
             Checkpoint = true;
             break;
         case 'z':
+            cerr << "enblend: info: flag \"-z\" is deprecated;\n"
+                 << "enblend: info: use \"--compression=LZW\" instead"
+                 << endl;
             OutputCompression = "LZW";
             break;
+        case '?':
+            switch (optopt) {
+                case 0: // unknown long option
+                    cerr << "enblend: unknown option \"" << argv[optind - 1] << "\"\n";
+                    break;
+                case 'b':           // FALLTHROUGH
+                case 'f':           // FALLTHROUGH
+                case 'l':           // FALLTHROUGH
+                case 'm':           // FALLTHROUGH
+                case 'o':
+                    cerr << "enblend: option \"-" << optopt << "\" requires an argument" << endl;
+                    break;
+                default:
+                    cerr << "enblend: unknown option ";
+                    if (isprint(optopt)) {
+                        cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                    } else {
+                        cerr << "character 0x" << hex << optopt;
+                    }
+                    cerr << endl;
+            }
+            cerr << "Try \"enblend --help\" for more information." << endl;
+            exit(1);
 
         default:
-            printUsageAndExit();
-            break;
+            cerr << "enblend: internal error: unhandled command line option" << endl;
+            exit(1);
         }
     }
 
@@ -582,8 +611,8 @@ int main(int argc, char** argv) {
 
     // Make sure mandatory output file name parameter given.
     if (OutputFileName.empty()) {
-        cerr << "enblend: no output file specified." << endl;
-        printUsageAndExit();
+        cerr << "enblend: no output file specified" << endl;
+        exit(1);
     }
 
     // Remaining parameters are input files.
@@ -624,13 +653,13 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << "enblend: no input files specified." << endl;
-        printUsageAndExit();
+        cerr << "enblend: no input files specified" << endl;
+        exit(1);
     }
 
 #ifdef HAVE_LIBGLEW
     if (UseGPU) {
-      initGPU(&argc,argv);
+      initGPU(&argc, argv);
     }
 #endif
 

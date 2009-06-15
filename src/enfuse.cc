@@ -155,6 +155,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::hex;
 using std::list;
 
 using vigra::CachedFileImageDirector;
@@ -410,6 +411,7 @@ int process_options(int argc, char** argv) {
     // Parse command line.
     int option_index = 0;
     int c;
+    opterr = 0;       // we have our own "unrecognized option" message
     while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vwz",
                             long_options, &option_index)) != -1) {
         switch (c) {
@@ -692,7 +694,7 @@ int process_options(int argc, char** argv) {
                  option_index == WeightSaturationId || option_index == WeightEntropyId)) {
                 cerr << "enfuse: " << long_options[option_index].name
                      << " must be in the range [0.0, 1.0]." << endl;
-                printUsageAndExit();
+                exit(1);
             }
 
             *optionDouble = value;
@@ -746,10 +748,10 @@ int process_options(int argc, char** argv) {
             justPrintVersion = true;
             break;
         case 'b': {
-            const int kilobytes = atoi(optarg);
+            int kilobytes = atoi(optarg);
             if (kilobytes < 1) {
-                cerr << "enfuse: cache block size must be 1 or more." << endl;
-                printUsageAndExit();
+                cerr << "enfuse: cache block size must be 1 KB or more; will use 1 KB" << endl;
+                kilobytes = 1;
             }
             CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
             break;
@@ -772,9 +774,9 @@ int process_options(int argc, char** argv) {
                 OutputOffsetXCmdLine = 0;
                 OutputOffsetYCmdLine = 0;
             } else {
-                cerr << "enfuse: the -f option requires a parameter "
-                     << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
-                printUsageAndExit();
+                cerr << "enfuse: option \"-f\" requires a parameter\n"
+                     << "Try \"enfuse --help\" for more information." << endl;
+                exit(1);
             }
             break;
         }
@@ -785,30 +787,31 @@ int process_options(int argc, char** argv) {
             justPrintUsage = true;
             break;
         case 'l': {
-            const int levels = atoi(optarg);
-            if (levels < 1 || levels > 29) {
-                cerr << "enfuse: levels must in the range 1 to 29." << endl;
-                printUsageAndExit();
+            int levels = atoi(optarg);
+            if (levels < 1) {
+                cerr << "enfuse: warning: too few levels; will use 1" << endl;
+                levels = 1;
             }
+            // We take care of the "too many levels" case in "bounds.h".
             ExactLevels = static_cast<unsigned int>(levels);
             break;
         }
         case 'm': {
-            const int megabytes = atoi(optarg);
+            int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << "enfuse: memory limit must be 1 or more." << endl;
-                printUsageAndExit();
+                cerr << "enblend: warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
             break;
         }
         case 'o':
-            if (!OutputFileName.empty()) {
+            if (OutputFileName.empty()) {
+                OutputFileName = optarg;
+            } else {
                 cerr << "enfuse: more than one output file specified." << endl;
-                printUsageAndExit();
-                break;
+                exit(1);
             }
-            OutputFileName = optarg;
             break;
         case 'v':
             Verbose++;
@@ -817,12 +820,39 @@ int process_options(int argc, char** argv) {
             Wraparound = true;
             break;
         case 'z':
+            cerr << "enfuse: info: flag \"-z\" is deprecated;\n"
+                 << "enfuse: info: use \"--compression=LZW\" instead"
+                 << endl;
             OutputCompression = "LZW";
             break;
+        case '?':
+            switch (optopt) {
+                case 0: // unknown long option
+                    cerr << "enfuse: unknown option \"" << argv[optind - 1] << "\"\n";
+                    break;
+                case 'b':           // FALLTHROUGH
+                case 'd':           // FALLTHROUGH
+                case 'f':           // FALLTHROUGH
+                case 'l':           // FALLTHROUGH
+                case 'm':           // FALLTHROUGH
+                case 'o':
+                    cerr << "enfuse: option \"-" << optopt << "\" requires an argument" << endl;
+                    break;
+                default:
+                    cerr << "enfuse: unknown option ";
+                    if (isprint(optopt)) {
+                        cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                    } else {
+                        cerr << "character 0x" << hex << optopt;
+                    }
+                    cerr << endl;
+            }
+            cerr << "Try \"enfuse --help\" for more information." << endl;
+            exit(1);
 
         default:
-            printUsageAndExit();
-            break;
+            cerr << "enfuse: internal error: unhandled command line option" << endl;
+            exit(1);
         }
     }
 
@@ -883,7 +913,7 @@ int main(int argc, char** argv) {
     // Make sure mandatory output file name parameter given.
     if (OutputFileName.empty()) {
         cerr << "enfuse: no output file specified." << endl;
-        printUsageAndExit();
+        exit(1);
     }
 
     // Remaining parameters are input files.
@@ -925,6 +955,7 @@ int main(int argc, char** argv) {
         }
     } else {
         cerr << "enfuse: no input files specified.\n";
+        exit(1);
     }
 
     // Check that more than one input file was given.
