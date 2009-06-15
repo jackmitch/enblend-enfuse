@@ -1,6 +1,6 @@
 # Plot radial component of Laplacian-of-Gaussian
 
-load "config.gp"
+load "@srcdir@/config.gp"
 
 LaplacianOfGaussian(R, Sigma) = \
     ((R**2 / (2.0 * Sigma**2)) - 1.0) * \

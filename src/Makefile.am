@@ -21,7 +21,7 @@ EXTRA_DIST = enblend.vcproj enblend_msvc2003.vcproj enblend_msvc2008.vcproj \
              enfuse.vcproj enfuse_msvc2003.vcproj enfuse_msvc2008.vcproj \
              enblend.1 enfuse.1
 
-MAINTAINERCLEANFILES = enblend.1 enfuse.1
+DISTCLEANFILES = enblend.1 enfuse.1
 
 # Documentation
 
@@ -33,7 +33,7 @@ man: enblend.1 enfuse.1
 
 
 enblend.1: enblend
-	$(HELP2MAN) --output=$@ ./$<
+	$(HELP2MAN) --output=$@ ./enblend
 
 enfuse.1: enfuse
-	$(HELP2MAN) --output=$@ ./$<
+	$(HELP2MAN) --output=$@ ./enfuse

@@ -1,10 +1,10 @@
 # Plot an example of a particularly sharp edge
 
-load "config.gp"
-load "config-edge.gp"
+load "@srcdir@/config.gp"
+load "@srcdir@/config-edge.gp"
 
 set terminal unknown
-splot "sharp-edge.data" matrix title "sharp\\_edge"
+splot "@srcdir@/sharp-edge.data" matrix title "sharp\\_edge"
 
 set output "sharp-edge.txt"
 set terminal dumb Dumb_Width Dumb_Height enhanced

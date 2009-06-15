@@ -1,6 +1,6 @@
 # Plot entropy with respect to base 2
 
-load "config.gp"
+load "@srcdir@/config.gp"
 
 Base = 2.0
 lb(x) = log(x) / log(Base)

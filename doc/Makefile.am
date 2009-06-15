@@ -1,19 +1,29 @@
 info_TEXINFOS = enblend.texi \
                 enfuse.texi
 
-enblend_TEXINFOS = auxmac.texi \
+enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    fdl.texi \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
-                   understanding-masks.texi
+                   understanding-masks.texi \
+                   default.css
 
-enfuse_TEXINFOS = auxmac.texi \
+enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   fdl.texi \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
-                  understanding-masks.texi
+                  understanding-masks.texi \
+                  default.css \
+                  config-edge.gp config.gp \
+                  entropy-cutoff.gp.in \
+                  entropy.gp.in gaussian.gp.in \
+                  laplacian-of-gaussian.gp.in \
+                  sharp-edge.gp.in sharp-edge.data \
+                  smooth-edge.gp.in smooth-edge.data \
+                  local-analysis-window.fig
 
-AM_MAKEINFOFLAGS=@AM_MAKEINFOFLAGS@
+AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
+                   --css-include=@srcdir@/default.css
 
 # created by make(1), user pobably wants to rebuild (often?)
 MOSTLYCLEANFILES =
@@ -31,7 +41,6 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
 # created by configure(1)
 DISTCLEANFILES = texinfo.tex
 
-# e.g. *.info
 MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 
@@ -44,13 +53,13 @@ DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
 xhtml: html
 	for x in *.html; do \
 	  if test -d $$x; then \
-	    for y in $$x/*; do \
-	      tidy -config tidy.cfg -file $${y/.html/.msg} $$y | \
-	        $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${y/.html/.xhtml}; \
+	    for y in $$x/*.html; do \
+	      tidy -config @srcdir@/tidy.cfg -file $${y/%.html/.msg} $$y | \
+	        $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${y/%.html/.xhtml}; \
             done; \
 	  else \
-	    tidy -config tidy.cfg -file $${x/.html/.msg} $$x | \
-	      $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${x/.html/.xhtml}; \
+	    tidy -config @srcdir@/tidy.cfg -file $${x/%.html/.msg} $$x | \
+	      $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${x/%.html/.xhtml}; \
           fi; \
 	done
 

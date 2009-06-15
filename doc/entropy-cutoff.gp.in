@@ -1,6 +1,6 @@
 # Plot example of entropy-cutoff function
 
-load "config.gp"
+load "@srcdir@/config.gp"
 
 Lower = 0.05
 Upper = 0.9

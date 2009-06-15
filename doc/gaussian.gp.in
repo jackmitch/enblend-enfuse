@@ -1,6 +1,6 @@
 # Plot Gauss curve with default parameters of Enfuse
 
-load "config.gp"
+load "@srcdir@/config.gp"
 
 Mu = 0.5
 Sigma = 0.2
