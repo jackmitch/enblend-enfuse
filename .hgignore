@@ -9,11 +9,15 @@
 (^|/)Makefile$
 (^|/)Makefile\.in$
 
+^INSTALL$
 ^aclocal\.m4$
 ^config\.
 ^configure$
 ^depcomp$
+^install-sh$
 ^mdate.sh$
+^missing$
+^mkinstalldirs$
 ^stamp-h1$
 ^texinfo.tex$
 
