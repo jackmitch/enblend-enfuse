@@ -17,6 +17,9 @@
 ^stamp-h1$
 ^texinfo.tex$
 
+^src/enblend$
+^src/enfuse$
+
 ^doc/stamp-(1|vti)$
 ^doc/enblend\.html/
 ^doc/enblend\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
