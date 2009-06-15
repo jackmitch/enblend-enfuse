@@ -808,7 +808,7 @@ int main(int argc, char** argv) {
         const std::string neededPixelType =
             OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
         const std::string bestPixelType =
-            enblend::maxPixelType(outputFileType, neededPixelType);
+            enblend::bestPixelType(outputFileType, neededPixelType);
         if (neededPixelType != bestPixelType) {
             cerr << "enblend: warning: "
                  << (OutputPixelType.empty() ? "deduced" : "requested")
@@ -936,6 +936,10 @@ int main(int argc, char** argv) {
              << endl;
     }
 
+    if (OutputPixelType != "") {
+        pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
+    }
+
     // Invoke templatized blender.
     try {
         if (isColor) {
@@ -952,7 +956,7 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: images with pixel type \""
+                cerr << "enblend: RGB images with pixel type \""
                      << pixelType
                      << "\" are not supported."
                      << endl;
@@ -972,7 +976,7 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: images with pixel type \""
+                cerr << "enblend: black&white images with pixel type \""
                      << pixelType
                      << "\" are not supported."
                      << endl;

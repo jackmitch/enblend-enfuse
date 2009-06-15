@@ -458,6 +458,26 @@ different primary colors are blended together.
 Force the number of bits per channel and the numeric format of the
 output image.
 
+Enfuse always uses a sensible way to change the channel depth to
+assure highest image quality (at the expense of memory) whether
+requantization is implicit because of the output format or explicit
+with option@tie{}@option{--depth}.
+
+@itemize
+@item
+If the output-channel width is larger than the input-channel width of
+the input images, the input images' channels are widened to the output
+channel depth immediately after loading, this is, as soon as possible.
+Enfuse then performs all blending operations at the output-channel
+width, thereby preserving minute color details which can appear in the
+blending areas.
+
+@item
+If the output-channel width is smaller than the input-channel width of
+the input images, the output image's channels are narrowed only right
+before it is written to disk, this is, as late as possible.  Thus the
+data benefits from the wider input channels for the longest time.
+@end itemize
 All @var{DEPTH} specifications are valid in lowercase as well as
 uppercase letters.  For integer format use
 

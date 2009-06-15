@@ -135,10 +135,10 @@ outputPixelTypeOfString(const char* anOutputDepth)
 }
 
 
-/** Answer the "maximum" pixel type of an image given aFileType with
- * respect to aPixelType. */
+/** Answer the best pixel type of an image given aFileType with
+ * respect to aPixelType.  This is the type with the largest range. */
 std::string
-maxPixelType(const std::string& aFileType, const std::string& aPixelType)
+bestPixelType(const std::string& aFileType, const std::string& aPixelType)
 {
     if (aFileType == "BMP" ||
         aFileType == "JPEG" ||
@@ -185,6 +185,55 @@ rangeOfPixelType(const std::string& aPixelType)
     }
 }
 
+
+/** Answer the smallest pixel type that is larger or equal to both
+ *  aPixelType and anotherPixelType. */
+std::string
+maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
+{
+    const std::pair<double, double> range1 = rangeOfPixelType(aPixelType);
+    const std::pair<double, double> range2 = rangeOfPixelType(anotherPixelType);
+
+    if (range1.first <= range2.first && range1.second >= range2.second) {
+        return aPixelType;      // first includes second
+    } else if (range2.first <= range1.first && range2.second >= range1.second) {
+        return anotherPixelType; // second includes first
+    } else {
+        // Look for the "least common multiple" of both tpyes
+        if (aPixelType == "FLOAT" || anotherPixelType == "FLOAT" ||
+            aPixelType == "DOUBLE" || anotherPixelType == "DOUBLE") {
+            return "DOUBLE";
+        } else if (range1.first < 0 || range2.first < 0) {
+            // Scan signed types
+            std::string types[] = {"INT8", "INT16", "INT32"};
+            for (int i = 0; i < 3; ++i) {
+                const std::pair<double, double> x = rangeOfPixelType(types[i]);
+                if (range1.first >= x.first && range1.second <= x.second &&
+                    range2.first >= x.first && range2.second <= x.second) {
+                    return types[i];
+                }
+            }
+            return "INT32";
+        } else {
+            // Scan unsigned types
+            std::string types[] = {"UINT8", "UINT16", "UINT32"};
+            for (int i = 0; i < 3; ++i) {
+                const std::pair<double, double> x = rangeOfPixelType(types[i]);
+                if (range1.first >= x.first && range1.second <= x.second &&
+                    range2.first >= x.first && range2.second <= x.second) {
+                    return types[i];
+                }
+            }
+            return "UINT32";
+        }
+    }
+}
+
+
 } // namespace enblend
 
 #endif /* __COMMON_H__ */
+
+// Local Variables:
+// mode: c++
+// End:
