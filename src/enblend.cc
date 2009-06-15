@@ -155,23 +155,33 @@ using enblend::enblendMain;
 /** Print information on the current version and some configuration
  * details. */
 void printVersionAndExit() {
-    cout << "enblend " << VERSION << "\n";
+    cout << "enblend " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
-#ifdef ENBLEND_CACHE_IMAGES
-        cout << "Extra feature: image cache\n";
-#endif
-#ifdef HAVE_LIBGLEW
-        cout << "Extra feature: GPU acceleration\n";
-#endif
         cout <<
-            "\n" <<
+            "Extra feature: image cache: " <<
+#ifdef ENBLEND_CACHE_IMAGES
+            "yes" <<
+#else
+            "no" <<
+#endif
+            "\n";
+
+        cout <<
+            "Extra feature: GPU acceleration: " <<
+#ifdef HAVE_LIBGLEW
+            "yes" <<
+#else
+            "no" <<
+#endif
+            "\n\n";
+
+        cout <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
-            "Supported file extensions: " << vigra::impexListExtensions() << "\n";
+            "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
     }
 
     cout <<
-        "\n" <<
         "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
