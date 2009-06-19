@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -348,6 +349,103 @@ void sigint_handler(int sig) {
 }
 
 
+enum AllPossibleOptions {
+    VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
+    Blend180Option /* -w */, CompressionOption, LZWCompressionOption,
+    BlockSizeOption, CIECAM02Option /* -c */,
+    DepthOption, AssociatedAlphaOption /* -g */,
+    SizeAndPositionOption /* -f */, CacheSizeOption,
+    ExposureWeightOption, SaturationWeightOption,
+    ContrastWeightOption, EntropyWeightOption,
+    ExposureMuOption /* -wMu */, ExposureSigmaOption /* -wSigma */,
+    SoftMaskOption, HardMaskOption,
+    ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
+    MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
+    DebugOption
+};
+
+typedef std::set<enum AllPossibleOptions> OptionSetType;
+
+bool contains(const OptionSetType& optionSet,
+              enum AllPossibleOptions anOption)
+{
+    return optionSet.count(anOption) != 0;
+}
+
+
+/** Warn if options given at the command line have no effect. */
+void warn_of_ineffective_options(const OptionSetType& optionSet)
+{
+    if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
+        if (contains(optionSet, ExposureMuOption)) {
+            cerr << command <<
+                ": warning: wMu has no effect as exposure weight is zero" <<
+                endl;
+        }
+        if (contains(optionSet, ExposureSigmaOption)) {
+            cerr << command <<
+                ": warning: wSigma has no effect as exposure weight is zero" <<
+                endl;
+        }
+    }
+
+    if (WContrast == 0.0 && contains(optionSet, ContrastWindowSizeOption)) {
+        cerr << command <<
+            ": warning: ContrastWindowSize has no effect as contrast weight is zero" <<
+            endl;
+    }
+
+    if (WExposure == 0.0 && WContrast == 0.0 && contains(optionSet, GrayProjectorOption)) {
+        cerr << command <<
+            ": warning: GrayProjector has no effect as exposure and contrast weight\n" <<
+            ": warning:   both are zero" <<
+            endl;
+    }
+
+    if (WContrast == 0.0) {
+        if (contains(optionSet, EdgeScaleOption)) {
+            cerr << command <<
+                ": warning: EdgeScale has no effect as contrast weight is zero" <<
+                endl;
+        }
+        if (contains(optionSet, MinCurvatureOption)) {
+            cerr << command <<
+                ": warning: MinCurvatureOption has no effect as contrast weight is zero" <<
+                endl;
+        }
+    } else {
+        if (FilterConfig.edgeScale > 0.0 &&
+            contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value <= 0.0) {
+            cerr << command <<
+                ": warning: ContrastWindowSize has no effect as EDGESCALE (in EdgeScale)\n" <<
+                ": warning:   is positive and MinCurvature is non-positive" <<
+                endl;
+        }
+    }
+
+    if (WEntropy == 0.0) {
+        if (contains(optionSet, EntropyWindowSizeOption)) {
+            cerr << command <<
+                ": warning: EntropyWindowSize has no effect as entropy weight is zero" <<
+                endl;
+        }
+        if (contains(optionSet, EntropyCutoffOption)) {
+            cerr << command <<
+                ": warning: EntropyCutoff has no effect as entropy weight is zero" <<
+                endl;
+        }
+    }
+
+    if (contains(optionSet, CompressionOption) &&
+        !(enblend::getFileType(OutputFileName) == "TIFF" ||
+          enblend::getFileType(OutputFileName) == "JPEG")) {
+            cerr << command <<
+                ": warning: compression is not supported with this output file type" <<
+                endl;
+    }
+}
+
+
 int process_options(int argc, char** argv) {
     enum OptionArgumentKind {
         NoArgument,
@@ -411,6 +509,7 @@ int process_options(int argc, char** argv) {
 
     bool justPrintVersion = false;
     bool justPrintUsage = false;
+    OptionSetType optionSet;
 
     // Parse command line.
     int option_index = 0;
@@ -420,25 +519,33 @@ int process_options(int argc, char** argv) {
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case HardMaskId:
                 UseHardMask = true;
+                optionSet.insert(HardMaskOption);
                 break;
             case SoftMaskId:
                 UseHardMask = false;
+                optionSet.insert(SoftMaskOption);
                 break;
             case DebugId:
                 Debug++;
+                optionSet.insert(DebugOption);
                 break;
             case VerboseId:
                 Verbose++;
+                optionSet.insert(VerboseOption);
                 break;
             case HelpId:
                 justPrintUsage = true;
+                optionSet.insert(HelpOption);
                 break;
             case VersionId:
                 justPrintVersion = true;
+                optionSet.insert(VersionOption);
                 break;
             default:
                 cerr << command << ": internal error: unhandled \"NoArgument\" option"
@@ -449,7 +556,9 @@ int process_options(int argc, char** argv) {
         } // end of "case NoArgument"
 
         case StringArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case MinCurvatureId: {
                 char *tail;
@@ -474,6 +583,7 @@ int process_options(int argc, char** argv) {
                     delete [] errmsg;
                     exit(1);
                 }
+                optionSet.insert(MinCurvatureOption);
                 break;
             }
 
@@ -562,6 +672,7 @@ int process_options(int argc, char** argv) {
                 }
 
                 delete [] s;
+                optionSet.insert(EdgeScaleOption);
                 break;
             }
 
@@ -630,19 +741,23 @@ int process_options(int argc, char** argv) {
                 }
 
                 delete [] s;
+                optionSet.insert(EntropyCutoffOption);
                 break;
             }
 
             case CompressionId:
                 OutputCompression = optarg;
+                optionSet.insert(CompressionOption);
                 break;
 
             case GrayProjectorId:
                 GrayscaleProjector = optarg;
+                optionSet.insert(GrayProjectorOption);
                 break;
 
             case DepthId:
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                optionSet.insert(DepthOption);
                 break;
 
             case OutputId:
@@ -652,6 +767,7 @@ int process_options(int argc, char** argv) {
                     cerr << command << ": more than one output file specified." << endl;
                     exit(1);
                 }
+                optionSet.insert(OutputOption);
                 break;
 
             default:
@@ -663,27 +779,35 @@ int process_options(int argc, char** argv) {
         } // end of "case StringArgument"
 
         case FloatArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             double *optionDouble = NULL;
             switch (option_index) {
             case WeightExposureId:
                 optionDouble = &WExposure;
+                optionSet.insert(ExposureWeightOption);
                 break;
             case WeightContrastId:
                 optionDouble = &WContrast;
+                optionSet.insert(ContrastWeightOption);
                 break;
             case WeightSaturationId:
                 optionDouble = &WSaturation;
                 WSaturationIsDefault = false;
+                optionSet.insert(SaturationWeightOption);
                 break;
             case WeightMuId:
                 optionDouble = &WMu;
+                optionSet.insert(ExposureMuOption);
                 break;
             case WeightSigmaId:
                 optionDouble = &WSigma;
+                optionSet.insert(ExposureSigmaOption);
                 break;
             case WeightEntropyId:
                 optionDouble = &WEntropy;
+                optionSet.insert(EntropyWeightOption);
                 break;
             default:
                 cerr << command << ": internal error: unhandled \"FloatArgument\" option"
@@ -706,7 +830,9 @@ int process_options(int argc, char** argv) {
         } // end of "case FloatArgument"
 
         case IntegerArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case ContrastWindowSizeId:
                 ContrastWindowSize = atoi(optarg);
@@ -722,6 +848,7 @@ int process_options(int argc, char** argv) {
                          << endl;
                     ContrastWindowSize++;
                 }
+                optionSet.insert(ContrastWindowSizeOption);
                 break;
 
             case EntropyWindowSizeId:
@@ -738,6 +865,7 @@ int process_options(int argc, char** argv) {
                          << endl;
                     EntropyWindowSize++;
                 }
+                optionSet.insert(EntropyWindowSizeOption);
                 break;
 
             default:
@@ -750,6 +878,7 @@ int process_options(int argc, char** argv) {
 
         case 'V':
             justPrintVersion = true;
+            optionSet.insert(VersionOption);
             break;
         case 'b': {
             int kilobytes = atoi(optarg);
@@ -760,13 +889,16 @@ int process_options(int argc, char** argv) {
                 kilobytes = 1;
             }
             CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
+            optionSet.insert(BlockSizeOption);
             break;
         }
         case 'c':
             UseCIECAM = true;
+            optionSet.insert(CIECAM02Option);
             break;
         case 'd':
             OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+            optionSet.insert(DepthOption);
             break;
         case 'f': {
             OutputSizeGiven = true;
@@ -784,13 +916,16 @@ int process_options(int argc, char** argv) {
                      << "Try \"enfuse --help\" for more information." << endl;
                 exit(1);
             }
+            optionSet.insert(SizeAndPositionOption);
             break;
         }
         case 'g':
             GimpAssociatedAlphaHack = true;
+            optionSet.insert(AssociatedAlphaOption);
             break;
         case 'h':
             justPrintUsage = true;
+            optionSet.insert(HelpOption);
             break;
         case 'l': {
             int levels = atoi(optarg);
@@ -800,6 +935,7 @@ int process_options(int argc, char** argv) {
             }
             // We take care of the "too many levels" case in "bounds.h".
             ExactLevels = static_cast<unsigned int>(levels);
+            optionSet.insert(LevelsOption);
             break;
         }
         case 'm': {
@@ -809,6 +945,7 @@ int process_options(int argc, char** argv) {
                 megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            optionSet.insert(CacheSizeOption);
             break;
         }
         case 'o':
@@ -818,18 +955,22 @@ int process_options(int argc, char** argv) {
                 cerr << command << ": more than one output file specified." << endl;
                 exit(1);
             }
+            optionSet.insert(OutputOption);
             break;
         case 'v':
             Verbose++;
+            optionSet.insert(VerboseOption);
             break;
         case 'w':
             Wraparound = true;
+            optionSet.insert(Blend180Option);
             break;
         case 'z':
             cerr << command << ": info: flag \"-z\" is deprecated;\n"
                  << command << ": info: use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
+            optionSet.insert(LZWCompressionOption);
             break;
         case '?':
             switch (optopt) {
@@ -871,6 +1012,8 @@ int process_options(int argc, char** argv) {
         printVersionAndExit();
         // never reached
     }
+
+    warn_of_ineffective_options(optionSet);
 
     return optind;
 }

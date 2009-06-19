@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <set>
 #include <vector>
 
 #ifndef _WIN32
@@ -280,6 +281,43 @@ void sigint_handler(int sig) {
 }
 
 
+enum AllPossibleOptions {
+    VersionOption, PreAssembleOption /* -a */, HelpOption, LevelsOption,
+    OutputOption, VerboseOption, Blend180Option /* -w */,
+    CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
+    BlockSizeOption, CIECAM02Option /* -c */,
+    DepthOption, AssociatedAlphaOption /* -g */, GPUOption,
+    SizeAndPositionOption /* -f */, CacheSizeOption,
+    VisualizeOption, CoarseMaskOption, FineMaskOption,
+    OptimizeOption, NoOptimizeOption,
+    SaveMaskOption, LoadMaskOption,
+    // currently below the radar...
+    SequentialBlendingOption,
+    GdaKmaxIdOption, DijkstraRadiusIdOption, MaskVectorizeDistanceIdOption
+};
+
+typedef std::set<enum AllPossibleOptions> OptionSetType;
+
+bool contains(const OptionSetType& optionSet,
+              enum AllPossibleOptions anOption)
+{
+    return optionSet.count(anOption) != 0;
+}
+
+
+/** Warn if options given at the command line have no effect. */
+void warn_of_ineffective_options(const OptionSetType& optionSet)
+{
+    if (contains(optionSet, CompressionOption) &&
+        !(enblend::getFileType(OutputFileName) == "TIFF" ||
+          enblend::getFileType(OutputFileName) == "JPEG")) {
+            cerr << command <<
+                ": warning: compression is not supported with this output file type" <<
+                endl;
+    }
+}
+
+
 int process_options(int argc, char** argv) {
     enum OptionArgumentKind {
         NoArgument,
@@ -335,6 +373,7 @@ int process_options(int argc, char** argv) {
 
     bool justPrintVersion = false;
     bool justPrintUsage = false;
+    OptionSetType optionSet;
 
     // Parse command line.
     int option_index = 0;
@@ -344,34 +383,45 @@ int process_options(int argc, char** argv) {
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case UseGpuId:
                 UseGPU = true;
+                optionSet.insert(GPUOption);
                 break;
             case CoarseMaskId:
                 CoarseMask = true;
+                optionSet.insert(CoarseMaskOption);
                 break;
             case FineMaskId:
                 CoarseMask = false;
+                optionSet.insert(FineMaskOption);
                 break;
             case OptimizeMaskId:
                 OptimizeMask = true;
+                optionSet.insert(OptimizeOption);
                 break;
             case NoOptimizeMaskId:
                 OptimizeMask = false;
+                optionSet.insert(NoOptimizeOption);
                 break;
             case VerboseId:
                 Verbose++;
+                optionSet.insert(VerboseOption);
                 break;
             case HelpId:
                 justPrintUsage = true;
+                optionSet.insert(HelpOption);
                 break;
             case VersionId:
                 justPrintVersion = true;
+                optionSet.insert(VersionOption);
                 break;
             default:
-                cerr << command << ": internal error: unhandled \"NoArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -379,33 +429,44 @@ int process_options(int argc, char** argv) {
         } // end of "case NoArgument"
 
         case StringArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case SaveMaskId:
                 SaveMaskFileName = optarg;
+                optionSet.insert(SaveMaskOption);
                 break;
             case LoadMaskId:
                 LoadMaskFileName = optarg;
+                optionSet.insert(LoadMaskOption);
                 break;
             case VisualizeId:
                 VisualizeMaskFileName = optarg;
+                optionSet.insert(VisualizeOption);
                 break;
             case CompressionId:
                 OutputCompression = optarg;
+                optionSet.insert(CompressionOption);
                 break;
             case DepthId:
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                optionSet.insert(DepthOption);
                 break;
             case OutputId:
                 if (OutputFileName.empty()) {
                     OutputFileName = optarg;
                 } else {
-                    cerr << command << ": more than one output file specified." << endl;
+                    cerr << command
+                         << ": more than one output file specified."
+                         << endl;
                     exit(1);
                 }
+                optionSet.insert(OutputOption);
                 break;
             default:
-                cerr << command << ": internal error: unhandled \"StringArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"StringArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -417,20 +478,26 @@ int process_options(int argc, char** argv) {
         // } // end of "case FloatArgument"
 
         case IntegerArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             unsigned int* optionUInt = NULL;
             switch (option_index) {
             case GdaKmaxId:
                 optionUInt = &GDAKmax;
+                optionSet.insert(GdaKmaxIdOption);
                 break;
             case DijkstraRadiusId:
                 optionUInt = &DijkstraRadius;
+                optionSet.insert(DijkstraRadiusIdOption);
                 break;
             case MaskVectorizeDistanceId:
                 optionUInt = &MaskVectorizeDistance;
+                optionSet.insert(MaskVectorizeDistanceIdOption);
                 break;
             default:
-                cerr << command << ": internal error: unhandled \"IntegerArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"IntegerArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -447,9 +514,11 @@ int process_options(int argc, char** argv) {
 
         case 'V':
             justPrintVersion = true;
+            optionSet.insert(VersionOption);
             break;
         case 'a':
             OneAtATime = false;
+            optionSet.insert(PreAssembleOption);
             break;
         case 'b': {
             int kilobytes = atoi(optarg);
@@ -464,9 +533,11 @@ int process_options(int argc, char** argv) {
         }
         case 'c':
             UseCIECAM = true;
+            optionSet.insert(CIECAM02Option);
             break;
         case 'd':
             OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+            optionSet.insert(DepthOption);
             break;
         case 'f': {
             OutputSizeGiven = true;
@@ -483,31 +554,40 @@ int process_options(int argc, char** argv) {
                      << "Try \"enblend --help\" for more information." << endl;
                 exit(1);
             }
+            optionSet.insert(SizeAndPositionOption);
             break;
         }
         case 'g':
             GimpAssociatedAlphaHack = true;
+            optionSet.insert(AssociatedAlphaOption);
             break;
         case 'h':
             justPrintUsage = true;
+            optionSet.insert(HelpOption);
             break;
         case 'l': {
             int levels = atoi(optarg);
             if (levels < 1) {
-                cerr << command << ": warning: too few levels; will use one level" << endl;
+                cerr << command
+                     << ": warning: too few levels; will use one level"
+                     << endl;
                 levels = 1;
             }
             // We take care of the "too many levels" case in "bounds.h".
             ExactLevels = static_cast<unsigned int>(levels);
+            optionSet.insert(LevelsOption);
             break;
         }
         case 'm': {
             int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << command << ": warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                cerr << command
+                     << ": warning: memory limit less than 1 MB; will use 1 MB"
+                     << endl;
                 megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            optionSet.insert(CacheSizeOption);
             break;
         }
         case 'o':
@@ -517,38 +597,51 @@ int process_options(int argc, char** argv) {
                 cerr << command << ": more than one output file specified." << endl;
                 exit(1);
             }
+            optionSet.insert(OutputOption);
             break;
         case 's':
             // Deprecated sequential blending flag.
             OneAtATime = true;
             cerr << command << ": warning: flag \"-s\" is deprecated." << endl;
+            optionSet.insert(SequentialBlendingOption);
             break;
         case 'v':
             Verbose++;
+            optionSet.insert(VerboseOption);
             break;
         case 'w':
             Wraparound = true;
+            optionSet.insert(Blend180Option);
             break;
         case 'x':
             Checkpoint = true;
+            optionSet.insert(CheckpointOption);
             break;
         case 'z':
             cerr << command << ": info: flag \"-z\" is deprecated;\n"
                  << command << ": info: use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
+            optionSet.insert(LZWCompressionOption);
             break;
         case '?':
             switch (optopt) {
                 case 0: // unknown long option
-                    cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
+                    cerr << command
+                         << ": unknown option \""
+                         << argv[optind - 1]
+                         << "\"\n";
                     break;
                 case 'b':           // FALLTHROUGH
                 case 'f':           // FALLTHROUGH
                 case 'l':           // FALLTHROUGH
                 case 'm':           // FALLTHROUGH
                 case 'o':
-                    cerr << command << ": option \"-" << optopt << "\" requires an argument" << endl;
+                    cerr << command
+                         << ": option \"-"
+                         << optopt
+                         << "\" requires an argument"
+                         << endl;
                     break;
                 default:
                     cerr << command << ": unknown option ";
@@ -563,7 +656,9 @@ int process_options(int argc, char** argv) {
             exit(1);
 
         default:
-            cerr << command << ": internal error: unhandled command line option" << endl;
+            cerr << command
+                 << ": internal error: unhandled command line option"
+                 << endl;
             exit(1);
         }
     }
@@ -577,6 +672,8 @@ int process_options(int argc, char** argv) {
         printVersionAndExit();
         // never reached
     }
+
+    warn_of_ineffective_options(optionSet);
 
     return optind;
 }
