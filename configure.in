@@ -1,5 +1,7 @@
 AC_PREREQ(2.59)
-AC_INIT(enblend-enfuse, 3.2-staging, [https://bugs.launchpad.net/enblend])
+AC_INIT(enblend-enfuse,
+        [m4_esyscmd([tr -d '\n' < VERSION])],
+        [https://bugs.launchpad.net/enblend])
 AC_CONFIG_SRCDIR([src/enblend.cc])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR(m4)
