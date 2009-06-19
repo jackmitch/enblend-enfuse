@@ -106,10 +106,11 @@ Focus Stacks
 
 Advanced Focus Stacking
 
-* Local Contrast Problem::      What is the problem Kenneth?
-* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
-* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Local Contrast Problem::        What is the problem Kenneth?
+* Laplacian Edge Detection::      Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::    Boosting local contrast before weighting
 * Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+* Focus Stacking Decision Tree::  What to do and how to fuse
 
 Helpful Programs
 
@@ -223,34 +224,34 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
- [image src="photographic-workflow.png" text="                        O
+ [image src="photographic-workflow.png" text="                        o
                         |
-                   _____v_______
+                   _____V_______
                   /             \\
                   | Take Images |
                   \\_____________/
                         |
-                        v
-                 +------+------+
-          [else] |             | [raw]
-                 |          ___v____________
+                        V
+                 /------+----------\\
+          [else] |                 | [raw]
+                 |          _______V________
                  |         /                \\
                  |         | Convert Images |  <-- DCRaw, UFRaw, etc.
                  |         \\________________/
-                 |             |
-                 +----->+<-----+
+                 |                 |
+                 \\----->+<---------/
                         |
-                  ______v_______
+                  ______V_______
                  /              \\
                  | Align Images |              <-- Hugin, Panotools
                  \\______________/
                         |
-                 _______v________
+                 _______V________
                 /                \\
                 | Combine Images |             <-- Enblend, Enfuse
                 \\________________/
                         |
-                  ______v______
+                  ______V______
                  /             \\
                  | Postprocess |               <-- The Gimp, et al.
                  \\_____________/
@@ -1223,11 +1224,11 @@ The "Laplacian of Gaussian" (LoG) is an operator to detect edges in an
 image.  Sometimes the LoG-operator is also called MARR-HILDRETH
 operator.  A Laplacian-of-Gaussian operator,
 `vigra::laplacianOfGaussian'
-(http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/doc/vigra/group__CommonConvolutionFilters.html)
-is part of the package Vigra
-(http://kogs-www.informatik.uni-hamburg.de/~koethe/vigra/) that Enfuse
-is built upon and is used for edge detection if option `--EdgeScale' is
-non-zero and `--MinCurvature' equal to or less than zero.
+(http://hci.iwr.uni-heidelberg.de/vigra/doc/vigra/group__CommonConvolutionFilters.html)
+is part of the package Vigra (http://hci.iwr.uni-heidelberg.de/vigra/)
+that Enfuse is built upon and is used for edge detection if
+option `--EdgeScale' is non-zero and `--MinCurvature' equal to or less
+than zero.
 
    Let the Gaussian function be
      g(x, y) = 1/pi * exp((x^2 + y^2) / (2 * sigma^2))/(2 * sigma^2)
@@ -1900,7 +1901,7 @@ File: enfuse.info,  Node: Focus Stacks,  Prev: Polarization Series,  Up: Applica
 *Main Purpose*:  Synthetic Depth-of-Field Increase
 
 A "focus stack" is a series of images where the distance of the focal
-plane from the sensor varies.  Sloppyly speaking, the images were
+plane from the sensor varies.  Sloppily speaking, the images were
 focussed at different distances.  Fusing such a stack increases the
 depth-of-field (DOF) beyond the physical limits of diffraction.
 
@@ -2046,10 +2047,11 @@ works around the seam artifacts.  It is described in the next section.
 
 * Menu:
 
-* Local Contrast Problem::      What is the problem Kenneth?
-* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
-* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Local Contrast Problem::        What is the problem Kenneth?
+* Laplacian Edge Detection::      Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::    Boosting local contrast before weighting
 * Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+* Focus Stacking Decision Tree::  What to do and how to fuse
 
 
 File: enfuse.info,  Node: Local Contrast Problem,  Next: Laplacian Edge Detection,  Up: Advanced Focus Stacking
@@ -2223,7 +2225,7 @@ also can be specified as a percentage.  Examples:
 By default LCE is turned off.
 
 
-File: enfuse.info,  Node: Suppressing Noise or Recognizing Faint Edges,  Prev: Local Contrast Enhancement,  Up: Advanced Focus Stacking
+File: enfuse.info,  Node: Suppressing Noise or Recognizing Faint Edges,  Next: Focus Stacking Decision Tree,  Prev: Local Contrast Enhancement,  Up: Advanced Focus Stacking
 
 7.6.5.4 Suppressing Noise or Recognizing Faint Edges
 ....................................................
@@ -2256,30 +2258,102 @@ range of edge curvatures.
 
 *Summary*
 
---EdgeScale=0.3
-     Use LoG to detect edges on a scale of 0.3 pixels.  Apply the
+`--EdgeScale=0.3'
+     Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average'.
 
---EdgeScale=0.3 --GrayProjector=l-star
-     Use LoG to detect edges on a scale of 0.3 pixels.  Apply the
+`--EdgeScale=0.3 --GrayProjector=l-star'
+     Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      L*-grayscale projector.
 
---EdgeScale=0.3:3:300%
-     Use LoG to detect edges on a scale of 0.3 pixels, pre-sharpen the
-     input images by 300% on a scale of 3 pixels.  Apply the default
+`--EdgeScale=0.3:3:300%'
+     Use LoG to detect edges on a scale of 0.3pixels, pre-sharpen the
+     input images by 300% on a scale of 3pixels.  Apply the default
      grayscale projector: `average'.
 
---EdgeScale=0.3 --MinCurvature=-0.5%
-     Use LoG to detect edges on a scale of 0.3 pixels.  Apply the
+`--EdgeScale=0.3 --MinCurvature=-0.5%'
+     Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average' and throw away all edges
      with a curvature of less than 0.5%.
 
---EdgeScale=0.3 --MinCurvature=0.5% --ContrastWindowSize=7
-     Use LoG to detect edges on a scale of 0.3 pixels.  Apply the
+`--EdgeScale=0.3 --MinCurvature=0.5% --ContrastWindowSize=7'
+     Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average' and throw away all edges
      with a curvature of less than 0.5% and replace the LoG data
-     between 0% and 0.5% with SDev data.  Usa a window of 7x7 pixel
+     between 0% and 0.5% with SDev data.  Usa a window of 7x7pixel
      window to compute the SDev.
+
+
+File: enfuse.info,  Node: Focus Stacking Decision Tree,  Prev: Suppressing Noise or Recognizing Faint Edges,  Up: Advanced Focus Stacking
+
+7.6.5.5 Focus Stacking Decision Tree
+....................................
+
+Figure *note Figure:focus-stacking-decision-tree:: helps the user to
+arrive at a well-fused focus stack with as little steps as possible.
+
+ [image src="focus-stack-decision-tree.png" text="                            o
+                            |
+               _____________V_____________
+              /                           \\
+              | Use local contrast window |
+              \\___________________________/
+                            |
+                            V    [else]
+                            +----------------------\\
+            [visible seams] |                      |
+               _____________V_____________         |
+              /                           \\        |
+              | Use Laplacian-of-Gaussian |        |
+              \\___________________________/        |
+                            |                      |
+                            V    [else]            |
+                            +--------------------->|
+      [still visible seams] |                      |
+              ______________V______________        |
+             /                             \\       |
+             | Apply positive MinCurvature |       |
+             \\_____________________________/       |
+                            |                      |
+                            V    [else]            V
+                            +--------------------->|
+      [loss of fine detail] |                      |
+                            |                      |
+                            |                      |
+   [mild loss of detail]    V                      |
+             /--------------+                      |
+             |              |                      |
+    _________V__________    |                      |
+   /                    \\   |                      |
+   | Use local contrast |   |                      |
+   |    enhancement     |   |                      |
+   \\____________________/   |                      |
+             |              V                      |
+             \\------------->+                      |
+                            |                      |
+               _____________V_______________       |
+              /                             \\      |
+              | Apply negative MinCurvature |      |
+              \\_____________________________/      |
+                            |                      V
+                            \\--------------------->O
+" ]
+
+Figure 7.3: Focus stacking decision tree.
+
+   Always start with the default, contrast weighting with a local
+contrast window.  Only if seams appear as described in *note Advanced
+Focus Stacking:: switch to Laplacian-of-Gaussian contrast detection.
+
+   If some seams remain even in LoG-mode, decrease the sensitivity of
+the edge detection with a positive `--MinCurvature'.  A too high value
+of `--MinCurvature' supresses fine detail though.  Part of the detail
+can be brought back with pre-sharpening, this is, *note Local Contrast
+Enhancement:: or combining LoG with local-contrast-window mode by using
+a negative `--MinCurvature'.
+
+   Carfully examining the masks (option `--debug') the Enfuses uses
+helps to jugde the effects of the parameters.
 
 
 File: enfuse.info,  Node: Expert Stacking,  Prev: Advanced Focus Stacking,  Up: Focus Stacks
@@ -2329,16 +2403,16 @@ Enfuse and Enblend.
 
 *Raw Image Conversion*
         * DCRaw (http://www.cybercom.net/~dcoffin/dcraw/) is a
-          universal raw-converter.
+          universal raw-converter written by DAVID COFFIN.
 
-        * UFRaw (http://ufraw.sourceforge.net/), a raw converter based
-          on DCRaw, adds a GUI (`ufraw'), versatile batch processing
-          (`ufraw-batch'), and some additional features like, for
-          example, cropping, noise reduction with wavelets, and
-          automatic lens error correction.
+        * UFRaw (http://ufraw.sourceforge.net/), a raw converter written
+          by UDI FUCHS and based on DCRaw, adds a GUI (`ufraw'),
+          versatile batch processing (`ufraw-batch'), and some
+          additional features like, for example, cropping, noise
+          reduction with wavelets, and automatic lens error correction.
 
 *Image Alignment and Rendering*
-        * ALE (http://auricle.dyndns.org/ALE/), David Hilvert's
+        * ALE (http://auricle.dyndns.org/ALE/), DAVID HILVERT'S
           anti-lamenessing engine for the real die-hard command-line
           users aligns, filters, and renders images.
 
@@ -2351,9 +2425,9 @@ Enfuse and Enblend.
           `fulla' to correct lens errors.
 
         * PanoTools (http://panotools.sourceforge.net/) the successor of
-          Helmut Dersch's original PanoTools
+          HELMUT DERSCH'S original PanoTools
           (http://www.all-in-one.ee/~dersch/) offers a set of
-          command-line dirven applications to create panoramas.  Most
+          command-line driven applications to create panoramas.  Most
           notable are `PTOptimizer' and `PTmender'.
 
 *Image Manipulation*
@@ -2864,6 +2938,7 @@ List of Figures
 * Figure 4.4: Entropy function:          Figure:entropy.
 * Figure 7.1: Sharp edge:                Figure:sharp-edge.
 * Figure 7.2: Smooth edge:               Figure:smooth-edge.
+* Figure 7.3: Focus stacking ...:        Figure:focus-stacking-decision-tree.
 
 
 File: enfuse.info,  Node: Program Index,  Next: Option Index,  Prev: List of Figures,  Up: Top
@@ -3020,6 +3095,8 @@ General Index
 * conversion, L*a*b*:                    Expert Options.      (line 138)
 * conversion, raw:                       Workflow.            (line  76)
 * dark frame:                            Expert Stacking.     (line  18)
+* decision tree, focus stacking:         Focus Stacking Decision Tree.
+                                                              (line   6)
 * deflate compression:                   Common Options.      (line  23)
 * delimiters, option:                    Option Delimiters.   (line   6)
 * depth-of-field:                        Why Focus Stacks.    (line  15)
@@ -3048,6 +3125,8 @@ General Index
                                                               (line   6)
 * FDL:                                   FDL.                 (line   6)
 * flash exposure series:                 Flash Exposure Series.
+                                                              (line   6)
+* focus stacking decision tree:          Focus Stacking Decision Tree.
                                                               (line   6)
 * focus stacking, advanced:              Advanced Focus Stacking.
                                                               (line   6)
@@ -3188,70 +3267,72 @@ General Index
 
 Tag Table:
 Node: Top717
-Node: Overview4356
-Ref: Table:weighting-criteria5543
-Ref: Overview-Footnote-17658
-Ref: Overview-Footnote-27827
-Ref: Overview-Footnote-38008
-Node: Workflow8190
-Ref: Figure:photographic-workflow8702
-Node: Invocation12684
-Node: Common Options13226
-Ref: Common Options-Footnote-115680
-Node: Extended Options15871
-Node: Fusion Options20665
-Node: Expert Options22540
-Ref: Figure:entropy-cutoff24922
-Node: Option Delimiters31918
-Node: Weighting Functions32883
-Node: Weighting Pixels33547
-Node: Weighted Average35049
-Node: Disabling Averaging35640
-Node: Exposure Weighting36589
-Ref: Figure:gaussian38067
-Node: Saturation Weighting41357
-Node: Contrast Weighting42453
-Node: Standard Deviation43782
-Ref: Figure:local-analysis-window44223
-Ref: Standard Deviation-Footnote-147114
-Node: Laplacian of Gaussian47263
-Ref: Figure:laplacian-of-gaussian48836
-Node: Blend SDev and LoG52284
-Node: Scaling and Choice of Mode53915
-Node: Entropy Weighting54757
-Ref: Figure:entropy55722
-Node: Understanding Masks59701
-Node: Tuning Memory Usage63490
-Ref: tab:cache-size-settings65564
-Node: Applications65872
-Node: What Images66594
-Node: Repetition69757
-Node: Exposure Series70814
-Node: Exposure Series Tips73016
-Node: Exposure Series Misconceptions74125
-Ref: Exposure Series Misconceptions-Footnote-175893
-Node: Flash Exposure Series76106
-Node: Polarization Series76348
-Node: Focus Stacks76782
-Node: Why Focus Stacks77664
-Node: Preparing Focus Stacks78991
-Node: Contrast Based Fusing79731
-Node: Basic Focus Stacking80978
-Node: Advanced Focus Stacking82334
-Node: Local Contrast Problem83031
-Ref: Figure:sharp-edge84231
-Ref: Figure:smooth-edge85830
-Node: Laplacian Edge Detection88266
-Node: Local Contrast Enhancement89347
-Node: Suppressing Noise or Recognizing Faint Edges90263
-Node: Expert Stacking92723
-Node: Helpful Programs94222
-Node: Authors97832
-Node: FDL98611
-Node: List of Tables119592
-Node: List of Figures119856
-Node: Program Index120512
-Node: Option Index123800
-Node: General Index126573
+Node: Overview4423
+Ref: Table:weighting-criteria5610
+Ref: Overview-Footnote-17725
+Ref: Overview-Footnote-27894
+Ref: Overview-Footnote-38075
+Node: Workflow8257
+Ref: Figure:photographic-workflow8769
+Node: Invocation12769
+Node: Common Options13311
+Ref: Common Options-Footnote-115765
+Node: Extended Options15956
+Node: Fusion Options20750
+Node: Expert Options22625
+Ref: Figure:entropy-cutoff25007
+Node: Option Delimiters32003
+Node: Weighting Functions32968
+Node: Weighting Pixels33632
+Node: Weighted Average35134
+Node: Disabling Averaging35725
+Node: Exposure Weighting36674
+Ref: Figure:gaussian38152
+Node: Saturation Weighting41442
+Node: Contrast Weighting42538
+Node: Standard Deviation43867
+Ref: Figure:local-analysis-window44308
+Ref: Standard Deviation-Footnote-147199
+Node: Laplacian of Gaussian47348
+Ref: Figure:laplacian-of-gaussian48887
+Node: Blend SDev and LoG52335
+Node: Scaling and Choice of Mode53966
+Node: Entropy Weighting54808
+Ref: Figure:entropy55773
+Node: Understanding Masks59752
+Node: Tuning Memory Usage63541
+Ref: tab:cache-size-settings65615
+Node: Applications65923
+Node: What Images66645
+Node: Repetition69808
+Node: Exposure Series70865
+Node: Exposure Series Tips73067
+Node: Exposure Series Misconceptions74176
+Ref: Exposure Series Misconceptions-Footnote-175944
+Node: Flash Exposure Series76157
+Node: Polarization Series76399
+Node: Focus Stacks76833
+Node: Why Focus Stacks77715
+Node: Preparing Focus Stacks79042
+Node: Contrast Based Fusing79782
+Node: Basic Focus Stacking81029
+Node: Advanced Focus Stacking82385
+Node: Local Contrast Problem83149
+Ref: Figure:sharp-edge84349
+Ref: Figure:smooth-edge85948
+Node: Laplacian Edge Detection88384
+Node: Local Contrast Enhancement89465
+Node: Suppressing Noise or Recognizing Faint Edges90381
+Node: Focus Stacking Decision Tree92881
+Ref: Figure:focus-stacking-decision-tree93236
+Node: Expert Stacking96320
+Node: Helpful Programs97819
+Node: Authors101478
+Node: FDL102257
+Node: List of Tables123238
+Node: List of Figures123502
+Node: Program Index124236
+Node: Option Index127524
+Node: General Index130297
 
 End Tag Table

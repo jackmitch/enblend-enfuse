@@ -49,6 +49,7 @@ math {display: block}
 math[display=inline] {display: inline}
 
 pre.example {}
+pre.display {font-family: sans-serif}
 pre.menu-comment {
     font-family: sans-serif;
     font-size: 110%;
@@ -60,6 +61,11 @@ small.enddots {}
 
 span.option {font-size: 110%}
 span.samp {font-size: 110%}
+
+strong {
+    font-family: sans-serif;
+    font-weight: bold;
+}
 
 table.index-cp {}
 table.index-op {}

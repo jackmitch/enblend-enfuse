@@ -177,10 +177,11 @@ Focus Stacks
 
 Advanced Focus Stacking
 
-* Local Contrast Problem::      What is the problem Kenneth?
-* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
-* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Local Contrast Problem::        What is the problem Kenneth?
+* Laplacian Edge Detection::      Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::    Boosting local contrast before weighting
 * Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+* Focus Stacking Decision Tree::  What to do and how to fuse
 
 Helpful Programs
 
@@ -2346,9 +2347,9 @@ The @dfn{Laplacian of Gaussian} (@acronym{LoG}) is an operator to
 detect edges in an image.  Sometimes the @acronym{LoG}-operator is
 also called @sc{Marr}-@sc{Hildreth} operator.  A Laplacian-of-Gaussian
 operator,
-@uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
+@uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
 @code{vigra::@/laplacian@/Of@/Gaussian}} is part of the
-package@tie{}@uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/,
+package@tie{}@uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
 Vigra} that Enfuse is built upon and is used for edge detection if
 option@tie{}@option{--EdgeScale} is non-zero and
 @option{--MinCurvature} equal to or less than zero.
@@ -3305,7 +3306,7 @@ to fuse a polarization series.  Na@"{@dotless{i}}vely abusing
 @mainpurpose Synthetic Depth-of-Field Increase
 
 A @dfn{focus stack} is a series of images where the distance of the
-focal plane from the sensor varies.  Sloppyly speaking, the images
+focal plane from the sensor varies.  Sloppily speaking, the images
 were focussed at different distances.  Fusing such a stack increases
 the depth-of-field (@acronym{DOF}) beyond the physical limits of
 diffraction.
@@ -3474,10 +3475,11 @@ effectively works around the seam artifacts.  It is described in the
 next section.
 
 @menu
-* Local Contrast Problem::      What is the problem Kenneth?
-* Laplacian Edge Detection::    Using a Laplacian-of-Gaussian to detect edges
-* Local Contrast Enhancement::  Boosting local contrast before weighting
+* Local Contrast Problem::        What is the problem Kenneth?
+* Laplacian Edge Detection::      Using a Laplacian-of-Gaussian to detect edges
+* Local Contrast Enhancement::    Boosting local contrast before weighting
 * Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
+* Focus Stacking Decision Tree::  What to do and how to fuse
 @end menu
 
 
@@ -3640,32 +3642,67 @@ curvatures.
 @noindent
 @strong{Summary}
 
-@table @asis
+@table @code
 @item -@/-EdgeScale=0.3
-Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
-default grayscale projector: @code{average}.
+Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels}.
+Apply the default grayscale projector: @code{average}.
 
 @item -@/-EdgeScale=0.3 -@/-GrayProjector=l-star
-Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
-L*-grayscale projector.
+Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels}.
+Apply the L*-grayscale projector.
 
 @item -@/-EdgeScale=0.3:3:300%
-Use @acronym{LoG} to detect edges on a scale of 0.3 pixels,
-pre-sharpen the input images by 300% on a scale of 3 pixels.  Apply
-the default grayscale projector: @code{average}.
+Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels},
+pre-sharpen the input images by 300% on a scale of 3@dmn{pixels}.
+Apply the default grayscale projector: @code{average}.
 
 @item -@/-EdgeScale=0.3 -@/-MinCurvature=@minus{}0.5%
-Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
-default grayscale projector: @code{average} and throw away all edges
-with a curvature of less than 0.5%.
+Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels}.
+Apply the default grayscale projector: @code{average} and throw away
+all edges with a curvature of less than 0.5%.
 
 @item -@/-EdgeScale=0.3 -@/-MinCurvature=0.5% -@/-ContrastWindowSize=7
-Use @acronym{LoG} to detect edges on a scale of 0.3 pixels.  Apply the
-default grayscale projector: @code{average} and throw away all edges
-with a curvature of less than 0.5% and replace the @acronym{LoG} data
-between 0% and 0.5% with @acronym{SDev} data.  Usa a window of
-7@classictimes{}7 pixel window to compute the @acronym{SDev}.
+Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels}.
+Apply the default grayscale projector: @code{average} and throw away
+all edges with a curvature of less than 0.5% and replace the
+@acronym{LoG} data between 0% and 0.5% with @acronym{SDev} data.  Usa
+a window of 7@classictimes{}7@dmn{pixel} window to compute the
+@acronym{SDev}.
 @end table
+
+
+@page
+@node Focus Stacking Decision Tree
+@subsubsection Focus Stacking Decision Tree
+@cindex focus stacking decision tree
+@cindex decision tree, focus stacking
+
+Figure@tie{}@ref{Figure:focus-stacking-decision-tree} helps the user
+to arrive at a well-fused focus stack with as little steps as
+possible.
+
+@float Figure,Figure:focus-stacking-decision-tree
+@image{focus-stack-decision-tree}
+
+@caption{Focus stacking decision tree.}
+
+@shortcaption{Focus stacking decision tree}
+@end float
+
+Always start with the default, contrast weighting with a local
+contrast window.  Only if seams appear as described in @ref{Advanced
+Focus Stacking} switch to Laplacian-of-Gaussian contrast detection.
+
+If some seams remain even in @acronym{LoG}-mode, decrease the
+sensitivity of the edge detection with a positive
+@option{--MinCurvature}.  A too high value of @option{--MinCurvature}
+supresses fine detail though.  Part of the detail can be brought back
+with pre-sharpening, this is, @ref{Local Contrast Enhancement} or
+combining @acronym{LoG} with local-contrast-window mode by using a
+negative @option{--MinCurvature}.
+
+Carfully examining the masks (option @option{--debug}) the Enfuses
+uses helps to jugde the effects of the parameters.
 
 
 @node Expert Stacking

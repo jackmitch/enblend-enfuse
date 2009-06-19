@@ -8,18 +8,18 @@ Enfuse and Enblend.
 @item
 @pindex DCRaw
 @pindex @command{dcraw}
-@uref{http://www.cybercom.net/@/~dcoffin/@/dcraw/, DCRaw} is a
-universal raw-converter.
+@uref{http://@/www.cybercom.net/@/~dcoffin/@/dcraw/, DCRaw} is a
+universal raw-converter written by @sc{David Coffin}.
 
 @item
 @pindex UFRaw
 @pindex @command{ufraw}
 @pindex @command{ufraw-batch}
-@uref{http://ufraw.sourceforge.net/, UFRaw}, a raw converter based on
-DCRaw, adds a @acronym{GUI} (@command{ufraw}), versatile batch
-processing (@command{ufraw-batch}), and some additional features like,
-for example, cropping, noise reduction with wavelets, and automatic
-lens error correction.
+@uref{http://@/ufraw.sourceforge.net/, UFRaw}, a raw converter written
+by @sc{Udi Fuchs} and based on DCRaw, adds a @acronym{GUI}
+(@command{ufraw}), versatile batch processing (@command{ufraw-batch}),
+and some additional features like, for example, cropping, noise
+reduction with wavelets, and automatic lens error correction.
 @end itemize
 
 
@@ -29,14 +29,14 @@ lens error correction.
 @item
 @pindex ALE
 @pindex Anti-Lamenessing Engine
-@uref{http://auricle.dyndns.org/ALE/, ALE}, David Hilvert's
+@uref{http://@/auricle.dyndns.org/ALE/, ALE}, @sc{David Hilvert's}
 anti-lamenessing engine for the real die-hard command-line users
 aligns, filters, and renders images.
 
 @item
 @pindex Hugin
 @pindex @command{hugin}
-@uref{http://hugin.sourceforge.net/, Hugin} is a @acronym{GUI} that
+@uref{http://@/hugin.sourceforge.net/, Hugin} is a @acronym{GUI} that
 aligns and stitches images.
 
 @pindex @command{nona}
@@ -51,10 +51,11 @@ overlapping images for @acronym{HDR} or create focus stacks, and
 @pindex PanoTools
 @pindex @command{PTOptimizer}
 @pindex @command{PTmender}
-@uref{http://panotools.sourceforge.net/, PanoTools} the successor of
-Helmut Dersch's @uref{http://www.all-in-one.ee/@/~dersch/, original
-PanoTools} offers a set of command-line dirven applications to create
-panoramas.  Most notable are @command{PTOptimizer} and @command{PTmender}.
+@uref{http://@/panotools.sourceforge.net/, PanoTools} the successor of
+@sc{Helmut Dersch's} @uref{http://@/www.all-in-one.ee/@/~dersch/,
+original PanoTools} offers a set of command-line driven applications
+to create panoramas.  Most notable are @command{PTOptimizer} and
+@command{PTmender}.
 @end itemize
 
 
@@ -64,7 +65,7 @@ panoramas.  Most notable are @command{PTOptimizer} and @command{PTmender}.
 @item
 @pindex CinePaint
 @pindex @command{cinepaint}
-@uref{http://www.cinepaint.org/, CinePaint} is a branch of an early
+@uref{http://@/www.cinepaint.org/, CinePaint} is a branch of an early
 Gimp forked off at version@tie{}1.0.4.  It sports much less features
 than the current Gimp, but offers 8@dmn{bit}, 16@dmn{bit} and
 32@dmn{bit} color channels, @acronym{HDR} (for example floating-point
@@ -74,15 +75,15 @@ management system.
 @item
 @pindex Gimp
 @pindex @command{gimp}
-The @uref{http://www.gimp.org/, Gimp} is a general purpose image
+The @uref{http://@/www.gimp.org/, Gimp} is a general purpose image
 manipulation program.  At the time of this writing it is still limited
 to images with only 8@dmn{bits} per channel.
 
 @item
 @pindex ImageMagick
 @pindex GraphicsMagick
-@uref{http://www.imagemagick.org/, ImageMagick} and its clone
-@uref{http://www.graphicsmagick.org/, GraphicsMagick} are general
+@uref{http://@/www.imagemagick.org/, ImageMagick} and its clone
+@uref{http://@/www.graphicsmagick.org/, GraphicsMagick} are general
 purpose command-line driven image manipulation programs.
 @end itemize
 
@@ -92,13 +93,13 @@ purpose command-line driven image manipulation programs.
 @itemize
 @item
 @pindex OpenEXR
-@uref{http://www.openexr.com/, OpenEXR} offers libraries and some
-programs to work with the EXR @acronym{HDR} format.
+@uref{http://@/www.openexr.com/, OpenEXR} offers libraries and some
+programs to work with the @acronym{EXR} @acronym{HDR} format.
 
 @item
 @pindex PFSTools
-@uref{http://pfstools.sourceforge.net/, PFSTools} create, modify, and
-tonemap high-dynamic range images.
+@uref{http://@/pfstools.sourceforge.net/, PFSTools} create, modify,
+and tonemap high-dynamic range images.
 @end itemize
 
 
@@ -107,24 +108,24 @@ tonemap high-dynamic range images.
 @itemize
 @item
 @pindex LibJPEG
-@uref{http://www.ijg.org/, LibJPEG} is a library for handling the JPEG
-(JFIF) image format.
+@uref{http://@/www.ijg.org/, LibJPEG} is a library for handling the
+@acronym{JPEG} (@acronym{JFIF}) image format.
 
 @item
 @pindex LibPNG
-@uref{http://www.libpng.org/@/pub/@/png/@/libpng.html, LibPNG} is a
+@uref{http://@/www.libpng.org/@/pub/@/png/@/libpng.html, LibPNG} is a
 library that handles the Portable Network Graphics (@acronym{PNG})
 image format.
 
 @item
 @pindex LibTIFF
-@uref{http://www.remotesensing.org/@/libtiff/, LibTIFF} offers a
+@uref{http://@/www.remotesensing.org/@/libtiff/, LibTIFF} offers a
 library and utility programs to manipulate the ubiquitous Tagged Image
 File Format, @acronym{TIFF}.
 
 @pindex @command{tiffinfo}
 The nifty @command{tiffinfo} command quickly inquires the properties
-of TIFF files.
+of @acronym{TIFF} files.
 @end itemize
 
 
@@ -134,14 +135,14 @@ of TIFF files.
 @item
 @pindex EXIFTool
 @pindex @command{exiftool}
-@uref{http://www.sno.phy.queensu.ca/@/~phil/@/exiftool/, EXIFTool}
+@uref{http://@/www.sno.phy.queensu.ca/@/~phil/@/exiftool/, EXIFTool}
 reads and writes @acronym{EXIF} meta data.  In particular it copies
 meta data from one image to another.
 
 @item
 @pindex LittleCMS, TiffICC
 @pindex @command{tifficc}
-@uref{http://www.littlecms.com/, LittleCMS} is the color management
+@uref{http://@/www.littlecms.com/, LittleCMS} is the color management
 library used by Hugin, DCRaw, UFRaw, Enblend, and Enfuse.  It supplies
 some binaries, too.  @command{tifficc}, an @acronym{ICC} color profile
 applier, is of particular interest.

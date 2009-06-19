@@ -26,6 +26,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   smooth-edge.gp.in smooth-edge.data \
                   local-analysis-window.fig \
                   photographic-workflow.fig \
+                  focus-stack-decision-tree.fig \
                   default.css
 
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
@@ -41,6 +42,7 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
              laplacian-of-gaussian.{txt,png,eps,pdf} \
              local-analysis-window.{txt,png,eps,pdf} \
              photographic-workflow.{txt,png,eps,pdf} \
+             focus-stack-decision-tree.{txt,png,eps,pdf} \
              sharp-edge.{txt,png,eps,pdf} \
              smooth-edge.{txt,png,eps,pdf} \
              *.fig.bak \
@@ -54,20 +56,35 @@ MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 # Phony Targets
 
+.PHONY: html-local
+html-local:
+	test -d enblend.html && \
+            for i in $(enblend_TEXINFOS); do \
+              test -f $${i%.png}.png && cp $$i enblend.html; \
+            done; true
+	test -d enfuse.html && \
+            for i in $(enfuse_TEXINFOS); do \
+              test -f $${i%.png}.png && cp $$i enfuse.html; \
+            done; true
+
+
 # The public id is in "tidy.cfg".
 DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
 
 .PHONY: xhtml
-xhtml: html
-	for x in *.html; do \
+xhtml: $(HTMLS) html-local
+	for x in $(HTMLS); do \
 	  if test -d $$x; then \
+            test -d $${x/%.html/.xhtml} || mkdir $${x/%.html/.xhtml}; \
+            cp $$x/*.png $${x/%.html/.xhtml}; \
 	    for y in $$x/*.html; do \
 	      tidy -config @srcdir@/tidy.cfg -file $${y/%.html/.msg} $$y | \
-	        $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${y/%.html/.xhtml}; \
+	        $(SED) -e '1,9s|""|$(DTD_SYSID)|' \
+                       -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' > $${y//.html/.xhtml}; \
             done; \
 	  else \
 	    tidy -config @srcdir@/tidy.cfg -file $${x/%.html/.msg} $$x | \
-	      $(SED) --expression='1,9s#""#$(DTD_SYSID)#' > $${x/%.html/.xhtml}; \
+	      $(SED) -e '1,9s|""|$(DTD_SYSID)|' > $${x/%.html/.xhtml}; \
           fi; \
 	done
 
@@ -113,6 +130,7 @@ enblend.pdf: photographic-workflow.png
 
 
 enfuse.info: photographic-workflow.txt \
+             focus-stack-decision-tree.txt \
              entropy.txt \
              entropy-cutoff.txt \
              gaussian.txt \
@@ -122,6 +140,7 @@ enfuse.info: photographic-workflow.txt \
              smooth-edge.txt
 
 enfuse.dvi: photographic-workflow.eps \
+            focus-stack-decision-tree.eps \
             entropy.eps \
             entropy-cutoff.eps \
             gaussian.eps \
@@ -132,6 +151,7 @@ enfuse.dvi: photographic-workflow.eps \
 
 enfuse.html \
 enfuse.pdf: photographic-workflow.png \
+            focus-stack-decision-tree.png \
             entropy.png \
             entropy-cutoff.png \
             gaussian.png \

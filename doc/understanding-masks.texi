@@ -67,7 +67,7 @@ A mask defines a selection of pixels.  A value of zero represents an
 unselected pixel.  The maximum value (``white'') represents a selected
 pixel and the values between zero and the maximum are partially
 selected pixels.  See
-@uref{http://gimp-savvy.com/@/BOOK/@/index.html?node42.html,
+@uref{http://@/gimp-savvy.com/@/BOOK/@/index.html?node42.html,
 Gimp-Savy}.
 
 @item Alpha Channel
@@ -80,7 +80,7 @@ opaque.
 @item Matte
 The notion ``matte'' as used by ImageMagick refers to an inverted
 alpha channel, more precisely: 1 - alpha.  See
-@uref{http://www.imagemagick.org/@/Usage/@/channels/@/#trans,
+@uref{http://@/www.imagemagick.org/@/Usage/@/channels/@/#trans,
 ImageMagick} for further explanations.
 @end table
 
