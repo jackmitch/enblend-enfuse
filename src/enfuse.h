@@ -1105,10 +1105,11 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 /** Enfuse's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enfuseMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo& outputImageInfo,
-        Rect2D& inputUnion) {
-
+void enfuseMain(const list<char*>& inputFileNameList,
+                list<ImageImportInfo*> &imageInfoList,
+                ImageExportInfo& outputImageInfo,
+                Rect2D& inputUnion)
+{
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
@@ -1138,9 +1139,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
                                             new AlphaType(inputUnion.size()));
 
-    int m = 0;
+    unsigned m = 0;
+    list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
     while (!imageInfoList.empty()) {
-
         Rect2D imageBB;
         pair<ImageType*, AlphaType*> imagePair =
                 assemble<ImageType, AlphaType>(imageInfoList, inputUnion, imageBB);
@@ -1152,10 +1153,33 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                                    destImage(*mask));
 
         if (SaveMasks) {
-            std::ostringstream oss;
-            oss << "mask" << std::setw(4) << std::setfill('0') << m << ".tif";
-            ImageExportInfo maskInfo(oss.str().c_str());
-            exportImage(srcImageRange(*mask), maskInfo);
+            const std::string maskFilename =
+                enblend::expandFilenameTemplate(SoftMaskTemplate,
+                                                *inputFileNameIterator,
+                                                OutputFileName,
+                                                m);
+            if (maskFilename == *inputFileNameIterator) {
+                cerr << command
+                     << ": will not overwrite input image \""
+                     << *inputFileNameIterator
+                     << "\" with soft mask"
+                     << endl;
+                exit(1);
+            } else if (maskFilename == OutputFileName) {
+                cerr << command
+                     << ": will not overwrite output image \""
+                     << OutputFileName
+                     << "\" with soft mask"
+                     << endl;
+                exit(1);
+            } else {
+                if (Verbose > VERBOSE_MASK_MESSAGES) {
+                    cerr << command
+                         << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                }
+                ImageExportInfo maskInfo(maskFilename.c_str());
+                exportImage(srcImageRange(*mask), maskInfo);
+            }
         }
 
         // Make output alpha the union of all input alphas.
@@ -1187,6 +1211,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         #endif
 
         ++m;
+        ++inputFileNameIterator;
     }
 
     const int totalImages = imageList.size();
@@ -1195,12 +1220,12 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
     if (UseHardMask) {
-        if (Verbose) {
+        if (Verbose > VERBOSE_MASK_MESSAGES) {
             cerr << command
                  << ": info: creating hard blend mask" << endl;
         }
         Size2D sz = normImage->size();
-        typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
+        typename list< triple<ImageType*, AlphaType*, MaskType*> >::iterator imageIter;
         for (int y = 0; y < sz.y; ++y) {
             for (int x = 0; x < sz.x; ++x) {
                 float max = 0.0f;
@@ -1221,7 +1246,8 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                      imageIter != imageList.end();
                      ++imageIter) {
                     if (max == 0.0f) {
-                        (*(*imageIter).third)(x, y) = static_cast<MaskPixelType>(maxMaskPixelType) / totalImages;
+                        (*(*imageIter).third)(x, y) =
+                            static_cast<MaskPixelType>(maxMaskPixelType) / totalImages;
                     } else if (i == maxi) {
                         (*(*imageIter).third)(x, y) = maxMaskPixelType;
                     } else {
@@ -1231,13 +1257,38 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 }
             }
         }
-        int i = 0;
+        unsigned i = 0;
         if (SaveMasks) {
-            for (imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
-                std::ostringstream oss;
-                oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";
-                ImageExportInfo maskInfo(oss.str().c_str());
-                exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+            for (imageIter = imageList.begin(), inputFileNameIterator = inputFileNameList.begin();
+                 imageIter != imageList.end();
+                 ++imageIter, ++inputFileNameIterator) {
+                const std::string maskFilename =
+                    enblend::expandFilenameTemplate(HardMaskTemplate,
+                                                    *inputFileNameIterator,
+                                                    OutputFileName,
+                                                    i);
+                if (maskFilename == *inputFileNameIterator) {
+                    cerr << command
+                         << ": will not overwrite input image \""
+                         << *inputFileNameIterator
+                         << "\" with hard mask"
+                         << endl;
+                    exit(1);
+                } else if (maskFilename == OutputFileName) {
+                    cerr << command
+                         << ": will not overwrite output image \""
+                         << OutputFileName
+                         << "\" with hard mask"
+                         << endl;
+                    exit(1);
+                } else {
+                    if (Verbose > VERBOSE_MASK_MESSAGES) {
+                        cerr << command
+                             << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
+                    }
+                    ImageExportInfo maskInfo(maskFilename.c_str());
+                    exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+                }
                 i++;
             }
         }

@@ -1,7 +1,7 @@
 This is ../../doc/enfuse.info, produced by makeinfo version 4.11 from
 ../../doc/enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 9 April 2009), a
+This manual is for Enfuse (version 3.2-staging, 11 April 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -20,7 +20,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 9 April 2009), a
+This manual is for Enfuse (version 3.2-staging, 11 April 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -400,8 +400,8 @@ Common options control some overall features of Enfuse.
    ---------- Footnotes ----------
 
    (1) As Dr. Daniel Jackson correctly noted
-(http://stargate.wikia.com/wiki/The_Tomb) actually, it is not a
-pyramid.  "Ziggaurat, it's a Ziggaurat
+(http://stargate.wikia.com/wiki/The_Tomb), actually, it is not a
+pyramid: "Ziggaurat, it's a Ziggaurat
 (http://en.wikipedia.org/wiki/Ziggaurat).
 
 
@@ -645,44 +645,6 @@ to read the manual before applying them successfully.
      image (for example 255 or 65535).  *note Figure:entropy-cutoff::
      shows an example.
 
-      [image src="entropy-cutoff.png" text="
-           +-----------+------------+-----------+------------+-----------+
-           +           +            +           +            +           +
-           |           :            :           :            :           |
-         1 ++......................................................####***
-           |           :            :           :            :     #**** |
-           |           :            :           :            :    ***    |
-           |           :            :           :            :  ***      |
-           |           :            :           :            ****        |
-       0.8 ++..............................................***..........++
-           |           :            :           :       **** :           |
-           |           :            :           :     ***    :           |
-           |           :            :           :   ***      :           |
-           |           :            :           :****        :           |
-       0.6 ++..................................***......................++
-           |           :            :       ****:            :           |
-           |           :            :     ***   :            :           |
-           |           :            :   ***     :            :           |
-           |           :            :****       :            :           |
-       0.4 ++......................***..................................++
-           |           :        ****:           :            :           |
-           |           :      ***   :           :            :           |
-           |           :    ***     :           :            :           |
-           |           : ****       :           :            :           |
-       0.2 ++..........***..............................................++
-           |        ****            :           :            :           |
-           |      ***  :            :           :            :           |
-           |    ***    :            :           :            :           |
-           | ****      :            :           :            :           |
-         0 ***#.................................................Y.******++
-           |           :           EntropyCutoff(Y, Lower, Upper) ###### |
-           +           +            +           +            +           +
-           +-----------+------------+-----------+------------+-----------+
-           0          0.2          0.4         0.6          0.8          1
-                                          Y
-
-     " ]
-
      Figure 3.1: Linear lightness Y in comparison with an
      entropy-cutoff function for LOWER-CUTOFF = 5% and UPPER-CUTOFF =
      90% which are rather extreme values.
@@ -792,12 +754,102 @@ to read the manual before applying them successfully.
         Consider all masks when fusing.  This is the default.
 
   `--SaveMasks'
-        Save all weight files as TIFF images.  If option `--HardMask'
-     is effective also save the hard masks.  Soft mask files are called
-     `mask[0-9][0-9][0-9][0-9].tif' and hard mask files follow the
-     pattern `mask[0-9][0-9][0-9][0-9]_wta.tif'.  Mask file `0000'
-     corresponds to the first input file, `0001' to the second one, and
-     so on.
+  `--SaveMasks=SOFT-MASK-TEMPLATE'
+  `--SaveMasks=SOFT-MASK-TEMPLATE:HARD-MASK-TEMPLATE'
+        Save all weight files as TIFF images.  First form: Save all
+     soft weight masks in files.  If option `--HardMask' is effective
+     also save the hard masks.  The defaults are `mask%04i.tif' and
+     `mask%04i_wta.tif'.  In the second form SOFT-MASK-TEMPLATE defines
+     the names of the soft mask files.  In the third form
+     HARD-MASK-TEMPLATE additionally defines the names of the hard mask
+     files.
+
+        Both SOFT-MASK-TEMPLATE and HARD-MASK-TEMPLATE define templates
+     that are expanded for each mask file.  In a template a percent
+     sign (`%') introduces a variable part.  All other characters are
+     copied literally.  Lowercase letters refer to the name of the
+     respective input file, whereas uppercase ones refer to the name of
+     the output file (*note Common Options::).  *note
+     Table:mask-template-characters:: lists all variables.
+
+        A fancy mask filename template could look like this:
+
+          %D/soft-mask-%02n-%f.viff
+
+        It puts the mask files into the same directory as the output
+     file (`%D'), generates a two-digit index (`%02n') to keep the mask
+     files nicely sorted, and decorates the mask filename with the name
+     of the associated input file (`%f') for easy recognition.
+
+`%%'
+     Produces a literal `%'-sign.
+
+`%i'
+     Expands to the index of the mask file starting at zero.
+
+     `%i' supports setting a pad character or a width specification:
+
+          `%' PAD WIDTH `i'
+
+     PAD is either `0' or any punctuation character; the default pad
+     character is `0'.  WIDTH is an integer.  Examples: `%02i' or
+     `%_4i'.
+
+`%n'
+     Expands to the number of the mask file starting at one.  Otherwise
+     it behaves identical to `%i' including pad character and width
+     specification.
+
+`%p'
+     This is the full name (path, filename, and extension) of the input
+     file associated with the mask.
+
+     Example: If the input file is called `/home/luser/snap/img.jpg',
+     `%p' expands to `/home/luser/snap/img.jpg', or shorter: `%p' =>
+     `/home/luser/snap/img.jpg'.
+
+`%P'
+     This is the full name of the output file.
+
+`%d'
+     Is replaced with the directory part of the associated input file.
+     *note (coreutils.info)dirname::.
+
+     Example (cont.): `%d' => `/home/luser/snap'.
+
+`%D'
+     Is replaced with the directory part of the output file.
+
+`%b'
+     Is replaced with the non-directory part (often called "basename")
+     of the associated input file.  *note (coreutils.info)basename::.
+
+     Example (cont.): `%b' => `img.jpg'.
+
+`%B'
+     Is replaced with the non-directory part of the output file.
+
+`%f'
+     Is replaced with the filename without path and extension of the
+     associated input file.
+
+     Example (cont.): `%f' => `img'.
+
+`%F'
+     Is replaced with the filename without path and extension of the
+     output file.
+
+`%e'
+     Is replaced with the extension (including the leading dot) of the
+     associated input file.
+
+     Example (cont.): `%e' => `.jpg'.
+
+`%E'
+     Is replaced with the extension of the output file.
+
+Table 3.1: Special characters to control the generation of mask
+filenames.
 
 
 File: enfuse.info,  Node: Option Delimiters,  Prev: Expert Options,  Up: Invocation
@@ -808,9 +860,13 @@ File: enfuse.info,  Node: Option Delimiters,  Prev: Expert Options,  Up: Invocat
 Enfuse allows the arguments supplied to the program's options to be
 separated by different separators.  The online documentation and this
 manual, however, exclusively use the colon `:' in every syntax
-definition and in all examples.  Valid delimiters are the the semicolon
-`;', the colon `:', and the slash `/'.  All delimiters may be mixed
-within any option.
+definition and in all examples.
+
+*Numeric Arguments*
+
+   Valid delimiters are the the semicolon `;', the colon `:', and the
+slash `/'.  All delimiters may be mixed within any option that takes
+numeric arguments.
 
 Examples:
 
@@ -831,6 +887,19 @@ Examples:
 
 `--GrayProjector=channel-mixer/30;60:10'
      Go wild and Enfuse will understand.
+
+*Filename Arguments*
+
+   Here, the accepted delimiters are `,', `;', and `:'.  Again, all
+delimiters may be mixed within any option that has filename arguments.
+
+Examples:
+
+`--SaveMasks=soft-mask-%03i.tif:hard-mask-03%i.tif'
+     Separate all arguments with colons.
+
+`--SaveMasks=%d/soft-%n.tif,%d/hard-%n.tif'
+     Use a comma.
 
 
 File: enfuse.info,  Node: Weighting Functions,  Next: Understanding Masks,  Prev: Invocation,  Up: Top
@@ -960,44 +1029,6 @@ time; the pixel's neighborhood is not taken into account.
 options `--wMu' and `--wSigma' respectively.  Mu defaults to 0.5, the
 middle of the luminance interval.  Sigma defaults to 0.2.  *note
 Figure:gaussian:: shows a Gaussian with these parameters.
-
- [image src="gaussian.png" text="
-    1 ++----------+------------+---*****---+------------+----------++
-      +           +            +  *     *  +     Gaussian(Y) ****** +
-      |                         **       **                         |
-      |                        **         **                        |
-      |                       *             *                       |
-      |                       *             *                       |
-  0.8 ++                     *               *                     ++
-      |                     *                 *                     |
-      |                    *                   *                    |
-      |                    *                   *                    |
-      |                   *                     *                   |
-      |                  *                       *                  |
-  0.6 ++                 *                       *                 ++
-      |                 *                         *                 |
-      |                 *                         *                 |
-      |                *                           *                |
-      |               *                             *               |
-      |              **                             **              |
-      |             *                                 *             |
-  0.4 ++            *                                 *            ++
-      |            *                                   *            |
-      |            *                                   *            |
-      |          **                                     **          |
-      |          *                                       *          |
-      |        **                                         **        |
-  0.2 ++      **                                           **      ++
-      |      **                                             **      |
-      |     *                                                 *     |
-      |   **                                                   **   |
-      |***                                                       ***|
-      *           +            +           +            +           *
-    0 ++----------+------------+-----------+------------+----------++
-      0          0.2          0.4         0.6          0.8          1
-                                     Y
-
-" ]
 
 Figure 4.1: Gaussian function with Enfuse's default parameters MU = 0.5
 and SIGMA = 0.2.
@@ -1202,44 +1233,6 @@ the image.  The operator is radially symmetric with respect to the
 origin, which is why we can easily plot it in *note
 Figure:laplacian-of-gaussian::, setting R = sqrt(x^2 + y^2).
 
- [image src="laplacian-of-gaussian.png" text="
-  1 ++--------------+---------------+---------------+--------------++
-    +               +             *****             +               +
-    |               :          **** :  *******      :               |
-    |               :        **     :        *******:               |
-  0 ++.....................**.......................*****************
-    |               :    **         :               :               |
-    |               :    *          :               :               |
-    |               :  **           :               :               |
-    |               :  *            :               :               |
- -1 ++...............**............................................++
-    |               :*              :               :               |
-    |               *               :               :               |
-    |               *               :               :               |
- -2 ++.............*...............................................++
-    |             * :               :               :               |
-    |            ** :               :               :               |
-    |           *   :               :               :               |
-    |           *   :               :               :               |
- -3 ++.........*...................................................++
-    |         *     :               :               :               |
-    |         *     :               :               :               |
-    |       **      :               :               :               |
- -4 ++......*......................................................++
-    |      *        :               :               :               |
-    |     *         :               :               :               |
-    |    *          :               :               :               |
-    |  **           :               :               :               |
- -5 ***............................................................++
-    |               :               :               :               |
-    |               :            LaplacianOfGaussian(R, 0.5) ****** |
-    +               +               +               +               +
- -6 ++--------------+---------------+---------------+--------------++
-    0              0.5              1              1.5              2
-                                    R
-
-" ]
-
 Figure 4.3: Laplacian-of-Gaussian function for sigma = 0.5.
 
 See also HIPR2: Laplacian of Gaussian
@@ -1355,44 +1348,6 @@ entropy depends on the choice of the constant a > 1.  Obviously
 entropy of the "impossible message" to zero according to
      lim(p * log_a(1 / p), p -> 0) = 0.
    *note Figure:entropy:: shows an entropy function.
-
- [image src="entropy.png" text="
-    1 ++----------+------------+-*********-+------------+----------++
-      +           +          ****         ****    Entropy(p) ****** +
-      |                    ***               ***                    |
-      |                  ***                   ***                  |
-      |                 **                       **                 |
-      |               **                           **               |
-  0.8 ++             **                             **             ++
-      |             *                                 *             |
-      |            *                                   *            |
-      |           *                                     *           |
-      |          *                                       *          |
-      |         *                                         *         |
-  0.6 ++       *                                           *       ++
-      |        *                                           *        |
-      |       *                                             *       |
-      |      *                                               *      |
-      |     *                                                 *     |
-      |     *                                                 *     |
-      |    *                                                   *    |
-  0.4 ++   *                                                    *  ++
-      |   *                                                     *   |
-      |   *                                                     *   |
-      |  *                                                       *  |
-      |  *                                                       *  |
-      |  *                                                        * |
-  0.2 ++*                                                         *++
-      | *                                                          *|
-      |*                                                           *|
-      |*                                                           *|
-      |                                                             |
-      +           +            +           +            +           +
-    0 ++----------+------------+-----------+------------+----------++
-      0          0.2          0.4         0.6          0.8          1
-                                     p
-
-" ]
 
 Figure 4.4: Entropy function H for an experiment with exactly two
 outcomes.
@@ -1570,8 +1525,8 @@ The CACHE-SIZE should be set in a way as to reconcile all of the above
 aspects even for the biggest data sets (this is many images and large
 images).
 
-   Suggested cache- and buffer-sizes for different amounts of available
-RAM.
+   *note Table:cache-size-settings:: suggestes some cache- and
+buffer-sizes for different amounts of available RAM.
 
       RAM  | CACHE-SIZE | BUFFER-SIZE | Comment
       MB   |     MB     |     KB      |
@@ -2038,84 +1993,8 @@ in fact Tela (http://www.ava.fmi.fi/~pjanhune/tela/) syntax.
    Images *note Figure:sharp-edge:: and *note Figure:smooth-edge:: show
 plots of the matrices `sharp_edge' and `smooth_edge'.
 
- [image src="sharp-edge.png" text="
-
-
-
-                                                   sharp_edge ******
-                                                          250 $$$$$$
-                                                          200 %%%%%%
-                                                          150 @@@@@@
-                           ###                            100 &&&&&&
-                        ###   #                            50 ======
-                        ###    #
-                        # ##    #
-     300  ++           ###  #    #
-     250  |+          ##     #    #
-          |         #####     #    #
-     200  |+       # # # #     #    #####
-          |       #   #   #     # ##     ########
-     100  |+    ##    # ##*#     ###########     ############
-          |          # #   -#*    # ##      ########     ## |
-      50  |+  ##     ##  -%%@**   ######    ##      #####   |
-          | ##     ## -@%%@@&&**##      ########    ##      |
-       0  #####    -#=&&&======####.    ##      ####----    |
-          |    ####+==&@@@@%%@@&** ########.    ##.+    ---- 4
-          |   --- ==&@@ .%%$$%@@&* ##      #####....     --+
-          | -- ++=&&@ .%% %%@@& ==*###..   ##..     ..+ 3
-          +---    =&.@%%%%@@&===..    #####.....    ---
-        0  +  -----=&&&& ======....     .|      .. 2
-                1   ==&&@@@@&& =   ......|.    ---
-                        2 --@-&-=  +..   | ..- 1
-                                3-----   |+--
-                                       4- 0
-
-
-
-
-
-" ]
-
 Figure 7.1: 3D plot augmented by contour plot of the matrix
 `sharp_edge'.
-
- [image src="smooth-edge.png" text="
-
-
-
-                                                  smooth_edge ******
-                                                          250 $$$$$$
-                                                          200 %%%%%%
-                                                          150 @@@@@@
-                                                          100 &&&&&&
-                                                           50 ======
-                                                     ########
-                                             ########    ## |
-     300  ++                         ########   #########   |
-     250  |+                  #######   #########   ##      |
-          |                 ##   ########   ########        |
-     200  |+             ########   ########    ##          |
-          |           ####  ########   #########            |
-     100  |+      ##########################                |
-          |     #########  #########     |                  |
-      50  |+  ##   #########     -==-----|                  |
-          |#########  ---+..    ==.+   &&--------           |
-       0  ##       ---      .===.... &&  |.+@@@  ---%%---   |
-          |      --++...   ==.    &&&....@@@     .%%     -$$ 4
-          |   ---       ===....&&&   ..@@|  ...%%%..    $$-+
-          | -- ++.. ====.    && .....@@. |   %%     ..$ 3
-          +---    ==.......&&   .. @@   .|.%%...    $$-
-        0  +  ---=--     &&......@@     .%%     .$ 2
-                1   ---&&- +.. @@  ...%%%|.    $$-
-                        2 ---@@-   +%%   | ..$ 1
-                                3--%--   |+$$
-                                       4- 0
-
-
-
-
-
-" ]
 
 Figure 7.2: 3D plot augmented by contour plot of the matrix
 `smooth_edge'.
@@ -2151,10 +2030,10 @@ for weighting.
 
    Typically, SCALE ranges between 0.1pixels and 0.5pixels, where
 0.3pixels is a good starting point.  To find the best value for SCALE
-though, usually some experimentation will be necessary.  Use the
-`--SaveMasks' option to get all `mask####.tif' and `mask####_wta.tif'
-files (*note Understanding Masks::) and check how different scales
-affect the artifacts.
+though, usually some experimentation will be necessary.  Use
+`--SaveMasks' to get all soft- (default: `mask%04i.tif') and hard-mask
+files (default: `mask%04i_wta.tif').  Check how different scales affect
+the artifacts.  Also *note Understanding Masks::.
 
 
 File: enfuse.info,  Node: Local Contrast Enhancement,  Next: Suppressing Noise or Recognizing Faint Edges,  Prev: Laplacian Edge Detection,  Up: Advanced Focus Stacking
@@ -2256,13 +2135,13 @@ Focus Stacking:: switch to Laplacian-of-Gaussian contrast detection.
 
    If some seams remain even in LoG-mode, decrease the sensitivity of
 the edge detection with a positive `--MinCurvature'.  A too high value
-of `--MinCurvature' supresses fine detail though.  Part of the detail
+of `--MinCurvature' suppresses fine detail though.  Part of the detail
 can be brought back with pre-sharpening, this is, *note Local Contrast
 Enhancement:: or combining LoG with local-contrast-window mode by using
 a negative `--MinCurvature'.
 
-   Carfully examining the masks (option `--SaveMasks') the Enfuses uses
-helps to jugde the effects of the parameters.
+   Carefully examining the masks (option `--SaveMasks') that Enfuse
+uses helps to judge the effects of the parameters.
 
 
 File: enfuse.info,  Node: Expert Stacking,  Prev: Advanced Focus Stacking,  Up: Focus Stacks
@@ -2829,7 +2708,8 @@ List of Tables
 * Menu:
 
 * Table 1.1: Weighting criteria:         Table:weighting-criteria.
-* Table 6.1: Suggested ...:              tab:cache-size-settings.
+* Table 3.1: Mask template ...:          Table:mask-template-characters.
+* Table 6.1: Suggested ...:              Table:cache-size-settings.
 
 
 File: enfuse.info,  Node: List of Figures,  Next: Program Index,  Prev: List of Tables,  Up: Top
@@ -2916,16 +2796,16 @@ Option Index
 * --depth:                               Extended Options.    (line  30)
 * --EdgeScale:                           Expert Options.      (line  27)
 * --EntropyCutoff:                       Expert Options.      (line  46)
-* --EntropyWindowSize:                   Expert Options.      (line 111)
-* --GrayProjector:                       Expert Options.      (line 124)
+* --EntropyWindowSize:                   Expert Options.      (line  73)
+* --GrayProjector:                       Expert Options.      (line  86)
 * --HardMask <1>:                        Expert Stacking.     (line  22)
 * --HardMask <2>:                        Disabling Averaging. (line   6)
-* --HardMask:                            Expert Options.      (line 178)
+* --HardMask:                            Expert Options.      (line 140)
 * --help:                                Common Options.      (line  43)
-* --MinCurvature:                        Expert Options.      (line 190)
+* --MinCurvature:                        Expert Options.      (line 152)
 * --output:                              Common Options.      (line  56)
-* --SaveMasks:                           Expert Options.      (line 207)
-* --SoftMask:                            Expert Options.      (line 204)
+* --SaveMasks:                           Expert Options.      (line 171)
+* --SoftMask:                            Expert Options.      (line 166)
 * --verbose:                             Common Options.      (line  63)
 * --version:                             Common Options.      (line  68)
 * --wContrast:                           Fusion Options.      (line  10)
@@ -3002,7 +2882,7 @@ General Index
                                                               (line   6)
 * contrast weighting using standard deviation: Standard Deviation.
                                                               (line   6)
-* conversion, L*a*b*:                    Expert Options.      (line 138)
+* conversion, L*a*b*:                    Expert Options.      (line 100)
 * conversion, raw:                       Workflow.            (line  41)
 * dark frame:                            Expert Stacking.     (line  18)
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
@@ -3034,6 +2914,7 @@ General Index
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
 * FDL:                                   FDL.                 (line   6)
+* filename template:                     Expert Options.      (line 174)
 * flash exposure series:                 Flash Exposure Series.
                                                               (line   6)
 * focus stacking decision tree:          Focus Stacking Decision Tree.
@@ -3052,13 +2933,13 @@ General Index
                                                               (line   6)
 * general index:                         General Index.       (line   6)
 * GNU Free Documentation License:        FDL.                 (line   6)
-* gray projector:                        Expert Options.      (line 124)
-* gray projector, average:               Expert Options.      (line 132)
-* gray projector, channel-mixer:         Expert Options.      (line 164)
-* gray projector, l-star:                Expert Options.      (line 138)
-* gray projector, lightness:             Expert Options.      (line 148)
-* gray projector, luminance:             Expert Options.      (line 158)
-* gray projector, value:                 Expert Options.      (line 153)
+* gray projector:                        Expert Options.      (line  86)
+* gray projector, average:               Expert Options.      (line  94)
+* gray projector, channel-mixer:         Expert Options.      (line 126)
+* gray projector, l-star:                Expert Options.      (line 100)
+* gray projector, lightness:             Expert Options.      (line 110)
+* gray projector, luminance:             Expert Options.      (line 120)
+* gray projector, value:                 Expert Options.      (line 115)
 * half precision float, OpenEXR:         Extended Options.    (line  98)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
@@ -3073,7 +2954,7 @@ General Index
 * input masks:                           Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  15)
-* L*a*b* conversion:                     Expert Options.      (line 138)
+* L*a*b* conversion:                     Expert Options.      (line 100)
 * laplacian edge detection:              Laplacian Edge Detection.
                                                               (line   6)
 * Laplacian of Gaussian:                 Laplacian of Gaussian.
@@ -3092,7 +2973,9 @@ General Index
 * LZW compression:                       Common Options.      (line  29)
 * mask, binary:                          Understanding Masks. (line   6)
 * mask, weight:                          Understanding Masks. (line   6)
+* masks, filename template:              Expert Options.      (line 174)
 * masks, input files:                    Understanding Masks. (line  18)
+* masks, saving:                         Expert Options.      (line 171)
 * masks, undestanding:                   Understanding Masks. (line   6)
 * masks, weight:                         Understanding Masks. (line  91)
 * memory, tuning usage of:               Tuning Memory Usage. (line   6)
@@ -3176,73 +3059,74 @@ General Index
 
 
 Tag Table:
-Node: Top717
-Node: Overview4423
-Ref: Table:weighting-criteria5610
-Ref: Overview-Footnote-17725
-Ref: Overview-Footnote-27894
-Ref: Overview-Footnote-38075
-Node: Workflow8257
-Ref: Figure:photographic-workflow8769
-Node: Invocation11468
-Node: Common Options12010
-Ref: Common Options-Footnote-114464
-Node: Extended Options14655
-Node: Fusion Options19449
-Node: Expert Options21324
-Ref: Figure:entropy-cutoff23706
-Node: Option Delimiters31079
-Node: Weighting Functions32044
-Node: Weighting Pixels32708
-Node: Weighted Average34210
-Node: Disabling Averaging34801
-Node: Exposure Weighting35750
-Ref: Figure:gaussian37228
-Node: Saturation Weighting40518
-Node: Contrast Weighting41614
-Node: Standard Deviation42943
-Ref: Figure:local-analysis-window43384
-Ref: Standard Deviation-Footnote-145448
-Node: Laplacian of Gaussian45597
-Ref: Figure:laplacian-of-gaussian47136
-Node: Blend SDev and LoG50600
-Node: Scaling and Choice of Mode52231
-Node: Entropy Weighting53073
-Ref: Figure:entropy54038
-Node: Understanding Masks58017
-Node: Tuning Memory Usage61806
-Ref: tab:cache-size-settings63880
-Node: Applications64188
-Node: What Images64910
-Node: Repetition68073
-Node: Exposure Series69130
-Node: Exposure Series Tips71332
-Node: Exposure Series Misconceptions72441
-Ref: Exposure Series Misconceptions-Footnote-174209
-Node: Flash Exposure Series74422
-Node: Polarization Series74664
-Node: Focus Stacks75098
-Node: Why Focus Stacks75980
-Node: Preparing Focus Stacks77307
-Node: Contrast Based Fusing78047
-Node: Basic Focus Stacking79294
-Node: Advanced Focus Stacking80650
-Node: Local Contrast Problem81414
-Ref: Figure:sharp-edge82614
-Ref: Figure:smooth-edge84213
-Node: Laplacian Edge Detection86649
-Node: Local Contrast Enhancement87734
-Node: Suppressing Noise or Recognizing Faint Edges88650
-Node: Focus Stacking Decision Tree91150
-Ref: Figure:focus-stacking-decision-tree91505
-Node: Expert Stacking92257
-Node: Helpful Programs93756
-Node: Authors97415
-Node: FDL98194
-Node: List of Tables119175
-Node: List of Figures119439
-Node: Program Index120173
-Node: Option Index123461
-Node: General Index126307
+Node: Top718
+Node: Overview4425
+Ref: Table:weighting-criteria5612
+Ref: Overview-Footnote-17727
+Ref: Overview-Footnote-27896
+Ref: Overview-Footnote-38077
+Node: Workflow8259
+Ref: Figure:photographic-workflow8771
+Node: Invocation11470
+Node: Common Options12012
+Ref: Common Options-Footnote-114466
+Node: Extended Options14657
+Node: Fusion Options19451
+Node: Expert Options21326
+Ref: Figure:entropy-cutoff23708
+Ref: Table:mask-template-characters29491
+Node: Option Delimiters31361
+Node: Weighting Functions32709
+Node: Weighting Pixels33373
+Node: Weighted Average34875
+Node: Disabling Averaging35466
+Node: Exposure Weighting36415
+Ref: Figure:gaussian37893
+Node: Saturation Weighting38791
+Node: Contrast Weighting39887
+Node: Standard Deviation41216
+Ref: Figure:local-analysis-window41657
+Ref: Standard Deviation-Footnote-143721
+Node: Laplacian of Gaussian43870
+Ref: Figure:laplacian-of-gaussian45409
+Node: Blend SDev and LoG46469
+Node: Scaling and Choice of Mode48100
+Node: Entropy Weighting48942
+Ref: Figure:entropy49907
+Node: Understanding Masks51495
+Node: Tuning Memory Usage55284
+Ref: Table:cache-size-settings57397
+Node: Applications57705
+Node: What Images58427
+Node: Repetition61590
+Node: Exposure Series62647
+Node: Exposure Series Tips64849
+Node: Exposure Series Misconceptions65958
+Ref: Exposure Series Misconceptions-Footnote-167726
+Node: Flash Exposure Series67939
+Node: Polarization Series68181
+Node: Focus Stacks68615
+Node: Why Focus Stacks69497
+Node: Preparing Focus Stacks70824
+Node: Contrast Based Fusing71564
+Node: Basic Focus Stacking72811
+Node: Advanced Focus Stacking74167
+Node: Local Contrast Problem74931
+Ref: Figure:sharp-edge76131
+Ref: Figure:smooth-edge76206
+Node: Laplacian Edge Detection76950
+Node: Local Contrast Enhancement78065
+Node: Suppressing Noise or Recognizing Faint Edges78981
+Node: Focus Stacking Decision Tree81481
+Ref: Figure:focus-stacking-decision-tree81836
+Node: Expert Stacking82590
+Node: Helpful Programs84089
+Node: Authors87748
+Node: FDL88527
+Node: List of Tables109508
+Node: List of Figures109847
+Node: Program Index110581
+Node: Option Index113869
+Node: General Index116715
 
 End Tag Table

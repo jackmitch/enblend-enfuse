@@ -23,7 +23,7 @@ AC_C_BIGENDIAN
 # Checks for libraries.
 AC_CHECK_LIB(z, gzopen,
              [],
-             AC_MSG_NOTICE([zlib is required.]), [])
+             AC_MSG_NOTICE([Compiling without libz.]), [])
 AC_CHECK_LIB(jpeg, jpeg_finish_compress,
              [LIBS="-ljpeg ${LIBS}"; AC_DEFINE(HasJPEG, 1, [Define if you have the jpeg library])],
              AC_MSG_NOTICE([Compiling without support for jpeg files.]), [])
@@ -32,13 +32,13 @@ AC_CHECK_LIB(png, png_init_io,
              AC_MSG_NOTICE([Compiling without support for png files.]), [])
 AC_CHECK_LIB(tiff, TIFFOpen,
              [LIBS="-ltiff ${LIBS}"; AC_DEFINE(HasTIFF, 1, [Define if you have the tiff library])],
-             AC_MSG_ERROR([libtiff is required to compile enblend.]), [])
+             AC_MSG_ERROR([libtiff is required to compile Enblend.]), [])
 AC_CHECK_LIB(lcms, cmsCreateTransform,
              [],
-             AC_MSG_ERROR([liblcms is required to compile enblend.]), [])
+             AC_MSG_ERROR([liblcms is required to compile Enblend.]), [])
 AC_CHECK_LIB(xmi, miNewPaintedSet,
              [],
-             AC_MSG_ERROR([libxmi is required to compile enblend.]), [])
+             AC_MSG_ERROR([libxmi is required to compile Enblend.]), [])
 PKG_CHECK_MODULES(OPENEXR, OpenEXR >= 1.0,
                   [AC_DEFINE(HasEXR, 1, [Define if you have EXR library])
                    have_exr=yes],
@@ -59,7 +59,7 @@ AX_CHECK_GL
 AX_CHECK_GLU
 AX_CHECK_GLUT
 if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then
-     AC_MSG_WARN([WARNING: GL/GLU/GLUT not found, disabling GPU mode])
+    AC_MSG_WARN([[WARNING: GL/GLU/GLUT not found, disabling GPU mode]])
 else
     # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
     LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
@@ -68,7 +68,7 @@ fi
 
 AC_CHECK_LIB(GLEW, glewInit,
              [],
-             AC_MSG_WARN([GLEW not found. Disabling GPU mode.]), [])
+             AC_MSG_WARN([[WARNING: GLEW not found, disabling GPU mode.]]), [])
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -78,32 +78,59 @@ AC_HEADER_STDC
 # it is available anyhow (Its part of the GNU stl implementation)
 #AC_CHECK_HEADER(ext/slist,
 #                AC_DEFINE(HAVE_EXT_SLIST, 1, Define if you have the <ext/slist> header file),
-#                AC_MSG_WARN([ext/slist is required to compile enblend]))
-AC_DEFINE(HAVE_EXT_SLIST,1,Define if you have the <ext/slist> header file)
+#                AC_MSG_WARN([ext/slist is required to compile Enblend]))
+AC_DEFINE(HAVE_EXT_SLIST, 1, [Define if you have the <ext/slist> header file])
 
 AC_CHECK_HEADERS([fenv.h limits.h stdlib.h string.h unistd.h])
 
 AC_CHECK_HEADER(tiffio.h, [],
-                AC_MSG_ERROR([libtiff-devel header files are required to compile enblend.]))
+                AC_MSG_ERROR([libtiff-devel header files are required to compile Enblend.]))
 AC_CHECK_HEADER(jpeglib.h, [],
-                AC_MSG_ERROR([libjpeg-devel header files are required to compile enblend.]))
+                AC_MSG_ERROR([libjpeg-devel header files are required to compile Enblend.]))
 AC_CHECK_HEADER(png.h, [],
-                AC_MSG_ERROR([libpng-devel header files are required to compile enblend.]))
+                AC_MSG_ERROR([libpng-devel header files are required to compile Enblend.]))
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
-                AC_MSG_ERROR([boost header files are required to compile enblend.]))
+                AC_MSG_ERROR([Boost "mersenne_twister" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/static_assert.hpp, [],
-                AC_MSG_ERROR([boost header files are required to compile enblend.]))
+                AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp, [],
-                AC_MSG_ERROR([boost header files are required to compile enblend.]))
+                AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/filesystem.hpp,
+                [AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1, [Define if you have boost/filesystem.hpp])],
+                AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
+if test x$ac_cv_header_boost_filesystem_hpp = xyes; then
+  if test x$acx_pthread_ok = xyes; then
+    boost_filesystem_lib=boost_filesystem-mt
+  else
+    boost_filesystem_lib=boost_filesystem
+  fi
+  AC_LINK_IFELSE($boost_filesystem_lib,
+                 [AC_LANG_CONFTEST(AC_LANG_PROGRAM([[
+#include <string>
+#include "boost/filesystem.hpp"
+]],
+[[
+boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> basic_path p("foo/bar/baz.oo");
+p.branch_path().string();
+p.leaf();
+basename(p);
+extension(p);
+]]
+))],
+                 [EXTRA_LIBS="-l$boost_filesystem_lib ${EXTRA_LIBS}"
+                  AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])],
+                 [AC_MSG_NOTICE([Boost "filesystem" library missing: compiling with built-in support.])])
+fi
 AC_LANG_RESTORE
+AC_SUBST(EXTRA_LIBS)
 
 AC_CHECK_HEADER(lcms.h, [],
-                AC_MSG_ERROR([lcms header files are required to compile enblend.]))
+                AC_MSG_ERROR([lcms header files are required to compile Enblend.]))
 AC_CHECK_HEADER(xmi.h, [],
-                AC_MSG_ERROR([xmi header files are required to compile enblend.]))
+                AC_MSG_ERROR([xmi header files are required to compile Enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -163,7 +190,7 @@ for dir in $GDFONTPATH; do \
 done
 IFS="$orig_ifs"
 if test $have_freesans_font != yes; then
-  AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; Text in the documentation's figures could look strange.)
+  AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange.)
 fi
 
 AC_CHECK_PROG(FIG2DEV,
@@ -310,6 +337,7 @@ AC_MSG_RESULT([
    CFLAGS needed for configure:    ${CFLAGS}
    CXXFLAGS needed for configure:  ${CXXFLAGS}
    LIBS needed for configure:      ${LIBS}
+   EXTRA_LIBS (optional):          ${EXTRA_LIBS}
 
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 

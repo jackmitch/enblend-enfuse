@@ -1,7 +1,7 @@
 This is ../../doc/enblend.info, produced by makeinfo version 4.11 from
 ../../doc/enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 6 April 2009), a tool
+This manual is for Enblend (version 3.2-staging, 11 April 2009), a tool
 for compositing images in such a way that the seam between the images
 is invisible, or at least very difficult to see.
 
@@ -20,7 +20,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 6 April 2009), a tool
+This manual is for Enblend (version 3.2-staging, 11 April 2009), a tool
 for compositing images n such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
@@ -287,8 +287,8 @@ Common options control some overall features of Enblend.
    ---------- Footnotes ----------
 
    (1) As Dr. Daniel Jackson correctly noted
-(http://stargate.wikia.com/wiki/The_Tomb) actually, it is not a
-pyramid.  "Ziggaurat, it's a Ziggaurat
+(http://stargate.wikia.com/wiki/The_Tomb), actually, it is not a
+pyramid: "Ziggaurat, it's a Ziggaurat
 (http://en.wikipedia.org/wiki/Ziggaurat).
 
 
@@ -459,8 +459,10 @@ These options control the generation and the usage of masks.
      Use the full-size images to create the seam line.  This can be
      slow.  Use `--fine-mask' if you have very narrow overlap regions.
 
-`--load-mask=IMAGE-FILE'
-     Instead of generating a mask, use the one in IMAGE-FILE.
+`--load-mask=IMAGE-TEMPLATE'
+     Instead of generating masks, use those in IMAGE-TEMPLATE.
+
+     See `--save-mask' below for details.
 
 `--no-optimize'
      Turn off seam line optimization.  Combined with `--fine-mask' this
@@ -470,13 +472,100 @@ These options control the generation and the usage of masks.
      Use a two-strategy approach to route the seam line around
      mismatches in the overlap region.  This is the default.
 
-`--save-mask=IMAGE-FILE'
-     Save the generated mask to IMAGE-FILE.
+`--save-mask=IMAGE-TEMPLATE'
+     Save the generated masks to IMAGE-TEMPLATE.
 
      Use this option if you wish to edit the location of the seam line
-     by hand.  This will give you a template of the right size that you
+     by hand.  This will give you images of the right sizes that you
      can edit to make your changes.  Later, use `--load-mask' to blend
-     the project with your custom seam line.
+     the project with your custom seam lines.
+
+     IMAGE-TEMPLATE defines a template that is expanded for each mask
+     file.  In a template a percent sign (`%') introduces a variable
+     part.  All other characters are copied literally.  Lowercase
+     letters refer to the name of the respective input file, whereas
+     uppercase ones refer to the name of the output file (*note Common
+     Options::).  *note Table:mask-template-characters:: lists all
+     variables.
+
+     A fancy mask filename template could look like this:
+
+          %D/mask-%02n-%f.tif
+
+     It puts the mask files into the same directory as the output file
+     (`%D'), generates a two-digit index (`%02n') to keep the mask
+     files nicely sorted, and decorates the mask filename with the name
+     of the associated input file (`%f') for easy recognition.
+
+`%%'
+     Produces a literal `%'-sign.
+
+`%i'
+     Expands to the index of the mask file starting at zero.
+
+     `%i' supports setting a pad character or a width specification:
+
+          `%' PAD WIDTH `i'
+
+     PAD is either `0' or any punctuation character; the default pad
+     character is `0'.  WIDTH is an integer.  Examples: `%02i' or
+     `%_4i'.
+
+`%n'
+     Expands to the number of the mask file starting at one.  Otherwise
+     it behaves identical to `%i' including pad character and width
+     specification.
+
+`%p'
+     This is the full name (path, filename, and extension) of the input
+     file associated with the mask.
+
+     Example: If the input file is called `/home/luser/snap/img.jpg',
+     `%p' expands to `/home/luser/snap/img.jpg', or shorter: `%p' =>
+     `/home/luser/snap/img.jpg'.
+
+`%P'
+     This is the full name of the output file.
+
+`%d'
+     Is replaced with the directory part of the associated input file.
+     *note (coreutils.info)dirname::.
+
+     Example (cont.): `%d' => `/home/luser/snap'.
+
+`%D'
+     Is replaced with the directory part of the output file.
+
+`%b'
+     Is replaced with the non-directory part (often called "basename")
+     of the associated input file.  *note (coreutils.info)basename::.
+
+     Example (cont.): `%b' => `img.jpg'.
+
+`%B'
+     Is replaced with the non-directory part of the output file.
+
+`%f'
+     Is replaced with the filename without path and extension of the
+     associated input file.
+
+     Example (cont.): `%f' => `img'.
+
+`%F'
+     Is replaced with the filename without path and extension of the
+     output file.
+
+`%e'
+     Is replaced with the extension (including the leading dot) of the
+     associated input file.
+
+     Example (cont.): `%e' => `.jpg'.
+
+`%E'
+     Is replaced with the extension of the output file.
+
+Table 3.1: Special characters to control the generation of mask
+filenames.
 
 
 File: enblend.info,  Node: Understanding Masks,  Next: Tuning Memory Usage,  Prev: Invocation,  Up: Top
@@ -615,8 +704,8 @@ The CACHE-SIZE should be set in a way as to reconcile all of the above
 aspects even for the biggest data sets (this is many images and large
 images).
 
-   Suggested cache- and buffer-sizes for different amounts of available
-RAM.
+   *note Table:cache-size-settings:: suggestes some cache- and
+buffer-sizes for different amounts of available RAM.
 
       RAM  | CACHE-SIZE | BUFFER-SIZE | Comment
       MB   |     MB     |     KB      |
@@ -1220,12 +1309,12 @@ Option Index
 * --load-mask:                           Mask Generation Options.
                                                               (line  17)
 * --no-optimize:                         Mask Generation Options.
-                                                              (line  20)
+                                                              (line  22)
 * --optimize:                            Mask Generation Options.
-                                                              (line  24)
+                                                              (line  26)
 * --output:                              Common Options.      (line  63)
 * --save-mask:                           Mask Generation Options.
-                                                              (line  28)
+                                                              (line  30)
 * --verbose:                             Common Options.      (line  70)
 * --version:                             Common Options.      (line  75)
 * --visualize:                           Extended Options.    (line 145)
@@ -1310,7 +1399,7 @@ General Index
 * mask, load:                            Mask Generation Options.
                                                               (line  17)
 * mask, save:                            Mask Generation Options.
-                                                              (line  28)
+                                                              (line  30)
 * mask, visualization:                   Extended Options.    (line 145)
 * mask, weight:                          Understanding Masks. (line   6)
 * masks, input files:                    Understanding Masks. (line  18)
@@ -1320,7 +1409,7 @@ General Index
 * OpenEXR, data format:                  Extended Options.    (line  93)
 * OpenEXR, half precision float:         Extended Options.    (line  98)
 * optimize seam:                         Mask Generation Options.
-                                                              (line  20)
+                                                              (line  22)
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
 * options, extended:                     Extended Options.    (line   6)
@@ -1337,9 +1426,9 @@ General Index
 * pyramid levels:                        Common Options.      (line  53)
 * row conversion:                        Workflow.            (line  41)
 * save mask:                             Mask Generation Options.
-                                                              (line  28)
+                                                              (line  30)
 * seam optimization:                     Mask Generation Options.
-                                                              (line  20)
+                                                              (line  22)
 * single precision float, IEEE754:       Extended Options.    (line  73)
 * transformation, affine:                Workflow.            (line  54)
 * undestanding masks:                    Understanding Masks. (line   6)
@@ -1352,24 +1441,25 @@ General Index
 
 
 Tag Table:
-Node: Top728
-Node: Overview1656
-Ref: Overview-Footnote-13749
-Node: Workflow3930
-Ref: Figure:photographic-workflow4443
-Node: Invocation7142
-Node: Common Options7546
-Ref: Common Options-Footnote-110374
-Node: Extended Options10565
-Node: Mask Generation Options16158
-Node: Understanding Masks17356
-Node: Tuning Memory Usage21137
-Ref: tab:cache-size-settings23216
-Node: Helpful Programs23524
-Node: Authors27191
-Node: FDL27971
-Node: Program Index48952
-Node: Option Index52302
-Node: General Index55034
+Node: Top729
+Node: Overview1658
+Ref: Overview-Footnote-13751
+Node: Workflow3932
+Ref: Figure:photographic-workflow4445
+Node: Invocation7144
+Node: Common Options7548
+Ref: Common Options-Footnote-110376
+Node: Extended Options10567
+Node: Mask Generation Options16160
+Ref: Table:mask-template-characters18206
+Node: Understanding Masks20076
+Node: Tuning Memory Usage23857
+Ref: Table:cache-size-settings25975
+Node: Helpful Programs26283
+Node: Authors29950
+Node: FDL30730
+Node: Program Index51711
+Node: Option Index55061
+Node: General Index57793
 
 End Tag Table

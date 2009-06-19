@@ -3,6 +3,7 @@ info_TEXINFOS = enblend.texi \
 
 enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    fdl.texi \
+                   mask-template-characters.texi \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
                    understanding-masks.texi \
@@ -13,6 +14,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
 
 enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   fdl.texi \
+                  mask-template-characters.texi \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
                   understanding-masks.texi \
@@ -46,7 +48,7 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
              sharp-edge.{txt,png,eps,pdf} \
              smooth-edge.{txt,png,eps,pdf} \
              *.fig.bak \
-             *.xhtml *.msg
+             *.msg
 
 # created by configure(1)
 DISTCLEANFILES = texinfo.tex
@@ -67,6 +69,10 @@ html-local:
               test -f $${i%.png}.png && cp $$i enfuse.html; \
             done; true
 
+.PHONY: clean-local
+clean-local:
+	-rm -rf enblend.xhtml enfuse.xhtml
+
 
 # The public id is in "tidy.cfg".
 DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
@@ -76,7 +82,7 @@ xhtml: $(HTMLS) html-local
 	for x in $(HTMLS); do \
 	  if test -d $$x; then \
             test -d $${x/%.html/.xhtml} || mkdir $${x/%.html/.xhtml}; \
-            cp $$x/*.png $${x/%.html/.xhtml}; \
+            cp *.png $${x/%.html/.xhtml}; \
 	    for y in $$x/*.html; do \
 	      tidy -config @srcdir@/tidy.cfg -file $${y/%.html/.msg} $$y | \
 	        $(SED) -e '1,9s|""|$(DTD_SYSID)|' \

@@ -82,8 +82,6 @@ extern "C" int optind;
 // Size of the buffer we reserve for (library) error messages
 #define ERROR_MESSAGE_SIZE 256
 
-#define OPTION_DELIMITERS ";:/"
-
 struct AlternativePercentage {
     double value;
     bool isPercentage;
@@ -134,7 +132,8 @@ struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 bool UseHardMask = false;
 bool SaveMasks = false;
-//int Output16BitImage=0;
+std::string SoftMaskTemplate("mask%04d.tif");
+std::string HardMaskTemplate("mask%04d_wta.tif");
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -301,7 +300,9 @@ void printUsageAndExit(const bool error = true) {
         "                         weighting; append \"%\" signs for relative values;\n" <<
         "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
-        "  --SaveMasks            save weight masks\n" <<
+        "  --SaveMasks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
+        "                         save weight masks; default: \"" <<
+        SoftMaskTemplate << "\", \"" << HardMaskTemplate << "\"\n" <<
         "  --debug                output mask images for debugging (deprecated);\n" <<
         "                         use \"--SaveMasks\" instead\n" <<
         "\n" <<
@@ -507,7 +508,7 @@ int process_options(int argc, char** argv) {
         {"version", no_argument, 0, NoArgument},                         // 18
         {"depth", required_argument, 0, StringArgument},                 // 19
         {"output", required_argument, 0, StringArgument},                // 20
-        {"SaveMasks", no_argument, 0, NoArgument},                       // 21
+        {"SaveMasks", optional_argument, 0, StringArgument},             // 21
         {0, 0, 0, 0}
     };
 
@@ -554,10 +555,6 @@ int process_options(int argc, char** argv) {
                 justPrintVersion = true;
                 optionSet.insert(VersionOption);
                 break;
-            case SaveMasksId:
-                SaveMasks = true;
-                optionSet.insert(SaveMasksOption);
-                break;
             default:
                 cerr << command << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
@@ -602,7 +599,7 @@ int process_options(int argc, char** argv) {
                 char* s = new char[strlen(optarg) + 1];
                 strcpy(s, optarg);
                 char* save_ptr = NULL;
-                char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                char* token = strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 char* tail;
 
                 if (token == NULL || *token == 0) {
@@ -629,7 +626,7 @@ int process_options(int argc, char** argv) {
                     exit(1);
                 }
 
-                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     FilterConfig.lceScale = strtod(token, &tail);
@@ -653,7 +650,7 @@ int process_options(int argc, char** argv) {
                     }
                 }
 
-                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     FilterConfig.lceFactor = strtod(token, &tail);
@@ -691,7 +688,7 @@ int process_options(int argc, char** argv) {
                 char* s = new char[strlen(optarg) + 1];
                 strcpy(s, optarg);
                 char* save_ptr = NULL;
-                char* token = strtoken_r(s, OPTION_DELIMITERS, &save_ptr);
+                char* token = strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 char* tail;
 
                 if (token == NULL || *token == 0) {
@@ -721,7 +718,7 @@ int process_options(int argc, char** argv) {
                     exit(1);
                 }
 
-                token = strtoken_r(NULL, OPTION_DELIMITERS, &save_ptr);
+                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     EntropyUpperCutoff.value = strtod(token, &tail);
@@ -779,6 +776,28 @@ int process_options(int argc, char** argv) {
                 }
                 OutputFileName = optarg;
                 optionSet.insert(OutputOption);
+                break;
+
+            case SaveMasksId:
+                SaveMasks = true;
+                optionSet.insert(SaveMasksOption);
+                if (optarg != NULL) {
+                    char* s = new char[strlen(optarg) + 1];
+                    strcpy(s, optarg);
+                    char* save_ptr = NULL;
+                    char* token = strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+                    SoftMaskTemplate = token;
+                    token = strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                    if (token != NULL && *token != 0) {
+                        HardMaskTemplate = token;
+                    }
+                    token = strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                    if (token != NULL && *token != 0) {
+                        cerr << command
+                             << ": warning: ignoring trailing garbage in --SaveMasks" << endl;
+                    }
+                    delete [] s;
+                }
                 break;
 
             default:
@@ -1059,7 +1078,7 @@ int main(int argc, char** argv) {
 
     // List of input files.
     list<char*> inputFileNameList;
-    list<char*>::iterator inputFileNameIterator;
+    list<char*>::const_iterator inputFileNameIterator;
 
     int optind;
     try {optind = process_options(argc, argv);}
@@ -1421,15 +1440,15 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if      (pixelType == "UINT8")  enfuseMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enfuseMain<RGBValue<UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enfuseMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enfuseMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enfuseMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enfuseMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enfuseMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enfuseMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enfuseMain<RGBValue<Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enfuseMain<RGBValue<UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enfuseMain<RGBValue<Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enfuseMain<RGBValue<UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enfuseMain<RGBValue<Int32 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enfuseMain<RGBValue<float > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << command << ": RGB images with pixel type \""
@@ -1447,15 +1466,15 @@ int main(int argc, char** argv) {
                      << endl;
                 WSaturation = 0.0;
             }
-            if      (pixelType == "UINT8")  enfuseMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enfuseMain<UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enfuseMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enfuseMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enfuseMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enfuseMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enfuseMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enfuseMain<float >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enfuseMain<double>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enfuseMain<Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enfuseMain<UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enfuseMain<Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enfuseMain<UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enfuseMain<Int32 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enfuseMain<float >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enfuseMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << command

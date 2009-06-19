@@ -14,7 +14,10 @@ var {
 
 /* Class- and attibute based settings */
 div.contents {}
-div.float {}
+div.float {
+    border-bottom: 1px solid;
+    border-top: 1px solid;
+}
 
 dl.compact {}
 dl.listoffloats {}

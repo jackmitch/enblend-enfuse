@@ -67,10 +67,11 @@ namespace enblend {
 /** Enblend's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enblendMain(list<ImageImportInfo*> &imageInfoList,
-                 ImageExportInfo &outputImageInfo,
-                 Rect2D &inputUnion) {
-
+void enblendMain(const list<char*>& inputFileNameList,
+                 list<ImageImportInfo*>& imageInfoList,
+                 ImageExportInfo& outputImageInfo,
+                 Rect2D& inputUnion)
+{
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
@@ -122,6 +123,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
     #endif
 
     // Main blending loop.
+    unsigned m = 0;
+    list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
     while (!imageInfoList.empty()) {
         // Create the white image.
         Rect2D whiteBB;
@@ -230,7 +233,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
             // Mem used during mask generation:
             long long nftBytes = 0;
-            if (!LoadMaskFileName.empty()) {
+            if (LoadMasks) {
                 nftBytes = 0;
             } else if (CoarseMask) {
                 nftBytes =
@@ -243,7 +246,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             }
 
             long long optBytes = 0;
-            if (!LoadMaskFileName.empty()) {
+            if (LoadMasks) {
                 optBytes = 0;
             } else if (!OptimizeMask) {
                 optBytes = 0;
@@ -254,8 +257,8 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             }
             if (!VisualizeMaskFileName.empty()) optBytes *= 2;
 
-            long long bytesDuringMask = bytes + std::max(nftBytes, optBytes);
-            long long bytesAfterMask = bytes + uBB.area() * sizeof(MaskPixelType);
+            const long long bytesDuringMask = bytes + std::max(nftBytes, optBytes);
+            const long long bytesAfterMask = bytes + uBB.area() * sizeof(MaskPixelType);
 
             bytes = std::max(bytesDuringMask, bytesAfterMask);
 
@@ -265,19 +268,29 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         }
 
         // Create the blend mask.
-        bool wraparoundForMask = Wraparound && (uBB.width() == inputUnion.width());
+        const bool wraparoundForMask = Wraparound && (uBB.width() == inputUnion.width());
 
         MaskType* mask =
             createMask<ImageType, AlphaType, MaskType>(whitePair.first, blackPair.first,
                                                        whitePair.second, blackPair.second,
-                                                       uBB, iBB, wraparoundForMask);
+                                                       uBB, iBB, wraparoundForMask,
+                                                       inputFileNameIterator, m);
 
         // Calculate bounding box of seam line.
         Rect2D mBB;
         maskBounds(mask, uBB, mBB);
 
-        if (!SaveMaskFileName.empty()) {
-            ImageExportInfo maskInfo(SaveMaskFileName.c_str());
+        if (SaveMasks) {
+            const std::string maskFilename =
+                enblend::expandFilenameTemplate(SaveMaskTemplate,
+                                                *inputFileNameIterator,
+                                                OutputFileName,
+                                                m);
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cerr << command
+                     << ": info: saving mask \"" << maskFilename << "\"" << endl;
+            }
+            ImageExportInfo maskInfo(maskFilename.c_str());
             maskInfo.setPosition(uBB.upperLeft());
             exportImage(srcImageRange(*mask), maskInfo);
         }
@@ -286,7 +299,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //                  2*inputUnion*ImageValueType +
         //                  2*inputUnion*AlphaValueType
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -299,7 +312,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
@@ -345,9 +358,10 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //exportPyramid(maskGP, "mask");
         // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         // mem usage xsection = 3 * roiBB.width * MaskPyramidType
-        // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType + (4/3)*roiBB*MaskPyramidType
+        // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        //                   + (4/3)*roiBB*MaskPyramidType
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -363,7 +377,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
@@ -394,7 +408,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                                                         roiBB.apply(srcImageRange(*(whitePair.first))),
                                                         roiBB.apply(maskImage(*(whitePair.second))));
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -412,7 +426,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
         // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
         // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
@@ -432,7 +446,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
                                                         roiBB.apply(srcImageRange(*(blackPair.first))),
                                                         roiBB.apply(maskImage(*(blackPair.second))));
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -452,7 +466,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
         //exportPyramid(blackLP, "enblend_black_lp");
 
         // Peak memory xsection is here!
@@ -477,7 +491,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         // Blend pyramids
         ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
         blend(maskGP, whiteLP, blackLP, whiteMask(NumericTraits<MaskPixelType>::max()));
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -496,7 +510,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // delete mask pyramid
         //exportPyramid(maskGP, "enblend_mask_gp");
@@ -519,7 +533,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
         //exportPyramid(blackLP, "enblend_blend_lp");
         // collapse black pyramid
         collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -532,14 +546,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType,
-                               ImagePyramidIntegerBits, ImagePyramidFractionBits>(
-                srcImageRange(*((*blackLP)[0])),
-                roiBB.apply(maskImage(*(blackPair.second))),
-                roiBB.apply(destImage(*(blackPair.first))));
+            ImagePyramidIntegerBits, ImagePyramidFractionBits>(
+                                                               srcImageRange(*((*blackLP)[0])),
+                                                               roiBB.apply(maskImage(*(blackPair.second))),
+                                                               roiBB.apply(destImage(*(blackPair.first))));
 
         // delete black pyramid
         for (unsigned int i = 0; i < blackLP->size(); i++) {
@@ -562,7 +576,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             checkpoint(blackPair, outputImageInfo);
         }
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -572,12 +586,14 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // Now set blackBB to uBB.
         blackBB = uBB;
 
-    }
+        ++m;
+        ++inputFileNameIterator;
+    } // end main blending loop
 
     if (!Checkpoint) {
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
@@ -588,7 +604,7 @@ void enblendMain(list<ImageImportInfo*> &imageInfoList,
 
     delete blackPair.first;
     delete blackPair.second;
-};
+}
 
 } // namespace enblend
 

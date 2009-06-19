@@ -46,10 +46,10 @@ The @var{CACHE-SIZE} should be set in a way as to reconcile all of the
 above aspects even for the biggest data sets (this is many images and
 large images).
 
-Suggested cache- and buffer-sizes for different amounts of available
-@acronym{RAM}.
+@ref{Table:cache-size-settings} suggestes some cache- and buffer-sizes
+for different amounts of available @acronym{RAM}.
 
-@float Table,tab:cache-size-settings
+@float Table,Table:cache-size-settings
 @ifinfo
 @example
  @acronym{RAM}  | @var{CACHE-SIZE} | @var{BUFFER-SIZE} | Comment

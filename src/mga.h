@@ -105,9 +105,9 @@ private:
                 double red, green, blue;
                 if (sscanf(name.c_str(),
                            CHANNEL_MIXER "%["
-                           OPTION_DELIMITERS "]%lf%["
-                           OPTION_DELIMITERS "]%lf%["
-                           OPTION_DELIMITERS "]%lf",
+                           NUMERIC_OPTION_DELIMITERS "]%lf%["
+                           NUMERIC_OPTION_DELIMITERS "]%lf%["
+                           NUMERIC_OPTION_DELIMITERS "]%lf",
                            &dummy, &red, &dummy, &green, &dummy, &blue) == 6)
                 {
                     check_weights(red, green, blue);

@@ -74,9 +74,8 @@ entitled ``@acronym{GNU} Free Documentation License''.
 \global\pageno=-4
 @end tex
 
-@c We do not have any tables yet.
-@c-- @unnumbered List of Tables
-@c-- @listoffloats Table
+@unnumbered List of Tables
+@listoffloats Table
 
 
 @unnumbered List of Figures
@@ -272,9 +271,9 @@ Print information on the available options and exit.
 @cindex pyramid levels
 @cindex levels, pyramid
 Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
-Jackson correctly @url{http://stargate.wikia.com@//wiki@//The_Tomb,
-noted} actually, it is not a pyramid.  ``Ziggaurat, it's a
-@url{http://en.wikipedia.org@//wiki@//Ziggaurat, Ziggaurat}.}
+Jackson correctly @uref{http://stargate.wikia.com/@/wiki/@/The_Tomb,
+noted}, actually, it is not a pyramid: ``Ziggaurat, it's a
+@uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.}
 blending.
 
 This option allows to trade off quality of results for slightly
@@ -556,11 +555,13 @@ This is the default.
 Use the full-size images to create the seam line.  This can be slow.
 Use @option{--fine-mask} if you have very narrow overlap regions.
 
-@item --load-mask=@var{IMAGE-FILE}
+@item --load-mask=@var{IMAGE-TEMPLATE}
 @opindex --load-mask
 @cindex mask, load
 @cindex load mask
-Instead of generating a mask, use the one in @var{IMAGE-FILE}.
+Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.
+
+See @option{--save-mask} below for details.
 
 @item --no-optimize
 @opindex --no-optimize
@@ -576,17 +577,38 @@ this will produce the same type of mask as Enblend version@tie{}2.5.
 Use a two-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
 
-@item --save-mask=@var{IMAGE-FILE}
+@item --save-mask=@var{IMAGE-TEMPLATE}
 @opindex --save-mask
 @cindex mask, save
 @cindex save mask
-Save the generated mask to @var{IMAGE-FILE}.
+Save the generated masks to @var{IMAGE-TEMPLATE}.
 
 Use this option if you wish to edit the location of the seam line by
-hand.  This will give you a template of the right size that you can
-edit to make your changes.  Later, use @option{--load-mask} to blend
-the project with your custom seam line.
+hand.  This will give you images of the right sizes that you can edit
+to make your changes.  Later, use @option{--load-mask} to blend the
+project with your custom seam lines.
+
+@var{IMAGE-TEMPLATE} defines a template that is expanded for each mask
+file.  In a template a percent sign (@samp{%}) introduces a variable
+part.  All other characters are copied literally.  Lowercase letters
+refer to the name of the respective input file, whereas uppercase ones
+refer to the name of the output file (@pxref{Common Options}).
+@ref{Table:mask-template-characters} lists all variables.
+
+A fancy mask filename template could look like this:
+
+@example
+%D/mask-%02n-%f.tif
+@end example
+
+It puts the mask files into the same directory as the output file
+(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
+mask files nicely sorted, and decorates the mask filename with the
+name of the associated input file (@samp{%f}) for easy recognition.
 @end table
+@page
+
+@include mask-template-characters.texi
 
 
 @node Understanding Masks

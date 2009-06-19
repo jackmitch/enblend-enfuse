@@ -275,19 +275,30 @@ MaskType* createMask(const ImageType* const white,
                      const AlphaType* const blackAlpha,
                      const Rect2D& uBB,
                      const Rect2D& iBB,
-                     const bool wraparound) {
+                     const bool wraparound,
+                     list<char*>::const_iterator inputFileNameIterator,
+                     unsigned m) {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
     typedef typename MaskType::Accessor MaskAccessor;
 
-    if (!LoadMaskFileName.empty()) {
+    if (LoadMasks) {
         // Read mask from a file instead of calculating it.
         MaskType* mask = new MaskType(uBB.size());
-        ImageImportInfo maskInfo(LoadMaskFileName.c_str());
+        const std::string maskFilename =
+            enblend::expandFilenameTemplate(LoadMaskTemplate,
+                                            *inputFileNameIterator,
+                                            OutputFileName,
+                                            m);
+        ImageImportInfo maskInfo(maskFilename.c_str());
+        if (Verbose > VERBOSE_MASK_MESSAGES) {
+            cerr << command
+                 << ": info: loading mask \"" << maskFilename << "\"" << endl;
+        }
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
             cerr << command
-                 << ": warning: mask \"" << LoadMaskFileName << "\" has size "
+                 << ": warning: mask in \"" << maskFilename << "\" has size "
                  << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
                  << command
                  << ": warning:     but image union has size " << uBB.size() << ";\n"
@@ -296,7 +307,6 @@ MaskType* createMask(const ImageType* const white,
                  << endl;
         }
         importImage(maskInfo, destImage(*mask));
-        LoadMaskFileName = "";
         return mask;
     }
 

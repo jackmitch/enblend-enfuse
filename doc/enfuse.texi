@@ -394,9 +394,9 @@ Print information on the available options then exit.
 @cindex pyramid levels
 @cindex levels, pyramid
 Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
-Jackson correctly @url{http://stargate.wikia.com@//wiki@//The_Tomb,
-noted} actually, it is not a pyramid.  ``Ziggaurat, it's a
-@url{http://en.wikipedia.org@//wiki@//Ziggaurat, Ziggaurat}.}
+Jackson correctly @uref{http://stargate.wikia.com/@/wiki/@/The_Tomb,
+noted}, actually, it is not a pyramid: ``Ziggaurat, it's a
+@uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.}
 blending.
 
 This option allows to trade off quality of results for slightly
@@ -1263,15 +1263,42 @@ left unchanged.  This effectively suppresses weak edges.
 Consider all masks when fusing.  This is the default.
 
 @item --SaveMasks
+@itemx --SaveMasks=@var{SOFT-MASK-TEMPLATE}
+@itemx --SaveMasks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
 @opindex --SaveMasks
-Save all weight files as @acronym{TIFF} images.  If
+Save all weight files as @acronym{TIFF} images.
+@cindex masks, saving
+First form: Save all soft weight masks in files.  If
 option@tie{}@option{--HardMask} is effective also save the hard masks.
-Soft mask files are called @file{mask[0-9][0-9][0-9][0-9].tif} and
-hard mask files follow the
-pattern@tie{}@file{mask[0-9][0-9][0-9][0-9]_wta.tif}.  Mask
-file@tie{}@file{0000} corresponds to the first input file, @file{0001}
-to the second one, and so on.
+The defaults are @file{mask%04i.tif} and @file{mask%04i_wta.tif}.
+@cindex filename template
+@cindex masks, filename template
+In the second form @var{SOFT-MASK-TEMPLATE} defines the names of the
+soft mask files.  In the third form @var{HARD-MASK-TEMPLATE}
+additionally defines the names of the hard mask files.
+
+Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
+templates that are expanded for each mask file.  In a template a
+percent sign (@samp{%}) introduces a variable part.  All other
+characters are copied literally.  Lowercase letters refer to the name
+of the respective input file, whereas uppercase ones refer to the name
+of the output file (@pxref{Common Options}).
+@ref{Table:mask-template-characters} lists all variables.
+
+A fancy mask filename template could look like this:
+
+@example
+%D/soft-mask-%02n-%f.viff
+@end example
+
+It puts the mask files into the same directory as the output file
+(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
+mask files nicely sorted, and decorates the mask filename with the
+name of the associated input file (@samp{%f}) for easy recognition.
 @end table
+@page
+
+@include mask-template-characters.texi
 
 
 @node Option Delimiters
@@ -1282,9 +1309,15 @@ to the second one, and so on.
 Enfuse allows the arguments supplied to the program's options to be
 separated by different separators.  The online documentation and this
 manual, however, exclusively use the colon @samp{:} in every syntax
-definition and in all examples.  Valid delimiters are the the
-semicolon @samp{;}, the colon @samp{:}, and the slash @samp{/}.  All
-delimiters may be mixed within any option.
+definition and in all examples.
+
+@need 500
+@noindent
+@strong{Numeric Arguments}
+
+Valid delimiters are the the semicolon @samp{;}, the colon @samp{:},
+and the slash @samp{/}.  All delimiters may be mixed within any
+option that takes numeric arguments.
 
 @noindent
 Examples:
@@ -1307,6 +1340,25 @@ Separate arguments with a colon and two slashes.
 
 @item --GrayProjector=channel-mixer/30;60:10
 Go wild and Enfuse will understand.
+@end table
+
+@need 500
+@noindent
+@strong{Filename Arguments}
+
+Here, the accepted delimiters are @samp{,}, @samp{;}, and @samp{:}.
+Again, all delimiters may be mixed within any option that has filename
+arguments.
+
+@noindent
+Examples:
+
+@table @samp
+@item --SaveMasks=soft-mask-%03i.tif:hard-mask-03%i.tif
+Separate all arguments with colons.
+
+@item --SaveMasks=%d/soft-%n.tif,%d/hard-%n.tif
+Use a comma.
 @end table
 
 
@@ -3578,10 +3630,10 @@ curvature for weighting.
 Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
 0.5@dmn{pixels}, where 0.3@dmn{pixels} is a good starting point.  To
 find the best value for @var{SCALE} though, usually some
-experimentation will be necessary.  Use the
-@option{--SaveMasks}@tie{}option to get all @file{mask####.tif} and
-@file{mask####_wta.tif} files (@pxref{Understanding Masks}) and check
-how different scales affect the artifacts.
+experimentation will be necessary.  Use @option{--SaveMasks} to get
+all soft- (default: @file{mask%04i.tif}) and hard-mask files (default:
+@file{mask%04i_wta.tif}).  Check how different scales affect the
+artifacts.  Also @pxref{Understanding Masks}.
 
 
 @node Local Contrast Enhancement
@@ -3706,13 +3758,13 @@ Focus Stacking} switch to Laplacian-of-Gaussian contrast detection.
 If some seams remain even in @acronym{LoG}-mode, decrease the
 sensitivity of the edge detection with a positive
 @option{--MinCurvature}.  A too high value of @option{--MinCurvature}
-supresses fine detail though.  Part of the detail can be brought back
+suppresses fine detail though.  Part of the detail can be brought back
 with pre-sharpening, this is, @ref{Local Contrast Enhancement} or
 combining @acronym{LoG} with local-contrast-window mode by using a
 negative @option{--MinCurvature}.
 
-Carfully examining the masks (option @option{--SaveMasks}) the Enfuses
-uses helps to jugde the effects of the parameters.
+Carefully examining the masks (option @option{--SaveMasks}) that
+Enfuse uses helps to judge the effects of the parameters.
 
 
 @node Expert Stacking

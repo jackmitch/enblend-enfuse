@@ -103,8 +103,10 @@ bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
-std::string SaveMaskFileName;
-std::string LoadMaskFileName;
+bool SaveMasks = false;
+std::string SaveMaskTemplate("mask.tif");
+bool LoadMasks = false;
+std::string LoadMaskTemplate(SaveMaskTemplate);
 std::string VisualizeMaskFileName;
 unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
@@ -244,8 +246,8 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --save-mask=FILE       save the generated mask to FILE\n" <<
-        "  --load-mask=FILE       use the mask in FILE instead of generating one\n" <<
+        "  --save-mask=TEMPLATE   save generated masks\n" <<
+        "  --load-mask=TEMPLATE   use existing masks instead of generating them\n" <<
         "\n" <<
         "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;
@@ -434,11 +436,13 @@ int process_options(int argc, char** argv) {
             }
             switch (option_index) {
             case SaveMaskId:
-                SaveMaskFileName = optarg;
+                SaveMaskTemplate = optarg;
+                SaveMasks = true;
                 optionSet.insert(SaveMaskOption);
                 break;
             case LoadMaskId:
-                LoadMaskFileName = optarg;
+                LoadMaskTemplate = optarg;
+                LoadMasks = true;
                 optionSet.insert(LoadMaskOption);
                 break;
             case VisualizeId:
@@ -709,8 +713,9 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     int optind;
-    try {optind = process_options(argc, argv);}
-    catch (StdException& e) {
+    try {
+        optind = process_options(argc, argv);
+    } catch (StdException& e) {
         cerr << command << ": error while processing command line options\n"
              << command << ":     " << e.what()
              << endl;
@@ -1098,37 +1103,6 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    // Sanity check on the LoadMaskFileName
-    if (!LoadMaskFileName.empty()) try {
-        ImageImportInfo maskInfo(LoadMaskFileName.c_str());
-    } catch (StdException& e) {
-        cerr << endl
-             << command
-             << ": error opening load-mask input file \""
-             << LoadMaskFileName << "\";\n"
-             << command
-             << ": "
-             << e.what()
-             << endl;
-        exit(1);
-    }
-
-    // Sanity check on the SaveMaskFileName
-    if (!SaveMaskFileName.empty()) try {
-        ImageExportInfo maskInfo(SaveMaskFileName.c_str());
-        encoder(maskInfo);
-    } catch (StdException& e) {
-        cerr << endl
-             << command
-             << ": error opening save-mask output file \""
-             << SaveMaskFileName << "\";\n"
-             << command
-             << ": "
-             << e.what()
-             << endl;
-        exit(1);
-    }
-
     // Sanity check on the VisualizeMaskFileName
     if (!VisualizeMaskFileName.empty()) try {
         ImageExportInfo maskInfo(VisualizeMaskFileName.c_str());
@@ -1158,15 +1132,15 @@ int main(int argc, char** argv) {
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if      (pixelType == "UINT8")  enblendMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<RGBValue<UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enblendMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enblendMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enblendMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enblendMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enblendMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enblendMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<RGBValue<Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<RGBValue<UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<RGBValue<Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<RGBValue<UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<RGBValue<Int32 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<RGBValue<float > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << command << ": RGB images with pixel type \""
@@ -1176,15 +1150,15 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         } else {
-            if      (pixelType == "UINT8")  enblendMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enblendMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enblendMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enblendMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enblendMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enblendMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enblendMain<float >(imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<Int32 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<float >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
                 cerr << command << ": black&white images with pixel type \""
