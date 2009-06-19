@@ -1151,7 +1151,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                                    srcImage(*(imagePair.second)),
                                                    destImage(*mask));
 
-        if (Debug) {
+        if (SaveMasks) {
             std::ostringstream oss;
             oss << "mask" << std::setw(4) << std::setfill('0') << m << ".tif";
             ImageExportInfo maskInfo(oss.str().c_str());
@@ -1232,7 +1232,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
             }
         }
         int i = 0;
-        if (Debug) {
+        if (SaveMasks) {
             for (imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
                 std::ostringstream oss;
                 oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";

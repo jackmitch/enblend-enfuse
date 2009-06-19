@@ -1,7 +1,7 @@
 This is ../../doc/enfuse.info, produced by makeinfo version 4.11 from
 ../../doc/enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 6 April 2009), a
+This manual is for Enfuse (version 3.2-staging, 9 April 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -20,7 +20,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 6 April 2009), a
+This manual is for Enfuse (version 3.2-staging, 9 April 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -223,41 +223,6 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
-
- [image src="photographic-workflow.png" text="                        o
-                        |
-                   _____V_______
-                  /             \\
-                  | Take Images |
-                  \\_____________/
-                        |
-                        V
-                 /------+----------\\
-          [else] |                 | [raw]
-                 |          _______V________
-                 |         /                \\
-                 |         | Convert Images |  <-- DCRaw, UFRaw, etc.
-                 |         \\________________/
-                 |                 |
-                 \\----->+<---------/
-                        |
-                  ______V_______
-                 /              \\
-                 | Align Images |              <-- Hugin, Panotools
-                 \\______________/
-                        |
-                 _______V________
-                /                \\
-                | Combine Images |             <-- Enblend, Enfuse
-                \\________________/
-                        |
-                  ______V______
-                 /             \\
-                 | Postprocess |               <-- The Gimp, et al.
-                 \\_____________/
-                        |
-                        O
-" ]
 
 Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
@@ -826,6 +791,14 @@ to read the manual before applying them successfully.
   `--SoftMask'
         Consider all masks when fusing.  This is the default.
 
+  `--SaveMasks'
+        Save all weight files as TIFF images.  If option `--HardMask'
+     is effective also save the hard masks.  Soft mask files are called
+     `mask[0-9][0-9][0-9][0-9].tif' and hard mask files follow the
+     pattern `mask[0-9][0-9][0-9][0-9]_wta.tif'.  Mask file `0000'
+     corresponds to the first input file, `0001' to the second one, and
+     so on.
+
 
 File: enfuse.info,  Node: Option Delimiters,  Prev: Expert Options,  Up: Invocation
 
@@ -1137,23 +1110,6 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
- [image src="local-analysis-window.png" text="    window size = 3                 window size = 5
-
-     |   |   |   |               |   |   |   |   |   |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | N | N |               | N | N | N | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | C | N |               | N | N | N | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | N | N |               | N | N | C | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     |   |   |   |               | N | N | N | N | N |
-                                -+---+---+---+---+---+-
-                                 | N | N | N | N | N |
-                                -+---+---+---+---+---+-
-                                 |   |   |   |   |   |
-" ]
-
 Figure 4.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
 neighboring pixels, which all contribute equally to the weight.
@@ -1295,8 +1251,8 @@ deriving always "roughens" a function.  The (normalized) mask files
 relentlessly disclose such problems.  Use option `--MinCurvature' with
 a _negative_ argument CURVATURE to suppress all edges with a curvature
 below -CURVATURE (which is a positive value).  Check the effects with
-the mask files and particularly the `mask####_wta.tif' files if using
-option `--HardMask'.
+the mask files and particularly the `mask[0-9][0-9][0-9][0-9]_wta.tif'
+files if using option `--HardMask'.
 
    To indicate the CURVATURE in relative terms, which is particularly
 comprehensible for humans, append a percent sign (`%').  Try minimum
@@ -2196,9 +2152,9 @@ for weighting.
    Typically, SCALE ranges between 0.1pixels and 0.5pixels, where
 0.3pixels is a good starting point.  To find the best value for SCALE
 though, usually some experimentation will be necessary.  Use the
-`--debug' option to get all `mask####.tif' and `mask####_wta.tif' files
-(*note Understanding Masks::) and check how different scales affect the
-artifacts.
+`--SaveMasks' option to get all `mask####.tif' and `mask####_wta.tif'
+files (*note Understanding Masks::) and check how different scales
+affect the artifacts.
 
 
 File: enfuse.info,  Node: Local Contrast Enhancement,  Next: Suppressing Noise or Recognizing Faint Edges,  Prev: Laplacian Edge Detection,  Up: Advanced Focus Stacking
@@ -2292,53 +2248,6 @@ File: enfuse.info,  Node: Focus Stacking Decision Tree,  Prev: Suppressing Noise
 Figure *note Figure:focus-stacking-decision-tree:: helps the user to
 arrive at a well-fused focus stack with as little steps as possible.
 
- [image src="focus-stack-decision-tree.png" text="                            o
-                            |
-               _____________V_____________
-              /                           \\
-              | Use local contrast window |
-              \\___________________________/
-                            |
-                            V    [else]
-                            +----------------------\\
-            [visible seams] |                      |
-               _____________V_____________         |
-              /                           \\        |
-              | Use Laplacian-of-Gaussian |        |
-              \\___________________________/        |
-                            |                      |
-                            V    [else]            |
-                            +--------------------->|
-      [still visible seams] |                      |
-              ______________V______________        |
-             /                             \\       |
-             | Apply positive MinCurvature |       |
-             \\_____________________________/       |
-                            |                      |
-                            V    [else]            V
-                            +--------------------->|
-      [loss of fine detail] |                      |
-                            |                      |
-                            |                      |
-   [mild loss of detail]    V                      |
-             /--------------+                      |
-             |              |                      |
-    _________V__________    |                      |
-   /                    \\   |                      |
-   | Use local contrast |   |                      |
-   |    enhancement     |   |                      |
-   \\____________________/   |                      |
-             |              V                      |
-             \\------------->+                      |
-                            |                      |
-               _____________V_______________       |
-              /                             \\      |
-              | Apply negative MinCurvature |      |
-              \\_____________________________/      |
-                            |                      V
-                            \\--------------------->O
-" ]
-
 Figure 7.3: Focus stacking decision tree.
 
    Always start with the default, contrast weighting with a local
@@ -2352,7 +2261,7 @@ can be brought back with pre-sharpening, this is, *note Local Contrast
 Enhancement:: or combining LoG with local-contrast-window mode by using
 a negative `--MinCurvature'.
 
-   Carfully examining the masks (option `--debug') the Enfuses uses
+   Carfully examining the masks (option `--SaveMasks') the Enfuses uses
 helps to jugde the effects of the parameters.
 
 
@@ -3015,6 +2924,7 @@ Option Index
 * --help:                                Common Options.      (line  43)
 * --MinCurvature:                        Expert Options.      (line 190)
 * --output:                              Common Options.      (line  56)
+* --SaveMasks:                           Expert Options.      (line 207)
 * --SoftMask:                            Expert Options.      (line 204)
 * --verbose:                             Common Options.      (line  63)
 * --version:                             Common Options.      (line  68)
@@ -3055,10 +2965,10 @@ General Index
                                                               (line   6)
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
-* affine transformation:                 Workflow.            (line  89)
+* affine transformation:                 Workflow.            (line  54)
 * alpha channel:                         Overview.            (line  64)
 * alpha channel, unassociated:           Extended Options.    (line 107)
-* alpha-channel:                         Workflow.            (line 110)
+* alpha-channel:                         Workflow.            (line  75)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
 * authors, list of:                      Authors.             (line   6)
@@ -3093,7 +3003,7 @@ General Index
 * contrast weighting using standard deviation: Standard Deviation.
                                                               (line   6)
 * conversion, L*a*b*:                    Expert Options.      (line 138)
-* conversion, raw:                       Workflow.            (line  76)
+* conversion, raw:                       Workflow.            (line  41)
 * dark frame:                            Expert Stacking.     (line  18)
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
                                                               (line   6)
@@ -3115,8 +3025,8 @@ General Index
                                                               (line   8)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  73)
-* expectation value:                     Standard Deviation.  (line  57)
+* estimators:                            Standard Deviation.  (line  56)
+* expectation value:                     Standard Deviation.  (line  40)
 * expert focus stacking ttops:           Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -3168,7 +3078,7 @@ General Index
                                                               (line   6)
 * Laplacian of Gaussian:                 Laplacian of Gaussian.
                                                               (line   6)
-* lens distortion, correction of:        Workflow.            (line  89)
+* lens distortion, correction of:        Workflow.            (line  54)
 * levels, pyramid:                       Common Options.      (line  46)
 * light probe:                           Exposure Series Misconceptions.
                                                               (line  28)
@@ -3203,17 +3113,17 @@ General Index
 * output image, set size of:             Extended Options.    (line 118)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  33)
-* parallax error:                        Workflow.            (line  99)
-* photometric alignment:                 Workflow.            (line  91)
+* parallax error:                        Workflow.            (line  64)
+* photometric alignment:                 Workflow.            (line  56)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  54)
+* probability function:                  Standard Deviation.  (line  37)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * pyramid levels:                        Common Options.      (line  46)
-* row conversion:                        Workflow.            (line  76)
+* row conversion:                        Workflow.            (line  41)
 * saturation enhancement:                Polarization Series. (line   6)
 * scaling of parameters:                 Scaling and Choice of Mode.
                                                               (line   6)
@@ -3225,15 +3135,15 @@ General Index
 * series, simple:                        Repetition.          (line   6)
 * simple series:                         Repetition.          (line   6)
 * single precision float, IEEE754:       Extended Options.    (line  73)
-* standard deviation:                    Standard Deviation.  (line  63)
-* statistical moments:                   Standard Deviation.  (line  54)
+* standard deviation:                    Standard Deviation.  (line  46)
+* statistical moments:                   Standard Deviation.  (line  37)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
-* transformation, affine:                Workflow.            (line  89)
+* transformation, affine:                Workflow.            (line  54)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * undestanding masks:                    Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  60)
+* variance:                              Standard Deviation.  (line  43)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
 * weight, contrast:                      Fusion Options.      (line  10)
@@ -3274,65 +3184,65 @@ Ref: Overview-Footnote-27894
 Ref: Overview-Footnote-38075
 Node: Workflow8257
 Ref: Figure:photographic-workflow8769
-Node: Invocation12769
-Node: Common Options13311
-Ref: Common Options-Footnote-115765
-Node: Extended Options15956
-Node: Fusion Options20750
-Node: Expert Options22625
-Ref: Figure:entropy-cutoff25007
-Node: Option Delimiters32003
-Node: Weighting Functions32968
-Node: Weighting Pixels33632
-Node: Weighted Average35134
-Node: Disabling Averaging35725
-Node: Exposure Weighting36674
-Ref: Figure:gaussian38152
-Node: Saturation Weighting41442
-Node: Contrast Weighting42538
-Node: Standard Deviation43867
-Ref: Figure:local-analysis-window44308
-Ref: Standard Deviation-Footnote-147199
-Node: Laplacian of Gaussian47348
-Ref: Figure:laplacian-of-gaussian48887
-Node: Blend SDev and LoG52335
-Node: Scaling and Choice of Mode53966
-Node: Entropy Weighting54808
-Ref: Figure:entropy55773
-Node: Understanding Masks59752
-Node: Tuning Memory Usage63541
-Ref: tab:cache-size-settings65615
-Node: Applications65923
-Node: What Images66645
-Node: Repetition69808
-Node: Exposure Series70865
-Node: Exposure Series Tips73067
-Node: Exposure Series Misconceptions74176
-Ref: Exposure Series Misconceptions-Footnote-175944
-Node: Flash Exposure Series76157
-Node: Polarization Series76399
-Node: Focus Stacks76833
-Node: Why Focus Stacks77715
-Node: Preparing Focus Stacks79042
-Node: Contrast Based Fusing79782
-Node: Basic Focus Stacking81029
-Node: Advanced Focus Stacking82385
-Node: Local Contrast Problem83149
-Ref: Figure:sharp-edge84349
-Ref: Figure:smooth-edge85948
-Node: Laplacian Edge Detection88384
-Node: Local Contrast Enhancement89465
-Node: Suppressing Noise or Recognizing Faint Edges90381
-Node: Focus Stacking Decision Tree92881
-Ref: Figure:focus-stacking-decision-tree93236
-Node: Expert Stacking96320
-Node: Helpful Programs97819
-Node: Authors101478
-Node: FDL102257
-Node: List of Tables123238
-Node: List of Figures123502
-Node: Program Index124236
-Node: Option Index127524
-Node: General Index130297
+Node: Invocation11468
+Node: Common Options12010
+Ref: Common Options-Footnote-114464
+Node: Extended Options14655
+Node: Fusion Options19449
+Node: Expert Options21324
+Ref: Figure:entropy-cutoff23706
+Node: Option Delimiters31079
+Node: Weighting Functions32044
+Node: Weighting Pixels32708
+Node: Weighted Average34210
+Node: Disabling Averaging34801
+Node: Exposure Weighting35750
+Ref: Figure:gaussian37228
+Node: Saturation Weighting40518
+Node: Contrast Weighting41614
+Node: Standard Deviation42943
+Ref: Figure:local-analysis-window43384
+Ref: Standard Deviation-Footnote-145448
+Node: Laplacian of Gaussian45597
+Ref: Figure:laplacian-of-gaussian47136
+Node: Blend SDev and LoG50600
+Node: Scaling and Choice of Mode52231
+Node: Entropy Weighting53073
+Ref: Figure:entropy54038
+Node: Understanding Masks58017
+Node: Tuning Memory Usage61806
+Ref: tab:cache-size-settings63880
+Node: Applications64188
+Node: What Images64910
+Node: Repetition68073
+Node: Exposure Series69130
+Node: Exposure Series Tips71332
+Node: Exposure Series Misconceptions72441
+Ref: Exposure Series Misconceptions-Footnote-174209
+Node: Flash Exposure Series74422
+Node: Polarization Series74664
+Node: Focus Stacks75098
+Node: Why Focus Stacks75980
+Node: Preparing Focus Stacks77307
+Node: Contrast Based Fusing78047
+Node: Basic Focus Stacking79294
+Node: Advanced Focus Stacking80650
+Node: Local Contrast Problem81414
+Ref: Figure:sharp-edge82614
+Ref: Figure:smooth-edge84213
+Node: Laplacian Edge Detection86649
+Node: Local Contrast Enhancement87734
+Node: Suppressing Noise or Recognizing Faint Edges88650
+Node: Focus Stacking Decision Tree91150
+Ref: Figure:focus-stacking-decision-tree91505
+Node: Expert Stacking92257
+Node: Helpful Programs93756
+Node: Authors97415
+Node: FDL98194
+Node: List of Tables119175
+Node: List of Figures119439
+Node: Program Index120173
+Node: Option Index123461
+Node: General Index126307
 
 End Tag Table

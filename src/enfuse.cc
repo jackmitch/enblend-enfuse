@@ -133,7 +133,7 @@ int EntropyWindowSize = 3;
 struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 bool UseHardMask = false;
-int Debug = 0;
+bool SaveMasks = false;
 //int Output16BitImage=0;
 
 // Globals related to catching SIGINT
@@ -301,7 +301,9 @@ void printUsageAndExit(const bool error = true) {
         "                         weighting; append \"%\" signs for relative values;\n" <<
         "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
-        "  --debug                output mask images for debugging\n" <<
+        "  --SaveMasks            save weight masks\n" <<
+        "  --debug                output mask images for debugging (deprecated);\n" <<
+        "                         use \"--SaveMasks\" instead\n" <<
         "\n" <<
         "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;
@@ -361,7 +363,7 @@ enum AllPossibleOptions {
     SoftMaskOption, HardMaskOption,
     ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
     MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
-    DebugOption
+    DebugOption, SaveMasksOption
 };
 
 typedef std::set<enum AllPossibleOptions> OptionSetType;
@@ -478,7 +480,8 @@ int process_options(int argc, char** argv) {
         HelpId,                  // 17
         VersionId,               // 18
         DepthId,                 // 19
-        OutputId                 // 20
+        OutputId,                // 20
+        SaveMasksId              // 21
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -504,6 +507,7 @@ int process_options(int argc, char** argv) {
         {"version", no_argument, 0, NoArgument},                         // 18
         {"depth", required_argument, 0, StringArgument},                 // 19
         {"output", required_argument, 0, StringArgument},                // 20
+        {"SaveMasks", no_argument, 0, NoArgument},                       // 21
         {0, 0, 0, 0}
     };
 
@@ -532,7 +536,10 @@ int process_options(int argc, char** argv) {
                 optionSet.insert(SoftMaskOption);
                 break;
             case DebugId:
-                Debug++;
+                cerr << command
+                     << ": warning: option \"--debug\" is deprecated; use \"--SaveMasks\" instead"
+                     << endl;
+                SaveMasks = true;
                 optionSet.insert(DebugOption);
                 break;
             case VerboseId:
@@ -546,6 +553,10 @@ int process_options(int argc, char** argv) {
             case VersionId:
                 justPrintVersion = true;
                 optionSet.insert(VersionOption);
+                break;
+            case SaveMasksId:
+                SaveMasks = true;
+                optionSet.insert(SaveMasksOption);
                 break;
             default:
                 cerr << command << ": internal error: unhandled \"NoArgument\" option"

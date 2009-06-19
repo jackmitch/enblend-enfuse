@@ -1261,6 +1261,16 @@ left unchanged.  This effectively suppresses weak edges.
 @item --SoftMask
 @opindex --SoftMask
 Consider all masks when fusing.  This is the default.
+
+@item --SaveMasks
+@opindex --SaveMasks
+Save all weight files as @acronym{TIFF} images.  If
+option@tie{}@option{--HardMask} is effective also save the hard masks.
+Soft mask files are called @file{mask[0-9][0-9][0-9][0-9].tif} and
+hard mask files follow the
+pattern@tie{}@file{mask[0-9][0-9][0-9][0-9]_wta.tif}.  Mask
+file@tie{}@file{0000} corresponds to the first input file, @file{0001}
+to the second one, and so on.
 @end table
 
 
@@ -2649,7 +2659,7 @@ option@tie{}@option{--MinCurvature} with a @emph{negative}
 argument@tie{}@var{CURVATURE} to suppress all edges with a curvature
 below @minus{}@var{CURVATURE} (which is a positive value).  Check the
 effects with the mask files and particularly the
-@file{mask####_wta.tif} files if using
+@file{mask[0-9][0-9][0-9][0-9]_wta.tif} files if using
 option@tie{}@option{--HardMask}.
 
 To indicate the @var{CURVATURE} in relative terms, which is
@@ -3569,7 +3579,7 @@ Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
 0.5@dmn{pixels}, where 0.3@dmn{pixels} is a good starting point.  To
 find the best value for @var{SCALE} though, usually some
 experimentation will be necessary.  Use the
-@option{--debug}@tie{}option to get all @file{mask####.tif} and
+@option{--SaveMasks}@tie{}option to get all @file{mask####.tif} and
 @file{mask####_wta.tif} files (@pxref{Understanding Masks}) and check
 how different scales affect the artifacts.
 
@@ -3701,7 +3711,7 @@ with pre-sharpening, this is, @ref{Local Contrast Enhancement} or
 combining @acronym{LoG} with local-contrast-window mode by using a
 negative @option{--MinCurvature}.
 
-Carfully examining the masks (option @option{--debug}) the Enfuses
+Carfully examining the masks (option @option{--SaveMasks}) the Enfuses
 uses helps to jugde the effects of the parameters.
 
 
