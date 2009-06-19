@@ -1,7 +1,7 @@
-This is enblend.info, produced by makeinfo version 4.11 from
-enblend.texi.
+This is ../../doc/enblend.info, produced by makeinfo version 4.11 from
+../../doc/enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 29 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 3 April 2009), a tool
 for compositing images in such a way that the seam between the images
 is invisible, or at least very difficult to see.
 
@@ -20,13 +20,14 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 29 March 2009), a tool
+This manual is for Enblend (version 3.2-staging, 3 April 2009), a tool
 for compositing images n such a way that the seam between the images is
 invisible, or at least very difficult to see.
 
 * Menu:
 
-* Overview::                    Overview of Enbelnd's features
+* Overview::                    Overview of Enblend's features
+* Workflow::                    Enblend's role in making panoramas
 * Invocation::                  Command line options and arguments
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing RAM and swap
@@ -38,7 +39,7 @@ invisible, or at least very difficult to see.
 * General Index::               Topic index
 
 
-File: enblend.info,  Node: Overview,  Next: Invocation,  Prev: Top,  Up: Top
+File: enblend.info,  Node: Overview,  Next: Workflow,  Prev: Top,  Up: Top
 
 1 Overview
 **********
@@ -86,14 +87,113 @@ With Application to Image Mosaics", ACM Transactions on Graphics, Vol.
 2, No. 4, October 1983, pages 217-236.
 
 
-File: enblend.info,  Node: Invocation,  Next: Understanding Masks,  Prev: Overview,  Up: Top
+File: enblend.info,  Node: Workflow,  Next: Invocation,  Prev: Overview,  Up: Top
 
-2 Invocation
+2 Workflow
+**********
+
+Enblend and Enfuse are parts of a chain of tools to create compound
+images.
+
+   * Enblend combines a series of pictures taken at the same location
+     but in different directions.
+
+   * Enfuse merges photos of the same subject taken with varying
+     exposures.
+
+*note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
+in the tool chain.
+
+Figure 2.1: Photographic workflow with Enblend and Enfuse.
+
+Take Images
+     Take _multiple_ images for form a panorama, an exposure series, a
+     focus stack, etc.
+
+          There is one exception with Enfuse when a single raw image is
+          converted multiple times to get several - typically differently
+          "exposed" - images.
+
+     _Exemplary Benefits_
+        * Many pictures taken from the same vantage point but showing
+          different viewing directions.  (Panorama)
+
+        * Pictures of the same subject exposed with different shutter
+          speeds.  (Exposure series)
+
+        * Images of the same subject focussed at differing distances.
+          (Focus stack)
+
+     _Remaining Problem_
+
+     If "overlayed" the images do not register.  The overlay regions do
+     not match exactly.
+
+Convert Images
+     Convert the raw data
+     (http://www.luminous-landscape.com/tutorials/understanding-series/u-raw-files.shtml)
+     exploiting the full dynamic range of the camera and capitalize on
+     a high-quality conversion.
+
+Align Images
+     Align the images so as to make the match as well as possible.
+
+          Again there is one exception and this is when images naturally align.
+          For example, a series of images taken from a rock solid tripod with a
+          cable release without touching the camera or images taken with a shift
+          lens can align without further user intervention.
+
+     This step submits the images to affine transformations.  If
+     necessary it rectifies the lens' distortions (e.g. barrel or
+     pincushion), too.  Sometimes even luminance or color differences
+     between pairs of overlaying images are corrected ("photometric
+     alignment").
+
+     _Benefit_
+
+     The overlay areas of images match as closely as possible given the
+     quality if the input images and the lens model used in the
+     transformation.
+
+     _Remaining Problem_
+
+     The images may still not align perfectly, for example, because of
+     parallax (http://en.wikipedia.org/wiki/Parallax) errors or blur
+     because of camera shake.
+
+Combine Images
+     Enblend and Enfuse combine the aligned images into one.
+
+     _Benefit_
+
+     The overlay areas become imperceptible for all but the most
+     mal-aligned images.
+
+     _Remaining Problem_
+
+     Enblend and Enfuse write images with an alpha-channel.
+     Furthermore, the image area rarely is rectangular.
+
+Postprocess
+     Postprocess the combined image with your favorite tool.  Often the
+     user will want to crop the image and simultaneously throw away the
+     alpha-channel.
+
+View
+
+Print
+
+Enjoy
+
+
+File: enblend.info,  Node: Invocation,  Next: Understanding Masks,  Prev: Workflow,  Up: Top
+
+3 Invocation
 ************
 
-`enblend' [OPTIONS] `--output='OUTPUT-FILE INPUT-FILES...
+`enblend' [OPTIONS] [`--output='IMAGE] INPUT...
 
-Assemble the sequence of images INPUT-FILES... into OUTPUT-FILE.
+Assemble the sequence of images INPUT... into a single IMAGE.
 
 * Menu:
 
@@ -104,7 +204,7 @@ Assemble the sequence of images INPUT-FILES... into OUTPUT-FILE.
 
 File: enblend.info,  Node: Common Options,  Next: Extended Options,  Up: Invocation
 
-2.1 Common Options
+3.1 Common Options
 ==================
 
 Common options control some overall features of Enblend.
@@ -163,8 +263,11 @@ Common options control some overall features of Enblend.
      geometry of the images demands.
 
 `-o'
-`--output=OUTPUT-FILE'
-     Required option that specifies the name of the OUTPUT-FILE.
+`--output=FILE'
+     Place output in FILE.
+
+     If `--output' is not specified, the default is to put the
+     resulting image in `a.tif'.
 
 `-v'
 `--verbose'
@@ -203,7 +306,7 @@ pyramid.  "Ziggaurat, it's a Ziggaurat
 
 File: enblend.info,  Node: Extended Options,  Next: Mask Generation Options,  Prev: Common Options,  Up: Invocation
 
-2.2 Extended Options
+3.2 Extended Options
 ====================
 
 Extended options control the image cache, the color model, and the
@@ -355,7 +458,7 @@ cropping of the output image.
 
 File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up: Invocation
 
-2.3 Mask Generation Options
+3.3 Mask Generation Options
 ===========================
 
 These options control the generation and the usage of masks.
@@ -390,7 +493,7 @@ These options control the generation and the usage of masks.
 
 File: enblend.info,  Node: Understanding Masks,  Next: Tuning Memory Usage,  Prev: Invocation,  Up: Top
 
-3 Understanding Masks
+4 Understanding Masks
 *********************
 
 A "binary mask" indicates for every pixel of an image if this pixel
@@ -402,7 +505,7 @@ zero again meaning "no contribution".
 files, showing the actual pixel weights prior to image blendung or
 fusion.  We shall explore both occurrences in the next sections.
 
-3.1 Masks in Input Files
+4.1 Masks in Input Files
 ========================
 
 Each of the input files for Enfuse and Enblend can contain its own
@@ -475,7 +578,7 @@ that moved across the scene during the exposures.  If the masks of all
 input images are black at a certain position, the output image will
 have a hole there.
 
-3.2 Weight Mask Files
+4.2 Weight Mask Files
 =====================
 
 ...
@@ -483,7 +586,7 @@ have a hole there.
 
 File: enblend.info,  Node: Tuning Memory Usage,  Next: Helpful Programs,  Prev: Understanding Masks,  Up: Top
 
-4 Tuning Memory Usage
+5 Tuning Memory Usage
 *********************
 
 The default configuration of Enfuse assumes a system with 3-4GB of RAM.
@@ -534,12 +637,12 @@ RAM.
       2048 | 512--1024  | 1024        |
       1024 | 256--512   | 256--512    |
 
-Table 4.1: Suggested cache-size settings
+Table 5.1: Suggested cache-size settings
 
 
 File: enblend.info,  Node: Helpful Programs,  Next: Authors,  Prev: Tuning Memory Usage,  Up: Top
 
-5 Helpful Additional Programs
+6 Helpful Additional Programs
 *****************************
 
 Several libraries and programs have proven helpful when working with
@@ -1106,8 +1209,8 @@ Option Index
 * --output:                              Common Options.      (line  63)
 * --save-mask:                           Mask Generation Options.
                                                               (line  28)
-* --verbose:                             Common Options.      (line  67)
-* --version:                             Common Options.      (line  72)
+* --verbose:                             Common Options.      (line  70)
+* --version:                             Common Options.      (line  75)
 * --visualize:                           Extended Options.    (line 145)
 * -a:                                    Common Options.      (line   9)
 * -b <1>:                                Tuning Memory Usage. (line   6)
@@ -1121,11 +1224,11 @@ Option Index
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 136)
 * -o:                                    Common Options.      (line  63)
-* -V:                                    Common Options.      (line  72)
-* -v:                                    Common Options.      (line  67)
-* -w:                                    Common Options.      (line  78)
-* -x:                                    Common Options.      (line  85)
-* -z:                                    Common Options.      (line  89)
+* -V:                                    Common Options.      (line  75)
+* -v:                                    Common Options.      (line  70)
+* -w:                                    Common Options.      (line  81)
+* -x:                                    Common Options.      (line  88)
+* -z:                                    Common Options.      (line  92)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -1216,26 +1319,29 @@ General Index
 * undestanding masks:                    Understanding Masks. (line   6)
 * weight mask:                           Understanding Masks. (line   6)
 * weight masks:                          Understanding Masks. (line  91)
+* workflow:                              Workflow.            (line   6)
 
 
 
 Tag Table:
-Node: Top709
-Node: Overview1571
-Ref: Overview-Footnote-13666
-Node: Invocation3847
-Node: Common Options4264
-Ref: Common Options-Footnote-17182
-Node: Extended Options7373
-Node: Mask Generation Options12966
-Node: Understanding Masks14164
-Node: Tuning Memory Usage17945
-Ref: tab:cache-size-settings20024
-Node: Helpful Programs20332
-Node: Authors23950
-Node: FDL24126
-Node: Program Index45107
-Node: Option Index48092
-Node: General Index50897
+Node: Top728
+Node: Overview1656
+Ref: Overview-Footnote-13749
+Node: Workflow3930
+Ref: Figure:photographic-workflow4394
+Node: Invocation7014
+Node: Common Options7418
+Ref: Common Options-Footnote-110388
+Node: Extended Options10579
+Node: Mask Generation Options16172
+Node: Understanding Masks17370
+Node: Tuning Memory Usage21151
+Ref: tab:cache-size-settings23230
+Node: Helpful Programs23538
+Node: Authors27156
+Node: FDL27332
+Node: Program Index48313
+Node: Option Index51298
+Node: General Index54103
 
 End Tag Table

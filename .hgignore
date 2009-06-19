@@ -23,6 +23,8 @@
 
 ^enblend-enfuse-[^-]*-staging\.tar\.gz$
 
+\.fig\.bak$
+
 ^src/enblend$
 ^src/enfuse$
 

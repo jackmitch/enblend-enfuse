@@ -6,6 +6,8 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
                    understanding-masks.texi \
+                   workflow.texi \
+                   photographic-workflow.fig \
                    default.css
 
 enfuse_TEXINFOS = auxmac.texi auxmac.tex \
@@ -13,14 +15,16 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
                   understanding-masks.texi \
-                  default.css \
+                  workflow.texi \
                   config-edge.gp config.gp \
                   entropy-cutoff.gp.in \
                   entropy.gp.in gaussian.gp.in \
                   laplacian-of-gaussian.gp.in \
                   sharp-edge.gp.in sharp-edge.data \
                   smooth-edge.gp.in smooth-edge.data \
-                  local-analysis-window.fig
+                  local-analysis-window.fig \
+                  photographic-workflow.fig \
+                  default.css
 
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    --css-include=@srcdir@/default.css
@@ -34,8 +38,10 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
              gaussian.{txt,png,eps,pdf} \
              laplacian-of-gaussian.{txt,png,eps,pdf} \
              local-analysis-window.{txt,png,eps,pdf} \
+             photographic-workflow.{txt,png,eps,pdf} \
              sharp-edge.{txt,png,eps,pdf} \
              smooth-edge.{txt,png,eps,pdf} \
+             *.fig.bak \
              *.xhtml *.msg
 
 # created by configure(1)
@@ -96,7 +102,16 @@ xhtml: html
 
 # Explicit Rules
 
-enfuse.info: entropy.txt \
+enblend.info: photographic-workflow.txt
+
+enblend.dvi: photographic-workflow.eps
+
+enblend.html \
+enblend.pdf: photographic-workflow.png
+
+
+enfuse.info: photographic-workflow.txt \
+             entropy.txt \
              entropy-cutoff.txt \
              gaussian.txt \
              laplacian-of-gaussian.txt \
@@ -104,7 +119,8 @@ enfuse.info: entropy.txt \
              sharp-edge.txt \
              smooth-edge.txt
 
-enfuse.dvi: entropy.eps \
+enfuse.dvi: photographic-workflow.eps \
+            entropy.eps \
             entropy-cutoff.eps \
             gaussian.eps \
             laplacian-of-gaussian.eps \
@@ -113,7 +129,8 @@ enfuse.dvi: entropy.eps \
             smooth-edge.eps
 
 enfuse.html \
-enfuse.pdf: entropy.png \
+enfuse.pdf: photographic-workflow.png \
+            entropy.png \
             entropy-cutoff.png \
             gaussian.png \
             laplacian-of-gaussian.png \

@@ -63,6 +63,27 @@ entitled ``@acronym{GNU} Free Documentation License''.
 @contents
 
 
+@c For the TeX output the List-of-Tables and List-of-Figures appear
+@c right after the Table-of-Contents.  In all other formats they go
+@c right before the indices.
+@iftex
+@c Adjust page number so that we get roman numerals for the
+@c List-of-Tables and List-of-Figures.  This screws up Texinfo's page
+@c count so that we must undo it later.
+@tex
+\global\pageno=-4
+@end tex
+
+@c We do not have any tables yet.
+@c-- @unnumbered List of Tables
+@c-- @listoffloats Table
+
+
+@unnumbered List of Figures
+@listoffloats Figure
+@end iftex
+
+
 @c
 @c ``Top'' Node and Master Menu
 @c
@@ -78,7 +99,8 @@ see.
 @end ifnottex
 
 @menu
-* Overview::                    Overview of Enbelnd's features
+* Overview::                    Overview of Enblend's features
+* Workflow::                    Enblend's role in making panoramas
 * Invocation::                  Command line options and arguments
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
@@ -97,6 +119,13 @@ see.
 
 @node Overview
 @chapter Overview
+
+@c Undo the roman page numbering we used for the Table-of-Contents,
+@c the List-of-Tables, and the List-of-Figures.
+@tex
+\global\pageno=1
+@end tex
+
 @cindex overview
 
 @cindex Burt-Adelson multiresolution spline
@@ -142,6 +171,13 @@ blend all of the rows together vertically.
 
 Find out more about Enblend on its
 @uref{http://@/enblend.sourceforge.net/, web page}.
+
+
+@node Workflow
+@chapter Workflow
+@cindex workflow
+
+@include workflow.texi
 
 
 @node Invocation

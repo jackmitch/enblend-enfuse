@@ -97,6 +97,7 @@ scene to produce an image that looks much like a tonemapped image.
 
 @menu
 * Overview::                    Overview of Enfuse's features
+* Workflow::                    Enfuse's role in combining images
 * Invocation::                  Command line options and arguments
 * Weighting Functions::         Description of all weighting functions
 * Understanding Masks::         How to interpret masks and @file{mask####.tif} files
@@ -116,6 +117,8 @@ scene to produce an image that looks much like a tonemapped image.
 --- The Detailed Node Listing ---
 
 Overview
+
+Workflow
 
 Invocation
 
@@ -294,6 +297,13 @@ contribute to the final image''.
 
 Find out more about Enfuse on its
 @uref{http://@/enblend.sourceforge.net/, web page}.
+
+
+@node Workflow
+@chapter Workflow
+@cindex workflow
+
+@include workflow.texi
 
 
 @node Invocation
@@ -3082,6 +3092,9 @@ breathing.
 
 @item
 Prefer a monopod or better rigid tripod with a heavy head.
+
+@item
+Use a cable release if possible.
 
 @item
 (This applies to cameras with a moving mirror only.)  Engage ``mirror
