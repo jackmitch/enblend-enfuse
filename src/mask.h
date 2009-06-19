@@ -607,6 +607,9 @@ MaskType* createMask(const ImageType* const white,
         }
         cerr << endl;
     }
+    if (totalSegments <= 0) {
+        cerr << command << ": warning: failed to detect any seam" << endl;
+    }
 
     // Find extent of moveable snake vertices, and vertices bordering moveable vertices
     // Vertex bounding box
