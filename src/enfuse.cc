@@ -234,8 +234,6 @@ void printUsageAndExit(const bool error = true) {
         "                         where COMP is:\n" <<
         "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
         "                           0 to 100 for JPEG files\n" <<
-        "  -z                     use LZW compression (TIFF only); kept for\n" <<
-        "                         backward compatability with older scripts\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<

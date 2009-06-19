@@ -213,8 +213,6 @@ void printUsageAndExit(const bool error = true) {
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
         "  -x                     checkpoint partial results\n" <<
-        "  -z                     use LZW compression (TIFF only); kept for\n" <<
-        "                         backward compatability with older scripts\n" <<
         "  --compression=COMP     set compression of output image to COMP,\n" <<
         "                         where COMP is:\n" <<
         "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<

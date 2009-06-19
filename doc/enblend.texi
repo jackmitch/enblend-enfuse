@@ -321,12 +321,6 @@ in these areas.
 @opindex -x
 Checkpoint partial results to the output file after each blending
 step.
-
-@item -z
-@opindex -z
-This option has been deprecated.  It is kept for backward
-compatability with older scripts.  Use @option{--compression=LZW}
-instead.
 @end table
 
 
