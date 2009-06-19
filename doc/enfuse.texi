@@ -26,7 +26,7 @@ This manual is for Enfuse (version@tie{}@value{VERSION},
 @value{UPDATED}), a program to merge different exposures of the same
 scene to produce an image that looks much like a tonemapped image.
 
-Copyright @copyright{} 2004--2009 Andrew Mihal.
+Copyright @copyright{} 2004--2009 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -207,15 +207,16 @@ FDL
 @cindex overview
 
 @cindex Mertens-Kautz-Van Reeth exposure fusion
-Enfuse merges overlapping images using the Mertens-Kautz-Van Reeth
-exposure fusion algorithm.@footnote{Tom Mertens, Jan Kautz, and Frank
-van Reeth, ``Exposure Fusion'', Proceedings of the 15th Pacific
-Conference on Computer Graphics and Applications, pages 382--390.}
-This is a quick way for example to blend differently exposed images
-into a nice output image, without producing intermediate high-dynamic
-range (@acronym{HDR}) images that are then tonemapped to a viewable
-image.  This simplified process often works much better than
-tonemapping algorithms.
+Enfuse merges overlapping images using the
+@sc{Mertens}-@sc{Kautz}-@sc{Van Reeth} exposure fusion
+algorithm.@footnote{Tom Mertens, Jan Kautz, and Frank van Reeth,
+``Exposure Fusion'', Proceedings of the 15th Pacific Conference on
+Computer Graphics and Applications, pages 382--390.}  This is a quick
+way for example to blend differently exposed images into a nice output
+image, without producing intermediate high-dynamic range
+(@acronym{HDR}) images that are then tonemapped to a viewable image.
+This simplified process often works much better than tonemapping
+algorithms.
 
 Enfuse can also be used to build extended depth-of-field
 (@acronym{DOF}) images by blending a focus stack.
@@ -226,13 +227,13 @@ high saturation.  These weights determine how much a given pixel will
 contribute to the final image.
 
 @cindex Burt-Adelson multiresolution spline
-A Burt-Adelson multiresolution spline blender@footnote{Peter J. Burt
-and Edward H. Adelson, ``A Multiresolution Spline With Application to
-Image Mosaics'', @acronym{ACM} Transactions on Graphics, @abbr{Vol@.}
-2, @abbr{No@.} 4, October 1983, pages 217--236.} is used to combine
-the images according to the weights.  The multiresolution blending
-ensures that transitions between regions where different images
-contribute are difficult to spot.
+A @sc{Burt}-@sc{Adelson} multiresolution spline blender@footnote{Peter
+J. Burt and Edward H. Adelson, ``A Multiresolution Spline With
+Application to Image Mosaics'', @acronym{ACM} Transactions on
+Graphics, @abbr{Vol@.}  2, @abbr{No@.} 4, October 1983, pages
+217--236.} is used to combine the images according to the weights.
+The multiresolution blending ensures that transitions between regions
+where different images contribute are difficult to spot.
 
 Enfuse uses up to four criteria to judge the quality of a pixel, which
 @ref{Table:weighting-criteria} briefly describes.
@@ -361,13 +362,13 @@ Do not compress.  This is the default.
 Use the Deflate compression scheme also called
 @acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
 compression algorithm that uses a combination of the @acronym{LZ77}
-algorithm and Huffman coding.
+algorithm and @sc{Huffman} coding.
 
 @item LZW
 @cindex @acronym{LZW} compression
 @cindex compression, @acronym{LZW}
-Use Lempel-Ziv-Welch (@acronym{LZW}) adaptive compression scheme.
-@acronym{LZW} compression is lossless.
+Use @sc{Lempel}-@sc{Ziv}-@sc{Welch} (@acronym{LZW}) adaptive
+compression scheme.  @acronym{LZW} compression is lossless.
 
 @item PACKBITS
 @cindex packbits compression
@@ -2343,7 +2344,8 @@ $$
 @cindex LoG
 The @dfn{Laplacian of Gaussian} (@acronym{LoG}) is an operator to
 detect edges in an image.  Sometimes the @acronym{LoG}-operator is
-also called Marr-Hildreth operator.  A Laplacian-of-Gaussian operator,
+also called @sc{Marr}-@sc{Hildreth} operator.  A Laplacian-of-Gaussian
+operator,
 @uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
 @code{vigra::@/laplacian@/Of@/Gaussian}} is part of the
 package@tie{}@uref{http://@/kogs-www.informatik.uni-hamburg.de/@/~koethe/@/vigra/,
@@ -3727,24 +3729,7 @@ detail in the in-focus regions.
 @appendix Authors
 @cindex authors, list of
 
-@itemize
-@item
-Andrew Mihal (@email{acmihal@@users.sourceforge.net}) has written
-Enfuse.
-
-@item
-Thanks to Simon Andriot and Pablo Joubert for suggesting the
-Mertens-Kautz-Van Reeth technique and the name ``Enfuse''.
-
-@item
-The contrast criteria was added by Pablo d'Angelo
-(@email{dangelo@@users.sourceforge.net}).
-
-@item
-Dr. Christoph L. Spiel added the gray projectors, the
-@acronym{LoG}-based edge detection, an O(n)-algorithm for the
-calculation of local contrast, and entropy weighting.
-@end itemize
+@include authors.texi
 
 
 @node FDL

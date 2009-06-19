@@ -27,7 +27,7 @@ This manual is for Enblend (version@tie{}@value{VERSION},
 seam between the images is invisible, or at least very difficult to
 see.
 
-Copyright @copyright{} 2004--2009 Andrew Mihal.
+Copyright @copyright{} 2004--2009 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -129,21 +129,21 @@ see.
 @cindex overview
 
 @cindex Burt-Adelson multiresolution spline
-Enblend overlays multiple @acronym{TIFF} images using the Burt-Adelson
-multiresolution spline algorithm.@footnote{Peter J. Burt and Edward
-H. Adelson, ``A Multiresolution Spline With Application to Image
-Mosaics'', @acronym{ACM} Transactions on Graphics, @abbr{Vol@.} 2,
-@abbr{No@.} 4, October 1983, pages 217--236.}  This technique tries to
-make the seams between the input images invisible.  The basic idea is
-that image features should be blended across a transition zone
-proportional in size to the spatial frequency of the features.  For
-example, objects like trees and windowpanes have rapid changes in
-color.  By blending these features in a narrow zone, you will not be
-able to see the seam because the eye already expects to see color
-changes at the edge of these features.  Clouds and sky are the
-opposite.  These features have to be blended across a wide transition
-zone because any sudden change in color will be immediately
-noticeable.
+Enblend overlays multiple @acronym{TIFF} images using the
+@sc{Burt}-@sc{Adelson} multiresolution spline
+algorithm.@footnote{Peter J. Burt and Edward H. Adelson, ``A
+Multiresolution Spline With Application to Image Mosaics'',
+@acronym{ACM} Transactions on Graphics, @abbr{Vol@.} 2, @abbr{No@.} 4,
+October 1983, pages 217--236.}  This technique tries to make the seams
+between the input images invisible.  The basic idea is that image
+features should be blended across a transition zone proportional in
+size to the spatial frequency of the features.  For example, objects
+like trees and windowpanes have rapid changes in color.  By blending
+these features in a narrow zone, you will not be able to see the seam
+because the eye already expects to see color changes at the edge of
+these features.  Clouds and sky are the opposite.  These features have
+to be blended across a wide transition zone because any sudden change
+in color will be immediately noticeable.
 
 Enblend expects each input file to have an alpha channel.  The alpha
 channel should indicate the region of the file that has valid image
@@ -241,13 +241,13 @@ Do not compress.  This is the default.
 Use the Deflate compression scheme also called
 @acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
 compression algorithm that uses a combination of the @acronym{LZ77}
-algorithm and Huffman coding.
+algorithm and @sc{Huffman} coding.
 
 @item LZW
 @cindex @acronym{LZW} compression
 @cindex compression, @acronym{LZW}
-Use Lempel-Ziv-Welch (@acronym{LZW}) adaptive compression scheme.
-@acronym{LZW} compression is lossless.
+Use @sc{Lempel}-@sc{Ziv}-@sc{Welch} (@acronym{LZW}) adaptive
+compression scheme.  @acronym{LZW} compression is lossless.
 
 @item PACKBITS
 @cindex packbits compression
@@ -622,11 +622,9 @@ the project with your custom seam line.
 
 @node Authors
 @appendix Authors
+@cindex authors, list of
 
-@itemize
-@item
-Andrew Mihal @email{acmihal@@users.sourceforge.net}.
-@end itemize
+@include authors.texi
 
 
 @node FDL

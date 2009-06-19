@@ -1,0 +1,38 @@
+@sc{Andrew Mihal} (@email{acmihal@@users.sourceforge.net}) has written
+Enblend and Enfuse.
+
+@sp 1
+
+@noindent
+@strong{Contributors}
+
+@itemize
+@item
+@sc{Pablo d'Angelo} (@email{dangelo@@users.sourceforge.net}) added the
+contrast criteria.
+
+@item
+@sc{Joe Beda}: Win32 porting.
+
+@item
+@sc{Max Lyons}.
+
+@item
+@sc{Mark} aka mjz: Win32 porting.
+
+@item
+@sc{Christoph Spiel} (@email{cspiel@@users.sourceforge.net}) added the
+gray projectors, the @acronym{LoG}-based edge detection, an
+O(n)-algorithm for the calculation of local contrast, entropy
+weighting, and various other features.
+
+@item
+@sc{Brent Townshend}: @acronym{HDR} support.
+@end itemize
+
+@sp 1
+
+@noindent
+Thanks to @sc{Simon Andriot} and @sc{Pablo Joubert} for suggesting the
+@sc{Mertens}-@sc{Kautz}-@sc{Van Reeth} technique and the name
+``Enfuse''.
