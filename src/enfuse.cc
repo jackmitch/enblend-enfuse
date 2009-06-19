@@ -95,6 +95,8 @@ struct AlternativePercentage {
     }
 };
 
+#define DEFAULT_OUTPUT_FILENAME "a.tif"
+
 // Globals
 const std::string command("enfuse");
 
@@ -102,7 +104,7 @@ const std::string command("enfuse");
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-std::string OutputFileName;
+std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 int Verbose = 0;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
@@ -217,14 +219,14 @@ void printVersionAndExit() {
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
     cout <<
-        "Usage: enfuse [options] -o OUTPUT INPUT...\n" <<
-        "Fuse INPUT images into a single OUTPUT image.\n" <<
+        "Usage: enfuse [options] [--output=IMAGE] INPUT...\n" <<
+        "Fuse INPUT images into a single IMAGE.\n" <<
         "\n" <<
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending levels to use (1 to 29)\n" <<
-        "  -o, --output=FILENAME  write output to FILENAME\n" <<
+        "  -o, --output=FILE      write output to FILE; default: \"" DEFAULT_OUTPUT_FILENAME "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
@@ -232,15 +234,15 @@ void printUsageAndExit(const bool error = true) {
         "                         where COMP is:\n" <<
         "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
         "                           0 to 100 for JPEG files\n" <<
-        " -z                      use LZW compression (TIFF only); kept for\n" <<
+        "  -z                     use LZW compression (TIFF only); kept for\n" <<
         "                         backward compatability with older scripts\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
-        "  -d, --depth=DEPTH      Set the number of bits per channel of the output image.\n" <<
-        "                         DEPTH is 8, 16, 32, r32, or r64.\n" <<
+        "  -d, --depth=DEPTH      set the number of bits per channel of the output image,\n" <<
+        "                         where DEPTH is 8, 16, 32, r32, or r64\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -761,12 +763,12 @@ int process_options(int argc, char** argv) {
                 break;
 
             case OutputId:
-                if (OutputFileName.empty()) {
-                    OutputFileName = optarg;
-                } else {
-                    cerr << command << ": more than one output file specified." << endl;
-                    exit(1);
+                if (contains(optionSet, OutputOption)) {
+                    cerr << command
+                         << ": warning: more than one output file specified"
+                         << endl;
                 }
+                OutputFileName = optarg;
                 optionSet.insert(OutputOption);
                 break;
 
@@ -949,12 +951,12 @@ int process_options(int argc, char** argv) {
             break;
         }
         case 'o':
-            if (OutputFileName.empty()) {
-                OutputFileName = optarg;
-            } else {
-                cerr << command << ": more than one output file specified." << endl;
-                exit(1);
+            if (contains(optionSet, OutputOption)) {
+                cerr << command
+                     << ": warning: more than one output file specified"
+                     << endl;
             }
+            OutputFileName = optarg;
             optionSet.insert(OutputOption);
             break;
         case 'v':
@@ -1056,12 +1058,6 @@ int main(int argc, char** argv) {
         cerr << command << ": error while processing command line options\n"
              << command << ":     " << e.what()
              << endl;
-        exit(1);
-    }
-
-    // Make sure mandatory output file name parameter given.
-    if (OutputFileName.empty()) {
-        cerr << command << ": no output file specified." << endl;
         exit(1);
     }
 

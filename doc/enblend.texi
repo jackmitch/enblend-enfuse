@@ -148,12 +148,12 @@ Find out more about Enblend on its
 @chapter Invocation
 @cindex invocation
 
-@command{enblend} [@var{OPTIONS}] @code{--output=}@var{OUTPUT-FILE}
-@var{INPUT-FILES}@enddots{}
+@command{enblend} [@var{OPTIONS}] [@code{--output=}@var{IMAGE}]
+@var{INPUT}@enddots{}
 
 @noindent
-Assemble the sequence of images@tie{}@var{INPUT-FILES}@enddots{} into
-@var{OUTPUT-FILE}.
+Assemble the sequence of images @var{INPUT}@dots{} into a single
+@var{IMAGE}.
 
 @menu
 * Common Options::              General options
@@ -248,10 +248,13 @@ Enblend may still use a smaller number of levels if the geometry of
 the images demands.
 
 @item -o
-@itemx --output=@var{OUTPUT-FILE}
+@itemx --output=@var{FILE}
 @opindex -o
 @opindex --output
-Required option that specifies the name of the @var{OUTPUT-FILE}.
+Place output in @var{FILE}.
+
+If @option{--output} is not specified, the default is to put the
+resulting image in @file{a.tif}.
 
 @item -v
 @itemx --verbose
