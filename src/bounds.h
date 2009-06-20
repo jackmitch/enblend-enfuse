@@ -162,7 +162,7 @@ roiBounds(const Rect2D &inputUnion,
         cerr << command << ": info: using " << allowableLevels << " blending levels" << endl;
     }
     if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cerr << command << ": info: region of Interest bounding box: " << roiBB << endl;
+        cerr << command << ": info: region-of-interest bounding box: " << roiBB << endl;
     }
 
     return allowableLevels;
