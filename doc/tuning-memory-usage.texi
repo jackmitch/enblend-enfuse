@@ -1,52 +1,66 @@
-The default configuration of Enfuse assumes a system with 3--4@dmn{GB}
-of @acronym{RAM}.
+The default configuration of Enblend and Enfuse assumes a system with
+3--4@dmn{GB} of @acronym{RAM}.
 
-@cindex @code{ENBLEND_CACHE_IMAGES} (preprocessor symbol)
-If Enfuse has been compiled with the C++-preprocessor symbol
-@code{ENBLEND_CACHE_IMAGES} it uses its own image cache, whose size is
-user configurable with the option @samp{-m @var{CACHE-SIZE}}
-(@pxref{Extended Options}).  Furthermore, option @samp{-b
-@var{BUFFER-SIZE}} (@pxref{Extended Options}) allows for fine-tuning
-the size of a single buffer inside the image cache.  Note that
-@var{CACHE-SIZE} is given in megabytes, whereas @var{BUFFER-SIZE} is
-given in kilobytes.
+If Enblend and Enfuse have been compiled with the ``image-cache''
+feature they do not rely on the operating system's memory management,
+but use their own image cache.  To find out whether your version uses
+the image cache say
+
+@example
+enblend --verbose --version
+@end example
+
+@noindent
+or
+
+@example
+enfuse --verbose --version
+@end example
+
+@noindent
+The size of the image cache is user configurable with the
+option@tie{}@samp{-m @var{CACHE-SIZE}} (@pxref{Extended Options}).
+Furthermore, option@tie{}@samp{-b @var{BUFFER-SIZE}} (@pxref{Extended
+Options}) allows for fine-tuning the size of a single buffer inside
+the image cache.  Note that @var{CACHE-SIZE} is given in megabytes,
+whereas the unit of @var{BUFFER-SIZE} is kilobytes.
 
 Usually the user lets the operating system take care of the memory
-management of all processes.  However, a user of Enfuse might want to
-control the balance between the operating systems' Virtual Memory
-System and Enfuse's image cache for several reasons.
+management of all processes.  However, users of Enblend or Enfuse
+might want to control the balance between the operating systems'
+Virtual Memory System and the image cache for several reasons.
 
 @itemize
 @item
 Paging in or out parts of a process' image runs at kernel level and
 thus can make user processes appear unresponsive or ``jumpy''.  The
-caching mechanism of Enfuse of course runs as a user process, which is
-why it has less detrimental effects on the system's overall
-responsiveness.
+caching mechanism of Enblend and Enfuse of course runs as a user
+process, which is why it has less detrimental effects on the system's
+overall responsiveness.
 
 @item
-Enfuse's image cache has been optimized for accesses to image data.
-And all algorithms in Enfuse have been carefully arranged to play nice
-with the image cache.  An operating system's cache has no knowledge of
-these particular memory access patterns.
+The image cache has been optimized for accesses to image data.  And
+all algorithms in Enblend and Enfuse have been carefully arranged to
+play nice with the image cache.  An operating system's cache has no
+knowledge of these particular memory access patterns.
 
 @item
 The disk access of the operating system to the swap device has been
-highly optimized.  Enfuse on the other hand uses the standard
-@acronym{IO}-layer which is a slower interface.
+highly optimized.  Enblend and Enfuse on the other hand use the
+standard @acronym{IO}-layer which is a slower interface.
 
 @item
-Limiting the amount of image cache prevents Enfuse from eating up most
-or all @acronym{RAM}, thereby forcing all user applications into the
-swap device.
+Limiting the amount of image cache prevents Enblend and Enfuse from
+eating up most or all @acronym{RAM}, thereby forcing all user
+applications into the swap.
 @end itemize
 
 @noindent
 The @var{CACHE-SIZE} should be set in a way as to reconcile all of the
-above aspects even for the biggest data sets (this is many images and
-large images).
+above aspects even for the biggest data sets, this is, projects with
+many large images.
 
-@ref{Table:cache-size-settings} suggestes some cache- and buffer-sizes
+@ref{Table:cache-size-settings} suggests some cache- and buffer-sizes
 for different amounts of available @acronym{RAM}.
 
 @float Table,Table:cache-size-settings
@@ -118,3 +132,6 @@ for different amounts of available @acronym{RAM}.
 @caption{Suggested cache-size settings}
 @c @shortcaption{}
 @end float
+
+On systems with considerably more than 4@dmn{GB} of @acronym{RAM} it
+is recommended to run Enblend or Enfuse versions without image cache.

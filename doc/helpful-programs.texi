@@ -109,15 +109,18 @@ and tonemap high-dynamic range images.
 
 @itemize
 @item
+@cindex LibJPEG
 @uref{http://@/www.ijg.org/, LibJPEG} is a library for handling the
 @acronym{JPEG} (@acronym{JFIF}) image format.
 
 @item
+@cindex LibPNG
 @uref{http://@/www.libpng.org/@/pub/@/png/@/libpng.html, LibPNG} is a
 library that handles the Portable Network Graphics (@acronym{PNG})
 image format.
 
 @item
+@cindex LibTiff
 @uref{http://@/www.remotesensing.org/@/libtiff/, LibTIFF} offers a
 library and utility programs to manipulate the ubiquitous Tagged Image
 File Format, @acronym{TIFF}.
