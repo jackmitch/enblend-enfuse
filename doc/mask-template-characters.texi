@@ -1,9 +1,12 @@
 @float Table,Table:mask-template-characters
+@cindex mask template characters, table of
 @table @code
 @item %%
+@cindex mask template character, @samp{%}
 Produces a literal @samp{%}-sign.
 
 @item %i
+@cindex mask template character, @samp{i}
 Expands to the index of the mask file starting at zero.
 
 @samp{%i} supports setting a pad character or a width specification:
@@ -17,11 +20,13 @@ pad character is @samp{0}.  @var{WIDTH} is an integer.  Examples:
 @samp{%02i} or @samp{%_4i}.
 
 @item %n
+@cindex mask template character, @samp{n}
 Expands to the number of the mask file starting at one.  Otherwise it
 behaves identical to @samp{%i} including pad character and width
 specification.
 
 @item %p
+@cindex mask template character, @samp{p}
 This is the full name (path, filename, and extension) of the input
 file associated with the mask.
 
@@ -31,43 +36,52 @@ Example: If the input file is called
 @file{/home/@/luser/@/snap/@/img.jpg}.
 
 @item %P
+@cindex mask template character, @samp{P}
 This is the full name of the output file.
 
 @item %d
+@cindex mask template character, @samp{d}
 Is replaced with the directory part of the associated input file.
 @inforef{dirname,, coreutils.info}.
 
 Example (cont.): @samp{%d} @result{} @file{/home/@/luser/@/snap}.
 
 @item %D
+@cindex mask template character, @samp{D}
 Is replaced with the directory part of the output file.
 
 @item %b
+@cindex mask template character, @samp{b}
 Is replaced with the non-directory part (often called ``basename'') of
 the associated input file.  @inforef{basename,, coreutils.info}.
 
 Example (cont.): @samp{%b} @result{} @file{img.jpg}.
 
 @item %B
+@cindex mask template character, @samp{B}
 Is replaced with the non-directory part of the output file.
 
 @item %f
+@cindex mask template character, @samp{f}
 Is replaced with the filename without path and extension of the
 associated input file.
 
 Example (cont.): @samp{%f} @result{} @file{img}.
 
 @item %F
+@cindex mask template character, @samp{F}
 Is replaced with the filename without path and extension of the output
 file.
 
 @item %e
+@cindex mask template character, @samp{e}
 Is replaced with the extension (including the leading dot) of the
 associated input file.
 
 Example (cont.): @samp{%e} @result{} @file{.jpg}.
 
 @item %E
+@cindex mask template character, @samp{E}
 Is replaced with the extension of the output file.
 @end table
 @caption{Special characters to control the generation of mask

@@ -19,11 +19,11 @@ in this tool chain.
 @cindex workflow with Enblend
 @cindex workflow with Enfuse
 
-@pindex DCRaw
-@pindex UFRaw
-@pindex Hugin
+@pindex dcraw
+@pindex ufraw
+@pindex hugin
 @pindex PanoTools
-@pindex Gimp
+@pindex gimp
 
 @image{photographic-workflow}
 
@@ -62,7 +62,7 @@ stack
 together, this is the overlay regions may not match exactly.
 
 @item Convert Images
-@cindex row conversion
+@cindex raw conversion
 @cindex conversion, raw
 Convert the
 @uref{http://@/www.luminous-landscape.com/@/tutorials/@/understanding-@/series/@/u-@/raw-@/files.shtml,
@@ -110,15 +110,15 @@ most mal-aligned images.
 
 @noindent
 @emph{Remaining Problem:}
-@cindex alpha-channel
-Enblend and Enfuse write images with an alpha-channel.  (For more
-information on alpha-channels see @ref{Understanding Masks}.)
+@cindex alpha channel
+Enblend and Enfuse write images with an alpha channel.  (For more
+information on alpha channels see @ref{Understanding Masks}.)
 Furthermore, the final image rarely is rectangular.
 
 @item Postprocess
 Postprocess the combined image with your favorite tool.  Often the
 user will want to crop the image and simultaneously throw away the
-alpha-channel.
+alpha channel.
 @end table
 
 @noindent

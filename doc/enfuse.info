@@ -284,15 +284,15 @@ Combine Images
      _Benefit:_ The overlay areas become imperceptible for all but the
      most mal-aligned images.
 
-     _Remaining Problem:_ Enblend and Enfuse write images with an
-     alpha-channel.  (For more information on alpha-channels see *note
+     _Remaining Problem:_ Enblend and Enfuse write images with an alpha
+     channel.  (For more information on alpha channels see *note
      Understanding Masks::.)  Furthermore, the final image rarely is
      rectangular.
 
 Postprocess
      Postprocess the combined image with your favorite tool.  Often the
      user will want to crop the image and simultaneously throw away the
-     alpha-channel.
+     alpha channel.
 
 View
 
@@ -2424,7 +2424,7 @@ File: enfuse.info,  Node: Helpful Programs,  Next: Authors,  Prev: Applications,
 8 Helpful Additional Programs
 *****************************
 
-Several libraries and programs have proven helpful when working with
+Several programs and libraries have proven helpful when working with
 Enfuse and Enblend.
 
 *Raw Image Conversion*
@@ -2470,7 +2470,8 @@ Enfuse and Enblend.
 
         * ImageMagick (http://www.imagemagick.org/) and its clone
           GraphicsMagick (http://www.graphicsmagick.org/) are general
-          purpose command-line driven image manipulation programs.
+          purpose command-line driven image manipulation programs, for
+          example, `convert', `display', `identify', and `montage'.
 
 *High Dynamic Range*
         * OpenEXR (http://www.openexr.com/) offers libraries and some
@@ -2973,51 +2974,45 @@ File: enfuse.info,  Node: Program Index,  Next: Option Index,  Prev: List of Fig
 Program Index
 *************
 
- [index ]
 * Menu:
 
-* ALE:                                   Helpful Programs.    (line  20)
-* align_image_stack:                     Helpful Programs.    (line  27)
-* Anti-Lamenessing Engine:               Helpful Programs.    (line  20)
-* cinepaint:                             Helpful Programs.    (line  39)
-* CinePaint <1>:                         Helpful Programs.    (line  39)
-* CinePaint:                             Extended Options.    (line 109)
-* dcraw:                                 Helpful Programs.    (line  10)
-* DCRaw <1>:                             Helpful Programs.    (line  10)
-* DCRaw:                                 Workflow.            (line  17)
-* exiftool:                              Helpful Programs.    (line  77)
-* EXIFTool:                              Helpful Programs.    (line  77)
-* fulla:                                 Helpful Programs.    (line  27)
-* gimp:                                  Helpful Programs.    (line  46)
-* Gimp <1>:                              Helpful Programs.    (line  46)
-* Gimp <2>:                              Extended Options.    (line 109)
-* Gimp:                                  Workflow.            (line  17)
-* GraphicsMagick:                        Helpful Programs.    (line  50)
-* hugin:                                 Helpful Programs.    (line  24)
-* Hugin <1>:                             Helpful Programs.    (line  24)
-* Hugin <2>:                             What Images.         (line  13)
-* Hugin <3>:                             Extended Options.    (line 121)
-* Hugin:                                 Workflow.            (line  17)
-* identify:                              Understanding Masks. (line  22)
-* ImageMagick:                           Helpful Programs.    (line  50)
-* LibJPEG:                               Helpful Programs.    (line  62)
-* LibPNG:                                Helpful Programs.    (line  65)
-* LibTIFF:                               Helpful Programs.    (line  69)
-* LittleCMS, TiffICC:                    Helpful Programs.    (line  81)
-* nona <1>:                              Helpful Programs.    (line  27)
-* nona:                                  Extended Options.    (line 121)
-* OpenEXR:                               Helpful Programs.    (line  55)
-* PanoTools <1>:                         Helpful Programs.    (line  32)
+* ale:                                   Helpful Programs.    (line  20)
+* align_image_stack (Hugin):             Helpful Programs.    (line  27)
+* cinepaint <1>:                         Helpful Programs.    (line  39)
+* cinepaint:                             Extended Options.    (line 109)
+* convert (ImageMagick):                 Helpful Programs.    (line  50)
+* dcraw <1>:                             Helpful Programs.    (line  10)
+* dcraw:                                 Workflow.            (line  17)
+* display (ImageMagick):                 Helpful Programs.    (line  50)
+* exiftool:                              Helpful Programs.    (line  78)
+* exrdisplay (OpenEXR):                  Helpful Programs.    (line  56)
+* fulla (Hugin):                         Helpful Programs.    (line  27)
+* gimp <1>:                              Helpful Programs.    (line  46)
+* gimp <2>:                              Extended Options.    (line 109)
+* gimp:                                  Workflow.            (line  17)
+* gm (GraphicsMagick):                   Helpful Programs.    (line  50)
+* hugin <1>:                             Helpful Programs.    (line  24)
+* hugin <2>:                             What Images.         (line  13)
+* hugin <3>:                             Extended Options.    (line 121)
+* hugin:                                 Workflow.            (line  17)
+* identify (ImageMagick) <1>:            Helpful Programs.    (line  50)
+* identify (ImageMagick):                Understanding Masks. (line  22)
+* montage (ImageMagick):                 Helpful Programs.    (line  50)
+* nona (Hugin) <1>:                      Helpful Programs.    (line  27)
+* nona (Hugin):                          Extended Options.    (line 121)
 * PanoTools:                             Workflow.            (line  17)
-* PFSTools:                              Helpful Programs.    (line  58)
-* PTmender:                              Helpful Programs.    (line  32)
-* PTOptimizer:                           Helpful Programs.    (line  32)
-* tifficc:                               Helpful Programs.    (line  81)
-* tiffinfo <1>:                          Helpful Programs.    (line  73)
-* tiffinfo:                              Understanding Masks. (line  22)
-* ufraw:                                 Helpful Programs.    (line  13)
-* UFRaw <1>:                             Helpful Programs.    (line  13)
-* UFRaw:                                 Workflow.            (line  17)
+* pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  59)
+* pfsin (PFSTools):                      Helpful Programs.    (line  59)
+* pfsout (PFSTools):                     Helpful Programs.    (line  59)
+* pfstmo_* (PFStmo):                     Helpful Programs.    (line  59)
+* pfsview (PFSTools):                    Helpful Programs.    (line  59)
+* PTmender (PanoTools):                  Helpful Programs.    (line  32)
+* PTOptimizer (PanoTools):               Helpful Programs.    (line  32)
+* tifficc (LittleCMS):                   Helpful Programs.    (line  82)
+* tiffinfo (libtiff) <1>:                Helpful Programs.    (line  74)
+* tiffinfo (libtiff):                    Understanding Masks. (line  22)
+* ufraw <1>:                             Helpful Programs.    (line  13)
+* ufraw:                                 Workflow.            (line  17)
 * ufraw-batch:                           Helpful Programs.    (line  13)
 
 
@@ -3084,14 +3079,14 @@ General Index
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
 * affine transformation:                 Workflow.            (line  56)
+* alpha channel <1>:                     Workflow.            (line  77)
 * alpha channel:                         Overview.            (line  64)
 * alpha channel, unassociated:           Extended Options.    (line 107)
-* alpha-channel:                         Workflow.            (line  77)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
 * authors, list of:                      Authors.             (line   6)
+* average, disabling:                    Disabling Averaging. (line   6)
 * average, weighted:                     Weighted Average.    (line   6)
-* averaging, disabling:                  Disabling Averaging. (line   6)
 * basic focus stacking:                  Basic Focus Stacking.
                                                               (line   6)
 * binary mask:                           Understanding Masks. (line   6)
@@ -3103,7 +3098,6 @@ General Index
 * channel, alpha:                        Overview.            (line  64)
 * CIECAM02:                              Extended Options.    (line  19)
 * circle-of-confusion:                   Why Focus Stacks.    (line  12)
-* CoC:                                   Why Focus Stacks.    (line  12)
 * color appearance model:                Extended Options.    (line  19)
 * compression:                           Common Options.      (line   9)
 * compression, deflate:                  Common Options.      (line  23)
@@ -3131,8 +3125,7 @@ General Index
 * depth-of-focus increase:               Focus Stacks.        (line   6)
 * digital blending:                      Exposure Series Misconceptions.
                                                               (line   9)
-* disabling averaging:                   Disabling Averaging. (line   6)
-* DOF:                                   Why Focus Stacks.    (line  15)
+* disabling average:                     Disabling Averaging. (line   6)
 * double precision float, IEEE754:       Extended Options.    (line  82)
 * dynamic range increase <1>:            Flash Exposure Series.
                                                               (line   6)
@@ -3151,7 +3144,6 @@ General Index
                                                               (line   6)
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
-* FDL:                                   FDL.                 (line   6)
 * filename template:                     Expert Options.      (line 213)
 * flash exposure series:                 Flash Exposure Series.
                                                               (line   6)
@@ -3167,10 +3159,11 @@ General Index
 * focus stacks, preparation:             Preparing Focus Stacks.
                                                               (line   6)
 * focus stacks, why create them:         Why Focus Stacks.    (line   6)
+* free documentation license (FDL):      FDL.                 (line   6)
 * fusing, contrased-based:               Contrast Based Fusing.
                                                               (line   6)
 * general index:                         General Index.       (line   6)
-* GNU Free Documentation License:        FDL.                 (line   6)
+* GNU free documentation license:        FDL.                 (line   6)
 * gray projector:                        Expert Options.      (line 124)
 * gray projector, average:               Expert Options.      (line 133)
 * gray projector, channel-mixer:         Expert Options.      (line 165)
@@ -3189,13 +3182,13 @@ General Index
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
 * index, program:                        Program Index.       (line   6)
-* input masks:                           Understanding Masks. (line  18)
+* input mask:                            Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  15)
 * L*a*b* conversion:                     Expert Options.      (line 139)
 * laplacian edge detection:              Laplacian Edge Detection.
                                                               (line   6)
-* Laplacian of Gaussian:                 Laplacian of Gaussian.
+* Laplacian of Gaussian (LoG):           Laplacian of Gaussian.
                                                               (line   6)
 * lens distortion, correction of:        Workflow.            (line  56)
 * levels, pyramid:                       Common Options.      (line  49)
@@ -3206,16 +3199,27 @@ General Index
                                                               (line   6)
 * local contrast problem:                Local Contrast Problem.
                                                               (line   6)
-* LoG:                                   Laplacian of Gaussian.
-                                                              (line   6)
 * LZW compression:                       Common Options.      (line  29)
+* mask template character, %:            Expert Options.      (line 236)
+* mask template character, B:            Expert Options.      (line 281)
+* mask template character, b:            Expert Options.      (line 275)
+* mask template character, D:            Expert Options.      (line 272)
+* mask template character, d:            Expert Options.      (line 266)
+* mask template character, E:            Expert Options.      (line 300)
+* mask template character, e:            Expert Options.      (line 294)
+* mask template character, F:            Expert Options.      (line 290)
+* mask template character, f:            Expert Options.      (line 284)
+* mask template character, i:            Expert Options.      (line 239)
+* mask template character, n:            Expert Options.      (line 250)
+* mask template character, P:            Expert Options.      (line 263)
+* mask template character, p:            Expert Options.      (line 255)
+* mask template characters, table of:    Expert Options.      (line 235)
 * mask, binary:                          Understanding Masks. (line   6)
+* mask, filename template:               Expert Options.      (line 213)
+* mask, input files:                     Understanding Masks. (line  18)
+* mask, saving:                          Expert Options.      (line 210)
 * mask, weight:                          Understanding Masks. (line   6)
-* masks, filename template:              Expert Options.      (line 213)
-* masks, input files:                    Understanding Masks. (line  18)
-* masks, saving:                         Expert Options.      (line 210)
 * masks, undestanding:                   Understanding Masks. (line   6)
-* masks, weight:                         Understanding Masks. (line  91)
 * memory, tuning usage of:               Tuning Memory Usage. (line   6)
 * Mertens-Kautz-Van Reeth exposure fusion: Overview.          (line   6)
 * mode of operation (SDev, LoG, ...):    Scaling and Choice of Mode.
@@ -3266,7 +3270,6 @@ General Index
 * undestanding masks:                    Understanding Masks. (line   6)
 * variance:                              Standard Deviation.  (line  45)
 * weight mask:                           Understanding Masks. (line   6)
-* weight masks:                          Understanding Masks. (line  91)
 * weight, contrast:                      Fusion Options.      (line  10)
 * weight, entropy:                       Fusion Options.      (line  15)
 * weight, exposure:                      Fusion Options.      (line  20)

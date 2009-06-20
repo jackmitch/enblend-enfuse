@@ -151,7 +151,7 @@ the areas where images overlap.  Alpha channels can be used to
 indicate to Enblend that certain portions of an input image should not
 contribute to the final image.
 
-@pindex @command{hugin}
+@pindex hugin
 @pindex PanoTools
 @cindex feathering, detrimental effect of
 Enblend does @emph{not} align images.  Use a tool as @command{hugin}
@@ -474,8 +474,8 @@ Maximum finite value: @semilog{4.3, 9}
 @opindex -g
 @cindex alpha channel, unassociated
 
-@pindex Gimp
-@pindex Cinepaint
+@pindex gimp
+@pindex cinepaint
 Gimp (before version@tie{}2.0) and Cinepaint (@pxref{Helpful
 Programs}) exhibit unusual behavior when loading images with
 unassociated alpha channels.  Use option @option{-g} to work around
@@ -485,8 +485,7 @@ unassociated alpha.
 
 @item --gpu
 @opindex --gpu
-@cindex graphics processing unit
-@cindex @acronym{GPU}
+@cindex graphics processing unit @acronym{GPU}
 Use the graphics card -- in fact the graphics processing unit
 (@acronym{GPU}) -- to accelerate some computations.
 
@@ -506,8 +505,8 @@ Set the size of the output image manually to
 @var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
 @var{X-OFFSET} and @var{Y-OFFSET}, too.
 
-@pindex @command{nona}
-@pindex Hugin
+@pindex nona @r{(Hugin)}
+@pindex hugin
 This option is useful when the input images are cropped @acronym{TIFF}
 files, such as those produced by @command{nona}.  The stitcher
 @command{nona} is part of Hugin.  @xref{Helpful Programs}.
@@ -648,8 +647,8 @@ name of the associated input file (@samp{%f}) for easy recognition.
 
 @node FDL
 @appendix @acronym{GNU} Free Documentation License
-@cindex @acronym{FDL}
-@cindex @acronym{GNU} Free Documentation License
+@cindex free documentation license (@acronym{FDL})
+@cindex @acronym{GNU} free documentation license
 
 @include fdl.texi
 

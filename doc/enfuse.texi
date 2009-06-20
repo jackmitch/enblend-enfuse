@@ -594,8 +594,8 @@ Maximum finite value: @semilog{4.3, 9}
 @cindex alpha channel, unassociated
 Save alpha channel as ``associated''.
 
-@pindex Gimp
-@pindex CinePaint
+@pindex gimp
+@pindex cinepaint
 Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
 Programs}) exhibit unusual behavior when loading images with
 unassociated alpha channels.  Use option @option{-g} to work around
@@ -611,8 +611,8 @@ Set the size of the output image manually to
 @var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
 @var{X-OFFSET} and @var{Y-OFFSET}, too.
 
-@pindex @command{nona}
-@pindex Hugin
+@pindex nona @r{(Hugin)}
+@pindex hugin
 This option is useful when the input images are cropped @acronym{TIFF}
 files, such as those produced by @command{nona}.  The stitcher
 @command{nona} is part of Hugin.  @xref{Helpful Programs}.
@@ -1270,12 +1270,12 @@ Consider all masks when fusing.  This is the default.
 @itemx --SaveMasks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
 @opindex --SaveMasks
 Save all weight files as @acronym{TIFF} images.
-@cindex masks, saving
+@cindex mask, saving
 First form: Save all soft weight masks in files.  If
 option@tie{}@option{--HardMask} is effective also save the hard masks.
 The defaults are @file{mask%04i.tif} and @file{mask%04i_wta.tif}.
 @cindex filename template
-@cindex masks, filename template
+@cindex mask, filename template
 In the second form @var{SOFT-MASK-TEMPLATE} defines the names of the
 soft mask files.  In the third form @var{HARD-MASK-TEMPLATE}
 additionally defines the names of the hard mask files.
@@ -1733,8 +1733,8 @@ of this weighting algorithm, like smoothing out noise.
 
 @node Disabling Averaging
 @subsection Disabling Averaging: Option@tie{}@option{--HardMask}
-@cindex disabling averaging
-@cindex averaging, disabling
+@cindex disabling average
+@cindex average, disabling
 @opindex --HardMask
 
 The weighted average computation as described above has proven to be
@@ -2406,8 +2406,7 @@ $$
 @cindex weighting, contrast using laplacian-of--gaussian
 @cindex contrast weighting using laplacian-of--gaussian
 
-@cindex Laplacian of Gaussian
-@cindex LoG
+@cindex Laplacian of Gaussian (@acronym{LoG})
 The @dfn{Laplacian of Gaussian} (@acronym{LoG}) is an operator to
 detect edges in an image.  Sometimes the @acronym{LoG}-operator is
 also called @sc{Marr}-@sc{Hildreth} operator.  A Laplacian-of-Gaussian
@@ -3099,7 +3098,7 @@ inch) or even for web presentation are relatively low, whereas the
 alignment of 8@dmn{MPixel} images for a 12"@classictimes{}18" print
 ought to be tight.
 
-@pindex Hugin
+@pindex hugin
 If the input images need to be aligned, Hugin (@pxref{Helpful
 Programs}) is the tool of choice.  It produces images exactly in the
 format that Enfuse expects.
@@ -3399,13 +3398,11 @@ a fixed sensor or film size,
 a lens' particular focal length, and
 @item
 @cindex circle-of-confusion
-@cindex @acronym{CoC}
 a notion about ``sharpness'', technically speaking the size of the
 circle-of-confusion (@acronym{CoC})
 @end itemize
 
 @cindex depth-of-field
-@cindex @acronym{DOF}
 @noindent
 the photographer controls the depth-of-field with the aperture.
 Smaller apertures -- this is larger aperture numbers -- increase the
@@ -3836,8 +3833,8 @@ detail in the in-focus regions.
 
 @node FDL
 @appendix @acronym{GNU} Free Documentation License
-@cindex @acronym{FDL}
-@cindex @acronym{GNU} Free Documentation License
+@cindex free documentation license (@acronym{FDL})
+@cindex @acronym{GNU} free documentation license
 
 @include fdl.texi
 

@@ -14,15 +14,15 @@ fusion.  We shall explore both occurrences in the next sections.
 
 @c @node Input File Masks
 @section Masks in Input Files
-@cindex masks, input files
-@cindex input masks
+@cindex mask, input files
+@cindex input mask
 
 Each of the input files for Enfuse and Enblend can contain its own
 mask.  Both applications interpret them as binary masks no matter how
 many bits per image pixel they contain.
 
-@pindex @command{identify}
-@pindex @command{tiffinfo}
+@pindex identify @r{(ImageMagick)}
+@pindex tiffinfo @r{(libtiff)}
 Use ImageMagick's @command{identify} or, for @acronym{TIFF} files,
 @command{tiffinfo} to inquire quickly whether a file contains a mask.
 @ref{Helpful Programs} shows where to find these programs on the web.
@@ -100,7 +100,7 @@ have a hole there.
 
 @c @node Weight Mask Files
 @section Weight Mask Files
-@cindex masks, weight
-@cindex weight masks
+@cindex mask, weight
+@cindex weight mask
 
 ...
