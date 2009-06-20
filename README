@@ -6,7 +6,7 @@ This file is part of Enblend.
 * Programs
 
 This packages contains the programs Enblend and Enfuse.  The source
-code and further information about enblend are available at:
+code and further information about Enblend are available at:
         http://enblend.sf.net
 
 ** Enblend
@@ -86,9 +86,18 @@ default is "no", build an optimized version without debugging symbols.
 Split the documentation files in INFO or HTML format into small
 pieces.  The default is "yes", split documentation.
 
+** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
+
+Use Boost "filesystem" library to get platform-independent path
+generation.  The default is to check for usability.  "No" forces the
+use of the internal path generation library.  Supply a LIBRARY name if
+you want to override the default candidates "boost_filesystem-mt" for
+multi-threaded compilation and "boost_filesystem" for a single-thread
+build.
+
 ** --with-ttf-path=<PATH>
 
-Set path to TrueType fonts.  This is only required for building the
+Set PATH to TrueType fonts.  This is only required for building the
 documentation.
 
 
@@ -107,7 +116,8 @@ PDF, and HTML format.
         make pdf
         make html
 
-Note that some additional pagages are required to build these formats:
+Note that some additional packages are required to build these
+formats:
         makeinfo       - GNU documentation generator.
         gnuplot        - Render plots (.gp) in .txt, .png, .eps, and
                          .pdf. Check out http://www.gnuplot.info/.
@@ -116,7 +126,7 @@ Note that some additional pagages are required to build these formats:
         tetex          - Typeset the .texi documents in .ps or .pdf
         texi2html      - Convert .texi to .html.  Find more information
                          at http://www.nongnu.org/texi2html/.
-        transfig       - Rander XFig drawings in .png, .eps, and .pdf.
+        transfig       - Render XFig drawings in .png, .eps, and .pdf.
                          Check out http://www.xfig.org/ for Transfig.
 
 
