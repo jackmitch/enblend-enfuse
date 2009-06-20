@@ -256,8 +256,11 @@ run-length compression.  It is lossless.
 @end table
 
 @item Any other format
-Other formats like the @acronym{PNG} do not accept a @var{COMPRESSION}
-setting.
+Other formats do not accept a @var{COMPRESSION} setting.
+
+However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
+@acronym{VIGRA}} automatically compresses @file{png}-files with the
+``deflate'' method.
 @end table
 
 @item -h

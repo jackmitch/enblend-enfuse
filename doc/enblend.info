@@ -1,9 +1,9 @@
 This is ../../doc/enblend.info, produced by makeinfo version 4.11 from
 ../../doc/enblend.texi.
 
-This manual is for Enblend (version 3.2-staging, 11 April 2009), a tool
-for compositing images in such a way that the seam between the images
-is invisible, or at least very difficult to see.
+This manual is for Enblend (version 3.2-staging-6c979924c3d1, 14 April
+2009), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
    Copyright (C) 2004-2009 ANDREW MIHAL.
 
@@ -20,9 +20,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging, 11 April 2009), a tool
-for compositing images n such a way that the seam between the images is
-invisible, or at least very difficult to see.
+This manual is for Enblend (version 3.2-staging-6c979924c3d1, 14 April
+2009), a tool for compositing images n such a way that the seam between
+the images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -238,8 +238,10 @@ Common options control some overall features of Enblend.
                variant of run-length compression.  It is lossless.
 
     Any other format
-          Other formats like the PNG do not accept a COMPRESSION
-          setting.
+          Other formats like PNG do not accept a COMPRESSION setting.
+          However, VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
+          automatically compresses `png'-files with the "deflate"
+          method.
 
 `-h'
 `--help'
@@ -276,9 +278,9 @@ Common options control some overall features of Enblend.
 `-w'
      Blend around the +/-180o boundary.  Useful for full 360o panoramas.
 
-     Version 3.2-staging of Enblend, the one described here, does not
-     blend neither zenith nor or nadir, so you may still see some seams
-     in these areas.
+     Version 3.2-staging-6c979924c3d1 of Enblend, the one described
+     here, does not blend neither zenith nor or nadir, so you may still
+     see some seams in these areas.
 
 `-x'
      Checkpoint partial results to the output file after each blending
@@ -410,8 +412,8 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 3.2-staging, only mask optimization
-     strategy 1 benefits from this option.
+     In this version of Enblend, 3.2-staging-6c979924c3d1, only mask
+     optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled in the Enblend
      binary for this option being available.  Find out about this
@@ -1305,18 +1307,18 @@ Option Index
 * --fine-mask:                           Mask Generation Options.
                                                               (line  13)
 * --gpu:                                 Extended Options.    (line 115)
-* --help:                                Common Options.      (line  50)
+* --help:                                Common Options.      (line  52)
 * --load-mask:                           Mask Generation Options.
                                                               (line  17)
 * --no-optimize:                         Mask Generation Options.
                                                               (line  22)
 * --optimize:                            Mask Generation Options.
                                                               (line  26)
-* --output:                              Common Options.      (line  63)
+* --output:                              Common Options.      (line  65)
 * --save-mask:                           Mask Generation Options.
                                                               (line  30)
-* --verbose:                             Common Options.      (line  70)
-* --version:                             Common Options.      (line  75)
+* --verbose:                             Common Options.      (line  72)
+* --version:                             Common Options.      (line  77)
 * --visualize:                           Extended Options.    (line 145)
 * -a:                                    Common Options.      (line   9)
 * -b <1>:                                Tuning Memory Usage. (line   6)
@@ -1325,15 +1327,15 @@ Option Index
 * -d:                                    Extended Options.    (line  30)
 * -f:                                    Extended Options.    (line 128)
 * -g:                                    Extended Options.    (line 107)
-* -h:                                    Common Options.      (line  50)
-* -l:                                    Common Options.      (line  53)
+* -h:                                    Common Options.      (line  52)
+* -l:                                    Common Options.      (line  55)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 136)
-* -o:                                    Common Options.      (line  63)
-* -V:                                    Common Options.      (line  75)
-* -v:                                    Common Options.      (line  70)
-* -w:                                    Common Options.      (line  81)
-* -x:                                    Common Options.      (line  88)
+* -o:                                    Common Options.      (line  65)
+* -V:                                    Common Options.      (line  77)
+* -v:                                    Common Options.      (line  72)
+* -w:                                    Common Options.      (line  83)
+* -x:                                    Common Options.      (line  90)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -1387,7 +1389,7 @@ General Index
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  23)
 * lens distortion, correction of:        Workflow.            (line  54)
-* levels, pyramid:                       Common Options.      (line  53)
+* levels, pyramid:                       Common Options.      (line  55)
 * load mask:                             Mask Generation Options.
                                                               (line  17)
 * LZW compression:                       Common Options.      (line  37)
@@ -1423,7 +1425,7 @@ General Index
 * photometric alignment:                 Workflow.            (line  56)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line  53)
+* pyramid levels:                        Common Options.      (line  55)
 * row conversion:                        Workflow.            (line  41)
 * save mask:                             Mask Generation Options.
                                                               (line  30)
@@ -1441,25 +1443,25 @@ General Index
 
 
 Tag Table:
-Node: Top729
-Node: Overview1658
-Ref: Overview-Footnote-13751
-Node: Workflow3932
-Ref: Figure:photographic-workflow4445
-Node: Invocation7144
-Node: Common Options7548
-Ref: Common Options-Footnote-110376
-Node: Extended Options10567
-Node: Mask Generation Options16160
-Ref: Table:mask-template-characters18206
-Node: Understanding Masks20076
-Node: Tuning Memory Usage23857
-Ref: Table:cache-size-settings25975
-Node: Helpful Programs26283
-Node: Authors29950
-Node: FDL30730
-Node: Program Index51711
-Node: Option Index55061
-Node: General Index57793
+Node: Top742
+Node: Overview1684
+Ref: Overview-Footnote-13777
+Node: Workflow3958
+Ref: Figure:photographic-workflow4471
+Node: Invocation7170
+Node: Common Options7574
+Ref: Common Options-Footnote-110552
+Node: Extended Options10743
+Node: Mask Generation Options16349
+Ref: Table:mask-template-characters18395
+Node: Understanding Masks20265
+Node: Tuning Memory Usage24046
+Ref: Table:cache-size-settings26164
+Node: Helpful Programs26472
+Node: Authors30139
+Node: FDL30919
+Node: Program Index51900
+Node: Option Index55250
+Node: General Index57982
 
 End Tag Table

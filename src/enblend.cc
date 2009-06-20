@@ -246,7 +246,7 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --save-mask=TEMPLATE   save generated masks\n" <<
+        "  --save-mask=TEMPLATE   save generated masks; example template: \"mask-%04i.tif\"\n" <<
         "  --load-mask=TEMPLATE   use existing masks instead of generating them\n" <<
         "\n" <<
         "Report bugs at <https://bugs.launchpad.net/enblend>." <<
@@ -314,8 +314,23 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
             cerr << command <<
-                ": warning: compression is not supported with this output file type" <<
+                ": warning: compression is not supported with output file type \"" <<
+                enblend::getFileType(OutputFileName) << "\"" <<
                 endl;
+    }
+
+    if (contains(optionSet, AssociatedAlphaOption) &&
+        enblend::getFileType(OutputFileName) != "TIFF") {
+            cerr << command <<
+                ": warning: \"-g\" has no effect with output file type \"" <<
+                enblend::getFileType(OutputFileName) << "\"" <<
+                endl;
+    }
+
+    if (contains(optionSet, VisualizeOption) && !OptimizeMask) {
+        cerr << command <<
+            ": warning: \"--visualize\" without mask optimization has no effect" <<
+            endl;
     }
 }
 
@@ -620,8 +635,8 @@ int process_options(int argc, char** argv) {
             optionSet.insert(CheckpointOption);
             break;
         case 'z':
-            cerr << command << ": info: flag \"-z\" is deprecated;\n"
-                 << command << ": info: use \"--compression=LZW\" instead"
+            cerr << command
+                 << ": info: flag \"-z\" is deprecated; use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
             optionSet.insert(LZWCompressionOption);
@@ -1117,12 +1132,6 @@ int main(int argc, char** argv) {
              << e.what()
              << endl;
         exit(1);
-    }
-
-    if (!VisualizeMaskFileName.empty() && !OptimizeMask) {
-        cerr << command
-             << ": warning: \"--visualize\" does nothing without \"--optimize\""
-             << endl;
     }
 
     if (!OutputPixelType.empty()) {

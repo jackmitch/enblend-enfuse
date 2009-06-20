@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -443,7 +443,16 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
             cerr << command <<
-                ": warning: compression is not supported with this output file type" <<
+                ": warning: compression is not supported with output file type \"" <<
+                enblend::getFileType(OutputFileName) << "\"" <<
+                endl;
+    }
+
+    if (contains(optionSet, AssociatedAlphaOption) &&
+        enblend::getFileType(OutputFileName) != "TIFF") {
+            cerr << command <<
+                ": warning: \"-g\" has no effect with output file type \"" <<
+                enblend::getFileType(OutputFileName) << "\"" <<
                 endl;
     }
 }
@@ -996,8 +1005,8 @@ int process_options(int argc, char** argv) {
             optionSet.insert(Blend180Option);
             break;
         case 'z':
-            cerr << command << ": info: flag \"-z\" is deprecated;\n"
-                 << command << ": info: use \"--compression=LZW\" instead"
+            cerr << command
+                 << ": info: flag \"-z\" is deprecated; use \"--compression=LZW\" instead"
                  << endl;
             OutputCompression = "LZW";
             optionSet.insert(LZWCompressionOption);

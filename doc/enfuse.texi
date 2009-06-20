@@ -379,8 +379,11 @@ run-length compression; it is lossless.
 @end table
 
 @item Any other format
-Other formats like the @acronym{PNG} do not accept a @var{COMPRESSION}
-setting.
+Other formats do not accept a @var{COMPRESSION} setting.
+
+However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
+@acronym{VIGRA}} automatically compresses @file{png}-files with the
+``deflate'' method.
 @end table
 
 @item -h
@@ -2412,8 +2415,8 @@ operator,
 @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
 @code{vigra::@/laplacian@/Of@/Gaussian}} is part of the
 package@tie{}@uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
-Vigra} that Enfuse is built upon and is used for edge detection if
-option@tie{}@option{--EdgeScale} is non-zero and
+@acronym{VIGRA}} that Enfuse is built upon and is used for edge
+detection if option@tie{}@option{--EdgeScale} is non-zero and
 @option{--MinCurvature} equal to or less than zero.
 
 Let the Gaussian function be

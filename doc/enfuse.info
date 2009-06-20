@@ -1,9 +1,9 @@
 This is ../../doc/enfuse.info, produced by makeinfo version 4.11 from
 ../../doc/enfuse.texi.
 
-This manual is for Enfuse (version 3.2-staging, 11 April 2009), a
-program to merge different exposures of the same scene to produce an
-image that looks much like a tonemapped image.
+This manual is for Enfuse (version 3.2-staging-6c979924c3d1, 14 April
+2009), a program to merge different exposures of the same scene to
+produce an image that looks much like a tonemapped image.
 
    Copyright (C) 2004-2009 ANDREW MIHAL.
 
@@ -20,9 +20,9 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging, 11 April 2009), a
-program to merge different exposures of the same scene to produce an
-image that looks much like a tonemapped image.
+This manual is for Enfuse (version 3.2-staging-6c979924c3d1, 14 April
+2009), a program to merge different exposures of the same scene to
+produce an image that looks much like a tonemapped image.
 
 * Menu:
 
@@ -354,8 +354,10 @@ Common options control some overall features of Enfuse.
                lossless.
 
     Any other format
-          Other formats like the PNG do not accept a COMPRESSION
-          setting.
+          Other formats like PNG do not accept a COMPRESSION setting.
+          However, VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
+          automatically compresses `png'-files with the "deflate"
+          method.
 
 `-h'
 `--help'
@@ -393,9 +395,9 @@ Common options control some overall features of Enfuse.
      Blend around the +/-180o boundary.  This is useful for full 360o
      panoramas.
 
-     Version 3.2-staging of Enfuse, the one described here, does not
-     blend neither zenith nor or nadir, so you may still see some seams
-     in these areas.
+     Version 3.2-staging-6c979924c3d1 of Enfuse, the one described
+     here, does not blend neither zenith nor or nadir, so you may still
+     see some seams in these areas.
 
    ---------- Footnotes ----------
 
@@ -672,9 +674,10 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 3.2-staging of
-     Enfuse, the option is effective for exposure weighting contrast
-     weighting.  Default: `average'.
+     grayscale masks: (R, G, B) -> Y.  In
+     version 3.2-staging-6c979924c3d1 of Enfuse, the option is
+     effective for exposure weighting contrast weighting.  Default:
+     `average'.
 
         Valid values for PROJECTOR are:
 
@@ -1212,7 +1215,7 @@ image.  Sometimes the LoG-operator is also called MARR-HILDRETH
 operator.  A Laplacian-of-Gaussian operator,
 `vigra::laplacianOfGaussian'
 (http://hci.iwr.uni-heidelberg.de/vigra/doc/vigra/group__CommonConvolutionFilters.html)
-is part of the package Vigra (http://hci.iwr.uni-heidelberg.de/vigra/)
+is part of the package VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
 that Enfuse is built upon and is used for edge detection if
 option `--EdgeScale' is non-zero and `--MinCurvature' equal to or less
 than zero.
@@ -2800,14 +2803,14 @@ Option Index
 * --GrayProjector:                       Expert Options.      (line  86)
 * --HardMask <1>:                        Expert Stacking.     (line  22)
 * --HardMask <2>:                        Disabling Averaging. (line   6)
-* --HardMask:                            Expert Options.      (line 140)
-* --help:                                Common Options.      (line  43)
-* --MinCurvature:                        Expert Options.      (line 152)
-* --output:                              Common Options.      (line  56)
-* --SaveMasks:                           Expert Options.      (line 171)
-* --SoftMask:                            Expert Options.      (line 166)
-* --verbose:                             Common Options.      (line  63)
-* --version:                             Common Options.      (line  68)
+* --HardMask:                            Expert Options.      (line 141)
+* --help:                                Common Options.      (line  45)
+* --MinCurvature:                        Expert Options.      (line 153)
+* --output:                              Common Options.      (line  58)
+* --SaveMasks:                           Expert Options.      (line 172)
+* --SoftMask:                            Expert Options.      (line 167)
+* --verbose:                             Common Options.      (line  65)
+* --version:                             Common Options.      (line  70)
 * --wContrast:                           Fusion Options.      (line  10)
 * --wEntropy:                            Fusion Options.      (line  15)
 * --wExposure:                           Fusion Options.      (line  20)
@@ -2820,14 +2823,14 @@ Option Index
 * -d:                                    Extended Options.    (line  30)
 * -f:                                    Extended Options.    (line 118)
 * -g:                                    Extended Options.    (line 107)
-* -h:                                    Common Options.      (line  43)
-* -l:                                    Common Options.      (line  46)
+* -h:                                    Common Options.      (line  45)
+* -l:                                    Common Options.      (line  48)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 126)
-* -o:                                    Common Options.      (line  56)
-* -V:                                    Common Options.      (line  68)
-* -v:                                    Common Options.      (line  63)
-* -w:                                    Common Options.      (line  74)
+* -o:                                    Common Options.      (line  58)
+* -V:                                    Common Options.      (line  70)
+* -v:                                    Common Options.      (line  65)
+* -w:                                    Common Options.      (line  76)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2838,7 +2841,7 @@ General Index
  [index ]
 * Menu:
 
-* 360o panorama:                         Common Options.      (line  74)
+* 360o panorama:                         Common Options.      (line  76)
 * advanced focus stacking:               Advanced Focus Stacking.
                                                               (line   6)
 * advanced focus stacking, recognizing faint edges: Suppressing Noise or Recognizing Faint Edges.
@@ -2882,7 +2885,7 @@ General Index
                                                               (line   6)
 * contrast weighting using standard deviation: Standard Deviation.
                                                               (line   6)
-* conversion, L*a*b*:                    Expert Options.      (line 100)
+* conversion, L*a*b*:                    Expert Options.      (line 101)
 * conversion, raw:                       Workflow.            (line  41)
 * dark frame:                            Expert Stacking.     (line  18)
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
@@ -2914,7 +2917,7 @@ General Index
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
 * FDL:                                   FDL.                 (line   6)
-* filename template:                     Expert Options.      (line 174)
+* filename template:                     Expert Options.      (line 175)
 * flash exposure series:                 Flash Exposure Series.
                                                               (line   6)
 * focus stacking decision tree:          Focus Stacking Decision Tree.
@@ -2934,12 +2937,12 @@ General Index
 * general index:                         General Index.       (line   6)
 * GNU Free Documentation License:        FDL.                 (line   6)
 * gray projector:                        Expert Options.      (line  86)
-* gray projector, average:               Expert Options.      (line  94)
-* gray projector, channel-mixer:         Expert Options.      (line 126)
-* gray projector, l-star:                Expert Options.      (line 100)
-* gray projector, lightness:             Expert Options.      (line 110)
-* gray projector, luminance:             Expert Options.      (line 120)
-* gray projector, value:                 Expert Options.      (line 115)
+* gray projector, average:               Expert Options.      (line  95)
+* gray projector, channel-mixer:         Expert Options.      (line 127)
+* gray projector, l-star:                Expert Options.      (line 101)
+* gray projector, lightness:             Expert Options.      (line 111)
+* gray projector, luminance:             Expert Options.      (line 121)
+* gray projector, value:                 Expert Options.      (line 116)
 * half precision float, OpenEXR:         Extended Options.    (line  98)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
@@ -2954,13 +2957,13 @@ General Index
 * input masks:                           Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  15)
-* L*a*b* conversion:                     Expert Options.      (line 100)
+* L*a*b* conversion:                     Expert Options.      (line 101)
 * laplacian edge detection:              Laplacian Edge Detection.
                                                               (line   6)
 * Laplacian of Gaussian:                 Laplacian of Gaussian.
                                                               (line   6)
 * lens distortion, correction of:        Workflow.            (line  54)
-* levels, pyramid:                       Common Options.      (line  46)
+* levels, pyramid:                       Common Options.      (line  48)
 * light probe:                           Exposure Series Misconceptions.
                                                               (line  28)
 * local analysis window:                 Standard Deviation.  (line   6)
@@ -2973,9 +2976,9 @@ General Index
 * LZW compression:                       Common Options.      (line  29)
 * mask, binary:                          Understanding Masks. (line   6)
 * mask, weight:                          Understanding Masks. (line   6)
-* masks, filename template:              Expert Options.      (line 174)
+* masks, filename template:              Expert Options.      (line 175)
 * masks, input files:                    Understanding Masks. (line  18)
-* masks, saving:                         Expert Options.      (line 171)
+* masks, saving:                         Expert Options.      (line 172)
 * masks, undestanding:                   Understanding Masks. (line   6)
 * masks, weight:                         Understanding Masks. (line  91)
 * memory, tuning usage of:               Tuning Memory Usage. (line   6)
@@ -3005,7 +3008,7 @@ General Index
                                                               (line   6)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line  46)
+* pyramid levels:                        Common Options.      (line  48)
 * row conversion:                        Workflow.            (line  41)
 * saturation enhancement:                Polarization Series. (line   6)
 * scaling of parameters:                 Scaling and Choice of Mode.
@@ -3059,74 +3062,74 @@ General Index
 
 
 Tag Table:
-Node: Top718
-Node: Overview4425
-Ref: Table:weighting-criteria5612
-Ref: Overview-Footnote-17727
-Ref: Overview-Footnote-27896
-Ref: Overview-Footnote-38077
-Node: Workflow8259
-Ref: Figure:photographic-workflow8771
-Node: Invocation11470
-Node: Common Options12012
-Ref: Common Options-Footnote-114466
-Node: Extended Options14657
-Node: Fusion Options19451
-Node: Expert Options21326
-Ref: Figure:entropy-cutoff23708
-Ref: Table:mask-template-characters29491
-Node: Option Delimiters31361
-Node: Weighting Functions32709
-Node: Weighting Pixels33373
-Node: Weighted Average34875
-Node: Disabling Averaging35466
-Node: Exposure Weighting36415
-Ref: Figure:gaussian37893
-Node: Saturation Weighting38791
-Node: Contrast Weighting39887
-Node: Standard Deviation41216
-Ref: Figure:local-analysis-window41657
-Ref: Standard Deviation-Footnote-143721
-Node: Laplacian of Gaussian43870
-Ref: Figure:laplacian-of-gaussian45409
-Node: Blend SDev and LoG46469
-Node: Scaling and Choice of Mode48100
-Node: Entropy Weighting48942
-Ref: Figure:entropy49907
-Node: Understanding Masks51495
-Node: Tuning Memory Usage55284
-Ref: Table:cache-size-settings57397
-Node: Applications57705
-Node: What Images58427
-Node: Repetition61590
-Node: Exposure Series62647
-Node: Exposure Series Tips64849
-Node: Exposure Series Misconceptions65958
-Ref: Exposure Series Misconceptions-Footnote-167726
-Node: Flash Exposure Series67939
-Node: Polarization Series68181
-Node: Focus Stacks68615
-Node: Why Focus Stacks69497
-Node: Preparing Focus Stacks70824
-Node: Contrast Based Fusing71564
-Node: Basic Focus Stacking72811
-Node: Advanced Focus Stacking74167
-Node: Local Contrast Problem74931
-Ref: Figure:sharp-edge76131
-Ref: Figure:smooth-edge76206
-Node: Laplacian Edge Detection76950
-Node: Local Contrast Enhancement78065
-Node: Suppressing Noise or Recognizing Faint Edges78981
-Node: Focus Stacking Decision Tree81481
-Ref: Figure:focus-stacking-decision-tree81836
-Node: Expert Stacking82590
-Node: Helpful Programs84089
-Node: Authors87748
-Node: FDL88527
-Node: List of Tables109508
-Node: List of Figures109847
-Node: Program Index110581
-Node: Option Index113869
-Node: General Index116715
+Node: Top731
+Node: Overview4451
+Ref: Table:weighting-criteria5638
+Ref: Overview-Footnote-17753
+Ref: Overview-Footnote-27922
+Ref: Overview-Footnote-38103
+Node: Workflow8285
+Ref: Figure:photographic-workflow8797
+Node: Invocation11496
+Node: Common Options12038
+Ref: Common Options-Footnote-114642
+Node: Extended Options14833
+Node: Fusion Options19627
+Node: Expert Options21502
+Ref: Figure:entropy-cutoff23884
+Ref: Table:mask-template-characters29685
+Node: Option Delimiters31555
+Node: Weighting Functions32903
+Node: Weighting Pixels33567
+Node: Weighted Average35069
+Node: Disabling Averaging35660
+Node: Exposure Weighting36609
+Ref: Figure:gaussian38087
+Node: Saturation Weighting38985
+Node: Contrast Weighting40081
+Node: Standard Deviation41410
+Ref: Figure:local-analysis-window41851
+Ref: Standard Deviation-Footnote-143915
+Node: Laplacian of Gaussian44064
+Ref: Figure:laplacian-of-gaussian45603
+Node: Blend SDev and LoG46663
+Node: Scaling and Choice of Mode48294
+Node: Entropy Weighting49136
+Ref: Figure:entropy50101
+Node: Understanding Masks51689
+Node: Tuning Memory Usage55478
+Ref: Table:cache-size-settings57591
+Node: Applications57899
+Node: What Images58621
+Node: Repetition61784
+Node: Exposure Series62841
+Node: Exposure Series Tips65043
+Node: Exposure Series Misconceptions66152
+Ref: Exposure Series Misconceptions-Footnote-167920
+Node: Flash Exposure Series68133
+Node: Polarization Series68375
+Node: Focus Stacks68809
+Node: Why Focus Stacks69691
+Node: Preparing Focus Stacks71018
+Node: Contrast Based Fusing71758
+Node: Basic Focus Stacking73005
+Node: Advanced Focus Stacking74361
+Node: Local Contrast Problem75125
+Ref: Figure:sharp-edge76325
+Ref: Figure:smooth-edge76400
+Node: Laplacian Edge Detection77144
+Node: Local Contrast Enhancement78259
+Node: Suppressing Noise or Recognizing Faint Edges79175
+Node: Focus Stacking Decision Tree81675
+Ref: Figure:focus-stacking-decision-tree82030
+Node: Expert Stacking82784
+Node: Helpful Programs84283
+Node: Authors87942
+Node: FDL88721
+Node: List of Tables109702
+Node: List of Figures110041
+Node: Program Index110775
+Node: Option Index114063
+Node: General Index116909
 
 End Tag Table
