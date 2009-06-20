@@ -54,21 +54,44 @@ if test "x$GXX" = xyes; then
     CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
 fi
 
-
-AX_CHECK_GL
-AX_CHECK_GLU
-AX_CHECK_GLUT
-if test "$no_gl" = yes -o "$no_glu" = yes -o "$no_glut" = yes ; then
-    AC_MSG_WARN([[WARNING: GL/GLU/GLUT not found, disabling GPU mode]])
+can_use_gpu=no
+missing_for_gpu=
+no_gpu_reason=
+AC_ARG_WITH([apple-opengl-framework],
+            [AC_HELP_STRING([--with-apple-opengl-framework],
+                            [use Apple OpenGL framework (Mac OS X only)])])
+if test "X$with_apple_opengl_framework" = "Xyes"; then
+    AX_CHECK_APPLE_OPENGL
 else
+    AX_CHECK_GL
+    AX_CHECK_GLU
+    AX_CHECK_GLUT
+fi
+if test "X$no_gl" = Xyes; then
+    missing_for_gpu="$missing_for_gpu GL"
+    AC_MSG_WARN([[GL not found, disabling GPU mode]])
+elif test "X$no_glu" = Xyes; then
+    missing_for_gpu="$missing_for_gpu GLU"
+    AC_MSG_WARN([[GLU not found, disabling GPU mode]])
+elif test "X$no_glut" = Xyes; then
+    missing_for_gpu="$missing_for_gpu GLUT"
+    AC_MSG_WARN([[GLUT not found, disabling GPU mode]])
+else
+    can_use_gpu=yes
     # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
     LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
     CFLAGS="${GL_CFLAGS} $CFLAGS"
 fi
-
 AC_CHECK_LIB(GLEW, glewInit,
-             [],
-             AC_MSG_WARN([[WARNING: GLEW not found, disabling GPU mode.]]), [])
+             [no_glew=no],
+             [no_glew=yes
+              can_use_gpu=no
+              missing_for_gpu="$missing_for_gpu GLEW"
+              AC_MSG_WARN([[GLEW not found, disabling GPU mode.]])],
+             [])
+if test $can_use_gpu = no; then
+    no_gpu_reason=", because of missing$missing_for_gpu"
+fi
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -107,25 +130,30 @@ AC_ARG_WITH([boost-filesystem],
 AS_IF([test "x$with_boost_filesystem" == xNO \
          -o "x$with_boost_filesystem" == xNo \
          -o "x$with_boost_filesystem" == xno],
-      [],
-      [AC_CHECK_HEADER(boost/filesystem.hpp,
-                       [AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1, [Define if you have boost/filesystem.hpp])],
-                       AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
-       if test x$ac_cv_header_boost_filesystem_hpp = xyes; then
-         if test "x$with_boost_filesystem" != xYES \
-              -a "x$with_boost_filesystem" != xYes \
-              -a "x$with_boost_filesystem" != xyes \
-              -a "x$with_boost_filesystem" != xCHECK \
-              -a "x$with_boost_filesystem" != xCheck \
-              -a "x$with_boost_filesystem" != xcheck; then
-           boost_filesystem_lib=$with_boost_filesystem
-         elif test x$acx_pthread_ok = xyes; then
-           boost_filesystem_lib="-lboost_filesystem-mt"
-         else
-           boost_filesystem_lib="-lboost_filesystem"
-         fi
-         AC_LINK_IFELSE($boost_filesystem_lib,
-                        [AC_LANG_CONFTEST(AC_LANG_PROGRAM([[
+      [AC_MSG_NOTICE([disabling use of Boost "filesystem" library])],
+      [AS_IF([test "x$with_boost_filesystem" == xYES \
+                -o "x$with_boost_filesystem" == xYes \
+                -o "x$with_boost_filesystem" == xyes],
+             [AC_MSG_NOTICE([forcing use of Boost "filesystem" library])
+              AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
+                        [Define if you have boost/filesystem.hpp])
+              EXTRA_LIBS="-lboost_filesystem ${EXTRA_LIBS}"],
+             [AC_CHECK_HEADER(boost/filesystem.hpp,
+                              [AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
+                                         [Define if you have boost/filesystem.hpp])],
+                              AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
+              if test x$ac_cv_header_boost_filesystem_hpp = xyes; then
+                  if test "x$with_boost_filesystem" != xCHECK \
+                       -a "x$with_boost_filesystem" != xCheck \
+                       -a "x$with_boost_filesystem" != xcheck; then
+                      boost_filesystem_lib=$with_boost_filesystem
+                  elif test x$acx_pthread_ok = xyes; then
+                      boost_filesystem_lib="-lboost_filesystem-mt"
+                  else
+                      boost_filesystem_lib="-lboost_filesystem"
+                  fi
+                  AC_LINK_IFELSE($boost_filesystem_lib,
+                                 [AC_LANG_CONFTEST(AC_LANG_PROGRAM([[
 #include <string>
 #include "boost/filesystem.hpp"
 ]],
@@ -137,11 +165,12 @@ basename(p);
 extension(p);
 ]]
 ))],
-                 [EXTRA_LIBS="$boost_filesystem_lib ${EXTRA_LIBS}"
-                  AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])],
-                 [AC_MSG_NOTICE([Boost "filesystem" library missing: compiling with built-in support.])])
-       fi
-      ] )
+                                 [EXTRA_LIBS="$boost_filesystem_lib ${EXTRA_LIBS}"
+                                  AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])],
+                                 [AC_MSG_NOTICE([Boost "filesystem" library missing: compiling with built-in support.])])
+              fi
+             ] ) dnl AS_IF($with_boost_filesystem == yes)
+      ] ) dnl  AS_IF($with_boost_filesystem == no)
 AC_LANG_RESTORE
 AC_SUBST(EXTRA_LIBS)
 
@@ -175,9 +204,9 @@ AC_C99_FUNC_LRINTF
 
 # Documentation
 if test $cross_compiling = no; then
-  AM_MISSING_PROG(HELP2MAN, help2man)
+    AM_MISSING_PROG(HELP2MAN, help2man)
 else
-  HELP2MAN=:
+    HELP2MAN=:
 fi
 
 can_build_doc=yes
@@ -186,9 +215,9 @@ AC_CHECK_PROG(GNUPLOT,
               gnuplot,
               false)
 if test "x$GNUPLOT" = xfalse; then
-  AC_MSG_WARN(Cannot find gnuplot; will not be able to build documentation.)
-  can_build_doc=no
-  missing_for_doc="$missing_for_doc gnuplot"
+    AC_MSG_WARN(Cannot find gnuplot; will not be able to build documentation.)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc gnuplot"
 fi
 
 AC_ARG_WITH([ttf-path],
@@ -201,14 +230,14 @@ have_freesans_font=no
 orig_ifs="$IFS"
 IFS=':'
 for dir in $GDFONTPATH; do \
-  if test -f "$dir/FreeSans.ttf"; then \
-    have_freesans_font=yes; \
-    break; \
-  fi; \
+    if test -f "$dir/FreeSans.ttf"; then \
+        have_freesans_font=yes; \
+        break; \
+    fi; \
 done
 IFS="$orig_ifs"
 if test $have_freesans_font != yes; then
-  AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange.)
+    AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange.)
 fi
 
 AC_CHECK_PROG(FIG2DEV,
@@ -216,9 +245,9 @@ AC_CHECK_PROG(FIG2DEV,
               fig2dev,
               false)
 if test "x$FIG2DEV" = xfalse; then
-  AC_MSG_WARN(Cannot find fig2dev; will not be able to build documentation.)
-  can_build_doc=no
-  missing_for_doc="$missing_for_doc fig2dev"
+    AC_MSG_WARN(Cannot find fig2dev; will not be able to build documentation.)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc fig2dev"
 fi
 
 AC_PROG_SED
@@ -230,9 +259,9 @@ AC_CHECK_PROG(MAKEINFO,
               makeinfo,
               false)
 if test "x$MAKEINFO" = xfalse; then
-  AC_MSG_WARN(Cannot find makeinfo; will not be able to build documentation.)
-  can_build_doc=no
-  missing_for_doc="$missing_for_doc makeinfo"
+    AC_MSG_WARN(Cannot find makeinfo; will not be able to build documentation.)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc makeinfo"
 fi
 
 dnl AC_CHECK_PROG(TEXI2DVI,
@@ -267,7 +296,7 @@ dnl fi
 
 AM_CONDITIONAL([BUILD_DOC], [test $can_build_doc = yes])
 if test $can_build_doc = no; then
-  no_doc_reason=", because of missing$missing_for_doc"
+    no_doc_reason=", because of missing$missing_for_doc"
 fi
 
 AC_MSG_CHECKING([checking whether split documentation files])
@@ -280,13 +309,13 @@ AC_ARG_ENABLE([split-doc],
 if test "x$split_doc" = "xyes" \
      -o "x$split_doc" = "xYES" \
      -o "x$split_doc" = "xYes"; then
-  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS"
-  AC_MSG_RESULT(yes)
-  split_doc=yes
+    AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS"
+    AC_MSG_RESULT(yes)
+    split_doc=yes
 else
-  AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split --no-headers"
-  AC_MSG_RESULT(no)
-  split_doc=no
+    AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split --no-headers"
+    AC_MSG_RESULT(no)
+    split_doc=no
 fi
 AC_SUBST(AM_MAKEINFOFLAGS)
 
@@ -303,13 +332,13 @@ AC_ARG_ENABLE(debug,
 if test "x$enable_debug" = "xyes" \
      -o "x$enable_debug" = "xYES" \
      -o "x$enable_debug" = "xYes"; then
-  CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
-  AC_MSG_RESULT(yes)
-  enable_debug=yes
+    CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
+    AC_MSG_RESULT(yes)
+    enable_debug=yes
 else
-  CXXFLAGS="$CXXFLAGS -O3 -ffast-math -DNDEBUG -Wall"
-  AC_MSG_RESULT(no)
-  enable_debug=no
+    CXXFLAGS="$CXXFLAGS -O3 -ffast-math -DNDEBUG -Wall"
+    AC_MSG_RESULT(no)
+    enable_debug=no
 fi
 
 AC_MSG_CHECKING(whether to enable image cache)
@@ -322,12 +351,12 @@ AC_ARG_ENABLE(image_cache,
 if test "x$enable_image_cache" = "xyes" \
      -o "x$enable_image_cache" = "xYES" \
      -o "x$enable_image_cache" = "xYes"; then
-  CXXFLAGS="$CXXFLAGS -DENBLEND_CACHE_IMAGES"
-  AC_MSG_RESULT(yes)
-  enable_image_cache=yes
+    CXXFLAGS="$CXXFLAGS -DENBLEND_CACHE_IMAGES"
+    AC_MSG_RESULT(yes)
+    enable_image_cache=yes
 else
-  AC_MSG_RESULT(no)
-  enable_image_cache=no
+    AC_MSG_RESULT(no)
+    enable_image_cache=no
 fi
 
 AC_CONFIG_FILES([doc/entropy.gp
@@ -357,10 +386,11 @@ AC_MSG_RESULT([
    LIBS needed for configure:      ${LIBS}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS}
 
+ can compile GPU acceleration:     ${can_use_gpu}${no_gpu_reason}
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 
  feature selection:
-   split *.info and *.html files:  $split_doc
-   enable debugging support:       $enable_debug
-   use image cache:                $enable_image_cache
+   split *.info and *.html files:  ${split_doc}
+   enable debugging support:       ${enable_debug}
+   use image cache:                ${enable_image_cache}
 ])
