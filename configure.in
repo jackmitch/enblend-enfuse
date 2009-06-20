@@ -114,12 +114,15 @@ AS_IF([test "x$with_boost_filesystem" == xNO \
        if test x$ac_cv_header_boost_filesystem_hpp = xyes; then
          if test "x$with_boost_filesystem" != xYES \
               -a "x$with_boost_filesystem" != xYes \
-              -a "x$with_boost_filesystem" != xyes; then
+              -a "x$with_boost_filesystem" != xyes \
+              -a "x$with_boost_filesystem" != xCHECK \
+              -a "x$with_boost_filesystem" != xCheck \
+              -a "x$with_boost_filesystem" != xcheck; then
            boost_filesystem_lib=$with_boost_filesystem
          elif test x$acx_pthread_ok = xyes; then
-           boost_filesystem_lib=boost_filesystem-mt
+           boost_filesystem_lib="-lboost_filesystem-mt"
          else
-           boost_filesystem_lib=boost_filesystem
+           boost_filesystem_lib="-lboost_filesystem"
          fi
          AC_LINK_IFELSE($boost_filesystem_lib,
                         [AC_LANG_CONFTEST(AC_LANG_PROGRAM([[
@@ -134,7 +137,7 @@ basename(p);
 extension(p);
 ]]
 ))],
-                 [EXTRA_LIBS="-l$boost_filesystem_lib ${EXTRA_LIBS}"
+                 [EXTRA_LIBS="$boost_filesystem_lib ${EXTRA_LIBS}"
                   AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])],
                  [AC_MSG_NOTICE([Boost "filesystem" library missing: compiling with built-in support.])])
        fi
