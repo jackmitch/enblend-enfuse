@@ -386,46 +386,60 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
         if (contains(optionSet, ExposureMuOption)) {
             cerr << command <<
-                ": warning: wMu has no effect as exposure weight is zero" <<
+                ": warning: option \"--wMu\" has no effect as exposure weight\n" <<
+                command <<
+                ": warning:     is zero" <<
                 endl;
         }
         if (contains(optionSet, ExposureSigmaOption)) {
             cerr << command <<
-                ": warning: wSigma has no effect as exposure weight is zero" <<
+                ": warning: option \"--wSigma\" has no effect as exposure weight\n" <<
+                command <<
+                ": warning:     is zero" <<
                 endl;
         }
     }
 
     if (WContrast == 0.0 && contains(optionSet, ContrastWindowSizeOption)) {
         cerr << command <<
-            ": warning: ContrastWindowSize has no effect as contrast weight is zero" <<
+            ": warning: option \"--ContrastWindowSize\" has no effect as contrast\n" <<
+            command <<
+            ": warning:     weight is zero" <<
             endl;
     }
 
     if (WExposure == 0.0 && WContrast == 0.0 && contains(optionSet, GrayProjectorOption)) {
         cerr << command <<
-            ": warning: GrayProjector has no effect as exposure and contrast weight\n" <<
-            ": warning:   both are zero" <<
+            ": warning: option \"--GrayProjector\" has no effect as exposure\n" <<
+            command <<
+            ": warning:     and contrast weight both are zero" <<
             endl;
     }
 
     if (WContrast == 0.0) {
         if (contains(optionSet, EdgeScaleOption)) {
             cerr << command <<
-                ": warning: EdgeScale has no effect as contrast weight is zero" <<
+                ": warning: option \"--EdgeScale\" has no effect as contrast\n" <<
+                command <<
+                ": warning:     weight is zero" <<
                 endl;
         }
         if (contains(optionSet, MinCurvatureOption)) {
             cerr << command <<
-                ": warning: MinCurvatureOption has no effect as contrast weight is zero" <<
+                ": warning: option \"--MinCurvature\" has no effect as contrast\n" <<
+                command <<
+                ": warning:     weight is zero" <<
                 endl;
         }
     } else {
         if (FilterConfig.edgeScale > 0.0 &&
             contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value <= 0.0) {
             cerr << command <<
-                ": warning: ContrastWindowSize has no effect as EDGESCALE (in EdgeScale)\n" <<
-                ": warning:   is positive and MinCurvature is non-positive" <<
+                ": warning: option \"--ContrastWindowSize\" has no effect as\n" <<
+                command <<
+                ": warning:     EDGESCALE in \"--EdgeScale\" is positive and" <<
+                command <<
+                ": warning:     \"--MinCurvature\" is non-positive" <<
                 endl;
         }
     }
@@ -433,12 +447,16 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (WEntropy == 0.0) {
         if (contains(optionSet, EntropyWindowSizeOption)) {
             cerr << command <<
-                ": warning: EntropyWindowSize has no effect as entropy weight is zero" <<
+                ": warning: option \"--EntropyWindowSize\" has no effect as\n" <<
+                command <<
+                ": warning:     entropy weight is zero" <<
                 endl;
         }
         if (contains(optionSet, EntropyCutoffOption)) {
             cerr << command <<
-                ": warning: EntropyCutoff has no effect as entropy weight is zero" <<
+                ": warning: option \"--EntropyCutoff\" has no effect as entropy\n" <<
+                command <<
+                ": warning:     weight is zero" <<
                 endl;
         }
     }
@@ -446,19 +464,41 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (contains(optionSet, CompressionOption) &&
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
-            cerr << command <<
-                ": warning: compression is not supported with output file type \"" <<
-                enblend::getFileType(OutputFileName) << "\"" <<
-                endl;
+        cerr << command <<
+            ": warning: compression is not supported with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
     }
 
     if (contains(optionSet, AssociatedAlphaOption) &&
         enblend::getFileType(OutputFileName) != "TIFF") {
-            cerr << command <<
-                ": warning: \"-g\" has no effect with output file type \"" <<
-                enblend::getFileType(OutputFileName) << "\"" <<
-                endl;
+        cerr << command <<
+            ": warning: option \"-g\" has no effect with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
     }
+
+#ifndef ENBLEND_CACHE_IMAGES
+    if (contains(optionSet, CacheSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image cache" <<
+            endl;
+    }
+
+    if (contains(optionSet, BlockSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-b\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image cache" <<
+            endl;
+    }
+#endif
 }
 
 

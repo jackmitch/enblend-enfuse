@@ -318,25 +318,49 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (contains(optionSet, CompressionOption) &&
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
-            cerr << command <<
-                ": warning: compression is not supported with output file type \"" <<
-                enblend::getFileType(OutputFileName) << "\"" <<
-                endl;
+        cerr << command <<
+            ": warning: compression is not supported with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
     }
 
     if (contains(optionSet, AssociatedAlphaOption) &&
         enblend::getFileType(OutputFileName) != "TIFF") {
-            cerr << command <<
-                ": warning: \"-g\" has no effect with output file type \"" <<
-                enblend::getFileType(OutputFileName) << "\"" <<
-                endl;
+        cerr << command <<
+            ": warning: option \"-g\" has no effect with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
     }
 
     if (contains(optionSet, VisualizeOption) && !OptimizeMask) {
         cerr << command <<
-            ": warning: \"--visualize\" without mask optimization has no effect" <<
+            ": warning: option \"--visualize\" without mask optimization\n" <<
+            command <<
+            "warning:     has no effect" <<
             endl;
     }
+
+#ifndef ENBLEND_CACHE_IMAGES
+    if (contains(optionSet, CacheSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image-cache" <<
+            endl;
+    }
+
+    if (contains(optionSet, BlockSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-b\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image cache" <<
+            endl;
+    }
+#endif
 }
 
 
