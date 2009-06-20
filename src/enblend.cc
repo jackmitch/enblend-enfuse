@@ -661,7 +661,7 @@ int process_options(int argc, char** argv) {
                 case 'o':
                     cerr << command
                          << ": option \"-"
-                         << optopt
+                         << static_cast<char>(optopt)
                          << "\" requires an argument"
                          << endl;
                     break;

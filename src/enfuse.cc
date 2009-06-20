@@ -1018,7 +1018,10 @@ int process_options(int argc, char** argv) {
         case '?':
             switch (optopt) {
                 case 0: // unknown long option
-                    cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
+                    cerr << command
+                         << ": unknown option \""
+                         << argv[optind - 1]
+                         << "\"\n";
                     break;
                 case 'b':           // FALLTHROUGH
                 case 'd':           // FALLTHROUGH
@@ -1026,7 +1029,11 @@ int process_options(int argc, char** argv) {
                 case 'l':           // FALLTHROUGH
                 case 'm':           // FALLTHROUGH
                 case 'o':
-                    cerr << command << ": option \"-" << optopt << "\" requires an argument" << endl;
+                    cerr << command
+                         << ": option \"-"
+                         << static_cast<char>(optopt)
+                         << "\" requires an argument"
+                         << endl;
                     break;
                 default:
                     cerr << command << ": unknown option ";
@@ -1041,7 +1048,9 @@ int process_options(int argc, char** argv) {
             exit(1);
 
         default:
-            cerr << command << ": internal error: unhandled command line option" << endl;
+            cerr << command
+                 << ": internal error: unhandled command line option"
+                 << endl;
             exit(1);
         }
     }
