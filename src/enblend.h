@@ -274,6 +274,7 @@ void enblendMain(const list<char*>& inputFileNameList,
             createMask<ImageType, AlphaType, MaskType>(whitePair.first, blackPair.first,
                                                        whitePair.second, blackPair.second,
                                                        uBB, iBB, wraparoundForMask,
+                                                       imageInfoList.size(),
                                                        inputFileNameIterator, m);
 
         // Calculate bounding box of seam line.
@@ -283,6 +284,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         if (SaveMasks) {
             const std::string maskFilename =
                 enblend::expandFilenameTemplate(SaveMaskTemplate,
+                                                imageInfoList.size(),
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);

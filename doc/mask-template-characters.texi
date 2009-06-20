@@ -16,8 +16,12 @@ Expands to the index of the mask file starting at zero.
 @end display
 
 @var{PAD} is either @samp{0} or any punctuation character; the default
-pad character is @samp{0}.  @var{WIDTH} is an integer.  Examples:
-@samp{%02i} or @samp{%_4i}.
+pad character is @samp{0}.  @var{WIDTH} is an integer specifying the
+minimum width of the number.  The default is the smallest width given
+the number of input images, this is 1 for 2--9 images, 2 for 10--99
+images, 3 for 100--999 images, and so on.
+
+Examples: @samp{%i}, @samp{%02i}, or @samp{%_4i}.
 
 @item %n
 @cindex mask template character, @samp{n}

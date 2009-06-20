@@ -276,6 +276,7 @@ MaskType* createMask(const ImageType* const white,
                      const Rect2D& uBB,
                      const Rect2D& iBB,
                      const bool wraparound,
+                     unsigned numberOfImages,
                      list<char*>::const_iterator inputFileNameIterator,
                      unsigned m) {
     typedef typename ImageType::PixelType ImagePixelType;
@@ -288,6 +289,7 @@ MaskType* createMask(const ImageType* const white,
         MaskType* mask = new MaskType(uBB.size());
         const std::string maskFilename =
             enblend::expandFilenameTemplate(LoadMaskTemplate,
+                                            numberOfImages,
                                             *inputFileNameIterator,
                                             OutputFileName,
                                             m);

@@ -513,15 +513,15 @@ uppercase letters.  For integer format use
 
 @table @asis
 @item @code{8}, @code{uint8}
-Unsigned 8@tie{}bit; range: 0..255
+Unsigned 8@dmn{bit}; range: 0..255
 @item @code{int16}
-Signed 16 bit; range: @minus{}32768..32767
+Signed 16@dmn{bit}; range: @minus{}32768..32767
 @item @code{16}, @code{uint16}
-Unsigned 16@tie{}bit; range: 0..65536
+Unsigned 16@dmn{bit}; range: 0..65536
 @item @code{int32}
-Signed 32@tie{}bit; range: @minus{}2147483648..2147483647
+Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
 @item @code{32}, @code{uint32}
-Unsigned 32@tie{}bit; range: 0..4294967295
+Unsigned 32@dmn{bit}; range: 0..4294967295
 @end table
 
 For floating-point format use
@@ -535,8 +535,8 @@ For floating-point format use
 @item @code{r32}, @code{real32}, @code{float}
 @cindex @acronym{IEEE754} single precision float
 @cindex single precision float, @acronym{IEEE754}
-@acronym{IEEE754} single precision floating-point, 32@tie{}bits wide,
-24@tie{}bit significant
+@acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
+24@dmn{bit} significant
 @itemize
 @item
 Minimal normalized value: @semilog{1.2, -38}
@@ -550,8 +550,8 @@ Maximal finite value: @semilog{3.4, 38}
 @item @code{r64}, @code{real64}, @code{double}
 @cindex @acronym{IEEE754} double precision float
 @cindex double precision float, @acronym{IEEE754}
-@acronym{IEEE754} double precision floating-point, 64@tie{}bits wide,
-53@tie{}bit significant
+@acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
+53@dmn{bit} significant
 @itemize
 @item
 Minimal normalized value: @semilog{2.2, -308}
@@ -567,18 +567,16 @@ format, Enfuse warns and chooses the @var{DEPTH} that matches best.
 
 @cindex @acronym{OpenEXR}, data format
 The @acronym{OpenEXR} data format is treated as
-@acronym{IEEE754}@tie{}float internally.
-
-@smalldisplay
-Externally, this is on disk, @acronym{OpenEXR} data is represented by
-``half'' precision floating-point numbers.
+@acronym{IEEE754}@tie{}float internally.  Externally, this is on disk,
+@acronym{OpenEXR} data is represented by ``half'' precision
+floating-point numbers.
 
 @c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
 @cindex @acronym{OpenEXR}, half precision float
 @cindex half precision float, @acronym{OpenEXR}
 @uref{http://@/www.openexr.com/@/about.html#features,
-@acronym{OpenEXR}} half precision floating-point, 16@tie{}bits wide,
-10@tie{}bit significant
+@acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
+10@dmn{bit} significant
 @itemize
 @item
 Minimum normalized value: @semilog{9.3, -10}
@@ -587,12 +585,13 @@ Epsilon: @semilog{2.0, -3}
 @item
 Maximum finite value: @semilog{4.3, 9}
 @end itemize
-@end smalldisplay
 
 @item -g
 @opindex -g
-@cindex alpha channel, unassociated
-Save alpha channel as ``associated''.
+@cindex alpha channel, associated
+Save alpha channel as ``associated''.  See the
+@uref{http://@/www.awaresystems.be/@/imaging/@/tiff/@/tifftags/@/extrasamples.html,
+@acronym{TIFF} documentation} for an explanation.
 
 @pindex gimp
 @pindex cinepaint

@@ -259,32 +259,45 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
 }
 
 
+/** Compute the integral logarithm of n to the base 10.  We do not
+ *  need to take special care of the case n == 0 for our purposes. */
+unsigned
+ilog10(unsigned n)
+{
+    return n <= 9 ? 0 : 1 + ilog10(n / 10);
+}
+
+
 /** Expand aTemplate filling the variable parts with anInputFilename,
  *  anOutputFilename, and aNumber depending on the conversion
  *  specifiers in aTemplate.
  *
  *  Conversion Specifiers - lowercase characters refer to
  *  anInputFilename whereas uppercase ones refer to anOutputFilename:
- *      %%    A single '%'-sign
- *      %i    aNumber unaltered
- *      %n    successor of aNumber
- *      %p    aFilename unaltered
- *      %d    directory part of aFilename
- *      %b    non-directory part (aka basename) of aFilename
- *      %f    basename of aFilename without extension
- *      %e    extension of aFilename (including the leading dot)
+ *      %%        A single '%'-sign
+ *      %i        aNumber unaltered
+ *      %n        successor of aNumber
+ *      %p        aFilename unaltered
+ *      %d        directory part of aFilename
+ *      %b        non-directory part (aka basename) of aFilename
+ *      %f        basename of aFilename without extension
+ *      %e        extension of aFilename (including the leading dot)
  *  All other characters in aTemplate are passed through literally.
  *
  *  The "%i" and "%n" conversions honor a flag which is either
- *      '0'   pad with zeros instead of spaces or
- *      PUNCT i.e. any punctuation character to pad with
- *  and a width specification.  For example
- *          expandFilenameTemplate("mask-%04n.tif", "foobar.jpg", 9)
+ *      '0'       pad with zeros (default) or
+ *      PUNCT     i.e. any punctuation character to pad with
+ *  and a width specification.  If no width is requested, the
+ *  width is computed based on aNumberOfImages.
+ *
+ *  For example
+ *          expandFilenameTemplate("mask-%04n.tif", 2, "foobar.jpg", 9)
  *  evaluates to
  *          mask-0009.tif
  */
 std::string
 expandFilenameTemplate(const std::string& aTemplate,
+                       unsigned aNumberOfImages,
                        const std::string& anInputFilename,
                        const std::string& anOutputFilename,
                        unsigned aNumber)
@@ -327,13 +340,14 @@ expandFilenameTemplate(const std::string& aTemplate,
                         break;
                     case 'n':
                         ++aNumber;
+                        ++aNumberOfImages;
                         // FALLTHROUGH
                     case 'i':
                     {
                         std::ostringstream oss;
                         oss <<
-                            (std::setw(width.empty() ? 0 : atoi(width.c_str()))) <<
-                            (std::setfill(pad == 0 ? '0' : pad)) <<
+                            std::setw(width.empty() ? 1 + ilog10(aNumberOfImages - 1) : atoi(width.c_str())) <<
+                            std::setfill(pad == 0 ? '0' : pad) <<
                             aNumber;
                         result.append(oss.str());
                         break;
