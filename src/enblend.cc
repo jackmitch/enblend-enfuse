@@ -210,7 +210,7 @@ void printUsageAndExit(const bool error = true) {
         "  -a                     pre-assemble non-overlapping images\n" <<
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
-        "  -o, --output=FILE      write output to FILE; default: \"" DEFAULT_OUTPUT_FILENAME "\"\n" <<
+        "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
@@ -224,8 +224,8 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
-        "  -d, --depth=DEPTH      set the number of bits per channel of the output image,\n" <<
-        "                         where DEPTH is 8, 16, 32, r32, or r64\n" <<
+        "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
+        "                         image, where DEPTH is 8, 16, 32, r32, or r64\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
 #ifdef HAVE_LIBGLEW
@@ -246,8 +246,13 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --save-mask=TEMPLATE   save generated masks; example template: \"mask-%04i.tif\"\n" <<
-        "  --load-mask=TEMPLATE   use existing masks instead of generating them\n" <<
+        "  --save-mask=TEMPLATE   save generated masks in TEMPLATE;\n" <<
+        "                         conversion chars: %i: mask index, mask %n: number,\n" <<
+        "                         %p: full path, %d: dirname, %b: basename,\n" <<
+        "                         %f: filename, %e: extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to output image\n" <<
+        "  --load-mask=TEMPLATE   use existing masks in TEMPLATE instead of generating\n" <<
+        "                         them; same template characters as \"--save-mask\"\n" <<
         "\n" <<
         "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;

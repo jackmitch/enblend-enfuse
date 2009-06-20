@@ -132,8 +132,8 @@ struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 bool UseHardMask = false;
 bool SaveMasks = false;
-std::string SoftMaskTemplate("mask%04d.tif");
-std::string HardMaskTemplate("mask%04d_wta.tif");
+std::string SoftMaskTemplate("mask%04i.tif");
+std::string HardMaskTemplate("mask%04i_wta.tif");
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -225,7 +225,7 @@ void printUsageAndExit(const bool error = true) {
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending levels to use (1 to 29)\n" <<
-        "  -o, --output=FILE      write output to FILE; default: \"" DEFAULT_OUTPUT_FILENAME "\"\n" <<
+        "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
         "  -w                     blend across -180/+180 degrees boundary\n" <<
@@ -301,8 +301,12 @@ void printUsageAndExit(const bool error = true) {
         "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
         "  --SaveMasks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
-        "                         save weight masks; default: \"" <<
-        SoftMaskTemplate << "\", \"" << HardMaskTemplate << "\"\n" <<
+        "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
+        "                         conversion chars: %i: mask index, %n: mask number\n" <<
+        "                         %p: full path, %d: dirname, %b: basename,\n" <<
+        "                         %f: filename, %e: extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to output image;\n" <<
+        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
         "  --debug                output mask images for debugging (deprecated);\n" <<
         "                         use \"--SaveMasks\" instead\n" <<
         "\n" <<
