@@ -541,6 +541,19 @@ variable part.  All other characters are copied literally.  Lowercase
 letters refer to the name of the respective input file, whereas
 uppercase ones refer to the name of the output file (@pxref{Common
 Options}).  @ref{Table:mask-template-characters} lists all variables.
+
+@noindent
+@strong{Vizualization File}
+
+The visualization file shows the symmetric difference of the pixels in
+the rectangular region where two images overlap.  Enblend paints
+non-overlapping parts of the image pair with dark red.
+
+The optimizer's samples are shown in blue.  If a sample is the first
+of a line segment it is painted in light green; non-first line
+segments are drawn in darker green.  Cyan points indicate state space
+samples inside the Disjkstra radius.  Non-converged points are drawn
+in magenta color.  The final seam line is shown in bright yellow.
 @end table
 
 
@@ -587,6 +600,213 @@ this will produce the same type of mask as Enblend version@tie{}2.5.
 @cindex seam optimization
 Use a two-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
+
+@item --anneal=@var{K-MAX}[:@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}]]]
+@opindex --anneal
+@cindex optimize, anneal parameters
+@cindex anneal parameters
+@cindex simmulated annealing optimizer
+@cindex optimizer, simmulated annealing (strategy@tie{}1)
+Set the parameters of the
+@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
+Simmulated-Annealing} optimizer used in optimizer strategy@tie{}1.
+
+@table @var
+@item K-MAX
+@var{K-MAX} is the maximum number of ``moves'' the optimizer will make
+for each line segment.  Higher values more accurately sample the state
+space at the expense of a higher computation cost.
+
+Valid range:
+@ifinfo
+@var{K-MAX} @geq{} 3.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">K-MAX</mi>
+        <mo>&ge;</mo>
+        <mn>3</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$\mathit{K-MAX} \ge 3$.
+@end tex
+
+The default is 32.  Values around 100 seem reasonable.
+
+@item TAU
+@var{TAU} is the temperature reduction factor in the Simmulated
+Annealing.  It also can be thought of as ``cooling factor''.
+The closer @var{TAU} is to one the more accurate the annealing run
+will be and the longer it will take.
+
+Valid range:
+@ifinfo
+0 < @var{TAU} < 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&lt;</mo>
+        <mi mathvariant="italic">TAU</mi>
+        <mo>&lt;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 < \mathit{TAU} < 1$.
+@end tex
+
+The default is 0.75; values around 0.95 are reasonable.
+
+@item DELTA-E-MAX
+@itemx DELTA-E-MIN
+@var{DELTA-E-MAX} and @var{DELTA-E-MIN} are the maximum and minimum
+cost change possible by any single annealing move.
+
+Valid range:
+@ifinfo
+0 < DELTA-E-MIN < DELTA-E-MAX.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&lt;</mo>
+        <mi mathvariant="italic">DELTA-E-MIN</mi>
+        <mo>&lt;</mo>
+        <mi mathvariant="italic">DELTA-E-MAX</mi>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 < \mathit{DELTA-E-MIN} < \mathit{DELTA-E-MAX}$.
+@end tex
+
+In particular they determine the initial and final annealing
+temperatures according to:
+@ifinfo
+@display
+                   DELTA-E-MAX
+T_initial = ------------------------
+            log(K-MAX / (K-MAX - 2))
+
+                DELTA-E-MIN
+T_final = ------------------------
+          log(K-MAX^2 - K-MAX - 1)
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mtable>
+        <mtr>
+            <mtd>
+                <mrow>
+                    <msub>
+                        <mi mathvariant="italic">T</mi>
+                        <mi mathvariant="roman">initial</mi>
+                    </msub>
+                    <mo>=</mo>
+                    <mfrac>
+                        <mi mathvariant="italic">DELTA-E-MAX</mi>
+                        <mrow>
+                            <mo>log</mo>
+                            <mo>&ApplyFunction;</mo>
+                            <mo>(</mo>
+                            <mrow>
+                                <mi mathvariant="italic">K-MAX</mi>
+                                <mo>/</mo>
+                                <mo>(<mo>
+                                <mrow>
+                                    <mi mathvariant="italic">K-MAX</mi>
+                                    <mo>-</mo>
+                                    <mn>2</mn>
+                                </mrow>
+                                <mo>)<mo>
+                            </mrow>
+                            <mo>)</mo>
+                        </mrow>
+                    </mfrac>
+                </mrow>
+            </mtd>
+        </mtr>
+
+        <mtr>
+            <mtd>
+                <mrow>
+                    <msub>
+                        <mi mathvariant="italic">T</mi>
+                        <mi mathvariant="roman">final</mi>
+                    </msub>
+                    <mo>=</mo>
+                    <mfrac>
+                        <mi mathvariant="italic">DELTA-E-MIN</mi>
+                        <mrow>
+                            <mo>log</mo>
+                            <mo>&ApplyFunction;</mo>
+                            <mo>(</mo>
+                            <mrow>
+                                <msup>
+                                    <mi mathvariant="italic">K-MAX</mi>
+                                    <mn>2</mn>
+                                </msup>
+                                <mo>-</mo>
+                                <mi mathvariant="italic">K-MAX</mi>
+                                <mo>-</mo>
+                                <mn>1</mn>
+                            </mrow>
+                            <mo>)</mo>
+                        </mrow>
+                    </mfrac>
+                </mrow>
+            </mtd>
+        </mtr>
+    </mtable>
+</math>
+@end html
+@tex
+$$\eqalign{
+  T_{\mathrm{initial}} & =
+    {\mathit{DELTA-E-MAX} \over {\log(\mathit{K-MAX} / (\mathit{K-MAX} - 2))}} \cr
+  T_{\mathrm{final}} & =
+    {\mathit{DELTA-E-MIN} \over {\log(\mathit{K-MAX\/}^2 - \mathit{K-MAX} - 1)}} \cr
+}$$
+@end tex
+
+The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
+@end table
+
+@item --dijkstra-radius=@var{RADIUS}
+Set the search @var{RADIUS} of the
+@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm, Dijkstra
+algorithm} used in optimizer stragegy@tie{}2.
+
+Valid range:
+@ifinfo
+@var{RADIUS} @geq{} 0.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">RADIUS</mi>
+        <mo>&ge;</mo>
+        <mn>0</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$\mathit{RADIUS} \ge 0$.
+@end tex
+
+Default: 25.
 
 @item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask

@@ -80,6 +80,13 @@ extern "C" int optind;
 
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
 
+typedef struct {
+    unsigned int kmax;          // maximum number of moves for a line segment
+    double tau;                 // temperature reduction factor, "cooling factor"; 0 < tau < 1
+    double deltaEMax;           // maximum cost change possible by any single annealing move
+    double deltaEMin;           // minimum cost change possible by any single annealing move
+} anneal_para_t;
+
 // Globals
 const std::string command("enblend");
 
@@ -109,7 +116,7 @@ bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
 std::string VisualizeTemplate("vis-%n.tif");
 bool VisualizeSeam = false;
-unsigned int GDAKmax = 32;
+anneal_para_t AnnealPara = {32, 0.75, 7000.0, 5.0};
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 std::string OutputCompression;
@@ -249,6 +256,12 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
+        "  --anneal=KMAX[:TAU[:DELTAEMAX[:DELTAEMIN]]]\n" <<
+        "                         set annealing parameters of strategy 1; defaults:\n" <<
+        "                         " << AnnealPara.kmax << ':' << AnnealPara.tau << ':' <<
+        AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << "\n" <<
+        "  --dijkstra-radius=R    set search radius of stragegy 2 to R; default: " <<
+        DijkstraRadius << "\n" <<
         "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
         SaveMaskTemplate << "\"\n" <<
         "                         conversion chars: %i: mask index, mask %n: number,\n" <<
@@ -303,9 +316,9 @@ enum AllPossibleOptions {
     VisualizeOption, CoarseMaskOption, FineMaskOption,
     OptimizeOption, NoOptimizeOption,
     SaveMaskOption, LoadMaskOption,
+    AnnealOption, DijkstraRadiusOption,
     // currently below the radar...
-    SequentialBlendingOption,
-    GdaKmaxIdOption, DijkstraRadiusIdOption, MaskVectorizeDistanceIdOption
+    SequentialBlendingOption, MaskVectorizeDistanceOption
 };
 
 typedef std::set<enum AllPossibleOptions> OptionSetType;
@@ -341,12 +354,30 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             endl;
     }
 
-    if (contains(optionSet, VisualizeOption) && !OptimizeMask) {
-        cerr << command <<
-            ": warning: option \"--visualize\" without mask optimization\n" <<
-            command <<
-            "warning:     has no effect" <<
-            endl;
+    if (!OptimizeMask) {
+        if (contains(optionSet, VisualizeOption)) {
+            cerr << command <<
+                ": warning: option \"--visualize\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, AnnealOption)) {
+            cerr << command <<
+                ": warning: option \"--anneal\" without mask optimization has\n" <<
+                command <<
+                ": warning:     no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, DijkstraRadiusOption)) {
+            cerr << command <<
+                ": warning: option \"--dijkstra-radius\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
     }
 
 #ifndef ENBLEND_CACHE_IMAGES
@@ -389,7 +420,7 @@ int process_options(int argc, char** argv) {
         SaveMaskId,                 //  5
         LoadMaskId,                 //  6
         VisualizeId,                //  7
-        GdaKmaxId,                  //  8
+        AnnealId,                   //  8
         DijkstraRadiusId,           //  9
         MaskVectorizeDistanceId,    // 10
         CompressionId,              // 11
@@ -410,7 +441,7 @@ int process_options(int argc, char** argv) {
         {"save-mask", optional_argument, 0, StringArgument},                   //  5
         {"load-mask", optional_argument, 0, StringArgument},                   //  6
         {"visualize", optional_argument, 0, StringArgument},                   //  7
-        {"gda-kmax", required_argument, 0, IntegerArgument},                   //  8
+        {"anneal", required_argument, 0, StringArgument},                      //  8
         {"dijkstra-radius", required_argument, 0, IntegerArgument},            //  9
         {"mask-vectorize-distance", required_argument, 0, IntegerArgument},    // 10
         {"compression", required_argument, 0, StringArgument},                 // 11
@@ -522,6 +553,134 @@ int process_options(int argc, char** argv) {
                 OutputFileName = optarg;
                 optionSet.insert(OutputOption);
                 break;
+            case AnnealId: {
+                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+                strcpy(s.get(), optarg);
+                char* save_ptr = NULL;
+                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                char* tail;
+
+                if (token == NULL || *token == 0) {
+                    cerr << command
+                         << ": option \"--anneal\": no k_max given" << endl;
+                    exit(1);
+                }
+                errno = 0;
+                const long int kmax = strtol(token, &tail, 10);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": illegal numeric format \""
+                         << token << "\" of k_max: " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": trailing garbage \""
+                         << tail << "\" in k_max: \""
+                         << token << "\"" << endl;
+                    exit(1);
+                }
+                if (kmax < 3) {
+                    cerr << command
+                         << ": option \"--anneal\": k_max must larger or equal to three"
+                         << endl;
+                    exit(1);
+                }
+                AnnealPara.kmax = static_cast<unsigned int>(kmax);
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    AnnealPara.tau = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of tau: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": --anneal: trailing garbage \""
+                             << tail << "\" in tau: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    if (AnnealPara.tau <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": tau must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                    if (AnnealPara.tau >= 1.0) {
+                        cerr << command
+                             << ": option \"--anneal\": tau must be less than one"
+                             << endl;
+                        exit(1);
+                    }
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    AnnealPara.deltaEMax = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of deltaE_max: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in deltaE_max: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    if (AnnealPara.deltaEMax <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": deltaE_max must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    AnnealPara.deltaEMin = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of deltaE_min: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in deltaE_min: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    if (AnnealPara.deltaEMin <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": deltaE_min must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                }
+                if (AnnealPara.deltaEMin >= AnnealPara.deltaEMax) {
+                    cerr << command
+                         << ": option \"--anneal\": deltaE_min must be less than deltaE_max"
+                         << endl;
+                    exit(1);
+                }
+
+                optionSet.insert(AnnealOption);
+                break;
+            }
             default:
                 cerr << command
                      << ": internal error: unhandled \"StringArgument\" option"
@@ -541,17 +700,13 @@ int process_options(int argc, char** argv) {
             }
             unsigned int* optionUInt = NULL;
             switch (option_index) {
-            case GdaKmaxId:
-                optionUInt = &GDAKmax;
-                optionSet.insert(GdaKmaxIdOption);
-                break;
             case DijkstraRadiusId:
                 optionUInt = &DijkstraRadius;
-                optionSet.insert(DijkstraRadiusIdOption);
+                optionSet.insert(DijkstraRadiusOption);
                 break;
             case MaskVectorizeDistanceId:
                 optionUInt = &MaskVectorizeDistance;
-                optionSet.insert(MaskVectorizeDistanceIdOption);
+                optionSet.insert(MaskVectorizeDistanceOption);
                 break;
             default:
                 cerr << command

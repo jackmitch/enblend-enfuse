@@ -731,13 +731,15 @@ MaskType* createMask(const ImageType* const white,
     }
 
     typedef UInt8 MismatchImagePixelType;
+    typedef EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType
+        VisualizeImageType;
     EnblendNumericTraits<MismatchImagePixelType>::ImageType
         mismatchImage(mismatchImageSize, NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
-    EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType* visualizeImage = NULL;
+    VisualizeImageType* visualizeImage = NULL;
     if (VisualizeSeam) {
-        visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
+        visualizeImage = new VisualizeImageType(mismatchImageSize);
     }
 
     // mem usage after: Visualize && CoarseMask: iBB * UInt8
@@ -845,7 +847,9 @@ MaskType* createMask(const ImageType* const white,
                         }
                     }
 
-                    if (needsBreak) break;
+                    if (needsBreak) {
+                        break;
+                    }
                 }
                 else {
                     lastVertex = vertexIterator;
@@ -893,7 +897,7 @@ MaskType* createMask(const ImageType* const white,
                            srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
                            destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
                            ifThenElse(Arg1() ^ Arg2(),
-                                      Param(RGBValue<MismatchImagePixelType>(128, 0, 0)),
+                                      Param(VISUALIZE_NO_OVERLAP_VALUE),
                                       Arg3()));
     }
 
@@ -909,7 +913,9 @@ MaskType* createMask(const ImageType* const white,
              ++currentSegment, ++segmentNumber) {
             Segment* snake = *currentSegment;
 
-            if (snake->empty()) continue;
+            if (snake->empty()) {
+                continue;
+            }
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {
                 cerr << " s" << segmentNumber;
@@ -919,7 +925,9 @@ MaskType* createMask(const ImageType* const white,
             for (Segment::iterator currentVertex = snake->begin(); ; ) {
                 Segment::iterator nextVertex = currentVertex;
                 ++nextVertex;
-                if (nextVertex == snake->end()) nextVertex = snake->begin();
+                if (nextVertex == snake->end()) {
+                    nextVertex = snake->begin();
+                }
 
                 if (currentVertex->first || nextVertex->first) {
                     // Find shortest path between these points
@@ -950,7 +958,7 @@ MaskType* createMask(const ImageType* const white,
 
                         if (visualizeImage) {
                             (*visualizeImage)[*shortPathPoint + pointSurround.upperLeft()] =
-                                RGBValue<MismatchImagePixelType>(255, 255, 0);
+                                VISUALIZE_SHORT_PATH_VALUE;
                         }
                     }
 
@@ -958,11 +966,14 @@ MaskType* createMask(const ImageType* const white,
 
                     if (visualizeImage) {
                         (*visualizeImage)[currentPoint] =
-                            RGBValue<MismatchImagePixelType>(0, currentVertex->first ? 200 : 230, 0);
+                            currentVertex->first ?
+                            VISUALIZE_FIRST_VERTEX_VALUE :
+                            VISUALIZE_NEXT_VERTEX_VALUE;
                         (*visualizeImage)[nextPoint] =
-                            RGBValue<MismatchImagePixelType>(0, nextVertex->first ? 200 : 230, 0);
+                            nextVertex->first ?
+                            VISUALIZE_FIRST_VERTEX_VALUE :
+                            VISUALIZE_NEXT_VERTEX_VALUE;
                     }
-
                 }
 
                 currentVertex = nextVertex;

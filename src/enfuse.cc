@@ -79,9 +79,6 @@ extern "C" int optind;
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
-// Size of the buffer we reserve for (library) error messages
-#define ERROR_MESSAGE_SIZE 256
-
 struct AlternativePercentage {
     double value;
     bool isPercentage;
@@ -302,7 +299,7 @@ void printUsageAndExit(const bool error = true) {
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
         "  --SaveMasks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
         "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
-        "                         conversion chars: %i: mask index, %n: mask number\n" <<
+        "                         conversion chars: %i: mask index, %n: mask number,\n" <<
         "                         %p: full path, %d: dirname, %b: basename,\n" <<
         "                         %f: filename, %e: extension; lowercase characters\n" <<
         "                         refer to input images uppercase to output image;\n" <<
@@ -314,25 +311,6 @@ void printUsageAndExit(const bool error = true) {
         endl;
 
     exit(error ? 1 : 0);
-}
-
-/** String tokenizer similar to strtok_r().
- *  In contrast to strtok_r this function returns an empty string for
- *  each pair of successive delimiters.  Function strtok_r skips them.
- */
-char*
-strtoken_r(char *str, const char *delim, char **save_ptr)
-{
-    char *s = str == NULL ? *save_ptr : str;
-    if (s == NULL) return NULL;
-    else
-    {
-        char *token = s;
-        while (*s != 0 && strchr(delim, (int) *s) == NULL) s++;
-        *save_ptr = *s == 0 ? NULL : s + 1;
-        *s = 0;
-        return token;
-    }
 }
 
 /** Make sure all cached file images get destroyed,
@@ -636,12 +614,9 @@ int process_options(int argc, char** argv) {
                         exit(1);
                     }
                 } else {
-                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << command << ": illegal numeric format \""
                          << optarg << "\" for minimum gradient: "
-                         << errmsg << endl;
-                    delete [] errmsg;
+                         << enblend::errorMessage(errno) << endl;
                     exit(1);
                 }
                 optionSet.insert(MinCurvatureOption);
@@ -652,7 +627,7 @@ int process_options(int argc, char** argv) {
                 char* s = new char[strlen(optarg) + 1];
                 strcpy(s, optarg);
                 char* save_ptr = NULL;
-                char* token = strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 char* tail;
 
                 if (token == NULL || *token == 0) {
@@ -670,16 +645,13 @@ int process_options(int argc, char** argv) {
                         exit(1);
                     }
                 } else {
-                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << command << ": illegal numeric format \""
                          << token << "\" for EdgeScale: "
-                         << errmsg << endl;
-                    delete [] errmsg;
+                         << enblend::errorMessage(errno) << endl;
                     exit(1);
                 }
 
-                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     FilterConfig.lceScale = strtod(token, &tail);
@@ -693,17 +665,14 @@ int process_options(int argc, char** argv) {
                             exit(1);
                         }
                     } else {
-                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << command << ": illegal numeric format \""
                              << token << "\" for LCE-Scale: "
-                             << errmsg << endl;
-                        delete [] errmsg;
+                             << enblend::errorMessage(errno) << endl;
                         exit(1);
                     }
                 }
 
-                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     FilterConfig.lceFactor = strtod(token, &tail);
@@ -717,12 +686,9 @@ int process_options(int argc, char** argv) {
                             exit(1);
                         }
                     } else {
-                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << command << ": illegal numeric format \""
                              << token << "\" for LCE-factor: "
-                             << errmsg << endl;
-                        delete [] errmsg;
+                             << enblend::errorMessage(errno) << endl;
                         exit(1);
                     }
                 }
@@ -741,7 +707,7 @@ int process_options(int argc, char** argv) {
                 char* s = new char[strlen(optarg) + 1];
                 strcpy(s, optarg);
                 char* save_ptr = NULL;
-                char* token = strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 char* tail;
 
                 if (token == NULL || *token == 0) {
@@ -762,16 +728,13 @@ int process_options(int argc, char** argv) {
                         exit(1);
                     }
                 } else {
-                    char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                    strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                     cerr << command << ": illegal numeric format \""
                          << token << "\" of entropy's lower cutoff: "
-                         << errmsg << endl;
-                    delete [] errmsg;
+                         << enblend::errorMessage(errno) << endl;
                     exit(1);
                 }
 
-                token = strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
                     EntropyUpperCutoff.value = strtod(token, &tail);
@@ -786,12 +749,9 @@ int process_options(int argc, char** argv) {
                             exit(1);
                         }
                     } else {
-                        char* errmsg = new char[ERROR_MESSAGE_SIZE];
-                        strerror_r(errno, errmsg, ERROR_MESSAGE_SIZE);
                         cerr << command << ": illegal numeric format \""
                              << token << "\" of entropy's upper cutoff: "
-                             << errmsg << endl;
-                        delete [] errmsg;
+                             << enblend::errorMessage(errno) << endl;
                         exit(1);
                     }
                 }
@@ -838,13 +798,13 @@ int process_options(int argc, char** argv) {
                     char* s = new char[strlen(optarg) + 1];
                     strcpy(s, optarg);
                     char* save_ptr = NULL;
-                    char* token = strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+                    char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
                     SoftMaskTemplate = token;
-                    token = strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
                     if (token != NULL && *token != 0) {
                         HardMaskTemplate = token;
                     }
-                    token = strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
                     if (token != NULL && *token != 0) {
                         cerr << command
                              << ": warning: ignoring trailing garbage in --SaveMasks" << endl;

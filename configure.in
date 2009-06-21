@@ -115,12 +115,14 @@ AC_CHECK_HEADER(png.h, [],
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
-                AC_MSG_ERROR([Boost "mersenne_twister" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/static_assert.hpp, [],
-                AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp, [],
                 AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
+                AC_MSG_ERROR([Boost "mersenne_twister" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
+                AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/static_assert.hpp, [],
+                AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],
@@ -183,20 +185,25 @@ AC_CHECK_HEADER(xmi.h, [],
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_C_INLINE
+
 AC_TYPE_OFF_T
+AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
+
 AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FSEEKO
 AC_FUNC_MALLOC
+AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_STRERROR_R
 AC_FUNC_STRTOD
-AC_TYPE_SIGNAL
+
 AC_CHECK_FUNCS([fesetround floor \
                 memset mkstemp \
-                sqrt strchr strcspn strdup strrchr])
+                pow \
+                sqrt strchr strcspn strdup strerror strrchr strtol])
 
 # lrint and lrintf
 AC_C99_FUNC_LRINT

@@ -51,12 +51,15 @@
 
 using std::for_each;
 using std::pair;
-using std::vector;
+using std::scientific;
+using std::setprecision;
+using std::setw;
 #ifdef HAVE_EXT_SLIST
 using __gnu_cxx::slist;
 #else
 using std::slist;
 #endif
+using std::vector;
 
 using boost::lambda::bind;
 using boost::lambda::_1;
@@ -69,46 +72,6 @@ using vigra::Rect2D;
 using vigra_ext::copyPaintedSetToImage;
 
 namespace enblend {
-
-template <typename CostImage>
-void drawDottedLine(CostImage& i, vector<Point2D>& l, typename CostImage::PixelType p)
-{
-    typedef typename CostImage::PixelType CostImagePixelType;
-
-    miPixel pixels[2];
-    pixels[0] = p;
-    pixels[1] = p;
-    miGC* pGC = miNewGC(2, pixels);
-    miPaintedSet* paintedSet = miNewPaintedSet();
-    miPoint* mip = new miPoint[l.size()];
-
-    int index = 0;
-    for (vector<Point2D>::iterator points = l.begin();
-         points != l.end();
-         ++points, ++index) {
-        mip[index].x = (*points).x;
-        mip[index].y = (*points).y;
-    }
-
-    miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
-    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
-    miClearPaintedSet(paintedSet);
-
-    p = (p > (NumericTraits<CostImagePixelType>::max() / 2))
-        ? NumericTraits<CostImagePixelType>::zero()
-        : NumericTraits<CostImagePixelType>::max();
-    pixels[0] = p;
-    pixels[1] = p;
-    miSetGCPixels(pGC, 2, pixels);
-
-    miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
-    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
-
-    miDeleteGC(pGC);
-    miDeletePaintedSet(paintedSet);
-    delete [] mip;
-}
-
 
 template <typename CostImage, typename VisualizeImage>
 class GDAConfiguration
@@ -134,7 +97,7 @@ public:
             bool currentMoveable = current->first;
             Point2D currentPoint = current->second;
             ++current;
-            Point2D nextPoint = (current == v->end()) ? v->begin()->second : current->second;
+            Point2D nextPoint = current == v->end() ? v->begin()->second : current->second;
 
             mfEstimates.push_back(currentPoint);
 
@@ -157,7 +120,7 @@ public:
                 // normal = normal vector at currentPoint
                 // normal points to the left of vp and vn.
                 Diff2D normal = np + nn;
-                normal *= (stateSpaceWidth / normal.magnitude());
+                normal *= stateSpaceWidth / normal.magnitude();
 
                 Diff2D leftPoint = currentPoint + normal;
                 Diff2D rightPoint = currentPoint - normal;
@@ -166,7 +129,7 @@ public:
                 int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
                                           std::abs(rightPoint.y - leftPoint.y));
                 const int spaceBetweenPoints =
-                    static_cast<int>(ceil(lineLength / static_cast<double>(GDAKmax)));
+                    static_cast<int>(ceil(lineLength / static_cast<double>(AnnealPara.kmax)));
 
                 LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
                 for (int i = 0; i < (lineLength + 1) / 2; ++i, ++linePoint) {
@@ -178,13 +141,13 @@ public:
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
                         if (visualizeStateSpaceImage) {
-                            (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                            (*visualizeStateSpaceImage)[*linePoint] = VISUALIZE_STATE_SPACE;
                         }
                     }
                 }
                 linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
-                for (int i = 1; i < 1 + (lineLength / 2); ++i, ++linePoint) {
+                for (int i = 1; i < 1 + lineLength / 2; ++i, ++linePoint) {
                     // Stop searching along the line if we leave the cost image or enter a max-cost region.
                     if (!costImage->isInside(*linePoint)) {break;}
                     else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {break;}
@@ -193,7 +156,7 @@ public:
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
                         if (visualizeStateSpaceImage) {
-                            (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                            (*visualizeStateSpaceImage)[*linePoint] = VISUALIZE_STATE_SPACE;
                         }
                     }
                 }
@@ -203,14 +166,14 @@ public:
                 stateSpace->push_back(currentPoint);
                 stateDistances->push_back(0);
                 if (visualizeStateSpaceImage && costImage->isInside(currentPoint)) {
-                    (*visualizeStateSpaceImage)[currentPoint].setBlue(200);
+                    (*visualizeStateSpaceImage)[currentPoint] = VISUALIZE_STATE_SPACE_INSIDE;
                 }
             }
 
             const unsigned int localK = stateSpace->size();
-            if (localK > GDAKmax) {
+            if (localK > AnnealPara.kmax) {
                 cerr << command
-                     << ": localK = " << localK << " > GDAKmax = " << GDAKmax
+                     << ": local k = " << localK << " > k_max = " << AnnealPara.kmax
                      << endl;
                 exit(1);
             }
@@ -232,13 +195,12 @@ public:
             Pi = new double[kMax];
         }
 
-        tau = 0.75;
-        deltaEMax = 7000.0;
-        deltaEMin = 5.0;
-        const double epsilon = 1.0 / (kMax * kMax);
-        tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) /
-                                        (kMax - 1 - (kMax * kMax * epsilon))));
-        tFinal = deltaEMin / log((kMax - (kMax * epsilon) - 1) / (kMax * epsilon));
+        tau = AnnealPara.tau;
+        deltaEMax = AnnealPara.deltaEMax;
+        deltaEMin = AnnealPara.deltaEMin;
+        const double kmax = static_cast<double>(kMax);
+        tInitial = ceil(deltaEMax / log(kmax / (kmax - 2.0)));
+        tFinal = deltaEMin / log(kmax * kmax - kmax - 1.0);
     }
 
     ~GDAConfiguration() {
@@ -266,8 +228,8 @@ public:
         tCurrent = tInitial;
 
         while (kMax > 1 && tCurrent > tFinal) {
-            double epsilon = 1.0 / kMax;
-            unsigned int eta =
+            const double epsilon = 1.0 / kMax;
+            const unsigned int eta =
                 static_cast<unsigned int>(ceil(log(epsilon)
                                                / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax))
                                                      + 0.5)));
@@ -275,8 +237,9 @@ public:
             if (Verbose > VERBOSE_GDA_MESSAGES) {
                 cerr << endl
                      << command
-                     << ": info: tCurrent = " << tCurrent
-                     << ", eta = " << eta << ", kMax = " << kMax;
+                     << ": info: t = " << scientific << setprecision(2) << tCurrent
+                     << ", eta = " << setw(4) << eta
+                     << ", k_max = " << setw(3) << kMax;
                 cerr.flush();
             }
 
@@ -293,8 +256,9 @@ public:
                         numConvergedPoints++;
                     }
                 }
-                cerr << ", converged = " << numConvergedPoints
-                     << " of " << convergedPoints.size();
+                cerr << ", " << numConvergedPoints
+                     << " of " << convergedPoints.size()
+                     << " points converged";
                 cerr.flush();
             }
             else if (Verbose > VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
@@ -318,12 +282,10 @@ public:
                 for (unsigned int j = 0; j < stateSpace->size(); ++j) {
                     Point2D point = (*stateSpace)[j];
                     if (visualizeStateSpaceImage->isInside(point)) {
-                        (*visualizeStateSpaceImage)[point].setGreen(255);
+                        (*visualizeStateSpaceImage)[point] = VISUALIZE_STATE_SPACE_UNCONVERGED;
                     }
                 }
             }
-            // Optimized contour
-            //drawDottedLine(visualizeStateSpaceImage, mfEstimates, 225);
         }
 
         if (Verbose > VERBOSE_GDA_MESSAGES) {

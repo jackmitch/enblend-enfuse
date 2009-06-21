@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -26,6 +26,7 @@
 
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "vigra/numerictraits.hxx"
 
@@ -56,6 +57,42 @@
 #define VERBOSE_GDA_MESSAGES                2
 #define VERBOSE_VERSION_REPORTING           1
 
+
+// Colors used in the optimizer visualization
+#define VISUALIZE_RGB_COLOR_BLUE1    RGBValue<vigra::UInt8>(  0,   0, 255)
+#define VISUALIZE_RGB_COLOR_BLUE2    RGBValue<vigra::UInt8>(  0,   0, 238)
+#define VISUALIZE_RGB_COLOR_BLUE3    RGBValue<vigra::UInt8>(  0,   0, 205)
+#define VISUALIZE_RGB_COLOR_BLUE4    RGBValue<vigra::UInt8>(  0,   0, 139)
+#define VISUALIZE_RGB_COLOR_CYAN1    RGBValue<vigra::UInt8>(  0, 255, 255)
+#define VISUALIZE_RGB_COLOR_CYAN2    RGBValue<vigra::UInt8>(  0, 238, 238)
+#define VISUALIZE_RGB_COLOR_CYAN3    RGBValue<vigra::UInt8>(  0, 205, 205)
+#define VISUALIZE_RGB_COLOR_CYAN4    RGBValue<vigra::UInt8>(  0, 139, 139)
+#define VISUALIZE_RGB_COLOR_GREEN1   RGBValue<vigra::UInt8>(  0, 255,   0)
+#define VISUALIZE_RGB_COLOR_GREEN2   RGBValue<vigra::UInt8>(  0, 238,   0)
+#define VISUALIZE_RGB_COLOR_GREEN3   RGBValue<vigra::UInt8>(  0, 205,   0)
+#define VISUALIZE_RGB_COLOR_GREEN4   RGBValue<vigra::UInt8>(  0, 139,   0)
+#define VISUALIZE_RGB_COLOR_MAGENTA1 RGBValue<vigra::UInt8>(255,   0, 255)
+#define VISUALIZE_RGB_COLOR_MAGENTA2 RGBValue<vigra::UInt8>(238,   0, 238)
+#define VISUALIZE_RGB_COLOR_MAGENTA3 RGBValue<vigra::UInt8>(205,   0, 205)
+#define VISUALIZE_RGB_COLOR_MAGENTA4 RGBValue<vigra::UInt8>(139,   0, 139)
+#define VISUALIZE_RGB_COLOR_RED1     RGBValue<vigra::UInt8>(255,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED2     RGBValue<vigra::UInt8>(238,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED3     RGBValue<vigra::UInt8>(205,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED4     RGBValue<vigra::UInt8>(139,   0,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW1  RGBValue<vigra::UInt8>(255, 255,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW2  RGBValue<vigra::UInt8>(238, 238,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW3  RGBValue<vigra::UInt8>(205, 205,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW4  RGBValue<vigra::UInt8>(139, 139,   0)
+
+#define VISUALIZE_SHORT_PATH_VALUE   VISUALIZE_RGB_COLOR_YELLOW1
+#define VISUALIZE_FIRST_VERTEX_VALUE VISUALIZE_RGB_COLOR_GREEN3
+#define VISUALIZE_NEXT_VERTEX_VALUE  VISUALIZE_RGB_COLOR_GREEN2
+#define VISUALIZE_NO_OVERLAP_VALUE   VISUALIZE_RGB_COLOR_RED4
+#define VISUALIZE_STATE_SPACE        VISUALIZE_RGB_COLOR_BLUE3
+#define VISUALIZE_STATE_SPACE_INSIDE VISUALIZE_RGB_COLOR_CYAN1
+#define VISUALIZE_STATE_SPACE_UNCONVERGED VISUALIZE_RGB_COLOR_MAGENTA1
+
+
 // Select our preferred type of image depending on what ./configure
 // tells us.
 #ifdef ENBLEND_CACHE_IMAGES
@@ -64,10 +101,53 @@
 #define IMAGETYPE BasicImage
 #endif
 
+
 namespace enblend {
 
 /** The different image overlap classifications. */
 enum Overlap {NoOverlap, PartialOverlap, CompleteOverlap};
+
+
+/** String tokenizer similar to strtok_r().
+ *  In contrast to strtok_r this function returns an empty string for
+ *  each pair of successive delimiters.  Function strtok_r skips them.
+ */
+char*
+strtoken_r(char *str, const char *delim, char **save_ptr)
+{
+    char *s = str == NULL ? *save_ptr : str;
+    if (s == NULL) return NULL;
+    else
+    {
+        char *token = s;
+        while (*s != 0 && strchr(delim, (int) *s) == NULL) s++;
+        *save_ptr = *s == 0 ? NULL : s + 1;
+        *s = 0;
+        return token;
+    }
+}
+
+
+/** Answer the error message associated with anErrorNumber.
+ */
+std::string
+errorMessage(int anErrorNumber)
+{
+#if HAVE_STRERROR_R || HAVE_STRERROR
+    const size_t size = 256;
+    boost::scoped_ptr<char> message(new char[size]);
+#if HAVE_STRERROR_R
+    strerror_r(anErrorNumber, message.get(), size);
+#elif HAVE_STRERROR
+    strncpy(message.get(), strerror(anErrorNumber), size);
+#endif
+    return std::string(message.get());
+#else
+    std::ostringstream oss;
+    oss << "no message available, error: " << anErrorNumber;
+    return oss.str();
+#endif
+}
 
 
 /** Answer aString converted to uppercase letters. */
