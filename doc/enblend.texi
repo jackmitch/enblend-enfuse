@@ -543,7 +543,7 @@ uppercase ones refer to the name of the output file (@pxref{Common
 Options}).  @ref{Table:mask-template-characters} lists all variables.
 
 @noindent
-@strong{Vizualization File}
+@strong{Visualization File}
 
 The visualization file shows the symmetric difference of the pixels in
 the rectangular region where two images overlap.  Enblend paints
@@ -552,7 +552,7 @@ non-overlapping parts of the image pair with dark red.
 The optimizer's samples are shown in blue.  If a sample is the first
 of a line segment it is painted in light green; non-first line
 segments are drawn in darker green.  Cyan points indicate state space
-samples inside the Disjkstra radius.  Non-converged points are drawn
+samples inside the Dijkstra radius.  Non-converged points are drawn
 in magenta color.  The final seam line is shown in bright yellow.
 @end table
 
@@ -605,11 +605,11 @@ in the overlap region.  This is the default.
 @opindex --anneal
 @cindex optimize, anneal parameters
 @cindex anneal parameters
-@cindex simmulated annealing optimizer
-@cindex optimizer, simmulated annealing (strategy@tie{}1)
+@cindex simulated annealing optimizer
+@cindex optimizer, simulated annealing (strategy@tie{}1)
 Set the parameters of the
 @uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
-Simmulated-Annealing} optimizer used in optimizer strategy@tie{}1.
+Simulated-Annealing} optimizer used in optimizer strategy@tie{}1.
 
 @table @var
 @item K-MAX
@@ -638,7 +638,7 @@ $\mathit{K-MAX} \ge 3$.
 The default is 32.  Values around 100 seem reasonable.
 
 @item TAU
-@var{TAU} is the temperature reduction factor in the Simmulated
+@var{TAU} is the temperature reduction factor in the Simulated
 Annealing.  It also can be thought of as ``cooling factor''.
 The closer @var{TAU} is to one the more accurate the annealing run
 will be and the longer it will take.
@@ -786,7 +786,7 @@ The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
 @item --dijkstra-radius=@var{RADIUS}
 Set the search @var{RADIUS} of the
 @uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm, Dijkstra
-algorithm} used in optimizer stragegy@tie{}2.
+algorithm} used in optimizer strategy@tie{}2.
 
 Valid range:
 @ifinfo
@@ -847,8 +847,8 @@ name of the associated input file (@samp{%f}) for easy recognition.
 
 @node Understanding Masks
 @chapter Understanding Masks
-@cindex undestanding masks
-@cindex masks, undestanding
+@cindex understanding masks
+@cindex masks, understanding
 
 @include understanding-masks.texi
 

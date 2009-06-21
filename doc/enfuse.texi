@@ -422,7 +422,7 @@ resulting image in @file{a.tif}.
 @opindex -v
 @opindex --verbose
 Increase the verbosity of progress reporting.  Giving one or more
-@option{--verbos}@tie{}options will make Enfuse more verbose.
+@option{--verbose}@tie{}options will make Enfuse more verbose.
 
 @item -V
 @itemx --version
@@ -496,7 +496,7 @@ with option@tie{}@option{--depth}.
 @item
 If the output-channel width is larger than the input-channel width of
 the input images, the input images' channels are widened to the output
-channel widthth immediately after loading, this is, as soon as possible.
+channel width immediately after loading, this is, as soon as possible.
 Enfuse then performs all blending operations at the output-channel
 width, thereby preserving minute color details which can appear in the
 blending areas.
@@ -1238,7 +1238,7 @@ Force hard blend masks on the finest scale.  This is the opposite flag
 of @option{--SoftMask}.
 
 This blending mode avoids averaging of fine details (only) at the
-expense of increasing the noise.  However it considerably improvs the
+expense of increasing the noise.  However it considerably improves the
 sharpness of focus stacks.  Blending with hard masks has solely proven
 useful with focus stacks.
 
@@ -1335,7 +1335,7 @@ Use semi-colons.
 Mix semicolon and slash in weird ways.
 
 @item --EntropyCutoff=3%/99%
-All delimiters also work in conjuction with percentages.
+All delimiters also work in conjunction with percentages.
 
 @item --GrayProjector=channel-mixer:3/6/1
 Separate arguments with a colon and two slashes.
@@ -1721,7 +1721,7 @@ and $r_{\mathrm{ent}}$ are explained in the next sections.
 
 By default, Enfuse uses a weighted average, where @emph{each} pixel
 contributes as much as its weight demands.  Of course the weights can
-be extreme, favouring only a few pixels or even only one pixel in the
+be extreme, favoring only a few pixels or even only one pixel in the
 input stack.  Extremes are untypical, however.
 
 Equal weights are another extreme that turns (W) into an arithmetic
@@ -2549,7 +2549,7 @@ $$
     {\partial^2 \over \partial x^2} + {\partial^2 \over \partial y^2}
 $$
 @end tex
-to @math{g(x, y)}, to arrive at a continous representation of the
+to @math{g(x, y)}, to arrive at a continuous representation of the
 two-dimensional filter kernel
 @ifinfo
 @display
@@ -2756,7 +2756,7 @@ weight.
 This technique merges the two edge detection methods where the are
 best.  The @acronym{LoG} excels with clear edges and cannot be fooled
 by strong but smooth gradients.  However, it is bad at detecting faint
-edges and it is susceptible to noise.  The @acronym{SDev} on the othe
+edges and it is susceptible to noise.  The @acronym{SDev} on the other
 hand shines with even the most marginal edges and resists noise quite
 well.  Its weakness is that is is easily deceived by strong and smooth
 gradients.  Tuning @var{CURVATURE} the user can pick the best
@@ -3053,8 +3053,8 @@ setting the second argument of @option{--EntropyCutoff}.
 
 @node Understanding Masks
 @chapter Understanding Masks
-@cindex undestanding masks
-@cindex masks, undestanding
+@cindex understanding masks
+@cindex masks, understanding
 
 @include understanding-masks.texi
 
@@ -3115,7 +3115,7 @@ Useful ideas for a good alignment:
 
 @itemize
 @item
-Fix all camera parameters that are not explicitely varied.
+Fix all camera parameters that are not explicitly varied.
 
 @table @emph
 @item Aperture
@@ -3136,7 +3136,7 @@ fastest shutter speed to avoid blur caused by camera shake or motion
 blur.
 
 @item Flash power
-Explicitely control the flash power of @emph{all} flashes.  This is
+Explicitly control the flash power of @emph{all} flashes.  This is
 sometimes called ``flash exposure lock''.
 
 @item Sensitivity
@@ -3244,7 +3244,7 @@ an @acronym{RGB} image separately and chooses the channel with the
 minimum entropy as representative for the whole pixel.
 
 Enfuse offers the photographer tremendous flexibility on fusing
-differenly exposed images.  Whether you combine only two pictures or a
+differently exposed images.  Whether you combine only two pictures or a
 series of 21, Enfuse imposes no limits on you.  Accordingly, the
 photographic effects achieved range from subtle to surreal like the
 late 1980s ``Max Headroom'' @acronym{TV}-Series to really unreal.
@@ -3410,7 +3410,7 @@ diffraction which in turn renders the image unsharp.  So, there is an
 optimum aperture where the photographer gets maximum @acronym{DOF}.
 Sadly, for some purposes like macro shots it is not enough.  One way
 out is to combine the sharp parts of images focused at different
-distances, thereby artifically increasing the total @acronym{DOF}.
+distances, thereby artificially increasing the total @acronym{DOF}.
 This is exactly what Enfuse can do.
 
 @cindex sweet spot aperture
@@ -3431,7 +3431,7 @@ contrast selection abilities.
 We are going to combine images with limited @acronym{DOF} to increase
 their in-focus parts.  The whole process is about image sharpness.
 Therefore, the input images must align very well, not just well, but
-very well.  For optimum results the maximum controlpoint distance in
+very well.  For optimum results the maximum control point distance in
 Hugin (@pxref{Helpful Programs}) should not exceed
 0.3--0.5@dmn{pixels} to ensure perfect blending.
 
@@ -3443,8 +3443,8 @@ welcome.
 
 @node Contrast Based Fusing
 @subsection Contrast Based Fusing
-@cindex contrased-based fusing
-@cindex fusing, contrased-based
+@cindex contrast-based fusing
+@cindex fusing, contrast-based
 @cindex focus stacks, fusing
 
 A bare bones call to Enfuse for focus stacking could look like this.
@@ -3511,7 +3511,7 @@ The typical artifacts that show up are
 faint dark seams on the light side of the high contrast edges and
 
 @item
-extremely soft, slighly lighter seams on the dark side of the high
+extremely soft, slightly lighter seams on the dark side of the high
 contrast edges,
 @end itemize
 
@@ -3726,7 +3726,7 @@ all edges with a curvature of less than 0.5%.
 Use @acronym{LoG} to detect edges on a scale of 0.3@dmn{pixels}.
 Apply the default grayscale projector: @code{average} and throw away
 all edges with a curvature of less than 0.5% and replace the
-@acronym{LoG} data between 0% and 0.5% with @acronym{SDev} data.  Usa
+@acronym{LoG} data between 0% and 0.5% with @acronym{SDev} data.  Use
 a window of 7@classictimes{}7@dmn{pixel} window to compute the
 @acronym{SDev}.
 @end table
@@ -3768,7 +3768,7 @@ Enfuse uses helps to judge the effects of the parameters.
 
 @node Expert Stacking
 @subsection Tips For Focus Stacking Experts
-@cindex expert focus stacking ttops
+@cindex expert focus stacking tips
 @cindex tips, focus stacking experts
 
 We have collected some advice of which even focus stacking adepts can
