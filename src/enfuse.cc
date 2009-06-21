@@ -132,8 +132,8 @@ struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 bool UseHardMask = false;
 bool SaveMasks = false;
-std::string SoftMaskTemplate("mask%04i.tif");
-std::string HardMaskTemplate("mask%04i_wta.tif");
+std::string SoftMaskTemplate("softmask-%n.tif");
+std::string HardMaskTemplate("hardmask-%n.tif");
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -834,7 +834,7 @@ int process_options(int argc, char** argv) {
             case SaveMasksId:
                 SaveMasks = true;
                 optionSet.insert(SaveMasksOption);
-                if (optarg != NULL) {
+                if (optarg != NULL && *optarg != 0) {
                     char* s = new char[strlen(optarg) + 1];
                     strcpy(s, optarg);
                     char* save_ptr = NULL;

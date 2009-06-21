@@ -1163,14 +1163,14 @@ void enfuseMain(const list<char*>& inputFileNameList,
                 cerr << command
                      << ": will not overwrite input image \""
                      << *inputFileNameIterator
-                     << "\" with soft mask"
+                     << "\" with soft mask file"
                      << endl;
                 exit(1);
             } else if (maskFilename == OutputFileName) {
                 cerr << command
                      << ": will not overwrite output image \""
                      << OutputFileName
-                     << "\" with soft mask"
+                     << "\" with soft mask file"
                      << endl;
                 exit(1);
             } else {

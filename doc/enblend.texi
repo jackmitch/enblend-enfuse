@@ -523,16 +523,24 @@ for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
 
 See @ref{Tuning Memory Usage} for details.
 
-@item --visualize=@var{IMAGE-FILE}
+@item --visualize[=@var{VISUALIZE-TEMPLATE}]
 @opindex --visualize
-@cindex mask, visualization
-Create an @var{IMAGE-FILE} that visualizes the mask optimization
-process.
+@cindex mask, optimization visualization
+@cindex visualization of mask optimization
+Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
+the mask optimization process.  The default is @file{vis-%n.tif}.
 
 This shows Enblend's view of the overlap region and how it decided to
 route the seam line.  If you are experiencing artifacts or unexpected
 output, it may be useful to include this visualization image in your
 bug report.
+
+@var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
+input file.  In a template a percent sign (@samp{%}) introduces a
+variable part.  All other characters are copied literally.  Lowercase
+letters refer to the name of the respective input file, whereas
+uppercase ones refer to the name of the output file (@pxref{Common
+Options}).  @ref{Table:mask-template-characters} lists all variables.
 @end table
 
 
@@ -557,11 +565,12 @@ This is the default.
 Use the full-size images to create the seam line.  This can be slow.
 Use @option{--fine-mask} if you have very narrow overlap regions.
 
-@item --load-mask=@var{IMAGE-TEMPLATE}
+@item --load-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --load-mask
 @cindex mask, load
 @cindex load mask
-Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.
+Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
+default is @file{mask-%n.tif}.
 
 See @option{--save-mask} below for details.
 
@@ -579,25 +588,26 @@ this will produce the same type of mask as Enblend version@tie{}2.5.
 Use a two-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
 
-@item --save-mask=@var{IMAGE-TEMPLATE}
+@item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask
 @cindex mask, save
 @cindex save mask
-Save the generated masks to @var{IMAGE-TEMPLATE}.  Enblend saves masks
-as 8@dmn{bit} grayscale (single channel) images.  For accuracy it is
-recommended to choose a lossless format.
+Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
+@file{mask-%n.tif}.  Enblend saves masks as 8@dmn{bit} grayscale
+(single channel) images.  For accuracy we recommend to choose a
+lossless format.
 
 Use this option if you wish to edit the location of the seam line by
 hand.  This will give you images of the right sizes that you can edit
 to make your changes.  Later, use @option{--load-mask} to blend the
 project with your custom seam lines.
 
-@var{IMAGE-TEMPLATE} defines a template that is expanded for each mask
-file.  In a template a percent sign (@samp{%}) introduces a variable
-part.  All other characters are copied literally.  Lowercase letters
-refer to the name of the respective input file, whereas uppercase ones
-refer to the name of the output file (@pxref{Common Options}).
-@ref{Table:mask-template-characters} lists all variables.
+@var{IMAGE-TEMPLATE} defines a template that is expanded for each
+input file.  In a template a percent sign (@samp{%}) introduces a
+variable part.  All other characters are copied literally.  Lowercase
+letters refer to the name of the respective input file, whereas
+uppercase ones refer to the name of the output file (@pxref{Common
+Options}).  @ref{Table:mask-template-characters} lists all variables.
 
 A fancy mask filename template could look like this:
 

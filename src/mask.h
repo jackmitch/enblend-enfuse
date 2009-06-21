@@ -736,7 +736,7 @@ MaskType* createMask(const ImageType* const white,
 
     // Visualization of optimization output
     EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType* visualizeImage = NULL;
-    if (!VisualizeMaskFileName.empty()) {
+    if (VisualizeSeam) {
         visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
     }
 
@@ -988,8 +988,36 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (visualizeImage) {
-        ImageExportInfo visualizeInfo(VisualizeMaskFileName.c_str());
-        exportImage(srcImageRange(*visualizeImage), visualizeInfo);
+        const std::string visualizeFilename =
+            enblend::expandFilenameTemplate(VisualizeTemplate,
+                                            numberOfImages,
+                                            *inputFileNameIterator,
+                                            OutputFileName,
+                                            m);
+        if (visualizeFilename == *inputFileNameIterator) {
+            cerr << command
+                 << ": will not overwrite input image \""
+                 << *inputFileNameIterator
+                 << "\" with seam-visualization image"
+                 << endl;
+            exit(1);
+        } else if (visualizeFilename == OutputFileName) {
+            cerr << command
+                 << ": will not overwrite output image \""
+                 << OutputFileName
+                 << "\" with seam-visualization image"
+                 << endl;
+            exit(1);
+        } else {
+            if (Verbose > VERBOSE_MASK_MESSAGES) {
+                cerr << command
+                     << ": info: saving seam visualization \""
+                     << visualizeFilename << "\"" << endl;
+            }
+            ImageExportInfo visualizeInfo(visualizeFilename.c_str());
+            exportImage(srcImageRange(*visualizeImage), visualizeInfo);
+        }
+
         delete visualizeImage;
     }
 

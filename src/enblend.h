@@ -122,6 +122,8 @@ void enblendMain(const list<char*>& inputFileNameList,
     }
     #endif
 
+    const unsigned numberOfImages = imageInfoList.size();
+
     // Main blending loop.
     unsigned m = 0;
     list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
@@ -255,7 +257,9 @@ void enblendMain(const list<char*>& inputFileNameList,
             } else {
                 optBytes = iBB.area() * sizeof(UInt8);
             }
-            if (!VisualizeMaskFileName.empty()) optBytes *= 2;
+            if (VisualizeSeam) {
+                optBytes *= 2;
+            }
 
             const long long bytesDuringMask = bytes + std::max(nftBytes, optBytes);
             const long long bytesAfterMask = bytes + uBB.area() * sizeof(MaskPixelType);
@@ -274,7 +278,7 @@ void enblendMain(const list<char*>& inputFileNameList,
             createMask<ImageType, AlphaType, MaskType>(whitePair.first, blackPair.first,
                                                        whitePair.second, blackPair.second,
                                                        uBB, iBB, wraparoundForMask,
-                                                       imageInfoList.size(),
+                                                       numberOfImages,
                                                        inputFileNameIterator, m);
 
         // Calculate bounding box of seam line.
@@ -288,13 +292,29 @@ void enblendMain(const list<char*>& inputFileNameList,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);
-            if (Verbose > VERBOSE_MASK_MESSAGES) {
+            if (maskFilename == *inputFileNameIterator) {
                 cerr << command
-                     << ": info: saving mask \"" << maskFilename << "\"" << endl;
+                     << ": will not overwrite input image \""
+                     << *inputFileNameIterator
+                     << "\" with mask file"
+                     << endl;
+                exit(1);
+            } else if (maskFilename == OutputFileName) {
+                cerr << command
+                     << ": will not overwrite output image \""
+                     << OutputFileName
+                     << "\" with mask file"
+                     << endl;
+                exit(1);
+            } else {
+                if (Verbose > VERBOSE_MASK_MESSAGES) {
+                    cerr << command
+                         << ": info: saving mask \"" << maskFilename << "\"" << endl;
+                }
+                ImageExportInfo maskInfo(maskFilename.c_str());
+                maskInfo.setPosition(uBB.upperLeft());
+                exportImage(srcImageRange(*mask), maskInfo);
             }
-            ImageExportInfo maskInfo(maskFilename.c_str());
-            maskInfo.setPosition(uBB.upperLeft());
-            exportImage(srcImageRange(*mask), maskInfo);
         }
 
         // mem usage here = MaskType*ubb +

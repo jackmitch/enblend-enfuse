@@ -104,10 +104,11 @@ bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
 bool SaveMasks = false;
-std::string SaveMaskTemplate("mask.tif");
+std::string SaveMaskTemplate("mask-%n.tif");
 bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
-std::string VisualizeMaskFileName;
+std::string VisualizeTemplate("vis-%n.tif");
+bool VisualizeSeam = false;
 unsigned int GDAKmax = 32;
 unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
@@ -237,7 +238,9 @@ void printUsageAndExit(const bool error = true) {
         "                         TIFF images, such as those produced by Nona\n" <<
         "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
-        "  --visualize=FILE       save results of optimizer in FILE\n" <<
+        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
+        "                         characters as \"--save-mask\"; default: \"" <<
+        VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Mask generation options:\n" <<
         "  --coarse-mask          use an approximation to speedup mask generation;\n" <<
@@ -246,13 +249,15 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --save-mask=TEMPLATE   save generated masks in TEMPLATE;\n" <<
+        "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
+        SaveMaskTemplate << "\"\n" <<
         "                         conversion chars: %i: mask index, mask %n: number,\n" <<
         "                         %p: full path, %d: dirname, %b: basename,\n" <<
         "                         %f: filename, %e: extension; lowercase characters\n" <<
         "                         refer to input images uppercase to output image\n" <<
-        "  --load-mask=TEMPLATE   use existing masks in TEMPLATE instead of generating\n" <<
-        "                         them; same template characters as \"--save-mask\"\n" <<
+        "  --load-mask[=TEMPLATE] use existing masks in TEMPLATE instead of generating\n" <<
+        "                         them; same template characters as \"--save-mask\";\n" <<
+        "                         default: \"" << LoadMaskTemplate << "\"\n" <<
         "\n" <<
         "Report bugs at <https://bugs.launchpad.net/enblend>." <<
         endl;
@@ -402,9 +407,9 @@ int process_options(int argc, char** argv) {
         {"fine-mask", no_argument, 0, NoArgument},                             //  2
         {"optimize", no_argument, 0, NoArgument},                              //  3
         {"no-optimize", no_argument, 0, NoArgument},                           //  4
-        {"save-mask", required_argument, 0, StringArgument},                   //  5
-        {"load-mask", required_argument, 0, StringArgument},                   //  6
-        {"visualize", required_argument, 0, StringArgument},                   //  7
+        {"save-mask", optional_argument, 0, StringArgument},                   //  5
+        {"load-mask", optional_argument, 0, StringArgument},                   //  6
+        {"visualize", optional_argument, 0, StringArgument},                   //  7
         {"gda-kmax", required_argument, 0, IntegerArgument},                   //  8
         {"dijkstra-radius", required_argument, 0, IntegerArgument},            //  9
         {"mask-vectorize-distance", required_argument, 0, IntegerArgument},    // 10
@@ -480,17 +485,24 @@ int process_options(int argc, char** argv) {
             }
             switch (option_index) {
             case SaveMaskId:
-                SaveMaskTemplate = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    SaveMaskTemplate = optarg;
+                }
                 SaveMasks = true;
                 optionSet.insert(SaveMaskOption);
                 break;
             case LoadMaskId:
-                LoadMaskTemplate = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    LoadMaskTemplate = optarg;
+                }
                 LoadMasks = true;
                 optionSet.insert(LoadMaskOption);
                 break;
             case VisualizeId:
-                VisualizeMaskFileName = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    VisualizeTemplate = optarg;
+                }
+                VisualizeSeam = true;
                 optionSet.insert(VisualizeOption);
                 break;
             case CompressionId:
@@ -1140,22 +1152,6 @@ int main(int argc, char** argv) {
              << ": error opening output file \""
              << OutputFileName
              << "\";\n"
-             << command
-             << ": "
-             << e.what()
-             << endl;
-        exit(1);
-    }
-
-    // Sanity check on the VisualizeMaskFileName
-    if (!VisualizeMaskFileName.empty()) try {
-        ImageExportInfo maskInfo(VisualizeMaskFileName.c_str());
-        encoder(maskInfo);
-    } catch (StdException& e) {
-        cerr << endl
-             << command
-             << ": error opening visualize output file \""
-             << VisualizeMaskFileName << "\";\n"
              << command
              << ": "
              << e.what()

@@ -100,7 +100,7 @@ scene to produce an image that looks much like a tonemapped image.
 * Workflow::                    Enfuse's role in combining images
 * Invocation::                  Command line options and arguments
 * Weighting Functions::         Description of all weighting functions
-* Understanding Masks::         How to interpret masks and @file{mask####.tif} files
+* Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Applications::                Possible applications of Enfuse
 * Helpful Programs::            Useful other programs
@@ -1272,12 +1272,12 @@ Save all weight files as @acronym{TIFF} images.
 @cindex mask, saving
 First form: Save all soft weight masks in files.  If
 option@tie{}@option{--HardMask} is effective also save the hard masks.
-The defaults are @file{mask%04i.tif} and @file{mask%04i_wta.tif}.
+The defaults are @file{softmask-%n.tif} and @file{hardmask-%n.tif}.
 @cindex filename template
 @cindex mask, filename template
 In the second form @var{SOFT-MASK-TEMPLATE} defines the names of the
-soft mask files.  In the third form @var{HARD-MASK-TEMPLATE}
-additionally defines the names of the hard mask files.
+soft-mask files.  In the third form @var{HARD-MASK-TEMPLATE}
+additionally defines the names of the hard-mask files.
 
 Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
 templates that are expanded for each mask file.  In a template a
