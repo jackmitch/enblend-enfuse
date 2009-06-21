@@ -288,7 +288,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         if (SaveMasks) {
             const std::string maskFilename =
                 enblend::expandFilenameTemplate(SaveMaskTemplate,
-                                                imageInfoList.size(),
+                                                numberOfImages,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);

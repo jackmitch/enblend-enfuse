@@ -1139,6 +1139,8 @@ void enfuseMain(const list<char*>& inputFileNameList,
     pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
                                             new AlphaType(inputUnion.size()));
 
+    const unsigned numberOfImages = imageInfoList.size();
+
     unsigned m = 0;
     list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
     while (!imageInfoList.empty()) {
@@ -1155,7 +1157,7 @@ void enfuseMain(const list<char*>& inputFileNameList,
         if (SaveMasks) {
             const std::string maskFilename =
                 enblend::expandFilenameTemplate(SoftMaskTemplate,
-                                                imageInfoList.size(),
+                                                numberOfImages,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);

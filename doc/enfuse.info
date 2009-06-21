@@ -803,10 +803,10 @@ to read the manual before applying them successfully.
   `--SaveMasks=SOFT-MASK-TEMPLATE:HARD-MASK-TEMPLATE'
         Save all weight files as TIFF images.  First form: Save all
      soft weight masks in files.  If option `--HardMask' is effective
-     also save the hard masks.  The defaults are `mask%04i.tif' and
-     `mask%04i_wta.tif'.  In the second form SOFT-MASK-TEMPLATE defines
-     the names of the soft mask files.  In the third form
-     HARD-MASK-TEMPLATE additionally defines the names of the hard mask
+     also save the hard masks.  The defaults are `softmask-%n.tif' and
+     `hardmask-%n.tif'.  In the second form SOFT-MASK-TEMPLATE defines
+     the names of the soft-mask files.  In the third form
+     HARD-MASK-TEMPLATE additionally defines the names of the hard-mask
      files.
 
         Both SOFT-MASK-TEMPLATE and HARD-MASK-TEMPLATE define templates
