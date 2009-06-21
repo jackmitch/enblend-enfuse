@@ -1105,10 +1105,10 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 /** Enfuse's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enfuseMain(const list<char*>& inputFileNameList,
-                list<ImageImportInfo*> &imageInfoList,
-                ImageExportInfo& outputImageInfo,
-                Rect2D& inputUnion)
+void enfuseMain(const list<char*>& anInputFileNameList,
+                const list<ImageImportInfo*>& anImageInfoList,
+                ImageExportInfo& anOutputImageInfo,
+                Rect2D& anInputUnion)
 {
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -1133,22 +1133,22 @@ void enfuseMain(const list<char*>& inputFileNameList,
     list <triple<ImageType*, AlphaType*, MaskType*> > imageList;
 
     // Sum of all masks
-    MaskType *normImage = new MaskType(inputUnion.size());
+    MaskType *normImage = new MaskType(anInputUnion.size());
 
     // Result image. Alpha will be union of all input alphas.
     pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
-                                            new AlphaType(inputUnion.size()));
-
+                                            new AlphaType(anInputUnion.size()));
+    list<ImageImportInfo*> imageInfoList(anImageInfoList);
     const unsigned numberOfImages = imageInfoList.size();
 
     unsigned m = 0;
-    list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
+    list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
         Rect2D imageBB;
         pair<ImageType*, AlphaType*> imagePair =
-                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, imageBB);
+                assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
 
-        MaskType *mask = new MaskType(inputUnion.size());
+        MaskType *mask = new MaskType(anInputUnion.size());
 
         enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
                                                    srcImage(*(imagePair.second)),
@@ -1262,7 +1262,7 @@ void enfuseMain(const list<char*>& inputFileNameList,
         }
         unsigned i = 0;
         if (SaveMasks) {
-            for (imageIter = imageList.begin(), inputFileNameIterator = inputFileNameList.begin();
+            for (imageIter = imageList.begin(), inputFileNameIterator = anInputFileNameList.begin();
                  imageIter != imageList.end();
                  ++imageIter, ++inputFileNameIterator) {
                 const std::string maskFilename =
@@ -1309,7 +1309,7 @@ void enfuseMain(const list<char*>& inputFileNameList,
 
     Rect2D junkBB;
     unsigned int numLevels =
-        roiBounds<ImagePixelComponentType>(inputUnion, inputUnion, inputUnion, inputUnion, junkBB, Wraparound);
+        roiBounds<ImagePixelComponentType>(anInputUnion, anInputUnion, anInputUnion, anInputUnion, junkBB, Wraparound);
 
     vector<ImagePyramidType*> *resultLP = NULL;
 
@@ -1414,7 +1414,7 @@ void enfuseMain(const list<char*>& inputFileNameList,
 
     collapsePyramid<SKIPSMImagePixelType>(Wraparound, resultLP);
 
-    outputPair.first = new ImageType(inputUnion.size());
+    outputPair.first = new ImageType(anInputUnion.size());
 
     copyFromPyramidImageIf<ImagePyramidType, AlphaType, ImageType,
                            ImagePyramidIntegerBits, ImagePyramidFractionBits>(
@@ -1428,7 +1428,7 @@ void enfuseMain(const list<char*>& inputFileNameList,
     }
     delete resultLP;
 
-    checkpoint(outputPair, outputImageInfo);
+    checkpoint(outputPair, anOutputImageInfo);
 
     delete outputPair.first;
     delete outputPair.second;

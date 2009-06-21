@@ -67,10 +67,10 @@ namespace enblend {
 /** Enblend's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enblendMain(const list<char*>& inputFileNameList,
-                 list<ImageImportInfo*>& imageInfoList,
-                 ImageExportInfo& outputImageInfo,
-                 Rect2D& inputUnion)
+void enblendMain(const list<char*>& anInputFileNameList,
+                 const list<ImageImportInfo*>& anImageInfoList,
+                 ImageExportInfo& anOutputImageInfo,
+                 Rect2D& anInputUnion)
 {
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -91,24 +91,21 @@ void enblendMain(const list<char*>& inputFileNameList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMAlphaPixelType SKIPSMAlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
-    //sigset_t oldsigmask;
-    //sigprocmask(SIG_BLOCK, &SigintMask, &oldsigmask);
+    list<ImageImportInfo*> imageInfoList(anImageInfoList);
 
     // Create the initial black image.
     Rect2D blackBB;
     pair<ImageType*, AlphaType*> blackPair =
-        assemble<ImageType, AlphaType>(imageInfoList, inputUnion, blackBB);
-
-    //sigprocmask(SIG_SETMASK, &oldsigmask, NULL);
+        assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, blackBB);
 
     if (Checkpoint) {
-        checkpoint(blackPair, outputImageInfo);
+        checkpoint(blackPair, anOutputImageInfo);
     }
 
     // mem usage before = 0
-    // mem xsection = OneAtATime: inputUnion*imageValueType + inputUnion*AlphaValueType
-    //                !OneAtATime: 2*inputUnion*imageValueType + 2*inputUnion*AlphaValueType
-    // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+    // mem xsection = OneAtATime: anInputUnion*imageValueType + anInputUnion*AlphaValueType
+    //                !OneAtATime: 2*anInputUnion*imageValueType + 2*anInputUnion*AlphaValueType
+    // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
 
     #ifdef ENBLEND_CACHE_IMAGES
     if (Verbose > VERBOSE_CFI_MESSAGES) {
@@ -126,17 +123,17 @@ void enblendMain(const list<char*>& inputFileNameList,
 
     // Main blending loop.
     unsigned m = 0;
-    list<char*>::const_iterator inputFileNameIterator(inputFileNameList.begin());
+    list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
         // Create the white image.
         Rect2D whiteBB;
         pair<ImageType*, AlphaType*> whitePair =
-            assemble<ImageType, AlphaType>(imageInfoList, inputUnion, whiteBB);
+            assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, whiteBB);
 
-        // mem usage before = inputUnion*ImageValueType + inputUnion*AlphaValueType
-        // mem xsection = OneAtATime: inputUnion*imageValueType + inputUnion*AlphaValueType
-        //                !OneAtATime: 2*inputUnion*imageValueType + 2*inputUnion*AlphaValueType
-        // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage before = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
+        // mem xsection = OneAtATime: anInputUnion*imageValueType + anInputUnion*AlphaValueType
+        //                !OneAtATime: 2*anInputUnion*imageValueType + 2*anInputUnion*AlphaValueType
+        // mem usage after = 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
 
         #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
@@ -216,7 +213,7 @@ void enblendMain(const list<char*>& inputFileNameList,
                         cerr << "checkpointing" << endl;
                     }
                 }
-                checkpoint(blackPair, outputImageInfo);
+                checkpoint(blackPair, anOutputImageInfo);
             }
 
             blackBB = uBB;
@@ -272,7 +269,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         }
 
         // Create the blend mask.
-        const bool wraparoundForMask = Wraparound && (uBB.width() == inputUnion.width());
+        const bool wraparoundForMask = Wraparound && (uBB.width() == anInputUnion.width());
 
         MaskType* mask =
             createMask<ImageType, AlphaType, MaskType>(whitePair.first, blackPair.first,
@@ -318,8 +315,8 @@ void enblendMain(const list<char*>& inputFileNameList,
         }
 
         // mem usage here = MaskType*ubb +
-        //                  2*inputUnion*ImageValueType +
-        //                  2*inputUnion*AlphaValueType
+        //                  2*anInputUnion*ImageValueType +
+        //                  2*anInputUnion*AlphaValueType
 
 #ifdef ENBLEND_CACHE_IMAGES
         if (Verbose > VERBOSE_CFI_MESSAGES) {
@@ -340,21 +337,21 @@ void enblendMain(const list<char*>& inputFileNameList,
         // ROI bounds must be at least mBB but not to extend uBB.
         Rect2D roiBB;
         unsigned int numLevels =
-            roiBounds<ImagePixelComponentType>(inputUnion,
+            roiBounds<ImagePixelComponentType>(anInputUnion,
                                                iBB, mBB, uBB, roiBB,
                                                wraparoundForMask);
-        bool wraparoundForBlend = Wraparound && (roiBB.width() == inputUnion.width());
+        bool wraparoundForBlend = Wraparound && (roiBB.width() == anInputUnion.width());
 
         // Estimate memory requirements for this blend iteration
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // Maximum utilization is when all three pyramids have been built
             // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
             //                + 4 * roiBB.width() * SKIPSMAlphaPixelType
-            // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+            // mem usage after = anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
             //      + (4/3)*roiBB*MaskPyramidType
             //      + 2*(4/3)*roiBB*ImagePyramidType
             long long bytes =
-                inputUnion.area() * (sizeof(ImagePixelType) + 2 * sizeof(AlphaPixelType))
+                anInputUnion.area() * (sizeof(ImagePixelType) + 2 * sizeof(AlphaPixelType))
                 + (4/3) * roiBB.area() * (sizeof(MaskPyramidPixelType)
                                           + 2 * sizeof(ImagePyramidPixelType))
                 + (4 * roiBB.width()) * (sizeof(SKIPSMImagePixelType)
@@ -378,9 +375,9 @@ void enblendMain(const list<char*>& inputFileNameList,
             SKIPSMMaskPixelType>(numLevels, wraparoundForBlend,
                                  roiBB_uBB.apply(srcImageRange(*mask)));
         //exportPyramid(maskGP, "mask");
-        // mem usage before = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage before = MaskType*ubb + 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         // mem usage xsection = 3 * roiBB.width * MaskPyramidType
-        // mem usage after = MaskType*ubb + 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = MaskType*ubb + 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType
 
 #ifdef ENBLEND_CACHE_IMAGES
@@ -417,8 +414,8 @@ void enblendMain(const list<char*>& inputFileNameList,
 
         // We no longer need the mask.
         delete mask;
-        // mem usage after = 2*inputUnion*ImageValueType +
-        //                   2*inputUnion*AlphaValueType +
+        // mem usage after = 2*anInputUnion*ImageValueType +
+        //                   2*anInputUnion*AlphaValueType +
         //                   (4/3)*roiBB*MaskPyramidType
 
         // Build Laplacian pyramid from white image.
@@ -449,14 +446,14 @@ void enblendMain(const list<char*>& inputFileNameList,
             v.resetCacheMisses();
         }
 #endif
-        // mem usage after = 2*inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
         // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
         //                + 4 * roiBB.width() * SKIPSMAlphaPixelType
 
         // We no longer need the white rgb data.
         delete whitePair.first;
-        // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         // Build Laplacian pyramid from black image.
@@ -494,7 +491,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         // Peak memory xsection is here!
         // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
         //                + 4 * roiBB.width() * SKIPSMAlphaPixelType
-        // mem usage after = inputUnion*ImageValueType + 2*inputUnion*AlphaValueType
+        // mem usage after = anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //      + (4/3)*roiBB*MaskPyramidType
         //      + 2*(4/3)*roiBB*ImagePyramidType
 
@@ -507,7 +504,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         // We no longer need the white alpha data.
         delete whitePair.second;
 
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+        // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
         //      + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
@@ -541,7 +538,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         }
         delete maskGP;
 
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
+        // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
         // delete white pyramid
         //exportPyramid(whiteLP, "enblend_white_lp");
@@ -550,7 +547,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         }
         delete whiteLP;
 
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
+        // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
 
         //exportPyramid(blackLP, "enblend_blend_lp");
         // collapse black pyramid
@@ -583,7 +580,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         }
         delete blackLP;
 
-        // mem usage after = inputUnion*ImageValueType + inputUnion*AlphaValueType
+        // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
 
         // Checkpoint results.
         if (Checkpoint) {
@@ -595,7 +592,7 @@ void enblendMain(const list<char*>& inputFileNameList,
                     cerr << "checkpointing" << endl;
                 }
             }
-            checkpoint(blackPair, outputImageInfo);
+            checkpoint(blackPair, anOutputImageInfo);
         }
 
 #ifdef ENBLEND_CACHE_IMAGES
@@ -621,7 +618,7 @@ void enblendMain(const list<char*>& inputFileNameList,
         if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
             cerr << command << ": info: writing final output" << endl;
         }
-        checkpoint(blackPair, outputImageInfo);
+        checkpoint(blackPair, anOutputImageInfo);
     }
 
     delete blackPair.first;

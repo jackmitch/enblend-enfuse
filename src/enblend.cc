@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -1017,7 +1017,6 @@ int main(int argc, char** argv) {
     inputFileNameIterator = inputFileNameList.begin();
     int minDim = INT_MAX;
     while (inputFileNameIterator != inputFileNameList.end()) {
-
         ImageImportInfo* inputInfo = NULL;
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
@@ -1358,13 +1357,11 @@ int main(int argc, char** argv) {
             }
         }
 
-        // delete entries in imageInfoList, in case
-        // enblend loop returned early.
-        imageInfoIterator = imageInfoList.begin();
-        while (imageInfoIterator != imageInfoList.end()) {
-            delete *imageInfoIterator++;
+        for (list<ImageImportInfo*>::iterator i = imageInfoList.begin();
+             i != imageInfoList.end();
+             ++i) {
+            delete *i;
         }
-
     } catch (std::bad_alloc& e) {
         cerr << endl
              << command << ": out of memory\n"

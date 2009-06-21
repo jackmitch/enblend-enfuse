@@ -1176,7 +1176,6 @@ int main(int argc, char** argv) {
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
     while (inputFileNameIterator != inputFileNameList.end()) {
-
         ImageImportInfo *inputInfo = NULL;
         try {
             inputInfo = new ImageImportInfo(*inputFileNameIterator);
@@ -1508,11 +1507,10 @@ int main(int argc, char** argv) {
             }
         }
 
-        // delete entries in imageInfoList, in case
-        // enfuse loop returned early.
-        imageInfoIterator = imageInfoList.begin();
-        while (imageInfoIterator != imageInfoList.end()) {
-            delete *imageInfoIterator++;
+        for (list<ImageImportInfo*>::iterator i = imageInfoList.begin();
+             i != imageInfoList.end();
+             ++i) {
+            delete *i;
         }
     } catch (std::bad_alloc& e) {
         cerr << endl
