@@ -117,13 +117,13 @@ public:
                               ResultType(NumericTraits<ResultPixelComponentType>::min()),
                               ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
 
-    inline ResultType operator()(const PixelType& a, const PixelType& b) const {
+    ResultType operator()(const PixelType& a, const PixelType& b) const {
         typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
         return diff(a, b, src_is_scalar());
     }
 
 protected:
-    inline ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
+    ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
         PixelComponentType aLum = a.luminance();
         PixelComponentType bLum = b.luminance();
         PixelComponentType aHue = a.hue();
@@ -136,18 +136,18 @@ protected:
         return rm(std::max(hueDiff, lumDiff));
     }
 
-    inline ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
+    ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
         typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
         return scalar_diff(a, b, src_is_signed());
     }
 
-    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
+    ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
         return rm(std::abs(a - b));
     }
 
     // This appears necessary because NumericTraits<unsigned int>::Promote
     // is an unsigned int instead of an int.
-    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
+    ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
         return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
     }
 
