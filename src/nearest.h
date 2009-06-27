@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2004-2009 Andrew Mihal
+ * nearestFeatureTransform2() -- Copyright (C) 2009 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -33,6 +34,8 @@
 #include <stdlib.h>
 #include <utility>
 
+#include "vigra/distancetransform.hxx"
+#include "vigra/functorexpression.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/stdcachedfileimage.hxx"
 
@@ -45,6 +48,132 @@ using vigra::NumericTraits;
 using vigra::triple;
 
 namespace enblend {
+
+template <class ValueType>
+struct saturating_subtract
+{
+    typedef ValueType first_argument_type;
+    typedef ValueType second_argument_type;
+    typedef ValueType result_type;
+
+    result_type operator()(const first_argument_type& v1,
+                           const second_argument_type& v2) const
+    {
+        typedef vigra::NumericTraits<result_type> traits;
+
+        return v2 < v1 ? v1 - v2 : traits::zero();
+    }
+};
+
+
+// Compute a mask (dest) that defines the seam line given the
+// blackmask (src1) and the whitemask (src2) of the overlapping
+// images.
+//
+// The idea of the algorithm is from
+//     Yalin Xiong, Ken Turkowski
+//     "Registration, Calibration and Blending in Creating High Quality Panoramas"
+//     Proceedings of the 4th IEEE Workshop on Applications of Computer Vision (WACV'98)
+// where we find:
+//     "To locate the mask boundary, we perform the grassfire
+//      transform on two images individually.  The resulting distance
+//      maps represent how far away each pixel is from its nearest
+//      boundary.  The pixel values of the blend mask is then set to
+//      either 0 or 1 by comparing the distance values at each pixel
+//      in the two distance maps."
+//
+// Though we prefer the Distance Transform to the Grassfire Transform.
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+void
+nearestFeatureTransform2(bool wraparound,
+                         SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor sa1,
+                         SrcImageIterator src2_upperleft, SrcAccessor sa2,
+                         DestImageIterator dest_upperleft, DestAccessor da)
+{
+    typedef typename SrcAccessor::value_type SrcPixelType;
+    typedef vigra::NumericTraits<SrcPixelType> SrcPixelTraits;
+    typedef typename SrcPixelTraits::Promote SrcPromoteType;
+
+    typedef typename DestAccessor::value_type DestPixelType;
+    typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
+
+    if (wraparound)
+    {
+        cerr << command << ": warning: mask generator only supports singly connected panoramas\n";
+    }
+
+    const SrcPixelType background = 0;
+    const int norm = 2; // 0 => chessboard, 1 => Manhattan, 2 => Euklidean
+    const Diff2D size(src1_lowerright.x - src1_upperleft.x,
+                      src1_lowerright.y - src1_upperleft.y);
+
+    if (Verbose > VERBOSE_NFT_MESSAGES)
+    {
+        cerr << command << ": info: creating blend mask: 1/3";
+        cerr.flush();
+    }
+    IMAGETYPE<SrcPromoteType> dist12(size);
+    {
+        IMAGETYPE<SrcPixelType> diff12(size);
+        combineTwoImages(src1_upperleft, src1_lowerright, sa1,
+                         src2_upperleft, sa2,
+                         diff12.upperLeft(), diff12.accessor(),
+                         saturating_subtract<SrcPixelType>());
+        distanceTransform(srcImageRange(diff12), destImage(dist12),
+                          background, norm);
+    }
+
+    if (Verbose > VERBOSE_NFT_MESSAGES)
+    {
+        cerr << " 2/3";
+        cerr.flush();
+    }
+    IMAGETYPE<SrcPromoteType> dist21(size);
+    {
+        IMAGETYPE<SrcPixelType> diff21(size);
+        combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
+                         src1_upperleft, sa1,
+                         diff21.upperLeft(), diff21.accessor(),
+                         saturating_subtract<SrcPixelType>());
+        distanceTransform(srcImageRange(diff21), destImage(dist21),
+                          background, norm);
+    }
+
+    if (Verbose > VERBOSE_NFT_MESSAGES)
+    {
+        cerr << " 3/3";
+        cerr.flush();
+    }
+    combineTwoImages(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
+                     dist21.upperLeft(), dist21.accessor(),
+                     dest_upperleft, da,
+                     ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
+                                vigra::functor::Param(DestPixelTraits::max()),
+                                vigra::functor::Param(DestPixelTraits::zero())));
+
+    if (Verbose > VERBOSE_NFT_MESSAGES)
+    {
+        cerr << endl;
+    }
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+inline void
+nearestFeatureTransform2(bool wraparound,
+                         triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+                         pair<SrcImageIterator, SrcAccessor> src2,
+                         pair<DestImageIterator, DestAccessor> dest)
+{
+    nearestFeatureTransform2(wraparound,
+                             src1.first, src1.second, src1.third,
+                             src2.first, src2.second,
+                             dest.first, dest.second);
+}
+
 
 // The metric to use for calculating distances.
 #define EUCLIDEAN_METRIC

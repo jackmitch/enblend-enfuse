@@ -292,7 +292,7 @@ MaskType* createMask(const ImageType* const white,
                      const AlphaType* const blackAlpha,
                      const Rect2D& uBB,
                      const Rect2D& iBB,
-                     const bool wraparound,
+                     bool wraparound,
                      unsigned numberOfImages,
                      list<char*>::const_iterator inputFileNameIterator,
                      unsigned m)
@@ -337,7 +337,7 @@ MaskType* createMask(const ImageType* const white,
     if (CoarseMask) {
         // Do NFT at 1/8 scale.
         // uBB rounded up to multiple of 8 pixels in each direction
-        nftInputSize = Size2D(((uBB.width() + 7) >> 3), ((uBB.height() + 7) >> 3));
+        nftInputSize = Size2D((uBB.width() + 7) >> 3, (uBB.height() + 7) >> 3);
         nftInputBB = Rect2D(Size2D(uBB.width() >> 3, uBB.height() >> 3));
         nftStride = 8;
     } else {
@@ -347,29 +347,10 @@ MaskType* createMask(const ImageType* const white,
         nftStride = 1;
     }
 
-    // Input data for NFT:
-    // 1 = outside both black and white image, or inside both images.
-    // 255 = inside white image only.
-    // 0 = inside black image only.
-    MaskType* nftInputImage = new MaskType(nftInputSize);
-
-    // mem usage before: 0
-    // mem usage after: CoarseMask: 1/8 * uBB * MaskType
-    //                  !CoarseMask: uBB * MaskType
-
-    combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                     stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
-                     nftInputBB.apply(destImage(*nftInputImage)),
-                     ifThenElse(Arg1() ^ Arg2(),
-                                ifThenElse(Arg1(),
-                                           Param(NumericTraits<MaskPixelType>::max()),
-                                           Param(NumericTraits<MaskPixelType>::zero())),
-                                Param(NumericTraits<MaskPixelType>::one())));
-
     Size2D nftOutputSize;
     Diff2D nftOutputOffset;
     if (!CoarseMask && !OptimizeMask) {
-        // If we're not going to vectorize the mask.
+        // We are not going to vectorize the mask.
         nftOutputSize = nftInputSize;
         nftOutputOffset = Diff2D(0, 0);
     } else {
@@ -378,17 +359,45 @@ MaskType* createMask(const ImageType* const white,
         nftOutputOffset = Diff2D(1, 1);
     }
 
+    // mem usage before: 0
+    // mem usage after: CoarseMask: 1/8 * uBB * MaskType
+    //                  !CoarseMask: uBB * MaskType
     MaskType* nftOutputImage = new MaskType(nftOutputSize);
 
-    // mem usage before: CoarseMask: 1/8 * uBB * MaskType
-    //                   !CoarseMask: uBB * MaskType
-    // mem usage after: CoarseMask: 2/8 * uBB * MaskType
-    //                  !CoarseMask: 2 * uBB * MaskType
+    if (wraparound) {
+        // mem usage before: CoarseMask: 1/8 * uBB * MaskType
+        //                   !CoarseMask: uBB * MaskType
+        // mem usage after: CoarseMask: 2/8 * uBB * MaskType
+        //                  !CoarseMask: 2 * uBB * MaskType
+        MaskType* nftInputImage = new MaskType(nftInputSize);
 
-    nearestFeatureTransform(wraparound,
-                            srcImageRange(*nftInputImage),
-                            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
-                            NumericTraits<MaskPixelType>::one());
+        // Input data for NFT:
+        // 1 = outside both black and white image, or inside both images.
+        // 255 = inside white image only.
+        // 0 = inside black image only.
+        combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                         stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
+                         nftInputBB.apply(destImage(*nftInputImage)),
+                         ifThenElse(Arg1() ^ Arg2(),
+                                    ifThenElse(Arg1(),
+                                               Param(NumericTraits<MaskPixelType>::max()),
+                                               Param(NumericTraits<MaskPixelType>::zero())),
+                                    Param(NumericTraits<MaskPixelType>::one())));
+
+        nearestFeatureTransform(wraparound,
+                                srcImageRange(*nftInputImage),
+                                destIter(nftOutputImage->upperLeft() + nftOutputOffset),
+                                NumericTraits<MaskPixelType>::one());
+
+        // mem usage after: CoarseMask: 1/8 * uBB * MaskType
+        //                  !CoarseMask: uBB * MaskType
+        delete nftInputImage;
+    } else {
+        nearestFeatureTransform2(wraparound,
+                                 stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                                 stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
+                                 destIter(nftOutputImage->upperLeft() + nftOutputOffset));
+    }
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
@@ -397,7 +406,7 @@ MaskType* createMask(const ImageType* const white,
         const ImagePair nft[] = {
             std::make_pair("blackmask", blackAlpha),
             std::make_pair("whitemask", whiteAlpha),
-            std::make_pair("nft-input", nftInputImage),
+            //std::make_pair("nft-input", nftInputImage),
             std::make_pair("nft-output", nftOutputImage)
         };
 
@@ -420,10 +429,6 @@ MaskType* createMask(const ImageType* const white,
         }
     }
 #endif
-
-    // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
-    //                     !CoarseMask: uBB * UInt32 * 2
-    delete nftInputImage;
 
     // mem usage before: CoarseMask: 2/8 * uBB * MaskType
     //                   !CoarseMask: 2 * uBB * MaskType
