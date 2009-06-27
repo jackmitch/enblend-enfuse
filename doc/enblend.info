@@ -23,7 +23,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging-rev316, 27 April 2009),
+This manual is for Enblend (version 3.2-staging-rev326, 27 April 2009),
 a tool for compositing images n such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -250,7 +250,7 @@ Common options control some overall features of Enblend.
 `-w'
      Blend around the +/-180o boundary.  Useful for full 360o panoramas.
 
-     Version 3.2-staging-rev316 of Enblend, the one described here, does
+     Version 3.2-staging-rev326 of Enblend, the one described here, does
      not blend neither zenith nor or nadir, so you may still see some
      seams in these areas.
 
@@ -384,7 +384,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 3.2-staging-rev316, only mask
+     In this version of Enblend, 3.2-staging-rev326, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled in the Enblend

@@ -70,26 +70,31 @@ Among the usual configuration options of the GNU autoconf system, the
 ./configure script offers the following options to tailor Enblend and
 Enfuse.
 
-** --enable-image-cache=YES/no
+** --enable-split-doc=YES/no
 
-Activate the image-cache feature, which allows for processing of large
-images.  The image cache handles swapping parts of the images to disk.
-The default is "yes", enable the image cache.
+Split the documentation files in INFO or HTML format into small
+pieces.  The default is "yes", split documentation.
 
 ** --enable-debug=yes/NO
 
 Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
 
+** --enable-image-cache=YES/no
+
+Activate the image-cache feature, which allows for processing of large
+images.  The image cache handles swapping parts of the images to disk.
+The default is "yes", enable the image cache.
+
+** --with-apple-opengl-framework=yes/NO
+
+Use the Apple OpenGL Framework instead of Xorg.
+
+
 ** --with-dmalloc=yes/NO
 
 Compile with the debug-malloc library.  The library is available at
 http://www.dmalloc.com/.
-
-** --enable-split-doc=YES/no
-
-Split the documentation files in INFO or HTML format into small
-pieces.  The default is "yes", split documentation.
 
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
 
@@ -104,6 +109,21 @@ build.
 
 Set PATH to TrueType fonts.  This is only required for building the
 documentation.
+
+
+* Extra Make(1) Variables
+
+You can override Makefile variables the usual way.  In addition the
+build process supplies several variables, all starting with "EXTRA",
+that add their value to the "usual suspects".  These are
+
+        CPPFLAGS  --  EXTRACPPFLAGS
+        CFLAGS    --  EXTRACFLAGS
+        CXXFLAGS  --  EXTRACXXFLAGS
+        LDFLAGS   --  EXTRALDFLAGS
+
+For example, to quickly add an additional define, use
+        make EXTRACPPFLAGS=-DDEBUG_NEAREST_FEATURE_TRANSFORM
 
 
 * Documentation

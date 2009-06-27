@@ -1,3 +1,8 @@
+AM_CPPFLAGS = $(EXTRACPPFLAGS)
+AM_CFLAGS = $(EXTRACFLAGS)
+AM_CXXFLAGS = $(EXTRACXXFLAGS)
+AM_LDFLAGS = $(EXTRALDFLAGS)
+
 SUBDIRS = vigra_impex win32helpers
 
 bin_PROGRAMS = enblend enfuse
@@ -7,17 +12,21 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   float_cast.h global.h gpu.cc gpu.h mask.h \
                   nearest.h numerictraits.h path.h pyramid.h \
                   filenameparse.h filenameparse.cc
-enblend_LDFLAGS =
+enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@
-enblend_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I${top_srcdir}/include
+enblend_CXXFLAGS = $(AM_CXXFLAGS) \
+                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+                   -I${top_srcdir}/include
 
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  enfuse.h enfuse.cc fixmath.h float_cast.h \
                  global.h mga.h numerictraits.h pyramid.h \
                  filenameparse.h filenameparse.cc
-enfuse_LDFLAGS =
+enfuse_LDFLAGS = $(AM_LDFLAGS)
 enfuse_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@
-enfuse_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I${top_srcdir}/include
+enfuse_CXXFLAGS = $(AM_CXXFLAGS) \
+                  -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+                  -I${top_srcdir}/include
 
 EXTRA_DIST = enblend.vcproj enblend_msvc2003.vcproj enblend_msvc2008.vcproj \
              enfuse.vcproj enfuse_msvc2003.vcproj enfuse_msvc2008.vcproj \
