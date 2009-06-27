@@ -310,6 +310,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                 }
                 ImageExportInfo maskInfo(maskFilename.c_str());
                 maskInfo.setPosition(uBB.upperLeft());
+                maskInfo.setCompression(MASK_COMPRESSION);
                 exportImage(srcImageRange(*mask), maskInfo);
             }
         }

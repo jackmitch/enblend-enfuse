@@ -404,6 +404,7 @@ MaskType* createMask(const ImageType* const white,
              << nftMaskFilename << "\"" << endl;
     }
     ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
+    nftMaskInfo.setCompression(MASK_COMPRESSION);
     exportImage(srcImageRange(*nftOutputImage), nftMaskInfo);
 #endif
 
@@ -1038,6 +1039,7 @@ MaskType* createMask(const ImageType* const white,
                      << visualizeFilename << "\"" << endl;
             }
             ImageExportInfo visualizeInfo(visualizeFilename.c_str());
+            visualizeInfo.setCompression(MASK_COMPRESSION);
             exportImage(srcImageRange(*visualizeImage), visualizeInfo);
         }
 
