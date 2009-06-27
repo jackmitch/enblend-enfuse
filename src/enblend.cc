@@ -271,10 +271,10 @@ void printUsageAndExit(const bool error = true) {
         coarseMaskVectorizeDistance << " for coarse masks and\n" <<
         "                         " <<
         fineMaskVectorizeDistance << " for fine masks\n" <<
-        "  --anneal=KMAX[:TAU[:DELTAEMAX[:DELTAEMIN]]]\n" <<
+        "  --anneal=TAU[:DELTAEMAX[:DELTAEMIN[:KMAX]]]]\n" <<
         "                         set annealing parameters of strategy 1; defaults:\n" <<
-        "                         " << AnnealPara.kmax << ':' << AnnealPara.tau << ':' <<
-        AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << "\n" <<
+        "                         " << AnnealPara.tau << ':' <<
+        AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
         "  --dijkstra=RADIUS      set search RADIUS of stragegy 2; default: " <<
         DijkstraRadius << "\n" <<
         "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
@@ -584,39 +584,9 @@ int process_options(int argc, char** argv) {
                 char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 char* tail;
 
-                if (token == NULL || *token == 0) {
-                    cerr << command
-                         << ": option \"--anneal\": no k_max given" << endl;
-                    exit(1);
-                }
-                errno = 0;
-                const long int kmax = strtol(token, &tail, 10);
-                if (errno != 0) {
-                    cerr << command
-                         << ": option \"--anneal\": illegal numeric format \""
-                         << token << "\" of k_max: " << enblend::errorMessage(errno)
-                         << endl;
-                    exit(1);
-                }
-                if (*tail != 0) {
-                    cerr << command
-                         << ": option \"--anneal\": trailing garbage \""
-                         << tail << "\" in k_max: \""
-                         << token << "\"" << endl;
-                    exit(1);
-                }
-                if (kmax < 3) {
-                    cerr << command
-                         << ": option \"--anneal\": k_max must larger or equal to three"
-                         << endl;
-                    exit(1);
-                }
-                AnnealPara.kmax = static_cast<unsigned int>(kmax);
-
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
                 if (token != NULL && *token != 0) {
                     errno = 0;
-                    AnnealPara.tau = strtod(token, &tail);
+                    double tau = strtod(token, &tail);
                     if (errno != 0) {
                         cerr << command
                              << ": option \"--anneal\": illegal numeric format \""
@@ -625,24 +595,29 @@ int process_options(int argc, char** argv) {
                         exit(1);
                     }
                     if (*tail != 0) {
-                        cerr << command
-                             << ": --anneal: trailing garbage \""
-                             << tail << "\" in tau: \""
-                             << token << "\"" << endl;
-                        exit(1);
+                        if (*tail == '%') {
+                            tau /= 100.0;
+                        } else {
+                            cerr << command
+                                 << ": --anneal: trailing garbage \""
+                                 << tail << "\" in tau: \"" << token << "\""
+                                 << endl;
+                            exit(1);
+                        }
                     }
-                    if (AnnealPara.tau <= 0.0) {
+                    if (tau <= 0.0) {
                         cerr << command
                              << ": option \"--anneal\": tau must be larger than zero"
                              << endl;
                         exit(1);
                     }
-                    if (AnnealPara.tau >= 1.0) {
+                    if (tau >= 1.0) {
                         cerr << command
                              << ": option \"--anneal\": tau must be less than one"
                              << endl;
                         exit(1);
                     }
+                    AnnealPara.tau = tau;
                 }
 
                 token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
@@ -700,6 +675,33 @@ int process_options(int argc, char** argv) {
                          << ": option \"--anneal\": deltaE_min must be less than deltaE_max"
                          << endl;
                     exit(1);
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    const long int kmax = strtol(token, &tail, 10);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of k_max: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in k_max: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    if (kmax < 3) {
+                        cerr << command
+                             << ": option \"--anneal\": k_max must larger or equal to 3"
+                             << endl;
+                        exit(1);
+                    }
+                    AnnealPara.kmax = static_cast<unsigned int>(kmax);
                 }
 
                 optionSet.insert(AnnealOption);

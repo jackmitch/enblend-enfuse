@@ -666,8 +666,8 @@ in the overlap region.  This is the default.
 @cindex optimize strategy
 @table @asis
 @item Stragegy 1: Simulated Annealing
-Tune with option@tie{}@code{--anneal} = @var{K-MAX} : @var{TAU} :
-@var{DELTA-E-MAX} : @var{DELTA-E-MIN}.
+Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
+: @var{DELTA-E-MIN} : @var{K-MAX}.
 
 @uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
 Simulated-Annealing}
@@ -686,7 +686,7 @@ images.}
 @shortcaption{optimizer strategies}
 @end float
 
-@item --anneal=@var{K-MAX}[:@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}]]]
+@item --anneal=@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}[:@var{K-MAX}]]]
 @opindex --anneal
 @cindex optimize, anneal parameters
 @cindex anneal parameters
@@ -696,36 +696,13 @@ Set the parameters of the Simulated Annealing optimizer used in
 Optimizer Strategy@tie{}1 (see @ref{Table:optimizer-strategies}).
 
 @table @var
-@item K-MAX
-@var{K-MAX} is the maximum number of ``moves'' the optimizer will make
-for each line segment.  Higher values more accurately sample the state
-space at the expense of a higher computation cost.
-
-Valid range:
-@ifinfo
-@var{K-MAX} @geq{} 3.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">K-MAX</mi>
-        <mo>&ge;</mo>
-        <mn>3</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{K-MAX} \ge 3$.
-@end tex
-
-The default is 32.  Values around 100 seem reasonable.
-
 @item TAU
 @var{TAU} is the temperature reduction factor in the Simulated
 Annealing; it also can be thought of as ``cooling factor''.  The
 closer @var{TAU} is to one the more accurate the annealing run will be
 and the longer it will take.
+
+Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
 Valid range:
 @ifinfo
@@ -866,6 +843,31 @@ $$\eqalign{
 @end tex
 
 The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
+
+@item K-MAX
+@var{K-MAX} is the maximum number of ``moves'' the optimizer will make
+for each line segment.  Higher values more accurately sample the state
+space at the expense of a higher computation cost.
+
+Valid range:
+@ifinfo
+@var{K-MAX} @geq{} 3.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">K-MAX</mi>
+        <mo>&ge;</mo>
+        <mn>3</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$\mathit{K-MAX} \ge 3$.
+@end tex
+
+The default is 32.  Values around 100 seem reasonable.
 @end table
 
 @item --dijkstra=@var{RADIUS}
