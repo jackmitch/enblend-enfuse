@@ -40,6 +40,8 @@
 - Without any output filename given, i.e. no "-o" option, the output
   filename now defaults to "a.tif", making "-o" truly an option.
 
+- Use OpenMP to make better use of multi-processor machines.
+
 - Enblend and Enfuse issue messages following the GNU standard.
 
 

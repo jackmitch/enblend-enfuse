@@ -172,12 +172,12 @@ void blend(vector<MaskPyramidType*> *maskGP,
         }
 
         //if (!UseGPU) {
-        if (1) {
-            combineThreeImages(srcImageRange(*((*maskGP)[layer])),
-                    srcImage(*((*whiteLP)[layer])),
-                    srcImage(*((*blackLP)[layer])),
-                    destImage(*((*blackLP)[layer])),
-                    CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
+        if (true) {
+            combineThreeImagesMP(srcImageRange(*((*maskGP)[layer])),
+                                 srcImage(*((*whiteLP)[layer])),
+                                 srcImage(*((*blackLP)[layer])),
+                                 destImage(*((*blackLP)[layer])),
+                                 CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
             continue;
         }
 

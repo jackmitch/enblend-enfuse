@@ -98,60 +98,78 @@ nearestFeatureTransform2(bool wraparound,
 
     typedef typename DestAccessor::value_type DestPixelType;
     typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
+#ifdef OPENMP
+// BasicImage is reentrant whereas CachedFileImage is not (yet).
+#define REENTRANT_IMAGETYPE BasicImage
+#else
+#define REENTRANT_IMAGETYPE IMAGETYPE
+#endif
 
     if (wraparound)
     {
         cerr << command << ": warning: mask generator only supports singly connected panoramas\n";
     }
 
-    const SrcPixelType background = 0;
+    const SrcPixelType background = SrcPixelTraits::zero();
     const int norm = 2; // 0 => chessboard, 1 => Manhattan, 2 => Euklidean
     const Diff2D size(src1_lowerright.x - src1_upperleft.x,
                       src1_lowerright.y - src1_upperleft.y);
 
+    IMAGETYPE<SrcPromoteType> dist12(size);
+    IMAGETYPE<SrcPromoteType> dist21(size);
     if (Verbose > VERBOSE_NFT_MESSAGES)
     {
         cerr << command << ": info: creating blend mask: 1/3";
         cerr.flush();
     }
-    IMAGETYPE<SrcPromoteType> dist12(size);
-    {
-        IMAGETYPE<SrcPixelType> diff12(size);
-        combineTwoImages(src1_upperleft, src1_lowerright, sa1,
-                         src2_upperleft, sa2,
-                         diff12.upperLeft(), diff12.accessor(),
-                         saturating_subtract<SrcPixelType>());
-        distanceTransform(srcImageRange(diff12), destImage(dist12),
-                          background, norm);
-    }
 
-    if (Verbose > VERBOSE_NFT_MESSAGES)
+#ifdef OPENMP
+#pragma omp parallel sections
+#endif
     {
-        cerr << " 2/3";
-        cerr.flush();
-    }
-    IMAGETYPE<SrcPromoteType> dist21(size);
-    {
-        IMAGETYPE<SrcPixelType> diff21(size);
-        combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
-                         src1_upperleft, sa1,
-                         diff21.upperLeft(), diff21.accessor(),
-                         saturating_subtract<SrcPixelType>());
-        distanceTransform(srcImageRange(diff21), destImage(dist21),
-                          background, norm);
-    }
+#ifdef OPENMP
+#pragma omp section
+#endif
+        {
+            REENTRANT_IMAGETYPE<SrcPixelType> diff12(size);
+            combineTwoImages(src1_upperleft, src1_lowerright, sa1,
+                             src2_upperleft, sa2,
+                             diff12.upperLeft(), diff12.accessor(),
+                             saturating_subtract<SrcPixelType>());
+            distanceTransform(srcImageRange(diff12), destImage(dist12),
+                              background, norm);
+        } // omp section
+
+#ifdef OPENMP
+#pragma omp section
+#endif
+        {
+            if (Verbose > VERBOSE_NFT_MESSAGES)
+            {
+                cerr << " 2/3";
+                cerr.flush();
+            }
+            REENTRANT_IMAGETYPE<SrcPixelType> diff21(size);
+            combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
+                             src1_upperleft, sa1,
+                             diff21.upperLeft(), diff21.accessor(),
+                             saturating_subtract<SrcPixelType>());
+            distanceTransform(srcImageRange(diff21), destImage(dist21),
+                              background, norm);
+        } // omp section
+    } // omp parallel sections
 
     if (Verbose > VERBOSE_NFT_MESSAGES)
     {
         cerr << " 3/3";
         cerr.flush();
     }
-    combineTwoImages(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
-                     dist21.upperLeft(), dist21.accessor(),
-                     dest_upperleft, da,
-                     ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
-                                vigra::functor::Param(DestPixelTraits::max()),
-                                vigra::functor::Param(DestPixelTraits::zero())));
+    combineTwoImagesMP(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
+                       dist21.upperLeft(), dist21.accessor(),
+                       dest_upperleft, da,
+                       ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
+                                  vigra::functor::Param(DestPixelTraits::max()),
+                                  vigra::functor::Param(DestPixelTraits::zero())));
 
     if (Verbose > VERBOSE_NFT_MESSAGES)
     {

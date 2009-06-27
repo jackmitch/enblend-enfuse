@@ -188,7 +188,19 @@ void printVersionAndExit() {
 #else
             "no" <<
 #endif
+            "\n";
+
+        cout <<
+            "Extra feature: OpenMP: " <<
+#ifdef OPENMP
+            "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << " using " <<
+            omp_get_num_procs() << " processor(s) and up to " <<
+            omp_get_max_threads() << " thread(s)" <<
+#else
+            "no" <<
+#endif
             "\n\n";
+
         cout <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";

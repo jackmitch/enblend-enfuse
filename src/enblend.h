@@ -31,6 +31,7 @@
 #include <boost/static_assert.hpp>
 
 #include "common.h"
+#include "openmp.h"
 #include "numerictraits.h"
 #include "fixmath.h"
 #include "assemble.h"
@@ -41,7 +42,6 @@
 
 #include "vigra/impex.hxx"
 #include "vigra/initimage.hxx"
-#include "vigra/inspectimage.hxx"
 #include "vigra/transformimage.hxx"
 
 using std::cout;
@@ -52,12 +52,10 @@ using std::pair;
 using vigra::BasicImage;
 using vigra::CachedFileImage;
 using vigra::CachedFileImageDirector;
-using vigra::FindMinMax;
 using vigra::ImageExportInfo;
 using vigra::ImageImportInfo;
 using vigra::initImage;
 using vigra::initImageIf;
-using vigra::inspectImage;
 using vigra::NumericTraits;
 using vigra::VigraFalseType;
 using vigra::VigraTrueType;

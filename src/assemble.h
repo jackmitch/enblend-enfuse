@@ -156,12 +156,12 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
                  << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
 
             ImageType lowDepthImage(image->width(), image->height());
-            transformImage(srcImageRange(*image),
-                           destImage(lowDepthImage),
-                           linearRangeMapping(ImagePixelType(inputMin),
-                                              ImagePixelType(inputMax),
-                                              ImagePixelType(outputRange.first),
-                                              ImagePixelType(outputRange.second)));
+            transformImageMP(srcImageRange(*image),
+                             destImage(lowDepthImage),
+                             linearRangeMapping(ImagePixelType(inputMin),
+                                                ImagePixelType(inputMax),
+                                                ImagePixelType(outputRange.first),
+                                                ImagePixelType(outputRange.second)));
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
@@ -183,12 +183,12 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
                  AlphaTraits<IntegralPixelComponentType>::zero()),
                 mask->accessor());
 
-        transformImage(srcImageRange(*image),
-                       destImage(integralImage),
-                       linearRangeMapping(ImagePixelType(inputMin),
-                                          ImagePixelType(inputMax),
-                                          IntegralPixelType(outputRange.first),
-                                          IntegralPixelType(outputRange.second)));
+        transformImageMP(srcImageRange(*image),
+                         destImage(integralImage),
+                         linearRangeMapping(ImagePixelType(inputMin),
+                                            ImagePixelType(inputMax),
+                                            IntegralPixelType(outputRange.first),
+                                            IntegralPixelType(outputRange.second)));
         exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
     }
 }
@@ -240,12 +240,12 @@ import(const ImageImportInfo& info,
         static_cast<double>(NumericTraits<ImagePixelComponentType>::max()) :
         1.0;
     if (inputRange.first != min || inputRange.second != max) {
-        transformImage(srcIterRange(image.first, image.first + extent, image.second),
-                       destIter(image.first, image.second),
-                       linearRangeMapping(ImagePixelType(inputRange.first),
-                                          ImagePixelType(inputRange.second),
-                                          ImagePixelType(min),
-                                          ImagePixelType(max)));
+        transformImageMP(srcIterRange(image.first, image.first + extent, image.second),
+                         destIter(image.first, image.second),
+                         linearRangeMapping(ImagePixelType(inputRange.first),
+                                            ImagePixelType(inputRange.second),
+                                            ImagePixelType(min),
+                                            ImagePixelType(max)));
     }
 }
 

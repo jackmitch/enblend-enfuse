@@ -70,21 +70,31 @@ Among the usual configuration options of the GNU autoconf system, the
 ./configure script offers the following options to tailor Enblend and
 Enfuse.
 
+
+** --enable-openmp=YES/no
+
+Parallelize parts of Enblend and Enfuse with OpenMP.  See
+        http://www.openmp.org/
+
+
 ** --enable-split-doc=YES/no
 
 Split the documentation files in INFO or HTML format into small
 pieces.  The default is "yes", split documentation.
+
 
 ** --enable-debug=yes/NO
 
 Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
 
+
 ** --enable-image-cache=YES/no
 
 Activate the image-cache feature, which allows for processing of large
 images.  The image cache handles swapping parts of the images to disk.
 The default is "yes", enable the image cache.
+
 
 ** --with-apple-opengl-framework=yes/NO
 
@@ -96,6 +106,7 @@ Use the Apple OpenGL Framework instead of Xorg.
 Compile with the debug-malloc library.  The library is available at
 http://www.dmalloc.com/.
 
+
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
 
 Use Boost "filesystem" library to get platform-independent path
@@ -104,6 +115,7 @@ use of the internal path generation library.  Supply a LIBRARY name if
 you want to override the default candidates "boost_filesystem-mt" for
 multi-threaded compilation and "boost_filesystem" for a single-thread
 build.
+
 
 ** --with-ttf-path=<PATH>
 
@@ -123,7 +135,11 @@ that add their value to the "usual suspects".  These are
         LDFLAGS   --  EXTRALDFLAGS
 
 For example, to quickly add an additional define, use
-        make EXTRACPPFLAGS=-DDEBUG_NEAREST_FEATURE_TRANSFORM
+        make EXTRACPPFLAGS=-DDEBUG_8BIT_ONLY
+To compile for coverage analysis, say
+        make EXTRACXXFLAGS="-O0 --coverage" EXTRALDFLAGS="--coverage"
+analogously for profiling analysis
+        make EXTRACXXFLAGS=-pg EXTRALDFLAGS=-pg
 
 
 * Documentation

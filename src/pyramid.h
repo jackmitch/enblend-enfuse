@@ -195,7 +195,7 @@ inline void reduce(bool wraparound,
     //int dst_h = dest_lowerright.y - dest_upperleft.y;
 
     vigra_precondition(src_w > 1 && src_h > 1,
-            "src image too small in reduce");
+                       "src image too small in reduce");
 
     // State variables for source image pixel values
     SKIPSMImagePixelType isr0, isr1, isrp;
@@ -598,13 +598,13 @@ inline void reduce(bool wraparound,
 
     typedef typename DestAccessor::value_type DestPixelType;
 
-    int src_w = src_lowerright.x - src_upperleft.x;
-    int src_h = src_lowerright.y - src_upperleft.y;
-    int dst_w = dest_lowerright.x - dest_upperleft.x;
-    //int dst_h = dest_lowerright.y - dest_upperleft.y;
+    const int src_w = src_lowerright.x - src_upperleft.x;
+    const int src_h = src_lowerright.y - src_upperleft.y;
+    const int dst_w = dest_lowerright.x - dest_upperleft.x;
+    //const int dst_h = dest_lowerright.y - dest_upperleft.y;
 
     vigra_precondition(src_w > 1 && src_h > 1,
-            "src image too small in reduce");
+                       "src image too small in reduce");
 
     // State variables for source image pixel values
     SKIPSMImagePixelType isr0, isr1, isrp;
@@ -684,11 +684,10 @@ inline void reduce(bool wraparound,
     // Main Rows
     {
         for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y) {
-
             if (wraparound) {
-                isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-2,0)));
+                isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 2, 0)));
                 isr1 = SKIPSMImageZero;
-                isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0))) * 4;
+                isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0))) * 4;
             } else {
                 isr0 = SKIPSMImagePixelType(sa(sy));
                 isr1 = SKIPSMImageZero;
@@ -1745,11 +1744,11 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueTy
 
         // Rescale the pyramid values to fit in UINT16.
         UInt16Image usPyramid((*v)[i]->width(), (*v)[i]->height());
-        transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                linearRangeMapping(NumericTraits<PyramidValueType>::min(),
-                                     NumericTraits<PyramidValueType>::max(),
-                                     NumericTraits<UInt16>::min(),
-                                     NumericTraits<UInt16>::max()));
+        transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                         linearRangeMapping(NumericTraits<PyramidValueType>::min(),
+                                            NumericTraits<PyramidValueType>::max(),
+                                            NumericTraits<UInt16>::min(),
+                                            NumericTraits<UInt16>::max()));
 
         ImageExportInfo info(filenameBuf);
         exportImage(srcImageRange(usPyramid), info);
@@ -1774,11 +1773,11 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseT
 
         // Rescale the pyramid values to fit in UINT16.
         UInt16RGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
-        transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
-                                   PyramidVectorType(NumericTraits<PyramidValueType>::max()),
-                                   typename UInt16RGBImage::value_type(NumericTraits<UInt16>::min()),
-                                   typename UInt16RGBImage::value_type(NumericTraits<UInt16>::max())));
+        transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                         linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
+                                            PyramidVectorType(NumericTraits<PyramidValueType>::max()),
+                                            typename UInt16RGBImage::value_type(NumericTraits<UInt16>::min()),
+                                            typename UInt16RGBImage::value_type(NumericTraits<UInt16>::max())));
 
         ImageExportInfo info(filenameBuf);
         exportImage(srcImageRange(usPyramid), info);

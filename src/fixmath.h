@@ -362,9 +362,9 @@ void copyToPyramidImage(
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
 
-    transformImage(src_upperleft, src_lowerright, sa,
-            dest_upperleft, da,
-            ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
+    transformImageMP(src_upperleft, src_lowerright, sa,
+                     dest_upperleft, da,
+                     ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
 };
 
 /** Copy a vector image into a vector pyramid image.
@@ -407,9 +407,9 @@ void copyToPyramidImage(
         //        dest_upperleft, da,
         //        ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
-        transformImage(src_upperleft, src_lowerright, sa,
-                dest_upperleft, da,
-                ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        transformImageMP(src_upperleft, src_lowerright, sa,
+                         dest_upperleft, da,
+                         ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
 
 };
@@ -462,11 +462,10 @@ inline void copyFromPyramidImageIf(
     typedef typename DestImageType::value_type DestPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
 
-    transformImageIf(src_upperleft, src_lowerright, sa,
-            mask_upperleft, ma,
-            dest_upperleft, da,
-            ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
-
+    transformImageIfMP(src_upperleft, src_lowerright, sa,
+                       mask_upperleft, ma,
+                       dest_upperleft, da,
+                       ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
 };
 
 /** Copy a vector pyramid image into a vector image.
@@ -508,17 +507,18 @@ inline void copyFromPyramidImageIf(
                     ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
         }
         if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
-        //transformImageIf(src_upperleft, src_lowerright, sa,
+        //transformImageIfMP(src_upperleft, src_lowerright, sa,
         //        mask_upperleft, ma,
         //        dest_upperleft, da,
         //        ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
-        transformImageIf(src_upperleft, src_lowerright, sa,
-                mask_upperleft, ma,
-                dest_upperleft, da,
-                ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        // OpenMP changes the result here!  The maximum absolute
+        // difference is 1 of 255 for 8-bit images.  -- cls
+        transformImageIfMP(src_upperleft, src_lowerright, sa,
+                           mask_upperleft, ma,
+                           dest_upperleft, da,
+                           ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
-
 };
 
 // Compile-time switch based on scalar or vector image type.
@@ -565,3 +565,7 @@ inline void copyFromPyramidImageIf(
 } // namespace enblend
 
 #endif /* __FIXMATH_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

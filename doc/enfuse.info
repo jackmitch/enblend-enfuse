@@ -82,7 +82,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 3.2-staging-rev329, 18 April 2009),
+This manual is for Enfuse (version 3.2-staging-rev332, 18 April 2009),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -344,7 +344,7 @@ Common options control some overall features of Enfuse.
      Blend around the +/-180o boundary.  This is useful for full 360o
      panoramas.
 
-     Version 3.2-staging-rev329 of Enfuse, the one described here, does
+     Version 3.2-staging-rev332 of Enfuse, the one described here, does
      not blend neither zenith nor or nadir, so you may still see some
      seams in these areas.
 
@@ -651,7 +651,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 3.2-staging-rev329 of
+     grayscale masks: (R, G, B) -> Y.  In version 3.2-staging-rev332 of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 

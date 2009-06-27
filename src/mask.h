@@ -375,14 +375,14 @@ MaskType* createMask(const ImageType* const white,
         // 1 = outside both black and white image, or inside both images.
         // 255 = inside white image only.
         // 0 = inside black image only.
-        combineTwoImages(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                         stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
-                         nftInputBB.apply(destImage(*nftInputImage)),
-                         ifThenElse(Arg1() ^ Arg2(),
-                                    ifThenElse(Arg1(),
-                                               Param(NumericTraits<MaskPixelType>::max()),
-                                               Param(NumericTraits<MaskPixelType>::zero())),
-                                    Param(NumericTraits<MaskPixelType>::one())));
+        combineTwoImagesMP(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                           stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
+                           nftInputBB.apply(destImage(*nftInputImage)),
+                           ifThenElse(Arg1() ^ Arg2(),
+                                      ifThenElse(Arg1(),
+                                                 Param(NumericTraits<MaskPixelType>::max()),
+                                                 Param(NumericTraits<MaskPixelType>::zero())),
+                                      Param(NumericTraits<MaskPixelType>::one())));
 
         nearestFeatureTransform(wraparound,
                                 srcImageRange(*nftInputImage),
@@ -803,10 +803,10 @@ MaskType* createMask(const ImageType* const white,
     //                  !Visualize && !CoarseMask: iBB * UInt8
 
     // Calculate mismatch image
-    combineTwoImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
-                     stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
-                     destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                     PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
+    combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
+                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
+                       destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                       PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
 
     if (visualizeImage) {
         // Dump cost image into visualize image.
@@ -814,13 +814,13 @@ MaskType* createMask(const ImageType* const white,
     }
 
     // Areas other than intersection region have maximum cost.
-    combineThreeImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                       srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                       destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                       ifThenElse(Arg1() & Arg2(),
-                                  Arg3(),
-                                  Param(NumericTraits<MismatchImagePixelType>::max())));
+    combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                         stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                         srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                         destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                         ifThenElse(Arg1() & Arg2(),
+                                    Arg3(),
+                                    Param(NumericTraits<MismatchImagePixelType>::max())));
 
     // Strategy 1: Use GDA to optimize placement of snake vertices
     int segmentNumber;
@@ -937,22 +937,22 @@ MaskType* createMask(const ImageType* const white,
 
     // Adjust cost image for the shortest path algorithm.
     // Areas outside the union region have epsilon cost.
-    combineThreeImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                       srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                       destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                       ifThenElse(!(Arg1() || Arg2()),
-                                  Param(NumericTraits<MismatchImagePixelType>::one()),
-                                  Arg3()));
+    combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                         stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                         srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                         destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                         ifThenElse(!(Arg1() || Arg2()),
+                                    Param(NumericTraits<MismatchImagePixelType>::one()),
+                                    Arg3()));
 
     if (visualizeImage) {
-        combineThreeImages(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                           stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                           srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                           destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                           ifThenElse(Arg1() ^ Arg2(),
-                                      Param(VISUALIZE_NO_OVERLAP_VALUE),
-                                      Arg3()));
+        combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                             stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                             srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                             destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                             ifThenElse(Arg1() ^ Arg2(),
+                                        Param(VISUALIZE_NO_OVERLAP_VALUE),
+                                        Arg3()));
     }
 
     Rect2D withinMismatchImage(mismatchImageSize);
