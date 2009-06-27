@@ -425,6 +425,29 @@ MaskType* createMask(const ImageType* const white,
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
 
+    const double diagonalLength =
+        hypot(static_cast<double>(nftOutputImage->width()),
+              static_cast<double>(nftOutputImage->height()));
+    int vectorizeDistance =
+        MaskVectorizeDistance.isPercentage ?
+        static_cast<int>(ceil(MaskVectorizeDistance.value / 100.0 * diagonalLength)) :
+        MaskVectorizeDistance.value;
+    if (vectorizeDistance < minimumVectorizeDistance) {
+        cerr << command
+             << ": warning: mask vectorization distance "
+             << vectorizeDistance
+             << " ("
+             << 100.0 * vectorizeDistance / diagonalLength
+             << "% of diagonal) is smaller\n"
+             << command
+             << ": warning:   than minimum of " << minimumVectorizeDistance
+             << "; will use " << minimumVectorizeDistance << " ("
+             << 100.0 * minimumVectorizeDistance / diagonalLength
+             << "% of diagonal)"
+             << endl;
+        vectorizeDistance = minimumVectorizeDistance;
+    }
+
     Point2D borderUL(1, 1);
     Point2D borderLR(nftOutputImage->width() - 1, nftOutputImage->height() - 1);
     MaskIteratorType my = nftOutputImage->upperLeft() + Diff2D(1, 1);
@@ -480,7 +503,7 @@ MaskType* createMask(const ImageType* const white,
                     }
                     else {
                         // Current point is not frozen.
-                        if (distanceLastPoint % MaskVectorizeDistance == 0) {
+                        if (distanceLastPoint % vectorizeDistance == 0) {
                             snake->push_front(make_pair(true, currentPoint));
                             distanceLastPoint = 0;
                         } else {

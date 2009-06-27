@@ -23,7 +23,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging-rev316, 24 April 2009),
+This manual is for Enblend (version 3.2-staging-rev316, 27 April 2009),
 a tool for compositing images n such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -507,19 +507,21 @@ These options control the generation and the usage of masks.
      *note Table 3.1: Table:mask-generation.
 
     Stragegy 1: Simulated Annealing
+          Tune with option `--anneal' = K-MAX : TAU : DELTA-E-MAX :
+          DELTA-E-MIN.
+
           Simulated-Annealing
           (http://en.wikipedia.org/wiki/Simulated_annealing)
 
-          Tune with option `--anneal'.
-
     Stragegy 2: DIJKSTRA Shortest Path
+          Tune with option `--dijkstra' = RADIUS.
+
           DIJKSTRA algorithm
           (http://en.wikipedia.org/wiki/Dijkstra_algorithm)
 
-          Tune with option `--dijkstra-radius'.
 
-     Table 3.2: Enblend's two algorithms to optimize the seam line
-     between two images.
+     Table 3.2: Enblend's two strategies to optimize the seam lines
+     between images.
 
   `--anneal=K-MAX[:TAU[:DELTA-E-MAX[:DELTA-E-MIN]]]'
         Set the parameters of the Simulated Annealing optimizer used in
@@ -565,7 +567,7 @@ These options control the generation and the usage of masks.
 
           The defaults are: DELTA-E-MAX: 7000 and DELTA-E-MIN: 5.
 
-  `--dijkstra-radius=RADIUS'
+  `--dijkstra=RADIUS'
         Set the search RADIUS of the DIJKSTRA Shortest Path algorithm
      used in Optimizer Strategy 2 (see *note Table 3.2:
      Table:optimizer-strategies.).
@@ -578,34 +580,46 @@ These options control the generation and the usage of masks.
 
         Default: 25.
 
-  `--mask-vectorize-distance=DISTANCE'
-        Set the mask vectorization distance Enblend uses to partition
-     each seam.
+  `--mask-vectorize=DISTANCE'
+        Set the mask vectorization DISTANCE Enblend uses to partition
+     each seam.  Thus, break down the seam to segments of length
+     DISTANCE each.
 
         If Enblend uses a coarse mask (`--coarse-mask') or Enblend
      optimizes (`--optimize') a mask it vectorizes the initial seam
      line before performing further operations.  See *note Table 3.1:
      Table:mask-generation. for the precise conditions.  DISTANCE tells
-     Enblend how long to make each of the line segments called vectors.
+     Enblend how long to make each of the line segments called vectors
+     here.
 
-        The unit of DISTANCE is pixels.  In fine masks one mask pixel
+        The unit of DISTANCE is pixels unless it is a percentage as
+     explained in the next paragraph.  In fine masks one mask pixel
      corresponds to one pixel in the input image, whereas in coarse
-     masks one pixel represents 8 pixels in the input image (see also
-     option `--coarse-mask').
+     masks one pixel represents 8 pixels in the input image.
+
+        Append a percentage sign (`%') to DISTANCE to specify the
+     segment length as a fraction of the diagonal of the rectangle
+     including the overlap region.  Relative measures do not depend on
+     coarse or fine masks, they are recomputed for each mask.  Values
+     around 5%-10% are a good starting point.
 
         This option massively influences the mask generation process!
      Large DISTANCE values lead to shorter, straighter, less wiggly,
      less baroque seams that are on the other hand less optimal,
      because they run through regions of larger image mismatch instead
      of avoiding them.  Small DISTANCE values give the optimizers more
-     possibilities to let the seam run around high mismatch areas.
+     possibilities to run the seam around high mismatch areas.
 
-        What should _never_ happen are loops in the seam line.  Counter
-     loops with larger a vectorization DISTANCE and a TAU (in
+        What should _never_ happen though, are loops in the seam line.
+     Counter loops with larger a vectorization DISTANCE and a TAU (in
      option `--anneal') that is closer to one.  Use
      option `--visualize' to check the results.
 
-        Default: 4 for coarse masks and 20 for fine masks.
+        Valid range: DISTANCE >= 4.  Enblend limits DISTANCE so that it
+     never gets below 4 even if it has been given as a percentage.  The
+     user will be warned in such cases.
+
+        Default: 4pixels for coarse masks and 20pixels for fine masks.
 
   `--save-mask[=IMAGE-TEMPLATE]'
         Save the generated masks to IMAGE-TEMPLATE.  The default is
@@ -1386,67 +1400,67 @@ Version 1.2, November 2002
 Program Index
 *************
 
-ale:                                           See 6.        (line  892)
-align_image_stack (Hugin):                     See 6.        (line  899)
-cinepaint <1>:                                 See 6.        (line  911)
+ale:                                           See 6.        (line  906)
+align_image_stack (Hugin):                     See 6.        (line  913)
+cinepaint <1>:                                 See 6.        (line  925)
 cinepaint:                                     See 3.2.      (line  375)
-convert (ImageMagick):                         See 6.        (line  922)
-dcraw <1>:                                     See 6.        (line  882)
+convert (ImageMagick):                         See 6.        (line  936)
+dcraw <1>:                                     See 6.        (line  896)
 dcraw:                                         See 2.        (line   89)
-display (ImageMagick):                         See 6.        (line  922)
-exiftool:                                      See 6.        (line  950)
-exrdisplay (OpenEXR):                          See 6.        (line  928)
-fulla (Hugin):                                 See 6.        (line  899)
-gimp <1>:                                      See 6.        (line  918)
+display (ImageMagick):                         See 6.        (line  936)
+exiftool:                                      See 6.        (line  964)
+exrdisplay (OpenEXR):                          See 6.        (line  942)
+fulla (Hugin):                                 See 6.        (line  913)
+gimp <1>:                                      See 6.        (line  932)
 gimp <2>:                                      See 3.2.      (line  375)
 gimp:                                          See 2.        (line   89)
-gm (GraphicsMagick):                           See 6.        (line  922)
-hugin <1>:                                     See 6.        (line  896)
+gm (GraphicsMagick):                           See 6.        (line  936)
+hugin <1>:                                     See 6.        (line  910)
 hugin <2>:                                     See 3.2.      (line  399)
 hugin <3>:                                     See 2.        (line   89)
 hugin:                                         See 1.        (line   52)
-identify (ImageMagick) <1>:                    See 6.        (line  922)
-identify (ImageMagick):                        See 4.1.      (line  738)
-montage (ImageMagick):                         See 6.        (line  922)
-nona (Hugin) <1>:                              See 6.        (line  899)
+identify (ImageMagick) <1>:                    See 6.        (line  936)
+identify (ImageMagick):                        See 4.1.      (line  752)
+montage (ImageMagick):                         See 6.        (line  936)
+nona (Hugin) <1>:                              See 6.        (line  913)
 nona (Hugin):                                  See 3.2.      (line  399)
 PanoTools <1>:                                 See 2.        (line   89)
 PanoTools:                                     See 1.        (line   52)
-pfshdrcalibrate (PFScalibration):              See 6.        (line  931)
-pfsin (PFSTools):                              See 6.        (line  931)
-pfsout (PFSTools):                             See 6.        (line  931)
-pfstmo_* (PFStmo):                             See 6.        (line  931)
-pfsview (PFSTools):                            See 6.        (line  931)
-PTmender (PanoTools):                          See 6.        (line  904)
-PTOptimizer (PanoTools):                       See 6.        (line  904)
-tifficc (LittleCMS):                           See 6.        (line  954)
-tiffinfo (libtiff) <1>:                        See 6.        (line  946)
-tiffinfo (libtiff):                            See 4.1.      (line  738)
-ufraw <1>:                                     See 6.        (line  885)
+pfshdrcalibrate (PFScalibration):              See 6.        (line  945)
+pfsin (PFSTools):                              See 6.        (line  945)
+pfsout (PFSTools):                             See 6.        (line  945)
+pfstmo_* (PFStmo):                             See 6.        (line  945)
+pfsview (PFSTools):                            See 6.        (line  945)
+PTmender (PanoTools):                          See 6.        (line  918)
+PTOptimizer (PanoTools):                       See 6.        (line  918)
+tifficc (LittleCMS):                           See 6.        (line  968)
+tiffinfo (libtiff) <1>:                        See 6.        (line  960)
+tiffinfo (libtiff):                            See 4.1.      (line  752)
+ufraw <1>:                                     See 6.        (line  899)
 ufraw:                                         See 2.        (line   89)
-ufraw-batch:                                   See 6.        (line  885)
+ufraw-batch:                                   See 6.        (line  899)
 Option Index
 ************
 
---anneal:                                      See 3.3.      (line  525)
+--anneal:                                      See 3.3.      (line  527)
 --coarse-mask:                                 See 3.3.      (line  449)
 --compression:                                 See 3.1.      (line  184)
 --depth:                                       See 3.2.      (line  295)
---dijkstra-radius:                             See 3.3.      (line  569)
+--dijkstra:                                    See 3.3.      (line  571)
 --fine-mask:                                   See 3.3.      (line  483)
 --gpu:                                         See 3.2.      (line  383)
 --help:                                        See 3.1.      (line  220)
 --load-mask:                                   See 3.3.      (line  490)
---mask-vectorize-distance:                     See 3.3.      (line  582)
+--mask-vectorize:                              See 3.3.      (line  584)
 --no-optimize:                                 See 3.3.      (line  496)
 --optimize:                                    See 3.3.      (line  504)
 --output:                                      See 3.1.      (line  233)
---save-mask:                                   See 3.3.      (line  611)
+--save-mask:                                   See 3.3.      (line  625)
 --verbose:                                     See 3.1.      (line  240)
 --version:                                     See 3.1.      (line  245)
 --visualize:                                   See 3.2.      (line  413)
 -a:                                            See 3.1.      (line  176)
--b <1>:                                        See 5.        (line  812)
+-b <1>:                                        See 5.        (line  826)
 -b:                                            See 3.2.      (line  275)
 -c:                                            See 3.2.      (line  284)
 -d:                                            See 3.2.      (line  295)
@@ -1454,7 +1468,7 @@ Option Index
 -g:                                            See 3.2.      (line  371)
 -h:                                            See 3.1.      (line  220)
 -l:                                            See 3.1.      (line  223)
--m <1>:                                        See 5.        (line  812)
+-m <1>:                                        See 5.        (line  826)
 -m:                                            See 3.2.      (line  404)
 -o:                                            See 3.1.      (line  233)
 -V:                                            See 3.1.      (line  245)
@@ -1467,10 +1481,10 @@ General Index
 affine transformation:                         See 2.        (line  126)
 alpha channel:                                 See 2.        (line  147)
 alpha channel, associated:                     See 3.2.      (line  371)
-anneal parameters:                             See 3.3.      (line  525)
+anneal parameters:                             See 3.3.      (line  527)
 authors, list of:                              See Appendix A.
-                                                             (line  962)
-binary mask:                                   See 4.        (line  722)
+                                                             (line  976)
+binary mask:                                   See 4.        (line  736)
 bits per channel:                              See 3.2.      (line  295)
 Burt-Adelson multiresolution spline:           See 1.        (line   33)
 channel width:                                 See 3.2.      (line  295)
@@ -1484,74 +1498,75 @@ compression, LZW:                              See 3.1.      (line  204)
 compression, packbits:                         See 3.1.      (line  208)
 conversion, raw:                               See 2.        (line  113)
 deflate compression:                           See 3.1.      (line  198)
-DIJKSTRA radius:                               See 3.3.      (line  569)
+DIJKSTRA radius:                               See 3.3.      (line  571)
 double precision float, IEEE754:               See 3.2.      (line  347)
 feathering, detrimental effect of:             See 1.        (line   52)
 fine mask:                                     See 3.3.      (line  483)
 free documentation license (FDL):              See Appendix B.
-                                                             (line  991)
+                                                             (line 1005)
 general index:
-          See ``General Index''.                             (line 1467)
+          See ``General Index''.                             (line 1481)
 GNU free documentation license:                See Appendix B.
-                                                             (line  991)
+                                                             (line 1005)
 graphics processing unit GPU:                  See 3.2.      (line  383)
 half precision float, OpenEXR:                 See 3.2.      (line  362)
-helpful programs:                              See 6.        (line  878)
+helpful programs:                              See 6.        (line  892)
 IEEE754 double precision float:                See 3.2.      (line  347)
 IEEE754 single precision float:                See 3.2.      (line  338)
 image cache, block size:                       See 3.2.      (line  275)
 image cache, cache size:                       See 3.2.      (line  404)
 index, general:
-          See ``General Index''.                             (line 1467)
+          See ``General Index''.                             (line 1481)
 index, option:
-          See ``Option Index''.                              (line 1431)
+          See ``Option Index''.                              (line 1445)
 index, program:
-          See ``Program Index''.                             (line 1389)
-input mask:                                    See 4.1.      (line  734)
+          See ``Program Index''.                             (line 1403)
+input mask:                                    See 4.1.      (line  748)
 invocation:                                    See 3.        (line  166)
 JPEG compression:                              See 3.1.      (line  190)
 lens distortion, correction of:                See 2.        (line  126)
 levels, pyramid:                               See 3.1.      (line  223)
-LibJPEG:                                       See 6.        (line  935)
-LibPNG:                                        See 6.        (line  938)
-LibTiff:                                       See 6.        (line  942)
+LibJPEG:                                       See 6.        (line  949)
+LibPNG:                                        See 6.        (line  952)
+LibTiff:                                       See 6.        (line  956)
 load mask:                                     See 3.3.      (line  490)
+loops in seam line:                            See 3.3.      (line  613)
 LZW compression:                               See 3.1.      (line  204)
-mask template character, %:                    See 3.3.      (line  639)
-mask template character, B:                    See 3.3.      (line  688)
-mask template character, b:                    See 3.3.      (line  682)
-mask template character, D:                    See 3.3.      (line  679)
-mask template character, d:                    See 3.3.      (line  673)
-mask template character, E:                    See 3.3.      (line  707)
-mask template character, e:                    See 3.3.      (line  701)
-mask template character, F:                    See 3.3.      (line  697)
-mask template character, f:                    See 3.3.      (line  691)
-mask template character, i:                    See 3.3.      (line  642)
-mask template character, n:                    See 3.3.      (line  657)
-mask template character, P:                    See 3.3.      (line  670)
-mask template character, p:                    See 3.3.      (line  662)
-mask template characters, table of:            See 3.3.      (line  638)
-mask, binary:                                  See 4.        (line  722)
+mask template character, %:                    See 3.3.      (line  653)
+mask template character, B:                    See 3.3.      (line  702)
+mask template character, b:                    See 3.3.      (line  696)
+mask template character, D:                    See 3.3.      (line  693)
+mask template character, d:                    See 3.3.      (line  687)
+mask template character, E:                    See 3.3.      (line  721)
+mask template character, e:                    See 3.3.      (line  715)
+mask template character, F:                    See 3.3.      (line  711)
+mask template character, f:                    See 3.3.      (line  705)
+mask template character, i:                    See 3.3.      (line  656)
+mask template character, n:                    See 3.3.      (line  671)
+mask template character, P:                    See 3.3.      (line  684)
+mask template character, p:                    See 3.3.      (line  676)
+mask template characters, table of:            See 3.3.      (line  652)
+mask, binary:                                  See 4.        (line  736)
 mask, coarse:                                  See 3.3.      (line  449)
 mask, fine:                                    See 3.3.      (line  483)
 mask, generation:                              See 3.3.      (line  478)
-mask, input files:                             See 4.1.      (line  734)
+mask, input files:                             See 4.1.      (line  748)
 mask, load:                                    See 3.3.      (line  490)
 mask, optimization visualization:              See 3.2.      (line  413)
-mask, save:                                    See 3.3.      (line  611)
-mask, vectorization distance:                  See 3.3.      (line  582)
-mask, weight:                                  See 4.        (line  722)
-masks, understanding:                          See 4.        (line  722)
-memory, tuning usage of:                       See 5.        (line  812)
+mask, save:                                    See 3.3.      (line  625)
+mask, vectorization distance:                  See 3.3.      (line  584)
+mask, weight:                                  See 4.        (line  736)
+masks, understanding:                          See 4.        (line  736)
+memory, tuning usage of:                       See 5.        (line  826)
 nearest-feature transform (NFT):               See 3.3.      (line  478)
 OpenEXR, data format:                          See 3.2.      (line  358)
 OpenEXR, half precision float:                 See 3.2.      (line  362)
 optimize seam:                                 See 3.3.      (line  496)
 optimize strategy:                             See 3.3.      (line  509)
-optimize, anneal parameters:                   See 3.3.      (line  525)
-optimizer, simulated annealing:                See 3.3.      (line  525)
+optimize, anneal parameters:                   See 3.3.      (line  527)
+optimizer, simulated annealing:                See 3.3.      (line  527)
 option index:
-          See ``Option Index''.                              (line 1431)
+          See ``Option Index''.                              (line 1445)
 options, common:                               See 3.1.      (line  173)
 options, extended:                             See 3.2.      (line  271)
 options, mask generation:                      See 3.3.      (line  446)
@@ -1562,19 +1577,20 @@ packbits compression:                          See 3.1.      (line  208)
 parallax error:                                See 2.        (line  136)
 photometric alignment:                         See 2.        (line  128)
 program index:
-          See ``Program Index''.                             (line 1389)
-programs, helpful additional:                  See 6.        (line  878)
+          See ``Program Index''.                             (line 1403)
+programs, helpful additional:                  See 6.        (line  892)
 pyramid levels:                                See 3.1.      (line  223)
-radius, DIJKSTRA:                              See 3.3.      (line  569)
+radius, DIJKSTRA:                              See 3.3.      (line  571)
 raw conversion:                                See 2.        (line  113)
-save mask:                                     See 3.3.      (line  611)
+save mask:                                     See 3.3.      (line  625)
+seam line, loops:                              See 3.3.      (line  613)
 seam optimization:                             See 3.3.      (line  496)
-simulated annealing optimizer:                 See 3.3.      (line  525)
+simulated annealing optimizer:                 See 3.3.      (line  527)
 single precision float, IEEE754:               See 3.2.      (line  338)
 transformation, affine:                        See 2.        (line  126)
-understanding masks:                           See 4.        (line  722)
+understanding masks:                           See 4.        (line  736)
 visualization of mask optimization:            See 3.2.      (line  413)
-weight mask:                                   See 4.        (line  722)
+weight mask:                                   See 4.        (line  736)
 workflow:                                      See 2.        (line   78)
 workflow with Enblend:                         See 2.        (line   89)
 workflow with Enfuse:                          See 2.        (line   89)

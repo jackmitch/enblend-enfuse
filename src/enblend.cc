@@ -89,6 +89,7 @@ typedef struct {
 
 // Globals
 const std::string command("enblend");
+const int minimumVectorizeDistance = 4;
 const int coarseMaskVectorizeDistance = 4;
 const int fineMaskVectorizeDistance = 20;
 
@@ -120,7 +121,7 @@ std::string VisualizeTemplate("vis-%n.tif");
 bool VisualizeSeam = false;
 anneal_para_t AnnealPara = {32, 0.75, 7000.0, 5.0};
 unsigned int DijkstraRadius = 25;
-unsigned int MaskVectorizeDistance = 0;
+struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
 std::string OutputCompression;
 std::string OutputPixelType;
 TiffResolution ImageResolution;
@@ -265,10 +266,11 @@ void printUsageAndExit(const bool error = true) {
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
         "  --mask-vectorize=LENGTH\n" <<
-        "                         set LENGTH of single seam segment; defaults: \n" <<
+        "                         set LENGTH of single seam segment; append \"%\" for\n" <<
+        "                         relative value; defaults: " <<
+        coarseMaskVectorizeDistance << " for coarse masks and\n" <<
         "                         " <<
-        coarseMaskVectorizeDistance << " for coarse masks, " <<
-        fineMaskVectorizeDistance << " for fine masks\n"
+        fineMaskVectorizeDistance << " for fine masks\n" <<
         "  --anneal=KMAX[:TAU[:DELTAEMAX[:DELTAEMIN]]]\n" <<
         "                         set annealing parameters of strategy 1; defaults:\n" <<
         "                         " << AnnealPara.kmax << ':' << AnnealPara.tau << ':' <<
@@ -465,7 +467,7 @@ int process_options(int argc, char** argv) {
         {"visualize", optional_argument, 0, StringArgument},                   //  7
         {"anneal", required_argument, 0, StringArgument},                      //  8
         {"dijkstra", required_argument, 0, IntegerArgument},                   //  9
-        {"mask-vectorize", required_argument, 0, IntegerArgument},             // 10
+        {"mask-vectorize", required_argument, 0, StringArgument},              // 10
         {"compression", required_argument, 0, StringArgument},                 // 11
         {"verbose", no_argument, 0, NoArgument},                               // 12
         {"help", no_argument, 0, NoArgument},                                  // 13
@@ -703,6 +705,40 @@ int process_options(int argc, char** argv) {
                 optionSet.insert(AnnealOption);
                 break;
             }
+
+            case MaskVectorizeDistanceId: {
+                char* tail;
+                MaskVectorizeDistance.isPercentage = false;
+                errno = 0;
+                MaskVectorizeDistance.value = strtod(optarg, &tail);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--mask-vectorize\": illegal numeric format \""
+                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    if (*tail == '%') {
+                        MaskVectorizeDistance.isPercentage = true;
+                    } else {
+                        cerr << command
+                             << ": option \"--mask-vectorize\": trailing garbage \""
+                             << tail << "\" in \"" << optarg << "\"" << endl;
+                        exit(1);
+                    }
+                }
+                if (MaskVectorizeDistance.value <= 0.0) {
+                    cerr << command
+                         << ": option \"--mask-vectorize\": distance must be positive"
+                         << endl;
+                    exit(1);
+                }
+
+                optionSet.insert(MaskVectorizeDistanceOption);
+                break;
+            }
+
             default:
                 cerr << command
                      << ": internal error: unhandled \"StringArgument\" option"
@@ -725,10 +761,6 @@ int process_options(int argc, char** argv) {
             case DijkstraRadiusId:
                 optionUInt = &DijkstraRadius;
                 optionSet.insert(DijkstraRadiusOption);
-                break;
-            case MaskVectorizeDistanceId:
-                optionUInt = &MaskVectorizeDistance;
-                optionSet.insert(MaskVectorizeDistanceOption);
                 break;
             default:
                 cerr << command
@@ -1226,8 +1258,9 @@ int main(int argc, char** argv) {
         CoarseMask = false;
     }
 
-    if (MaskVectorizeDistance == 0) {
-        MaskVectorizeDistance =
+    if (MaskVectorizeDistance.value == 0) {
+        MaskVectorizeDistance.isPercentage = false;
+        MaskVectorizeDistance.value =
             CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance;
     }
 

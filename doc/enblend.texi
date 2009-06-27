@@ -912,26 +912,56 @@ optimizes (@option{--optimize}) a mask it vectorizes the initial seam
 line before performing further operations.  See
 @ref{Table:mask-generation} for the precise conditions.
 @var{DISTANCE} tells Enblend how long to make each of the line
-segments called vectors.
+segments called vectors here.
 
-The unit of @var{DISTANCE} is pixels.  In fine masks one mask pixel
+The unit of @var{DISTANCE} is pixels unless it is a percentage as
+explained in the next paragraph.  In fine masks one mask pixel
 corresponds to one pixel in the input image, whereas in coarse masks
-one pixel represents 8@tie{}pixels in the input image (see also
-option@tie{}@option{--coarse-mask}).
+one pixel represents 8@tie{}pixels in the input image.
+
+Append a percentage sign (@samp{%}) to @var{DISTANCE} to specify the
+segment length as a fraction of the diagonal of the rectangle
+including the overlap region.  Relative measures do not depend on
+coarse or fine masks, they are recomputed for each mask.  Values
+around 5%--10% are a good starting point.
 
 This option massively influences the mask generation process!  Large
 @var{DISTANCE} values lead to shorter, straighter, less wiggly, less
 baroque seams that are on the other hand less optimal, because they
 run through regions of larger image mismatch instead of avoiding them.
 Small @var{DISTANCE} values give the optimizers more possibilities to
-let the seam run around high mismatch areas.
+run the seam around high mismatch areas.
 
-What should @emph{never} happen are loops in the seam line.  Counter
-loops with larger a vectorization @var{DISTANCE} and a @var{TAU} (in
-option@tie{}@option{--anneal}) that is closer to one.  Use
-option@tie{}@option{--visualize} to check the results.
+@cindex seam line, loops
+@cindex loops in seam line
+What should @emph{never} happen though, are loops in the seam line.
+Counter loops with larger a vectorization @var{DISTANCE} and a
+@var{TAU} (in option@tie{}@option{--anneal}) that is closer to one.
+Use option@tie{}@option{--visualize} to check the results.
 
-Default: 4 for coarse masks and 20 for fine masks.
+Valid range:
+@ifinfo
+@var{DISTANCE} @geq{} 4.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mi mathvariant="italic">DISTANCE</mi>
+        <mo>&ge;</mo>
+        <mn>4</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$\mathit{DISTANCE} \ge 4$.
+@end tex
+Enblend limits @var{DISTANCE} so that it never gets below 4 even if it
+has been given as a percentage.  The user will be warned in such
+cases.
+
+Default: 4@dmn{pixels} for coarse masks and 20@dmn{pixels} for fine
+masks.
 
 @item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask

@@ -24,7 +24,24 @@
 // definitions of global variables.
 
 
+#include <sstream>
+
+
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
+
+
+struct AlternativePercentage {
+    double value;
+    bool isPercentage;
+
+    std::string str() const {
+        std::ostringstream oss;
+        oss << value;
+        if (isPercentage) {oss << "%";}
+        return oss.str();
+    }
+};
+
 
 #define DEFAULT_TIFF_RESOLUTION 300.0f
 

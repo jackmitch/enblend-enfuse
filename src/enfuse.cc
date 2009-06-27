@@ -48,7 +48,6 @@
 #include <iostream>
 #include <list>
 #include <set>
-#include <sstream>
 #include <vector>
 
 #ifndef _WIN32
@@ -78,17 +77,6 @@ extern "C" int optind;
 
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
-
-struct AlternativePercentage {
-    double value;
-    bool isPercentage;
-    std::string str() const {
-        std::ostringstream oss;
-        oss << value;
-        if (isPercentage) {oss << "%";}
-        return oss.str();
-    }
-};
 
 #include "global.h"
 
