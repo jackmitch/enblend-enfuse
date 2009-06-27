@@ -101,7 +101,7 @@ int Verbose = 0;
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
-bool Wraparound = false;
+boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
 bool UseCIECAM = false;
 bool OutputSizeGiven = false;
@@ -242,7 +242,10 @@ void printUsageAndExit(const bool error = true) {
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
-        "  -w                     blend across -180/+180 degrees boundary\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
+        "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
+        enblend::stringOfWraparound(WrapAround) << ";\n" <<
+        "                         without argument the option selects horizontal wrapping\n" <<
         "  -x                     checkpoint partial results\n" <<
         "  --compression=COMP     set compression of output image to COMP,\n" <<
         "                         where COMP is:\n" <<
@@ -287,7 +290,7 @@ void printUsageAndExit(const bool error = true) {
         "                         set annealing parameters of strategy 1; defaults:\n" <<
         "                         " << AnnealPara.tau << ':' <<
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
-        "  --dijkstra=RADIUS      set search RADIUS of stragegy 2; default: " <<
+        "  --dijkstra=RADIUS      set search RADIUS of strategy 2; default: " <<
         DijkstraRadius << "\n" <<
         "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
         SaveMaskTemplate << "\"\n" <<
@@ -335,7 +338,7 @@ void sigint_handler(int sig) {
 
 enum AllPossibleOptions {
     VersionOption, PreAssembleOption /* -a */, HelpOption, LevelsOption,
-    OutputOption, VerboseOption, Blend180Option /* -w */,
+    OutputOption, VerboseOption, WrapAroundOption /* -w */,
     CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
     BlockSizeOption, CIECAM02Option /* -c */,
     DepthOption, AssociatedAlphaOption /* -g */, GPUOption,
@@ -464,7 +467,8 @@ int process_options(int argc, char** argv) {
         HelpId,                     // 13
         VersionId,                  // 14
         DepthId,                    // 15
-        OutputId                    // 16
+        OutputId,                   // 16
+        WrapAroundId                // 17
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -486,6 +490,7 @@ int process_options(int argc, char** argv) {
         {"version", no_argument, 0, NoArgument},                               // 14
         {"depth", required_argument, 0, StringArgument},                       // 15
         {"output", required_argument, 0, StringArgument},                      // 16
+        {"wrap", optional_argument, 0, StringArgument},                        // 17
         {0, 0, 0, 0}
     };
 
@@ -497,7 +502,7 @@ int process_options(int argc, char** argv) {
     int option_index = 0;
     int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:svwxz",
+    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:svw::xz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -551,6 +556,19 @@ int process_options(int argc, char** argv) {
                 break;
             }
             switch (option_index) {
+            case WrapAroundId:
+                if (optarg != NULL && *optarg != 0) {
+                    WrapAround = enblend::wraparoundOfString(optarg);
+                    if (WrapAround == UnknownWrapAround) {
+                        cerr << command
+                             << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                        exit(1);
+                    }
+                } else {
+                    WrapAround = HorizontalStrip;
+                }
+                optionSet.insert(WrapAroundOption);
+                break;
             case SaveMaskId:
                 if (optarg != NULL && *optarg != 0) {
                     SaveMaskTemplate = optarg;
@@ -893,8 +911,17 @@ int process_options(int argc, char** argv) {
             optionSet.insert(VerboseOption);
             break;
         case 'w':
-            Wraparound = true;
-            optionSet.insert(Blend180Option);
+            if (optarg != NULL && *optarg != 0) {
+                WrapAround = enblend::wraparoundOfString(optarg);
+                if (WrapAround == UnknownWrapAround) {
+                    cerr << command
+                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    exit(1);
+                }
+            } else {
+                WrapAround = HorizontalStrip;
+            }
+            optionSet.insert(WrapAroundOption);
             break;
         case 'x':
             Checkpoint = true;

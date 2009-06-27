@@ -267,7 +267,9 @@ void enblendMain(const list<char*>& anInputFileNameList,
         }
 
         // Create the blend mask.
-        const bool wraparoundForMask = Wraparound && (uBB.width() == anInputUnion.width());
+        const bool wraparoundForMask =
+            WrapAround != OpenBoundaries &&
+            uBB.width() == anInputUnion.width();
 
         MaskType* mask =
             createMask<ImageType, AlphaType, MaskType>(whitePair.first, blackPair.first,
@@ -337,11 +339,13 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
         Rect2D roiBB;
-        unsigned int numLevels =
+        const unsigned int numLevels =
             roiBounds<ImagePixelComponentType>(anInputUnion,
                                                iBB, mBB, uBB, roiBB,
                                                wraparoundForMask);
-        bool wraparoundForBlend = Wraparound && (roiBB.width() == anInputUnion.width());
+        const bool wraparoundForBlend =
+            WrapAround != OpenBoundaries &&
+            roiBB.width() == anInputUnion.width();
 
         // Estimate memory requirements for this blend iteration
         if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {

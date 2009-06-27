@@ -37,6 +37,11 @@
 
 - Save masks with (lossless) "Deflate" compression.
 
+- An improved wrap-around option, formerly only "-w", now "-wMODE" and
+  "--wrap=MODE", lets the user determine whether to create a 360
+  degrees horizontal or vertical panorama.  It is possible to wrap
+  around vertically and horizontally at the same time.
+
 - Without any output filename given, i.e. no "-o" option, the output
   filename now defaults to "a.tif", making "-o" truly an option.
 

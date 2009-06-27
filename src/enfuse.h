@@ -1317,8 +1317,10 @@ void enfuseMain(const list<char*>& anInputFileNameList,
     }
 
     Rect2D junkBB;
-    unsigned int numLevels =
-        roiBounds<ImagePixelComponentType>(anInputUnion, anInputUnion, anInputUnion, anInputUnion, junkBB, Wraparound);
+    const unsigned int numLevels =
+        roiBounds<ImagePixelComponentType>(anInputUnion, anInputUnion, anInputUnion, anInputUnion,
+                                           junkBB,
+                                           WrapAround != OpenBoundaries);
 
     vector<ImagePyramidType*> *resultLP = NULL;
 
@@ -1337,7 +1339,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                                  ImagePyramidIntegerBits, ImagePyramidFractionBits,
                                  SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
                         oss0.str().c_str(),
-                        numLevels, Wraparound,
+                        numLevels, WrapAround != OpenBoundaries,
                         srcImageRange(*(imageTriple.first)),
                         maskImage(*(imageTriple.second)));
 
@@ -1362,10 +1364,13 @@ void enfuseMain(const list<char*>& anInputFileNameList,
         // maskGP is constructed using the union of the input alpha channels
         // as the boundary for extrapolation.
         vector<MaskPyramidType*> *maskGP =
-                gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
-                                MaskPyramidIntegerBits, MaskPyramidFractionBits,
-                                SKIPSMMaskPixelType, SKIPSMAlphaPixelType>(
-                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)), maskImage(*(outputPair.second)));
+            gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
+                            MaskPyramidIntegerBits, MaskPyramidFractionBits,
+                            SKIPSMMaskPixelType, SKIPSMAlphaPixelType>
+            (numLevels,
+             WrapAround != OpenBoundaries,
+             srcImageRange(*(imageTriple.third)),
+             maskImage(*(outputPair.second)));
 
         delete imageTriple.third;
 
@@ -1421,7 +1426,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
 
     //exportPyramid<ImagePyramidType>(resultLP, "resultLP");
 
-    collapsePyramid<SKIPSMImagePixelType>(Wraparound, resultLP);
+    collapsePyramid<SKIPSMImagePixelType>(WrapAround != OpenBoundaries, resultLP);
 
     outputPair.first = new ImageType(anInputUnion.size());
 

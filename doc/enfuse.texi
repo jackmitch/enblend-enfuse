@@ -434,10 +434,203 @@ Team this option with @option{--verbose} to inquire configuration
 details like the extra features that have been compiled in.
 
 @item -w
+@itemx --wrap=@var{MODE}
 @opindex -w
-@cindex 360@textdegree{} panorama
-Blend around the @plusminus{}180@textdegree{} boundary.  This is
-useful for full 360@textdegree{} panoramas.
+@opindex --wrap
+@cindex 360@textdegree{} panoramas
+@cindex wrap around
+Blend around the boundaries of the panorama.
+
+With this option Enfuse treats the panorama of width@tie{}@math{w} and
+height@tie{}@math{h} as an infinite data structure, where each
+pixel@tie{}@math{P(x, y)} of the input images represents the set of
+pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
+reminded of the
+@uref{http://@/en.wikipedia.org/@/wiki/@/Born-von_Karman_boundary_condition},
+@sc{Born}-@sc{von K@'arm@'an} boundary condition.}.
+
+@var{MODE} takes the following values:
+@table @samp
+@item none
+@itemx open
+This is a ``no-op''; it has the same effect as not giving
+@option{--wrap} at all.  The set of input images is considered open at
+its boundaries.
+
+@item horizontal
+Wrap around horizontally:
+@ifinfo
+@display
+@math{S_P(x, y) = @{P(x + m * w, y): m in Z@}.}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <msub>
+            <mi>S</mi>
+            <mi>P</mi>
+        </msub>
+        <mfenced>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfenced>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lcub;</mo>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mrow>
+                        <mi>x</mi>
+                        <mo>+</mo>
+                        <mi>m</mi>
+                        <mo>&InvisibleTimes;</mo>
+                        <mi>w</mi>
+                    </mrow>
+                    <mi>y</mi>
+                </mfenced>
+            </mrow>
+            <mo>:</mo>
+            <mrow>
+                <mi>m</mi>
+                <mtext>&ThickSpace;in&ThickSpace;</mtext>
+                <mi>Z</mi>
+            </mrow>
+            <mo>&rcub;</mo>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    S_P(x, y) = \{P(x + m w, y): m \in Z\}.
+$$
+@end tex
+This is useful for 360@textdegree{} horizontal panoramas as it
+eliminates the left and right borders.
+
+@item vertical
+Wrap around vertically:
+@ifinfo
+@display
+@math{S_P(x, y) = @{P(x, y + n * h): m in Z@}.}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <msub>
+            <mi>S</mi>
+            <mi>P</mi>
+        </msub>
+        <mfenced>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfenced>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lcub;</mo>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mi>x</mi>
+                    <mrow>
+                        <mi>y</mi>
+                        <mo>+</mo>
+                        <mi>n</mi>
+                        <mo>&InvisibleTimes;</mo>
+                        <mi>h</mi>
+                    </mrow>
+                </mfenced>
+            </mrow>
+            <mo>:</mo>
+            <mrow>
+                <mi>n</mi>
+                <mtext>&ThickSpace;in&ThickSpace;</mtext>
+                <mi>Z</mi>
+            </mrow>
+            <mo>&rcub;</mo>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    S_P(x, y) = \{P(x, y + n h): n \in Z\}.
+$$
+@end tex
+This is useful for 360@textdegree{} vertical panoramas as it
+eliminates the top and bottom borders.
+
+@item both
+@itemx horizontal+vertical
+@itemx vertical+horizontal
+Wrap around both horizontally and vertically:
+@ifinfo
+@display
+@math{S_P(x, y) = @{P(x + m * w, y + n * h): m, n in Z@}.}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <msub>
+            <mi>S</mi>
+            <mi>P</mi>
+        </msub>
+        <mfenced>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfenced>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lcub;</mo>
+            <mrow>
+                <mi>P</mi>
+                <mfenced>
+                    <mrow>
+                        <mi>x</mi>
+                        <mo>+</mo>
+                        <mi>m</mi>
+                        <mo>&InvisibleTimes;</mo>
+                        <mi>w</mi>
+                    </mrow>
+                    <mrow>
+                        <mi>y</mi>
+                        <mo>+</mo>
+                        <mi>n</mi>
+                        <mo>&InvisibleTimes;</mo>
+                        <mi>h</mi>
+                    </mrow>
+                </mfenced>
+            </mrow>
+            <mo>:</mo>
+            <mrow>
+                <mrow>
+                    <mi>m</mi>
+                    <mo>,</mo>
+                    <mi>n</mi>
+                </mrow>
+                <mtext>&ThickSpace;in&ThickSpace;</mtext>
+                <mi>Z</mi>
+            </mrow>
+            <mo>&rcub;</mo>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
+$$
+@end tex
+In this mode both, left and right borders as well as top and bottom
+borders are eliminated.
+@end table
+
+Specifying @option{--wrap} without @var{MODE} selects horizontal
+wrapping.
 
 Version@tie{}@value{VERSION} of Enfuse, the one described here, does
 not blend neither zenith nor or nadir, so you may still see some seams

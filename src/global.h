@@ -43,6 +43,18 @@ struct AlternativePercentage {
 };
 
 
+/** The different kinds of boundary conditions we can impose upon an
+ *  image. */
+typedef enum BoundaryKind
+{
+    UnknownWrapAround,          // unknown kind
+    OpenBoundaries,             // contractible
+    HorizontalStrip,            // contractible along 2nd axis
+    VerticalStrip,              // contractible along 1st axis
+    DoubleStrip                 // non-contractible
+} boundary_t;
+
+
 #define DEFAULT_TIFF_RESOLUTION 300.0f
 
 

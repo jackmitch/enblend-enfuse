@@ -91,7 +91,7 @@ std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 int Verbose = 0;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
-bool Wraparound = false;
+boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
 bool UseCIECAM = false;
 bool OutputSizeGiven = false;
@@ -232,7 +232,9 @@ void printUsageAndExit(const bool error = true) {
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
-        "  -w                     blend across -180/+180 degrees boundary\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
+        "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
+        enblend::stringOfWraparound(WrapAround) << ";\n" <<
         "  --compression=COMP     set compression of output image to COMP,\n" <<
         "                         where COMP is:\n" <<
         "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
@@ -343,7 +345,7 @@ void sigint_handler(int sig) {
 
 enum AllPossibleOptions {
     VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
-    Blend180Option /* -w */, CompressionOption, LZWCompressionOption,
+    WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
     BlockSizeOption, CIECAM02Option /* -c */,
     DepthOption, AssociatedAlphaOption /* -g */,
     SizeAndPositionOption /* -f */, CacheSizeOption,
@@ -520,7 +522,8 @@ int process_options(int argc, char** argv) {
         VersionId,               // 18
         DepthId,                 // 19
         OutputId,                // 20
-        SaveMasksId              // 21
+        SaveMasksId,             // 21
+        WrapAroundId             // 22
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -547,6 +550,7 @@ int process_options(int argc, char** argv) {
         {"depth", required_argument, 0, StringArgument},                 // 19
         {"output", required_argument, 0, StringArgument},                // 20
         {"SaveMasks", optional_argument, 0, StringArgument},             // 21
+        {"wrap", optional_argument, 0, StringArgument},                  // 22
         {0, 0, 0, 0}
     };
 
@@ -558,7 +562,7 @@ int process_options(int argc, char** argv) {
     int option_index = 0;
     int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vwz",
+    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vw::z",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -607,6 +611,19 @@ int process_options(int argc, char** argv) {
                 break;
             }
             switch (option_index) {
+            case WrapAroundId:
+                if (optarg != NULL && *optarg != 0) {
+                    WrapAround = enblend::wraparoundOfString(optarg);
+                    if (WrapAround == UnknownWrapAround) {
+                        cerr << command
+                             << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                        exit(1);
+                    }
+                } else {
+                    WrapAround = HorizontalStrip;
+                }
+                optionSet.insert(WrapAroundOption);
+                break;
             case MinCurvatureId: {
                 char *tail;
                 errno = 0;
@@ -1018,8 +1035,17 @@ int process_options(int argc, char** argv) {
             optionSet.insert(VerboseOption);
             break;
         case 'w':
-            Wraparound = true;
-            optionSet.insert(Blend180Option);
+            if (optarg != NULL && *optarg != 0) {
+                WrapAround = enblend::wraparoundOfString(optarg);
+                if (WrapAround == UnknownWrapAround) {
+                    cerr << command
+                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    exit(1);
+                }
+            } else {
+                WrapAround = HorizontalStrip;
+            }
+            optionSet.insert(WrapAroundOption);
             break;
         case 'z':
             cerr << command

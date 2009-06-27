@@ -119,17 +119,6 @@ typedef enum
 } nearest_neigbor_metric_t;
 
 
-/** The different kinds of boundary conditions we can impose upon an
- *  image. */
-typedef enum BoundaryKind
-{
-    OpenBoundaries,             // contractible
-    HorizontalStrip,            // contractible along 2nd axis
-    VerticalStrip,              // contractible along 1st axis
-    DoubleStrip                 // non-contractible
-} boundary_t;
-
-
 /** String tokenizer similar to strtok_r().
  *  In contrast to strtok_r this function returns an empty string for
  *  each pair of successive delimiters.  Function strtok_r skips them.
@@ -205,6 +194,42 @@ getFileType(const std::string& aFileName)
     else if (ext == "VIF") return "VIFF";
     else if (ext == "PBM" || ext == "PGM" || ext == "PPM") return "PNM";
     else return ext;
+}
+
+
+/** Convert aWraparoundMode given as string to the internal
+ *  representation as enum. */
+boundary_t
+wraparoundOfString(const char* aWraparoundMode)
+{
+    const std::string mode = toUppercase(std::string(aWraparoundMode));
+
+    if (mode == "NONE" || mode == "OPEN") return OpenBoundaries;
+    else if (mode == "HORIZONTAL") return HorizontalStrip;
+    else if (mode == "VERTICAL") return VerticalStrip;
+    else if (mode == "BOTH" ||
+             mode == "HORIZONTAL+VERTICAL" ||
+             mode == "VERTICAL+HORIZONTAL") return DoubleStrip;
+    else return UnknownWrapAround;
+}
+
+
+/** Convert aBoundaryMode to its string representation. */
+std::string stringOfWraparound(boundary_t aBoundaryMode)
+{
+    switch (aBoundaryMode)
+    {
+    case OpenBoundaries:
+        return "none";
+    case HorizontalStrip:
+        return "horizontal";
+    case VerticalStrip:
+        return "vertical";
+    case DoubleStrip:
+        return "both";
+    default:
+        assert(false);
+    }
 }
 
 
