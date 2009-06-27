@@ -492,7 +492,10 @@ protected:
 #endif
 
         kMax = 1;
-        for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
+        for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
             if (convergedPoints[index]) {
                 continue;
             }
@@ -525,19 +528,25 @@ protected:
 
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
-                cerr << command
-                     << ": warning: new mean field estimate outside cost image"
-                     << endl;
-                for (unsigned int state = 0; state < localK; ++state) {
+#ifdef OPENMP
+#pragma omp critical
+#endif
+                {
                     cerr << command
-                         << ": info:    state " << (*stateSpace)[state]
-                         << " weight = "
-                         << (*stateProbabilities)[state]
+                         << ": warning: new mean field estimate outside cost image"
                          << endl;
-                }
-                cerr << command
-                     << ": info:    new estimate = " << newEstimate
-                     << endl;
+                    for (unsigned int state = 0; state < localK; ++state) {
+                        cerr << command
+                             << ": info:    state " << (*stateSpace)[state]
+                             << " weight = "
+                             << (*stateProbabilities)[state]
+                             << endl;
+                    }
+                    cerr << command
+                         << ": info:    new estimate = " << newEstimate
+                         << endl;
+                } // omp critical
+
                 // Skip this point from now on.
                 convergedPoints[index] = true;
                 continue;
@@ -575,7 +584,12 @@ protected:
             if (localK < 2) {
                 convergedPoints[index] = true;
             }
-            kMax = std::max(static_cast<size_t>(kMax), stateProbabilities->size());
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            {
+                kMax = std::max(static_cast<size_t>(kMax), stateProbabilities->size());
+            } // omp critical
         }
     }
 
