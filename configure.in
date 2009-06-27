@@ -87,7 +87,7 @@ AC_CHECK_LIB(GLEW, glewInit,
              [no_glew=yes
               can_use_gpu=no
               missing_for_gpu="$missing_for_gpu GLEW"
-              AC_MSG_WARN([[GLEW not found, disabling GPU mode.]])],
+              AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
              [])
 if test $can_use_gpu = no; then
     no_gpu_reason=", because of missing$missing_for_gpu"

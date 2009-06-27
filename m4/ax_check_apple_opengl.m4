@@ -33,8 +33,11 @@ AC_DEFUN([AX_CHECK_APPLE_OPENGL],
 AC_DEFINE([HAVE_APPLE_OPENGL_FRAMEWORK], 1,
           [Use the Apple OpenGL framework.])
 
+AC_PATH_X
+ACX_PTHREAD
+
 # GL
-GL_CFLAGS="${GL_CFLAGS}"
+dnl GL_CFLAGS=
 GL_LIBS="${GL_LIBS} -framework OpenGL -framework AGL"
 
 # GLU
@@ -53,12 +56,11 @@ AC_CACHE_CHECK([for OpenGL Utility library],
                         ax_try_lib="${ax_lib}"
                     fi
                     LIBS="${ax_try_lib} ${GL_LIBS} ${ax_save_LIBS}"
-                    #
-                    # libGLU typically links with libstdc++ on POSIX platforms. However,
-                    # setting the language to C++ means that test program source is named
-                    # "conftest.cc"; and Microsoft cl doesn't know what to do with such a
-                    # file.
-                    #
+                    dnl libGLU typically links with libstdc++ on POSIX
+                    dnl platforms.  However, setting the language to
+                    dnl C++ means that test program source is named
+                    dnl "conftest.cc"; and Microsoft cl does not know
+                    dnl what to do with such a file.
                     AC_LANG_PUSH([C++])
                     if test X$ax_compiler_ms = Xyes; then
                         AC_LANG_PUSH([C])
@@ -66,10 +68,10 @@ AC_CACHE_CHECK([for OpenGL Utility library],
                     AC_LINK_IFELSE(
                     [AC_LANG_PROGRAM(
 [[
-if HAVE_WINDOWS_H && defined(_WIN32)
-  include <windows.h>
-endif
-include <GL/glu.h>
+#if HAVE_WINDOWS_H && defined(_WIN32)
+#include<windows.h>
+#endif
+#include <GL/glu.h>
 ]],
 [[
 gluBeginCurve(0)

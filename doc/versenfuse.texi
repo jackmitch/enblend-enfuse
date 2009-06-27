@@ -1,4 +1,4 @@
 @set UPDATED 18 April 2009
 @set UPDATED-MONTH April 2009
-@set EDITION 3.2-staging-rev315
-@set VERSION 3.2-staging-rev315
+@set EDITION 3.2-staging-rev316
+@set VERSION 3.2-staging-rev316
