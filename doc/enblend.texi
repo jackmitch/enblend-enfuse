@@ -571,6 +571,10 @@ These options control the generation and the usage of masks.
 Use a scaled-down version of the input images to create the seam line.
 This is the default.
 
+In the current version of Enblend the scale-down factor is 8, this is,
+option@tie{}@option{--coarse-mask} shrinks the overlapping areas by a
+factor of 64.
+
 @item --fine-mask
 @opindex --fine-mask
 @cindex mask, fine
@@ -784,9 +788,15 @@ The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
 @end table
 
 @item --dijkstra-radius=@var{RADIUS}
+@opindex --dijkstra-radius
+@cindex Dijkstra radius
+@cindex radius, Dijkstra
 Set the search @var{RADIUS} of the
 @uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm, Dijkstra
-algorithm} used in optimizer strategy@tie{}2.
+algorithm} used in optimizer strategy@tie{}2.  A small value prefers
+straight line segments and thus shorter seam lines.  Larger values
+instruct the optimizer to let the seam line take more detours when
+searching for the best seam line.
 
 Valid range:
 @ifinfo
@@ -807,6 +817,24 @@ $\mathit{RADIUS} \ge 0$.
 @end tex
 
 Default: 25.
+
+@item --mask-vectorize-distance=@var{DISTANCE}
+@opindex --mask-vectorize-distance
+@cindex mask, vectorization distance
+Set the mask vectorization distance Enblend uses to partition each
+seam.
+
+If Enblend uses a coarse mask (@option{--coarse-mask}) or Enblend
+optimizes (@option{--optimize}) a mask it vectorizes the initial seam
+line before performing further operations.  @var{DISTANCE} tells
+Enblend how long to make each of the segments (``vectors'').
+
+The unit of @var{DISTANCE} is pixels.  In fine masks a mask pixel
+corresponds to a pixel in the input image.  For coarse masks one pixel
+in the mask represents 8@tie{}pixels in the input image (see also
+option@tie{}@option{--coarse-mask}).
+
+Default: 4 for coarse masks and 20 for fine masks.
 
 @item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask

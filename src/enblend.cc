@@ -89,6 +89,8 @@ typedef struct {
 
 // Globals
 const std::string command("enblend");
+const int coarseMaskVectorizeDistance = 4;
+const int fineMaskVectorizeDistance = 20;
 
 // Random number generator for dithering
 boost::mt19937 Twister;
@@ -261,6 +263,11 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
+        "  --mask-vectorize-distance=LENGTH\n" <<
+        "                         set LENGTH of single seam segment; defaults: \n" <<
+        "                         " <<
+        coarseMaskVectorizeDistance << " for coarse masks, " <<
+        fineMaskVectorizeDistance << " for fine masks\n"
         "  --anneal=KMAX[:TAU[:DELTAEMAX[:DELTAEMIN]]]\n" <<
         "                         set annealing parameters of strategy 1; defaults:\n" <<
         "                         " << AnnealPara.kmax << ':' << AnnealPara.tau << ':' <<
@@ -321,9 +328,9 @@ enum AllPossibleOptions {
     VisualizeOption, CoarseMaskOption, FineMaskOption,
     OptimizeOption, NoOptimizeOption,
     SaveMaskOption, LoadMaskOption,
-    AnnealOption, DijkstraRadiusOption,
+    AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     // currently below the radar...
-    SequentialBlendingOption, MaskVectorizeDistanceOption
+    SequentialBlendingOption
 };
 
 typedef std::set<enum AllPossibleOptions> OptionSetType;
@@ -383,6 +390,15 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
                 ": warning:     has no effect" <<
                 endl;
         }
+
+    }
+
+    if (!(OptimizeMask || CoarseMask) && contains(optionSet, MaskVectorizeDistanceOption)){
+        cerr << command <<
+            ": warning: option \"--mask-vectorize-distance\" without mask optimization\n" <<
+            command <<
+            ": warning:     or coarse mask has no effect" <<
+            endl;
     }
 
 #ifndef ENBLEND_CACHE_IMAGES
@@ -1185,7 +1201,8 @@ int main(int argc, char** argv) {
     }
 
     if (MaskVectorizeDistance == 0) {
-        MaskVectorizeDistance = CoarseMask ? 4 : 20;
+        MaskVectorizeDistance =
+            CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance;
     }
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
