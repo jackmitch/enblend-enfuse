@@ -19,15 +19,6 @@ AC_LANG(C++)
 
 AC_C_BIGENDIAN
 
-AC_OPENMP
-CFLAGS="$CFLAGS $OPENMP_CFLAGS"
-CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
-if test -z "$OPENMP_CXXFLAGS"; then
-    enable_openmp=no
-else
-    enable_openmp=yes
-fi
-
 # Checks for libraries.
 AC_CHECK_LIB(z, gzopen,
              [],
@@ -270,7 +261,7 @@ AC_CHECK_PROG(GNUPLOT,
               gnuplot,
               false)
 if test "x$GNUPLOT" = xfalse; then
-    AC_MSG_WARN(Cannot find gnuplot; will not be able to build documentation.)
+    AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc gnuplot"
 fi
@@ -292,7 +283,7 @@ for dir in $GDFONTPATH; do \
 done
 IFS="$orig_ifs"
 if test $have_freesans_font != yes; then
-    AC_MSG_WARN(Cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange.)
+    AC_MSG_WARN(cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange)
 fi
 
 AC_CHECK_PROG(FIG2DEV,
@@ -300,7 +291,7 @@ AC_CHECK_PROG(FIG2DEV,
               fig2dev,
               false)
 if test "x$FIG2DEV" = xfalse; then
-    AC_MSG_WARN(Cannot find fig2dev; will not be able to build documentation.)
+    AC_MSG_WARN(cannot find fig2dev; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc fig2dev"
 fi
@@ -314,7 +305,7 @@ AC_CHECK_PROG(MAKEINFO,
               makeinfo,
               false)
 if test "x$MAKEINFO" = xfalse; then
-    AC_MSG_WARN(Cannot find makeinfo; will not be able to build documentation.)
+    AC_MSG_WARN(cannot find makeinfo; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc makeinfo"
 fi
@@ -324,7 +315,7 @@ dnl               texi2dvi,
 dnl               texi2dvi,
 dnl               false)
 dnl if test "x$TEXI2DVI" = xfalse; then
-dnl   AC_MSG_WARN(Cannot find texi2dvi; will not be able to build documentation.)
+dnl   AC_MSG_WARN(cannot find texi2dvi; will not be able to build documentation)
 dnl   can_build_doc=no
 dnl   missing_for_doc="$missing_for_doc texi2dvi"
 dnl fi
@@ -334,7 +325,7 @@ dnl               texi2pdf,
 dnl               texi2pdf,
 dnl               false)
 dnl if test "x$TEXI2PDF" = xfalse; then
-dnl   AC_MSG_WARN(Cannot find texi2pdf; will not be able to build documentation.)
+dnl   AC_MSG_WARN(cannot find texi2pdf; will not be able to build documentation)
 dnl   can_build_doc=no
 dnl   missing_for_doc="$missing_for_doc texi2pdf"
 dnl fi
@@ -344,7 +335,7 @@ dnl               dvips,
 dnl               dvips,
 dnl               false)
 dnl if test "x$DVIPS" = xfalse; then
-dnl   AC_MSG_WARN(Cannot find dvips; will not be able to build documentation.)
+dnl   AC_MSG_WARN(cannot find dvips; will not be able to build documentation)
 dnl   can_build_doc=no
 dnl   missing_for_doc="$missing_for_doc dvips"
 dnl fi
@@ -414,6 +405,24 @@ else
     enable_image_cache=no
 fi
 
+if test "x$enable_openmp" = "xyes" \
+     -o "x$enable_openmp" = "xYES" \
+     -o "x$enable_openmp" = "xYes"; then
+    AC_OPENMP
+fi
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
+if test -z "$OPENMP_CXXFLAGS"; then
+    enable_openmp=no
+else
+    if test $enable_image_cache = yes; then
+        AC_MSG_WARN([[image cache and OpenMP support are mutually exclusive]])
+        AC_MSG_WARN([[only configure like this if you want to develop a reentrant image cache]])
+        warnings=`echo -e "$warnings\n WARNING: Image cache and OpenMP are both enabled!  You are a developer, aren't you?"`
+    fi
+    enable_openmp=yes
+fi
+
 AC_CONFIG_FILES([doc/entropy.gp
                  doc/entropy-cutoff.gp
                  doc/gaussian.gp
@@ -450,4 +459,4 @@ AC_MSG_RESULT([
    enable malloc debugging:        ${enable_dmalloc}
    use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
-])
+${warnings}])

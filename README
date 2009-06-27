@@ -71,10 +71,12 @@ Among the usual configuration options of the GNU autoconf system, the
 Enfuse.
 
 
-** --enable-openmp=YES/no
+** --enable-openmp=yes/NO
 
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
+Note that OpenMP support and the image-cache cannot be activated both.
+The default is to configure with image-cache and without OpenMP.
 
 
 ** --enable-split-doc=YES/no

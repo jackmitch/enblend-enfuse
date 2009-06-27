@@ -98,12 +98,6 @@ nearestFeatureTransform2(bool wraparound,
 
     typedef typename DestAccessor::value_type DestPixelType;
     typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
-#ifdef OPENMP
-// BasicImage is reentrant whereas CachedFileImage is not (yet).
-#define REENTRANT_IMAGETYPE BasicImage
-#else
-#define REENTRANT_IMAGETYPE IMAGETYPE
-#endif
 
     if (wraparound)
     {
@@ -131,7 +125,7 @@ nearestFeatureTransform2(bool wraparound,
 #pragma omp section
 #endif
         {
-            REENTRANT_IMAGETYPE<SrcPixelType> diff12(size);
+            IMAGETYPE<SrcPixelType> diff12(size);
             combineTwoImages(src1_upperleft, src1_lowerright, sa1,
                              src2_upperleft, sa2,
                              diff12.upperLeft(), diff12.accessor(),
@@ -149,7 +143,7 @@ nearestFeatureTransform2(bool wraparound,
                 cerr << " 2/3";
                 cerr.flush();
             }
-            REENTRANT_IMAGETYPE<SrcPixelType> diff21(size);
+            IMAGETYPE<SrcPixelType> diff21(size);
             combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
                              src1_upperleft, sa1,
                              diff21.upperLeft(), diff21.accessor(),
