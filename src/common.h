@@ -36,6 +36,7 @@
 #define PATH_OPTION_DELIMITERS ",;:"
 
 #define MASK_COMPRESSION "DEFLATE"
+#define TIFF_RESOLUTION 300.0
 
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.

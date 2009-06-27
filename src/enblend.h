@@ -309,6 +309,8 @@ void enblendMain(const list<char*>& anInputFileNameList,
                          << ": info: saving mask \"" << maskFilename << "\"" << endl;
                 }
                 ImageExportInfo maskInfo(maskFilename.c_str());
+                maskInfo.setXResolution(TIFF_RESOLUTION);
+                maskInfo.setYResolution(TIFF_RESOLUTION);
                 maskInfo.setPosition(uBB.upperLeft());
                 maskInfo.setCompression(MASK_COMPRESSION);
                 exportImage(srcImageRange(*mask), maskInfo);

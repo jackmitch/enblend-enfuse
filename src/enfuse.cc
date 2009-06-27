@@ -1436,8 +1436,8 @@ int main(int argc, char** argv) {
     }
 
     // Set the output image position and resolution.
-    outputImageInfo.setXResolution(300.0);
-    outputImageInfo.setYResolution(300.0);
+    outputImageInfo.setXResolution(TIFF_RESOLUTION);
+    outputImageInfo.setYResolution(TIFF_RESOLUTION);
     outputImageInfo.setPosition(inputUnion.upperLeft());
 
     // Sanity check on the output image file.
