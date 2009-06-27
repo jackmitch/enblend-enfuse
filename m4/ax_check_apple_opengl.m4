@@ -33,9 +33,6 @@ AC_DEFUN([AX_CHECK_APPLE_OPENGL],
 AC_DEFINE([HAVE_APPLE_OPENGL_FRAMEWORK], 1,
           [Use the Apple OpenGL framework.])
 
-AC_PATH_X
-ACX_PTHREAD
-
 # GL
 dnl GL_CFLAGS=
 GL_LIBS="${GL_LIBS} -framework OpenGL -framework AGL"
