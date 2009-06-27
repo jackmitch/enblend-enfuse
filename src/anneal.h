@@ -87,9 +87,9 @@ public:
         E(NULL), Pi(NULL), EF(NULL), PiF(NULL) {
         kMax = 1;
 
-        int costImageShortDimension = std::min(costImage->width(), costImage->height());
+        const int costImageShortDimension = std::min(costImage->width(), costImage->height());
         // Determine state space of currentPoint
-        int stateSpaceWidth = costImageShortDimension / 3;
+        const int stateSpaceWidth = costImageShortDimension / 3;
 
         slist<pair<bool, Point2D> >::iterator last = v->previous(v->end());
         Point2D previousPoint = last->second;
@@ -101,10 +101,10 @@ public:
 
             mfEstimates.push_back(currentPoint);
 
-            vector<Point2D> *stateSpace = new vector<Point2D>();
+            vector<Point2D>* stateSpace = new vector<Point2D>();
             pointStateSpaces.push_back(stateSpace);
 
-            vector<int> *stateDistances = new vector<int>();
+            vector<int>* stateDistances = new vector<int>();
             pointStateDistances.push_back(stateDistances);
 
             if (currentMoveable) {
@@ -126,17 +126,20 @@ public:
                 Diff2D rightPoint = currentPoint - normal;
 
                 // Choose a reasonable number of state points between these extremes
-                int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
-                                          std::abs(rightPoint.y - leftPoint.y));
+                const int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
+                                                std::abs(rightPoint.y - leftPoint.y));
                 const int spaceBetweenPoints =
                     static_cast<int>(ceil(lineLength / static_cast<double>(AnnealPara.kmax)));
 
                 LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
                 for (int i = 0; i < (lineLength + 1) / 2; ++i, ++linePoint) {
-                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
-                    if (!costImage->isInside(*linePoint)) {break;}
-                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {break;}
-                    else if (i % spaceBetweenPoints == 0) {
+                    // Stop searching along the line if we leave the
+                    // cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) {
+                        break;
+                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                        break;
+                    } else if (i % spaceBetweenPoints == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
@@ -148,10 +151,13 @@ public:
                 linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
                 for (int i = 1; i < 1 + lineLength / 2; ++i, ++linePoint) {
-                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
-                    if (!costImage->isInside(*linePoint)) {break;}
-                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {break;}
-                    else if (i % spaceBetweenPoints == 0) {
+                    // Stop searching along the line if we leave the
+                    // cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) {
+                        break;
+                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                        break;
+                    } else if (i % spaceBetweenPoints == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
@@ -235,12 +241,14 @@ public:
                                                      + 0.5)));
 
             if (Verbose > VERBOSE_GDA_MESSAGES) {
-                cerr << endl
+                const std::ios_base::fmtflags ioFlags(cerr.flags());
+                cerr << "\n"
                      << command
-                     << ": info: t = " << scientific << setprecision(2) << tCurrent
+                     << ": info: t = " << scientific << setprecision(3) << tCurrent
                      << ", eta = " << setw(4) << eta
                      << ", k_max = " << setw(3) << kMax;
                 cerr.flush();
+                cerr.flags(ioFlags);
             }
 
             for (unsigned int i = 0; i < eta; i++) {
@@ -262,7 +270,8 @@ public:
                 cerr.flush();
             }
             else if (Verbose > VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
-                cerr << " " << progressIndicator++ << "/4";
+                cerr << " " << progressIndicator << "/4";
+                progressIndicator++;
                 cerr.flush();
             }
 
@@ -295,9 +304,9 @@ public:
                     cerr << command
                          << ": info: unconverged point: "
                          << endl;
-                    vector<Point2D> *stateSpace = pointStateSpaces[i];
-                    vector<double> *stateProbabilities = pointStateProbabilities[i];
-                    unsigned int localK = stateSpace->size();
+                    vector<Point2D>* stateSpace = pointStateSpaces[i];
+                    vector<double>* stateProbabilities = pointStateProbabilities[i];
+                    const unsigned int localK = stateSpace->size();
                     for (unsigned int state = 0; state < localK; ++state) {
                         cerr << command
                              << ": info:    state " << (*stateSpace)[state]
@@ -312,7 +321,9 @@ public:
         }
     }
 
-    vector<Point2D>& getCurrentPoints() {return mfEstimates;}
+    const vector<Point2D>& getCurrentPoints() const {
+        return mfEstimates;
+    }
 
 protected:
     void calculateStateProbabilities() {
@@ -427,8 +438,12 @@ protected:
             for (unsigned int i = 0; i < localK; ++i) {
                 Point2D currentPoint = (*stateSpace)[i];
                 EFbase[4 * i] = (*stateDistances)[i];
-                if (lastPointInCostImage) EFbase[4 * i] += costImageCost(lastPointEstimate, currentPoint);
-                if (nextPointInCostImage) EFbase[4 * i] += costImageCost(currentPoint, nextPointEstimate);
+                if (lastPointInCostImage) {
+                    EFbase[4 * i] += costImageCost(lastPointEstimate, currentPoint);
+                }
+                if (nextPointInCostImage) {
+                    EFbase[4 * i] += costImageCost(currentPoint, nextPointEstimate);
+                }
                 PiFbase[4 * i] = static_cast<float>((*stateProbabilities)[i]);
             }
             for (unsigned int i = localK; i < kMax; ++i) {
@@ -493,12 +508,12 @@ protected:
             double totalWeight = 0.0;
             bool hasHighWeightState = false;
             for (unsigned int k = 0; k < localK; ++k) {
-                double weight = (*stateProbabilities)[k];
+                const double weight = (*stateProbabilities)[k];
                 totalWeight += weight;
                 if (weight > 0.99) {
                     hasHighWeightState = true;
                 }
-                Point2D state = (*stateSpace)[k];
+                const Point2D state = (*stateSpace)[k];
                 estimateX += weight * static_cast<double>(state.x);
                 estimateY += weight * static_cast<double>(state.y);
             }
@@ -532,9 +547,9 @@ protected:
 
             // Remove improbable solutions from the search space
             double totalWeights = 0.0;
-            double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
+            const double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
             for (unsigned int k = 0; k < stateSpace->size(); ) {
-                double weight = (*stateProbabilities)[k];
+                const double weight = (*stateProbabilities)[k];
                 if (weight < cutoffWeight) {
                     // Replace this state with last state
                     (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
@@ -560,13 +575,14 @@ protected:
             if (localK < 2) {
                 convergedPoints[index] = true;
             }
-            kMax = std::max((size_t)kMax, stateProbabilities->size());
+            kMax = std::max(static_cast<size_t>(kMax), stateProbabilities->size());
         }
     }
 
     int costImageCost(const Point2D& start, const Point2D& end) {
         int cost = 0;
-        int lineLength = std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
+        const int lineLength =
+            std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
 
         if (lineLength > 0) {
             LineIterator<CostIterator> lineStart(costImage->upperLeft() + start,
@@ -586,12 +602,23 @@ protected:
 
     bool segmentIntersect(const Point2D& l1a, const Point2D& l1b,
                           const Point2D& l2a, const Point2D& l2b) {
-        int denom = (l2b.y - l2a.y)*(l1b.x - l1a.x) - (l2b.x - l2a.x)*(l1b.y - l1a.y);
-        if (denom == 0) {return false;} // lines are parallel or coincident
-        int uaNum = (l2b.x - l2a.x)*(l1a.y - l2a.y) - (l2b.y - l2a.y)*(l1a.x - l2a.x);
-        int ubNum = (l1b.x - l1a.x)*(l1a.y - l2a.y) - (l1b.y - l1a.y)*(l1a.x - l2a.x);
-        if (denom < 0) {uaNum *= -1; ubNum *= -1; denom *= -1;}
-        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) {return true;}
+        const int denom =
+            (l2b.y - l2a.y) * (l1b.x - l1a.x) - (l2b.x - l2a.x) * (l1b.y - l1a.y);
+        if (denom == 0) {
+            return false;       // lines are parallel or coincident
+        }
+        const int uaNum =
+            (l2b.x - l2a.x) * (l1a.y - l2a.y) - (l2b.y - l2a.y) * (l1a.x - l2a.x);
+        const int ubNum =
+            (l1b.x - l1a.x) * (l1a.y - l2a.y) - (l1b.y - l1a.y) * (l1a.x - l2a.x);
+        if (denom < 0) {
+            uaNum *= -1;
+            ubNum *= -1;
+            denom *= -1;
+        }
+        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) {
+            return true;
+        }
         return false;
     }
 
@@ -602,12 +629,12 @@ protected:
     vector<Point2D> mfEstimates;
 
     // State spaces of each point
-    vector<vector<Point2D>* > pointStateSpaces;
+    vector<vector<Point2D>*> pointStateSpaces;
 
     // Probability vectors for each state space
-    vector<vector<double>* > pointStateProbabilities;
+    vector<vector<double>*> pointStateProbabilities;
 
-    vector<vector<int>* > pointStateDistances;
+    vector<vector<int>*> pointStateDistances;
 
     // Flags indicate which points have converged
     vector<bool> convergedPoints;
@@ -634,12 +661,12 @@ protected:
     unsigned int kMax;
 
     // Data arrays for CPU probability calculations
-    int *E;
-    double *Pi;
+    int* E;
+    double* Pi;
 
     // Data arrays for GPU probability calculations
-    float *EF;
-    float *PiF;
+    float* EF;
+    float* PiF;
 };
 
 
@@ -652,9 +679,10 @@ void annealSnake(const CostImage* const ci,
 
     cfg.run();
 
-    slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
-    vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
-    for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
+    vector<Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
+    for (slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
+         snakePoint != snake->end();
+         ++snakePoint, ++annealedPoint) {
         snakePoint->second = *annealedPoint;
     }
 }

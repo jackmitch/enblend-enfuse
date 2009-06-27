@@ -390,8 +390,22 @@ MaskType* createMask(const ImageType* const white,
                             destIter(nftOutputImage->upperLeft() + nftOutputOffset),
                             NumericTraits<MaskPixelType>::one());
 
-    //ImageExportInfo nftmaskinfo("enblend_nft.tif");
-    //exportImage(srcImageRange(*nftOutputImage), nftmaskinfo);
+#ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
+    const std::string nftMaskTemplate(command + "-nft-%n.tif");
+    const std::string nftMaskFilename =
+            enblend::expandFilenameTemplate(nftMaskTemplate,
+                                            numberOfImages,
+                                            *inputFileNameIterator,
+                                            OutputFileName,
+                                            m);
+    if (Verbose > VERBOSE_NFT_MESSAGES) {
+        cerr << command
+             << ": info: saving nearest-feature-transform mask image \""
+             << nftMaskFilename << "\"" << endl;
+    }
+    ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
+    exportImage(srcImageRange(*nftOutputImage), nftMaskInfo);
+#endif
 
     // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
     //                     !CoarseMask: uBB * UInt32 * 2
@@ -499,7 +513,6 @@ MaskType* createMask(const ImageType* const white,
                     // not be found again.
                     (*nftOutputImage)[*vertexIterator] = NumericTraits<MaskPixelType>::one();
                 }
-
             }
 
             lastColor = *mx;
@@ -567,7 +580,9 @@ MaskType* createMask(const ImageType* const white,
         for (Segment::iterator vertexIterator = snake->begin();
              vertexIterator != snake->end();
              ++vertexIterator) {
-            if (vertexIterator->first) lastMoveableVertex = vertexIterator;
+            if (vertexIterator->first) {
+                lastMoveableVertex = vertexIterator;
+            }
         }
 
         Segment* currentSegment = NULL;
@@ -665,7 +680,6 @@ MaskType* createMask(const ImageType* const white,
             for (Segment::iterator vertexIterator = (*currentSegment)->begin();
                  vertexIterator != (*currentSegment)->end();
                  ++vertexIterator) {
-
                 if (vertexIterator->first) {
                     if (!initializedVBB) {
                         vBB = Rect2D(vertexIterator->second, Size2D(1, 1));
@@ -679,8 +693,7 @@ MaskType* createMask(const ImageType* const white,
                     }
 
                     foundFirstMoveableVertex = true;
-                }
-                else if (foundFirstMoveableVertex) {
+                } else if (foundFirstMoveableVertex) {
                     // First nonmoveable vertex at end of run.
                     vBB |= vertexIterator->second;
                     break;
@@ -776,7 +789,6 @@ MaskType* createMask(const ImageType* const white,
         for (Contour::iterator currentSegment = (*currentContour)->begin();
              currentSegment != (*currentContour)->end();
              ++currentSegment, ++segmentNumber) {
-
             Segment* snake = *currentSegment;
 
             if (Verbose > VERBOSE_MASK_MESSAGES) {

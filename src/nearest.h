@@ -49,48 +49,49 @@ namespace enblend {
 // The metric to use for calculating distances.
 #define EUCLIDEAN_METRIC
 
+
 template <typename dist_t>
-inline dist_t _nftDistance(dist_t deltaX, dist_t deltaY) {
-    #ifdef EUCLIDEAN_METRIC
-        return (deltaY == NumericTraits<dist_t>::max())
-                ? deltaY
-                : (deltaY + (deltaX * deltaX));
-    #else
-    #ifdef CHESSBOARD_METRIC
-        return max(deltaX, deltaY);
-    #else
-    #ifdef MANHATTAN_METRIC
-        return (deltaY == NumericTraits<dist_t>::max())
-                ? deltaY
-                : (deltaX + deltaY);
-    #endif
-    #endif
-    #endif
-};
+inline dist_t _nftDistance(dist_t deltaX, dist_t deltaY)
+{
+#if defined(EUCLIDEAN_METRIC)
+    return deltaY == NumericTraits<dist_t>::max()
+        ? deltaY
+        : deltaY + deltaX * deltaX;
+#elif defined(CHESSBOARD_METRIC)
+    return max(deltaX, deltaY);
+#elif defined(MANHATTAN_METRIC)
+    return deltaY == NumericTraits<dist_t>::max()
+        ? deltaY
+        : deltaX + deltaY;
+#else
+#error no metric defined
+#endif
+}
+
 
 // Distance to a pixel with the same x coordinate.
 template <typename dist_t>
-inline dist_t _nftDistance(dist_t deltaY) {
-    #ifdef EUCLIDEAN_METRIC
-        return deltaY * deltaY;
-    #else
-    #ifdef CHESSBOARD_METRIC
-        return deltaY;
-    #else
-    #ifdef MANHATTAN_METRIC
-        return deltaY;
-    #endif
-    #endif
-    #endif
-};
+inline dist_t _nftDistance(dist_t deltaY)
+{
+#if defined(EUCLIDEAN_METRIC)
+    return deltaY * deltaY;
+#elif defined(CHESSBOARD_METRIC)
+    return deltaY;
+#elif defined(MANHATTAN_METRIC)
+    return deltaY;
+#else
+#error no metric defined
+#endif
+}
+
 
 /** Data structure for potentialFeatureStack.
  *  Contribution from Fulvio Senore.
  *  Fast insert and delete, avoiding dynamic memory allocation.
  */
 template <typename T>
-class FeatureList {
-
+class FeatureList
+{
     struct Node {
         T value;
         Node *prev;
@@ -108,7 +109,6 @@ class FeatureList {
     Node *iterator;
 
 public:
-
     FeatureList(int size) {
         array = new Node[size];
         firstUnused = array;
@@ -142,7 +142,7 @@ public:
     }
 
     bool has_previous() const {
-        return (iterator->prev != NULL);
+        return iterator->prev != NULL;
     }
 
     void erase_previous() {
@@ -161,27 +161,27 @@ public:
         iterator = iterator->prev;
     }
 
-    bool empty() {
-        return (last == NULL);
+    bool empty() const {
+        return last == NULL;
     }
-
 };
 
+
 /** Compute the nearest feature transform.
- *  A non-zero pixel in the src image is considered a feature.
- *  Each pixel in the dest image is given the value of the nearest feature
+ *  A non-zero pixel in the src image is considered a feature.  Each
+ *  pixel in the dest image is given the value of the nearest feature
  *  to that pixel.
  */
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 void nearestFeatureTransform(bool wraparound,
-        SrcImageIterator src_upperleft,
-        SrcImageIterator src_lowerright,
-        SrcAccessor sa,
-        DestImageIterator dest_upperleft,
-        DestAccessor da,
-        typename SrcAccessor::value_type featurelessPixel) {
-
+                             SrcImageIterator src_upperleft,
+                             SrcImageIterator src_lowerright,
+                             SrcAccessor sa,
+                             DestImageIterator dest_upperleft,
+                             DestAccessor da,
+                             typename SrcAccessor::value_type featurelessPixel)
+{
     typedef typename EnblendNumericTraits<UInt32>::ImageType DNFImage;
     typedef typename DNFImage::traverser DnfIterator;
     typedef typename SrcAccessor::value_type SrcValueType;
@@ -191,24 +191,24 @@ void nearestFeatureTransform(bool wraparound,
     DnfIterator dnflx, dnfly;
     DestImageIterator dx, dy;
 
-    int w = src_lowerright.x - src_upperleft.x;
-    int h = src_lowerright.y - src_upperleft.y;
+    const int w = src_lowerright.x - src_upperleft.x;
+    const int h = src_lowerright.y - src_upperleft.y;
 
     // Distance to the nearest feature in the current column.
-    DNFImage *dnfColumn = new DNFImage(w, h);
+    DNFImage* dnfColumn = new DNFImage(w, h);
     // Distance to the nearest feature in the current column, or any
     // column to the left of this column.
-    DNFImage *dnfLeft = new DNFImage(w, h);
+    DNFImage* dnfLeft = new DNFImage(w, h);
 
     // Data structures for initializing dnfColumn.
     // These let us initialize all of the columns in one pass
-    // over the rows of the image. Cache-friendly.
+    // over the rows of the image.  Cache-friendly.
     SrcValueType* lastFeature = new SrcValueType[w];
     bool* foundFirstFeature = new bool[w];
     UInt32* lastFeatureDeltaY = new UInt32[w];
 
-    // Initialize dnfColumn top-down. Store the distance to the nearest feature
-    // in the same column and above us.
+    // Initialize dnfColumn top-down.  Store the distance to the
+    // nearest feature in the same column and above us.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) {
             cerr << command << ": info: creating blend mask: 1/6";
@@ -257,9 +257,9 @@ void nearestFeatureTransform(bool wraparound,
         }
     }
 
-    // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
-    // feature in the same column and below us.
-    // If this is smaller than the value caluclated in the top-down pass,
+    // Initialize dnfColumn bottom-up. Caluclate the distance to the
+    // nearest feature in the same column and below us.  If this is
+    // smaller than the value caluclated in the top-down pass,
     // overwrite that value.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) {
@@ -308,10 +308,9 @@ void nearestFeatureTransform(bool wraparound,
                 // time before commenting out this line: 19.52
                 // time after commenting out this line: 18.23
                 //da.set(lastFeature[xIndex], dx);
-            }
-            else if (foundFirstFeature[xIndex]) {
+            } else if (foundFirstFeature[xIndex]) {
                 // Source pixel is not a feature
-                UInt32 distLastFeature = _nftDistance(lastFeatureDeltaY[xIndex]);
+                const UInt32 distLastFeature = _nftDistance(lastFeatureDeltaY[xIndex]);
                 if (distLastFeature < *dnfcx) {
                     // Feature below us is closer than feature above us.
                     *dnfcx = distLastFeature;
@@ -325,7 +324,7 @@ void nearestFeatureTransform(bool wraparound,
 
     // List of dnfcx's on the left that might be the closest features
     // to the current dnflx.
-    FeatureList<typename DnfIterator::MoveX> potentialFeatureList((wraparound) ? w*2 : w);
+    FeatureList<typename DnfIterator::MoveX> potentialFeatureList(wraparound ? 2 * w : w);
 
     // Calculate dnfLeft for each pixel.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
@@ -338,7 +337,7 @@ void nearestFeatureTransform(bool wraparound,
     }
     sy = src_upperleft;
     send = src_lowerright;
-    smidpoint = src_upperleft + Diff2D(w/2, h/2);
+    smidpoint = src_upperleft + Diff2D(w / 2, h / 2);
     dnfcy = dnfColumn->upperLeft();
     dnfly = dnfLeft->upperLeft();
     dy = dest_upperleft;
@@ -355,7 +354,7 @@ void nearestFeatureTransform(bool wraparound,
         // If wraparound is true, we must go across the row twice.
         // This takes care of the case when the nearest feature is reached by
         // wrapping around the image.
-        for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
+        for (int twiceAround = wraparound ? 1 : 0; twiceAround >= 0; twiceAround--) {
             sx = sy;
             dnfcx = dnfcy;
             dnflx = dnfly;
@@ -375,12 +374,15 @@ void nearestFeatureTransform(bool wraparound,
                     }
 
                     potentialFeatureList.move_to_end();
-                    typename DnfIterator::MoveX firstFeature = potentialFeatureList.get_current();
+                    typename DnfIterator::MoveX firstFeature =
+                        potentialFeatureList.get_current();
                     int deltaX = (dnfcx.x - firstFeature) % w;
-                    if (deltaX < 0) deltaX += w;
-                    distPotentialFeature = _nftDistance((UInt32)deltaX, dnfcx(firstFeature - dnfcx.x, 0));
-                }
-                else {
+                    if (deltaX < 0) {
+                        deltaX += w;
+                    }
+                    distPotentialFeature = _nftDistance(static_cast<UInt32>(deltaX),
+                                                        dnfcx(firstFeature - dnfcx.x, 0));
+                } else {
                     // First add ourself to the list.
                     potentialFeatureList.push_back(dnfcx.x);
 
@@ -393,18 +395,22 @@ void nearestFeatureTransform(bool wraparound,
 
                 while (potentialFeatureList.has_previous()) {
                     // X coordinate of the predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
+                    typename DnfIterator::MoveX previousFeature =
+                        potentialFeatureList.get_previous();
 
                     // Subtract the X coordinates to find out how many
                     // columns to the left of dnfcx previousFeature is.
                     // DeltaX must be positive.
                     // modulo w to consider wraparound condition.
                     int deltaX = (dnfcx.x - previousFeature) % w;
-                    if (deltaX < 0) deltaX += w;
+                    if (deltaX < 0) {
+                        deltaX += w;
+                    }
 
                     // previousFeature is this far from dnfcx.
                     UInt32 distPreviousFeature =
-                            _nftDistance((UInt32)deltaX, dnfcx(previousFeature - dnfcx.x, 0));
+                        _nftDistance(static_cast<UInt32>(deltaX),
+                                     dnfcx(previousFeature - dnfcx.x, 0));
 
                     if (distPreviousFeature >= distPotentialFeature) {
                         // previousFeature is not a candidate for dnflx
@@ -422,14 +428,15 @@ void nearestFeatureTransform(bool wraparound,
                 *dnflx = distPotentialFeature;
 
                 // Set color of dx to be color of closest feature to the left.
-                da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
+                da.set(dx(potentialFeatureList.get_current() - dnfcx.x, 0), dx);
             }
         }
     }
 
-    // Final pass: calculate the distance to the nearest feature in the same
-    // column or any column to the right. If this is smaller than dnflx,
-    // Then recolor the pixel to the color of the nearest feature to the right.
+    // Final pass: calculate the distance to the nearest feature in
+    // the same column or any column to the right. If this is smaller
+    // than dnflx, Then recolor the pixel to the color of the nearest
+    // feature to the right.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) {
             cerr << " 5/6";
@@ -440,7 +447,7 @@ void nearestFeatureTransform(bool wraparound,
     }
     sy = src_lowerright;
     send = src_upperleft;
-    smidpoint = src_upperleft + Diff2D(w/2, h/2);
+    smidpoint = src_upperleft + Diff2D(w / 2, h / 2);
     dnfcy = dnfColumn->lowerRight();
     dnfly = dnfLeft->lowerRight();
     dy = dest_upperleft + Diff2D(w, h);
@@ -459,9 +466,9 @@ void nearestFeatureTransform(bool wraparound,
         potentialFeatureList.clear();
 
         // If wraparound is true, we must go across the row twice.
-        // This takes care of the case when the nearest feature is reached by
-        // wrapping around the image.
-        for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
+        // This takes care of the case when the nearest feature is
+        // reached by wrapping around the image.
+        for (int twiceAround = wraparound ? 1 : 0; twiceAround >= 0; twiceAround--) {
             sx = sy;
             dnfcx = dnfcy;
             dnflx = dnfly;
@@ -479,17 +486,21 @@ void nearestFeatureTransform(bool wraparound,
                     // No feature in current column.
 
                     if (potentialFeatureList.empty()) {
-                        // No features to the right. Nearest feature must be to the left.
+                        // No features to the right. Nearest feature
+                        // must be to the left.
                         continue;
                     }
 
                     potentialFeatureList.move_to_end();
-                    typename DnfIterator::MoveX firstFeature = potentialFeatureList.get_current();
+                    typename DnfIterator::MoveX firstFeature =
+                        potentialFeatureList.get_current();
                     int deltaX = (firstFeature - dnfcx.x) % w;
-                    if (deltaX < 0) deltaX += w;
-                    distPotentialFeature = _nftDistance((UInt32)deltaX, dnfcx(firstFeature - dnfcx.x, 0));
-                }
-                else {
+                    if (deltaX < 0) {
+                        deltaX += w;
+                    }
+                    distPotentialFeature = _nftDistance(static_cast<UInt32>(deltaX),
+                                                        dnfcx(firstFeature - dnfcx.x, 0));
+                } else {
                     // First add ourself to the list.
                     potentialFeatureList.push_back(dnfcx.x);
 
@@ -499,18 +510,22 @@ void nearestFeatureTransform(bool wraparound,
 
                 while (potentialFeatureList.has_previous()) {
                     // X coordinate of the predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
+                    typename DnfIterator::MoveX previousFeature =
+                        potentialFeatureList.get_previous();
 
                     // Subtract the X coordinates to find out how many
                     // columns to the right of dnfcx previousFeature is.
                     // DeltaX must be positive.
                     // modulo w to consider wraparound condition.
                     int deltaX = (previousFeature - dnfcx.x) % w;
-                    if (deltaX < 0) deltaX += w;
+                    if (deltaX < 0) {
+                        deltaX += w;
+                    }
 
                     // previousFeature is this far from dnfcx.
                     UInt32 distPreviousFeature =
-                            _nftDistance((UInt32)deltaX, dnfcx(previousFeature - dnfcx.x, 0));
+                        _nftDistance(static_cast<UInt32>(deltaX),
+                                     dnfcx(previousFeature - dnfcx.x, 0));
 
                     if (distPreviousFeature >= distPotentialFeature) {
                         // previousFeature is not a candidate.
@@ -527,7 +542,7 @@ void nearestFeatureTransform(bool wraparound,
                     // Following line only necessary for advanced mask generation.
                     //*dnflx = distPotentialFeature;
                     // Recolor dx.
-                    da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
+                    da.set(dx(potentialFeatureList.get_current() - dnfcx.x, 0), dx);
                 }
             }
         }
@@ -542,23 +557,21 @@ void nearestFeatureTransform(bool wraparound,
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         cerr << endl;
     }
+}
 
-    return;
-};
 
 // Version using argument object factories.
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 inline void nearestFeatureTransform(bool wraparound,
-        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-        pair<DestImageIterator, DestAccessor> dest,
-        typename SrcAccessor::value_type featurelessPixel) {
-
+                                    triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                                    pair<DestImageIterator, DestAccessor> dest,
+                                    typename SrcAccessor::value_type featurelessPixel)
+{
     nearestFeatureTransform(wraparound,
-            src.first, src.second, src.third,
-            dest.first, dest.second, featurelessPixel);
-
-};
+                            src.first, src.second, src.third,
+                            dest.first, dest.second, featurelessPixel);
+}
 
 } // namespace enblend
 

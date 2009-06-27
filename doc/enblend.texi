@@ -130,7 +130,7 @@ see.
 @cindex Burt-Adelson multiresolution spline
 Enblend overlays multiple @acronym{TIFF} images using the
 @sc{Burt}-@sc{Adelson} multiresolution spline
-algorithm.@footnote{Peter J. Burt and Edward H. Adelson, ``A
+algorithm.@footnote{@sc{Peter J. Burt} and @sc{Edward H. Adelson}, ``A
 Multiresolution Spline With Application to Image Mosaics'',
 @acronym{ACM} Transactions on Graphics, @abbr{Vol@.} 2, @abbr{No@.} 4,
 October 1983, pages 217--236.}  This technique tries to make the seams
@@ -552,8 +552,9 @@ non-overlapping parts of the image pair with dark red.
 The optimizer's samples are shown in blue.  If a sample is the first
 of a line segment it is painted in light green; non-first line
 segments are drawn in darker green.  Cyan points indicate state space
-samples inside the Dijkstra radius.  Non-converged points are drawn
-in magenta color.  The final seam line is shown in bright yellow.
+samples inside the @sc{Dijkstra} radius.  Non-converged points are
+drawn in magenta color.  The final seam line is shown in bright
+yellow.
 @end table
 
 
@@ -571,16 +572,61 @@ These options control the generation and the usage of masks.
 Use a scaled-down version of the input images to create the seam line.
 This is the default.
 
-In the current version of Enblend the scale-down factor is 8, this is,
-option@tie{}@option{--coarse-mask} shrinks the overlapping areas by a
-factor of 64.
+In the current version of Enblend the scale factor is @math{1/8}, this
+means, option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of 64 and thus reduces the number of
+computations necessary to compute the seam line by an order of
+magnitude.
+
+Also see @ref{Table:mask-generation}.
+
+@float Table,Table:mask-generation
+@multitable @columnfractions 0.25 0.333 0.333
+@headitem @tab @code{--no-optimize} @tab @code{--optimize}
+
+@item @code{--fine-mask}
+@c no opt
+@tab
+Use @acronym{NFT} mask.
+
+@c opt
+@tab
+Vectorize @acronym{NFT} mask, optimize vertices with simulated
+annealing and @sc{Dijkstra's} shortest path algorithm, fill vector
+contours.
+
+@item @code{--coarse-mask}
+@c no opt
+@tab
+Scale down overlap region, compute @acronym{NFT} mask and vectorize
+it, fill vector contours.
+
+@c opt
+@tab
+Scale down overlap region, vectorize @acronym{NFT} mask, optimize
+vertices with simulated annealing and @sc{Dijkstra's} shortest path
+algorithm, fill vector contours.
+@end multitable
+
+@caption{Various options that control the generation of masks.  All
+mask computations are based on the Nearest-Feature Transformation
+(@acronym{NFT}) of the overlap region.}
+
+@shortcaption{Mask generation options}
+
+@cindex nearest-feature transform (@acronym{NFT})
+@cindex mask, generation
+@end float
 
 @item --fine-mask
 @opindex --fine-mask
 @cindex mask, fine
 @cindex fine mask
-Use the full-size images to create the seam line.  This can be slow.
-Use @option{--fine-mask} if you have very narrow overlap regions.
+Instruct Enblend to employ the full-size images to create the seam
+line, which can be slow.  Use this option, for example, if you have
+very narrow overlap regions.
+
+Also see @ref{Table:mask-generation}.
 
 @item --load-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --load-mask
@@ -595,8 +641,17 @@ See @option{--save-mask} below for details.
 @opindex --no-optimize
 @cindex optimize seam
 @cindex seam optimization
-Turn off seam line optimization.  Combined with @option{--fine-mask}
-this will produce the same type of mask as Enblend version@tie{}2.5.
+Turn off seam line optimization.  Combined with
+option@tie{}@option{--fine-mask} this will produce the same type of
+mask as Enblend version@tie{}2.5, namely the result of a
+@cindex nearest-feature transform (@acronym{NFT})
+Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
+H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
+of Binary Images'', Proceedings of the International Conference on
+Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
+and II, pages 83--86.}
+
+Also see @ref{Table:mask-generation}.
 
 @item --optimize
 @opindex --optimize
@@ -604,16 +659,41 @@ this will produce the same type of mask as Enblend version@tie{}2.5.
 @cindex seam optimization
 Use a two-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
+@ref{Table:optimizer-strategies} explains these strategies.  Also see
+@ref{Table:mask-generation}.
+
+@float Table,Table:optimizer-strategies
+@cindex optimize strategy
+@table @asis
+@item Stragegy 1: Simulated Annealing
+Tune with option@tie{}@code{--anneal} = @var{K-MAX} : @var{TAU} :
+@var{DELTA-E-MAX} : @var{DELTA-E-MIN}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
+Simulated-Annealing}
+
+
+@item Stragegy 2: @sc{Dijkstra} Shortest Path
+Tune with option@tie{}@code{--dijkstra-radius} = @var{RADIUS}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm,
+@sc{Dijkstra} algorithm}
+
+@end table
+@caption{Enblend's two strategies to optimize the seam lines between
+images.}
+
+@shortcaption{optimizer strategies}
+@end float
 
 @item --anneal=@var{K-MAX}[:@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}]]]
 @opindex --anneal
 @cindex optimize, anneal parameters
 @cindex anneal parameters
 @cindex simulated annealing optimizer
-@cindex optimizer, simulated annealing (strategy@tie{}1)
-Set the parameters of the
-@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
-Simulated-Annealing} optimizer used in optimizer strategy@tie{}1.
+@cindex optimizer, simulated annealing
+Set the parameters of the Simulated Annealing optimizer used in
+Optimizer Strategy@tie{}1 (see @ref{Table:optimizer-strategies}).
 
 @table @var
 @item K-MAX
@@ -643,9 +723,9 @@ The default is 32.  Values around 100 seem reasonable.
 
 @item TAU
 @var{TAU} is the temperature reduction factor in the Simulated
-Annealing.  It also can be thought of as ``cooling factor''.
-The closer @var{TAU} is to one the more accurate the annealing run
-will be and the longer it will take.
+Annealing; it also can be thought of as ``cooling factor''.  The
+closer @var{TAU} is to one the more accurate the annealing run will be
+and the longer it will take.
 
 Valid range:
 @ifinfo
@@ -667,7 +747,8 @@ Valid range:
 $0 < \mathit{TAU} < 1$.
 @end tex
 
-The default is 0.75; values around 0.95 are reasonable.
+The default is 0.75; values around 0.95 are reasonable.  Usually,
+slower cooling results in more converged points.
 
 @item DELTA-E-MAX
 @itemx DELTA-E-MIN
@@ -789,14 +870,15 @@ The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
 
 @item --dijkstra-radius=@var{RADIUS}
 @opindex --dijkstra-radius
-@cindex Dijkstra radius
-@cindex radius, Dijkstra
-Set the search @var{RADIUS} of the
-@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm, Dijkstra
-algorithm} used in optimizer strategy@tie{}2.  A small value prefers
-straight line segments and thus shorter seam lines.  Larger values
-instruct the optimizer to let the seam line take more detours when
-searching for the best seam line.
+@cindex @sc{Dijkstra} radius
+@cindex radius, @sc{Dijkstra}
+Set the search @var{RADIUS} of the @sc{Dijkstra} Shortest Path
+algorithm used in Optimizer Strategy@tie{}2 (see
+@ref{Table:optimizer-strategies}).
+
+A small value prefers straight line segments and thus shorter seam
+lines.  Larger values instruct the optimizer to let the seam line take
+more detours when searching for the best seam line.
 
 Valid range:
 @ifinfo
@@ -826,13 +908,27 @@ seam.
 
 If Enblend uses a coarse mask (@option{--coarse-mask}) or Enblend
 optimizes (@option{--optimize}) a mask it vectorizes the initial seam
-line before performing further operations.  @var{DISTANCE} tells
-Enblend how long to make each of the segments (``vectors'').
+line before performing further operations.  See
+@ref{Table:mask-generation} for the precise conditions.
+@var{DISTANCE} tells Enblend how long to make each of the line
+segments called vectors.
 
-The unit of @var{DISTANCE} is pixels.  In fine masks a mask pixel
-corresponds to a pixel in the input image.  For coarse masks one pixel
-in the mask represents 8@tie{}pixels in the input image (see also
+The unit of @var{DISTANCE} is pixels.  In fine masks one mask pixel
+corresponds to one pixel in the input image, whereas in coarse masks
+one pixel represents 8@tie{}pixels in the input image (see also
 option@tie{}@option{--coarse-mask}).
+
+This option massively influences the mask generation process!  Large
+@var{DISTANCE} values lead to shorter, straighter, less wiggly, less
+baroque seams that are on the other hand less optimal, because they
+run through regions of larger image mismatch instead of avoiding them.
+Small @var{DISTANCE} values give the optimizers more possibilities to
+let the seam run around high mismatch areas.
+
+What should @emph{never} happen are loops in the seam line.  Counter
+loops with larger a vectorization @var{DISTANCE} and a @var{TAU} (in
+option@tie{}@option{--anneal}) that is closer to one.  Use
+option@tie{}@option{--visualize} to check the results.
 
 Default: 4 for coarse masks and 20 for fine masks.
 
@@ -868,6 +964,7 @@ It puts the mask files into the same directory as the output file
 mask files nicely sorted, and decorates the mask filename with the
 name of the associated input file (@samp{%f}) for easy recognition.
 @end table
+
 @page
 
 @include mask-template-characters.texi
