@@ -90,7 +90,7 @@ struct AlternativePercentage {
     }
 };
 
-#define DEFAULT_OUTPUT_FILENAME "a.tif"
+#include "global.h"
 
 // Globals
 const std::string command("enfuse");
@@ -131,6 +131,7 @@ bool UseHardMask = false;
 bool SaveMasks = false;
 std::string SoftMaskTemplate("softmask-%n.tif");
 std::string HardMaskTemplate("hardmask-%n.tif");
+TiffResolution ImageResolution;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -1175,6 +1176,7 @@ int main(int argc, char** argv) {
 
     bool isColor = false;
     std::string pixelType;
+    TiffResolution resolution;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
@@ -1239,10 +1241,12 @@ int main(int argc, char** argv) {
                 Size2D(inputInfo->width(), inputInfo->height()));
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
-            // The first input image.
+            // First input image
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
             pixelType = inputInfo->getPixelType();
+            resolution = TiffResolution(inputInfo->getXResolution(),
+                                        inputInfo->getYResolution());
             iccProfile = inputInfo->getICCProfile();
             if (!iccProfile.empty()) {
                 InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
@@ -1256,7 +1260,7 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            // second and later images.
+            // Second and later images
             inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
@@ -1276,6 +1280,16 @@ int main(int argc, char** argv) {
                      << pixelType
                      << endl;
                 exit(1);
+            }
+            if (resolution !=
+                TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
+                cerr << command << ": info: input image \""
+                     << *inputFileNameIterator << "\" has resolution "
+                     << inputInfo->getXResolution() << " dpi x "
+                     << inputInfo->getYResolution() << " dpi,\n"
+                     << command << ": info:   but first image has resolution "
+                     << resolution.x << " dpi x " << resolution.y << " dpi"
+                     << endl;
             }
             if (!std::equal(iccProfile.begin(),
                             iccProfile.end(),
@@ -1325,6 +1339,19 @@ int main(int argc, char** argv) {
         }
 
         inputFileNameIterator++;
+    }
+
+    if (resolution == TiffResolution()) {
+        cerr << command
+             << ": warning: no usable resolution found in first image \""
+             << *inputFileNameList.begin() << "\";\n"
+             << command
+             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi"
+             << endl;
+        ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
+                                         DEFAULT_TIFF_RESOLUTION);
+    } else {
+        ImageResolution = resolution;
     }
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
@@ -1436,8 +1463,8 @@ int main(int argc, char** argv) {
     }
 
     // Set the output image position and resolution.
-    outputImageInfo.setXResolution(TIFF_RESOLUTION);
-    outputImageInfo.setYResolution(TIFF_RESOLUTION);
+    outputImageInfo.setXResolution(ImageResolution.x);
+    outputImageInfo.setYResolution(ImageResolution.y);
     outputImageInfo.setPosition(inputUnion.upperLeft());
 
     // Sanity check on the output image file.

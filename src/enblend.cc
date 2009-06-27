@@ -78,7 +78,7 @@ extern "C" int optind;
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
-#define DEFAULT_OUTPUT_FILENAME "a.tif"
+#include "global.h"
 
 typedef struct {
     unsigned int kmax;          // maximum number of moves for a line segment
@@ -123,6 +123,7 @@ unsigned int DijkstraRadius = 25;
 unsigned int MaskVectorizeDistance = 0;
 std::string OutputCompression;
 std::string OutputPixelType;
+TiffResolution ImageResolution;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -1031,6 +1032,7 @@ int main(int argc, char** argv) {
 
     bool isColor = false;
     std::string pixelType;
+    TiffResolution resolution;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
@@ -1094,14 +1096,16 @@ int main(int argc, char** argv) {
 
         // Get input image's position and size.
         Rect2D imageROI(Point2D(inputInfo->getPosition()),
-                Size2D(inputInfo->width(), inputInfo->height()));
+                        Size2D(inputInfo->width(), inputInfo->height()));
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
-            // The first input image.
+            // First input image
             minDim = std::min(inputInfo->width(), inputInfo->height());
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
             pixelType = inputInfo->getPixelType();
+            resolution = TiffResolution(inputInfo->getXResolution(),
+                                        inputInfo->getYResolution());
             iccProfile = inputInfo->getICCProfile();
             if (!iccProfile.empty()) {
                 InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
@@ -1113,9 +1117,8 @@ int main(int argc, char** argv) {
                     exit(1);
                 }
             }
-        }
-        else {
-            // second and later images.
+        } else {
+            // Second and later images
             inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
@@ -1128,13 +1131,23 @@ int main(int argc, char** argv) {
                 exit(1);
             }
             if (pixelType != inputInfo->getPixelType()) {
-                cerr << command << ": Input image \""
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" has pixel type "
                      << inputInfo->getPixelType() << ",\n"
                      << command << ":   but previous images have pixel type "
                      << pixelType
                      << endl;
                 exit(1);
+            }
+            if (resolution !=
+                TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
+                cerr << command << ": info: input image \""
+                     << *inputFileNameIterator << "\" has resolution "
+                     << inputInfo->getXResolution() << " dpi x "
+                     << inputInfo->getYResolution() << " dpi,\n"
+                     << command << ": info:   but first image has resolution "
+                     << resolution.x << " dpi x " << resolution.y << " dpi"
+                     << endl;
             }
             if (!std::equal(iccProfile.begin(), iccProfile.end(),
                             inputInfo->getICCProfile().begin())) {
@@ -1152,7 +1165,7 @@ int main(int argc, char** argv) {
                     }
                 }
 
-                cerr << endl << command << ": Input image \""
+                cerr << endl << command << ": input image \""
                      << *inputFileNameIterator
                      << "\" has ";
                 if (newProfile) {
@@ -1189,6 +1202,19 @@ int main(int argc, char** argv) {
         }
 
         inputFileNameIterator++;
+    }
+
+    if (resolution == TiffResolution()) {
+        cerr << command
+             << ": warning: no usable resolution found in first image \""
+             << *inputFileNameList.begin() << "\";\n"
+             << command
+             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi"
+             << endl;
+        ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
+                                         DEFAULT_TIFF_RESOLUTION);
+    } else {
+        ImageResolution = resolution;
     }
 
     // Switch to fine mask, if the smallest coarse mask would be less
@@ -1312,8 +1338,8 @@ int main(int argc, char** argv) {
     }
 
     // Set the output image position and resolution.
-    outputImageInfo.setXResolution(TIFF_RESOLUTION);
-    outputImageInfo.setYResolution(TIFF_RESOLUTION);
+    outputImageInfo.setXResolution(ImageResolution.x);
+    outputImageInfo.setYResolution(ImageResolution.y);
     outputImageInfo.setPosition(inputUnion.upperLeft());
 
     // Sanity check on the output image file.

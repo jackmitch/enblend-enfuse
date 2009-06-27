@@ -4,8 +4,8 @@ bin_PROGRAMS = enblend enfuse
 
 enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
-                  float_cast.h gpu.cc gpu.h mask.h nearest.h \
-                  numerictraits.h path.h pyramid.h \
+                  float_cast.h global.h gpu.cc gpu.h mask.h \
+                  nearest.h numerictraits.h path.h pyramid.h \
                   filenameparse.h filenameparse.cc
 enblend_LDFLAGS =
 enblend_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@
@@ -13,7 +13,7 @@ enblend_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I${top_srcdir}/include
 
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  enfuse.h enfuse.cc fixmath.h float_cast.h \
-                 mga.h numerictraits.h pyramid.h \
+                 global.h mga.h numerictraits.h pyramid.h \
                  filenameparse.h filenameparse.cc
 enfuse_LDFLAGS =
 enfuse_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@

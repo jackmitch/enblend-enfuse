@@ -1181,6 +1181,8 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                          << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
                 }
                 ImageExportInfo maskInfo(maskFilename.c_str());
+                maskInfo.setXResolution(ImageResolution.x);
+                maskInfo.setYResolution(ImageResolution.y);
                 maskInfo.setCompression(MASK_COMPRESSION);
                 exportImage(srcImageRange(*mask), maskInfo);
             }
@@ -1292,6 +1294,8 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                              << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
                     }
                     ImageExportInfo maskInfo(maskFilename.c_str());
+                    maskInfo.setXResolution(ImageResolution.x);
+                    maskInfo.setYResolution(ImageResolution.y);
                     maskInfo.setCompression(MASK_COMPRESSION);
                     exportImage(srcImageRange(*(imageIter->third)), maskInfo);
                 }
