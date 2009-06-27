@@ -111,9 +111,9 @@ xhtml: $(HTMLS) html-local
 
 
 .fig.txt:
-	$(SED) --expression='1,/---BEGIN-TEXT---/d' \
-               --expression='/---END-TEXT---/,$$d' \
-               --expression='s/^# \?//' < $< > $@
+	$(SED) -e '1,/---BEGIN-TEXT---/d' \
+               -e '/---END-TEXT---/,$$d' \
+               -e 's/^# \?//' < $< > $@
 
 .fig.png:
 	$(FIG2DEV) -L png $< $@
