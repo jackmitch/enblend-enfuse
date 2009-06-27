@@ -109,6 +109,27 @@ namespace enblend {
 enum Overlap {NoOverlap, PartialOverlap, CompleteOverlap};
 
 
+/** Symbolic expressions for the three different metrics that
+ *  vigra::distanceTransform understands. */
+typedef enum
+{
+    ChessboardDistance,         // 0
+    ManhattanDistance,          // 1, L1 norm
+    EuclideanDistance           // 2, L2 norm
+} nearest_neigbor_metric_t;
+
+
+/** The different kinds of boundary conditions we can impose upon an
+ *  image. */
+typedef enum BoundaryKind
+{
+    OpenBoundaries,             // contractible
+    HorizontalStrip,            // contractible along 2nd axis
+    VerticalStrip,              // contractible along 1st axis
+    DoubleStrip                 // non-contractible
+} boundary_t;
+
+
 /** String tokenizer similar to strtok_r().
  *  In contrast to strtok_r this function returns an empty string for
  *  each pair of successive delimiters.  Function strtok_r skips them.

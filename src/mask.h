@@ -364,40 +364,11 @@ MaskType* createMask(const ImageType* const white,
     //                  !CoarseMask: uBB * MaskType
     MaskType* nftOutputImage = new MaskType(nftOutputSize);
 
-    if (wraparound) {
-        // mem usage before: CoarseMask: 1/8 * uBB * MaskType
-        //                   !CoarseMask: uBB * MaskType
-        // mem usage after: CoarseMask: 2/8 * uBB * MaskType
-        //                  !CoarseMask: 2 * uBB * MaskType
-        MaskType* nftInputImage = new MaskType(nftInputSize);
-
-        // Input data for NFT:
-        // 1 = outside both black and white image, or inside both images.
-        // 255 = inside white image only.
-        // 0 = inside black image only.
-        combineTwoImagesMP(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                           stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
-                           nftInputBB.apply(destImage(*nftInputImage)),
-                           ifThenElse(Arg1() ^ Arg2(),
-                                      ifThenElse(Arg1(),
-                                                 Param(NumericTraits<MaskPixelType>::max()),
-                                                 Param(NumericTraits<MaskPixelType>::zero())),
-                                      Param(NumericTraits<MaskPixelType>::one())));
-
-        nearestFeatureTransform(wraparound,
-                                srcImageRange(*nftInputImage),
-                                destIter(nftOutputImage->upperLeft() + nftOutputOffset),
-                                NumericTraits<MaskPixelType>::one());
-
-        // mem usage after: CoarseMask: 1/8 * uBB * MaskType
-        //                  !CoarseMask: uBB * MaskType
-        delete nftInputImage;
-    } else {
-        nearestFeatureTransform2(wraparound,
-                                 stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                                 stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
-                                 destIter(nftOutputImage->upperLeft() + nftOutputOffset));
-    }
+    nearestFeatureTransform(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                            stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
+                            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
+                            EuclideanDistance,
+                            wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
