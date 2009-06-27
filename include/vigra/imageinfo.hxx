@@ -366,6 +366,10 @@ class VIGRA_EXPORT ImageImportInfo
          **/
     int height() const;
 
+        /** Get the total number of layers ("directories" in TIFF-speak) in the image.
+         **/
+    int numLayers() const;
+
         /** Get the total number of bands in the image.
          **/
     int numBands() const;
@@ -437,7 +441,7 @@ class VIGRA_EXPORT ImageImportInfo
 
   private:
     std::string m_filename, m_filetype, m_pixeltype;
-    int m_width, m_height, m_num_bands, m_num_extra_bands;
+    int m_width, m_height, m_num_layers, m_num_bands, m_num_extra_bands;
     float m_x_res, m_y_res;
     Diff2D m_pos;
     ICCProfile m_icc_profile;
@@ -445,6 +449,14 @@ class VIGRA_EXPORT ImageImportInfo
 
 // return a decoder for a given ImageImportInfo object
 VIGRA_EXPORT std::auto_ptr<Decoder> decoder( const ImageImportInfo & info );
+
+
+typedef std::pair<std::string, unsigned> FilenameLayerPair;
+
+std::string join_filename_layer(const std::string&, unsigned);
+std::string join_filename_layer(const FilenameLayerPair&);
+
+FilenameLayerPair split_filename(const std::string&);
 
 } // namespace vigra
 

@@ -36,6 +36,7 @@
 #include "common.h"
 #include "fixmath.h"
 #include "vigra/copyimage.hxx"
+#include "vigra/imageinfo.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
@@ -273,15 +274,20 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     AlphaType* imageA = new AlphaType(inputUnion.size());
 
     if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
+        const vigra::FilenameLayerPair file_layer =
+            vigra::split_filename(imageInfoList.front()->getFileName());
+        const int layers = imageInfoList.front()->numLayers();
         if (OneAtATime) {
             cerr << command
                  << ": info: loading next image: "
-                 << imageInfoList.front()->getFileName()
+                 << file_layer.first << " "
+                 << file_layer.second + 1 << '/' << layers
                  << endl;
         } else {
             cerr << command
                  << ": info: combining non-overlapping images: "
-                 << imageInfoList.front()->getFileName();
+                 << file_layer.first << " "
+                 << file_layer.second + 1 << '/' << layers;
             cerr.flush();
         }
     }

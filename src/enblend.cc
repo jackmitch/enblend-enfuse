@@ -145,6 +145,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 #include "gpu.h"
 #endif
 
+#include "vigra/imageinfo.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/sized_int.hxx"
 
@@ -409,7 +410,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         cerr << command <<
             ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<
             command <<
-            ": warning:     because it was compiled without image-cache" <<
+            ": warning:     because it was compiled without image cache" <<
             endl;
     }
 
@@ -797,7 +798,8 @@ int process_options(int argc, char** argv) {
                      << endl;
                 kilobytes = 1;
             }
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes << 10));
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
+            optionSet.insert(BlockSizeOption);
             break;
         }
         case 'c':
@@ -810,14 +812,15 @@ int process_options(int argc, char** argv) {
             break;
         case 'f': {
             OutputSizeGiven = true;
-            const int nP = sscanf(optarg, "%dx%d+%d+%d",
+            const int nP = sscanf(optarg,
+                                  "%dx%d+%d+%d",
                                   &OutputWidthCmdLine, &OutputHeightCmdLine,
                                   &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
             if (nP == 4) {
-                ; // OK - full geometry string
+                ; // ok: full geometry string
             } else if (nP == 2) {
-                OutputOffsetXCmdLine=0;
-                OutputOffsetYCmdLine=0;
+                OutputOffsetXCmdLine = 0;
+                OutputOffsetYCmdLine = 0;
             } else {
                 cerr << command << ": option \"-f\" requires a parameter\n"
                      << "Try \"enblend --help\" for more information." << endl;
@@ -948,7 +951,8 @@ int process_options(int argc, char** argv) {
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
@@ -1027,17 +1031,17 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << command << ": no input files specified" << endl;
+        cerr << command << ": no input files specified.\n";
         exit(1);
     }
 
     if (UseGPU) {
 #ifdef HAVE_LIBGLEW
-      initGPU(&argc, argv);
+        initGPU(&argc, argv);
 #else
-      cerr << command
-           << ": warning: no GPU support compiled in; option \"--gpu\" has no effect"
-           << endl;
+        cerr << command
+             << ": warning: no GPU support compiled in; option \"--gpu\" has no effect"
+             << endl;
 #endif
     }
 
@@ -1048,17 +1052,6 @@ int main(int argc, char** argv) {
     //    // 4 in reduce (src image layer N, src alpha layer N, dest image layer N+1, dest alpha layer N+1)
     //    // FIXME complain or automatically adjust blocksize to get ManagedBlocks above 4?
     //}
-
-    // Check that more than one input file was given.
-    if (inputFileNameList.size() <= 1) {
-        cerr << command
-             << ": warning: only one input file given.\n"
-             << command
-             << ": warning: Enblend needs two or more overlapping input images in order to do\n"
-             << command
-             << ": warning: blending calculations.  The output will be the same as the input."
-             << endl;
-    }
 
     // List of info structures for each input image.
     list<ImageImportInfo*> imageInfoList;
@@ -1073,15 +1066,25 @@ int main(int argc, char** argv) {
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
     int minDim = INT_MAX;
+    unsigned layer = 0;
+    unsigned layers = 0;
     while (inputFileNameIterator != inputFileNameList.end()) {
         ImageImportInfo* inputInfo = NULL;
         try {
-            inputInfo = new ImageImportInfo(*inputFileNameIterator);
+            std::string filename(*inputFileNameIterator);
+            ImageImportInfo info(filename.c_str());
+            if (layers == 0) { // OPTIMIZATION: call only once per file
+                layers = info.numLayers();
+            }
+            if (layers >= 2) {
+                filename = vigra::join_filename_layer(*inputFileNameIterator, layer);
+            }
+            ++layer;
+            inputInfo = new ImageImportInfo(filename.c_str());
         } catch (StdException& e) {
-            cerr << endl << command << ": error opening input file \""
-                 << *inputFileNameIterator << "\":"
-                 << endl << e.what()
-                 << endl;
+            cerr << '\n' << command
+                 << ": error opening input file \"" << *inputFileNameIterator << "\":\n"
+                 << e.what() << endl;
             exit(1);
         }
 
@@ -1092,7 +1095,8 @@ int main(int argc, char** argv) {
             cerr << command
                  << ": info: input image \""
                  << *inputFileNameIterator
-                 << "\" ";
+                 << "\" "
+                 << layer << '/' << layers << ' ';
 
             if (inputInfo->isColor()) {
                 cerr << "RGB ";
@@ -1118,12 +1122,9 @@ int main(int argc, char** argv) {
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
             cerr << command
-                 << ": warning: input image \""
+                 << ": input image \""
                  << *inputFileNameIterator
-                 << "\" does not have an alpha channel;\n"
-                 << command
-                 << ": warning: assuming all pixels should "
-                 << "contribute to the final image"
+                 << "\" does not have an alpha channel"
                  << endl;
             exit(1);
         }
@@ -1183,7 +1184,8 @@ int main(int argc, char** argv) {
                      << resolution.x << " dpi x " << resolution.y << " dpi"
                      << endl;
             }
-            if (!std::equal(iccProfile.begin(), iccProfile.end(),
+            if (!std::equal(iccProfile.begin(),
+                            iccProfile.end(),
                             inputInfo->getICCProfile().begin())) {
                 ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                 cmsHPROFILE newProfile = NULL;
@@ -1217,7 +1219,7 @@ int main(int argc, char** argv) {
                          << cmsTakeProductName(InputProfile)
                          << " "
                          << cmsTakeProductDesc(InputProfile)
-                         << "\"." << endl;
+                         << "\"" << endl;
                 } else {
                     cerr << " no ICC profile" << endl;
                 }
@@ -1235,7 +1237,33 @@ int main(int argc, char** argv) {
             }
         }
 
-        inputFileNameIterator++;
+        if (layers == 1 || layer == layers)
+        {
+            layer = 0;
+            layers = 0;
+            inputFileNameIterator++;
+        }
+        else
+        {
+            // We are about to process the next layer in the _same_
+            // image.  The imageInfoList already has been updated, but
+            // inputFileNameList still lacks the filename.
+            inputFileNameList.insert(inputFileNameIterator, *inputFileNameIterator);
+        }
+    }
+
+    vigra_postcondition(imageInfoList.size() == inputFileNameList.size(),
+                        "filename list and image info list are inconsistent");
+
+    // Check that more than one input file was given.
+    if (imageInfoList.size() <= 1) {
+        cerr << command
+             << ": warning: only one input image given.\n"
+             << command
+             << ": warning: Enblend needs two or more overlapping input images in order to do\n"
+             << command
+             << ": warning: blending calculations.  The output will be the same as the input."
+             << endl;
     }
 
     if (resolution == TiffResolution()) {
@@ -1268,7 +1296,8 @@ int main(int argc, char** argv) {
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
-        inputUnion |= Rect2D(OutputOffsetXCmdLine, OutputOffsetYCmdLine,
+        inputUnion |= Rect2D(OutputOffsetXCmdLine,
+                             OutputOffsetYCmdLine,
                              OutputOffsetXCmdLine + OutputWidthCmdLine,
                              OutputOffsetYCmdLine + OutputHeightCmdLine);
     }
@@ -1315,7 +1344,7 @@ int main(int argc, char** argv) {
     if (UseCIECAM) {
         if (InputProfile == NULL) {
             cerr << command
-                 << ": warning: input images do not have ICC profiles; assuming sRGB"
+                 << ": warning: input images do not have ICC profiles; assuming sRGB."
                  << endl;
             InputProfile = cmsCreate_sRGBProfile();
         }
@@ -1337,7 +1366,8 @@ int main(int argc, char** argv) {
                                                  InputProfile, TYPE_RGB_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (XYZToInputTransform == NULL) {
-            cerr << command << ": error building color transform from XYZ to \""
+            cerr << command
+                 << ": error building color transform from XYZ to \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
@@ -1432,7 +1462,8 @@ int main(int argc, char** argv) {
             else if (pixelType == "DOUBLE") enblendMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << command << ": black&white images with pixel type \""
+                cerr << command
+                     << ": black&white images with pixel type \""
                      << pixelType
                      << "\" are not supported"
                      << endl;

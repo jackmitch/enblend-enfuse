@@ -154,6 +154,10 @@ namespace vigra
 
         virtual unsigned int getWidth() const = 0;
         virtual unsigned int getHeight() const = 0;
+        virtual unsigned int getNumLayers() const
+        {
+            return 1U;
+        }
         virtual unsigned int getNumBands() const = 0;
         virtual unsigned int getNumExtraBands() const
         {

@@ -70,6 +70,7 @@
 #include "../float_cast.h"
 #include "vigra/windows.h"
 
+#include "vigra/imageinfo.hxx"
 #include "vigra/sized_int.hxx"
 #include "error.hxx"
 #include "tiff.hxx"
@@ -181,6 +182,7 @@ namespace vigra {
 
         uint32 stripindex, stripheight;
         uint32 width, height;
+        unsigned layers;
         uint16 samples_per_pixel, bits_per_sample,
             photometric, planarconfig, fillorder, extra_samples_per_pixel;
         float x_resolution, y_resolution;
@@ -237,6 +239,8 @@ namespace vigra {
         std::string get_pixeltype_by_sampleformat() const;
         std::string get_pixeltype_by_datatype() const;
 
+        unsigned layer;
+
     public:
 
         TIFFDecoderImpl( const std::string & filename );
@@ -249,14 +253,27 @@ namespace vigra {
 
     TIFFDecoderImpl::TIFFDecoderImpl( const std::string & filename )
     {
-        tiff = TIFFOpen( filename.c_str(), "r" );
+        const FilenameLayerPair file_layer = split_filename(filename);
 
+        tiff = TIFFOpen( file_layer.first.c_str(), "r" );
         if ( !tiff ) {
-            std::string msg("Unable to open file '");
-            msg += filename;
-            msg += "'.";
-            vigra_precondition(0, msg.c_str());
+            std::ostringstream oss;
+            oss << "Unable to open file '" << file_layer.first << "'.";
+            vigra_precondition(false, oss.str().c_str());
         }
+
+        if (file_layer.second != 0) // OPTIMIZATION
+        {
+            if (TIFFSetDirectory(tiff, file_layer.second) != 1)
+            {
+                std::ostringstream oss;
+                oss <<
+                    "Unable to select layer " << file_layer.second <<
+                    " of file '" << file_layer.first << "'.";
+                vigra_precondition(false, oss.str().c_str());
+            }
+        }
+        layer = file_layer.second;
     }
 
     std::string TIFFDecoderImpl::get_pixeltype_by_sampleformat() const
@@ -334,6 +351,12 @@ namespace vigra {
 
     void TIFFDecoderImpl::init()
     {
+        // layers
+        layers = 0;
+        TIFFSetDirectory(tiff, 0);
+        do {++layers;} while (TIFFReadDirectory(tiff) == 1);
+        TIFFSetDirectory(tiff, layer);
+
         // read width and height
         TIFFGetField( tiff, TIFFTAG_IMAGEWIDTH, &width );
         TIFFGetField( tiff, TIFFTAG_IMAGELENGTH, &height );
@@ -629,6 +652,11 @@ namespace vigra {
     unsigned int TIFFDecoder::getHeight() const
     {
         return pimpl->height;
+    }
+
+    unsigned int TIFFDecoder::getNumLayers() const
+    {
+        return pimpl->layers;
     }
 
     unsigned int TIFFDecoder::getNumBands() const

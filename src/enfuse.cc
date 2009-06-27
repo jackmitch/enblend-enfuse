@@ -137,6 +137,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 #include "common.h"
 #include "enfuse.h"
 
+#include "vigra/imageinfo.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/sized_int.hxx"
 
@@ -215,7 +216,7 @@ void printUsageAndExit(const bool error = true) {
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
-        "  -l LEVELS              number of blending levels to use (1 to 29)\n" <<
+        "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose          verbosely report progress; repeat to\n" <<
         "                         increase verbosity\n" <<
@@ -229,8 +230,8 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
-        "  -d, --depth=DEPTH      set the number of bits per channel of the output image,\n" <<
-        "                         where DEPTH is 8, 16, 32, r32, or r64\n" <<
+        "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
+        "                         image, where DEPTH is 8, 16, 32, r32, or r64\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -312,7 +313,7 @@ void printUsageAndExit(const bool error = true) {
  *  if we are killed.
  */
 void sigint_handler(int sig) {
-    cout << endl << "Interrupted." << endl;
+    cerr << endl << "Interrupted." << endl;
     // FIXME what if this occurs in a CFI atomic section?
     // This is no longer necessary, temp files are unlinked during creation.
     //CachedFileImageDirector::v().~CachedFileImageDirector();
@@ -581,7 +582,8 @@ int process_options(int argc, char** argv) {
                 optionSet.insert(VersionOption);
                 break;
             default:
-                cerr << command << ": internal error: unhandled \"NoArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -847,7 +849,8 @@ int process_options(int argc, char** argv) {
                 optionSet.insert(EntropyWeightOption);
                 break;
             default:
-                cerr << command << ": internal error: unhandled \"FloatArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"FloatArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -967,7 +970,9 @@ int process_options(int argc, char** argv) {
         case 'l': {
             int levels = atoi(optarg);
             if (levels < 1) {
-                cerr << command << ": warning: too few levels; will use one level" << endl;
+                cerr << command
+                     << ": warning: too few levels; will use one level"
+                     << endl;
                 levels = 1;
             }
             // We take care of the "too many levels" case in "bounds.h".
@@ -978,7 +983,9 @@ int process_options(int argc, char** argv) {
         case 'm': {
             int megabytes = atoi(optarg);
             if (megabytes < 1) {
-                cerr << command << ": warning: memory limit less than 1 MB; will use 1 MB" << endl;
+                cerr << command
+                     << ": warning: memory limit less than 1 MB; will use 1 MB"
+                     << endl;
                 megabytes = 1;
             }
             CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
@@ -1065,12 +1072,13 @@ int process_options(int argc, char** argv) {
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
     // See changes in vigra numerictraits.hxx
-    _controlfp( _RC_NEAR, _MCW_RC );
+    _controlfp(_RC_NEAR, _MCW_RC);
 #else
     fesetround(FE_TONEAREST);
 #endif
@@ -1094,11 +1102,12 @@ int main(int argc, char** argv) {
 
     // List of input files.
     list<char*> inputFileNameList;
-    list<char*>::const_iterator inputFileNameIterator;
+    list<char*>::iterator inputFileNameIterator;
 
     int optind;
-    try {optind = process_options(argc, argv);}
-    catch (StdException& e) {
+    try {
+        optind = process_options(argc, argv);
+    } catch (StdException& e) {
         cerr << command << ": error while processing command line options\n"
              << command << ":     " << e.what()
              << endl;
@@ -1147,17 +1156,6 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    // Check that more than one input file was given.
-    if (inputFileNameList.size() <= 1) {
-        cerr << command
-             << ": warning: only one input file given.\n"
-             << command
-             << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
-             << command
-             << ": warning: blending calculations.  The output will be the same as the input."
-             << endl;
-    }
-
     // List of info structures for each input image.
     list<ImageImportInfo*> imageInfoList;
     list<ImageImportInfo*>::iterator imageInfoIterator;
@@ -1170,15 +1168,25 @@ int main(int argc, char** argv) {
 
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
+    unsigned layer = 0;
+    unsigned layers = 0;
     while (inputFileNameIterator != inputFileNameList.end()) {
-        ImageImportInfo *inputInfo = NULL;
+        ImageImportInfo* inputInfo = NULL;
         try {
-            inputInfo = new ImageImportInfo(*inputFileNameIterator);
+            std::string filename(*inputFileNameIterator);
+            ImageImportInfo info(filename.c_str());
+            if (layers == 0) { // OPTIMIZATION: call only once per file
+                layers = info.numLayers();
+            }
+            if (layers >= 2) {
+                filename = vigra::join_filename_layer(*inputFileNameIterator, layer);
+            }
+            ++layer;
+            inputInfo = new ImageImportInfo(filename.c_str());
         } catch (StdException& e) {
-            cerr << endl << command << ": error opening input file \""
-                 << *inputFileNameIterator << "\":"
-                 << endl << e.what()
-                 << endl;
+            cerr << '\n' << command
+                 << ": error opening input file \"" << *inputFileNameIterator << "\":\n"
+                 << e.what() << endl;
             exit(1);
         }
 
@@ -1189,7 +1197,8 @@ int main(int argc, char** argv) {
             cerr << command
                  << ": info: input image \""
                  << *inputFileNameIterator
-                 << "\" ";
+                 << "\" "
+                 << layer << '/' << layers << ' ';
 
             if (inputInfo->isColor()) {
                 cerr << "RGB ";
@@ -1226,7 +1235,7 @@ int main(int argc, char** argv) {
 
         // Get input image's position and size.
         Rect2D imageROI(Point2D(inputInfo->getPosition()),
-                Size2D(inputInfo->width(), inputInfo->height()));
+                        Size2D(inputInfo->width(), inputInfo->height()));
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
             // First input image
@@ -1246,8 +1255,7 @@ int main(int argc, char** argv) {
                     exit(1);
                 }
             }
-        }
-        else {
+        } else {
             // Second and later images
             inputUnion |= imageROI;
 
@@ -1326,7 +1334,33 @@ int main(int argc, char** argv) {
             }
         }
 
-        inputFileNameIterator++;
+        if (layers == 1 || layer == layers)
+        {
+            layer = 0;
+            layers = 0;
+            inputFileNameIterator++;
+        }
+        else
+        {
+            // We are about to process the next layer in the _same_
+            // image.  The imageInfoList already has been updated, but
+            // inputFileNameList still lacks the filename.
+            inputFileNameList.insert(inputFileNameIterator, *inputFileNameIterator);
+        }
+    }
+
+    vigra_postcondition(imageInfoList.size() == inputFileNameList.size(),
+                        "filename list and image info list are inconsistent");
+
+    // Check that more than one input file was given.
+    if (imageInfoList.size() <= 1) {
+        cerr << command
+             << ": warning: only one input image given.\n"
+             << command
+             << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
+             << command
+             << ": warning: blending calculations.  The output will be the same as the input."
+             << endl;
     }
 
     if (resolution == TiffResolution()) {

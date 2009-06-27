@@ -48,6 +48,7 @@
 #include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/error.hxx"
+#include "vigra/imageinfo.hxx"
 #include "codecmanager.hxx"
 
 // the codecs
@@ -195,17 +196,18 @@ namespace vigra
         // get the magic string
         const unsigned int magiclen = 4;
         char fmagic[magiclen];
+        const FilenameLayerPair file_layer = split_filename(filename);
 #ifdef VIGRA_NEED_BIN_STREAMS
-        std::ifstream stream(filename.c_str(), std::ios::binary);
+        std::ifstream stream(file_layer.first.c_str(), std::ios::binary);
 #else
-        std::ifstream stream(filename.c_str());
+        std::ifstream stream(file_layer.first.c_str());
 #endif
         if(!stream.good())
         {
             std::string msg("Unable to open file '");
-            msg += filename;
-            msg += "'.";
-            vigra_precondition(0, msg.c_str());
+            msg += file_layer.first;
+            msg += "' (bad stream).";
+            vigra_precondition(false, msg.c_str());
         }
         stream.read( fmagic, magiclen );
         stream.close();
