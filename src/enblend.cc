@@ -264,7 +264,7 @@ void printUsageAndExit(const bool error = true) {
         "                         overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --mask-vectorize-distance=LENGTH\n" <<
+        "  --mask-vectorize=LENGTH\n" <<
         "                         set LENGTH of single seam segment; defaults: \n" <<
         "                         " <<
         coarseMaskVectorizeDistance << " for coarse masks, " <<
@@ -273,7 +273,7 @@ void printUsageAndExit(const bool error = true) {
         "                         set annealing parameters of strategy 1; defaults:\n" <<
         "                         " << AnnealPara.kmax << ':' << AnnealPara.tau << ':' <<
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << "\n" <<
-        "  --dijkstra-radius=R    set search radius of stragegy 2 to R; default: " <<
+        "  --dijkstra=RADIUS      set search RADIUS of stragegy 2; default: " <<
         DijkstraRadius << "\n" <<
         "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
         SaveMaskTemplate << "\"\n" <<
@@ -386,7 +386,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
         if (contains(optionSet, DijkstraRadiusOption)) {
             cerr << command <<
-                ": warning: option \"--dijkstra-radius\" without mask optimization\n" <<
+                ": warning: option \"--dijkstra\" without mask optimization\n" <<
                 command <<
                 ": warning:     has no effect" <<
                 endl;
@@ -396,7 +396,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (!(OptimizeMask || CoarseMask) && contains(optionSet, MaskVectorizeDistanceOption)){
         cerr << command <<
-            ": warning: option \"--mask-vectorize-distance\" without mask optimization\n" <<
+            ": warning: option \"--mask-vectorize\" without mask optimization\n" <<
             command <<
             ": warning:     or coarse mask has no effect" <<
             endl;
@@ -464,8 +464,8 @@ int process_options(int argc, char** argv) {
         {"load-mask", optional_argument, 0, StringArgument},                   //  6
         {"visualize", optional_argument, 0, StringArgument},                   //  7
         {"anneal", required_argument, 0, StringArgument},                      //  8
-        {"dijkstra-radius", required_argument, 0, IntegerArgument},            //  9
-        {"mask-vectorize-distance", required_argument, 0, IntegerArgument},    // 10
+        {"dijkstra", required_argument, 0, IntegerArgument},                   //  9
+        {"mask-vectorize", required_argument, 0, IntegerArgument},             // 10
         {"compression", required_argument, 0, StringArgument},                 // 11
         {"verbose", no_argument, 0, NoArgument},                               // 12
         {"help", no_argument, 0, NoArgument},                                  // 13

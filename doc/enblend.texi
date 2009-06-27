@@ -674,7 +674,7 @@ Simulated-Annealing}
 
 
 @item Stragegy 2: @sc{Dijkstra} Shortest Path
-Tune with option@tie{}@code{--dijkstra-radius} = @var{RADIUS}.
+Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 
 @uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm,
 @sc{Dijkstra} algorithm}
@@ -868,8 +868,8 @@ $$\eqalign{
 The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
 @end table
 
-@item --dijkstra-radius=@var{RADIUS}
-@opindex --dijkstra-radius
+@item --dijkstra=@var{RADIUS}
+@opindex --dijkstra
 @cindex @sc{Dijkstra} radius
 @cindex radius, @sc{Dijkstra}
 Set the search @var{RADIUS} of the @sc{Dijkstra} Shortest Path
@@ -900,11 +900,12 @@ $\mathit{RADIUS} \ge 0$.
 
 Default: 25.
 
-@item --mask-vectorize-distance=@var{DISTANCE}
-@opindex --mask-vectorize-distance
+@item --mask-vectorize=@var{DISTANCE}
+@opindex --mask-vectorize
 @cindex mask, vectorization distance
-Set the mask vectorization distance Enblend uses to partition each
-seam.
+Set the mask vectorization @var{DISTANCE} Enblend uses to partition
+each seam.  Thus, break down the seam to segments of length
+@var{DISTANCE} each.
 
 If Enblend uses a coarse mask (@option{--coarse-mask}) or Enblend
 optimizes (@option{--optimize}) a mask it vectorizes the initial seam
