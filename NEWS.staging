@@ -1,0 +1,148 @@
+             -------------------------------------------
+             --                                       --
+             --  What is new in the "staging" branch  --
+             --  in comparison with Enblend-3.2 CVS?  --
+             --                                       --
+             -------------------------------------------
+
+* Good News
+
+** For Users
+
+*** Improvements
+
+- Huge new documentation in Info, PS, PDF, HTML formats.  XHTML format
+  is still experimental.
+
+- New manual pages.
+
+- Automatic bit depth conversion between input and output images if
+  necessary.
+
+  For example: given 16-bit TIFF input images and a JPEG output image
+  Enblend and Enfuse automatically convert from 16-bit to 8-bit before
+  writing the JPEG file.
+
+- Compilation without image cache works again
+  ("--disable-image-cache").  Speedups of up to 30% have been reported
+  on the amd64 architecture.
+
+- Lots of new warnings if a command-line option has no effect, like,
+  for example, combining a mask optimization option with
+  "--no-optimize".
+
+- Enblend and Enfuse read multi-layer TIFF files ("multi directory" in
+  TIFF jargon).  It is even possible to mix multi-layer with single
+  layer images.  This partially fixes SourceForge bug ID 1170329.
+
+- Save masks with (lossless) "Deflate" compression.
+
+- Without any output filename given, i.e. no "-o" option, the output
+  filename now defaults to "a.tif", making "-o" truly an option.
+
+- Enblend and Enfuse issue messages following the GNU standard.
+
+
+*** Bug Fixes
+
+- Fix the calculation of the number of blending levels.  Previously,
+  it was off by one in most cases.
+
+- A longstanding bug (SourceForge ID 2160427) in the primary seam line
+  generation that caused a sub-optimal seam line was fixed.  As a side
+  effect the new seam line algorithm is at least 20% faster than the
+  old one.
+
+  The new version does not yet handle wraparound for non singly
+  connected panoramas, thus we keep the old algorithm for 360 degree
+  panoramas.
+
+- Make Enblend and Enfuse aware of the input images' resolution.  Use
+  the input resolution in the output file.
+
+  With this change masks get the correct offsets and fixes the bug
+  that masks do not end up at the correct position with respect to the
+  input files.
+
+- Fix MacOS problem of parsing floating-point parameters at the
+  command line.
+
+*** New Commandline Options
+
+- New option to control the output bit depth ("--depth").
+
+- Mask filenames can be specified with templates.
+
+  * Enblend ("--save-mask", "--load-mask", "--visualize"): Save and
+    load all masks of a project in a single run.  Same for seam line
+    visualization files.
+
+  * Enfuse ("--SaveMasks"): Save soft and hard masks according to path
+    given in template.
+
+- New option to control the mask vectorization, which is done before
+  any mask optimizations ("--mask-vectorize").
+
+- New option to control the Simulated Annealing optimizer called
+  strategy 1 ("--anneal").
+
+- New option to control the Dijkstra path minimizer called strategy 2
+  ("--dijkstra").
+
+
+** For Developers
+
+- VPATH builds work.  This makes it easy to compile for differently
+  configured versions, like for example with and without image cache.
+
+- The target "make distcheck" works again.
+
+- Introduce additional Make variables to control the Make process
+  after the project was configured.  See "README" file.
+
+- Debugging of dynamic memory allocation has been eased be the
+  integration of the DMalloc package; "configure --with-dmalloc"
+
+- Use only m4 files that clearly have a GPL license.  This fixes
+  SourceForge feature request ID 2152850.
+
+- Remove all files that are meant to be generated auto Autoconf.  This
+  fixes SourceForge bug ID 2036031.
+
+- Install m4 file to detect the M$ compiler.  This fixes SourceForge
+  bug ID 2036034.
+
+- Make "configure" report that extra features will get compiled and if
+  they cannot tell the developer why not.
+
+- Pull version of program and documentation into file "VERSION".  Both
+  program and documentation automatically uses this information on
+  every build.
+
+
+* What is known not to work today?
+
+- Configuration "--with-apple-opengl-framework" is broken.
+
+- Documentation generation is not as reliable and smooth as it ought
+  to be.  The culprit is Automake; see PR/486.
+
+
+
+
+Im Augenblicke vor der Loesung.
+
+In der Wissenschaft kommt es alle Tage und Stunden vor, dass einer
+unmittelbar vor der Loesung stehenbleibt, ueberzeugt, jetzt sei sein
+Bemuehen voellig umsonst gewesen, -- gleich einem, der, eine Schleife
+aufziehend, im Augenblicke, wo sie der Loesung am naechsten ist,
+zoegert: denn da gerade sieht sie einem Knoten am aehnlichsten.
+
+                                    Friedrich Nietzsche
+                                    Menschliches, Allzumenschliches
+                                    Band 2, Nummer 203
+
+
+Local Variables:
+mode: outline
+End:
