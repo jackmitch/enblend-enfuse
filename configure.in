@@ -93,6 +93,34 @@ if test $can_use_gpu = no; then
     no_gpu_reason=", because of missing$missing_for_gpu"
 fi
 
+# Memory allocation debug support
+AC_MSG_CHECKING([if malloc debugging is wanted])
+AC_ARG_WITH(dmalloc,
+            [  --with-dmalloc          use dmalloc, as in
+                          http://www.dmalloc.com/dmalloc.tar.gz],
+            [if test "x$withval" = xyes; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(WITH_DMALLOC, 1,
+              	    [Define if using the dmalloc debugging malloc package])
+                if test x$acx_pthread_ok = xyes; then
+                    LIBS="$LIBS -ldmallocthcxx"
+                    enable_dmalloc="yes (thread aware)"
+                else
+                    LIBS="$LIBS -ldmalloccxx"
+                    enable_dmalloc=yes
+                fi
+                LDFLAGS="$LDFLAGS -g"
+                AC_DEFINE(DMALLOC, 1,
+                          [Define to enable malloc debugger library])
+                AC_DEFINE(DMALLOC_FUNC_CHECK, 1,
+                          [Define to enable malloc debugger function checking])
+            else
+                AC_MSG_RESULT(no)
+                enable_dmalloc=no
+            fi],
+            [AC_MSG_RESULT(no)
+             enable_dmalloc=no])
+
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
@@ -399,5 +427,6 @@ AC_MSG_RESULT([
  feature selection:
    split *.info and *.html files:  ${split_doc}
    enable debugging support:       ${enable_debug}
+   enable malloc debugging:        ${enable_dmalloc}
    use image cache:                ${enable_image_cache}
 ])

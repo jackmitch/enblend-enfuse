@@ -145,6 +145,11 @@ LCMSHANDLE CIECAMTransform = NULL;
 #include "vigra/sized_int.hxx"
 
 #include <tiffio.h>
+
+#ifdef DMALLOC
+#include "dmalloc.h"            // must be last #include
+#endif
+
 using std::cerr;
 using std::cout;
 using std::endl;

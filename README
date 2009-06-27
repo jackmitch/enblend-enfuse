@@ -81,6 +81,11 @@ The default is "yes", enable the image cache.
 Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
 
+** --with-dmalloc=yes/NO
+
+Compile with the debug-malloc library.  The library is available at
+http://www.dmalloc.com/.
+
 ** --enable-split-doc=YES/no
 
 Split the documentation files in INFO or HTML format into small
