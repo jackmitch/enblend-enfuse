@@ -315,8 +315,8 @@ namespace vigra {
         }
 
         // read resolution
-        x_resolution = png_get_x_pixels_per_meter( png, info ) / 254.0;
-        y_resolution = png_get_y_pixels_per_meter( png, info ) / 254.0;
+        x_resolution = png_get_x_pixels_per_meter( png, info ) * 0.0254;
+        y_resolution = png_get_y_pixels_per_meter( png, info ) * 0.0254;
 
         // read offset
         position.x = png_get_x_offset_pixels( png, info );
@@ -582,8 +582,8 @@ namespace vigra {
         if (x_resolution > 0 && y_resolution > 0) {
             if (setjmp(png->jmpbuf))
                 vigra_postcondition( false, png_error_message.insert(0, "error in png_set_pHYs(): ").c_str() );
-            png_set_pHYs(png, info, (png_uint_32) (x_resolution * 254 + 0.5),
-                         (png_uint_32) (y_resolution * 254 + 0.5),
+            png_set_pHYs(png, info, (png_uint_32) (x_resolution / 0.0254 + 0.5),
+                         (png_uint_32) (y_resolution / 0.0254 + 0.5),
                          PNG_RESOLUTION_METER);
         }
 
