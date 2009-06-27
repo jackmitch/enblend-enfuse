@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -48,21 +48,30 @@ namespace enblend {
 
 // The metric to use for calculating distances.
 #define EUCLIDEAN_METRIC
+//#define CHESSBOARD_METRIC
+//#define MANHATTAN_METRIC
+//#define HYBRID_METRIC
 
 
 template <typename dist_t>
 inline dist_t _nftDistance(dist_t deltaX, dist_t deltaY)
 {
 #if defined(EUCLIDEAN_METRIC)
-    return deltaY == NumericTraits<dist_t>::max()
-        ? deltaY
-        : deltaY + deltaX * deltaX;
+    const dist_t max = NumericTraits<dist_t>::max();
+    const double z = rint(hypot(static_cast<double>(deltaX), static_cast<double>(deltaY)));
+    return z > static_cast<double>(max) ? max : static_cast<dist_t>(z);
 #elif defined(CHESSBOARD_METRIC)
-    return max(deltaX, deltaY);
+    return std::max(deltaX, deltaY);
 #elif defined(MANHATTAN_METRIC)
-    return deltaY == NumericTraits<dist_t>::max()
-        ? deltaY
-        : deltaX + deltaY;
+    const dist_t max = NumericTraits<dist_t>::max();
+    const double sum = static_cast<double>(deltaX) + static_cast<double>(deltaY);
+    return sum > static_cast<double>(max) ? max : static_cast<dist_t>(sum);
+#elif defined(HYBRID_METRIC)
+    const dist_t max = NumericTraits<dist_t>::max();
+    const double sum =
+        static_cast<double>(std::max(deltaX, deltaY)) +
+        0.5 * static_cast<double>(std::min(deltaX, deltaY));
+    return sum > static_cast<double>(max) ? max : static_cast<dist_t>(sum);
 #else
 #error no metric defined
 #endif
@@ -74,10 +83,12 @@ template <typename dist_t>
 inline dist_t _nftDistance(dist_t deltaY)
 {
 #if defined(EUCLIDEAN_METRIC)
-    return deltaY * deltaY;
+    return deltaY;
 #elif defined(CHESSBOARD_METRIC)
     return deltaY;
 #elif defined(MANHATTAN_METRIC)
+    return deltaY;
+#elif defined(HYBRID_METRIC)
     return deltaY;
 #else
 #error no metric defined
@@ -109,12 +120,9 @@ class FeatureList
     Node *iterator;
 
 public:
-    FeatureList(int size) {
-        array = new Node[size];
-        firstUnused = array;
-        last = NULL;
-        iterator = NULL;
-    }
+    FeatureList(int size) :
+        array(new Node[size]), firstUnused(array), last(NULL), iterator(NULL)
+    {}
 
     ~FeatureList() {
         delete [] array;
@@ -149,11 +157,11 @@ public:
         iterator->prev = iterator->prev->prev;
     }
 
-    T get_current() {
+    T get_current() const {
         return iterator->value;
     }
 
-    T get_previous() {
+    T get_previous() const {
         return iterator->prev->value;
     }
 
@@ -217,6 +225,7 @@ void nearestFeatureTransform(bool wraparound,
         }
         cerr.flush();
     }
+
     // Initialization.
     for (int i = 0; i < w; i++) {
         // before commenting out: 18.23
@@ -244,22 +253,21 @@ void nearestFeatureTransform(bool wraparound,
                 lastFeatureDeltaY[xIndex] = 0;
                 // Nearest feature color = source feature color.
                 da.set(lastFeature[xIndex], dx);
-            }
-            else if (foundFirstFeature[xIndex]) {
+            } else if (foundFirstFeature[xIndex]) {
                 // Source pixel is not a feature.
                 *dnfcx = _nftDistance(lastFeatureDeltaY[xIndex]);
                 da.set(lastFeature[xIndex], dx);
-            }
-            else {
+            } else {
                 *dnfcx = NumericTraits<UInt32>::max();
             }
+
             ++lastFeatureDeltaY[xIndex];
         }
     }
 
-    // Initialize dnfColumn bottom-up. Caluclate the distance to the
+    // Initialize dnfColumn bottom-up. Calculate the distance to the
     // nearest feature in the same column and below us.  If this is
-    // smaller than the value caluclated in the top-down pass,
+    // smaller than the value calculated in the top-down pass,
     // overwrite that value.
     if (Verbose > VERBOSE_NFT_MESSAGES) {
         if (wraparound) {
@@ -269,6 +277,7 @@ void nearestFeatureTransform(bool wraparound,
         }
         cerr.flush();
     }
+
     // Initialization.
     for (int i = 0; i < w; i++) {
         // before commenting out: 18.35
@@ -292,7 +301,7 @@ void nearestFeatureTransform(bool wraparound,
         dnfcx = dnfcy;
         dx = dy;
 
-        for (int xIndex = w-1; sx.x > send.x; --xIndex) {
+        for (int xIndex = w - 1; sx.x > send.x; --xIndex) {
             --sx.x;
             --dnfcx.x;
             --dx.x;
@@ -386,7 +395,7 @@ void nearestFeatureTransform(bool wraparound,
                     // First add ourself to the list.
                     potentialFeatureList.push_back(dnfcx.x);
 
-                    // Iterate throught the list starting at the right. For each
+                    // Iterate through the list starting at the right. For each
                     // potential feature, all of the potential features to the left
                     // in the list must be strictly closer. If not delete them from
                     // the list.

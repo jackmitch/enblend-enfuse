@@ -391,21 +391,34 @@ MaskType* createMask(const ImageType* const white,
                             NumericTraits<MaskPixelType>::one());
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
-    const std::string nftMaskTemplate(command + "-nft-%n.tif");
-    const std::string nftMaskFilename =
-            enblend::expandFilenameTemplate(nftMaskTemplate,
-                                            numberOfImages,
-                                            *inputFileNameIterator,
-                                            OutputFileName,
-                                            m);
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        cerr << command
-             << ": info: saving nearest-feature-transform mask image \""
-             << nftMaskFilename << "\"" << endl;
+    {
+        typedef pair<const char*, const MaskType*> ImagePair;
+
+        const ImagePair nft[] = {
+            std::make_pair("blackmask", blackAlpha),
+            std::make_pair("whitemask", whiteAlpha),
+            std::make_pair("nft-input", nftInputImage),
+            std::make_pair("nft-output", nftOutputImage)
+        };
+
+        for (size_t i = 0; i < sizeof(nft) / sizeof(ImagePair); ++i) {
+            const std::string nftMaskTemplate(command + "-" + nft[i].first + "-%n.tif");
+            const std::string nftMaskFilename =
+                enblend::expandFilenameTemplate(nftMaskTemplate,
+                                                numberOfImages,
+                                                *inputFileNameIterator,
+                                                OutputFileName,
+                                                m);
+            if (Verbose > VERBOSE_NFT_MESSAGES) {
+                cerr << command
+                     << ": info: saving nearest-feature-transform image \""
+                     << nftMaskFilename << "\"" << endl;
+            }
+            ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
+            nftMaskInfo.setCompression(MASK_COMPRESSION);
+            exportImage(srcImageRange(*nft[i].second), nftMaskInfo);
+        }
     }
-    ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
-    nftMaskInfo.setCompression(MASK_COMPRESSION);
-    exportImage(srcImageRange(*nftOutputImage), nftMaskInfo);
 #endif
 
     // mem usage xsection: CoarseMask: 1/8 * uBB * UInt32 * 2
