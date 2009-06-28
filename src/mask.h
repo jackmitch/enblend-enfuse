@@ -107,7 +107,7 @@ class PixelDifferenceFunctor
 {
     typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
     typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
-    typedef LinearIntensityTransform<ResultType> RangeMapper;
+    typedef LinearIntensityTransform<ResultType,typename NumericTraits<ResultType>::RealPromote> RangeMapper;
 
 public:
 
@@ -118,11 +118,12 @@ public:
 
     inline ResultType operator()(const PixelType& a, const PixelType& b) const {
         typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
-        return diff(a, b, src_is_scalar());
+        typedef typename NumericTraits<PixelType>::isIntegral src_is_integral;
+        return diff(a, b, src_is_scalar(), src_is_integral());
     }
 
 protected:
-    inline ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
+    inline ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType, VigraTrueType) const {
         PixelComponentType aLum = a.luminance();
         PixelComponentType bLum = b.luminance();
         PixelComponentType aHue = a.hue();
@@ -134,18 +135,75 @@ protected:
         return rm(std::max(hueDiff, lumDiff));
     }
 
-    inline ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
-        typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
-        return scalar_diff(a, b, src_is_signed());
+    // Convert an RGB triple to XYZ and return in the same data structure
+    // Ref: Reinhard et al, "High Dynamic Range Imaging", pg 80
+    inline PixelType rgb2xyz(const PixelType &a) const {
+	PixelType result;
+	// Use AdobeRGB conversion matrix (assume HDR files have AdobeRGB whitepoint; if not, error in delta E slight anyway)
+	result.setRed(.5767*a.red()+0.1856*a.green()+0.1882*a.blue());
+	result.setGreen(.2974*a.red()+0.6273*a.green()+0.0753*a.blue());
+	result.setBlue(.0270*a.red()+0.0707*a.green()+0.9911*a.blue());
+	return result;
     }
 
-    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
+    // Convert an XYZ triple to a Lab-like space and return in the same data structure
+    // The full Lab transform has a linear region when X,Y,Z are less than 0.008856, but here we ignore this
+    // since the XYZ are not properly scaled by the illuminant
+    // The objective is only to measure delta-E, so this shouldn't have a significant
+    // Ref: Reinhard et al, "High Dynamic Range Imaging", pg 61
+    inline PixelType xyz2lab(const PixelType &a) const {
+	PixelType result;
+	double fx=pow(a.red(),0.33);
+	double fy=pow(a.green(),0.33);
+	double fz=pow(a.blue(),0.33);
+	// Use only power-law region of conversion since HDR file could be arbitrarily scaled
+	result.setRed(116*fy);
+	result.setGreen(500*(fx-fy));
+	result.setBlue(200*(fy-fz));
+	return result;
+    }
+    // Version for non-integral pixels -- assume to be linear RGB with arbitrary scaling
+    inline ResultType diff(const PixelType & a, const PixelType & b, VigraFalseType, VigraFalseType) const {
+	PixelType axyz=rgb2xyz(a);
+	PixelType bxyz=rgb2xyz(b);
+	PixelType alab=xyz2lab(axyz);
+	PixelType blab=xyz2lab(bxyz);
+	double diff=(alab-blab).magnitude();
+	if (Verbose > VERBOSE_MASK_MESSAGES) {
+	    static int firsttime=10;
+	    if (firsttime && diff!=0) {
+		cout << "diff(" << a << "," << b << "); alab=" << alab << ',' << "; blab=" << blab << "; diff=" << diff << endl;
+		*(int *)&firsttime = firsttime-1;
+	    }
+	}
+	return diff;
+    }
+
+    inline ResultType diff(const PixelType & a, const PixelType & b, VigraTrueType, VigraTrueType) const {
+        typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        typedef typename NumericTraits<PixelType>::isIntegral src_is_integral;
+        return scalar_diff(a, b, src_is_signed(), src_is_integral());
+    }
+
+    inline ResultType diff(const PixelType & a, const PixelType & b, VigraTrueType, VigraFalseType) const {
+        typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        typedef typename NumericTraits<PixelType>::isIntegral src_is_integral;
+        return scalar_diff(a, b, src_is_signed(),src_is_integral());
+    }
+
+    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraTrueType, VigraTrueType) const {
         return rm(std::abs(a - b));
     }
 
     // This appears necessary because NumericTraits<unsigned int>::Promote is an unsigned int instead of an int.
-    inline ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
+    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraFalseType, VigraTrueType) const {
         return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
+    }
+
+    // The following ones take non-integral scalar pixels; they don't need to rescale
+    // I don't think this will ever be called
+    inline ResultType scalar_diff(const PixelType & a, const PixelType & b, VigraTrueType, VigraFalseType) const {
+        return std::abs(a - b);
     }
 
     RangeMapper rm;
@@ -672,14 +730,16 @@ MaskType* createMask(const ImageType* const white,
         mismatchImageSize = vBB.size();
     }
 
-    typedef UInt8 MismatchImagePixelType;
-    EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage(mismatchImageSize,
-                                                                          NumericTraits<MismatchImagePixelType>::max());
+    // To handle HDR data, we need a floating-point mismatch type to handle regions of the image
+    // which may differ by more than an 8-bit pixel can accomodate.
+    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType MismatchImagePixelType;
+
+    typename EnblendNumericTraits<MismatchImagePixelType>::ImageType mismatchImage(mismatchImageSize, NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
-    EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType* visualizeImage = NULL;
+    typename EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType *visualizeImage = NULL;
     if (!VisualizeMaskFileName.empty()) {
-        visualizeImage = new EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
+        visualizeImage = new typename EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType(mismatchImageSize);
     }
 
     // mem usage after: Visualize && CoarseMask: iBB * UInt8
@@ -911,9 +971,34 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (visualizeImage) {
+	static int visualizeCount = 0;
+	static char *origname = 0;
+	static char *origsuffix = 0;
+	cout << "Saving visualize mask to " << VisualizeMaskFileName << endl;
         ImageExportInfo visualizeInfo(VisualizeMaskFileName.c_str());
         exportImage(srcImageRange(*visualizeImage), visualizeInfo);
         delete visualizeImage;
+
+
+	// In case we are doing multiple blends, augment the filename with an index
+	if (visualizeCount==0) {
+	    int flen = strlen(VisualizeMaskFileName)+5;
+	    origname=VisualizeMaskFileName;
+	    char *lastdot=rindex(VisualizeMaskFileName,'.');
+	    if (lastdot != NULL) {
+		*lastdot=0;
+	 	origsuffix=lastdot+1;
+	    } else {
+		origsuffix=0;
+	    }
+	    VisualizeMaskFileName = new char[flen];
+	}
+	visualizeCount++;
+	sprintf(VisualizeMaskFileName,"%s_%d",origname,visualizeCount);
+	if (origsuffix) {
+	    strcat(VisualizeMaskFileName,".");
+	    strcat(VisualizeMaskFileName,origsuffix);
+	}
     }
 
     // Fill contours to get final optimized mask.
