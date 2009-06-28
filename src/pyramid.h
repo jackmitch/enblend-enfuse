@@ -1729,7 +1729,7 @@ void collapsePyramid(bool wraparound, vector<PyramidImageType*> *p) {
 };
 
 // Export a scalar pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType) {
     typedef typename PyramidImageType::value_type PyramidValueType;
 
@@ -1737,7 +1737,7 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueTy
     //    // Clear all levels except last.
     //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
     //}
-    //collapsePyramid(false, v);
+    //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];
@@ -1757,7 +1757,7 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueTy
 };
 
 // Export a vector pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType) {
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidValueType;
@@ -1766,7 +1766,7 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseT
     //    // Clear all levels except last.
     //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
     //}
-    //collapsePyramid(false, v);
+    //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];
@@ -1786,10 +1786,10 @@ void exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseT
 };
 
 // Export a pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void exportPyramid(vector<PyramidImageType*> *v, const char *prefix) {
     typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
-    exportPyramid(v, prefix, pyramid_is_scalar());
+    exportPyramid<SKIPSMImagePyramidType, PyramidImageType>(v, prefix, pyramid_is_scalar());
 };
 
 } // namespace enblend
