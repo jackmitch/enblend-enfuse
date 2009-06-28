@@ -347,10 +347,23 @@ MaskType* createMask(const ImageType* const white,
     // mem usage after: CoarseMask: 2/8 * uBB * MaskType
     //                  !CoarseMask: 2 * uBB * MaskType
 
+ImageExportInfo nftmaskinfo1("enblend_nft_input.tif");
+exportImage(srcImageRange(*nftInputImage), nftmaskinfo1);
+
     nearestFeatureTransform(wraparound,
                             srcImageRange(*nftInputImage),
                             destIter(nftOutputImage->upperLeft() + nftOutputOffset),
                             NumericTraits<MaskPixelType>::one());
+
+ImageExportInfo nftmaskinfo2("enblend_nft_output.tif");
+exportImage(srcImageRange(*nftOutputImage), nftmaskinfo2);
+
+    nearestFeatureTransformExact(srcImageRange(*nftInputImage),
+                                 destIter(nftOutputImage->upperLeft() + nftOutputOffset),
+                                 NumericTraits<MaskPixelType>::one());
+
+ImageExportInfo nftmaskinfo3("enblend_nfte_output.tif");
+exportImage(srcImageRange(*nftOutputImage), nftmaskinfo3);
 
     //ImageExportInfo nftmaskinfo("enblend_nft.tif");
     //exportImage(srcImageRange(*nftOutputImage), nftmaskinfo);

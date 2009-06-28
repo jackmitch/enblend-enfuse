@@ -167,6 +167,318 @@ public:
 
 };
 
+template<class FeatureType> class Chain {
+public:
+    struct Node {
+        bool active;
+        FeatureType f;
+        int x;
+        int y;
+        Node* left;
+        Node* right;
+    };
+
+    Chain(int w) {
+        nodeArray = new Node[w];
+        activeNodes = 0;
+        leftmostNode = NULL;
+        rightmostNode = NULL;
+        for (int i = 0; i < w; ++i) {
+            nodeArray[i].active = false;
+            nodeArray[i].x = i;
+            nodeArray[i].left = NULL;
+            nodeArray[i].right = NULL;
+        }
+    }
+
+    ~Chain() {
+        delete [] nodeArray;
+    }
+
+    void insertAfter(Node* n, int x, int y, FeatureType f) {
+        if (nodeArray[x].active) {
+            nodeArray[x].y = y;
+            nodeArray[x].f = f;
+        }
+        else if (n == NULL) {
+            // Insert at beginning
+            nodeArray[x].active = true;
+            nodeArray[x].f = f;
+            nodeArray[x].y = y;
+            nodeArray[x].left = NULL;
+            nodeArray[x].right = leftmostNode;
+            if (leftmostNode != NULL) {
+                leftmostNode->left = &nodeArray[x];
+            }
+            leftmostNode = &nodeArray[x];
+            if (rightmostNode == NULL) {
+                rightmostNode = &nodeArray[x];
+            }
+            ++activeNodes;
+        } else {
+            // Insert after given node.
+            nodeArray[x].active = true;
+            nodeArray[x].f = f;
+            nodeArray[x].y = y;
+            nodeArray[x].left = n;
+            nodeArray[x].right = n->right;
+            if (n->right == NULL) {
+                rightmostNode = &nodeArray[x];
+            } else {
+                nodeArray[x].right->left = &nodeArray[x];
+            }
+            n->right = &nodeArray[x];
+            ++activeNodes;
+        }
+    }
+
+    void erase(Node* n) {
+        n->active = false;
+        if (n->left == NULL) {
+            leftmostNode = n->right;
+        } else {
+            n->left->right = n->right;
+        }
+        if (n->right == NULL) {
+            rightmostNode = n->left;
+        } else {
+            n->right->left = n->left;
+        }
+        n->left = NULL;
+        n->right = NULL;
+        --activeNodes;
+    }
+
+    // Compute the y-coordinate of the intersection of the
+    // perpendicular bisector of pq with the vertical line at x.
+    pair<double, bool> pbY(Node* p, double x) {
+        Node* q = p->right;
+        assert(q != NULL);
+        const double px = p->x;
+        const double py = p->y;
+        const double qx = q->x;
+        const double qy = q->y;
+        if (q->y == p->y) return std::make_pair<double, bool>(0.0, false);
+        const double midX = (qx + px) / 2.0;
+        const double midY = (qy + py) / 2.0;
+        const double m = (qy - py) / (qx - px);
+        const double mPB = -1.0 / m;
+        // y = mPB * (x - midX) + midY
+        return std::make_pair<double, bool>((mPB * (x - midX) + midY), true);
+    }
+
+    // Compute the x-coordinate of the intersection of the
+    // perpendicular bisector of pq with the horizontal line at y.
+    double pbX(Node* p, double y) {
+        Node* q = p->right;
+        assert(q != NULL);
+        const double px = p->x;
+        const double py = p->y;
+        const double qx = q->x;
+        const double qy = q->y;
+        const double midX = (qx + px) / 2.0;
+        if (q->y == p->y) return midX;
+        const double midY = (qy + py) / 2.0;
+        const double m = (qy - py) / (qx - px);
+        const double mPB = -1.0 / m;
+        // y = mPB * (x - midX) + midY
+        // y - midY = mPB * (x - midX)
+        // (y - midY) / mPB = x - midX
+        // x = (y - midY) / mPB + midX
+        return ((y - midY) / mPB + midX);
+    }
+
+    // Compute the y-coordinate of the intersection of the
+    // perpendicular bisectors of pq and qr.
+    pair<double, bool> intersectionY(Node* p) {
+        Node* q = p->right;
+        assert(q != NULL);
+        Node* r = q->right;
+        assert(r != NULL);
+        const int px = p->x;
+        const int py = p->y;
+        const int qx = q->x;
+        const int qy = q->y;
+        const int rx = r->x;
+        const int ry = r->y;
+
+        const double midPQX = (qx + px) / 2.0;
+        if (qy == py) return pbY(q, midPQX);
+
+        const double midQRX = (rx + qx) / 2.0;
+        if (qy == ry) return pbY(p, midQRX);
+
+        const double midPQY = (qy + py) / 2.0;
+        const double slopePQ = static_cast<double>(qy - py) / static_cast<double>(qx - px);
+        const double pbSlopePQ = -1.0 / slopePQ;
+
+        const double midQRY = (ry + qy) / 2.0;
+        const double slopeQR = static_cast<double>(ry - qy) / static_cast<double>(rx - qx);
+        const double pbSlopeQR = -1.0 / slopeQR;
+
+        if (slopePQ == slopeQR) return std::make_pair<double, bool>(0.0, false);
+
+        // pbPQ: y = pbSlopePQ * (x - midPQX) + midPQY;
+        // pbQR: y = pbSlopeQR * (x - midQRX) + midQRY;
+        //       y = (pbSlopeQR * x) - (pbSlopeQR * midQRX) + midQRY
+        //       pbSlopeQR * x = y + (pbSlopeQR * midQRX) - midQRY
+        //       x = (y + (pbSlopeQR * midQRX) - midQRY) / pbSlopeQR
+        // substituting into pbPQ:
+        //       y = pbSlopePQ * (y + (pbSlopeQR * midQRX) - midQRY) / pbSlopeQR - pbSlopePQ*midPQX + midPQY;
+        //         = (pbSlopePQ/pbSlopeQR) * (y + pbSlopeQR*midQRX - midQRY) - pbSlopePQ*midPQX + midPQY;
+        //       y - (pbSlopePQ/pbSlopeQR)*y = (pbSlopePQ/pbSlopeQR)*(pbSlopeQR*midQRX - midQRY) - pbSlopePQ*midPQX + midPQY
+        //       y * (1 - pbSlopePQ/pbSlopeQR) = ...
+        //       y = ... / (1 - pbSlopePQ/pbSlopeQR)
+        const double iy = ((pbSlopePQ/pbSlopeQR)*(pbSlopeQR*midQRX - midQRY) - pbSlopePQ*midPQX + midPQY)
+                          / (1.0 - pbSlopePQ / pbSlopeQR);
+        return std::make_pair<double, bool>(iy, true);
+    }
+
+    Node* operator[](int idx) {
+        return &(nodeArray[idx]);
+    }
+
+    Node* nodeArray;
+    int activeNodes;
+    Node* leftmostNode;
+    Node* rightmostNode;
+};
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+void nearestFeatureTransformExact(
+        SrcImageIterator src_upperleft,
+        SrcImageIterator src_lowerright,
+        SrcAccessor sa,
+        DestImageIterator dest_upperleft,
+        DestAccessor da,
+        typename SrcAccessor::value_type featurelessPixel) {
+
+    typedef typename EnblendNumericTraits<UInt32>::ImageType DNFImage;
+    typedef typename DNFImage::traverser DnfIterator;
+    typedef typename SrcAccessor::value_type SrcValueType;
+
+    SrcImageIterator sx, sy, send;
+    DnfIterator dnfAboveX, dnfAboveY;
+    DestImageIterator dx, dy;
+
+    int w = src_lowerright.x - src_upperleft.x;
+    int h = src_lowerright.y - src_upperleft.y;
+
+    DNFImage dnfAbove(w, h, NumericTraits<UInt32>::max());
+    Chain<SrcValueType> chain(w);
+
+    // Top-down pass
+    sy = src_upperleft;
+    send = src_lowerright;
+    dy = dest_upperleft;
+    dnfAboveY = dnfAbove.upperLeft();
+
+    for (int yIndex = 0; sy.y < send.y; ++yIndex, ++sy.y, ++dy.y, ++dnfAboveY.y) {
+        // Insert new features into chain.
+        sx = sy;
+        typename Chain<SrcValueType>::Node* lastActiveNode = NULL;
+        for (int xIndex = 0; sx.x < send.x; ++xIndex, ++sx.x) {
+            SrcValueType pixel = sa(sx);
+            if (pixel != featurelessPixel) {
+                //cout << "new feature xIndex=" << xIndex << " yIndex=" << yIndex << " f=" << (int)pixel << endl;
+                chain.insertAfter(lastActiveNode, xIndex, yIndex, pixel);
+            }
+            if (chain[xIndex]->active) lastActiveNode = chain[xIndex];
+        }
+
+        //cout << "after insert: ";
+        //for (lastActiveNode = chain.leftmostNode; lastActiveNode != NULL; lastActiveNode = lastActiveNode->right) {
+        //    cout << "[" << lastActiveNode->x << "," << lastActiveNode->y << ": " << (int)lastActiveNode->f << "] ";
+        //}
+        //cout << endl;
+
+        // Remove leftmost extreme features
+        while (chain.activeNodes > 1) {
+            // If intersection of perpendicular bisector of pq and x=0 is < yIndex, delete p.
+            pair<double, bool> r = chain.pbY(chain.leftmostNode, 0);
+            if (r.second && (r.first < yIndex) && (r.first > chain.leftmostNode->y)) chain.erase(chain.leftmostNode);
+            else break;
+        }
+
+        //cout << "after leftmost: ";
+        //for (lastActiveNode = chain.leftmostNode; lastActiveNode != NULL; lastActiveNode = lastActiveNode->right) {
+        //    cout << "[" << lastActiveNode->x << "," << lastActiveNode->y << ": " << (int)lastActiveNode->f << "] ";
+        //}
+
+        // Remove rightmost extreme features
+        while (chain.activeNodes > 1) {
+            // If intersection of perpendicular bisector of pq and x=w-1 is <= yIndex, delete q.
+            pair<double, bool> r = chain.pbY(chain.rightmostNode->left, w-1);
+            if (r.second && (r.first <= yIndex) && (r.first > chain.rightmostNode->y)) chain.erase(chain.rightmostNode);
+            else break;
+        }
+
+        //cout << "after rightmost: ";
+        //for (lastActiveNode = chain.leftmostNode; lastActiveNode != NULL; lastActiveNode = lastActiveNode->right) {
+        //    cout << "[" << lastActiveNode->x << "," << lastActiveNode->y << ": " << (int)lastActiveNode->f << "] ";
+        //}
+
+        // Remove internal features
+        typename Chain<SrcValueType>::Node* p = chain.leftmostNode;
+        while (chain.activeNodes > 2) {
+            typename Chain<SrcValueType>::Node* q = p->right;
+            typename Chain<SrcValueType>::Node* r = q->right;
+            if (r == NULL) break;
+            pair<double, bool> iy = chain.intersectionY(p);
+            if (iy.second && (iy.first < yIndex) && (iy.first > q->y)) {
+                // remove q and backtrack
+                chain.erase(q);
+                if (p->left != NULL) p = p->left;
+            } else {
+                // advance
+                p = q;
+            }
+        }
+
+        //cout << "after internal: ";
+        //for (lastActiveNode = chain.leftmostNode; lastActiveNode != NULL; lastActiveNode = lastActiveNode->right) {
+        //    cout << "[" << lastActiveNode->x << "," << lastActiveNode->y << ": " << (int)lastActiveNode->f << "] ";
+        //}
+        //cout << endl;
+
+        // assign
+        dx = dy;
+        dnfAboveX = dnfAboveY;
+        lastActiveNode = chain.leftmostNode;
+        int xIndex = 0;
+        while (lastActiveNode != NULL) {
+            int xLimit = (lastActiveNode->right) ? static_cast<int>(floor(chain.pbX(lastActiveNode, yIndex))) : w;
+            //cout << "[" << lastActiveNode->x << "," << lastActiveNode->y << ": " << (int)lastActiveNode->f << "] xLimit=" << xLimit << endl;
+            for (; xIndex < w && xIndex <= xLimit; ++xIndex) {
+                dx(xIndex, 0) = lastActiveNode->f;
+                dnfAboveX(xIndex, 0) = (xIndex - lastActiveNode->x) * (xIndex - lastActiveNode->x) + (yIndex - lastActiveNode->y) * (yIndex - lastActiveNode->y);
+            }
+            lastActiveNode = lastActiveNode->right;
+        }
+
+    } /* end of top-down pass */
+/*
+    sy = src_lowerright;
+    send = src_upperleft;
+    dy = dest_upperleft + Diff2D(w, h);
+    dnfAboveY = dnfAbove.lowerRight();
+
+    for (int yIndex = h; sy.y > send.y;) {
+        --yIndex;
+        --sy.y;
+        --dy.y;
+        --dnfAboveY.y;
+
+        sx = sy;
+        typename Chain<SrcValueType>::Node* lastActiveNode = NULL;
+        for (int xIndex = w; sx.x > send.x;) {
+            --xIndex;
+            --sx.x;
+*/
+
+}
+    
 /** Compute the nearest feature transform.
  *  A non-zero pixel in the src image is considered a feature.
  *  Each pixel in the dest image is given the value of the nearest feature
@@ -545,6 +857,19 @@ inline void nearestFeatureTransform(bool wraparound,
         typename SrcAccessor::value_type featurelessPixel) {
 
     nearestFeatureTransform(wraparound,
+            src.first, src.second, src.third,
+            dest.first, dest.second, featurelessPixel);
+
+};
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+inline void nearestFeatureTransformExact(
+        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+        pair<DestImageIterator, DestAccessor> dest,
+        typename SrcAccessor::value_type featurelessPixel) {
+
+    nearestFeatureTransformExact(
             src.first, src.second, src.third,
             dest.first, dest.second, featurelessPixel);
 
