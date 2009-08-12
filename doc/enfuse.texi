@@ -1,0 +1,761 @@
+\input auxmac
+\input texinfo
+@c %** start of header
+@setfilename enfuse.info
+@settitle Fusing Multiple Images with Enfuse
+@c %** end of header
+
+
+@c
+@c Summary Description and Copyright
+@c
+
+@ifinfo
+This file documents Enfuse version 3.1.
+
+Copyright @copyright{} 2004-2008 Andrew Mihal.
+@end ifinfo
+
+
+@c
+@c Title Page and Copyright
+@c
+
+@titlepage
+@sp 10
+@center @titlefont{Fusing Multiple Images with Enfuse}
+
+@page
+@vskip 0pt plus 1fill
+Copyright @copyright{} 2004-2008 Andrew Mihal
+@end titlepage
+
+
+@c
+@c ``Top'' Node and Master Menu
+@c
+
+@ifnottex
+@node Top, Overview, (dir), (dir)
+@top Enfuse
+
+Using Enfuse
+
+This file documents Enfuse version 3.1.
+
+This document is distributed under the terms of the GNU Free
+Documentation License.
+@end ifnottex
+
+@menu
+* Overview::                    Overview
+* Invocation::                  Invocation
+* Examples::                    Examples
+* Authors::                     Authors
+* Index::                       Index
+@end menu
+
+
+@node Overview, Invocation, Top, Top
+@chapter Overview
+@cindex Overview
+
+Enfuse merges overlapping images using the Mertens-Kautz-Van Reeth
+exposure fusion algorithm.@footnote{Tom Mertens, Jan Kautz, and Frank
+van Reeth, ``Exposure Fusion'', Proceedings of the 15th Pacific
+Conference on Computer Graphics and Applications, pages 382--390.}
+This is a quick way for example to blend differently exposed images
+into a nice output image, without producing intermediate high-dynamic
+range (@acronym{HDR}) images that are then tonemapped to a viewable
+image.  This simplified process often works much better than the
+currently known tonemapping algorithms.
+
+Enfuse can also be used to build extended depth-of-field
+(@acronym{DOF}) images by blending a focus stack.
+
+The basic idea is that pixels in the input images are weighted
+according to qualities such as proper exposure, good contrast, or high
+saturation.  These weights determine how much a given pixel will
+contribute to the final image.  A Burt-Adelson multiresolution spline
+blender@footnote{Peter J. Burt and Edward H. Adelson, ``A
+Multiresolution Spline With Application to Image Mosaics'',
+@acronym{ACM} Transactions on Graphics, Vol@:. 2, No@:. 4, October
+1983, pages 217--236.} is used to combine the images according to the
+weights.  The multiresolution blending ensures that transitions
+between regions where different images contribute are difficult to
+see.
+
+Enfuse uses three different criteria to judge the quality of a pixel:
+exposure, saturation, contrast, and entropy.
+
+@table @asis
+@item Exposure
+The exposure criteria favors pixels with luminance close to the middle
+of the range.  These pixels are considered better-exposed than those
+with high or low luminance levels.
+
+@item Saturation
+The saturation criteria favors highly-saturated pixels.
+
+@item Contrast
+The contrast criteria favors high-contrast pixels.  Enfuse can use
+standard deviation or Laplacian magnitude or a blend of both as local
+contrast measure.
+@end table
+
+Adjust how much importance is given to each criterion by setting the
+weight parameters on the command line.  For example, if you set
+@samp{--wExposure=1.0} and @samp{--wSaturation=0.5}, Enfuse will favor
+well-exposed pixels over highly-saturated pixels when blending the
+source images.  The impact of these parameters on the final result
+will not always be clear.  The quality of the result is subject to
+your artistic interpretation.  Playing with the weights may or may not
+give you a more pleasing result.  The authors encourage you to
+experiment, perhaps using downsized images for speed.
+
+Enfuse expects but does not require each input image to have an alpha
+channel.  By setting the alpha values of pixels to zero, users can
+manually remove those pixels from consideration when blending.  If an
+input image lacks an alpha channel, Enfuse will issue a warning and
+continue assuming all pixels should contribute to the final output.
+Any alpha value other than zero is interpreted as ``this pixel should
+contribute to the final image''.
+
+
+@node Invocation, Examples, Overview, Top
+@chapter Invocation
+@cindex Invocation
+
+@command{enfuse} [@var{OPTIONS}] @option{-o OUTPUT-FILE} @var{INPUT-FILE}...
+
+Fuse the sequence of images @var{INPUT-FILE}... into @var{OUTPUT-FILE}.
+
+@menu
+* Common Options::              General options
+* Extended Options::            Memory control
+* Fusion Options::              Image fusion control
+* Expert Options::              Contrast selection configuration
+@end menu
+
+
+@node Common Options, Extended Options, Invocation, Invocation
+@section Common Options
+@cindex Common Options
+
+...
+
+@table @code
+@item -V
+@itemx --version
+@cindex option @option{-V}
+@cindex option @option{--version}
+Output information on the Enfuse version and some configuration
+details like extra features that have been compiled in.
+
+@item -h
+@itemx --help
+@cindex option @option{-h}
+@cindex option @option{--help}
+Print information on the available options and exit.
+
+@item -l @var{LEVELS}
+@cindex option @option{-l}
+Use exactly this many @var{LEVELS} for pyramid blending.  This trades
+off quality of results for shorter execution time and lower memory
+usage.  The default is to use as many levels as possible given the
+size of the overlap region.  Enfuse may still use a smaller number of
+levels if the geometry of the images demands it.
+
+@item -o @var{OUTPUT-FILE}
+@cindex option @option{-o}
+Required option that specifies the name of the @var{OUTPUT-FILE}.
+
+@item -v
+@itemx --verbose
+@cindex option @option{-v}
+@cindex option @option{--verbose}
+Increase the verbosity of progress reporting.  Giving one or more
+@option{-v} options will make Enfuse more verbose.
+
+@item -w
+@cindex option @option{-w}
+Blend around the @minus{}180/+180 degree boundary.  Useful for
+full 360 degree panoramas.  Enfuse currently does not blend
+neither zenith nor or nadir, so you may still see some seams in these
+areas.
+
+@item --compression=@var{COMP}
+@cindex option @option{--compression}
+Write a compressed output file.  Valid values for @var{COMP} are
+@samp{LZW} and @samp{DEFLATE} for @acronym{TIFF}-files, and quality
+levels from 0--100 for @acronym{JPEG} files.
+@end table
+
+
+@node Extended Options, Fusion Options, Common Options, Invocation
+@section Extended Options
+@cindex Extended Options
+
+...
+
+@table @code
+@item -b @var{BLOCKSIZE}
+@cindex option @option{-b}
+Set the @var{BLOCKSIZE} in Kilobytes for Enfuse's image cache.  This
+is the amount of data that Enfuse will move to and from the disk in
+one go.  The default is 2048@dmn{KB}, which should be ok for most
+systems.
+
+@item -c
+@cindex option @option{-c}
+Use the @acronym{CIECAM02} color appearance model for blending colors.
+Your input files should have embedded @acronym{ICC} profiles when this
+option is specified.  If no @acronym{ICC} profile is present, Enfuse
+will assume that the image uses the @acronym{sRGB} color space.  The
+difference between this option and Enfuse's default color blending
+algorithm is very slight, and will be only noticeable when areas of
+different primary colors are blended together.
+
+@item -g
+@cindex option @option{-g}
+Gimp (before @w{version 2.0}) and Cinepaint exhibit unusual behavior
+when loading images with unassociated alpha channels.  Use option
+@option{-g} to work around this problem.  With this flag Enfuse will
+create the output image with the associated alpha tag set, even though
+the image is really unassociated alpha.
+
+@item -f @var{WIDTH}x@var{HEIGHT}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
+@cindex option @option{-f}
+Set the size of the output image manually to @var{WIDTH}x@var{HEIGHT}.
+Optionally specify the @var{XOFFSET} and @var{YOFFSET}, too.  This is
+useful when the input images are cropped @acronym{TIFF} files, such as
+those produced by @command{nona}.
+
+@item -m @var{CACHESIZE}
+@cindex option @option{-m}
+Set the @var{CACHESIZE} in Megabytes of Enfuse's image cache.  This is
+the amount of memory Enfuse will use for storing image data before
+swapping to disk.  The default is 1024@dmn{MB}.
+@end table
+
+
+@node Fusion Options, Expert Options, Extended Options, Invocation
+@section Fusion Options
+@cindex Fusion Options
+
+...
+
+@table @code
+@item --wExposure=@var{WEIGHT}
+@cindex option @option{--wExposure}
+Sets the relative @var{WEIGHT} of the well-exposedness criterion.
+Increasing this weight relative to the others will make well-exposed
+pixels contribute more to the final output.  Valid range:
+@ifinfo
+0 <= @var{WEIGHT} <= 1.
+@end ifinfo
+@html
+<math>
+    <mn>0</mn>
+    <mo>&le;</mo>
+    <mi mathvariant="italic">WEIGHT</mi>
+    <mo>&le;</mo>
+    <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+
+@item --wMu=@var{MEAN}
+@cindex option @option{--wMu}
+Set the @var{MEAN} (this is, the center) of the Gaussian exposure
+weight curve.  The default value is 0.5, which for example gives
+pixels with @w{value 128} (when using 8-bit images) the highest
+weight.  Valid range:
+@ifinfo
+0 <= @var{MEAN} <= 1.
+@end ifinfo
+@html
+<math>
+    <mn>0</mn>
+    <mo>&le;</mo>
+    <mi mathvariant="italic">MEAN</mi>
+    <mo>&le;</mo>
+    <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{MEAN} \le 1$.
+@end tex
+
+@item --wSigma=@var{STD-DEV}
+@cindex option @option{--wSigma}
+Standard deviation @var{STD-DEV} of the Gaussian exposure weight
+curve.  Default: 0.2.  Low numbers give less weight to pixels that are
+far from @option{--wMu} and vice versa.  Valid range:
+@ifinfo
+0 <= @var{STD-DEV} <= 1.
+@end ifinfo
+@html
+<math>
+    <mn>0</mn>
+    <mo>&le;</mo>
+    <mi mathvariant="italic">STD-DEV</mi>
+    <mo>&le;</mo>
+    <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{STD-DEV} \le 1$.
+@end tex
+
+@item --wSaturation=@var{WEIGHT}
+@cindex option @option{--wSaturation}
+Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
+this weight makes pixels with high saturation contribute more to the
+final output.  Valid range:
+@ifinfo
+0 <= @var{WEIGHT} <= 1.
+@end ifinfo
+@html
+<math>
+    <mn>0</mn>
+    <mo>&le;</mo>
+    <mi mathvariant="italic">WEIGHT</mi>
+    <mo>&le;</mo>
+    <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+
+@item --wContrast=@var{WEIGHT}
+@cindex option @option{--wContrast}
+Sets the relative @var{WEIGHT} of high-contrast pixels.  Valid range:
+@ifinfo
+0 <= @var{WEIGHT} <= 1.
+@end ifinfo
+@html
+<math>
+    <mn>0</mn>
+    <mo>&le;</mo>
+    <mi mathvariant="italic">WEIGHT</mi>
+    <mo>&le;</mo>
+    <mn>1</mn>.
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+
+@item --wEntropy=@var{WEIGHT}
+@cindex option @option{--wEntropy}
+Sets the relative @var{WEIGHT} of high entropy pixels.  Valid range:
+@ifinfo
+0 <= @var{WEIGHT} <= 1.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">WEIGHT</mi>
+        <mo>&le;</mo>
+        <mn>1</mn>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{WEIGHT} \le 1$.
+@end tex
+@end table
+
+
+@node Expert Options,  , Fusion Options, Invocation
+@section Expert Options
+@cindex Expert Options
+
+...
+
+@table @code
+@item --ContrastWindowSize=@var{SIZE}
+@cindex option @option{--ContrastWindowSize}
+Window @var{SIZE} for local contrast analysis.  Values larger than 5
+might result in a blurry composite and increased computation times.
+Values in the range of 3 to 5 have given good results on focus stacks.
+Valid range:
+@ifinfo
+@var{SIZE} >= 3.
+@end ifinfo
+@html
+<math>
+    <mi mathvariant="italic">SIZE</mi>
+    <mo>&ge;</mo>
+    <mn>3</mn>.
+</math>
+@end html
+@tex
+$\mathit{SIZE} \ge 3$.
+@end tex
+
+@item --SoftMask
+@cindex option @option{--SoftMask}
+Consider all masks when fusing.  This is the default.
+
+@item --HardMask
+@cindex option @option{--HardMask}
+Force hard blend masks on the finest scale.  This avoids averaging of
+fine details (only) at the expense of increasing the noise,
+considerably improving the sharpness of focus stacks.
+
+@item --GrayProjector=@var{PROJ}
+@cindex option @option{--GrayProjector}
+@cindex gray projector
+Use gray projector @var{PROJ} for conversion of @acronym{RGB} images
+to grayscale masks.  Enfuse uses grayscale projections of color images
+in exposure weighting and contrast weighting.  Valid values for
+@var{PROJ} are:
+
+@table @samp
+@item average
+@cindex gray projector, @samp{average}
+Average red, green, and blue channel with equal weights.  This is the
+default and it often is a good projector for gamma = 1 data.
+@ifinfo
+@display
+@math{Y = (R + G + B) / 3}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mi>Y</mi>
+    <mo>=</mo>
+    <mfrac>
+        <mrow>
+            <mi>R</mi>
+            <mo>+</mo>
+            <mi>G</mi>
+            <mo>+</mo>
+            <mi>B</mi>
+        </mrow>
+        <mn>3</mn>
+    </mfrac>
+</math>
+@end html
+@tex
+$$Y = {R + G + B \over 3}$$
+@end tex
+
+@item l-star
+@cindex gray projector, @samp{l-star}
+Use the L*-channel of the L*a*b*-conversion of the image as its
+grayscale representation.  This is a useful projector for gamma = 1
+data.  It reveals minute contrast variations even in the shadows and
+the highlights.  This projector is computationally expensive.
+
+@item lightness
+@cindex gray projector, @samp{lightness}
+Compute the lightness of each @acronym{RGB} pixel as in an
+@acronym{HSL}-conversion of the image.
+@ifinfo
+@display
+@math{Y = (max(R, G, B) + min(R, G, B)) / 2}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mi>Y</mi>
+    <mo>=</mo>
+    <mfrac>
+        <mrow>
+            <mi>max</mi>
+            <mo>&ApplyFunction;</mo>
+            <mo>(</mo>
+            <mi>R</mi>
+            <mo>,</mo>
+            <mi>G</mi>
+            <mo>,</mo>
+            <mi>B</mi>
+            <mo>)</mo>
+            <mo>+</mo>
+            <mi>max</mi>
+            <mo>&ApplyFunction;</mo>
+            <mo>(</mo>
+            <mi>R</mi>
+            <mo>,</mo>
+            <mi>G</mi>
+            <mo>,</mo>
+            <mi>B</mi>
+            <mo>)</mo>
+        </mrow>
+        <mn>2</mn>
+    </mfrac>
+</math>
+@end html
+@tex
+$$Y = {\max(R, G, B) + \min(R, G, B) \over 2}$$
+@end tex
+
+@item value
+@cindex gray projector, @samp{value}
+Take the Value-channel of the @acronym{HSV} conversion of the image.
+@ifinfo
+@display
+@math{Y = max(R, G, B)}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mi>Y</mi>
+    <mo>=</mo>
+    <mi>max</mi>
+    <mo>&ApplyFunction;</mo>
+    <mo>(</mo>
+    <mi>R</mi>
+    <mo>,</mo>
+    <mi>G</mi>
+    <mo>,</mo>
+    <mi>B</mi>
+    <mo>)</mo>
+</math>
+@end html
+@tex
+$$Y = \max(R, G, B)$$
+@end tex
+
+@item luminance
+@cindex gray projector, @samp{luminance}
+Use the weighted average of the @acronym{RGB} pixel's channels as
+defined by @acronym{CIE} and the @acronym{JPEG} standard.
+@ifinfo
+@display
+@math{Y = 0.30 * R + 0.59 * G + 0.11 * B}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mi>Y</mi>
+    <mo>=</mo>
+    <mn>0.30</mn>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.333em"/>
+    <mi>R</mi>
+    <mo>+</mo>
+    <mn>0.59</mn>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.333em"/>
+    <mi>G</mi>
+    <mo>+</mo>
+    <mn>0.11</mn>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.333em"/>
+    <mi>B</mi>
+</math>
+@end html
+@tex
+$$Y = 0.30 \, R + 0.59 \, G + 0.11 \, B$$
+@end tex
+
+@item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
+@cindex gray projector, @samp{channel-mixer}
+Weight the channels as given.
+@ifinfo
+@display
+@math{Y = RED-WEIGHT * R + GREEN-WEIGHT * G + BLUE-WEIGHT * B}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mi>Y</mi>
+    <mo>=</mo>
+    <mi mathvariant="italic">RED-WEIGHT</mi>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.5em"/>
+    <mi>R</mi>
+    <mo>+</mo>
+    <mi mathvariant="italic">GREEN-WEIGHT</mi>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.5em"/>
+    <mi>G</mi>
+    <mo>+</mo>
+    <mi mathvariant="italic">BLUE-WEIGHT</mi>
+    <mo>&InvisibleTimes;</mo>
+    <mspace width="0.5em"/>
+    <mi>B</mi>
+</math>
+@end html
+@tex
+$$Y = \mathit{RED-WEIGHT} \; R +
+      \mathit{GREEN-WEIGHT} \; G +
+      \mathit{BLUE-WEIGHT} \; B$$
+@end tex
+
+The weights are automatically normalized to one, so
+@example
+    --GrayProjector=channel-mixer:0.25:0.5:0.25
+    --GrayProjector=channel-mixer:1:2:1
+    --GrayProjector=channel-mixer:25:50:25
+@end example
+all define the same mixer configuration.
+
+The three weights @var{RED-WEIGHT}, @var{GREEN-WEIGHT}, and
+@var{BLUE-WEIGHT} define the relative weight of the respective color
+channel.  The sum of all weights is normalized to one.
+@end table
+
+Default: @samp{average}.
+
+@item --EdgeScale=@var{EDGE-SCALE}
+@itemx --EdgeScale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
+@cindex option @option{--EdgeScale}
+A non-zero value for @var{EDGE-SCALE} switches on the
+Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
+@var{EDGE-SCALE} is the radius of the Gaussian used in the search for
+edges.  Default: 0 pixels.
+
+A positive @var{LCE-SCALE} turns on local contrast enhancement
+(@acronym{LCE}) prior to the @acronym{LoG} edge detection.
+@var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
+step, @var{LCE-FACTOR} is the weight factor (``strength'').
+@ifinfo
+@display
+@math{enhanced =   (1 + LCE-FACTOR) * original
+                 - LCE-FACTOR * GaussianSmooth(original, LCE-SCALE)}
+@end display
+@end ifinfo
+@html
+<br>
+<math>
+    <mtable>
+        <mtr>
+            <mtd>
+                <mi mathvariant="italic">enhanced</mi>
+            </mtd>
+            <mtd>
+                <mo>=</mo>
+            </mtd>
+            <mtd>
+                <mo>(</mo>
+                <mn>1</mn>
+                <mo>+</mo>
+                <mi mathvariant="italic">LCE-FACTOR</mi>
+                <mo>)</mo>
+                <mo>&InvisibleTimes;</mo>
+                <mspace width="0.5em"/>
+                <mi mathvariant="italic">original</mi>
+            </mtd>
+        </mtr>
+        <mtr>
+            <mtd></mtd>
+            <mtd></mtd>
+            <mtd>
+                <mo>-</mo>
+                <mi mathvariant="italic">LCE-FACTOR</mi>
+                <mo>&InvisibleTimes;</mo>
+                <mspace width="0.5em"/>
+                <mi>GaussianSmooth</mi>
+                <mo>&ApplyFunction;</mo>
+                <mo>(</mo>
+                <mi mathvariant="italic">original</mi>
+                <mo>,</mo>
+                <mi mathvariant="italic">LCE-SCALE</mi>
+                <mo>)</mo>
+            </mtd>
+        </mtr>
+    </mtable>
+</math>
+@end html
+@tex
+$$
+\eqalign{enhanced & = (1 + \mathit{LCE-FACTOR}) \; \mathit{original}\cr
+                  & - \mathit{LCE-FACTOR} \;
+                      \mathrm{GaussianSmooth}(\mathit{original},
+                                              \mathit{LCE-SCALE})\cr}
+$$
+@end tex
+
+@var{LCE-SCALE} defaults to 0 pixels and @var{LCE-FACTOR} defaults to
+0.  Append @samp{%} to @var{LCE-SCALE} to specify the radius as a
+percentage of @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR}
+to specify the weight as a percentage.
+
+@item --MinCurvature=@var{CURVATURE}
+@cindex option @option{--MinCurvature}
+Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
+detection.  Default: 0.  Append a @samp{%} to specify the minimum
+curvature relative to maximum pixel value in the source image (for
+example 255 or 65535).
+
+A positive value lets enfuse use the local contrast data (controlled
+with @option{--ContrastWindowSize}) for curvatures less than
+@var{CURVATURE} and @acronym{LoG} data for values above it.
+
+A negative value truncates all curvatures less than
+@minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
+left unchanged.  This effectively suppresses weak edges.
+@end table
+
+
+@node Examples, Authors, Invocation, Top
+@chapter Examples
+
+To blend an exposure stack given in files @file{exposure-01.tif},
+@file{exposure-02.tif}, ...
+
+@example
+enfuse -o result.tif exposure-*.tif
+@end example
+
+To blend a focus stack to form an extended depth of field image set
+the contrast weight to 1 and use very low values for exposure and
+saturation criteria to get meaningful results in low contrast areas.
+
+@example
+enfuse -o result.tif --wExposure=0.001 --wSaturation=0.001 --wContrast=1 --HardMask focus-*.tif
+@end example
+
+
+@node Authors,  , Examples, Top
+@chapter Authors
+
+@itemize @bullet
+@item
+Andrew Mihal @email{acmihal@@users.sourceforge.net}.
+
+@item
+Thanks to Simon Andriot and Pablo Joubert for suggesting the
+Mertens-Kautz-Van Reeth technique and the name ``Enfuse''.
+
+@item
+The contrast criteria was added by Pablo d'Angelo
+@email{dangelo@@users.sourceforge.net}.
+
+@item
+Dr. Christoph L. Spiel added the gray projectors, the
+@acronym{LoG}-based edge detection, an O(1)-algorithm for the
+calculation of local contrast, and the entropy weighting.
+@end itemize
+
+
+@c
+@c End of Document
+@c
+
+@node Index,  , Top, Top
+@unnumbered Index
+
+@printindex cp
+
+@ifnothtml
+@contents
+@end ifnothtml
+@bye
