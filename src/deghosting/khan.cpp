@@ -1,15 +1,10 @@
 
+#include <signal.h>
+
 #include "khan.h"
 #include <vigra/impex.hxx>
 // for importImageAlpha, it's not really necessary
 #include <vigra_ext/impexalpha.hxx>
-
-// for EMoR
-#include <photometric/ResponseTransform.h>
-// neded for zeroNegative(), used in response transformation
-#include <vigra_ext/ImageTransforms.h>
-// panotools format of image, needed for response transformation
-#include <panotools/PanoToolsInterface.h>
 
 #ifdef ATAN_KH
 // neded for atan and abs
@@ -92,34 +87,6 @@ namespace deghosting {
         #endif
     }
     
-    void Khan::linearizeRGB(std::string inputFile,FRGBImage *pInputImg) {
-        HuginBase::SrcPanoImage panoImg(inputFile);
-        panoImg.setResponseType(HuginBase::SrcPanoImage::RESPONSE_EMOR);
-        panoImg.setEMoRParams(response);
-        // response transform functor
-        HuginBase::Photometric::InvResponseTransform<RGBValue<float>,
-                                                     RGBValue<float> > invResponse(panoImg);
-        invResponse.enforceMonotonicity();
-
-        // iterator to the upper left corner
-        FRGBImage::traverser imgIterSourceY = pInputImg->upperLeft();
-        // iterator to he lower right corner
-        FRGBImage::traverser imgIterEnd = pInputImg->lowerRight();
-        // iterator to the output
-        FRGBImage::traverser imgIterOut = pInputImg->upperLeft();
-        // loop through the image
-        for (int y=1; imgIterSourceY.y != imgIterEnd.y; ++imgIterSourceY.y, ++imgIterOut.y, ++y) {
-            // iterator to the input
-            FRGBImage::traverser sx = imgIterSourceY;
-            // iterator to the output
-            FRGBImage::traverser dx = imgIterOut;
-            for (int x=1; sx.x != imgIterEnd.x; ++sx.x, ++dx.x, ++x) {
-                // transform image using response
-                *dx = vigra_ext::zeroNegative(invResponse(*sx, hugin_utils::FDiff2D(x, y)));
-            }
-        }
-    }
-    
     void Khan::preprocessImage(unsigned int i, FImagePtr &weight, FLabImagePtr &LabImage) {
         cout << "Loading image number " << i << endl;
         ImageImportInfo imgInfo(inputFiles[i].c_str());
@@ -129,9 +96,6 @@ namespace deghosting {
         
         // import alpha
         importImageAlpha(imgInfo, destImage(*pInputImg),destImage(imgAlpha));
-        
-        // linearize RGB and convert it to L*a*b image
-        //linearizeRGB(inputFiles[i], pInputImg);
         
         // take logarithm or gamma correction if the input images are HDR
         // I'm not sure if it's the right way how to

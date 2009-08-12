@@ -82,7 +82,7 @@ namespace deghosting
              * @param inputFile filename of image to be transformed
              * @param *pInputImg FRGBImage to be transformed
              */
-            void linearizeRGB(std::string, FRGBImage* pInputImg);
+            //void linearizeRGB(std::string, FRGBImage* pInputImg);
             /** kernel function
              * Standard probability density function
              */
