@@ -182,6 +182,15 @@ void printVersionAndExit() {
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
         cout <<
+            "Extra feature: dmalloc support: " <<
+#ifdef DMALLOC
+            "yes" <<
+#else
+            "no" <<
+#endif
+            "\n";
+
+        cout <<
             "Extra feature: image cache: " <<
 #ifdef ENBLEND_CACHE_IMAGES
             "yes" <<
