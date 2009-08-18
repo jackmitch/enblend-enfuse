@@ -62,14 +62,13 @@
   effect the new seam line algorithm is at least 20% faster than the
   old one.
 
-  The new version does not yet handle wraparound for non singly
-  connected panoramas, thus we keep the old algorithm for 360 degree
-  panoramas.
+- Fix a well hidden but serious bug in the seam line optimization.
+  Both, the GPU and non-GPU versions of the optimizer were affected.
 
 - Make Enblend and Enfuse aware of the input images' resolution.  Use
   the input resolution in the output file.
 
-  With this change masks get the correct offsets and fixes the bug
+  With this change masks get the correct offsets.  This fixes the bug
   that masks do not end up at the correct position with respect to the
   input files.
 
@@ -109,7 +108,7 @@
 - Introduce additional Make variables to control the Make process
   after the project was configured.  See "README" file.
 
-- Debugging of dynamic memory allocation has been eased be the
+- Debugging of dynamic memory allocation has been eased by the
   integration of the DMalloc package; "configure --with-dmalloc"
 
 - Use only m4 files that clearly have a GPL license.  This fixes
@@ -125,7 +124,7 @@
   they cannot tell the developer why not.
 
 - Pull version of program and documentation into file "VERSION".  Both
-  program and documentation automatically uses this information on
+  program and documentation automatically use this information on
   every build.
 
 
