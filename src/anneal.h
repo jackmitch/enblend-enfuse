@@ -529,7 +529,7 @@ protected:
             // Sanity check
             if (!costImage->isInside(newEstimate)) {
 #ifdef OPENMP
-#pragma omp critical
+#pragma omp critical(write_to_cerr)
 #endif
                 {
                     cerr << command
@@ -584,12 +584,15 @@ protected:
             if (localK < 2) {
                 convergedPoints[index] = true;
             }
+
+            if (stateProbabilities->size() > kMax) {
 #ifdef OPENMP
-#pragma omp critical
+#pragma omp critical(update_kMax)
 #endif
-            {
-                kMax = std::max(static_cast<size_t>(kMax), stateProbabilities->size());
-            } // omp critical
+                {
+                    kMax = std::max(kMax, static_cast<unsigned int>(stateProbabilities->size()));
+                } // omp critical
+            }
         }
     }
 
