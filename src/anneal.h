@@ -323,7 +323,7 @@ protected:
             double* Pi = new double[kMax];
 
 #ifdef OPENMP
-#pragma omp for
+#pragma omp for nowait
 #endif
             for (int index = 0; index < mf_size; ++index) {
                 // Skip updating points that have already converged.
@@ -508,7 +508,7 @@ protected:
 #endif
         {
 #ifdef OPENMP
-#pragma omp for
+#pragma omp for nowait
 #endif
             for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
                 if (convergedPoints[index]) {
