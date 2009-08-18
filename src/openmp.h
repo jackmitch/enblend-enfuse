@@ -430,7 +430,11 @@ namespace detail
             DistanceType* f = new DistanceType[greatest_length];
             DistanceType* d = new DistanceType[greatest_length];
 
-#pragma omp for
+// IMPLEMENTATION NOTE
+//     We need "guided" schedule to reduce the waiting time at the
+//     (implicit) barriers.  This holds true for the next OpenMP
+//     parallelized "for" loop, too.
+#pragma omp for schedule(guided)
             for (int x = 0; x < size.x; ++x)
             {
                 SrcImageIterator si(src_upperleft + vigra::Diff2D(x, 0));
@@ -445,11 +449,15 @@ namespace detail
                 for (DistanceType* pd = d; pd != d + size.y; ++pd, ++ci)
                 {
                     *ci = *pd;
+
+                    // IMPLEMENTATION NOTE
+                    //     PREFETCH() about halves the number of stalls
+                    //     per instruction of this loop!
                     PREFETCH((ci + 1).operator->(), PREPARE_FOR_WRITE, HIGH_TEMPORAL_LOCALITY);
                 }
             }
 
-#pragma omp for nowait
+#pragma omp for nowait schedule(guided)
             for (int y = 0; y < size.y; ++y)
             {
                 transform1d(d, &intermediate(0, y), size.x);
