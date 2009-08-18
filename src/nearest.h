@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <utility>
 
-#include "vigra/distancetransform.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/stdcachedfileimage.hxx"
@@ -255,8 +254,8 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
     quadruple_image(src_upperleft, src_lowerright, sa,
                     periodic.upperLeft(), periodic.accessor(),
                     boundary);
-    vigra::distanceTransform(srcImageRange(periodic), destImage(distance),
-                             background, norm);
+    distanceTransformMP(srcImageRange(periodic), destImage(distance),
+                        background, norm);
     quater_image(srcImageRange(distance), destIter(dest_upperleft, da), boundary);
 }
 
@@ -353,8 +352,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
             switch (boundary)
             {
             case OpenBoundaries:
-                distanceTransform(srcImageRange(diff12), destImage(dist12),
-                                  background, norm);
+                distanceTransformMP(srcImageRange(diff12), destImage(dist12),
+                                    background, norm);
                 break;
 
             case HorizontalStrip: // FALLTHROUGH
@@ -386,8 +385,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
             switch (boundary)
             {
             case OpenBoundaries:
-                distanceTransform(srcImageRange(diff21), destImage(dist21),
-                                  background, norm);
+                distanceTransformMP(srcImageRange(diff21), destImage(dist21),
+                                    background, norm);
                 break;
 
             case HorizontalStrip: // FALLTHROUGH

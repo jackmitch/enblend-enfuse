@@ -30,6 +30,7 @@
 #include "vigra/transformimage.hxx"
 #include "vigra/combineimages.hxx"
 #include "vigra/convolution.hxx"
+#include "vigra/distancetransform.hxx"
 
 
 #if _OPENMP >= 200505 // at least OpenMP version 2.5
@@ -55,6 +56,9 @@
 
 #define CROSSOVER_TRANSFORMIMAGE_SCALAR 57600
 #define CROSSOVER_TRANSFORMIMAGE_NON_SCALAR 32768
+
+#define CROSSOVER_DISTANCE_TRANSFORM_SCALAR 1
+#define CROSSOVER_DISTANCE_TRANSFORM_NON_SCALAR 1
 
 
 template <class SrcImageIterator1, class SrcAccessor1,
@@ -266,6 +270,35 @@ transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerrig
 }
 
 
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor,
+          class ValueType>
+void
+distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa,
+                    DestImageIterator dest_upperleft, DestAccessor da,
+                    ValueType background, int norm)
+{
+    typedef typename DestAccessor::value_type value_type;
+    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+
+    const vigra::Diff2D size(src_lowerright - src_upperleft);
+
+    if (size.x * size.y >=
+        (isScalar().asBool ? CROSSOVER_DISTANCE_TRANSFORM_SCALAR : CROSSOVER_DISTANCE_TRANSFORM_NON_SCALAR))
+    {
+        distanceTransform(src_upperleft, src_lowerright, sa,
+                          dest_upperleft, da,
+                          background, norm);
+    }
+    else
+    {
+        distanceTransform(src_upperleft, src_lowerright, sa,
+                          dest_upperleft, da,
+                          background, norm);
+    }
+}
+
+
 #else
 
 
@@ -373,6 +406,20 @@ transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerrig
                             func);
 }
 
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor,
+          class ValueType>
+void
+distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa,
+                    DestImageIterator dest_upperleft, DestAccessor da,
+                    ValueType background, int norm)
+{
+    vigra::distanceTransform(src_upperleft, src_lowerright, src_acc,
+                             dest_upperleft, dest_acc,
+                             background, norm);
+}
+
 #endif // _OPENMP >= 200505
 
 
@@ -465,6 +512,20 @@ transformImageIfMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor
                        mask.first, mask.second,
                        dest.first, dest.second,
                        func);
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor,
+          class ValueType>
+inline void
+distanceTransformMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                    vigra::pair<DestImageIterator, DestAccessor> dest,
+                    ValueType background, int norm)
+{
+    distanceTransformMP(src.first, src.second, src.third,
+                        dest.first, dest.second,
+                        background, norm);
 }
 
 
