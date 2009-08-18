@@ -97,6 +97,9 @@
 - New option to control the Dijkstra path minimizer called strategy 2
   ("--dijkstra").
 
+- Option "--coarse-mask" takes an optional (linear) reduction factor.
+  The default remains at 8.
+
 
 ** For Developers
 

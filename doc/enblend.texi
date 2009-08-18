@@ -759,23 +759,29 @@ yellow.
 These options control the generation and the usage of masks.
 
 @table @code
-@item --coarse-mask
+@item --coarse-mask[=@var{FACTOR}]
 @opindex --coarse-mask
 @cindex mask, coarse
 @cindex coarse mask
 Use a scaled-down version of the input images to create the seam line.
-This is the default.
+This option reduces the number of computations necessary to compute
+the seam line and the amount of memory necessary to do so.  It is the
+default.
 
-In the current version of Enblend the scale factor is @math{1/8}, this
-means, option@tie{}@option{--coarse-mask} shrinks the overlapping
-@emph{areas} by a factor of 64 and thus reduces the number of
-computations necessary to compute the seam line by an order of
-magnitude.
+If omitted @var{FACTOR} defaults to 8, this means,
+option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of 64.  With @var{FACTOR}@tie{}=@tie{}8 the
+total memory allocated during a run of Enblend shrinks approximately
+by 80% and the maximum amount of memory in use at a time is decreased
+to 60% (Enblend compiled with image cache) or 40% (Enblend compiled
+without image cache).
+
+Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
 
 Also see @ref{Table:mask-generation}.
 
 @float Table,Table:mask-generation
-@multitable @columnfractions 0.25 0.333 0.333
+@multitable @columnfractions 0.2 0.333 0.333
 @headitem @tab @code{--no-optimize} @tab @code{--optimize}
 
 @item @code{--fine-mask}

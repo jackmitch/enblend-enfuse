@@ -631,11 +631,13 @@ MaskType* createMask(const ImageType* const white,
     Rect2D nftInputBB;
     int nftStride;
     if (CoarseMask) {
-        // Do NFT at 1/8 scale.
-        // uBB rounded up to multiple of 8 pixels in each direction
-        nftInputSize = Size2D((uBB.width() + 7) >> 3, (uBB.height() + 7) >> 3);
-        nftInputBB = Rect2D(Size2D(uBB.width() >> 3, uBB.height() >> 3));
-        nftStride = 8;
+        // Do NFT at 1/CoarsenessFactor scale.
+        // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
+        nftInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+                              (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+        nftInputBB = Rect2D(Size2D(uBB.width() / CoarsenessFactor,
+                                   uBB.height() / CoarsenessFactor));
+        nftStride = CoarsenessFactor;
     } else {
         // Do NFT at 1/1 scale.
         nftInputSize = uBB.size();

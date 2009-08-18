@@ -99,7 +99,7 @@ boost::mt19937 Twister;
 // Global values from command line parameters.
 int Verbose = 0;
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-unsigned int ExactLevels = 0;
+unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
@@ -113,6 +113,7 @@ bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
+unsigned CoarsenessFactor = 8U;
 bool SaveMasks = false;
 std::string SaveMaskTemplate("mask-%n.tif");
 bool LoadMasks = false;
@@ -120,7 +121,7 @@ std::string LoadMaskTemplate(SaveMaskTemplate);
 std::string VisualizeTemplate("vis-%n.tif");
 bool VisualizeSeam = false;
 anneal_para_t AnnealPara = {32, 0.75, 7000.0, 5.0};
-unsigned int DijkstraRadius = 25;
+unsigned int DijkstraRadius = 25U;
 struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
 std::string OutputCompression;
 std::string OutputPixelType;
@@ -293,10 +294,12 @@ void printUsageAndExit(const bool error = true) {
         VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Mask generation options:\n" <<
-        "  --coarse-mask          use an approximation to speedup mask generation;\n" <<
-        "                         this is the default\n" <<
-        "  --fine-mask            enable detailed mask generation (slow!); use if\n" <<
-        "                         overlap regions are very narrow\n" <<
+        "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
+        "                         generation; this is the default; if omitted FACTOR\n" <<
+        "                         defaults to " <<
+        CoarsenessFactor << "\n" <<
+        "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
+        "                         if overlap regions are very narrow\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
         "  --mask-vectorize=LENGTH\n" <<
@@ -493,7 +496,7 @@ int process_options(int argc, char** argv) {
     // NOTE: See note attached to "enum OptionId" above.
     static struct option long_options[] = {
         {"gpu", no_argument, 0, NoArgument},                                   //  0
-        {"coarse-mask", no_argument, 0, NoArgument},                           //  1
+        {"coarse-mask", optional_argument, 0, IntegerArgument},                //  1
         {"fine-mask", no_argument, 0, NoArgument},                             //  2
         {"optimize", no_argument, 0, NoArgument},                              //  3
         {"no-optimize", no_argument, 0, NoArgument},                           //  4
@@ -532,10 +535,6 @@ int process_options(int argc, char** argv) {
             case UseGpuId:
                 UseGPU = true;
                 optionSet.insert(GPUOption);
-                break;
-            case CoarseMaskId:
-                CoarseMask = true;
-                optionSet.insert(CoarseMaskOption);
                 break;
             case FineMaskId:
                 CoarseMask = false;
@@ -744,7 +743,7 @@ int process_options(int argc, char** argv) {
                              << token << "\"" << endl;
                         exit(1);
                     }
-                    if (kmax < 3) {
+                    if (kmax < 3L) {
                         cerr << command
                              << ": option \"--anneal\": k_max must larger or equal to 3"
                              << endl;
@@ -807,26 +806,67 @@ int process_options(int argc, char** argv) {
             if (long_options[option_index].flag != 0) {
                 break;
             }
-            unsigned int* optionUInt = NULL;
             switch (option_index) {
-            case DijkstraRadiusId:
-                optionUInt = &DijkstraRadius;
+            case CoarseMaskId:
+                CoarseMask = true;
+                if (optarg != NULL && *optarg != 0) {
+                    char* tail;
+                    errno = 0;
+                    const long int factor = strtol(optarg, &tail, 10);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--coarse-mask\": illegal numeric format \""
+                             << optarg << "\": " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--coarse-mask\": trailing garbage \""
+                             << tail << "\" in \"" << optarg << "\"" << endl;
+                        exit(1);
+                    }
+                    if (factor <= 0L) {
+                        cerr << command << ": warning: coarseness factor less or equal to 0; will use 1\n";
+                        CoarsenessFactor = 1U;
+                    } else {
+                        CoarsenessFactor = static_cast<unsigned>(factor);
+                    }
+                }
+                optionSet.insert(CoarseMaskOption);
+                break;
+            case DijkstraRadiusId: {
+                char* tail;
+                errno = 0;
+                const long int radius = strtol(optarg, &tail, 10);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--dijkstra\": illegal numeric format \""
+                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--dijkstra\": trailing garbage \""
+                         << tail << "\" in \"" << optarg << "\"" << endl;
+                    exit(1);
+                }
+                if (radius <= 0L) {
+                    cerr << command << ": warning: Dijkstra radius is 0; will use 1\n";
+                    DijkstraRadius = 1U;
+                } else {
+                    DijkstraRadius = static_cast<unsigned>(radius);
+                }
                 optionSet.insert(DijkstraRadiusOption);
                 break;
+            }
             default:
                 cerr << command
                      << ": internal error: unhandled \"IntegerArgument\" option"
                      << endl;
                 exit(1);
             }
-
-            int value = atoi(optarg);
-            if (value < 1) {
-                cerr << command << ": warning: " << long_options[option_index].name
-                     << " must be 1 or more; will use 1" << endl;
-                value = 1;
-            }
-            *optionUInt = static_cast<unsigned int>(value);
             break;
         } // end of "case IntegerArgument"
 

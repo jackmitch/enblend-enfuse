@@ -1,4 +1,4 @@
-@set UPDATED 21 June 2009
-@set UPDATED-MONTH June 2009
+@set UPDATED 9 August 2009
+@set UPDATED-MONTH August 2009
 @set EDITION 3.2-staging-rev343
 @set VERSION 3.2-staging-rev343
