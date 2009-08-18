@@ -244,6 +244,8 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
         break;
 
     default:
+        size_x = -1;
+        size_y = -1;
         assert(false);
     }
 

@@ -229,6 +229,7 @@ std::string stringOfWraparound(boundary_t aBoundaryMode)
         return "both";
     default:
         assert(false);
+        return "none";
     }
 }
 
