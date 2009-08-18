@@ -100,6 +100,9 @@
 - Option "--coarse-mask" takes an optional (linear) reduction factor.
   The default remains at 8.
 
+- New option "--smooth-difference" to blur difference images prior to
+  seam-line optimization.
+
 
 ** For Developers
 

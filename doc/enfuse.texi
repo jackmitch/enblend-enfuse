@@ -396,9 +396,10 @@ Print information on the available options then exit.
 @opindex -l
 @cindex pyramid levels
 @cindex levels, pyramid
-Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
-Jackson correctly @uref{http://stargate.wikia.com/@/wiki/@/The_Tomb,
-noted}, actually, it is not a pyramid: ``Ziggaurat, it's a
+Use exactly this many @var{LEVELS} for pyramid @footnote{As
+Dr.@tie{}Daniel Jackson correctly
+@uref{http://stargate.wikia.com/@/wiki/@/The_Tomb, noted}, actually,
+it is not a pyramid: ``Ziggaurat, it's a
 @uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.}
 blending.
 
@@ -414,6 +415,9 @@ images demands it.
 @opindex --output
 Place output in @var{FILE}.
 
+@cindex @file{a.tif}
+@cindex default output filename
+@cindex output filename, default
 If @option{--output} is not specified, the default is to put the
 resulting image in @file{a.tif}.
 
@@ -664,6 +668,10 @@ See @ref{Tuning Memory Usage} for details.
 @cindex @acronym{CIECAM02}
 Use the @acronym{CIECAM02} color appearance model for blending colors.
 
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+@cindex @acronym{sRGB} color space
+@cindex color space, @acronym{sRGB}
 The input files should have embedded @acronym{ICC} profiles when this
 option is specified.  If no @acronym{ICC} profile is present, Enfuse
 will assume that the image uses the @acronym{sRGB} color space.  The
@@ -710,7 +718,7 @@ Unsigned 8@dmn{bit}; range: 0..255
 @item @code{int16}
 Signed 16@dmn{bit}; range: @minus{}32768..32767
 @item @code{16}, @code{uint16}
-Unsigned 16@dmn{bit}; range: 0..65536
+Unsigned 16@dmn{bit}; range: 0..65535
 @item @code{int32}
 Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
 @item @code{32}, @code{uint32}
@@ -779,6 +787,20 @@ Epsilon: @semilog{2.0, -3}
 Maximum finite value: @semilog{4.3, 9}
 @end itemize
 
+@item -f @var{WIDTH}x@var{HEIGHT}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{X-OFFSET}+y@var{Y-OFFSET}
+@opindex -f
+@cindex output image, set size of
+Set the size of the output image manually to
+@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
+@var{X-OFFSET} and @var{Y-OFFSET}, too.
+
+@pindex nona @r{(Hugin)}
+@pindex hugin
+This option is useful when the input images are cropped @acronym{TIFF}
+files, such as those produced by @command{nona}.  The stitcher
+@command{nona} is part of Hugin.  @xref{Helpful Programs}.
+
 @item -g
 @opindex -g
 @cindex alpha channel, associated
@@ -794,20 +816,6 @@ unassociated alpha channels.  Use option @option{-g} to work around
 this problem.  With this flag Enfuse will create the output image with
 the associated alpha tag set, even though the image is really
 unassociated alpha.
-
-@item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{X-OFFSET}+y@var{Y-OFFSET}
-@opindex -f
-@cindex output image, set size of
-Set the size of the output image manually to
-@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
-@var{X-OFFSET} and @var{Y-OFFSET}, too.
-
-@pindex nona @r{(Hugin)}
-@pindex hugin
-This option is useful when the input images are cropped @acronym{TIFF}
-files, such as those produced by @command{nona}.  The stitcher
-@command{nona} is part of Hugin.  @xref{Helpful Programs}.
 
 @item -m @var{CACHESIZE}
 @opindex -m
@@ -1238,6 +1246,60 @@ $$
 $$
 @end tex
 
+@item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
+@cindex gray projector, @samp{channel-mixer}
+Weight the channels as given.
+@ifinfo
+@display
+@math{Y = RED-WEIGHT * R + GREEN-WEIGHT * G + BLUE-WEIGHT * B}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mrow>
+            <mi mathvariant="italic">RED-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>R</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mi mathvariant="italic">GREEN-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>G</mi>
+        </mrow>
+        <mo>+</mo>
+        <mrow>
+            <mi mathvariant="italic">BLUE-WEIGHT</mi>
+            <mo>&times;</mo>
+            <mi>B</mi>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \eqalign{Y \quad = \quad
+        & \mathit{RED-WEIGHT} \times R \; + \cr
+        & \mathit{GREEN-WEIGHT} \times G \; + \cr
+        & \mathit{BLUE-WEIGHT} \times B \cr}
+$$
+@end tex
+
+The weights are automatically normalized to one, so
+@example
+    --GrayProjector=channel-mixer:0.25:0.5:0.25
+    --GrayProjector=channel-mixer:1:2:1
+    --GrayProjector=channel-mixer:25:50:25
+@end example
+all define the same mixer configuration.
+
+The three weights @var{RED-WEIGHT}, @var{GREEN-WEIGHT}, and
+@var{BLUE-WEIGHT} define the relative weight of the respective color
+channel.  The sum of all weights is normalized to one.
+
 @item l-star
 @cindex gray projector, @samp{l-star}
 @cindex L*a*b* conversion
@@ -1298,38 +1360,6 @@ $$
 $$
 @end tex
 
-@item value
-@cindex gray projector, @samp{value}
-Take the Value-channel of the Hue-Saturation-Value (@acronym{HSV})
-conversion of the image.
-@ifinfo
-@display
-@math{Y = max(R, G, B)}
-@end display
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-    <mrow>
-        <mi>Y</mi>
-        <mo>=</mo>
-        <mrow>
-            <mo>max</mo>
-            <mo>&ApplyFunction;</mo>
-            <mfenced>
-                <mi>R</mi>
-                <mi>G</mi>
-                <mi>B</mi>
-            </mfenced>
-        </mrow>
-    </mrow>
-</math>
-@end html
-@tex
-$$
-    Y = \max(R, G, B)
-$$
-@end tex
-
 @item luminance
 @cindex gray projector, @samp{luminance}
 Use the weighted average of the @acronym{RGB} pixel's channels as
@@ -1371,12 +1401,13 @@ $$
 $$
 @end tex
 
-@item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
-@cindex gray projector, @samp{channel-mixer}
-Weight the channels as given.
+@item value
+@cindex gray projector, @samp{value}
+Take the Value-channel of the Hue-Saturation-Value (@acronym{HSV})
+conversion of the image.
 @ifinfo
 @display
-@math{Y = RED-WEIGHT * R + GREEN-WEIGHT * G + BLUE-WEIGHT * B}
+@math{Y = max(R, G, B)}
 @end display
 @end ifinfo
 @html
@@ -1385,44 +1416,22 @@ Weight the channels as given.
         <mi>Y</mi>
         <mo>=</mo>
         <mrow>
-            <mi mathvariant="italic">RED-WEIGHT</mi>
-            <mo>&times;</mo>
-            <mi>R</mi>
-        </mrow>
-        <mo>+</mo>
-        <mrow>
-            <mi mathvariant="italic">GREEN-WEIGHT</mi>
-            <mo>&times;</mo>
-            <mi>G</mi>
-        </mrow>
-        <mo>+</mo>
-        <mrow>
-            <mi mathvariant="italic">BLUE-WEIGHT</mi>
-            <mo>&times;</mo>
-            <mi>B</mi>
+            <mo>max</mo>
+            <mo>&ApplyFunction;</mo>
+            <mfenced>
+                <mi>R</mi>
+                <mi>G</mi>
+                <mi>B</mi>
+            </mfenced>
         </mrow>
     </mrow>
 </math>
 @end html
 @tex
 $$
-    Y = \mathit{RED-WEIGHT} \; R +
-        \mathit{GREEN-WEIGHT} \; G +
-        \mathit{BLUE-WEIGHT} \; B
+    Y = \max(R, G, B)
 $$
 @end tex
-
-The weights are automatically normalized to one, so
-@example
-    --GrayProjector=channel-mixer:0.25:0.5:0.25
-    --GrayProjector=channel-mixer:1:2:1
-    --GrayProjector=channel-mixer:25:50:25
-@end example
-all define the same mixer configuration.
-
-The three weights @var{RED-WEIGHT}, @var{GREEN-WEIGHT}, and
-@var{BLUE-WEIGHT} define the relative weight of the respective color
-channel.  The sum of all weights is normalized to one.
 @end table
 
 @item --HardMask
@@ -1452,10 +1461,6 @@ with @option{--ContrastWindowSize}) for curvatures less than
 A negative value truncates all curvatures less than
 @minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
 left unchanged.  This effectively suppresses weak edges.
-
-@item --SoftMask
-@opindex --SoftMask
-Consider all masks when fusing.  This is the default.
 
 @item --SaveMasks
 @itemx --SaveMasks=@var{SOFT-MASK-TEMPLATE}
@@ -1490,7 +1495,12 @@ It puts the mask files into the same directory as the output file
 (@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
 mask files nicely sorted, and decorates the mask filename with the
 name of the associated input file (@samp{%f}) for easy recognition.
+
+@item --SoftMask
+@opindex --SoftMask
+Consider all masks when fusing.  This is the default.
 @end table
+
 @page
 
 @include mask-template-characters.texi

@@ -273,9 +273,10 @@ Print information on the available options and exit.
 @opindex -l
 @cindex pyramid levels
 @cindex levels, pyramid
-Use exactly this many @var{LEVELS} for pyramid @footnote{As Dr. Daniel
-Jackson correctly @uref{http://stargate.wikia.com/@/wiki/@/The_Tomb,
-noted}, actually, it is not a pyramid: ``Ziggaurat, it's a
+Use exactly this many @var{LEVELS} for pyramid @footnote{As
+Dr.@tie{}Daniel Jackson correctly
+@uref{http://stargate.wikia.com/@/wiki/@/The_Tomb, noted}, actually,
+it is not a pyramid: ``Ziggaurat, it's a
 @uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.''}
 blending.
 
@@ -291,6 +292,9 @@ the images demands.
 @opindex --output
 Place output in @var{FILE}.
 
+@cindex @file{a.tif}
+@cindex default output filename
+@cindex output filename, default
 If @option{--output} is not specified, the default is to put the
 resulting image in @file{a.tif}.
 
@@ -546,6 +550,10 @@ See @ref{Tuning Memory Usage} for details.
 @cindex @acronym{CIECAM02}
 Use the @acronym{CIECAM02} color appearance model for blending colors.
 
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+@cindex @acronym{sRGB} color space
+@cindex color space, @acronym{sRGB}
 The input files should have embedded @acronym{ICC} profiles if this
 option is specified.  If no @acronym{ICC} profile is present, Enblend
 will assume that the image uses the @acronym{sRGB} color space.  The
@@ -592,7 +600,7 @@ Unsigned 8@dmn{bit}; range: 0..255
 @item @code{int16}
 Signed 16@dmn{bit}; range: @minus{}32768..32767
 @item @code{16}, @code{uint16}
-Unsigned 16@dmn{bit}; range: 0..65536
+Unsigned 16@dmn{bit}; range: 0..65535
 @item @code{int32}
 Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
 @item @code{32}, @code{uint32}
@@ -661,6 +669,20 @@ Epsilon: @semilog{2.0, -3}
 Maximum finite value: @semilog{4.3, 9}
 @end itemize
 
+@item -f @var{WIDTH}x@var{HEIGHT}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
+@opindex -f
+@cindex output image, set size of
+Set the size of the output image manually to
+@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
+@var{X-OFFSET} and @var{Y-OFFSET}, too.
+
+@pindex nona @r{(Hugin)}
+@pindex hugin
+This option is useful when the input images are cropped @acronym{TIFF}
+files, such as those produced by @command{nona}.  The stitcher
+@command{nona} is part of Hugin.  @xref{Helpful Programs}.
+
 @item -g
 @opindex -g
 @cindex alpha channel, associated
@@ -679,7 +701,8 @@ unassociated alpha.
 
 @item --gpu
 @opindex --gpu
-@cindex graphics processing unit @acronym{GPU}
+@cindex graphics processing unit
+@cindex @acronym{GPU} (Graphics Processing Unit)
 Use the graphics card -- in fact the graphics processing unit
 (@acronym{GPU}) -- to accelerate some computations.
 
@@ -690,20 +713,6 @@ strategy@tie{}1 benefits from this option.
 Note that @acronym{GPU}-support must have been compiled in the Enblend
 binary for this option being available.  Find out about this feature
 with @code{enblend --version --verbose}.
-
-@item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
-@opindex -f
-@cindex output image, set size of
-Set the size of the output image manually to
-@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
-@var{X-OFFSET} and @var{Y-OFFSET}, too.
-
-@pindex nona @r{(Hugin)}
-@pindex hugin
-This option is useful when the input images are cropped @acronym{TIFF}
-files, such as those produced by @command{nona}.  The stitcher
-@command{nona} is part of Hugin.  @xref{Helpful Programs}.
 
 @item -m @var{CACHESIZE}
 @opindex -m
@@ -716,39 +725,6 @@ before swapping to disk.  The default is 1024@dmn{MB} which is good
 for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
 
 See @ref{Tuning Memory Usage} for details.
-
-@item --visualize[=@var{VISUALIZE-TEMPLATE}]
-@opindex --visualize
-@cindex mask, optimization visualization
-@cindex visualization of mask optimization
-Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
-the mask optimization process.  The default is @file{vis-%n.tif}.
-
-This shows Enblend's view of the overlap region and how it decided to
-route the seam line.  If you are experiencing artifacts or unexpected
-output, it may be useful to include this visualization image in your
-bug report.
-
-@var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
-input file.  In a template a percent sign (@samp{%}) introduces a
-variable part.  All other characters are copied literally.  Lowercase
-letters refer to the name of the respective input file, whereas
-uppercase ones refer to the name of the output file (@pxref{Common
-Options}).  @ref{Table:mask-template-characters} lists all variables.
-
-@noindent
-@strong{Visualization File}
-
-The visualization file shows the symmetric difference of the pixels in
-the rectangular region where two images overlap.  Enblend paints
-non-overlapping parts of the image pair with dark red.
-
-The optimizer's samples are shown in blue.  If a sample is the first
-of a line segment it is painted in light green; non-first line
-segments are drawn in darker green.  Cyan points indicate state space
-samples inside the @sc{Dijkstra} radius.  Non-converged points are
-drawn in magenta color.  The final seam line is shown in bright
-yellow.
 @end table
 
 
@@ -759,133 +735,6 @@ yellow.
 These options control the generation and the usage of masks.
 
 @table @code
-@item --coarse-mask[=@var{FACTOR}]
-@opindex --coarse-mask
-@cindex mask, coarse
-@cindex coarse mask
-Use a scaled-down version of the input images to create the seam line.
-This option reduces the number of computations necessary to compute
-the seam line and the amount of memory necessary to do so.  It is the
-default.
-
-If omitted @var{FACTOR} defaults to 8, this means,
-option@tie{}@option{--coarse-mask} shrinks the overlapping
-@emph{areas} by a factor of 64.  With @var{FACTOR}@tie{}=@tie{}8 the
-total memory allocated during a run of Enblend shrinks approximately
-by 80% and the maximum amount of memory in use at a time is decreased
-to 60% (Enblend compiled with image cache) or 40% (Enblend compiled
-without image cache).
-
-Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
-
-Also see @ref{Table:mask-generation}.
-
-@float Table,Table:mask-generation
-@multitable @columnfractions 0.2 0.333 0.333
-@headitem @tab @code{--no-optimize} @tab @code{--optimize}
-
-@item @code{--fine-mask}
-@c no opt
-@tab
-Use @acronym{NFT} mask.
-
-@c opt
-@tab
-Vectorize @acronym{NFT} mask, optimize vertices with simulated
-annealing and @sc{Dijkstra's} shortest path algorithm, fill vector
-contours.
-
-@item @code{--coarse-mask}
-@c no opt
-@tab
-Scale down overlap region, compute @acronym{NFT} mask and vectorize
-it, fill vector contours.
-
-@c opt
-@tab
-Scale down overlap region, vectorize @acronym{NFT} mask, optimize
-vertices with simulated annealing and @sc{Dijkstra's} shortest path
-algorithm, fill vector contours.
-@end multitable
-
-@caption{Various options that control the generation of masks.  All
-mask computations are based on the Nearest-Feature Transformation
-(@acronym{NFT}) of the overlap region.}
-
-@shortcaption{Mask generation options}
-
-@cindex nearest-feature transform (@acronym{NFT})
-@cindex mask, generation
-@end float
-
-@item --fine-mask
-@opindex --fine-mask
-@cindex mask, fine
-@cindex fine mask
-Instruct Enblend to employ the full-size images to create the seam
-line, which can be slow.  Use this option, for example, if you have
-very narrow overlap regions.
-
-Also see @ref{Table:mask-generation}.
-
-@item --load-mask[=@var{IMAGE-TEMPLATE}]
-@opindex --load-mask
-@cindex mask, load
-@cindex load mask
-Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
-default is @file{mask-%n.tif}.
-
-See @option{--save-mask} below for details.
-
-@item --no-optimize
-@opindex --no-optimize
-@cindex optimize seam
-@cindex seam optimization
-Turn off seam line optimization.  Combined with
-option@tie{}@option{--fine-mask} this will produce the same type of
-mask as Enblend version@tie{}2.5, namely the result of a
-@cindex nearest-feature transform (@acronym{NFT})
-Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
-H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
-of Binary Images'', Proceedings of the International Conference on
-Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
-and II, pages 83--86.}
-
-Also see @ref{Table:mask-generation}.
-
-@item --optimize
-@opindex --optimize
-@cindex optimize seam
-@cindex seam optimization
-Use a two-strategy approach to route the seam line around mismatches
-in the overlap region.  This is the default.
-@ref{Table:optimizer-strategies} explains these strategies.  Also see
-@ref{Table:mask-generation}.
-
-@float Table,Table:optimizer-strategies
-@cindex optimize strategy
-@table @asis
-@item Stragegy 1: Simulated Annealing
-Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
-: @var{DELTA-E-MIN} : @var{K-MAX}.
-
-@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
-Simulated-Annealing}
-
-
-@item Stragegy 2: @sc{Dijkstra} Shortest Path
-Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
-
-@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm,
-@sc{Dijkstra} algorithm}
-
-@end table
-@caption{Enblend's two strategies to optimize the seam lines between
-images.}
-
-@shortcaption{optimizer strategies}
-@end float
-
 @item --anneal=@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}[:@var{K-MAX}]]]
 @opindex --anneal
 @cindex optimize, anneal parameters
@@ -1070,6 +919,65 @@ $\mathit{K-MAX} \ge 3$.
 The default is 32.  Values around 100 seem reasonable.
 @end table
 
+@item --coarse-mask[=@var{FACTOR}]
+@opindex --coarse-mask
+@cindex mask, coarse
+@cindex coarse mask
+Use a scaled-down version of the input images to create the seam line.
+This option reduces the number of computations necessary to compute
+the seam line and the amount of memory necessary to do so.  It is the
+default.
+
+If omitted @var{FACTOR} defaults to 8, this means,
+option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of 64.  With @var{FACTOR}@tie{}=@tie{}8 the
+total memory allocated during a run of Enblend shrinks approximately
+by 80% and the maximum amount of memory in use at a time is decreased
+to 60% (Enblend compiled with image cache) or 40% (Enblend compiled
+without image cache).
+
+Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
+
+Also see @ref{Table:mask-generation}.
+
+@float Table,Table:mask-generation
+@multitable @columnfractions 0.2 0.35 0.35
+@headitem @tab @code{--no-optimize} @tab @code{--optimize}
+
+@item @code{--fine-mask}
+@c no opt
+@tab
+Use @acronym{NFT} mask.
+
+@c opt
+@tab
+Vectorize @acronym{NFT} mask, optimize vertices with simulated
+annealing and @sc{Dijkstra's} shortest path algorithm, fill vector
+contours.
+
+@item @code{--coarse-mask}
+@c no opt
+@tab
+Scale down overlap region, compute @acronym{NFT} mask and vectorize
+it, fill vector contours.
+
+@c opt
+@tab
+Scale down overlap region, vectorize @acronym{NFT} mask, optimize
+vertices with simulated annealing and @sc{Dijkstra's} shortest path
+algorithm, fill vector contours.
+@end multitable
+
+@caption{Various options that control the generation of masks.  All
+mask computations are based on the Nearest-Feature Transformation
+(@acronym{NFT}) of the overlap region.}
+
+@shortcaption{Mask generation options}
+
+@cindex nearest-feature transform (@acronym{NFT})
+@cindex mask, generation
+@end float
+
 @item --dijkstra=@var{RADIUS}
 @opindex --dijkstra
 @cindex @sc{Dijkstra} radius
@@ -1100,7 +1008,26 @@ Valid range:
 $\mathit{RADIUS} \ge 0$.
 @end tex
 
-Default: 25.
+Default: 25@dmn{pixels}.
+
+@item --fine-mask
+@opindex --fine-mask
+@cindex mask, fine
+@cindex fine mask
+Instruct Enblend to employ the full-size images to create the seam
+line, which can be slow.  Use this option, for example, if you have
+very narrow overlap regions.
+
+Also see @ref{Table:mask-generation}.
+
+@item --load-mask[=@var{IMAGE-TEMPLATE}]
+@opindex --load-mask
+@cindex mask, load
+@cindex load mask
+Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
+default is @file{mask-%n.tif}.
+
+See @option{--save-mask} below for details.
 
 @item --mask-vectorize=@var{DISTANCE}
 @opindex --mask-vectorize
@@ -1137,9 +1064,11 @@ run the seam around high mismatch areas.
 @cindex seam line, loops
 @cindex loops in seam line
 What should @emph{never} happen though, are loops in the seam line.
-Counter loops with larger a vectorization @var{DISTANCE} and a
-@var{TAU} (in option@tie{}@option{--anneal}) that is closer to one.
-Use option@tie{}@option{--visualize} to check the results.
+Counter loops with larger vectorization @var{DISTANCE}s, @var{TAU}s
+(in option@tie{}@option{--anneal}) that are closer to one, and
+blurring of the difference image with
+option@tie{}@option{--smooth-difference}.  Use
+option@tie{}@option{--visualize} to check the results.
 
 Valid range:
 @ifinfo
@@ -1164,6 +1093,55 @@ cases.
 
 Default: 4@dmn{pixels} for coarse masks and 20@dmn{pixels} for fine
 masks.
+
+@item --no-optimize
+@opindex --no-optimize
+@cindex optimize seam
+@cindex seam optimization
+Turn off seam line optimization.  Combined with
+option@tie{}@option{--fine-mask} this will produce the same type of
+mask as Enblend version@tie{}2.5, namely the result of a
+@cindex nearest-feature transform (@acronym{NFT})
+Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
+H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
+of Binary Images'', Proceedings of the International Conference on
+Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
+and II, pages 83--86.}
+
+Also see @ref{Table:mask-generation}.
+
+@item --optimize
+@opindex --optimize
+@cindex optimize seam
+@cindex seam optimization
+Use a two-strategy approach to route the seam line around mismatches
+in the overlap region.  This is the default.
+@ref{Table:optimizer-strategies} explains these strategies; also see
+@ref{Table:mask-generation}.
+
+@float Table,Table:optimizer-strategies
+@cindex optimize strategy
+@table @asis
+@item Stragegy 1: Simulated Annealing
+Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
+: @var{DELTA-E-MIN} : @var{K-MAX}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
+Simulated-Annealing}
+
+
+@item Stragegy 2: @sc{Dijkstra} Shortest Path
+Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm,
+@sc{Dijkstra} algorithm}
+
+@end table
+@caption{Enblend's two strategies to optimize the seam lines between
+images.}
+
+@shortcaption{optimizer strategies}
+@end float
 
 @item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask
@@ -1196,6 +1174,78 @@ It puts the mask files into the same directory as the output file
 (@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
 mask files nicely sorted, and decorates the mask filename with the
 name of the associated input file (@samp{%f}) for easy recognition.
+
+@item --smooth-difference=@var{RADIUS}
+@opindex --smooth-difference
+@cindex smooth difference image
+@cindex blur difference image
+Smooth the difference image prior to seam-line optimization to get a
+shorter and -- on the length scale of @var{RADIUS} -- also a
+straighter seam-line.  The default is not to smooth.
+
+If @var{RADIUS} is larger than zero Enblend blurs the difference
+images of the overlap regions with a @sc{Gaussian} filter having a
+radius of @var{RADIUS}@dmn{pixels}.  Values of 0.5 to 1.5@dmn{pixels}
+for @var{RADIUS} are good starting points; use
+option@tie{}@option{--visualize} to directly judge the effect.
+
+When using this option in conjunction with
+@tie{}@option{--coarse-mask}=@var{FACTOR}, keep in mind that the
+smoothing occurs @emph{after} the overlap regions have been shrunken.
+Thus, blurring affects a @var{FACTOR}@classictimes{}@var{FACTOR} times
+larger area in the original images.
+
+Valid range:
+@ifinfo
+0 @leq{} @var{RADIUS}.
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrow>
+        <mn>0</mn>
+        <mo>&le;</mo>
+        <mi mathvariant="italic">RADIUS</mi>
+        <mtext>.</mtext>
+    </mrow>
+</math>
+@end html
+@tex
+$0 \le \mathit{RADIUS}$.
+@end tex
+
+@item --visualize[=@var{VISUALIZE-TEMPLATE}]
+@opindex --visualize
+@cindex mask, optimization visualization
+@cindex visualization of mask optimization
+Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
+the mask optimization process.  The default is @file{vis-%n.tif}.
+
+This shows Enblend's view of the overlap region and how it decided to
+route the seam line.  If you are experiencing artifacts or unexpected
+output, it may be useful to include this visualization image in your
+bug report.
+
+@var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
+input file.  In a template a percent sign (@samp{%}) introduces a
+variable part.  All other characters are copied literally.  Lowercase
+letters refer to the name of the respective input file, whereas
+uppercase ones refer to the name of the output file (@pxref{Common
+Options}).  @ref{Table:mask-template-characters} lists all variables.
+
+@sp 1
+@noindent
+@strong{Visualization File}
+@need 150
+The visualization file shows the symmetric difference of the pixels in
+the rectangular region where two images overlap.  Enblend paints
+non-overlapping parts of the image pair with dark red.
+
+The optimizer's samples are shown in blue.  If a sample is the first
+of a line segment it is painted in light green; non-first line
+segments are drawn in darker green.  Cyan points indicate state space
+samples inside the @sc{Dijkstra} radius.  Non-converged points are
+drawn in magenta color.  The final seam line is shown in bright
+yellow.
 @end table
 
 @page

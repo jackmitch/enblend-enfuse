@@ -853,6 +853,12 @@ MaskType* createMask(const ImageType* const white,
                        destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
                        PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
 
+    if (DifferenceBlurRadius > 0.0) {
+        gaussianSmoothing(srcImageRange(mismatchImage),
+                          destImage(mismatchImage),
+                          DifferenceBlurRadius);
+    }
+
     if (visualizeImage) {
         // Dump cost image into visualize image.
         copyImage(srcImageRange(mismatchImage), destImage(*visualizeImage));

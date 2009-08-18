@@ -114,6 +114,7 @@ bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
 unsigned CoarsenessFactor = 8U;
+double DifferenceBlurRadius = 0.0;
 bool SaveMasks = false;
 std::string SaveMaskTemplate("mask-%n.tif");
 bool LoadMasks = false;
@@ -300,6 +301,10 @@ void printUsageAndExit(const bool error = true) {
         CoarsenessFactor << "\n" <<
         "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
         "                         if overlap regions are very narrow\n" <<
+        "  --smooth-difference=RADIUS\n" <<
+        "                         smooth the difference image prior to seam-line\n" <<
+        "                         optimization with a Gaussian blur of RADIUS;\n" <<
+        "                         default: " << DifferenceBlurRadius << " pixels\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
         "  --mask-vectorize=LENGTH\n" <<
@@ -313,7 +318,7 @@ void printUsageAndExit(const bool error = true) {
         "                         " << AnnealPara.tau << ':' <<
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
         "  --dijkstra=RADIUS      set search RADIUS of strategy 2; default: " <<
-        DijkstraRadius << "\n" <<
+        DijkstraRadius << " pixels\n" <<
         "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
         SaveMaskTemplate << "\"\n" <<
         "                         conversion chars: %i: mask index, mask %n: number,\n" <<
@@ -369,6 +374,7 @@ enum AllPossibleOptions {
     OptimizeOption, NoOptimizeOption,
     SaveMaskOption, LoadMaskOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
+    SmoothDifferenceOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -431,6 +437,13 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
                 endl;
         }
 
+        if (contains(optionSet, SmoothDifferenceOption)) {
+            cerr << command <<
+                ": warning: option \"--smooth-difference\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
     }
 
     if (!(OptimizeMask || CoarseMask) && contains(optionSet, MaskVectorizeDistanceOption)){
@@ -490,7 +503,8 @@ int process_options(int argc, char** argv) {
         VersionId,                  // 14
         DepthId,                    // 15
         OutputId,                   // 16
-        WrapAroundId                // 17
+        WrapAroundId,               // 17
+        SmoothDifferenceId          // 18
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -513,6 +527,7 @@ int process_options(int argc, char** argv) {
         {"depth", required_argument, 0, StringArgument},                       // 15
         {"output", required_argument, 0, StringArgument},                      // 16
         {"wrap", optional_argument, 0, StringArgument},                        // 17
+        {"smooth-difference", required_argument, 0, StringArgument},           // 18
         {0, 0, 0, 0}
     };
 
@@ -786,6 +801,36 @@ int process_options(int argc, char** argv) {
                 }
 
                 optionSet.insert(MaskVectorizeDistanceOption);
+                break;
+            }
+
+            case SmoothDifferenceId: {
+                char* tail;
+                errno = 0;
+                const double radius = strtod(optarg, &tail);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": illegal numeric format \""
+                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": trailing garbage \""
+                         << tail << "\" in \"" << optarg << "\"" << endl;
+                    exit(1);
+                }
+                if (radius < 0.0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": negative radius; will not blur"
+                         << endl;
+                    DifferenceBlurRadius = 0.0;
+                } else {
+                    DifferenceBlurRadius = radius;
+                }
+
+                optionSet.insert(SmoothDifferenceOption);
                 break;
             }
 
