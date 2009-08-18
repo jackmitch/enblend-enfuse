@@ -82,9 +82,7 @@ public:
     typedef typename CostImage::const_traverser CostIterator;
 
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> >* v, VisualizeImage* const vi) :
-        costImage(d),
-        visualizeStateSpaceImage(vi),
-        E(NULL), Pi(NULL), EF(NULL), PiF(NULL) {
+        costImage(d), visualizeStateSpaceImage(vi) {
         kMax = 1;
 
         const int costImageShortDimension = std::min(costImage->width(), costImage->height());
@@ -193,14 +191,6 @@ public:
             previousPoint = currentPoint;
         }
 
-        if (UseGPU) {
-            EF = new float[kMax * mfEstimates.size()];
-            PiF = new float[kMax * mfEstimates.size()];
-        } else {
-            E = new int[kMax];
-            Pi = new double[kMax];
-        }
-
         tau = AnnealPara.tau;
         deltaEMax = AnnealPara.deltaEMax;
         deltaEMin = AnnealPara.deltaEMin;
@@ -213,10 +203,6 @@ public:
         for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
         for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
         for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
-        delete [] E;
-        delete [] Pi;
-        delete [] EF;
-        delete [] PiF;
     }
 
     void run() {
@@ -327,125 +313,146 @@ public:
 
 protected:
     void calculateStateProbabilities() {
-        unsigned int lastIndex = mfEstimates.size() - 1;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
-            // Skip updating points that have already converged.
-            if (convergedPoints[index]) {
-                continue;
-            }
+        const int mf_size = static_cast<int>(mfEstimates.size());
 
-            vector<Point2D>* stateSpace = pointStateSpaces[index];
-            vector<double>* stateProbabilities = pointStateProbabilities[index];
-            vector<int>* stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
-
-            unsigned int nextIndex = (index + 1) % mfEstimates.size();
-            Point2D lastPointEstimate = mfEstimates[lastIndex];
-            bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            Point2D nextPointEstimate = mfEstimates[nextIndex];
-            bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
-            lastIndex = index;
-
-            // Calculate E values.
-            // exp_a scaling factor is part of the Schraudolph approximation.
-            // for all e_i, e_j, in E: -700 < e_j-e_i < 700
-            double exp_a = 1512775 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
-            for (unsigned int i = 0; i < localK; ++i) {
-                Point2D currentPoint = (*stateSpace)[i];
-                E[i] = (*stateDistances)[i];
-                if (lastPointInCostImage) {
-                    E[i] += costImageCost(lastPointEstimate, currentPoint);
-                }
-                if (nextPointInCostImage) {
-                    E[i] += costImageCost(currentPoint, nextPointEstimate);
-                }
-                E[i] = NumericTraits<int>::fromRealPromote(E[i] * exp_a);
-                Pi[i] = 0.0;
-            }
-
-            // Calculate new stateProbabilities
-            // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
-            // I am using an approximation of the exp function from:
-            // Nicol N. Schraudolph. A Fast, Compact Approximation of the Exponential Function.
-            // Neural Computation, vol. 11, pages 853--862, 1999.
-            union {
-                double d;
-#ifdef WORDS_BIGENDIAN
-                struct { int i, j; } n;
-#else
-                struct { int j, i; } n;
+#ifdef OPENMP
+#pragma omp parallel
 #endif
-            } eco;
-            eco.n.j = 0;
+        {
+            int* E = new int[kMax];
+            double* Pi = new double[kMax];
 
-            // An = 1 / (1 + exp( (E[j] - E[i]) / T )
-            // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
-            for (unsigned int j = 0; j < localK; ++j) {
-                double piTj = (*stateProbabilities)[j];
-                Pi[j] += piTj;
-                int ej = E[j];
-                for (unsigned int i = j + 1; i < localK; ++i) {
-                    double piT = (*stateProbabilities)[i] + piTj;
-                    eco.n.i = (ej - E[i]) + (1072693248 - 60801);
-                    // FIXME eco.n.i is overflowing into NaN range!
-                    double piTAn = piT / (1 + eco.d);
-                    if (
-#ifdef _MSC_VER
-                        isnan(piTAn)
-#else
-                        std::isnan(piTAn)
+#ifdef OPENMP
+#pragma omp for
 #endif
-                        ) {
-                        // exp term is infinity or zero.
-                        piTAn = ej > E[i] ? 0.0 : piT;
+            for (int index = 0; index < mf_size; ++index) {
+                // Skip updating points that have already converged.
+                if (convergedPoints[index]) {
+                    continue;
+                }
+
+                const vector<Point2D>* stateSpace = pointStateSpaces[index];
+                vector<double>* stateProbabilities = pointStateProbabilities[index];
+                const vector<int>* stateDistances = pointStateDistances[index];
+                const unsigned int localK = stateSpace->size();
+
+                const int lastIndex = index == 0 ? mf_size - 1 : index - 1;
+                const unsigned int nextIndex = (index + 1) % mf_size;
+                const Point2D lastPointEstimate = mfEstimates[lastIndex];
+                const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
+                const Point2D nextPointEstimate = mfEstimates[nextIndex];
+                const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
+
+                // Calculate E values.
+                // exp_a scaling factor is part of the Schraudolph approximation.
+                // for all e_i, e_j, in E: -700 < e_j-e_i < 700
+                const double exp_a = 1512775.0 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
+                for (unsigned int i = 0; i < localK; ++i) {
+                    const Point2D currentPoint = (*stateSpace)[i];
+                    int cost = (*stateDistances)[i];
+                    if (lastPointInCostImage) {
+                        cost += costImageCost(lastPointEstimate, currentPoint);
                     }
-                    Pi[j] += piTAn;
-                    Pi[i] += piT - piTAn;
+                    if (nextPointInCostImage) {
+                        cost += costImageCost(currentPoint, nextPointEstimate);
+                    }
+                    E[i] = NumericTraits<int>::fromRealPromote(cost * exp_a);
+                    Pi[i] = 0.0;
                 }
-                (*stateProbabilities)[j] = Pi[j] / localK;
+
+                // Calculate new stateProbabilities
+                // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
+                // I am using an approximation of the exp function from:
+                // Nicol N. Schraudolph. A Fast, Compact Approximation of the Exponential Function.
+                // Neural Computation, vol. 11, pages 853--862, 1999.
+                union {
+                    double d;
+#ifdef WORDS_BIGENDIAN
+                    struct { int hi, lo; } n;
+#else
+                    struct { int lo, hi; } n;
+#endif
+                } eco;
+                eco.n.lo = 0;
+
+                // An = 1 / (1 + exp( (E[j] - E[i]) / T )
+                // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
+                for (unsigned int j = 0; j < localK; ++j) {
+                    const double piTj = (*stateProbabilities)[j];
+                    Pi[j] += piTj;
+                    const int ej = E[j];
+                    for (unsigned int i = j + 1; i < localK; ++i) {
+                        const double piT = (*stateProbabilities)[i] + piTj;
+                        eco.n.hi = (ej - E[i]) + (0x3ff00000 - 60801);
+                        // FIXME eco.n.hi is overflowing into NaN range!
+                        double piTAn = piT / (1.0 + eco.d);
+                        if (
+#ifdef _MSC_VER
+                            isnan(piTAn)
+#else
+                            std::isnan(piTAn)
+#endif
+                            ) {
+                            // exp term is infinity or zero.
+                            piTAn = ej > E[i] ? 0.0 : piT;
+                        }
+                        Pi[j] += piTAn;
+                        Pi[i] += piT - piTAn;
+                    }
+                    (*stateProbabilities)[j] = Pi[j] / localK;
+                }
             }
-        }
+
+            delete [] E;
+            delete [] Pi;
+        } // omp parallel
     }
 
 #ifdef HAVE_LIBGLEW
     void calculateStateProbabilitiesGPU() {
+        const unsigned int mf_size = mfEstimates.size();
         unsigned int unconvergedPoints = 0;
-        unsigned int lastIndex = mfEstimates.size() - 1;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
+
+        float* EF = new float[kMax * mfEstimates.size()];
+        float* PiF = new float[kMax * mfEstimates.size()];
+
+        for (unsigned int index = 0; index < mf_size; ++index) {
             // Skip updating points that have already converged.
             if (convergedPoints[index]) {
                 continue;
             }
 
-            unsigned int rowIndex = unconvergedPoints / 4;
-            unsigned int vectorIndex = unconvergedPoints % 4;
+            const unsigned int rowIndex = unconvergedPoints / 4;
+            const unsigned int vectorIndex = unconvergedPoints % 4;
             float* EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
             float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
-            vector<Point2D>* stateSpace = pointStateSpaces[index];
+            const vector<Point2D>* stateSpace = pointStateSpaces[index];
             vector<double>* stateProbabilities = pointStateProbabilities[index];
-            vector<int>* stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
+            const vector<int>* stateDistances = pointStateDistances[index];
+            const unsigned int localK = stateSpace->size();
 
-            unsigned int nextIndex = (index + 1) % mfEstimates.size();
-            Point2D lastPointEstimate = mfEstimates[lastIndex];
-            bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            Point2D nextPointEstimate = mfEstimates[nextIndex];
-            bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
-            lastIndex = index;
+            const unsigned int lastIndex = index == 0 ? mf_size - 1 : index - 1;
+            const unsigned int nextIndex = (index + 1) % mf_size;
+            const Point2D lastPointEstimate = mfEstimates[lastIndex];
+            const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
+            const Point2D nextPointEstimate = mfEstimates[nextIndex];
+            const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
 
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
-                Point2D currentPoint = (*stateSpace)[i];
-                EFbase[4 * i] = (*stateDistances)[i];
+                const Point2D currentPoint = (*stateSpace)[i];
+                int cost = (*stateDistances)[i];
                 if (lastPointInCostImage) {
-                    EFbase[4 * i] += costImageCost(lastPointEstimate, currentPoint);
+                    cost += costImageCost(lastPointEstimate, currentPoint);
                 }
                 if (nextPointInCostImage) {
-                    EFbase[4 * i] += costImageCost(currentPoint, nextPointEstimate);
+                    cost += costImageCost(currentPoint, nextPointEstimate);
                 }
+                EFbase[4 * i] = static_cast<float>(cost);
                 PiFbase[4 * i] = static_cast<float>((*stateProbabilities)[i]);
             }
+
             for (unsigned int i = localK; i < kMax; ++i) {
                 PiFbase[4 * i] = 0.0f;
             }
@@ -458,18 +465,18 @@ protected:
 
         // Write the results back to pointStateProbabilities
         unconvergedPoints = 0;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
+        for (unsigned int index = 0; index < mf_size; ++index) {
             // Skip updating points that have already converged.
             if (convergedPoints[index]) {
                 continue;
             }
 
-            unsigned int rowIndex = unconvergedPoints / 4;
-            unsigned int vectorIndex = unconvergedPoints % 4;
+            const unsigned int rowIndex = unconvergedPoints / 4;
+            const unsigned int vectorIndex = unconvergedPoints % 4;
             float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
             vector<double>* stateProbabilities = pointStateProbabilities[index];
-            unsigned int localK = stateProbabilities->size();
+            const unsigned int localK = stateProbabilities->size();
 
             for (unsigned int i = 0; i < localK; ++i) {
                 (*stateProbabilities)[i] = static_cast<double>(PiFbase[4 * i]);
@@ -477,6 +484,9 @@ protected:
 
             unconvergedPoints++;
         }
+
+        delete [] EF;
+        delete [] PiF;
     }
 #endif
 
@@ -599,18 +609,16 @@ protected:
         } // omp parallel
     }
 
-    int costImageCost(const Point2D& start, const Point2D& end) {
+    int costImageCost(const Point2D& start, const Point2D& end) const {
         int cost = 0;
         const int lineLength =
             std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
 
-        if (lineLength > 0) {
-            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start,
-                                                 costImage->upperLeft() + end);
-            for (int i = 0; i < lineLength; ++i) {
-                cost += *lineStart;
-                ++lineStart;
-            }
+        LineIterator<CostIterator> lineStart(costImage->upperLeft() + start,
+                                             costImage->upperLeft() + end);
+        for (int i = 0; i < lineLength; ++i) {
+            cost += *lineStart;
+            ++lineStart;
         }
 
         if (lineLength < 8) {
@@ -621,7 +629,7 @@ protected:
     }
 
     bool segmentIntersect(const Point2D& l1a, const Point2D& l1b,
-                          const Point2D& l2a, const Point2D& l2b) {
+                          const Point2D& l2a, const Point2D& l2b) const {
         const int denom =
             (l2b.y - l2a.y) * (l1b.x - l1a.x) - (l2b.x - l2a.x) * (l1b.y - l1a.y);
         if (denom == 0) {
@@ -679,14 +687,6 @@ protected:
 
     // Largest state space over all points
     unsigned int kMax;
-
-    // Data arrays for CPU probability calculations
-    int* E;
-    double* Pi;
-
-    // Data arrays for GPU probability calculations
-    float* EF;
-    float* PiF;
 };
 
 
