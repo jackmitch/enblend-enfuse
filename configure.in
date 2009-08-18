@@ -82,9 +82,8 @@ else
     CFLAGS="${GL_CFLAGS} $CFLAGS"
 fi
 AC_CHECK_LIB(GLEW, glewInit,
-             [no_glew=no],
-             [no_glew=yes
-              can_use_gpu=no
+             [],
+             [can_use_gpu=no
               missing_for_gpu="$missing_for_gpu GLEW"
               AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
              [])
