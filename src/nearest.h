@@ -337,6 +337,9 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     }
 
 #ifdef OPENMP
+    const bool openmp_nested = omp_get_nested();
+    omp_set_nested(true);
+
 #pragma omp parallel sections
 #endif
     {
@@ -345,10 +348,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 #endif
         {
             IMAGETYPE<SrcPixelType> diff12(size);
-            combineTwoImages(src1_upperleft, src1_lowerright, sa1,
-                             src2_upperleft, sa2,
-                             diff12.upperLeft(), diff12.accessor(),
-                             saturating_subtract<SrcPixelType>());
+            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
+                               src2_upperleft, sa2,
+                               diff12.upperLeft(), diff12.accessor(),
+                               saturating_subtract<SrcPixelType>());
             switch (boundary)
             {
             case OpenBoundaries:
@@ -378,10 +381,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                 cerr.flush();
             }
             IMAGETYPE<SrcPixelType> diff21(size);
-            combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
-                             src1_upperleft, sa1,
-                             diff21.upperLeft(), diff21.accessor(),
-                             saturating_subtract<SrcPixelType>());
+            combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
+                               src1_upperleft, sa1,
+                               diff21.upperLeft(), diff21.accessor(),
+                               saturating_subtract<SrcPixelType>());
             switch (boundary)
             {
             case OpenBoundaries:
@@ -401,6 +404,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
             }
         } // omp section
     } // omp parallel sections
+
+#ifdef OPENMP
+    omp_set_nested(openmp_nested);
+#endif
 
     if (Verbose > VERBOSE_NFT_MESSAGES)
     {

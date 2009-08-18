@@ -199,16 +199,26 @@ void printVersionAndExit() {
 #endif
             "\n";
 
+#ifdef OPENMP
+        const bool openmp_nested = omp_get_nested();
+        omp_set_nested(true);
+        const bool openmp_dynamic = omp_get_dynamic();
+        omp_set_dynamic(true);
         cout <<
             "Extra feature: OpenMP: " <<
-#ifdef OPENMP
-            "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << " using " <<
-            omp_get_num_procs() << " processor(s) and up to " <<
-            omp_get_max_threads() << " thread(s)" <<
+            "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
+            "                           - " << (omp_get_nested() ? "" : "no ") <<
+            "support for nested parallelism\n" <<
+            "                           - " << (omp_get_dynamic() ? "" : "no ") <<
+            "support for dynamic adjustment of the number of threads\n" <<
+            "                           - using " <<
+            omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
+            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n\n";
+        omp_set_dynamic(openmp_dynamic);
+        omp_set_nested(openmp_nested);
 #else
-            "no" <<
+        cout << "Extra feature: OpenMP: " << "no\n\n";
 #endif
-            "\n\n";
 
         cout <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<

@@ -24,6 +24,8 @@
 #include <config.h>
 #endif
 
+#include <limits>
+
 #include "vigra/diff2d.hxx"
 #include "vigra/initimage.hxx"
 #include "vigra/inspectimage.hxx"
@@ -31,6 +33,37 @@
 #include "vigra/combineimages.hxx"
 #include "vigra/convolution.hxx"
 #include "vigra/distancetransform.hxx"
+
+
+#ifdef __GNUC__
+#define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint) \
+    __builtin_prefetch(m_addr, m_rw_hint, m_temporal_locality_hint)
+#define EXPECT_RESULT(m_condition, m_expected_result) \
+    __builtin_expect(m_condition, static_cast<int>(m_expected_result))
+#else
+#define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint)
+#define EXPECT_RESULT(m_condition, m_expected_result) (m_condition)
+#endif
+
+
+typedef enum {
+    PREPARE_FOR_READ,
+    PREPARE_FOR_WRITE
+} rw_hint;
+
+
+// If data is only touched once, or if the dataset is smaller than the
+// cache, prefer the non-temporal version; otherwise use one of the
+// temporal versions.
+typedef enum {
+    // Fetch data into the first way of the L1/L2 cache, minimizing cache pollution.
+    NO_TEMPORAL_LOCALITY,
+
+    // Fetch data into the least-recently-used way of the ...
+    LOW_TEMPORAL_LOCALITY,      // ... L3 cache?
+    MEDIUM_TEMPORAL_LOCALITY,   // ... L2/L3 cache?
+    HIGH_TEMPORAL_LOCALITY      // ... L1/L2/L3 cache just as a normal load would do.
+} temporal_locality_hint;
 
 
 #if _OPENMP >= 200505 // at least OpenMP version 2.5
@@ -57,8 +90,7 @@
 #define CROSSOVER_TRANSFORMIMAGE_SCALAR 57600
 #define CROSSOVER_TRANSFORMIMAGE_NON_SCALAR 32768
 
-#define CROSSOVER_DISTANCE_TRANSFORM_SCALAR 1
-#define CROSSOVER_DISTANCE_TRANSFORM_NON_SCALAR 1
+#define CROSSOVER_DISTANCE_TRANSFORM 1936
 
 
 template <class SrcImageIterator1, class SrcAccessor1,
@@ -270,6 +302,183 @@ transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerrig
 }
 
 
+namespace fh
+{
+namespace detail
+{
+    template <class ValueType>
+    inline static ValueType
+    square(ValueType x)
+    {
+        return x * x;
+    }
+
+
+    // Pedro F. Felzenszwalb, Daniel P. Huttenlocher
+    // "Distance Transforms of Sampled Functions"
+
+
+    template <class ValueType>
+    struct ChessboardTransform1D
+    {
+        typedef ValueType value_type;
+
+        int id() const {return 0;}
+
+        void operator()(ValueType*, const ValueType*, int) const
+        {
+            vigra_fail("fh::detail::ChessboardTransform1D: not implemented");
+        }
+    };
+
+
+    template <class ValueType>
+    struct ManhattanTransform1D
+    {
+        typedef ValueType value_type;
+
+        int id() const {return 1;}
+
+        void operator()(ValueType* d, const ValueType* f, int n) const
+        {
+            const ValueType one = static_cast<ValueType>(1);
+
+            d[0] = f[0];
+            for (int q = 1; q < n; ++q)
+            {
+                d[q] = std::min<ValueType>(f[q], d[q - 1] + one);
+            }
+            for (int q = n - 2; q >= 0; --q)
+            {
+                d[q] = std::min<ValueType>(d[q], d[q + 1] + one);
+            }
+        }
+    };
+
+
+    template <class ValueType>
+    struct EuclideanTransform1D
+    {
+        typedef ValueType value_type;
+
+        int id() const {return 2;}
+
+        void operator()(ValueType* d, const ValueType* f, int n) const
+        {
+            typedef float math_t;
+            const math_t max = static_cast<math_t>(std::numeric_limits<ValueType>::max());
+
+            int* v = new int[n];
+            math_t* z = new math_t[n + 1];
+            int k = 0;
+
+            v[0] = 0;
+            z[0] = -max;
+            z[1] = max;
+
+            for (int q = 1; q < n; ++q)
+            {
+                const math_t sum_q = static_cast<math_t>(f[q]) + square(static_cast<math_t>(q));
+                math_t s = (sum_q - (f[v[k]] + square(v[k]))) / (2 * (q - v[k]));
+
+                while (s <= z[k])
+                {
+                    --k;
+                    s = (sum_q - (f[v[k]] + square(v[k]))) / (2 * (q - v[k]));
+                }
+                ++k;
+
+                v[k] = q;
+                z[k] = s;
+                z[k + 1] = max;
+            }
+
+            k = 0;
+            for (int q = 0; q < n; ++q)
+            {
+                while (z[k + 1] < static_cast<math_t>(q))
+                {
+                    ++k;
+                }
+                d[q] = square(q - v[k]) + f[v[k]];
+            }
+
+            delete [] v;
+            delete [] z;
+        }
+    };
+
+
+    template <class SrcImageIterator, class SrcAccessor,
+              class DestImageIterator, class DestAccessor,
+              class ValueType, class Transform1dFunctor>
+    void
+    fhDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa,
+                        DestImageIterator dest_upperleft, DestAccessor da,
+                        ValueType background, Transform1dFunctor transform1d)
+    {
+        typedef typename Transform1dFunctor::value_type DistanceType;
+        typedef typename vigra::NumericTraits<DistanceType> DistanceTraits;
+        typedef vigra::BasicImage<DistanceType> DistanceImageType;
+
+        const vigra::Diff2D size(src_lowerright - src_upperleft);
+        const int greatest_length = std::max(size.x, size.y);
+        DistanceImageType intermediate(size);
+
+#pragma omp parallel
+        {
+            DistanceType* f = new DistanceType[greatest_length];
+            DistanceType* d = new DistanceType[greatest_length];
+
+#pragma omp for
+            for (int x = 0; x < size.x; ++x)
+            {
+                SrcImageIterator si(src_upperleft + vigra::Diff2D(x, 0));
+                for (DistanceType* pf = f; pf != f + size.y; ++pf, ++si.y)
+                {
+                    *pf = sa(si) == background ? DistanceTraits::max() : DistanceTraits::zero();
+                }
+
+                transform1d(d, f, size.y);
+
+                typename DistanceImageType::column_iterator ci(intermediate.columnBegin(x));
+                for (DistanceType* pd = d; pd != d + size.y; ++pd, ++ci)
+                {
+                    *ci = *pd;
+                    PREFETCH((ci + 1).operator->(), PREPARE_FOR_WRITE, HIGH_TEMPORAL_LOCALITY);
+                }
+            }
+
+#pragma omp for nowait
+            for (int y = 0; y < size.y; ++y)
+            {
+                transform1d(d, &intermediate(0, y), size.x);
+                DestImageIterator i(dest_upperleft + vigra::Diff2D(0, y));
+
+                if (transform1d.id() == 2)
+                {
+                    for (DistanceType* pd = d; pd != d + size.x; ++pd, ++i.x)
+                    {
+                        da.set(sqrt(*pd), i);
+                    }
+                }
+                else
+                {
+                    for (DistanceType* pd = d; pd != d + size.x; ++pd, ++i.x)
+                    {
+                        da.set(*pd, i);
+                    }
+                }
+            }
+
+            delete [] d;
+            delete [] f;
+        } // omp parallel
+    }
+} // namespace detail
+} // namespace fh
+
+
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor,
           class ValueType>
@@ -278,17 +487,25 @@ distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerri
                     DestImageIterator dest_upperleft, DestAccessor da,
                     ValueType background, int norm)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
-
     const vigra::Diff2D size(src_lowerright - src_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_DISTANCE_TRANSFORM_SCALAR : CROSSOVER_DISTANCE_TRANSFORM_NON_SCALAR))
+    if (norm != 0 && // We have no multi-threaded version for chessboard metric yet. - cls
+        size.x * size.y >= CROSSOVER_DISTANCE_TRANSFORM)
     {
-        distanceTransform(src_upperleft, src_lowerright, sa,
-                          dest_upperleft, da,
-                          background, norm);
+        if (norm == 1)
+        {
+            fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
+                                            dest_upperleft, da,
+                                            background,
+                                            fh::detail::ManhattanTransform1D<float>());
+        }
+        else
+        {
+            fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
+                                            dest_upperleft, da,
+                                            background,
+                                            fh::detail::EuclideanTransform1D<float>());
+        }
     }
     else
     {
@@ -411,8 +628,8 @@ template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor,
           class ValueType>
 void
-distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa,
-                    DestImageIterator dest_upperleft, DestAccessor da,
+distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
+                    DestImageIterator dest_upperleft, DestAccessor dest_acc,
                     ValueType background, int norm)
 {
     vigra::distanceTransform(src_upperleft, src_lowerright, src_acc,
