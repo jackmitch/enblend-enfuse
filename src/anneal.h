@@ -492,108 +492,111 @@ protected:
 #endif
 
         kMax = 1;
+        size_t kmax_local = 1;
 #ifdef OPENMP
-#pragma omp parallel for
+#pragma omp parallel firstprivate(kmax_local)
 #endif
-        for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
-            if (convergedPoints[index]) {
-                continue;
-            }
-
-            vector<Point2D>* stateSpace = pointStateSpaces[index];
-            vector<double>* stateProbabilities = pointStateProbabilities[index];
-            vector<int>* stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
-            double estimateX = 0.0;
-            double estimateY = 0.0;
-
-            // Make new mean field estimates.
-            double totalWeight = 0.0;
-            bool hasHighWeightState = false;
-            for (unsigned int k = 0; k < localK; ++k) {
-                const double weight = (*stateProbabilities)[k];
-                totalWeight += weight;
-                if (weight > 0.99) {
-                    hasHighWeightState = true;
+        {
+#ifdef OPENMP
+#pragma omp for
+#endif
+            for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
+                if (convergedPoints[index]) {
+                    continue;
                 }
-                const Point2D state = (*stateSpace)[k];
-                estimateX += weight * static_cast<double>(state.x);
-                estimateY += weight * static_cast<double>(state.y);
-            }
-            estimateX /= totalWeight;
-            estimateY /= totalWeight;
 
-            Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
-                                NumericTraits<int>::fromRealPromote(estimateY));
+                vector<Point2D>* stateSpace = pointStateSpaces[index];
+                vector<double>* stateProbabilities = pointStateProbabilities[index];
+                vector<int>* stateDistances = pointStateDistances[index];
+                unsigned int localK = stateSpace->size();
+                double estimateX = 0.0;
+                double estimateY = 0.0;
 
-            // Sanity check
-            if (!costImage->isInside(newEstimate)) {
+                // Make new mean field estimates.
+                double totalWeight = 0.0;
+                bool hasHighWeightState = false;
+                for (unsigned int k = 0; k < localK; ++k) {
+                    const double weight = (*stateProbabilities)[k];
+                    totalWeight += weight;
+                    if (weight > 0.99) {
+                        hasHighWeightState = true;
+                    }
+                    const Point2D state = (*stateSpace)[k];
+                    estimateX += weight * static_cast<double>(state.x);
+                    estimateY += weight * static_cast<double>(state.y);
+                }
+                estimateX /= totalWeight;
+                estimateY /= totalWeight;
+
+                Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
+                                    NumericTraits<int>::fromRealPromote(estimateY));
+
+                // Sanity check
+                if (!costImage->isInside(newEstimate)) {
 #ifdef OPENMP
 #pragma omp critical(write_to_cerr)
 #endif
-                {
-                    cerr << command
-                         << ": warning: new mean field estimate outside cost image"
-                         << endl;
-                    for (unsigned int state = 0; state < localK; ++state) {
+                    {
                         cerr << command
-                             << ": info:    state " << (*stateSpace)[state]
-                             << " weight = "
-                             << (*stateProbabilities)[state]
+                             << ": warning: new mean field estimate outside cost image"
                              << endl;
-                    }
-                    cerr << command
-                         << ": info:    new estimate = " << newEstimate
-                         << endl;
-                } // omp critical
+                        for (unsigned int state = 0; state < localK; ++state) {
+                            cerr << command
+                                 << ": info:    state " << (*stateSpace)[state]
+                                 << " weight = "
+                                 << (*stateProbabilities)[state]
+                                 << endl;
+                        }
+                        cerr << command
+                             << ": info:    new estimate = " << newEstimate
+                             << endl;
+                    } // omp critical
 
-                // Skip this point from now on.
-                convergedPoints[index] = true;
-                continue;
-            }
-
-            mfEstimates[index] = newEstimate;
-
-            // Remove improbable solutions from the search space
-            double totalWeights = 0.0;
-            const double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
-            for (unsigned int k = 0; k < stateSpace->size(); ) {
-                const double weight = (*stateProbabilities)[k];
-                if (weight < cutoffWeight) {
-                    // Replace this state with last state
-                    (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
-                    (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
-                    (*stateDistances)[k] = (*stateDistances)[stateDistances->size() - 1];
-
-                    // Delete last state
-                    stateProbabilities->pop_back();
-                    stateSpace->pop_back();
-                    stateDistances->pop_back();
-                } else {
-                    totalWeights += weight;
-                    ++k;
+                    // Skip this point from now on.
+                    convergedPoints[index] = true;
+                    continue;
                 }
-            }
 
-            // Renormalize
-            for (unsigned int k = 0; k < stateSpace->size(); ++k) {
-                (*stateProbabilities)[k] /= totalWeights;
-            }
+                mfEstimates[index] = newEstimate;
 
-            localK = stateSpace->size();
-            if (localK < 2) {
-                convergedPoints[index] = true;
-            }
+                // Remove improbable solutions from the search space
+                double totalWeights = 0.0;
+                const double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
+                for (unsigned int k = 0; k < stateSpace->size(); ) {
+                    const double weight = (*stateProbabilities)[k];
+                    if (weight < cutoffWeight) {
+                        // Replace this state with last state
+                        (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
+                        (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
+                        (*stateDistances)[k] = (*stateDistances)[stateDistances->size() - 1];
 
-            if (stateProbabilities->size() > kMax) {
+                        // Delete last state
+                        stateProbabilities->pop_back();
+                        stateSpace->pop_back();
+                        stateDistances->pop_back();
+                    } else {
+                        totalWeights += weight;
+                        ++k;
+                    }
+                }
+
+                // Renormalize
+                for (unsigned int k = 0; k < stateSpace->size(); ++k) {
+                    (*stateProbabilities)[k] /= totalWeights;
+                }
+
+                localK = stateSpace->size();
+                if (localK < 2) {
+                    convergedPoints[index] = true;
+                }
+
+                kmax_local = std::max(kmax_local, stateProbabilities->size());
+            }
 #ifdef OPENMP
 #pragma omp critical(update_kMax)
 #endif
-                {
-                    kMax = std::max(kMax, static_cast<unsigned int>(stateProbabilities->size()));
-                } // omp critical
-            }
-        }
+            kMax = std::max(kMax, static_cast<unsigned int>(kmax_local));
+        } // omp parallel
     }
 
     int costImageCost(const Point2D& start, const Point2D& end) {
