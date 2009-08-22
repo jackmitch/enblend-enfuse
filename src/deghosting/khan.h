@@ -45,11 +45,11 @@ namespace deghosting
     class Khan : public Deghosting
     {
         public:
-            Khan(std::vector< std::string >& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, int verbosity);
+            Khan(std::vector<std::string>& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, double sigma, int verbosity);
+            Khan(std::vector<ImageImportInfo>& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, double sigma, int verbosity);
             std::vector<FImagePtr> createWeightMasks();
-            void setSigma(double sigma);
             ~Khan() {}
-        private:
+        protected:
             // Kh() things
             // (2*pi)^(1/2)
             double PIPOW;
@@ -66,15 +66,23 @@ namespace deghosting
              * used for creating initial weights
              */
             static inline float hat(RGBValue<float> pixel);
+            
+            /** set sigma
+             * sets sigma for gaussian weigting function
+             */
+            void setSigma(double sigma);
+            
             /** transform image using EMoR response
              * @param inputFile filename of image to be transformed
              * @param *pInputImg FRGBImage to be transformed
              */
             //void linearizeRGB(std::string, FRGBImage* pInputImg);
+            
             /** kernel function
              * Standard probability density function
              */
             inline double Kh(deghosting::AlgTinyVector< float, 3 > x);
+            
             /** function to preprocess input image
              * This function loads image, linearize it using EMoR (FIXME),
              * tranform it using logarithm or gamma if input images are HDR

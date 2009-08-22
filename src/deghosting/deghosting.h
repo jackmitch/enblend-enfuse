@@ -15,6 +15,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <vigra/stdimage.hxx>
+#include <vigra/imageinfo.hxx>
 
 // define if you want to use image cache
 #ifdef ENBLEND_CACHE_IMAGES
@@ -67,6 +68,7 @@ namespace deghosting {
          * @param inputFiles images to be processed
          */
         virtual void loadImages(std::vector<std::string>& inputFiles) throw(NoImages, BadDimensions);
+        virtual void loadImages(std::vector<vigra::ImageImportInfo>& inputFiles) throw(NoImages, BadDimensions);
         
         /** set advanced flags
          * Allows to change behavior of used algorithm
@@ -96,7 +98,7 @@ namespace deghosting {
         virtual ~Deghosting() {}
         
     protected:
-        std::vector<std::string> inputFiles;
+        std::vector<vigra::ImageImportInfo> inputFiles;
         uint16_t flags;
         uint16_t debugFlags;
         int iterations;

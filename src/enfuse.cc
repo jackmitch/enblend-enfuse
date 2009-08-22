@@ -116,6 +116,8 @@ double WSaturation = 0.2;
 double WEntropy = 0.0;
 double WMu = 0.5;
 double WSigma = 0.2;
+double DSigma = 30;
+int DIterations = 4;
 bool WSaturationIsDefault = true;
 int ContrastWindowSize = 5;
 std::string GrayscaleProjector;
@@ -125,6 +127,7 @@ int EntropyWindowSize = 3;
 struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
 struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
 bool UseHardMask = false;
+bool UseDeghosting = false;
 int Debug = 0;
 //int Output16BitImage=0;
 
@@ -247,6 +250,11 @@ void printUsageAndExit(const bool error = true) {
         "                           scale.  This is especially useful for focus\n" <<
         "                           stacks with thin and high contrast features,\n" <<
         "                           but leads to increased noise.\n" <<
+        "  --Deghosting           Enable ghost removal. Slow.\n" <<
+        "  --dSigma =SIGMA          Standard deviation of Gaussian weighting for deghosting\n" <<
+        "                           function (SIGMA > 0).  Default: " << DSigma << "\n" <<
+        "  --dIterations=ITER     Number of iterations for deghosting.\n" <<
+        "                           function (ITER > 0).  Default: " << DIterations << "\n" <<
         "\n" <<
         "Expert options:\n" <<
         "  --ContrastWindowSize=SIZE\n" <<
@@ -353,9 +361,12 @@ int process_options(int argc, char** argv) {
         EntropyWindowSizeId,     // 13
         EntropyCutoffId,         // 14
         SoftMaskId,              // 15
-        VerboseId,               // 16
-        HelpId,                  // 17
-        VersionId                // 18
+        DeghostingID,            // 16
+        DeghostingSigmaID,       // 17
+        DeghostingIterationsID,  // 18
+        VerboseId,               // 19
+        HelpId,                  // 20
+        VersionId                // 21
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -376,9 +387,12 @@ int process_options(int argc, char** argv) {
         {"EntropyWindowSize", required_argument, 0, IntegerArgument},    // 13
         {"EntropyCutoff", required_argument, 0, StringArgument},         // 14
         {"SoftMask", no_argument, 0, NoArgument},                        // 15
-        {"verbose", no_argument, 0, NoArgument},                         // 16
-        {"help", no_argument, 0, NoArgument},                            // 17
-        {"version", no_argument, 0, NoArgument},                         // 18
+        {"Deghosting", no_argument, 0, NoArgument},                      // 16
+        {"dSigma", required_argument, 0, FloatArgument},                 // 17
+        {"dIterations", required_argument, 0, IntegerArgument},          // 18
+        {"verbose", no_argument, 0, NoArgument},                         // 19
+        {"help", no_argument, 0, NoArgument},                            // 20
+        {"version", no_argument, 0, NoArgument},                         // 21
         {0, 0, 0, 0}
     };
 
@@ -408,6 +422,9 @@ int process_options(int argc, char** argv) {
             case VersionId:
                 printVersionAndExit();
                 break;          // never reached
+            case DeghostingID:
+                UseDeghosting = true;
+                break;
             default:
                 cerr << "enfuse: internal error: unhandled \"NoArgument\" option"
                      << endl;
@@ -607,6 +624,9 @@ int process_options(int argc, char** argv) {
             case WeightEntropyId:
                 optionDouble = &WEntropy;
                 break;
+            case DeghostingSigmaID:
+                optionDouble = &DSigma;
+                break;
             default:
                 cerr << "enfuse: internal error: unhandled \"FloatArgument\" option"
                      << endl;
@@ -662,10 +682,17 @@ int process_options(int argc, char** argv) {
                 }
                 break;
 
+            case DeghostingIterationsID:
+                DIterations = atoi(optarg);
+                if (DIterations < 1) {
+                    cerr << "enfuse: number of iterations have to be at least 1" << endl;
+                    exit(1);
+                }
+                break;
             default:
                 cerr << "enfuse: internal error: unhandled \"IntegerArgument\" option"
                      << endl;
-                exit(1);
+                printUsageAndExit();
             }
             break;
         } // end of "case IntegerArgument"

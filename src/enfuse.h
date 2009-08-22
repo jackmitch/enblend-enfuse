@@ -40,6 +40,9 @@
 #include "pyramid.h"
 #include "mga.h"
 
+#include "deghosting/deghosting.h"
+#include "deghosting/khan.h"
+
 #include "vigra/flatmorphology.hxx"
 #include "vigra/functorexpression.hxx"
 #include "vigra/impex.hxx"
@@ -81,6 +84,9 @@ using boost::lambda::_1;
 using boost::lambda::_2;
 using boost::lambda::bind;
 using boost::lambda::const_parameters;
+
+using deghosting::Deghosting;
+using deghosting::Khan;
 
 namespace enblend {
 
@@ -1138,6 +1144,18 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
                                             new AlphaType(inputUnion.size()));
 
+    // create weights for deghosting
+    // load ImageInportInfo's into the vector
+    list<ImageImportInfo*>::iterator imageInfoIterator;
+    vector<ImageImportInfo> inputFiles;
+    for (; imageInfoIterator != imageInfoList.end(); imageInfoIterator++) {
+        inputFiles.push_back(**imageInfoIterator);
+    }
+    Deghosting* deghoster = NULL;
+    Khan khanDeghoster(inputFiles, deghosting::ADV_ONLYP, 0, DIterations, DSigma, Verbose);
+    deghoster = &khanDeghoster;
+    //vector<FImagePtr> weights = deghoster->createWeightMasks();
+    
     int m = 0;
     while (!imageInfoList.empty()) {
 

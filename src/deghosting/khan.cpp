@@ -37,14 +37,32 @@ using std::cout;
 
 namespace deghosting {
     Khan::Khan(std::vector<std::string>& newInputFiles, const uint16_t newFlags, const uint16_t newDebugFlags,
-                int newIterations, int newVerbosity) {
+                int newIterations, double newSigma, int newVerbosity) {
         try {
             Deghosting::loadImages(newInputFiles);
             Deghosting::setFlags(newFlags);
             Deghosting::setDebugFlags(newDebugFlags);
             Deghosting::setIterationNum(newIterations);
             Deghosting::setVerbosity(newVerbosity);
-            setSigma(30);
+            setSigma(newSigma);
+            for (unsigned int i=0; i<5; i++)
+                Deghosting::response.push_back(0);
+            PIPOW = sigma*std::sqrt(2*PI);
+            denom = 1/PIPOW;
+        } catch (...) {
+            throw;
+        }
+    }
+    
+    Khan::Khan(std::vector<ImageImportInfo>& newInputFiles, const uint16_t newFlags, const uint16_t newDebugFlags,
+                int newIterations, double newSigma, int newVerbosity) {
+        try {
+            Deghosting::loadImages(newInputFiles);
+            Deghosting::setFlags(newFlags);
+            Deghosting::setDebugFlags(newDebugFlags);
+            Deghosting::setIterationNum(newIterations);
+            Deghosting::setVerbosity(newVerbosity);
+            setSigma(newSigma);
             for (unsigned int i=0; i<5; i++)
                 Deghosting::response.push_back(0);
             PIPOW = sigma*std::sqrt(2*PI);
@@ -107,8 +125,7 @@ namespace deghosting {
     }*/
     
     void Khan::preprocessImage(unsigned int i, FImagePtr &weight, FLabImagePtr &LabImage) {
-        cout << "Loading image " << inputFiles[i] << endl;
-        ImageImportInfo imgInfo(inputFiles[i].c_str());
+        ImageImportInfo imgInfo(inputFiles[i]);
         FRGBImage * pInputImg =  new FRGBImage(imgInfo.size());
         BImage imgAlpha(imgInfo.size());
         weight = FImagePtr(new FImage(imgInfo.size()));
