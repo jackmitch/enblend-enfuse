@@ -17,7 +17,9 @@
 #include <vigra/stdimage.hxx>
 
 // define if you want to use image cache
+#ifdef ENBLEND_CACHE_IMAGES
 #define DEGHOSTING_CACHE_IMAGES
+#endif
 
 namespace deghosting {
     
