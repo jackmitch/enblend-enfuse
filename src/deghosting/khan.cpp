@@ -1,10 +1,21 @@
 
 #include <signal.h>
+// Globals related to catching SIGINT
+#ifndef _WIN32
+extern sigset_t SigintMask;
+#endif
 
 #include "khan.h"
 #include <vigra/impex.hxx>
 // for importImageAlpha, it's not really necessary
 #include <vigra_ext/impexalpha.hxx>
+
+/*// for EMoR
+#include <photometric/ResponseTransform.h>
+// neded for zeroNegative(), used in response transformation
+#include <vigra_ext/ImageTransforms.h>
+// panotools format of image, needed for response transformation
+#include <panotools/PanoToolsInterface.h>*/
 
 #ifdef ATAN_KH
 // neded for atan and abs
@@ -25,42 +36,22 @@ using std::endl;
 using std::cout;
 
 namespace deghosting {
-    Khan::Khan(std::vector<std::string>& setInputFiles, const uint16_t setFlags, const uint16_t setDebugFlags,
-                int setIterations, int setVerbosity) {
-        inputFiles = setInputFiles;
-        flags = setFlags;
-        debugFlags = setDebugFlags;
-        iterations = setIterations;
-        for (unsigned int i=0; i<5; i++)
-            response.push_back(0);
-        verbosity = setVerbosity;
-        sigma = 30;
-        PIPOW = sigma*std::sqrt(2*PI);
-        denom = 1/PIPOW;
-    }
-
-    void Khan::loadImages(std::vector<std::string>& newInputFiles) {
-        inputFiles = newInputFiles;
-    }
-
-    void Khan::setFlags(const uint16_t newFlags) {
-        flags = newFlags;
-    }
-
-    void Khan::setDebugFlags(const uint16_t newFlags) {
-        debugFlags = newFlags;
-    }
-
-    void Khan::setIterationNum(const int newIterations) {
-        iterations = newIterations;
-    }
-    
-    void Khan::setCameraResponse(EMoR newResponse) {
-        response = newResponse;
-    }
-    
-    void Khan::setVerbosity(int newVerbosity) {
-        verbosity = newVerbosity;
+    Khan::Khan(std::vector<std::string>& newInputFiles, const uint16_t newFlags, const uint16_t newDebugFlags,
+                int newIterations, int newVerbosity) {
+        try {
+            Deghosting::loadImages(newInputFiles);
+            Deghosting::setFlags(newFlags);
+            Deghosting::setDebugFlags(newDebugFlags);
+            Deghosting::setIterationNum(newIterations);
+            Deghosting::setVerbosity(newVerbosity);
+            setSigma(30);
+            for (unsigned int i=0; i<5; i++)
+                Deghosting::response.push_back(0);
+            PIPOW = sigma*std::sqrt(2*PI);
+            denom = 1/PIPOW;
+        } catch (...) {
+            throw;
+        }
     }
     
     void Khan::setSigma(double newSigma) {
@@ -87,8 +78,36 @@ namespace deghosting {
         #endif
     }
     
+    /*void Khan::linearizeRGB(std::string inputFile,FRGBImage *pInputImg) {
+        HuginBase::SrcPanoImage panoImg(inputFile);
+        panoImg.setResponseType(HuginBase::SrcPanoImage::RESPONSE_EMOR);
+        panoImg.setEMoRParams(response);
+        // response transform functor
+        HuginBase::Photometric::InvResponseTransform<RGBValue<float>,
+                                                     RGBValue<float> > invResponse(panoImg);
+        invResponse.enforceMonotonicity();
+
+        // iterator to the upper left corner
+        FRGBImage::traverser imgIterSourceY = pInputImg->upperLeft();
+        // iterator to he lower right corner
+        FRGBImage::traverser imgIterEnd = pInputImg->lowerRight();
+        // iterator to the output
+        FRGBImage::traverser imgIterOut = pInputImg->upperLeft();
+        // loop through the image
+        for (int y=1; imgIterSourceY.y != imgIterEnd.y; ++imgIterSourceY.y, ++imgIterOut.y, ++y) {
+            // iterator to the input
+            FRGBImage::traverser sx = imgIterSourceY;
+            // iterator to the output
+            FRGBImage::traverser dx = imgIterOut;
+            for (int x=1; sx.x != imgIterEnd.x; ++sx.x, ++dx.x, ++x) {
+                // transform image using response
+                *dx = vigra_ext::zeroNegative(invResponse(*sx, hugin_utils::FDiff2D(x, y)));
+            }
+        }
+    }*/
+    
     void Khan::preprocessImage(unsigned int i, FImagePtr &weight, FLabImagePtr &LabImage) {
-        cout << "Loading image number " << i << endl;
+        cout << "Loading image " << inputFiles[i] << endl;
         ImageImportInfo imgInfo(inputFiles[i].c_str());
         FRGBImage * pInputImg =  new FRGBImage(imgInfo.size());
         BImage imgAlpha(imgInfo.size());
@@ -97,6 +116,9 @@ namespace deghosting {
         // import alpha
         importImageAlpha(imgInfo, destImage(*pInputImg),destImage(imgAlpha));
         
+        // linearize RGB and convert it to L*a*b image
+        //linearizeRGB(inputFiles[i], pInputImg);
+        
         // take logarithm or gamma correction if the input images are HDR
         // I'm not sure if it's the right way how to
         // find out if they are HDR
@@ -104,19 +126,21 @@ namespace deghosting {
                 !strcmp(imgInfo.getFileType(),"EXR") ||
                 !strcmp(imgInfo.getPixelType(),"FLOAT"))
         {
-            // take logarithm
-            if (flags & ADV_LOGARITHM) {
-                transformImage(srcImageRange(*pInputImg),destImage(*pInputImg),LogarithmFunctor<RGBValue<float> >(1.0));
-            }
             // use gamma 2.2
-            else if (flags & ADV_GAMMA) {
+            if (flags & ADV_GAMMA) {
                 // GammaFunctor is only in vigra 1.6 GRRR
                 // I have to use BrightnessContrastFunctor
                 // TODO: change to the GammaFunctor in the future
                 vigra::FindMinMax<float> minmax;
                 vigra::inspectImage(srcImageRange(*pInputImg), minmax);
                 transformImage(srcImageRange(*pInputImg),destImage(*pInputImg),BrightnessContrastFunctor<RGBValue<float> >(0.45,1.0,minmax.min, minmax.max));
+            } else {
+                // take logarithm
+                transformImage(srcImageRange(*pInputImg),destImage(*pInputImg),LogarithmFunctor<RGBValue<float> >(1.0));
             }
+            
+            // I don't know why, but sigma for HDR input have to approximately 10 times smaller 
+            sigma /= 10;
         }
         
         // generate initial weights using hat function
@@ -126,7 +150,7 @@ namespace deghosting {
             transformImage(srcImageRange(*pInputImg, color2gray), destImage(*weight), log(Arg1()+Param(1.0f)));
         }
         else {
-            transformImage(srcImageRange(*pInputImg),destImage(*weight),hat);
+            transformImage(srcImageRange(*pInputImg),destImage(*weight),Khan::hat);
         }
         
         // convert from linear RGB to L*a*b //
@@ -305,7 +329,7 @@ namespace deghosting {
                                         cout << "(" << ndx << "," << ndy << ")";
                                     // now we can construct pixel vector
                                     // should omit the middle pixel, ie use only neighbours
-                                    if (ndx != ndy != 0) {
+                                    if (ndx != 0 || ndy != 0) {
                                         wpqsKhsum += (*weightx * Kh(X-(*neighbx)));
                                         wpqssum += *weightx;
                                     }

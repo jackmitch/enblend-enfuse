@@ -15,6 +15,7 @@ using std::vector;
 using namespace vigra;
 using namespace deghosting;
 
+const uint16_t ONE_UNMASKED       = 0;
 const uint16_t THRESHOLD_DONTCARE = 1;
 
 /** Threshold function
@@ -23,13 +24,11 @@ const uint16_t THRESHOLD_DONTCARE = 1;
  * @param const int threshold all pixels above this thresshold are set to 255, others to 0
  * @param const uint16_t flags flags for setting the behavior
  *          possible values are:
- *              0 – applies only threshold
+ *              THRESHOLD_DONTCARE – applies only simple threshold
  *              ONE_UNMASKED – if pixel should be black in all images after applying threshold
- *                             leave it in one image (where the pixel value is highest) white
- *              ONE_MASKED – make the pixel black only in one image where it's value is lowest
+ *                             leave it in one image (where the pixel value is highest) white, default
  */
-template <class Functor>
-vector<BImagePtr> threshold(const vector<FImagePtr> &inputImages, const double threshold, const Functor &f, uint16_t flags) {
+vector<BImagePtr> threshold(const vector<FImagePtr> &inputImages, const double threshold, const uint16_t flags) {
     vector<BImagePtr> retVal;
     const uint8_t minValue = 0;
     const uint8_t maxValue = 255;
@@ -38,8 +37,6 @@ vector<BImagePtr> threshold(const vector<FImagePtr> &inputImages, const double t
     if (flags & THRESHOLD_DONTCARE) {
         for (unsigned int i=0; i < inputImages.size(); ++i) {
             BImagePtr tmpImg(new BImage(inputImages[i]->size()));
-            // preprocess image using functor f
-            transformImage(srcImageRange(*(inputImages[i])), destImage(*tmpImg), f);
             transformImage(srcImageRange(*tmpImg), destImage(*tmpImg),
                             Threshold<FImage::PixelType, BImage::PixelType>(threshold, 255, 0, 255));
             retVal.push_back(tmpImg);
@@ -101,4 +98,6 @@ vector<BImagePtr> threshold(const vector<FImagePtr> &inputImages, const double t
             ++diterators[i].y;
         }
     }
+    
+    return retVal;
 }

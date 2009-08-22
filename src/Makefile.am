@@ -5,7 +5,7 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h common.h enblend.h enblen
 enblend_LDFLAGS = -ffast-math
 enblend_LDADD = vigra_impex/libvigra_impex.a
 enblend_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I${top_srcdir}/include
-enfuse_SOURCES = assemble.h blend.h bounds.h common.h enfuse.h enfuse.cc fixmath.h float_cast.h mga.h numerictraits.h pyramid.h deghosting/khan.cpp
+enfuse_SOURCES = assemble.h blend.h bounds.h common.h enfuse.h enfuse.cc fixmath.h float_cast.h mga.h numerictraits.h pyramid.h deghosting/deghosting.cpp deghosting/khan.cpp
 enfuse_LDFLAGS = -ffast-math
 enfuse_LDADD = vigra_impex/libvigra_impex.a
 enfuse_CXXFLAGS = -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -I${top_srcdir}/include

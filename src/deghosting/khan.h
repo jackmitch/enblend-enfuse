@@ -26,6 +26,7 @@
 //#define ATAN_KH
 
 #ifdef DEGHOSTING_CACHE_IMAGES
+    #include <cstring>
     #include <vigra/cachedfileimage.hxx>
 #endif
 
@@ -46,22 +47,9 @@ namespace deghosting
         public:
             Khan(std::vector< std::string >& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, int verbosity);
             std::vector<FImagePtr> createWeightMasks();
-            void loadImages(std::vector<std::string>& inputFiles);
-            void setFlags(const uint16_t flagslags);
-            void setDebugFlags(const uint16_t debugFlags);
-            void setIterationNum(const int iterations);
-            void setCameraResponse(EMoR newResponse);
-            void setVerbosity(int verbosity);
             void setSigma(double sigma);
             ~Khan() {}
         private:
-            std::vector<std::string> inputFiles;
-            uint16_t flags;
-            uint16_t debugFlags;
-            int iterations;
-            EMoR response;
-            int verbosity;
-            
             // Kh() things
             // (2*pi)^(1/2)
             double PIPOW;
