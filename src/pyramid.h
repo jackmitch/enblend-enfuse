@@ -1745,7 +1745,7 @@ collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
 
 
 // Export a scalar pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
 exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
 {
@@ -1755,7 +1755,7 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
     //    // Clear all levels except last.
     //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
     //}
-    //collapsePyramid(false, v);
+    //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];
@@ -1776,7 +1776,7 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
 
 
 // Export a vector pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
 exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
 {
@@ -1787,7 +1787,7 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
     //    // Clear all levels except last.
     //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
     //}
-    //collapsePyramid(false, v);
+    //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
     for (unsigned int i = 0; i < v->size(); i++) {
         char filenameBuf[512];
@@ -1808,12 +1808,12 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
 
 
 // Export a pyramid as a set of UINT16 tiff files.
-template <typename PyramidImageType>
+template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
 exportPyramid(vector<PyramidImageType*> *v, const char *prefix)
 {
     typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
-    exportPyramid(v, prefix, pyramid_is_scalar());
+    exportPyramid<SKIPSMImagePyramidType, PyramidImageType>(v, prefix, pyramid_is_scalar());
 }
 
 } // namespace enblend

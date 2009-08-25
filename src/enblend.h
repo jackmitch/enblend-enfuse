@@ -379,7 +379,10 @@ void enblendMain(const list<char*>& anInputFileNameList,
             MaskPyramidIntegerBits, MaskPyramidFractionBits,
             SKIPSMMaskPixelType>(numLevels, wraparoundForBlend,
                                  roiBB_uBB.apply(srcImageRange(*mask)));
-        //exportPyramid(maskGP, "mask");
+#ifdef DEBUG_EXPORT_PYRAMID
+        exportPyramid<SKIPSMMaskPixelType, MaskPyramidType>(maskGP, "mask");
+#endif
+
         // mem usage before = MaskType*ubb + 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         // mem usage xsection = 3 * roiBB.width * MaskPyramidType
         // mem usage after = MaskType*ubb + 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
@@ -491,7 +494,10 @@ void enblendMain(const list<char*>& anInputFileNameList,
             v.resetCacheMisses();
         }
 #endif
-        //exportPyramid(blackLP, "enblend_black_lp");
+
+#ifdef DEBUG_EXPORT_PYRAMID
+        exportPyramid<SKIPSMImagePixelType, ImagePyramidType>(blackLP, "enblend_black_lp");
+#endif
 
         // Peak memory xsection is here!
         // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
@@ -537,7 +543,9 @@ void enblendMain(const list<char*>& anInputFileNameList,
 #endif
 
         // delete mask pyramid
-        //exportPyramid(maskGP, "enblend_mask_gp");
+#ifdef DEBUG_EXPORT_PYRAMID
+        exportPyramid<SKIPSMMaskPixelType, MaskPyramidType>(maskGP, "enblend_mask_gp");
+#endif
         for (unsigned int i = 0; i < maskGP->size(); i++) {
             delete (*maskGP)[i];
         }
@@ -546,7 +554,9 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType + 2*(4/3)*roiBB*ImagePyramidType
 
         // delete white pyramid
-        //exportPyramid(whiteLP, "enblend_white_lp");
+#ifdef DEBUG_EXPORT_PYRAMID
+        exportPyramid<SKIPSMImagePixelType, ImagePyramidType>(whiteLP, "enblend_white_lp");
+#endif
         for (unsigned int i = 0; i < whiteLP->size(); i++) {
             delete (*whiteLP)[i];
         }
@@ -554,7 +564,10 @@ void enblendMain(const list<char*>& anInputFileNameList,
 
         // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType + (4/3)*roiBB*ImagePyramidType
 
-        //exportPyramid(blackLP, "enblend_blend_lp");
+#ifdef DEBUG_EXPORT_PYRAMID
+        exportPyramid<SKIPSMImagePixelType, ImagePyramidType>(blackLP, "enblend_blend_lp");
+#endif
+
         // collapse black pyramid
         collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
 #ifdef ENBLEND_CACHE_IMAGES
