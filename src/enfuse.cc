@@ -335,7 +335,7 @@ void printUsageAndExit(const bool error = true) {
         "  --debug                output mask images for debugging (deprecated);\n" <<
         "                         use \"--SaveMasks\" instead\n" <<
         "\n" <<
-        "Report bugs at <https://bugs.launchpad.net/enblend>." <<
+        "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
 
     exit(error ? 1 : 0);

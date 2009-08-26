@@ -329,7 +329,7 @@ void printUsageAndExit(const bool error = true) {
         "                         them; same template characters as \"--save-mask\";\n" <<
         "                         default: \"" << LoadMaskTemplate << "\"\n" <<
         "\n" <<
-        "Report bugs at <https://bugs.launchpad.net/enblend>." <<
+        "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
 
     exit(error ? 1 : 0);

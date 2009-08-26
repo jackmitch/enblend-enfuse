@@ -23,9 +23,9 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 3.2-staging-rev343, 11 August
-2009), a tool for compositing images n such a way that the seam between
-the images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.0-3242bcb05993, 25 August 2009),
+a tool for compositing images n such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
 1 Overview
 **********
@@ -86,7 +86,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
- Figure 2.1: Photographic workflow with Enblend and Enfuse.
+Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images for form a panorama, an exposure series, a
@@ -284,7 +284,7 @@ Common options control some overall features of Enblend.
 
      Specifying `--wrap' without MODE selects horizontal wrapping.
 
-     Version 3.2-staging-rev343 of Enblend, the one described here, does
+     Version 4.0-3242bcb05993 of Enblend, the one described here, does
      not blend neither zenith nor or nadir, so you may still see some
      seams in these areas.
 
@@ -431,7 +431,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 3.2-staging-rev343, only mask
+     In this version of Enblend, 4.0-3242bcb05993, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled in the Enblend
@@ -594,8 +594,8 @@ These options control the generation and the usage of masks.
      possibilities to run the seam around high mismatch areas.
 
         What should _never_ happen though, are loops in the seam line.
-     Counter loops with larger a vectorization DISTANCE, a TAU (in
-     option `--anneal') that is closer to one, and blurring of the
+     Counter loops with larger vectorization DISTANCEs, TAUs (in
+     option `--anneal') that are closer to one, and blurring of the
      difference image with option `--smooth-difference'.  Use
      option `--visualize' to check the results.
 

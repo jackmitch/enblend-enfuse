@@ -1,4 +1,4 @@
 @set UPDATED 25 August 2009
 @set UPDATED-MONTH August 2009
-@set EDITION 3.2-staging-rev353
-@set VERSION 3.2-staging-rev353
+@set EDITION 4.0-3242bcb05993
+@set VERSION 4.0-3242bcb05993
