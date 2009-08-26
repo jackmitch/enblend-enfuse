@@ -18,6 +18,17 @@
 
 
 @c
+@c Categorization for the GNU Info System
+@c
+
+@dircategory Individual utilities
+
+@direntry
+* enfuse: (enfuse).                     Fuse images using a multiresolution spline.
+@end direntry
+
+
+@c
 @c Summary Description and Copyright
 @c
 

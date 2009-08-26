@@ -18,6 +18,17 @@
 
 
 @c
+@c Categorization for the GNU Info System
+@c
+
+@dircategory Individual utilities
+
+@direntry
+* enblend: (enblend).                   Blend images using a multiresolution spline.
+@end direntry
+
+
+@c
 @c Summary Description and Copyright
 @c
 
@@ -92,7 +103,7 @@ entitled ``@acronym{GNU} Free Documentation License''.
 @top Enblend
 
 This manual is for Enblend (version@tie{}@value{VERSION},
-@value{UPDATED}), a tool for compositing images n such a way that the
+@value{UPDATED}), a tool for compositing images in such a way that the
 seam between the images is invisible, or at least very difficult to
 see.
 @end ifnottex
