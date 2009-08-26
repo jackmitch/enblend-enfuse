@@ -68,6 +68,20 @@
 ** Therefore implement inline versions of these functions here.
 */
 
+#if defined(_M_X64)
+
+#include <intrin.h>
+
+__forceinline long long int llrint (double flt) {
+    return (long long int) _mm_cvtsd_si64x(_mm_loadu_pd(&flt));
+}
+
+__forceinline long int lrint (double flt) {
+    return (long int) _mm_cvtsd_si64x(_mm_loadu_pd(&flt));
+}
+
+#else
+
 __forceinline long int lrint (double flt) {
     long int intgr;
     __asm {
@@ -121,6 +135,8 @@ __forceinline long long int llrintl(long double flt) {
     }
     return intgr;
 }
+
+#endif /* _M_X64 */
 
 #endif
 
