@@ -56,9 +56,9 @@ Also see INSTALL for further information.
         make install
 
 
-** CVS/Bazaar
+** Mercurial Repository
 
-        make --makefile=Makefile.cvs
+        make --makefile=Makefile.scm
         ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
         make
         make install
