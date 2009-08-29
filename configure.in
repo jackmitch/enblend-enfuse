@@ -56,16 +56,9 @@ fi
 can_use_gpu=no
 missing_for_gpu=
 no_gpu_reason=
-AC_ARG_WITH([apple-opengl-framework],
-            [AC_HELP_STRING([--with-apple-opengl-framework],
-                            [use Apple OpenGL framework (Mac OS X only)])])
-if test "X$with_apple_opengl_framework" = "Xyes"; then
-    AX_CHECK_APPLE_OPENGL
-else
-    AX_CHECK_GL
-    AX_CHECK_GLU
-    AX_CHECK_GLUT
-fi
+AX_CHECK_GL
+AX_CHECK_GLU
+AX_CHECK_GLUT
 if test "X$no_gl" = Xyes; then
     missing_for_gpu="$missing_for_gpu GL"
     AC_MSG_WARN([[GL not found, disabling GPU mode]])
@@ -407,7 +400,7 @@ fi
 if test "x$enable_openmp" = "xyes" \
      -o "x$enable_openmp" = "xYES" \
      -o "x$enable_openmp" = "xYes"; then
-    AC_OPENMP
+    AX_OPENMP
 fi
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
