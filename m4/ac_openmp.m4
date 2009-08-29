@@ -5,6 +5,8 @@ dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
 dnl This file can be removed once we assume autoconf >= 2.62.
+m4_version_prereq([2.62], [],
+[
 
 # _AC_LANG_OPENMP
 # ---------------
@@ -89,4 +91,6 @@ AC_DEFUN([AC_OPENMP],
     esac
   fi
   AC_SUBST([OPENMP_]_AC_LANG_PREFIX[FLAGS])
+])
+
 ])
