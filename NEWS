@@ -130,8 +130,6 @@ Released on August 25, 2009.
 
 ** What is known not to work?
 
-- Configuration "--with-apple-opengl-framework" is broken.
-
 - Documentation generation is not as reliable and smooth as it ought
   to be.  The culprit is Automake; see PR/486.
 

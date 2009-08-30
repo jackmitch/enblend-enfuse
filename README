@@ -98,11 +98,6 @@ images.  The image cache handles swapping parts of the images to disk.
 The default is "yes", enable the image cache.
 
 
-** --with-apple-opengl-framework=yes/NO
-
-Use the Apple OpenGL Framework instead of Xorg.
-
-
 ** --with-dmalloc=yes/NO
 
 Compile with the debug-malloc library.  The library is available at
@@ -115,8 +110,8 @@ Use Boost "filesystem" library to get platform-independent path
 generation.  The default is to check for usability.  "No" forces the
 use of the internal path generation library.  Supply a LIBRARY name if
 you want to override the default candidates "boost_filesystem-mt" for
-multi-threaded compilation and "boost_filesystem" for a single-thread
-build.
+multi-threaded compilation and "boost_filesystem" for single-thread
+builds.
 
 
 ** --with-ttf-path=<PATH>
