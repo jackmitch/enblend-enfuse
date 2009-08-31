@@ -1075,10 +1075,10 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 #endif
             Image trunc(imageSize);
             ClampingFunctor<PixelType, PixelType>
-                cf(PixelType(lowerCutoff),
-                   PixelType(ScalarType()),
-                   PixelType(upperCutoff),
-                   PixelType(NumericTraits<ScalarType>::max()));
+                cf((PixelType(lowerCutoff)),  // IMPLEMENTATION NOTE:
+                   (PixelType(ScalarType())), //     The extra parenthesis avoid a bug in the VC9 compiler.
+                   (PixelType(upperCutoff)),
+                   (PixelType(NumericTraits<ScalarType>::max())));
             transformImageMP(src.first, src.second, src.third,
                              trunc.upperLeft(), trunc.accessor(),
                              cf);
