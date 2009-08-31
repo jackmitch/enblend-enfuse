@@ -96,6 +96,7 @@ using boost::lambda::call_begin;
 using boost::lambda::call_end;
 using boost::lambda::constant;
 using boost::lambda::protect;
+using boost::lambda::ret;
 
 namespace enblend {
 
@@ -775,7 +776,7 @@ MaskType* createMask(const ImageType* const white,
     {
         const size_t totalSegments =
             std::accumulate(contours.begin(), contours.end(),
-                            0U, _1 + bind(&std::vector<Segment*>::size, _2));
+                            0U, ret<size_t>(_1 + bind(&std::vector<Segment*>::size, _2)));
 
         if (Verbose > VERBOSE_MASK_MESSAGES) {
             cerr << command << ": info: optimizing ";

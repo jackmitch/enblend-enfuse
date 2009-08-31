@@ -30,8 +30,7 @@
 
 #include "filenameparse.h"
 
-
-#ifdef HAVE_WINDOWS_H
+#if defined(_MSC_VER) || defined(HAVE_WINDOWS_H)
 #define PATH_SEPARATOR "\\"
 #else
 #define PATH_SEPARATOR "/"
