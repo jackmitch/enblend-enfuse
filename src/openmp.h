@@ -37,9 +37,9 @@
 
 #ifdef __GNUC__
 #define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint) \
-    __builtin_prefetch(m_addr, m_rw_hint, m_temporal_locality_hint)
+    __builtin_prefetch((m_addr), (m_rw_hint), (m_temporal_locality_hint))
 #define EXPECT_RESULT(m_condition, m_expected_result) \
-    __builtin_expect(m_condition, static_cast<int>(m_expected_result))
+    __builtin_expect((m_condition), static_cast<int>(m_expected_result))
 #else
 #define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint)
 #define EXPECT_RESULT(m_condition, m_expected_result) (m_condition)
@@ -66,7 +66,7 @@ typedef enum {
 } temporal_locality_hint;
 
 
-#if _OPENMP >= 200505 // at least OpenMP version 2.5
+#if _OPENMP >= 200203 // at least OpenMP version 2.0
 
 #include <omp.h>
 
