@@ -899,8 +899,14 @@ public:
         {}
 
     ResultType operator()(const InputType& x, const InputType& y) const {
-        if (x >= threshold) return NumericTraits<ResultType>::fromRealPromote(scale1 * x);
-        else return NumericTraits<ResultType>::fromRealPromote(scale2 * y);
+        if (x >= threshold)
+        {
+            return NumericTraits<ResultType>::fromRealPromote(scale1 * x);
+        }
+        else
+        {
+            return NumericTraits<ResultType>::fromRealPromote(scale2 * y);
+        }
     }
 
 private:
@@ -1410,8 +1416,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                 delete (*imageLP)[i];
             }
             delete imageLP;
-        }
-        else {
+        } else {
             resultLP = imageLP;
         }
 

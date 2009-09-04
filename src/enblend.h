@@ -172,8 +172,9 @@ void enblendMain(const list<char*>& anInputFileNameList,
         }
 
         // Determine what kind of overlap we have.
-        Overlap overlap = inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
-                                         uBB.apply(srcImage(*(whitePair.second))));
+        const Overlap overlap =
+            inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
+                           uBB.apply(srcImage(*(whitePair.second))));
 
         // If white image is redundant, skip it and go to next images.
         if (overlap == CompleteOverlap) {
@@ -183,8 +184,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
             cerr << command << ": warning: some images are redundant and will not be blended"
                  << endl;
             continue;
-        }
-        else if (overlap == NoOverlap && ExactLevels == 0) {
+        } else if (overlap == NoOverlap && ExactLevels == 0) {
             // Images do not actually overlap.
             cerr << command << ": images do not overlap - they will be combined without blending\n"
                  << command << ": use the \"-l\" flag to force blending with a certain number of levels"
