@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -101,9 +101,57 @@ using boost::lambda::ret;
 namespace enblend {
 
 /** Data structures for vector masks */
-typedef slist<pair<bool, Point2D> > Segment;
+typedef pair<bool, Point2D> SegmentPoint;
+typedef slist<SegmentPoint> Segment;
 typedef vector<Segment*> Contour;
 typedef vector<Contour*> ContourVector;
+
+
+void
+dump_segment(const Segment& segment,
+             const std::string& prefix = "", std::ostream& out = std::cout)
+{
+    const unsigned points_per_line = 5U;
+    unsigned n = 1U;
+    const size_t size = segment.size();
+
+    out << prefix << "{segment with " << size << " point(s):\n" << prefix;
+    for (Segment::const_iterator i = segment.begin(); i != segment.end(); ++i, ++n)
+    {
+        out << ' ' << i->second << (i->first ? 'f' : ' ');
+        if (n % points_per_line == 0U && n != size)
+        {
+            out << '\n' << prefix;
+        }
+    }
+    out << "\n" << prefix << "}\n";
+}
+
+
+void
+dump_contour(const Contour& contour,
+             const std::string& prefix = "", std::ostream& out = std::cout)
+{
+    out << prefix << "{contour with " << contour.size() << " segment(s):\n";
+    for (Contour::const_iterator i = contour.begin(); i != contour.end(); ++i)
+    {
+        dump_segment(**i, prefix + "    ", out);
+    }
+    out << prefix << "}\n";
+}
+
+
+void
+dump_contourvector(const ContourVector& contourvector,
+                   const std::string& prefix = "", std::ostream& out = std::cout)
+{
+    out << prefix << "{contourvector with " << contourvector.size() << " contour(s):\n";
+    for (ContourVector::const_iterator i = contourvector.begin(); i != contourvector.end(); ++i)
+    {
+        dump_contour(**i, prefix + "    ", out);
+    }
+    out << prefix << "}\n";
+}
 
 
 template <typename PixelType, typename ResultType>
@@ -159,31 +207,28 @@ protected:
 
 
 template <typename MaskType>
-void fillContour(MaskType* mask, Contour& contour, Diff2D offset)
+void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
+    typedef NumericTraits<MaskPixelType> MaskPixelTraits;
 
-    int totalPoints = 0;
-    for (Contour::iterator currentSegment = contour.begin();
+    size_t totalPoints = 0U;
+    for (Contour::const_iterator currentSegment = contour.begin();
          currentSegment != contour.end();
          ++currentSegment) {
         totalPoints += (*currentSegment)->size();
     }
 
-    if (totalPoints == 0) {
+    if (totalPoints == 0U) {
         return;
     }
 
-    miPixel pixels[2];
-    pixels[0] = NumericTraits<MaskPixelType>::max();
-    pixels[1] = NumericTraits<MaskPixelType>::max();
+    miPixel pixels[2] = {MaskPixelTraits::max(), MaskPixelTraits::max()};
     miGC* pGC = miNewGC(2, pixels);
-    miPaintedSet* paintedSet = miNewPaintedSet();
-
     miPoint* points = new miPoint[totalPoints];
 
-    int i = 0;
-    for (Contour::iterator currentSegment = contour.begin();
+    unsigned i = 0U;
+    for (Contour::const_iterator currentSegment = contour.begin();
          currentSegment != contour.end();
          ++currentSegment) {
         for (Segment::iterator vertexIterator = (*currentSegment)->begin();
@@ -195,27 +240,29 @@ void fillContour(MaskType* mask, Contour& contour, Diff2D offset)
         }
     }
 
-    miFillPolygon(paintedSet, pGC, MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN,
+    miPaintedSet* paintedSet = miNewPaintedSet();
+    miFillPolygon(paintedSet, pGC,
+                  MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN,
                   totalPoints, points);
 
-    delete[] points;
+    delete [] points;
 
     copyPaintedSetToImage(destImageRange(*mask), paintedSet, offset);
 
-    miDeleteGC(pGC);
     miDeletePaintedSet(paintedSet);
+    miDeleteGC(pGC);
 }
 
 
 template <typename MaskType>
-void maskBounds(MaskType* mask, Rect2D& uBB, Rect2D& mBB)
+void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
     typedef typename MaskType::Accessor MaskAccessor;
 
     // Find the bounding box of the mask transition line and put it in mBB.
-    // mBB starts out as empty rect
+    // mBB starts out as empty rectangle.
     mBB = Rect2D(Point2D(mask->size()), Point2D(0, 0));
 
     MaskIteratorType myPrev = mask->upperLeft();
@@ -223,6 +270,7 @@ void maskBounds(MaskType* mask, Rect2D& uBB, Rect2D& mBB)
     MaskIteratorType mend = mask->lowerRight();
     MaskIteratorType mxLeft = myPrev;
     MaskIteratorType mx = myPrev + Diff2D(1, 0);
+
     for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x) {
         if (*mxLeft != *mx) {
             mBB |= Rect2D(x - 1, 0, x + 1, 1);
@@ -251,20 +299,21 @@ void maskBounds(MaskType* mask, Rect2D& uBB, Rect2D& mBB)
 
     // Check that mBB is well-defined.
     if (mBB.isEmpty()) {
-        // No transition pixels were found in the mask at all.
-        // This means that one image has no contribution.
+        // No transition pixels were found in the mask at all.  This
+        // means that one image has no contribution.
         if (*(mask->upperLeft()) == NumericTraits<MaskPixelType>::zero()) {
-            // If the mask is entirely black, then inspectOverlap should have caught this.
-            // It should have said that the white image is redundant.
+            // If the mask is entirely black, then inspectOverlap
+            // should have caught this.  It should have said that the
+            // white image is redundant.
             cerr << command
                  << ": mask is entirely black, but white image was not identified as redundant"
                  << endl;
             exit(1);
-        }
-        else {
-            // If the mask is entirely white, then the black image would have been identified
-            // as redundant if black and white were swapped.
-            // Set mBB to the full size of the mask.
+        } else {
+            // If the mask is entirely white, then the black image
+            // would have been identified as redundant if black and
+            // white were swapped.  Set mBB to the full size of the
+            // mask.
             mBB = uBB;
             // Explain why the black image disappears completely.
             cerr << command
@@ -320,8 +369,8 @@ void vectorizeSeamLine(Contour& rawSegments,
         vectorizeDistance = minimumVectorizeDistance;
     }
 
-    Point2D borderUL(1, 1);
-    Point2D borderLR(nftOutputImage->width() - 1, nftOutputImage->height() - 1);
+    const Rect2D border(1, 1, nftOutputImage->width() - 1, nftOutputImage->height() - 1);
+
     MaskIteratorType my = nftOutputImage->upperLeft() + Diff2D(1, 1);
     MaskIteratorType mend = nftOutputImage->lowerRight() + Diff2D(-1, -1);
     for (int y = 1; my.y < mend.y; ++y, ++my.y) {
@@ -348,32 +397,29 @@ void vectorizeSeamLine(Contour& rawSegments,
                     Point2D nextPoint = *crack + Diff2D(x, y);
 
                     // See if currentPoint lies on border.
-                    if (currentPoint.x == borderUL.x
-                        || currentPoint.x == borderLR.x
-                        || currentPoint.y == borderUL.y
-                        || currentPoint.y == borderLR.y) {
+                    if (currentPoint.x == border.left()
+                        || currentPoint.x == border.right()
+                        || currentPoint.y == border.top()
+                        || currentPoint.y == border.bottom()) {
                         // See if currentPoint is in a corner.
-                        if ((currentPoint.x == borderUL.x && currentPoint.y == borderUL.y)
-                            || (currentPoint.x == borderUL.x && currentPoint.y == borderLR.y)
-                            || (currentPoint.x == borderLR.x && currentPoint.y == borderUL.y)
-                            || (currentPoint.x == borderLR.x && currentPoint.y == borderLR.y)) {
+                        if ((currentPoint.x == border.left() && currentPoint.y == border.top())
+                            || (currentPoint.x == border.left() && currentPoint.y == border.bottom())
+                            || (currentPoint.x == border.right() && currentPoint.y == border.top())
+                            || (currentPoint.x == border.right() && currentPoint.y == border.bottom())) {
                             snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
-                        }
-                        else if (!lastPointFrozen
-                                 || (nextPoint.x != borderUL.x
-                                     && nextPoint.x != borderLR.x
-                                     && nextPoint.y != borderUL.y
-                                     && nextPoint.y != borderLR.y)) {
+                        } else if (!lastPointFrozen
+                                   || (nextPoint.x != border.left()
+                                       && nextPoint.x != border.right()
+                                       && nextPoint.y != border.top()
+                                       && nextPoint.y != border.bottom())) {
                             snake->push_front(make_pair(false, currentPoint));
                             distanceLastPoint = 0;
-                        }
-                        else {
+                        } else {
                             excessPoints.push_back(currentPoint);
                         }
                         lastPointFrozen = true;
-                    }
-                    else {
+                    } else {
                         // Current point is not frozen.
                         if (distanceLastPoint % vectorizeDistance == 0) {
                             snake->push_front(make_pair(true, currentPoint));
@@ -404,9 +450,10 @@ void vectorizeSeamLine(Contour& rawSegments,
                 }
                 for (vector<Point2D>::iterator vertexIterator = excessPoints.begin();
                      vertexIterator != excessPoints.end(); ++vertexIterator) {
-                    // These are points on the border of the white region that are
-                    // not in the snake. Recolor them so that this white region will
-                    // not be found again.
+                    // These are points on the border of the white
+                    // region that are not in the snake.  Recolor them
+                    // so that this white region will not be found
+                    // again.
                     (*nftOutputImage)[*vertexIterator] = NumericTraits<MaskPixelType>::one();
                 }
             }
@@ -511,10 +558,9 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
             if (!insideMoveableSegment && vertexIterator->first) {
                 // Beginning a new moveable segment.
                 insideMoveableSegment = true;
-            }
-            else if (insideMoveableSegment
-                     && !vertexIterator->first
-                     && !passedLastMoveableVertex) {
+            } else if (insideMoveableSegment
+                       && !vertexIterator->first
+                       && !passedLastMoveableVertex) {
                 // End of currentSegment.
                 insideMoveableSegment = false;
                 // Correct for the push_fronts we've been doing
@@ -719,20 +765,8 @@ MaskType* createMask(const ImageType* const white,
     delete nftOutputImage;
 
 #ifdef DEBUG_SEAM_LINE
-    std::cerr << "+ createMask: " << rawSegments.size() << " rawSegments\n";
-    for (Contour::iterator segment = rawSegments.begin();
-         segment != rawSegments.end();
-         ++segment) {
-        std::cerr << "+ createMask: segment:";
-        for (Segment::iterator vertex = (*segment)->begin();
-             vertex != (*segment)->end();
-             ++vertex) {
-            std::cerr
-                << " (" << (vertex->first ? "true" : "false") << ", "
-                << vertex->second << ")";
-        }
-        std::cerr << "; segment contains " << (*segment)->size() << " vertices\n";
-    }
+    std::cout << "+ createMask: rawSegments\n";
+    dump_contour(rawSegments, "+ createMask: ");
 #endif
 
     // mem usage after: 0
@@ -751,26 +785,8 @@ MaskType* createMask(const ImageType* const white,
     rawSegments.clear();
 
 #ifdef DEBUG_SEAM_LINE
-    std::cerr << "+ createMask: " << contours.size() << " contours\n";
-    for (ContourVector::const_iterator contour = contours.begin();
-         contour != contours.end();
-         ++contour) {
-        std::cerr << "+ createMask: contour\n";
-        for (Contour::iterator segment = (*contour)->begin();
-             segment != (*contour)->end();
-             ++segment) {
-            std::cerr << "+ createMask: segment:";
-            for (Segment::iterator vertex = (*segment)->begin();
-                 vertex != (*segment)->end();
-                 ++vertex) {
-                std::cerr
-                    << " (" << (vertex->first ? "true" : "false") << ", "
-                    << vertex->second << ")";
-            }
-            std::cerr << "; segment contains " << (*segment)->size() << " vertices\n";
-        }
-        std::cerr << "+ createMask: contour contains " << (*contour)->size() << " segments\n";
-    }
+    std::cout << "+ createMask: contours\n";
+    dump_contourvector(contours, "+ createMask: ");
 #endif
 
     {
@@ -1138,6 +1154,11 @@ MaskType* createMask(const ImageType* const white,
 
         delete visualizeImage;
     }
+
+#ifdef DEBUG_SEAM_LINE
+    std::cout << "+ createMask: contours of final optimized mask\n";
+    dump_contourvector(contours, "+ createMask: ");
+#endif
 
     // Fill contours to get final optimized mask.
     MaskType* mask = new MaskType(uBB.size());
