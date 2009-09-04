@@ -365,7 +365,11 @@ namespace detail
 
         void operator()(ValueType* d, const ValueType* f, int n) const
         {
-            typedef float math_t;
+            // IMPLEMENTATION NOTE: Defining math_t as float instead
+            // of double would speed up the computation especially on
+            // 64bit systems, but in rare occasions causes multiple
+            // seam lines when using OpenMP.
+            typedef double math_t;
             const math_t max = static_cast<math_t>(std::numeric_limits<ValueType>::max());
 
             int* v = new int[n];
