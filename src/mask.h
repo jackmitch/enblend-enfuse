@@ -206,18 +206,47 @@ protected:
 };
 
 
+template <typename ValueType, typename AccessorType>
+class XorAccessor
+{
+public:
+    typedef ValueType value_type;
+    typedef AccessorType accessor_type;
+
+    XorAccessor(AccessorType a) : acc(a) {}
+
+    template <class Iterator>
+    ValueType operator()(const Iterator& i) const {return acc(i);}
+
+    ValueType operator()(const ValueType* i) const {return acc(i);}
+
+    template <class Iterator, class Difference>
+    ValueType operator()(const Iterator& i, Difference d) const {return acc(i, d);}
+
+    template <class Value, class Iterator>
+    void set(const Value& v, const Iterator& i) const {acc.set(v ^ acc(i), i);}
+
+    template <class Value, class Iterator>
+    void set(const Value& v, Iterator& i) const {acc.set(v ^ acc(i), i);}
+
+    template <class Value, class Iterator, class Difference>
+    void set(const Value& v, const Iterator& i, const Difference& d) const {acc.set(v ^ acc(i, d), i, d);}
+
+private:
+    AccessorType acc;
+};
+
+
 template <typename MaskType>
 void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
+    typedef typename MaskType::Accessor MaskAccessor;
     typedef NumericTraits<MaskPixelType> MaskPixelTraits;
 
-    size_t totalPoints = 0U;
-    for (Contour::const_iterator currentSegment = contour.begin();
-         currentSegment != contour.end();
-         ++currentSegment) {
-        totalPoints += (*currentSegment)->size();
-    }
+    const size_t totalPoints =
+        std::accumulate(contour.begin(), contour.end(),
+                        0U, ret<size_t>(_1 + bind(&Segment::size, _2)));
 
     if (totalPoints == 0U) {
         return;
@@ -225,18 +254,17 @@ void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 
     miPixel pixels[2] = {MaskPixelTraits::max(), MaskPixelTraits::max()};
     miGC* pGC = miNewGC(2, pixels);
-    miPoint* points = new miPoint[totalPoints];
+    miPoint* const points = new miPoint[totalPoints];
+    miPoint* p = points;
 
-    unsigned i = 0U;
     for (Contour::const_iterator currentSegment = contour.begin();
          currentSegment != contour.end();
          ++currentSegment) {
         for (Segment::iterator vertexIterator = (*currentSegment)->begin();
              vertexIterator != (*currentSegment)->end();
-             ++vertexIterator) {
-            points[i].x = vertexIterator->second.x;
-            points[i].y = vertexIterator->second.y;
-            ++i;
+             ++vertexIterator, ++p) {
+            p->x = vertexIterator->second.x;
+            p->y = vertexIterator->second.y;
         }
     }
 
@@ -247,7 +275,9 @@ void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 
     delete [] points;
 
-    copyPaintedSetToImage(destImageRange(*mask), paintedSet, offset);
+    copyPaintedSetToImage(mask->upperLeft(), mask->lowerRight(),
+                          XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
+                          paintedSet, offset);
 
     miDeletePaintedSet(paintedSet);
     miDeleteGC(pGC);
@@ -792,7 +822,7 @@ MaskType* createMask(const ImageType* const white,
     {
         const size_t totalSegments =
             std::accumulate(contours.begin(), contours.end(),
-                            0U, ret<size_t>(_1 + bind(&std::vector<Segment*>::size, _2)));
+                            0U, ret<size_t>(_1 + bind(&Contour::size, _2)));
 
         if (Verbose > VERBOSE_MASK_MESSAGES) {
             cerr << command << ": info: optimizing ";
