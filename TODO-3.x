@@ -14,7 +14,7 @@ X skipsm expand replacement
     X comment
 X fast cfi row iterators
     left-middle test before changes: 59.54
-    left-middle test after changes: 50.50 
+    left-middle test after changes: 50.50
     2.5 non-profiling test: 12.9 user
     3.0 non-profiling test: 7.24 user
 X make checkpointing optional
@@ -144,4 +144,3 @@ X build windows executable
     - store alpha masks in RLE format
     - update to new vigra, use arg obj factories with ROI
         - add striding to arg obj factories with ROI
-
