@@ -1,10 +1,13 @@
-Enblend developers:
-Andrew Mihal <acmihal@users.sourceforge.net> (primary author)
-Max Lyons
-Pablo d'Angelo
-Christoph Spiel
-Brent Townshend
+Enblend/Enfuse developers:
+    Pablo d'Angelo <dangelo@users.sourceforge.net>
+    Max Lyons
+    Andrew Mihal <acmihal@users.sourceforge.net>
+    Christoph Spiel <cspiel@users.sourceforge.net>
+    Brent Townshend <btownshend@users.sourceforge.net>
+
 
 Win32 porting:
-Joe Beda
-Mark - mjz
+    Joe Beda
+    Mark - mjz
+    Thomas Modes
+    Ryan Sleevi
