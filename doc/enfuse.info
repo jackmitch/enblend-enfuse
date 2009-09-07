@@ -82,7 +82,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-08692d9addd3, 26 August 2009), a
+This manual is for Enfuse (version 4.0-932e968bc1c4, 26 August 2009), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -377,7 +377,7 @@ Common options control some overall features of Enfuse.
 
      Specifying `--wrap' without MODE selects horizontal wrapping.
 
-     Version 4.0-08692d9addd3 of Enfuse, the one described here, does
+     Version 4.0-932e968bc1c4 of Enfuse, the one described here, does
      not blend neither zenith nor or nadir, so you may still see some
      seams in these areas.
 
@@ -652,7 +652,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-08692d9addd3 of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-932e968bc1c4 of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 

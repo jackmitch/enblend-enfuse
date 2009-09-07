@@ -134,6 +134,12 @@ multi-threaded compilation and "boost_filesystem" for single-thread
 builds.
 
 
+** --with-openexr=CHECK/yes/no
+
+Build with support for reading and writing OpenEXR images.  See
+http://www.openexr.com/ for the required libraries.
+
+
 ** --with-ttf-path=<PATH>
 
 Set PATH to TrueType fonts.  This is only required for building the

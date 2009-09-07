@@ -38,15 +38,37 @@ AC_CHECK_LIB(lcms, cmsCreateTransform,
 AC_CHECK_LIB(xmi, miNewPaintedSet,
              [],
              AC_MSG_ERROR([libxmi is required to compile Enblend.]), [])
-PKG_CHECK_MODULES(OPENEXR, OpenEXR >= 1.0,
-                  [AC_DEFINE(HasEXR, 1, [Define if you have EXR library])
-                   have_exr=yes],
-                  [AC_MSG_WARN("OpenEXR support disabled: " $OPENEXR_PKG_ERRORS)
-                   have_exr=no])
 
-LIBS="${OPENEXR_LIBS} $LIBS"
-CFLAGS="${OPENEXR_CFLAGS} $CFLAGS"
-CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
+AC_MSG_CHECKING([if OpenEXR is wanted])
+AC_ARG_WITH([openexr],
+            [AS_HELP_STRING([--with-openexr],
+                            [use OpenEXR @<:@default=check@:>@])],
+            [],
+            [with_openexr=check])
+AS_IF([test "x$with_openexr" = xNO \
+         -o "x$with_openexr" = xNo \
+         -o "x$with_openexr" = xno],
+      [AC_MSG_NOTICE([disabling OpenEXR])
+       have_exr=no],
+      [if test "x$with_openexr" = xyes \
+            -o "x$with_openexr" = "xYES" \
+            -o "x$with_openexr" = "xYes" \
+            -o "x$with_openexr" = "xcheck" \
+            -o "x$with_openexr" = "xCHECK" \
+            -o "x$with_openexr" = "xCheck"; then
+          AC_MSG_RESULT(yes)
+          PKG_CHECK_MODULES(OPENEXR, OpenEXR >= 1.0,
+                            [AC_DEFINE(HasEXR, 1, [Define if you have EXR library])
+                             have_exr=yes],
+                            [AC_MSG_WARN("OpenEXR support disabled: " $OPENEXR_PKG_ERRORS)
+                             have_exr=no])
+          LIBS="${OPENEXR_LIBS} $LIBS"
+          CFLAGS="${OPENEXR_CFLAGS} $CFLAGS"
+          CXXFLAGS="${OPENEXR_CFLAGS} $CXXFLAGS"
+       else
+          AC_MSG_RESULT(no)
+          have_exr=no
+       fi])
 
 if test "x$GXX" = xyes; then
     # Fixes SourceForge bug id 2121647 on some systems with newer GCCs.
@@ -465,6 +487,7 @@ AC_MSG_RESULT([
    split *.info and *.html files:  ${split_doc}
    enable debugging support:       ${enable_debug}
    enable malloc debugging:        ${enable_dmalloc}
+   OpenEXR image format            ${have_exr}
    use image cache:                ${enable_image_cache}
    build GPU acceleration:         ${can_use_gpu}${no_gpu_reason}
    use OpenMP:                     ${enable_openmp}
