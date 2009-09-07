@@ -12,9 +12,9 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   float_cast.h global.h gpu.cc gpu.h mask.h \
                   nearest.h numerictraits.h openmp.h path.h pyramid.h \
                   filenameparse.h filenameparse.cc
-enblend_LDFLAGS = $(AM_LDFLAGS)
-enblend_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@
-enblend_CXXFLAGS = $(AM_CXXFLAGS) \
+enblend_LDFLAGS = $(AM_LDFLAGS) $(OPENGL_CFLAGS)
+enblend_LDADD = vigra_impex/libvigra_impex.a $(OPENGL_LIBS) @EXTRA_LIBS@
+enblend_CXXFLAGS = $(AM_CXXFLAGS) $(OPENGL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                    -I${top_srcdir}/include
 

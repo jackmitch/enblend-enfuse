@@ -53,6 +53,8 @@ if test "x$GXX" = xyes; then
     CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
 fi
 
+AC_ARG_VAR(OPENGL_CFLAGS, [C compiler flags for OpenGL])
+AC_ARG_VAR(OPENGL_LIBS, [Linker flags and libraries for OpenGL])
 can_use_gpu=no
 missing_for_gpu=
 no_gpu_reason=
@@ -71,11 +73,12 @@ elif test "X$no_glut" = Xyes; then
 else
     can_use_gpu=yes
     # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
-    LIBS="${GLU_LIBS} ${GLUT_LIBS} $LIBS"
-    CFLAGS="${GL_CFLAGS} $CFLAGS"
+    OPENGL_LIBS="${GLU_LIBS} ${GLUT_LIBS}"
+    OPENGL_CFLAGS="${GL_CFLAGS}"
 fi
 AC_CHECK_LIB(GLEW, glewInit,
-             [],
+             [OPENGL_LIBS="-lGLEW ${OPENGL_LIBS}"
+              AC_DEFINE(HAVE_LIBGLEW, [], [Define if you have the GLEW library])],
              [can_use_gpu=no
               missing_for_gpu="$missing_for_gpu GLEW"
               AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
@@ -437,10 +440,12 @@ AC_MSG_RESULT([
    Source directory:               ${srcdir}
    Installation directory:         ${prefix}
    C++ compiler:                   ${CXX}
-   CFLAGS needed for configure:    ${CFLAGS}
-   CXXFLAGS needed for configure:  ${CXXFLAGS}
-   LIBS needed for configure:      ${LIBS}
-   EXTRA_LIBS (optional):          ${EXTRA_LIBS}
+   CFLAGS:                         ${CFLAGS:-<none required>}
+   OPENGL_CFLAGS:                  ${OPENGL_CFLAGS:-<none required>}
+   CXXFLAGS:                       ${CXXFLAGS:-<none required>}
+   LIBS:                           ${LIBS:-<none required>}
+   OPENGL_LIBS:                    ${OPENGL_LIBS:-<none required>}
+   EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
  can compile GPU acceleration:     ${can_use_gpu}${no_gpu_reason}
  can build all documentation:      ${can_build_doc}${no_doc_reason}
