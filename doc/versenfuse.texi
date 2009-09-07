@@ -1,4 +1,4 @@
 @set UPDATED 26 August 2009
 @set UPDATED-MONTH August 2009
-@set EDITION 4.0-ea2a7238e0f9
-@set VERSION 4.0-ea2a7238e0f9
+@set EDITION 4.0-08692d9addd3
+@set VERSION 4.0-08692d9addd3

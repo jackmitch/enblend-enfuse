@@ -55,36 +55,48 @@ fi
 
 AC_ARG_VAR(OPENGL_CFLAGS, [C compiler flags for OpenGL])
 AC_ARG_VAR(OPENGL_LIBS, [Linker flags and libraries for OpenGL])
+gpu_support_default="yes"
+AC_ARG_ENABLE([gpu-support],
+              AC_HELP_STRING([--enable-gpu-support],
+                             [GPU support for Enblend @<:@default=check@:>@]),
+              [gpu_support=$enableval],
+              [gpu_support=$gpu_support_default])
 can_use_gpu=no
-missing_for_gpu=
-no_gpu_reason=
-AX_CHECK_GL
-AX_CHECK_GLU
-AX_CHECK_GLUT
-if test "X$no_gl" = Xyes; then
-    missing_for_gpu="$missing_for_gpu GL"
-    AC_MSG_WARN([[GL not found, disabling GPU mode]])
-elif test "X$no_glu" = Xyes; then
-    missing_for_gpu="$missing_for_gpu GLU"
-    AC_MSG_WARN([[GLU not found, disabling GPU mode]])
-elif test "X$no_glut" = Xyes; then
-    missing_for_gpu="$missing_for_gpu GLUT"
-    AC_MSG_WARN([[GLUT not found, disabling GPU mode]])
+if test "x$gpu_support" = "xyes" \
+     -o "x$gpu_support" = "xYES" \
+     -o "x$gpu_support" = "xYes"; then
+    missing_for_gpu=
+    no_gpu_reason=
+    AX_CHECK_GL
+    AX_CHECK_GLU
+    AX_CHECK_GLUT
+    if test "X$no_gl" = Xyes; then
+        missing_for_gpu="$missing_for_gpu GL"
+        AC_MSG_WARN([[GL not found, disabling GPU mode]])
+    elif test "X$no_glu" = Xyes; then
+        missing_for_gpu="$missing_for_gpu GLU"
+        AC_MSG_WARN([[GLU not found, disabling GPU mode]])
+    elif test "X$no_glut" = Xyes; then
+        missing_for_gpu="$missing_for_gpu GLUT"
+        AC_MSG_WARN([[GLUT not found, disabling GPU mode]])
+    else
+        can_use_gpu=yes
+        # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
+        OPENGL_LIBS="${GLU_LIBS} ${GLUT_LIBS}"
+        OPENGL_CFLAGS="${GL_CFLAGS}"
+    fi
+    AC_CHECK_LIB(GLEW, glewInit,
+                 [OPENGL_LIBS="-lGLEW ${OPENGL_LIBS}"
+                  AC_DEFINE(HAVE_LIBGLEW, [], [Define if you have the GLEW library])],
+                 [can_use_gpu=no
+                  missing_for_gpu="$missing_for_gpu GLEW"
+                  AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
+                 [])
+    if test $can_use_gpu = no; then
+        no_gpu_reason=", because of missing$missing_for_gpu"
+    fi
 else
-    can_use_gpu=yes
-    # GLUT_LIBS and GLU_LIBS include GL_LIBS implicitly
-    OPENGL_LIBS="${GLU_LIBS} ${GLUT_LIBS}"
-    OPENGL_CFLAGS="${GL_CFLAGS}"
-fi
-AC_CHECK_LIB(GLEW, glewInit,
-             [OPENGL_LIBS="-lGLEW ${OPENGL_LIBS}"
-              AC_DEFINE(HAVE_LIBGLEW, [], [Define if you have the GLEW library])],
-             [can_use_gpu=no
-              missing_for_gpu="$missing_for_gpu GLEW"
-              AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
-             [])
-if test $can_use_gpu = no; then
-    no_gpu_reason=", because of missing$missing_for_gpu"
+    no_gpu_reason=", because it was disabled"
 fi
 
 # Memory allocation debug support
@@ -447,7 +459,6 @@ AC_MSG_RESULT([
    OPENGL_LIBS:                    ${OPENGL_LIBS:-<none required>}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
- can compile GPU acceleration:     ${can_use_gpu}${no_gpu_reason}
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 
  feature selection:
@@ -455,5 +466,6 @@ AC_MSG_RESULT([
    enable debugging support:       ${enable_debug}
    enable malloc debugging:        ${enable_dmalloc}
    use image cache:                ${enable_image_cache}
+   build GPU acceleration:         ${can_use_gpu}${no_gpu_reason}
    use OpenMP:                     ${enable_openmp}
 ${warnings}])

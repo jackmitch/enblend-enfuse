@@ -71,12 +71,26 @@ Among the usual configuration options of the GNU autoconf system, the
 Enfuse.
 
 
+** --enable-gpu-support=CHECK/yes/no
+
+Enable code in Enblend to use the GPU for optimizing the seam line
+between two images if all necessary OpenGL libraries are found.
+Enfuse does not benefit of this code.  OpenMP (see below) and GPU work
+together.
+
+Note that enabling GPU support does not mean Enblend will actually use
+the GPU.  Besides passing option "--gpu" to Enblend the hardware as
+well as the X11 drivers have to fulfill certain requirements.
+
+
 ** --enable-openmp=yes/NO
 
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
-Note that OpenMP support and the image-cache cannot be activated both.
-The default is to configure with image-cache and without OpenMP.
+
+Note that OpenMP support and the image cache must not be activated
+both.  The default is to configure with image cache and without
+OpenMP.
 
 
 ** --enable-split-doc=YES/no
@@ -96,6 +110,12 @@ default is "no", build an optimized version without debugging symbols.
 Activate the image-cache feature, which allows for processing of large
 images.  The image cache handles swapping parts of the images to disk.
 The default is "yes", enable the image cache.
+
+The image cache is recommended on systems where memory is scarce, but
+the images to blend or fuse are large.
+
+The image-cache feature and OpenMP support must not be activated
+together.
 
 
 ** --with-dmalloc=yes/NO
