@@ -194,6 +194,34 @@ formats:
                          Check out http://www.xfig.org/ for Transfig.
 
 
+* Operating System Specific Instructions and Hints
+
+** GNU/Linux
+
+*** High-Performance Binaries
+
+To configure and compile high-performance versions of Enblend and
+Enfuse configure single CPU systems with
+        --disable-image-cache
+SMP boxes with
+        --disable-image-cache --enable-openmp
+and pass
+         EXTRACXXFLAGS="-march=native -O2"
+to make(1).  The resulting binaries are pretty fast, although other
+configuration options or compiler flags might improve their
+performance even more.
+
+*** Xmi and Xi
+
+To avoid direct linkage to the two X11 libraries Xmi and Xi add
+"--without-x" to the parameters of configure(1).
+
+
+** MacOS
+
+** Win
+
+
 * License
 
 Enblend is free software; you can redistribute it and/or modify
