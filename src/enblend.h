@@ -106,7 +106,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
     // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
 
     #ifdef ENBLEND_CACHE_IMAGES
-    if (Verbose > VERBOSE_CFI_MESSAGES) {
+    if (Verbose >= VERBOSE_CFI_MESSAGES) {
         CachedFileImageDirector& v = CachedFileImageDirector::v();
         cerr << command
              << ": info: image cache statistics after loading black image\n";
@@ -134,7 +134,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // mem usage after = 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
 
         #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  <<": info: image cache statistics after loading white image\n";
@@ -150,7 +150,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // Union bounding box of whiteImage and blackImage.
         Rect2D uBB = blackBB | whiteBB;
 
-        if (Verbose > VERBOSE_UBB_MESSAGES) {
+        if (Verbose >= VERBOSE_UBB_MESSAGES) {
             cerr << command
                  << ": info: image union bounding box: "
                  << uBB
@@ -161,7 +161,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         Rect2D iBB = blackBB & whiteBB;
         bool iBBValid = !iBB.isEmpty();
 
-        if (Verbose > VERBOSE_IBB_MESSAGES) {
+        if (Verbose >= VERBOSE_IBB_MESSAGES) {
             cerr << command << ": info: image intersection bounding box: ";
             if (iBBValid) {
                 cerr << iBB;
@@ -203,7 +203,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
 
             // Checkpoint results.
             if (Checkpoint) {
-                if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+                if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
                     cerr << command << ": info: ";
                     if (imageInfoList.empty()) {
                         cerr << "writing final output" << endl;
@@ -219,7 +219,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         }
 
         // Estimate memory requirements.
-        if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
+        if (Verbose >= VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             long long bytes = 0;
 
             // Input images
@@ -304,7 +304,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                      << endl;
                 exit(1);
             } else {
-                if (Verbose > VERBOSE_MASK_MESSAGES) {
+                if (Verbose >= VERBOSE_MASK_MESSAGES) {
                     cerr << command
                          << ": info: saving mask \"" << maskFilename << "\"" << endl;
                 }
@@ -322,7 +322,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         //                  2*anInputUnion*AlphaValueType
 
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after mask generation\n";
@@ -348,7 +348,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
             roiBB.width() == anInputUnion.width();
 
         // Estimate memory requirements for this blend iteration
-        if (Verbose > VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
+        if (Verbose >= VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // Maximum utilization is when all three pyramids have been built
             // mem xsection = 4 * roiBB.width() * SKIPSMImagePixelType
             //                + 4 * roiBB.width() * SKIPSMAlphaPixelType
@@ -389,7 +389,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         //                   + (4/3)*roiBB*MaskPyramidType
 
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after calculating mask pyramid\n";
@@ -436,7 +436,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                                                         roiBB.apply(maskImage(*(whitePair.second))));
 
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after calculating white pyramid\n";
@@ -474,7 +474,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                                                         roiBB.apply(maskImage(*(blackPair.second))));
 
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after calculating black pyramid\n";
@@ -522,7 +522,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
         blend(maskGP, whiteLP, blackLP, whiteMask(NumericTraits<MaskPixelType>::max()));
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after blending pyramids\n";
@@ -571,7 +571,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // collapse black pyramid
         collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after collapsing black pyramid\n";
@@ -602,7 +602,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
 
         // Checkpoint results.
         if (Checkpoint) {
-            if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+            if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
                 cerr << command << ": info: ";
                 if (imageInfoList.empty()) {
                     cerr << "writing final output" << endl;
@@ -614,7 +614,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         }
 
 #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after checkpointing\n";
@@ -633,7 +633,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
     } // end main blending loop
 
     if (!Checkpoint) {
-        if (Verbose > VERBOSE_CHECKPOINTING_MESSAGES) {
+        if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
             cerr << command << ": info: writing final output" << endl;
         }
         checkpoint(blackPair, anOutputImageInfo);

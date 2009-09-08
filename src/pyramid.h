@@ -1469,7 +1469,7 @@ gaussianPyramid(unsigned int numLevels,
 
     gp->push_back(gp0);
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
@@ -1477,7 +1477,7 @@ gaussianPyramid(unsigned int numLevels,
     PyramidImageType* lastGP = gp0;
     AlphaImageType* lastA = NULL;
     for (unsigned int l = 1; l < numLevels; l++) {
-        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+        if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
             cerr << " g" << l;
             cerr.flush();
         }
@@ -1510,7 +1510,7 @@ gaussianPyramid(unsigned int numLevels,
 
     delete lastA;
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << endl;
     }
 
@@ -1562,14 +1562,14 @@ gaussianPyramid(unsigned int numLevels,
 
     gp->push_back(gp0);
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
     PyramidImageType* lastGP = gp0;
     for (unsigned int l = 1; l < numLevels; l++) {
-        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+        if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
             cerr << " g" << l;
             cerr.flush();
         }
@@ -1587,7 +1587,7 @@ gaussianPyramid(unsigned int numLevels,
         lastGP = gpn;
     }
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << endl;
     }
 
@@ -1633,7 +1633,7 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
 
     //exportPyramid(gp, exportName);
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: generating Laplacian pyramid:";
         cerr.flush();
     }
@@ -1641,7 +1641,7 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
     for (unsigned int l = 0; l < (numLevels-1); l++) {
-        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+        if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
             cerr << " l" << l;
             cerr.flush();
         }
@@ -1686,7 +1686,7 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
         //}
     }
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << " l" << (numLevels-1) << endl;
     }
 
@@ -1719,7 +1719,7 @@ template <typename SKIPSMImagePixelType, typename PyramidImageType>
 void
 collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
 {
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: collapsing Laplacian pyramid: "
              << "l" << p->size() - 1;
         cerr.flush();
@@ -1728,7 +1728,7 @@ collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
     // For each level, add the expansion of the next level.
     // Work backwards from the smallest level to the largest.
     for (int l = (p->size()-2); l >= 0; l--) {
-        if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+        if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
             cerr << " l" << l;
             cerr.flush();
         }
@@ -1738,7 +1738,7 @@ collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
                                      destImageRange(*((*p)[l])));
     }
 
-    if (Verbose > VERBOSE_PYRAMID_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << endl;
     }
  }

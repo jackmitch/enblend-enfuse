@@ -75,6 +75,11 @@ if test "x$GXX" = xyes; then
     CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
 fi
 
+AC_DEFINE(DEFAULT_VERBOSITY, 1,
+          [Default verbosity level of Enblend and Enfuse.
+A value of zero reduces the message output to only warnings and errors.
+Values of one and more make Enblend and Enfuse report progress in detail.])
+
 AC_ARG_VAR(OPENGL_CFLAGS, [C compiler flags for OpenGL])
 AC_ARG_VAR(OPENGL_LIBS, [Linker flags and libraries for OpenGL])
 gpu_support_default="yes"
@@ -129,7 +134,7 @@ AC_ARG_WITH(dmalloc,
             [if test "x$withval" = xyes; then
                 AC_MSG_RESULT(yes)
                 AC_DEFINE(WITH_DMALLOC, 1,
-              	    [Define if using the dmalloc debugging malloc package])
+                    [Define if using the dmalloc debugging malloc package])
                 if test x$acx_pthread_ok = xyes; then
                     LIBS="$LIBS -ldmallocthcxx"
                     enable_dmalloc="yes (thread aware)"

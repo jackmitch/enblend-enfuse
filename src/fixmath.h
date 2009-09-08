@@ -383,7 +383,7 @@ void copyToPyramidImage(
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
     if (UseCIECAM) {
-        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "CIECAM02 color conversion:";
             cout.flush();
         }
@@ -391,7 +391,7 @@ void copyToPyramidImage(
         int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
         int tick = 1;
         for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++dest_upperleft.y, ++y) {
-            if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+            if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
                 if ((y % twentyPercent) == 0) {
                     cout << " " << tick++ << "/5";
                     cout.flush();
@@ -402,7 +402,7 @@ void copyToPyramidImage(
                     dest_upperleft.rowIterator(), da,
                     ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
         }
-        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
+        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
         //transformImage(src_upperleft, src_lowerright, sa,
         //        dest_upperleft, da,
         //        ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
@@ -486,7 +486,7 @@ inline void copyFromPyramidImageIf(
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
     if (UseCIECAM) {
-        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cout << "CIECAM02 color conversion:";
             cout.flush();
         }
@@ -494,7 +494,7 @@ inline void copyFromPyramidImageIf(
         int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
         int tick = 1;
         for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++mask_upperleft.y, ++dest_upperleft.y, ++y) {
-            if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) {
+            if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
                 if ((y % twentyPercent) == 0) {
                     cout << " " << tick++ << "/5";
                     cout.flush();
@@ -506,7 +506,7 @@ inline void copyFromPyramidImageIf(
                     dest_upperleft.rowIterator(), da,
                     ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
         }
-        if (Verbose > VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
+        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) cout << endl;
         //transformImageIfMP(src_upperleft, src_lowerright, sa,
         //        mask_upperleft, ma,
         //        dest_upperleft, da,

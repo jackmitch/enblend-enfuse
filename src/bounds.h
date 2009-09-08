@@ -158,10 +158,10 @@ roiBounds(const Rect2D &inputUnion,
              << " levels" << endl;
     }
 
-    if (Verbose > VERBOSE_NUMLEVELS_MESSAGES) {
+    if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: using " << allowableLevels << " blending levels" << endl;
     }
-    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
+    if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
         cerr << command << ": info: region-of-interest bounding box: " << roiBB << endl;
     }
 

@@ -88,7 +88,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-int Verbose = 0;
+int Verbose = DEFAULT_VERBOSITY;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
@@ -249,8 +249,8 @@ void printUsageAndExit(const bool error = true) {
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
-        "  -v, --verbose          verbosely report progress; repeat to\n" <<
-        "                         increase verbosity\n" <<
+        "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
+        "                         increase verbosity or directly set to LEVEL\n" <<
         "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
         "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
@@ -283,9 +283,9 @@ void printUsageAndExit(const bool error = true) {
         "                         (0 <= WEIGHT <= 1); default: " << WContrast << "\n" <<
         "  --wEntropy=WEIGHT      weight given to high entropy regions\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
-        "  --wMu=MEAN             center aka MEAN of gaussian weighting\n" <<
+        "  --wMu=MEAN             center also known as MEAN of Gaussian weighting\n" <<
         "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
-        "  --wSigma=SIGMA         standard deviation of gaussian weighting\n" <<
+        "  --wSigma=SIGMA         standard deviation of Gaussian weighting\n" <<
         "                         function (SIGMA > 0); default: " << WSigma << "\n" <<
         "  --SoftMask             average over all masks; this is the default\n" <<
         "  --HardMask             force hard blend masks and no averaging on finest\n" <<
@@ -298,7 +298,7 @@ void printUsageAndExit(const bool error = true) {
         "                         set window SIZE for local-contrast analysis\n" <<
         "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
         "  --GrayProjector=OPERATOR\n" <<
-        "                         apply grayscale projection OPERATOR, where\n" <<
+        "                         apply gray-scale projection OPERATOR, where\n" <<
         "                         OPERATOR is one of \"average\", \"l-star\",\n" <<
         "                         \"lightness\", \"value\", \"luminance\", or\n" <<
         "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
@@ -563,7 +563,7 @@ int process_options(int argc, char** argv) {
         {"EntropyWindowSize", required_argument, 0, IntegerArgument},    // 13
         {"EntropyCutoff", required_argument, 0, StringArgument},         // 14
         {"SoftMask", no_argument, 0, NoArgument},                        // 15
-        {"verbose", no_argument, 0, NoArgument},                         // 16
+        {"verbose", optional_argument, 0, IntegerArgument},              // 16
         {"help", no_argument, 0, NoArgument},                            // 17
         {"version", no_argument, 0, NoArgument},                         // 18
         {"depth", required_argument, 0, StringArgument},                 // 19
@@ -581,7 +581,7 @@ int process_options(int argc, char** argv) {
     int option_index = 0;
     int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:vw::z",
+    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:v::w::z",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -603,10 +603,6 @@ int process_options(int argc, char** argv) {
                      << endl;
                 SaveMasks = true;
                 optionSet.insert(DebugOption);
-                break;
-            case VerboseId:
-                Verbose++;
-                optionSet.insert(VerboseOption);
                 break;
             case HelpId:
                 justPrintUsage = true;
@@ -921,15 +917,27 @@ int process_options(int argc, char** argv) {
             if (long_options[option_index].flag != 0) {
                 break;
             }
+
             switch (option_index) {
-            case ContrastWindowSizeId:
-                ContrastWindowSize = atoi(optarg);
-                if (ContrastWindowSize < 3) {
-                    cerr << command << ": warning: contrast window size \""
-                         << ContrastWindowSize << "\" is too small; will use size = 3"
-                         << endl;
-                    ContrastWindowSize = 3;
+            case VerboseId:
+                if (optarg != NULL && *optarg != 0) {
+                    Verbose =
+                        enblend::numberOfString(optarg,
+                                                _1 >= 0,
+                                                "verbosity level less than 0; will use 0",
+                                                0);
+                } else {
+                    Verbose++;
                 }
+                optionSet.insert(VerboseOption);
+                break;
+
+            case ContrastWindowSizeId:
+                ContrastWindowSize =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 3,
+                                            "contrast window size to small; will use size = 3",
+                                            3);
                 if (ContrastWindowSize % 2 != 1) {
                     cerr << command << ": warning: contrast window size \""
                          << ContrastWindowSize << "\" is even; increasing size to next odd number"
@@ -940,13 +948,11 @@ int process_options(int argc, char** argv) {
                 break;
 
             case EntropyWindowSizeId:
-                EntropyWindowSize = atoi(optarg);
-                if (EntropyWindowSize < 3) {
-                    cerr << command << ": warning: entropy window size \""
-                         << EntropyWindowSize << "\" is too small; will use size = 3"
-                         << endl;
-                    EntropyWindowSize = 3;
-                }
+                EntropyWindowSize =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 3,
+                                            "entropy window size to small; will use size = 3",
+                                            3);
                 if (EntropyWindowSize % 2 != 1) {
                     cerr << command << ": warning: entropy window size \""
                          << EntropyWindowSize << "\" is even; increasing size to next odd number"
@@ -969,14 +975,12 @@ int process_options(int argc, char** argv) {
             optionSet.insert(VersionOption);
             break;
         case 'b': {
-            int kilobytes = atoi(optarg);
-            if (kilobytes < 1) {
-                cerr << command
-                     << ": warning: cache block size must be 1 KB or more; will use 1 KB"
-                     << endl;
-                kilobytes = 1;
-            }
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
+            const int cache_block_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache block size must be 1 KB or more; will use 1 KB",
+                                        1);
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
             optionSet.insert(BlockSizeOption);
             break;
         }
@@ -1016,27 +1020,22 @@ int process_options(int argc, char** argv) {
             optionSet.insert(HelpOption);
             break;
         case 'l': {
-            int levels = atoi(optarg);
-            if (levels < 1) {
-                cerr << command
-                     << ": warning: too few levels; will use one level"
-                     << endl;
-                levels = 1;
-            }
-            // We take care of the "too many levels" case in "bounds.h".
-            ExactLevels = static_cast<unsigned int>(levels);
+            // We take care of "too many levels" in "bounds.h".
+            ExactLevels =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1U,
+                                        "too few levels; will use one level",
+                                        1U);
             optionSet.insert(LevelsOption);
             break;
         }
         case 'm': {
-            int megabytes = atoi(optarg);
-            if (megabytes < 1) {
-                cerr << command
-                     << ": warning: memory limit less than 1 MB; will use 1 MB"
-                     << endl;
-                megabytes = 1;
-            }
-            CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            const int cache_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache memory limit less than 1 MB; will use 1 MB",
+                                        1);
+            CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
             optionSet.insert(CacheSizeOption);
             break;
         }
@@ -1050,7 +1049,15 @@ int process_options(int argc, char** argv) {
             optionSet.insert(OutputOption);
             break;
         case 'v':
-            Verbose++;
+            if (optarg != NULL && *optarg != 0) {
+                Verbose =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 0,
+                                            "verbosity level less than 0; will use 0",
+                                            0);
+            } else {
+                Verbose++;
+            }
             optionSet.insert(VerboseOption);
             break;
         case 'w':
@@ -1250,7 +1257,7 @@ int main(int argc, char** argv)
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
 
-        if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
+        if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
             cerr << command
                  << ": info: input image \""
                  << *inputFileNameIterator
@@ -1534,7 +1541,7 @@ int main(int argc, char** argv)
     }
 
     // The size of the output image.
-    if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
+    if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
         cerr << command
              << ": info: output image size: "
              << inputUnion

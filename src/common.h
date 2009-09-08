@@ -20,6 +20,8 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <errno.h>
+
 #include <iomanip>
 #include <map>
 #include <stdexcept>
@@ -39,24 +41,28 @@
 
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.
-#define VERBOSE_ASSEMBLE_MESSAGES           0
-#define VERBOSE_ABB_MESSAGES                1
-#define VERBOSE_UBB_MESSAGES                1
-#define VERBOSE_IBB_MESSAGES                1
-#define VERBOSE_BLEND_MESSAGES              0
-#define VERBOSE_NUMLEVELS_MESSAGES          0
-#define VERBOSE_ROIBB_SIZE_MESSAGES         1
-#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  1
-#define VERBOSE_CHECKPOINTING_MESSAGES      0
-#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   1
-#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   1
-#define VERBOSE_COLOR_CONVERSION_MESSAGES   0
-#define VERBOSE_NFT_MESSAGES                0
-#define VERBOSE_MASK_MESSAGES               0
-#define VERBOSE_PYRAMID_MESSAGES            0
-#define VERBOSE_CFI_MESSAGES                2
-#define VERBOSE_GDA_MESSAGES                2
-#define VERBOSE_VERSION_REPORTING           1
+#define VERBOSE_ASSEMBLE_MESSAGES           1
+#define VERBOSE_CHECKPOINTING_MESSAGES      1
+
+#define VERBOSE_NFT_MESSAGES                2
+#define VERBOSE_MASK_MESSAGES               2
+#define VERBOSE_PYRAMID_MESSAGES            2
+#define VERBOSE_VERSION_REPORTING           2
+#define VERBOSE_BLEND_MESSAGES              2
+
+#define VERBOSE_COLOR_CONVERSION_MESSAGES   3
+
+#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   4
+#define VERBOSE_ABB_MESSAGES                4
+#define VERBOSE_UBB_MESSAGES                4
+#define VERBOSE_IBB_MESSAGES                4
+#define VERBOSE_ROIBB_SIZE_MESSAGES         4
+#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   4
+
+#define VERBOSE_CFI_MESSAGES                5
+#define VERBOSE_GDA_MESSAGES                5
+
+#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  6
 
 
 // Colors used in the optimizer visualization
@@ -152,10 +158,19 @@ errorMessage(int anErrorNumber)
 #elif HAVE_STRERROR
     strncpy(message.get(), strerror(anErrorNumber), size);
 #endif
-    return std::string(message.get());
+    if (strlen(message.get()) == 0)
+    {
+        std::ostringstream oss;
+        oss << "no message available, error #" << anErrorNumber;
+        return oss.str();
+    }
+    else
+    {
+        return std::string(message.get());
+    }
 #else
     std::ostringstream oss;
-    oss << "no message available, error: " << anErrorNumber;
+    oss << "no message available, error #" << anErrorNumber;
     return oss.str();
 #endif
 }
@@ -230,6 +245,102 @@ std::string stringOfWraparound(boundary_t aBoundaryMode)
     default:
         assert(false);
         return "none";
+    }
+}
+
+
+/** Convert a_string into a number. */
+template <class NumericType, class Validator>
+NumericType
+numberOfString(const char* a_string, // string we want to convert into a number
+               Validator is_valid,        // validator function
+               const std::string& invalid_message, // error message for failed validation
+               NumericType replacement_value)      // replacement return value on failure
+{
+    typedef std::numeric_limits<NumericType> traits;
+
+    char* tail;
+    long int long_int_value;
+    double double_value;
+    NumericType value;
+
+    errno = 0;
+    if (traits::is_exact)
+    {
+        long_int_value = strtol(a_string, &tail, 10);
+    }
+    else
+    {
+        double_value = strtod(a_string, &tail);
+    }
+
+    if (errno != 0)
+    {
+        std::cerr << command << ": "
+                  << "illegal numeric format of \""
+                  << a_string
+                  << "\": "
+                  << errorMessage(errno)
+                  << std::endl;
+        exit(1);
+    }
+
+    if (*tail != 0)
+    {
+        std::cerr << command << ": "
+                  << "trailing garbage \"" << tail << "\" in \"" << a_string << "\""
+                  << std::endl;
+        exit(1);
+    }
+
+    if (traits::is_exact)
+    {
+        if (traits::is_signed)
+        {
+            if (long_int_value < traits::min() || long_int_value > traits::max())
+            {
+                std::cerr << command << ": "
+                          << "signed number " << long_int_value
+                          << " out of range [" << traits::min() << " .. " << traits::max() << "]"
+                          << std::endl;
+                exit(1);
+            }
+            else
+            {
+                value = static_cast<NumericType>(long_int_value);
+            }
+        }
+        else
+        {
+            if (long_int_value < 0L || long_int_value > traits::max())
+            {
+                std::cerr << command << ": "
+                          << "unsigned number " << long_int_value
+                          << " out of range [0 .. " << traits::max() << "]"
+                          << std::endl;
+                exit(1);
+            }
+            else
+            {
+                value = static_cast<NumericType>(long_int_value);
+            }
+        }
+    }
+    else
+    {
+        value = static_cast<NumericType>(double_value);
+    }
+
+    if (is_valid(value))
+    {
+        return value;
+    }
+    else
+    {
+        std::cerr << command << ": warning: "
+                  << invalid_message
+                  << std::endl;
+        return replacement_value;
     }
 }
 

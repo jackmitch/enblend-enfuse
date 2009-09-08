@@ -330,7 +330,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 
     IMAGETYPE<SrcPromoteType> dist12(size);
     IMAGETYPE<SrcPromoteType> dist21(size);
-    if (Verbose > VERBOSE_NFT_MESSAGES)
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
         cerr << command << ": info: creating blend mask: 1/3";
         cerr.flush();
@@ -375,7 +375,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 #pragma omp section
 #endif
         {
-            if (Verbose > VERBOSE_NFT_MESSAGES)
+            if (Verbose >= VERBOSE_NFT_MESSAGES)
             {
                 cerr << " 2/3";
                 cerr.flush();
@@ -409,7 +409,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     omp_set_nested(openmp_nested);
 #endif
 
-    if (Verbose > VERBOSE_NFT_MESSAGES)
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
         cerr << " 3/3";
         cerr.flush();
@@ -421,7 +421,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                                   vigra::functor::Param(DestPixelTraits::max()),
                                   vigra::functor::Param(DestPixelTraits::zero())));
 
-    if (Verbose > VERBOSE_NFT_MESSAGES)
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
         cerr << endl;
     }

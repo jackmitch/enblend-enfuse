@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -132,7 +132,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
 
     //typedef typename ImagePyramidType::value_type::value_type ImagePixelComponentType;
 
-    if (Verbose > VERBOSE_BLEND_MESSAGES) {
+    if (Verbose >= VERBOSE_BLEND_MESSAGES) {
         cerr << command << ": info: blending layers:             ";
         cerr.flush();
     }
@@ -166,7 +166,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
 
     for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
 
-        if (Verbose > VERBOSE_BLEND_MESSAGES) {
+        if (Verbose >= VERBOSE_BLEND_MESSAGES) {
             cerr << " l" << layer;
             cerr.flush();
         }
@@ -267,7 +267,7 @@ void blend(vector<MaskPyramidType*> *maskGP,
 
     }
 
-    if (Verbose > VERBOSE_BLEND_MESSAGES) {
+    if (Verbose >= VERBOSE_BLEND_MESSAGES) {
         cerr << endl;
     }
 

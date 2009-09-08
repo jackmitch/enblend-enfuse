@@ -1182,7 +1182,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                      << endl;
                 exit(1);
             } else {
-                if (Verbose > VERBOSE_MASK_MESSAGES) {
+                if (Verbose >= VERBOSE_MASK_MESSAGES) {
                     cerr << command
                          << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
                 }
@@ -1208,7 +1208,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
         #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after loading image "
@@ -1232,7 +1232,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
     if (UseHardMask) {
-        if (Verbose > VERBOSE_MASK_MESSAGES) {
+        if (Verbose >= VERBOSE_MASK_MESSAGES) {
             cerr << command
                  << ": info: creating hard blend mask" << endl;
         }
@@ -1298,7 +1298,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                          << endl;
                     exit(1);
                 } else {
-                    if (Verbose > VERBOSE_MASK_MESSAGES) {
+                    if (Verbose >= VERBOSE_MASK_MESSAGES) {
                         cerr << command
                              << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
                     }
@@ -1312,7 +1312,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
             }
         }
         #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
                  << ": info: image cache statistics after creating hard mask\n";

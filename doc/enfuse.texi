@@ -251,6 +251,7 @@ Enfuse uses up to four criteria to judge the quality of a pixel, which
 @ref{Table:weighting-criteria} briefly describes.
 
 @float Table,Table:weighting-criteria
+
 @table @asis
 @item Exposure
 @cindex weighting, exposure
@@ -364,6 +365,7 @@ for @var{COMPRESSION}.
 
 @item @acronym{TIFF}
 @var{COMPRESSION} is one of the keywords:
+
 @table @samp
 @item NONE
 Do not compress.  This is the default.
@@ -433,11 +435,43 @@ If @option{--output} is not specified, the default is to put the
 resulting image in @file{a.tif}.
 
 @item -v
-@itemx --verbose
+@itemx --verbose[=@var{LEVEL}]
 @opindex -v
 @opindex --verbose
-Increase the verbosity of progress reporting.  Giving one or more
-@option{--verbose}@tie{}options will make Enfuse more verbose.
+Without an argument increase the verbosity of progress reporting.
+Giving more @option{--verbose}@tie{}options will make Enfuse more
+verbose.  Directly set a verbosity level with a non-negative integral
+@var{LEVEL}.
+
+Each level includes all messages of the lower levels.
+
+@table @asis
+@item Level
+Messages
+
+@item 0
+only warnings and errors
+
+@item 1
+reading and writing of images
+
+@item 2
+mask generation, pyramid, and blending
+
+@item 3
+color conversions
+
+@item 4
+image sizes, bounding boxes and intersection sizes
+
+@item 5
+detailed information on the optimizer runs (Enblend only)
+
+@item 6
+estimations of required memory in selected processing steps
+@end table
+
+The default verbosity level of Enfuse is 1.
 
 @item -V
 @itemx --version
@@ -465,6 +499,7 @@ reminded of the
 @sc{Born}-@sc{von K@'arm@'an} boundary condition.}.
 
 @var{MODE} takes the following values:
+
 @table @samp
 @item none
 @itemx open
@@ -741,7 +776,7 @@ For floating-point format use
 @c Minimum positive normalized value: 2^(2 - 2^k)
 @c Epsilon: 2^(1 - n)
 @c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
-@c
+
 @table @asis
 @c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
 @item @code{r32}, @code{real32}, @code{float}

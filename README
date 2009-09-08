@@ -67,8 +67,9 @@ Also see INSTALL for further information.
 * Specific Configuration Options
 
 Among the usual configuration options of the GNU autoconf system, the
-./configure script offers the following options to tailor Enblend and
-Enfuse.
+configure(1) script offers the following options to tailor Enblend and
+Enfuse.  Remember that configure(1) creates a file called "config.h"
+that can serve for fine-tuning the configuration.
 
 
 ** --enable-gpu-support=CHECK/yes/no

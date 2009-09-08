@@ -226,7 +226,7 @@ public:
                                                / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax))
                                                      + 0.5)));
 
-            if (Verbose > VERBOSE_GDA_MESSAGES) {
+            if (Verbose >= VERBOSE_GDA_MESSAGES) {
                 const std::ios_base::fmtflags ioFlags(cerr.flags());
                 cerr << "\n"
                      << command
@@ -243,7 +243,7 @@ public:
 
             tCurrent *= tau;
 
-            if (Verbose > VERBOSE_GDA_MESSAGES) {
+            if (Verbose >= VERBOSE_GDA_MESSAGES) {
                 int numConvergedPoints = 0;
                 for (unsigned int i = 0; i < convergedPoints.size(); i++) {
                     if (convergedPoints[i]) {
@@ -255,7 +255,7 @@ public:
                      << " points converged";
                 cerr.flush();
             }
-            else if (Verbose > VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
+            else if (Verbose >= VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
                 cerr << " " << progressIndicator << "/4";
                 progressIndicator++;
                 cerr.flush();
@@ -283,7 +283,7 @@ public:
             }
         }
 
-        if (Verbose > VERBOSE_GDA_MESSAGES) {
+        if (Verbose >= VERBOSE_GDA_MESSAGES) {
             cerr << endl;
             for (unsigned int i = 0; i < convergedPoints.size(); i++) {
                 if (!convergedPoints[i]) {

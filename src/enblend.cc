@@ -97,7 +97,7 @@ const int fineMaskVectorizeDistance = 20;
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 0;
+int Verbose = DEFAULT_VERBOSITY;
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
@@ -261,8 +261,8 @@ void printUsageAndExit(const bool error = true) {
         "  -h, --help             print this help message and exit\n" <<
         "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
-        "  -v, --verbose          verbosely report progress; repeat to\n" <<
-        "                         increase verbosity\n" <<
+        "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
+        "                         increase verbosity or directly set to LEVEL\n" <<
         "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
         "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
@@ -521,7 +521,7 @@ int process_options(int argc, char** argv) {
         {"dijkstra", required_argument, 0, IntegerArgument},                   //  9
         {"mask-vectorize", required_argument, 0, StringArgument},              // 10
         {"compression", required_argument, 0, StringArgument},                 // 11
-        {"verbose", no_argument, 0, NoArgument},                               // 12
+        {"verbose", optional_argument, 0, IntegerArgument},                    // 12
         {"help", no_argument, 0, NoArgument},                                  // 13
         {"version", no_argument, 0, NoArgument},                               // 14
         {"depth", required_argument, 0, StringArgument},                       // 15
@@ -539,7 +539,7 @@ int process_options(int argc, char** argv) {
     int option_index = 0;
     int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:svw::xz",
+    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:sv::w::xz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
@@ -562,10 +562,6 @@ int process_options(int argc, char** argv) {
             case NoOptimizeMaskId:
                 OptimizeMask = false;
                 optionSet.insert(NoOptimizeOption);
-                break;
-            case VerboseId:
-                Verbose++;
-                optionSet.insert(VerboseOption);
                 break;
             case HelpId:
                 justPrintUsage = true;
@@ -852,60 +848,37 @@ int process_options(int argc, char** argv) {
                 break;
             }
             switch (option_index) {
+            case VerboseId:
+                if (optarg != NULL && *optarg != 0) {
+                    Verbose =
+                        enblend::numberOfString(optarg,
+                                                _1 >= 0,
+                                                "verbosity level less than 0; will use 0",
+                                                0);
+                } else {
+                    Verbose++;
+                }
+                optionSet.insert(VerboseOption);
+                break;
             case CoarseMaskId:
                 CoarseMask = true;
                 if (optarg != NULL && *optarg != 0) {
-                    char* tail;
-                    errno = 0;
-                    const long int factor = strtol(optarg, &tail, 10);
-                    if (errno != 0) {
-                        cerr << command
-                             << ": option \"--coarse-mask\": illegal numeric format \""
-                             << optarg << "\": " << enblend::errorMessage(errno)
-                             << endl;
-                        exit(1);
-                    }
-                    if (*tail != 0) {
-                        cerr << command
-                             << ": option \"--coarse-mask\": trailing garbage \""
-                             << tail << "\" in \"" << optarg << "\"" << endl;
-                        exit(1);
-                    }
-                    if (factor <= 0L) {
-                        cerr << command << ": warning: coarseness factor less or equal to 0; will use 1\n";
-                        CoarsenessFactor = 1U;
-                    } else {
-                        CoarsenessFactor = static_cast<unsigned>(factor);
-                    }
+                    CoarsenessFactor =
+                        enblend::numberOfString(optarg,
+                                                _1 >= 1U,
+                                                "coarseness factor less or equal to 0; will use 1",
+                                                1U);
                 }
                 optionSet.insert(CoarseMaskOption);
                 break;
-            case DijkstraRadiusId: {
-                char* tail;
-                errno = 0;
-                const long int radius = strtol(optarg, &tail, 10);
-                if (errno != 0) {
-                    cerr << command
-                         << ": option \"--dijkstra\": illegal numeric format \""
-                         << optarg << "\": " << enblend::errorMessage(errno)
-                         << endl;
-                    exit(1);
-                }
-                if (*tail != 0) {
-                    cerr << command
-                         << ": option \"--dijkstra\": trailing garbage \""
-                         << tail << "\" in \"" << optarg << "\"" << endl;
-                    exit(1);
-                }
-                if (radius <= 0L) {
-                    cerr << command << ": warning: Dijkstra radius is 0; will use 1\n";
-                    DijkstraRadius = 1U;
-                } else {
-                    DijkstraRadius = static_cast<unsigned>(radius);
-                }
+            case DijkstraRadiusId:
+                DijkstraRadius =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1U,
+                                            "Dijkstra radius is 0; will use 1",
+                                            1U);
                 optionSet.insert(DijkstraRadiusOption);
                 break;
-            }
             default:
                 cerr << command
                      << ": internal error: unhandled \"IntegerArgument\" option"
@@ -924,14 +897,12 @@ int process_options(int argc, char** argv) {
             optionSet.insert(PreAssembleOption);
             break;
         case 'b': {
-            int kilobytes = atoi(optarg);
-            if (kilobytes < 1) {
-                cerr << command
-                     << ": warning: cache block size must be 1 KB or more; will use 1 KB"
-                     << endl;
-                kilobytes = 1;
-            }
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes) << 10);
+            const int cache_block_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache block size must be 1 KB or more; will use 1 KB",
+                                        1);
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
             optionSet.insert(BlockSizeOption);
             break;
         }
@@ -970,28 +941,22 @@ int process_options(int argc, char** argv) {
             justPrintUsage = true;
             optionSet.insert(HelpOption);
             break;
-        case 'l': {
-            int levels = atoi(optarg);
-            if (levels < 1) {
-                cerr << command
-                     << ": warning: too few levels; will use one level"
-                     << endl;
-                levels = 1;
-            }
-            // We take care of the "too many levels" case in "bounds.h".
-            ExactLevels = static_cast<unsigned int>(levels);
+        case 'l':
+            // We take care of "too many levels" in "bounds.h".
+            ExactLevels =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1U,
+                                        "too few levels; will use one level",
+                                        1U);
             optionSet.insert(LevelsOption);
             break;
-        }
         case 'm': {
-            int megabytes = atoi(optarg);
-            if (megabytes < 1) {
-                cerr << command
-                     << ": warning: memory limit less than 1 MB; will use 1 MB"
-                     << endl;
-                megabytes = 1;
-            }
-            CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            const int cache_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache memory limit less than 1 MB; will use 1 MB",
+                                        1);
+            CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
             optionSet.insert(CacheSizeOption);
             break;
         }
@@ -1011,7 +976,15 @@ int process_options(int argc, char** argv) {
             optionSet.insert(SequentialBlendingOption);
             break;
         case 'v':
-            Verbose++;
+            if (optarg != NULL && *optarg != 0) {
+                Verbose =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 0,
+                                            "verbosity level less than 0; will use 0",
+                                            0);
+            } else {
+                Verbose++;
+            }
             optionSet.insert(VerboseOption);
             break;
         case 'w':
@@ -1233,7 +1206,7 @@ int main(int argc, char** argv)
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
 
-        if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
+        if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
             cerr << command
                  << ": info: input image \""
                  << *inputFileNameIterator
@@ -1537,7 +1510,7 @@ int main(int argc, char** argv)
     }
 
     // The size of the output image.
-    if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
+    if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
         cerr << command
              << ": info: output image size: "
              << inputUnion

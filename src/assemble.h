@@ -273,7 +273,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     ImageType* image = new ImageType(inputUnion.size());
     AlphaType* imageA = new AlphaType(inputUnion.size());
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
+    if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
         const vigra::FilenameLayerPair file_layer =
             vigra::split_filename(imageInfoList.front()->getFileName());
         const int layers = imageInfoList.front()->numLayers();
@@ -337,7 +337,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
             if (!overlapFound) {
                 // Copy src and srcA into image and imageA.
 
-                if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
+                if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
                     cerr << " " << info->getFileName();
                     cerr.flush();
                 }
@@ -366,7 +366,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
         }
     }
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) {
+    if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) {
         cerr << endl;
     }
 
@@ -376,7 +376,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
                    srcImage(*imageA), unionRect);
     bb = unionRect();
 
-    if (Verbose > VERBOSE_ABB_MESSAGES) {
+    if (Verbose >= VERBOSE_ABB_MESSAGES) {
         cerr << command
              << ": info: assembled images bounding box: "
              << unionRect()

@@ -356,7 +356,7 @@ void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
         mBB.moveBy(uBB.upperLeft());
     }
 
-    if (Verbose > VERBOSE_ROIBB_SIZE_MESSAGES) {
+    if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
         cerr << command
              << ": info: mask transition line bounding box: "
              << mBB
@@ -685,7 +685,7 @@ MaskType* createMask(const ImageType* const white,
                                             OutputFileName,
                                             m);
         ImageImportInfo maskInfo(maskFilename.c_str());
-        if (Verbose > VERBOSE_MASK_MESSAGES) {
+        if (Verbose >= VERBOSE_MASK_MESSAGES) {
             cerr << command
                  << ": info: loading mask \"" << maskFilename << "\"" << endl;
         }
@@ -764,7 +764,7 @@ MaskType* createMask(const ImageType* const white,
                                                 *inputFileNameIterator,
                                                 OutputFileName,
                                                 m);
-            if (Verbose > VERBOSE_NFT_MESSAGES) {
+            if (Verbose >= VERBOSE_NFT_MESSAGES) {
                 cerr << command
                      << ": info: saving nearest-feature-transform image \""
                      << nftMaskFilename << "\"" << endl;
@@ -824,7 +824,7 @@ MaskType* createMask(const ImageType* const white,
             std::accumulate(contours.begin(), contours.end(),
                             0U, ret<size_t>(_1 + bind(&Contour::size, _2)));
 
-        if (Verbose > VERBOSE_MASK_MESSAGES) {
+        if (Verbose >= VERBOSE_MASK_MESSAGES) {
             cerr << command << ": info: optimizing ";
             if (totalSegments == 1U) {
                 cerr << "1 distinct seam";
@@ -931,7 +931,7 @@ MaskType* createMask(const ImageType* const white,
              ++currentSegment, ++segmentNumber) {
             Segment* snake = *currentSegment;
 
-            if (Verbose > VERBOSE_MASK_MESSAGES) {
+            if (Verbose >= VERBOSE_MASK_MESSAGES) {
                 cerr << command
                      << ": info: strategy 1, s"
                      << segmentNumber << ":";
@@ -1009,7 +1009,7 @@ MaskType* createMask(const ImageType* const white,
                 }
             }
 
-            if (Verbose > VERBOSE_MASK_MESSAGES) {
+            if (Verbose >= VERBOSE_MASK_MESSAGES) {
                 cerr << endl;
             }
 
@@ -1027,7 +1027,7 @@ MaskType* createMask(const ImageType* const white,
         }
     }
 
-    if (Verbose > VERBOSE_MASK_MESSAGES) {
+    if (Verbose >= VERBOSE_MASK_MESSAGES) {
         cerr << command
              << ": info: strategy 2:";
         cerr.flush();
@@ -1069,7 +1069,7 @@ MaskType* createMask(const ImageType* const white,
                 continue;
             }
 
-            if (Verbose > VERBOSE_MASK_MESSAGES) {
+            if (Verbose >= VERBOSE_MASK_MESSAGES) {
                 cerr << " s" << segmentNumber;
                 cerr.flush();
             }
@@ -1146,7 +1146,7 @@ MaskType* createMask(const ImageType* const white,
         }
     }
 
-    if (Verbose > VERBOSE_MASK_MESSAGES) {
+    if (Verbose >= VERBOSE_MASK_MESSAGES) {
         cerr << endl;
     }
 
@@ -1172,7 +1172,7 @@ MaskType* createMask(const ImageType* const white,
                  << endl;
             exit(1);
         } else {
-            if (Verbose > VERBOSE_MASK_MESSAGES) {
+            if (Verbose >= VERBOSE_MASK_MESSAGES) {
                 cerr << command
                      << ": info: saving seam visualization \""
                      << visualizeFilename << "\"" << endl;
