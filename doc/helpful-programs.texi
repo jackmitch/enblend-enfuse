@@ -16,8 +16,8 @@ universal raw-converter written by @sc{David Coffin}.
 @uref{http://@/ufraw.sourceforge.net/, UFRaw}, a raw converter written
 by @sc{Udi Fuchs} and based on DCRaw, adds a @acronym{GUI}
 (@command{ufraw}), versatile batch processing (@command{ufraw-batch}),
-and some additional features like, for example, cropping, noise
-reduction with wavelets, and automatic lens error correction.
+and some additional features such as cropping, noise reduction with
+wavelets, and automatic lens error correction.
 @end itemize
 
 

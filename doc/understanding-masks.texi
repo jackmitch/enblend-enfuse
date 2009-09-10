@@ -3,7 +3,7 @@
 @cindex weight mask
 @cindex mask, weight
 A @dfn{binary mask} indicates for every pixel of an image if this
-pixel must be considered in further processing or ignored.  For a
+pixel must be considered in further processing, or ignored.  For a
 @dfn{weight mask}, the value of the mask determines how much the pixel
 contributes, zero again meaning ``no contribution''.
 
@@ -85,8 +85,8 @@ ImageMagick} for further explanations.
 @end table
 
 Enblend and Enfuse only consider pixels that have an associated mask
-value different from zero.  If an input image does not have an alpha
-channel, Enblend warns and assumes a mask of all non-zero values, this
+value other than zero.  If an input image does not have an alpha
+channel, Enblend warns and assumes a mask of all non-zero values, that
 is, it will use every pixel of the input image for fusion.
 
 Stitchers like @command{nona} add a mask to their output images.
@@ -95,7 +95,7 @@ Sometimes it is helpful to manually modify a mask before fusion.  For
 example to suppress unwanted objects (insects and cars come into mind)
 that moved across the scene during the exposures.  If the masks of all
 input images are black at a certain position, the output image will
-have a hole there.
+have a hole in that position.
 
 
 @c @node Weight Mask Files

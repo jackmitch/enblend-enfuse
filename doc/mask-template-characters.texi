@@ -26,7 +26,7 @@ Examples: @samp{%i}, @samp{%02i}, or @samp{%_4i}.
 @item %n
 @cindex mask template character, @samp{n}
 Expands to the number of the mask file starting at one.  Otherwise it
-behaves identical to @samp{%i} including pad character and width
+behaves identically to @samp{%i}, including pad character and width
 specification.
 
 @item %p

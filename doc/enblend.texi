@@ -165,12 +165,13 @@ contribute to the final image.
 @pindex hugin
 @pindex PanoTools
 @cindex feathering, detrimental effect of
-Enblend does @emph{not} align images.  Use a tool as @command{hugin}
-or PanoTools to do this.  The @acronym{TIFF} files produced by these
-programs are exactly what Enblend is designed to work with.  Sometimes
-these @acronym{GUI}s allow you to select feathering for the edges of
-your images.  This treatment is detrimental to Enblend.  Turn off
-feathering by deselecting it or setting the feather width to zero.
+Enblend does @emph{not} align images.  Use a tool such as
+@command{hugin} or PanoTools to do this.  The @acronym{TIFF} files
+produced by these programs are exactly what Enblend is designed to
+work with.  Sometimes these @acronym{GUI}s allow you to select
+feathering for the edges of your images.  This treatment is
+detrimental to Enblend.  Turn off feathering by deselecting it or
+setting the feather width to zero.
 
 Enblend blends the images in the order they are specified on the
 command line.  You should order your images according to the way that
@@ -314,7 +315,7 @@ resulting image in @file{a.tif}.
 @itemx --verbose[=@var{LEVEL}]
 @opindex -v
 @opindex --verbose
-Without an argument increase the verbosity of progress reporting.
+Without an argument, increase the verbosity of progress reporting.
 Giving more @option{--verbose}@tie{}options will make Enblend more
 verbose.  Directly set a verbosity level with a non-negative integral
 @var{LEVEL}.
@@ -355,8 +356,9 @@ The default verbosity level of Enblend is 1.
 @opindex --version
 Output information on the Enblend version.
 
-Team this option with @option{--verbose} to inquire configuration
-details like the extra features that have been compiled in.
+Team this option with @option{--verbose} to inquire about
+configuration details, like the extra features that have been compiled
+in.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -551,16 +553,16 @@ $$
     S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
 $$
 @end tex
-In this mode both, left and right borders as well as top and bottom
-borders are eliminated.
+In this mode, both left and right borders, as well as top and bottom
+borders, are eliminated.
 @end table
 
 Specifying @option{--wrap} without @var{MODE} selects horizontal
 wrapping.
 
 Version@tie{}@value{VERSION} of Enblend, the one described here, does
-not blend neither zenith nor or nadir, so you may still see some seams
-in these areas.
+not blend either zenith or nadir, so you may still see some seams in
+these areas.
 
 @item -x
 @opindex -x
@@ -584,7 +586,7 @@ Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enblend's image
 cache.
 
 This is the amount of data that Enblend will move to and from the disk
-in one go.  The default is 2048@dmn{KB}, which should be ok for most
+at one time.  The default is 2048@dmn{KB}, which should be ok for most
 systems.
 
 See @ref{Tuning Memory Usage} for details.
@@ -603,7 +605,7 @@ The input files should have embedded @acronym{ICC} profiles if this
 option is specified.  If no @acronym{ICC} profile is present, Enblend
 will assume that the image uses the @acronym{sRGB} color space.  The
 difference between this option and Enblend's default color blending
-algorithm is very slight and will be only noticeable when areas of
+algorithm is very slight and will only be noticeable when areas of
 different primary colors are blended together.
 
 @item -d
@@ -616,7 +618,7 @@ Force the number of bits per channel and the numeric format of the
 output image.
 
 Enblend always uses a smart way to change the channel depth to assure
-highest image quality (at the expense of memory) whether
+highest image quality (at the expense of memory), whether
 requantization is implicit because of the output format or explicit
 with option@tie{}@option{--depth}.
 
@@ -624,7 +626,7 @@ with option@tie{}@option{--depth}.
 @item
 If the output-channel width is larger than the input-channel width of
 the input images, the input images' channels are widened to the output
-channel width immediately after loading, this is, as soon as possible.
+channel width immediately after loading, that is, as soon as possible.
 Enblend then performs all blending operations at the output-channel
 width, thereby preserving minute color details which can appear in the
 blending areas.
@@ -632,12 +634,12 @@ blending areas.
 @item
 If the output-channel width is smaller than the input-channel width of
 the input images, the output image's channels are narrowed only right
-before it is written to disk, this is, as late as possible.  Thus the
+before it is written to disk, that is, as late as possible.  Thus the
 data benefits from the wider input channels for the longest time.
 @end itemize
 
 All @var{DEPTH} specifications are valid in lowercase as well as
-uppercase letters.  For integer format use
+uppercase letters.  For integer format, use
 
 @table @asis
 @item @code{8}, @code{uint8}
@@ -652,7 +654,7 @@ Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
 Unsigned 32@dmn{bit}; range: 0..4294967295
 @end table
 
-For floating-point format use
+For floating-point format, use
 
 @c Minimum positive normalized value: 2^(2 - 2^k)
 @c Epsilon: 2^(1 - n)
@@ -695,7 +697,7 @@ format, Enblend warns and chooses the @var{DEPTH} that matches best.
 
 @cindex @acronym{OpenEXR}, data format
 The @acronym{OpenEXR} data format is treated as
-@acronym{IEEE754}@tie{}float internally.  Externally, this is on disk,
+@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
 @acronym{OpenEXR} data is represented by ``half'' precision
 floating-point numbers.
 
@@ -755,8 +757,8 @@ This is an experimental feature that may not work on all systems.  In
 this version of Enblend, @value{VERSION}, only mask optimization
 strategy@tie{}1 benefits from this option.
 
-Note that @acronym{GPU}-support must have been compiled in the Enblend
-binary for this option being available.  Find out about this feature
+Note that @acronym{GPU}-support must have been compiled into the Enblend
+binary for this option to be available.  Find out about this feature
 with @code{enblend --version --verbose}.
 
 @item -m @var{CACHESIZE}
@@ -793,8 +795,8 @@ Optimizer Strategy@tie{}1 (see @ref{Table:optimizer-strategies}).
 @item TAU
 @var{TAU} is the temperature reduction factor in the Simulated
 Annealing; it also can be thought of as ``cooling factor''.  The
-closer @var{TAU} is to one the more accurate the annealing run will be
-and the longer it will take.
+closer @var{TAU} is to one, the more accurate the annealing run will
+be, and the longer it will take.
 
 Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
@@ -941,7 +943,7 @@ The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
 @item K-MAX
 @var{K-MAX} is the maximum number of ``moves'' the optimizer will make
 for each line segment.  Higher values more accurately sample the state
-space at the expense of a higher computation cost.
+space, at the expense of a higher computation cost.
 
 Valid range:
 @ifinfo
@@ -1272,8 +1274,8 @@ output, it may be useful to include this visualization image in your
 bug report.
 
 @var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
-input file.  In a template a percent sign (@samp{%}) introduces a
-variable part.  All other characters are copied literally.  Lowercase
+input file.  In a template, a percent sign (@samp{%}) introduces a
+variable part; all other characters are copied literally.  Lowercase
 letters refer to the name of the respective input file, whereas
 uppercase ones refer to the name of the output file (@pxref{Common
 Options}).  @ref{Table:mask-template-characters} lists all variables.
@@ -1287,7 +1289,7 @@ the rectangular region where two images overlap.  Enblend paints
 non-overlapping parts of the image pair with dark red.
 
 The optimizer's samples are shown in blue.  If a sample is the first
-of a line segment it is painted in light green; non-first line
+of a line segment, it is painted in light green; non-first line
 segments are drawn in darker green.  Cyan points indicate state space
 samples inside the @sc{Dijkstra} radius.  Non-converged points are
 drawn in magenta color.  The final seam line is shown in bright

@@ -2,7 +2,7 @@ The default configuration of Enblend and Enfuse assumes a system with
 3--4@dmn{GB} of @acronym{RAM}.
 
 If Enblend and Enfuse have been compiled with the ``image-cache''
-feature they do not rely on the operating system's memory management,
+feature, they do not rely on the operating system's memory management,
 but use their own image cache.  To find out whether your version uses
 the image cache say
 
@@ -39,15 +39,15 @@ process, which is why it has less detrimental effects on the system's
 overall responsiveness.
 
 @item
-The image cache has been optimized for accesses to image data.  And
-all algorithms in Enblend and Enfuse have been carefully arranged to
-play nice with the image cache.  An operating system's cache has no
+The image cache has been optimized for accesses to image data.  All
+algorithms in Enblend and Enfuse have been carefully arranged to play
+nice with the image cache.  An operating system's cache has no
 knowledge of these particular memory access patterns.
 
 @item
 The disk access of the operating system to the swap device has been
 highly optimized.  Enblend and Enfuse on the other hand use the
-standard @acronym{IO}-layer which is a slower interface.
+standard @acronym{IO}-layer, which is a slower interface.
 
 @item
 Limiting the amount of image cache prevents Enblend and Enfuse from
@@ -56,9 +56,9 @@ applications into the swap.
 @end itemize
 
 @noindent
-The @var{CACHE-SIZE} should be set in a way as to reconcile all of the
-above aspects even for the biggest data sets, this is, projects with
-many large images.
+The @var{CACHE-SIZE} should be set in such a way as to reconcile all
+of the above aspects even for the biggest data sets, that is, projects
+with many large images.
 
 @ref{Table:cache-size-settings} suggests some cache- and buffer-sizes
 for different amounts of available @acronym{RAM}.

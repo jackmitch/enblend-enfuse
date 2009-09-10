@@ -32,7 +32,7 @@ in this tool chain.
 
 @table @asis
 @item Take Images
-Take @emph{multiple} images for form a panorama, an exposure series, a
+Take @emph{multiple} images to form a panorama, an exposure series, a
 focus stack, etc.
 
 @smalldisplay
@@ -59,7 +59,7 @@ stack
 
 @noindent
 @emph{Remaining Problem:} The ``overlayed'' images may not fit
-together, this is the overlay regions may not match exactly.
+together, that is the overlay regions may not match exactly.
 
 @item Convert Images
 @cindex raw conversion
@@ -75,15 +75,15 @@ Align the images so as to make them match as well as possible.
 @smalldisplay
 Again there is one exception and this is when images naturally align.
 For example, a series of images taken from a rock solid tripod with a
-cable release without touching the camera or images taken with a shift
-lens can align without further user intervention.
+cable release without touching the camera, or images taken with a
+shift lens, can align without further user intervention.
 @end smalldisplay
 
 @cindex affine transformation
 @cindex transformation, affine
 This step submits the images to affine transformations.
 @cindex lens distortion, correction of
-If necessary it rectifies the lens' distortions (e.g.@: barrel or
+If necessary, it rectifies the lens' distortions (e.g.@: barrel or
 pincushion), too.
 @cindex photometric alignment
 Sometimes even luminance or color differences between pairs of
@@ -98,8 +98,8 @@ in the transformation.
 @emph{Remaining Problem:}
 @cindex parallax error
 The images may still not align perfectly, for example, because of
-@uref{http://@/en.wikipedia.org/@/wiki/@/Parallax, parallax} errors or
-blur produced by camera shake.
+@uref{http://@/en.wikipedia.org/@/wiki/@/Parallax, parallax} errors,
+or blur produced by camera shake.
 
 @item Combine Images
 Enblend and Enfuse combine the aligned images into one.

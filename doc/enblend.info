@@ -23,7 +23,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-227a6153f072, 8 September
+This manual is for Enblend (version 4.0-227a6153f072, 10 September
 2009), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -49,12 +49,12 @@ the areas where images overlap.  Alpha channels can be used to indicate
 to Enblend that certain portions of an input image should not
 contribute to the final image.
 
-   Enblend does _not_ align images.  Use a tool as `hugin' or PanoTools
-to do this.  The TIFF files produced by these programs are exactly what
-Enblend is designed to work with.  Sometimes these GUIs allow you to
-select feathering for the edges of your images.  This treatment is
-detrimental to Enblend.  Turn off feathering by deselecting it or
-setting the feather width to zero.
+   Enblend does _not_ align images.  Use a tool such as `hugin' or
+PanoTools to do this.  The TIFF files produced by these programs are
+exactly what Enblend is designed to work with.  Sometimes these GUIs
+allow you to select feathering for the edges of your images.  This
+treatment is detrimental to Enblend.  Turn off feathering by
+deselecting it or setting the feather width to zero.
 
    Enblend blends the images in the order they are specified on the
 command line.  You should order your images according to the way that
@@ -89,7 +89,7 @@ in this tool chain.
  Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
-     Take _multiple_ images for form a panorama, an exposure series, a
+     Take _multiple_ images to form a panorama, an exposure series, a
      focus stack, etc.
 
           There is one exception with Enfuse when a single raw image is
@@ -107,7 +107,7 @@ Take Images
           - Focus stack
 
      _Remaining Problem:_ The "overlayed" images may not fit together,
-     this is the overlay regions may not match exactly.
+     that is the overlay regions may not match exactly.
 
 Convert Images
      Convert the raw data
@@ -120,11 +120,11 @@ Align Images
 
           Again there is one exception and this is when images naturally align.
           For example, a series of images taken from a rock solid tripod with a
-          cable release without touching the camera or images taken with a shift
-          lens can align without further user intervention.
+          cable release without touching the camera, or images taken with a
+          shift lens, can align without further user intervention.
 
      This step submits the images to affine transformations.  If
-     necessary it rectifies the lens' distortions (e.g. barrel or
+     necessary, it rectifies the lens' distortions (e.g. barrel or
      pincushion), too.  Sometimes even luminance or color differences
      between pairs of overlaying images are corrected ("photometric
      alignment").
@@ -135,8 +135,8 @@ Align Images
 
      _Remaining Problem:_ The images may still not align perfectly, for
      example, because of parallax
-     (http://en.wikipedia.org/wiki/Parallax) errors or blur produced by
-     camera shake.
+     (http://en.wikipedia.org/wiki/Parallax) errors, or blur produced
+     by camera shake.
 
 Combine Images
      Enblend and Enfuse combine the aligned images into one.
@@ -238,7 +238,7 @@ Common options control some overall features of Enblend.
 
 `-v'
 `--verbose[=LEVEL]'
-     Without an argument increase the verbosity of progress reporting.
+     Without an argument, increase the verbosity of progress reporting.
      Giving more `--verbose' options will make Enblend more verbose.
      Directly set a verbosity level with a non-negative integral LEVEL.
 
@@ -274,8 +274,8 @@ Common options control some overall features of Enblend.
 `--version'
      Output information on the Enblend version.
 
-     Team this option with `--verbose' to inquire configuration details
-     like the extra features that have been compiled in.
+     Team this option with `--verbose' to inquire about configuration
+     details, like the extra features that have been compiled in.
 
 `-w'
 `--wrap=MODE'
@@ -310,14 +310,14 @@ Common options control some overall features of Enblend.
     `vertical+horizontal'
           Wrap around both horizontally and vertically:
                S_P(x, y) = {P(x + m * w, y + n * h): m, n in Z}.
-          In this mode both, left and right borders as well as top and
-          bottom borders are eliminated.
+          In this mode, both left and right borders, as well as top and
+          bottom borders, are eliminated.
 
      Specifying `--wrap' without MODE selects horizontal wrapping.
 
      Version 4.0-227a6153f072 of Enblend, the one described here, does
-     not blend neither zenith nor or nadir, so you may still see some
-     seams in these areas.
+     not blend either zenith or nadir, so you may still see some seams
+     in these areas.
 
 `-x'
      Checkpoint partial results to the output file after each blending
@@ -344,8 +344,8 @@ cropping of the output image.
      Set the BLOCKSIZE in kilobytes (KB) of Enblend's image cache.
 
      This is the amount of data that Enblend will move to and from the
-     disk in one go.  The default is 2048KB, which should be ok for most
-     systems.
+     disk at one time.  The default is 2048KB, which should be ok for
+     most systems.
 
      See *note Tuning Memory Usage:: for details.
 
@@ -356,7 +356,7 @@ cropping of the output image.
      is specified.  If no ICC profile is present, Enblend will assume
      that the image uses the sRGB color space.  The difference between
      this option and Enblend's default color blending algorithm is very
-     slight and will be only noticeable when areas of different primary
+     slight and will only be noticeable when areas of different primary
      colors are blended together.
 
 `-d'
@@ -365,26 +365,26 @@ cropping of the output image.
      output image.
 
      Enblend always uses a smart way to change the channel depth to
-     assure highest image quality (at the expense of memory) whether
+     assure highest image quality (at the expense of memory), whether
      requantization is implicit because of the output format or explicit
      with option `--depth'.
 
         * If the output-channel width is larger than the input-channel
           width of the input images, the input images' channels are
           widened to the output channel width immediately after
-          loading, this is, as soon as possible.  Enblend then performs
+          loading, that is, as soon as possible.  Enblend then performs
           all blending operations at the output-channel width, thereby
           preserving minute color details which can appear in the
           blending areas.
 
         * If the output-channel width is smaller than the input-channel
           width of the input images, the output image's channels are
-          narrowed only right before it is written to disk, this is, as
+          narrowed only right before it is written to disk, that is, as
           late as possible.  Thus the data benefits from the wider
           input channels for the longest time.
 
      All DEPTH specifications are valid in lowercase as well as
-     uppercase letters.  For integer format use
+     uppercase letters.  For integer format, use
 
     `8', `uint8'
           Unsigned 8bit; range: 0..255
@@ -401,7 +401,7 @@ cropping of the output image.
     `32', `uint32'
           Unsigned 32bit; range: 0..4294967295
 
-     For floating-point format use
+     For floating-point format, use
 
     `r32', `real32', `float'
           IEEE754 single precision floating-point, 32bit wide, 24bit
@@ -425,7 +425,7 @@ cropping of the output image.
      Enblend warns and chooses the DEPTH that matches best.
 
      The OpenEXR data format is treated as IEEE754 float internally.
-     Externally, this is on disk, OpenEXR data is represented by "half"
+     Externally, on disk, OpenEXR data is represented by "half"
      precision floating-point numbers.
 
      OpenEXR (http://www.openexr.com/about.html#features) half
@@ -465,8 +465,8 @@ cropping of the output image.
      In this version of Enblend, 4.0-227a6153f072, only mask
      optimization strategy 1 benefits from this option.
 
-     Note that GPU-support must have been compiled in the Enblend
-     binary for this option being available.  Find out about this
+     Note that GPU-support must have been compiled into the Enblend
+     binary for this option to be available.  Find out about this
      feature with `enblend --version --verbose'.
 
 `-m CACHESIZE'
@@ -490,8 +490,8 @@ These options control the generation and the usage of masks.
     TAU
           TAU is the temperature reduction factor in the Simulated
           Annealing; it also can be thought of as "cooling factor".  The
-          closer TAU is to one the more accurate the annealing run will
-          be and the longer it will take.
+          closer TAU is to one, the more accurate the annealing run will
+          be, and the longer it will take.
 
           Append a percent sign (`%') to specify TAU as a percentage.
 
@@ -522,7 +522,7 @@ These options control the generation and the usage of masks.
     K-MAX
           K-MAX is the maximum number of "moves" the optimizer will make
           for each line segment.  Higher values more accurately sample
-          the state space at the expense of a higher computation cost.
+          the state space, at the expense of a higher computation cost.
 
           Valid range: K-MAX >= 3.
 
@@ -723,8 +723,8 @@ These options control the generation and the usage of masks.
      visualization image in your bug report.
 
         VISUALIZE-TEMPLATE defines a template that is expanded for each
-     input file.  In a template a percent sign (`%') introduces a
-     variable part.  All other characters are copied literally.
+     input file.  In a template, a percent sign (`%') introduces a
+     variable part; all other characters are copied literally.
      Lowercase letters refer to the name of the respective input file,
      whereas uppercase ones refer to the name of the output file (*note
      Common Options::).  *note Table:mask-template-characters:: lists
@@ -737,7 +737,7 @@ These options control the generation and the usage of masks.
      pair with dark red.
 
         The optimizer's samples are shown in blue.  If a sample is the
-     first of a line segment it is painted in light green; non-first
+     first of a line segment, it is painted in light green; non-first
      line segments are drawn in darker green.  Cyan points indicate
      state space samples inside the DIJKSTRA radius.  Non-converged
      points are drawn in magenta color.  The final seam line is shown
@@ -763,7 +763,7 @@ These options control the generation and the usage of masks.
 
 `%n'
      Expands to the number of the mask file starting at one.  Otherwise
-     it behaves identical to `%i' including pad character and width
+     it behaves identically to `%i', including pad character and width
      specification.
 
 `%p'
@@ -828,7 +828,7 @@ Vols. I and II, pages 83-86.
 *********************
 
 A "binary mask" indicates for every pixel of an image if this pixel
-must be considered in further processing or ignored.  For a "weight
+must be considered in further processing, or ignored.  For a "weight
 mask", the value of the mask determines how much the pixel contributes,
 zero again meaning "no contribution".
 
@@ -897,8 +897,8 @@ Matte
      explanations.
 
    Enblend and Enfuse only consider pixels that have an associated mask
-value different from zero.  If an input image does not have an alpha
-channel, Enblend warns and assumes a mask of all non-zero values, this
+value other than zero.  If an input image does not have an alpha
+channel, Enblend warns and assumes a mask of all non-zero values, that
 is, it will use every pixel of the input image for fusion.
 
    Stitchers like `nona' add a mask to their output images.
@@ -907,7 +907,7 @@ is, it will use every pixel of the input image for fusion.
 example to suppress unwanted objects (insects and cars come into mind)
 that moved across the scene during the exposures.  If the masks of all
 input images are black at a certain position, the output image will
-have a hole there.
+have a hole in that position.
 
 4.2 Weight Mask Files
 =====================
@@ -921,7 +921,7 @@ The default configuration of Enblend and Enfuse assumes a system with
 3-4GB of RAM.
 
    If Enblend and Enfuse have been compiled with the "image-cache"
-feature they do not rely on the operating system's memory management,
+feature, they do not rely on the operating system's memory management,
 but use their own image cache.  To find out whether your version uses
 the image cache say
 
@@ -948,22 +948,22 @@ Memory System and the image cache for several reasons.
      process, which is why it has less detrimental effects on the
      system's overall responsiveness.
 
-   * The image cache has been optimized for accesses to image data.  And
-     all algorithms in Enblend and Enfuse have been carefully arranged
-     to play nice with the image cache.  An operating system's cache
-     has no knowledge of these particular memory access patterns.
+   * The image cache has been optimized for accesses to image data.  All
+     algorithms in Enblend and Enfuse have been carefully arranged to
+     play nice with the image cache.  An operating system's cache has no
+     knowledge of these particular memory access patterns.
 
    * The disk access of the operating system to the swap device has been
      highly optimized.  Enblend and Enfuse on the other hand use the
-     standard IO-layer which is a slower interface.
+     standard IO-layer, which is a slower interface.
 
    * Limiting the amount of image cache prevents Enblend and Enfuse from
      eating up most or all RAM, thereby forcing all user applications
      into the swap.
 
-The CACHE-SIZE should be set in a way as to reconcile all of the above
-aspects even for the biggest data sets, this is, projects with many
-large images.
+The CACHE-SIZE should be set in such a way as to reconcile all of the
+above aspects even for the biggest data sets, that is, projects with
+many large images.
 
    *note Table:cache-size-settings:: suggests some cache- and
 buffer-sizes for different amounts of available RAM.
@@ -993,8 +993,8 @@ Enfuse and Enblend.
         * UFRaw (http://ufraw.sourceforge.net/), a raw converter written
           by UDI FUCHS and based on DCRaw, adds a GUI (`ufraw'),
           versatile batch processing (`ufraw-batch'), and some
-          additional features like, for example, cropping, noise
-          reduction with wavelets, and automatic lens error correction.
+          additional features such as cropping, noise reduction with
+          wavelets, and automatic lens error correction.
 
 *Image Alignment and Rendering*
         * ALE (http://auricle.dyndns.org/ALE/), DAVID HILVERT'S
@@ -1067,27 +1067,37 @@ Enfuse and Enblend.
 Appendix A Authors
 ******************
 
-ANDREW MIHAL (<acmihal@users.sourceforge.net>) has written Enblend and
+ANDREW MIHAL <acmihal@users.sourceforge.net> has written Enblend and
 Enfuse.
 
 
 *Contributors*
 
-   * PABLO D'ANGELO (<dangelo@users.sourceforge.net>) added the
-     contrast criteria.
+   * PABLO D'ANGELO <dangelo@users.sourceforge.net> added the contrast
+     criteria.
 
-   * JOE BEDA: Win32 porting.
+   * JOE BEDA: Win32 porting up to version 3.2.
+
+   * KORNEL BENKO <kornelbenko.sourceforge.net>: CMake support for
+     version 4.0.
+
+   * ROGER GOODMAN: Proofreading of the manuals.
 
    * MAX LYONS.
 
-   * MARK aka mjz: Win32 porting.
+   * MARK aka mjz: Win32 porting up to version 3.2.
 
-   * CHRISTOPH SPIEL (<cspiel@users.sourceforge.net>) added the gray
+   * THOMAS MODES: Win32 porting of version 4.0.
+
+   * RYAN SLEEVI <ryansleevi.sourceforge.net>: Win32 porting of
+     version 4.0.
+
+   * CHRISTOPH SPIEL <cspiel@users.sourceforge.net> added the gray
      projectors, the LoG-based edge detection, an O(n)-algorithm for
      the calculation of local contrast, entropy weighting, and various
      other features.
 
-   * BRENT TOWNSHEND: HDR support.
+   * BRENT TOWNSHEND <btownshend.sourceforge.net>: HDR support.
 
 
 Thanks to SIMON ANDRIOT and PABLO JOUBERT for suggesting the
@@ -1604,11 +1614,11 @@ double precision float, IEEE754:               See 3.2.      (line  416)
 feathering, detrimental effect of:             See 1.        (line   52)
 fine mask:                                     See 3.3.      (line  585)
 free documentation license (FDL):              See Appendix B.
-                                                             (line 1099)
+                                                             (line 1109)
 general index:
-          See ``General Index''.                             (line 1577)
+          See ``General Index''.                             (line 1587)
 GNU free documentation license:                See Appendix B.
-                                                             (line 1099)
+                                                             (line 1109)
 GPU (Graphics Processing Unit):                See 3.2.      (line  461)
 graphics processing unit:                      See 3.2.      (line  461)
 half precision float, OpenEXR:                 See 3.2.      (line  431)
@@ -1619,11 +1629,11 @@ IEEE754 single precision float:                See 3.2.      (line  407)
 image cache, block size:                       See 3.2.      (line  344)
 image cache, cache size:                       See 3.2.      (line  473)
 index, general:
-          See ``General Index''.                             (line 1577)
+          See ``General Index''.                             (line 1587)
 index, option:
-          See ``Option Index''.                              (line 1539)
+          See ``Option Index''.                              (line 1549)
 index, program:
-          See ``Program Index''.                             (line 1497)
+          See ``Program Index''.                             (line 1507)
 input mask:                                    See 4.1.      (line  842)
 invocation:                                    See 3.        (line  166)
 JPEG compression:                              See 3.1.      (line  190)
@@ -1669,7 +1679,7 @@ optimize strategy:                             See 3.3.      (line  653)
 optimize, anneal parameters:                   See 3.3.      (line  487)
 optimizer, simulated annealing:                See 3.3.      (line  487)
 option index:
-          See ``Option Index''.                              (line 1539)
+          See ``Option Index''.                              (line 1549)
 options, common:                               See 3.1.      (line  173)
 options, extended:                             See 3.2.      (line  340)
 options, mask generation:                      See 3.3.      (line  484)
@@ -1682,7 +1692,7 @@ parallax error:                                See 2.        (line  136)
 photometric alignment:                         See 2.        (line  128)
 profile, ICC:                                  See 3.2.      (line  355)
 program index:
-          See ``Program Index''.                             (line 1497)
+          See ``Program Index''.                             (line 1507)
 programs, helpful additional:                  See 6.        (line  986)
 pyramid levels:                                See 3.1.      (line  224)
 radius, DIJKSTRA:                              See 3.3.      (line  572)

@@ -256,7 +256,7 @@ Enfuse uses up to four criteria to judge the quality of a pixel, which
 @item Exposure
 @cindex weighting, exposure
 The exposure criteria favors pixels with luminance close to the middle
-of the range.  These pixels are considered better exposed as those
+of the range.  These pixels are considered better exposed than those
 with high or low luminance levels.
 
 @item Saturation
@@ -267,8 +267,8 @@ saturation is only defined for color pixels.)
 @item Contrast
 @cindex weighting, contrast
 The contrast criteria favors pixels inside a high-contrast
-neighborhood.  Enfuse can use standard deviation or Laplacian
-magnitude or a blend of both as local contrast measure.
+neighborhood.  Enfuse can use standard deviation, Laplacian magnitude,
+or a blend of both as local contrast measure.
 
 @item Entropy
 @cindex weighting, entropy
@@ -283,8 +283,8 @@ black threshold.
 @shortcaption{Weighting criteria}
 @end float
 
-For the concept of pixel weighting and details on the different
-weighting functions see @ref{Weighting Functions}.
+For the concept of pixel weighting, and details on the different
+weighting functions, see @ref{Weighting Functions}.
 
 Adjust how much importance is given to each criterion by setting the
 weight parameters on the command line.  For example, if you set
@@ -353,7 +353,7 @@ Common options control some overall features of Enfuse.
 @cindex compression
 Write a compressed output file.
 
-Depending on the output file format Enfuse accepts different values
+Depending on the output file format, Enfuse accepts different values
 for @var{COMPRESSION}.
 
 @table @asis
@@ -438,7 +438,7 @@ resulting image in @file{a.tif}.
 @itemx --verbose[=@var{LEVEL}]
 @opindex -v
 @opindex --verbose
-Without an argument increase the verbosity of progress reporting.
+Without an argument, increase the verbosity of progress reporting.
 Giving more @option{--verbose}@tie{}options will make Enfuse more
 verbose.  Directly set a verbosity level with a non-negative integral
 @var{LEVEL}.
@@ -479,8 +479,8 @@ The default verbosity level of Enfuse is 1.
 @opindex --version
 Output information on the Enfuse version.
 
-Team this option with @option{--verbose} to inquire configuration
-details like the extra features that have been compiled in.
+Team this option with @option{--verbose} to show configuration
+details, like the extra features that have been compiled in.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -490,8 +490,8 @@ details like the extra features that have been compiled in.
 @cindex wrap around
 Blend around the boundaries of the panorama.
 
-With this option Enfuse treats the panorama of width@tie{}@math{w} and
-height@tie{}@math{h} as an infinite data structure, where each
+With this option, Enfuse treats the panorama of width@tie{}@math{w}
+and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
 pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
 reminded of the
@@ -610,7 +610,7 @@ $$
     S_P(x, y) = \{P(x, y + n h): n \in Z\}.
 $$
 @end tex
-This is useful for 360@textdegree{} vertical panoramas as it
+This is useful for 360@textdegree{} vertical panoramas, as it
 eliminates the top and bottom borders.
 
 @item both
@@ -675,16 +675,16 @@ $$
     S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
 $$
 @end tex
-In this mode both, left and right borders as well as top and bottom
-borders are eliminated.
+In this mode, both left and right borders, as well as top and bottom
+borders, are eliminated.
 @end table
 
 Specifying @option{--wrap} without @var{MODE} selects horizontal
 wrapping.
 
 Version@tie{}@value{VERSION} of Enfuse, the one described here, does
-not blend neither zenith nor or nadir, so you may still see some seams
-in these areas.
+not blend either zenith or nadir, so you may still see some seams in
+these areas.
 @end table
 
 
@@ -703,7 +703,7 @@ Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enfuse's image
 cache.
 
 This is the amount of data that Enfuse will move to and from the disk
-in one go.  The default is 2048@dmn{KB}, which should be ok for most
+at one time.  The default is 2048@dmn{KB}, which should be ok for most
 systems.
 
 See @ref{Tuning Memory Usage} for details.
@@ -722,7 +722,7 @@ The input files should have embedded @acronym{ICC} profiles when this
 option is specified.  If no @acronym{ICC} profile is present, Enfuse
 will assume that the image uses the @acronym{sRGB} color space.  The
 difference between this option and Enfuse's default color blending
-algorithm is slight, and will be only noticeable when areas of
+algorithm is slight, and will only be noticeable when areas of
 different primary colors are blended together.
 
 @item -d
@@ -734,8 +734,8 @@ different primary colors are blended together.
 Force the number of bits per channel and the numeric format of the
 output image.
 
-Enfuse always uses a smart way to change the channel depth to assure
-highest image quality (at the expense of memory) whether
+Enfuse always uses a smart way to change the channel depth, to assure
+highest image quality (at the expense of memory), whether
 requantization is implicit because of the output format or explicit
 with option@tie{}@option{--depth}.
 
@@ -743,7 +743,7 @@ with option@tie{}@option{--depth}.
 @item
 If the output-channel width is larger than the input-channel width of
 the input images, the input images' channels are widened to the output
-channel width immediately after loading, this is, as soon as possible.
+channel width immediately after loading, that is, as soon as possible.
 Enfuse then performs all blending operations at the output-channel
 width, thereby preserving minute color details which can appear in the
 blending areas.
@@ -751,7 +751,7 @@ blending areas.
 @item
 If the output-channel width is smaller than the input-channel width of
 the input images, the output image's channels are narrowed only right
-before it is written to disk, this is, as late as possible.  Thus the
+before it is written to disk, that is, as late as possible.  Thus the
 data benefits from the wider input channels for the longest time.
 @end itemize
 
@@ -814,7 +814,7 @@ format, Enfuse warns and chooses the @var{DEPTH} that matches best.
 
 @cindex @acronym{OpenEXR}, data format
 The @acronym{OpenEXR} data format is treated as
-@acronym{IEEE754}@tie{}float internally.  Externally, this is on disk,
+@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
 @acronym{OpenEXR} data is represented by ``half'' precision
 floating-point numbers.
 
@@ -1081,8 +1081,8 @@ Valid range:
 $\mathit{SIZE} \ge 3$.
 @end tex
 
-Given an even @var{SIZE} Enfuse will automatically use the next odd
-number.
+If given an even @var{SIZE}, Enfuse will automatically use the next
+odd number.
 
 See also @ref{Fusion Options, Option --wContrast} and
 @option{--HardMask} below.
@@ -1166,16 +1166,16 @@ to specify the weight as a percentage.
 @item --EntropyCutoff=@var{LOWER-CUTOFF}
 @itemx --EntropyCutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
 @opindex --EntropyCutoff
-The first form defines the lower cutoff value below of which pixels
-are treated as pure black when calculating the local entropy.  The
-second form also defines the upper cutoff value above of which pixels
-are treated as pure white.
+The first form defines the lower cutoff value below which pixels are
+treated as pure black when calculating the local entropy.  The second
+form also defines the upper cutoff value above which pixels are
+treated as pure white.
 
 For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
 separately and independently to each channel.
 
 Defaults: 0% for @var{LOWER-CUTOFF} and 100% for @var{UPPER-CUTOFF},
-this is, all pixels' values are taken into account.  Append a @samp{%}
+that is, all pixels' values are taken into account.  Append a @samp{%}
 to specify the cutoff relative to maximum pixel value in the source
 image (for example 255 or 65535).  @ref{Figure:entropy-cutoff} shows
 an example.
@@ -1225,7 +1225,7 @@ Valid range:
 $\mathit{SIZE} \ge 3$.
 @end tex
 
-Given an even @var{SIZE} Enfuse will automatically use the next odd
+If given an even @var{SIZE} Enfuse will automatically use the next odd
 number.
 
 @item --GrayProjector=@var{PROJECTOR}
@@ -1262,7 +1262,7 @@ Valid values for @var{PROJECTOR} are:
 @item average
 @cindex gray projector, @samp{average}
 Average red, green, and blue channel with equal weights.  This is the
-default and it often is a good projector for gamma = 1 data.
+default, and it often is a good projector for gamma = 1 data.
 @ifinfo
 @display
 @math{Y = (R + G + B) / 3}
@@ -1487,7 +1487,7 @@ of @option{--SoftMask}.
 
 This blending mode avoids averaging of fine details (only) at the
 expense of increasing the noise.  However it considerably improves the
-sharpness of focus stacks.  Blending with hard masks has solely proven
+sharpness of focus stacks.  Blending with hard masks has only proven
 useful with focus stacks.
 
 See also @ref{Fusion Options, Option --wContrast} and
@@ -1519,8 +1519,8 @@ option@tie{}@option{--HardMask} is effective also save the hard masks.
 The defaults are @file{softmask-%n.tif} and @file{hardmask-%n.tif}.
 @cindex filename template
 @cindex mask, filename template
-In the second form @var{SOFT-MASK-TEMPLATE} defines the names of the
-soft-mask files.  In the third form @var{HARD-MASK-TEMPLATE}
+In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
+soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
 additionally defines the names of the hard-mask files.
 
 Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
@@ -1550,7 +1550,6 @@ Consider all masks when fusing.  This is the default.
 @page
 
 @include mask-template-characters.texi
-
 
 @node Option Delimiters
 @section Option Delimiters
@@ -1971,10 +1970,10 @@ and $r_{\mathrm{ent}}$ are explained in the next sections.
 By default, Enfuse uses a weighted average, where @emph{each} pixel
 contributes as much as its weight demands.  Of course the weights can
 be extreme, favoring only a few pixels or even only one pixel in the
-input stack.  Extremes are untypical, however.
+input stack.  Extremes are not typical, however.
 
 Equal weights are another extreme that turns (W) into an arithmetic
-average.  this is why we sometimes speak of the ``averaging property''
+average.  This is why we sometimes speak of the ``averaging property''
 of this weighting algorithm, like smoothing out noise.
 
 
@@ -2100,7 +2099,7 @@ represents pure white independently of the data type of the input
 image.  This is, for a @acronym{JPEG} image the luminance@tie{}255
 maps to 1.0 in the normalized interval and for a 32@dmn{bit}
 @acronym{TIFF} picture the highest luminance value@tie{}4294967295
-also maps to 1.0.  The middle if the luminance interval, 0.5, is where
+also maps to 1.0.  The middle of the luminance interval, 0.5, is where
 a neutral gray tone ends up with every camera that had no exposure
 correction dialed in, for example the image of a gray- or white-card.
 
@@ -2194,7 +2193,7 @@ vice versa.  Option@tie{}@option{--wSigma} defines the range
 @var{Sigma} of acceptable exposures.  The default is @var{Sigma} =
 0.2, which means at @var{Mu} @plusminus{} 0.2 the weight will be
 approximately 0.88.  Small values of @var{Sigma} penalize exposures
-deviant from @var{Mu} more and vice versa.
+that deviate from @var{Mu} more, and vice versa.
 
 @optionsummaryheading{}
 
@@ -2242,7 +2241,7 @@ algorithm.
 
 @noindent
 Obviously, saturation weighting can only be defined for @acronym{RGB}
-images, not for grayscale ones!  If you need something similar check
+images, not for grayscale ones!  If you need something similar, check
 out @ref{Entropy Weighting}; entropy weighting works for both
 @acronym{RGB} and grayscale pictures.
 
@@ -2283,7 +2282,7 @@ If the @acronym{LoG} magnitude is below a given threshold, use
 Enfuse converts every @acronym{RGB} image to grayscale before it
 determines its contrast.  Option@tie{}@option{--GrayProjector}
 (@pxref{Expert Options}) controls the projector function.  Depending
-on the subject one of several grayscale projectors may yield the best
+on the subject, one of several grayscale projectors may yield the best
 black-and-white contrast for image fusion.
 
 In the following sections we describe each algorithm in detail.
@@ -2320,7 +2319,7 @@ neighboring pixels, which all contribute equally to the weight.}
 @shortcaption{Local analysis window}
 @end float
 
-During the analysis Enfuse scans the local analysis window across all
+During the analysis, Enfuse scans the local analysis window across all
 rows and all columns@footnote{In the current implementation a
 @code{floor(ContrastWindowSize / 2)} wide border around the images
 remains unprocessed and gets a weight of zero.} of each of the input
@@ -2539,7 +2538,7 @@ standard deviation rectifies the dimension to make it comparable with
 @cindex estimators
 
 In Enfuse, we assume that @math{X} follows a uniform probability
-function@tie{}@math{w(x)} = const.  This is, all pixel values in the
+function@tie{}@math{w(x)} = const.  That is, all pixel values in the
 local analysis window are considered to be equally probable.  Thus,
 the expectation value and the variance can be estimated from the pixel
 values like this
@@ -2954,9 +2953,9 @@ See also
 @acronym{HIPR2}: Laplacian of Gaussian}.
 
 Sometimes the @acronym{LoG} is plagued by noise in the input images.
-After all it is a numerical approximation of the second derivative and
-deriving always ``roughens'' a function.  The (normalized) mask files
-relentlessly disclose such problems.  Use
+After all, it is a numerical approximation of the second derivative
+and deriving always ``roughens'' a function.  The (normalized) mask
+files relentlessly disclose such problems.  Use
 option@tie{}@option{--MinCurvature} with a @emph{negative}
 argument@tie{}@var{CURVATURE} to suppress all edges with a curvature
 below @minus{}@var{CURVATURE} (which is a positive value).  Check the
@@ -2999,14 +2998,14 @@ the @acronym{SDev}-weight and the @acronym{LoG}-weight, then uses the
 @acronym{SDev} data.  If the @acronym{LoG} is greater than
 @var{CURVATURE} Enfuse uses the weight delivered by the @acronym{LoG},
 otherwise the @acronym{SDev}-weight is rescaled such that its maximum
-is equal to @var{CURVATURE} and the scaled @acronym{SDev} is used as
+is equal to @var{CURVATURE}, and the scaled @acronym{SDev} is used as
 weight.
 
-This technique merges the two edge detection methods where the are
+This technique merges the two edge detection methods where they are
 best.  The @acronym{LoG} excels with clear edges and cannot be fooled
 by strong but smooth gradients.  However, it is bad at detecting faint
 edges and it is susceptible to noise.  The @acronym{SDev} on the other
-hand shines with even the most marginal edges and resists noise quite
+hand shines with even the most marginal edges, and resists noise quite
 well.  Its weakness is that is is easily deceived by strong and smooth
 gradients.  Tuning @var{CURVATURE} the user can pick the best
 threshold for a given set of images.
@@ -3042,13 +3041,13 @@ threshold for a given set of images.
 Experience has shown that neither the parameters @var{EDGESCALE} and
 @var{CURVATURE} nor the mode of operation (@acronym{SDev}-only,
 @acronym{LoG}-only, or a blend of both) scales to different image
-sizes.  In practice this means that if you start with a set of reduced
-size images, say 2808@classictimes{}1872 pixels, carefully optimize
-@var{EDGESCALE}, @var{CURVATURE} and so on, moreover find
-@acronym{LoG}-only the best mode and then switch to the original
+sizes.  In practice, this means that if you start with a set of
+reduced size images, say 2808@classictimes{}1872 pixels, carefully
+optimize @var{EDGESCALE}, @var{CURVATURE} and so on, and find
+@acronym{LoG}-only the best mode, and then switch to the original
 resolution of 5616@classictimes{}3744 pixels, multiplying (or
 dividing) the parameters by four and sticking to @acronym{LoG}-only
-might @emph{not} result in the best fused image.  For best quality
+might @emph{not} result in the best fused image.  For best quality,
 perform the parameter optimization and the search for the most
 appropriate mode at the final resolution.
 
@@ -3274,11 +3273,11 @@ the center degrades @math{H} into a non-local measure.  For small
 windows the opposite holds true.
 
 Another difficulty arises from the use of entropy as a weighting
-function in dark parts of an image, this is, in areas where the
-signal-to-noise ratio is low.  Without any precautions high noise is
-taken to be high entropy, which might not be desired.
-Use option@tie{}@option{--EntropyCutoff} to control the black level
-when computing the entropy.
+function in dark parts of an image, that is, in areas where the
+signal-to-noise ratio is low.  Without any precautions, high noise is
+taken to be high entropy, which might not be desired.  Use
+option@tie{}@option{--EntropyCutoff} to control the black level when
+computing the entropy.
 
 On the other extreme side of lightness, very light parts of an image,
 the sensor might already have overflown without the signal reaching
@@ -3321,8 +3320,8 @@ setting the second argument of @option{--EntropyCutoff}.
 @chapter Applications of Enfuse
 @cindex applications of enfuse
 
-The section describes some of the novel possibilities that Enfuse
-offers the photographer.  In contrast to the previous chapters it
+This section describes some of the novel possibilities that Enfuse
+offers the photographer.  In contrast to the previous chapters, it
 centers around the image effects.
 
 @menu
@@ -3354,10 +3353,10 @@ format that Enfuse expects.
 Sometimes images naturally align extremely well so that no
 re-alignment is required.  An image series with preprogrammed exposure
 steps taken in rapid succession where the camera is mounted on a heavy
-tripod and a humongous ball head, mirror lockup and a cable release
-are used comes into mind.
+tripod and a humongous ball head, mirror lockup, and a cable release
+are used, comes to mind.
 
-When in doubt what will work, try it, and judge for yourself.
+When in doubt about what will work, try it, and judge for yourself.
 
 @noindent
 Useful ideas for a good alignment:
@@ -3392,9 +3391,9 @@ sometimes called ``flash exposure lock''.
 Disable ``Auto @acronym{ISO}''.
 
 @item White balance
-Disable ``Auto White Balance''.  Instead use the most suitable fixed
+Disable ``Auto White Balance''.  Instead, use the most suitable fixed
 white balance or take the white balance off a white card.  When in
-doubt use the setting ``Daylight'' or equivalent.
+doubt, use the setting ``Daylight'' or equivalent.
 @end table
 
 @item
@@ -3406,7 +3405,7 @@ Apply your best camera bracing technique combined with controlled
 breathing.
 
 @item
-Prefer a monopod or better rigid tripod with a heavy head.
+Prefer a monopod, or better, a rigid tripod with a heavy head.
 
 @item
 Use a cable release if possible.
@@ -3420,10 +3419,10 @@ Consider automatic bracketing when applicable.
 
 @item
 Activate camera- or lens-based image stabilization if you are sure
-that it improves the image quality in your particular case, otherwise
+that it improves the image quality in your particular case; otherwise
 disengage the feature.
 
-For some lens-based image stabilization systems it is known that they
+For some lens-based image stabilization systems, it is known that they
 ``lock'' into different positions every time they are activated.
 Moreover, some stabilization systems decrease the image quality when
 the lens is mounted on a tripod.
@@ -3445,17 +3444,17 @@ Fire in rapid succession.
 @mainpurpose Reduce noise
 
 @noindent
-With the default settings Enfuse computes a weighted average of the
+With the default settings, Enfuse computes a weighted average of the
 input pixels.  For a series of images, repeated with identical
-settings this results in a reduction of (photon shot) noise.  In other
-words, the dynamic range increases slightly, because the higher
+settings, this results in a reduction of (photon shot) noise.  In
+other words, the dynamic range increases slightly, because the higher
 signal-to-noise ratio makes darker shades usable.  Furthermore, smooth
-or glossy surfaces get a ``cleaner'' look and edges become visually
+or glossy surfaces get a ``cleaner'' look, and edges become visually
 sharper.  The nitty-gritty reportage look that sometimes stems from a
 high sensitivity setting disappears.
 
-Averaged images and therefore low-noise images are the base for a
-multitude of techniques like for example differences.  The most
+Averaged images, and therefore low-noise images, are the base for a
+multitude of techniques like, for example, differences.  The most
 prominent method in this class is dark-frame subtraction.
 
 The defaults set @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}.
@@ -3480,30 +3479,30 @@ manual of your model for details.
 Enfuse's defaults, @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}
 are well suited for fusion of @emph{color} images.  Remember that
 saturation weighting only works for @acronym{RGB} data.
-Option@tie{}@option{--wSaturation} helps controlling burnt-out
-highlights as these are heavily desaturated.  If no image suffers from
-troublesome highlights, the relative saturation weight can be reduced
-and even be set to zero.  For black and white images
+Option@tie{}@option{--wSaturation} helps to control burnt-out
+highlights, as these are heavily desaturated.  If no image suffers
+from troublesome highlights, the relative saturation weight can be
+reduced and even be set to zero.  For black and white images
 @option{--wEntropy} can be an alternative to @option{--wSaturation}
-because it suppresses overexposed pixels as these contain little
+because it suppresses overexposed pixels, as these contain little
 information.  However, entropy weighting is not limited to grayscale
-data.  It has been successfully applied to @acronym{RGB} images, too.
+data; it has been successfully applied to @acronym{RGB} images, too.
 Note that saturation weighting considers @emph{each} color channel of
 an @acronym{RGB} image separately and chooses the channel with the
 minimum entropy as representative for the whole pixel.
 
-Enfuse offers the photographer tremendous flexibility on fusing
-differently exposed images.  Whether you combine only two pictures or a
-series of 21, Enfuse imposes no limits on you.  Accordingly, the
-photographic effects achieved range from subtle to surreal like the
-late 1980s ``Max Headroom'' @acronym{TV}-Series to really unreal.
-Like some time ago in the chemical days of photography a new developer
-opened unseen possibilities for artists, exposure fusion extends a
-photographer's expressive space in the digital age.  Whether the
-results look good or bad, whether the images are dull or exciting is
-entirely up the artist.
+Enfuse offers the photographer tremendous flexibility in fusing
+differently exposed images.  Whether you combine only two pictures or
+a series of 21, Enfuse imposes no limits on you.  Accordingly, the
+photographic effects achieved range from subtle to surreal, like the
+late 1980s ``Max Headroom'' @acronym{TV}-Series, to really unreal.
+Like some time ago in the chemical days of photography, when a new
+developer opened unseen possibilities for artists, exposure fusion
+extends a photographer's expressive space in the digital age.  Whether
+the results look good or bad, whether the images are dull or exciting,
+is entirely up the artist.
 
-In the next sections we give assistance to starters and rectify
+In the next sections we give assistance to starters, and rectify
 several misconceptions about Enfuse.
 
 @menu
@@ -3522,21 +3521,21 @@ Here are some tips to get you in business quickly.
 @item Include the best single exposure.
 Include the exposure you would have taken if you did not use Enfuse in
 your series.  It gives you a solid starting point.  Think of the other
-images as augmenting this best single exposure to bring out the
-light and dark features you would like to see.
+images as augmenting this best single exposure to bring out the light
+and dark features you would like to see.
 
-@item Begin with as little a number of images as possible.
+@item Begin with as small a number of images as possible.
 Pre-visualizing the results of Enfuse is difficult.  The more images
-enter the fusion process and the wider their @acronym{EV}-spacing is,
-the more challenging thinking of the output image becomes.  Therefore,
-start off with as little images as possible.
+put into the fusion process and the wider their @acronym{EV}-spacing
+is, the more challenging visualizing the output image becomes.
+Therefore, start off with as few images as possible.
 
 You can take a larger series of images and only use part of it.
 
 @item Start with a moderate @acronym{EV}-spacing.
 As has been pointed out in the previous item, a wide
-@acronym{EV}-spacing makes pre-visualization harder.  So set out with
-a spacing of 2/3@dmn{EV} to 1+1/3@dmn{EV}.
+@acronym{EV}-spacing makes pre-visualization harder.  So start out
+with a spacing of 2/3@dmn{EV} to 1+1/3@dmn{EV}.
 @end table
 
 
@@ -3561,7 +3560,7 @@ filter) or
 blending exposures} in an image manipulation program.  Moreover,
 perfect alignment comes free of charge!
 
-@item An exposure series must feature symmetric exposures.
+@item An exposure series must feature symmetrically-spaced exposures.
 Twice wrong!  Neither do the exposures have to be ``symmetric'' like
 @{0@dmn{EV}, @minus{}2/3@dmn{EV}, +2/3@dmn{EV}@}, nor does the number
 of exposures have to be odd.  Series like
@@ -3571,8 +3570,8 @@ order in which the images were taken does not matter either.
 
 @item An exposure series must cover the whole dynamic range of the scene.
 @cindex light probe
-Unless you do not want to cover the whole range, you do not have to.
-Some @acronym{HDR} programs require the user to take a light
+If you do not want to cover the whole range, you do not have to.  Some
+@acronym{HDR} programs require the user to take a light
 probe,@footnote{@uref{http://@/www.debevec.org/, Paul E.@tie{}Debevec}
 defines: ``A @dfn{light probe} image is an omnidirectional, high
 dynamic range image that records the incident illumination conditions
@@ -3581,8 +3580,8 @@ complete freedom of exposure.
 
 @item All exposure values must be different.
 You can repeat any exposure as often as you like.  That way you
-combine and exposure series with parts of @ref{Repetition},
-emphasizing the multiply occuring exposures and reducing noise.
+combine an exposure series with parts of @ref{Repetition}, emphasizing
+the multiply occuring exposures and reducing noise.
 @end table
 
 
@@ -3605,7 +3604,7 @@ emphasizing the multiply occuring exposures and reducing noise.
 
 @mainpurpose Reflection suppression, saturation enhancement
 
-In the current implementation of Enfuse it is not possible in general
+In the current implementation of Enfuse, it is not possible in general
 to fuse a polarization series.  Na@"{@dotless{i}}vely abusing
 @option{--wSaturation} will not work.
 
@@ -3665,12 +3664,12 @@ This is exactly what Enfuse can do.
 @cindex sweet spot aperture
 @cindex aperture, sweet spot
 All lenses have a so called ``sweet spot'' aperture, where their
-resolution is best.  Taking pictures at this aperture the photographer
-squeezes the maximum quality out of the lens.  But: the ``sweet spot''
-aperture often is only one or two stops away from wide open.  Wouldn't
-it be great to be able combine these best-possible images to form one
-high-quality, sufficient-@acronym{DOF} image?  Welcome to Enfuse's
-contrast selection abilities.
+resolution is best.  Taking pictures at this aperture, the
+photographer squeezes the maximum quality out of the lens.  But: the
+``sweet spot'' aperture often is only one or two stops away from wide
+open.  Wouldn't it be great to be able combine these best-possible
+images to form one high-quality, sufficient-@acronym{DOF} image?
+Welcome to Enfuse's contrast selection abilities.
 
 
 @node Preparing Focus Stacks
@@ -3710,7 +3709,7 @@ enfuse \
 @end example
 
 @noindent
-Here is what the option cause.
+Here is what each option causes:
 
 @table @option
 @item --wExposure=0
@@ -3726,16 +3725,16 @@ Switch @strong{on} pixel selection based on contrast.
 
 @item --HardMask
 Select the best pixel from the image stack and ignore all others.
-Without this option Enfuse uses all pixels in the stack and weights
+Without this option, Enfuse uses all pixels in the stack and weights
 them according to their respective quality, which in our case would be
-contrast.  Without @option{--HardMask} the result will always look a
+contrast.  Without @option{--HardMask}, the result will always look a
 bit soft.  @xref{Contrast Weighting}.
 @end table
 
 @noindent
 If you want to see some entertaining progress messages -- contrast
-weighting takes a while --, also pass the @option{-v}@tie{}option
-for a verbose progress report.
+weighting takes a while --, also pass the @option{-v}@tie{}option for
+a verbose progress report.
 
 
 @node Basic Focus Stacking
@@ -3746,10 +3745,10 @@ for a verbose progress report.
 For a large class of image stacks Enfuse's default algorithm, as
 selected in @ref{Contrast Based Fusing}, to determine the sharpness
 produces nice results.  The algorithm uses a moving square window, the
-so called contrast window.  It computes the standard deviation of the
+so-called contrast window.  It computes the standard deviation of the
 pixels inside of the window.  The program then selects the window's
 center pixel of the image in the stack where the standard deviation is
-largest, this is the local contrast reaches the maximum.
+largest, that is, the local contrast reaches the maximum.
 
 However, the algorithm fails to deliver good masks for images which
 exhibit high contrast edges on the scale of the contrast window size.
@@ -3768,9 +3767,9 @@ contrast edges,
 where the distance of the seams from the middle of the edge is
 comparable to the contrast window size.
 
-If your results do not show any of this artifacts, stick with the
-basic algorithm.  Advanced focus stacking as described in the next
-sections delivers superior results in case of artifacts, though
+If your results do not show any of these artifacts, stick with the
+basic algorithm.  Advanced focus stacking, as described in the next
+sections, delivers superior results in case of artifacts, though
 requires manually tuning several parameters.
 
 
@@ -3780,7 +3779,7 @@ requires manually tuning several parameters.
 @cindex focus stacking, advanced
 
 If your fused image shows any of the defects described in the previous
-section, you can try a more difficult to use algorithm that
+section, you can try a more difficult-to-use algorithm that
 effectively works around the seam artifacts.  It is described in the
 next section.
 
@@ -3819,7 +3818,7 @@ smooth_edge = #(    0,   62,  125,  187,  250;
                     5,   67,  130,  192,  255)
 @end example
 
-where @samp{;} separates the rows and @samp{,} separates the colons.
+where @samp{;} separates the rows and @samp{,} separates the columns.
 This is in fact @uref{http://@/www.ava.fmi.fi/@/~pjanhune/@/tela/,
 Tela} syntax.
 
@@ -3850,12 +3849,12 @@ matrix, whereas the second one describes an extraordinarily smooth
 diagonal intensity ramp.  Which one will be selected?  Well,
 @code{sharp_edge} has a standard deviation of 88.07 and
 @code{smooth_edge} has 88.41.  Thus, @code{smooth_edge} wins,
-contradicting our intuition and even worse our intention!
+contradicting our intuition, and even worse, our intention!
 
 Sadly, configurations like @code{smooth_edge} occur more often with
 high-quality, good
 @uref{http://@/www.luminous-landscape.com/@/essays/@/bokeh.shtml,
-bokeh} lenses.  In fact they are the very manifestation of ``good
+bokeh} lenses.  In fact, they are the very manifestation of ``good
 bokeh''.  Therefore, Laplacian edge detection plays an important role
 when working with high-quality lenses.
 
@@ -3871,7 +3870,7 @@ is activated with a positive value for @var{SCALE} in
 @code{--EdgeScale}=@/@var{SCALE}.  The Laplacian will detect
 two-dimensional @emph{curvature} on the scale of @var{SCALE}.  Here
 and in the following we simply speak of ``curvature'' where we mean
-``magnitude of curvature''.  This is, we shall not distinguish between
+``magnitude of curvature''.  That is, we shall not distinguish between
 convex and concave edges.  Enfuse always use the magnitude of
 curvature for weighting.
 
@@ -3917,8 +3916,9 @@ By default @acronym{LCE} is turned off.
 @cindex advanced focus stacking, suppressing noise
 @cindex advanced focus stacking, recognizing faint edges
 
-The Laplacian-based algorithm much better resists the seam problem
-than the local-contrast algorithm, but it has two shortcomings:
+The Laplacian-based algorithm is much better at resisting the seam
+problem than the local-contrast algorithm, but it has two
+shortcomings:
 
 @enumerate
 @item
@@ -3935,19 +3935,19 @@ absolute lightness value, for example 0..255 for 8@dmn{bit} data and
 0..65535 for 16@dmn{bit} data, or, when given with a @samp{%}-sign it
 is a relative lightness value ranging from 0% to 100%.
 
-To suppress unreal edges or counter excessive noise use the
+To suppress unreal edges or counter excessive noise, use the
 @option{--MinCurvature} option with a @emph{negative} curvature
 measure @var{CURVATURE}.  This forces all curvatures less than
 @minus{}@var{CURVATURE} to zero.
 
 A @emph{positive} curvature measure @var{CURVATURE} makes Enfuse merge
 the @acronym{LoG} data with the local-contrast data.  Every curvature
-larger or equal to @var{CURVATURE} is left unchanged and every
-curvature less than @var{CURVATURE} gets replaced by the rescaled
-local-contrast data such that the largest local contrast is just below
-@var{CURVATURE}.  This combines the best parts of both techniques and
-ensures a precise edge detection over the whole range of edge
-curvatures.
+larger than or equal to @var{CURVATURE} is left unchanged, and every
+curvature less than @var{CURVATURE} gets replaced with the rescaled
+local-contrast data, such that the largest local contrast is just
+below @var{CURVATURE}.  This combines the best parts of both
+techniques and ensures a precise edge detection over the whole range
+of edge curvatures.
 
 @noindent
 @strong{Summary}
@@ -3988,8 +3988,7 @@ a window of 7@classictimes{}7@dmn{pixel} window to compute the
 @cindex decision tree, focus stacking
 
 Figure@tie{}@ref{Figure:focus-stacking-decision-tree} helps the user
-to arrive at a well-fused focus stack with as little steps as
-possible.
+to arrive at a well-fused focus stack with as few steps as possible.
 
 @float Figure,Figure:focus-stacking-decision-tree
 @image{focus-stack-decision-tree}
@@ -4007,7 +4006,7 @@ If some seams remain even in @acronym{LoG}-mode, decrease the
 sensitivity of the edge detection with a positive
 @option{--MinCurvature}.  A too high value of @option{--MinCurvature}
 suppresses fine detail though.  Part of the detail can be brought back
-with pre-sharpening, this is, @ref{Local Contrast Enhancement} or
+with pre-sharpening, that is, @ref{Local Contrast Enhancement} or
 combining @acronym{LoG} with local-contrast-window mode by using a
 negative @option{--MinCurvature}.
 
@@ -4020,8 +4019,8 @@ Enfuse uses helps to judge the effects of the parameters.
 @cindex expert focus stacking tips
 @cindex tips, focus stacking experts
 
-We have collected some advice of which even focus stacking adepts can
-benefit.
+We have collected some advice with which even focus-stacking adepts
+can benefit.
 
 @itemize
 @item
@@ -4032,28 +4031,28 @@ Aligning focus stacks requires varying the viewing angle, which
 corresponds to a changing focal length.  Hence, the same pixel on the
 sensor gets mapped onto different positions in the final image.  Dirt
 spots will occur not only once but as many times as there are images
-in the stack -- something unfunny to correct in postprocessing.
+in the stack -- something that is no fun to correct in postprocessing.
 
 @cindex dark frame
 @cindex subtraction of dark frame
 @cindex hot pixels
 @cindex pixels, hot
-Along the same lines the photographer may want to consider to prepare
-dark frames before and possibly also after the shoot of the focus
-stack to subtract hot pixels before fusion.
+Along the same lines, the photographer may want to consider to prepare
+dark frames before, and possibly also after, the shoot of the focus
+stack, to subtract hot pixels before fusion.
 
 @item
 @opindex --HardMask
-Prefer a low-sensitivity setting on the camera to get low-noise
-images.
+Prefer a low-sensitivity setting (``@acronym{ISO}'') on the camera to
+get low-noise images.
 
-Fusing with @option{--HardMask} does not average and thus does not
+Fusing with @option{--HardMask} does not average, and thus does not
 suppress any noise in the input images.
 
 @item
 If the transition of in-focus to out-of-focus areas is too abrupt,
 record the images with closest and farthest focusing distances twice:
-first with the intended working aperture and a second time with a
+first with the intended working aperture, and a second time with a
 small aperture (large aperture number).
 
 @cindex natural sharp-unsharp transition
