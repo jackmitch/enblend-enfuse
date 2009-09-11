@@ -60,23 +60,7 @@ if (APPLE)
   find_package(OpenGL)
 endif(APPLE)
 
-find_package(GLUT)
-find_package(GLEW)
-set(HAVE_LIBGLEW ${GLEW_FOUND})
-find_library(HAVE_LIBLCMS lcms REQUIRED)
-find_library(HAVE_LIBXMI xmi REQUIRED)
-find_library(HAVE_LIBZ z)
-find_package(Threads)
-if(CMAKE_HAVE_PTHREAD_H AND CMAKE_HAVE_PTHREAD_CREATE)
-  set(HAVE_PTHREAD 1)
-endif()
-
 check_type_size( ptrdiff_t    HAVE_PTRDIFF_T )
-find_package(OpenMP)
-if(${OpenMP_FLAG_DETECTED})
-  add_definitions(${OpenMP_CXX_FLAGS})
-  set(HAVE_OPENMP 1)
-endif()
 # How to check  if stdbool.h conforms to C99?
 
 check_cxx_source_compiles(
@@ -93,14 +77,7 @@ check_cxx_source_compiles(
     int main(){return(0);}
     "
     HAVE_SYS_NDIR_H)
-find_package(OpenEXR REQUIRED)
-set(HasEXR ${OPENEXR_FOUND})
-find_package(JPEG REQUIRED)
-set(HasJPEG ${JPEG_FOUND})
-find_package(PNG REQUIRED)
-set(HasPNG ${PNG_FOUND})
-find_package(TIFF REQUIRED)
-set(HasTIFF ${TIFF_FOUND})
+
 check_include_files("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
 check_cxx_source_compiles(
   "

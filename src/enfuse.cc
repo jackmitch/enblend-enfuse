@@ -22,7 +22,9 @@
 #endif
 
 #ifdef _MSC_VER
+#ifndef HAVE_CONFIG_H
 #include <win32helpers\win32config.h>
+#endif
 #define isnan _isnan
 #endif // _MSC_VER
 

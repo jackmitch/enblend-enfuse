@@ -35,6 +35,8 @@ IF(MSVC)
   find_package_handle_standard_args(STLport DEFAULT_MSG STLport_INCLUDE_DIR STLport_LIBRARIES_DIR)
   
   MARK_AS_ADVANCED(
+    STLport_ROOT_DIR
     STLport_INCLUDE_DIR
+	STLport_LIBRARIES_DIR
   )		  
 ENDIF(MSVC)

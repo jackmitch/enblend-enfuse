@@ -15,9 +15,6 @@ IF (WIN32)
     PATH_SUFFIXES 
 	  glut
 	  glut-3.7.6
-    PATHS 
-	  ${GLUT_ROOT_PATH}
-	  ${SOURCE_BASE_DIR}
   )
   
   FIND_PATH(GLUT_INCLUDE_DIR
@@ -35,6 +32,7 @@ IF (WIN32)
 	  ${OPENGL_LIBRARY_DIR}
       ${GLUT_ROOT_PATH}/lib/glut
   )
+  
 ELSE (WIN32)
   
   IF (APPLE)

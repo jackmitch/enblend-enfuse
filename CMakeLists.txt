@@ -16,10 +16,9 @@ endif(COMMAND cmake_policy)
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
 project(enblend)
-set(CMAKE_BUILD_TYPE Release CACHE STRING
-	"Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-	FORCE)
-
+IF(NOT MSVC)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+ENDIF(NOT MSVC)
 # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/
 # is checked
 # For now, reuse the hugin modules directory
@@ -42,7 +41,6 @@ set(EXECUTABLE_OUTPUT_PATH  ${CMAKE_BINARY_DIR}/bin)
 
 # Regenerate when calling make
 set(CMAKE_SUPPRESS_REGENERATION FALSE)
-
 set(VERSION_INFO "CMake Build")
 
 macro(setstripped _varname _value)
@@ -58,118 +56,13 @@ endmacro(setstripped)
 set(TOP_SRC_DIR ${CMAKE_SOURCE_DIR})
 file(STRINGS "${TOP_SRC_DIR}/VERSION" _version_lines)
 foreach(_v_l ${_version_lines})
-  #if (_v_l MATCHES "^\([0-9]+\)\.\([0-9]+\)-\([0-9a-z]+\)")
   if (_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\)-\([0-9a-z]+\)")
     setstripped(ENBLEND_MAJOR_VERSION ${CMAKE_MATCH_1})
     setstripped(ENBLEND_MINOR_VERSION ${CMAKE_MATCH_2})
     message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}")
     set(PACKAGE_VERSION "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-hg")
   endif()
-endforeach()
-
-## COPIED FROM HUGIN - Needs to run early on to set SOURCE_BASE_DIR for WIN32
-IF(WIN32)
-  STRING( REGEX REPLACE "(.*)/[^/]+$" "\\1" work "${CMAKE_SOURCE_DIR}" )
-  # create the cache entry
-  SET( SOURCE_BASE_DIR ${work} CACHE FILEPATH "parent dir of hugin source root" )
-  # wxWidgets
-  SET(wxWidgets_ROOT_DIR ${SOURCE_BASE_DIR}/wxWidgets-2.8.10)  
-ENDIF(WIN32)
-
-# First include so it picks up (our) config.h
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
-
-SET(wxWidgets_USE_LIBS base core)
-FIND_PACKAGE(wxWidgets REQUIRED)
-
-OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
-OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
-OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
-IF(NOT CMAKE_CL_64)
-  OPTION(ENABLE_SSE2 "SSE2 Support" OFF)
-ELSE(NOT CMAKE_CL_64)
-  SET(ENABLE_SSE2 OFF)
-ENDIF(NOT CMAKE_CL_64)
-
-IF(ENABLE_OPENMP)
-  find_package(OpenMP REQUIRED)
-  add_definitions(${OpenMP_CXX_FLAGS})
-ENDIF(ENABLE_OPENMP)
-
-IF(ENABLE_IMAGECACHE AND ENABLE_OPENMP)
-  MESSAGE(FATAL_ERROR "The image cache does not currently work with OpenMP. You must disable either the image cache or OpenMP.")
-ENDIF(ENABLE_IMAGECACHE AND ENABLE_OPENMP)
-
-
-IF(ENABLE_IMAGECACHE)
-  ADD_DEFINITIONS("-DENBLEND_CACHE_IMAGES")
-ENDIF(ENABLE_IMAGECACHE)
-
-IF(ENABLE_GPU)
-  find_package(GLUT REQUIRED)
-  find_package(GLEW REQUIRED)
-  
-  INCLUDE_DIRECTORIES(${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
-  set(common_libs ${GLUT_LIBRARIES} ${GLEW_LIBRARIES})
-  ADD_DEFINITIONS(-DHAVE_LIBGLEW)
-ENDIF(ENABLE_GPU)
-
-IF(ENABLE_SSE2)
-  IF(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -msse2 -mtune=pentium4")
-  ELSEIF(MSVC)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2")
-  ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-ENDIF(ENABLE_SSE2)
-
-IF(MSVC)
-  ADD_DEFINITIONS("-D_CRT_SECURE_NO_DEPRECATE")
-ENDIF(MSVC)
-
-find_library(LIBZ z)
-
-FIND_PACKAGE(TIFF REQUIRED)
-FIND_PACKAGE(JPEG REQUIRED)
-FIND_PACKAGE(PNG REQUIRED)
-FIND_PACKAGE(OpenEXR REQUIRED)
-FIND_PACKAGE(LCMS REQUIRED)
-FIND_PACKAGE(LibXMI REQUIRED)
-IF(MSVC)
-  FIND_PACKAGE(STLport REQUIRED)
-ENDIF(MSVC)
-FIND_PACKAGE(Threads)
-SET(HasTIFF ${TIFF_FOUND})
-SET(HasJPEG ${JPEG_FOUND})
-SET(HasPNG ${PNG_FOUND})
-SET(HasEXR ${OPENEXR_FOUND})
-
-##
-## Boost
-##
-IF(WIN32)
-  SET(Boost_USE_STATIC_LIBS ON)
-  # If BOOST_ROOT was defined in the environment, use it. 
-  if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
-    set(BOOST_ROOT $ENV{BOOST_ROOT}) 
-  else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
-    set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost_1_39_0) 
-   endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
-   SET(BOOST_DIR_SEARCH_USER ${BOOST_ROOT})
-ENDIF(WIN32)
-FIND_PACKAGE(Boost REQUIRED thread date_time)
-IF (NOT Boost_FOUND)
-  MESSAGE(FATAL_ERROR "boost library not found. If it is installed with a\nunrecognized suffix, specify it with -DBOOST_LIBRARYDIR=<librarydir> and -DBOOST_INCLUDEDIR=<includedir>")
-ENDIF (NOT Boost_FOUND)
-
-
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${STLport_INCLUDE_DIR})
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS} ${STLport_LIBRARIES_DIR})
-
-MESSAGE(STATUS "Boost inc dirs = ${Boost_INCLUDE_DIRS}")
-
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR} ${TIFF_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${LCMS_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${OPENEXR_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${iconv_INCLUDE_DIR})
-set(common_libs ${common_libs} ${Boost_LIBRARIES} ${JPEG_LIBRARIES} ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES})
+endforeach(_v_l)
 
 # here I don't know, how to get the revision number from mercurial
 # so the try is "hg tip"
@@ -186,34 +79,243 @@ else()
   set(CPACK_PACKAGE_VERSION_PATCH 468)
 endif()
 
+# For Win32 builds, assume that all of the libraries are located
+# one directory above the current CMakeLists directory
+IF(WIN32)
+  STRING( REGEX REPLACE "(.*)/[^/]+$" "\\1" work "${CMAKE_SOURCE_DIR}" )
+  # create the cache entry
+  SET( SOURCE_BASE_DIR ${work} CACHE FILEPATH "parent dir of hugin source root" )
+  SET(wxWidgets_ROOT_DIR ${SOURCE_BASE_DIR}/wxWidgets-2.8.10)  
+  
+  LIST(APPEND CMAKE_PREFIX_PATH ${SOURCE_BASE_DIR})
+ENDIF(WIN32)
+
+# First include so it picks up (our) config.h
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
+
+SET(library_type STATIC)
+set(common_libs)
+ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
+
+# Configurable options
+OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
+OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
+OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
+IF(NOT CMAKE_CL_64)
+  OPTION(ENABLE_SSE2 "SSE2 Support (Release builds only)" OFF)
+ELSE(NOT CMAKE_CL_64)
+  SET(ENABLE_SSE2 OFF CACHE INTERNAL "")
+ENDIF(NOT CMAKE_CL_64)
+IF(NOT WIN32)
+  OPTION(ENABLE_DMALLOC "Use the dmalloc debugging package" OFF)
+  OPTION(ENABLE_DMALLOC_FUNC_CHECK "Enable dmalloc function checking" OFF)
+ELSE(NOT WIN32)
+  SET(ENABLE_DMALLOC OFF CACHE INTERNAL "")
+  SET(ENABLE_DMALLOC_FUNC_CHECK OFF CACHE INTERNAL "")
+ENDIF(NOT WIN32)
+
+# Compiler specific tweaks and optimizations
+IF(CMAKE_COMPILER_IS_GNUCXX)
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -DNDEBUG -Wall")
+  IF(APPLE AND (CMAKE_MAJOR_VERSION LESS 2 OR (CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)))
+      ## Add needed Compiler and Linker flags for OSX
+      SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flat_namespace -undefined suppress" )
+      SET (CMAKE_CXX_FLAGS "{$CMAKE_CXX_FLAGS} -flat_namespace -undefined suppress" )
+      SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flat_namespace -undefined suppress" )
+      SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flat_namespace -undefined suppress" )
+      SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flat_namespace -undefined suppress" )
+  ENDIF(APPLE AND (CMAKE_MAJOR_VERSION LESS 2 OR (CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)))
+ELSEIF(WIN32)
+  IF(MSVC)
+    # Quiet some compiler noise
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
+	ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+	
+	# Due to the number of templates and the added overhead in .obj files from 64-bit builds
+	# add /bigobj support
+	# details: http://msdn.microsoft.com/en-us/library/ms173499.aspx
+    IF(CMAKE_CL_64)
+	  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /bigobj")
+	  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+	ENDIF(CMAKE_CL_64)
+	
+	# Maximize speed
+	STRING(REPLACE " /O2 " " /Ox /GL " CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	STRING(REPLACE " /O2 " " /Ox /GL " CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+	
+	SET(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /GL")
+  ENDIF(MSVC)
+  
+  # wxWidgets is required on Windows platforms for the TIFF/JPEG/PNG support
+  FIND_PACKAGE(wxWidgets REQUIRED png jpeg tiff) 
+  LIST(APPEND common_libs ${wxWidgets_LIBRARIES})
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+# Required Libraries first
+FIND_PACKAGE(LCMS REQUIRED)
+FIND_PACKAGE(LIBXMI REQUIRED)
+FIND_PACKAGE(TIFF REQUIRED)
+LIST(APPEND common_libs ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES})
+include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS_INCLUDE_DIR})
+
+# Platform specifics required libraries
+IF(WIN32) 
+  FIND_PACKAGE(STLport REQUIRED)
+  
+  include_directories(${STLport_INCLUDE_DIR})
+  link_directories(${STLport_LIBRARIES_DIR})
+  SET(Boost_USE_STATIC_LIBS ON)
+ENDIF(WIN32)
+
+# TODO: Only the headers are necessary. None of the libraries
+# are required to build
+FIND_PACKAGE(Boost COMPONENTS filesystem)
+
+IF(Boost_filesystem_FOUND)
+  ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
+ENDIF(Boost_filesystem_FOUND)
+
+IF(Boost_FOUND)
+  LIST(APPEND common_libs ${Boost_LIBRARIES})
+  link_directories(${Boost_LIBRARY_DIR})
+  include_directories(${Boost_INCLUDE_DIR})
+ENDIF(Boost_FOUND)
+
+# Optional Libraries
+FIND_PACKAGE(ZLIB)
+FIND_PACKAGE(JPEG)
+FIND_PACKAGE(PNG)
+FIND_PACKAGE(OpenEXR)
+FIND_PACKAGE(Threads)
+
+# VIGRA uses Has* pre-processor definitions for config.h
+ADD_DEFINITIONS(-DHasTiff)
+
+IF(ZLIB_FOUND)
+  LIST(APPEND common_libs ${ZLIB_LIBRARIES})
+  include_directories(${ZLIB_INCLUDE_DIR})
+ELSEIF(WIN32 AND (NOT ZLIB_FOUND AND (PNG_FOUND OR JPEG_FOUND)))
+  MESSAGE(STATUS "Disabling support for PNG due to lack of zlib") 
+  SET(PNG_FOUND 0)
+ENDIF(ZLIB_FOUND)
+
+IF(JPEG_FOUND)
+  ADD_DEFINITIONS(-DHasJPEG)
+  list(APPEND common_libs ${JPEG_LIBRARIES})
+  include_directories(${JPEG_INCLUDE_DIR})
+ELSE(JPEG_FOUND)
+  MESSAGE(STATUS "Compiling without support for JPEG files")
+ENDIF(JPEG_FOUND)
+
+IF(PNG_FOUND)
+  ADD_DEFINITIONS(-DHasPNG)
+  list(APPEND common_libs ${PNG_LIBRARIES})
+  include_directories(${PNG_INCLUDE_DIR})
+ELSE(PNG_FOUND)
+  MESSAGE(STATUS "Compiling without support for PNG files")
+ENDIF(PNG_FOUND)
+
+IF(OPENEXR_FOUND)
+  ADD_DEFINITIONS(-DHasEXR)
+  list(APPEND common_libs ${OPENEXR_LIBRARIES})
+  include_directories(${OPENEXR_INCLUDE_DIR})
+ELSE(OPENEXR_FOUND)
+  MESSAGE(STATUS "OpenEXR support disabled")
+ENDIF(OPENEXR_FOUND)
+
+# Now that packages are / are not detected, handle config options
+
+IF(ENABLE_OPENMP)
+  FIND_PACKAGE(OpenMP REQUIRED)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ENDIF(ENABLE_OPENMP)
+
+IF(ENABLE_IMAGECACHE AND ENABLE_OPENMP)
+  MESSAGE(STATUS "image cache and OpenMP support are mutually exclusive. only configure like this if you want to develop a reentrant image cache")
+  LIST(APPEND WARNINGS "WARNING: Image cache and OpenMP are both enabled!  You are a developer, aren't you?")
+ENDIF(ENABLE_IMAGECACHE AND ENABLE_OPENMP)
+
+IF(ENABLE_IMAGECACHE)
+  ADD_DEFINITIONS(-DENBLEND_CACHE_IMAGES)
+ENDIF(ENABLE_IMAGECACHE)
+
+IF(ENABLE_GPU)
+  FIND_PACKAGE(GLUT REQUIRED)
+  FIND_PACKAGE(GLEW REQUIRED)
+ 
+  ADD_DEFINITIONS(-DHAVE_LIBGLEW)
+  include_directories(${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
+  LIST(APPEND common_libs ${GLEW_LIBRARIES} ${GLUT_LIBRARIES})
+ENDIF(ENABLE_GPU)
+
+IF(ENABLE_SSE2)
+  IF(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -msse2 -mtune=pentium4")
+  ELSEIF(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2")
+  ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+ENDIF(ENABLE_SSE2)
+
+IF(ENABLE_DMALLOC)
+  ADD_DEFINITIONS(-DDMALLOC)
+  IF(ENABLE_DMALLOC_FUNC_CHECK)
+    ADD_DEFINITIONS(-DDMALLOC_FUNC_CHECK)
+  ENDIF(ENABLE_DMALLOC_FUNC_CHECK)
+  
+  IF(CMAKE_USE_PTHREADS_INIT)
+    FIND_LIBRARY(dmalloc_LIBRARIES dmallocthcxx)  
+  ELSE(CMAKE_USE_PTHREADS_INIT)
+    FIND_LIBRARY(dmalloc_LIBRARIES dmalloccxx)
+  ENDIF(CMAKE_USE_PTHREADS_INIT)
+
+  IF(NOT dmalloc_LIBRARIES)
+    MESSAGE(FATAL_ERROR "dmalloc support requested, but was unable to locate dmalloc library")
+  ENDIF(NOT dmalloc_LIBRARIES)
+  
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+  LIST(APPEND common_libs ${dmalloc_LIBRARIES})
+ENDIF(ENABLE_DMALLOC)
+
+
 # Try to create config.h
 set(ENBLEND_VERSION_ONLY "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${PACKAGE_REVISION}")
 set(PACKAGE_STRING "enblend-enfuse ${ENBLEND_VERSION_ONLY}")
 set(ENBLEND_VERSION "${PACKAGE_STRING}")
 include(ConfigureChecks.cmake)
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-
-set(library_type STATIC)
-add_definitions(-DVIGRA_STATIC_LIB)
-
 add_definitions(-DHAVE_CONFIG_H)
+
 include_directories(${CMAKE_BINARY_DIR} ${TOP_SRC_DIR}/include)
 
-IF (APPLE)
-   #This namespace workaround is not needed for CMake >= 2.5.x
-   ## Add needed Compiler and Linker flags for OSX
-      IF (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-         SET (CMAKE_C_FLAGS:STRING "\"$CMAKE_C_FLAGS\" -flat_namespace -undefined suppress" )
-         SET (CMAKE_CXX_FLAGS:STRING "\"$CMAKE_CXX_FLAGS\" -flat_namespace -undefined suppress" )
-         SET (CMAKE_LDFLAGS:STRING "\"$CMAKE_LD_FLAGS\"" )
-         SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -flat_namespace -undefined suppress" )
-         SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS}  -flat_namespace -undefined suppress" )
-         SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  -flat_namespace -undefined suppress" )
-      ENDIF (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-ENDIF (APPLE)
+MESSAGE(STATUS "")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Enblend-enfuse now configured for ${CMAKE_SYSTEM}")
+MESSAGE(STATUS "Source Directory:        ${CMAKE_SOURCE_DIR}")
+MESSAGE(STATUS "Installation Directory:  ${CMAKE_BINARY_DIR}")
+MESSAGE(STATUS "C++ Compiler:            ${CMAKE_CXX_COMPILER}")
+MESSAGE(STATUS "CFLAGS:                  ${CMAKE_C_FLAGS}")
+MESSAGE(STATUS "CXXFLAGS:                ${CMAKE_CXX_FLAGS}")
+MESSAGE(STATUS "Libraries:               ${common_libs}")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Features Enabled:")
+IF(NOT WIN32)
+MESSAGE(STATUS "enable malloc debugging: ${ENABLE_DMALLOC}")
+ENDIF(NOT WIN32)
+MESSAGE(STATUS "use image cache:         ${ENABLE_IMAGECACHE}")
+MESSAGE(STATUS "build GPU acceleration:  ${ENABLE_GPU}")
+MESSAGE(STATUS "use OpenMP:              ${ENABLE_OPENMP}")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Image Formats Enabled:")
+MESSAGE(STATUS "OpenEXR:                 ${OPENEXR_FOUND}")
+MESSAGE(STATUS "JPEG:                    ${JPEG_FOUND}")
+MESSAGE(STATUS "TIFF:                    ${TIFF_FOUND}")
+MESSAGE(STATUS "PNG:                     ${PNG_FOUND}")
+MESSAGE(STATUS "")
+MESSAGE(STATUS ${WARNINGS})
+MESSAGE(STATUS "")
 
 add_subdirectory(src)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/enblend ${CMAKE_CURRENT_BINARY_DIR}/bin/enfuse DESTINATION bin CONFIGURATIONS Release)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/enblend ${CMAKE_CURRENT_BINARY_DIR}/bin/enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${ENBLEND_MAJOR_VERSION})
 SET(CPACK_PACKAGE_VERSION_MINOR ${ENBLEND_MINOR_VERSION})

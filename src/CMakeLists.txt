@@ -10,22 +10,21 @@ include_directories(${TOP_SRC_DIR}/src)
 add_subdirectory(vigra_impex)
 
 file(GLOB all_sources ${TOP_SRC_DIR}/src/*.cc)
-message(STATUS "all_sources = " ${all_sources})
 list(REMOVE_ITEM all_sources ${TOP_SRC_DIR}/src/enblend.cc ${TOP_SRC_DIR}/src/enfuse.cc)
+
 if (WIN32)
     list(APPEND all_sources ${TOP_SRC_DIR}/src/win32helpers/getopt.c ${TOP_SRC_DIR}/src/win32helpers/getopt_long.c)
-endif()
+endif(WIN32)
 
-message(STATUS "all_sources(after remove) = " ${all_sources})
+
 set(enblend_sources ${all_sources} ${TOP_SRC_DIR}/src/enblend.cc)
 set(enfuse_sources ${all_sources} ${TOP_SRC_DIR}/src/enfuse.cc)
 add_executable(enblend ${enblend_sources})
 add_executable(enfuse ${enfuse_sources})
-message(STATUS "OPENMP_FOUND = ${OPENMP_FOUND}")
-if (OPENMP_FOUND)
+
+if (${OpenMP_CXX_FLAGS})
   set_target_properties(enblend enfuse PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
-  message(STATUS "OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
-endif()
+endif(${OpenMP_CXX_FLAGS})
 
 set(en_libraries vigra_impex ${common_libs})
 target_link_libraries(enblend ${en_libraries})
