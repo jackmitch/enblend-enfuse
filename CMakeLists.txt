@@ -185,7 +185,7 @@ IF(Boost_FOUND)
   IF(NOT MSVC)
     # MSVC supports auto-linking and will always choose the appropriate
 	# library for the config. Use explicit specifiers for the other platforms
-    LIST(append common_libs ${Boost_LIBRARIES})
+    LIST(APPEND common_libs ${Boost_LIBRARIES})
   ENDIF(NOT MSVC)
   
   include_directories(${Boost_INCLUDE_DIR})
