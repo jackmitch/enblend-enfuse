@@ -39,7 +39,7 @@ foreach(_fc fesetround floor fseeko lrint lrintf
   check_function_exists(${_fc} "HAVE_${_FC}")
 endforeach()
 
-if (${HAVE_DIRENT_H})
+if(HAVE_DIRENT_H)
   check_cxx_source_compiles(
     "
     #include <dirent.h>
@@ -48,17 +48,14 @@ if (${HAVE_DIRENT_H})
     int main(){return(0);}
     "
     CLOSEDIR_INT)
-endif()
+endif(HAVE_DIRENT_H)
+
 if (NOT CLOSEDIR_INT)
   set(CLOSEDIR_VOID 1)
 endif()
 
 message(STATUS "CMAKE_ERRFILE = ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log")
 message(STATUS "CMAKE_LOGFILE = ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log")
-if (APPLE)
-  message(STATUS "We are on Apple OSX. Detect OpenGL framework")
-  find_package(OpenGL)
-endif(APPLE)
 
 check_type_size( ptrdiff_t    HAVE_PTRDIFF_T )
 # How to check  if stdbool.h conforms to C99?
@@ -87,11 +84,13 @@ check_cxx_source_compiles(
     int main(int c, char *av[]) { signal(0, sg); return(0);}
     "
   RETSIGTYPE_VOID)
-if (RETSIGTYPE_VOID)
+
+if(RETSIGTYPE_VOID)
   set(RETSIGTYPE void)
-else()
+else(RETSIGTYPE_VOID)
   set(RETSIGTYPE int)
-endif()
+endif(RETSIGTYPE_VOID)
+
 test_big_endian(WORDS_BIGENDIAN)
 check_cxx_source_compiles(
   "
