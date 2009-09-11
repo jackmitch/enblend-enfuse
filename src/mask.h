@@ -742,7 +742,7 @@ MaskType* createMask(const ImageType* const white,
     nearestFeatureTransform(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
                             stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
                             destIter(nftOutputImage->upperLeft() + nftOutputOffset),
-                            EuclideanDistance,
+                            ManhattanDistance,
                             wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
