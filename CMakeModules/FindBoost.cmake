@@ -135,7 +135,7 @@ IF(Boost_INCLUDE_DIR)
   # Note that the user may not have installed any libraries
   # so it is quite possible the Boost_LIBRARY_PATH may not exist.
   SET(Boost_LIBRARY_DIR ${Boost_INCLUDE_DIR})
-
+  
   IF(NOT EXISTS "${Boost_LIBRARY_DIR}/stage/lib")
     IF( "${Boost_LIBRARY_DIR}" MATCHES "boost-[0-9]+")
       GET_FILENAME_COMPONENT(Boost_LIBRARY_DIR ${Boost_LIBRARY_DIR} PATH)
@@ -191,11 +191,14 @@ SET(BOOST_ALL_LIBRARIES
   filesystem
   graph
   iostreams
+  math
+  mpi
   program_options
   python
   regex
   serialization
   signals
+  system
   test
   thread
   unit_test_framework    

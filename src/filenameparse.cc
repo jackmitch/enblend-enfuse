@@ -38,7 +38,7 @@
 
 
 #ifdef HAVE_BOOST_FILESYSTEM
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
 
 typedef boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> basic_path;
 #endif

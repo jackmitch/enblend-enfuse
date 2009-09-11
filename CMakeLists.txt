@@ -153,7 +153,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Required Libraries first
 FIND_PACKAGE(LCMS REQUIRED)
-FIND_PACKAGE(LIBXMI REQUIRED)
+FIND_PACKAGE(LibXMI REQUIRED)
 FIND_PACKAGE(TIFF REQUIRED)
 LIST(APPEND common_libs ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES})
 include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS_INCLUDE_DIR})
@@ -167,18 +167,30 @@ IF(WIN32)
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF(WIN32)
 
-# TODO: Only the headers are necessary. None of the libraries
-# are required to build
-FIND_PACKAGE(Boost COMPONENTS filesystem)
+# Boost headers are required, but filesystem is optional
+FIND_PACKAGE(Boost COMPONENTS filesystem system)
 
-IF(Boost_filesystem_FOUND)
+IF(Boost_filesystem_FOUND AND Boost_system_FOUND)
   ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
-ENDIF(Boost_filesystem_FOUND)
+ELSE(Boost_filesystem_FOUND AND Boost_system_FOUND)
+  MESSAGE(STATUS "Boost filesystem library found:     ${Boost_filesystem_FOUND}")
+  MESSAGE(STATUS "Boost system library found:         ${Boost_system_FOUND}")
+  MESSAGE(STATUS "Disabling Boost filesystem support")
+ENDIF(Boost_filesystem_FOUND AND Boost_system_FOUND)
 
 IF(Boost_FOUND)
   LIST(APPEND common_libs ${Boost_LIBRARIES})
   link_directories(${Boost_LIBRARY_DIR})
+  
+  IF(NOT MSVC)
+    # MSVC supports auto-linking and will always choose the appropriate
+	# library for the config. Use explicit specifiers for the other platforms
+    LIST(append common_libs ${Boost_LIBRARIES})
+  ENDIF(NOT MSVC)
+  
   include_directories(${Boost_INCLUDE_DIR})
+ELSE(Boost_FOUND)
+  MESSAGE(FATAL_ERROR "Boost was not found, but is required to compile")
 ENDIF(Boost_FOUND)
 
 # Optional Libraries
