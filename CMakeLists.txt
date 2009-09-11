@@ -170,13 +170,13 @@ ENDIF(WIN32)
 # Boost headers are required, but filesystem is optional
 FIND_PACKAGE(Boost COMPONENTS filesystem system)
 
-IF(Boost_filesystem_FOUND AND Boost_system_FOUND)
+IF(Boost_filesystem_FOUND)
   ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
-ELSE(Boost_filesystem_FOUND AND Boost_system_FOUND)
+ELSE(Boost_filesystem_FOUND)
   MESSAGE(STATUS "Boost filesystem library found:     ${Boost_filesystem_FOUND}")
   MESSAGE(STATUS "Boost system library found:         ${Boost_system_FOUND}")
   MESSAGE(STATUS "Disabling Boost filesystem support")
-ENDIF(Boost_filesystem_FOUND AND Boost_system_FOUND)
+ENDIF(Boost_filesystem_FOUND)
 
 IF(Boost_FOUND)
   LIST(APPEND common_libs ${Boost_LIBRARIES})
