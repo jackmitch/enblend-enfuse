@@ -90,7 +90,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-int Verbose = DEFAULT_VERBOSITY;
+int Verbose = 1;
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;

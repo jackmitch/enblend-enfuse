@@ -75,11 +75,6 @@ if test "x$GXX" = xyes; then
     CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
 fi
 
-AC_DEFINE(DEFAULT_VERBOSITY, 1,
-          [Default verbosity level of Enblend and Enfuse.
-A value of zero reduces the message output to only warnings and errors.
-Values of one and more make Enblend and Enfuse report progress in detail.])
-
 AC_ARG_VAR(OPENGL_CFLAGS, [C compiler flags for OpenGL])
 AC_ARG_VAR(OPENGL_LIBS, [Linker flags and libraries for OpenGL])
 gpu_support_default="yes"

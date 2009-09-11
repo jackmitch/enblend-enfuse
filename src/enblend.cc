@@ -99,7 +99,7 @@ const int fineMaskVectorizeDistance = 20;
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = DEFAULT_VERBOSITY;
+int Verbose = 1;
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
