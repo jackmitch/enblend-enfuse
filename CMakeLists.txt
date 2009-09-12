@@ -339,9 +339,8 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS ${WARNINGS})
 MESSAGE(STATUS "")
 
-if(DOC)
-  add_subdirectory(doc)
-endif(DOC)
+add_subdirectory(doc)
+
 add_subdirectory(src)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/enblend ${CMAKE_CURRENT_BINARY_DIR}/bin/enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
 

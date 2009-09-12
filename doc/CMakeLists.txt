@@ -29,7 +29,7 @@ endforeach(_e)
 # generate images (.txt, .pdf .eps and .png)
 find_program(GNUPLOT_EXE "gnuplot")
 set(_depend_gp)
-if (${GNUPLOT_EXE} MATCHES "-NOTFOUND")
+if (NOT DOC OR ${GNUPLOT_EXE} MATCHES "-NOTFOUND")
   # there is no gnuplot command, so simply copy the needed files
   file(GLOB _copy_files RELATIVE "${TOP_SRC_DIR}/doc"
     "${TOP_SRC_DIR}/doc/*.txt"
@@ -37,11 +37,13 @@ if (${GNUPLOT_EXE} MATCHES "-NOTFOUND")
     "${TOP_SRC_DIR}/doc/*.png"
     "${TOP_SRC_DIR}/doc/*.pdf")
   foreach(_cf ${_copy_files})
-    add_custom_command(
-      OUTPUT ${_cf}
-      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cf}" "${_cf}"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cf}"
-      )
+    if(NOT ${_cf} MATCHES "en(blend|fuse)") # This is done below
+      add_custom_command(
+	OUTPUT ${_cf}
+	COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cf}" "${_cf}"
+	DEPENDS "${TOP_SRC_DIR}/doc/${_cf}"
+	)
+    endif()
   endforeach(_cf)
   install(FILES ${_copy_files} DESTINATION "doc")
   list(APPEND _docs ${_copy_files})
@@ -73,7 +75,7 @@ find_program(MAKEINFO_EXE "makeinfo")
 find_program(TEXI2DVI_EXE "texi2dvi")
 foreach (_cmd "enblend" "enfuse")
   set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_cmd}")
-  if (${MAKEINFO_EXE} MATCHES "-NOTFOUND" OR ${TEXI2DVI_EXE} MATCHES "-NOTFOUND")
+  if (NOT DOC OR ${MAKEINFO_EXE} MATCHES "-NOTFOUND" OR ${TEXI2DVI_EXE} MATCHES "-NOTFOUND")
     # there is no makeinfo or no texi2dvi command,
     # this implies insufficient latex installation.
     # Therefore simply copy the data from source tree.
@@ -88,7 +90,7 @@ foreach (_cmd "enblend" "enfuse")
       install(FILES "${_created}.${_ext}" DESTINATION "doc")
     endforeach()
   else()
-    # here makeinfo and texi2dvi exist
+    # here makeinfo and texi2dvi exist, DOC set to ON
     add_custom_command(
       OUTPUT "${_created}.info"
       COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"

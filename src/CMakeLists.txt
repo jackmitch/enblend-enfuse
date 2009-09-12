@@ -35,7 +35,7 @@ project(man)
 
 find_program(HELP2MAN_EXE "help2man")
 foreach (_cmd "enblend" "enfuse")
-  if (${HELP2MAN_EXE} MATCHES "-NOTFOUND")
+  if (NOT DOC OR ${HELP2MAN_EXE} MATCHES "-NOTFOUND")
     add_custom_command(
       OUTPUT "${_cmd}.1"
       COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/src/${_cmd}.1" "${_cmd}.1"
@@ -48,7 +48,7 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${CMAKE_BINARY_DIR}/bin/${_cmd}"
       )
   endif()
-  add_custom_target(man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/enblend.1 ${CMAKE_CURRENT_BINARY_DIR}/enfuse.1)
+  add_custom_target(man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_cmd}.1)
 endforeach(_cmd)
 
 add_dependencies(man enblend)
