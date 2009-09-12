@@ -39,7 +39,7 @@ foreach (_cmd "enblend" "enfuse")
     add_custom_command(
       OUTPUT "${_cmd}.1"
       COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/src/${_cmd}.1" "${_cmd}.1"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.1"
+      DEPENDS "${TOP_SRC_DIR}/src/${_cmd}.1"
       )
   else()
     add_custom_command(
