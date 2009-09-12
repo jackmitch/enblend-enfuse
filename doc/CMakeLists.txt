@@ -24,7 +24,50 @@ foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful
   list(APPEND _enfuse_TEXINFOS "${TOP_SRC_DIR}/doc/${_e}")
 endforeach(_e)
 
-# First search for makeinfo command and
+
+# search for gnuplot and
+# generate images (.txt, .pdf .eps and .png)
+find_program(GNUPLOT_EXE "gnuplot")
+set(_depend_gp)
+if (${GNUPLOT_EXE} MATCHES "-NOTFOUND")
+  # there is no gnuplot command, so simply copy the needed files
+  file(GLOB _copy_files RELATIVE "${TOP_SRC_DIR}/doc"
+    "${TOP_SRC_DIR}/doc/*.txt"
+    "${TOP_SRC_DIR}/doc/*.eps"
+    "${TOP_SRC_DIR}/doc/*.png"
+    "${TOP_SRC_DIR}/doc/*.pdf")
+  foreach(_cf ${_copy_files})
+    add_custom_command(
+      OUTPUT ${_cf}
+      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cf}" "${_cf}"
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cf}"
+      )
+  endforeach(_cf)
+  install(FILES ${_copy_files} DESTINATION "doc")
+  list(APPEND _docs ${_copy_files})
+  list(APPEND _depend_gp ${_copy_files})
+else()
+  file(GLOB gpin_files RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.gp.in")
+  set(srcdir "${TOP_SRC_DIR}/doc") # (@srcdir@) will be substituted in *.gp.in
+  foreach(_gpin ${gpin_files})
+    string(REGEX REPLACE "\\.gp.in$" "" _gp ${_gpin})
+    SET_SOURCE_FILES_PROPERTIES("${_gp}.gp" GENERATED)
+    configure_file("${TOP_SRC_DIR}/doc/${_gpin}" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
+
+    set(_created "${_gp}.txt" "${_gp}.png" "${_gp}.pdf" "${_gp}.eps")
+    message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
+    add_custom_command(
+      OUTPUT ${_created}
+      COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
+      DEPENDS "${_gp}.gp"
+      )
+    install(FILES ${_created} DESTINATION "doc")
+    list(APPEND _docs ${_created})
+    list(APPEND _depend_gp ${_created})
+  endforeach(_gpin)
+endif()
+
+# Search for makeinfo command and
 # generate info and pdf for enblend + enfuse
 find_program(MAKEINFO_EXE "makeinfo")
 find_program(TEXI2DVI_EXE "texi2dvi")
@@ -51,59 +94,20 @@ foreach (_cmd "enblend" "enfuse")
       COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
       "-I" "${TOP_SRC_DIR}/doc"
       -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS}
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
     message(STATUS "create ${_created}.pdf")
     add_custom_command(
       OUTPUT "${_created}.pdf"
       COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS}
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
     install(FILES "${_created}.info" "${_created}.pdf" DESTINATION "doc")
   endif()
   install(FILES "${_created}.info" "${_created}.pdf" DESTINATION "doc")
   list(APPEND _docs "${_created}.info" "${_created}.pdf")
 endforeach(_cmd)
-
-# search for gnuplot and
-# generate images (.txt, .pdf .eps and .png)
-find_program(GNUPLOT_EXE "gnuplot")
-if (${GNUPLOT_EXE} MATCHES "-NOTFOUND")
-  # there is no gnuplot command, so simply copy the needed files
-  file(GLOB _copy_files RELATIVE "${TOP_SRC_DIR}/doc"
-    "${TOP_SRC_DIR}/doc/*.txt"
-    "${TOP_SRC_DIR}/doc/*.eps"
-    "${TOP_SRC_DIR}/doc/*.png"
-    "${TOP_SRC_DIR}/doc/*.pdf")
-  foreach(_cf ${_copy_files})
-    add_custom_command(
-      OUTPUT ${_cf}
-      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cf}" "${_cf}"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cf}"
-      )
-  endforeach(_cf)
-  install(FILES ${_copy_files} DESTINATION "doc")
-  list(APPEND _docs ${_copy_files})
-else()
-  file(GLOB gpin_files RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.gp.in")
-  set(srcdir "${TOP_SRC_DIR}/doc") # (@srcdir@) will be substituted in *.gp.in
-  foreach(_gpin ${gpin_files})
-    string(REGEX REPLACE "\\.gp.in$" "" _gp ${_gpin})
-    SET_SOURCE_FILES_PROPERTIES("${_gp}.gp" GENERATED)
-    configure_file("${TOP_SRC_DIR}/doc/${_gpin}" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
-
-    set(_created "${_gp}.txt" "${_gp}.png" "${_gp}.pdf" "${_gp}.eps")
-    message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
-    add_custom_command(
-      OUTPUT ${_created}
-      COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
-      DEPENDS "${_gp}.gp"
-      )
-    install(FILES ${_created} DESTINATION "doc")
-    list(APPEND _docs ${_created})
-  endforeach(_gpin)
-endif()
 
 ADD_CUSTOM_TARGET(doc ALL DEPENDS ${_docs})
 

@@ -30,11 +30,11 @@ set(en_libraries vigra_impex ${common_libs})
 target_link_libraries(enblend ${en_libraries})
 target_link_libraries(enfuse ${en_libraries})
 
+project(man)
 # create enblend.1 and enfuse.1
 
 find_program(HELP2MAN_EXE "help2man")
 foreach (_cmd "enblend" "enfuse")
-  set(_binary "${CMAKE_BINARY_DIR}/bin/${_cmd}")
   if (${HELP2MAN_EXE} MATCHES "-NOTFOUND")
     add_custom_command(
       OUTPUT "${_cmd}.1"
@@ -44,11 +44,11 @@ foreach (_cmd "enblend" "enfuse")
   else()
     add_custom_command(
       OUTPUT "${_cmd}.1"
-      COMMAND "${HELP2MAN_EXE}" "--output=${_cmd}.1" "${_binary}"
-      DEPENDS "${_binary}"
+      COMMAND "${HELP2MAN_EXE}" "--output=${_cmd}.1" "${CMAKE_BINARY_DIR}/bin/${_cmd}"
+      DEPENDS "${CMAKE_BINARY_DIR}/bin/${_cmd}"
       )
   endif()
-  install(FILES "${_cmd}.1" DESTINATION "share/man/man1")
-  ADD_CUSTOM_TARGET("enblend" ALL DEPENDS "${_cmd}.1")
+  add_custom_target(man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/enblend.1 ${CMAKE_CURRENT_BINARY_DIR}/enfuse.1)
 endforeach(_cmd)
 
+add_dependencies(man enblend)
