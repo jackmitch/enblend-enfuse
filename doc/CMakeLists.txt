@@ -37,7 +37,7 @@ foreach (_cmd "enblend" "enfuse")
     foreach(_ext "info" "pdf")
       SET_SOURCE_FILES_PROPERTIES("${_created}.${_ext}" GENERATED)
       add_custom_command(
-	OUTPUT "${_created_info}.${_ext}"
+	OUTPUT "${_created}.${_ext}"
 	COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cmd}.${_ext}" "${_created}.${_ext}"
 	DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.${_ext}"
 	)
