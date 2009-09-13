@@ -36,6 +36,7 @@ macro(copybin _basename)
     OUTPUT ${_basename}
     COMMAND ${CMAKE_COMMAND} -E ${cp_command} "${TOP_SRC_DIR}/doc/${_basename}" ${_basename}
     DEPENDS "${TOP_SRC_DIR}/doc/${_basename}"
+    COMMENT "Copy ${TOP_SRC_DIR}/doc/${_basename} ${_basename}"
     )
   list(APPEND _docs ${_basename})
   list(APPEND _depend_gp ${_basename})
@@ -73,6 +74,7 @@ else()
       OUTPUT ${_created}
       COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
       DEPENDS "${_gp}.gp"
+      COMMENT "gnuplot: Creating ${_created} from ${_gp}.gp"
       )
     foreach(_cr ${_created})
       install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_cr}" DESTINATION ${DocumentsDirectory})
@@ -97,6 +99,7 @@ else()
 	OUTPUT "${_created}.${_ext}"
 	COMMAND ${FIG2DEV_EXE} -L ${_ext} "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.${_ext}"
 	DEPENDS "${TOP_SRC_DIR}/doc/${_img}.fig"
+	COMMENT "fig2dev: Creating ${_created}.${_ext} from ${TOP_SRC_DIR}/doc/${_img}.fig"
 	)
       list(APPEND _docs ${_created}.${_ext})
       list(APPEND _depend_gp ${_created}.${_ext})
@@ -145,6 +148,7 @@ foreach (_cmd "enblend" "enfuse")
       "-I" "${TOP_SRC_DIR}/doc"
       -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      COMMENT "makeinfo: Creating ${_created}.info from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
     add_custom_command(
@@ -152,6 +156,7 @@ foreach (_cmd "enblend" "enfuse")
       COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     message(STATUS "create ${_created}.html")
@@ -161,9 +166,10 @@ foreach (_cmd "enblend" "enfuse")
       "-I" "${TOP_SRC_DIR}/doc"
       -o "${_created}.html" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
-    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html")
+    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html/index.html")
   endif()
 endforeach(_cmd)
 
