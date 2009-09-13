@@ -92,13 +92,15 @@ if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
 else()
   foreach(_img "photographic-workflow" "focus-stack-decision-tree" "local-analysis-window")
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_img}")
-    add_custom_command(
-      OUTPUT "${_created}.gif"
-      COMMAND ${FIG2DEV_EXE} -L gif "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.gif"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_img}.fig"
-      )
-    list(APPEND _docs ${_created}.gif)
-    list(APPEND _depend_gp ${_created}.gif)
+    foreach(_ext gif pdf)
+      add_custom_command(
+	OUTPUT "${_created}.${_ext}"
+	COMMAND ${FIG2DEV_EXE} -L ${_ext} "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.${_ext}"
+	DEPENDS "${TOP_SRC_DIR}/doc/${_img}.fig"
+	)
+      list(APPEND _docs ${_created}.${_ext})
+      list(APPEND _depend_gp ${_created}.${_ext})
+    endforeach(_ext)
   endforeach(_img)
   set(DOC3:BOOL ${DOC})
 endif()
@@ -165,7 +167,7 @@ endforeach(_cmd)
 add_custom_target(doc3 ALL DEPENDS ${_docs})
 
 # set make order
-add_dependencies(doc3 doc2 doc1)
+add_dependencies(doc3 doc2 doc1 enblendenfuse)
 
 
 #original Makefile.am contents follow:
