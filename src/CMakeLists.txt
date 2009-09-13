@@ -9,11 +9,13 @@
 include_directories(${TOP_SRC_DIR}/src)
 add_subdirectory(vigra_impex)
 
+project(enblendenfuse)
 file(GLOB all_sources ${TOP_SRC_DIR}/src/*.cc)
 list(REMOVE_ITEM all_sources ${TOP_SRC_DIR}/src/enblend.cc ${TOP_SRC_DIR}/src/enfuse.cc)
 
 if (WIN32)
-  list(APPEND all_sources ${TOP_SRC_DIR}/src/win32helpers/getopt.c ${TOP_SRC_DIR}/src/win32helpers/getopt_long.c)
+  file(GLOB winhelper_sources ${TOP_SRC_DIR}/src/win32helpers/*.c)
+  list(APPEND all_sources ${winhelper_sources})
 endif(WIN32)
 
 
@@ -29,6 +31,12 @@ endif(${OpenMP_CXX_FLAGS})
 set(en_libraries vigra_impex ${common_libs})
 target_link_libraries(enblend ${en_libraries})
 target_link_libraries(enfuse ${en_libraries})
+
+install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
+add_custom_target(enblendenfuse ALL DEPENDS enblend enfuse)
+
+add_dependencies(enblend vigra_impex)
+add_dependencies(enfuse vigra_impex)
 
 project(man)
 # create enblend.1 and enfuse.1
@@ -51,4 +59,4 @@ foreach (_cmd "enblend" "enfuse")
   add_custom_target(man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_cmd}.1)
 endforeach(_cmd)
 
-add_dependencies(man enblend)
+add_dependencies(man enblendenfuse)

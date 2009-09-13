@@ -26,10 +26,10 @@ macro(copybin _basename)
   set_source_files_properties(${_basename} GENERATED)
   if (${ARGV1} MATCHES "DIR")
     set(cp_command "copy_directory")
-    install(DIRECTORY ${_basename} DESTINATION "doc")
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION "doc")
   else()
     set(cp_command "copy")
-    install(FILES ${_basename} DESTINATION "doc")
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION "doc")
   endif()
   add_custom_command(
     OUTPUT ${_basename}
@@ -141,7 +141,6 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
     install(FILES "${_created}.info" DESTINATION "doc")
-    message(STATUS "create ${_created}.pdf")
     add_custom_command(
       OUTPUT "${_created}.pdf"
       COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
@@ -150,8 +149,8 @@ foreach (_cmd "enblend" "enfuse")
       )
     install(FILES "${_created}.pdf" DESTINATION "doc")
     message(STATUS "create ${_created}.html")
-     add_custom_command(
-      OUTPUT "${_created}.html"
+    add_custom_command(
+      OUTPUT "${_created}.html/index.html"
       COMMAND ${MAKEINFO_EXE} "--html" "--css-include=${TOP_SRC_DIR}/doc/default.css"
       "-I" "${TOP_SRC_DIR}/doc"
       -o "${_created}.html" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
