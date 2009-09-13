@@ -23,6 +23,7 @@ if (WIN32)
   list(APPEND all_sources ${winhelper_sources})
 endif(WIN32)
 
+set(depends2)
 foreach(_cmd ${_COMMANDS})
   set(${_cmd}_sources ${all_sources} "${TOP_SRC_DIR}/src/${_cmd}.cc")
   add_executable(${_cmd} ${${_cmd}_sources})
@@ -32,14 +33,15 @@ foreach(_cmd ${_COMMANDS})
   target_link_libraries(${_cmd} ${en_libraries})
   install(TARGETS ${_cmd} DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
   add_dependencies(${_cmd} vigra_impex)
-
-  add_custom_target(enblendenfuse ALL DEPENDS ${_cmd})
+  list(APPEND depends2 ${_cmd})
 endforeach(_cmd)
+add_custom_target(enblendenfuse ALL DEPENDS ${depends2})
 
 project(man)
 # create enblend.1 and enfuse.1
 
 find_program(HELP2MAN_EXE "help2man")
+set(depends3)
 foreach (_cmd ${_COMMANDS})
   if (NOT DOC OR ${HELP2MAN_EXE} MATCHES "-NOTFOUND")
     add_custom_command(
@@ -54,7 +56,8 @@ foreach (_cmd ${_COMMANDS})
       DEPENDS "${CMAKE_BINARY_DIR}/bin/${_cmd}"
       )
   endif()
+  list(APPEND depends3 "${CMAKE_CURRENT_BINARY_DIR}/${_cmd}.1")
   add_custom_target(man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_cmd}.1)
 endforeach(_cmd)
-
+add_custom_target(man ALL DEPENDS ${depends3})
 add_dependencies(man enblendenfuse)

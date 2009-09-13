@@ -339,10 +339,9 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS ${WARNINGS})
 MESSAGE(STATUS "")
 
-add_subdirectory(doc)
 
 add_subdirectory(src)
-#install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
+add_subdirectory(doc)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/enblend.1 ${CMAKE_CURRENT_BINARY_DIR}/src/enfuse.1 DESTINATION "share/man/man1" CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
 SET(CPACK_PACKAGE_VERSION_MAJOR ${ENBLEND_MAJOR_VERSION})
