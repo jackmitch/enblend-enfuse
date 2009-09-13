@@ -4,8 +4,6 @@
 # Copyright (c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
 #
 
-project(doc)
-
 set(_docs)
 set(_enblend_TEXINFOS)
 foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
@@ -24,6 +22,25 @@ foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful
   list(APPEND _enfuse_TEXINFOS "${TOP_SRC_DIR}/doc/${_e}")
 endforeach(_e)
 
+macro(copybin _basename)
+  set_source_files_properties(${_basename} GENERATED)
+  if (${ARGV1} MATCHES "DIR")
+    set(cp_command "copy_directory")
+    install(DIRECTORY ${_basename} DESTINATION "doc")
+  else()
+    set(cp_command "copy")
+    install(FILES ${_basename} DESTINATION "doc")
+  endif()
+  add_custom_command(
+    OUTPUT ${_basename}
+    COMMAND ${CMAKE_COMMAND} -E ${cp_command} "${TOP_SRC_DIR}/doc/${_basename}" ${_basename}
+    DEPENDS "${TOP_SRC_DIR}/doc/${_basename}"
+    )
+  list(APPEND _docs ${_basename})
+  list(APPEND _depend_gp ${_basename})
+endmacro(copybin)
+
+project(doc1)
 
 # search for gnuplot and
 # generate images (.txt, .pdf .eps and .png)
@@ -38,16 +55,9 @@ if (NOT DOC OR ${GNUPLOT_EXE} MATCHES "-NOTFOUND")
     "${TOP_SRC_DIR}/doc/*.pdf")
   foreach(_cf ${_copy_files})
     if(NOT ${_cf} MATCHES "en(blend|fuse)") # This is done below
-      add_custom_command(
-	OUTPUT ${_cf}
-	COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cf}" "${_cf}"
-	DEPENDS "${TOP_SRC_DIR}/doc/${_cf}"
-	)
+      copybin("${_cf}")
     endif()
   endforeach(_cf)
-  install(FILES ${_copy_files} DESTINATION "doc")
-  list(APPEND _docs ${_copy_files})
-  list(APPEND _depend_gp ${_copy_files})
 else()
   file(GLOB gpin_files RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.gp.in")
   set(srcdir "${TOP_SRC_DIR}/doc") # (@srcdir@) will be substituted in *.gp.in
@@ -63,34 +73,66 @@ else()
       COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
       DEPENDS "${_gp}.gp"
       )
-    install(FILES ${_created} DESTINATION "doc")
+    foreach(_cr ${_created})
+      install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_cr}" DESTINATION "doc")
+    endforeach()
     list(APPEND _docs ${_created})
     list(APPEND _depend_gp ${_created})
   endforeach(_gpin)
 endif()
 
+project(doc2)
+# Search for fig2dev and convert some images
+find_program(FIG2DEV_EXE fig2dev)
+if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
+  # here the creation of html and pdf will be disabled, because .gif-prerequisites are not found
+  # Automake uses here sed and the like
+  set(DOC3:BOOL "FALSE")
+else()
+  foreach(_img "photographic-workflow" "focus-stack-decision-tree" "local-analysis-window")
+    set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_img}")
+    add_custom_command(
+      OUTPUT "${_created}.gif"
+      COMMAND ${FIG2DEV_EXE} -L gif "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.gif"
+      DEPENDS "${TOP_SRC_DIR}/doc/${_img}.fig"
+      )
+    list(APPEND _docs ${_created}.gif)
+    list(APPEND _depend_gp ${_created}.gif)
+  endforeach(_img)
+  set(DOC3:BOOL ${DOC})
+endif()
+
+project(doc3)
 # Search for makeinfo command and
 # generate info and pdf for enblend + enfuse
 find_program(MAKEINFO_EXE "makeinfo")
 find_program(TEXI2DVI_EXE "texi2dvi")
 foreach (_cmd "enblend" "enfuse")
   set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_cmd}")
-  if (NOT DOC OR ${MAKEINFO_EXE} MATCHES "-NOTFOUND" OR ${TEXI2DVI_EXE} MATCHES "-NOTFOUND")
+  if (NOT DOC3:BOOL OR ${MAKEINFO_EXE} MATCHES "-NOTFOUND" OR ${TEXI2DVI_EXE} MATCHES "-NOTFOUND")
     # there is no makeinfo or no texi2dvi command,
     # this implies insufficient latex installation.
     # Therefore simply copy the data from source tree.
-    foreach(_ext "info" "pdf")
-      SET_SOURCE_FILES_PROPERTIES("${_created}.${_ext}" GENERATED)
-      add_custom_command(
-	OUTPUT "${_created}.${_ext}"
-	COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cmd}.${_ext}" "${_created}.${_ext}"
-	DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.${_ext}"
-	)
-      list(APPEND _docs "${_created}.${_ext}")
-      install(FILES "${_created}.${_ext}" DESTINATION "doc")
+    foreach(_ext "info")
+      copybin("${_cmd}.${_ext}")
     endforeach()
+    #
+    # Disabled, because not part of repo.
+    # They would have only been created with "make pdf" or "make html" in source doc directory
+    # under automake
+    if (EXISTS "${TOP_SRC_DIR}/doc/${_cmd}.pdf" AND NOT IS_DIRECTORY "${TOP_SRC_DIR}/doc/${_cmd}.pdf")
+      copybin("${_cmd}.pdf")
+    else()
+      message(STATUS "Sorry, but there is no file ${TOP_SRC_DIR}/doc/${_cmd}.pdf to copy. Leave it out")
+    endif()
+    if (EXISTS "${TOP_SRC_DIR}/doc/${_cmd}.html" AND IS_DIRECTORY "${TOP_SRC_DIR}/doc/${_cmd}.html")
+      copybin("${_cmd}.html" "DIR")
+    else()
+      message(STATUS "Sorry, but there is no directory ${TOP_SRC_DIR}/doc/${_cmd}.html to copy. Leave it out")
+    endif()
   else()
-    # here makeinfo and texi2dvi exist, DOC set to ON
+    # here fig2dev, makeinfo and texi2dvi exist, option DOC set to ON
+    message(STATUS "create ${_created}.info")
     add_custom_command(
       OUTPUT "${_created}.info"
       COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
@@ -98,6 +140,7 @@ foreach (_cmd "enblend" "enfuse")
       -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
+    install(FILES "${_created}.info" DESTINATION "doc")
     message(STATUS "create ${_created}.pdf")
     add_custom_command(
       OUTPUT "${_created}.pdf"
@@ -105,17 +148,24 @@ foreach (_cmd "enblend" "enfuse")
       "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
-    install(FILES "${_created}.info" "${_created}.pdf" DESTINATION "doc")
+    install(FILES "${_created}.pdf" DESTINATION "doc")
+    message(STATUS "create ${_created}.html")
+     add_custom_command(
+      OUTPUT "${_created}.html"
+      COMMAND ${MAKEINFO_EXE} "--html" "--css-include=${TOP_SRC_DIR}/doc/default.css"
+      "-I" "${TOP_SRC_DIR}/doc"
+      -o "${_created}.html" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      )
+    install(DIRECTORY "${_created}.html" DESTINATION "doc")
   endif()
-  install(FILES "${_created}.info" "${_created}.pdf" DESTINATION "doc")
-  list(APPEND _docs "${_created}.info" "${_created}.pdf")
+  list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html")
 endforeach(_cmd)
 
-ADD_CUSTOM_TARGET(doc ALL DEPENDS ${_docs})
+add_custom_target(doc3 ALL DEPENDS ${_docs})
 
-########### install files ###############
-
-
+# set make order
+add_dependencies(doc3 doc2 doc1)
 
 
 #original Makefile.am contents follow:
