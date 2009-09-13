@@ -4,6 +4,7 @@
 # Copyright (c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
 #
 
+set(DocumentsDirectory "doc/enblend")
 set(_docs)
 set(_enblend_TEXINFOS)
 foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
@@ -26,10 +27,10 @@ macro(copybin _basename)
   set_source_files_properties(${_basename} GENERATED)
   if (${ARGV1} MATCHES "DIR")
     set(cp_command "copy_directory")
-    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION "doc")
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION ${DocumentsDirectory})
   else()
     set(cp_command "copy")
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION "doc")
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_basename}" DESTINATION ${DocumentsDirectory})
   endif()
   add_custom_command(
     OUTPUT ${_basename}
@@ -74,7 +75,7 @@ else()
       DEPENDS "${_gp}.gp"
       )
     foreach(_cr ${_created})
-      install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_cr}" DESTINATION "doc")
+      install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_cr}" DESTINATION ${DocumentsDirectory})
     endforeach()
     list(APPEND _docs ${_created})
     list(APPEND _depend_gp ${_created})
@@ -140,14 +141,14 @@ foreach (_cmd "enblend" "enfuse")
       -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
-    install(FILES "${_created}.info" DESTINATION "doc")
+    install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
     add_custom_command(
       OUTPUT "${_created}.pdf"
       COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
-    install(FILES "${_created}.pdf" DESTINATION "doc")
+    install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     message(STATUS "create ${_created}.html")
     add_custom_command(
       OUTPUT "${_created}.html/index.html"
@@ -156,7 +157,7 @@ foreach (_cmd "enblend" "enfuse")
       -o "${_created}.html" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
-    install(DIRECTORY "${_created}.html" DESTINATION "doc")
+    install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
   endif()
   list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html")
 endforeach(_cmd)
