@@ -118,6 +118,7 @@ foreach (_cmd "enblend" "enfuse")
     # Therefore simply copy the data from source tree.
     foreach(_ext "info")
       copybin("${_cmd}.${_ext}")
+      list(APPEND _docs "${_created}.${_ext}")
     endforeach()
     #
     # Disabled, because not part of repo.
@@ -125,11 +126,13 @@ foreach (_cmd "enblend" "enfuse")
     # under automake
     if (EXISTS "${TOP_SRC_DIR}/doc/${_cmd}.pdf" AND NOT IS_DIRECTORY "${TOP_SRC_DIR}/doc/${_cmd}.pdf")
       copybin("${_cmd}.pdf")
+      list(APPEND _docs "${_created}.pdf")
     else()
       message(STATUS "Sorry, but there is no file ${TOP_SRC_DIR}/doc/${_cmd}.pdf to copy. Leave it out")
     endif()
     if (EXISTS "${TOP_SRC_DIR}/doc/${_cmd}.html" AND IS_DIRECTORY "${TOP_SRC_DIR}/doc/${_cmd}.html")
       copybin("${_cmd}.html" "DIR")
+      list(APPEND _docs "${_created}.html")
     else()
       message(STATUS "Sorry, but there is no directory ${TOP_SRC_DIR}/doc/${_cmd}.html to copy. Leave it out")
     endif()
@@ -160,8 +163,8 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       )
     install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
+    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html")
   endif()
-  list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html")
 endforeach(_cmd)
 
 add_custom_target(doc3 ALL DEPENDS ${_docs})
