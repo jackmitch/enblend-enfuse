@@ -165,13 +165,13 @@ visualizeLine(ImageType& image,
               const Point2D& begin, const Point2D& end,
               typename ImageType::PixelType value)
 {
-    typedef typename ImageType::Iterator Iterator;
+    typedef typename ImageType::traverser traverser;
 
     const vigra::Diff2D difference(end - begin);
     const int stepX = sign(difference.x);
     const int stepY = sign(difference.y);
-    Iterator point(image.upperLeft() + begin);
-    const Iterator stop(image.upperLeft() + end);
+    traverser point(image.upperLeft() + begin);
+    const traverser stop(image.upperLeft() + end);
     double error = 0.0;
 
     //std::cout << "+ [" << begin << " .. " << end << "]\n";
