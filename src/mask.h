@@ -154,6 +154,79 @@ dump_contourvector(const ContourVector& contourvector,
 }
 
 
+// Draw a line from begin to end in image.  Use value as pixel color.
+//
+// The algorithm is not implemented efficiently.  However, the
+// function is only called to visualize the initial seam line, which
+// we do not consider a performance-critical job.
+template <typename ImageType>
+void
+visualizeLine(ImageType& image,
+              const Point2D& begin, const Point2D& end,
+              typename ImageType::PixelType value)
+{
+    typedef typename ImageType::Iterator Iterator;
+
+    const vigra::Diff2D difference(end - begin);
+    const int stepX = sign(difference.x);
+    const int stepY = sign(difference.y);
+    Iterator point(image.upperLeft() + begin);
+    const Iterator stop(image.upperLeft() + end);
+    double error = 0.0;
+
+    //std::cout << "+ [" << begin << " .. " << end << "]\n";
+
+    const vigra::Size2D size(image.size());
+    // Exit immediately if both start point and end point are outside of the image.
+    if (!(begin.x >= 0 && begin.x < size.x && begin.y >= 0 && begin.y < size.y &&
+          end.x >= 0 && end.x < size.x && end.y >= 0 && end.y < size.y)) {
+        return;
+    }
+
+    if (abs(difference.x) >= abs(difference.y)) {
+        const double delta_error =
+            difference.x == 0 ?
+            0.0 :
+            fabs(static_cast<double>(difference.y) / static_cast<double>(difference.x));
+        while (true) {
+            if (point.x >= image.upperLeft().x && point.x < image.lowerRight().x &&
+                point.y >= image.upperLeft().y && point.y < image.lowerRight().y) {
+                image.accessor().set(value, point);
+            }
+            if (point.x == stop.x) {
+                break;
+            }
+            error += delta_error;
+            if (fabs(error) >= 0.5) {
+                point.y += stepY;
+                error -= 1.0;
+            }
+            point.x += stepX;
+        }
+    } else {
+        const double delta_error =
+            difference.y == 0 ?
+            0.0 :
+            fabs(static_cast<double>(difference.x) / static_cast<double>(difference.y));
+        while (true) {
+            if (point.x >= image.upperLeft().x && point.x < image.lowerRight().x &&
+                point.y >= image.upperLeft().y && point.y < image.lowerRight().y) {
+                image.accessor().set(value, point);
+            }
+            if (point.y == stop.y) {
+                break;
+            }
+            error += delta_error;
+            if (fabs(error) >= 0.5) {
+                point.x += stepX;
+                error -= 1.0;
+            }
+            point.y += stepY;
+        }
+    }
+}
+
+
 template <typename PixelType, typename ResultType>
 class PixelDifferenceFunctor
 {
@@ -909,6 +982,23 @@ MaskType* createMask(const ImageType* const white,
     if (visualizeImage) {
         // Dump cost image into visualize image.
         copyImage(srcImageRange(mismatchImage), destImage(*visualizeImage));
+
+        const Diff2D offset = Diff2D(vBB.upperLeft()) - Diff2D(uBB.upperLeft());
+        // Draw the initial seam line as a reference.
+        for (ContourVector::const_iterator v = contours.begin(); v != contours.end(); ++v) {
+            for (Contour::const_iterator c = (*v)->begin(); c != (*v)->end(); ++c) {
+                for (Segment::const_iterator s = (*c)->begin(); s != (*c)->end(); ++s) {
+                    Segment::const_iterator next = s;
+                    ++next;
+                    if (next != (*c)->end()) {
+                        visualizeLine(*visualizeImage,
+                                      (s->second - offset) / mismatchImageStride,
+                                      (next->second - offset) / mismatchImageStride,
+                                      VISUALIZE_INITIAL_PATH);
+                    }
+                }
+            }
+        }
     }
 
     // Areas other than intersection region have maximum cost.

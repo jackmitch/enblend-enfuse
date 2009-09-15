@@ -91,6 +91,7 @@
 #define VISUALIZE_RGB_COLOR_YELLOW3  RGBValue<vigra::UInt8>(205, 205,   0)
 #define VISUALIZE_RGB_COLOR_YELLOW4  RGBValue<vigra::UInt8>(139, 139,   0)
 
+#define VISUALIZE_INITIAL_PATH       VISUALIZE_RGB_COLOR_YELLOW4
 #define VISUALIZE_SHORT_PATH_VALUE   VISUALIZE_RGB_COLOR_YELLOW1
 #define VISUALIZE_FIRST_VERTEX_VALUE VISUALIZE_RGB_COLOR_GREEN3
 #define VISUALIZE_NEXT_VERTEX_VALUE  VISUALIZE_RGB_COLOR_GREEN2
@@ -495,6 +496,17 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
             return "UINT32";
         }
     }
+}
+
+
+/** Answer the sign of x.
+ */
+
+template <typename T>
+int
+sign(T x)
+{
+    return x > T() ? 1 : (x < T() ? -1 : 0);
 }
 
 

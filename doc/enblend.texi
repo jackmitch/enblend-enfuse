@@ -1293,7 +1293,8 @@ of a line segment, it is painted in light green; non-first line
 segments are drawn in darker green.  Cyan points indicate state space
 samples inside the @sc{Dijkstra} radius.  Non-converged points are
 drawn in magenta color.  The final seam line is shown in bright
-yellow.
+yellow.  For comparison purposes Enblend draws the initial seam line
+in dark yellow.
 @end table
 
 @page

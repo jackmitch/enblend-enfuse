@@ -24,6 +24,10 @@ Released on August 25, 2009.
   for example, combining a mask optimization option with
   "--no-optimize".
 
+- Enblend shows the initial, unoptimized seam line in addition to the
+  optimized one in all seam-line visualization images (option
+  "--visualize").
+
 - Enblend and Enfuse read multi-layer TIFF files ("multi directory" in
   TIFF jargon).  It is even possible to mix multi-layer with single
   layer images.  This partially fixes SourceForge bug ID 1170329.
@@ -54,6 +58,9 @@ Released on August 25, 2009.
   generation that caused a sub-optimal seam line was fixed.  As a side
   effect the new seam line algorithm is at least 20% faster than the
   old one.
+
+- Another longstanding bug (SourceForge ID 1891785) that caused wrong
+  output for images with holes was also fixed.
 
 - Fix a well hidden but serious bug in the seam line optimization.
   Both, the GPU and non-GPU versions of the optimizer were affected.

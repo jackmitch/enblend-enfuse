@@ -23,7 +23,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-227a6153f072, 10 September
+This manual is for Enblend (version 4.0-07128825447c, 15 September
 2009), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -315,7 +315,7 @@ Common options control some overall features of Enblend.
 
      Specifying `--wrap' without MODE selects horizontal wrapping.
 
-     Version 4.0-227a6153f072 of Enblend, the one described here, does
+     Version 4.0-07128825447c of Enblend, the one described here, does
      not blend either zenith or nadir, so you may still see some seams
      in these areas.
 
@@ -462,7 +462,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.0-227a6153f072, only mask
+     In this version of Enblend, 4.0-07128825447c, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into the Enblend
@@ -741,7 +741,8 @@ These options control the generation and the usage of masks.
      line segments are drawn in darker green.  Cyan points indicate
      state space samples inside the DIJKSTRA radius.  Non-converged
      points are drawn in magenta color.  The final seam line is shown
-     in bright yellow.
+     in bright yellow.  For comparison purposes Enblend draws the
+     initial seam line in dark yellow.
 
 `%%'
      Produces a literal `%'-sign.
@@ -1067,18 +1068,18 @@ Enfuse and Enblend.
 Appendix A Authors
 ******************
 
-ANDREW MIHAL <acmihal@users.sourceforge.net> has written Enblend and
+ANDREW MIHAL (<acmihal@users.sourceforge.net>) has written Enblend and
 Enfuse.
 
 
 *Contributors*
 
-   * PABLO D'ANGELO <dangelo@users.sourceforge.net> added the contrast
-     criteria.
+   * PABLO D'ANGELO (<dangelo@users.sourceforge.net>) added the
+     contrast criteria.
 
    * JOE BEDA: Win32 porting up to version 3.2.
 
-   * KORNEL BENKO <kornelbenko.sourceforge.net>: CMake support for
+   * KORNEL BENKO, <kornelbenko.sourceforge.net>: CMake support for
      version 4.0.
 
    * ROGER GOODMAN: Proofreading of the manuals.
@@ -1089,15 +1090,15 @@ Enfuse.
 
    * THOMAS MODES: Win32 porting of version 4.0.
 
-   * RYAN SLEEVI <ryansleevi.sourceforge.net>: Win32 porting of
+   * RYAN SLEEVI, <ryansleevi.sourceforge.net>: Win32 porting of
      version 4.0.
 
-   * CHRISTOPH SPIEL <cspiel@users.sourceforge.net> added the gray
+   * CHRISTOPH SPIEL (<cspiel@users.sourceforge.net>) added the gray
      projectors, the LoG-based edge detection, an O(n)-algorithm for
      the calculation of local contrast, entropy weighting, and various
      other features.
 
-   * BRENT TOWNSHEND <btownshend.sourceforge.net>: HDR support.
+   * BRENT TOWNSHEND, <btownshend.sourceforge.net>: HDR support.
 
 
 Thanks to SIMON ANDRIOT and PABLO JOUBERT for suggesting the
@@ -1504,45 +1505,45 @@ Version 1.2, November 2002
 Program Index
 *************
 
-ale:                                           See 6.        (line 1000)
-align_image_stack (Hugin):                     See 6.        (line 1007)
-cinepaint <1>:                                 See 6.        (line 1019)
+ale:                                           See 6.        (line 1001)
+align_image_stack (Hugin):                     See 6.        (line 1008)
+cinepaint <1>:                                 See 6.        (line 1020)
 cinepaint:                                     See 3.2.      (line  453)
-convert (ImageMagick):                         See 6.        (line 1030)
-dcraw <1>:                                     See 6.        (line  990)
+convert (ImageMagick):                         See 6.        (line 1031)
+dcraw <1>:                                     See 6.        (line  991)
 dcraw:                                         See 2.        (line   89)
-display (ImageMagick):                         See 6.        (line 1030)
-exiftool:                                      See 6.        (line 1058)
-exrdisplay (OpenEXR):                          See 6.        (line 1036)
-fulla (Hugin):                                 See 6.        (line 1007)
-gimp <1>:                                      See 6.        (line 1026)
+display (ImageMagick):                         See 6.        (line 1031)
+exiftool:                                      See 6.        (line 1059)
+exrdisplay (OpenEXR):                          See 6.        (line 1037)
+fulla (Hugin):                                 See 6.        (line 1008)
+gimp <1>:                                      See 6.        (line 1027)
 gimp <2>:                                      See 3.2.      (line  453)
 gimp:                                          See 2.        (line   89)
-gm (GraphicsMagick):                           See 6.        (line 1030)
-hugin <1>:                                     See 6.        (line 1004)
+gm (GraphicsMagick):                           See 6.        (line 1031)
+hugin <1>:                                     See 6.        (line 1005)
 hugin <2>:                                     See 3.2.      (line  444)
 hugin <3>:                                     See 2.        (line   89)
 hugin:                                         See 1.        (line   52)
-identify (ImageMagick) <1>:                    See 6.        (line 1030)
-identify (ImageMagick):                        See 4.1.      (line  846)
-montage (ImageMagick):                         See 6.        (line 1030)
-nona (Hugin) <1>:                              See 6.        (line 1007)
+identify (ImageMagick) <1>:                    See 6.        (line 1031)
+identify (ImageMagick):                        See 4.1.      (line  847)
+montage (ImageMagick):                         See 6.        (line 1031)
+nona (Hugin) <1>:                              See 6.        (line 1008)
 nona (Hugin):                                  See 3.2.      (line  444)
 PanoTools <1>:                                 See 2.        (line   89)
 PanoTools:                                     See 1.        (line   52)
-pfshdrcalibrate (PFScalibration):              See 6.        (line 1039)
-pfsin (PFSTools):                              See 6.        (line 1039)
-pfsout (PFSTools):                             See 6.        (line 1039)
-pfstmo_* (PFStmo):                             See 6.        (line 1039)
-pfsview (PFSTools):                            See 6.        (line 1039)
-PTmender (PanoTools):                          See 6.        (line 1012)
-PTOptimizer (PanoTools):                       See 6.        (line 1012)
-tifficc (LittleCMS):                           See 6.        (line 1062)
-tiffinfo (libtiff) <1>:                        See 6.        (line 1054)
-tiffinfo (libtiff):                            See 4.1.      (line  846)
-ufraw <1>:                                     See 6.        (line  993)
+pfshdrcalibrate (PFScalibration):              See 6.        (line 1040)
+pfsin (PFSTools):                              See 6.        (line 1040)
+pfsout (PFSTools):                             See 6.        (line 1040)
+pfstmo_* (PFStmo):                             See 6.        (line 1040)
+pfsview (PFSTools):                            See 6.        (line 1040)
+PTmender (PanoTools):                          See 6.        (line 1013)
+PTOptimizer (PanoTools):                       See 6.        (line 1013)
+tifficc (LittleCMS):                           See 6.        (line 1063)
+tiffinfo (libtiff) <1>:                        See 6.        (line 1055)
+tiffinfo (libtiff):                            See 4.1.      (line  847)
+ufraw <1>:                                     See 6.        (line  994)
 ufraw:                                         See 2.        (line   89)
-ufraw-batch:                                   See 6.        (line  993)
+ufraw-batch:                                   See 6.        (line  994)
 Option Index
 ************
 
@@ -1566,7 +1567,7 @@ Option Index
 --visualize:                                   See 3.3.      (line  717)
 --wrap:                                        See 3.1.      (line  282)
 -a:                                            See 3.1.      (line  176)
--b <1>:                                        See 5.        (line  920)
+-b <1>:                                        See 5.        (line  921)
 -b:                                            See 3.2.      (line  344)
 -c:                                            See 3.2.      (line  353)
 -d:                                            See 3.2.      (line  364)
@@ -1574,7 +1575,7 @@ Option Index
 -g:                                            See 3.2.      (line  449)
 -h:                                            See 3.1.      (line  221)
 -l:                                            See 3.1.      (line  224)
--m <1>:                                        See 5.        (line  920)
+-m <1>:                                        See 5.        (line  921)
 -m:                                            See 3.2.      (line  473)
 -o:                                            See 3.1.      (line  234)
 -V:                                            See 3.1.      (line  275)
@@ -1591,8 +1592,8 @@ alpha channel:                                 See 2.        (line  147)
 alpha channel, associated:                     See 3.2.      (line  449)
 anneal parameters:                             See 3.3.      (line  487)
 authors, list of:                              See Appendix A.
-                                                             (line 1070)
-binary mask:                                   See 4.        (line  830)
+                                                             (line 1071)
+binary mask:                                   See 4.        (line  831)
 bits per channel:                              See 3.2.      (line  364)
 blur difference image:                         See 3.3.      (line  699)
 Burt-Adelson multiresolution spline:           See 1.        (line   33)
@@ -1614,63 +1615,63 @@ double precision float, IEEE754:               See 3.2.      (line  416)
 feathering, detrimental effect of:             See 1.        (line   52)
 fine mask:                                     See 3.3.      (line  585)
 free documentation license (FDL):              See Appendix B.
-                                                             (line 1109)
+                                                             (line 1110)
 general index:
-          See ``General Index''.                             (line 1587)
+          See ``General Index''.                             (line 1588)
 GNU free documentation license:                See Appendix B.
-                                                             (line 1109)
+                                                             (line 1110)
 GPU (Graphics Processing Unit):                See 3.2.      (line  461)
 graphics processing unit:                      See 3.2.      (line  461)
 half precision float, OpenEXR:                 See 3.2.      (line  431)
-helpful programs:                              See 6.        (line  986)
+helpful programs:                              See 6.        (line  987)
 ICC profile:                                   See 3.2.      (line  355)
 IEEE754 double precision float:                See 3.2.      (line  416)
 IEEE754 single precision float:                See 3.2.      (line  407)
 image cache, block size:                       See 3.2.      (line  344)
 image cache, cache size:                       See 3.2.      (line  473)
 index, general:
-          See ``General Index''.                             (line 1587)
+          See ``General Index''.                             (line 1588)
 index, option:
-          See ``Option Index''.                              (line 1549)
+          See ``Option Index''.                              (line 1550)
 index, program:
-          See ``Program Index''.                             (line 1507)
-input mask:                                    See 4.1.      (line  842)
+          See ``Program Index''.                             (line 1508)
+input mask:                                    See 4.1.      (line  843)
 invocation:                                    See 3.        (line  166)
 JPEG compression:                              See 3.1.      (line  190)
 lens distortion, correction of:                See 2.        (line  126)
 levels, pyramid:                               See 3.1.      (line  224)
-LibJPEG:                                       See 6.        (line 1043)
-LibPNG:                                        See 6.        (line 1046)
-LibTiff:                                       See 6.        (line 1050)
+LibJPEG:                                       See 6.        (line 1044)
+LibPNG:                                        See 6.        (line 1047)
+LibTiff:                                       See 6.        (line 1051)
 load mask:                                     See 3.3.      (line  592)
 loops in seam line:                            See 3.3.      (line  627)
 LZW compression:                               See 3.1.      (line  205)
-mask template character, %:                    See 3.3.      (line  747)
-mask template character, B:                    See 3.3.      (line  796)
-mask template character, b:                    See 3.3.      (line  790)
-mask template character, D:                    See 3.3.      (line  787)
-mask template character, d:                    See 3.3.      (line  781)
-mask template character, E:                    See 3.3.      (line  815)
-mask template character, e:                    See 3.3.      (line  809)
-mask template character, F:                    See 3.3.      (line  805)
-mask template character, f:                    See 3.3.      (line  799)
-mask template character, i:                    See 3.3.      (line  750)
-mask template character, n:                    See 3.3.      (line  765)
-mask template character, P:                    See 3.3.      (line  778)
-mask template character, p:                    See 3.3.      (line  770)
-mask template characters, table of:            See 3.3.      (line  746)
-mask, binary:                                  See 4.        (line  830)
+mask template character, %:                    See 3.3.      (line  748)
+mask template character, B:                    See 3.3.      (line  797)
+mask template character, b:                    See 3.3.      (line  791)
+mask template character, D:                    See 3.3.      (line  788)
+mask template character, d:                    See 3.3.      (line  782)
+mask template character, E:                    See 3.3.      (line  816)
+mask template character, e:                    See 3.3.      (line  810)
+mask template character, F:                    See 3.3.      (line  806)
+mask template character, f:                    See 3.3.      (line  800)
+mask template character, i:                    See 3.3.      (line  751)
+mask template character, n:                    See 3.3.      (line  766)
+mask template character, P:                    See 3.3.      (line  779)
+mask template character, p:                    See 3.3.      (line  771)
+mask template characters, table of:            See 3.3.      (line  747)
+mask, binary:                                  See 4.        (line  831)
 mask, coarse:                                  See 3.3.      (line  532)
 mask, fine:                                    See 3.3.      (line  585)
 mask, generation:                              See 3.3.      (line  567)
-mask, input files:                             See 4.1.      (line  842)
+mask, input files:                             See 4.1.      (line  843)
 mask, load:                                    See 3.3.      (line  592)
 mask, optimization visualization:              See 3.3.      (line  717)
 mask, save:                                    See 3.3.      (line  671)
 mask, vectorization distance:                  See 3.3.      (line  598)
-mask, weight:                                  See 4.        (line  830)
-masks, understanding:                          See 4.        (line  830)
-memory, tuning usage of:                       See 5.        (line  920)
+mask, weight:                                  See 4.        (line  831)
+masks, understanding:                          See 4.        (line  831)
+memory, tuning usage of:                       See 5.        (line  921)
 nearest-feature transform (NFT):               See 3.3.      (line  567)
 OpenEXR, data format:                          See 3.2.      (line  427)
 OpenEXR, half precision float:                 See 3.2.      (line  431)
@@ -1679,7 +1680,7 @@ optimize strategy:                             See 3.3.      (line  653)
 optimize, anneal parameters:                   See 3.3.      (line  487)
 optimizer, simulated annealing:                See 3.3.      (line  487)
 option index:
-          See ``Option Index''.                              (line 1549)
+          See ``Option Index''.                              (line 1550)
 options, common:                               See 3.1.      (line  173)
 options, extended:                             See 3.2.      (line  340)
 options, mask generation:                      See 3.3.      (line  484)
@@ -1692,8 +1693,8 @@ parallax error:                                See 2.        (line  136)
 photometric alignment:                         See 2.        (line  128)
 profile, ICC:                                  See 3.2.      (line  355)
 program index:
-          See ``Program Index''.                             (line 1507)
-programs, helpful additional:                  See 6.        (line  986)
+          See ``Program Index''.                             (line 1508)
+programs, helpful additional:                  See 6.        (line  987)
 pyramid levels:                                See 3.1.      (line  224)
 radius, DIJKSTRA:                              See 3.3.      (line  572)
 raw conversion:                                See 2.        (line  113)
@@ -1705,9 +1706,9 @@ single precision float, IEEE754:               See 3.2.      (line  407)
 smooth difference image:                       See 3.3.      (line  699)
 sRGB color space:                              See 3.2.      (line  355)
 transformation, affine:                        See 2.        (line  126)
-understanding masks:                           See 4.        (line  830)
+understanding masks:                           See 4.        (line  831)
 visualization of mask optimization:            See 3.3.      (line  717)
-weight mask:                                   See 4.        (line  830)
+weight mask:                                   See 4.        (line  831)
 workflow:                                      See 2.        (line   78)
 workflow with Enblend:                         See 2.        (line   89)
 workflow with Enfuse:                          See 2.        (line   89)
