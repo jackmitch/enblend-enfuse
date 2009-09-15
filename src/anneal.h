@@ -610,19 +610,21 @@ protected:
     }
 
     int costImageCost(const Point2D& start, const Point2D& end) const {
+        const int shortLineThreshold = 8; // We penalize lines below this limit.
+
+        const CostIterator lineEnd(costImage->upperLeft() + end);
+        LineIterator<CostIterator> line(costImage->upperLeft() + start, lineEnd);
         int cost = 0;
+        while (line != lineEnd) {
+            cost += *line;
+            ++line;
+        }
+
         const int lineLength =
             std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
 
-        LineIterator<CostIterator> lineStart(costImage->upperLeft() + start,
-                                             costImage->upperLeft() + end);
-        for (int i = 0; i < lineLength; ++i) {
-            cost += *lineStart;
-            ++lineStart;
-        }
-
-        if (lineLength < 8) {
-            cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
+        if (lineLength < shortLineThreshold) {
+            cost += NumericTraits<CostImagePixelType>::max() * (shortLineThreshold - lineLength);
         }
 
         return cost;
