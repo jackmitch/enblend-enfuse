@@ -84,6 +84,8 @@ public:
     GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> >* v, VisualizeImage* const vi) :
         costImage(d), visualizeStateSpaceImage(vi) {
         kMax = 1;
+        distanceWeight = 1.0;
+        mismatchWeight = 1.0;
 
         const int costImageShortDimension = std::min(costImage->width(), costImage->height());
         // Determine state space of currentPoint
@@ -311,6 +313,19 @@ public:
         return mfEstimates;
     }
 
+    void setOptimizerWeights(double aDistanceWeight, double aMismatchWeight) {
+        // IMPLEMENTATION NOTE: We normalize to 2.0, because we
+        // want to reproduce the results of Enblend-3.2.  Up to
+        // Enblend-3.2 the distanceWeight and mismatchWeight were both
+        // fixed at 1.0.
+        const double sum = 0.5 * (aDistanceWeight + aMismatchWeight);
+        assert(aDistanceWeight >= 0.0);
+        assert(aMismatchWeight >= 0.0);
+        assert(sum > 0.0);
+        distanceWeight = aDistanceWeight / sum;
+        mismatchWeight = aMismatchWeight / sum;
+    }
+
 protected:
     void calculateStateProbabilities() {
         const int mf_size = static_cast<int>(mfEstimates.size());
@@ -349,13 +364,18 @@ protected:
                 const double exp_a = 1512775.0 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
                 for (unsigned int i = 0; i < localK; ++i) {
                     const Point2D currentPoint = (*stateSpace)[i];
-                    int cost = (*stateDistances)[i];
+                    const int distanceCost = (*stateDistances)[i];
+                    int mismatchCost = 0;
                     if (lastPointInCostImage) {
-                        cost += costImageCost(lastPointEstimate, currentPoint);
+                        mismatchCost += costImageCost(lastPointEstimate, currentPoint);
                     }
                     if (nextPointInCostImage) {
-                        cost += costImageCost(currentPoint, nextPointEstimate);
+                        mismatchCost += costImageCost(currentPoint, nextPointEstimate);
                     }
+
+                    const double cost =
+                        distanceWeight * static_cast<double>(distanceCost) +
+                        mismatchWeight * static_cast<double>(mismatchCost);
                     E[i] = NumericTraits<int>::fromRealPromote(cost * exp_a);
                     Pi[i] = 0.0;
                 }
@@ -442,14 +462,18 @@ protected:
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
                 const Point2D currentPoint = (*stateSpace)[i];
-                int cost = (*stateDistances)[i];
+                const int distanceCost = (*stateDistances)[i];
+                int mismatchCost = 0;
                 if (lastPointInCostImage) {
-                    cost += costImageCost(lastPointEstimate, currentPoint);
+                    mismatchCost += costImageCost(lastPointEstimate, currentPoint);
                 }
                 if (nextPointInCostImage) {
-                    cost += costImageCost(currentPoint, nextPointEstimate);
+                    mismatchCost += costImageCost(currentPoint, nextPointEstimate);
                 }
-                EFbase[4 * i] = static_cast<float>(cost);
+                const float cost =
+                    distanceWeight * static_cast<float>(distanceCost) +
+                    mismatchWeight * static_cast<float>(mismatchCost);
+                EFbase[4 * i] = cost;
                 PiFbase[4 * i] = static_cast<float>((*stateProbabilities)[i]);
             }
 
@@ -689,16 +713,24 @@ protected:
 
     // Largest state space over all points
     unsigned int kMax;
+
+    // Weight factors for the distance of a point from the initial
+    // seam line and the total mismatch accumulated along the seam
+    // line segment.
+    double distanceWeight;;
+    double mismatchWeight;
 };
 
 
 template <typename CostImage, typename VisualizeImage>
 void annealSnake(const CostImage* const ci,
+                 const pair<double, double>& optimizerWeights,
                  slist<pair<bool, Point2D> >* snake,
                  VisualizeImage* const vi)
 {
     GDAConfiguration<CostImage, VisualizeImage> cfg(ci, snake, vi);
 
+    cfg.setOptimizerWeights(optimizerWeights.first, optimizerWeights.second);
     cfg.run();
 
     vector<Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();

@@ -1047,7 +1047,8 @@ MaskType* createMask(const ImageType* const white,
                     / mismatchImageStride;
             }
 
-            annealSnake(&mismatchImage, snake, visualizeImage);
+            annealSnake(&mismatchImage, OptimizerWeights,
+                        snake, visualizeImage);
 
             // Post-process annealed vertices
             Segment::iterator lastVertex = snake->previous(snake->end());

@@ -1191,6 +1191,41 @@ images.}
 @shortcaption{optimizer strategies}
 @end float
 
+@item --optimizer-weights=@var{DISTANCE-WEIGHT}[:@var{MISMATCH-WEIGHT}]
+@opindex --optimizer-weights
+@cindex optimizer weights
+@cindex weights, optimizer
+@cindex seam optimization
+
+Set the weights of the seam-line optimizer.  If omitted,
+@var{MISMATCH-WEIGHT} defaults to 1.
+
+The seam-line optimizer considers two qualities of the seam line:
+@itemize
+@item
+The distance of the seam line from its initial position, which has
+been determined by @acronym{NFT} (see@option{--no-optimize}).
+
+@item
+The total ``mismatch'' accumulated along it.
+@end itemize
+
+The optimizer weights@tie{}@var{DISTANCE-WEIGHT} and
+@var{MISMATCH-WEIGHT} define how to weight these two criteria.
+Enblend up to version@tie{}3.2 used 1:1.  This version of Enblend
+(@value{VERSION}) uses 8:1.
+
+A large @var{DISTANCE-WEIGHT} pulls the optimized seam line closer to
+the initial postion.  A large @var{MISMATCH-WEIGHT} makes the seam
+line go on detours to find a path along which the mismatch between the
+images is small.  If the optimized seam line shows cusps or loops (see
+option@tie{}@option{--visualize}), reduce @var{MISMATCH-WEIGHT} or
+increase @var{DISTANCE-WEIGHT}.
+
+Both weights must be non-negative.  They cannot be both zero at the
+same time.  Otherwise, their absolute values are not important as
+Enblend normalizes their sum.
+
 @item --save-mask[=@var{IMAGE-TEMPLATE}]
 @opindex --save-mask
 @cindex mask, save

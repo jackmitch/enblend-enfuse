@@ -123,6 +123,7 @@ bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
 std::string VisualizeTemplate("vis-%n.tif");
 bool VisualizeSeam = false;
+std::pair<double, double> OptimizerWeights = std::make_pair(8.0, 1.0);
 anneal_para_t AnnealPara = {32, 0.75, 7000.0, 5.0};
 unsigned int DijkstraRadius = 25U;
 struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
@@ -309,6 +310,10 @@ void printUsageAndExit(const bool error = true) {
         "                         default: " << DifferenceBlurRadius << " pixels\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
+        "  --optimizer-weights=DISTANCEWEIGHT[:MISMATCHWEIGHT]\n" <<
+        "                         set the optimizer's weigths for distance and mismatch;\n" <<
+        "                         default: " << OptimizerWeights.first << ':' <<
+        OptimizerWeights.second << "\n" <<
         "  --mask-vectorize=LENGTH\n" <<
         "                         set LENGTH of single seam segment; append \"%\" for\n" <<
         "                         relative value; defaults: " <<
@@ -376,7 +381,7 @@ enum AllPossibleOptions {
     OptimizeOption, NoOptimizeOption,
     SaveMaskOption, LoadMaskOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
-    SmoothDifferenceOption,
+    SmoothDifferenceOption, OptimizerWeightsOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -446,6 +451,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
                 ": warning:     has no effect" <<
                 endl;
         }
+
+        if (contains(optionSet, OptimizerWeightsOption)) {
+            cerr << command <<
+                ": warning: option \"--optimizer-weights\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
     }
 
     if (!(OptimizeMask || CoarseMask) && contains(optionSet, MaskVectorizeDistanceOption)){
@@ -506,7 +519,8 @@ int process_options(int argc, char** argv) {
         DepthId,                    // 15
         OutputId,                   // 16
         WrapAroundId,               // 17
-        SmoothDifferenceId          // 18
+        SmoothDifferenceId,         // 18
+        OptimizerWeightsId          // 19
     };
 
     // NOTE: See note attached to "enum OptionId" above.
@@ -530,6 +544,7 @@ int process_options(int argc, char** argv) {
         {"output", required_argument, 0, StringArgument},                      // 16
         {"wrap", optional_argument, 0, StringArgument},                        // 17
         {"smooth-difference", required_argument, 0, StringArgument},           // 18
+        {"optimizer-weights", required_argument, 0, StringArgument},           // 19
         {0, 0, 0, 0}
     };
 
@@ -829,6 +844,32 @@ int process_options(int argc, char** argv) {
                 }
 
                 optionSet.insert(SmoothDifferenceOption);
+                break;
+            }
+
+            case OptimizerWeightsId: {
+                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+                strcpy(s.get(), optarg);
+                char* save_ptr = NULL;
+                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                OptimizerWeights.first =
+                    enblend::numberOfString(token,
+                                            _1 >= 0.0,
+                                            "negative optimizer weight; will use 0.0",
+                                            0.0);
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    OptimizerWeights.second =
+                        enblend::numberOfString(token,
+                                                _1 >= 0.0,
+                                                "negative optimizer weight; will use 0.0",
+                                                0.0);
+                }
+                if (OptimizerWeights.first == 0.0 && OptimizerWeights.second == 0.0) {
+                    cerr << command
+                         << ": optimizer weights cannot be both zero"
+                         << endl;
+                }
                 break;
             }
 

@@ -95,6 +95,9 @@ Released on August 25, 2009.
 - New option to control the Simulated Annealing optimizer called
   strategy 1 ("--anneal").
 
+- New option to control the relative weights of the distance to the
+  initial seam line and the total mismatch ("--optimizer-weights").
+
 - New option to control the Dijkstra path minimizer called strategy 2
   ("--dijkstra").
 
