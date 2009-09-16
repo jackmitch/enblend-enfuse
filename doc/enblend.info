@@ -23,7 +23,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-07128825447c, 15 September
+This manual is for Enblend (version 4.0-07128825447c, 16 September
 2009), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -86,7 +86,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
- Figure 2.1: Photographic workflow with Enblend and Enfuse.
+Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images to form a panorama, an exposure series, a

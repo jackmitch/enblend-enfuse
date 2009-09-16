@@ -165,13 +165,13 @@ visualizeLine(ImageType& image,
               const Point2D& begin, const Point2D& end,
               typename ImageType::PixelType value)
 {
-    typedef typename ImageType::traverser traverser;
+    typedef typename ImageType::Iterator Iterator;
 
     const vigra::Diff2D difference(end - begin);
     const int stepX = sign(difference.x);
     const int stepY = sign(difference.y);
-    traverser point(image.upperLeft() + begin);
-    const traverser stop(image.upperLeft() + end);
+    Iterator point(image.upperLeft() + begin);
+    const Iterator stop(image.upperLeft() + end);
     double error = 0.0;
 
     //std::cout << "+ [" << begin << " .. " << end << "]\n";
@@ -951,10 +951,10 @@ MaskType* createMask(const ImageType* const white,
     }
 
     typedef UInt8 MismatchImagePixelType;
-    typedef EnblendNumericTraits<RGBValue<MismatchImagePixelType> >::ImageType
-        VisualizeImageType;
-    EnblendNumericTraits<MismatchImagePixelType>::ImageType
-        mismatchImage(mismatchImageSize, NumericTraits<MismatchImagePixelType>::max());
+    typedef BasicImage<MismatchImagePixelType> MismatchImageType;
+    typedef BasicImage<RGBValue<MismatchImagePixelType> > VisualizeImageType;
+    MismatchImageType mismatchImage(mismatchImageSize,
+                                    NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
     VisualizeImageType* visualizeImage = NULL;
