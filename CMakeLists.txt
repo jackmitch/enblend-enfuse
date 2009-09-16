@@ -169,7 +169,15 @@ IF(WIN32)
 ENDIF(WIN32)
 
 # Boost headers are required, but filesystem is optional
-FIND_PACKAGE(Boost COMPONENTS filesystem system)
+if(WIN32)
+    FIND_PACKAGE(WindowsBoost COMPONENTS filesystem system)
+else()
+    find_package(Boost COMPONENTS system)
+    find_package(Boost COMPONENTS filesystem)
+    set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
+    set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
+    message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+endif()
 
 IF(Boost_filesystem_FOUND)
   ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
@@ -191,7 +199,7 @@ IF(Boost_FOUND)
   
   include_directories(${Boost_INCLUDE_DIR})
 ELSE(Boost_FOUND)
-  MESSAGE(FATAL_ERROR "Boost was not found, but is required to compile")
+  MESSAGE(STATUS "Boost was not found, but is helpfull to compile")
 ENDIF(Boost_FOUND)
 
 # Optional Libraries
