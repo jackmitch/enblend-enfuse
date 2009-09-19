@@ -1,11 +1,13 @@
-This is enfuse.info, produced by makeinfo version 4.12 from enfuse.texi.
+This is ../../doc/enfuse.info, produced by makeinfo version 4.11 from
+../../doc/enfuse.texi.
 
 INFO-DIR-SECTION Individual utilities
+
 START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.0-b1496f879e25, 10 September
+   This manual is for Enfuse (version 4.0-bc52d28cda3e, 18 September
 2009), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -24,7 +26,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-b1496f879e25, 10 September
+This manual is for Enfuse (version 4.0-bc52d28cda3e, 18 September
 2009), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -228,39 +230,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
-                        o
-                        |
-                   _____V_______
-                  /             \
-                  | Take Images |
-                  \_____________/
-                        |
-                        V
-                 /------+----------\
-          [else] |                 | [raw]
-                 |          _______V________
-                 |         /                \
-                 |         | Convert Images |  <-- DCRaw, UFRaw, etc.
-                 |         \________________/
-                 |                 |
-                 \----->+<---------/
-                        |
-                  ______V_______
-                 /              \
-                 | Align Images |              <-- Hugin, Panotools
-                 \______________/
-                        |
-                 _______V________
-                /                \
-                | Combine Images |             <-- Enblend, Enfuse
-                \________________/
-                        |
-                  ______V______
-                 /             \
-                 | Postprocess |               <-- The Gimp, et al.
-                 \_____________/
-                        |
-                        O
+ [image src="photographic-workflow.png" ]
 
 Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
@@ -498,7 +468,7 @@ Common options control some overall features of Enfuse.
 
      Specifying `--wrap' without MODE selects horizontal wrapping.
 
-     Version 4.0-b1496f879e25 of Enfuse, the one described here, does
+     Version 4.0-bc52d28cda3e of Enfuse, the one described here, does
      not blend either zenith or nadir, so you may still see some seams
      in these areas.
 
@@ -755,41 +725,41 @@ to read the manual before applying them successfully.
      image (for example 255 or 65535).  *note Figure:entropy-cutoff::
      shows an example.
 
-      [image src="entropy-cutoff.png" text="  EC
-             +-----------+-----------+------------+-----------+-----------+
-             +           +           +            +           +           +
-             |           :           :            :           :           |
-           1 ++.....................................................####***
-             |           :           :            :           :     # *** |
-             |           :           :            :           :    ***    |
-             |           :           :            :           :  ***      |
-             |           :           :            :           ****        |
-         0.8 ++.............................................***..........++
-             |           :           :            :       *** :           |
-             |           :           :            :    ****   :           |
-             |           :           :            :  ***      :           |
-             |           :           :            :***        :           |
-         0.6 ++.................................****.....................++
-             |           :           :        *** :           :           |
-             |           :           :      ***   :           :           |
-             |           :           :   ***      :           :           |
-             |           :           : ***        :           :           |
-         0.4 ++.....................****.................................++
-             |           :        ***:            :           :           |
-             |           :      ***  :            :           :           |
-             |           :   ****    :            :           :           |
-             |           : ***       :            :           :           |
-         0.2 ++..........***.............................................++
-             |        ****           :            :           :           |
-             |      ***  :           :            :           :           |
-             |    ***    :           :            :           :           |
-             | ***       :           :            :           :           |
-           0 ***#................................................Y.******++
-             |           :          EntropyCutoff(Y, Lower, Upper) ###### |
-             +           +           +            +           +           +
-             +-----------+-----------+------------+-----------+-----------+
-             0          0.2         0.4          0.6         0.8          1
-                                           Y
+      [image src="entropy-cutoff.png" text="
+           +-----------+------------+-----------+------------+-----------+
+           +           +            +           +            +           +
+           |           :            :           :            :           |
+         1 ++......................................................####***
+           |           :            :           :            :     #**** |
+           |           :            :           :            :    ***    |
+           |           :            :           :            :  ***      |
+           |           :            :           :            ****        |
+       0.8 ++..............................................***..........++
+           |           :            :           :       **** :           |
+           |           :            :           :     ***    :           |
+           |           :            :           :   ***      :           |
+           |           :            :           :****        :           |
+       0.6 ++..................................***......................++
+           |           :            :       ****:            :           |
+           |           :            :     ***   :            :           |
+           |           :            :   ***     :            :           |
+           |           :            :****       :            :           |
+       0.4 ++......................***..................................++
+           |           :        ****:           :            :           |
+           |           :      ***   :           :            :           |
+           |           :    ***     :           :            :           |
+           |           : ****       :           :            :           |
+       0.2 ++..........***..............................................++
+           |        ****            :           :            :           |
+           |      ***  :            :           :            :           |
+           |    ***    :            :           :            :           |
+           | ****      :            :           :            :           |
+         0 ***#.................................................Y.******++
+           |           :           EntropyCutoff(Y, Lower, Upper) ###### |
+           +           +            +           +            +           +
+           +-----------+------------+-----------+------------+-----------+
+           0          0.2          0.4         0.6          0.8          1
+                                          Y
 
      " ]
 
@@ -820,7 +790,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-b1496f879e25 of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-bc52d28cda3e of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 
@@ -1183,40 +1153,40 @@ middle of the luminance interval.  Sigma defaults to 0.2.  *note
 Figure:gaussian:: shows a Gaussian with these parameters.
 
  [image src="gaussian.png" text="
-      1 ++----------+-----------+---******---+-----------+----------++
-        +           +           +  **    **  +    Gaussian(Y) ****** +
-        |                         *        *                         |
-        |                        *          *                        |
-        |                       *            *                       |
-        |                      *              *                      |
-    0.8 ++                    **              **                    ++
-        |                     *                *                     |
-        |                    *                  *                    |
-        |                   *                    *                   |
-        |                   *                    *                   |
-        |                  *                      *                  |
-    0.6 ++                *                        *                ++
-        |                 *                        *                 |
-        |                *                          *                |
-        |                *                          *                |
-        |               *                            *               |
-        |              *                              *              |
-        |             *                                *             |
-    0.4 ++            *                                *            ++
-        |            *                                  *            |
-        |           *                                    *           |
-        |          **                                    **          |
-        |         *                                        *         |
-        |        **                                        **        |
-    0.2 ++      **                                          **      ++
-        |      *                                              *      |
-        |     *                                                *     |
-        |   **                                                  **   |
-        |***                                                      ***|
-        *           +           +            +           +           *
-      0 ++----------+-----------+------------+-----------+----------++
-        0          0.2         0.4          0.6         0.8          1
-                                      Y
+    1 ++----------+------------+---*****---+------------+----------++
+      +           +            +  *     *  +     Gaussian(Y) ****** +
+      |                         **       **                         |
+      |                        **         **                        |
+      |                       *             *                       |
+      |                       *             *                       |
+  0.8 ++                     *               *                     ++
+      |                     *                 *                     |
+      |                    *                   *                    |
+      |                    *                   *                    |
+      |                   *                     *                   |
+      |                  *                       *                  |
+  0.6 ++                 *                       *                 ++
+      |                 *                         *                 |
+      |                 *                         *                 |
+      |                *                           *                |
+      |               *                             *               |
+      |              **                             **              |
+      |             *                                 *             |
+  0.4 ++            *                                 *            ++
+      |            *                                   *            |
+      |            *                                   *            |
+      |          **                                     **          |
+      |          *                                       *          |
+      |        **                                         **        |
+  0.2 ++      **                                           **      ++
+      |      **                                             **      |
+      |     *                                                 *     |
+      |   **                                                   **   |
+      |***                                                       ***|
+      *           +            +           +            +           *
+    0 ++----------+------------+-----------+------------+----------++
+      0          0.2          0.4         0.6          0.8          1
+                                     Y
 
 " ]
 
@@ -1331,21 +1301,7 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
-    window size = 3                 window size = 5
-
-     |   |   |   |               |   |   |   |   |   |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | N | N |               | N | N | N | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | C | N |               | N | N | N | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     | N | N | N |               | N | N | C | N | N |
-    -+---+---+---+-             -+---+---+---+---+---+-
-     |   |   |   |               | N | N | N | N | N |
-                                -+---+---+---+---+---+-
-                                 | N | N | N | N | N |
-                                -+---+---+---+---+---+-
-                                 |   |   |   |   |   |
+ [image src="local-analysis-window.png" ]
 
 Figure 4.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
@@ -1439,41 +1395,41 @@ the image.  The operator is radially symmetric with respect to the
 origin, which is why we can easily plot it in *note
 Figure:laplacian-of-gaussian::, setting R = sqrt(x^2 + y^2).
 
- [image src="laplacian-of-gaussian.png" text="  k(R)
-    1 ++--------------+---------------+--------------+--------------++
-      +               +             *****            +               +
-      |               :         ****  : *******      :               |
-      |               :       **      :        ******:               |
-    0 ++....................***......................*****************
-      |               :    **         :              :               |
-      |               :   *           :              :               |
-      |               :  **           :              :               |
-      |               : *             :              :               |
-   -1 ++...............**...........................................++
-      |               :*              :              :               |
-      |               *               :              :               |
-      |              *:               :              :               |
-   -2 ++.............*..............................................++
-      |             * :               :              :               |
-      |            *  :               :              :               |
-      |           *   :               :              :               |
-      |          *    :               :              :               |
-   -3 ++.........*..................................................++
-      |         *     :               :              :               |
-      |         *     :               :              :               |
-      |       **      :               :              :               |
-   -4 ++......*.....................................................++
-      |      *        :               :              :               |
-      |     *         :               :              :               |
-      |   **          :               :              :               |
-      |  **           :               :              :               |
-   -5 ***...........................................................++
-      |               :               :              :               |
-      |               :           LaplacianOfGaussian(R, 0.5) ****** |
-      +               +               +              +               +
-   -6 ++--------------+---------------+--------------+--------------++
-      0              0.5              1             1.5              2
-                                     R
+ [image src="laplacian-of-gaussian.png" text="
+  1 ++--------------+---------------+---------------+--------------++
+    +               +             *****             +               +
+    |               :          **** :  *******      :               |
+    |               :        **     :        *******:               |
+  0 ++.....................**.......................*****************
+    |               :    **         :               :               |
+    |               :    *          :               :               |
+    |               :  **           :               :               |
+    |               :  *            :               :               |
+ -1 ++...............**............................................++
+    |               :*              :               :               |
+    |               *               :               :               |
+    |               *               :               :               |
+ -2 ++.............*...............................................++
+    |             * :               :               :               |
+    |            ** :               :               :               |
+    |           *   :               :               :               |
+    |           *   :               :               :               |
+ -3 ++.........*...................................................++
+    |         *     :               :               :               |
+    |         *     :               :               :               |
+    |       **      :               :               :               |
+ -4 ++......*......................................................++
+    |      *        :               :               :               |
+    |     *         :               :               :               |
+    |    *          :               :               :               |
+    |  **           :               :               :               |
+ -5 ***............................................................++
+    |               :               :               :               |
+    |               :            LaplacianOfGaussian(R, 0.5) ****** |
+    +               +               +               +               +
+ -6 ++--------------+---------------+---------------+--------------++
+    0              0.5              1              1.5              2
+                                    R
 
 " ]
 
@@ -1593,41 +1549,41 @@ entropy of the "impossible message" to zero according to
      lim(p * log_a(1 / p), p -> 0) = 0.
    *note Figure:entropy:: shows an entropy function.
 
- [image src="entropy.png" text="  H (p)
-   2  1 ++----------+-----------+-**********-+-----------+----------++
-        +           +          ****        ****    Entropy(p) ****** +
-        |                    **                **                    |
-        |                  **                    **                  |
-        |                **                        **                |
-        |               **                          **               |
-    0.8 ++             *                              *             ++
-        |             *                                *             |
-        |           **                                  **           |
-        |           *                                    *           |
-        |         **                                      **         |
-        |         *                                        *         |
-    0.6 ++       *                                          *       ++
-        |        *                                          *        |
-        |      **                                            **      |
-        |      *                                              *      |
-        |     *                                                *     |
-        |     *                                                *     |
-        |    *                                                  *    |
-    0.4 ++   *                                                   *  ++
-        |   *                                                    *   |
-        |   *                                                    *   |
-        |  *                                                      *  |
-        | *                                                        * |
-        | *                                                        * |
-    0.2 ++*                                                        *++
-        | *                                                         *|
-        |*                                                          *|
-        |*                                                          *|
-        |                                                            |
-        +           +           +            +           +           +
-      0 ++----------+-----------+------------+-----------+----------++
-        0          0.2         0.4          0.6         0.8          1
-                                      p
+ [image src="entropy.png" text="
+    1 ++----------+------------+-*********-+------------+----------++
+      +           +          ****         ****    Entropy(p) ****** +
+      |                    ***               ***                    |
+      |                  ***                   ***                  |
+      |                 **                       **                 |
+      |               **                           **               |
+  0.8 ++             **                             **             ++
+      |             *                                 *             |
+      |            *                                   *            |
+      |           *                                     *           |
+      |          *                                       *          |
+      |         *                                         *         |
+  0.6 ++       *                                           *       ++
+      |        *                                           *        |
+      |       *                                             *       |
+      |      *                                               *      |
+      |     *                                                 *     |
+      |     *                                                 *     |
+      |    *                                                   *    |
+  0.4 ++   *                                                    *  ++
+      |   *                                                     *   |
+      |   *                                                     *   |
+      |  *                                                       *  |
+      |  *                                                       *  |
+      |  *                                                        * |
+  0.2 ++*                                                         *++
+      | *                                                          *|
+      |*                                                           *|
+      |*                                                           *|
+      |                                                             |
+      +           +            +           +            +           +
+    0 ++----------+------------+-----------+------------+----------++
+      0          0.2          0.4         0.6          0.8          1
+                                     p
 
 " ]
 
@@ -2500,51 +2456,7 @@ File: enfuse.info,  Node: Focus Stacking Decision Tree,  Prev: Suppressing Noise
 Figure *note Figure:focus-stacking-decision-tree:: helps the user to
 arrive at a well-fused focus stack with as few steps as possible.
 
-                            o
-                            |
-               _____________V_____________
-              /                           \
-              | Use local contrast window |
-              \___________________________/
-                            |
-                            V    [else]
-                            +----------------------\
-            [visible seams] |                      |
-               _____________V_____________         |
-              /                           \        |
-              | Use Laplacian-of-Gaussian |        |
-              \___________________________/        |
-                            |                      |
-                            V    [else]            |
-                            +--------------------->|
-      [still visible seams] |                      |
-              ______________V______________        |
-             /                             \       |
-             | Apply positive MinCurvature |       |
-             \_____________________________/       |
-                            |                      |
-                            V    [else]            V
-                            +--------------------->|
-      [loss of fine detail] |                      |
-                            |                      |
-                            |                      |
-   [mild loss of detail]    V                      |
-             /--------------+                      |
-             |              |                      |
-    _________V__________    |                      |
-   /                    \   |                      |
-   | Use local contrast |   |                      |
-   |    enhancement     |   |                      |
-   \____________________/   |                      |
-             |              V                      |
-             \------------->+                      |
-                            |                      |
-               _____________V_______________       |
-              /                             \      |
-              | Apply negative MinCurvature |      |
-              \_____________________________/      |
-                            |                      V
-                            \--------------------->O
+ [image src="focus-stack-decision-tree.png" ]
 
 Figure 7.3: Focus stacking decision tree.
 
@@ -3272,8 +3184,8 @@ General Index
                                                               (line   6)
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
-* affine transformation:                 Workflow.            (line  88)
-* alpha channel <1>:                     Workflow.            (line 109)
+* affine transformation:                 Workflow.            (line  56)
+* alpha channel <1>:                     Workflow.            (line  77)
 * alpha channel:                         Overview.            (line  64)
 * alpha channel, associated:             Extended Options.    (line 115)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
@@ -3310,7 +3222,7 @@ General Index
 * contrast-based fusing:                 Contrast Based Fusing.
                                                               (line   6)
 * conversion, L*a*b*:                    Expert Options.      (line 152)
-* conversion, raw:                       Workflow.            (line  75)
+* conversion, raw:                       Workflow.            (line  43)
 * dark frame:                            Expert Stacking.     (line  18)
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
                                                               (line   6)
@@ -3330,8 +3242,8 @@ General Index
                                                               (line   6)
 * entropy:                               Entropy Weighting.   (line  11)
 * entropy, definition:                   Entropy Weighting.   (line   8)
-* estimators:                            Standard Deviation.  (line  72)
-* expectation value:                     Standard Deviation.  (line  56)
+* estimators:                            Standard Deviation.  (line  58)
+* expectation value:                     Standard Deviation.  (line  42)
 * expert focus stacking tips:            Expert Stacking.     (line   6)
 * exposure series:                       Exposure Series.     (line   6)
 * exposure series, common misconceptions: Exposure Series Misconceptions.
@@ -3385,7 +3297,7 @@ General Index
                                                               (line   6)
 * Laplacian of Gaussian (LoG):           Laplacian of Gaussian.
                                                               (line   6)
-* lens distortion, correction of:        Workflow.            (line  88)
+* lens distortion, correction of:        Workflow.            (line  56)
 * levels, pyramid:                       Common Options.      (line  50)
 * LibJPEG:                               Helpful Programs.    (line  63)
 * LibPNG:                                Helpful Programs.    (line  66)
@@ -3437,18 +3349,18 @@ General Index
 * output image, set size of:             Extended Options.    (line 107)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  34)
-* parallax error:                        Workflow.            (line  98)
-* photometric alignment:                 Workflow.            (line  90)
+* parallax error:                        Workflow.            (line  66)
+* photometric alignment:                 Workflow.            (line  58)
 * pixels, hot:                           Expert Stacking.     (line  18)
 * polarization series:                   Polarization Series. (line   6)
-* probability function:                  Standard Deviation.  (line  53)
+* probability function:                  Standard Deviation.  (line  39)
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * profile, ICC:                          Extended Options.    (line  21)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * pyramid levels:                        Common Options.      (line  50)
-* raw conversion:                        Workflow.            (line  75)
+* raw conversion:                        Workflow.            (line  43)
 * saturation enhancement:                Polarization Series. (line   6)
 * scaling of parameters:                 Scaling and Choice of Mode.
                                                               (line   6)
@@ -3461,15 +3373,15 @@ General Index
 * simple series:                         Repetition.          (line   6)
 * single precision float, IEEE754:       Extended Options.    (line  73)
 * sRGB color space:                      Extended Options.    (line  21)
-* standard deviation:                    Standard Deviation.  (line  62)
-* statistical moments:                   Standard Deviation.  (line  53)
+* standard deviation:                    Standard Deviation.  (line  48)
+* statistical moments:                   Standard Deviation.  (line  39)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
 * tips, focus stacking experts:          Expert Stacking.     (line   6)
-* transformation, affine:                Workflow.            (line  88)
+* transformation, affine:                Workflow.            (line  56)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * understanding masks:                   Understanding Masks. (line   6)
-* variance:                              Standard Deviation.  (line  59)
+* variance:                              Standard Deviation.  (line  45)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, contrast:                      Fusion Options.      (line  10)
 * weight, entropy:                       Fusion Options.      (line  15)
@@ -3502,75 +3414,75 @@ General Index
 
 
 Tag Table:
-Node: Top873
-Node: Overview4579
-Ref: Table:weighting-criteria5766
-Ref: Overview-Footnote-17884
-Ref: Overview-Footnote-28053
-Ref: Overview-Footnote-38234
-Node: Workflow8416
-Ref: Figure:photographic-workflow8928
-Node: Invocation12867
-Node: Common Options13409
-Ref: Common Options-Footnote-117834
-Ref: Common Options-Footnote-218025
-Node: Extended Options18185
-Node: Fusion Options23050
-Node: Expert Options24925
-Ref: Figure:entropy-cutoff27305
-Ref: Table:mask-template-characters35716
-Node: Option Delimiters37802
-Node: Weighting Functions39151
-Node: Weighting Pixels39815
-Node: Weighted Average41317
-Node: Disabling Averaging41909
-Node: Exposure Weighting42858
-Ref: Figure:gaussian44336
-Node: Saturation Weighting47666
-Node: Contrast Weighting48763
-Node: Standard Deviation50093
-Ref: Figure:local-analysis-window50534
-Ref: Standard Deviation-Footnote-153374
-Node: Laplacian of Gaussian53523
-Ref: Figure:laplacian-of-gaussian55063
-Node: Blend SDev and LoG58568
-Node: Scaling and Choice of Mode60202
-Node: Entropy Weighting61042
-Ref: Figure:entropy62007
-Node: Understanding Masks66028
-Node: Tuning Memory Usage69825
-Ref: Table:cache-size-settings72199
-Node: Applications72634
-Node: What Images73358
-Node: Repetition76542
-Node: Exposure Series77606
-Node: Exposure Series Tips79819
-Node: Exposure Series Misconceptions80929
-Ref: Exposure Series Misconceptions-Footnote-182702
-Node: Flash Exposure Series82915
-Node: Polarization Series83157
-Node: Focus Stacks83592
-Node: Why Focus Stacks84474
-Node: Preparing Focus Stacks85803
-Node: Contrast Based Fusing86544
-Node: Basic Focus Stacking87795
-Node: Advanced Focus Stacking89156
-Node: Local Contrast Problem89920
-Ref: Figure:sharp-edge91121
-Ref: Figure:smooth-edge92720
-Node: Laplacian Edge Detection95159
-Node: Local Contrast Enhancement96274
-Node: Suppressing Noise or Recognizing Faint Edges97190
-Node: Focus Stacking Decision Tree99708
-Ref: Figure:focus-stacking-decision-tree100060
-Node: Expert Stacking103081
-Node: Helpful Programs104603
-Node: Authors108323
-Node: FDL109439
-Node: List of Tables130420
-Node: List of Figures130759
-Node: Program Index131493
-Node: Option Index134416
-Node: General Index137335
+Node: Top894
+Node: Overview4600
+Ref: Table:weighting-criteria5787
+Ref: Overview-Footnote-17905
+Ref: Overview-Footnote-28074
+Ref: Overview-Footnote-38255
+Node: Workflow8437
+Ref: Figure:photographic-workflow8949
+Node: Invocation11696
+Node: Common Options12238
+Ref: Common Options-Footnote-116663
+Ref: Common Options-Footnote-216854
+Node: Extended Options17014
+Node: Fusion Options21879
+Node: Expert Options23754
+Ref: Figure:entropy-cutoff26134
+Ref: Table:mask-template-characters34507
+Node: Option Delimiters36593
+Node: Weighting Functions37942
+Node: Weighting Pixels38606
+Node: Weighted Average40108
+Node: Disabling Averaging40700
+Node: Exposure Weighting41649
+Ref: Figure:gaussian43127
+Node: Saturation Weighting46423
+Node: Contrast Weighting47520
+Node: Standard Deviation48850
+Ref: Figure:local-analysis-window49291
+Ref: Standard Deviation-Footnote-151401
+Node: Laplacian of Gaussian51550
+Ref: Figure:laplacian-of-gaussian53090
+Node: Blend SDev and LoG56555
+Node: Scaling and Choice of Mode58189
+Node: Entropy Weighting59029
+Ref: Figure:entropy59994
+Node: Understanding Masks63974
+Node: Tuning Memory Usage67771
+Ref: Table:cache-size-settings70145
+Node: Applications70580
+Node: What Images71304
+Node: Repetition74488
+Node: Exposure Series75552
+Node: Exposure Series Tips77765
+Node: Exposure Series Misconceptions78875
+Ref: Exposure Series Misconceptions-Footnote-180648
+Node: Flash Exposure Series80861
+Node: Polarization Series81103
+Node: Focus Stacks81538
+Node: Why Focus Stacks82420
+Node: Preparing Focus Stacks83749
+Node: Contrast Based Fusing84490
+Node: Basic Focus Stacking85741
+Node: Advanced Focus Stacking87102
+Node: Local Contrast Problem87866
+Ref: Figure:sharp-edge89067
+Ref: Figure:smooth-edge90666
+Node: Laplacian Edge Detection93105
+Node: Local Contrast Enhancement94220
+Node: Suppressing Noise or Recognizing Faint Edges95136
+Node: Focus Stacking Decision Tree97654
+Ref: Figure:focus-stacking-decision-tree98006
+Node: Expert Stacking98809
+Node: Helpful Programs100331
+Node: Authors104051
+Node: FDL105167
+Node: List of Tables126148
+Node: List of Figures126487
+Node: Program Index127221
+Node: Option Index130144
+Node: General Index133063
 
 End Tag Table

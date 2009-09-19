@@ -34,7 +34,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    --css-include=@srcdir@/default.css
 
-# created by make(1), user pobably wants to rebuild (often?)
+# created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES =
 
 # created by make(1)

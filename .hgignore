@@ -21,7 +21,7 @@
 ^stamp-h1$
 ^texinfo.tex$
 
-^enblend-enfuse-[^-]*-staging\.tar\.gz$
+^enblend-enfuse-.*\.tar\.gz$
 
 \.fig\.bak$
 
@@ -35,4 +35,4 @@
 ^doc/enfuse\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
 ^doc/(entropy-cutoff|entropy|gaussian|laplacian-of-gaussian|local-analysis-window|photographic-workflow|sharp-edge|smooth-edge)\.(gp|eps|pdf|png|txt)$
 
-^[^A-Za-z0-9]?BUILD/
+^[^A-Za-z0-9]?BUILD([-_].*)?/
