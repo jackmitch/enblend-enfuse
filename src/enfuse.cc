@@ -202,22 +202,22 @@ void printVersionAndExit() {
             "\n";
 
 #ifdef OPENMP
-        const bool openmp_nested = omp_get_nested();
-        omp_set_nested(true);
-        const bool openmp_dynamic = omp_get_dynamic();
-        omp_set_dynamic(true);
+        const bool have_nested = have_openmp_nested();
+        const bool have_dynamic = have_openmp_dynamic();
         cout <<
             "Extra feature: OpenMP: " <<
             "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
-            "                           - " << (omp_get_nested() ? "" : "no ") <<
+            "                           - " << (have_nested ? "" : "no ") <<
             "support for nested parallelism\n" <<
-            "                           - " << (omp_get_dynamic() ? "" : "no ") <<
+            "                             nested parallelism " <<
+            (have_nested && omp_get_nested() ? "enabled" : "disabled") << " by default\n" <<
+            "                           - " << (have_dynamic ? "" : "no ") <<
             "support for dynamic adjustment of the number of threads\n" <<
+            "                             dynamic adjustment " <<
+            (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
             "                           - using " <<
             omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
             omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n\n";
-        omp_set_dynamic(openmp_dynamic);
-        omp_set_nested(openmp_nested);
 #else
         cout << "Extra feature: OpenMP: " << "no\n\n";
 #endif

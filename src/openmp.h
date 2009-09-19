@@ -652,6 +652,32 @@ distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerri
 #endif // _OPENMP >= 200505
 
 
+// Answer whether the underlying OpenMP implementation really (thinks
+// that it) supports nested parallelism.
+inline static bool
+have_openmp_nested()
+{
+    const bool openmp_nested = omp_get_nested();
+    omp_set_nested(true);
+    const bool result = omp_get_nested() != 0;
+    omp_set_nested(openmp_nested);
+    return result;
+}
+
+
+// Answer whether the underlying OpenMP implementation really (thinks
+// that it) supports dynamic adjustment of the number of threads.
+inline static bool
+have_openmp_dynamic()
+{
+    const bool openmp_dynamic = omp_get_dynamic();
+    omp_set_dynamic(true);
+    const bool result = omp_get_dynamic() != 0;
+    omp_set_dynamic(openmp_dynamic);
+    return result;
+}
+
+
 //
 // Argument Object Factory versions
 //

@@ -93,6 +93,12 @@ Note that OpenMP support and the image cache must not be activated
 both.  The default is to configure with image cache and without
 OpenMP.
 
+If OpenMP support has been enabled, the utilization of special
+features of the actual, underlying OpenMP implementation can be
+controlled as usual with the environment variables OMP_NUM_THREADS,
+OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
+on the usage of these variables.
+
 
 ** --enable-split-doc=YES/no
 

@@ -337,9 +337,6 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     }
 
 #ifdef OPENMP
-    const bool openmp_nested = omp_get_nested();
-    omp_set_nested(true);
-
 #pragma omp parallel sections
 #endif
     {
@@ -404,10 +401,6 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
             }
         } // omp section
     } // omp parallel sections
-
-#ifdef OPENMP
-    omp_set_nested(openmp_nested);
-#endif
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
