@@ -1,3 +1,8 @@
+AM_CPPFLAGS = $(EXTRACPPFLAGS)
+AM_CFLAGS = $(EXTRACFLAGS)
+AM_CXXFLAGS = $(EXTRACXXFLAGS)
+AM_LDFLAGS = $(EXTRALDFLAGS)
+
 EXTRA_DIST = vigra_impex.vcproj vigra_impex_msvc2003.vcproj vigra_impex_msvc2008.vcproj
 
 noinst_LIBRARIES = libvigra_impex.a
@@ -12,6 +17,6 @@ libvigra_impex_a_SOURCES = auto_file.hxx bmp.cxx bmp.hxx byteorder.cxx \
                            viff.hxx void_vector.cxx void_vector.hxx exr.cxx \
                            exr.hxx
 
-libvigra_impex_a_CXXFLAGS = -I${top_srcdir}/include -O3 -Wall \
+libvigra_impex_a_CXXFLAGS = $(AM_CXXFLAGS) \
                             -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                            -DNDEBUG -DVIGRA_STATIC_LIB
+                            -I${top_srcdir}/include
