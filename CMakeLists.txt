@@ -210,7 +210,7 @@ FIND_PACKAGE(OpenEXR)
 FIND_PACKAGE(Threads)
 
 # VIGRA uses Has* pre-processor definitions for config.h
-ADD_DEFINITIONS(-DHasTiff)
+ADD_DEFINITIONS(-DHasTIFF)
 
 IF(ZLIB_FOUND)
   LIST(APPEND common_libs ${ZLIB_LIBRARIES})
