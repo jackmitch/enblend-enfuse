@@ -69,7 +69,7 @@ else()
     configure_file("${TOP_SRC_DIR}/doc/${_gpin}" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
 
     set(_created "${_gp}.txt" "${_gp}.png" "${_gp}.pdf" "${_gp}.eps")
-    message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
+    #message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
     add_custom_command(
       OUTPUT ${_created}
       COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
@@ -141,7 +141,7 @@ foreach (_cmd "enblend" "enfuse")
     endif()
   else()
     # here fig2dev, makeinfo and texi2dvi exist, option DOC set to ON
-    message(STATUS "create ${_created}.info")
+    #message(STATUS "create ${_created}.info")
     add_custom_command(
       OUTPUT "${_created}.info"
       COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
@@ -159,7 +159,7 @@ foreach (_cmd "enblend" "enfuse")
       COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
-    message(STATUS "create ${_created}.html")
+    #message(STATUS "create ${_created}.html")
     add_custom_command(
       OUTPUT "${_created}.html/index.html"
       COMMAND ${MAKEINFO_EXE} "--html" "--css-include=${TOP_SRC_DIR}/doc/default.css"
