@@ -1,9 +1,9 @@
 # This file is part of enblend/enfuse.
 # Licence details can be found in the file COPYING.
 #
-# Copyright (c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
-#                   , Ryan Sleevi <ryan+hugin@sleevi.com>
-#                   , Harry van der Wolf <hvdwolf@gmail.com>
+# Copyright(c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
+#                  , Ryan Sleevi <ryan+hugin@sleevi.com>
+#                  , Harry van der Wolf <hvdwolf@gmail.com>
 # Original file from lyx-project, heavily modified
 #
 cmake_minimum_required(VERSION 2.4)
@@ -56,7 +56,7 @@ endmacro(setstripped)
 set(TOP_SRC_DIR ${CMAKE_SOURCE_DIR})
 file(STRINGS "${TOP_SRC_DIR}/VERSION" _version_lines)
 foreach(_v_l ${_version_lines})
-  if (_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\)-\([0-9a-z]+\)")
+  if(_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\)-\([0-9a-z]+\)")
     setstripped(ENBLEND_MAJOR_VERSION ${CMAKE_MATCH_1})
     setstripped(ENBLEND_MINOR_VERSION ${CMAKE_MATCH_2})
     message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}")
@@ -67,10 +67,10 @@ endforeach(_v_l)
 # here I don't know, how to get the revision number from mercurial
 # so the try is "hg tip"
 FIND_PROGRAM(_hg hg)
-if (NOT ${_hg} MATCHES "-NOTFOUND")
+if(NOT ${_hg} MATCHES "-NOTFOUND")
   EXECUTE_PROCESS(COMMAND ${_hg} tip WORKING_DIRECTORY "${TOP_SRC_DIR}" OUTPUT_VARIABLE _release OUTPUT_STRIP_TRAILING_WHITESPACE)
   foreach(_v_l ${_release})
-    if (_v_l MATCHES "^changeset: *[^0-9]*\([0-9]+\):\([a-z0-9]+\)")
+    if(_v_l MATCHES "^changeset: *[^0-9]*\([0-9]+\):\([a-z0-9]+\)")
       set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
       set(PACKAGE_REVISION ${CMAKE_MATCH_2})
     endif()
@@ -82,15 +82,15 @@ endif()
 # For Win32 builds, assume that all of the libraries are located
 # one directory above the current CMakeLists directory
 IF(WIN32)
-  STRING( REGEX REPLACE "(.*)/[^/]+$" "\\1" work "${CMAKE_SOURCE_DIR}" )
+  STRING(REGEX REPLACE "(.*)/[^/]+$" "\\1" work "${CMAKE_SOURCE_DIR}")
   # create the cache entry
-  SET( SOURCE_BASE_DIR ${work} CACHE FILEPATH "parent dir of hugin source root" )
-  SET(wxWidgets_ROOT_DIR ${SOURCE_BASE_DIR}/wxWidgets-2.8.10)  
-  
+  SET(SOURCE_BASE_DIR ${work} CACHE FILEPATH "parent dir of hugin source root")
+  SET(wxWidgets_ROOT_DIR ${SOURCE_BASE_DIR}/wxWidgets-2.8.10)
+
   LIST(APPEND CMAKE_PREFIX_PATH ${SOURCE_BASE_DIR})
 ENDIF(WIN32)
 
-# First include so it picks up (our) config.h
+# First include so it picks up(our) config.h
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 SET(library_type STATIC)
@@ -103,7 +103,7 @@ OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" ON)
 IF(NOT CMAKE_CL_64)
-  OPTION(ENABLE_SSE2 "SSE2 Support (Release builds only)" OFF)
+  OPTION(ENABLE_SSE2 "SSE2 Support(Release builds only)" OFF)
 ELSE(NOT CMAKE_CL_64)
   SET(ENABLE_SSE2 OFF CACHE INTERNAL "")
 ENDIF(NOT CMAKE_CL_64)
@@ -120,18 +120,18 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -DNDEBUG -Wall")
   IF(APPLE AND CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)
       ## Add needed Compiler and Linker flags for OSX
-      SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flat_namespace -undefined suppress" )
-      SET (CMAKE_CXX_FLAGS "{$CMAKE_CXX_FLAGS} -flat_namespace -undefined suppress" )
-      SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flat_namespace -undefined suppress" )
-      SET (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flat_namespace -undefined suppress" )
-      SET (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flat_namespace -undefined suppress" )
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flat_namespace -undefined suppress")
+      SET(CMAKE_CXX_FLAGS "{$CMAKE_CXX_FLAGS} -flat_namespace -undefined suppress")
+      SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flat_namespace -undefined suppress")
+      SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flat_namespace -undefined suppress")
+      SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flat_namespace -undefined suppress")
   ENDIF(APPLE AND CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)
 ELSEIF(WIN32)
   IF(MSVC)
     # Quiet some compiler noise
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 	ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
-	
+
 	# Due to the number of templates and the added overhead in .obj files from 64-bit builds
 	# add /bigobj support
 	# details: http://msdn.microsoft.com/en-us/library/ms173499.aspx
@@ -139,16 +139,16 @@ ELSEIF(WIN32)
 	  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /bigobj")
 	  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 	ENDIF(CMAKE_CL_64)
-	
+
 	# Maximize speed
 	STRING(REPLACE " /O2 " " /Ox /GL " CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	STRING(REPLACE " /O2 " " /Ox /GL " CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-	
+
 	SET(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /GL")
   ENDIF(MSVC)
-  
+
   # wxWidgets is required on Windows platforms for the TIFF/JPEG/PNG support
-  FIND_PACKAGE(wxWidgets REQUIRED png jpeg tiff) 
+  FIND_PACKAGE(wxWidgets REQUIRED png jpeg tiff)
   LIST(APPEND common_libs ${wxWidgets_LIBRARIES})
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
@@ -160,9 +160,9 @@ LIST(APPEND common_libs ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES})
 include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS_INCLUDE_DIR})
 
 # Platform specifics required libraries
-IF(WIN32) 
+IF(WIN32)
   FIND_PACKAGE(STLport REQUIRED)
-  
+
   include_directories(${STLport_INCLUDE_DIR})
   link_directories(${STLport_LIBRARIES_DIR})
   SET(Boost_USE_STATIC_LIBS ON)
@@ -190,13 +190,13 @@ ENDIF(Boost_filesystem_FOUND)
 IF(Boost_FOUND)
   LIST(APPEND common_libs ${Boost_LIBRARIES})
   link_directories(${Boost_LIBRARY_DIR})
-  
+
   IF(NOT MSVC)
     # MSVC supports auto-linking and will always choose the appropriate
 	# library for the config. Use explicit specifiers for the other platforms
     LIST(APPEND common_libs ${Boost_LIBRARIES})
   ENDIF(NOT MSVC)
-  
+
   include_directories(${Boost_INCLUDE_DIR})
 ELSE(Boost_FOUND)
   MESSAGE(STATUS "Boost was not found, but is helpfull to compile")
@@ -218,7 +218,7 @@ IF(ZLIB_FOUND)
 ELSEIF(WIN32)
   IF(NOT ZLIB_FOUND)
     IF(PNG_FOUND)
-      MESSAGE(STATUS "Disabling support for PNG due to lack of zlib") 
+      MESSAGE(STATUS "Disabling support for PNG due to lack of zlib")
       SET(PNG_FOUND 0)
 	ENDIF(PNG_FOUND)
   ENDIF(NOT ZLIB_FOUND)
@@ -294,9 +294,9 @@ IF(ENABLE_DMALLOC)
   IF(ENABLE_DMALLOC_FUNC_CHECK)
     ADD_DEFINITIONS(-DDMALLOC_FUNC_CHECK)
   ENDIF(ENABLE_DMALLOC_FUNC_CHECK)
-  
+
   IF(CMAKE_USE_PTHREADS_INIT)
-    FIND_LIBRARY(dmalloc_LIBRARIES dmallocthcxx)  
+    FIND_LIBRARY(dmalloc_LIBRARIES dmallocthcxx)
   ELSE(CMAKE_USE_PTHREADS_INIT)
     FIND_LIBRARY(dmalloc_LIBRARIES dmalloccxx)
   ENDIF(CMAKE_USE_PTHREADS_INIT)
@@ -304,7 +304,7 @@ IF(ENABLE_DMALLOC)
   IF(NOT dmalloc_LIBRARIES)
     MESSAGE(FATAL_ERROR "dmalloc support requested, but was unable to locate dmalloc library")
   ENDIF(NOT dmalloc_LIBRARIES)
-  
+
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
   LIST(APPEND common_libs ${dmalloc_LIBRARIES})
 ENDIF(ENABLE_DMALLOC)
