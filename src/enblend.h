@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -105,7 +105,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
     //                !OneAtATime: 2*anInputUnion*imageValueType + 2*anInputUnion*AlphaValueType
     // mem usage after = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
 
-    #ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
     if (Verbose >= VERBOSE_CFI_MESSAGES) {
         CachedFileImageDirector& v = CachedFileImageDirector::v();
         cerr << command
@@ -115,7 +115,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         v.printStats(cerr, command + ": info: ");
         v.resetCacheMisses();
     }
-    #endif
+#endif
 
     const unsigned numberOfImages = imageInfoList.size();
 
@@ -133,7 +133,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         //                !OneAtATime: 2*anInputUnion*imageValueType + 2*anInputUnion*AlphaValueType
         // mem usage after = 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -145,7 +145,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         // Union bounding box of whiteImage and blackImage.
         Rect2D uBB = blackBB | whiteBB;
@@ -321,7 +321,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         //                  2*anInputUnion*ImageValueType +
         //                  2*anInputUnion*AlphaValueType
 
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -388,7 +388,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // mem usage after = MaskType*ubb + 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType
 
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -435,7 +435,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                                                         roiBB.apply(srcImageRange(*(whitePair.first))),
                                                         roiBB.apply(maskImage(*(whitePair.second))));
 
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -473,7 +473,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
                                                         roiBB.apply(srcImageRange(*(blackPair.first))),
                                                         roiBB.apply(maskImage(*(blackPair.second))));
 
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -521,7 +521,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
         // Blend pyramids
         ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
         blend(maskGP, whiteLP, blackLP, whiteMask(NumericTraits<MaskPixelType>::max()));
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -570,7 +570,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
 
         // collapse black pyramid
         collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -613,7 +613,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
             checkpoint(blackPair, anOutputImageInfo);
         }
 
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command

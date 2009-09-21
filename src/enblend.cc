@@ -204,7 +204,7 @@ void printVersionAndExit() {
 
         cout <<
             "Extra feature: image cache: " <<
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
             "yes" <<
 #else
             "no" <<
@@ -477,7 +477,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             endl;
     }
 
-#ifndef ENBLEND_CACHE_IMAGES
+#ifndef CACHE_IMAGES
     if (contains(optionSet, CacheSizeOption)) {
         cerr << command <<
             ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<

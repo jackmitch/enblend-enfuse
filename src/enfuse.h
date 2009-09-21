@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -1207,7 +1207,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
 
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -1220,7 +1220,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
 
         ++m;
         ++inputFileNameIterator;
@@ -1311,7 +1311,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                 i++;
             }
         }
-        #ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
             cerr << command
@@ -1319,7 +1319,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
             v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
         }
-        #endif
+#endif
     }
 
     Rect2D junkBB;

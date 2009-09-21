@@ -20,6 +20,10 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <errno.h>
 
 #include <iomanip>
@@ -111,7 +115,7 @@
 
 // Select our preferred type of image depending on what ./configure
 // tells us.
-#ifdef ENBLEND_CACHE_IMAGES
+#ifdef CACHE_IMAGES
 #define IMAGETYPE CachedFileImage
 #else
 #define IMAGETYPE BasicImage
