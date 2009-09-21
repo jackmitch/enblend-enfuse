@@ -278,7 +278,7 @@ variant of run-length compression.  It is lossless.
 @item Any other format
 Other formats do not accept a @var{COMPRESSION} setting.
 
-However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
+However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 @acronym{VIGRA}} automatically compresses @file{png}-files with the
 @sc{Deflate} method.
 @end table
@@ -295,7 +295,7 @@ Print information on the available options and exit.
 @cindex levels, pyramid
 Use exactly this many @var{LEVELS} for pyramid @footnote{As
 Dr.@tie{}Daniel Jackson correctly
-@uref{http://stargate.wikia.com/@/wiki/@/The_Tomb, noted}, actually,
+@uref{http://stargate.wikia.com/@/wiki/@/The_@/Tomb, noted}, actually,
 it is not a pyramid: ``Ziggaurat, it's a
 @uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.''}
 blending.
@@ -384,7 +384,7 @@ and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
 pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
 reminded of the
-@uref{http://@/en.wikipedia.org/@/wiki/@/Born-von_Karman_boundary_condition},
+@uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition},
 @sc{Born}-@sc{von K@'arm@'an} boundary condition.}.
 
 @var{MODE} takes the following values:
@@ -721,7 +721,7 @@ floating-point numbers.
 @c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
 @cindex @acronym{OpenEXR}, half precision float
 @cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#features,
+@uref{http://@/www.openexr.com/@/about.html#@/features,
 @acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
 10@dmn{bit} significant
 @itemize
@@ -1203,14 +1203,14 @@ in the overlap region.  This is the default.
 Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
 : @var{DELTA-E-MIN} : @var{K-MAX}.
 
-@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_annealing,
+@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_@/annealing,
 Simulated-Annealing}
 
 
 @item Stragegy 2: @sc{Dijkstra} Shortest Path
 Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 
-@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_algorithm,
+@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_@/algorithm,
 @sc{Dijkstra} algorithm}
 
 @end table

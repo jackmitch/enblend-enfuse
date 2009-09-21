@@ -399,7 +399,7 @@ variant of run-length compression; it is lossless.
 @item Any other format
 Other formats do not accept a @var{COMPRESSION} setting.
 
-However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
+However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 @acronym{VIGRA}} automatically compresses @file{png}-files with the
 @sc{Deflate} method.
 @end table
@@ -416,7 +416,7 @@ Print information on the available options then exit.
 @cindex levels, pyramid
 Use exactly this many @var{LEVELS} for pyramid @footnote{As
 Dr.@tie{}Daniel Jackson correctly
-@uref{http://stargate.wikia.com/@/wiki/@/The_Tomb, noted}, actually,
+@uref{http://stargate.wikia.com/@/wiki/@/The_@/Tomb, noted}, actually,
 it is not a pyramid: ``Ziggaurat, it's a
 @uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.}
 blending.
@@ -504,7 +504,7 @@ and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
 pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
 reminded of the
-@uref{http://@/en.wikipedia.org/@/wiki/@/Born-von_Karman_boundary_condition},
+@uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition},
 @sc{Born}-@sc{von K@'arm@'an} boundary condition.}.
 
 @var{MODE} takes the following values:
@@ -832,7 +832,7 @@ floating-point numbers.
 @c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
 @cindex @acronym{OpenEXR}, half precision float
 @cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#features,
+@uref{http://@/www.openexr.com/@/about.html#@/features,
 @acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
 10@dmn{bit} significant
 @itemize
@@ -1382,8 +1382,8 @@ grayscale representation.  This is a useful projector for gamma = 1
 data.  It reveals minute contrast variations even in the shadows and
 the highlights.  This projector is computationally expensive.
 
-See @uref{http://@/en.wikipedia.org/@/wiki/@/Lab_color_space,
-Wikipedia} for a detailed description of the @acronym{Lab} color
+See @uref{http://@/en.wikipedia.org/@/wiki/@/Lab_@/color_@/space,
+Wikipedia} for a detailed description of the @acronym{Lab}@tie{}color
 space.
 
 @item lightness
@@ -2021,7 +2021,7 @@ Use @option{--HardMask} to switch Enfuse into a different (``Super
 Trouper'') weighting mode, where the pixel with the highest weight
 wins, this is, gets weight@tie{}one, and all other pixels get the
 weight of zero
-(@uref{http://@/en.wikipedia.org/@/wiki/@/The_Winner_Takes_It_All,,``The
+(@uref{http://@/en.wikipedia.org/@/wiki/@/The_@/Winner_@/Takes_@/It_@/All,,``The
 Winner Takes It All.''}).  With @option{--HardMask} Equation@tie{}(W)
 becomes
 @ifinfo
@@ -2683,9 +2683,9 @@ The @dfn{Laplacian of Gaussian} (@acronym{LoG}) is an operator to
 detect edges in an image.  Sometimes the @acronym{LoG}-operator is
 also called @sc{Marr}-@sc{Hildreth} operator.  A Laplacian-of-Gaussian
 operator,
-@uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/@/doc/@/vigra/@/group__CommonConvolutionFilters.html,
+@uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/@/doc/@/vigra/@/group__@/Common@/Convolution@/Filters.html,
 @code{vigra::@/laplacian@/Of@/Gaussian}} is part of the
-package@tie{}@uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
+package@tie{}@uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 @acronym{VIGRA}} that Enfuse is built upon and is used for edge
 detection if option@tie{}@option{--EdgeScale} is non-zero and
 @option{--MinCurvature} equal to or less than zero.
@@ -3284,7 +3284,7 @@ outcomes.}
 @end float
 
 For more on (information) entropy visit
-@uref{http://@/en.wikipedia.org/@/wiki/@/Information_entropy,
+@uref{http://@/en.wikipedia.org/@/wiki/@/Information_@/entropy,
 Wikipedia}.
 
 Enfuse computes a pixel's entropy by considering the pixel itself and
@@ -3580,10 +3580,10 @@ series.
 Raw-files in particular lend themselves to be converted multiple times
 and the results being fused together.  The technique is simpler,
 faster, and usually even looks better than
-@uref{http://@/luminous-landscape.com/@/tutorials/@/digital-blending.shtml,
+@uref{http://@/luminous-@/landscape.com/@/tutorials/@/digital-@/blending.shtml,
 digital blending} (as opposed to using a graduated neutral density
 filter) or
-@uref{http://@/www.gimpguru.org/@/Tutorials/@/BlendingExposures/,
+@uref{http://@/www.gimpguru.org/@/Tutorials/@/Blending@/Exposures/,
 blending exposures} in an image manipulation program.  Moreover,
 perfect alignment comes free of charge!
 
@@ -3880,7 +3880,7 @@ contradicting our intuition, and even worse, our intention!
 
 Sadly, configurations like @code{smooth_edge} occur more often with
 high-quality, good
-@uref{http://@/www.luminous-landscape.com/@/essays/@/bokeh.shtml,
+@uref{http://@/www.luminous-@/landscape.com/@/essays/@/bokeh.shtml,
 bokeh} lenses.  In fact, they are the very manifestation of ``good
 bokeh''.  Therefore, Laplacian edge detection plays an important role
 when working with high-quality lenses.
@@ -3920,7 +3920,7 @@ Sometimes Enfuse misses smoother edges with @option{--EdgeScale} and a
 little local contrast enhancement (@acronym{LCE}) helps.  Set
 @code{--EdgeScale}=@/@var{SCALE}:@/@var{LCE-SCALE}:@/@var{LCE-FACTOR}.
 where @var{LCE-SCALE} and @var{LCE-FACTOR} work like the
-@uref{http://@/www.cambridgeincolour.com/@/tutorials/@/unsharp-mask.htm,
+@uref{http://@/www.cambridgeincolour.com/@/tutorials/@/unsharp-@/mask.htm,
 unsharp mask} filters in various image manipulation programs.  Start
 with @var{LCE-SCALE} ten times the value of @var{SCALE} and a
 @var{LCE-FACTOR} of 2--5.

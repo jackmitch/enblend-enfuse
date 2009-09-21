@@ -65,7 +65,7 @@ together, that is the overlay regions may not match exactly.
 @cindex raw conversion
 @cindex conversion, raw
 Convert the
-@uref{http://@/www.luminous-landscape.com/@/tutorials/@/understanding-@/series/@/u-@/raw-@/files.shtml,
+@uref{http://@/www.luminous-@/landscape.com/@/tutorials/@/understanding-@/series/@/u-@/raw-@/files.shtml,
 raw data} exploiting the full dynamic range of the camera and
 capitalize on a high-quality conversion.
 
