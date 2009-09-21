@@ -91,15 +91,15 @@ typedef struct {
 
 // Globals
 const std::string command("enblend");
-const int minimumVectorizeDistance = 4;
-const int coarseMaskVectorizeDistance = 4;
-const int fineMaskVectorizeDistance = 20;
+const int minimumVectorizeDistance = 4; //< src::minimum-vectorize-distance 4
+const int coarseMaskVectorizeDistance = 4; //< src::coarse-mask-vectorize-distance 4
+const int fineMaskVectorizeDistance = 20; //< src::fine-mask-vectorize-distance 20
 
 // Random number generator for dithering
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 1;
+int Verbose = 1;                //< src::default-verbosity-level 1
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
@@ -115,17 +115,24 @@ bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
-unsigned CoarsenessFactor = 8U;
+unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
 double DifferenceBlurRadius = 0.0;
 bool SaveMasks = false;
-std::string SaveMaskTemplate("mask-%n.tif");
+std::string SaveMaskTemplate("mask-%n.tif"); //< src::default-mask-template mask-%n.tif
 bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
-std::string VisualizeTemplate("vis-%n.tif");
+std::string VisualizeTemplate("vis-%n.tif"); //< src::default-visualize-template vis-%n.tif
 bool VisualizeSeam = false;
-std::pair<double, double> OptimizerWeights = std::make_pair(8.0, 1.0);
-anneal_para_t AnnealPara = {32, 0.75, 7000.0, 5.0};
-unsigned int DijkstraRadius = 25U;
+std::pair<double, double> OptimizerWeights =
+    std::make_pair(8.0,      //< src::default-optimizer-weight-distance 8.0
+                   1.0);     //< src::default-optimizer-weight-mismatch 1.0
+anneal_para_t AnnealPara = {
+    32,                         //< src::default-anneal-kmax 32
+    0.75,                       //< src::default-anneal-tau 0.75
+    7000.0,                     //< src::default-anneal-deltae-max 7000.0
+    5.0                         //< src::default-anneal-deltae-min 5.0
+};
+unsigned int DijkstraRadius = 25U; //< src::default-dijkstra-radius 25
 struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
 std::string OutputCompression;
 std::string OutputPixelType;
@@ -271,10 +278,11 @@ void printUsageAndExit(const bool error = true) {
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
         "                         without argument the option selects horizontal wrapping\n" <<
         "  -x                     checkpoint partial results\n" <<
-        "  --compression=COMP     set compression of output image to COMP,\n" <<
-        "                         where COMP is:\n" <<
-        "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
-        "                           0 to 100 for JPEG files\n" <<
+        "  --compression=COMPRESSION\n" <<
+        "                         set compression of output image to COMPRESSION,\n" <<
+        "                         where COMPRESSION is:\n" <<
+        "                         NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                         0 to 100 for JPEG files\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
@@ -681,12 +689,14 @@ int process_options(int argc, char** argv) {
                             exit(1);
                         }
                     }
+                    //< src::minimum-anneal-tau 0
                     if (tau <= 0.0) {
                         cerr << command
                              << ": option \"--anneal\": tau must be larger than zero"
                              << endl;
                         exit(1);
                     }
+                    //< src::maximum-anneal-tau 1
                     if (tau >= 1.0) {
                         cerr << command
                              << ": option \"--anneal\": tau must be less than one"
@@ -713,6 +723,7 @@ int process_options(int argc, char** argv) {
                              << token << "\"" << endl;
                         exit(1);
                     }
+                    //< src::minimum-anneal-deltae-max 0
                     if (AnnealPara.deltaEMax <= 0.0) {
                         cerr << command
                              << ": option \"--anneal\": deltaE_max must be larger than zero"
@@ -739,6 +750,7 @@ int process_options(int argc, char** argv) {
                              << token << "\"" << endl;
                         exit(1);
                     }
+                    //< src::minimum-anneal-deltae-min 0
                     if (AnnealPara.deltaEMin <= 0.0) {
                         cerr << command
                              << ": option \"--anneal\": deltaE_min must be larger than zero"
@@ -771,6 +783,7 @@ int process_options(int argc, char** argv) {
                              << token << "\"" << endl;
                         exit(1);
                     }
+                    //< src::minimum-anneal-kmax 3
                     if (kmax < 3L) {
                         cerr << command
                              << ": option \"--anneal\": k_max must larger or equal to 3"
@@ -834,6 +847,7 @@ int process_options(int argc, char** argv) {
                          << tail << "\" in \"" << optarg << "\"" << endl;
                     exit(1);
                 }
+                //< src::minimum-smooth-difference 0.0
                 if (radius < 0.0) {
                     cerr << command
                          << ": option \"--smooth-difference\": negative radius; will not blur"
@@ -915,6 +929,7 @@ int process_options(int argc, char** argv) {
                 optionSet.insert(CoarseMaskOption);
                 break;
             case DijkstraRadiusId:
+                //< src::minimum-dijkstra-radius 1
                 DijkstraRadius =
                     enblend::numberOfString(optarg,
                                             _1 >= 1U,
@@ -986,6 +1001,7 @@ int process_options(int argc, char** argv) {
             break;
         case 'l':
             // We take care of "too many levels" in "bounds.h".
+            //< src::minimum-pyramid-levels 1
             ExactLevels =
                 enblend::numberOfString(optarg,
                                         _1 >= 1U,

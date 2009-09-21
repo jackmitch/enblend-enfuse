@@ -285,10 +285,14 @@ else
 fi
 
 can_build_doc=yes
-AC_CHECK_PROG(GNUPLOT,
-              gnuplot,
-              gnuplot,
-              false)
+AX_WITH_PROG(PERL, perl, perl, false)
+if test "x$PERL" = xfalse; then
+    AC_MSG_WARN(cannot find perl; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc perl"
+fi
+
+AX_WITH_PROG(GNUPLOT, gnuplot, gnuplot, false)
 if test "x$GNUPLOT" = xfalse; then
     AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
     can_build_doc=no

@@ -91,13 +91,21 @@
 #define VISUALIZE_RGB_COLOR_YELLOW3  RGBValue<vigra::UInt8>(205, 205,   0)
 #define VISUALIZE_RGB_COLOR_YELLOW4  RGBValue<vigra::UInt8>(139, 139,   0)
 
+//< src::visualize-initial-path-color dark yellow
 #define VISUALIZE_INITIAL_PATH       VISUALIZE_RGB_COLOR_YELLOW4
+//< src::visualize-short-path-value-color bright yellow
 #define VISUALIZE_SHORT_PATH_VALUE   VISUALIZE_RGB_COLOR_YELLOW1
+//< src::visualize-first-vertex-value-color medium green
 #define VISUALIZE_FIRST_VERTEX_VALUE VISUALIZE_RGB_COLOR_GREEN3
+//< src::visualize-next-vertex-value-color light green
 #define VISUALIZE_NEXT_VERTEX_VALUE  VISUALIZE_RGB_COLOR_GREEN2
+//< src::visualize-no-overlap-value-color dark red
 #define VISUALIZE_NO_OVERLAP_VALUE   VISUALIZE_RGB_COLOR_RED4
+//< src::visualize-state-space-color dark blue
 #define VISUALIZE_STATE_SPACE        VISUALIZE_RGB_COLOR_BLUE3
+//< src::visualize-state-space-inside-color bright cyan
 #define VISUALIZE_STATE_SPACE_INSIDE VISUALIZE_RGB_COLOR_CYAN1
+//< src::visualize-state-space-unconverged-color bright magenta
 #define VISUALIZE_STATE_SPACE_UNCONVERGED VISUALIZE_RGB_COLOR_MAGENTA1
 
 

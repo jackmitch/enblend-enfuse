@@ -90,7 +90,7 @@ boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-int Verbose = 1;
+int Verbose = 1;                //< src::default-verbosity-level 1
 unsigned int ExactLevels = 0;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
@@ -103,24 +103,28 @@ int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
 std::string OutputCompression;
 std::string OutputPixelType;
-double WExposure = 1.0;
-double WContrast = 0.0;
-double WSaturation = 0.2;
-double WEntropy = 0.0;
-double WMu = 0.5;
-double WSigma = 0.2;
+double WExposure = 1.0;         //< src::default-weight-exposure 1.0
+double WContrast = 0.0;         //< src::default-weight-contrast 0.0
+double WSaturation = 0.2;       //< src::default-weight-saturation 0.2
+double WEntropy = 0.0;          //< src::default-weight-entropy 0.0
+double WMu = 0.5;               //< src::default-exposure-mu 0.5
+double WSigma = 0.2;            //< src::default-exposure-sigma 0.2
 bool WSaturationIsDefault = true;
 int ContrastWindowSize = 5;
 std::string GrayscaleProjector;
-struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {0.0, 0.0, 0.0};
-struct AlternativePercentage MinCurvature = {0.0, false};
-int EntropyWindowSize = 3;
-struct AlternativePercentage EntropyLowerCutoff = {0.0, true};
-struct AlternativePercentage EntropyUpperCutoff = {100.0, true};
+struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {
+    0.0,                        //< src::default-edge-scale 0.0
+    0.0,                        //< src::default-lce-scale 0.0
+    0.0                         //< src::default-lce-factor 0.0
+};
+struct AlternativePercentage MinCurvature = {0.0, false}; //< src::default-minimum-curvature 0
+int EntropyWindowSize = 3;      //< src::default-entropy-window-size 3
+struct AlternativePercentage EntropyLowerCutoff = {0.0, true}; //< src::default-entropy-lower-cutoff 0%
+struct AlternativePercentage EntropyUpperCutoff = {100.0, true}; //< src::default-entropy-upper-cutoff 100%
 bool UseHardMask = false;
 bool SaveMasks = false;
-std::string SoftMaskTemplate("softmask-%n.tif");
-std::string HardMaskTemplate("hardmask-%n.tif");
+std::string SoftMaskTemplate("softmask-%n.tif"); //< src::default-soft-mask-template softmask-%n.tif
+std::string HardMaskTemplate("hardmask-%n.tif"); //< src::default-hard-mask-template hardmask-%n.tif
 TiffResolution ImageResolution;
 
 // Globals related to catching SIGINT
@@ -256,10 +260,11 @@ void printUsageAndExit(const bool error = true) {
         "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
         "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
-        "  --compression=COMP     set compression of output image to COMP,\n" <<
-        "                         where COMP is:\n" <<
-        "                           NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
-        "                           0 to 100 for JPEG files\n" <<
+        "  --compression=COMPRESSION\n" <<
+        "                         set compression of output image to COMPRESSION,\n" <<
+        "                         where COMPRESSION is:\n" <<
+        "                         NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                         0 to 100 for JPEG files\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
@@ -903,11 +908,19 @@ int process_options(int argc, char** argv) {
 
             char *lastChar = NULL;
             double value = strtod(optarg, &lastChar);
+            //< src::minimum-float-argument 0.0
+            //< src::maximum-float-argument 1.0
             if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
                 (option_index == WeightExposureId || option_index == WeightContrastId ||
-                 option_index == WeightSaturationId || option_index == WeightEntropyId)) {
+                 option_index == WeightSaturationId || option_index == WeightEntropyId ||
+                 option_index == WeightMuId)) {
                 cerr << command << ": " << long_options[option_index].name
                      << " must be in the range [0.0, 1.0]." << endl;
+                exit(1);
+            }
+            if ((lastChar == optarg || value < 0.0) && option_index == WeightSigmaId) {
+                cerr << command << ": " << long_options[option_index].name
+                     << " must be non-negative." << endl;
                 exit(1);
             }
 
@@ -937,7 +950,7 @@ int process_options(int argc, char** argv) {
             case ContrastWindowSizeId:
                 ContrastWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3,
+                                            _1 >= 3, //< src::minimum-contrast-window-size 3
                                             "contrast window size to small; will use size = 3",
                                             3);
                 if (ContrastWindowSize % 2 != 1) {
@@ -952,7 +965,7 @@ int process_options(int argc, char** argv) {
             case EntropyWindowSizeId:
                 EntropyWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3,
+                                            _1 >= 3, //< src::minimum-entropy-window-size 3
                                             "entropy window size to small; will use size = 3",
                                             3);
                 if (EntropyWindowSize % 2 != 1) {
@@ -1023,6 +1036,7 @@ int process_options(int argc, char** argv) {
             break;
         case 'l': {
             // We take care of "too many levels" in "bounds.h".
+            //< src::minimum-pyramid-levels 1
             ExactLevels =
                 enblend::numberOfString(optarg,
                                         _1 >= 1U,

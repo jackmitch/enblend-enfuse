@@ -11,6 +11,10 @@
 @settitle Combining Multiple Images with Enblend@tie{}@value{VERSION}
 @include auxmac.texi
 @include versenblend.texi
+@include varsenblend.texi
+
+@set default-image-cache-cachesize 1024@dmn{MB}
+@set default-image-cache-blocksize 2048@dmn{KB}
 
 @c Define a new index for options.
 @defcodeindex op
@@ -155,6 +159,8 @@ these features.  Clouds and sky are the opposite.  These features have
 to be blended across a wide transition zone because any sudden change
 in color will be immediately noticeable.
 
+@cindex alpha channel
+@cindex channel, alpha
 Enblend expects each input file to have an alpha channel.  The alpha
 channel should indicate the region of the file that has valid image
 data.  Enblend compares the alpha regions in the input files to find
@@ -166,12 +172,12 @@ contribute to the final image.
 @pindex PanoTools
 @cindex feathering, detrimental effect of
 Enblend does @emph{not} align images.  Use a tool such as
-@command{hugin} or PanoTools to do this.  The @acronym{TIFF} files
-produced by these programs are exactly what Enblend is designed to
-work with.  Sometimes these @acronym{GUI}s allow you to select
-feathering for the edges of your images.  This treatment is
-detrimental to Enblend.  Turn off feathering by deselecting it or
-setting the feather width to zero.
+@command{hugin} or PanoTools to do this.  The
+@acronym{TIFF}@tie{}files produced by these programs are exactly what
+Enblend is designed to work with.  Sometimes these @acronym{GUI}s
+allow you to select feathering for the edges of your images.  This
+treatment is detrimental to Enblend.  Turn off feathering by
+deselecting it or setting the feather width to zero.
 
 Enblend blends the images in the order they are specified on the
 command line.  You should order your images according to the way that
@@ -204,7 +210,7 @@ Assemble the sequence of images @var{INPUT}@dots{} into a single
 
 @menu
 * Common Options::              General options
-* Extended Options::            Memory and GPU control
+* Extended Options::            Memory and @acronym{GPU} control
 * Mask Generation Options::     Mask generation control
 @end menu
 
@@ -250,8 +256,8 @@ Do not compress.  This is the default.
 @item DEFLATE
 @cindex deflate compression
 @cindex compression, deflate
-Use the Deflate compression scheme also called
-@acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
+Use the @sc{Deflate} compression scheme also called
+@acronym{ZIP}-in-@acronym{TIFF}.  @sc{Deflate} is a lossless data
 compression algorithm that uses a combination of the @acronym{LZ77}
 algorithm and @sc{Huffman} coding.
 
@@ -264,8 +270,8 @@ compression scheme.  @acronym{LZW} compression is lossless.
 @item PACKBITS
 @cindex packbits compression
 @cindex compression, packbits
-Use PackBits compression scheme.  PackBits is particular variant of
-run-length compression.  It is lossless.
+Use @sc{PackBits} compression scheme.  @sc{PackBits} is particular
+variant of run-length compression.  It is lossless.
 @end table
 
 @item Any other format
@@ -273,7 +279,7 @@ Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
 @acronym{VIGRA}} automatically compresses @file{png}-files with the
-``deflate'' method.
+@sc{Deflate} method.
 @end table
 
 @item -h
@@ -299,17 +305,20 @@ as many levels as is possible given the size of the overlap regions.
 Enblend may still use a smaller number of levels if the geometry of
 the images demands.
 
+The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels} to
+@value{src::maximum-pyramid-levels}.
+
 @item -o
 @itemx --output=@var{FILE}
 @opindex -o
 @opindex --output
 Place output in @var{FILE}.
 
-@cindex @file{a.tif}
+@cindex @file{@value{src::default-output-filename}}
 @cindex default output filename
 @cindex output filename, default
 If @option{--output} is not specified, the default is to put the
-resulting image in @file{a.tif}.
+resulting image in @file{@value{src::default-output-filename}}.
 
 @item -v
 @itemx --verbose[=@var{LEVEL}]
@@ -348,7 +357,8 @@ detailed information on the optimizer runs (Enblend only)
 estimations of required memory in selected processing steps
 @end table
 
-The default verbosity level of Enblend is 1.
+The default verbosity level of Enblend is
+@value{src::default-verbosity-level}.
 
 @item -V
 @itemx --version
@@ -427,6 +437,7 @@ Wrap around horizontally:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -480,6 +491,7 @@ Wrap around vertically:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -545,6 +557,7 @@ Wrap around both horizontally and vertically:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -586,8 +599,8 @@ Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enblend's image
 cache.
 
 This is the amount of data that Enblend will move to and from the disk
-at one time.  The default is 2048@dmn{KB}, which should be ok for most
-systems.
+at one time.  The default is @value{default-image-cache-blocksize},
+which should be ok for most systems.
 
 See @ref{Tuning Memory Usage} for details.
 
@@ -768,8 +781,9 @@ Set the @var{CACHESIZE} in megabytes (@acronym{MB}) of Enblend's image
 cache.
 
 This is the amount of memory Enblend will use for storing image data
-before swapping to disk.  The default is 1024@dmn{MB} which is good
-for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+before swapping to disk.  The default is
+@value{default-image-cache-cachesize} which is good for systems with
+3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
 
 See @ref{Tuning Memory Usage} for details.
 @end table
@@ -802,26 +816,27 @@ Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
 Valid range:
 @ifinfo
-0 < @var{TAU} < 1.
+@value{src::minimum-anneal-tau} < @var{TAU} < @value{src::maximum-anneal-tau}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-anneal-tau}</mn>
         <mo>&lt;</mo>
         <mi mathvariant="italic">TAU</mi>
         <mo>&lt;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-anneal-tau}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 < \mathit{TAU} < 1$.
+$@value{src::minimum-anneal-tau} < \mathit{TAU} <
+@value{src::maximum-anneal-tau}$.
 @end tex
 
-The default is 0.75; values around 0.95 are reasonable.  Usually,
-slower cooling results in more converged points.
+The default is @value{src::default-anneal-tau}; values around 0.95 are
+reasonable.  Usually, slower cooling results in more converged points.
 
 @item DELTA-E-MAX
 @itemx DELTA-E-MIN
@@ -830,12 +845,12 @@ cost change possible by any single annealing move.
 
 Valid range:
 @ifinfo
-0 < DELTA-E-MIN < DELTA-E-MAX.
+@value{src::minimum-anneal-deltae-min} < DELTA-E-MIN < DELTA-E-MAX.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-anneal-deltae-min}</mn>
         <mo>&lt;</mo>
         <mi mathvariant="italic">DELTA-E-MIN</mi>
         <mo>&lt;</mo>
@@ -845,7 +860,8 @@ Valid range:
 </math>
 @end html
 @tex
-$0 < \mathit{DELTA-E-MIN} < \mathit{DELTA-E-MAX}$.
+$@value{src::minimum-anneal-deltae-min} < \mathit{DELTA-E-MIN} <
+\mathit{DELTA-E-MAX}$.
 @end tex
 
 In particular they determine the initial and final annealing
@@ -938,7 +954,8 @@ $$\eqalign{
 }$$
 @end tex
 
-The defaults are: @var{DELTA-E-MAX}: 7000 and @var{DELTA-E-MIN}: 5.
+The defaults are: @var{DELTA-E-MAX}: @value{src::default-anneal-deltae-max}
+and @var{DELTA-E-MIN}: @value{src::default-anneal-deltae-min}.
 
 @item K-MAX
 @var{K-MAX} is the maximum number of ``moves'' the optimizer will make
@@ -947,23 +964,24 @@ space, at the expense of a higher computation cost.
 
 Valid range:
 @ifinfo
-@var{K-MAX} @geq{} 3.
+@var{K-MAX} @geq{} @value{src::minimum-anneal-kmax}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
         <mi mathvariant="italic">K-MAX</mi>
         <mo>&ge;</mo>
-        <mn>3</mn>
-        <mtext>.</mtext>
+        <mn></mn>
+        <mtext>@value{src::minimum-anneal-kmax}.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$\mathit{K-MAX} \ge 3$.
+$\mathit{K-MAX} \ge @value{src::minimum-anneal-kmax}$.
 @end tex
 
-The default is 32.  Values around 100 seem reasonable.
+The default is @value{src::default-anneal-kmax}.  Values around 100 seem
+reasonable.
 @end table
 
 @item --coarse-mask[=@var{FACTOR}]
@@ -975,13 +993,14 @@ This option reduces the number of computations necessary to compute
 the seam line and the amount of memory necessary to do so.  It is the
 default.
 
-If omitted @var{FACTOR} defaults to 8, this means,
-option@tie{}@option{--coarse-mask} shrinks the overlapping
-@emph{areas} by a factor of 64.  With @var{FACTOR}@tie{}=@tie{}8 the
-total memory allocated during a run of Enblend shrinks approximately
-by 80% and the maximum amount of memory in use at a time is decreased
-to 60% (Enblend compiled with image cache) or 40% (Enblend compiled
-without image cache).
+If omitted @var{FACTOR} defaults to @value{src::default-coarseness-factor},
+this means, option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of @math{@value{src::default-coarseness-factor}
+@classictimes{} @value{src::default-coarseness-factor}}.  With
+@var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a run of
+Enblend shrinks approximately by 80% and the maximum amount of memory
+in use at a time is decreased to 60% (Enblend compiled with image
+cache) or 40% (Enblend compiled without image cache).
 
 Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
 
@@ -1039,23 +1058,23 @@ more detours when searching for the best seam line.
 
 Valid range:
 @ifinfo
-@var{RADIUS} @geq{} 0.
+@var{RADIUS} @geq{} @value{src::minimum-dijkstra-radius}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
         <mi mathvariant="italic">RADIUS</mi>
         <mo>&ge;</mo>
-        <mn>0</mn>
+        <mn>@value{src::minimum-dijkstra-radius}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$\mathit{RADIUS} \ge 0$.
+$\mathit{RADIUS} \ge @value{src::minimum-dijkstra-radius}$.
 @end tex
 
-Default: 25@dmn{pixels}.
+Default: @value{src::default-dijkstra-radius}@dmn{pixels}.
 
 @item --fine-mask
 @opindex --fine-mask
@@ -1072,7 +1091,7 @@ Also see @ref{Table:mask-generation}.
 @cindex mask, load
 @cindex load mask
 Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
-default is @file{mask-%n.tif}.
+default is @file{@value{src::default-mask-template}}.
 
 See @option{--save-mask} below for details.
 
@@ -1093,7 +1112,8 @@ segments called vectors here.
 The unit of @var{DISTANCE} is pixels unless it is a percentage as
 explained in the next paragraph.  In fine masks one mask pixel
 corresponds to one pixel in the input image, whereas in coarse masks
-one pixel represents 8@tie{}pixels in the input image.
+one pixel represents for example
+@value{src::default-coarseness-factor}@dmn{pixels} in the input image.
 
 Append a percentage sign (@samp{%}) to @var{DISTANCE} to specify the
 segment length as a fraction of the diagonal of the rectangle
@@ -1111,15 +1131,16 @@ run the seam around high mismatch areas.
 @cindex seam line, loops
 @cindex loops in seam line
 What should @emph{never} happen though, are loops in the seam line.
-Counter loops with larger vectorization @var{DISTANCE}s, @var{TAU}s
-(in option@tie{}@option{--anneal}) that are closer to one, and
-blurring of the difference image with
+Counter loops with higher weights of @var{DISTANCE-WEIGHT} (in
+option@tie{}@option{--optimizer-weights}), larger vectorization
+@var{DISTANCE}s, @var{TAU}s (in option@tie{}@option{--anneal}) that
+are closer to one, and blurring of the difference image with
 option@tie{}@option{--smooth-difference}.  Use
 option@tie{}@option{--visualize} to check the results.
 
 Valid range:
 @ifinfo
-@var{DISTANCE} @geq{} 4.
+@var{DISTANCE} @geq{} @value{src::minimum-vectorize-distance}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
@@ -1132,13 +1153,14 @@ Valid range:
 </math>
 @end html
 @tex
-$\mathit{DISTANCE} \ge 4$.
+$\mathit{DISTANCE} \ge @value{src::minimum-vectorize-distance}$.
 @end tex
-Enblend limits @var{DISTANCE} so that it never gets below 4 even if it
-has been given as a percentage.  The user will be warned in such
-cases.
+Enblend limits @var{DISTANCE} so that it never gets below
+@value{src::minimum-vectorize-distance} even if it has been given as a
+percentage.  The user will be warned in such cases.
 
-Default: 4@dmn{pixels} for coarse masks and 20@dmn{pixels} for fine
+Default: @value{src::coarse-mask-vectorize-distance}@dmn{pixels} for coarse
+masks and @value{src::fine-mask-vectorize-distance}@dmn{pixels} for fine
 masks.
 
 @item --no-optimize
@@ -1213,7 +1235,8 @@ The total ``mismatch'' accumulated along it.
 The optimizer weights@tie{}@var{DISTANCE-WEIGHT} and
 @var{MISMATCH-WEIGHT} define how to weight these two criteria.
 Enblend up to version@tie{}3.2 used 1:1.  This version of Enblend
-(@value{VERSION}) uses 8:1.
+(@value{VERSION}) uses
+@value{src::default-optimizer-weight-distance}:@value{src::default-optimizer-weight-mismatch}.
 
 A large @var{DISTANCE-WEIGHT} pulls the optimized seam line closer to
 the initial postion.  A large @var{MISMATCH-WEIGHT} makes the seam
@@ -1231,9 +1254,9 @@ Enblend normalizes their sum.
 @cindex mask, save
 @cindex save mask
 Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
-@file{mask-%n.tif}.  Enblend saves masks as 8@dmn{bit} grayscale
-(single channel) images.  For accuracy we recommend to choose a
-lossless format.
+@file{@value{src::default-mask-template}}.  Enblend saves masks as
+8@dmn{bit} grayscale (single channel) images.  For accuracy we
+recommend to choose a lossless format.
 
 Use this option if you wish to edit the location of the seam line by
 hand.  This will give you images of the right sizes that you can edit
@@ -1280,12 +1303,12 @@ larger area in the original images.
 
 Valid range:
 @ifinfo
-0 @leq{} @var{RADIUS}.
+@value{src::minimum-smooth-difference} @leq{} @var{RADIUS}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-smooth-difference}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">RADIUS</mi>
         <mtext>.</mtext>
@@ -1293,7 +1316,7 @@ Valid range:
 </math>
 @end html
 @tex
-$0 \le \mathit{RADIUS}$.
+$@value{src::minimum-smooth-difference} \le \mathit{RADIUS}$.
 @end tex
 
 @item --visualize[=@var{VISUALIZE-TEMPLATE}]
@@ -1301,7 +1324,8 @@ $0 \le \mathit{RADIUS}$.
 @cindex mask, optimization visualization
 @cindex visualization of mask optimization
 Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
-the mask optimization process.  The default is @file{vis-%n.tif}.
+the mask optimization process.  The default is
+@file{@value{src::default-visualize-template}}.
 
 This shows Enblend's view of the overlap region and how it decided to
 route the seam line.  If you are experiencing artifacts or unexpected
@@ -1323,13 +1347,17 @@ The visualization file shows the symmetric difference of the pixels in
 the rectangular region where two images overlap.  Enblend paints
 non-overlapping parts of the image pair with dark red.
 
-The optimizer's samples are shown in blue.  If a sample is the first
-of a line segment, it is painted in light green; non-first line
-segments are drawn in darker green.  Cyan points indicate state space
+The optimizer's samples are shown in
+@value{src::visualize-state-space-color}.  If a sample is the first of a
+line segment, it is painted in
+@value{src::visualize-first-vertex-value-color}; other line segments are
+drawn in @value{src::visualize-next-vertex-value-color}.  Points in
+@value{src::visualize-state-space-inside-color} color indicate state space
 samples inside the @sc{Dijkstra} radius.  Non-converged points are
-drawn in magenta color.  The final seam line is shown in bright
-yellow.  For comparison purposes Enblend draws the initial seam line
-in dark yellow.
+drawn in @value{src::visualize-state-space-unconverged-color} color.  The
+final seam line is shown in @value{src::visualize-short-path-value-color}.
+For comparison purposes Enblend draws the initial seam line in
+@value{src::visualize-initial-path-color}.
 @end table
 
 @page

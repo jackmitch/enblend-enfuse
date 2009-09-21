@@ -27,6 +27,7 @@
 #include <sstream>
 
 
+//< src::default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
 
 
@@ -55,6 +56,7 @@ typedef enum BoundaryKind
 } boundary_t;
 
 
+//< src::default-tiff-resolution 300@dmn{dpi}
 #define DEFAULT_TIFF_RESOLUTION 300.0f
 
 

@@ -2,7 +2,7 @@ info_TEXINFOS = enblend.texi \
                 enfuse.texi
 
 enblend_TEXINFOS = auxmac.texi auxmac.tex \
-                   fdl.texi \
+                   varsenblend.texi fdl.texi \
                    mask-template-characters.texi \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
@@ -13,7 +13,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    default.css
 
 enfuse_TEXINFOS = auxmac.texi auxmac.tex \
-                  fdl.texi \
+                  varsenfuse.texi fdl.texi \
                   mask-template-characters.texi \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
@@ -35,7 +35,7 @@ AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    --css-include=@srcdir@/default.css
 
 # created by make(1), user probably wants to rebuild (often?)
-MOSTLYCLEANFILES =
+MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 
 # created by make(1)
 CLEANFILES = entropy.{txt,png,eps,pdf} \
@@ -127,13 +127,26 @@ xhtml: $(HTMLS) html-local
 
 # Explicit Rules
 
+varsenblend.texi: $(VPATH)/../src/enblend.cc \
+                  $(VPATH)/../src/bounds.h \
+                  $(VPATH)/../src/common.h \
+                  $(VPATH)/../src/global.h
+	$(PERL) $(VPATH)/docstrings $^ > $@
+
 enblend.info: photographic-workflow.txt
 
-enblend.dvi: photographic-workflow.eps
+enblend.dvi: enblend.texi $(srcdir)/versenblend.texi $(enblend_TEXINFOS) \
+             photographic-workflow.eps
 
 enblend.html \
 enblend.pdf: photographic-workflow.png
 
+
+varsenfuse.texi: $(VPATH)/../src/enfuse.cc \
+                 $(VPATH)/../src/bounds.h \
+                 $(VPATH)/../src/common.h \
+                 $(VPATH)/../src/global.h
+	$(PERL) $(VPATH)/docstrings $^ > $@
 
 enfuse.info: photographic-workflow.txt \
              focus-stack-decision-tree.txt \
@@ -153,7 +166,8 @@ enfuse.dvi: photographic-workflow.eps \
             laplacian-of-gaussian.eps \
             local-analysis-window.eps \
             sharp-edge.eps \
-            smooth-edge.eps
+            smooth-edge.eps \
+            enfuse.texi $(srcdir)/versenfuse.texi $(enfuse_TEXINFOS)
 
 enfuse.html \
 enfuse.pdf: photographic-workflow.png \

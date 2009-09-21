@@ -11,6 +11,10 @@
 @settitle Fusing Multiple Images with Enfuse@tie{}@value{VERSION}
 @include auxmac.texi
 @include versenfuse.texi
+@include varsenfuse.texi
+
+@set default-image-cache-cachesize 1024@dmn{MB}
+@set default-image-cache-blocksize 2048@dmn{KB}
 
 @c Define a new index for options.
 @defcodeindex op
@@ -373,8 +377,8 @@ Do not compress.  This is the default.
 @item DEFLATE
 @cindex deflate compression
 @cindex compression, deflate
-Use the Deflate compression scheme also called
-@acronym{ZIP}-in-@acronym{TIFF}.  Deflate is a lossless data
+Use the @sc{Deflate} compression scheme also called
+@acronym{ZIP}-in-@acronym{TIFF}.  @sc{Deflate} is a lossless data
 compression algorithm that uses a combination of the @acronym{LZ77}
 algorithm and @sc{Huffman} coding.
 
@@ -387,8 +391,8 @@ compression scheme.  @acronym{LZW} compression is lossless.
 @item PACKBITS
 @cindex packbits compression
 @cindex compression, packbits
-Use PackBits compression scheme.  PackBits is a particular variant of
-run-length compression; it is lossless.
+Use @sc{PackBits} compression scheme.  @sc{PackBits} is a particular
+variant of run-length compression; it is lossless.
 @end table
 
 @item Any other format
@@ -396,7 +400,7 @@ Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-heidelberg.de/@/vigra/,
 @acronym{VIGRA}} automatically compresses @file{png}-files with the
-``deflate'' method.
+@sc{Deflate} method.
 @end table
 
 @item -h
@@ -418,9 +422,12 @@ blending.
 
 This option allows to trade off quality of results for slightly
 shorter execution time and lower memory usage.  The default is to use
-as many levels as possible given the size of the overlap region.
+as many levels as possible given the size of the overlap regions.
 Enfuse may still use a smaller number of levels if the geometry of the
-images demands it.
+images demands.
+
+The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels} to
+@value{src::maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}
@@ -428,11 +435,11 @@ images demands it.
 @opindex --output
 Place output in @var{FILE}.
 
-@cindex @file{a.tif}
+@cindex @file{@value{src::default-output-filename}}
 @cindex default output filename
 @cindex output filename, default
 If @option{--output} is not specified, the default is to put the
-resulting image in @file{a.tif}.
+resulting image in @file{@value{src::default-output-filename}}.
 
 @item -v
 @itemx --verbose[=@var{LEVEL}]
@@ -471,7 +478,8 @@ detailed information on the optimizer runs (Enblend only)
 estimations of required memory in selected processing steps
 @end table
 
-The default verbosity level of Enfuse is 1.
+The default verbosity level of Enfuse is
+@value{src::default-verbosity-level}.
 
 @item -V
 @itemx --version
@@ -549,6 +557,7 @@ Wrap around horizontally:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -602,6 +611,7 @@ Wrap around vertically:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -667,6 +677,7 @@ Wrap around both horizontally and vertically:
             </mrow>
             <mo>&rcub;</mo>
         </mrow>
+        <mtext>.</mtext>
     </mrow>
 </math>
 @end html
@@ -681,10 +692,6 @@ borders, are eliminated.
 
 Specifying @option{--wrap} without @var{MODE} selects horizontal
 wrapping.
-
-Version@tie{}@value{VERSION} of Enfuse, the one described here, does
-not blend either zenith or nadir, so you may still see some seams in
-these areas.
 @end table
 
 
@@ -703,8 +710,8 @@ Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enfuse's image
 cache.
 
 This is the amount of data that Enfuse will move to and from the disk
-at one time.  The default is 2048@dmn{KB}, which should be ok for most
-systems.
+at one time.  The default is @value{default-image-cache-blocksize},
+which should be ok for most systems.
 
 See @ref{Tuning Memory Usage} for details.
 
@@ -870,8 +877,9 @@ Set the @var{CACHESIZE} in megabytes (@acronym{MB}) of Enfuse's image
 cache.
 
 This is the amount of memory Enfuse will use for storing image data
-before swapping to disk.  The default is 1024@dmn{MB}, which is good
-for systems with 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+before swapping to disk.  The default is
+@value{default-image-cache-cachesize}, which is good for systems with
+3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
 
 See @ref{Tuning Memory Usage} for details.
 @end table
@@ -888,25 +896,27 @@ contributes to the output image.
 @item --wContrast=@var{WEIGHT}
 @opindex --wContrast
 @cindex weight, contrast
-Sets the relative @var{WEIGHT} of high-contrast pixels.  Default: 0.0.
-Valid range:
+Sets the relative @var{WEIGHT} of high-contrast pixels.  Default:
+@value{src::default-weight-contrast}.  Valid range:
 @ifinfo
-0 @leq{} @var{WEIGHT} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{WEIGHT} @leq{}
+@value{src::maximum-float-argument}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">WEIGHT</mi>
         <mo>&le;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-float-argument}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{WEIGHT} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
+@value{src::maximum-float-argument}$.
 @end tex
 See @ref{Contrast Weighting} and @ref{Expert Options, Option
 ContrastWindowSize}.
@@ -914,25 +924,27 @@ ContrastWindowSize}.
 @item --wEntropy=@var{WEIGHT}
 @opindex --wEntropy
 @cindex weight, entropy
-Sets the relative @var{WEIGHT} of high entropy pixels.  Default: 0.0.
-Valid range:
+Sets the relative @var{WEIGHT} of high entropy pixels.  Default:
+@value{src::default-weight-entropy}.  Valid range:
 @ifinfo
-0 @leq{} @var{WEIGHT} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{WEIGHT} @leq{}
+@value{src::maximum-float-argument}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">WEIGHT</mi>
         <mo>&le;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-float-argument}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{WEIGHT} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
+@value{src::maximum-float-argument}$.
 @end tex
 See @ref{Entropy Weighting} and @ref{Expert Options, Options
 EntropyWindowSize and EntropyCutoff}.
@@ -942,49 +954,53 @@ EntropyWindowSize and EntropyCutoff}.
 @cindex weight, exposure
 Sets the relative @var{WEIGHT} of the well-exposedness criterion.
 Increasing this weight relative to the others will make well-exposed
-pixels contribute more to the final output.  Default: 1.0.  Valid
-range:
+pixels contribute more to the final output.  Default:
+@value{src::default-weight-exposure}.  Valid range:
 @ifinfo
-0 @leq{} @var{WEIGHT} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{WEIGHT} @leq{}
+@value{src::maximum-float-argument}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">WEIGHT</mi>
         <mo>&le;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-float-argument}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{WEIGHT} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
+@value{src::maximum-float-argument}$.
 @end tex
 @xref{Exposure Weighting}.
 
 @item --wMu=@var{MEAN}
 @opindex --wMu
 Set the @var{MEAN} (this is, the center) of the Gaussian exposure
-weight curve.  Default: 0.5.  Valid range:
+weight curve.  Default: @value{src::default-exposure-mu}.  Valid range:
 @ifinfo
-0 @leq{} @var{MEAN} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{MEAN} @leq{}
+@value{src::maximum-float-argument}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">MEAN</mi>
         <mo>&le;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-float-argument}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{MEAN} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{MEAN} \le
+@value{src::maximum-float-argument}$.
 @end tex
 
 Use this option to fine-tune exposure weighting (@pxref{Exposure
@@ -995,24 +1011,27 @@ Weighting}).
 @cindex weight, saturation
 Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
-final output.  Default: 0.2.  Valid range:
+final output.  Default: @value{src::default-weight-saturation}.  Valid
+range:
 @ifinfo
-0 @leq{} @var{WEIGHT} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{WEIGHT} @leq{}
+@value{src::maximum-float-argument}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">WEIGHT</mi>
         <mo>&le;</mo>
-        <mn>1</mn>
+        <mn>@value{src::maximum-float-argument}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{WEIGHT} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
+@value{src::maximum-float-argument}$.
 @end tex
 Saturation weighting is only defined for color images.
 @xref{Saturation Weighting}.
@@ -1020,25 +1039,24 @@ Saturation weighting is only defined for color images.
 @item --wSigma=@var{STD-DEV}
 @opindex --wSigma
 Standard deviation @var{STD-DEV} of the Gaussian exposure weight
-curve.  Default: 0.2.  Low numbers give less weight to pixels that are
-far from @option{--wMu} and vice versa.  Valid range:
+curve.  Default: @value{src::default-exposure-sigma}.  Low numbers give
+less weight to pixels that are far from @option{--wMu} and vice versa.
+Valid range:
 @ifinfo
-0 @leq{} @var{STD-DEV} @leq{} 1.
+@value{src::minimum-float-argument} @leq{} @var{STD-DEV}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
-        <mn>0</mn>
+        <mn>@value{src::minimum-float-argument}</mn>
         <mo>&le;</mo>
         <mi mathvariant="italic">STD-DEV</mi>
-        <mo>&le;</mo>
-        <mn>1</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$0 \le \mathit{STD-DEV} \le 1$.
+$@value{src::minimum-float-argument} \le \mathit{STD-DEV}$.
 @end tex
 
 Use this option to fine-tune exposure weighting (@pxref{Exposure
@@ -1065,20 +1083,20 @@ on focus stacks.
 
 Valid range:
 @ifinfo
-@var{SIZE} @geq{} 3.
+@var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
         <mi mathvariant="italic">SIZE</mi>
         <mo>&ge;</mo>
-        <mn>3</mn>
+        <mn>@value{src::minimum-contrast-window-size}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$\mathit{SIZE} \ge 3$.
+$\mathit{SIZE} \ge @value{src::minimum-contrast-window-size}$.
 @end tex
 
 If given an even @var{SIZE}, Enfuse will automatically use the next
@@ -1093,7 +1111,7 @@ See also @ref{Fusion Options, Option --wContrast} and
 A non-zero value for @var{EDGE-SCALE} switches on the
 Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
 @var{EDGE-SCALE} is the radius of the Gaussian used in the search for
-edges.  Default: 0 pixels.
+edges.  Default: @value{src::default-edge-scale}@dmn{pixels}.
 
 A positive @var{LCE-SCALE} turns on local contrast enhancement
 (@acronym{LCE}) before the @acronym{LoG} edge detection.
@@ -1158,10 +1176,11 @@ $$
 $$
 @end tex
 
-@var{LCE-SCALE} defaults to 0 pixels and @var{LCE-FACTOR} defaults to
-0.  Append @samp{%} to @var{LCE-SCALE} to specify the radius as a
-percentage of @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR}
-to specify the weight as a percentage.
+@var{LCE-SCALE} defaults to @value{src::default-lce-scale} pixels and
+@var{LCE-FACTOR} defaults to @value{src::default-lce-factor}.  Append
+@samp{%} to @var{LCE-SCALE} to specify the radius as a percentage of
+@var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR} to specify the
+weight as a percentage.
 
 @item --EntropyCutoff=@var{LOWER-CUTOFF}
 @itemx --EntropyCutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
@@ -1174,11 +1193,12 @@ treated as pure white.
 For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
 separately and independently to each channel.
 
-Defaults: 0% for @var{LOWER-CUTOFF} and 100% for @var{UPPER-CUTOFF},
-that is, all pixels' values are taken into account.  Append a @samp{%}
-to specify the cutoff relative to maximum pixel value in the source
-image (for example 255 or 65535).  @ref{Figure:entropy-cutoff} shows
-an example.
+Defaults: @value{src::default-entropy-lower-cutoff} for @var{LOWER-CUTOFF}
+and @value{src::default-entropy-upper-cutoff} for @var{UPPER-CUTOFF}, that
+is, all pixels' values are taken into account.  Append a @samp{%} to
+specify the cutoff relative to maximum pixel value in the source image
+(for example 255 or 65535).  @ref{Figure:entropy-cutoff} shows an
+example.
 
 @float Figure,Figure:entropy-cutoff
 @image{entropy-cutoff}
@@ -1209,20 +1229,20 @@ significance of the local entropy value itself.
 
 Valid range:
 @ifinfo
-@var{SIZE} @geq{} 3.
+@var{SIZE} @geq{} @value{src::minimum-entropy-window-size}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mrow>
         <mi mathvariant="italic">SIZE</mi>
         <mo>&ge;</mo>
-        <mn>3</mn>
+        <mn>@value{src::minimum-entropy-window-size}</mn>
         <mtext>.</mtext>
     </mrow>
 </math>
 @end html
 @tex
-$\mathit{SIZE} \ge 3$.
+$\mathit{SIZE} \ge @value{src::minimum-entropy-window-size}$.
 @end tex
 
 If given an even @var{SIZE} Enfuse will automatically use the next odd
@@ -1262,7 +1282,7 @@ Valid values for @var{PROJECTOR} are:
 @item average
 @cindex gray projector, @samp{average}
 Average red, green, and blue channel with equal weights.  This is the
-default, and it often is a good projector for gamma = 1 data.
+default, and it often is a good projector for @math{gamma = 1} data.
 @ifinfo
 @display
 @math{Y = (R + G + B) / 3}
@@ -1496,9 +1516,9 @@ See also @ref{Fusion Options, Option --wContrast} and
 @item --MinCurvature=@var{CURVATURE}
 @opindex --MinCurvature
 Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
-detection.  Default: 0.  Append a @samp{%} to specify the minimum
-curvature relative to maximum pixel value in the source image (for
-example 255 or 65535).
+detection.  Default: @value{src::default-minimum-curvature}.  Append a
+@samp{%} to specify the minimum curvature relative to maximum pixel
+value in the source image (for example 255 or 65535).
 
 A positive value makes Enfuse use the local contrast data (controlled
 with @option{--ContrastWindowSize}) for curvatures less than
@@ -1516,7 +1536,8 @@ Save all weight files as @acronym{TIFF} images.
 @cindex mask, saving
 First form: Save all soft weight masks in files.  If
 option@tie{}@option{--HardMask} is effective also save the hard masks.
-The defaults are @file{softmask-%n.tif} and @file{hardmask-%n.tif}.
+The defaults are @file{@value{src::default-soft-mask-template}} and
+@file{@value{src::default-hard-mask-template}}.
 @cindex filename template
 @cindex mask, filename template
 In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
@@ -2170,15 +2191,15 @@ $$
 @noindent
 whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
 by the command line options@tie{}@option{--wMu} and @option{--wSigma}
-respectively.  @math{Mu} defaults to 0.5, the middle of the luminance
-interval.  @math{Sigma} defaults to 0.2.  @ref{Figure:gaussian} shows
-a Gaussian with these parameters.
+respectively.  @math{Mu} defaults to @value{src::default-exposure-mu} and
+@math{Sigma} defaults to @value{src::default-exposure-sigma}.
+@ref{Figure:gaussian} shows a Gaussian.
 
 @float Figure,Figure:gaussian
 @image{gaussian}
 
-@caption{Gaussian function with Enfuse's default parameters @var{Mu} =
-0.5 and @var{Sigma} = 0.2.}
+@caption{Gaussian function with the parameters @var{Mu} = 0.5 and
+@var{Sigma} = 0.2.}
 
 @shortcaption{Gaussian function}
 @end float
@@ -2186,13 +2207,10 @@ a Gaussian with these parameters.
 The options@tie{}@option{--wMu} and @option{--wSigma} are for
 fine-tuning the final result without changing the set of input images.
 Option@tie{}@option{--wMu} sets the point @var{Mu} of optimum
-exposure.  The default is @var{Mu} = 0.5, exactly the middle between
-pure black (0.0) and pure white (1.0).  Increasing @var{Mu} makes
-Enfuse prefer lighter pixels, rendering the final image lighter and
-vice versa.  Option@tie{}@option{--wSigma} defines the range
-@var{Sigma} of acceptable exposures.  The default is @var{Sigma} =
-0.2, which means at @var{Mu} @plusminus{} 0.2 the weight will be
-approximately 0.88.  Small values of @var{Sigma} penalize exposures
+exposure.  Increasing @var{Mu} makes Enfuse prefer lighter pixels,
+rendering the final image lighter, and vice versa.
+Option@tie{}@option{--wSigma} defines the range @var{Sigma} of
+acceptable exposures.  Small values of @var{Sigma} penalize exposures
 that deviate from @var{Mu} more, and vice versa.
 
 @optionsummaryheading{}
@@ -2959,8 +2977,8 @@ files relentlessly disclose such problems.  Use
 option@tie{}@option{--MinCurvature} with a @emph{negative}
 argument@tie{}@var{CURVATURE} to suppress all edges with a curvature
 below @minus{}@var{CURVATURE} (which is a positive value).  Check the
-effects with the mask files and particularly the
-@file{mask[0-9][0-9][0-9][0-9]_wta.tif} files if using
+effects with the mask files and particularly the hard-mask files
+(@file{@value{src::default-hard-mask-template}}) if using
 option@tie{}@option{--HardMask}.
 
 To indicate the @var{CURVATURE} in relative terms, which is
@@ -3457,7 +3475,8 @@ Averaged images, and therefore low-noise images, are the base for a
 multitude of techniques like, for example, differences.  The most
 prominent method in this class is dark-frame subtraction.
 
-The defaults set @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}.
+The defaults set @samp{--wExposure=@value{src::default-weight-exposure}}
+and @samp{--wSaturation=@value{src::default-weight-saturation}}.
 Eliminating the saturation component with @samp{--wSaturation=0.0} can
 be worth an extra run.
 
@@ -3476,9 +3495,10 @@ except for the exposure time.  Some cameras even provide special
 functions to automate recording exposure series.  See the instruction
 manual of your model for details.
 
-Enfuse's defaults, @samp{--wExposure=1.0} and @samp{--wSaturation=0.2}
-are well suited for fusion of @emph{color} images.  Remember that
-saturation weighting only works for @acronym{RGB} data.
+Enfuse's defaults, @samp{--wExposure=@value{src::default-weight-exposure}}
+and @samp{--wSaturation=@value{src::default-weight-saturation}} are well
+suited for fusion of @emph{color} images.  Remember that saturation
+weighting only works for @acronym{RGB} data.
 Option@tie{}@option{--wSaturation} helps to control burnt-out
 highlights, as these are heavily desaturated.  If no image suffers
 from troublesome highlights, the relative saturation weight can be
@@ -3714,11 +3734,11 @@ Here is what each option causes:
 @table @option
 @item --wExposure=0
 Switch @strong{off} exposure based pixel selection.  The default
-weight is 1.
+weight is @value{src::default-weight-exposure}.
 
 @item --wSaturation=0
 Switch @strong{off} saturation based pixel selection.  The default
-weight is 0.2.
+weight is @value{src::default-weight-saturation}.
 
 @item --wContrast=1
 Switch @strong{on} pixel selection based on contrast.
@@ -3733,8 +3753,8 @@ bit soft.  @xref{Contrast Weighting}.
 
 @noindent
 If you want to see some entertaining progress messages -- contrast
-weighting takes a while --, also pass the @option{-v}@tie{}option for
-a verbose progress report.
+weighting takes a while --, also pass the
+@option{--verbose}@tie{}option for a verbose progress report.
 
 
 @node Basic Focus Stacking
@@ -3878,9 +3898,10 @@ Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
 0.5@dmn{pixels}, where 0.3@dmn{pixels} is a good starting point.  To
 find the best value for @var{SCALE} though, usually some
 experimentation will be necessary.  Use @option{--SaveMasks} to get
-all soft- (default: @file{mask%04i.tif}) and hard-mask files (default:
-@file{mask%04i_wta.tif}).  Check how different scales affect the
-artifacts.  Also @pxref{Understanding Masks}.
+all soft-mask (default: @file{@value{src::default-soft-mask-template}}) and
+hard-mask files (default: @file{@value{src::default-hard-mask-template}}).
+Check how different scales affect the artifacts.  Also
+@pxref{Understanding Masks}.
 
 
 @node Local Contrast Enhancement
@@ -4010,7 +4031,7 @@ with pre-sharpening, that is, @ref{Local Contrast Enhancement} or
 combining @acronym{LoG} with local-contrast-window mode by using a
 negative @option{--MinCurvature}.
 
-Carefully examining the masks (option @option{--SaveMasks}) that
+Carefully examining the masks (option@tie{}@option{--SaveMasks}) that
 Enfuse uses helps to judge the effects of the parameters.
 
 

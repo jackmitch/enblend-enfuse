@@ -194,6 +194,7 @@ formats:
                          .pdf. Check out http://www.gnuplot.info/.
         freefonts      - Fonts for Gnuplot's .png format
         ghostscript    - Convert .eps to .pdf
+        perl           - Run Perl programs
         tetex          - Typeset the .texi documents in .ps or .pdf
         texi2html      - Convert .texi to .html.  Find more information
                          at http://www.nongnu.org/texi2html/.
