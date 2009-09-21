@@ -109,7 +109,7 @@ if test "x$gpu_support" = "xyes" \
     fi
     AC_CHECK_LIB(GLEW, glewInit,
                  [OPENGL_LIBS="-lGLEW ${OPENGL_LIBS}"
-                  AC_DEFINE(HAVE_LIBGLEW, [], [Define if you have the GLEW library])],
+                  AC_DEFINE(HAVE_LIBGLEW, 1, [Define if you have the GLEW library])],
                  [can_use_gpu=no
                   missing_for_gpu="$missing_for_gpu GLEW"
                   AC_MSG_WARN([[GLEW not found, disabling GPU mode]])],
@@ -472,6 +472,12 @@ AC_CONFIG_FILES([Makefile
                  src/win32helpers/Makefile
                  doc/Makefile])
 AC_OUTPUT
+
+# AC_OUTPUT has created "config.h"
+AC_MSG_NOTICE([creating config-h.texi])
+perl -ne 'if (s/^\s*#define\s+(\S+)\s+"?([^"]*)"?/\@set CFG::$1 $2/) {chomp; print "$_\n"}' \
+    < config.h \
+    > config-h.texi
 
 AC_MSG_RESULT([
  enblend-enfuse now configured for ${host}

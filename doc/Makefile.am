@@ -32,7 +32,10 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   default.css
 
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
+                   -I $(top_builddir) -I $(srcdir) \
                    --css-include=@srcdir@/default.css
+
+export TEXINPUTS=$(top_builddir):$(srcdir)
 
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
@@ -135,7 +138,9 @@ varsenblend.texi: $(VPATH)/../src/enblend.cc \
 
 enblend.info: photographic-workflow.txt
 
-enblend.dvi: enblend.texi $(srcdir)/versenblend.texi $(enblend_TEXINFOS) \
+enblend.dvi: enblend.texi \
+             $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
+             $(enblend_TEXINFOS) \
              photographic-workflow.eps
 
 enblend.html \
@@ -158,7 +163,8 @@ enfuse.info: photographic-workflow.txt \
              sharp-edge.txt \
              smooth-edge.txt
 
-enfuse.dvi: photographic-workflow.eps \
+enfuse.dvi: enfuse.texi \
+            photographic-workflow.eps \
             focus-stack-decision-tree.eps \
             entropy.eps \
             entropy-cutoff.eps \
@@ -167,7 +173,8 @@ enfuse.dvi: photographic-workflow.eps \
             local-analysis-window.eps \
             sharp-edge.eps \
             smooth-edge.eps \
-            enfuse.texi $(srcdir)/versenfuse.texi $(enfuse_TEXINFOS)
+            $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
+            $(enfuse_TEXINFOS)
 
 enfuse.html \
 enfuse.pdf: photographic-workflow.png \

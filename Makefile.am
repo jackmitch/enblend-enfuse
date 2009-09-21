@@ -9,3 +9,6 @@ SUBDIRS = include src $(MAYBE_DOC)
 DIST_SUBDIRS = include src doc
 
 ACLOCAL_AMFLAGS = -I m4
+
+# created by configure(1)
+DISTCLEANFILES = config-h.texi

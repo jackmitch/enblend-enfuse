@@ -12,6 +12,7 @@
 @include auxmac.texi
 @include versenblend.texi
 @include varsenblend.texi
+@include config-h.texi
 
 @set default-image-cache-cachesize 1024@dmn{MB}
 @set default-image-cache-blocksize 2048@dmn{KB}
