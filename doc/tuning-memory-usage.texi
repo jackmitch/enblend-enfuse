@@ -1,6 +1,7 @@
 The default configuration of Enblend and Enfuse assumes a system with
 3--4@dmn{GB} of @acronym{RAM}.
 
+@cindex image cache
 If Enblend and Enfuse have been compiled with the ``image-cache''
 feature, they do not rely on the operating system's memory management,
 but use their own image cache.  To find out whether your version uses
@@ -28,7 +29,8 @@ whereas the unit of @var{BUFFER-SIZE} is kilobytes.
 Usually the user lets the operating system take care of the memory
 management of all processes.  However, users of Enblend or Enfuse
 might want to control the balance between the operating systems'
-Virtual Memory System and the image cache for several reasons.
+@uref{http://@/en.wikipedia.org/@/wiki/@/Virtual_@/memory, Virtual
+Memory} system and the image cache for several reasons.
 
 @itemize
 @item
@@ -47,7 +49,7 @@ knowledge of these particular memory access patterns.
 @item
 The disk access of the operating system to the swap device has been
 highly optimized.  Enblend and Enfuse on the other hand use the
-standard @acronym{IO}-layer, which is a slower interface.
+standard @acronym{IO}-layer, which is a much slower interface.
 
 @item
 Limiting the amount of image cache prevents Enblend and Enfuse from

@@ -712,9 +712,12 @@ cache.
 
 This is the amount of data that Enfuse will move to and from the disk
 at one time.  The default is @value{default-image-cache-blocksize},
-which should be ok for most systems.
+which should be ok for most systems.  See @ref{Tuning Memory Usage}
+for details.
 
-See @ref{Tuning Memory Usage} for details.
+Note that Enfuse must have been compiled with the image-cache feature
+for this option to be effective.  Find out about extra features with
+@code{enfuse --version --verbose}.
 
 @item -c
 @opindex -c
@@ -880,9 +883,12 @@ cache.
 This is the amount of memory Enfuse will use for storing image data
 before swapping to disk.  The default is
 @value{default-image-cache-cachesize}, which is good for systems with
-3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.  See @ref{Tuning
+Memory Usage} for details.
 
-See @ref{Tuning Memory Usage} for details.
+Note that Enfuse must have been compiled with the image-cache feature
+for this option to be effective.  Find out about extra features with
+@code{enfuse --version --verbose}.
 @end table
 
 

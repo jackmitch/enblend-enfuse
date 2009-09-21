@@ -601,9 +601,12 @@ cache.
 
 This is the amount of data that Enblend will move to and from the disk
 at one time.  The default is @value{default-image-cache-blocksize},
-which should be ok for most systems.
+which should be ok for most systems.  See @ref{Tuning Memory Usage}
+for details.
 
-See @ref{Tuning Memory Usage} for details.
+Note that Enblend must have been compiled with the image-cache feature
+for this option to be effective.  Find out about extra features with
+@code{enblend --version --verbose}.
 
 @item -c
 @opindex -c
@@ -771,9 +774,9 @@ This is an experimental feature that may not work on all systems.  In
 this version of Enblend, @value{VERSION}, only mask optimization
 strategy@tie{}1 benefits from this option.
 
-Note that @acronym{GPU}-support must have been compiled into the Enblend
-binary for this option to be available.  Find out about this feature
-with @code{enblend --version --verbose}.
+Note that @acronym{GPU}-support must have been compiled into Enblend
+for this option to be available.  Find out about this feature with
+@code{enblend --version --verbose}.
 
 @item -m @var{CACHESIZE}
 @opindex -m
@@ -784,9 +787,12 @@ cache.
 This is the amount of memory Enblend will use for storing image data
 before swapping to disk.  The default is
 @value{default-image-cache-cachesize} which is good for systems with
-3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.
+3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.  See @ref{Tuning
+Memory Usage} for details.
 
-See @ref{Tuning Memory Usage} for details.
+Note that Enblend must have been compiled with the image-cache feature
+for this option to be effective.  Find out about extra features with
+@code{enblend --version --verbose}.
 @end table
 
 
