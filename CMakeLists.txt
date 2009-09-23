@@ -351,7 +351,7 @@ add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
 find_program(PERL_EXE "perl")
-if (NOT ${PERLEXE} MATCHES "-NOTFOUND")
+if (NOT ${PERL_EXE} MATCHES "-NOTFOUND")
     add_subdirectory(doc)
 endif()
 
