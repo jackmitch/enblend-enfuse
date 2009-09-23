@@ -348,7 +348,12 @@ MESSAGE(STATUS "")
 
 
 add_subdirectory(src)
-add_subdirectory(doc)
+
+# you really should have perl installed, when creating doc's
+find_program(PERL_EXE "perl")
+if (NOT ${PERLEXE} MATCHES "-NOTFOUND")
+    add_subdirectory(doc)
+endif()
 
 foreach(_manual enblend enfuse)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/${_manual}.1

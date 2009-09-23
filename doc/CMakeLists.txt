@@ -42,6 +42,48 @@ macro(copybin _basename)
   list(APPEND _depend_gp ${_basename})
 endmacro(copybin)
 
+project(doc0)
+
+set(_helpfiles)
+
+#create config.h.texi
+add_custom_command(
+  OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
+  COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/define2set.pl"
+  "${CMAKE_BINARY_DIR}/config.h" ">" "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
+  DEPENDS "${CMAKE_BINARY_DIR}/config.h"
+  COMMENT "Creating config-h.texi"
+  )
+SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" GENERATED)
+list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi")
+
+# create varsenblend.texi and varsenfuse.texi
+foreach(_cmd enblend enfuse)
+  set(_depends "${TOP_SRC_DIR}/src/${_cmd}.cc"
+    "${TOP_SRC_DIR}/src/bounds.h" "${TOP_SRC_DIR}/src/common.h"
+    "${TOP_SRC_DIR}/src/global.h")
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/vars${_cmd}.texi"
+    COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/docstrings" ${_depends} ">" vars${_cmd}.texi
+    DEPENDS ${_depends}
+    COMMENT "perl: creating vars${_cmd}.texi"
+    )
+  SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/vars${_cmd}.texi" GENERATED)
+  list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/vars${_cmd}.texi")
+endforeach(_cmd)
+
+foreach(_fig photographic-workflow local-analysis-window focus-stack-decision-tree)
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
+    COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/fig2txt.pl" "${TOP_SRC_DIR}/doc/${_fig}.fig" ">" "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
+    DEPENDS "${TOP_SRC_DIR}/doc/${_fig}.fig"
+    COMMENT "perl: creating ${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
+    )
+  SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt" GENERATED)
+  list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt")
+endforeach(_fig)
+add_custom_target(doc0 ALL DEPENDS ${_helpfiles})
+
 project(doc1)
 
 # search for gnuplot and
@@ -176,7 +218,7 @@ endforeach(_cmd)
 add_custom_target(doc3 ALL DEPENDS ${_docs})
 
 # set make order
-add_dependencies(doc3 doc2 doc1 enblendenfuse)
+add_dependencies(doc3 doc2 doc1 doc0 enblendenfuse)
 
 
 #original Makefile.am contents follow:
