@@ -225,7 +225,10 @@ foreach (_cmd "enblend" "enfuse")
       COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
       "-I" "${TOP_SRC_DIR}/doc"
       -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      ${_${_cmd}_TEXINFOS}
+      ${_depend_gp}
+      "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
       COMMENT "makeinfo: Creating ${_created}.info from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
@@ -233,7 +236,9 @@ foreach (_cmd "enblend" "enfuse")
       OUTPUT "${_created}.pdf"
       COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      ${_${_cmd}_TEXINFOS} ${_depend_gp}
+      "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
       COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
