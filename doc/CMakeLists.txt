@@ -137,7 +137,7 @@ if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
 else()
   foreach(_img ${_enblendenfuse_images})
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_img}")
-    foreach(_ext gif pdf)
+    foreach(_ext gif pdf png)
       add_custom_command(
 	OUTPUT "${_created}.${_ext}"
 	COMMAND ${FIG2DEV_EXE} -L ${_ext} "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.${_ext}"
@@ -212,13 +212,16 @@ foreach (_cmd "enblend" "enfuse")
       COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     foreach(_img ${_enblendenfuse_images})
+      set(_needed_image "${_created}.html/${_img}.png")
+      set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
+      message(STATUS "_needed_image = ${_needed_image}")
       add_custom_command(
-	OUTPUT "${_created}.html/${_img}.gif"
-	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif" "${_created}.html/${_img}.gif"
-	DEPENDS "${_created}.html/index.html" "${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif"
-	COMMENT "Copying ${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif to ${_created}.html/${_img}.gif"
+	OUTPUT "${_needed_image}"
+	COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
+	DEPENDS "${_created}.html/index.html" "${_parent_image}"
+	COMMENT "Copying ${_parent_image} to ${_needed_image}"
 	)
-      list(APPEND _docs "${_created}.html/${_img}.gif")
+      list(APPEND _docs "${_needed_image}")
     endforeach(_img)
     install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
     list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html/index.html")
