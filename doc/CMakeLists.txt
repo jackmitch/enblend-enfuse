@@ -4,22 +4,27 @@
 # Copyright (c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
 #
 
+include(GetPrerequisites)	# get function gp_append_unique()
 set(DocumentsDirectory "doc/enblend")
 set(_docs)
-set(_enblend_TEXINFOS)
-foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
+set(_enblend_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi
     photographic-workflow.fig default.css)
-  list(APPEND _enblend_TEXINFOS "${TOP_SRC_DIR}/doc/${_e}")
-endforeach(_e)
 
-set(_enfuse_TEXINFOS)
-foreach(_e auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
+set(_enfuse_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi
     config-edge.gp config.gp entropy-cutoff.gp.in entropy.gp.in gaussian.gp.in
     laplacian-of-gaussian.gp.in sharp-edge.gp.in sharp-edge.data
     smooth-edge.gp.in smooth-edge.data local-analysis-window.fig
     photographic-workflow.fig focus-stack-decision-tree.fig default.css)
+
+set(_enblend_TEXINFOS)
+foreach(_e ${_enblend_Bases})
+  list(APPEND _enblend_TEXINFOS "${TOP_SRC_DIR}/doc/${_e}")
+endforeach(_e)
+
+set(_enfuse_TEXINFOS)
+foreach(_e ${_enfuse_Bases})
   list(APPEND _enfuse_TEXINFOS "${TOP_SRC_DIR}/doc/${_e}")
 endforeach(_e)
 
@@ -107,10 +112,9 @@ else()
   set(srcdir "${TOP_SRC_DIR}/doc") # (@srcdir@) will be substituted in *.gp.in
   foreach(_gpin ${gpin_files})
     string(REGEX REPLACE "\\.gp.in$" "" _gp ${_gpin})
-    SET_SOURCE_FILES_PROPERTIES("${_gp}.gp" GENERATED)
     configure_file("${TOP_SRC_DIR}/doc/${_gpin}" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
 
-    set(_created "${_gp}.txt" "${_gp}.png" "${_gp}.pdf" "${_gp}.eps")
+    set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.txt" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.png" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.pdf" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.eps")
     #message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
     add_custom_command(
       OUTPUT ${_created}
@@ -118,16 +122,39 @@ else()
       DEPENDS "${_gp}.gp"
       COMMENT "gnuplot: Creating ${_created} from ${_gp}.gp"
       )
-    foreach(_cr ${_created})
-      install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${_cr}" DESTINATION ${DocumentsDirectory})
-    endforeach()
+    SET_SOURCE_FILES_PROPERTIES(${_created} GENERATED)
+    install(FILES ${_created} DESTINATION ${DocumentsDirectory})
+    #message(STATUS "Generated files ${_created}")
     list(APPEND _docs ${_created})
     list(APPEND _depend_gp ${_created})
   endforeach(_gpin)
 endif()
 
 project(doc2)
-set(_enblendenfuse_images "photographic-workflow" "focus-stack-decision-tree" "local-analysis-window")
+
+macro(create_selection _list _ext _destlist)
+  set(${_destlist})		# empty destination list first
+  foreach(_src ${${_list}})
+    if(${_src} MATCHES "^(.+)\\.${_ext}$") #select from the list those with expected extension
+      list(APPEND ${_destlist} ${CMAKE_MATCH_1}) # Add the base name without extension only
+    endif()
+  endforeach(_src)
+endmacro(create_selection)
+
+create_selection(_enblend_Bases "fig" _enblend_fig_images)
+create_selection(_enblend_Bases "gp\\\\.in" _enblend_gp_images)
+create_selection(_enfuse_Bases "fig" _enfuse_fig_images)
+create_selection(_enfuse_Bases "gp\\\\.in" _enfuse_gp_images)
+
+set(_enblend_images ${_enblend_fig_images} ${_enblend_gp_images})
+set(_enfuse_images ${_enfuse_fig_images} ${_enfuse_gp_images})
+
+set(_enblendenfuse_fig_images)
+foreach(_i ${_enblend_fig_images} ${_enfuse_fig_images})
+  #message(STATUS "Adding ${_i} to _enblendenfuse_fig_images")
+  gp_append_unique(_enblendenfuse_fig_images ${_i})
+endforeach(_i)
+
 # Search for fig2dev and convert some images
 find_program(FIG2DEV_EXE fig2dev)
 if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
@@ -135,9 +162,11 @@ if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
   # Automake uses here sed and the like
   set(DOC3:BOOL "FALSE")
 else()
-  foreach(_img ${_enblendenfuse_images})
+  #message(STATUS "_enblendenfuse_fig_images =  ${_enblendenfuse_fig_images}")
+  foreach(_img ${_enblendenfuse_fig_images})
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_img}")
     foreach(_ext gif pdf png)
+      #message(STATUS "will create ${_created}.${_ext}")
       add_custom_command(
 	OUTPUT "${_created}.${_ext}"
 	COMMAND ${FIG2DEV_EXE} -L ${_ext} "${TOP_SRC_DIR}/doc/${_img}.fig" ">" "${_created}.${_ext}"
@@ -147,6 +176,7 @@ else()
       list(APPEND _docs ${_created}.${_ext})
       list(APPEND _depend_gp ${_created}.${_ext})
     endforeach(_ext)
+    set_source_files_properties(${_created}.png GENERATED)
   endforeach(_img)
   set(DOC3:BOOL ${DOC})
 endif()
@@ -211,10 +241,11 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
-    foreach(_img ${_enblendenfuse_images})
+    foreach(_img ${_${_cmd}_images})
       set(_needed_image "${_created}.html/${_img}.png")
       set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
-      message(STATUS "_needed_image = ${_needed_image}")
+      #message(STATUS "_needed_image = ${_needed_image}")
+      #message(STATUS "_parent_image = ${_parent_image}")
       add_custom_command(
 	OUTPUT "${_needed_image}"
 	COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
