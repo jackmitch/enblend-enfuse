@@ -127,6 +127,7 @@ else()
 endif()
 
 project(doc2)
+set(_enblendenfuse_images "photographic-workflow" "focus-stack-decision-tree" "local-analysis-window")
 # Search for fig2dev and convert some images
 find_program(FIG2DEV_EXE fig2dev)
 if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
@@ -134,7 +135,7 @@ if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
   # Automake uses here sed and the like
   set(DOC3:BOOL "FALSE")
 else()
-  foreach(_img "photographic-workflow" "focus-stack-decision-tree" "local-analysis-window")
+  foreach(_img ${_enblendenfuse_images})
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_img}")
     foreach(_ext gif pdf)
       add_custom_command(
@@ -210,6 +211,15 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
+    foreach(_img ${_enblendenfuse_images})
+      add_custom_command(
+	OUTPUT "${_created}.html/${_img}.gif"
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif" "${_created}.html/${_img}.gif"
+	DEPENDS "${_created}.html/index.html" "${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif"
+	COMMENT "Copying ${CMAKE_CURRENT_BINARY_DIR}/${_img}.gif to ${_created}.html/${_img}.gif"
+	)
+      list(APPEND _docs "${_created}.html/${_img}.gif")
+    endforeach(_img)
     install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
     list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html/index.html")
   endif()
