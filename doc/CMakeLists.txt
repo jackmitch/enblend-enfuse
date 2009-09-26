@@ -243,29 +243,42 @@ foreach (_cmd "enblend" "enfuse")
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     #message(STATUS "create ${_created}.html")
+    if(NOSPLIT)
+      set(_created_output "${_created}_file.html")
+      set(_output_param "${_created}_file.html")
+      set(_html_param "--no-split")
+    else()
+      set(_created_output "${_created}.html/index.html")
+      set(_output_param "${_created}.html")
+      set(_html_param)
+    endif(NOSPLIT)
     add_custom_command(
-      OUTPUT "${_created}.html/index.html"
-      COMMAND ${MAKEINFO_EXE} "--html" "--css-include=${TOP_SRC_DIR}/doc/default.css"
+      OUTPUT "${_created_output}"
+      COMMAND ${MAKEINFO_EXE} "--html" ${_html_param} "--css-include=${TOP_SRC_DIR}/doc/default.css"
       "-I" "${TOP_SRC_DIR}/doc"
-      -o "${_created}.html" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      -o "${_output_param}" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
       COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
-    foreach(_img ${_${_cmd}_images})
-      set(_needed_image "${_created}.html/${_img}.png")
-      set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
-      #message(STATUS "_needed_image = ${_needed_image}")
-      #message(STATUS "_parent_image = ${_parent_image}")
-      add_custom_command(
-	OUTPUT "${_needed_image}"
-	COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
-	DEPENDS "${_created}.html/index.html" "${_parent_image}"
-	COMMENT "Copying ${_parent_image} to ${_needed_image}"
-	)
-      list(APPEND _docs "${_needed_image}")
-    endforeach(_img)
-    install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
-    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created}.html/index.html")
+    if(NOSPLIT)
+      install(FILES "${_created}_file.html" DESTINATION ${DocumentsDirectory} RENAME "${_cmd}.html")
+    else(NOSPLIT)
+      foreach(_img ${_${_cmd}_images})
+	set(_needed_image "${_created}.html/${_img}.png")
+	set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
+	#message(STATUS "_needed_image = ${_needed_image}")
+	#message(STATUS "_parent_image = ${_parent_image}")
+	add_custom_command(
+	  OUTPUT "${_needed_image}"
+	  COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
+	  DEPENDS "${_created}.html/index.html" "${_parent_image}"
+	  COMMENT "Copying ${_parent_image} to ${_needed_image}"
+	  )
+	list(APPEND _docs "${_needed_image}")
+      endforeach(_img)
+      install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
+    endif(NOSPLIT)
+    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created_output}")
   endif()
 endforeach(_cmd)
 

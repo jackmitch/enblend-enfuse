@@ -102,6 +102,8 @@ OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
 OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" ON)
+OPTION(NOSPLIT "Do not split html-documents" OFF)
+
 IF(NOT CMAKE_CL_64)
   OPTION(ENABLE_SSE2 "SSE2 Support(Release builds only)" OFF)
 ELSE(NOT CMAKE_CL_64)
