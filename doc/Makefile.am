@@ -34,8 +34,9 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    -I $(top_builddir) -I $(srcdir) \
                    --css-include=@srcdir@/default.css
-
 export TEXINPUTS=$(top_builddir):$(srcdir)
+
+EXTRA_DIST = docstrings
 
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
