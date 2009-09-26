@@ -292,9 +292,7 @@ void printUsageAndExit(const bool error = true) {
         "                         image, where DEPTH is 8, 16, 32, r32, or r64\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
-#ifdef HAVE_LIBGLEW
-        "  --gpu                  use graphics card to accelerate some computations\n" <<
-#endif
+        "  --gpu                  use graphics card to accelerate seam-line optimization\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
         "                         manually set the size and position of the output\n" <<
         "                         image; useful for cropped and shifted input\n" <<
