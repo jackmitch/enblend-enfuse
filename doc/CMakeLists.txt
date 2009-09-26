@@ -47,6 +47,30 @@ macro(copybin _basename)
   list(APPEND _depend_gp ${_basename})
 endmacro(copybin)
 
+macro(create_selection _list _ext _destlist)
+  set(${_destlist})		# empty destination list first
+  foreach(_src ${${_list}})
+    if(${_src} MATCHES "^(.+)\\.${_ext}$") #select from the list those with expected extension
+      list(APPEND ${_destlist} ${CMAKE_MATCH_1}) # Add the base name without extension only
+    endif()
+  endforeach(_src)
+endmacro(create_selection)
+
+set(_enblendenfuse_fig_images)
+set(_enblendenfuse_gp_images)
+
+foreach(_cmd "enblend" "enfuse")
+  create_selection(_${_cmd}_Bases "fig" _${_cmd}_fig_images)
+  create_selection(_${_cmd}_Bases "gp\\\\.in" _${_cmd}_gp_images)
+  set(_${_cmd}_images ${_${_cmd}_fig_images} ${_${_cmd}_gp_images})
+  foreach(_i ${_${_cmd}_fig_images})
+    gp_append_unique(_enblendenfuse_fig_images ${_i})
+  endforeach(_i)
+  foreach(_i ${_${_cmd}_gp_images})
+    gp_append_unique(_enblendenfuse_gp_images ${_i})
+  endforeach(_i)
+endforeach(_cmd)
+
 project(doc0)
 
 set(_helpfiles)
@@ -77,7 +101,7 @@ foreach(_cmd enblend enfuse)
   list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/vars${_cmd}.texi")
 endforeach(_cmd)
 
-foreach(_fig photographic-workflow local-analysis-window focus-stack-decision-tree)
+foreach(_fig ${_enblendenfuse_fig_images})
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
     COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/fig2txt.pl" "${TOP_SRC_DIR}/doc/${_fig}.fig" ">" "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
@@ -108,11 +132,10 @@ if (NOT DOC OR ${GNUPLOT_EXE} MATCHES "-NOTFOUND")
     endif()
   endforeach(_cf)
 else()
-  file(GLOB gpin_files RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.gp.in")
+  #
   set(srcdir "${TOP_SRC_DIR}/doc") # (@srcdir@) will be substituted in *.gp.in
-  foreach(_gpin ${gpin_files})
-    string(REGEX REPLACE "\\.gp.in$" "" _gp ${_gpin})
-    configure_file("${TOP_SRC_DIR}/doc/${_gpin}" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
+  foreach(_gp ${_enblendenfuse_gp_images})
+    configure_file("${TOP_SRC_DIR}/doc/${_gp}.gp.in" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
 
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.txt" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.png" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.pdf" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.eps")
     #message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
@@ -127,38 +150,10 @@ else()
     #message(STATUS "Generated files ${_created}")
     list(APPEND _docs ${_created})
     list(APPEND _depend_gp ${_created})
-  endforeach(_gpin)
+  endforeach(_gp)
 endif()
 
 project(doc2)
-
-macro(create_selection _list _ext _destlist)
-  set(${_destlist})		# empty destination list first
-  foreach(_src ${${_list}})
-    if(${_src} MATCHES "^(.+)\\.${_ext}$") #select from the list those with expected extension
-      list(APPEND ${_destlist} ${CMAKE_MATCH_1}) # Add the base name without extension only
-    endif()
-  endforeach(_src)
-endmacro(create_selection)
-
-create_selection(_enblend_Bases "fig" _enblend_fig_images)
-create_selection(_enblend_Bases "gp\\\\.in" _enblend_gp_images)
-create_selection(_enfuse_Bases "fig" _enfuse_fig_images)
-create_selection(_enfuse_Bases "gp\\\\.in" _enfuse_gp_images)
-
-set(_enblend_images ${_enblend_fig_images} ${_enblend_gp_images})
-set(_enfuse_images ${_enfuse_fig_images} ${_enfuse_gp_images})
-
-set(_enblendenfuse_fig_images)
-foreach(_i ${_enblend_fig_images} ${_enfuse_fig_images})
-  #message(STATUS "Adding ${_i} to _enblendenfuse_fig_images")
-  gp_append_unique(_enblendenfuse_fig_images ${_i})
-endforeach(_i)
-
-foreach(_i ${_enblend_gp_images} ${_enfuse_gp_images})
-  #message(STATUS "Adding ${_i} to _enblendenfuse_fig_images")
-  gp_append_unique(_enblendenfuse_gp_images ${_i})
-endforeach(_i)
 
 # Search for fig2dev and convert some images
 find_program(FIG2DEV_EXE fig2dev)
@@ -182,6 +177,9 @@ else()
       list(APPEND _depend_gp ${_created}.${_ext})
     endforeach(_ext)
     set_source_files_properties(${_created}.png GENERATED)
+    if(NOSPLIT)
+      install(FILES ${_created}.png DESTINATION ${DocumentsDirectory})
+    endif(NOSPLIT)
   endforeach(_img)
   set(DOC3:BOOL ${DOC})
 endif()
