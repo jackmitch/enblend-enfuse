@@ -118,9 +118,9 @@ else()
     #message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
     add_custom_command(
       OUTPUT ${_created}
-      COMMAND ${GNUPLOT_EXE} "${_gp}.gp"
-      DEPENDS "${_gp}.gp"
-      COMMENT "gnuplot: Creating ${_created} from ${_gp}.gp"
+      COMMAND ${GNUPLOT_EXE} "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
+      DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
+      COMMENT "gnuplot: Creating ${_created} from ${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
       )
     SET_SOURCE_FILES_PROPERTIES(${_created} GENERATED)
     install(FILES ${_created} DESTINATION ${DocumentsDirectory})
@@ -153,6 +153,11 @@ set(_enblendenfuse_fig_images)
 foreach(_i ${_enblend_fig_images} ${_enfuse_fig_images})
   #message(STATUS "Adding ${_i} to _enblendenfuse_fig_images")
   gp_append_unique(_enblendenfuse_fig_images ${_i})
+endforeach(_i)
+
+foreach(_i ${_enblend_gp_images} ${_enfuse_gp_images})
+  #message(STATUS "Adding ${_i} to _enblendenfuse_fig_images")
+  gp_append_unique(_enblendenfuse_gp_images ${_i})
 endforeach(_i)
 
 # Search for fig2dev and convert some images
