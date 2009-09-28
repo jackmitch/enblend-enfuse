@@ -120,6 +120,7 @@ see.
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Helpful Programs::            Useful other programs
+* Bug Reports::                 How to write bug reports
 * Authors::                     Major Contributors
 * FDL::                         @acronym{GNU} Free Documentation License
 * Program Index::               Names of programs referenced
@@ -187,7 +188,8 @@ you are making a multi-row panorama, we recommend blending each
 horizontal row individually, and then running Enblend a last time to
 blend all of the rows together vertically.
 
-Find out more about Enblend on its
+@cindex SourceForge
+Find out more about Enblend on its SourceForge
 @uref{http://@/enblend.sourceforge.net/, web page}.
 
 
@@ -306,8 +308,8 @@ as many levels as is possible given the size of the overlap regions.
 Enblend may still use a smaller number of levels if the geometry of
 the images demands.
 
-The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels} to
-@value{src::maximum-pyramid-levels}.
+The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels}
+to @value{src::maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}
@@ -823,7 +825,8 @@ Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
 Valid range:
 @ifinfo
-@value{src::minimum-anneal-tau} < @var{TAU} < @value{src::maximum-anneal-tau}.
+@value{src::minimum-anneal-tau} < @var{TAU} <
+@value{src::maximum-anneal-tau}.
 @end ifinfo
 @html
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
@@ -961,8 +964,9 @@ $$\eqalign{
 }$$
 @end tex
 
-The defaults are: @var{DELTA-E-MAX}: @value{src::default-anneal-deltae-max}
-and @var{DELTA-E-MIN}: @value{src::default-anneal-deltae-min}.
+The defaults are: @var{DELTA-E-MAX}:
+@value{src::default-anneal-deltae-max} and @var{DELTA-E-MIN}:
+@value{src::default-anneal-deltae-min}.
 
 @item K-MAX
 @var{K-MAX} is the maximum number of ``moves'' the optimizer will make
@@ -987,8 +991,8 @@ Valid range:
 $\mathit{K-MAX} \ge @value{src::minimum-anneal-kmax}$.
 @end tex
 
-The default is @value{src::default-anneal-kmax}.  Values around 100 seem
-reasonable.
+The default is @value{src::default-anneal-kmax}.  Values around 100
+seem reasonable.
 @end table
 
 @item --coarse-mask[=@var{FACTOR}]
@@ -1000,10 +1004,12 @@ This option reduces the number of computations necessary to compute
 the seam line and the amount of memory necessary to do so.  It is the
 default.
 
-If omitted @var{FACTOR} defaults to @value{src::default-coarseness-factor},
-this means, option@tie{}@option{--coarse-mask} shrinks the overlapping
-@emph{areas} by a factor of @math{@value{src::default-coarseness-factor}
-@classictimes{} @value{src::default-coarseness-factor}}.  With
+If omitted @var{FACTOR} defaults to
+@value{src::default-coarseness-factor}, this means,
+option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of
+@math{@value{src::default-coarseness-factor} @classictimes{}
+@value{src::default-coarseness-factor}}.  With
 @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a run of
 Enblend shrinks approximately by 80% and the maximum amount of memory
 in use at a time is decreased to 60% (Enblend compiled with image
@@ -1166,9 +1172,9 @@ Enblend limits @var{DISTANCE} so that it never gets below
 @value{src::minimum-vectorize-distance} even if it has been given as a
 percentage.  The user will be warned in such cases.
 
-Default: @value{src::coarse-mask-vectorize-distance}@dmn{pixels} for coarse
-masks and @value{src::fine-mask-vectorize-distance}@dmn{pixels} for fine
-masks.
+Default: @value{src::coarse-mask-vectorize-distance}@dmn{pixels} for
+coarse masks and @value{src::fine-mask-vectorize-distance}@dmn{pixels}
+for fine masks.
 
 @item --no-optimize
 @opindex --no-optimize
@@ -1355,14 +1361,15 @@ the rectangular region where two images overlap.  Enblend paints
 non-overlapping parts of the image pair with dark red.
 
 The optimizer's samples are shown in
-@value{src::visualize-state-space-color}.  If a sample is the first of a
-line segment, it is painted in
-@value{src::visualize-first-vertex-value-color}; other line segments are
-drawn in @value{src::visualize-next-vertex-value-color}.  Points in
-@value{src::visualize-state-space-inside-color} color indicate state space
-samples inside the @sc{Dijkstra} radius.  Non-converged points are
-drawn in @value{src::visualize-state-space-unconverged-color} color.  The
-final seam line is shown in @value{src::visualize-short-path-value-color}.
+@value{src::visualize-state-space-color}.  If a sample is the first of
+a line segment, it is painted in
+@value{src::visualize-first-vertex-value-color}; other line segments
+are drawn in @value{src::visualize-next-vertex-value-color}.  Points
+in @value{src::visualize-state-space-inside-color} color indicate
+state space samples inside the @sc{Dijkstra} radius.  Non-converged
+points are drawn in
+@value{src::visualize-state-space-unconverged-color} color.  The final
+seam line is shown in @value{src::visualize-short-path-value-color}.
 For comparison purposes Enblend draws the initial seam line in
 @value{src::visualize-initial-path-color}.
 @end table
@@ -1395,6 +1402,13 @@ For comparison purposes Enblend draws the initial seam line in
 @cindex programs, helpful additional
 
 @include helpful-programs.texi
+
+
+@node Bug Reports
+@appendix Bug Reports
+@cindex bug reports
+
+@include bug-reports.texi
 
 
 @node Authors

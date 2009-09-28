@@ -120,6 +120,7 @@ scene to produce an image that looks much like a tonemapped image.
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Applications::                Possible applications of Enfuse
 * Helpful Programs::            Useful other programs
+* Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
 * FDL::                         @acronym{GNU} Free Documentation License
 * List of Tables::              List of all tables
@@ -200,6 +201,8 @@ Advanced Focus Stacking
 * Focus Stacking Decision Tree::  What to do and how to fuse
 
 Helpful Programs
+
+Bug Reports
 
 Authors
 
@@ -314,7 +317,8 @@ continue assuming all pixels should contribute to the final output.
 Any alpha value other than zero is interpreted as ``this pixel should
 contribute to the final image''.
 
-Find out more about Enfuse on its
+@cindex SourceForge
+Find out more about Enfuse on its SourceForge
 @uref{http://@/enblend.sourceforge.net/, web page}.
 
 
@@ -427,8 +431,8 @@ as many levels as possible given the size of the overlap regions.
 Enfuse may still use a smaller number of levels if the geometry of the
 images demands.
 
-The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels} to
-@value{src::maximum-pyramid-levels}.
+The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels}
+to @value{src::maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}
@@ -988,7 +992,8 @@ $@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
 @item --wMu=@var{MEAN}
 @opindex --wMu
 Set the @var{MEAN} (this is, the center) of the Gaussian exposure
-weight curve.  Default: @value{src::default-exposure-mu}.  Valid range:
+weight curve.  Default: @value{src::default-exposure-mu}.  Valid
+range:
 @ifinfo
 @value{src::minimum-float-argument} @leq{} @var{MEAN} @leq{}
 @value{src::maximum-float-argument}.
@@ -1046,9 +1051,9 @@ Saturation weighting is only defined for color images.
 @item --wSigma=@var{STD-DEV}
 @opindex --wSigma
 Standard deviation @var{STD-DEV} of the Gaussian exposure weight
-curve.  Default: @value{src::default-exposure-sigma}.  Low numbers give
-less weight to pixels that are far from @option{--wMu} and vice versa.
-Valid range:
+curve.  Default: @value{src::default-exposure-sigma}.  Low numbers
+give less weight to pixels that are far from @option{--wMu} and vice
+versa.  Valid range:
 @ifinfo
 @value{src::minimum-float-argument} @leq{} @var{STD-DEV}.
 @end ifinfo
@@ -1200,12 +1205,12 @@ treated as pure white.
 For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
 separately and independently to each channel.
 
-Defaults: @value{src::default-entropy-lower-cutoff} for @var{LOWER-CUTOFF}
-and @value{src::default-entropy-upper-cutoff} for @var{UPPER-CUTOFF}, that
-is, all pixels' values are taken into account.  Append a @samp{%} to
-specify the cutoff relative to maximum pixel value in the source image
-(for example 255 or 65535).  @ref{Figure:entropy-cutoff} shows an
-example.
+Defaults: @value{src::default-entropy-lower-cutoff} for
+@var{LOWER-CUTOFF} and @value{src::default-entropy-upper-cutoff} for
+@var{UPPER-CUTOFF}, that is, all pixels' values are taken into
+account.  Append a @samp{%} to specify the cutoff relative to maximum
+pixel value in the source image (for example 255 or 65535).
+@ref{Figure:entropy-cutoff} shows an example.
 
 @float Figure,Figure:entropy-cutoff
 @image{entropy-cutoff}
@@ -2198,8 +2203,8 @@ $$
 @noindent
 whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
 by the command line options@tie{}@option{--wMu} and @option{--wSigma}
-respectively.  @math{Mu} defaults to @value{src::default-exposure-mu} and
-@math{Sigma} defaults to @value{src::default-exposure-sigma}.
+respectively.  @math{Mu} defaults to @value{src::default-exposure-mu}
+and @math{Sigma} defaults to @value{src::default-exposure-sigma}.
 @ref{Figure:gaussian} shows a Gaussian.
 
 @float Figure,Figure:gaussian
@@ -3482,8 +3487,9 @@ Averaged images, and therefore low-noise images, are the base for a
 multitude of techniques like, for example, differences.  The most
 prominent method in this class is dark-frame subtraction.
 
-The defaults set @samp{--wExposure=@value{src::default-weight-exposure}}
-and @samp{--wSaturation=@value{src::default-weight-saturation}}.
+The defaults set
+@samp{--wExposure=@value{src::default-weight-exposure}} and
+@samp{--wSaturation=@value{src::default-weight-saturation}}.
 Eliminating the saturation component with @samp{--wSaturation=0.0} can
 be worth an extra run.
 
@@ -3502,8 +3508,9 @@ except for the exposure time.  Some cameras even provide special
 functions to automate recording exposure series.  See the instruction
 manual of your model for details.
 
-Enfuse's defaults, @samp{--wExposure=@value{src::default-weight-exposure}}
-and @samp{--wSaturation=@value{src::default-weight-saturation}} are well
+Enfuse's defaults,
+@samp{--wExposure=@value{src::default-weight-exposure}} and
+@samp{--wSaturation=@value{src::default-weight-saturation}} are well
 suited for fusion of @emph{color} images.  Remember that saturation
 weighting only works for @acronym{RGB} data.
 Option@tie{}@option{--wSaturation} helps to control burnt-out
@@ -3905,10 +3912,11 @@ Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
 0.5@dmn{pixels}, where 0.3@dmn{pixels} is a good starting point.  To
 find the best value for @var{SCALE} though, usually some
 experimentation will be necessary.  Use @option{--SaveMasks} to get
-all soft-mask (default: @file{@value{src::default-soft-mask-template}}) and
-hard-mask files (default: @file{@value{src::default-hard-mask-template}}).
-Check how different scales affect the artifacts.  Also
-@pxref{Understanding Masks}.
+all soft-mask (default:
+@file{@value{src::default-soft-mask-template}}) and hard-mask files
+(default: @file{@value{src::default-hard-mask-template}}).  Check how
+different scales affect the artifacts.  Also @pxref{Understanding
+Masks}.
 
 
 @node Local Contrast Enhancement
@@ -4097,6 +4105,13 @@ detail in the in-focus regions.
 @cindex programs, helpful additional
 
 @include helpful-programs.texi
+
+
+@node Bug Reports
+@appendix Bug Reports
+@cindex bug reports
+
+@include bug-reports.texi
 
 
 @node Authors
