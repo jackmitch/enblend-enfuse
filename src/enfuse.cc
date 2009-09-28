@@ -81,6 +81,7 @@ extern "C" int optind;
 #include <lcms.h>
 
 #include "global.h"
+#include "signature.h"
 
 // Globals
 const std::string command("enfuse");
@@ -139,6 +140,8 @@ cmsHTRANSFORM InputToXYZTransform = NULL;
 cmsHTRANSFORM XYZToInputTransform = NULL;
 cmsViewingConditions ViewingConditions;
 LCMSHANDLE CIECAMTransform = NULL;
+
+Signature sig;
 
 #include "common.h"
 #include "enfuse.h"
@@ -229,6 +232,10 @@ void printVersionAndExit() {
         cout <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
+    }
+
+    if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
+        cout << sig.message() << "\n\n";
     }
 
     cout <<
@@ -1175,6 +1182,8 @@ int main(int argc, char** argv)
     signal(SIGINT, sigint_handler);
 #endif
 
+    sig.initialize();
+
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
     // to avoid interactive warning dialogs.
     //TIFFSetWarningHandler(NULL);
@@ -1235,6 +1244,8 @@ int main(int argc, char** argv)
         cerr << command << ": no input files specified.\n";
         exit(1);
     }
+
+    sig.check();
 
     // List of info structures for each input image.
     list<ImageImportInfo*> imageInfoList;

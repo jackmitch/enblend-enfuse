@@ -1,50 +1,35 @@
-This is enblend.info, produced by makeinfo version 4.12 from
-enblend.texi.
+Table of Contents
+*****************
 
-INFO-DIR-SECTION Individual utilities
-START-INFO-DIR-ENTRY
-* enblend: (enblend).                   Blend images using a multiresolution spline.
-END-INFO-DIR-ENTRY
+Enblend
+1 Overview
+2 Workflow
+3 Invocation
+  3.1 Common Options
+  3.2 Extended Options
+  3.3 Mask Generation Options
+4 Understanding Masks
+  4.1 Masks in Input Files
+  4.2 Weight Mask Files
+5 Tuning Memory Usage
+6 Helpful Additional Programs
+Appendix A Bug Reports
+  A.1 Have You Really Found a Bug?
+  A.2 How to Report Bugs
+  A.3 Sending Patches for Enblend or Enfuse
+Appendix B Authors
+Appendix C GNU Free Documentation License
+Program Index
+Option Index
+General Index
 
-   This manual is for Enblend (version 4.0-9ab5b43bdf59, 21 September
-2009), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
-
-   Copyright (C) 2004-2009 ANDREW MIHAL.
-
-     Permission is granted to copy, distribute and/or modify this
-     document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, no Front-Cover Texts and no
-     Back-Cover Texts.  A copy of the license is included in the section
-     entitled "GNU Free Documentation License".
-
-
-File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-9ab5b43bdf59, 21 September
+This manual is for Enblend (version 4.0-9ab5b43bdf59, 28 September
 2009), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
-
-* Menu:
-
-* Overview::                    Overview of Enblend's features
-* Workflow::                    Enblend's role in making panoramas
-* Invocation::                  Command line options and arguments
-* Understanding Masks::         How to interpret masks and mask files
-* Tuning Memory Usage::         Balancing RAM and swap
-* Helpful Programs::            Useful other programs
-* Authors::                     Major Contributors
-* FDL::                         GNU Free Documentation License
-* Program Index::               Names of programs referenced
-* Option Index::                Index of all options
-* General Index::               Topic index
-
-
-File: enblend.info,  Node: Overview,  Next: Workflow,  Prev: Top,  Up: Top
 
 1 Overview
 **********
@@ -82,7 +67,7 @@ you are making a multi-row panorama, we recommend blending each
 horizontal row individually, and then running Enblend a last time to
 blend all of the rows together vertically.
 
-   Find out more about Enblend on its web page
+   Find out more about Enblend on its SourceForge web page
 (http://enblend.sourceforge.net/).
 
    ---------- Footnotes ----------
@@ -90,9 +75,6 @@ blend all of the rows together vertically.
    (1) PETER J. BURT and EDWARD H. ADELSON, "A Multiresolution Spline
 With Application to Image Mosaics", ACM Transactions on Graphics, Vol.
 2, No. 4, October 1983, pages 217-236.
-
-
-File: enblend.info,  Node: Workflow,  Next: Invocation,  Prev: Overview,  Up: Top
 
 2 Workflow
 **********
@@ -108,41 +90,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
-                        o
-                        |
-                   _____V_______
-                  /             \
-                  | Take Images |
-                  \_____________/
-                        |
-                        V
-                 /------+----------\
-          [else] |                 | [raw]
-                 |          _______V________
-                 |         /                \
-                 |         | Convert Images |  <-- DCRaw, UFRaw, etc.
-                 |         \________________/
-                 |                 |
-                 \----->+<---------/
-                        |
-                  ______V_______
-                 /              \
-                 | Align Images |              <-- Hugin, Panotools
-                 \______________/
-                        |
-                 _______V________
-                /                \
-                | Combine Images |             <-- Enblend, Enfuse
-                \________________/
-                        |
-                  ______V______
-                 /             \
-                 | Postprocess |               <-- The Gimp, et al.
-                 \_____________/
-                        |
-                        O
-
-Figure 2.1: Photographic workflow with Enblend and Enfuse.
+ Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images to form a panorama, an exposure series, a
@@ -216,24 +164,12 @@ Print
 
 Enjoy
 
-
-File: enblend.info,  Node: Invocation,  Next: Understanding Masks,  Prev: Workflow,  Up: Top
-
 3 Invocation
 ************
 
 `enblend' [OPTIONS] [`--output='IMAGE] INPUT...
 
 Assemble the sequence of images INPUT... into a single IMAGE.
-
-* Menu:
-
-* Common Options::              General options
-* Extended Options::            Memory and GPU control
-* Mask Generation Options::     Mask generation control
-
-
-File: enblend.info,  Node: Common Options,  Next: Extended Options,  Up: Invocation
 
 3.1 Common Options
 ==================
@@ -404,9 +340,6 @@ pyramid: "Ziggaurat, it's a Ziggaurat
 `http://en.wikipedia.org/wiki/Born-von_Karman_boundary_condition',
 BORN-VON KA'RMA'N boundary condition.
 
-
-File: enblend.info,  Node: Extended Options,  Next: Mask Generation Options,  Prev: Common Options,  Up: Invocation
-
 3.2 Extended Options
 ====================
 
@@ -555,9 +488,6 @@ cropping of the output image.
      Note that Enblend must have been compiled with the image-cache
      feature for this option to be effective.  Find out about extra
      features with `enblend --version --verbose'.
-
-
-File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up: Invocation
 
 3.3 Mask Generation Options
 ===========================
@@ -939,9 +869,6 @@ Transform of Binary Images", Proceedings of the International
 Conference on Imaging Science, Systems, and Technology, June 2000,
 Vols. I and II, pages 83-86.
 
-
-File: enblend.info,  Node: Understanding Masks,  Next: Tuning Memory Usage,  Prev: Invocation,  Up: Top
-
 4 Understanding Masks
 *********************
 
@@ -1032,9 +959,6 @@ have a hole in that position.
 
 ...
 
-
-File: enblend.info,  Node: Tuning Memory Usage,  Next: Helpful Programs,  Prev: Understanding Masks,  Up: Top
-
 5 Tuning Memory Usage
 *********************
 
@@ -1101,9 +1025,6 @@ Table 5.1: Suggested cache-size settings
 
    On systems with considerably more than 4GB of RAM it is recommended
 to run Enblend or Enfuse versions without image cache.
-
-
-File: enblend.info,  Node: Helpful Programs,  Next: Authors,  Prev: Tuning Memory Usage,  Up: Top
 
 6 Helpful Additional Programs
 *****************************
@@ -1189,10 +1110,153 @@ Enfuse and Enblend.
           supplies some binaries, too.  `tifficc', an ICC color profile
           applier, is of particular interest.
 
-
-File: enblend.info,  Node: Authors,  Next: FDL,  Prev: Helpful Programs,  Up: Top
+Appendix A Bug Reports
+**********************
 
-Appendix A Authors
+     Most of this appendix was taken from the
+     Octave (http://www.gnu.org/software/octave/) documentation.
+
+Bug reports play an important role in making Enblend and Enfuse
+reliable and enjoyable.
+
+   When you encounter a problem, the first thing to do is to see if it
+is already known.  On the package's SourceForge homepage
+(http://sourceforge.net/projects/enblend/) click "Develop" and on the
+development page click "Tracker".  Search the trackers for your
+particular problem.  If it is not known, then you should report the
+problem.
+
+   In order for a bug report to serve its purpose, you must include the
+information that makes it possible to fix the bug.
+
+A.1 Have You Really Found a Bug?
+================================
+
+If you are not sure whether you have found a bug, here are some
+guidelines:
+
+   * If Enblend or Enfuse get a fatal signal, for any options or input
+     images, that is a bug.
+
+   * If Enblend or Enfuse produce incorrect results, for any input
+     whatever, that is a bug.
+
+   * If Enblend or Enfuse produce an error message for valid input,
+     that is a bug.
+
+   * If Enblend or Enfuse do not produce an error message for invalid
+     input, that is a bug.
+
+A.2 How to Report Bugs
+======================
+
+The fundamental principle of reporting bugs usefully is this: report
+all the facts.  If you are not sure whether to state a fact or leave it
+out, state it.  Often people omit facts because they think they know
+what causes the problem and they conclude that some details do not
+matter.  Play it safe and give a specific, complete example.
+
+   Keep in mind that the purpose of a bug report is to enable someone to
+fix the bug if it is not known.  Always write your bug reports on the
+assumption that the bug is not known.
+
+   Try to make your bug report self-contained.  If we have to ask you
+for more information, it is best if you include all the previous
+information in your response, as well as the information that was
+missing.
+
+To enable someone to investigate the bug, you should include all these
+things:
+
+   * The exact version and configuration of Enblend or Enfuse.  You can
+     get this by running it with the options `--version' and
+     `--verbose'.
+
+   * A complete set of input images that will reproduce the bug.  Strive
+     for a minimal set of _small_(1) images.
+
+   * The type of machine you are using, and the operating system name
+     and its version number.
+
+   * A complete list of any modifications you have made to the source.
+     Be precise about these changes.  Show a `diff' for them.
+
+   * Details of any other deviations from the standard procedure for
+     installing Enblend and Enfuse.
+
+   * The _exact command line_ you use to call Enblend or Enfuse, which
+     then triggers the bug.
+
+     Examples:
+
+              ~/local/bin/enblend -v \
+                  --fine-mask \
+                  --optimizer-weights=3:2 --mask-vectorize=12.5% \
+                  image-1.png image-2.png
+
+     or:
+
+              ~/local/bin/enfuse -v \
+                  --wExposure=0 --wSaturation=0 --wEntropy=1 \
+                  --GrayProjector=l-star \
+                  --EntropyCutoff=1.667% \
+                  layer-01.ppm layer-02.ppm layer-03.ppm
+
+     If you call Enblend or Enfuse from within a GUI like, for example,
+     Hugin (http://hugin.sourceforge.net/) or KImageFuser
+     (http://panorama.dyndns.org/index.php?lang=en&subject=KImageFuser&texttag=KImagefuser)
+     by HARRY VAN DER WOLF, copy&paste or write down the command line
+     that launches Enblend or Enfuse.
+
+   * A description of what behavior you observe that you believe is
+     incorrect.  For example, "The application gets a fatal signal," or,
+     "The output image contains black holes."
+
+     Of course, if the bug is that the application gets a fatal signal,
+     then one cannot miss it.  But if the bug is incorrect output, we
+     might not notice unless it is glaringly wrong.
+
+A.3 Sending Patches for Enblend or Enfuse
+=========================================
+
+If you would like to write bug fixes or improvements for Enblend or
+Enfuse, that is very helpful.  When you send your changes, please
+follow these guidelines to avoid causing extra work for us in studying
+the patches.  If you do not follow these guidelines, your information
+might still be useful, but using it will take extra work.
+
+   * Send an explanation with your changes of what problem they fix or
+     what improvement they bring about.  For a bug fix, just include a
+     copy of the bug report, and explain why the change fixes the bug.
+
+   * Always include a proper bug report for the problem you think you
+     have fixed.  We need to convince ourselves that the change is
+     right before installing it.  Even if it is right, we might have
+     trouble judging it if we do not have a way to reproduce the
+     problem.
+
+   * Include all the comments that are appropriate to help people
+     reading the source in the future understand why this change was
+     needed.
+
+   * Do not mix together changes made for different reasons.  Send them
+     individually.
+
+     If you make two changes for separate reasons, then we might not
+     want to install them both.  We might want to install just one.
+
+   * Use the version control system to make your diffs.  Prefer the
+     unified diff (http://en.wikipedia.org/wiki/Diff#Unified_format)
+     format: `hg diff --unified 4'.
+
+   * You can increase the probability that your patch gets applied by
+     basing it on a recent revision of the sources.
+
+   ---------- Footnotes ----------
+
+   (1) Images of a size less than 1500x1000 pixels qualify as small.
+
+Appendix B Authors
 ******************
 
 ANDREW MIHAL (<acmihal@users.sourceforge.net>) has written Enblend and
@@ -1231,10 +1295,7 @@ Enfuse.
 Thanks to SIMON ANDRIOT and PABLO JOUBERT for suggesting the
 MERTENS-KAUTZ-VAN REETH technique and the name "Enfuse".
 
-
-File: enblend.info,  Node: FDL,  Next: Program Index,  Prev: Authors,  Up: Top
-
-Appendix B GNU Free Documentation License
+Appendix C GNU Free Documentation License
 *****************************************
 
 Version 1.2, November 2002
@@ -1632,316 +1693,235 @@ Version 1.2, November 2002
      you may choose any version ever published (not as a draft) by the
      Free Software Foundation.
 
-
-File: enblend.info,  Node: Program Index,  Next: Option Index,  Prev: FDL,  Up: Top
-
 Program Index
 *************
 
- [index ]
-* Menu:
-
-* ale:                                   Helpful Programs.    (line  20)
-* align_image_stack (Hugin):             Helpful Programs.    (line  27)
-* cinepaint <1>:                         Helpful Programs.    (line  39)
-* cinepaint:                             Extended Options.    (line 121)
-* convert (ImageMagick):                 Helpful Programs.    (line  50)
-* dcraw <1>:                             Helpful Programs.    (line  10)
-* dcraw:                                 Workflow.            (line  17)
-* display (ImageMagick):                 Helpful Programs.    (line  50)
-* exiftool:                              Helpful Programs.    (line  78)
-* exrdisplay (OpenEXR):                  Helpful Programs.    (line  56)
-* fulla (Hugin):                         Helpful Programs.    (line  27)
-* gimp <1>:                              Helpful Programs.    (line  46)
-* gimp <2>:                              Extended Options.    (line 121)
-* gimp:                                  Workflow.            (line  17)
-* gm (GraphicsMagick):                   Helpful Programs.    (line  50)
-* hugin <1>:                             Helpful Programs.    (line  24)
-* hugin <2>:                             Extended Options.    (line 112)
-* hugin <3>:                             Workflow.            (line  17)
-* hugin:                                 Overview.            (line  25)
-* identify (ImageMagick) <1>:            Helpful Programs.    (line  50)
-* identify (ImageMagick):                Understanding Masks. (line  22)
-* montage (ImageMagick):                 Helpful Programs.    (line  50)
-* nona (Hugin) <1>:                      Helpful Programs.    (line  27)
-* nona (Hugin):                          Extended Options.    (line 112)
-* PanoTools <1>:                         Workflow.            (line  17)
-* PanoTools:                             Overview.            (line  25)
-* pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  59)
-* pfsin (PFSTools):                      Helpful Programs.    (line  59)
-* pfsout (PFSTools):                     Helpful Programs.    (line  59)
-* pfstmo_* (PFStmo):                     Helpful Programs.    (line  59)
-* pfsview (PFSTools):                    Helpful Programs.    (line  59)
-* PTmender (PanoTools):                  Helpful Programs.    (line  32)
-* PTOptimizer (PanoTools):               Helpful Programs.    (line  32)
-* tifficc (LittleCMS):                   Helpful Programs.    (line  82)
-* tiffinfo (libtiff) <1>:                Helpful Programs.    (line  74)
-* tiffinfo (libtiff):                    Understanding Masks. (line  22)
-* ufraw <1>:                             Helpful Programs.    (line  13)
-* ufraw:                                 Workflow.            (line  17)
-* ufraw-batch:                           Helpful Programs.    (line  13)
-
-
-File: enblend.info,  Node: Option Index,  Next: General Index,  Prev: Program Index,  Up: Top
-
+ale:                                           See 6.        (line 1046)
+align_image_stack (Hugin):                     See 6.        (line 1053)
+cinepaint <1>:                                 See 6.        (line 1065)
+cinepaint:                                     See 3.2.      (line  461)
+convert (ImageMagick):                         See 6.        (line 1076)
+dcraw <1>:                                     See 6.        (line 1036)
+dcraw:                                         See 2.        (line   93)
+display (ImageMagick):                         See 6.        (line 1076)
+exiftool:                                      See 6.        (line 1104)
+exrdisplay (OpenEXR):                          See 6.        (line 1082)
+fulla (Hugin):                                 See 6.        (line 1053)
+gimp <1>:                                      See 6.        (line 1072)
+gimp <2>:                                      See 3.2.      (line  461)
+gimp:                                          See 2.        (line   93)
+gm (GraphicsMagick):                           See 6.        (line 1076)
+hugin <1>:                                     See 6.        (line 1050)
+hugin <2>:                                     See 3.2.      (line  452)
+hugin <3>:                                     See 2.        (line   93)
+hugin:                                         See 1.        (line   56)
+identify (ImageMagick) <1>:                    See 6.        (line 1076)
+identify (ImageMagick):                        See 4.1.      (line  891)
+montage (ImageMagick):                         See 6.        (line 1076)
+nona (Hugin) <1>:                              See 6.        (line 1053)
+nona (Hugin):                                  See 3.2.      (line  452)
+PanoTools <1>:                                 See 2.        (line   93)
+PanoTools:                                     See 1.        (line   56)
+pfshdrcalibrate (PFScalibration):              See 6.        (line 1085)
+pfsin (PFSTools):                              See 6.        (line 1085)
+pfsout (PFSTools):                             See 6.        (line 1085)
+pfstmo_* (PFStmo):                             See 6.        (line 1085)
+pfsview (PFSTools):                            See 6.        (line 1085)
+PTmender (PanoTools):                          See 6.        (line 1058)
+PTOptimizer (PanoTools):                       See 6.        (line 1058)
+tifficc (LittleCMS):                           See 6.        (line 1108)
+tiffinfo (libtiff) <1>:                        See 6.        (line 1100)
+tiffinfo (libtiff):                            See 4.1.      (line  891)
+ufraw <1>:                                     See 6.        (line 1039)
+ufraw:                                         See 2.        (line   93)
+ufraw-batch:                                   See 6.        (line 1039)
 Option Index
 ************
 
- [index ]
-* Menu:
-
-* --anneal:                              Mask Generation Options.
-                                                              (line   9)
-* --coarse-mask:                         Mask Generation Options.
-                                                              (line  55)
-* --compression:                         Common Options.      (line  17)
-* --depth:                               Extended Options.    (line  32)
-* --dijkstra:                            Mask Generation Options.
-                                                              (line  95)
-* --fine-mask:                           Mask Generation Options.
-                                                              (line 108)
-* --gpu:                                 Extended Options.    (line 129)
-* --help:                                Common Options.      (line  53)
-* --load-mask:                           Mask Generation Options.
-                                                              (line 115)
-* --mask-vectorize:                      Mask Generation Options.
-                                                              (line 121)
-* --no-optimize:                         Mask Generation Options.
-                                                              (line 166)
-* --optimize:                            Mask Generation Options.
-                                                              (line 174)
-* --optimizer-weights:                   Mask Generation Options.
-                                                              (line 197)
-* --output:                              Common Options.      (line  68)
-* --save-mask:                           Mask Generation Options.
-                                                              (line 224)
-* --smooth-difference:                   Mask Generation Options.
-                                                              (line 252)
-* --verbose:                             Common Options.      (line  75)
-* --version:                             Common Options.      (line 110)
-* --visualize:                           Mask Generation Options.
-                                                              (line 270)
-* --wrap:                                Common Options.      (line 117)
-* -a:                                    Common Options.      (line   9)
-* -b <1>:                                Tuning Memory Usage. (line   6)
-* -b:                                    Extended Options.    (line  10)
-* -c:                                    Extended Options.    (line  21)
-* -d:                                    Extended Options.    (line  32)
-* -f:                                    Extended Options.    (line 109)
-* -g:                                    Extended Options.    (line 117)
-* -h:                                    Common Options.      (line  53)
-* -l:                                    Common Options.      (line  56)
-* -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line 141)
-* -o:                                    Common Options.      (line  68)
-* -V:                                    Common Options.      (line 110)
-* -v:                                    Common Options.      (line  75)
-* -w:                                    Common Options.      (line 117)
-* -x:                                    Common Options.      (line 158)
-
-
-File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
-
+--anneal:                                      See 3.3.      (line  498)
+--coarse-mask:                                 See 3.3.      (line  544)
+--compression:                                 See 3.1.      (line  188)
+--depth:                                       See 3.2.      (line  372)
+--dijkstra:                                    See 3.3.      (line  584)
+--fine-mask:                                   See 3.3.      (line  597)
+--gpu:                                         See 3.2.      (line  469)
+--help:                                        See 3.1.      (line  224)
+--load-mask:                                   See 3.3.      (line  604)
+--mask-vectorize:                              See 3.3.      (line  610)
+--no-optimize:                                 See 3.3.      (line  655)
+--optimize:                                    See 3.3.      (line  663)
+--optimizer-weights:                           See 3.3.      (line  686)
+--output:                                      See 3.1.      (line  239)
+--save-mask:                                   See 3.3.      (line  713)
+--smooth-difference:                           See 3.3.      (line  741)
+--verbose:                                     See 3.1.      (line  246)
+--version:                                     See 3.1.      (line  281)
+--visualize:                                   See 3.3.      (line  759)
+--wrap:                                        See 3.1.      (line  288)
+-a:                                            See 3.1.      (line  180)
+-b <1>:                                        See 5.        (line  965)
+-b:                                            See 3.2.      (line  350)
+-c:                                            See 3.2.      (line  361)
+-d:                                            See 3.2.      (line  372)
+-f:                                            See 3.2.      (line  449)
+-g:                                            See 3.2.      (line  457)
+-h:                                            See 3.1.      (line  224)
+-l:                                            See 3.1.      (line  227)
+-m <1>:                                        See 5.        (line  965)
+-m:                                            See 3.2.      (line  481)
+-o:                                            See 3.1.      (line  239)
+-V:                                            See 3.1.      (line  281)
+-v:                                            See 3.1.      (line  246)
+-w:                                            See 3.1.      (line  288)
+-x:                                            See 3.1.      (line  329)
 General Index
 *************
 
- [index ]
-* Menu:
-
-* 360o panoramas:                        Common Options.      (line 117)
-* a.tif:                                 Common Options.      (line  70)
-* affine transformation:                 Workflow.            (line  88)
-* alpha channel <1>:                     Workflow.            (line 109)
-* alpha channel:                         Overview.            (line  18)
-* alpha channel, associated:             Extended Options.    (line 117)
-* anneal parameters:                     Mask Generation Options.
-                                                              (line   9)
-* authors, list of:                      Authors.             (line   6)
-* binary mask:                           Understanding Masks. (line   6)
-* bits per channel:                      Extended Options.    (line  32)
-* blur difference image:                 Mask Generation Options.
-                                                              (line 252)
-* Burt-Adelson multiresolution spline:   Overview.            (line   6)
-* channel width:                         Extended Options.    (line  32)
-* channel, alpha:                        Overview.            (line  18)
-* CIECAM02:                              Extended Options.    (line  21)
-* coarse mask:                           Mask Generation Options.
-                                                              (line  55)
-* color appearance model:                Extended Options.    (line  21)
-* color space, sRGB:                     Extended Options.    (line  23)
-* compression:                           Common Options.      (line  17)
-* compression, deflate:                  Common Options.      (line  32)
-* compression, JPEG:                     Common Options.      (line  23)
-* compression, LZW:                      Common Options.      (line  38)
-* compression, packbits:                 Common Options.      (line  42)
-* conversion, raw:                       Workflow.            (line  75)
-* default output filename:               Common Options.      (line  70)
-* deflate compression:                   Common Options.      (line  32)
-* DIJKSTRA radius:                       Mask Generation Options.
-                                                              (line  95)
-* double precision float, IEEE754:       Extended Options.    (line  84)
-* feathering, detrimental effect of:     Overview.            (line  25)
-* fine mask:                             Mask Generation Options.
-                                                              (line 108)
-* free documentation license (FDL):      FDL.                 (line   6)
-* general index:                         General Index.       (line   6)
-* GNU free documentation license:        FDL.                 (line   6)
-* GPU (Graphics Processing Unit):        Extended Options.    (line 129)
-* graphics processing unit:              Extended Options.    (line 129)
-* half precision float, OpenEXR:         Extended Options.    (line  99)
-* helpful programs:                      Helpful Programs.    (line   6)
-* ICC profile:                           Extended Options.    (line  23)
-* IEEE754 double precision float:        Extended Options.    (line  84)
-* IEEE754 single precision float:        Extended Options.    (line  75)
-* image cache:                           Tuning Memory Usage. (line   9)
-* image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line 141)
-* index, general:                        General Index.       (line   6)
-* index, option:                         Option Index.        (line   6)
-* index, program:                        Program Index.       (line   6)
-* input mask:                            Understanding Masks. (line  18)
-* invocation:                            Invocation.          (line   6)
-* JPEG compression:                      Common Options.      (line  23)
-* lens distortion, correction of:        Workflow.            (line  88)
-* levels, pyramid:                       Common Options.      (line  56)
-* LibJPEG:                               Helpful Programs.    (line  63)
-* LibPNG:                                Helpful Programs.    (line  66)
-* LibTiff:                               Helpful Programs.    (line  70)
-* load mask:                             Mask Generation Options.
-                                                              (line 115)
-* loops in seam line:                    Mask Generation Options.
-                                                              (line 151)
-* LZW compression:                       Common Options.      (line  38)
-* mask template character, %:            Mask Generation Options.
-                                                              (line 303)
-* mask template character, B:            Mask Generation Options.
-                                                              (line 352)
-* mask template character, b:            Mask Generation Options.
-                                                              (line 346)
-* mask template character, D:            Mask Generation Options.
-                                                              (line 343)
-* mask template character, d:            Mask Generation Options.
-                                                              (line 337)
-* mask template character, E:            Mask Generation Options.
-                                                              (line 371)
-* mask template character, e:            Mask Generation Options.
-                                                              (line 365)
-* mask template character, F:            Mask Generation Options.
-                                                              (line 361)
-* mask template character, f:            Mask Generation Options.
-                                                              (line 355)
-* mask template character, i:            Mask Generation Options.
-                                                              (line 306)
-* mask template character, n:            Mask Generation Options.
-                                                              (line 321)
-* mask template character, P:            Mask Generation Options.
-                                                              (line 334)
-* mask template character, p:            Mask Generation Options.
-                                                              (line 326)
-* mask template characters, table of:    Mask Generation Options.
-                                                              (line 302)
-* mask, binary:                          Understanding Masks. (line   6)
-* mask, coarse:                          Mask Generation Options.
-                                                              (line  55)
-* mask, fine:                            Mask Generation Options.
-                                                              (line 108)
-* mask, generation:                      Mask Generation Options.
-                                                              (line  90)
-* mask, input files:                     Understanding Masks. (line  18)
-* mask, load:                            Mask Generation Options.
-                                                              (line 115)
-* mask, optimization visualization:      Mask Generation Options.
-                                                              (line 270)
-* mask, save:                            Mask Generation Options.
-                                                              (line 224)
-* mask, vectorization distance:          Mask Generation Options.
-                                                              (line 121)
-* mask, weight:                          Understanding Masks. (line   6)
-* masks, understanding:                  Understanding Masks. (line   6)
-* memory, tuning usage of:               Tuning Memory Usage. (line   6)
-* nearest-feature transform (NFT):       Mask Generation Options.
-                                                              (line  90)
-* OpenEXR, data format:                  Extended Options.    (line  95)
-* OpenEXR, half precision float:         Extended Options.    (line  99)
-* optimize seam:                         Mask Generation Options.
-                                                              (line 166)
-* optimize strategy:                     Mask Generation Options.
-                                                              (line 179)
-* optimize, anneal parameters:           Mask Generation Options.
-                                                              (line   9)
-* optimizer weights:                     Mask Generation Options.
-                                                              (line 197)
-* optimizer, simulated annealing:        Mask Generation Options.
-                                                              (line   9)
-* option index:                          Option Index.        (line   6)
-* options, common:                       Common Options.      (line   6)
-* options, extended:                     Extended Options.    (line   6)
-* options, mask generation:              Mask Generation Options.
-                                                              (line   6)
-* output file compression:               Common Options.      (line  17)
-* output filename, default:              Common Options.      (line  70)
-* output image, set size of:             Extended Options.    (line 109)
-* overview:                              Overview.            (line   6)
-* packbits compression:                  Common Options.      (line  42)
-* parallax error:                        Workflow.            (line  98)
-* photometric alignment:                 Workflow.            (line  90)
-* profile, ICC:                          Extended Options.    (line  23)
-* program index:                         Program Index.       (line   6)
-* programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line  56)
-* radius, DIJKSTRA:                      Mask Generation Options.
-                                                              (line  95)
-* raw conversion:                        Workflow.            (line  75)
-* save mask:                             Mask Generation Options.
-                                                              (line 224)
-* seam line, loops:                      Mask Generation Options.
-                                                              (line 151)
-* seam optimization:                     Mask Generation Options.
-                                                              (line 166)
-* simulated annealing optimizer:         Mask Generation Options.
-                                                              (line   9)
-* single precision float, IEEE754:       Extended Options.    (line  75)
-* smooth difference image:               Mask Generation Options.
-                                                              (line 252)
-* sRGB color space:                      Extended Options.    (line  23)
-* transformation, affine:                Workflow.            (line  88)
-* understanding masks:                   Understanding Masks. (line   6)
-* visualization of mask optimization:    Mask Generation Options.
-                                                              (line 270)
-* weight mask:                           Understanding Masks. (line   6)
-* weights, optimizer:                    Mask Generation Options.
-                                                              (line 197)
-* workflow:                              Workflow.            (line   6)
-* workflow with Enblend:                 Workflow.            (line  17)
-* workflow with Enfuse:                  Workflow.            (line  17)
-* wrap around:                           Common Options.      (line 117)
-
-
-
-Tag Table:
-Node: Top885
-Node: Overview1824
-Ref: Overview-Footnote-13922
-Node: Workflow4103
-Ref: Figure:photographic-workflow4616
-Node: Invocation8555
-Node: Common Options8959
-Ref: Common Options-Footnote-113815
-Ref: Common Options-Footnote-214007
-Node: Extended Options14167
-Node: Mask Generation Options19899
-Ref: Table:mask-generation22591
-Ref: Table:optimizer-strategies27515
-Ref: Table:mask-template-characters32919
-Ref: Mask Generation Options-Footnote-135041
-Node: Understanding Masks35269
-Node: Tuning Memory Usage39058
-Ref: Table:cache-size-settings41488
-Node: Helpful Programs41923
-Node: Authors45651
-Node: FDL46768
-Node: Program Index67749
-Node: Option Index70734
-Node: General Index74300
-
-End Tag Table
+360o panoramas:                                See 3.1.      (line  288)
+a.tif:                                         See 3.1.      (line  241)
+affine transformation:                         See 2.        (line  130)
+alpha channel <1>:                             See 2.        (line  151)
+alpha channel:                                 See 1.        (line   49)
+alpha channel, associated:                     See 3.2.      (line  457)
+anneal parameters:                             See 3.3.      (line  498)
+authors, list of:                              See Appendix B.
+                                                             (line 1262)
+binary mask:                                   See 4.        (line  875)
+bits per channel:                              See 3.2.      (line  372)
+blur difference image:                         See 3.3.      (line  741)
+bug reports:                                   See Appendix A.
+                                                             (line 1116)
+Burt-Adelson multiresolution spline:           See 1.        (line   37)
+channel width:                                 See 3.2.      (line  372)
+channel, alpha:                                See 1.        (line   49)
+CIECAM02:                                      See 3.2.      (line  361)
+coarse mask:                                   See 3.3.      (line  544)
+color appearance model:                        See 3.2.      (line  361)
+color space, sRGB:                             See 3.2.      (line  363)
+compression:                                   See 3.1.      (line  188)
+compression, deflate:                          See 3.1.      (line  203)
+compression, JPEG:                             See 3.1.      (line  194)
+compression, LZW:                              See 3.1.      (line  209)
+compression, packbits:                         See 3.1.      (line  213)
+conversion, raw:                               See 2.        (line  117)
+default output filename:                       See 3.1.      (line  241)
+deflate compression:                           See 3.1.      (line  203)
+DIJKSTRA radius:                               See 3.3.      (line  584)
+double precision float, IEEE754:               See 3.2.      (line  424)
+feathering, detrimental effect of:             See 1.        (line   56)
+fine mask:                                     See 3.3.      (line  597)
+free documentation license (FDL):              See Appendix C.
+                                                             (line 1301)
+general index:
+          See ``General Index''.                             (line 1780)
+GNU free documentation license:                See Appendix C.
+                                                             (line 1301)
+GPU (Graphics Processing Unit):                See 3.2.      (line  469)
+graphics processing unit:                      See 3.2.      (line  469)
+half precision float, OpenEXR:                 See 3.2.      (line  439)
+helpful programs:                              See 6.        (line 1032)
+Hugin:                                         See A.2.      (line 1205)
+ICC profile:                                   See 3.2.      (line  363)
+IEEE754 double precision float:                See 3.2.      (line  424)
+IEEE754 single precision float:                See 3.2.      (line  415)
+image cache:                                   See 5.        (line  968)
+image cache, block size:                       See 3.2.      (line  350)
+image cache, cache size:                       See 3.2.      (line  481)
+index, general:
+          See ``General Index''.                             (line 1780)
+index, option:
+          See ``Option Index''.                              (line 1741)
+index, program:
+          See ``Program Index''.                             (line 1699)
+input mask:                                    See 4.1.      (line  887)
+invocation:                                    See 3.        (line  170)
+JPEG compression:                              See 3.1.      (line  194)
+KImageFuser:                                   See A.2.      (line 1205)
+lens distortion, correction of:                See 2.        (line  130)
+levels, pyramid:                               See 3.1.      (line  227)
+LibJPEG:                                       See 6.        (line 1089)
+LibPNG:                                        See 6.        (line 1092)
+LibTiff:                                       See 6.        (line 1096)
+load mask:                                     See 3.3.      (line  604)
+loops in seam line:                            See 3.3.      (line  640)
+LZW compression:                               See 3.1.      (line  209)
+mask template character, %:                    See 3.3.      (line  792)
+mask template character, B:                    See 3.3.      (line  841)
+mask template character, b:                    See 3.3.      (line  835)
+mask template character, D:                    See 3.3.      (line  832)
+mask template character, d:                    See 3.3.      (line  826)
+mask template character, E:                    See 3.3.      (line  860)
+mask template character, e:                    See 3.3.      (line  854)
+mask template character, F:                    See 3.3.      (line  850)
+mask template character, f:                    See 3.3.      (line  844)
+mask template character, i:                    See 3.3.      (line  795)
+mask template character, n:                    See 3.3.      (line  810)
+mask template character, P:                    See 3.3.      (line  823)
+mask template character, p:                    See 3.3.      (line  815)
+mask template characters, table of:            See 3.3.      (line  791)
+mask, binary:                                  See 4.        (line  875)
+mask, coarse:                                  See 3.3.      (line  544)
+mask, fine:                                    See 3.3.      (line  597)
+mask, generation:                              See 3.3.      (line  579)
+mask, input files:                             See 4.1.      (line  887)
+mask, load:                                    See 3.3.      (line  604)
+mask, optimization visualization:              See 3.3.      (line  759)
+mask, save:                                    See 3.3.      (line  713)
+mask, vectorization distance:                  See 3.3.      (line  610)
+mask, weight:                                  See 4.        (line  875)
+masks, understanding:                          See 4.        (line  875)
+memory, tuning usage of:                       See 5.        (line  965)
+nearest-feature transform (NFT):               See 3.3.      (line  579)
+Octave:                                        See Appendix A.
+                                                             (line 1116)
+OpenEXR, data format:                          See 3.2.      (line  435)
+OpenEXR, half precision float:                 See 3.2.      (line  439)
+optimize seam:                                 See 3.3.      (line  655)
+optimize strategy:                             See 3.3.      (line  668)
+optimize, anneal parameters:                   See 3.3.      (line  498)
+optimizer weights:                             See 3.3.      (line  686)
+optimizer, simulated annealing:                See 3.3.      (line  498)
+option index:
+          See ``Option Index''.                              (line 1741)
+options, common:                               See 3.1.      (line  177)
+options, extended:                             See 3.2.      (line  346)
+options, mask generation:                      See 3.3.      (line  495)
+output file compression:                       See 3.1.      (line  188)
+output filename, default:                      See 3.1.      (line  241)
+output image, set size of:                     See 3.2.      (line  449)
+overview:                                      See 1.        (line   37)
+packbits compression:                          See 3.1.      (line  213)
+parallax error:                                See 2.        (line  140)
+photometric alignment:                         See 2.        (line  132)
+problem reports:                               See Appendix A.
+                                                             (line 1119)
+profile, ICC:                                  See 3.2.      (line  363)
+program index:
+          See ``Program Index''.                             (line 1699)
+programs, helpful additional:                  See 6.        (line 1032)
+pyramid levels:                                See 3.1.      (line  227)
+radius, DIJKSTRA:                              See 3.3.      (line  584)
+raw conversion:                                See 2.        (line  117)
+save mask:                                     See 3.3.      (line  713)
+seam line, loops:                              See 3.3.      (line  640)
+seam optimization:                             See 3.3.      (line  655)
+simulated annealing optimizer:                 See 3.3.      (line  498)
+single precision float, IEEE754:               See 3.2.      (line  415)
+smooth difference image:                       See 3.3.      (line  741)
+SourceForge <1>:                               See Appendix A.
+                                                             (line 1122)
+SourceForge:                                   See 1.        (line   70)
+SourceForge, tracker:                          See Appendix A.
+                                                             (line 1122)
+sRGB color space:                              See 3.2.      (line  363)
+tracker, SourceForge:                          See Appendix A.
+                                                             (line 1122)
+transformation, affine:                        See 2.        (line  130)
+understanding masks:                           See 4.        (line  875)
+visualization of mask optimization:            See 3.3.      (line  759)
+weight mask:                                   See 4.        (line  875)
+weights, optimizer:                            See 3.3.      (line  686)
+workflow:                                      See 2.        (line   82)
+workflow with Enblend:                         See 2.        (line   93)
+workflow with Enfuse:                          See 2.        (line   93)
+wrap around:                                   See 3.1.      (line  288)
