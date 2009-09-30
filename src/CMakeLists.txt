@@ -10,9 +10,12 @@
 
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
-  COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/src/gen_sig" "--extra=4.0-${ENBLEND_CHANGESET}" ">" "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
+  COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/src/gen_sig"
+  "--extra=${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${ENBLEND_CHANGESET}"
+  ">" "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
   DEPENDS "${TOP_SRC_DIR}/src/gen_sig" "${TOP_SRC_DIR}/VERSION"
   )
+set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/signature.h" GENERATED)
 
 include_directories(${TOP_SRC_DIR}/src)
 add_subdirectory(vigra_impex)
@@ -32,6 +35,7 @@ if (WIN32)
 endif(WIN32)
 
 list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(depends2)
 message(STATUS "Boost_FOUND = ${Boost_FOUND}")
@@ -39,6 +43,7 @@ message(STATUS "OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 foreach(_cmd ${_COMMANDS})
   set(${_cmd}_sources ${all_sources} "${TOP_SRC_DIR}/src/${_cmd}.cc")
   add_executable(${_cmd} ${${_cmd}_sources} )
+  message(STATUS "depends of ${_cmd} ${all_sources}")
   if(OpenMP_CXX_FLAGS)
     set_target_properties(${_cmd} PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
     message(STATUS "Adding PROPERTIES LINK_FLAGS to ${_cmd}")
