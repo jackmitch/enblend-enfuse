@@ -241,6 +241,7 @@ extension(p);
               fi
              ] ) dnl AS_IF($with_boost_filesystem = yes)
       ] ) dnl  AS_IF($with_boost_filesystem = no)
+
 AC_LANG_RESTORE
 AC_SUBST(EXTRA_LIBS)
 
