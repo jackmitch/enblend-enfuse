@@ -87,7 +87,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-647db4715fa8, 28 September
+This manual is for Enfuse (version 4.0-476674a3d1da, 28 September
 2009), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -695,7 +695,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-647db4715fa8 of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-476674a3d1da of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 
