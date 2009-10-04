@@ -83,6 +83,8 @@ Note that enabling GPU support does not mean Enblend will actually use
 the GPU.  Besides passing option "--gpu" to Enblend the hardware as
 well as the X11 drivers have to fulfill certain requirements.
 
+See also option "--with-apple-opengl-framework".
+
 
 ** --enable-openmp=yes/NO
 
@@ -125,10 +127,12 @@ The image-cache feature and OpenMP support must not be activated
 together.
 
 
-** --with-dmalloc=yes/NO
+** --with-apple-opengl-framework=yes/NO
 
-Compile with the debug-malloc library.  The library is available at
-http://www.dmalloc.com/.
+Sometimes AutoConf fails to detect Apple's OpenGL framework.  Use this
+option on MAC OS X to force its usage without a test.
+
+See also option "--enable-gpu-support".
 
 
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
@@ -139,6 +143,12 @@ use of the internal path generation library.  Supply a LIBRARY name if
 you want to override the default candidates "boost_filesystem-mt" for
 multi-threaded compilation and "boost_filesystem" for single-thread
 builds.
+
+
+** --with-dmalloc=yes/NO
+
+Compile with the debug-malloc library.  The library is available at
+http://www.dmalloc.com/.
 
 
 ** --with-openexr=CHECK/yes/no
