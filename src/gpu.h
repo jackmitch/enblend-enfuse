@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -17,6 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+
 #ifndef __GPU_H__
 #define __GPU_H__
 
@@ -27,7 +29,6 @@
 #ifdef HAVE_LIBGLEW
 #define GLEW_STATIC 1
 
-
 #include <GL/glew.h>
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
 #include <GLUT/glut.h>
@@ -35,9 +36,11 @@
 #include <GL/glut.h>
 #endif
 
-#define CHECK_GL() checkGLErrors(__LINE__, __FILE__)
+extern int Verbose;
 
-void checkGLErrors(int line, char* file);
+void checkGLErrors(const char* file, unsigned line);
+#define CHECK_GL() checkGLErrors(__FILE__, __LINE__)
+
 void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
 
@@ -47,7 +50,7 @@ bool gpuGDAKernel(unsigned int k, unsigned int vars, double t,
                   float* packedEData, float* packedPiData, float* packedOutData);
 bool clearGPUTextures();
 bool wrapupGPU(void);
-#endif
+#endif /* HAVE_LIBGLEW */
 
 #endif /* __GPU_H__ */
 

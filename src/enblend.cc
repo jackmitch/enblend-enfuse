@@ -190,9 +190,50 @@ using enblend::enblendMain;
 #endif
 
 
+void inspectGPU(int argc, char** argv)
+{
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGBA);
+
+    const int handle = glutCreateWindow("Enblend");
+
+    if (handle >= 1 && glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
+        cout <<
+            "  - " << GLGETSTRING(GL_VENDOR) << "\n" <<
+            "  - " << GLGETSTRING(GL_RENDERER) << "\n" <<
+            "  - version " << GLGETSTRING(GL_VERSION) << "\n"
+            "  - extensions\n";
+
+        const char* const extensions = GLGETSTRING(GL_EXTENSIONS);
+        const char* const extensions_end = extensions + strlen(extensions);
+        const unsigned extensions_per_line = 3U;
+        unsigned count = 1U;
+
+        cout << "    ";
+        for (const char* c = extensions; c != extensions_end; ++c) {
+            if (*c == ' ') {
+                if (count % extensions_per_line == 0U) {
+                    cout << "\n    ";
+                } else {
+                    cout << "  ";
+                }
+                ++count;
+            } else {
+                cout << *c;
+            }
+        }
+        cout << "\n\n";
+    } else {
+        cout << "    <no reliable OpenGL information available>\n";
+    }
+
+    glutDestroyWindow(handle);
+}
+
+
 /** Print information on the current version and some configuration
  * details. */
-void printVersionAndExit() {
+void printVersionAndExit(int argc, char** argv) {
     cout << "enblend " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
@@ -214,37 +255,36 @@ void printVersionAndExit() {
 #endif
             "\n";
 
-        cout <<
-            "Extra feature: GPU acceleration: " <<
 #ifdef HAVE_LIBGLEW
-            "yes" <<
+        cout << "Extra feature: GPU acceleration: yes\n";
+        inspectGPU(argc, argv);
 #else
-            "no" <<
+        cout << "Extra feature: GPU acceleration: no\n";
 #endif
-            "\n";
 
 #ifdef OPENMP
         const bool have_nested = have_openmp_nested();
         const bool have_dynamic = have_openmp_dynamic();
         cout <<
-            "Extra feature: OpenMP: " <<
-            "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
-            "                           - " << (have_nested ? "" : "no ") <<
-            "support for nested parallelism\n" <<
-            "                             nested parallelism " <<
+            "Extra feature: OpenMP: yes\n" <<
+            "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
+            "  - " << (have_nested ? "" : "no ") <<
+            "support for nested parallelism;\n" <<
+            "    nested parallelism " <<
             (have_nested && omp_get_nested() ? "enabled" : "disabled") << " by default\n" <<
-            "                           - " << (have_dynamic ? "" : "no ") <<
-            "support for dynamic adjustment of the number of threads\n" <<
-            "                             dynamic adjustment " <<
+            "  - " << (have_dynamic ? "" : "no ") <<
+            "support for dynamic adjustment of the number of threads;\n" <<
+            "    dynamic adjustment " <<
             (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
-            "                           - using " <<
+            "  - using " <<
             omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
-            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n\n";
+            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n";
 #else
-        cout << "Extra feature: OpenMP: " << "no\n\n";
+        cout << "Extra feature: OpenMP: no\n";
 #endif
 
         cout <<
+            "\n" <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
     }
@@ -1120,7 +1160,7 @@ int process_options(int argc, char** argv) {
     }
 
     if (justPrintVersion) {
-        printVersionAndExit();
+        printVersionAndExit(argc, argv);
         // never reached
     }
 

@@ -27,8 +27,43 @@
 #include <sstream>
 
 
+// Defines to control how many -v flags are required for each type
+// of message to be produced on stdout.
+#define VERBOSE_ASSEMBLE_MESSAGES           1
+#define VERBOSE_CHECKPOINTING_MESSAGES      1
+
+#define VERBOSE_BLEND_MESSAGES              2
+#define VERBOSE_GPU_MESSAGES                2
+#define VERBOSE_MASK_MESSAGES               2
+#define VERBOSE_NFT_MESSAGES                2
+#define VERBOSE_PYRAMID_MESSAGES            2
+#define VERBOSE_SIGNATURE_REPORTING         2
+#define VERBOSE_VERSION_REPORTING           2
+
+#define VERBOSE_COLOR_CONVERSION_MESSAGES   3
+
+#define VERBOSE_ABB_MESSAGES                4
+#define VERBOSE_IBB_MESSAGES                4
+#define VERBOSE_INPUT_IMAGE_INFO_MESSAGES   4
+#define VERBOSE_INPUT_UNION_SIZE_MESSAGES   4
+#define VERBOSE_ROIBB_SIZE_MESSAGES         4
+#define VERBOSE_UBB_MESSAGES                4
+
+#define VERBOSE_CFI_MESSAGES                5
+#define VERBOSE_GDA_MESSAGES                5
+
+#define VERBOSE_MEMORY_ESTIMATION_MESSAGES  6
+
+
 //< src::default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
+
+
+// Safely retrieve the string associated with m_name from OpenGL.
+#define GLGETSTRING(m_name) \
+    (glGetString(m_name) == NULL ? \
+     "<cannot retrieve " #m_name ">" : \
+     (const char*) (glGetString(m_name)))
 
 
 struct AlternativePercentage {

@@ -212,24 +212,25 @@ void printVersionAndExit() {
         const bool have_nested = have_openmp_nested();
         const bool have_dynamic = have_openmp_dynamic();
         cout <<
-            "Extra feature: OpenMP: " <<
-            "yes - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
-            "                           - " << (have_nested ? "" : "no ") <<
-            "support for nested parallelism\n" <<
-            "                             nested parallelism " <<
+            "Extra feature: OpenMP: yes\n" <<
+            "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
+            "  - " << (have_nested ? "" : "no ") <<
+            "support for nested parallelism;\n" <<
+            "    nested parallelism " <<
             (have_nested && omp_get_nested() ? "enabled" : "disabled") << " by default\n" <<
-            "                           - " << (have_dynamic ? "" : "no ") <<
-            "support for dynamic adjustment of the number of threads\n" <<
-            "                             dynamic adjustment " <<
+            "  - " << (have_dynamic ? "" : "no ") <<
+            "support for dynamic adjustment of the number of threads;\n" <<
+            "    dynamic adjustment " <<
             (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
-            "                           - using " <<
+            "  - using " <<
             omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
-            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n\n";
+            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n";
 #else
-        cout << "Extra feature: OpenMP: " << "no\n\n";
+        cout << "Extra feature: OpenMP: no\n";
 #endif
 
         cout <<
+            "\n" <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
     }
