@@ -31,7 +31,7 @@ enfuse_CXXFLAGS = $(AM_CXXFLAGS) \
 EXTRA_DIST = enblend.vcproj enblend_msvc2003.vcproj enblend_msvc2008.vcproj \
              enfuse.vcproj enfuse_msvc2003.vcproj enfuse_msvc2008.vcproj \
              enblend.1 enfuse.1 \
-             gen_sig
+             gen_sig DefaultSig.pm Sig.pm
 
 DISTCLEANFILES = enblend.1 enfuse.1
 
@@ -41,8 +41,8 @@ DISTCLEANFILES = enblend.1 enfuse.1
 BUILT_SOURCES = signature.h
 CLEANFILES = signature.h
 
-signature.h: $(srcdir)/gen_sig
-	@ $(PERL) $< --extra=$(VERSION) > $@
+signature.h: $(srcdir)/gen_sig $(srcdir)/DefaultSig.pm $(srcdir)/Sig.pm
+	@ $(PERL) -I$(srcdir) $< --extra=$(VERSION) > $@
 
 
 # Documentation

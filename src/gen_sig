@@ -1,69 +1,18 @@
 #! /usr/bin/env perl
 
-
-# This file is part of Enblend.
-# Licence details can be found in the file COPYING.
-
 # name:         gen_sig
 # synopsis:     generate signature in Harry-van-der-Wolf style
 # author:       Dr. Christoph L. Spiel
 # perl version: 5.10.0
 
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
 
 use strict;
 use warnings;
 
-use English;
-use File::Basename;
-use Sys::Hostname;
-
-
-# Try to derive the real user name from Perl's built-in user id.
-# Answer the user's login name if we do not find a real name.
-sub get_real_user_name {
-    my ($login_name, undef, undef, undef,
-        undef, undef, $gcos) = getpwuid $REAL_USER_ID;
-    my ($real_user_name) = split m/,/, $gcos;
-
-    return $real_user_name eq '' ? $login_name : $real_user_name;
-}
-
-
-sub get_hostname {
-    my $hostname = hostname();
-
-    if ($OSNAME =~ m/MacOS/) {
-        $hostname =~ s/^(.*?)[-.].*$/$1/;
-    }
-
-    return $hostname;
-}
-
-
-sub now {
-    my @weekday = qw(Sun Mon Tue Wed Thu Fri Sat);
-    my @monthname = qw(Jan Feb Mar May Jun Jul Aug Sep Oct Nov Dec);
-    my ($second, $minute, $hour,
-        $day_of_month, $month, $year,
-        $day_of_week) = localtime;
-
-    my $date = sprintf("%s, %s %02u %u",
-                       $weekday[$day_of_week], $monthname[$month - 1],
-                       $day_of_month, $year + 1900);
-    my $time = sprintf("%02u:%02u:%02u",
-                       $hour, $minute, $second);
-
-    return $date, $time;
-}
-
-
-sub signature {
-    my $user_name = get_real_user_name();
-    my $host_name = get_hostname();
-    my ($date, $time) = now();
-
-    return "Compiled on $host_name by $user_name on $date, $time.";
-}
+use Sig;
 
 
 sub octalize_string {
@@ -137,29 +86,32 @@ END_OF_CLASS
 
 
 sub self_test {
+    my $sig = Sig->new();
     my $ok = 1;
 
     print "// self-test...\n";
 
-    unless (get_real_user_name()) {
+    unless ($sig->get_username()) {
         print "// no user name\n";
         $ok = 0;
     }
 
-    unless (get_hostname()) {
+    unless ($sig->get_hostname()) {
         print "// no hostname\n";
         $ok = 0;
     }
 
-    my ($date, $time) = now();
-    unless ($date) {
+    unless ($sig->get_date()) {
         print "// no date\n";
         $ok = 0;
     }
-    unless ($time) {
+
+    unless ($sig->get_time()) {
         print "// no time\n";
         $ok = 0;
     }
+
+    print "// ", $sig->signature(), "\n";
 
     print "// passed\n" if $ok;
 }
@@ -167,8 +119,9 @@ sub self_test {
 
 sub main {
     if ($ARGV[0] and $ARGV[0] =~ m/--extra=(.*)/) {
-        my $sig = signature();
-        emit_class($sig, unpack("%32C*", $sig), unpack("%32C*", $1));
+        my $sig = Sig->new();
+        emit_class($sig->signature(), unpack("%32C*", $sig->signature()),
+                   unpack("%32C*", $1));
     } else {
         self_test();
     }
