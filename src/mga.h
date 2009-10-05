@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Christoph L. Spiel
+ * Copyright (C) 2008, 2009 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -105,9 +105,9 @@ private:
                 double red, green, blue;
                 if (sscanf(name.c_str(),
                            CHANNEL_MIXER "%["
-                           OPTION_DELIMITERS "]%lf%["
-                           OPTION_DELIMITERS "]%lf%["
-                           OPTION_DELIMITERS "]%lf",
+                           NUMERIC_OPTION_DELIMITERS "]%lf%["
+                           NUMERIC_OPTION_DELIMITERS "]%lf%["
+                           NUMERIC_OPTION_DELIMITERS "]%lf",
                            &dummy, &red, &dummy, &green, &dummy, &blue) == 6)
                 {
                     check_weights(red, green, blue);
@@ -119,7 +119,9 @@ private:
                 }
                 else
                 {
-                    cerr << "enfuse: unknown grayscale projector \"" << accessorName << "\"." << endl;
+                    cerr << command
+                         << ": unknown grayscale projector \"" << accessorName << "\""
+                         << endl;
                     exit(1);
                 }
 
@@ -129,9 +131,11 @@ private:
                 kind = k->second;
                 if (kind == MIXER)
                 {
-                    cerr <<
-                        "enfuse: \"" CHANNEL_MIXER "\" is a grayscale projector requiring\n" <<
-                        "enfuse:      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\".\n";
+                    cerr << command
+                         << ": \"" CHANNEL_MIXER "\" is a grayscale projector requiring\n"
+                         << command
+                         << ":      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\""
+                         << endl;
                     exit(1);
                 }
             }
@@ -142,22 +146,30 @@ private:
         // TODO: check for isnormal(WEIGHT) before comparison
         if (red < 0.0)
         {
-            cerr << "enfuse: nonsensical weight of red channel (" << red << ").\n";
+            cerr << command
+                 << ": nonsensical weight of red channel (" << red << ")"
+                 << endl;
             exit(1);
         }
         if (green < 0.0)
         {
-            cerr << "enfuse: nonsensical weight of green channel (" << green << ").\n";
+            cerr << command
+                 << ": nonsensical weight of green channel (" << green << ")"
+                 << endl;
             exit(1);
         }
         if (blue < 0.0)
         {
-            cerr << "enfuse: nonsensical weight of blue channel (" << blue << ").\n";
+            cerr << command
+                 << ": nonsensical weight of blue channel (" << blue << ")"
+                 << endl;
             exit(1);
         }
         if (red + green + blue == 0.0)
         {
-            cerr << "enfuse: sum of channel weights is zero.\n";
+            cerr << command
+                 << ": sum of channel weights is zero"
+                 << endl;
             exit(1);
         }
     }
@@ -238,3 +250,7 @@ private:
 } // namespace enblend
 
 #endif /* __MGA_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <map>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <stdio.h>
@@ -46,6 +47,7 @@
 #include <boost/pool/pool.hpp>
 
 #include <vigra/error.hxx>
+#include <vigra/imageiterator.hxx>
 #include <vigra/metaprogramming.hxx>
 #include <vigra/utilities.hxx>
 
@@ -65,7 +67,7 @@ namespace vigra {
 /** Abstract base class for CachedFileImages. */
 class CachedFileImageBase {
 public:
-    virtual ~CachedFileImageBase() { }
+    virtual ~CachedFileImageBase() {}
     virtual int numBlocksAllocated() const = 0;
     virtual int numBlocksNeeded() const = 0;
     virtual void swapOutBlock() const = 0;
@@ -79,7 +81,6 @@ template <class PIXELTYPE> class CachedFileImage;
  */
 class CachedFileImageDirector {
 public:
-
     ~CachedFileImageDirector() {
         // This is no longer necessary. temp files get unlinked on creation.
         //// Make sure all image caches get destroyed and
@@ -274,36 +275,39 @@ public:
     }
 
     // Print general stats about allocated blocks and cache misses.
-    void printStats() {
-        cout << "Summary: cache misses="
-             << cacheMisses
-             << "  blocks managed="
-             << managedBlocks
-             << "  allocated="
-             << (managedBlocks - blocksAvailable)
-             << "  free="
-             << blocksAvailable
-             << endl;
+    void printStats(std::ostream& out, const std::string& label) {
+        out << label
+            << "summary: cache misses="
+            << cacheMisses
+            << "  blocks managed="
+            << managedBlocks
+            << "  allocated="
+            << (managedBlocks - blocksAvailable)
+            << "  free="
+            << blocksAvailable
+            << endl;
     }
 
     // Print stats about a particular image.
-    void printStats(const char * imageName, const CachedFileImageBase * image) {
-        cout << imageName << " " << image << ":"
-             << " cache misses=" << imageToMissMap[image]
-             << "  blocks allocated=" << image->numBlocksAllocated()
-             << "  blocks required=" << image->numBlocksNeeded()
-             << endl;
+    void printStats(std::ostream& out,
+                    const std::string& imageName, const CachedFileImageBase* image) {
+        out << imageName << " " << image << ":"
+            << " cache misses=" << imageToMissMap[image]
+            << "  blocks allocated=" << image->numBlocksAllocated()
+            << "  blocks required=" << image->numBlocksNeeded()
+            << endl;
     }
 
     // Print stats about a particular image.
     // Add an integer suffix to the image's name.
-    void printStats(const char * imageName, const int imageNumber,
-            const CachedFileImageBase * image) {
-        cout << imageName << imageNumber << " " << image << ":"
-             << " cache misses=" << imageToMissMap[image]
-             << "  blocks allocated=" << image->numBlocksAllocated()
-             << "  blocks required=" << image->numBlocksNeeded()
-             << endl;
+    void printStats(std::ostream& out,
+                    const std::string& imageName, const int imageNumber,
+                    const CachedFileImageBase* image) {
+        out << imageName << imageNumber << " " << image << ":"
+            << " cache misses=" << imageToMissMap[image]
+            << "  blocks allocated=" << image->numBlocksAllocated()
+            << "  blocks required=" << image->numBlocksNeeded()
+            << endl;
     }
 
     // Print stats on all images.
@@ -795,7 +799,7 @@ protected:
     pointer currentRow;
 
 };
- 
+
 /** Forward declarations */
 template <class PIXELTYPE>
 class StridedCachedFileImageIterator;
@@ -1191,7 +1195,7 @@ private:
 
     // Init the cache data structures once we know the size of the image.
     void initLineStartArray();
-    
+
     // obtain a pointer to the beginning of a line.
     // split into two functions for efficiency.
     // getLinePointer can then be inlined, and we only incur the function
@@ -1234,7 +1238,7 @@ private:
     // How many blocks are needed for the entire image.
     int blocksNeeded_;
 
-    // List of blocks in memory. 
+    // List of blocks in memory.
     // Blocks are in sequential order.
     mutable list<int> *blocksInMemory_;
 
@@ -1492,7 +1496,7 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(const int dy) co
 #else
         off_t offset = (off_t)width_
                 * (off_t)firstLineInBlock
-                * (off_t)sizeof(PIXELTYPE); 
+                * (off_t)sizeof(PIXELTYPE);
         if (fseeko(tmpFile_, offset, SEEK_SET) != 0) {
             vigra_fail(strerror(errno));
         }
@@ -1501,10 +1505,10 @@ PIXELTYPE * CachedFileImage<PIXELTYPE>::getLinePointerCacheMiss(const int dy) co
         // FIXME: should use compression
 #ifdef _WIN32
         DWORD bytesRead;
-        if (0 == ReadFile(hTempFile_, 
-                          blockStart, 
-                          sizeof(PIXELTYPE) * pixelsToRead, 
-                          &bytesRead, 
+        if (0 == ReadFile(hTempFile_,
+                          blockStart,
+                          sizeof(PIXELTYPE) * pixelsToRead,
+                          &bytesRead,
                           NULL)) {
             DWORD dwError = GetLastError();
             LPVOID lpMsgBuf;
@@ -1636,7 +1640,7 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
 #ifdef _WIN32
         if (hTempFile_ == INVALID_HANDLE_VALUE)
 #else
-        if (tmpFile_ == NULL) 
+        if (tmpFile_ == NULL)
 #endif
             initTmpfile();
 
@@ -1679,10 +1683,10 @@ void CachedFileImage<PIXELTYPE>::swapOutBlock() const {
         //FIXME this should use compression.
 #ifdef _WIN32
         DWORD bytesWritten;
-        if (0 == WriteFile(hTempFile_, 
-                           blockStart, 
-                           sizeof(PIXELTYPE) * pixelsToWrite, 
-                           &bytesWritten, 
+        if (0 == WriteFile(hTempFile_,
+                           blockStart,
+                           sizeof(PIXELTYPE) * pixelsToWrite,
+                           &bytesWritten,
                            NULL)) {
             DWORD dwError = GetLastError();
             LPVOID lpMsgBuf;
@@ -1748,7 +1752,7 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
 
      // Get the temp path.
     dwRetVal = GetTempPath(BUFSIZE,     // length of the buffer
-                           lpPathBuffer); // buffer for path 
+                           lpPathBuffer); // buffer for path
     if (dwRetVal > BUFSIZE || (dwRetVal == 0))
     {
         vigra_fail ("GetTempPath failed.");
@@ -1761,7 +1765,7 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     {
         vigra_fail("enblend: unable to create image swap file name.\n");
     }
-    
+
     hTempFile_ = CreateFileA(filenameTemplate,
                              GENERIC_READ|GENERIC_WRITE,
                              FILE_SHARE_READ, // share mode
@@ -1794,7 +1798,7 @@ void CachedFileImage<PIXELTYPE>::initTmpfile() const {
     } else {
        filenameTemplate = strdup("/tmp/.enblend_tmpXXXXXX");
     }
-    
+
 
 #if defined(HAVE_MKSTEMP)
     int tmpFD = mkstemp(filenameTemplate);
@@ -1942,12 +1946,12 @@ void CachedFileImage<PIXELTYPE>::swap( CachedFileImage<PIXELTYPE>& rhs ) {
 /********************************************************/
 
 template <class PixelType, class Accessor>
-inline triple<typename CachedFileImage<PixelType>::const_traverser, 
+inline triple<typename CachedFileImage<PixelType>::const_traverser,
               typename CachedFileImage<PixelType>::const_traverser, Accessor>
 srcImageRange(CachedFileImage<PixelType> const & img, Accessor a)
 {
-    return triple<typename CachedFileImage<PixelType>::const_traverser, 
-                  typename CachedFileImage<PixelType>::const_traverser, 
+    return triple<typename CachedFileImage<PixelType>::const_traverser,
+                  typename CachedFileImage<PixelType>::const_traverser,
           Accessor>(img.upperLeft(),
                     img.lowerRight(),
                     a);
@@ -1957,17 +1961,17 @@ template <class PixelType, class Accessor>
 inline pair<typename CachedFileImage<PixelType>::const_traverser, Accessor>
 srcImage(CachedFileImage<PixelType> const & img, Accessor a)
 {
-    return pair<typename CachedFileImage<PixelType>::const_traverser, 
+    return pair<typename CachedFileImage<PixelType>::const_traverser,
                 Accessor>(img.upperLeft(), a);
 }
 
 template <class PixelType, class Accessor>
-inline triple<typename CachedFileImage<PixelType>::traverser, 
+inline triple<typename CachedFileImage<PixelType>::traverser,
               typename CachedFileImage<PixelType>::traverser, Accessor>
 destImageRange(CachedFileImage<PixelType> & img, Accessor a)
 {
-    return triple<typename CachedFileImage<PixelType>::traverser, 
-                  typename CachedFileImage<PixelType>::traverser, 
+    return triple<typename CachedFileImage<PixelType>::traverser,
+                  typename CachedFileImage<PixelType>::traverser,
           Accessor>(img.upperLeft(),
                     img.lowerRight(),
                     a);
@@ -1977,7 +1981,7 @@ template <class PixelType, class Accessor>
 inline pair<typename CachedFileImage<PixelType>::traverser, Accessor>
 destImage(CachedFileImage<PixelType> & img, Accessor a)
 {
-    return pair<typename CachedFileImage<PixelType>::traverser, 
+    return pair<typename CachedFileImage<PixelType>::traverser,
                 Accessor>(img.upperLeft(), a);
 }
 
@@ -1985,65 +1989,65 @@ template <class PixelType, class Accessor>
 inline pair<typename CachedFileImage<PixelType>::const_traverser, Accessor>
 maskImage(CachedFileImage<PixelType> const & img, Accessor a)
 {
-    return pair<typename CachedFileImage<PixelType>::const_traverser, 
+    return pair<typename CachedFileImage<PixelType>::const_traverser,
                 Accessor>(img.upperLeft(), a);
 }
 
 /****************************************************************/
 
 template <class PixelType>
-inline triple<typename CachedFileImage<PixelType>::const_traverser, 
-              typename CachedFileImage<PixelType>::const_traverser, 
+inline triple<typename CachedFileImage<PixelType>::const_traverser,
+              typename CachedFileImage<PixelType>::const_traverser,
               typename CachedFileImage<PixelType>::ConstAccessor>
 srcImageRange(CachedFileImage<PixelType> const & img)
 {
-    return triple<typename CachedFileImage<PixelType>::const_traverser, 
-                  typename CachedFileImage<PixelType>::const_traverser, 
+    return triple<typename CachedFileImage<PixelType>::const_traverser,
+                  typename CachedFileImage<PixelType>::const_traverser,
                   typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(),
                                                                  img.lowerRight(),
                                                                  img.accessor());
 }
 
 template <class PixelType>
-inline pair< typename CachedFileImage<PixelType>::const_traverser, 
+inline pair< typename CachedFileImage<PixelType>::const_traverser,
              typename CachedFileImage<PixelType>::ConstAccessor>
 srcImage(CachedFileImage<PixelType> const & img)
 {
-    return pair<typename CachedFileImage<PixelType>::const_traverser, 
-                typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(), 
+    return pair<typename CachedFileImage<PixelType>::const_traverser,
+                typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(),
                                                                img.accessor());
 }
 
 template <class PixelType>
-inline triple< typename CachedFileImage<PixelType>::traverser, 
-               typename CachedFileImage<PixelType>::traverser, 
+inline triple< typename CachedFileImage<PixelType>::traverser,
+               typename CachedFileImage<PixelType>::traverser,
                typename CachedFileImage<PixelType>::Accessor>
 destImageRange(CachedFileImage<PixelType> & img)
 {
-    return triple<typename CachedFileImage<PixelType>::traverser, 
-                  typename CachedFileImage<PixelType>::traverser, 
+    return triple<typename CachedFileImage<PixelType>::traverser,
+                  typename CachedFileImage<PixelType>::traverser,
                   typename CachedFileImage<PixelType>::Accessor>(img.upperLeft(),
                                                             img.lowerRight(),
                                                             img.accessor());
 }
 
 template <class PixelType>
-inline pair< typename CachedFileImage<PixelType>::traverser, 
+inline pair< typename CachedFileImage<PixelType>::traverser,
              typename CachedFileImage<PixelType>::Accessor>
 destImage(CachedFileImage<PixelType> & img)
 {
-    return pair<typename CachedFileImage<PixelType>::traverser, 
-                typename CachedFileImage<PixelType>::Accessor>(img.upperLeft(), 
+    return pair<typename CachedFileImage<PixelType>::traverser,
+                typename CachedFileImage<PixelType>::Accessor>(img.upperLeft(),
                                                           img.accessor());
 }
 
 template <class PixelType>
-inline pair< typename CachedFileImage<PixelType>::const_traverser, 
+inline pair< typename CachedFileImage<PixelType>::const_traverser,
              typename CachedFileImage<PixelType>::ConstAccessor>
 maskImage(CachedFileImage<PixelType> const & img)
 {
-    return pair<typename CachedFileImage<PixelType>::const_traverser, 
-                typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(), 
+    return pair<typename CachedFileImage<PixelType>::const_traverser,
+                typename CachedFileImage<PixelType>::ConstAccessor>(img.upperLeft(),
                                                                img.accessor());
 }
 
@@ -2101,41 +2105,185 @@ maskStrideIterRange(ConstCachedFileImageIterator<PixelType> const & upperLeft,
                 typename IteratorTraits<ConstStridedCachedFileImageIterator<PixelType> >::DefaultAccessor());
 }
 
-template <typename PixelType, typename ImgAccessor>
-vigra::triple<StridedCachedFileImageIterator<PixelType>, StridedCachedFileImageIterator<PixelType>, ImgAccessor>
-stride(int xstride, int ystride, vigra::triple<CachedFileImageIterator<PixelType>, CachedFileImageIterator<PixelType>, ImgAccessor> image) {
-    Diff2D diff = image.second - image.first;
-    if (diff.x % xstride) diff.x += (xstride - (diff.x % xstride));
-    if (diff.y % ystride) diff.y += (ystride - (diff.y % ystride));
-    //cout << "stride(" << xstride << ", " << ystride << ", " << (image.second - image.first) << ", " << diff << ")" << endl;
-    return vigra::make_triple(StridedCachedFileImageIterator<PixelType>(image.first, xstride, ystride),
-                       StridedCachedFileImageIterator<PixelType>(image.first + diff, xstride, ystride),
-                       image.third);
-};
+
+Diff2D
+stridedCachedFileSize(int xstride, int ystride, Diff2D size)
+{
+    if (size.x % xstride != 0) {
+        size.x += xstride - size.x % xstride;
+    }
+    if (size.y % ystride != 0) {
+        size.y += ystride - size.y % ystride;
+    }
+
+    return size;
+}
+
 
 template <typename PixelType, typename ImgAccessor>
-vigra::triple<ConstStridedCachedFileImageIterator<PixelType>, ConstStridedCachedFileImageIterator<PixelType>, ImgAccessor>
-stride(int xstride, int ystride, vigra::triple<ConstCachedFileImageIterator<PixelType>, ConstCachedFileImageIterator<PixelType>, ImgAccessor> image) {
-    Diff2D diff = image.second - image.first;
-    if (diff.x % xstride) diff.x += (xstride - (diff.x % xstride));
-    if (diff.y % ystride) diff.y += (ystride - (diff.y % ystride));
-    //cout << "stride(" << xstride << ", " << ystride << ", " << (image.second - image.first) << ", " << diff << ")" << endl;
-    return vigra::make_triple(ConstStridedCachedFileImageIterator<PixelType>(image.first, xstride, ystride),
-                       ConstStridedCachedFileImageIterator<PixelType>(image.first + diff, xstride, ystride),
-                       image.third);
-};
+vigra::triple<StridedCachedFileImageIterator<PixelType>,
+              StridedCachedFileImageIterator<PixelType>,
+              ImgAccessor>
+stride(int xstride, int ystride,
+       vigra::triple<CachedFileImageIterator<PixelType>,
+                     CachedFileImageIterator<PixelType>,
+                     ImgAccessor> image)
+{
+    typedef StridedCachedFileImageIterator<PixelType> SCFII;
+
+    const Diff2D size = stridedCachedFileSize(xstride, ystride,
+                                              image.second - image.first);
+
+    return vigra::make_triple(SCFII(image.first, xstride, ystride),
+                              SCFII(image.first + size, xstride, ystride),
+                              image.third);
+}
+
 
 template <typename PixelType, typename ImgAccessor>
 std::pair<StridedCachedFileImageIterator<PixelType>, ImgAccessor>
-stride(int xstride, int ystride, std::pair<CachedFileImageIterator<PixelType>, ImgAccessor> image) {
-    return std::make_pair(StridedCachedFileImageIterator<PixelType>(image.first, xstride, ystride), image.second);
-};
+stride(int xstride, int ystride,
+       std::pair<CachedFileImageIterator<PixelType>, ImgAccessor> image)
+{
+    typedef StridedCachedFileImageIterator<PixelType> SCFII;
+
+    return std::make_pair(SCFII(image.first, xstride, ystride),
+                          image.second);
+}
+
+
+template <typename PixelType, typename ImgAccessor>
+vigra::triple<ConstStridedCachedFileImageIterator<PixelType>,
+              ConstStridedCachedFileImageIterator<PixelType>,
+              ImgAccessor>
+stride(int xstride, int ystride,
+       vigra::triple<ConstCachedFileImageIterator<PixelType>,
+                     ConstCachedFileImageIterator<PixelType>,
+                     ImgAccessor> image)
+{
+    typedef ConstStridedCachedFileImageIterator<PixelType> CSCFII;
+
+    const Diff2D size = stridedCachedFileSize(xstride, ystride,
+                                              image.second - image.first);
+
+    return vigra::make_triple(CSCFII(image.first, xstride, ystride),
+                              CSCFII(image.first + size, xstride, ystride),
+                              image.third);
+}
+
 
 template <typename PixelType, typename ImgAccessor>
 std::pair<ConstStridedCachedFileImageIterator<PixelType>, ImgAccessor>
-stride(int xstride, int ystride, std::pair<ConstCachedFileImageIterator<PixelType>, ImgAccessor> image) {
-    return std::make_pair(ConstStridedCachedFileImageIterator<PixelType>(image.first, xstride, ystride), image.second);
-};
+stride(int xstride, int ystride,
+       std::pair<ConstCachedFileImageIterator<PixelType>, ImgAccessor> image)
+{
+    typedef ConstStridedCachedFileImageIterator<PixelType> CSCFII;
+
+    return std::make_pair(CSCFII(image.first, xstride, ystride),
+                          image.second);
+}
+
+
+//
+// Missing implementations of stride() for compilation without image-cache
+//
+
+Diff2D
+stridedSize(int xstride, int ystride, Diff2D size)
+{
+    if (size.x % xstride != 0) {
+        size.x += xstride - size.x % xstride;
+    }
+    if (size.y % ystride != 0) {
+        size.y += ystride - size.y % ystride;
+    }
+
+    size.x /= xstride;
+    size.y /= ystride;
+
+    return size;
+}
+
+
+template <class Iterator>
+int
+iteratorWidth(Iterator imageIterator)
+{
+    Iterator nextLine(imageIterator);
+    nextLine.y += 1;
+    return nextLine[0] - imageIterator[0];
+}
+
+
+template <typename PixelType, typename ImgAccessor, typename ImgIterator>
+vigra::triple<StridedImageIterator<PixelType>,
+              StridedImageIterator<PixelType>,
+              ImgAccessor>
+stride(int xstride, int ystride,
+       vigra::triple<BasicImageIterator<PixelType, ImgIterator>,
+                     BasicImageIterator<PixelType, ImgIterator>,
+                     ImgAccessor> image)
+{
+    typedef StridedImageIterator<PixelType> SII;
+
+    const Diff2D size = stridedSize(xstride, ystride,
+                                    image.second - image.first);
+    const SII base = SII(image.first[0],
+                         iteratorWidth(image.first),
+                         xstride, ystride);
+
+    return vigra::make_triple(base, base + size, image.third);
+}
+
+
+template <typename PixelType, typename ImgAccessor, typename ImgIterator>
+std::pair<StridedImageIterator<PixelType>, ImgAccessor>
+stride(int xstride, int ystride,
+       std::pair<BasicImageIterator<PixelType, ImgIterator>, ImgAccessor> image)
+{
+    typedef StridedImageIterator<PixelType> SII;
+
+    return std::make_pair(SII(image.first[0],
+                              iteratorWidth(image.first),
+                              xstride, ystride),
+                          image.second);
+}
+
+
+template <typename PixelType, typename ImgAccessor, typename ImgIterator>
+vigra::triple<ConstStridedImageIterator<PixelType>,
+              ConstStridedImageIterator<PixelType>,
+              ImgAccessor>
+stride(int xstride, int ystride,
+       vigra::triple<ConstBasicImageIterator<PixelType, ImgIterator>,
+                     ConstBasicImageIterator<PixelType, ImgIterator>,
+                     ImgAccessor> image)
+{
+    typedef ConstStridedImageIterator<PixelType> CSII;
+
+    const Diff2D size = stridedSize(xstride, ystride,
+                                    image.second - image.first);
+    const CSII base = CSII(image.first[0],
+                           iteratorWidth(image.first),
+                           xstride, ystride);
+
+    return vigra::make_triple(base, base + size, image.third);
+}
+
+
+template <typename PixelType, typename ImgAccessor, typename ImgIterator>
+std::pair<ConstStridedImageIterator<PixelType>, ImgAccessor>
+stride(int xstride, int ystride,
+       std::pair<ConstBasicImageIterator<PixelType, ImgIterator>, ImgAccessor> image)
+{
+    typedef ConstStridedImageIterator<PixelType> CSII;
+
+    return std::make_pair(CSII(image.first[0],
+                               iteratorWidth(image.first),
+                               xstride, ystride),
+                          image.second);
+}
+
 
 } // namespace vigra
 

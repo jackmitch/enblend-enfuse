@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2009 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <utility>
 
+#include "vigra/functorexpression.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/stdcachedfileimage.hxx"
 
@@ -46,510 +47,398 @@ using vigra::triple;
 
 namespace enblend {
 
-// The metric to use for calculating distances.
-#define EUCLIDEAN_METRIC
-
-template <typename dist_t>
-inline dist_t _nftDistance(dist_t deltaX, dist_t deltaY) {
-    #ifdef EUCLIDEAN_METRIC
-        return (deltaY == NumericTraits<dist_t>::max())
-                ? deltaY
-                : (deltaY + (deltaX * deltaX));
-    #else
-    #ifdef CHESSBOARD_METRIC
-        return max(deltaX, deltaY);
-    #else
-    #ifdef MANHATTAN_METRIC
-        return (deltaY == NumericTraits<dist_t>::max())
-                ? deltaY
-                : (deltaX + deltaY);
-    #endif
-    #endif
-    #endif
-};
-
-// Distance to a pixel with the same x coordinate.
-template <typename dist_t>
-inline dist_t _nftDistance(dist_t deltaY) {
-    #ifdef EUCLIDEAN_METRIC
-        return deltaY * deltaY;
-    #else
-    #ifdef CHESSBOARD_METRIC
-        return deltaY;
-    #else
-    #ifdef MANHATTAN_METRIC
-        return deltaY;
-    #endif
-    #endif
-    #endif
-};
-
-/** Data structure for potentialFeatureStack.
- *  Contribution from Fulvio Senore.
- *  Fast insert and delete, avoiding dynamic memory allocation.
- */
-template <typename T>
-class FeatureList {
-
-    struct Node {
-        T value;
-        Node *prev;
-    };
-
-    // Statically allocated memory for Nodes
-    Node *array;
-
-    // pointer to the first unused element of the array
-    Node *firstUnused;
-
-    // pointer to the end of the list
-    Node *last;
-
-    Node *iterator;
-
-public:
-
-    FeatureList(int size) {
-        array = new Node[size];
-        firstUnused = array;
-        last = NULL;
-        iterator = NULL;
-    }
-
-    ~FeatureList() {
-        delete [] array;
-    }
-
-    void clear() {
-        firstUnused = array;
-        last = NULL;
-        iterator = NULL;
-    }
-
-    void push_back(const T& value) {
-        firstUnused->value = value;
-        firstUnused->prev = last;
-        last = firstUnused;
-        firstUnused++;
-    }
-
-    void move_to_beginning() {
-        iterator = array;
-    }
-
-    void move_to_end() {
-        iterator = last;
-    }
-
-    bool has_previous() const {
-        return (iterator->prev != NULL);
-    }
-
-    void erase_previous() {
-        iterator->prev = iterator->prev->prev;
-    }
-
-    T get_current() {
-        return iterator->value;
-    }
-
-    T get_previous() {
-        return iterator->prev->value;
-    }
-
-    void move_backwards() {
-        iterator = iterator->prev;
-    }
-
-    bool empty() {
-        return (last == NULL);
-    }
-
-};
-
-/** Compute the nearest feature transform.
- *  A non-zero pixel in the src image is considered a feature.
- *  Each pixel in the dest image is given the value of the nearest feature
- *  to that pixel.
- */
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
-void nearestFeatureTransform(bool wraparound,
-        SrcImageIterator src_upperleft,
-        SrcImageIterator src_lowerright,
-        SrcAccessor sa,
-        DestImageIterator dest_upperleft,
-        DestAccessor da,
-        typename SrcAccessor::value_type featurelessPixel) {
+void
+quadruple_image(SrcImageIterator src_upperleft,
+                SrcImageIterator src_lowerright, SrcAccessor sa,
+                DestImageIterator dest_upperleft, DestAccessor da,
+                boundary_t boundary)
+{
+    const vigra::Diff2D size_x(src_lowerright.x - src_upperleft.x, 0);
+    const vigra::Diff2D size_y(0, src_lowerright.y - src_upperleft.y);
 
-    typedef typename EnblendNumericTraits<UInt32>::ImageType DNFImage;
-    typedef typename DNFImage::traverser DnfIterator;
-    typedef typename SrcAccessor::value_type SrcValueType;
+    switch (boundary)
+    {
+    case OpenBoundaries:
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft, da);
+        break;
 
-    SrcImageIterator sx, sy, send, smidpoint;
-    DnfIterator dnfcx, dnfcy;
-    DnfIterator dnflx, dnfly;
-    DestImageIterator dx, dy;
+    case HorizontalStrip:
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft, da); // 11
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft + size_x, da); // 12
+        break;
 
-    int w = src_lowerright.x - src_upperleft.x;
-    int h = src_lowerright.y - src_upperleft.y;
+    case VerticalStrip:
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft, da); // 11
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft + size_y, da); // 21
+        break;
 
-    // Distance to the nearest feature in the current column.
-    DNFImage *dnfColumn = new DNFImage(w, h);
-    // Distance to the nearest feature in the current column, or any
-    // column to the left of this column.
-    DNFImage *dnfLeft = new DNFImage(w, h);
+    case DoubleStrip:
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft, da); // 11
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft + size_x, da); // 12
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft + size_y, da); // 21
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft + size_x + size_y, da); // 22
+        break;
 
-    // Data structures for initializing dnfColumn.
-    // These let us initialize all of the columns in one pass
-    // over the rows of the image. Cache-friendly.
-    SrcValueType* lastFeature = new SrcValueType[w];
-    bool* foundFirstFeature = new bool[w];
-    UInt32* lastFeatureDeltaY = new UInt32[w];
-
-    // Initialize dnfColumn top-down. Store the distance to the nearest feature
-    // in the same column and above us.
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << "Creating blend mask: 1/6";
-        else cout << "Creating blend mask: 1/4";
-        cout.flush();
+    default:
+        assert(false);
     }
-    // Initialization.
-    for (int i = 0; i < w; i++) {
-        // before commenting out: 18.23
-        // after commenting out:  18.35
-        //lastFeature[i] = sa(src_upperleft);
-        foundFirstFeature[i] = false;
-        //lastFeatureDeltaY[i] = 0;
-    }
-    sy = src_upperleft;
-    send = src_lowerright;
-    dnfcy = dnfColumn->upperLeft();
-    dy = dest_upperleft;
-    for (; sy.y < send.y; ++sy.y, ++dnfcy.y, ++dy.y) {
-        sx = sy;
-        dnfcx = dnfcy;
-        dx = dy;
+}
 
-        for (int xIndex = 0; sx.x < send.x; ++sx.x, ++dnfcx.x, ++dx.x, ++xIndex) {
-            if (sa(sx) != featurelessPixel) {
-                // Source pixel is a feature pixel.
-                lastFeature[xIndex] = sa(sx);
-                foundFirstFeature[xIndex] = true;
-                // Distance to feature pixel = 0
-                *dnfcx = 0;
-                lastFeatureDeltaY[xIndex] = 0;
-                // Nearest feature color = source feature color.
-                da.set(lastFeature[xIndex], dx);
-            }
-            else if (foundFirstFeature[xIndex]) {
-                // Source pixel is not a feature.
-                *dnfcx = _nftDistance(lastFeatureDeltaY[xIndex]);
-                da.set(lastFeature[xIndex], dx);
-            }
-            else {
-                *dnfcx = NumericTraits<UInt32>::max();
-            }
-            ++lastFeatureDeltaY[xIndex];
-        }
-    }
 
-    // Initialize dnfColumn bottom-up. Caluclate the distance to the nearest
-    // feature in the same column and below us.
-    // If this is smaller than the value caluclated in the top-down pass,
-    // overwrite that value.
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 2/6";
-        else cout << " 2/4";
-        cout.flush();
-    }
-    // Initialization.
-    for (int i = 0; i < w; i++) {
-        // before commenting out: 18.35
-        // after commenting out:  18.69
-        //lastFeature[i] = sa(src_upperleft);
-        foundFirstFeature[i] = false;
-        // before commenting out this and previous lastFeatureDeltaY init: 18.69
-        // after: 
-        //lastFeatureDeltaY[i] = 0;
-    }
-    sy = src_lowerright;
-    send = src_upperleft;
-    dnfcy = dnfColumn->lowerRight();
-    dy = dest_upperleft + Diff2D(w, h);
-    for (; sy.y > send.y;) {
-        --sy.y;
-        --dnfcy.y;
-        --dy.y;
-
-        sx = sy;
-        dnfcx = dnfcy;
-        dx = dy;
-
-        for (int xIndex = w-1; sx.x > send.x; --xIndex) {
-            --sx.x;
-            --dnfcx.x;
-            --dx.x;
-
-            if (sa(sx) != featurelessPixel) {
-                // Source pixel is a feature pixel.
-                lastFeature[xIndex] = sa(sx);
-                foundFirstFeature[xIndex] = true;
-                // Distance to feature pixel = 0
-                *dnfcx = 0;
-                lastFeatureDeltaY[xIndex] = 0;
-                // Nearest feature color = source feature color.
-                // time before commenting out this line: 19.52
-                // time after commenting out this line: 18.23
-                //da.set(lastFeature[xIndex], dx);
-            }
-            else if (foundFirstFeature[xIndex]) {
-                // Source pixel is not a feature
-                UInt32 distLastFeature = _nftDistance(lastFeatureDeltaY[xIndex]);
-                if (distLastFeature < *dnfcx) {
-                    // Feature below us is closer than feature above us.
-                    *dnfcx = distLastFeature;
-                    da.set(lastFeature[xIndex], dx);
-                }
-            }
-
-            ++lastFeatureDeltaY[xIndex];
-        }
-    }
-
-    // List of dnfcx's on the left that might be the closest features
-    // to the current dnflx.
-    FeatureList<typename DnfIterator::MoveX> potentialFeatureList((wraparound) ? w*2 : w);
-
-    // Calculate dnfLeft for each pixel.
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 3/6";
-        else cout << " 3/4";
-        cout.flush();
-    }
-    sy = src_upperleft;
-    send = src_lowerright;
-    smidpoint = src_upperleft + Diff2D(w/2, h/2);
-    dnfcy = dnfColumn->upperLeft();
-    dnfly = dnfLeft->upperLeft();
-    dy = dest_upperleft;
-    for (; sy.y < send.y; ++sy.y, ++dnfcy.y, ++dnfly.y, ++dy.y) {
-
-        // Indicate halfway mark when wraparound is true.
-        if (Verbose > VERBOSE_NFT_MESSAGES
-                && wraparound && (sy.y == smidpoint.y)) {
-            cout << " 4/6";
-            cout.flush();
-        }
-
-        potentialFeatureList.clear();
-
-        // If wraparound is true, we must go across the row twice.
-        // This takes care of the case when the nearest feature is reached by
-        // wrapping around the image.
-        for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
-            sx = sy;
-            dnfcx = dnfcy;
-            dnflx = dnfly;
-            dx = dy;
-
-            for (; sx.x < send.x; ++sx.x, ++dnfcx.x, ++dnflx.x, ++dx.x) {
-                // Distance to nearest feature in current column.
-                UInt32 distPotentialFeature = *dnfcx;
-
-                if (distPotentialFeature == NumericTraits<UInt32>::max()) {
-                    // No feature in current column.
-
-                    if (potentialFeatureList.empty()) {
-                        // No features to the left either.
-                        *dnflx = distPotentialFeature;
-                        continue;
-                    }
-
-                    potentialFeatureList.move_to_end();
-                    typename DnfIterator::MoveX firstFeature = potentialFeatureList.get_current();
-                    int deltaX = (dnfcx.x - firstFeature) % w;
-                    if (deltaX < 0) deltaX += w;
-                    distPotentialFeature = _nftDistance((UInt32)deltaX, dnfcx(firstFeature - dnfcx.x, 0));
-                }
-                else {
-                    // First add ourself to the list.
-                    potentialFeatureList.push_back(dnfcx.x);
-
-                    // Iterate throught the list starting at the right. For each
-                    // potential feature, all of the potential features to the left
-                    // in the list must be strictly closer. If not delete them from
-                    // the list.
-                    potentialFeatureList.move_to_end();
-                }
-
-                while (potentialFeatureList.has_previous()) {
-                    // X coordinate of the predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
-
-                    // Subtract the X coordinates to find out how many
-                    // columns to the left of dnfcx previousFeature is.
-                    // DeltaX must be positive.
-                    // modulo w to consider wraparound condition.
-                    int deltaX = (dnfcx.x - previousFeature) % w;
-                    if (deltaX < 0) deltaX += w;
-
-                    // previousFeature is this far from dnfcx.
-                    UInt32 distPreviousFeature =
-                            _nftDistance((UInt32)deltaX, dnfcx(previousFeature - dnfcx.x, 0));
-
-                    if (distPreviousFeature >= distPotentialFeature) {
-                        // previousFeature is not a candidate for dnflx
-                        // or any dnflx further to the right.
-                        potentialFeatureList.erase_previous();
-                    } else {
-                        // previousFeature is a candidate.
-                        potentialFeatureList.move_backwards();
-                        distPotentialFeature = distPreviousFeature;
-                    }
-                }
-
-                // The closest feature to dnflx in columns <= dnflx is the first
-                // potential feature in the list.
-                *dnflx = distPotentialFeature;
-
-                // Set color of dx to be color of closest feature to the left.
-                da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
-            }
-        }
-    }
-
-    // Final pass: calculate the distance to the nearest feature in the same
-    // column or any column to the right. If this is smaller than dnflx,
-    // Then recolor the pixel to the color of the nearest feature to the right.
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        if (wraparound) cout << " 5/6";
-        else cout << " 4/4";
-        cout.flush();
-    }
-    sy = src_lowerright;
-    send = src_upperleft;
-    smidpoint = src_upperleft + Diff2D(w/2, h/2);
-    dnfcy = dnfColumn->lowerRight();
-    dnfly = dnfLeft->lowerRight();
-    dy = dest_upperleft + Diff2D(w, h);
-    for (; sy.y > send.y;) {
-        --sy.y;
-        --dnfcy.y;
-        --dnfly.y;
-        --dy.y;
-
-        // Indicate halfway mark when wraparound is true.
-        if (Verbose > VERBOSE_NFT_MESSAGES
-                && wraparound && (sy.y == smidpoint.y)) {
-            cout << " 6/6";
-            cout.flush();
-        }
-
-        potentialFeatureList.clear();
-
-        // If wraparound is true, we must go across the row twice.
-        // This takes care of the case when the nearest feature is reached by
-        // wrapping around the image.
-        for (int twiceAround = (wraparound?1:0); twiceAround >= 0; twiceAround--) {
-            sx = sy;
-            dnfcx = dnfcy;
-            dnflx = dnfly;
-            dx = dy;
-
-            for (; sx.x > send.x;) {
-                --sx.x;
-                --dnfcx.x;
-                --dnflx.x;
-                --dx.x;
-
-                UInt32 distPotentialFeature = *dnfcx;
-
-                if (distPotentialFeature == NumericTraits<UInt32>::max()) {
-                    // No feature in current column.
-
-                    if (potentialFeatureList.empty()) {
-                        // No features to the right. Nearest feature must be to the left.
-                        continue;
-                    }
-
-                    potentialFeatureList.move_to_end();
-                    typename DnfIterator::MoveX firstFeature = potentialFeatureList.get_current();
-                    int deltaX = (firstFeature - dnfcx.x) % w;
-                    if (deltaX < 0) deltaX += w;
-                    distPotentialFeature = _nftDistance((UInt32)deltaX, dnfcx(firstFeature - dnfcx.x, 0));
-                }
-                else {
-                    // First add ourself to the list.
-                    potentialFeatureList.push_back(dnfcx.x);
-
-                    // Iterate through list and prune as before.
-                    potentialFeatureList.move_to_end();
-                }
-
-                while (potentialFeatureList.has_previous()) {
-                    // X coordinate of the predecessor.
-                    typename DnfIterator::MoveX previousFeature = potentialFeatureList.get_previous();
-
-                    // Subtract the X coordinates to find out how many
-                    // columns to the right of dnfcx previousFeature is.
-                    // DeltaX must be positive.
-                    // modulo w to consider wraparound condition.
-                    int deltaX = (previousFeature - dnfcx.x) % w;
-                    if (deltaX < 0) deltaX += w;
-
-                    // previousFeature is this far from dnfcx.
-                    UInt32 distPreviousFeature =
-                            _nftDistance((UInt32)deltaX, dnfcx(previousFeature - dnfcx.x, 0));
-
-                    if (distPreviousFeature >= distPotentialFeature) {
-                        // previousFeature is not a candidate.
-                        potentialFeatureList.erase_previous();
-                    } else {
-                        // previousFeature is a candidate.
-                        potentialFeatureList.move_backwards();
-                        distPotentialFeature = distPreviousFeature;
-                    }
-                }
-
-                // The closest feature on the right is potentialFeature.
-                if (*dnflx > distPotentialFeature) {
-                    // Following line only necessary for advanced mask generation.
-                    //*dnflx = distPotentialFeature;
-                    // Recolor dx.
-                    da.set(dx((potentialFeatureList.get_current() - dnfcx.x), 0), dx);
-                }
-            }
-        }
-    }
-
-    delete dnfColumn;
-    delete dnfLeft;
-    delete [] lastFeature;
-    delete [] foundFirstFeature;
-    delete [] lastFeatureDeltaY;
-
-    if (Verbose > VERBOSE_NFT_MESSAGES) {
-        cout << endl;
-    }
-
-    return;
-};
-
-// Version using argument object factories.
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
-inline void nearestFeatureTransform(bool wraparound,
-        triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-        pair<DestImageIterator, DestAccessor> dest,
-        typename SrcAccessor::value_type featurelessPixel) {
+inline void
+quadruple_image(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                vigra::pair<DestImageIterator, DestAccessor> dest,
+                boundary_t boundary)
+{
+    quadruple_image(src.first, src.second, src.third,
+                    dest.first, dest.second,
+                    boundary);
+}
 
-    nearestFeatureTransform(wraparound,
-            src.first, src.second, src.third,
-            dest.first, dest.second, featurelessPixel);
 
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+void
+quater_image(SrcImageIterator src_upperleft,
+             SrcImageIterator src_lowerright, SrcAccessor sa,
+             DestImageIterator dest_upperleft, DestAccessor da,
+             boundary_t boundary)
+{
+    const vigra::Diff2D size_x(src_lowerright.x - src_upperleft.x, 0);
+    const vigra::Diff2D size_y(0, src_lowerright.y - src_upperleft.y);
+    const vigra::Diff2D size_x2(size_x / 2);
+    const vigra::Diff2D size_y2(size_y / 2);
+    const vigra::Diff2D size_x4(size_x2 / 2);
+    const vigra::Diff2D size_y4(size_y2 / 2);
+
+    // destination image
+    //  | 11  12 |
+    //  |        |
+    //  | 21  22 |
+
+    switch (boundary)
+    {
+    case OpenBoundaries:
+        copyImage(src_upperleft, src_lowerright, sa,
+                  dest_upperleft, da);
+        break;
+
+    case HorizontalStrip:
+        copyImage(src_upperleft + size_x2,
+                  src_upperleft + size_x2 + size_x4 + size_y,
+                  sa,
+                  dest_upperleft,
+                  da); // 11
+        copyImage(src_upperleft + size_x4,
+                  src_upperleft + size_x2 + size_y,
+                  sa,
+                  dest_upperleft + size_x4,
+                  da); // 12
+        break;
+
+    case VerticalStrip:
+        copyImage(src_upperleft + size_y2,
+                  src_upperleft + size_y2 + size_y4 + size_x,
+                  sa,
+                  dest_upperleft,
+                  da); // 21
+        copyImage(src_upperleft + size_y4,
+                  src_upperleft + size_y2 + size_x,
+                  sa,
+                  dest_upperleft + size_y4,
+                  da); // 22
+        break;
+
+    case DoubleStrip:
+        copyImage(src_upperleft + size_x2 + size_y2,
+                  src_upperleft + size_x2 + size_y2 + size_x4 + size_y4,
+                  sa,
+                  dest_upperleft,
+                  da); // 11
+        copyImage(src_upperleft + size_x4 + size_y2,
+                  src_upperleft + size_x2 + size_y2 + size_y4,
+                  sa,
+                  dest_upperleft + size_x4,
+                  da); // 12
+        copyImage(src_upperleft + size_x2 + size_y4,
+                  src_upperleft + size_x2 + size_x4 + size_y2,
+                  sa,
+                  dest_upperleft + size_y4,
+                  da); // 21
+        copyImage(src_upperleft + size_x4 + size_y4,
+                  src_upperleft + size_x2 + size_y2,
+                  sa,
+                  dest_upperleft + size_x4 + size_y4,
+                  da); // 22
+        break;
+
+    default:
+        assert(false);
+    }
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+inline void
+quater_image(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+             vigra::pair<DestImageIterator, DestAccessor> dest,
+             boundary_t boundary)
+{
+    quater_image(src.first, src.second, src.third,
+                 dest.first, dest.second,
+                 boundary);
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor,
+          class ValueType>
+void
+periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor sa,
+                          DestImageIterator dest_upperleft, DestAccessor da,
+                          ValueType background, int norm, boundary_t boundary)
+{
+    typedef typename SrcImageIterator::value_type SrcValueType;
+    typedef typename DestImageIterator::value_type DestValueType;
+
+    const vigra::Diff2D size(src_lowerright.x - src_upperleft.x,
+                             src_lowerright.y - src_upperleft.y);
+    int size_x;
+    int size_y;
+
+    switch (boundary)
+    {
+    case OpenBoundaries:
+        size_x = size.x;
+        size_y = size.y;
+        break;
+
+    case HorizontalStrip:
+        size_x = 2 * size.x;
+        size_y = size.y;
+        break;
+
+    case VerticalStrip:
+        size_x = size.x;
+        size_y = 2 * size.y;
+        break;
+
+    case DoubleStrip:
+        size_x = 2 * size.x;
+        size_y = 2 * size.y;
+        break;
+
+    default:
+        size_x = -1;
+        size_y = -1;
+        assert(false);
+    }
+
+    vigra::BasicImage<SrcValueType> periodic(size_x, size_y);
+    vigra::BasicImage<DestValueType> distance(periodic.size());
+
+    quadruple_image(src_upperleft, src_lowerright, sa,
+                    periodic.upperLeft(), periodic.accessor(),
+                    boundary);
+    distanceTransformMP(srcImageRange(periodic), destImage(distance),
+                        background, norm);
+    quater_image(srcImageRange(distance), destIter(dest_upperleft, da), boundary);
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor,
+          class ValueType>
+inline void
+periodicDistanceTransform(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                          vigra::pair<DestImageIterator, DestAccessor> dest,
+                          ValueType background, int norm, boundary_t boundary)
+{
+    periodicDistanceTransform(src.first, src.second, src.third,
+                              dest.first, dest.second,
+                              background, norm, boundary);
+}
+
+
+template <class ValueType>
+struct saturating_subtract
+{
+    typedef ValueType first_argument_type;
+    typedef ValueType second_argument_type;
+    typedef ValueType result_type;
+
+    result_type operator()(const first_argument_type& v1,
+                           const second_argument_type& v2) const
+    {
+        typedef vigra::NumericTraits<result_type> traits;
+
+        return v2 < v1 ? v1 - v2 : traits::zero();
+    }
 };
+
+
+// Compute a mask (dest) that defines the seam line given the
+// blackmask (src1) and the whitemask (src2) of the overlapping
+// images.
+//
+// The idea of the algorithm is from
+//     Yalin Xiong, Ken Turkowski
+//     "Registration, Calibration and Blending in Creating High Quality Panoramas"
+//     Proceedings of the 4th IEEE Workshop on Applications of Computer Vision (WACV'98)
+// where we find:
+//     "To locate the mask boundary, we perform the grassfire
+//      transform on two images individually.  The resulting distance
+//      maps represent how far away each pixel is from its nearest
+//      boundary.  The pixel values of the blend mask is then set to
+//      either 0 or 1 by comparing the distance values at each pixel
+//      in the two distance maps."
+//
+// Though we prefer the Distance Transform to the Grassfire Transform.
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+void
+nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor sa1,
+                        SrcImageIterator src2_upperleft, SrcAccessor sa2,
+                        DestImageIterator dest_upperleft, DestAccessor da,
+                        nearest_neigbor_metric_t norm, boundary_t boundary)
+{
+    typedef typename SrcAccessor::value_type SrcPixelType;
+    typedef vigra::NumericTraits<SrcPixelType> SrcPixelTraits;
+    typedef typename SrcPixelTraits::Promote SrcPromoteType;
+
+    typedef typename DestAccessor::value_type DestPixelType;
+    typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
+
+    const SrcPixelType background = SrcPixelTraits::zero();
+    const Diff2D size(src1_lowerright.x - src1_upperleft.x,
+                      src1_lowerright.y - src1_upperleft.y);
+
+    IMAGETYPE<SrcPromoteType> dist12(size);
+    IMAGETYPE<SrcPromoteType> dist21(size);
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
+    {
+        cerr << command << ": info: creating blend mask: 1/3";
+        cerr.flush();
+    }
+
+#ifdef OPENMP
+#pragma omp parallel sections
+#endif
+    {
+#ifdef OPENMP
+#pragma omp section
+#endif
+        {
+            IMAGETYPE<SrcPixelType> diff12(size);
+            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
+                               src2_upperleft, sa2,
+                               diff12.upperLeft(), diff12.accessor(),
+                               saturating_subtract<SrcPixelType>());
+            switch (boundary)
+            {
+            case OpenBoundaries:
+                distanceTransformMP(srcImageRange(diff12), destImage(dist12),
+                                    background, norm);
+                break;
+
+            case HorizontalStrip: // FALLTHROUGH
+            case VerticalStrip:   // FALLTHROUGH
+            case DoubleStrip:
+                periodicDistanceTransform(srcImageRange(diff12), destImage(dist12),
+                                          background, norm, boundary);
+                break;
+
+            default:
+                assert(false);
+            }
+        } // omp section
+
+#ifdef OPENMP
+#pragma omp section
+#endif
+        {
+            if (Verbose >= VERBOSE_NFT_MESSAGES)
+            {
+                cerr << " 2/3";
+                cerr.flush();
+            }
+            IMAGETYPE<SrcPixelType> diff21(size);
+            combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
+                               src1_upperleft, sa1,
+                               diff21.upperLeft(), diff21.accessor(),
+                               saturating_subtract<SrcPixelType>());
+            switch (boundary)
+            {
+            case OpenBoundaries:
+                distanceTransformMP(srcImageRange(diff21), destImage(dist21),
+                                    background, norm);
+                break;
+
+            case HorizontalStrip: // FALLTHROUGH
+            case VerticalStrip:   // FALLTHROUGH
+            case DoubleStrip:
+                periodicDistanceTransform(srcImageRange(diff21), destImage(dist21),
+                                          background, norm, boundary);
+                break;
+
+            default:
+                assert(false);
+            }
+        } // omp section
+    } // omp parallel sections
+
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
+    {
+        cerr << " 3/3";
+        cerr.flush();
+    }
+    combineTwoImagesMP(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
+                       dist21.upperLeft(), dist21.accessor(),
+                       dest_upperleft, da,
+                       ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
+                                  vigra::functor::Param(DestPixelTraits::max()),
+                                  vigra::functor::Param(DestPixelTraits::zero())));
+
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
+    {
+        cerr << endl;
+    }
+}
+
+
+template <class SrcImageIterator, class SrcAccessor,
+          class DestImageIterator, class DestAccessor>
+inline void
+nearestFeatureTransform(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+                        pair<SrcImageIterator, SrcAccessor> src2,
+                        pair<DestImageIterator, DestAccessor> dest,
+                        nearest_neigbor_metric_t norm, boundary_t boundary)
+{
+    nearestFeatureTransform(src1.first, src1.second, src1.third,
+                            src2.first, src2.second,
+                            dest.first, dest.second,
+                            norm, boundary);
+}
 
 } // namespace enblend
 
 #endif /* __NEAREST_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

@@ -1,0 +1,4 @@
+@set UPDATED 28 September 2009
+@set UPDATED-MONTH September 2009
+@set EDITION 4.0-d5af3aa9f8ca
+@set VERSION 4.0-d5af3aa9f8ca

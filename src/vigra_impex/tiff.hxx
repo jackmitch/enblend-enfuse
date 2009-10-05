@@ -77,10 +77,13 @@ namespace vigra {
         std::string getFileType() const;
         unsigned int getWidth() const;
         unsigned int getHeight() const;
+        unsigned int getNumLayers() const;
         unsigned int getNumBands() const;
 
         unsigned int getNumExtraBands() const;
         Diff2D getPosition() const;
+        float getXResolution() const;
+        float getYResolution() const;
 
         const void * currentScanlineOfBand( unsigned int ) const;
         void nextScanline();

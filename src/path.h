@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,34 +36,41 @@ using vigra::UInt8Image;
 namespace enblend {
 
 template <typename Point, typename Image>
-class PathCompareFunctor {
+class PathCompareFunctor
+{
 public:
-    PathCompareFunctor(Image *i) : image(i) {}
-    bool operator()(const Point &a, const Point &b) {
-        //cout << "comparing a=(" << a.x << ", " << a.y << ")=" << (*image)[a]
-        //     << " b=(" << b.x << ", " << b.y << ")=" << (*image)[b] << endl;
-        // want the priority queue sorted in ascending order.
-        return ((*image)[a] > (*image)[b]);
+    PathCompareFunctor(const Image* i) : image(i) {}
+
+    bool operator()(const Point& a, const Point& b) const {
+#ifdef DEBUG_PATH_COMPARE
+        cout << "+ PathCompareFunctor::operator(): comparing "
+             << "a = (" << a.x << ", " << a.y << ") = " << (*image)[a]
+             << ", b = (" << b.x << ", " << b.y << ") = " << (*image)[b] << endl;
+#endif
+        // want the priority queue sorted in ascending order
+        return (*image)[a] > (*image)[b];
     }
+
 protected:
-    Image *image;
+    const Image* image;
 };
 
-template <class CostImageIterator, class CostAccessor>
-vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
-        CostImageIterator cost_lowerright,
-        CostAccessor ca,
-        Point2D startingPoint,
-        Point2D endingPoint) {
 
+template <class CostImageIterator, class CostAccessor>
+vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
+                             CostImageIterator cost_lowerright,
+                             CostAccessor ca,
+                             Point2D startingPoint,
+                             Point2D endingPoint)
+{
     typedef typename CostAccessor::value_type CostPixelType;
     typedef typename NumericTraits<CostPixelType>::Promote WorkingPixelType;
     typedef BasicImage<WorkingPixelType> WorkingImageType;
     typedef typename WorkingImageType::traverser WorkingImageIterator;
     typedef priority_queue<Point2D, vector<Point2D>, PathCompareFunctor<Point2D, WorkingImageType> > PQ;
 
-    int w = cost_lowerright.x - cost_upperleft.x;
-    int h = cost_lowerright.y - cost_upperleft.y;
+    const int w = cost_lowerright.x - cost_upperleft.x;
+    const int h = cost_lowerright.y - cost_upperleft.y;
 
     // 4-bit direction encoding {up, down, left, right}
     // A  8  9
@@ -74,64 +81,81 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
     //const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
     const UInt8 neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
 
-    UInt8Image *pathNextHop = new UInt8Image(w, h, UInt8(0));
-    WorkingImageType *costSoFar = new WorkingImageType(w, h, NumericTraits<WorkingPixelType>::max());
-    PQ *pq = new PQ(PathCompareFunctor<Point2D, WorkingImageType>(costSoFar));
-    vector<Point2D> *result = new vector<Point2D>;
+    UInt8Image* pathNextHop = new UInt8Image(w, h, UInt8(0));
+    WorkingImageType* costSoFar = new WorkingImageType(w, h, NumericTraits<WorkingPixelType>::max());
+    PQ* pq = new PQ(PathCompareFunctor<Point2D, WorkingImageType>(costSoFar));
+    vector<Point2D>* result = new vector<Point2D>;
 
-    //cout << "minCostPath w=" << w << " h=" << h << endl;
-    //cout << "startingPoint=" << startingPoint << endl;
-    //cout << "endingPoint=" << endingPoint << endl;
+#ifdef DEBUG_PATH
+    cout << "+ minCostPath: w = " << w << ", h = " << h << "\n"
+         << "+ minCostPath: startingPoint = " << startingPoint
+         << ", endingPoint = " << endingPoint << endl;
+#endif
 
-    (*costSoFar)[endingPoint] = std::max(NumericTraits<WorkingPixelType>::one(),
-                                           NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + endingPoint)));
+    (*costSoFar)[endingPoint] =
+        std::max(NumericTraits<WorkingPixelType>::one(),
+                 NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + endingPoint)));
     pq->push(endingPoint);
 
     while (!pq->empty()) {
         Point2D top = pq->top();
         pq->pop();
-
-        //cout << "visiting point=" << top << endl;
+#ifdef DEBUG_PATH
+        cout << "+ minCostPath: visiting point = " << top << endl;
+#endif
 
         if (top != startingPoint) {
             WorkingPixelType costToTop = (*costSoFar)[top];
+#ifdef DEBUG_PATH
+            cout << "+ minCostPath: costToTop = " << costToTop << endl;
+#endif
 
-            //cout << "costToTop = " << costToTop << endl;
-
-            // For each 8-neighbor of top with costSoFar==0 do relax
+            // For each 8-neighbor of top with costSoFar == 0 do relax
             for (int i = 0; i < 8; i++) {
                 // get the negihbor;
                 UInt8 neighborDirection = neighborArray[i];
                 Point2D neighborPoint = top;
-                if (neighborDirection & 0x8) --neighborPoint.y;
-                if (neighborDirection & 0x4) ++neighborPoint.y;
-                if (neighborDirection & 0x2) --neighborPoint.x;
-                if (neighborDirection & 0x1) ++neighborPoint.x;
+                if (neighborDirection & 0x8) {--neighborPoint.y;}
+                if (neighborDirection & 0x4) {++neighborPoint.y;}
+                if (neighborDirection & 0x2) {--neighborPoint.x;}
+                if (neighborDirection & 0x1) {++neighborPoint.x;}
 
                 // Make sure neighbor is in valid region
-                if ((neighborPoint.y < 0) || (neighborPoint.y >= h)
-                     || (neighborPoint.x < 0) || (neighborPoint.x >= w)) continue;
-
-                //cout << "neighbor=" << neighborPoint << endl;
+                if (neighborPoint.y < 0 || neighborPoint.y >= h
+                    || neighborPoint.x < 0 || neighborPoint.x >= w) {
+                    continue;
+                }
+#ifdef DEBUG_PATH
+                cout << "+ minCostPath: neighbor = " << neighborPoint << endl;
+#endif
 
                 // See if the neighbor has already been visited.
                 // If neighbor has maximal cost, it has not been visited.
                 // If so skip it.
                 WorkingPixelType neighborPreviousCost = (*costSoFar)[neighborPoint];
-                //cout << "neighborPreviousCost=" << neighborPreviousCost << endl;
-                if (neighborPreviousCost != NumericTraits<WorkingPixelType>::max()) continue;
+#ifdef DEBUG_PATH
+                cout << "+ minCostPath: neighborPreviousCost = " << neighborPreviousCost << endl;
+#endif
+                if (neighborPreviousCost != NumericTraits<WorkingPixelType>::max()) {
+                    continue;
+                }
 
-                WorkingPixelType neighborCost = std::max(NumericTraits<WorkingPixelType>::one(),
-                                                         NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
-                //cout << "neighborCost=" << neighborCost << endl;
-                if (neighborCost == NumericTraits<CostPixelType>::max()) neighborCost *= 65536; // Can't use << since neighborCost may be floating-point
+                WorkingPixelType neighborCost =
+                    std::max(NumericTraits<WorkingPixelType>::one(),
+                             NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
+#ifdef DEBUG_PATH
+                cout << "+ minCostPath: neighborCost = " << neighborCost << endl;
+#endif
+                if (neighborCost == NumericTraits<CostPixelType>::max()) {
+                    neighborCost *= 65536; // Can't use << since neighborCost may be floating-point
+                }
 
                 if ((i & 1) == 0) {
                     // neighbor is diagonal
-                    neighborCost = WorkingPixelType(double(neighborCost) * 1.4);
+                    neighborCost = WorkingPixelType(static_cast<double>(neighborCost) * 1.4);
                 }
 
-                WorkingPixelType newNeighborCost = neighborCost + costToTop;
+                const WorkingPixelType newNeighborCost = neighborCost + costToTop;
                 if (newNeighborCost < neighborPreviousCost) {
                     // We have found the shortest path to neighbor.
                     (*costSoFar)[neighborPoint] = newNeighborCost;
@@ -139,18 +163,19 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
                     pq->push(neighborPoint);
                 }
             }
-        }
-        else {
+        } else {
             // If yes then follow back to beginning using pathNextHop
             // include neither start nor end point in result
             UInt8 nextHop = (*pathNextHop)[top];
             while (nextHop != 0) {
-                if (nextHop & 0x8) --top.y;
-                if (nextHop & 0x4) ++top.y;
-                if (nextHop & 0x2) --top.x;
-                if (nextHop & 0x1) ++top.x;
+                if (nextHop & 0x8) {--top.y;}
+                if (nextHop & 0x4) {++top.y;}
+                if (nextHop & 0x2) {--top.x;}
+                if (nextHop & 0x1) {++top.x;}
                 nextHop = (*pathNextHop)[top];
-                if (nextHop != 0) result->push_back(top);
+                if (nextHop != 0) {
+                    result->push_back(top);
+                }
             }
             break;
         }
@@ -161,14 +186,20 @@ vector<Point2D> *minCostPath(CostImageIterator cost_upperleft,
     delete pq;
 
     return result;
-};
+}
+
 
 template <class CostImageIterator, class CostAccessor>
-vector<Point2D> *minCostPath(triple<CostImageIterator, CostImageIterator, CostAccessor> cost,
-        Point2D startingPoint, Point2D endingPoint) {
+vector<Point2D>* minCostPath(triple<CostImageIterator, CostImageIterator, CostAccessor> cost,
+                             Point2D startingPoint, Point2D endingPoint)
+{
     return minCostPath(cost.first, cost.second, cost.third, startingPoint, endingPoint);
-};
+}
 
 } // namespace enblend
 
 #endif /* __PATH_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

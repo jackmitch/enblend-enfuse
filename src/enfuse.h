@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -32,6 +32,7 @@
 #include <boost/static_assert.hpp>
 
 #include "common.h"
+#include "openmp.h"
 #include "numerictraits.h"
 #include "fixmath.h"
 #include "assemble.h"
@@ -121,145 +122,146 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                    DestIterator dest_ul, DestAccessor dest_acc,
                    Size2D size)
 {
-     typedef typename NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
-     typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
-     typedef typename SrcIterator::PixelType SrcPixelType;
-     typedef typename SrcIterator::row_iterator SrcRowIterator;
-     typedef typename MaskIterator::row_iterator MaskRowIterator;
-     typedef typename DestIterator::PixelType DestPixelType;
-     typedef ScratchPad<SrcSumType> ScratchPadType;
+    typedef typename NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
+    typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+    typedef typename SrcIterator::PixelType SrcPixelType;
+    typedef typename SrcIterator::row_iterator SrcRowIterator;
+    typedef typename MaskIterator::row_iterator MaskRowIterator;
+    typedef typename DestIterator::PixelType DestPixelType;
+    typedef ScratchPad<SrcSumType> ScratchPadType;
+    typedef std::vector<ScratchPadType> ScratchPadArray;
+    typedef typename ScratchPadArray::iterator ScratchPadArrayIterator;
 
-     vigra_precondition(size.x > 1 && size.y > 1,
-                        "localStdDevIf(): window for local variance must be at least 2x2");
-     vigra_precondition(src_lr.x - src_ul.x >= size.x &&
-                        src_lr.y - src_ul.y >= size.y,
-                        "localStdDevIf(): window larger than image");
+    vigra_precondition(size.x > 1 && size.y > 1,
+                       "localStdDevIf(): window for local variance must be at least 2x2");
+    vigra_precondition(src_lr.x - src_ul.x >= size.x &&
+                       src_lr.y - src_ul.y >= size.y,
+                       "localStdDevIf(): window larger than image");
 
-     const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
-     ScratchPadType* const scratchPad = new ScratchPadType[imageSize.x + 1];
-     vigra_precondition(scratchPad != NULL, "localStdDevIf(): could not allocate scratch pad");
+    const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
+    ScratchPadArray scratchPad(imageSize.x + 1);
 
-     const Diff2D border(size.x / 2, size.y / 2);
-     const Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
+    const Diff2D border(size.x / 2, size.y / 2);
+    const Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
 
-     SrcIterator srcRow;
-     SrcIterator const srcEnd(src_lr - border);
-     SrcIterator const srcEndXm1(srcEnd - Diff2D(1, 0));
-     MaskIterator maskRow;
-     DestIterator destRow;
+    SrcIterator const srcEnd(src_lr - border);
+    SrcIterator const srcEndXm1(srcEnd - Diff2D(1, 0));
 
-     // For each row in the source image...
-     for (srcRow = src_ul + border, maskRow = mask_ul + border, destRow = dest_ul + border;
-          srcRow.y < srcEnd.y;
-          ++srcRow.y, ++maskRow.y, ++destRow.y)
-     {
-         // Row's running values
-         SrcSumType sum = NumericTraits<SrcSumType>::zero();
-         SrcSumType sumSqr = NumericTraits<SrcSumType>::zero();
-         size_t n = 0;
+    // For each row in the source image...
+#ifdef OPENMP
+#pragma omp parallel for firstprivate (scratchPad)
+#endif
+    for (int row = 0; row < imageSize.y - 2 * border.y; ++row)
+    {
+        SrcIterator srcRow(src_ul + border + Diff2D(0, row));
+        MaskIterator maskRow(mask_ul + border + Diff2D(0, row));
+        DestIterator destRow(dest_ul + border + Diff2D(0, row));
 
-         SrcIterator const windowSrcUpperLeft(srcRow - border);
-         SrcIterator const windowSrcLowerRight(srcRow + border);
-         SrcIterator windowSrc;
-         MaskIterator const windowMaskUpperLeft(maskRow - border);
-         MaskIterator windowMask;
-         ScratchPadType* spCol;
+        // Row's running values
+        SrcSumType sum = NumericTraits<SrcSumType>::zero();
+        SrcSumType sumSqr = NumericTraits<SrcSumType>::zero();
+        size_t n = 0;
 
-         // Initialize running-sums of this row
-         for (windowSrc = windowSrcUpperLeft, windowMask = windowMaskUpperLeft,
-                  spCol = scratchPad;
-              windowSrc.x <= windowSrcLowerRight.x;
-              ++windowSrc.x, ++windowMask.x, ++spCol)
-         {
-             SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
-             SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
-             size_t nInit = 0;
+        SrcIterator const windowSrcUpperLeft(srcRow - border);
+        SrcIterator const windowSrcLowerRight(srcRow + border);
+        SrcIterator windowSrc;
+        MaskIterator const windowMaskUpperLeft(maskRow - border);
+        MaskIterator windowMask;
+        ScratchPadArrayIterator spCol;
 
-             for (windowSrc.y = windowSrcUpperLeft.y, windowMask.y = windowMaskUpperLeft.y;
-                  windowSrc.y <= windowSrcLowerRight.y;
-                  ++windowSrc.y, ++windowMask.y)
-             {
-                 if (mask_acc(windowMask))
-                 {
-                     const SrcSumType value = src_acc(windowSrc);
-                     sumInit += value;
-                     sumSqrInit += square(value);
-                     ++nInit;
-                 }
-             }
+        // Initialize running-sums of this row
+        for (windowSrc = windowSrcUpperLeft, windowMask = windowMaskUpperLeft,
+                 spCol = scratchPad.begin();
+             windowSrc.x <= windowSrcLowerRight.x;
+             ++windowSrc.x, ++windowMask.x, ++spCol)
+        {
+            SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
+            SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+            size_t nInit = 0;
 
-             // Set scratch pad's column-wise values
-             spCol->sum = sumInit;
-             spCol->sumSqr = sumSqrInit;
-             spCol->n = nInit;
+            for (windowSrc.y = windowSrcUpperLeft.y, windowMask.y = windowMaskUpperLeft.y;
+                 windowSrc.y <= windowSrcLowerRight.y;
+                 ++windowSrc.y, ++windowMask.y)
+            {
+                if (mask_acc(windowMask))
+                {
+                    const SrcSumType value = src_acc(windowSrc);
+                    sumInit += value;
+                    sumSqrInit += square(value);
+                    ++nInit;
+                }
+            }
 
-             // Update totals
-             sum += sumInit;
-             sumSqr += sumSqrInit;
-             n += nInit;
-         }
+            // Set scratch pad's column-wise values
+            spCol->sum = sumInit;
+            spCol->sumSqr = sumSqrInit;
+            spCol->n = nInit;
 
-         // Write one row of results
-         SrcIterator srcCol(srcRow);
-         MaskIterator maskCol(maskRow);
-         DestIterator destCol(destRow);
-         const ScratchPadType* old(scratchPad);
-         ScratchPadType* next(scratchPad + size.x);
+            // Update totals
+            sum += sumInit;
+            sumSqr += sumSqrInit;
+            n += nInit;
+        }
 
-         while (true)
-         {
-             // Compute standard deviation
-             if (mask_acc(maskCol))
-             {
-                 const SrcSumType result =
-                     n <= 1 ?
-                     NumericTraits<SrcSumType>::zero() :
-                     sqrt((sumSqr - square(sum) / n) / (n - 1));
-                 dest_acc.set(DestTraits::fromRealPromote(result), destCol);
-             }
-             if (srcCol.x == srcEndXm1.x)
-             {
-                 break;
-             }
+        // Write one row of results
+        SrcIterator srcCol(srcRow);
+        MaskIterator maskCol(maskRow);
+        DestIterator destCol(destRow);
+        ScratchPadArrayIterator old(scratchPad.begin());
+        ScratchPadArrayIterator next(scratchPad.begin() + size.x);
 
-             // Compute auxilliary values of next column
-             SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
-             SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
-             size_t nInit = 0;
+        while (true)
+        {
+            // Compute standard deviation
+            if (mask_acc(maskCol))
+            {
+                const SrcSumType result =
+                    n <= 1 ?
+                    NumericTraits<SrcSumType>::zero() :
+                    sqrt((sumSqr - square(sum) / n) / (n - 1));
+                dest_acc.set(DestTraits::fromRealPromote(result), destCol);
+            }
+            if (srcCol.x == srcEndXm1.x)
+            {
+                break;
+            }
 
-             for (windowSrc = srcCol + nextUpperRight, windowMask = maskCol + nextUpperRight;
-                  windowSrc.y <= windowSrcLowerRight.y;
-                  ++windowSrc.y, ++windowMask.y)
-             {
-                 if (mask_acc(windowMask))
-                 {
-                     const SrcSumType value = src_acc(windowSrc);
-                     sumInit += value;
-                     sumSqrInit += square(value);
-                     ++nInit;
-                 }
-             }
+            // Compute auxilliary values of next column
+            SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
+            SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+            size_t nInit = 0;
 
-             // Set sums of next column
-             next->sum = sumInit;
-             next->sumSqr = sumSqrInit;
-             next->n = nInit;
+            for (windowSrc = srcCol + nextUpperRight, windowMask = maskCol + nextUpperRight;
+                 windowSrc.y <= windowSrcLowerRight.y;
+                 ++windowSrc.y, ++windowMask.y)
+            {
+                if (mask_acc(windowMask))
+                {
+                    const SrcSumType value = src_acc(windowSrc);
+                    sumInit += value;
+                    sumSqrInit += square(value);
+                    ++nInit;
+                }
+            }
 
-             // Update totals
-             sum += sumInit - old->sum;
-             sumSqr += sumSqrInit - old->sumSqr;
-             n += nInit - old->n;
+            // Set sums of next column
+            next->sum = sumInit;
+            next->sumSqr = sumSqrInit;
+            next->n = nInit;
 
-             // Advance to next column
-             ++srcCol.x;
-             ++maskCol.x;
-             ++destCol.x;
-             ++old;
-             ++next;
-         }
-     }
+            // Update totals
+            sum += sumInit - old->sum;
+            sumSqr += sumSqrInit - old->sumSqr;
+            n += nInit - old->n;
 
-     delete [] scratchPad;
+            // Advance to next column
+            ++srcCol.x;
+            ++maskCol.x;
+            ++destCol.x;
+            ++old;
+            ++next;
+        }
+    }
 }
 
 
@@ -520,8 +522,6 @@ void localEntropyIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
 
     const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
     ScratchPadType* const scratchPad = new ScratchPadType[imageSize.y + 1];
-    vigra_precondition(scratchPad != NULL,
-                       "localEntropyIf(): could not allocate scratch pad");
 
     ScratchPadType::setPrecomputedEntropySize(size.x * size.y);
 
@@ -905,8 +905,14 @@ public:
         {}
 
     ResultType operator()(const InputType& x, const InputType& y) const {
-        if (x >= threshold) return NumericTraits<ResultType>::fromRealPromote(scale1 * x);
-        else return NumericTraits<ResultType>::fromRealPromote(scale2 * y);
+        if (x >= threshold)
+        {
+            return NumericTraits<ResultType>::fromRealPromote(scale1 * x);
+        }
+        else
+        {
+            return NumericTraits<ResultType>::fromRealPromote(scale2 * y);
+        }
     }
 
 private:
@@ -930,7 +936,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         typedef MultiGrayscaleAccessor<ImageValueType, ScalarType> MultiGrayAcc;
         MultiGrayAcc ga(GrayscaleProjector);
         ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType> ef(WExposure, WMu, WSigma, ga);
-        transformImageIf(src, mask, result, ef);
+        transformImageIfMP(src, mask, result, ef);
     }
 
     // Contrast
@@ -990,12 +996,12 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 #ifdef DEBUG_LOG
                 cout << "+ truncate values below " << -minCurve << endl;;
 #endif
-                transformImageIf(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
-                                 mask.first, mask.second,
-                                 grad.upperLeft(), grad.accessor(),
-                                 ClampingFunctor<LongScalarType, LongScalarType>
-                                 (static_cast<LongScalarType>(-minCurve), LongScalarType(),
-                                  NumericTraits<LongScalarType>::max(), NumericTraits<LongScalarType>::max()));
+                transformImageIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
+                                   mask.first, mask.second,
+                                   grad.upperLeft(), grad.accessor(),
+                                   ClampingFunctor<LongScalarType, LongScalarType>
+                                   (static_cast<LongScalarType>(-minCurve), LongScalarType(),
+                                    NumericTraits<LongScalarType>::max(), NumericTraits<LongScalarType>::max()));
             }
             else
             {
@@ -1009,14 +1015,14 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                               localContrast.upperLeft(), localContrast.accessor(),
                               Size2D(ContrastWindowSize, ContrastWindowSize));
 
-                combineTwoImagesIf(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
-                                   localContrast.upperLeft(), localContrast.accessor(),
-                                   mask.first, mask.second,
-                                   grad.upperLeft(), grad.accessor(),
-                                   FillInFunctor<LongScalarType, LongScalarType>
-                                   (static_cast<LongScalarType>(minCurve), // threshold
-                                    1.0, // scale factor for "laplacian"
-                                    minCurve / NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
+                combineTwoImagesIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
+                                     localContrast.upperLeft(), localContrast.accessor(),
+                                     mask.first, mask.second,
+                                     grad.upperLeft(), grad.accessor(),
+                                     FillInFunctor<LongScalarType, LongScalarType>
+                                     (static_cast<LongScalarType>(minCurve), // threshold
+                                      1.0, // scale factor for "laplacian"
+                                      minCurve / NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
             }
         }
         else
@@ -1038,15 +1044,15 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         }
 #endif
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
-        combineTwoImagesIf(srcImageRange(grad), result, mask, result,
-                           const_parameters(bind(cf, _1) + _2));
+        combineTwoImagesIfMP(srcImageRange(grad), result, mask, result,
+                             const_parameters(bind(cf, _1) + _2));
     }
 
     // Saturation
     if (WSaturation > 0.0) {
         SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
-        combineTwoImagesIf(src, result, mask, result,
-                           const_parameters(bind(sf, _1) + _2));
+        combineTwoImagesIfMP(src, result, mask, result,
+                             const_parameters(bind(sf, _1) + _2));
     }
 
     // Entropy
@@ -1081,13 +1087,13 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 #endif
             Image trunc(imageSize);
             ClampingFunctor<PixelType, PixelType>
-                cf(PixelType(lowerCutoff),
-                   PixelType(ScalarType()),
-                   PixelType(upperCutoff),
-                   PixelType(NumericTraits<ScalarType>::max()));
-            transformImage(src.first, src.second, src.third,
-                           trunc.upperLeft(), trunc.accessor(),
-                           cf);
+                cf((PixelType(lowerCutoff)),  // IMPLEMENTATION NOTE:
+                   (PixelType(ScalarType())), //     The extra parenthesis avoid a bug in the VC9 compiler.
+                   (PixelType(upperCutoff)),
+                   (PixelType(NumericTraits<ScalarType>::max())));
+            transformImageMP(src.first, src.second, src.third,
+                             trunc.upperLeft(), trunc.accessor(),
+                             cf);
             localEntropyIf(trunc.upperLeft(), trunc.lowerRight(), trunc.accessor(),
                            mask.first, mask.second,
                            entropy.upperLeft(), entropy.accessor(),
@@ -1102,8 +1108,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         }
 
         EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
-        combineTwoImagesIf(srcImageRange(entropy), result, mask, result,
-                           const_parameters(bind(ef, _1) + _2));
+        combineTwoImagesIfMP(srcImageRange(entropy), result, mask, result,
+                             const_parameters(bind(ef, _1) + _2));
     }
 };
 
@@ -1111,10 +1117,11 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 /** Enfuse's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enfuseMain(list<ImageImportInfo*> &imageInfoList,
-        ImageExportInfo& outputImageInfo,
-        Rect2D& inputUnion) {
-
+void enfuseMain(const list<char*>& anInputFileNameList,
+                const list<ImageImportInfo*>& anImageInfoList,
+                ImageExportInfo& anOutputImageInfo,
+                Rect2D& anInputUnion)
+{
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
@@ -1138,11 +1145,13 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     list <triple<ImageType*, AlphaType*, MaskType*> > imageList;
 
     // Sum of all masks
-    MaskType *normImage = new MaskType(inputUnion.size());
+    MaskType *normImage = new MaskType(anInputUnion.size());
 
     // Result image. Alpha will be union of all input alphas.
     pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
-                                            new AlphaType(inputUnion.size()));
+                                            new AlphaType(anInputUnion.size()));
+    list<ImageImportInfo*> imageInfoList(anImageInfoList);
+    const unsigned numberOfImages = imageInfoList.size();
 
     // create weights for deghosting
     // load ImageInportInfo's into the vector
@@ -1156,24 +1165,51 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     deghoster = &khanDeghoster;
     //vector<FImagePtr> weights = deghoster->createWeightMasks();
     
-    int m = 0;
+    unsigned m = 0;
+    list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
-
         Rect2D imageBB;
         pair<ImageType*, AlphaType*> imagePair =
-                assemble<ImageType, AlphaType>(imageInfoList, inputUnion, imageBB);
+                assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
 
-        MaskType *mask = new MaskType(inputUnion.size());
+        MaskType* mask = new MaskType(anInputUnion.size());
 
         enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
                                                    srcImage(*(imagePair.second)),
                                                    destImage(*mask));
 
-        if (Debug) {
-            std::ostringstream oss;
-            oss << "mask" << std::setw(4) << std::setfill('0') << m << ".tif";
-            ImageExportInfo maskInfo(oss.str().c_str());
-            exportImage(srcImageRange(*mask), maskInfo);
+        if (SaveMasks) {
+            const std::string maskFilename =
+                enblend::expandFilenameTemplate(SoftMaskTemplate,
+                                                numberOfImages,
+                                                *inputFileNameIterator,
+                                                OutputFileName,
+                                                m);
+            if (maskFilename == *inputFileNameIterator) {
+                cerr << command
+                     << ": will not overwrite input image \""
+                     << *inputFileNameIterator
+                     << "\" with soft mask file"
+                     << endl;
+                exit(1);
+            } else if (maskFilename == OutputFileName) {
+                cerr << command
+                     << ": will not overwrite output image \""
+                     << OutputFileName
+                     << "\" with soft mask file"
+                     << endl;
+                exit(1);
+            } else {
+                if (Verbose >= VERBOSE_MASK_MESSAGES) {
+                    cerr << command
+                         << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                }
+                ImageExportInfo maskInfo(maskFilename.c_str());
+                maskInfo.setXResolution(ImageResolution.x);
+                maskInfo.setYResolution(ImageResolution.y);
+                maskInfo.setCompression(MASK_COMPRESSION);
+                exportImage(srcImageRange(*mask), maskInfo);
+            }
         }
 
         // Make output alpha the union of all input alphas.
@@ -1182,29 +1218,30 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                     destImage(*(outputPair.second)));
 
         // Add the mask to the norm image.
-        combineTwoImages(srcImageRange(*mask),
-                         srcImage(*normImage),
-                         destImage(*normImage),
-                         Arg1() + Arg2());
+        combineTwoImagesMP(srcImageRange(*mask),
+                           srcImage(*normImage),
+                           destImage(*normImage),
+                           Arg1() + Arg2());
 
         imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
 
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+#ifdef CACHE_IMAGES
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after loading image " << m << " :" << endl;
-            v.printStats("image", imagePair.first);
-            v.printStats("alpha", imagePair.second);
-            v.printStats("weight", mask);
-            v.printStats("normImage", normImage);
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after loading image "
+                 << m << "\n";
+            v.printStats(cerr, command + ": info:     image", imagePair.first);
+            v.printStats(cerr, command + ": info:     alpha", imagePair.second);
+            v.printStats(cerr, command + ": info:     weight", mask);
+            v.printStats(cerr, command + ": info:     normImage", normImage);
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
-        #endif
-
+#endif
 
         ++m;
+        ++inputFileNameIterator;
     }
 
     const int totalImages = imageList.size();
@@ -1213,11 +1250,15 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
     if (UseHardMask) {
-        if (Verbose) {
-            cout << "Creating hard blend mask" << std::endl;
+        if (Verbose >= VERBOSE_MASK_MESSAGES) {
+            cerr << command
+                 << ": info: creating hard blend mask" << endl;
         }
-        Size2D sz = normImage->size();
-        typename list< triple <ImageType*, AlphaType* , MaskType* > >::iterator imageIter;
+        const Size2D sz = normImage->size();
+        typename list< triple<ImageType*, AlphaType*, MaskType*> >::iterator imageIter;
+#ifdef OPENMP
+#pragma omp parallel for private (imageIter)
+#endif
         for (int y = 0; y < sz.y; ++y) {
             for (int x = 0; x < sz.x; ++x) {
                 float max = 0.0f;
@@ -1226,7 +1267,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                 for (imageIter = imageList.begin();
                      imageIter != imageList.end();
                      ++imageIter) {
-                    const float w = static_cast<float>((*(*imageIter).third)(x, y));
+                    const float w = static_cast<float>((*imageIter->third)(x, y));
                     if (w > max) {
                         max = w;
                         maxi = i;
@@ -1238,39 +1279,72 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                      imageIter != imageList.end();
                      ++imageIter) {
                     if (max == 0.0f) {
-                        (*(*imageIter).third)(x, y) = static_cast<MaskPixelType>(maxMaskPixelType) / totalImages;
+                        (*imageIter->third)(x, y) =
+                            static_cast<MaskPixelType>(maxMaskPixelType) / totalImages;
                     } else if (i == maxi) {
-                        (*(*imageIter).third)(x, y) = maxMaskPixelType;
+                        (*imageIter->third)(x, y) = maxMaskPixelType;
                     } else {
-                        (*(*imageIter).third)(x, y) = 0.0f;
+                        (*imageIter->third)(x, y) = 0.0f;
                     }
                     i++;
                 }
             }
         }
-        int i = 0;
-        if (Debug) {
-            for (imageIter = imageList.begin(); imageIter != imageList.end(); ++imageIter) {
-                std::ostringstream oss;
-                oss << "mask" << std::setw(4) << std::setfill('0') << i << "_wta.tif";
-                ImageExportInfo maskInfo(oss.str().c_str());
-                exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+        unsigned i = 0;
+        if (SaveMasks) {
+            for (imageIter = imageList.begin(), inputFileNameIterator = anInputFileNameList.begin();
+                 imageIter != imageList.end();
+                 ++imageIter, ++inputFileNameIterator) {
+                const std::string maskFilename =
+                    enblend::expandFilenameTemplate(HardMaskTemplate,
+                                                    imageList.size(),
+                                                    *inputFileNameIterator,
+                                                    OutputFileName,
+                                                    i);
+                if (maskFilename == *inputFileNameIterator) {
+                    cerr << command
+                         << ": will not overwrite input image \""
+                         << *inputFileNameIterator
+                         << "\" with hard mask"
+                         << endl;
+                    exit(1);
+                } else if (maskFilename == OutputFileName) {
+                    cerr << command
+                         << ": will not overwrite output image \""
+                         << OutputFileName
+                         << "\" with hard mask"
+                         << endl;
+                    exit(1);
+                } else {
+                    if (Verbose >= VERBOSE_MASK_MESSAGES) {
+                        cerr << command
+                             << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
+                    }
+                    ImageExportInfo maskInfo(maskFilename.c_str());
+                    maskInfo.setXResolution(ImageResolution.x);
+                    maskInfo.setYResolution(ImageResolution.y);
+                    maskInfo.setCompression(MASK_COMPRESSION);
+                    exportImage(srcImageRange(*(imageIter->third)), maskInfo);
+                }
                 i++;
             }
         }
-        #ifdef ENBLEND_CACHE_IMAGES
-        if (Verbose > VERBOSE_CFI_MESSAGES) {
+#ifdef CACHE_IMAGES
+        if (Verbose >= VERBOSE_CFI_MESSAGES) {
             CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cout << "Image cache statistics after creating hard mask:" << endl;
-            v.printStats();
+            cerr << command
+                 << ": info: image cache statistics after creating hard mask\n";
+            v.printStats(cerr, command + ": info: ");
             v.resetCacheMisses();
-            cout << "--------------------------------------------------------------------------------" << endl;
         }
-        #endif
+#endif
     }
 
     Rect2D junkBB;
-    unsigned int numLevels = roiBounds<ImagePixelComponentType>(inputUnion, inputUnion, inputUnion, inputUnion, junkBB, Wraparound);
+    const unsigned int numLevels =
+        roiBounds<ImagePixelComponentType>(anInputUnion, anInputUnion, anInputUnion, anInputUnion,
+                                           junkBB,
+                                           WrapAround != OpenBoundaries);
 
     vector<ImagePyramidType*> *resultLP = NULL;
 
@@ -1289,7 +1363,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
                                  ImagePyramidIntegerBits, ImagePyramidFractionBits,
                                  SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
                         oss0.str().c_str(),
-                        numLevels, Wraparound,
+                        numLevels, WrapAround != OpenBoundaries,
                         srcImageRange(*(imageTriple.first)),
                         maskImage(*(imageTriple.second)));
 
@@ -1303,21 +1377,24 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         if (!UseHardMask) {
             // Normalize the mask coefficients.
             // Scale to the range expected by the MaskPyramidPixelType.
-            combineTwoImages(srcImageRange(*(imageTriple.third)),
-                             srcImage(*normImage),
-                             destImage(*(imageTriple.third)),
-                             ifThenElse(Arg2() > Param(0.0),
-                                        Param(maxMaskPixelType) * Arg1() / Arg2(),
-                                        Param(maxMaskPixelType / totalImages)));
+            combineTwoImagesMP(srcImageRange(*(imageTriple.third)),
+                               srcImage(*normImage),
+                               destImage(*(imageTriple.third)),
+                               ifThenElse(Arg2() > Param(0.0),
+                                          Param(maxMaskPixelType) * Arg1() / Arg2(),
+                                          Param(maxMaskPixelType / totalImages)));
         }
 
         // maskGP is constructed using the union of the input alpha channels
         // as the boundary for extrapolation.
         vector<MaskPyramidType*> *maskGP =
-                gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
-                                MaskPyramidIntegerBits, MaskPyramidFractionBits,
-                                SKIPSMMaskPixelType, SKIPSMAlphaPixelType>(
-                        numLevels, Wraparound, srcImageRange(*(imageTriple.third)), maskImage(*(outputPair.second)));
+            gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
+                            MaskPyramidIntegerBits, MaskPyramidFractionBits,
+                            SKIPSMMaskPixelType, SKIPSMAlphaPixelType>
+            (numLevels,
+             WrapAround != OpenBoundaries,
+             srcImageRange(*(imageTriple.third)),
+             maskImage(*(outputPair.second)));
 
         delete imageTriple.third;
 
@@ -1333,10 +1410,10 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
         for (unsigned int i = 0; i < maskGP->size(); ++i) {
             // Multiply image lp with the mask gp.
-            combineTwoImages(srcImageRange(*((*imageLP)[i])),
-                             srcImage(*((*maskGP)[i])),
-                             destImage(*((*imageLP)[i])),
-                             ImageMaskMultiplyFunctor<MaskPyramidPixelType>(maxMaskPyramidPixelValue));
+            combineTwoImagesMP(srcImageRange(*((*imageLP)[i])),
+                               srcImage(*((*maskGP)[i])),
+                               destImage(*((*imageLP)[i])),
+                               ImageMaskMultiplyFunctor<MaskPyramidPixelType>(maxMaskPyramidPixelValue));
 
             // Done with maskGP.
             delete (*maskGP)[i];
@@ -1350,15 +1427,14 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
         if (resultLP != NULL) {
             // Add imageLP to resultLP.
             for (unsigned int i = 0; i < imageLP->size(); ++i) {
-                combineTwoImages(srcImageRange(*((*imageLP)[i])),
-                                 srcImage(*((*resultLP)[i])),
-                                 destImage(*((*resultLP)[i])),
-                                 Arg1() + Arg2());
+                combineTwoImagesMP(srcImageRange(*((*imageLP)[i])),
+                                   srcImage(*((*resultLP)[i])),
+                                   destImage(*((*resultLP)[i])),
+                                   Arg1() + Arg2());
                 delete (*imageLP)[i];
             }
             delete imageLP;
-        }
-        else {
+        } else {
             resultLP = imageLP;
         }
 
@@ -1373,9 +1449,9 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 
     //exportPyramid<ImagePyramidType>(resultLP, "resultLP");
 
-    collapsePyramid<SKIPSMImagePixelType>(Wraparound, resultLP);
+    collapsePyramid<SKIPSMImagePixelType>(WrapAround != OpenBoundaries, resultLP);
 
-    outputPair.first = new ImageType(inputUnion.size());
+    outputPair.first = new ImageType(anInputUnion.size());
 
     copyFromPyramidImageIf<ImagePyramidType, AlphaType, ImageType,
                            ImagePyramidIntegerBits, ImagePyramidFractionBits>(
@@ -1389,7 +1465,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
     }
     delete resultLP;
 
-    checkpoint(outputPair, outputImageInfo);
+    checkpoint(outputPair, anOutputImageInfo);
 
     delete outputPair.first;
     delete outputPair.second;
@@ -1399,3 +1475,7 @@ void enfuseMain(list<ImageImportInfo*> &imageInfoList,
 } // namespace enblend
 
 #endif /* __ENFUSE_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

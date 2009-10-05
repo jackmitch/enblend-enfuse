@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -7,25 +7,33 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <iostream>
+#include <cassert>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include "global.h"
 #include "gpu.h"
+
+
 #ifdef HAVE_LIBGLEW
 
 using std::cerr;
 using std::cout;
 using std::endl;
+
+static const std::string command("enblend");
 
 static GLuint GlutWindowHandle;
 static GLint MaxTextureSize;
@@ -40,111 +48,145 @@ static GLint ETextureParam;
 static GLint TempParam;
 static GLint KMaxParam;
 
+
 static const char *GDAKernelSource = {
-"uniform sampler2DRect PiTexture;"
-"uniform sampler2DRect ETexture;"
-"uniform float Temperature;"
-"uniform float KMax;"
-"void main(void)"
-"{"
-"   vec4 pix = texture2DRect(PiTexture, gl_TexCoord[0].st);"
-"   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);"
-"   vec4 An;"
-"   vec4 pi_plus;"
-"   vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);"
-"   float i = 0.0;"
-"   for (i = 0.0; i < KMax; i++) {"
-"       vec2 coord = vec2(i, gl_TexCoord[0].t);"
-"       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0;"
-"       pi_plus = pix + texture2DRect(PiTexture, coord);"
-"       sum += (pi_plus / An);"
-"   }"
-"   gl_FragColor = sum / KMax;"
-"}"
+    "uniform sampler2DRect PiTexture;"
+    "uniform sampler2DRect ETexture;"
+    "uniform float Temperature;"
+    "uniform float KMax;"
+    "void main(void)"
+    "{"
+    "   vec4 pix = texture2DRect(PiTexture, gl_TexCoord[0].st);"
+    "   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);"
+    "   vec4 An;"
+    "   vec4 pi_plus;"
+    "   vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);"
+    "   float i = 0.0;"
+    "   for (i = 0.0; i < KMax; i++) {"
+    "       vec2 coord = vec2(i, gl_TexCoord[0].t);"
+    "       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0;"
+    "       pi_plus = pix + texture2DRect(PiTexture, coord);"
+    "       sum += (pi_plus / An);"
+    "   }"
+    "   gl_FragColor = sum / KMax;"
+    "}"
 };
 
-void checkGLErrors(int line, char *file) {
-    GLenum errCode;
-    if ((errCode = glGetError()) != GL_NO_ERROR) {
-        cerr << "enblend: GL error in " << file << ":" << line << ": " << gluErrorString(errCode) << endl;
+
+void checkGLErrors(const char* file, unsigned line)
+{
+    const GLenum errCode = glGetError();
+
+    if (errCode != GL_NO_ERROR) {
+        cerr << command
+             << ": OpenGL error in " << file << ":" << line << ": "
+             << gluErrorString(errCode) << endl;
         exit(1);
     }
 }
 
-void printInfoLog(GLhandleARB obj) {
-  GLint infologLength = 0;
-  GLint charsWritten = 0;
-  char *infoLog;
+
+void printInfoLog(GLhandleARB obj)
+{
+    GLint infologLength = 0;
+    GLint charsWritten = 0;
+    char *infoLog;
+
     glGetObjectParameterivARB(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infologLength);
     if (infologLength > 1) {
         infoLog = new char[infologLength];
         glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
-        cout << "enblend: GL info log:" << endl << infoLog << endl;
-        delete[] infoLog;
+        cerr << command << ": info: GL info log\n" << infoLog << endl;
+        delete [] infoLog;
     }
 }
 
-bool checkFramebufferStatus() {
-    GLenum status;
-    status = (GLenum) glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-    switch(status) {
-        case GL_FRAMEBUFFER_COMPLETE_EXT:
-            return true;
-        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-            cerr << "enblend: GL error: Framebuffer incomplete, incomplete attachment" << endl;
-            return false;
-        case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-            cerr << "enblend: Unsupported framebuffer format" << endl;
-            return false;
-        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-            cerr << "enblend: Framebuffer incomplete, missing attachment" << endl;
-            return false;
-        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-            cerr << "enblend: Framebuffer incomplete, attached images must have same dimensions" << endl;
-            return false;
-        case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
-            cerr << "enblend: Framebuffer incomplete, attached images must have same format" << endl;
-            return false;
-        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
-            cerr << "enblend: Framebuffer incomplete, missing draw buffer" << endl;
-            return false;
-        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
-            cerr << "enblend: Framebuffer incomplete, missing read buffer" << endl;
-            return false;
+bool checkFramebufferStatus()
+{
+    const GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+
+    switch (status) {
+    case GL_FRAMEBUFFER_COMPLETE_EXT:
+        return true;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+        cerr << command
+             << ": GL error: Framebuffer incomplete, incomplete attachment"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+        cerr << command
+             << ": unsupported framebuffer format"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+        cerr << command
+             << ": framebuffer incomplete, missing attachment"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+        cerr << command
+             << ": framebuffer incomplete, attached images must have same dimensions"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
+        cerr << command
+             << ": framebuffer incomplete, attached images must have same format"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
+        cerr << command
+             << ": framebuffer incomplete, missing draw buffer"
+             << endl;
+        return false;
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
+        cerr << command
+             << ": framebuffer incomplete, missing read buffer"
+             << endl;
+        return false;
     }
 
     return false;
 }
 
-bool initGPU(int *argcp,char **argv) {
-    glutInit(argcp,argv);
+
+bool initGPU(int* argcp, char** argv)
+{
+    glutInit(argcp, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
     GlutWindowHandle = glutCreateWindow("Enblend");
 
-    int err = glewInit();
+    const int err = glewInit();
     if (err != GLEW_OK) {
-        cerr << "enblend: an error occured while setting up the GPU:" << endl;
-        cerr << glewGetErrorString(err) << endl;
-        cerr << "enblend: sorry, the --gpu flag is not going to work on this machine." << endl;
+        cerr << command << ": an error occured while setting up the GPU\n"
+             << command << ": " << glewGetErrorString(err) << "\n"
+             << command << ": \"--gpu\" flag is not going to work on this machine"
+             << endl;
         glutDestroyWindow(GlutWindowHandle);
         exit(1);
     }
 
-    cout << "enblend: using graphics card: " << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << endl;
+    if (Verbose >= VERBOSE_GPU_MESSAGES) {
+        cerr << command << ": info: using graphics card: " << GLGETSTRING(GL_VENDOR) << "\n"
+             << command << ": info:   renderer: " << GLGETSTRING(GL_RENDERER) << "\n"
+             << command << ": info:   version: " << GLGETSTRING(GL_VERSION) << "\n";
+    }
 
-    GLboolean has_arb_fragment_shader = glewGetExtension("GL_ARB_fragment_shader");
-    GLboolean has_arb_vertex_shader = glewGetExtension("GL_ARB_vertex_shader");
-    GLboolean has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
-    GLboolean has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
+    const GLboolean has_arb_fragment_shader = glewGetExtension("GL_ARB_fragment_shader");
+    const GLboolean has_arb_vertex_shader = glewGetExtension("GL_ARB_vertex_shader");
+    const GLboolean has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
+    const GLboolean has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
 
-    if (!(has_arb_fragment_shader && has_arb_vertex_shader && has_arb_shader_objects && has_arb_shading_language)) {
-        const char * msg[] = {"false", "true"};
-        cerr << "enblend: extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << endl;
-        cerr << "enblend: extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << endl;
-        cerr << "enblend: extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << endl;
-        cerr << "enblend: extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << endl;
-        cerr << "enblend: this graphics card lacks the necessary extensions for --gpu." << endl;
-        cerr << "enblend: sorry, the --gpu flag is not going to work on this machine." << endl;
+    if (!(has_arb_fragment_shader &&
+          has_arb_vertex_shader &&
+          has_arb_shader_objects &&
+          has_arb_shading_language)) {
+        const char* msg[] = {"false", "true"};
+        cerr << command << ": extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << "\n"
+             << command << ": extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << "\n"
+             << command << ": extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << "\n"
+             << command << ": extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << "\n"
+             << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
+             << command << ": \"--gpu\" flag is not going to work on this machine" << endl;
         glutDestroyWindow(GlutWindowHandle);
         exit(1);
     }
@@ -162,7 +204,7 @@ bool initGPU(int *argcp,char **argv) {
     GLint success;
     glGetObjectParameterivARB(ProgramObject, GL_OBJECT_LINK_STATUS_ARB, &success);
     if (!success) {
-        cerr << "enblend: GPU ARB shader program could not be linked." << endl;
+        cerr << command << ": GPU ARB shader program could not be linked\n";
         exit(1);
     }
 
@@ -172,14 +214,27 @@ bool initGPU(int *argcp,char **argv) {
     KMaxParam = glGetUniformLocationARB(ProgramObject, "KMax");
 
     glUseProgramObjectARB(ProgramObject);
+    CHECK_GL();
 
     return true;
 }
 
-bool configureGPUTextures(unsigned int k, unsigned int vars) {
+
+bool configureGPUTextures(unsigned int k, unsigned int vars)
+{
     // state variables packed into vec4s
-    int height = (vars+3)/4;
-    int width = k;
+    const int width = k;
+    const int height = (vars + 3) / 4;
+
+    // http://www.opengl.org/documentation/specs/man_pages/hardcopy/GL/html/gl/teximage2d.html
+    if (width > 2 + GL_MAX_TEXTURE_SIZE ||
+        height > 2 + GL_MAX_TEXTURE_SIZE) {
+        cerr << command << ": texture size exceeds GPU's maximum\n";
+        exit(1);
+    }
+    if (width % 2 != 0 || height % 2 != 0) {
+        cerr << command << ": warning: odd texture size may be invalid for OpenGL\n";
+    }
 
     glGenTextures(1, &PiTexture);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
@@ -187,7 +242,8 @@ bool configureGPUTextures(unsigned int k, unsigned int vars) {
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height,
+                 0, GL_RGBA, GL_FLOAT, NULL);
     CHECK_GL();
 
     glGenTextures(1, &ETexture);
@@ -196,7 +252,8 @@ bool configureGPUTextures(unsigned int k, unsigned int vars) {
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height,
+                 0, GL_RGBA, GL_FLOAT, NULL);
     CHECK_GL();
 
     glGenTextures(1, &OutTexture);
@@ -205,7 +262,8 @@ bool configureGPUTextures(unsigned int k, unsigned int vars) {
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA32F_ARB, width, height,
+                 0, GL_RGBA, GL_FLOAT, NULL);
     CHECK_GL();
 
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -219,7 +277,8 @@ bool configureGPUTextures(unsigned int k, unsigned int vars) {
     glLoadIdentity();
     glViewport(0, 0, width, height);
 
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, OutTexture, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB,
+                              OutTexture, 0);
 
     if (!checkFramebufferStatus()) {
         exit(1);
@@ -228,16 +287,21 @@ bool configureGPUTextures(unsigned int k, unsigned int vars) {
     return true;
 }
 
-bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEData, float *packedPiData, float *packedOutData) {
-    unsigned localWidth = k;
-    unsigned localHeight = (vars+3) / 4;
+
+bool gpuGDAKernel(unsigned int k, unsigned int vars, double t,
+                  float* packedEData, float* packedPiData, float* packedOutData)
+{
+    const unsigned localWidth = k;
+    const unsigned localHeight = (vars + 3) / 4;
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, PiTexture);
-    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedPiData);
+    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight,
+                    GL_RGBA, GL_FLOAT, packedPiData);
     CHECK_GL();
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, ETexture);
-    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight, GL_RGBA, GL_FLOAT, packedEData);
+    glTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, localWidth, localHeight,
+                    GL_RGBA, GL_FLOAT, packedEData);
     CHECK_GL();
 
     glActiveTexture(GL_TEXTURE0);
@@ -258,10 +322,10 @@ bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEDat
     glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
     glPolygonMode(GL_FRONT, GL_FILL);
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);                glVertex2f(0.0, 0.0);
-        glTexCoord2f(localWidth, 0.0);         glVertex2f(localWidth, 0.0);
-        glTexCoord2f(localWidth, localHeight); glVertex2f(localWidth, localHeight);
-        glTexCoord2f(0.0, localHeight);        glVertex2f(0.0, localHeight);
+    glTexCoord2f(0.0, 0.0);                glVertex2f(0.0, 0.0);
+    glTexCoord2f(localWidth, 0.0);         glVertex2f(localWidth, 0.0);
+    glTexCoord2f(localWidth, localHeight); glVertex2f(localWidth, localHeight);
+    glTexCoord2f(0.0, localHeight);        glVertex2f(0.0, localHeight);
     glEnd();
     CHECK_GL();
 
@@ -273,21 +337,40 @@ bool gpuGDAKernel(unsigned int k, unsigned int vars, double t, float *packedEDat
     return true;
 }
 
-bool clearGPUTextures() {
+
+bool clearGPUTextures()
+{
     glDeleteFramebuffersEXT(1, &FB);
     glDeleteTextures(1, &PiTexture);
     glDeleteTextures(1, &ETexture);
     glDeleteTextures(1, &OutTexture);
+
     return true;
 }
 
-bool wrapupGPU() {
-    if (FB != 0) glDeleteFramebuffersEXT(1, &FB);
-    if (PiTexture != 0) glDeleteTextures(1, &PiTexture);
-    if (ETexture != 0) glDeleteTextures(1, &ETexture);
-    if (OutTexture != 0) glDeleteTextures(1, &OutTexture);
+
+bool wrapupGPU()
+{
+    if (FB != 0)
+    {
+        glDeleteFramebuffersEXT(1, &FB);
+    }
+    if (PiTexture != 0)
+    {
+        glDeleteTextures(1, &PiTexture);
+    }
+    if (ETexture != 0)
+    {
+        glDeleteTextures(1, &ETexture);
+    }
+    if (OutTexture != 0)
+    {
+        glDeleteTextures(1, &OutTexture);
+    }
+
     glutDestroyWindow(GlutWindowHandle);
+
     return true;
 }
 
-#endif
+#endif // HAVE_LIBGLEW

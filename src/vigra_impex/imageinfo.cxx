@@ -435,9 +435,12 @@ ImageImportInfo::ImageImportInfo( const char * filename )
     m_pixeltype = decoder->getPixelType();
     m_width = decoder->getWidth();
     m_height = decoder->getHeight();
+    m_num_layers = decoder->getNumLayers();
     m_num_bands = decoder->getNumBands();
     m_num_extra_bands = decoder->getNumExtraBands();
     m_pos = decoder->getPosition();
+    m_x_res = decoder->getXResolution();
+    m_y_res = decoder->getYResolution();
 
     m_icc_profile = decoder->getICCProfile();
 
@@ -491,6 +494,11 @@ int ImageImportInfo::width() const
 int ImageImportInfo::height() const
 {
     return m_height;
+}
+
+int ImageImportInfo::numLayers() const
+{
+    return m_num_layers;
 }
 
 int ImageImportInfo::numBands() const
@@ -549,6 +557,46 @@ std::auto_ptr<Decoder> decoder( const ImageImportInfo & info )
     std::string filetype = info.getFileType();
     validate_filetype(filetype);
     return getDecoder( std::string( info.getFileName() ), filetype );
+}
+
+
+// Separator between disk filenames and layer indices.
+static const char filename_layer_separator = '~';//'\035';
+
+// Join the a disk FILENAME and a LAYER index to a string the decoders
+// interpret.
+std::string join_filename_layer(const std::string& filename, unsigned layer)
+{
+    std::ostringstream oss;
+    oss << filename << filename_layer_separator << layer;
+    return oss.str();
+}
+
+std::string join_filename_layer(const FilenameLayerPair& pair)
+{
+    return join_filename_layer(pair.first, pair.second);
+}
+
+// Split FILENAME into a disk filename and a layer index.
+FilenameLayerPair split_filename(const std::string& filename)
+{
+    const std::string::size_type index = filename.find(filename_layer_separator);
+
+    if (index == std::string::npos)
+    {
+        return FilenameLayerPair(filename, 0U);
+    }
+    else
+    {
+        const std::string& file = filename.substr(0, index);
+        const std::string& layer_string = filename.substr(index + 1);
+        char* tail;
+        errno = 0;
+        const unsigned long layer = strtoul(layer_string.c_str(), &tail, 10);
+        vigra_precondition(errno == 0, "codecmanager.cc: split_filename: numeric conversion failed");
+        vigra_precondition(*tail == 0, "codecmanager.cc: split_filename: trailing garbage");
+        return FilenameLayerPair(file, static_cast<unsigned>(layer));
+    }
 }
 
 } // namespace vigra

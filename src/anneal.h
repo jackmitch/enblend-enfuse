@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,7 +27,6 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
-//#include <list>
 #ifdef HAVE_EXT_SLIST
 #include <ext/slist>
 #else
@@ -45,19 +44,22 @@
 #ifdef HAVE_LIBGLEW
 #include "gpu.h"
 #endif
+
 #include "vigra/diff2d.hxx"
 #include "vigra/iteratoradapter.hxx"
 #include "vigra_ext/XMIWrapper.h"
 
 using std::for_each;
 using std::pair;
-using std::vector;
-//using std::list;
+using std::scientific;
+using std::setprecision;
+using std::setw;
 #ifdef HAVE_EXT_SLIST
 using __gnu_cxx::slist;
 #else
 using std::slist;
 #endif
+using std::vector;
 
 using boost::lambda::bind;
 using boost::lambda::_1;
@@ -71,75 +73,38 @@ using vigra_ext::copyPaintedSetToImage;
 
 namespace enblend {
 
-template <typename CostImage>
-void drawDottedLine(CostImage & i, vector<Point2D> & l, typename CostImage::PixelType p) {
-    typedef typename CostImage::PixelType CostImagePixelType;
-
-    miPixel pixels[2];
-    pixels[0] = p;
-    pixels[1] = p;
-    miGC *pGC = miNewGC(2, pixels);
-    miPaintedSet *paintedSet = miNewPaintedSet();
-    miPoint *mip = new miPoint[l.size()];
-
-    int index = 0;
-    for (vector<Point2D>::iterator points = l.begin(); points != l.end(); ++points, ++index) {
-        mip[index].x = (*points).x;
-        mip[index].y = (*points).y;
-    }
-
-    miDrawLines(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
-    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
-    miClearPaintedSet(paintedSet);
-
-    p = (p > (NumericTraits<CostImagePixelType>::max() / 2))
-            ? NumericTraits<CostImagePixelType>::zero()
-            : NumericTraits<CostImagePixelType>::max();
-    pixels[0] = p;
-    pixels[1] = p;
-    miSetGCPixels(pGC, 2, pixels);
-    
-    miDrawPoints(paintedSet, pGC, MI_COORD_MODE_ORIGIN, index, mip);
-    copyPaintedSetToImage(destImageRange(i), paintedSet, Diff2D(0,0));
-
-    miDeleteGC(pGC);
-    miDeletePaintedSet(paintedSet);
-    delete[] mip;
-}
-
 template <typename CostImage, typename VisualizeImage>
-class GDAConfiguration {
+class GDAConfiguration
+{
 public:
     typedef typename CostImage::PixelType CostImagePixelType;
     typedef typename NumericTraits<CostImagePixelType>::Promote CostImagePromoteType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> > *v, VisualizeImage* const vi)
-            : costImage(d),
-              visualizeStateSpaceImage(vi),
-              E(NULL), Pi(NULL), EF(NULL), PiF(NULL) {
-
+    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> >* v, VisualizeImage* const vi) :
+        costImage(d), visualizeStateSpaceImage(vi) {
         kMax = 1;
+        distanceWeight = 1.0;
+        mismatchWeight = 1.0;
 
-        int costImageShortDimension = std::min(costImage->width(), costImage->height());
+        const int costImageShortDimension = std::min(costImage->width(), costImage->height());
         // Determine state space of currentPoint
-        int stateSpaceWidth = costImageShortDimension / 3;
+        const int stateSpaceWidth = costImageShortDimension / 3;
 
         slist<pair<bool, Point2D> >::iterator last = v->previous(v->end());
         Point2D previousPoint = last->second;
-        for (slist<pair<bool, Point2D> >::iterator current = v->begin(); current != v->end(); ) {
-
+        for (slist<pair<bool, Point2D> >::iterator current = v->begin(); current != v->end();) {
             bool currentMoveable = current->first;
             Point2D currentPoint = current->second;
             ++current;
-            Point2D nextPoint = (current == v->end()) ? v->begin()->second : current->second;
+            Point2D nextPoint = current == v->end() ? v->begin()->second : current->second;
 
             mfEstimates.push_back(currentPoint);
 
-            vector<Point2D> *stateSpace = new vector<Point2D>();
+            vector<Point2D>* stateSpace = new vector<Point2D>();
             pointStateSpaces.push_back(stateSpace);
 
-            vector<int> *stateDistances = new vector<int>();
+            vector<int>* stateDistances = new vector<int>();
             pointStateDistances.push_back(stateDistances);
 
             if (currentMoveable) {
@@ -151,73 +116,71 @@ public:
                 Diff2D np(-vp.y, vp.x);
                 // nn = normal to vn
                 Diff2D nn(-vn.y, vn.x);
-                
+
                 // normal = normal vector at currentPoint
                 // normal points to the left of vp and vn.
                 Diff2D normal = np + nn;
-                normal *= (stateSpaceWidth / normal.magnitude());
+                normal *= stateSpaceWidth / normal.magnitude();
 
                 Diff2D leftPoint = currentPoint + normal;
                 Diff2D rightPoint = currentPoint - normal;
 
                 // Choose a reasonable number of state points between these extremes
-                int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
-                                          std::abs(rightPoint.y - leftPoint.y));
-                int spaceBetweenPoints = static_cast<int>(ceil(lineLength / (double)GDAKmax));
+                const int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
+                                                std::abs(rightPoint.y - leftPoint.y));
+                const int spaceBetweenPoints =
+                    static_cast<int>(ceil(lineLength / static_cast<double>(AnnealPara.kmax)));
 
                 LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
-                for (int i = 0; i < (lineLength+1)/2; ++i, ++linePoint) {
-                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
-                    if (!costImage->isInside(*linePoint)) break;
-                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
-                    else if ((i % spaceBetweenPoints) == 0) {
+                for (int i = 0; i < (lineLength + 1) / 2; ++i, ++linePoint) {
+                    // Stop searching along the line if we leave the
+                    // cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) {
+                        break;
+                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                        break;
+                    } else if (i % spaceBetweenPoints == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
-                        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                        if (visualizeStateSpaceImage) {
+                            (*visualizeStateSpaceImage)[*linePoint] = VISUALIZE_STATE_SPACE;
+                        }
                     }
                 }
                 linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
-                for (int i=1; i < 1+(lineLength/2); ++i, ++linePoint) {
-                    // Stop searching along the line if we leave the cost image or enter a max-cost region.
-                    if (!costImage->isInside(*linePoint)) break;
-                    else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) break;
-                    else if ((i % spaceBetweenPoints) == 0) {
+                for (int i = 1; i < 1 + lineLength / 2; ++i, ++linePoint) {
+                    // Stop searching along the line if we leave the
+                    // cost image or enter a max-cost region.
+                    if (!costImage->isInside(*linePoint)) {
+                        break;
+                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                        break;
+                    } else if (i % spaceBetweenPoints == 0) {
                         stateSpace->push_back(Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
-                        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
+                        if (visualizeStateSpaceImage) {
+                            (*visualizeStateSpaceImage)[*linePoint] = VISUALIZE_STATE_SPACE;
+                        }
                     }
                 }
-
-                //LineIterator<Diff2D> linePoint(leftPoint, rightPoint);
-                //for (int i = 0; i < lineLength; ++i, ++linePoint) {
-                //    if (((i % spaceBetweenPoints) == 0)
-                //            && costImage->isInside(*linePoint)
-                //            && ((*costImage)[*linePoint] != NumericTraits<CostImagePixelType>::max())) {
-                //        stateSpace->push_back(Point2D(*linePoint));
-                //        stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
-                //                                           std::abs(linePoint->y - currentPoint.y)) / 2);
-
-                //        if (visualizeStateSpaceImage) (*visualizeStateSpaceImage)[*linePoint].setBlue(255);
-                //    }
-                //}
-
             }
 
             if (stateSpace->size() == 0) {
                 stateSpace->push_back(currentPoint);
                 stateDistances->push_back(0);
                 if (visualizeStateSpaceImage && costImage->isInside(currentPoint)) {
-                    (*visualizeStateSpaceImage)[currentPoint].setBlue(200);
+                    (*visualizeStateSpaceImage)[currentPoint] = VISUALIZE_STATE_SPACE_INSIDE;
                 }
             }
 
-            unsigned int localK = stateSpace->size();
-
-            if (localK > GDAKmax) {
-                cerr << "enblend: localK=" << localK << " > GDAKmax=" << GDAKmax << endl;
+            const unsigned int localK = stateSpace->size();
+            if (localK > AnnealPara.kmax) {
+                cerr << command
+                     << ": local k = " << localK << " > k_max = " << AnnealPara.kmax
+                     << endl;
                 exit(1);
             }
 
@@ -230,276 +193,292 @@ public:
             previousPoint = currentPoint;
         }
 
-        if (UseGPU) {
-            EF = new float[kMax * mfEstimates.size()];
-            PiF = new float[kMax * mfEstimates.size()];
-        } else {
-            E = new int[kMax];
-            Pi = new double[kMax];
-        }
-
-        tau = 0.75;
-        deltaEMax = 7000.0;
-        deltaEMin = 5.0;
-        double epsilon = 1.0 / (kMax * kMax);
-        tInitial = ceil(deltaEMax / log((kMax - 1 + (kMax * kMax * epsilon)) / (kMax - 1 - (kMax * kMax * epsilon))));
-        tFinal = deltaEMin / log((kMax - (kMax * epsilon) - 1) / (kMax * epsilon));
-
+        tau = AnnealPara.tau;
+        deltaEMax = AnnealPara.deltaEMax;
+        deltaEMin = AnnealPara.deltaEMin;
+        const double kmax = static_cast<double>(kMax);
+        tInitial = ceil(deltaEMax / log(kmax / (kmax - 2.0)));
+        tFinal = deltaEMin / log(kmax * kmax - kmax - 1.0);
     }
 
     ~GDAConfiguration() {
-        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(),_1));
-        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(),_1));
-        for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(),_1));
-        delete[] E;
-        delete[] Pi;
-        delete[] EF;
-        delete[] PiF;
+        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
+        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
+        for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
     }
 
     void run() {
         int progressIndicator = 1;
-        int numIterations = (int)ceil(log(tFinal/tInitial)/log(tau));
+        int numIterations = static_cast<int>(ceil(log(tFinal / tInitial) / log(tau)));
         int iterationCount = 0;
-        int iterationsPerTick = (numIterations+3) / 4;
+        int iterationsPerTick = (numIterations + 3) / 4;
 
 #ifdef HAVE_LIBGLEW
-        if (UseGPU) configureGPUTextures(kMax, pointStateSpaces.size());
+        if (UseGPU) {
+            configureGPUTextures(kMax, pointStateSpaces.size());
+        }
 #endif
 
         tCurrent = tInitial;
 
-        while ((kMax > 1) && (tCurrent > tFinal)) {
-            double epsilon = 1.0 / kMax;
-            unsigned int eta = (unsigned int)ceil(log(epsilon)
-                             / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax)) + 0.5));
+        while (kMax > 1 && tCurrent > tFinal) {
+            const double epsilon = 1.0 / kMax;
+            const unsigned int eta =
+                static_cast<unsigned int>(ceil(log(epsilon)
+                                               / log(((kMax - 2.0) / (2.0 * kMax) * exp(-tCurrent / deltaEMax))
+                                                     + 0.5)));
 
-            if (Verbose > VERBOSE_GDA_MESSAGES) {
-                cout << endl << "tCurrent=" << tCurrent << " eta=" << eta << " kMax=" << kMax;
-                cout.flush();
+            if (Verbose >= VERBOSE_GDA_MESSAGES) {
+                const std::ios_base::fmtflags ioFlags(cerr.flags());
+                cerr << "\n"
+                     << command
+                     << ": info: t = " << scientific << setprecision(3) << tCurrent
+                     << ", eta = " << setw(4) << eta
+                     << ", k_max = " << setw(3) << kMax;
+                cerr.flush();
+                cerr.flags(ioFlags);
             }
 
-            for (unsigned int i = 0; i < eta; i++) iterate();
+            for (unsigned int i = 0; i < eta; i++) {
+                iterate();
+            }
 
             tCurrent *= tau;
 
-            if (Verbose > VERBOSE_GDA_MESSAGES) {
+            if (Verbose >= VERBOSE_GDA_MESSAGES) {
                 int numConvergedPoints = 0;
                 for (unsigned int i = 0; i < convergedPoints.size(); i++) {
-                    if (convergedPoints[i]) numConvergedPoints++;
+                    if (convergedPoints[i]) {
+                        numConvergedPoints++;
+                    }
                 }
-                cout << " converged=" << numConvergedPoints << "/" << convergedPoints.size();
-                cout.flush();
+                cerr << ", " << numConvergedPoints
+                     << " of " << convergedPoints.size()
+                     << " points converged";
+                cerr.flush();
             }
-            else if ((Verbose > VERBOSE_MASK_MESSAGES) && (iterationCount % iterationsPerTick) == 0) {
-                cout << " " << progressIndicator++ << "/4";
-                cout.flush();
+            else if (Verbose >= VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
+                cerr << " " << progressIndicator << "/4";
+                progressIndicator++;
+                cerr.flush();
             }
 
             iterationCount++;
-
         }
 
 #ifdef HAVE_LIBGLEW
-        if (UseGPU) clearGPUTextures();
+        if (UseGPU) {
+            clearGPUTextures();
+        }
 #endif
 
         if (visualizeStateSpaceImage) {
             // Remaining unconverged state space points
             for (unsigned int i = 0; i < pointStateSpaces.size(); ++i) {
-                vector<Point2D> *stateSpace = pointStateSpaces[i];
+                vector<Point2D>* stateSpace = pointStateSpaces[i];
                 for (unsigned int j = 0; j < stateSpace->size(); ++j) {
                     Point2D point = (*stateSpace)[j];
-                    if (visualizeStateSpaceImage->isInside(point)) (*visualizeStateSpaceImage)[point].setGreen(255);
+                    if (visualizeStateSpaceImage->isInside(point)) {
+                        (*visualizeStateSpaceImage)[point] = VISUALIZE_STATE_SPACE_UNCONVERGED;
+                    }
                 }
             }
-            // Optimized contour
-            //drawDottedLine(visualizeStateSpaceImage, mfEstimates, 225);
         }
 
-        if (Verbose > VERBOSE_GDA_MESSAGES) {
-            cout << endl;
+        if (Verbose >= VERBOSE_GDA_MESSAGES) {
+            cerr << endl;
             for (unsigned int i = 0; i < convergedPoints.size(); i++) {
                 if (!convergedPoints[i]) {
-                    cout << "Unconverged point:" << endl;
-                    vector<Point2D> *stateSpace = pointStateSpaces[i];
-                    vector<double> *stateProbabilities = pointStateProbabilities[i];
-                    unsigned int localK = stateSpace->size();
+                    cerr << command
+                         << ": info: unconverged point: "
+                         << endl;
+                    vector<Point2D>* stateSpace = pointStateSpaces[i];
+                    vector<double>* stateProbabilities = pointStateProbabilities[i];
+                    const unsigned int localK = stateSpace->size();
                     for (unsigned int state = 0; state < localK; ++state) {
-                        cout << "    state " << (*stateSpace)[state]
-                             << " weight=" << (*stateProbabilities)[state] << endl;
+                        cerr << command
+                             << ": info:    state " << (*stateSpace)[state]
+                             << ", weight = " << (*stateProbabilities)[state]
+                             << endl;
                     }
-                    cout << "    mfEstimate=" << mfEstimates[i] << endl;
+                    cerr << command
+                         << ": info:    mfEstimate = " << mfEstimates[i]
+                         << endl;
                 }
             }
         }
-
     }
 
-    vector<Point2D> & getCurrentPoints() { return mfEstimates; }
+    const vector<Point2D>& getCurrentPoints() const {
+        return mfEstimates;
+    }
+
+    void setOptimizerWeights(double aDistanceWeight, double aMismatchWeight) {
+        // IMPLEMENTATION NOTE: We normalize to 2.0, because we
+        // want to reproduce the results of Enblend-3.2.  Up to
+        // Enblend-3.2 the distanceWeight and mismatchWeight were both
+        // fixed at 1.0.
+        const double sum = 0.5 * (aDistanceWeight + aMismatchWeight);
+        assert(aDistanceWeight >= 0.0);
+        assert(aMismatchWeight >= 0.0);
+        assert(sum > 0.0);
+        distanceWeight = aDistanceWeight / sum;
+        mismatchWeight = aMismatchWeight / sum;
+    }
 
 protected:
+    void calculateStateProbabilities() {
+        const int mf_size = static_cast<int>(mfEstimates.size());
 
-    //virtual void calculateStateProbabilities() {
-    inline void calculateStateProbabilities() {
-
-        unsigned int lastIndex = mfEstimates.size() - 1;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
-            // Skip updating points that have already converged.
-            if (convergedPoints[index]) continue;
-
-            vector<Point2D> *stateSpace = pointStateSpaces[index];
-            vector<double> *stateProbabilities = pointStateProbabilities[index];
-            vector<int> *stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
-
-            unsigned int nextIndex = (index + 1) % mfEstimates.size();
-            Point2D lastPointEstimate = mfEstimates[lastIndex];
-            bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            Point2D nextPointEstimate = mfEstimates[nextIndex];
-            bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
-            lastIndex = index;
-
-            // Calculate E values.
-            // exp_a scaling factor is part of the Schraudolph approximation.
-            // for all e_i, e_j, in E: -700 < e_j-e_i < 700
-            double exp_a = 1512775 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
-            for (unsigned int i = 0; i < localK; ++i) {
-                Point2D currentPoint = (*stateSpace)[i];
-                E[i] = (*stateDistances)[i];
-                if (lastPointInCostImage) E[i] += costImageCost(lastPointEstimate, currentPoint);
-                if (nextPointInCostImage) E[i] += costImageCost(currentPoint, nextPointEstimate);
-                E[i] = NumericTraits<int>::fromRealPromote(E[i] * exp_a);
-                Pi[i] = 0.0;
-            }
-
-            // Calculate new stateProbabilities
-            // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
-            // I am using an approximation of the exp function from:
-            // Nicol N. Schraudolph. A Fast, Compact Approximation of the Exponential Function.
-            // Neural Computation, vol. 11, pages 853--862, 1999.
-            union {
-                double d;
-                #ifdef WORDS_BIGENDIAN
-                    struct { int i, j; } n;
-                #else
-                    struct { int j, i; } n;
-                #endif
-            } eco;
-            eco.n.j = 0;
-
-            // An = 1 / (1 + exp( (E[j] - E[i]) / T )
-            // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
-            for (unsigned int j = 0; j < localK; ++j) {
-                double piTj = (*stateProbabilities)[j];
-                Pi[j] += piTj;
-                int ej = E[j];
-                for (unsigned int i = (j+1); i < localK; ++i) {
-                    double piT = (*stateProbabilities)[i] + piTj;
-                    eco.n.i = (ej - E[i]) + (1072693248 - 60801);
-                    // FIXME eco.n.i is overflowing into NaN range!
-                    double piTAn = piT / (1 + eco.d);
-                    //if (isnan(piTAn)) {
-                    //    cout << endl << "piTAn=" << piTAn << " piT=" << piT << " denom=" << (1+eco.d) << endl;
-                    //    cout << "eco.n.i=" << eco.n.i << " ej=" << ej << " ei=" << E[i] << " ej-ei=" << (ej - E[i]) << endl;
-                    //    printf("%08x         ej-ei\n", (ej - E[i]));
-                    //    printf("%08x         adj\n", 1072693248 - 60801);
-                    //    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                    //}
-#ifdef _MSC_VER
-                    if (isnan(piTAn)) {
-#else
-                    if (std::isnan(piTAn)) {
+#ifdef OPENMP
+#pragma omp parallel
 #endif
-                        // exp term is infinity or zero.
-                        if (ej > E[i]) piTAn = 0.0;
-                        else piTAn = piT;
-                    }
-                    Pi[j] += piTAn;
-                    Pi[i] += piT - piTAn;
-                }
-                double result = Pi[j] / localK;
-                //if (isnan(result)) {
-                //    cerr << endl << "nan! Pi[j]=" << Pi[j] << " localK=" << localK << endl;
-                //    for (unsigned int n = 0; n < localK; ++n) {
-                //        cerr << "    sp[" << n << "] = " << (*stateProbabilities)[n]
-                //             << "\te[" << n << "] = " << E[n] << endl;
-                //    }
-                //}
-                (*stateProbabilities)[j] = result;
-            }
-        }
+        {
+            int* E = new int[kMax];
+            double* Pi = new double[kMax];
 
+#ifdef OPENMP
+#pragma omp for nowait schedule(guided)
+#endif
+            for (int index = 0; index < mf_size; ++index) {
+                // Skip updating points that have already converged.
+                if (convergedPoints[index]) {
+                    continue;
+                }
+
+                const vector<Point2D>* stateSpace = pointStateSpaces[index];
+                vector<double>* stateProbabilities = pointStateProbabilities[index];
+                const vector<int>* stateDistances = pointStateDistances[index];
+                const unsigned int localK = stateSpace->size();
+
+                const int lastIndex = index == 0 ? mf_size - 1 : index - 1;
+                const unsigned int nextIndex = (index + 1) % mf_size;
+                const Point2D lastPointEstimate = mfEstimates[lastIndex];
+                const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
+                const Point2D nextPointEstimate = mfEstimates[nextIndex];
+                const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
+
+                // Calculate E values.
+                // exp_a scaling factor is part of the Schraudolph approximation.
+                // for all e_i, e_j, in E: -700 < e_j-e_i < 700
+                const double exp_a = 1512775.0 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
+                for (unsigned int i = 0; i < localK; ++i) {
+                    const Point2D currentPoint = (*stateSpace)[i];
+                    const int distanceCost = (*stateDistances)[i];
+                    int mismatchCost = 0;
+                    if (lastPointInCostImage) {
+                        mismatchCost += costImageCost(lastPointEstimate, currentPoint);
+                    }
+                    if (nextPointInCostImage) {
+                        mismatchCost += costImageCost(currentPoint, nextPointEstimate);
+                    }
+
+                    const double cost =
+                        distanceWeight * static_cast<double>(distanceCost) +
+                        mismatchWeight * static_cast<double>(mismatchCost);
+                    E[i] = NumericTraits<int>::fromRealPromote(cost * exp_a);
+                    Pi[i] = 0.0;
+                }
+
+                // Calculate new stateProbabilities
+                // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
+                // I am using an approximation of the exp function from:
+                // Nicol N. Schraudolph. A Fast, Compact Approximation of the Exponential Function.
+                // Neural Computation, vol. 11, pages 853--862, 1999.
+                union {
+                    double d;
+#ifdef WORDS_BIGENDIAN
+                    struct { int hi, lo; } n;
+#else
+                    struct { int lo, hi; } n;
+#endif
+                } eco;
+                eco.n.lo = 0;
+
+                // An = 1 / (1 + exp( (E[j] - E[i]) / T )
+                // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
+                for (unsigned int j = 0; j < localK; ++j) {
+                    const double piTj = (*stateProbabilities)[j];
+                    Pi[j] += piTj;
+                    const int ej = E[j];
+                    for (unsigned int i = j + 1; i < localK; ++i) {
+                        const double piT = (*stateProbabilities)[i] + piTj;
+                        eco.n.hi = (ej - E[i]) + (0x3ff00000 - 60801);
+                        // FIXME eco.n.hi is overflowing into NaN range!
+                        double piTAn = piT / (1.0 + eco.d);
+                        if (
+#ifdef _MSC_VER
+                            isnan(piTAn)
+#else
+                            std::isnan(piTAn)
+#endif
+                            ) {
+                            // exp term is infinity or zero.
+                            piTAn = ej > E[i] ? 0.0 : piT;
+                        }
+                        Pi[j] += piTAn;
+                        Pi[i] += piT - piTAn;
+                    }
+                    (*stateProbabilities)[j] = Pi[j] / localK;
+                }
+            }
+
+            delete [] E;
+            delete [] Pi;
+        } // omp parallel
     }
 
 #ifdef HAVE_LIBGLEW
-    //virtual void calculateStateProbabilitiesGPU() {
-    inline void calculateStateProbabilitiesGPU() {
-
+    void calculateStateProbabilitiesGPU() {
+        const unsigned int mf_size = mfEstimates.size();
         unsigned int unconvergedPoints = 0;
-        unsigned int lastIndex = mfEstimates.size() - 1;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
+
+        float* EF = new float[kMax * mfEstimates.size()];
+        float* PiF = new float[kMax * mfEstimates.size()];
+
+        for (unsigned int index = 0; index < mf_size; ++index) {
             // Skip updating points that have already converged.
-            if (convergedPoints[index]) continue;
+            if (convergedPoints[index]) {
+                continue;
+            }
 
-            unsigned int rowIndex = unconvergedPoints / 4;
-            unsigned int vectorIndex = unconvergedPoints % 4;
-            float *EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
-            float *PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
+            const unsigned int rowIndex = unconvergedPoints / 4;
+            const unsigned int vectorIndex = unconvergedPoints % 4;
+            float* EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
+            float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
-            vector<Point2D> *stateSpace = pointStateSpaces[index];
-            vector<double> *stateProbabilities = pointStateProbabilities[index];
-            vector<int> *stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
+            const vector<Point2D>* stateSpace = pointStateSpaces[index];
+            vector<double>* stateProbabilities = pointStateProbabilities[index];
+            const vector<int>* stateDistances = pointStateDistances[index];
+            const unsigned int localK = stateSpace->size();
 
-            unsigned int nextIndex = (index + 1) % mfEstimates.size();
-            Point2D lastPointEstimate = mfEstimates[lastIndex];
-            bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            Point2D nextPointEstimate = mfEstimates[nextIndex];
-            bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
-            lastIndex = index;
+            const unsigned int lastIndex = index == 0 ? mf_size - 1 : index - 1;
+            const unsigned int nextIndex = (index + 1) % mf_size;
+            const Point2D lastPointEstimate = mfEstimates[lastIndex];
+            const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
+            const Point2D nextPointEstimate = mfEstimates[nextIndex];
+            const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
 
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
-                Point2D currentPoint = (*stateSpace)[i];
-                EFbase[4*i] = (*stateDistances)[i];
-                if (lastPointInCostImage) EFbase[4*i] += costImageCost(lastPointEstimate, currentPoint);
-                if (nextPointInCostImage) EFbase[4*i] += costImageCost(currentPoint, nextPointEstimate);
-                PiFbase[4*i] = static_cast<float>((*stateProbabilities)[i]);
-                //if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
-                //    union {
-                //        double d;
-                //        #ifdef WORDS_BIGENDIAN
-                //            struct { int i, j; } n;
-                //        #else
-                //            struct { int j, i; } n;
-                //        #endif
-                //    } eco;
-                //    cout << "gpu incoming pi is nan: PiFbase=";
-                //    printf("%08x", PiFbase[4*i]);
-                //    cout << " spi=";
-                //    eco.d = (*stateProbabilities)[i];
-                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                //}
-                //if (isnan(EFbase[4*i])) {
-                //    union {
-                //        double d;
-                //        float f;
-                //        #ifdef WORDS_BIGENDIAN
-                //            struct { int i, j; } n;
-                //        #else
-                //            struct { int j, i; } n;
-                //        #endif
-                //    } eco;
-                //    eco.n.i = 0;
-                //    eco.n.j = 0;
-                //    eco.f = EFbase[4*i];
-                //    cout << "gpu incoming EF is nan: EFbase=";
-                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                //}
+                const Point2D currentPoint = (*stateSpace)[i];
+                const int distanceCost = (*stateDistances)[i];
+                int mismatchCost = 0;
+                if (lastPointInCostImage) {
+                    mismatchCost += costImageCost(lastPointEstimate, currentPoint);
+                }
+                if (nextPointInCostImage) {
+                    mismatchCost += costImageCost(currentPoint, nextPointEstimate);
+                }
+                const float cost =
+                    distanceWeight * static_cast<float>(distanceCost) +
+                    mismatchWeight * static_cast<float>(mismatchCost);
+                EFbase[4 * i] = cost;
+                PiFbase[4 * i] = static_cast<float>((*stateProbabilities)[i]);
             }
+
             for (unsigned int i = localK; i < kMax; ++i) {
-                PiFbase[4*i] = 0.0f;
+                PiFbase[4 * i] = 0.0f;
             }
 
             unconvergedPoints++;
@@ -510,228 +489,190 @@ protected:
 
         // Write the results back to pointStateProbabilities
         unconvergedPoints = 0;
-        for (unsigned int index = 0; index < mfEstimates.size(); ++index) {
+        for (unsigned int index = 0; index < mf_size; ++index) {
             // Skip updating points that have already converged.
-            if (convergedPoints[index]) continue;
+            if (convergedPoints[index]) {
+                continue;
+            }
 
-            unsigned int rowIndex = unconvergedPoints / 4;
-            unsigned int vectorIndex = unconvergedPoints % 4;
-            float *PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
+            const unsigned int rowIndex = unconvergedPoints / 4;
+            const unsigned int vectorIndex = unconvergedPoints % 4;
+            float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
-            vector<double> *stateProbabilities = pointStateProbabilities[index];
-            unsigned int localK = stateProbabilities->size();
-
-            //bool hasNan = false;
-            //for (unsigned int i = 0; i < localK; ++i) {
-            //    if (isnan(PiFbase[4*i])) hasNan = true;
-            //}
-
-            //if (hasNan) {
-            //    cout << "gpu outgoing pi is nan." << endl;
-            //}
+            vector<double>* stateProbabilities = pointStateProbabilities[index];
+            const unsigned int localK = stateProbabilities->size();
 
             for (unsigned int i = 0; i < localK; ++i) {
-                //if (hasNan) {
-                //    cout << "k=" << i << " spi=" << (*stateProbabilities)[i];
-                //}
-                (*stateProbabilities)[i] = static_cast<double>(PiFbase[4*i]);
-                //if (hasNan) {
-                //    cout << " newspi=" << (*stateProbabilities)[i];
-                //    union {
-                //        double d;
-                //        float f;
-                //        #ifdef WORDS_BIGENDIAN
-                //            struct { int i, j; } n;
-                //        #else
-                //            struct { int j, i; } n;
-                //        #endif
-                //    } eco;
-                //    cout << " = ";
-                //    eco.d = (*stateProbabilities)[i];
-                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                //}
-                //if (isnan(PiFbase[4*i]) || isnan((*stateProbabilities)[i])) {
-                //    union {
-                //        double d;
-                //        float f;
-                //        #ifdef WORDS_BIGENDIAN
-                //            struct { int i, j; } n;
-                //        #else
-                //            struct { int j, i; } n;
-                //        #endif
-                //    } eco;
-                //    cout << "gpu outgoing pi is nan: PiFbase=";
-                //    eco.n.i = eco.n.j = 0;
-                //    eco.f = PiFbase[4*i];
-                //    printf("%08x%08x", eco.n.i, eco.n.j);
-                //    cout << " spi=";
-                //    eco.d = (*stateProbabilities)[i];
-                //    printf("%08x%08x\n", eco.n.i, eco.n.j);
-                //}
+                (*stateProbabilities)[i] = static_cast<double>(PiFbase[4 * i]);
             }
 
             unconvergedPoints++;
         }
 
+        delete [] EF;
+        delete [] PiF;
     }
 #endif
 
-    //virtual void iterate() {
     void iterate() {
-
 #ifdef HAVE_LIBGLEW
         if (UseGPU) {
             calculateStateProbabilitiesGPU();
-
-            //// Copy GPU-calculated results
-            //vector<vector<double> > gpuStateProbabilities;
-            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-            //    gpuStateProbabilities.push_back(vector<double>(*(pointStateProbabilities[index])));
-            //}
-
-            //// Do regular CPU computations
-            //calculateStateProbabilities();
-
-            //// Compare
-            //for (unsigned int index = 0; index < pointStateProbabilities.size(); ++index) {
-            //    vector<double> &gpuProbs = gpuStateProbabilities[index];
-            //    vector<double> &cpuProbs = *(pointStateProbabilities[index]);
-            //    cout << "index " << index << endl;
-            //    for (unsigned int k = 0; k < gpuProbs.size(); ++k) {
-            //        double diff = std::abs(gpuProbs[k] - cpuProbs[k]);
-            //        if (diff > 0.001) {
-            //            cout << gpuProbs[k] << ", " << cpuProbs[k] << " abs=" << std::abs(gpuProbs[k] - cpuProbs[k]) << endl;
-            //        }
-            //    }
-            //}
-
         } else {
-#endif
             calculateStateProbabilities();
-#ifdef HAVE_LIBGLEW
         }
+#else
+        calculateStateProbabilities();
 #endif
 
         kMax = 1;
-        for (unsigned int index = 0; index < pointStateSpaces.size(); ++index) {
-            if (convergedPoints[index]) continue;
-
-            vector<Point2D> *stateSpace = pointStateSpaces[index];
-            vector<double> *stateProbabilities = pointStateProbabilities[index];
-            vector<int> *stateDistances = pointStateDistances[index];
-            unsigned int localK = stateSpace->size();
-            double estimateX = 0.0;
-            double estimateY = 0.0;
-
-            // Make new mean field estimates.
-            double totalWeight = 0.0;
-            bool hasHighWeightState = false;
-            for (unsigned int k = 0; k < localK; ++k) {
-                double weight = (*stateProbabilities)[k];
-                totalWeight += weight;
-                if (weight > 0.99) hasHighWeightState = true;
-                Point2D state = (*stateSpace)[k];
-                estimateX += weight * (double)state.x;
-                estimateY += weight * (double)state.y;
-            }
-            estimateX /= totalWeight;
-            estimateY /= totalWeight;
-
-            Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
-                                NumericTraits<int>::fromRealPromote(estimateY));
-
-            // Sanity check
-            if (!costImage->isInside(newEstimate)) {
-                //union {
-                //    double d;
-                //    #ifdef WORDS_BIGENDIAN
-                //        struct { int i, j; } n;
-                //    #else
-                //        struct { int j, i; } n;
-                //    #endif
-                //} eco;
-                cout << endl << "enblend: optimizer warning: new mean field estimate is outside cost image." << endl;
-                for (unsigned int state = 0; state < localK; ++state) {
-                    cout << "    state " << (*stateSpace)[state]
-                         << " weight = ";
-                    cout << (*stateProbabilities)[state] << endl;
-                    //cout << (*stateProbabilities)[state] << " = ";
-                    //eco.d = (*stateProbabilities)[state];
-                    //printf("%08x%08x\n", eco.n.i, eco.n.j);
+        size_t kmax_local = 1;
+#ifdef OPENMP
+#pragma omp parallel firstprivate(kmax_local)
+#endif
+        {
+#ifdef OPENMP
+#pragma omp for nowait schedule(guided)
+#endif
+            for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
+                if (convergedPoints[index]) {
+                    continue;
                 }
-                cout << "    new estimate = " << newEstimate << endl;
-                // Skip this point from now on.
-                convergedPoints[index] = true;
-                continue;
-            }
 
-            mfEstimates[index] = newEstimate;
+                vector<Point2D>* stateSpace = pointStateSpaces[index];
+                vector<double>* stateProbabilities = pointStateProbabilities[index];
+                vector<int>* stateDistances = pointStateDistances[index];
+                unsigned int localK = stateSpace->size();
+                double estimateX = 0.0;
+                double estimateY = 0.0;
 
-            // Remove improbable solutions from the search space
-            double totalWeights = 0.0;
-            double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
-            for (unsigned int k = 0; k < stateSpace->size(); ) {
-                double weight = (*stateProbabilities)[k];
-                if (weight < cutoffWeight) {
-                    // Replace this state with last state
-                    (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
-                    (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
-                    (*stateDistances)[k] = (*stateDistances)[stateDistances->size() - 1];
-
-                    // Delete last state
-                    stateProbabilities->pop_back();
-                    stateSpace->pop_back();
-                    stateDistances->pop_back();
-                } else {
-                    totalWeights += weight;
-                    ++k;
+                // Make new mean field estimates.
+                double totalWeight = 0.0;
+                bool hasHighWeightState = false;
+                for (unsigned int k = 0; k < localK; ++k) {
+                    const double weight = (*stateProbabilities)[k];
+                    totalWeight += weight;
+                    if (weight > 0.99) {
+                        hasHighWeightState = true;
+                    }
+                    const Point2D state = (*stateSpace)[k];
+                    estimateX += weight * static_cast<double>(state.x);
+                    estimateY += weight * static_cast<double>(state.y);
                 }
+                estimateX /= totalWeight;
+                estimateY /= totalWeight;
+
+                Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
+                                    NumericTraits<int>::fromRealPromote(estimateY));
+
+                // Sanity check
+                if (!costImage->isInside(newEstimate)) {
+#ifdef OPENMP
+#pragma omp critical(write_to_cerr)
+#endif
+                    {
+                        cerr << command
+                             << ": warning: new mean field estimate outside cost image"
+                             << endl;
+                        for (unsigned int state = 0; state < localK; ++state) {
+                            cerr << command
+                                 << ": info:    state " << (*stateSpace)[state]
+                                 << " weight = "
+                                 << (*stateProbabilities)[state]
+                                 << endl;
+                        }
+                        cerr << command
+                             << ": info:    new estimate = " << newEstimate
+                             << endl;
+                    } // omp critical
+
+                    // Skip this point from now on.
+                    convergedPoints[index] = true;
+                    continue;
+                }
+
+                mfEstimates[index] = newEstimate;
+
+                // Remove improbable solutions from the search space
+                double totalWeights = 0.0;
+                const double cutoffWeight = hasHighWeightState ? 0.50 : 0.00001;
+                for (unsigned int k = 0; k < stateSpace->size(); ) {
+                    const double weight = (*stateProbabilities)[k];
+                    if (weight < cutoffWeight) {
+                        // Replace this state with last state
+                        (*stateProbabilities)[k] = (*stateProbabilities)[stateProbabilities->size() - 1];
+                        (*stateSpace)[k] = (*stateSpace)[stateSpace->size() - 1];
+                        (*stateDistances)[k] = (*stateDistances)[stateDistances->size() - 1];
+
+                        // Delete last state
+                        stateProbabilities->pop_back();
+                        stateSpace->pop_back();
+                        stateDistances->pop_back();
+                    } else {
+                        totalWeights += weight;
+                        ++k;
+                    }
+                }
+
+                // Renormalize
+                for (unsigned int k = 0; k < stateSpace->size(); ++k) {
+                    (*stateProbabilities)[k] /= totalWeights;
+                }
+
+                localK = stateSpace->size();
+                if (localK < 2) {
+                    convergedPoints[index] = true;
+                }
+
+                kmax_local = std::max(kmax_local, stateProbabilities->size());
             }
-
-            // Renormalize
-            for (unsigned int k = 0; k < stateSpace->size(); ++k) {
-                (*stateProbabilities)[k] /= totalWeights;
-            }
-
-            localK = stateSpace->size();
-            if (localK < 2) convergedPoints[index] = true;
-            kMax = std::max((size_t)kMax, stateProbabilities->size());
-
-        }
-
+#ifdef OPENMP
+#pragma omp critical(update_kMax)
+#endif
+            kMax = std::max(kMax, static_cast<unsigned int>(kmax_local));
+        } // omp parallel
     }
 
-    //virtual int costImageCost(const Point2D &start, const Point2D &end) {
-    inline int costImageCost(const Point2D &start, const Point2D &end) {
-        //if (!(costImage->isInside(start) && costImage->isInside(end))) {
-        //    cerr << "start and end points are not inside image: start=" << start << " end=" << end << endl;
-        //    exit(-1);
-        //}
+    int costImageCost(const Point2D& start, const Point2D& end) const {
+        const int shortLineThreshold = 8; // We penalize lines below this limit.
 
+        const CostIterator lineEnd(costImage->upperLeft() + end);
+        LineIterator<CostIterator> line(costImage->upperLeft() + start, lineEnd);
         int cost = 0;
-
-        int lineLength = std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
-
-        if (lineLength > 0) {
-            LineIterator<CostIterator> lineStart(costImage->upperLeft() + start, costImage->upperLeft() + end);
-            for (int i = 0; i < lineLength; ++i) {
-                cost += *lineStart;
-                ++lineStart;
-            }
+        while (line != lineEnd) {
+            cost += *line;
+            ++line;
         }
 
-        if (lineLength < 8) cost += NumericTraits<CostImagePixelType>::max() * (8 - lineLength);
+        const int lineLength =
+            std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
+
+        if (lineLength < shortLineThreshold) {
+            cost += NumericTraits<CostImagePixelType>::max() * (shortLineThreshold - lineLength);
+        }
 
         return cost;
     }
 
-    bool segmentIntersect(const Point2D & l1a, const Point2D & l1b, const Point2D & l2a, const Point2D & l2b) {
-        int denom = (l2b.y - l2a.y)*(l1b.x - l1a.x) - (l2b.x - l2a.x)*(l1b.y - l1a.y);
-        if (denom == 0) return false; // lines are parallel or coincident
-        int uaNum = (l2b.x - l2a.x)*(l1a.y - l2a.y) - (l2b.y - l2a.y)*(l1a.x - l2a.x);
-        int ubNum = (l1b.x - l1a.x)*(l1a.y - l2a.y) - (l1b.y - l1a.y)*(l1a.x - l2a.x);
-        if (denom < 0) { uaNum *= -1; ubNum *= -1; denom *= -1; }
-        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) return true;
+    bool segmentIntersect(const Point2D& l1a, const Point2D& l1b,
+                          const Point2D& l2a, const Point2D& l2b) const {
+        const int denom =
+            (l2b.y - l2a.y) * (l1b.x - l1a.x) - (l2b.x - l2a.x) * (l1b.y - l1a.y);
+        if (denom == 0) {
+            return false;       // lines are parallel or coincident
+        }
+        const int uaNum =
+            (l2b.x - l2a.x) * (l1a.y - l2a.y) - (l2b.y - l2a.y) * (l1a.x - l2a.x);
+        const int ubNum =
+            (l1b.x - l1a.x) * (l1a.y - l2a.y) - (l1b.y - l1a.y) * (l1a.x - l2a.x);
+        if (denom < 0) {
+            uaNum *= -1;
+            ubNum *= -1;
+            denom *= -1;
+        }
+        if (uaNum > 0 && uaNum < denom && ubNum > 0 && ubNum < denom) {
+            return true;
+        }
         return false;
     }
 
@@ -742,12 +683,12 @@ protected:
     vector<Point2D> mfEstimates;
 
     // State spaces of each point
-    vector<vector<Point2D>* > pointStateSpaces;
+    vector<vector<Point2D>*> pointStateSpaces;
 
     // Probability vectors for each state space
-    vector<vector<double>* > pointStateProbabilities;
+    vector<vector<double>*> pointStateProbabilities;
 
-    vector<vector<int>* > pointStateDistances;
+    vector<vector<int>*> pointStateDistances;
 
     // Flags indicate which points have converged
     vector<bool> convergedPoints;
@@ -773,31 +714,37 @@ protected:
     // Largest state space over all points
     unsigned int kMax;
 
-    // Data arrays for CPU probability calculations
-    int *E;
-    double *Pi;
-
-    // Data arrays for GPU probability calculations
-    float *EF;
-    float *PiF;
-
+    // Weight factors for the distance of a point from the initial
+    // seam line and the total mismatch accumulated along the seam
+    // line segment.
+    double distanceWeight;;
+    double mismatchWeight;
 };
+
 
 template <typename CostImage, typename VisualizeImage>
-void annealSnake(const CostImage* const ci, slist<pair<bool, Point2D> > *snake, VisualizeImage* const vi) {
-
+void annealSnake(const CostImage* const ci,
+                 const pair<double, double>& optimizerWeights,
+                 slist<pair<bool, Point2D> >* snake,
+                 VisualizeImage* const vi)
+{
     GDAConfiguration<CostImage, VisualizeImage> cfg(ci, snake, vi);
 
+    cfg.setOptimizerWeights(optimizerWeights.first, optimizerWeights.second);
     cfg.run();
 
-    slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
-    vector<Point2D>::iterator annealedPoint = cfg.getCurrentPoints().begin();
-    for (; snakePoint != snake->end(); ++snakePoint, ++annealedPoint) {
+    vector<Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
+    for (slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
+         snakePoint != snake->end();
+         ++snakePoint, ++annealedPoint) {
         snakePoint->second = *annealedPoint;
     }
-
-};
+}
 
 } // namespace enblend
 
 #endif /* __ANNEAL_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

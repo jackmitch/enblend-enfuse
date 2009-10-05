@@ -36,6 +36,7 @@
 #include "common.h"
 #include "fixmath.h"
 #include "vigra/copyimage.hxx"
+#include "vigra/imageinfo.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
@@ -61,84 +62,192 @@ using vigra::NumericTraits;
 using vigra::Rect2D;
 using vigra::Threshold;
 using vigra::transformImage;
+using vigra::linearRangeMapping;
 
 using vigra_ext::ReadFunctorAccessor;
 using vigra_ext::WriteFunctorAccessor;
 
 namespace enblend {
 
+template <typename T> struct IntegralSelect {typedef T Result;};
+template <> struct IntegralSelect<float> {typedef vigra::UInt32 Result;};
+template <> struct IntegralSelect<double> {typedef vigra::UInt32 Result;};
+template <> struct IntegralSelect<vigra::RGBValue<float> > {
+    typedef vigra::RGBValue<vigra::UInt32> Result;
+};
+template <> struct IntegralSelect<vigra::RGBValue<double> > {
+    typedef vigra::RGBValue<vigra::UInt32> Result;
+};
+
+
+template <typename ImageType, typename AlphaType, typename Accessor>
+void
+exportImagePreferablyWithAlpha(const ImageType* image,
+                               const AlphaType* mask,
+                               const Accessor& accessor,
+                               const ImageExportInfo& outputImageInfo)
+{
+    try {
+        exportImageAlpha(srcImageRange(*image),
+                         srcIter(mask->upperLeft(), accessor),
+                         outputImageInfo);
+    } catch (std::exception&) {
+        // Oh well, there is no alpha-channel.  So we export without it.
+        exportImage(srcImageRange(*image), outputImageInfo);
+    }
+}
+
+
 /** Write output images.
  */
 template <typename ImageType, typename AlphaType>
-void checkpoint(pair<ImageType*, AlphaType*>& p, ImageExportInfo& outputImageInfo) {
+void
+checkpoint(const pair<ImageType*, AlphaType*>& p,
+           const ImageExportInfo& outputImageInfo)
+{
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
         ImagePixelComponentType;
     typedef typename AlphaType::Accessor AlphaAccessor;
     typedef typename AlphaType::PixelType AlphaPixelType;
 
-    typedef ReadFunctorAccessor<
-        Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
-        ThresholdingAccessor;
+    ImageType* image = p.first;
+    AlphaType* mask = p.second;
 
-    ThresholdingAccessor ata(
-        Threshold<AlphaPixelType, ImagePixelComponentType>(
-            NumericTraits<AlphaPixelType>::zero(),
-            NumericTraits<AlphaPixelType>::zero(),
-            AlphaTraits<ImagePixelComponentType>::max(),
-            AlphaTraits<ImagePixelComponentType>::zero()
-            ),
-        (p.second)->accessor());
+    ReadFunctorAccessor<Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
+        ata(Threshold<AlphaPixelType, ImagePixelComponentType>
+            (AlphaTraits<AlphaPixelType>::zero(),
+             AlphaTraits<AlphaPixelType>::zero(),
+             AlphaTraits<ImagePixelComponentType>::max(),
+             AlphaTraits<ImagePixelComponentType>::zero()),
+            mask->accessor());
 
-    try {
-        exportImageAlpha(srcImageRange(*(p.first)),
-                         srcIter((p.second)->upperLeft(), ata),
-                         outputImageInfo);
-    } catch (std::exception&) {
-        // try to export without alpha channel
-        exportImage(srcImageRange(*(p.first)), outputImageInfo);
+    const pair<double, double> outputRange =
+        enblend::rangeOfPixelType(outputImageInfo.getPixelType());
+    const ImagePixelComponentType inputMin =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        NumericTraits<ImagePixelComponentType>::min() :
+        0.0;
+    const ImagePixelComponentType inputMax =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        NumericTraits<ImagePixelComponentType>::max() :
+        1.0;
+#ifdef DEBUG
+    cerr << "+ checkpoint: input range:  ("
+         << static_cast<double>(inputMin) << ", "
+         << static_cast<double>(inputMax) << ")\n"
+         << "+ checkpoint: output range: ("
+         << outputRange.first << ", " << outputRange.second << ")" << endl;
+#endif
+
+    if (inputMin <= outputRange.first && inputMax >= outputRange.second) {
+        if (inputMin == outputRange.first && inputMax == outputRange.second) {
+            // No rescaling is necessary here: We skip the redundant
+            // transformation of the input to the output range and
+            // leave the channel width alone.
+            ;
+#ifdef DEBUG
+            cerr << "+ checkpoint: leaving channel width alone" << endl;
+#endif
+            exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
+        } else {
+            cerr << command
+                 << ": info: narrowing channel width for output as \""
+                 << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+
+            ImageType lowDepthImage(image->width(), image->height());
+            transformImageMP(srcImageRange(*image),
+                             destImage(lowDepthImage),
+                             linearRangeMapping(ImagePixelType(inputMin),
+                                                ImagePixelType(inputMax),
+                                                ImagePixelType(outputRange.first),
+                                                ImagePixelType(outputRange.second)));
+            exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
+        }
+    } else {
+        cerr << command
+             << ": info: rescaling floating-point data for output as \""
+             << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+
+        typedef typename IntegralSelect<ImagePixelType>::Result IntegralPixelType;
+        typedef typename EnblendNumericTraits<IntegralPixelType>::ImagePixelComponentType
+            IntegralPixelComponentType;
+
+        IMAGETYPE<IntegralPixelType> integralImage(image->width(), image->height());
+
+        ReadFunctorAccessor<Threshold<AlphaPixelType, IntegralPixelComponentType>, AlphaAccessor>
+            ata(Threshold<AlphaPixelType, IntegralPixelComponentType>
+                (AlphaTraits<AlphaPixelType>::zero(),
+                 AlphaTraits<AlphaPixelType>::zero(),
+                 AlphaTraits<IntegralPixelComponentType>::max(),
+                 AlphaTraits<IntegralPixelComponentType>::zero()),
+                mask->accessor());
+
+        transformImageMP(srcImageRange(*image),
+                         destImage(integralImage),
+                         linearRangeMapping(ImagePixelType(inputMin),
+                                            ImagePixelType(inputMax),
+                                            IntegralPixelType(outputRange.first),
+                                            IntegralPixelType(outputRange.second)));
+        exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
     }
-};
+}
 
 
 template <typename DestIterator, typename DestAccessor,
           typename AlphaIterator, typename AlphaAccessor>
-void import(const ImageImportInfo& info,
-            const pair<DestIterator, DestAccessor>& image,
-            const pair<AlphaIterator, AlphaAccessor>& alpha) {
+void
+import(const ImageImportInfo& info,
+       const pair<DestIterator, DestAccessor>& image,
+       const pair<AlphaIterator, AlphaAccessor>& alpha)
+{
     typedef typename DestIterator::PixelType ImagePixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
         ImagePixelComponentType;
     typedef typename AlphaIterator::PixelType AlphaPixelType;
 
-    // Use a thresholding accessor to write to the alpha image.
-    typedef WriteFunctorAccessor<
-        Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
-        ThresholdingAccessor;
-
-    // Threshold the alpha mask so that all pixels are either contributing
-    // or not contributing.
-    ThresholdingAccessor ata(
-            Threshold<ImagePixelComponentType, AlphaPixelType>(
-                    AlphaTraits<ImagePixelComponentType>::max() / 2,
-                    AlphaTraits<ImagePixelComponentType>::max(),
-                    AlphaTraits<AlphaPixelType>::zero(),
-                    AlphaTraits<AlphaPixelType>::max()
-            ),
-            alpha.second);
+    const Diff2D extent = Diff2D(info.width(), info.height());
+    const std::string pixelType = info.getPixelType();
+    const range_t inputRange = enblend::rangeOfPixelType(pixelType);
 
     if (info.numExtraBands() > 0) {
+        // Threshold the alpha mask so that all pixels are either
+        // contributing or not contributing.
+        WriteFunctorAccessor<Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
+            ata(Threshold<ImagePixelComponentType, AlphaPixelType>
+                (inputRange.second / 2,
+                 inputRange.second,
+                 AlphaTraits<AlphaPixelType>::zero(),
+                 AlphaTraits<AlphaPixelType>::max()),
+                alpha.second);
+
         importImageAlpha(info, image, destIter(alpha.first, ata));
-    }
-    else {
-        // Import image without alpha for enfuse. Init the alpha image to 100%.
+    } else {
+        // Import image without alpha.  Initialize the alpha image to 100%.
         importImage(info, image.first, image.second);
-        initImage(alpha.first,
-                  (alpha.first + Diff2D(info.width(), info.height())),
-                  alpha.second,
+        initImage(srcIterRange(alpha.first, alpha.first + extent, alpha.second),
                   AlphaTraits<AlphaPixelType>::max());
     }
-};
+
+    // Performance Optimization: Transform only if ranges do not
+    // match.
+    const double min =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(NumericTraits<ImagePixelComponentType>::min()) :
+        0.0;
+    const double max =
+        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(NumericTraits<ImagePixelComponentType>::max()) :
+        1.0;
+    if (inputRange.first != min || inputRange.second != max) {
+        transformImageMP(srcIterRange(image.first, image.first + extent, image.second),
+                         destIter(image.first, image.second),
+                         linearRangeMapping(ImagePixelType(inputRange.first),
+                                            ImagePixelType(inputRange.second),
+                                            ImagePixelType(min),
+                                            ImagePixelType(max)));
+    }
+}
 
 
 /** Find images that don't overlap and assemble them into one image.
@@ -148,34 +257,42 @@ void import(const ImageImportInfo& info,
  *  memory xsection = 2 * (ImageType*inputUnion + AlphaType*inputUnion)
  */
 template <typename ImageType, typename AlphaType>
-pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
-        Rect2D& inputUnion,
-        Rect2D& bb) {
+pair<ImageType*, AlphaType*>
+assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
+{
     typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
-    if (imageInfoList.empty())
+    if (imageInfoList.empty()) {
         return pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
                                             static_cast<AlphaType*>(NULL));
+    }
 
     // Create an image to assemble input images into.
     ImageType* image = new ImageType(inputUnion.size());
     AlphaType* imageA = new AlphaType(inputUnion.size());
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
+    if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
+        const vigra::FilenameLayerPair file_layer =
+            vigra::split_filename(imageInfoList.front()->getFileName());
+        const int layers = imageInfoList.front()->numLayers();
         if (OneAtATime) {
-            cout << "Loading next image: "
-                 << imageInfoList.front()->getFileName()
+            cerr << command
+                 << ": info: loading next image: "
+                 << file_layer.first << " "
+                 << file_layer.second + 1 << '/' << layers
                  << endl;
         } else {
-            cout << "Combining non-overlapping images: "
-                 << imageInfoList.front()->getFileName();
-            cout.flush();
+            cerr << command
+                 << ": info: combining non-overlapping images: "
+                 << file_layer.first << " "
+                 << file_layer.second + 1 << '/' << layers;
+            cerr.flush();
         }
     }
 
-    Diff2D imagePos = imageInfoList.front()->getPosition();
+    const Diff2D imagePos = imageInfoList.front()->getPosition();
     import(*imageInfoList.front(),
            destIter(image->upperLeft() + imagePos - inputUnion.upperLeft()),
            destIter(imageA->upperLeft() + imagePos - inputUnion.upperLeft()));
@@ -220,18 +337,18 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
             if (!overlapFound) {
                 // Copy src and srcA into image and imageA.
 
-                if (Verbose > VERBOSE_ASSEMBLE_MESSAGES) {
-                    cout << " " << info->getFileName();
-                    cout.flush();
+                if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
+                    cerr << " " << info->getFileName();
+                    cerr.flush();
                 }
 
-                Diff2D srcPos = info->getPosition();
+                const Diff2D srcPos = info->getPosition();
                 copyImageIf(srcImageRange(*src),
-                        maskImage(*srcA),
-                        destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
+                            maskImage(*srcA),
+                            destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
                 copyImageIf(srcImageRange(*srcA),
-                        maskImage(*srcA),
-                        destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
+                            maskImage(*srcA),
+                            destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
@@ -242,13 +359,16 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
         }
 
         // Erase the ImageImportInfos we used.
-        list<list<ImageImportInfo*>::iterator>::iterator r;
-        for (r = toBeRemoved.begin(); r != toBeRemoved.end(); r++) {
+        for (list<list<ImageImportInfo*>::iterator>::iterator r = toBeRemoved.begin();
+             r != toBeRemoved.end();
+             ++r) {
             imageInfoList.erase(*r);
         }
     }
 
-    if (Verbose > VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) cout << endl;
+    if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) {
+        cerr << endl;
+    }
 
     // Calculate bounding box of image.
     FindBoundingRectangle unionRect;
@@ -256,13 +376,20 @@ pair<ImageType*, AlphaType*> assemble(list<ImageImportInfo*>& imageInfoList,
                    srcImage(*imageA), unionRect);
     bb = unionRect();
 
-    if (Verbose > VERBOSE_ABB_MESSAGES) {
-        cout << "assembled images bounding box: " << unionRect() << endl;
+    if (Verbose >= VERBOSE_ABB_MESSAGES) {
+        cerr << command
+             << ": info: assembled images bounding box: "
+             << unionRect()
+             << endl;
     }
 
     return pair<ImageType*, AlphaType*>(image, imageA);
-};
+}
 
 } // namespace enblend
 
 #endif /* __ASSEMBLE_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

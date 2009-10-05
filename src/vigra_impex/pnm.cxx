@@ -377,7 +377,7 @@ namespace vigra {
 
 #ifdef DEBUG
         // print stats
-        std::cerr << width << "x" << height << "x" << components
+        std::cerr << "+" << width << "x" << height << "x" << components
                   << "x " << pixeltype << std::endl;
 #endif
 

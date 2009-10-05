@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2009 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -22,7 +22,9 @@
 #endif
 
 #ifdef _MSC_VER
+#ifndef HAVE_CONFIG_H
 #include <win32helpers\win32config.h>
+#endif
 #define isnan _isnan
 #endif // _MSC_VER
 
@@ -47,6 +49,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <set>
 #include <vector>
 
 #ifndef _WIN32
@@ -77,17 +80,31 @@ extern "C" int optind;
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
+#include "global.h"
+#include "signature.h"
+
+typedef struct {
+    unsigned int kmax;          // maximum number of moves for a line segment
+    double tau;                 // temperature reduction factor, "cooling factor"; 0 < tau < 1
+    double deltaEMax;           // maximum cost change possible by any single annealing move
+    double deltaEMin;           // minimum cost change possible by any single annealing move
+} anneal_para_t;
+
 // Globals
+const std::string command("enblend");
+const int minimumVectorizeDistance = 4; //< src::minimum-vectorize-distance 4
+const int coarseMaskVectorizeDistance = 4; //< src::coarse-mask-vectorize-distance 4
+const int fineMaskVectorizeDistance = 20; //< src::fine-mask-vectorize-distance 20
 
 // Random number generator for dithering
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 1;
-std::string OutputFileName;
-unsigned int ExactLevels = 0;
+int Verbose = 1;                //< src::default-verbosity-level 1
+std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
+unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
-bool Wraparound = false;
+boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
 bool UseCIECAM = false;
 bool OutputSizeGiven = false;
@@ -99,13 +116,28 @@ bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
-std::string SaveMaskFileName;
-std::string LoadMaskFileName;
-std::string VisualizeMaskFileName;
-unsigned int GDAKmax = 32;
-unsigned int DijkstraRadius = 25;
-unsigned int MaskVectorizeDistance = 0;
+unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
+double DifferenceBlurRadius = 0.0;
+bool SaveMasks = false;
+std::string SaveMaskTemplate("mask-%n.tif"); //< src::default-mask-template mask-%n.tif
+bool LoadMasks = false;
+std::string LoadMaskTemplate(SaveMaskTemplate);
+std::string VisualizeTemplate("vis-%n.tif"); //< src::default-visualize-template vis-%n.tif
+bool VisualizeSeam = false;
+std::pair<double, double> OptimizerWeights =
+    std::make_pair(8.0,      //< src::default-optimizer-weight-distance 8.0
+                   1.0);     //< src::default-optimizer-weight-mismatch 1.0
+anneal_para_t AnnealPara = {
+    32,                         //< src::default-anneal-kmax 32
+    0.75,                       //< src::default-anneal-tau 0.75
+    7000.0,                     //< src::default-anneal-deltae-max 7000.0
+    5.0                         //< src::default-anneal-deltae-min 5.0
+};
+unsigned int DijkstraRadius = 25U; //< src::default-dijkstra-radius 25
+struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
 std::string OutputCompression;
+std::string OutputPixelType;
+TiffResolution ImageResolution;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -120,19 +152,28 @@ cmsHTRANSFORM XYZToInputTransform = NULL;
 cmsViewingConditions ViewingConditions;
 LCMSHANDLE CIECAMTransform = NULL;
 
+Signature sig;
+
 #include "common.h"
 #include "enblend.h"
 #ifdef HAVE_LIBGLEW
 #include "gpu.h"
 #endif
 
+#include "vigra/imageinfo.hxx"
 #include "vigra/impex.hxx"
 #include "vigra/sized_int.hxx"
 
 #include <tiffio.h>
+
+#ifdef DMALLOC
+#include "dmalloc.h"            // must be last #include
+#endif
+
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::hex;
 using std::list;
 
 using vigra::CachedFileImageDirector;
@@ -149,19 +190,111 @@ using enblend::enblendMain;
 #endif
 
 
+void inspectGPU(int argc, char** argv)
+{
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGBA);
+
+    const int handle = glutCreateWindow("Enblend");
+
+    if (handle >= 1 && glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
+        cout <<
+            "  - " << GLGETSTRING(GL_VENDOR) << "\n" <<
+            "  - " << GLGETSTRING(GL_RENDERER) << "\n" <<
+            "  - version " << GLGETSTRING(GL_VERSION) << "\n"
+            "  - extensions\n";
+
+        const char* const extensions = GLGETSTRING(GL_EXTENSIONS);
+        const char* const extensions_end = extensions + strlen(extensions);
+        const unsigned extensions_per_line = 3U;
+        unsigned count = 1U;
+
+        cout << "    ";
+        for (const char* c = extensions; c != extensions_end; ++c) {
+            if (*c == ' ') {
+                if (count % extensions_per_line == 0U) {
+                    cout << "\n    ";
+                } else {
+                    cout << "  ";
+                }
+                ++count;
+            } else {
+                cout << *c;
+            }
+        }
+        cout << "\n\n";
+    } else {
+        cout << "    <no reliable OpenGL information available>\n";
+    }
+
+    glutDestroyWindow(handle);
+}
+
+
 /** Print information on the current version and some configuration
  * details. */
-void printVersionAndExit() {
-    cout <<
-        "enblend " << VERSION << "\n" <<
-#ifdef ENBLEND_CACHE_IMAGES
-        "Extra feature: image cache\n" <<
+void printVersionAndExit(int argc, char** argv) {
+    cout << "enblend " << VERSION << "\n\n";
+
+    if (Verbose >= VERBOSE_VERSION_REPORTING) {
+        cout <<
+            "Extra feature: dmalloc support: " <<
+#ifdef DMALLOC
+            "yes" <<
+#else
+            "no" <<
 #endif
+            "\n";
+
+        cout <<
+            "Extra feature: image cache: " <<
+#ifdef CACHE_IMAGES
+            "yes" <<
+#else
+            "no" <<
+#endif
+            "\n";
+
 #ifdef HAVE_LIBGLEW
-        "Extra feature: GPU acceleration\n" <<
+        cout << "Extra feature: GPU acceleration: yes\n";
+        inspectGPU(argc, argv);
+#else
+        cout << "Extra feature: GPU acceleration: no\n";
 #endif
-        "\n" <<
-        "Copyright (C) 2004-2008 Andrew Mihal.\n" <<
+
+#ifdef OPENMP
+        const bool have_nested = have_openmp_nested();
+        const bool have_dynamic = have_openmp_dynamic();
+        cout <<
+            "Extra feature: OpenMP: yes\n" <<
+            "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
+            "  - " << (have_nested ? "" : "no ") <<
+            "support for nested parallelism;\n" <<
+            "    nested parallelism " <<
+            (have_nested && omp_get_nested() ? "enabled" : "disabled") << " by default\n" <<
+            "  - " << (have_dynamic ? "" : "no ") <<
+            "support for dynamic adjustment of the number of threads;\n" <<
+            "    dynamic adjustment " <<
+            (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
+            "  - using " <<
+            omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
+            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n";
+#else
+        cout << "Extra feature: OpenMP: no\n";
+#endif
+
+        cout <<
+            "\n" <<
+            "Supported image formats: " << vigra::impexListFormats() << "\n" <<
+            "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
+    }
+
+    if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
+        cout << sig.message() << "\n\n";
+    }
+
+    cout <<
+        "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
         "There is NO WARRANTY, to the extent permitted by law.\n" <<
@@ -176,51 +309,87 @@ void printVersionAndExit() {
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
     cout <<
-        "Usage: enblend [options] -o OUTPUT INPUT...\n" <<
-        "Blend INPUT images into a single OUTPUT image.\n" <<
+        "Usage: enblend [options] [--output=IMAGE] INPUT...\n" <<
+        "Blend INPUT images into a single IMAGE.\n" <<
         "\n" <<
         "Common options:\n" <<
-        "  -V, --version          Output version information and exit\n" <<
-        "  -a                     Pre-assemble non-overlapping images\n" <<
-        "  -h, --help             Print this help message and exit\n" <<
-        "  -l LEVELS              Number of blending levels to use (1 to 29)\n" <<
-        "  -o FILENAME            Write output to FILENAME\n" <<
-        "  -v, --verbose          Verbosely report progress; repeat to\n" <<
-        "                            increase verbosity\n" <<
-        "  -w                     Blend across -180/+180 degrees boundary\n" <<
-        "  -x                     Checkpoint partial results\n" <<
-        "  -z                     Use LZW compression (TIFF only).\n" <<
-        "                           Kept for backward compatability with older scripts\n" <<
-        "  --compression=COMP     Set compression of output image to COMP,\n" <<
-        "                           where COMP is:\n" <<
-        "                             NONE, PACKBITS, LZW, DEFLATE (for TIFF files)\n" <<
-        "                             0-100 (for JPEG files)\n" <<
+        "  -V, --version          output version information and exit\n" <<
+        "  -a                     pre-assemble non-overlapping images\n" <<
+        "  -h, --help             print this help message and exit\n" <<
+        "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
+        "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
+        "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
+        "                         increase verbosity or directly set to LEVEL\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
+        "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
+        enblend::stringOfWraparound(WrapAround) << ";\n" <<
+        "                         without argument the option selects horizontal wrapping\n" <<
+        "  -x                     checkpoint partial results\n" <<
+        "  --compression=COMPRESSION\n" <<
+        "                         set compression of output image to COMPRESSION,\n" <<
+        "                         where COMPRESSION is:\n" <<
+        "                         NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                         0 to 100 for JPEG files\n" <<
         "\n" <<
         "Extended options:\n" <<
-        "  -b BLOCKSIZE           Image cache BLOCKSIZE in Kilobytes.  Default: " <<
+        "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
-        "  -c                     Use CIECAM02 to blend colors\n" <<
-        "  -g                     Associated-alpha hack for Gimp (before version 2)\n" <<
-        "                           and Cinepaint\n" <<
-#ifdef HAVE_LIBGLEW
-        "  --gpu                  Use the graphics card to accelerate some computations\n" <<
-#endif
+        "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
+        "                         image, where DEPTH is 8, 16, 32, r32, or r64\n" <<
+        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
+        "                         and Cinepaint\n" <<
+        "  --gpu                  use graphics card to accelerate seam-line optimization\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
-        "                         Manually set the size and position of the output\n" <<
-        "                           image.  Useful for cropped and shifted input\n" <<
-        "                           TIFF images, such as those produced by Nona.\n" <<
-        "  -m CACHESIZE           Images CACHESIZE in Megabytes.  Default: " <<
+        "                         manually set the size and position of the output\n" <<
+        "                         image; useful for cropped and shifted input\n" <<
+        "                         TIFF images, such as those produced by Nona\n" <<
+        "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
-        "  --visualize=FILENAME   Save results of optimizer FILENAME\n" <<
+        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
+        "                         characters as \"--save-mask\"; default: \"" <<
+        VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Mask generation options:\n" <<
-        "  --coarse-mask          Use an approximation to speedup mask generation.  Default\n" <<
-        "  --fine-mask            Enable detailed mask generation.  Slow!  Use if\n" <<
-        "                           overlap regions are very narrow.\n" <<
-        "  --optimize             Turn on mask optimization.  This is the default.\n" <<
-        "  --no-optimize          Turn off mask optimization.\n" <<
-        "  --save-mask=FILENAME   Save the generated mask to FILENAME.\n" <<
-        "  --load-mask=FILENAME   Use the mask in FILENAME instead of generating one.\n" <<
+        "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
+        "                         generation; this is the default; if omitted FACTOR\n" <<
+        "                         defaults to " <<
+        CoarsenessFactor << "\n" <<
+        "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
+        "                         if overlap regions are very narrow\n" <<
+        "  --smooth-difference=RADIUS\n" <<
+        "                         smooth the difference image prior to seam-line\n" <<
+        "                         optimization with a Gaussian blur of RADIUS;\n" <<
+        "                         default: " << DifferenceBlurRadius << " pixels\n" <<
+        "  --optimize             turn on mask optimization; this is the default\n" <<
+        "  --no-optimize          turn off mask optimization\n" <<
+        "  --optimizer-weights=DISTANCEWEIGHT[:MISMATCHWEIGHT]\n" <<
+        "                         set the optimizer's weigths for distance and mismatch;\n" <<
+        "                         default: " << OptimizerWeights.first << ':' <<
+        OptimizerWeights.second << "\n" <<
+        "  --mask-vectorize=LENGTH\n" <<
+        "                         set LENGTH of single seam segment; append \"%\" for\n" <<
+        "                         relative value; defaults: " <<
+        coarseMaskVectorizeDistance << " for coarse masks and\n" <<
+        "                         " <<
+        fineMaskVectorizeDistance << " for fine masks\n" <<
+        "  --anneal=TAU[:DELTAEMAX[:DELTAEMIN[:KMAX]]]]\n" <<
+        "                         set annealing parameters of strategy 1; defaults:\n" <<
+        "                         " << AnnealPara.tau << ':' <<
+        AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
+        "  --dijkstra=RADIUS      set search RADIUS of strategy 2; default: " <<
+        DijkstraRadius << " pixels\n" <<
+        "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
+        SaveMaskTemplate << "\"\n" <<
+        "                         conversion chars: %i: mask index, mask %n: number,\n" <<
+        "                         %p: full path, %d: dirname, %b: basename,\n" <<
+        "                         %f: filename, %e: extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to output image\n" <<
+        "  --load-mask[=TEMPLATE] use existing masks in TEMPLATE instead of generating\n" <<
+        "                         them; same template characters as \"--save-mask\";\n" <<
+        "                         default: \"" << LoadMaskTemplate << "\"\n" <<
+        "\n" <<
+        "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
 
     exit(error ? 1 : 0);
@@ -231,7 +400,7 @@ void printUsageAndExit(const bool error = true) {
  *  if we are killed.
  */
 void sigint_handler(int sig) {
-    cout << endl << "Interrupted." << endl;
+    cerr << endl << "Interrupted." << endl;
     // FIXME what if this occurs in a CFI atomic section?
     // This is no longer necessary, temp files are unlinked during creation.
     //CachedFileImageDirector::v().~CachedFileImageDirector();
@@ -251,6 +420,125 @@ void sigint_handler(int sig) {
     #else
     exit(0);
     #endif
+}
+
+
+enum AllPossibleOptions {
+    VersionOption, PreAssembleOption /* -a */, HelpOption, LevelsOption,
+    OutputOption, VerboseOption, WrapAroundOption /* -w */,
+    CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
+    BlockSizeOption, CIECAM02Option /* -c */,
+    DepthOption, AssociatedAlphaOption /* -g */, GPUOption,
+    SizeAndPositionOption /* -f */, CacheSizeOption,
+    VisualizeOption, CoarseMaskOption, FineMaskOption,
+    OptimizeOption, NoOptimizeOption,
+    SaveMaskOption, LoadMaskOption,
+    AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
+    SmoothDifferenceOption, OptimizerWeightsOption,
+    // currently below the radar...
+    SequentialBlendingOption
+};
+
+typedef std::set<enum AllPossibleOptions> OptionSetType;
+
+bool contains(const OptionSetType& optionSet,
+              enum AllPossibleOptions anOption)
+{
+    return optionSet.count(anOption) != 0;
+}
+
+
+/** Warn if options given at the command line have no effect. */
+void warn_of_ineffective_options(const OptionSetType& optionSet)
+{
+    if (contains(optionSet, CompressionOption) &&
+        !(enblend::getFileType(OutputFileName) == "TIFF" ||
+          enblend::getFileType(OutputFileName) == "JPEG")) {
+        cerr << command <<
+            ": warning: compression is not supported with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
+    }
+
+    if (contains(optionSet, AssociatedAlphaOption) &&
+        enblend::getFileType(OutputFileName) != "TIFF") {
+        cerr << command <<
+            ": warning: option \"-g\" has no effect with output\n" <<
+            command <<
+            ": warning:     file type \"" <<
+            enblend::getFileType(OutputFileName) << "\"" <<
+            endl;
+    }
+
+    if (!OptimizeMask) {
+        if (contains(optionSet, VisualizeOption)) {
+            cerr << command <<
+                ": warning: option \"--visualize\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, AnnealOption)) {
+            cerr << command <<
+                ": warning: option \"--anneal\" without mask optimization has\n" <<
+                command <<
+                ": warning:     no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, DijkstraRadiusOption)) {
+            cerr << command <<
+                ": warning: option \"--dijkstra\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, SmoothDifferenceOption)) {
+            cerr << command <<
+                ": warning: option \"--smooth-difference\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
+
+        if (contains(optionSet, OptimizerWeightsOption)) {
+            cerr << command <<
+                ": warning: option \"--optimizer-weights\" without mask optimization\n" <<
+                command <<
+                ": warning:     has no effect" <<
+                endl;
+        }
+    }
+
+    if (!(OptimizeMask || CoarseMask) && contains(optionSet, MaskVectorizeDistanceOption)){
+        cerr << command <<
+            ": warning: option \"--mask-vectorize\" without mask optimization\n" <<
+            command <<
+            ": warning:     or coarse mask has no effect" <<
+            endl;
+    }
+
+#ifndef CACHE_IMAGES
+    if (contains(optionSet, CacheSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image cache" <<
+            endl;
+    }
+
+    if (contains(optionSet, BlockSizeOption)) {
+        cerr << command <<
+            ": warning: option \"-b\" has no effect in this version of " << command << ",\n" <<
+            command <<
+            ": warning:     because it was compiled without image cache" <<
+            endl;
+    }
+#endif
 }
 
 
@@ -274,70 +562,88 @@ int process_options(int argc, char** argv) {
         SaveMaskId,                 //  5
         LoadMaskId,                 //  6
         VisualizeId,                //  7
-        GdaKmaxId,                  //  8
+        AnnealId,                   //  8
         DijkstraRadiusId,           //  9
         MaskVectorizeDistanceId,    // 10
         CompressionId,              // 11
         VerboseId,                  // 12
         HelpId,                     // 13
-        VersionId                   // 14
+        VersionId,                  // 14
+        DepthId,                    // 15
+        OutputId,                   // 16
+        WrapAroundId,               // 17
+        SmoothDifferenceId,         // 18
+        OptimizerWeightsId          // 19
     };
 
     // NOTE: See note attached to "enum OptionId" above.
     static struct option long_options[] = {
         {"gpu", no_argument, 0, NoArgument},                                   //  0
-        {"coarse-mask", no_argument, 0, NoArgument},                           //  1
+        {"coarse-mask", optional_argument, 0, IntegerArgument},                //  1
         {"fine-mask", no_argument, 0, NoArgument},                             //  2
         {"optimize", no_argument, 0, NoArgument},                              //  3
         {"no-optimize", no_argument, 0, NoArgument},                           //  4
-        {"save-mask", required_argument, 0, StringArgument},                   //  5
-        {"load-mask", required_argument, 0, StringArgument},                   //  6
-        {"visualize", required_argument, 0, StringArgument},                   //  7
-        {"gda-kmax", required_argument, 0, IntegerArgument},                   //  8
-        {"dijkstra-radius", required_argument, 0, IntegerArgument},            //  9
-        {"mask-vectorize-distance", required_argument, 0, IntegerArgument},    // 10
+        {"save-mask", optional_argument, 0, StringArgument},                   //  5
+        {"load-mask", optional_argument, 0, StringArgument},                   //  6
+        {"visualize", optional_argument, 0, StringArgument},                   //  7
+        {"anneal", required_argument, 0, StringArgument},                      //  8
+        {"dijkstra", required_argument, 0, IntegerArgument},                   //  9
+        {"mask-vectorize", required_argument, 0, StringArgument},              // 10
         {"compression", required_argument, 0, StringArgument},                 // 11
-        {"verbose", no_argument, 0, NoArgument},                               // 12
+        {"verbose", optional_argument, 0, IntegerArgument},                    // 12
         {"help", no_argument, 0, NoArgument},                                  // 13
         {"version", no_argument, 0, NoArgument},                               // 14
+        {"depth", required_argument, 0, StringArgument},                       // 15
+        {"output", required_argument, 0, StringArgument},                      // 16
+        {"wrap", optional_argument, 0, StringArgument},                        // 17
+        {"smooth-difference", required_argument, 0, StringArgument},           // 18
+        {"optimizer-weights", required_argument, 0, StringArgument},           // 19
         {0, 0, 0, 0}
     };
+
+    bool justPrintVersion = false;
+    bool justPrintUsage = false;
+    OptionSetType optionSet;
 
     // Parse command line.
     int option_index = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "Vab:cf:ghl:m:o:svwxz",
+    opterr = 0;       // we have our own "unrecognized option" message
+    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:sv::w::xz",
                             long_options, &option_index)) != -1) {
         switch (c) {
         case NoArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
             case UseGpuId:
                 UseGPU = true;
-                break;
-            case CoarseMaskId:
-                CoarseMask = true;
+                optionSet.insert(GPUOption);
                 break;
             case FineMaskId:
                 CoarseMask = false;
+                optionSet.insert(FineMaskOption);
                 break;
             case OptimizeMaskId:
                 OptimizeMask = true;
+                optionSet.insert(OptimizeOption);
                 break;
             case NoOptimizeMaskId:
                 OptimizeMask = false;
-                break;
-            case VerboseId:
-                Verbose++;
+                optionSet.insert(NoOptimizeOption);
                 break;
             case HelpId:
-                printUsageAndExit(false);
-                break;          // never reached
+                justPrintUsage = true;
+                optionSet.insert(HelpOption);
+                break;
             case VersionId:
-                printVersionAndExit();
-                break;          // never reached
+                justPrintVersion = true;
+                optionSet.insert(VersionOption);
+                break;
             default:
-                cerr << "enblend: internal error: unhandled \"NoArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"NoArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -345,22 +651,290 @@ int process_options(int argc, char** argv) {
         } // end of "case NoArgument"
 
         case StringArgument: {
-            if (long_options[option_index].flag != 0) break;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
+            case WrapAroundId:
+                if (optarg != NULL && *optarg != 0) {
+                    WrapAround = enblend::wraparoundOfString(optarg);
+                    if (WrapAround == UnknownWrapAround) {
+                        cerr << command
+                             << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                        exit(1);
+                    }
+                } else {
+                    WrapAround = HorizontalStrip;
+                }
+                optionSet.insert(WrapAroundOption);
+                break;
             case SaveMaskId:
-                SaveMaskFileName = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    SaveMaskTemplate = optarg;
+                }
+                SaveMasks = true;
+                optionSet.insert(SaveMaskOption);
                 break;
             case LoadMaskId:
-                LoadMaskFileName = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    LoadMaskTemplate = optarg;
+                }
+                LoadMasks = true;
+                optionSet.insert(LoadMaskOption);
                 break;
             case VisualizeId:
-                VisualizeMaskFileName = optarg;
+                if (optarg != NULL && *optarg != 0) {
+                    VisualizeTemplate = optarg;
+                }
+                VisualizeSeam = true;
+                optionSet.insert(VisualizeOption);
                 break;
             case CompressionId:
                 OutputCompression = optarg;
+                optionSet.insert(CompressionOption);
                 break;
+            case DepthId:
+                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+                optionSet.insert(DepthOption);
+                break;
+            case OutputId:
+                if (contains(optionSet, OutputOption)) {
+                    cerr << command
+                         << ": warning: more than one output file specified"
+                         << endl;
+                }
+                OutputFileName = optarg;
+                optionSet.insert(OutputOption);
+                break;
+            case AnnealId: {
+                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+                strcpy(s.get(), optarg);
+                char* save_ptr = NULL;
+                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                char* tail;
+
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    double tau = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of tau: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        if (*tail == '%') {
+                            tau /= 100.0;
+                        } else {
+                            cerr << command
+                                 << ": --anneal: trailing garbage \""
+                                 << tail << "\" in tau: \"" << token << "\""
+                                 << endl;
+                            exit(1);
+                        }
+                    }
+                    //< src::minimum-anneal-tau 0
+                    if (tau <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": tau must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                    //< src::maximum-anneal-tau 1
+                    if (tau >= 1.0) {
+                        cerr << command
+                             << ": option \"--anneal\": tau must be less than one"
+                             << endl;
+                        exit(1);
+                    }
+                    AnnealPara.tau = tau;
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    AnnealPara.deltaEMax = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of deltaE_max: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in deltaE_max: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    //< src::minimum-anneal-deltae-max 0
+                    if (AnnealPara.deltaEMax <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": deltaE_max must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    AnnealPara.deltaEMin = strtod(token, &tail);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of deltaE_min: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in deltaE_min: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    //< src::minimum-anneal-deltae-min 0
+                    if (AnnealPara.deltaEMin <= 0.0) {
+                        cerr << command
+                             << ": option \"--anneal\": deltaE_min must be larger than zero"
+                             << endl;
+                        exit(1);
+                    }
+                }
+                if (AnnealPara.deltaEMin >= AnnealPara.deltaEMax) {
+                    cerr << command
+                         << ": option \"--anneal\": deltaE_min must be less than deltaE_max"
+                         << endl;
+                    exit(1);
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    errno = 0;
+                    const long int kmax = strtol(token, &tail, 10);
+                    if (errno != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": illegal numeric format \""
+                             << token << "\" of k_max: " << enblend::errorMessage(errno)
+                             << endl;
+                        exit(1);
+                    }
+                    if (*tail != 0) {
+                        cerr << command
+                             << ": option \"--anneal\": trailing garbage \""
+                             << tail << "\" in k_max: \""
+                             << token << "\"" << endl;
+                        exit(1);
+                    }
+                    //< src::minimum-anneal-kmax 3
+                    if (kmax < 3L) {
+                        cerr << command
+                             << ": option \"--anneal\": k_max must larger or equal to 3"
+                             << endl;
+                        exit(1);
+                    }
+                    AnnealPara.kmax = static_cast<unsigned int>(kmax);
+                }
+
+                optionSet.insert(AnnealOption);
+                break;
+            }
+
+            case MaskVectorizeDistanceId: {
+                char* tail;
+                MaskVectorizeDistance.isPercentage = false;
+                errno = 0;
+                MaskVectorizeDistance.value = strtod(optarg, &tail);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--mask-vectorize\": illegal numeric format \""
+                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    if (*tail == '%') {
+                        MaskVectorizeDistance.isPercentage = true;
+                    } else {
+                        cerr << command
+                             << ": option \"--mask-vectorize\": trailing garbage \""
+                             << tail << "\" in \"" << optarg << "\"" << endl;
+                        exit(1);
+                    }
+                }
+                if (MaskVectorizeDistance.value <= 0.0) {
+                    cerr << command
+                         << ": option \"--mask-vectorize\": distance must be positive"
+                         << endl;
+                    exit(1);
+                }
+
+                optionSet.insert(MaskVectorizeDistanceOption);
+                break;
+            }
+
+            case SmoothDifferenceId: {
+                char* tail;
+                errno = 0;
+                const double radius = strtod(optarg, &tail);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": illegal numeric format \""
+                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << endl;
+                    exit(1);
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": trailing garbage \""
+                         << tail << "\" in \"" << optarg << "\"" << endl;
+                    exit(1);
+                }
+                //< src::minimum-smooth-difference 0.0
+                if (radius < 0.0) {
+                    cerr << command
+                         << ": option \"--smooth-difference\": negative radius; will not blur"
+                         << endl;
+                    DifferenceBlurRadius = 0.0;
+                } else {
+                    DifferenceBlurRadius = radius;
+                }
+
+                optionSet.insert(SmoothDifferenceOption);
+                break;
+            }
+
+            case OptimizerWeightsId: {
+                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+                strcpy(s.get(), optarg);
+                char* save_ptr = NULL;
+                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                OptimizerWeights.first =
+                    enblend::numberOfString(token,
+                                            _1 >= 0.0,
+                                            "negative optimizer weight; will use 0.0",
+                                            0.0);
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    OptimizerWeights.second =
+                        enblend::numberOfString(token,
+                                                _1 >= 0.0,
+                                                "negative optimizer weight; will use 0.0",
+                                                0.0);
+                }
+                if (OptimizerWeights.first == 0.0 && OptimizerWeights.second == 0.0) {
+                    cerr << command
+                         << ": optimizer weights cannot be both zero"
+                         << endl;
+                }
+                break;
+            }
+
             default:
-                cerr << "enblend: internal error: unhandled \"StringArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"StringArgument\" option"
                      << endl;
                 exit(1);
             }
@@ -372,130 +946,232 @@ int process_options(int argc, char** argv) {
         // } // end of "case FloatArgument"
 
         case IntegerArgument: {
-            if (long_options[option_index].flag != 0) break;
-            unsigned int* optionUInt = NULL;
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             switch (option_index) {
-            case GdaKmaxId:
-                optionUInt = &GDAKmax;
+            case VerboseId:
+                if (optarg != NULL && *optarg != 0) {
+                    Verbose =
+                        enblend::numberOfString(optarg,
+                                                _1 >= 0,
+                                                "verbosity level less than 0; will use 0",
+                                                0);
+                } else {
+                    Verbose++;
+                }
+                optionSet.insert(VerboseOption);
+                break;
+            case CoarseMaskId:
+                CoarseMask = true;
+                if (optarg != NULL && *optarg != 0) {
+                    CoarsenessFactor =
+                        enblend::numberOfString(optarg,
+                                                _1 >= 1U,
+                                                "coarseness factor less or equal to 0; will use 1",
+                                                1U);
+                }
+                optionSet.insert(CoarseMaskOption);
                 break;
             case DijkstraRadiusId:
-                optionUInt = &DijkstraRadius;
-                break;
-            case MaskVectorizeDistanceId:
-                optionUInt = &MaskVectorizeDistance;
+                //< src::minimum-dijkstra-radius 1
+                DijkstraRadius =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1U,
+                                            "Dijkstra radius is 0; will use 1",
+                                            1U);
+                optionSet.insert(DijkstraRadiusOption);
                 break;
             default:
-                cerr << "enblend: internal error: unhandled \"IntegerArgument\" option"
+                cerr << command
+                     << ": internal error: unhandled \"IntegerArgument\" option"
                      << endl;
                 exit(1);
             }
-
-            const int value = atoi(optarg);
-            if (value < 1) {
-                cerr << "enblend: " << long_options[option_index].name
-                     << " must be 1 or more." << endl;
-                printUsageAndExit();
-            }
-            *optionUInt = static_cast<unsigned int>(value);
             break;
         } // end of "case IntegerArgument"
 
         case 'V':
-            printVersionAndExit();
-            break;          // never reached
+            justPrintVersion = true;
+            optionSet.insert(VersionOption);
+            break;
         case 'a':
             OneAtATime = false;
+            optionSet.insert(PreAssembleOption);
             break;
         case 'b': {
-            const int kilobytes = atoi(optarg);
-            if (kilobytes < 1) {
-                cerr << "enblend: cache block size must be 1 or more." << endl;
-                printUsageAndExit();
-            }
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(kilobytes << 10));
+            const int cache_block_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache block size must be 1 KB or more; will use 1 KB",
+                                        1);
+            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
+            optionSet.insert(BlockSizeOption);
             break;
         }
         case 'c':
             UseCIECAM = true;
+            optionSet.insert(CIECAM02Option);
+            break;
+        case 'd':
+            OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+            optionSet.insert(DepthOption);
             break;
         case 'f': {
             OutputSizeGiven = true;
-            const int nP = sscanf(optarg, "%dx%d+%d+%d",
+            const int nP = sscanf(optarg,
+                                  "%dx%d+%d+%d",
                                   &OutputWidthCmdLine, &OutputHeightCmdLine,
                                   &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
             if (nP == 4) {
-                ; // full geometry string
+                ; // ok: full geometry string
             } else if (nP == 2) {
-                OutputOffsetXCmdLine=0;
-                OutputOffsetYCmdLine=0;
+                OutputOffsetXCmdLine = 0;
+                OutputOffsetYCmdLine = 0;
             } else {
-                cerr << "enblend: the -f option requires a parameter "
-                     << "of the form WIDTHxHEIGHT+X0+Y0 or WIDTHxHEIGHT" << endl;
-                printUsageAndExit();
+                cerr << command << ": option \"-f\" requires a parameter\n"
+                     << "Try \"enblend --help\" for more information." << endl;
+                exit(1);
             }
+            optionSet.insert(SizeAndPositionOption);
             break;
         }
         case 'g':
             GimpAssociatedAlphaHack = true;
+            optionSet.insert(AssociatedAlphaOption);
             break;
         case 'h':
-            printUsageAndExit(false);
+            justPrintUsage = true;
+            optionSet.insert(HelpOption);
             break;
-        case 'l': {
-            const int levels = atoi(optarg);
-            if (levels < 1 || levels > 29) {
-                cerr << "enblend: levels must in the range 1 to 29." << endl;
-                printUsageAndExit();
-            }
-            ExactLevels = static_cast<unsigned int>(levels);
+        case 'l':
+            // We take care of "too many levels" in "bounds.h".
+            //< src::minimum-pyramid-levels 1
+            ExactLevels =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1U,
+                                        "too few levels; will use one level",
+                                        1U);
+            optionSet.insert(LevelsOption);
             break;
-        }
         case 'm': {
-            const int megabytes = atoi(optarg);
-            if (megabytes < 1) {
-                cerr << "enblend: memory limit must be 1 or more." << endl;
-                printUsageAndExit();
-            }
-            CachedFileImageDirector::v().setAllocation(static_cast<long long>(megabytes) << 20);
+            const int cache_size =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1,
+                                        "cache memory limit less than 1 MB; will use 1 MB",
+                                        1);
+            CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
+            optionSet.insert(CacheSizeOption);
             break;
         }
         case 'o':
-            if (!OutputFileName.empty()) {
-                cerr << "enblend: more than one output file specified." << endl;
-                printUsageAndExit();
-                break;
+            if (contains(optionSet, OutputOption)) {
+                cerr << command
+                     << ": warning: more than one output file specified"
+                     << endl;
             }
             OutputFileName = optarg;
+            optionSet.insert(OutputOption);
             break;
         case 's':
             // Deprecated sequential blending flag.
             OneAtATime = true;
-            cerr << "enblend: warning: Flag \"-s\" is deprecated." << endl;
+            cerr << command << ": warning: flag \"-s\" is deprecated." << endl;
+            optionSet.insert(SequentialBlendingOption);
             break;
         case 'v':
-            Verbose++;
+            if (optarg != NULL && *optarg != 0) {
+                Verbose =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 0,
+                                            "verbosity level less than 0; will use 0",
+                                            0);
+            } else {
+                Verbose++;
+            }
+            optionSet.insert(VerboseOption);
             break;
         case 'w':
-            Wraparound = true;
+            if (optarg != NULL && *optarg != 0) {
+                WrapAround = enblend::wraparoundOfString(optarg);
+                if (WrapAround == UnknownWrapAround) {
+                    cerr << command
+                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    exit(1);
+                }
+            } else {
+                WrapAround = HorizontalStrip;
+            }
+            optionSet.insert(WrapAroundOption);
             break;
         case 'x':
             Checkpoint = true;
+            optionSet.insert(CheckpointOption);
             break;
         case 'z':
+            cerr << command
+                 << ": info: flag \"-z\" is deprecated; use \"--compression=LZW\" instead"
+                 << endl;
             OutputCompression = "LZW";
+            optionSet.insert(LZWCompressionOption);
             break;
+        case '?':
+            switch (optopt) {
+                case 0: // unknown long option
+                    cerr << command
+                         << ": unknown option \""
+                         << argv[optind - 1]
+                         << "\"\n";
+                    break;
+                case 'b':           // FALLTHROUGH
+                case 'f':           // FALLTHROUGH
+                case 'l':           // FALLTHROUGH
+                case 'm':           // FALLTHROUGH
+                case 'o':
+                    cerr << command
+                         << ": option \"-"
+                         << static_cast<char>(optopt)
+                         << "\" requires an argument"
+                         << endl;
+                    break;
+                default:
+                    cerr << command << ": unknown option ";
+                    if (isprint(optopt)) {
+                        cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                    } else {
+                        cerr << "character 0x" << hex << optopt;
+                    }
+                    cerr << endl;
+            }
+            cerr << "Try \"enblend --help\" for more information." << endl;
+            exit(1);
 
         default:
-            printUsageAndExit();
-            break;
+            cerr << command
+                 << ": internal error: unhandled command line option"
+                 << endl;
+            exit(1);
         }
     }
+
+    if (justPrintUsage) {
+        printUsageAndExit(false);
+        // never reached
+    }
+
+    if (justPrintVersion) {
+        printVersionAndExit(argc, argv);
+        // never reached
+    }
+
+    warn_of_ineffective_options(optionSet);
 
     return optind;
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 #ifdef _MSC_VER
     // Make sure the FPU is set to rounding mode so that the lrint
     // functions in float_cast.h will work properly.
@@ -517,6 +1193,8 @@ int main(int argc, char** argv) {
     signal(SIGINT, sigint_handler);
 #endif
 
+    sig.initialize();
+
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
     // to avoid interactive warning dialogs.
     //TIFFSetWarningHandler(NULL);
@@ -527,18 +1205,13 @@ int main(int argc, char** argv) {
     list<char*>::iterator inputFileNameIterator;
 
     int optind;
-    try {optind = process_options(argc, argv);}
-    catch (StdException& e) {
-        cerr << "enblend: error while processing command line options\n"
-             << "enblend:     " << e.what()
+    try {
+        optind = process_options(argc, argv);
+    } catch (StdException& e) {
+        cerr << command << ": error while processing command line options\n"
+             << command << ":     " << e.what()
              << endl;
         exit(1);
-    }
-
-    // Make sure mandatory output file name parameter given.
-    if (OutputFileName.empty()) {
-        cerr << "enblend: no output file specified." << endl;
-        printUsageAndExit();
     }
 
     // Remaining parameters are input files.
@@ -579,15 +1252,21 @@ int main(int argc, char** argv) {
 #endif
         }
     } else {
-        cerr << "enblend: no input files specified." << endl;
-        printUsageAndExit();
+        cerr << command << ": no input files specified.\n";
+        exit(1);
     }
 
-#ifdef HAVE_LIBGLEW
     if (UseGPU) {
-      initGPU(&argc,argv);
-    }
+#ifdef HAVE_LIBGLEW
+        initGPU(&argc, argv);
+#else
+        cerr << command
+             << ": warning: no GPU support compiled in; option \"--gpu\" has no effect"
+             << endl;
 #endif
+    }
+
+    sig.check();
 
     //if (CachedFileImageDirector::v()->getManagedBlocks() < 4) {
     //    // Max simultaneous image access is in:
@@ -597,54 +1276,61 @@ int main(int argc, char** argv) {
     //    // FIXME complain or automatically adjust blocksize to get ManagedBlocks above 4?
     //}
 
-    // Check that more than one input file was given.
-    if (inputFileNameList.size() <= 1) {
-        cerr << "enblend: only one input file given. "
-             << "Enblend needs two or more overlapping input images in order "
-             << "to do blending calculations. The output will be the same as "
-             << "the input."
-             << endl;
-    }
-
     // List of info structures for each input image.
     list<ImageImportInfo*> imageInfoList;
     list<ImageImportInfo*>::iterator imageInfoIterator;
 
     bool isColor = false;
-    const char* pixelType = NULL;
+    std::string pixelType;
+    TiffResolution resolution;
     ImageImportInfo::ICCProfile iccProfile;
     Rect2D inputUnion;
 
     // Check that all input images have the same parameters.
     inputFileNameIterator = inputFileNameList.begin();
     int minDim = INT_MAX;
+    unsigned layer = 0;
+    unsigned layers = 0;
     while (inputFileNameIterator != inputFileNameList.end()) {
-
         ImageImportInfo* inputInfo = NULL;
         try {
-            inputInfo = new ImageImportInfo(*inputFileNameIterator);
+            std::string filename(*inputFileNameIterator);
+            ImageImportInfo info(filename.c_str());
+            if (layers == 0) { // OPTIMIZATION: call only once per file
+                layers = info.numLayers();
+            }
+            if (layers >= 2) {
+                filename = vigra::join_filename_layer(*inputFileNameIterator, layer);
+            }
+            ++layer;
+            inputInfo = new ImageImportInfo(filename.c_str());
         } catch (StdException& e) {
-            cerr << endl << "enblend: error opening input file \""
-                 << *inputFileNameIterator << "\":"
-                 << endl << e.what()
-                 << endl;
+            cerr << '\n' << command
+                 << ": error opening input file \"" << *inputFileNameIterator << "\":\n"
+                 << e.what() << endl;
             exit(1);
         }
 
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
 
-        if (Verbose > VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
-            cout << "Input image \""
+        if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
+            cerr << command
+                 << ": info: input image \""
                  << *inputFileNameIterator
-                 << "\" ";
+                 << "\" "
+                 << layer << '/' << layers << ' ';
 
-            if (inputInfo->isColor()) cout << "RGB ";
+            if (inputInfo->isColor()) {
+                cerr << "RGB ";
+            }
 
-            if (!inputInfo->getICCProfile().empty()) cout << "ICC ";
+            if (!inputInfo->getICCProfile().empty()) {
+                cerr << "ICC ";
+            }
 
-            cout << inputInfo->getPixelType() << " "
-                 << "position="
+            cerr << inputInfo->getPixelType()
+                 << " position="
                  << inputInfo->getPosition().x
                  << "x"
                  << inputInfo->getPosition().y
@@ -658,58 +1344,71 @@ int main(int argc, char** argv) {
 
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
-            cerr << "enblend: Input image \""
-                 << *inputFileNameIterator << "\" does not have an alpha "
-                 << "channel. This is required to determine which pixels "
-                 << "contribute to the final image."
+            cerr << command
+                 << ": input image \""
+                 << *inputFileNameIterator
+                 << "\" does not have an alpha channel"
                  << endl;
             exit(1);
         }
 
         // Get input image's position and size.
         Rect2D imageROI(Point2D(inputInfo->getPosition()),
-                Size2D(inputInfo->width(), inputInfo->height()));
+                        Size2D(inputInfo->width(), inputInfo->height()));
 
         if (inputFileNameIterator == inputFileNameList.begin()) {
-            // The first input image.
+            // First input image
             minDim = std::min(inputInfo->width(), inputInfo->height());
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
             pixelType = inputInfo->getPixelType();
+            resolution = TiffResolution(inputInfo->getXResolution(),
+                                        inputInfo->getYResolution());
             iccProfile = inputInfo->getICCProfile();
             if (!iccProfile.empty()) {
                 InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
                 if (InputProfile == NULL) {
-                    cerr << endl << "enblend: error parsing ICC profile data from file\""
+                    cerr << endl
+                         << command << ": error parsing ICC profile data from file \""
                          << *inputFileNameIterator
                          << "\"" << endl;
                     exit(1);
                 }
             }
-        }
-        else {
-            // second and later images.
+        } else {
+            // Second and later images
             inputUnion |= imageROI;
 
             if (isColor != inputInfo->isColor()) {
-                cerr << "enblend: Input image \""
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" is "
-                     << (inputInfo->isColor() ? "color" : "grayscale")
-                     << " but previous images are "
+                     << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
+                     << command << ":   but previous images are "
                      << (isColor ? "color" : "grayscale")
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
-            if (strcmp(pixelType, inputInfo->getPixelType())) {
-                cerr << "enblend: Input image \""
+            if (pixelType != inputInfo->getPixelType()) {
+                cerr << command << ": input image \""
                      << *inputFileNameIterator << "\" has pixel type "
-                     << inputInfo->getPixelType()
-                     << " but previous images have pixel type "
+                     << inputInfo->getPixelType() << ",\n"
+                     << command << ":   but previous images have pixel type "
                      << pixelType
-                     << "." << endl;
+                     << endl;
                 exit(1);
             }
-            if (!std::equal(iccProfile.begin(), iccProfile.end(),
+            if (resolution !=
+                TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
+                cerr << command << ": info: input image \""
+                     << *inputFileNameIterator << "\" has resolution "
+                     << inputInfo->getXResolution() << " dpi x "
+                     << inputInfo->getYResolution() << " dpi,\n"
+                     << command << ": info:   but first image has resolution "
+                     << resolution.x << " dpi x " << resolution.y << " dpi"
+                     << endl;
+            }
+            if (!std::equal(iccProfile.begin(),
+                            iccProfile.end(),
                             inputInfo->getICCProfile().begin())) {
                 ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                 cmsHPROFILE newProfile = NULL;
@@ -717,14 +1416,15 @@ int main(int argc, char** argv) {
                     newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
                                                        mismatchProfile.size());
                     if (newProfile == NULL) {
-                        cerr << endl << "enblend: error parsing ICC profile data from file\""
+                        cerr << endl
+                             << command << ": error parsing ICC profile data from file \""
                              << *inputFileNameIterator
                              << "\"" << endl;
                         exit(1);
                     }
                 }
 
-                cerr << endl << "enblend: Input image \""
+                cerr << endl << command << ": input image \""
                      << *inputFileNameIterator
                      << "\" has ";
                 if (newProfile) {
@@ -742,13 +1442,15 @@ int main(int argc, char** argv) {
                          << cmsTakeProductName(InputProfile)
                          << " "
                          << cmsTakeProductDesc(InputProfile)
-                         << "\"." << endl;
+                         << "\"" << endl;
                 } else {
-                    cerr << " no ICC profile." << endl;
+                    cerr << " no ICC profile" << endl;
                 }
-                cerr << "enblend: Blending images with different color spaces may have unexpected results."
+                cerr << command
+                     << ": warning: blending images with different color spaces\n"
+                     << command
+                     << ": warning:     may have unexpected results"
                      << endl;
-
             }
             if (inputInfo->width() < minDim) {
                 minDim = inputInfo->width();
@@ -758,23 +1460,67 @@ int main(int argc, char** argv) {
             }
         }
 
-        inputFileNameIterator++;
+        if (layers == 1 || layer == layers)
+        {
+            layer = 0;
+            layers = 0;
+            inputFileNameIterator++;
+        }
+        else
+        {
+            // We are about to process the next layer in the _same_
+            // image.  The imageInfoList already has been updated, but
+            // inputFileNameList still lacks the filename.
+            inputFileNameList.insert(inputFileNameIterator, *inputFileNameIterator);
+        }
+    }
+
+    vigra_postcondition(imageInfoList.size() == inputFileNameList.size(),
+                        "filename list and image info list are inconsistent");
+
+    // Check that more than one input file was given.
+    if (imageInfoList.size() <= 1) {
+        cerr << command
+             << ": warning: only one input image given.\n"
+             << command
+             << ": warning: Enblend needs two or more overlapping input images in order to do\n"
+             << command
+             << ": warning: blending calculations.  The output will be the same as the input."
+             << endl;
+    }
+
+    if (resolution == TiffResolution()) {
+        cerr << command
+             << ": warning: no usable resolution found in first image \""
+             << *inputFileNameList.begin() << "\";\n"
+             << command
+             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi"
+             << endl;
+        ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
+                                         DEFAULT_TIFF_RESOLUTION);
+    } else {
+        ImageResolution = resolution;
     }
 
     // Switch to fine mask, if the smallest coarse mask would be less
     // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
-        cout << "Input images to small for coarse mask, switching to fine mask." << endl;
+        cerr << command
+             << ": warning: input images to small for coarse mask; switching to fine mask"
+             << endl;
         CoarseMask = false;
     }
 
-    if (MaskVectorizeDistance == 0) {
-        MaskVectorizeDistance = CoarseMask ? 4 : 20;
+    if (MaskVectorizeDistance.value == 0) {
+        MaskVectorizeDistance.isPercentage = false;
+        MaskVectorizeDistance.value =
+            CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance;
     }
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.
     if (OutputSizeGiven) {
-        inputUnion |= Rect2D(OutputOffsetXCmdLine, OutputOffsetYCmdLine,
+        inputUnion |= Rect2D(OutputOffsetXCmdLine,
+                             OutputOffsetYCmdLine,
                              OutputOffsetXCmdLine + OutputWidthCmdLine,
                              OutputOffsetYCmdLine + OutputHeightCmdLine);
     }
@@ -785,15 +1531,44 @@ int main(int argc, char** argv) {
         outputImageInfo.setCompression(OutputCompression.c_str());
     }
 
-    // Pixel type of the output image is the same as the input images.
-    outputImageInfo.setPixelType(pixelType);
+    // If not overridden by the command line, the pixel type of the
+    // output image is the same as the input images'.  If the pixel
+    // type is not supported by the output format, replace it with the
+    // best match.
+    {
+        const std::string outputFileType = enblend::getFileType(OutputFileName);
+        const std::string neededPixelType =
+            OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
+        const std::string bestPixelType =
+            enblend::bestPixelType(outputFileType, neededPixelType);
+        if (neededPixelType != bestPixelType) {
+            cerr << command
+                 << ": warning: "
+                 << (OutputPixelType.empty() ? "deduced" : "requested")
+                 << " output pixel type is \""
+                 << enblend::toLowercase(neededPixelType)
+                 << "\", but image type \""
+                 << enblend::toLowercase(outputFileType)
+                 << "\"\n"
+                 << command << ": warning:   supports \""
+                 << enblend::toLowercase(bestPixelType)
+                 << "\" at best;  will use \""
+                 << enblend::toLowercase(bestPixelType)
+                 << "\""
+                 << endl;
+        }
+        outputImageInfo.setPixelType(bestPixelType.c_str());
+        pixelType = enblend::maxPixelType(pixelType, bestPixelType);
+    }
 
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);
 
     if (UseCIECAM) {
         if (InputProfile == NULL) {
-            cerr << "enblend: Input images do not have ICC profiles. Assuming sRGB." << endl;
+            cerr << command
+                 << ": warning: input images do not have ICC profiles; assuming sRGB."
+                 << endl;
             InputProfile = cmsCreate_sRGBProfile();
         }
         XYZProfile = cmsCreateXYZProfile();
@@ -802,11 +1577,11 @@ int main(int argc, char** argv) {
                                                  XYZProfile, TYPE_XYZ_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (InputToXYZTransform == NULL) {
-            cerr << "enblend: Error building color transform from \""
+            cerr << command << ": error building color transform from \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\" to XYZ." << endl;
+                 << "\" to XYZ" << endl;
             exit(1);
         }
 
@@ -814,11 +1589,12 @@ int main(int argc, char** argv) {
                                                  InputProfile, TYPE_RGB_DBL,
                                                  INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
         if (XYZToInputTransform == NULL) {
-            cerr << "enblend: Error building color transform from XYZ to \""
+            cerr << command
+                 << ": error building color transform from XYZ to \""
                  << cmsTakeProductName(InputProfile)
                  << " "
                  << cmsTakeProductDesc(InputProfile)
-                 << "\"." << endl;
+                 << "\"" << endl;
             exit(1);
         }
 
@@ -833,19 +1609,25 @@ int main(int argc, char** argv) {
 
         CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
         if (!CIECAMTransform) {
-            cerr << endl << "enblend: Error initializing CIECAM02 transform." << endl;
+            cerr << endl
+                 << command
+                 << ": error initializing CIECAM02 transform"
+                 << endl;
             exit(1);
         }
     }
 
     // The size of the output image.
-    if (Verbose > VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        cout << "Output image size: " << inputUnion << endl;
+    if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
+        cerr << command
+             << ": info: output image size: "
+             << inputUnion
+             << endl;
     }
 
     // Set the output image position and resolution.
-    outputImageInfo.setXResolution(300.0);
-    outputImageInfo.setYResolution(300.0);
+    outputImageInfo.setXResolution(ImageResolution.x);
+    outputImageInfo.setYResolution(ImageResolution.y);
     outputImageInfo.setPosition(inputUnion.upperLeft());
 
     // Sanity check on the output image file.
@@ -855,113 +1637,78 @@ int main(int argc, char** argv) {
         // is done.
         encoder(outputImageInfo);
     } catch (StdException & e) {
-        cerr << endl << "enblend: error opening output file \""
+        cerr << endl
+             << command
+             << ": error opening output file \""
              << OutputFileName
-             << "\":"
-             << endl << e.what()
+             << "\";\n"
+             << command
+             << ": "
+             << e.what()
              << endl;
         exit(1);
     }
 
-    // Sanity check on the LoadMaskFileName
-    if (!LoadMaskFileName.empty()) try {
-        ImageImportInfo maskInfo(LoadMaskFileName.c_str());
-    } catch (StdException& e) {
-        cerr << endl << "enblend: error opening load-mask input file \""
-             << LoadMaskFileName << "\":"
-             << endl << e.what()
-             << endl;
-        exit(1);
-    }
-
-    // Sanity check on the SaveMaskFileName
-    if (!SaveMaskFileName.empty()) try {
-        ImageExportInfo maskInfo(SaveMaskFileName.c_str());
-        encoder(maskInfo);
-    } catch (StdException& e) {
-        cerr << endl << "enblend: error opening save-mask output file \""
-             << SaveMaskFileName << "\":"
-             << endl << e.what()
-             << endl;
-        exit(1);
-    }
-
-    // Sanity check on the VisualizeMaskFileName
-    if (!VisualizeMaskFileName.empty()) try {
-        ImageExportInfo maskInfo(VisualizeMaskFileName.c_str());
-        encoder(maskInfo);
-    } catch (StdException& e) {
-        cerr << endl << "enblend: error opening visualize output file \""
-             << VisualizeMaskFileName << "\":"
-             << endl << e.what()
-             << endl;
-        exit(1);
-    }
-
-    if (!VisualizeMaskFileName.empty() && !OptimizeMask) {
-        cerr << endl << "enblend: --visualize does nothing without --optimize."
-             << endl;
+    if (!OutputPixelType.empty()) {
+        pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
     }
 
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if (strcmp(pixelType,      "UINT8" ) == 0) enblendMain<RGBValue<UInt8 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enblendMain<RGBValue<float > >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<RGBValue<UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enblendMain<RGBValue<Int8  > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enblendMain<RGBValue<UInt16> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enblendMain<RGBValue<Int16 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enblendMain<RGBValue<UInt32> >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enblendMain<RGBValue<Int32 > >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enblendMain<RGBValue<UInt64> >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enblendMain<RGBValue<Int64 > >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enblendMain<RGBValue<double> >(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<RGBValue<Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<RGBValue<UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<RGBValue<Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<RGBValue<UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<RGBValue<Int32 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<RGBValue<float > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<RGBValue<double> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: images with pixel type \""
+                cerr << command << ": RGB images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
         } else {
-            if (strcmp(pixelType,      "UINT8" ) == 0) enblendMain<UInt8 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "FLOAT" ) == 0) enblendMain<float >(imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblendMain<UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (strcmp(pixelType, "INT8"  ) == 0) enblendMain<Int8  >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT16") == 0) enblendMain<UInt16>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT16" ) == 0) enblendMain<Int16 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "UINT32") == 0) enblendMain<UInt32>(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "INT32" ) == 0) enblendMain<Int32 >(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "UINT64") == 0) enblendMain<UInt64>(imageInfoList, outputImageInfo, inputUnion);
-            //else if (strcmp(pixelType, "INT64" ) == 0) enblendMain<Int64 >(imageInfoList, outputImageInfo, inputUnion);
-            else if (strcmp(pixelType, "DOUBLE") == 0) enblendMain<double>(imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblendMain<Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblendMain<UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblendMain<Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblendMain<UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblendMain<Int32 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblendMain<float >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblendMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << "enblend: images with pixel type \""
+                cerr << command
+                     << ": black&white images with pixel type \""
                      << pixelType
-                     << "\" are not supported."
+                     << "\" are not supported"
                      << endl;
                 exit(1);
             }
         }
 
-        // delete entries in imageInfoList, in case
-        // enblend loop returned early.
-        imageInfoIterator = imageInfoList.begin();
-        while (imageInfoIterator != imageInfoList.end()) {
-            delete *imageInfoIterator++;
+        for (list<ImageImportInfo*>::iterator i = imageInfoList.begin();
+             i != imageInfoList.end();
+             ++i) {
+            delete *i;
         }
-
     } catch (std::bad_alloc& e) {
-        cerr << endl << "enblend: out of memory"
-             << endl << e.what()
+        cerr << endl
+             << command << ": out of memory\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     } catch (StdException& e) {
-        cerr << endl << "enblend: an exception occured"
-             << endl << e.what()
+        cerr << endl
+             << command << ": an exception occured\n"
+             << command << ": " << e.what()
              << endl;
         exit(1);
     }

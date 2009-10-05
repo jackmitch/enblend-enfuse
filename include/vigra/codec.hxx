@@ -154,6 +154,10 @@ namespace vigra
 
         virtual unsigned int getWidth() const = 0;
         virtual unsigned int getHeight() const = 0;
+        virtual unsigned int getNumLayers() const
+        {
+            return 1U;
+        }
         virtual unsigned int getNumBands() const = 0;
         virtual unsigned int getNumExtraBands() const
         {
@@ -163,6 +167,15 @@ namespace vigra
         virtual vigra::Diff2D getPosition() const
         {
             return vigra::Diff2D();
+        }
+
+        virtual float getXResolution() const
+        {
+            return 0.0f;
+        }
+        virtual float getYResolution() const
+        {
+            return 0.0f;
         }
 
         virtual unsigned int getOffset() const = 0;
