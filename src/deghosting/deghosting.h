@@ -1,9 +1,22 @@
-/*
- * deghosting.h
+
+/**
+ * Header file for base class for deghosting algorithms
+ * Copyright (C) 2009  Lukáš Jirkovský <l.jirkovsky@gmail.com>
  *
- *  Created on: May 23, 2009
- *      Author: Lukas "stativ" Jirkovsky
- */
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ *Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 
 #ifndef DEGHOSTING_H_
 #define DEGHOSTING_H_
@@ -11,16 +24,20 @@
 #include <exception>
 #include <vector>
 #include <string>
-#include <stdint.h>
+
+#ifdef _WIN32
+    #include <boost/cstdint.hpp>
+    using namespace boost;
+#else
+    #include <stdint.h>
+#endif
 
 #include <boost/shared_ptr.hpp>
 #include <vigra/stdimage.hxx>
 #include <vigra/imageinfo.hxx>
 
 // define if you want to use image cache
-#ifdef ENBLEND_CACHE_IMAGES
 #define DEGHOSTING_CACHE_IMAGES
-#endif
 
 namespace deghosting {
     
@@ -47,9 +64,8 @@ namespace deghosting {
 
     // constants for advanced modes
     const uint16_t ADV_GAMMA         = 1;
-    const uint16_t ADV_NOINITWEIGHTS = 2;
-    const uint16_t ADV_ONLYP         = 4;
-    const uint16_t ADV_MULTIRES      = 8;
+    const uint16_t ADV_ONLYP         = 2;
+    const uint16_t ADV_MULTIRES      = 4;
 
     // constants for debug modes
     const uint16_t SAVE_INITWEIGHTS   = 1;
