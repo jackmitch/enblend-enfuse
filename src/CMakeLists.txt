@@ -34,8 +34,6 @@ if (WIN32)
   list(APPEND all_sources ${winhelper_sources})
 endif(WIN32)
 
-list(APPEND all_sources ${TOP_SRC_DIR}/src/deghosting/deghosting.cpp)
-
 list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -44,6 +42,9 @@ message(STATUS "Boost_FOUND = ${Boost_FOUND}")
 message(STATUS "OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 foreach(_cmd ${_COMMANDS})
   set(${_cmd}_sources ${all_sources} "${TOP_SRC_DIR}/src/${_cmd}.cc")
+  if(${_cmd} STREQUAL enfuse)
+    set(${_cmd}_sources ${${_cmd}_sources} "${TOP_SRC_DIR}/src/deghosting/deghosting.cpp")
+  endif()
   add_executable(${_cmd} ${${_cmd}_sources} )
   message(STATUS "depends of ${_cmd} ${all_sources}")
   if(OpenMP_CXX_FLAGS)
