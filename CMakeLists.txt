@@ -159,6 +159,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 FIND_PACKAGE(LCMS REQUIRED)
 FIND_PACKAGE(LibXMI REQUIRED)
 FIND_PACKAGE(TIFF REQUIRED)
+FIND_PACKAGE(Perl REQUIRED)
 LIST(APPEND common_libs ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES})
 include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS_INCLUDE_DIR})
 
@@ -353,8 +354,7 @@ MESSAGE(STATUS "")
 add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
-find_program(PERL_EXE "perl")
-if (NOT ${PERL_EXE} MATCHES "-NOTFOUND")
+if (${PERL_FOUND})
     add_subdirectory(doc)
 endif()
 
