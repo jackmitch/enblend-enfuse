@@ -10,7 +10,7 @@
 
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
-  COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/src/gen_sig"
+  COMMAND ${PERL_EXECUTABLE} -I"${TOP_SRC_DIR}/src" "${TOP_SRC_DIR}/src/gen_sig"
   "--extra=${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${ENBLEND_CHANGESET}"
   ">" "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
   DEPENDS "${TOP_SRC_DIR}/src/gen_sig" "${TOP_SRC_DIR}/VERSION"

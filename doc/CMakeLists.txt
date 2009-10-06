@@ -78,7 +78,7 @@ set(_helpfiles)
 #create config.h.texi
 add_custom_command(
   OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
-  COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/define2set.pl"
+  COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/define2set.pl"
   "${CMAKE_BINARY_DIR}/config.h" ">" "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
   DEPENDS "${CMAKE_BINARY_DIR}/config.h"
   COMMENT "Creating config-h.texi"
@@ -93,7 +93,7 @@ foreach(_cmd enblend enfuse)
     "${TOP_SRC_DIR}/src/global.h")
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/vars${_cmd}.texi"
-    COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/docstrings" ${_depends} ">" vars${_cmd}.texi
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" ${_depends} ">" vars${_cmd}.texi
     DEPENDS ${_depends}
     COMMENT "perl: creating vars${_cmd}.texi"
     )
@@ -104,7 +104,7 @@ endforeach(_cmd)
 foreach(_fig ${_enblendenfuse_fig_images})
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
-    COMMAND ${PERL_EXE} "${TOP_SRC_DIR}/doc/fig2txt.pl" "${TOP_SRC_DIR}/doc/${_fig}.fig" ">" "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/fig2txt.pl" "${TOP_SRC_DIR}/doc/${_fig}.fig" ">" "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
     DEPENDS "${TOP_SRC_DIR}/doc/${_fig}.fig"
     COMMENT "perl: creating ${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt"
     )
