@@ -34,6 +34,8 @@ if (WIN32)
   list(APPEND all_sources ${winhelper_sources})
 endif(WIN32)
 
+list(APPEND all_sources ${TOP_SRC_DIR}/src/deghosting/deghosting.cpp)
+
 list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
