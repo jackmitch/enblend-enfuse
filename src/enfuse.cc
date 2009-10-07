@@ -184,6 +184,64 @@ template <typename InputPixelType, typename ResultPixelType>
 double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
 
 
+void dump_global_variables()
+{
+    cout <<
+        "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
+        "+ OutputFileName = <" << OutputFileName << ">\n" <<
+        "+ ExactLevels = " << ExactLevels << ">\n" <<
+        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option ???\n" <<
+        "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
+        "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
+        ", option \"-g\"\n" <<
+        "+ UseCIECAM = " << enblend::stringOfBool(UseCIECAM) << ", option \"-c\"\n" <<
+        "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
+        "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputOffsetXCmdLine = " << OutputOffsetXCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputOffsetYCmdLine = " << OutputOffsetYCmdLine << ", argument to option \"-f\"\n" <<
+        "+ WExposure = " << WExposure << ", argument to option \"--wExposure\"\n" <<
+        "+     WMu = " << WMu  << ", argument to option \"--wMu\"\n" <<
+        "+     WSigma = " << WSigma << ", argument to option \"--wSigma\"\n" <<
+        "+ WContrast = " << WContrast << ", argument to option \"--wContrast\"\n" <<
+        "+ WSaturation = " << WSaturation << ", argument to option \"--wSaturation\"\n" <<
+        "+ WEntropy = " << WEntropy << ", argument to option \"--wEntropy\"\n" <<
+        "+ WSaturationIsDefault = " << enblend::stringOfBool(WSaturationIsDefault) << "\n" <<
+        "+ ContrastWindowSize = " << ContrastWindowSize <<
+        ", argument to option \"--ContrastWindowSize\"\n" <<
+        "+ GrayscaleProjector = <" << GrayscaleProjector << ">, argument to option \"--GrayProjector\"\n" <<
+        "+ FilterConfig = {\n" <<
+        "+     edgeScale = " << FilterConfig.edgeScale << ",\n" <<
+        "+     lceScale = " << FilterConfig.lceScale <<  ",\n" <<
+        "+     lceFactor = " << FilterConfig.lceFactor <<  "\n" <<
+        "+ }, arguments to option \"--EdgeScale\"\n" <<
+        "+ MinCurvature = {\n"
+        "+     value = " << MinCurvature.value << ",\n" <<
+        "+     isPercentage = " << enblend::stringOfBool(MinCurvature.isPercentage) << "\n" <<
+        "+ }, arguments to option \"--MinCurvature\"\n" <<
+        "+ EntropyWindowSize = " << EntropyWindowSize <<
+        ", argument to option \"--EntropyWindowSize\"\n" <<
+        "+ EntropyLowerCutoff = {\n"
+        "+     value = " << EntropyLowerCutoff.value << ",\n" <<
+        "+     isPercentage = " << enblend::stringOfBool(EntropyLowerCutoff.isPercentage) << "\n" <<
+        "+ }, first argument to option \"--EntropyCutoff\"\n" <<
+        "+ EntropyUpperCutoff = {\n"
+        "+     value = " << EntropyUpperCutoff.value << ",\n" <<
+        "+     isPercentage = " << enblend::stringOfBool(EntropyUpperCutoff.isPercentage) << "\n" <<
+        "+ }, second argument to option \"--EntropyCutoff\"\n" <<
+        "+ UseHardMask = " << enblend::stringOfBool(UseHardMask) <<
+        ", option \"--HardMask\" or \"--SoftMask\"\n" <<
+        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--SaveMasks\"\n" <<
+        "+     SoftMaskTemplate = <" << SoftMaskTemplate <<
+        ">, first argument to option \"--SaveMasks\"\n" <<
+        "+     HardMaskTemplate = <" << HardMaskTemplate <<
+        ">, second argument to option \"--SaveMasks\"\n" <<
+        "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
+        "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
+        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n";
+}
+
+
 /** Print information on the current version and some configuration
  * details. */
 void printVersionAndExit() {
@@ -1245,6 +1303,10 @@ int main(int argc, char** argv)
         cerr << command << ": no input files specified.\n";
         exit(1);
     }
+
+#ifdef DEBUG_DUMP_GLOBAL_VARIABLES
+    dump_global_variables();
+#endif
 
     sig.check();
 

@@ -190,6 +190,57 @@ using enblend::enblendMain;
 #endif
 
 
+void dump_global_variables()
+{
+    cout <<
+        "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
+        "+ OutputFileName = <" << OutputFileName << ">\n" <<
+        "+ ExactLevels = " << ExactLevels << ">\n" <<
+        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option ???\n" <<
+        "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
+        "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
+        ", option \"-g\"\n" <<
+        "+ UseCIECAM = " << enblend::stringOfBool(UseCIECAM) << ", option \"-c\"\n" <<
+        "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
+        "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputOffsetXCmdLine = " << OutputOffsetXCmdLine << ", argument to option \"-f\"\n" <<
+        "+     OutputOffsetYCmdLine = " << OutputOffsetYCmdLine << ", argument to option \"-f\"\n" <<
+        "+ Checkpoint = " << enblend::stringOfBool(Checkpoint) << ", option \"-x\"\n" <<
+        "+ UseGPU = " << enblend::stringOfBool(UseGPU) << ", option \"--gpu\"\n" <<
+        "+ OptimizeMask = " << enblend::stringOfBool(OptimizeMask) <<
+        ", options \"--optimize\" and \"--no-optimize\"\n" <<
+        "+ CoarseMask = " << enblend::stringOfBool(CoarseMask) <<
+        ", options \"--coarse-mask\" and \"--fine-mask\"\n" <<
+        "+     CoarsenessFactor = " << CoarsenessFactor << ", argument to option \"--coarse-mask\"\n" <<
+        "+ DifferenceBlurRadius = " << DifferenceBlurRadius << ", option \"--smooth-difference\"\n" <<
+        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-mask\"\n" <<
+        "+     SaveMaskTemplate = <" << SaveMaskTemplate << ">, argument to option \"--save-mask\"\n" <<
+        "+ LoadMasks = " << enblend::stringOfBool(LoadMasks) << ", option \"--load-mask\"\n" <<
+        "+     LoadMaskTemplate = <" << LoadMaskTemplate << ">, argument to option \"--load-mask\"\n" <<
+        "+ VisualizeSeam = " << enblend::stringOfBool(VisualizeSeam) << ", option \"--visualize\"\n" <<
+        "+     VisualizeTemplate = <" << VisualizeTemplate << ">, argument to option \"--visualize\"\n" <<
+        "+ OptimizerWeights = {\n" <<
+        "+     distance = " << OptimizerWeights.first << ",\n" <<
+        "+     mismatch = " << OptimizerWeights.second << "\n" <<
+        "+ }, arguments to option \"--visualize\"\n"
+        "+ AnnealPara = {\n" <<
+        "+     kmax = " << AnnealPara.kmax << ",\n" <<
+        "+     tau = " << AnnealPara.tau << ",\n" <<
+        "+     deltaEMax = " << AnnealPara.deltaEMax << ",\n" <<
+        "+     deltaEMin = " << AnnealPara.deltaEMin << "\n" <<
+        "+ }, arguments to option \"--anneal\"\n" <<
+        "+ DijkstraRadius = " << DijkstraRadius << ", option \"--dijkstra\"\n" <<
+        "+ MaskVectorizeDistance = {\n" <<
+        "+     value = " << MaskVectorizeDistance.value << ",\n" <<
+        "+     isPercentage = " << enblend::stringOfBool(MaskVectorizeDistance.isPercentage) << "\n" <<
+        "+ }, arguments to option \"--mask-vectorize\"\n" <<
+        "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
+        "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
+        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n";
+}
+
+
 void inspectGPU(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -1255,6 +1306,10 @@ int main(int argc, char** argv)
         cerr << command << ": no input files specified.\n";
         exit(1);
     }
+
+#ifdef DEBUG_DUMP_GLOBAL_VARIABLES
+    dump_global_variables();
+#endif
 
     if (UseGPU) {
 #ifdef HAVE_LIBGLEW

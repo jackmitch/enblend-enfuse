@@ -184,6 +184,14 @@ toLowercase(const std::string& aString)
 }
 
 
+/** Answer the string representation of the boolean b. */
+std::string
+stringOfBool(bool b)
+{
+    return b ? "true" : "false";
+}
+
+
 /** Answer the VIGRA file type as determined by the extension of
  *  aFileName. */
 std::string
