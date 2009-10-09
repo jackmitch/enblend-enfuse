@@ -184,13 +184,16 @@ template <typename InputPixelType, typename ResultPixelType>
 double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
 
 
-void dump_global_variables()
+#define DUMP_GLOBAL_VARIABLES(...) dump_global_variables(__FILE__, __LINE__, ##__VA_ARGS__)
+void dump_global_variables(const char* file, unsigned line,
+                           std::ostream& out = std::cout)
 {
-    cout <<
+    out <<
+        "+ " << file << ":" << line << ": state of global variables\n" <<
         "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
         "+ OutputFileName = <" << OutputFileName << ">\n" <<
-        "+ ExactLevels = " << ExactLevels << ">\n" <<
-        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option ???\n" <<
+        "+ ExactLevels = " << ExactLevels << "\n" <<
+        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option \"-a\"\n" <<
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
@@ -209,7 +212,8 @@ void dump_global_variables()
         "+ WSaturationIsDefault = " << enblend::stringOfBool(WSaturationIsDefault) << "\n" <<
         "+ ContrastWindowSize = " << ContrastWindowSize <<
         ", argument to option \"--ContrastWindowSize\"\n" <<
-        "+ GrayscaleProjector = <" << GrayscaleProjector << ">, argument to option \"--GrayProjector\"\n" <<
+        "+ GrayscaleProjector = <" << GrayscaleProjector <<
+        ">, argument to option \"--GrayProjector\"\n" <<
         "+ FilterConfig = {\n" <<
         "+     edgeScale = " << FilterConfig.edgeScale << ",\n" <<
         "+     lceScale = " << FilterConfig.lceScale <<  ",\n" <<
@@ -238,7 +242,8 @@ void dump_global_variables()
         ">, second argument to option \"--SaveMasks\"\n" <<
         "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
-        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n";
+        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n" <<
+        "+ end of global variable dump\n";
 }
 
 
@@ -1305,7 +1310,7 @@ int main(int argc, char** argv)
     }
 
 #ifdef DEBUG_DUMP_GLOBAL_VARIABLES
-    dump_global_variables();
+    DUMP_GLOBAL_VARIABLES();
 #endif
 
     sig.check();

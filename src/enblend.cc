@@ -190,13 +190,16 @@ using enblend::enblendMain;
 #endif
 
 
-void dump_global_variables()
+#define DUMP_GLOBAL_VARIABLES(...) dump_global_variables(__FILE__, __LINE__, ##__VA_ARGS__)
+void dump_global_variables(const char* file, unsigned line,
+                           std::ostream& out = std::cout)
 {
-    cout <<
+    out <<
+        "+ " << file << ":" << line << ": state of global variables\n" <<
         "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
         "+ OutputFileName = <" << OutputFileName << ">\n" <<
-        "+ ExactLevels = " << ExactLevels << ">\n" <<
-        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option ???\n" <<
+        "+ ExactLevels = " << ExactLevels << "\n" <<
+        "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option \"-a\"\n" <<
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
@@ -237,7 +240,8 @@ void dump_global_variables()
         "+ }, arguments to option \"--mask-vectorize\"\n" <<
         "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
-        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n";
+        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n" <<
+        "+ end of global variable dump\n";
 }
 
 
@@ -1308,7 +1312,7 @@ int main(int argc, char** argv)
     }
 
 #ifdef DEBUG_DUMP_GLOBAL_VARIABLES
-    dump_global_variables();
+    DUMP_GLOBAL_VARIABLES();
 #endif
 
     if (UseGPU) {

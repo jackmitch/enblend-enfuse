@@ -280,7 +280,7 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([fesetround floor \
                 memset mkstemp \
                 pow \
-                sqrt strchr strcspn strdup strerror strrchr strtol])
+                sqrt strchr strcspn strdup strerror strrchr strtol strtoul])
 
 # lrint and lrintf
 AC_C99_FUNC_LRINT
