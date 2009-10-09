@@ -45,6 +45,8 @@ sub emit_class {
 
 #include <numeric>
 
+extern const std::string command;
+
 class Signature
 {
 public:
@@ -57,15 +59,38 @@ public:
 
     void initialize()
     {
+#ifdef DEBUG_FORCE_SIG_CHECK_FAILURE
+        checksum_++;
+        neg_checksum_ = checksum_;
+#else
         neg_checksum_ = ~checksum_;
+#endif
     }
 
     void check() const
     {
+        if (checksum_ != ~neg_checksum_)
+        {
+            std::cerr <<
+                "+ static checksum " << checksum_ <<
+                " does not match static shadow checksum " << ~neg_checksum_ << "\\n";
+        }
+        if (generate_checksum() != checksum_)
+        {
+            std::cerr <<
+                "+ dynamic checksum " << generate_checksum() <<
+                " does not match static checksum " << checksum_ << ", where\\n" <<
+                "+     message is <" << message() << ">\\n";
+        }
+
         if (generate_checksum() != checksum_ || checksum_ != ~neg_checksum_)
         {
-            std::cerr << @{[octalize_string(qq(tampered binary\n))]};
+#ifdef WANT_AGGRESSIVE_SIGNATURE_CHECK
+            std::cerr << command << @{[octalize_string(qq(: tampered binary\n))]};
             exit(1);
+#else
+            std::cerr << command << @{[octalize_string(qq(: warning: signature check failed\n))]};
+#endif
         }
     }
 
