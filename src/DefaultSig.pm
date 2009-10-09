@@ -16,7 +16,14 @@ use warnings;
 
 use English;
 use Sys::Hostname;
-use Time::Zone;
+
+our %HAVE_MODULE;
+BEGIN {
+    foreach my $module qw(Time::Zone) {
+        eval "use $module ()"; # import, but keep module's original name space for clarity
+        $HAVE_MODULE{$module} = $EVAL_ERROR eq '';
+    }
+}
 
 
 sub new {
@@ -81,9 +88,11 @@ sub format_time {
     if ($self->is_using_gmt()) {
         $time .= " GMT";
     } else {
-        $time .= sprintf(" GMT%+d", tz_offset($ENV{'TZ'}) / 3600.0);
-        # alternatively:
-        #     $time .= " " . tz_name($ENV{'TZ'});
+        if ($HAVE_MODULE{'Time::Zone'}) {
+            $time .= sprintf(" GMT%+d", Time::Zone::tz_offset($ENV{'TZ'}) / 3600.0);
+            # alternatively:
+            #     $time .= " " . Time::Zone::tz_name($ENV{'TZ'});
+        }
     }
 
     return $time;
@@ -122,16 +131,33 @@ sub signature {
 }
 
 
+sub _login_name {
+    my $self = shift;
+
+    return getlogin or 'anonymous';
+}
+
+
 # Try to derive the real user name from Perl's built-in user id.
 # Answer the user's login name if we do not find a real name.
 sub _real_user_name {
     my $self = shift;
 
-    my ($login_name, undef, undef, undef,
-        undef, undef, $gcos) = getpwuid $REAL_USER_ID;
-    my ($real_user_name) = split m/,/, $gcos;
-
-    return $real_user_name eq '' ? $login_name : $real_user_name;
+    if ($OSNAME eq 'MSWin32') {
+        return $self->_login_name();
+    } else {
+        my ($login_name, undef, undef, undef,
+            undef, undef, $gcos) = getpwuid $REAL_USER_ID;
+        if ($gcos) {
+            my ($real_user_name) = split m/,/, $gcos;
+            return $real_user_name if $real_user_name;
+        }
+        if ($login_name) {
+            return $login_name;
+        } else {
+            return $self->_login_name();
+        }
+    }
 }
 
 

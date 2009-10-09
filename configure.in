@@ -286,6 +286,15 @@ AC_CHECK_FUNCS([fesetround floor \
 AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
 
+AX_WITH_PROG(PERL, perl, false, [])
+if test "x$PERL" = xfalse; then
+    AC_MSG_ERROR(cannot find perl)
+fi
+AX_PROG_PERL_MODULES(Sys::Hostname, [],
+                     AC_MSG_ERROR(missing Perl module Sys::Hostname))
+AX_PROG_PERL_MODULES(Time::Zone, [],
+                     AC_MSG_WARN(missing Perl module Time::Zone))
+
 # Documentation
 if test $cross_compiling = no; then
     AM_MISSING_PROG(HELP2MAN, help2man)
@@ -294,14 +303,20 @@ else
 fi
 
 can_build_doc=yes
-AX_WITH_PROG(PERL, perl, perl, false)
-if test "x$PERL" = xfalse; then
-    AC_MSG_WARN(cannot find perl; will not be able to build documentation)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc perl"
-fi
+AX_PROG_PERL_MODULES(File::Basename, [],
+                     [AC_MSG_WARN(missing Perl module File::Basename)
+                      can_build_doc=no
+                      missing_for_doc="$missing_for_doc File::Basename"])
+AX_PROG_PERL_MODULES(IO::File, [],
+                     [AC_MSG_WARN(missing Perl module IO::File)
+                      can_build_doc=no
+                      missing_for_doc="$missing_for_doc IO::File"])
+AX_PROG_PERL_MODULES(IO::Handle, [],
+                     [AC_MSG_WARN(missing Perl module IO::Handle)
+                      can_build_doc=no
+                      missing_for_doc="$missing_for_doc IO::Handle"])
 
-AX_WITH_PROG(GNUPLOT, gnuplot, gnuplot, false)
+AX_WITH_PROG(GNUPLOT, gnuplot, false, [])
 if test "x$GNUPLOT" = xfalse; then
     AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
     can_build_doc=no
