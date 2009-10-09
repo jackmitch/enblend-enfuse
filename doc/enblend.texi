@@ -576,10 +576,6 @@ borders, are eliminated.
 Specifying @option{--wrap} without @var{MODE} selects horizontal
 wrapping.
 
-Version@tie{}@value{VERSION} of Enblend, the one described here, does
-not blend either zenith or nadir, so you may still see some seams in
-these areas.
-
 @item -x
 @opindex -x
 Checkpoint partial results to the output file after each blending
