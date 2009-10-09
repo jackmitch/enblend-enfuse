@@ -245,6 +245,7 @@ void dump_global_variables(const char* file, unsigned line,
 }
 
 
+#ifdef HAVE_LIBGLEW
 void inspectGPU(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -284,6 +285,7 @@ void inspectGPU(int argc, char** argv)
 
     glutDestroyWindow(handle);
 }
+#endif
 
 
 /** Print information on the current version and some configuration
