@@ -1152,98 +1152,100 @@ void enfuseMain(const list<char*>& anInputFileNameList,
                                             new AlphaType(anInputUnion.size()));
     list<ImageImportInfo*> imageInfoList(anImageInfoList);
     const unsigned numberOfImages = imageInfoList.size();
-
-    // create weights for deghosting
-    // load ImageInportInfo's into the vector
-    list<ImageImportInfo*>::iterator imageInfoIterator;
-    vector<ImageImportInfo> inputFiles;
-    for (; imageInfoIterator != imageInfoList.end(); imageInfoIterator++) {
-        inputFiles.push_back(**imageInfoIterator);
-    }
-    Deghosting* deghoster = NULL;
-    Khan khanDeghoster(inputFiles, deghosting::ADV_ONLYP, 0, DIterations, DSigma, Verbose);
-    deghoster = &khanDeghoster;
-    //vector<FImagePtr> weights = deghoster->createWeightMasks();
     
     unsigned m = 0;
     list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
-    while (!imageInfoList.empty()) {
-        Rect2D imageBB;
-        pair<ImageType*, AlphaType*> imagePair =
-                assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
+    if (UseDeghosting) {
+        // create vector of ImageImportInfo's
+        list<ImageImportInfo *>::const_iterator infoIterator(imageInfoList.begin());
+        vector<ImageImportInfo> inputFiles;
+        while (infoIterator != imageInfoList.end()) {
+            inputFiles.push_back(**infoIterator);
+        }
+        
+        Deghosting* deghoster = NULL;
+        Khan<ImagePixelType> khanDeghoster(inputFiles, 0, 0, DIterations, DSigma, Verbose);
+        deghoster = &khanDeghoster;
+        //vector<FImagePtr> weights = deghoster->createWeightMasks();
+    } else {
+        while (!imageInfoList.empty()) {
+            Rect2D imageBB;
+            pair<ImageType*, AlphaType*> imagePair =
+                    assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
 
-        MaskType* mask = new MaskType(anInputUnion.size());
+            MaskType* mask = new MaskType(anInputUnion.size());
 
-        enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
-                                                   srcImage(*(imagePair.second)),
-                                                   destImage(*mask));
+            enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
+                                                    srcImage(*(imagePair.second)),
+                                                    destImage(*mask));
 
-        if (SaveMasks) {
-            const std::string maskFilename =
-                enblend::expandFilenameTemplate(SoftMaskTemplate,
-                                                numberOfImages,
-                                                *inputFileNameIterator,
-                                                OutputFileName,
-                                                m);
-            if (maskFilename == *inputFileNameIterator) {
-                cerr << command
-                     << ": will not overwrite input image \""
-                     << *inputFileNameIterator
-                     << "\" with soft mask file"
-                     << endl;
-                exit(1);
-            } else if (maskFilename == OutputFileName) {
-                cerr << command
-                     << ": will not overwrite output image \""
-                     << OutputFileName
-                     << "\" with soft mask file"
-                     << endl;
-                exit(1);
-            } else {
-                if (Verbose >= VERBOSE_MASK_MESSAGES) {
+            if (SaveMasks) {
+                const std::string maskFilename =
+                    enblend::expandFilenameTemplate(SoftMaskTemplate,
+                                                    numberOfImages,
+                                                    *inputFileNameIterator,
+                                                    OutputFileName,
+                                                    m);
+                if (maskFilename == *inputFileNameIterator) {
                     cerr << command
-                         << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                        << ": will not overwrite input image \""
+                        << *inputFileNameIterator
+                        << "\" with soft mask file"
+                        << endl;
+                    exit(1);
+                } else if (maskFilename == OutputFileName) {
+                    cerr << command
+                        << ": will not overwrite output image \""
+                        << OutputFileName
+                        << "\" with soft mask file"
+                        << endl;
+                    exit(1);
+                } else {
+                    if (Verbose >= VERBOSE_MASK_MESSAGES) {
+                        cerr << command
+                            << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                    }
+                    ImageExportInfo maskInfo(maskFilename.c_str());
+                    maskInfo.setXResolution(ImageResolution.x);
+                    maskInfo.setYResolution(ImageResolution.y);
+                    maskInfo.setCompression(MASK_COMPRESSION);
+                    exportImage(srcImageRange(*mask), maskInfo);
                 }
-                ImageExportInfo maskInfo(maskFilename.c_str());
-                maskInfo.setXResolution(ImageResolution.x);
-                maskInfo.setYResolution(ImageResolution.y);
-                maskInfo.setCompression(MASK_COMPRESSION);
-                exportImage(srcImageRange(*mask), maskInfo);
             }
+
+            // Make output alpha the union of all input alphas.
+            copyImageIf(srcImageRange(*(imagePair.second)),
+                        maskImage(*(imagePair.second)),
+                        destImage(*(outputPair.second)));
+
+            // Add the mask to the norm image.
+            combineTwoImagesMP(srcImageRange(*mask),
+                            srcImage(*normImage),
+                            destImage(*normImage),
+                            Arg1() + Arg2());
+
+            imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
+
+    #ifdef CACHE_IMAGES
+            if (Verbose >= VERBOSE_CFI_MESSAGES) {
+                CachedFileImageDirector& v = CachedFileImageDirector::v();
+                cerr << command
+                    << ": info: image cache statistics after loading image "
+                    << m << "\n";
+                v.printStats(cerr, command + ": info:     image", imagePair.first);
+                v.printStats(cerr, command + ": info:     alpha", imagePair.second);
+                v.printStats(cerr, command + ": info:     weight", mask);
+                v.printStats(cerr, command + ": info:     normImage", normImage);
+                v.printStats(cerr, command + ": info: ");
+                v.resetCacheMisses();
+            }
+    #endif
+
+            ++m;
+            ++inputFileNameIterator;
         }
-
-        // Make output alpha the union of all input alphas.
-        copyImageIf(srcImageRange(*(imagePair.second)),
-                    maskImage(*(imagePair.second)),
-                    destImage(*(outputPair.second)));
-
-        // Add the mask to the norm image.
-        combineTwoImagesMP(srcImageRange(*mask),
-                           srcImage(*normImage),
-                           destImage(*normImage),
-                           Arg1() + Arg2());
-
-        imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
-
-#ifdef CACHE_IMAGES
-        if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after loading image "
-                 << m << "\n";
-            v.printStats(cerr, command + ": info:     image", imagePair.first);
-            v.printStats(cerr, command + ": info:     alpha", imagePair.second);
-            v.printStats(cerr, command + ": info:     weight", mask);
-            v.printStats(cerr, command + ": info:     normImage", normImage);
-            v.printStats(cerr, command + ": info: ");
-            v.resetCacheMisses();
-        }
-#endif
-
-        ++m;
-        ++inputFileNameIterator;
     }
-
+    
     const int totalImages = imageList.size();
 
     typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =

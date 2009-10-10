@@ -37,7 +37,14 @@
 #include <vigra/imageinfo.hxx>
 
 // define if you want to use image cache
-#define DEGHOSTING_CACHE_IMAGES
+//#define DEGHOSTING_CACHE_IMAGES
+
+//#include "common.h"
+#ifdef CACHE_IMAGES
+#define IMAGETYPE CachedFileImage
+#else
+#define IMAGETYPE BasicImage
+#endif
 
 namespace deghosting {
     
@@ -57,8 +64,8 @@ namespace deghosting {
             const char * what() { return "You must specify images"; }
     };
     
-    typedef boost::shared_ptr<vigra::BImage> BImagePtr;
-    typedef boost::shared_ptr<vigra::FImage> FImagePtr;
+    typedef vigra::IMAGETYPE<float> WeightImage;
+    typedef boost::shared_ptr<WeightImage> WeightImagePtr;
     // type for camera response
     typedef std::vector<float> EMoR;
 
@@ -78,7 +85,7 @@ namespace deghosting {
         /** create weight masks
          * create weight masks for masking out ghosting regions
          */
-        virtual std::vector<FImagePtr> createWeightMasks() = 0;
+        virtual std::vector<WeightImagePtr> createWeightMasks() = 0;
 
         /** load images for processing
          * @param inputFiles images to be processed

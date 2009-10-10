@@ -51,7 +51,7 @@
 // leave undefined for gaussian normal distribution function
 //#define ATAN_KH
 
-#ifdef DEGHOSTING_CACHE_IMAGES
+#ifdef CACHE_IMAGES
     #include <cstring>
     #include <vigra/cachedfileimage.hxx>
 #endif
@@ -65,11 +65,7 @@ namespace deghosting
         public:
             typedef vigra::FImage ImageType;
             typedef boost::shared_ptr<ImageType> ImagePtr;
-            #ifdef DEGHOSTING_CACHE_IMAGES
-                typedef CachedFileImage<float> ProcessImageType;
-            #else
-                typedef BasicImage<float> ProcessImageType;
-            #endif
+            typedef IMAGETYPE<float> ProcessImageType;
             typedef boost::shared_ptr<ProcessImageType> ProcessImageTypePtr;
     };
 
@@ -78,11 +74,7 @@ namespace deghosting
         public:
             typedef vigra::FRGBImage ImageType;
             typedef boost::shared_ptr<ImageType> ImagePtr;
-            #ifdef DEGHOSTING_CACHE_IMAGES
-                typedef CachedFileImage<AlgTinyVector<float, 3> > ProcessImageType;
-            #else
-                typedef BasicImage<AlgTinyVector<float, 3> > ProcessImageType;
-            #endif
+            typedef IMAGETYPE<AlgTinyVector<float, 3> > ProcessImageType;
             typedef boost::shared_ptr<ProcessImageType> ProcessImageTypePtr;
     };
 
@@ -92,7 +84,7 @@ namespace deghosting
         public:
             Khan(std::vector<std::string>& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, double sigma, int verbosity);
             Khan(std::vector<ImageImportInfo>& inputFiles, const uint16_t flags, const uint16_t debugFlags, int iterations, double sigma, int verbosity);
-            std::vector<FImagePtr> createWeightMasks();
+            std::vector<WeightImagePtr> createWeightMasks();
             ~Khan() {}
         protected:
             typedef typename ImageTypes<PixelType>::ImageType ImageType;
@@ -112,7 +104,7 @@ namespace deghosting
             
             // other necessary stuff
             std::vector<ProcessImageTypePtr> processImages;
-            std::vector<FImagePtr> weights;
+            std::vector<WeightImagePtr> weights;
             
             /** set sigma
              * sets sigma for gaussian weigting function
@@ -146,7 +138,7 @@ namespace deghosting
              * This function loads image, linearize it using EMoR (FIXME),
              * tranform it using logarithm or gamma if input images are HDR
              */
-            void preprocessImage(unsigned int i, FImagePtr &weight, ProcessImageTypePtr &output);
+            void preprocessImage(unsigned int i, WeightImagePtr &weight, ProcessImageTypePtr &output);
     };
     
     template <class PixelType>
@@ -289,10 +281,10 @@ namespace deghosting
     }
     
     template <class PixelType>
-    void Khan<PixelType>::preprocessImage(unsigned int i, FImagePtr &weight, ProcessImageTypePtr &output) {
+    void Khan<PixelType>::preprocessImage(unsigned int i, WeightImagePtr &weight, ProcessImageTypePtr &output) {
         ImageImportInfo imgInfo(inputFiles[i]);
         ImageType * pInputImg =  new ImageType(imgInfo.size());
-        weight = FImagePtr(new FImage(imgInfo.size()));
+        weight = WeightImagePtr(new WeightImage(imgInfo.size()));
         output = ProcessImageTypePtr(new ProcessImageType(imgInfo.size()));
         
         // import image
@@ -336,9 +328,9 @@ namespace deghosting
     }
     
     template <class PixelType>
-    std::vector<FImagePtr> Khan<PixelType>::createWeightMasks() {
+    std::vector<WeightImagePtr> Khan<PixelType>::createWeightMasks() {
         for (unsigned int i = 0; i < inputFiles.size(); i++) {
-            FImagePtr weight;
+            WeightImagePtr weight;
             ProcessImageTypePtr processImage;
             preprocessImage(i, weight, processImage);
             processImages.push_back(processImage);
@@ -378,7 +370,7 @@ namespace deghosting
             if (verbosity > 1)
                 cout << "copying weights from previous iteration" << endl;
             
-            std::vector<FImagePtr> prevWeights;
+            std::vector<WeightImagePtr> prevWeights;
             for (unsigned int i = 0; i < weights.size(); i++) {
                 // scale weights to the requied size
                 if (flags & ADV_MULTIRES) {
@@ -390,20 +382,20 @@ namespace deghosting
                     //compute height
                     int resized_height = origHeight / ( iterations/(it+1) );
                     // destination images
-                    FImage resizedWeight;
+                    WeightImage resizedWeight;
                     ProcessImageType resizedLab;
                     // it's not worthy to scale to less than 100px per side
                     if (resized_width > 100 && resized_height > 100) {
                         // create destination image of desired size
-                        resizedWeight = FImage(Size2D(resized_width,resized_height));
+                        resizedWeight = WeightImage(Size2D(resized_width,resized_height));
                         resizedLab = ProcessImageType(Size2D(resized_width,resized_height));
                     } else if (origWidth >= 100 && origHeight >= 100) {
                         // resize it to the smallest value (ie 100px for the shorter side)
                         if (origWidth >= origHeight) {
-                            resizedWeight = FImage(Size2D(100*origWidth/origHeight, 100));
+                            resizedWeight = WeightImage(Size2D(100*origWidth/origHeight, 100));
                             resizedLab = ProcessImageType(Size2D(100*origWidth/origHeight, 100));
                         } else {
-                            resizedWeight = FImage(Size2D(100, 100*origHeight/origWidth));
+                            resizedWeight = WeightImage(Size2D(100, 100*origHeight/origWidth));
                             resizedLab = ProcessImageType(Size2D(100, 100*origHeight/origWidth));
                         }
                     } else {
@@ -416,13 +408,13 @@ namespace deghosting
                     resizeImageNoInterpolation(srcImageRange(*weights[i]), destImageRange(resizedWeight));
                     resizeImageNoInterpolation(srcImageRange(*backupLab[i]), destImageRange(resizedLab));
                     
-                    FImagePtr tmp(new FImage(resizedWeight));
+                    WeightImagePtr tmp(new WeightImage(resizedWeight));
                     prevWeights.push_back(tmp);
                     processImages[i] = ProcessImageTypePtr(new ProcessImageType(resizedLab));
-                    weights[i] = FImagePtr(new FImage(resizedWeight));
+                    weights[i] = WeightImagePtr(new WeightImage(resizedWeight));
                 } else {
                     DONTSCALE:
-                    FImagePtr tmp(new FImage(*weights[i]));
+                    WeightImagePtr tmp(new WeightImage(*weights[i]));
                     prevWeights.push_back(tmp);
                 }
             }
@@ -446,13 +438,13 @@ namespace deghosting
                 // iterator to the lower right corner
                 ProcessImageTraverser send = processImages[i]->lowerRight();
                 // iterator to the weight image left corner
-                FImage::traverser wy = weights[i]->upperLeft();
+                WeightImage::traverser wy = weights[i]->upperLeft();
                 // loop through the row
                 for (int y=0; sy.y != send.y; ++sy.y, ++wy.y, ++y) {
                     // iterator to the source (L*a*b image)
                     ProcessImageTraverser sx = sy;
                     // iterator to the weight
-                    FImage::traverser wx = wy;
+                    WeightImage::traverser wx = wy;
                     // loop over the pixels
                     for (int x=0; sx.x != send.x; ++sx.x, ++wx.x, ++x) {
                         if (verbosity > 2)
@@ -468,7 +460,7 @@ namespace deghosting
                             // iterator to the neighbour
                             ProcessImageTraverser neighby = processImages[j]->upperLeft();
                             // iterator to the weight
-                            FImage::traverser weighty = prevWeights[j]->upperLeft();
+                            WeightImage::traverser weighty = prevWeights[j]->upperLeft();
                             // pixel offset
                             int ndy = -NEIGHB_DIST;
                             // move them to the upper bound
@@ -485,7 +477,7 @@ namespace deghosting
                             int maxDisty = (height - y) > NEIGHB_DIST ? NEIGHB_DIST : (height - y-1);
                             for (; ndy <= maxDisty; ++neighby.y, ++weighty.y, ++ndy) {
                                 ProcessImageTraverser neighbx = neighby;
-                                FImage::traverser weightx = weighty;
+                                WeightImage::traverser weightx = weighty;
                                 // pixel offset
                                 int ndx = -NEIGHB_DIST;
                                 // move them to the upper bound
