@@ -354,7 +354,7 @@ MESSAGE(STATUS "")
 add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
-if (${PERL_FOUND})
+if (PERL_FOUND)
     add_subdirectory(doc)
 endif()
 

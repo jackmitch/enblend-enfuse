@@ -117,9 +117,9 @@ project(doc1)
 
 # search for gnuplot and
 # generate images (.txt, .pdf .eps and .png)
-find_program(GNUPLOT_EXE "gnuplot")
+find_package(Gnuplot)
 set(_depend_gp)
-if (NOT DOC OR ${GNUPLOT_EXE} MATCHES "-NOTFOUND")
+if (NOT DOC OR NOT GNUPLOT_FOUND)
   # there is no gnuplot command, so simply copy the needed files
   file(GLOB _copy_files RELATIVE "${TOP_SRC_DIR}/doc"
     "${TOP_SRC_DIR}/doc/*.txt"
@@ -138,10 +138,10 @@ else()
     configure_file("${TOP_SRC_DIR}/doc/${_gp}.gp.in" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp" @ONLY)
 
     set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.txt" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.png" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.pdf" "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.eps")
-    #message(STATUS "About to execute ${GNUPLOT_EXE} ${_gp}.gp")
+    #message(STATUS "About to execute ${GNUPLOT_EXECUTABLE} ${_gp}.gp")
     add_custom_command(
       OUTPUT ${_created}
-      COMMAND ${GNUPLOT_EXE} "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
+      COMMAND ${GNUPLOT_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
       DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
       COMMENT "gnuplot: Creating ${_created} from ${CMAKE_CURRENT_BINARY_DIR}/${_gp}.gp"
       )
