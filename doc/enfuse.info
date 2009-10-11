@@ -87,9 +87,9 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-bdc1830ab92a, 28 September
-2009), a program to merge different exposures of the same scene to
-produce an image that looks much like a tonemapped image.
+This manual is for Enfuse (version 4.0-ec62bf3cfe06, 11 October 2009),
+a program to merge different exposures of the same scene to produce an
+image that looks much like a tonemapped image.
 
 1 Overview
 **********
@@ -731,7 +731,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-bdc1830ab92a of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-ec62bf3cfe06 of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 
@@ -2019,20 +2019,20 @@ sharpness with the local contrast variations.  Say we use a 5x5
 contrast window.  Moreover, let `sharp_edge' and `smooth_edge' be two
 specific configurations:
 
-     sharp_edge =  #(    0,    0,  200,    0,    0;
-                         0,  225,    0,    0,    0;
-                         0,  255,    0,    0,    0;
-                       215,    0,    0,    0,    0;
-                       200,    0,    0,    0,    0)
+     sharp_edge =  [    0,    0,  200,    0,    0;
+                        0,  225,    0,    0,    0;
+                        0,  255,    0,    0,    0;
+                      215,    0,    0,    0,    0;
+                      200,    0,    0,    0,    0]
 
-     smooth_edge = #(    0,   62,  125,  187,  250;
-                         1,   63,  126,  188,  251;
-                         2,   65,  127,  190,  252;
-                         3,   66,  128,  191,  253;
-                         5,   67,  130,  192,  255)
+     smooth_edge = [    0,   62,  125,  187,  250;
+                        1,   63,  126,  188,  251;
+                        2,   65,  127,  190,  252;
+                        3,   66,  128,  191,  253;
+                        5,   67,  130,  192,  255]
 
    where `;' separates the rows and `,' separates the columns.  This is
-in fact Tela (http://www.ava.fmi.fi/~pjanhune/tela/) syntax.
+in fact Octave (http://www.gnu.org/software/octave/) syntax.
 
    Images *note Figure:sharp-edge:: and *note Figure:smooth-edge:: show
 plots of the matrices `sharp_edge' and `smooth_edge'.

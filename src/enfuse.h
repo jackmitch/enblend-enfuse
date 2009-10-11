@@ -723,10 +723,30 @@ protected:
     // RGB
     template <typename T>
     inline ResultType f(const T& a, VigraFalseType) const {
-        typedef typename T::value_type TComponentType;
-        typedef typename NumericTraits<TComponentType>::RealPromote RTComponentType;
-        const RTComponentType rsa = NumericTraits<TComponentType>::toRealPromote(a.saturation());
-        return NumericTraits<ResultType>::fromRealPromote(weight * rsa / NumericTraits<TComponentType>::max());
+        typedef typename T::value_type value_type;
+        typedef NumericTraits<value_type> value_traits;
+        typedef NumericTraits<ResultType> result_traits;
+
+        const value_type max = std::max(a.red(), std::max(a.green(), a.blue()));
+        const value_type min = std::min(a.red(), std::min(a.green(), a.blue()));
+        if (max == min)
+        {
+            return result_traits::zero();
+        }
+        else
+        {
+            const double max_value =
+                value_traits::isIntegral::asBool ?
+                static_cast<double>(value_traits::max()) :
+                1.0;
+            const double sum = static_cast<double>(max) + static_cast<double>(min);
+            const double difference = static_cast<double>(max) - static_cast<double>(min);
+            const double saturation =
+                sum <= max_value ?
+                difference / sum :
+                difference / (2.0 * max_value - sum);
+            return result_traits::fromRealPromote(weight * saturation);
+        }
     }
 
     double weight;
