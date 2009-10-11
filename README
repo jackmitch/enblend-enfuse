@@ -1,0 +1,268 @@
+Copyright (C) 2004-2009 Andrew Mihal.
+
+This file is part of Enblend.
+
+
+* Programs
+
+This packages contains the programs Enblend and Enfuse.  The source
+code and further information about Enblend are available at:
+        http://enblend.sf.net
+
+** Enblend
+
+Enblend is a tool for compositing images using a Burt&Adelson
+multiresolution spline.  This technique tries to make the seams
+between the input images invisible.  The basic idea is that image
+features should be blended across a transition zone proportional in
+size to the spatial frequency of the features.  For example, objects
+like trees and windowpanes have rapid changes in color.  By blending
+these features in a narrow zone, you will not be able to see the seam
+because the eye already expects to see color changes at the edge of
+these features.  Clouds and sky are the opposite.  These features have
+to be blended across a wide transition zone because any sudden change
+in color will be immediately noticeable.
+
+Enblend expects each input file to have an alpha channel.  The alpha
+channel should indicate the region of the file that has valid image
+data.  Enblend compares the alpha regions in the input files to find
+the areas where images overlap.  Alpha channels can be used to
+indicate to Enblend that certain portions of an input image should not
+contribute to the final image.
+
+Enblend does not align images for you.  Use a tool like Hugin or
+PanoTools to do this.  The files produced by these programs are
+exactly what Enblend is designed to work with.
+
+** Enfuse
+
+Enfuse is a tool for automatic exposure blending, contrast blending
+and much more.  It can be used to fuse an exposure bracketed step
+automatically into a nicely looking image.  See
+        doc/enfuse.info
+and on Windows also
+        contrib/enfuse_droplet/enfuse_droplet_readme.txt
+for more information.
+
+
+* Installation
+
+Also see INSTALL for further information.
+
+** Tarball
+
+        ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+
+** Mercurial Repository
+
+        make --makefile=Makefile.scm
+        ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+
+* Specific Configuration Options
+
+Among the usual configuration options of the GNU autoconf system, the
+configure(1) script offers the following options to tailor Enblend and
+Enfuse.  Remember that configure(1) creates a file called "config.h"
+that can serve for fine-tuning the configuration.
+
+
+** --enable-gpu-support=CHECK/yes/no
+
+Enable code in Enblend to use the GPU for optimizing the seam line
+between two images if all necessary OpenGL libraries are found.
+Enfuse does not benefit of this code.  OpenMP (see below) and GPU work
+together.
+
+Note that enabling GPU support does not mean Enblend will actually use
+the GPU.  Besides passing option "--gpu" to Enblend the hardware as
+well as the X11 drivers have to fulfill certain requirements.
+
+See also option "--with-apple-opengl-framework".
+
+
+** --enable-openmp=yes/NO
+
+Parallelize parts of Enblend and Enfuse with OpenMP.  See
+        http://www.openmp.org/
+
+Note that OpenMP support and the image cache must not be activated
+both.  The default is to configure with image cache and without
+OpenMP.
+
+If OpenMP support has been enabled, the utilization of special
+features of the actual, underlying OpenMP implementation can be
+controlled as usual with the environment variables OMP_NUM_THREADS,
+OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
+on the usage of these variables.
+
+
+** --enable-split-doc=YES/no
+
+Split the documentation files in INFO or HTML format into small
+pieces.  The default is "yes", split documentation.
+
+
+** --enable-debug=yes/NO
+
+Compile without optimizations and enable all debug-checking code.  The
+default is "no", build an optimized version without debugging symbols.
+
+
+** --enable-image-cache=YES/no
+
+Activate the image-cache feature, which allows for processing of large
+images.  The image cache handles swapping parts of the images to disk.
+The default is "yes", enable the image cache.
+
+The image cache is recommended on systems where memory is scarce, but
+the images to blend or fuse are large.
+
+The image-cache feature and OpenMP support must not be activated
+together.
+
+
+** --with-apple-opengl-framework=yes/NO
+
+Sometimes AutoConf fails to detect Apple's OpenGL framework.  Use this
+option on MAC OS X to force its usage without a test.
+
+See also option "--enable-gpu-support".
+
+
+** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
+
+Use Boost "filesystem" library to get platform-independent path
+generation.  The default is to check for usability.  "No" forces the
+use of the internal path generation library.  Supply a LIBRARY name if
+you want to override the default candidates "boost_filesystem-mt" for
+multi-threaded compilation and "boost_filesystem" for single-thread
+builds.
+
+
+** --with-dmalloc=yes/NO
+
+Compile with the debug-malloc library.  The library is available at
+http://www.dmalloc.com/.
+
+
+** --with-openexr=CHECK/yes/no
+
+Build with support for reading and writing OpenEXR images.  See
+http://www.openexr.com/ for the required libraries.
+
+
+** --with-ttf-path=<PATH>
+
+Set PATH to TrueType fonts.  This is only required for building the
+documentation.
+
+
+* Extra Make(1) Variables
+
+You can override Makefile variables the usual way.  In addition the
+build process supplies several variables, all starting with "EXTRA",
+that add their value to the "usual suspects".  These are
+
+        CPPFLAGS  --  EXTRACPPFLAGS
+        CFLAGS    --  EXTRACFLAGS
+        CXXFLAGS  --  EXTRACXXFLAGS
+        LDFLAGS   --  EXTRALDFLAGS
+
+For example, to quickly add an additional define, use
+        make EXTRACPPFLAGS=-DDEBUG_8BIT_ONLY
+To compile for coverage analysis, say
+        make EXTRACXXFLAGS="-O0 --coverage" EXTRALDFLAGS="--coverage"
+analogously for profiling analysis
+        make EXTRACXXFLAGS=-pg EXTRALDFLAGS=-pg
+
+
+* Documentation
+
+The distribution includes some basic documentation in
+        doc/enblend.info
+        doc/enfuse.info
+and the manual pages in
+        src/enblend.1
+        src/enfuse.1
+
+After the configuration you can build documentation in PostScript,
+PDF, and HTML format.
+        make ps
+        make pdf
+        make html
+
+Note that some additional packages are required to build these
+formats:
+        makeinfo       - GNU documentation generator.
+        gnuplot        - Render plots (.gp) in .txt, .png, .eps, and
+                         .pdf. Check out http://www.gnuplot.info/.
+        freefonts      - Fonts for Gnuplot's .png format
+        ghostscript    - Convert .eps to .pdf
+        perl           - Run Perl programs
+        tetex          - Typeset the .texi documents in .ps or .pdf
+        texi2html      - Convert .texi to .html.  Find more information
+                         at http://www.nongnu.org/texi2html/.
+        transfig       - Render XFig drawings in .png, .eps, and .pdf.
+                         Check out http://www.xfig.org/ for Transfig.
+
+
+* Operating System Specific Instructions and Hints
+
+** GNU/Linux
+
+*** High-Performance Binaries
+
+To configure and compile high-performance versions of Enblend and
+Enfuse configure single CPU systems with
+        --disable-image-cache
+SMP boxes with
+        --disable-image-cache --enable-openmp
+and pass
+         EXTRACXXFLAGS="-march=native -O2"
+to make(1).  The resulting binaries are pretty fast, although other
+configuration options or compiler flags might improve their
+performance even more.
+
+*** Xmi and Xi
+
+To avoid direct linkage to the two X11 libraries Xmi and Xi add
+"--without-x" to the parameters of configure(1).
+
+
+** MacOS
+
+** Win
+
+
+* License
+
+Enblend is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Enblend is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Enblend; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Enblend uses the VIGRA computer vision library.
+VIGRA is Copyright 1998-2002 by Ullrich Koethe
+Cognitive Systems Group, University of Hamburg, Germany
+Please see the file VIGRA_LICENSE for details.
+
+
+
+Local Variables:
+mode: outline
+End:
