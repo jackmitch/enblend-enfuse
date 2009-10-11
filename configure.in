@@ -439,7 +439,7 @@ if test "x$enable_debug" = "xyes" \
     AC_MSG_RESULT(yes)
     enable_debug=yes
 else
-    CXXFLAGS="$CXXFLAGS -O3 -ffast-math -DNDEBUG -Wall"
+    CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG -Wall"
     AC_MSG_RESULT(no)
     enable_debug=no
 fi
