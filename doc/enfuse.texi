@@ -3837,24 +3837,24 @@ sharpness with the local contrast variations.  Say we use a
 and @code{smooth_edge} be two specific configurations:
 
 @example
-sharp_edge =  #(    0,    0,  200,    0,    0;
-                    0,  225,    0,    0,    0;
-                    0,  255,    0,    0,    0;
-                  215,    0,    0,    0,    0;
-                  200,    0,    0,    0,    0)
+sharp_edge =  [    0,    0,  200,    0,    0;
+                   0,  225,    0,    0,    0;
+                   0,  255,    0,    0,    0;
+                 215,    0,    0,    0,    0;
+                 200,    0,    0,    0,    0]
 @end example
 
 @example
-smooth_edge = #(    0,   62,  125,  187,  250;
-                    1,   63,  126,  188,  251;
-                    2,   65,  127,  190,  252;
-                    3,   66,  128,  191,  253;
-                    5,   67,  130,  192,  255)
+smooth_edge = [    0,   62,  125,  187,  250;
+                   1,   63,  126,  188,  251;
+                   2,   65,  127,  190,  252;
+                   3,   66,  128,  191,  253;
+                   5,   67,  130,  192,  255]
 @end example
 
 where @samp{;} separates the rows and @samp{,} separates the columns.
-This is in fact @uref{http://@/www.ava.fmi.fi/@/~pjanhune/@/tela/,
-Tela} syntax.
+This is in fact @uref{http://@/www.gnu.org/@/software/@/octave/,
+Octave} syntax.
 
 Images@tie{}@ref{Figure:sharp-edge} and @ref{Figure:smooth-edge} show
 plots of the matrices @code{sharp_edge} and @code{smooth_edge}.
