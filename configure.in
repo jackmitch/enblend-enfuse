@@ -95,12 +95,23 @@ if test "x$gpu_support" = "xyes" \
     if test "X$with_apple_opengl_framework" = "Xyes"; then
       AC_DEFINE([HAVE_APPLE_OPENGL_FRAMEWORK], [1],
                 [Use the Apple OpenGL framework.])
-      GL_LIBS="-framework OpenGL"
+      GL_LIBS="-framework OpenGL -framework AGL"
+      GLUT_CFLAGS="$GLU_CFLAGS"
+      GLUT_LIBS="-framework GLUT -lobjc $GL_LIBS"
+      AC_SUBST([GL_CFLAGS])
+      AC_SUBST([GL_LIBS])
+      AC_SUBST([GLU_CFLAGS])
+      AC_SUBST([GLU_LIBS])
+      AC_SUBST([GLUT_CFLAGS])
+      AC_SUBST([GLUT_LIBS])
+      no_gl=""
+      no_glu=""
+      no_glut=""
     else
       AX_CHECK_GL
+      AX_CHECK_GLU
+      AX_CHECK_GLUT
     fi
-    AX_CHECK_GLU
-    AX_CHECK_GLUT
     if test "X$no_gl" = Xyes; then
         missing_for_gpu="$missing_for_gpu GL"
         AC_MSG_WARN([[GL not found, disabling GPU mode]])
