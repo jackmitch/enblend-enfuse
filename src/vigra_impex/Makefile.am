@@ -3,7 +3,7 @@ AM_CFLAGS = $(EXTRACFLAGS)
 AM_CXXFLAGS = $(EXTRACXXFLAGS)
 AM_LDFLAGS = $(EXTRALDFLAGS)
 
-EXTRA_DIST = vigra_impex.vcproj vigra_impex_msvc2003.vcproj vigra_impex_msvc2008.vcproj
+EXTRA_DIST = vigra_impex_msvc2008.vcproj
 
 noinst_LIBRARIES = libvigra_impex.a
 

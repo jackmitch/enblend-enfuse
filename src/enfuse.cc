@@ -52,15 +52,7 @@
 #include <set>
 #include <vector>
 
-#ifndef _WIN32
 #include <getopt.h>
-#else
-//extern "C" int getopt(int nargc, char** nargv, char* ostr);
-extern "C" {
-#include <win32helpers/getopt_long.h>
-}
-#endif
-
 extern "C" char *optarg;
 extern "C" int optind;
 

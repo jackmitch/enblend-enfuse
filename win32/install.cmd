@@ -1,17 +1,12 @@
 @echo off
 if not exist ..\INSTALLDIR md ..\INSTALLDIR
-copy ..\src\Release\enblend.exe ..\INSTALLDIR
-copy ..\src\Release\enfuse.exe ..\INSTALLDIR
+copy ..\src\%1\*.exe ..\INSTALLDIR
 copy ..\AUTHORS ..\INSTALLDIR
 copy ..\ChangeLog ..\INSTALLDIR
 copy ..\COPYING ..\INSTALLDIR
 copy ..\NEWS ..\INSTALLDIR
-copy ..\INSTALL ..\INSTALLDIR
 copy ..\README ..\INSTALLDIR
-copy ..\TODO ..\INSTALLDIR
 copy ..\VIGRA_LICENSE ..\INSTALLDIR
-copy ..\INSTALLDIR ..\INSTALLDIR
-copy ..\README_WINDOWS.txt ..\INSTALLDIR
 
 copy ..\doc\enblend.html ..\INSTALLDIR
 copy ..\doc\enfuse.html ..\INSTALLDIR
