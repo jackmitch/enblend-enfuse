@@ -87,7 +87,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-ec62bf3cfe06, 11 October 2009),
+This manual is for Enfuse (version 4.0-e469d02bbf19, 14 October 2009),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -191,7 +191,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
- Figure 2.1: Photographic workflow with Enblend and Enfuse.
+Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images to form a panorama, an exposure series, a
@@ -731,7 +731,7 @@ to read the manual before applying them successfully.
 
   `--GrayProjector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-ec62bf3cfe06 of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-e469d02bbf19 of
      Enfuse, the option is effective for exposure weighting contrast
      weighting.  Default: `average'.
 
@@ -1191,7 +1191,7 @@ length.  The user sets the size with option `--ContrastWindowSize'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
- Figure 4.2: Examples of local analysis windows for the sizes 3 and 5.
+Figure 4.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
 neighboring pixels, which all contribute equally to the weight.
 
@@ -2224,7 +2224,7 @@ over the whole range of edge curvatures.
 Figure *note Figure:focus-stacking-decision-tree:: helps the user to
 arrive at a well-fused focus stack with as few steps as possible.
 
- Figure 7.3: Focus stacking decision tree.
+Figure 7.3: Focus stacking decision tree.
 
    Always start with the default, contrast weighting with a local
 contrast window.  Only if seams appear as described in *note Advanced

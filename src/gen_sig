@@ -85,11 +85,12 @@ public:
 
         if (generate_checksum() != checksum_ || checksum_ != ~neg_checksum_)
         {
+            std::cerr << command.c_str(); // MSVC chokes without c_str()
 #ifdef WANT_AGGRESSIVE_SIGNATURE_CHECK
-            std::cerr << command << @{[octalize_string(qq(: tampered binary\n))]};
+            std::cerr << @{[octalize_string(qq(: tampered binary\n))]};
             exit(1);
 #else
-            std::cerr << command << @{[octalize_string(qq(: warning: signature check failed\n))]};
+            std::cerr << @{[octalize_string(qq(: warning: signature check failed\n))]};
 #endif
         }
     }

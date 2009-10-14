@@ -1,4 +1,4 @@
 @set UPDATED 9 October 2009
 @set UPDATED-MONTH October 2009
-@set EDITION 4.0-ec62bf3cfe06
-@set VERSION 4.0-ec62bf3cfe06
+@set EDITION 4.0-e469d02bbf19
+@set VERSION 4.0-e469d02bbf19
