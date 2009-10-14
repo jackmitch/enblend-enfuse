@@ -599,14 +599,24 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
         }
 
         if (snake->front().first) {
-            // First vertex is moveable. Rotate list so that first vertex is nonmoveable.
+            // First vertex is moveable.  Rotate list so that first
+            // vertex is nonmoveable.
             Segment::iterator firstNonmoveableVertex = snake->begin();
-            while (firstNonmoveableVertex->first) ++firstNonmoveableVertex;
+            while (firstNonmoveableVertex->first) {
+                ++firstNonmoveableVertex;
+            }
 
-            // Copy initial run on moveable vertices and first nonmoveable vertex to end of list.
-            Segment::iterator firstNonmoveablePlusOne = firstNonmoveableVertex;
-            ++firstNonmoveablePlusOne;
-            snake->insert(snake->end(), snake->begin(), firstNonmoveablePlusOne);
+            // Copy initial run on moveable vertices and first
+            // non-moveable vertex to end of list.
+            Segment::iterator firstNonmoveableSuccessor = firstNonmoveableVertex;
+            ++firstNonmoveableSuccessor;
+            if (EXPECT_RESULT(firstNonmoveableSuccessor == snake->end(), false)) {
+                snake->insert_after(firstNonmoveableVertex,
+                                    snake->begin(), firstNonmoveableVertex);
+            } else {
+                snake->insert(snake->end(), // append at the end
+                              snake->begin(), firstNonmoveableSuccessor);
+            }
 
             // Erase initial run of moveable vertices.
             snake->erase(snake->begin(), firstNonmoveableVertex);
