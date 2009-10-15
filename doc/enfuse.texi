@@ -142,7 +142,7 @@ Invocation
 * Common Options::              General options
 * Extended Options::            Memory control and others
 * Fusion Options::              Image fusion control
-* Expert Options::              Contrast and entropy selection configuration
+* Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
 
 Weighting Functions
@@ -150,15 +150,15 @@ Weighting Functions
 * Weighting Pixels::            General concept of weighting pixels
 * Exposure Weighting::          Weighting by exposure
 * Saturation Weighting::        Weighting by saturation
-* Contrast Weighting::          Weighting by local contrast
-* Entropy Weighting::           Weighting by local entropy
+* Local Contrast Weighting::    Weighting by local contrast
+* Local Entropy Weighting::     Weighting by local entropy
 
 Weighting Algorithms
 
 * Weighted Average::            Enfuse's default weighting algorithm
 * Disabling Averaging::         ``Super Trouper'' weighting for focus stacks
 
-Contrast Weighting
+Local Contrast Weighting
 
 * Standard Deviation::          Standard deviation (@acronym{SDev}) in a square of pixels
 * Laplacian of Gaussian::       @acronym{LoG}, a second derivative method
@@ -187,7 +187,7 @@ Focus Stacks
 
 * Why Focus Stacks::            Why take the hassle?
 * Preparing Focus Stacks::      How to get suitable input images
-* Contrast Based Fusing::       Fundamental command line options
+* Local Contrast Based Fusing:: Fundamental command line options
 * Basic Focus Stacking::        Simple, standard deviation method
 * Advanced Focus Stacking::     Advanced, Laplacian technique
 * Expert Stacking::             Tips for focus stacking experts
@@ -242,9 +242,9 @@ Enfuse can also be used to build extended depth-of-field
 (@acronym{DOF}) images by blending a focus stack.
 
 The idea is that pixels in the input images are weighted according to
-qualities such as, for example, proper exposure, good contrast, or
-high saturation.  These weights determine how much a given pixel will
-contribute to the final image.
+qualities such as, for example, proper exposure, good local contrast,
+or high saturation.  These weights determine how much a given pixel
+will contribute to the final image.
 
 @cindex Burt-Adelson multiresolution spline
 A @sc{Burt}-@sc{Adelson} multiresolution spline blender@footnote{Peter
@@ -272,14 +272,14 @@ with high or low luminance levels.
 The saturation criteria favors highly-saturated pixels.  (Note that
 saturation is only defined for color pixels.)
 
-@item Contrast
-@cindex weighting, contrast
+@item Local Contrast
+@cindex weighting, local contrast
 The contrast criteria favors pixels inside a high-contrast
 neighborhood.  Enfuse can use standard deviation, Laplacian magnitude,
 or a blend of both as local contrast measure.
 
-@item Entropy
-@cindex weighting, entropy
+@item Local Entropy
+@cindex weighting, local entropy
 The entropy criteria prefers pixels inside a high-entropy
 neighborhood.  In addition, Enfuse allows the user to mitigate the
 problem of noisy images when using entropy weighting by setting a
@@ -344,7 +344,7 @@ Fuse the sequence of images @var{INPUT}@dots{} into a single
 * Common Options::              General options
 * Extended Options::            Memory control and others
 * Fusion Options::              Image fusion control
-* Expert Options::              Contrast and entropy selection configuration
+* Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
 @end menu
 
@@ -906,9 +906,9 @@ contributes to the output image.
 @table @code
 @item --wContrast=@var{WEIGHT}
 @opindex --wContrast
-@cindex weight, contrast
-Sets the relative @var{WEIGHT} of high-contrast pixels.  Default:
-@value{src::default-weight-contrast}.  Valid range:
+@cindex weight, local contrast
+Sets the relative @var{WEIGHT} of high local-contrast pixels.
+Default: @value{src::default-weight-contrast}.  Valid range:
 @ifinfo
 @value{src::minimum-float-argument} @leq{} @var{WEIGHT} @leq{}
 @value{src::maximum-float-argument}.
@@ -929,7 +929,7 @@ Sets the relative @var{WEIGHT} of high-contrast pixels.  Default:
 $@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
 @value{src::maximum-float-argument}$.
 @end tex
-See @ref{Contrast Weighting} and @ref{Expert Options, Option
+See @ref{Local Contrast Weighting} and @ref{Expert Options, Option
 ContrastWindowSize}.
 
 @item --wEntropy=@var{WEIGHT}
@@ -957,7 +957,7 @@ Sets the relative @var{WEIGHT} of high entropy pixels.  Default:
 $@value{src::minimum-float-argument} \le \mathit{WEIGHT} \le
 @value{src::maximum-float-argument}$.
 @end tex
-See @ref{Entropy Weighting} and @ref{Expert Options, Options
+See @ref{Local Entropy Weighting} and @ref{Expert Options, Options
 EntropyWindowSize and EntropyCutoff}.
 
 @item --wExposure=@var{WEIGHT}
@@ -1286,7 +1286,8 @@ Use gray projector@tie{}@var{PROJECTOR} for conversion of
 $(R, G, B) \rightarrow Y.$
 @end tex
 In version@tie{}@value{VERSION} of Enfuse, the option is effective for
-exposure weighting contrast weighting.  Default: @samp{average}.
+exposure weighting and local contrast weighting.  Default:
+@samp{average}.
 
 Valid values for @var{PROJECTOR} are:
 
@@ -1657,8 +1658,8 @@ the concept of weighting and all weighting functions in detail.
 * Weighting Pixels::            General concept of weighting pixels
 * Exposure Weighting::          Weighting by exposure
 * Saturation Weighting::        Weighting by saturation
-* Contrast Weighting::          Weighting by local contrast
-* Entropy Weighting::           Weighting by local entropy
+* Local Contrast Weighting::    Weighting by local contrast
+* Local Entropy Weighting::     Weighting by local entropy
 @end menu
 
 
@@ -2272,7 +2273,7 @@ algorithm.
 @noindent
 Obviously, saturation weighting can only be defined for @acronym{RGB}
 images, not for grayscale ones!  If you need something similar, check
-out @ref{Entropy Weighting}; entropy weighting works for both
+out @ref{Local Entropy Weighting}; entropy weighting works for both
 @acronym{RGB} and grayscale pictures.
 
 The saturation weighting algorithm only looks at a single pixel at a
@@ -2286,13 +2287,13 @@ time; the pixel's neighborhood is not taken into account.
 @end table
 
 
-@node Contrast Weighting
-@section Contrast Weighting
-@cindex weighting, contrast
+@node Local Contrast Weighting
+@section Local Contrast Weighting
+@cindex weighting, local contrast
 
-Contrast weighting favors pixels inside a high contrast neighborhood.
-The notion of ``high contrast'' is defined either by two different
-criteria or by a blend of both:
+Local contrast weighting favors pixels inside a high contrast
+neighborhood.  The notion of ``high contrast'' is defined either by
+two different criteria or by a blend of both:
 
 @itemize
 @item
@@ -3082,9 +3083,9 @@ perform the parameter optimization and the search for the most
 appropriate mode at the final resolution.
 
 
-@node Entropy Weighting
-@section Entropy Weighting
-@cindex weighting, entropy
+@node Local Entropy Weighting
+@section Local Entropy Weighting
+@cindex weighting, local entropy
 
 Entropy weighting prefers pixels inside a high entropy neighborhood.
 
@@ -3293,14 +3294,14 @@ For more on (information) entropy visit
 Wikipedia}.
 
 Enfuse computes a pixel's entropy by considering the pixel itself and
-its surrounding pixels quite similar to @ref{Contrast Weighting}.  The
-size of the window is set by @option{--EntropyWindowSize}.  Choosing
-the right size is difficult, because there is a serious tradeoff
-between the locality of the data and the size of the sample used to
-compute @math{H}.  A large window results in a large sample size and
-therefore in a reliable entropy, but considering pixels far away from
-the center degrades @math{H} into a non-local measure.  For small
-windows the opposite holds true.
+its surrounding pixels quite similar to @ref{Local Contrast
+Weighting}.  The size of the window is set by
+@option{--EntropyWindowSize}.  Choosing the right size is difficult,
+because there is a serious tradeoff between the locality of the data
+and the size of the sample used to compute @math{H}.  A large window
+results in a large sample size and therefore in a reliable entropy,
+but considering pixels far away from the center degrades @math{H} into
+a non-local measure.  For small windows the opposite holds true.
 
 Another difficulty arises from the use of entropy as a weighting
 function in dark parts of an image, that is, in areas where the
@@ -3659,7 +3660,7 @@ diffraction.
 @menu
 * Why Focus Stacks::            Why take the hassle?
 * Preparing Focus Stacks::      How to get suitable input images
-* Contrast Based Fusing::       Fundamental command line options
+* Local Contrast Based Fusing:: Fundamental command line options
 * Basic Focus Stacking::        Simple, standard deviation method
 * Advanced Focus Stacking::     Advanced, Laplacian technique
 * Expert Stacking::             Tips for focus stacking experts
@@ -3703,7 +3704,7 @@ photographer squeezes the maximum quality out of the lens.  But: the
 ``sweet spot'' aperture often is only one or two stops away from wide
 open.  Wouldn't it be great to be able combine these best-possible
 images to form one high-quality, sufficient-@acronym{DOF} image?
-Welcome to Enfuse's contrast selection abilities.
+Welcome to Enfuse's local-contrast selection abilities.
 
 
 @node Preparing Focus Stacks
@@ -3723,10 +3724,10 @@ images will do.  Naturally, high @acronym{SNR} input data always is
 welcome.
 
 
-@node Contrast Based Fusing
-@subsection Contrast Based Fusing
-@cindex contrast-based fusing
-@cindex fusing, contrast-based
+@node Local Contrast Based Fusing
+@subsection Local Contrast Based Fusing
+@cindex local-contrast-based fusing
+@cindex fusing, local-contrast-based
 @cindex focus stacks, fusing
 
 A bare bones call to Enfuse for focus stacking could look like this.
@@ -3755,19 +3756,19 @@ Switch @strong{off} saturation based pixel selection.  The default
 weight is @value{src::default-weight-saturation}.
 
 @item --wContrast=1
-Switch @strong{on} pixel selection based on contrast.
+Switch @strong{on} pixel selection based on local contrast.
 
 @item --HardMask
 Select the best pixel from the image stack and ignore all others.
 Without this option, Enfuse uses all pixels in the stack and weights
-them according to their respective quality, which in our case would be
+them according to their respective quality, which in our case is local
 contrast.  Without @option{--HardMask}, the result will always look a
-bit soft.  @xref{Contrast Weighting}.
+bit soft.  @xref{Local Contrast Weighting}.
 @end table
 
 @noindent
-If you want to see some entertaining progress messages -- contrast
-weighting takes a while --, also pass the
+If you want to see some entertaining progress messages --
+local-contrast weighting takes a while --, also pass the
 @option{--verbose}@tie{}option for a verbose progress report.
 
 
@@ -3777,12 +3778,13 @@ weighting takes a while --, also pass the
 @cindex focus stacking, basic
 
 For a large class of image stacks Enfuse's default algorithm, as
-selected in @ref{Contrast Based Fusing}, to determine the sharpness
-produces nice results.  The algorithm uses a moving square window, the
-so-called contrast window.  It computes the standard deviation of the
-pixels inside of the window.  The program then selects the window's
-center pixel of the image in the stack where the standard deviation is
-largest, that is, the local contrast reaches the maximum.
+selected in @ref{Local Contrast Based Fusing}, to determine the
+sharpness produces nice results.  The algorithm uses a moving square
+window, the so-called contrast window.  It computes the standard
+deviation of the pixels inside of the window.  The program then
+selects the window's center pixel of the image in the stack where the
+standard deviation is largest, that is, the local contrast reaches the
+maximum.
 
 However, the algorithm fails to deliver good masks for images which
 exhibit high contrast edges on the scale of the contrast window size.

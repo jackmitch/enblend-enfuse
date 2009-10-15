@@ -350,9 +350,9 @@ void printUsageAndExit(const bool error = true) {
         "                         (0 <= WEIGHT <= 1); default: " << WExposure << "\n" <<
         "  --wSaturation=WEIGHT   weight given to highly-saturated pixels\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WSaturation << "\n" <<
-        "  --wContrast=WEIGHT     weight given to high-contrast pixels\n" <<
+        "  --wContrast=WEIGHT     weight given to pixels in high-contrast neighborhoods \n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WContrast << "\n" <<
-        "  --wEntropy=WEIGHT      weight given to high entropy regions\n" <<
+        "  --wEntropy=WEIGHT      weight given to pixels in high-entropy neighborhoods\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
         "  --wMu=MEAN             center also known as MEAN of Gaussian weighting\n" <<
         "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
