@@ -297,14 +297,18 @@ void printVersionAndExit(int argc, char** argv) {
 #endif
             "\n";
 
-        cout <<
-            "Extra feature: image cache: " <<
 #ifdef CACHE_IMAGES
-            "yes" <<
+        cout << "Extra feature: image cache: yes\n";
+        const char* tmpdir = getenv("TMPDIR");
+        cout << "  - environment variable TMPDIR ";
+        if (tmpdir == NULL) {
+            cout << "not set, cache file in default directory \"/tmp\"\n";
+        } else {
+            cout << "set, cache file located in \"" << tmpdir << "\"\n";
+        }
 #else
-            "no" <<
+        cout << "Extra feature: image cache: no\n";
 #endif
-            "\n";
 
 #ifdef HAVE_LIBGLEW
         cout << "Extra feature: GPU acceleration: yes\n";

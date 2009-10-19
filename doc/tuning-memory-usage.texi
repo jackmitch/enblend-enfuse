@@ -4,8 +4,8 @@ The default configuration of Enblend and Enfuse assumes a system with
 @cindex image cache
 If Enblend and Enfuse have been compiled with the ``image-cache''
 feature, they do not rely on the operating system's memory management,
-but use their own image cache.  To find out whether your version uses
-the image cache say
+but use their own image cache in the file system.  To find out whether
+your version uses the image cache say
 
 @example
 enblend --verbose --version
@@ -19,6 +19,16 @@ enfuse --verbose --version
 @end example
 
 @noindent
+@cindex image cache, location
+@cindex @env{TMPDIR}
+Enblend and Enfuse put the file that holds the image cache either in
+the directory pointed to by the environment
+variable@tie{}@env{TMPDIR}, or, if the variable is not set, in
+directory@tie{}@file{/tmp}.  It is prudent to ensure write permissions
+and enough of free space on the volume with the cache file.
+
+@opindex -m
+@opindex -b
 The size of the image cache is user configurable with the
 option@tie{}@samp{-m @var{CACHE-SIZE}} (@pxref{Extended Options}).
 Furthermore, option@tie{}@samp{-b @var{BUFFER-SIZE}} (@pxref{Extended
