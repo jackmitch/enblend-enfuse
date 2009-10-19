@@ -913,9 +913,18 @@ int process_options(int argc, char** argv)
 
         case CompressionId:
             if (optarg != NULL && *optarg != 0) {
-                OutputCompression = optarg;
+                const std::string upper_opt(enblend::toUppercase(optarg));
+                if (upper_opt == "NONE") {
+                    ;           // stick with default
+                } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS" ||
+                           upper_opt.find_first_not_of("0123456789") == std::string::npos) {
+                    OutputCompression = upper_opt;
+                } else {
+                    cerr << command << ": unrecognized compression \"" << optarg << "\"" << endl;
+                    failed = true;
+                }
             } else {
-                cerr << command << ": option \"--compression\" reqires an argument" << endl;
+                cerr << command << ": option \"--compression\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CompressionOption);
@@ -928,7 +937,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 GrayscaleProjector = optarg;
             } else {
-                cerr << command << ": option \"--gray-projector\" reqires an argument" << endl;
+                cerr << command << ": option \"--gray-projector\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(GrayProjectorOption);
@@ -955,7 +964,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 OutputFileName = optarg;
             } else {
-                cerr << command << ": options \"-o\" or \"--output\" reqire arguments" << endl;
+                cerr << command << ": options \"-o\" or \"--output\" require arguments" << endl;
                 failed = true;
             }
             optionSet.insert(OutputOption);
@@ -999,7 +1008,7 @@ int process_options(int argc, char** argv)
                                                     "exposure weight greater than 1; will use 1",
                                                     1.0);
             } else {
-                cerr << command << ": option \"--exposure-weight\" reqires an argument" << endl;
+                cerr << command << ": option \"--exposure-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureWeightOption);
@@ -1018,7 +1027,7 @@ int process_options(int argc, char** argv)
                                                     "contrast weight greater than 1; will use 1",
                                                     0.0);
             } else {
-                cerr << command << ": option \"--contrast-weight\" reqires an argument" << endl;
+                cerr << command << ": option \"--contrast-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ContrastWeightOption);
@@ -1037,7 +1046,7 @@ int process_options(int argc, char** argv)
                                                       "saturation weight greater than 1; will use 1",
                                                       1.0);
             } else {
-                cerr << command << ": option \"--saturation-weight\" reqires an argument" << endl;
+                cerr << command << ": option \"--saturation-weight\" requires an argument" << endl;
                 failed = true;
             }
             WSaturationIsDefault = false;
@@ -1057,7 +1066,7 @@ int process_options(int argc, char** argv)
                                               "exposure center value (mu) geater than 1; will use 1",
                                               1.0);
             } else {
-                cerr << command << ": option \"--exposure-mu\" reqires an argument" << endl;
+                cerr << command << ": option \"--exposure-mu\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureMuOption);
@@ -1073,7 +1082,7 @@ int process_options(int argc, char** argv)
                                                  "exposure standard deviation (sigma) less than 0; will use 1/1024",
                                                  1.0 / 1024.0);
             } else {
-                cerr << command << ": option \"--exposure-sigma\" reqires an argument" << endl;
+                cerr << command << ": option \"--exposure-sigma\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureSigmaOption);
@@ -1092,7 +1101,7 @@ int process_options(int argc, char** argv)
                                                    "entropy weight greater than 1; will use 1",
                                                    1.0);
             } else {
-                cerr << command << ": option \"--entropy-weight\" reqires an argument" << endl;
+                cerr << command << ": option \"--entropy-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(EntropyWeightOption);
@@ -1128,7 +1137,7 @@ int process_options(int argc, char** argv)
                     ContrastWindowSize++;
                 }
             } else {
-                cerr << command << ": option \"--contrast-window-size\" reqires an argument" << endl;
+                cerr << command << ": option \"--contrast-window-size\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ContrastWindowSizeOption);
@@ -1151,7 +1160,7 @@ int process_options(int argc, char** argv)
                     EntropyWindowSize++;
                 }
             } else {
-                cerr << command << ": option \"--entropy-window-size\" reqires an argument" << endl;
+                cerr << command << ": option \"--entropy-window-size\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(EntropyWindowSizeOption);
@@ -1166,7 +1175,7 @@ int process_options(int argc, char** argv)
                                             1);
                 CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
             } else {
-                cerr << command << ": option \"-b\" reqires an argument" << endl;
+                cerr << command << ": option \"-b\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(BlockSizeOption);
@@ -1193,7 +1202,7 @@ int process_options(int argc, char** argv)
                     failed = true;
                 }
             } else {
-                cerr << command << ": option \"-f\" reqires 2 or 4 arguments" << endl;
+                cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
                 failed = true;
             }
             OutputSizeGiven = true;
@@ -1214,7 +1223,7 @@ int process_options(int argc, char** argv)
                                             "too few levels; will use one level",
                                             1U);
             } else {
-                cerr << command << ": option \"-l\" reqires an argument" << endl;
+                cerr << command << ": option \"-l\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(LevelsOption);
@@ -1229,7 +1238,7 @@ int process_options(int argc, char** argv)
                                             1);
                 CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
             } else {
-                cerr << command << ": option \"-m\" reqires an argument" << endl;
+                cerr << command << ": option \"-m\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CacheSizeOption);

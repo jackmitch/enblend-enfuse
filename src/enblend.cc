@@ -759,9 +759,18 @@ int process_options(int argc, char** argv)
 
         case CompressionId:
             if (optarg != NULL && *optarg != 0) {
-                OutputCompression = optarg;
+                const std::string upper_opt(enblend::toUppercase(optarg));
+                if (upper_opt == "NONE") {
+                    ;           // stick with default
+                } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS" ||
+                           upper_opt.find_first_not_of("0123456789") == std::string::npos) {
+                    OutputCompression = upper_opt;
+                } else {
+                    cerr << command << ": unrecognized compression \"" << optarg << "\"" << endl;
+                    failed = true;
+                }
             } else {
-                cerr << command << ": option \"--compression\" reqires an argument" << endl;
+                cerr << command << ": option \"--compression\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CompressionOption);
@@ -789,7 +798,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 OutputFileName = optarg;
             } else {
-                cerr << command << ": options \"-o\" or \"--output\" reqire arguments" << endl;
+                cerr << command << ": options \"-o\" or \"--output\" require arguments" << endl;
                 failed = true;
             }
             optionSet.insert(OutputOption);
@@ -1070,7 +1079,7 @@ int process_options(int argc, char** argv)
                                             1);
                 CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
             } else {
-                cerr << command << ": option \"-b\" reqires an argument" << endl;
+                cerr << command << ": option \"-b\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(BlockSizeOption);
@@ -1097,7 +1106,7 @@ int process_options(int argc, char** argv)
                     failed = true;
                 }
             } else {
-                cerr << command << ": option \"-f\" reqires 2 or 4 arguments" << endl;
+                cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
                 failed = true;
             }
             OutputSizeGiven = true;
@@ -1118,7 +1127,7 @@ int process_options(int argc, char** argv)
                                             "too few levels; will use one level",
                                             1U);
             } else {
-                cerr << command << ": option \"-l\" reqires an argument" << endl;
+                cerr << command << ": option \"-l\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(LevelsOption);
@@ -1133,7 +1142,7 @@ int process_options(int argc, char** argv)
                                             1);
                 CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
             } else {
-                cerr << command << ": option \"-m\" reqires an argument" << endl;
+                cerr << command << ": option \"-m\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CacheSizeOption);
