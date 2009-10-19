@@ -11,7 +11,7 @@
 #define PACKAGE "enblend-enfuse"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "http://sourceforge.net/projects/enblend/"
+#define PACKAGE_BUGREPORT "https://sourceforge.net/tracker/?group_id=123407&atid=696409"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "enblend-enfuse"
