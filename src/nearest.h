@@ -34,6 +34,7 @@
 #include <utility>
 
 #include "vigra/functorexpression.hxx"
+#include "vigra/inspectimage.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/stdcachedfileimage.hxx"
 
@@ -291,6 +292,28 @@ struct saturating_subtract
 };
 
 
+template <class ValueType>
+struct tally
+{
+    typedef ValueType argument_type;
+    typedef unsigned result_type;
+
+    tally() : count(result_type()) {}
+
+    void reset() {count = result_type();}
+
+    void operator()(const argument_type& x)
+    {
+        if (x != argument_type())
+        {
+            ++count;
+        }
+    }
+
+    result_type count;
+};
+
+
 // Compute a mask (dest) that defines the seam line given the
 // blackmask (src1) and the whitemask (src2) of the overlapping
 // images.
@@ -336,6 +359,9 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         cerr.flush();
     }
 
+    tally<SrcPixelType> tally12;
+    tally<SrcPixelType> tally21;
+
 #ifdef OPENMP
 #pragma omp parallel sections
 #endif
@@ -349,6 +375,9 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                                src2_upperleft, sa2,
                                diff12.upperLeft(), diff12.accessor(),
                                saturating_subtract<SrcPixelType>());
+
+            vigra::inspectImage(srcImageRange(diff12), tally12);
+
             switch (boundary)
             {
             case OpenBoundaries:
@@ -382,6 +411,9 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                                src1_upperleft, sa1,
                                diff21.upperLeft(), diff21.accessor(),
                                saturating_subtract<SrcPixelType>());
+
+            vigra::inspectImage(srcImageRange(diff21), tally21);
+
             switch (boundary)
             {
             case OpenBoundaries:
@@ -407,6 +439,31 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         cerr << " 3/3";
         cerr.flush();
     }
+
+    const unsigned overlap_threshold =
+        // Arbitrary threshold of overlapping pixels below which we
+        // consider the overlap of the masks to be complete, i.e. the
+        // image pair as useless.
+        //
+        // The current value is 2x the circumference of the overlap
+        // rectangle.
+        2U * 2U * (static_cast<unsigned>(size.x) + static_cast<unsigned>(size.y));
+    const unsigned overlap_tally = std::max(tally12.count, tally21.count);
+    if (overlap_tally < overlap_threshold)
+    {
+        cerr << "\n" <<
+            command << ": excessive overlap detected; remove one of the images\n";
+#ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
+        cout <<
+            "+ nearestFeatureTransform: overlap area size = " << size << "\n" <<
+            "+ nearestFeatureTransform: threshold is " << overlap_threshold <<
+            " pixels for this pair of images\n" <<
+            "+ nearestFeatureTransform: only " << overlap_tally << " of " <<
+            size.x * size.y << " pixels do not overlap\n";
+#endif
+        exit(1);
+    }
+
     combineTwoImagesMP(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
                        dist21.upperLeft(), dist21.accessor(),
                        dest_upperleft, da,
