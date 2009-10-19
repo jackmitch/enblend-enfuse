@@ -1,4 +1,4 @@
-* Version 4.0
+* Version 4.0 pre
 
 Released on August 25, 2009.
 
@@ -78,16 +78,40 @@ Released on August 25, 2009.
 
 ** New Commandline Options
 
+- All Enfuse options have been converted to Enblend's option naming
+  scheme.  This is, camel-casing has been replaced by lowercase plus
+  dashes.  The new option name are more systematically constructed,
+  too.  The old options will completely dissapear in the next release,
+  4.1.
+
+               Old Option                New Option
+          ====================    ========================
+          --ContrastWindowSize    --contrast-window-size
+          --EdgeScale             --contrast-edge-scale
+          --EntropyCutoff         --entropy-cutoff
+          --EntropyWindowSize     --entropy-window-size
+          --GrayProjector         --gray-projector
+          --HardMask              --hard-mask
+          --MinCurvature          --contrast-min-curvature
+          --SaveMasks             --save-masks
+          --SoftMask              --soft-mask
+          --wContrast             --contrast-weight
+          --wEntropy              --entropy-weight
+          --wExposure             --exposure-weight
+          --wExposureMu           --exposure-mu
+          --wExposureSigma        --exposure-sigma
+          --wSaturation           --saturation-weight
+
 - New option to control the output bit depth ("--depth").
 
 - Mask filenames can be specified with templates.
 
-  * Enblend ("--save-mask", "--load-mask", "--visualize"): Save and
+  * Enblend ("--save-masks", "--load-masks", "--visualize"): Save and
     load all masks of a project in a single run.  Same for seam line
     visualization files.
 
-  * Enfuse ("--SaveMasks"): Save soft and hard masks according to path
-    given in template.
+  * Enfuse ("--save-masks"): Save soft and hard masks according to
+    path given in template.
 
 - New option to control the mask vectorization, which is done before
   any mask optimizations ("--mask-vectorize").
@@ -106,6 +130,20 @@ Released on August 25, 2009.
 
 - New option "--smooth-difference" to blur difference images prior to
   seam-line optimization.
+
+
+** Removed Commandline Options
+
+- After having been deprecated for a long time, Enfuse's option
+  "--debug", which saved the masks used in fusing, was removed.
+  Option "--save-masks" now provides a superset of the previous
+  functionality.
+
+- After having been deprecated for a long time, Enblend's and Enfuse's
+  option "-z", which compressed TIFF-output files with the LZW
+  algorithm, was removed.  Option "--compression" now provides a
+  superset of the previous functionality and "--compression=LZW" is a
+  substitute for "-z".
 
 
 ** Developer Stuff

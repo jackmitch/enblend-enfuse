@@ -33,6 +33,7 @@
 
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
 
 #include "vigra/numerictraits.hxx"
@@ -127,6 +128,19 @@ typedef enum {
 #define IMAGETYPE CachedFileImage
 #else
 #define IMAGETYPE BasicImage
+#endif
+
+
+#if 0
+#define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name)
+#else
+#define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name) \
+    do { \
+        cerr << command << \
+            ": info: option \"" m_old_name "\" is deprecated; use \"" m_new_name "\" instead" << \
+            endl; \
+        sleep(0); \
+    } while (false)
 #endif
 
 
@@ -262,7 +276,8 @@ wraparoundOfString(const char* aWraparoundMode)
 
 
 /** Convert aBoundaryMode to its string representation. */
-std::string stringOfWraparound(boundary_t aBoundaryMode)
+std::string
+stringOfWraparound(boundary_t aBoundaryMode)
 {
     switch (aBoundaryMode)
     {
@@ -281,13 +296,19 @@ std::string stringOfWraparound(boundary_t aBoundaryMode)
 }
 
 
-/** Convert a_string into a number. */
-template <class NumericType, class Validator>
+/** Convert a_string into a number.
+ *
+ * Perform two validating tests in the numerical result.  These are,
+ * for example, tests for lower and upper boundaries. */
+template <class NumericType, class Validator1, class Validator2>
 NumericType
-numberOfString(const char* a_string, // string we want to convert into a number
-               Validator is_valid,        // validator function
-               const std::string& invalid_message, // error message for failed validation
-               NumericType replacement_value)      // replacement return value on failure
+numberOfString(const char* a_string,                // string we want to convert into a number
+               Validator1 is_valid1,                // 1st validator function
+               const std::string& invalid_message1, // error message for failed 1st validation
+               NumericType replacement_value1,      // replacement return value on 1st failure
+               Validator2 is_valid2,                // 2nd validator function
+               const std::string& invalid_message2, // error message for failed 2nd validation
+               NumericType replacement_value2)      // replacement return value on 2nd failure
 {
     typedef std::numeric_limits<NumericType> traits;
 
@@ -319,9 +340,19 @@ numberOfString(const char* a_string, // string we want to convert into a number
 
     if (*tail != 0)
     {
-        std::cerr << command << ": "
-                  << "trailing garbage \"" << tail << "\" in \"" << a_string << "\""
-                  << std::endl;
+        if (strcmp(a_string, tail) == 0)
+        {
+            std::cerr << command << ": "
+                      << "number is garbage; maybe the option before \"" << a_string
+                      << "\" needs an argument"
+                      << std::endl;
+        }
+        else
+        {
+            std::cerr << command << ": "
+                      << "trailing garbage \"" << tail << "\" in \"" << a_string << "\""
+                      << std::endl;
+        }
         exit(1);
     }
 
@@ -363,17 +394,38 @@ numberOfString(const char* a_string, // string we want to convert into a number
         value = static_cast<NumericType>(double_value);
     }
 
-    if (is_valid(value))
+    if (is_valid1(value))
     {
-        return value;
+        if (is_valid2(value))
+        {
+            return value;
+        }
+        else
+        {
+            std::cerr << command << ": warning: " << invalid_message2 << std::endl;
+            return replacement_value2;
+        }
     }
     else
     {
-        std::cerr << command << ": warning: "
-                  << invalid_message
-                  << std::endl;
-        return replacement_value;
+        std::cerr << command << ": warning: " << invalid_message1 << std::endl;
+        return replacement_value1;
     }
+}
+
+
+/**  Convert a_string into a number.
+ */
+template <class NumericType, class Validator>
+NumericType
+numberOfString(const char* a_string,               // string we want to convert into a number
+               Validator is_valid,                 // validator function
+               const std::string& invalid_message, // error message for failed validation
+               NumericType replacement_value)      // replacement return value on failure
+{
+    return numberOfString(a_string,
+                          is_valid, invalid_message, replacement_value,
+                          boost::lambda::constant(true), "<never reached>", NumericType());
 }
 
 

@@ -1095,14 +1095,14 @@ very narrow overlap regions.
 
 Also see @ref{Table:mask-generation}.
 
-@item --load-mask[=@var{IMAGE-TEMPLATE}]
-@opindex --load-mask
+@item --load-masks[=@var{IMAGE-TEMPLATE}]
+@opindex --load-masks
 @cindex mask, load
 @cindex load mask
 Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
 default is @file{@value{src::default-mask-template}}.
 
-See @option{--save-mask} below for details.
+See @option{--save-masks} below for details.
 
 @item --mask-vectorize=@var{DISTANCE}
 @opindex --mask-vectorize
@@ -1258,8 +1258,8 @@ Both weights must be non-negative.  They cannot be both zero at the
 same time.  Otherwise, their absolute values are not important as
 Enblend normalizes their sum.
 
-@item --save-mask[=@var{IMAGE-TEMPLATE}]
-@opindex --save-mask
+@item --save-masks[=@var{IMAGE-TEMPLATE}]
+@opindex --save-masks
 @cindex mask, save
 @cindex save mask
 Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
@@ -1269,7 +1269,7 @@ recommend to choose a lossless format.
 
 Use this option if you wish to edit the location of the seam line by
 hand.  This will give you images of the right sizes that you can edit
-to make your changes.  Later, use @option{--load-mask} to blend the
+to make your changes.  Later, use @option{--load-masks} to blend the
 project with your custom seam lines.
 
 @var{IMAGE-TEMPLATE} defines a template that is expanded for each

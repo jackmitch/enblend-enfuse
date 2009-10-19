@@ -27,7 +27,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-e469d02bbf19, 9 October 2009),
+This manual is for Enblend (version 4.0-1f34bd7a13f0, 19 October 2009),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -466,7 +466,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.0-e469d02bbf19, only mask
+     In this version of Enblend, 4.0-1f34bd7a13f0, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -596,11 +596,11 @@ These options control the generation and the usage of masks.
 
         Also see *note Table 3.1: Table:mask-generation.
 
-  `--load-mask[=IMAGE-TEMPLATE]'
+  `--load-masks[=IMAGE-TEMPLATE]'
         Instead of generating masks, use those in IMAGE-TEMPLATE.  The
      default is `mask-%n.tif'.
 
-        See `--save-mask' below for details.
+        See `--save-masks' below for details.
 
   `--mask-vectorize=DISTANCE'
         Set the mask vectorization DISTANCE Enblend uses to partition
@@ -691,7 +691,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.0-e469d02bbf19)
+     version 3.2 used 1:1.  This version of Enblend (4.0-1f34bd7a13f0)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -705,7 +705,7 @@ These options control the generation and the usage of masks.
      the same time.  Otherwise, their absolute values are not important
      as Enblend normalizes their sum.
 
-  `--save-mask[=IMAGE-TEMPLATE]'
+  `--save-masks[=IMAGE-TEMPLATE]'
         Save the generated masks to IMAGE-TEMPLATE.  The default is
      `mask-%n.tif'.  Enblend saves masks as 8bit grayscale (single
      channel) images.  For accuracy we recommend to choose a lossless
@@ -713,7 +713,7 @@ These options control the generation and the usage of masks.
 
         Use this option if you wish to edit the location of the seam
      line by hand.  This will give you images of the right sizes that
-     you can edit to make your changes.  Later, use `--load-mask' to
+     you can edit to make your changes.  Later, use `--load-masks' to
      blend the project with your custom seam lines.
 
         IMAGE-TEMPLATE defines a template that is expanded for each
@@ -1192,10 +1192,11 @@ things:
 
      or:
 
-              ~/local/bin/enfuse -v \
-                  --wExposure=0 --wSaturation=0 --wEntropy=1 \
-                  --GrayProjector=l-star \
-                  --EntropyCutoff=1.667% \
+              /local/bin/enfuse \
+                  --verbose \
+                  --exposure-weight=0 --saturation-weight=0 --entropy-weight=1 \
+                  --gray-projector=l-star \
+                  --entropy-cutoff=1.667% \
                   layer-01.ppm layer-02.ppm layer-03.ppm
 
      If you call Enblend or Enfuse from within a GUI like, for example,
@@ -1742,13 +1743,13 @@ Option Index
 --fine-mask:                                   See 3.3.      (line  593)
 --gpu:                                         See 3.2.      (line  465)
 --help:                                        See 3.1.      (line  224)
---load-mask:                                   See 3.3.      (line  600)
+--load-masks:                                  See 3.3.      (line  600)
 --mask-vectorize:                              See 3.3.      (line  606)
 --no-optimize:                                 See 3.3.      (line  651)
 --optimize:                                    See 3.3.      (line  659)
 --optimizer-weights:                           See 3.3.      (line  682)
 --output:                                      See 3.1.      (line  239)
---save-mask:                                   See 3.3.      (line  709)
+--save-masks:                                  See 3.3.      (line  709)
 --smooth-difference:                           See 3.3.      (line  737)
 --verbose:                                     See 3.1.      (line  246)
 --version:                                     See 3.1.      (line  281)
@@ -1781,7 +1782,7 @@ alpha channel:                                 See 1.        (line   49)
 alpha channel, associated:                     See 3.2.      (line  453)
 anneal parameters:                             See 3.3.      (line  494)
 authors, list of:                              See Appendix B.
-                                                             (line 1258)
+                                                             (line 1259)
 binary mask:                                   See 4.        (line  871)
 bits per channel:                              See 3.2.      (line  368)
 blur difference image:                         See 3.3.      (line  737)
@@ -1807,16 +1808,16 @@ double precision float, IEEE754:               See 3.2.      (line  420)
 feathering, detrimental effect of:             See 1.        (line   56)
 fine mask:                                     See 3.3.      (line  593)
 free documentation license (FDL):              See Appendix C.
-                                                             (line 1297)
+                                                             (line 1298)
 general index:
-          See ``General Index''.                             (line 1776)
+          See ``General Index''.                             (line 1777)
 GNU free documentation license:                See Appendix C.
-                                                             (line 1297)
+                                                             (line 1298)
 GPU (Graphics Processing Unit):                See 3.2.      (line  465)
 graphics processing unit:                      See 3.2.      (line  465)
 half precision float, OpenEXR:                 See 3.2.      (line  435)
 helpful programs:                              See 6.        (line 1028)
-Hugin:                                         See A.2.      (line 1201)
+Hugin:                                         See A.2.      (line 1202)
 ICC profile:                                   See 3.2.      (line  359)
 IEEE754 double precision float:                See 3.2.      (line  420)
 IEEE754 single precision float:                See 3.2.      (line  411)
@@ -1824,15 +1825,15 @@ image cache:                                   See 5.        (line  964)
 image cache, block size:                       See 3.2.      (line  346)
 image cache, cache size:                       See 3.2.      (line  477)
 index, general:
-          See ``General Index''.                             (line 1776)
+          See ``General Index''.                             (line 1777)
 index, option:
-          See ``Option Index''.                              (line 1737)
+          See ``Option Index''.                              (line 1738)
 index, program:
-          See ``Program Index''.                             (line 1695)
+          See ``Program Index''.                             (line 1696)
 input mask:                                    See 4.1.      (line  883)
 invocation:                                    See 3.        (line  170)
 JPEG compression:                              See 3.1.      (line  194)
-KImageFuser:                                   See A.2.      (line 1201)
+KImageFuser:                                   See A.2.      (line 1202)
 lens distortion, correction of:                See 2.        (line  130)
 levels, pyramid:                               See 3.1.      (line  227)
 LibJPEG:                                       See 6.        (line 1085)
@@ -1878,7 +1879,7 @@ optimize, anneal parameters:                   See 3.3.      (line  494)
 optimizer weights:                             See 3.3.      (line  682)
 optimizer, simulated annealing:                See 3.3.      (line  494)
 option index:
-          See ``Option Index''.                              (line 1737)
+          See ``Option Index''.                              (line 1738)
 options, common:                               See 3.1.      (line  177)
 options, extended:                             See 3.2.      (line  342)
 options, mask generation:                      See 3.3.      (line  491)
@@ -1893,7 +1894,7 @@ problem reports:                               See Appendix A.
                                                              (line 1115)
 profile, ICC:                                  See 3.2.      (line  359)
 program index:
-          See ``Program Index''.                             (line 1695)
+          See ``Program Index''.                             (line 1696)
 programs, helpful additional:                  See 6.        (line 1028)
 pyramid levels:                                See 3.1.      (line  227)
 radius, DIJKSTRA:                              See 3.3.      (line  580)

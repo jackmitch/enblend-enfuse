@@ -35,7 +35,7 @@ Enfuse
 4 Weighting Functions
   4.1 Weighting Pixels
     4.1.1 Weighted Average
-    4.1.2 Disabling Averaging: Option `--HardMask'
+    4.1.2 Disabling Averaging: Option `--hard-mask'
   4.2 Exposure Weighting
   4.3 Saturation Weighting
   4.4 Local Contrast Weighting
@@ -87,7 +87,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.0-e469d02bbf19, 15 October 2009),
+This manual is for Enfuse (version 4.0-1f34bd7a13f0, 19 October 2009),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -144,12 +144,12 @@ weighting functions, see *note Weighting Functions::.
 
    Adjust how much importance is given to each criterion by setting the
 weight parameters on the command line.  For example, if you set
-`--wExposure=1.0' and `--wSaturation=0.5', Enfuse will favor
-well-exposed pixels over highly-saturated pixels when blending the
-source images.  The effect of these parameters on the final result will
-not always be clear in advance.  The quality of the result is subject
-to your artistic interpretation.  Playing with the weights may or may
-not give a more pleasing result.  The authors encourage you to
+`--exposure-weight=1.0' and `--saturation-weight=0.5', Enfuse will
+favor well-exposed pixels over highly-saturated pixels when blending
+the source images.  The effect of these parameters on the final result
+will not always be clear in advance.  The quality of the result is
+subject to your artistic interpretation.  Playing with the weights may
+or may not give a more pleasing result.  The authors encourage you to
 experiment, perhaps using down-sized(3) or cropped images for speed.
 
    Enfuse expects but does not require each input image to have an alpha
@@ -569,47 +569,58 @@ cropping of the output image.
 Fusion options define the proportion to which each input image's pixel
 contributes to the output image.
 
-`--wContrast=WEIGHT'
+`--contrast-weight=WEIGHT'
+     (This option supersedes the deprecated option `--wContrast'.)
+
      Sets the relative WEIGHT of high local-contrast pixels.  Default:
-     0.0.  Valid range: 0.0 <= WEIGHT <= 1.0.  See *note Local Contrast
-     Weighting:: and *note Option ContrastWindowSize: Expert Options.
+     0.0.  Valid range: 0 <= WEIGHT <= 1.  See *note Local Contrast
+     Weighting:: and *note Option contrast-window-size: Expert Options.
 
-`--wEntropy=WEIGHT'
-     Sets the relative WEIGHT of high entropy pixels.  Default:
-     0.0.  Valid range: 0.0 <= WEIGHT <= 1.0.  See *note Local Entropy
-     Weighting:: and *note Options EntropyWindowSize and EntropyCutoff:
-     Expert Options.
+`--entropy-weight=WEIGHT'
+     (This option supersedes the deprecated option `--wEntropy'.)
 
-`--wExposure=WEIGHT'
+     Sets the relative WEIGHT of high local entropy pixels.  Default:
+     0.0.  Valid range: 0 <= WEIGHT <= 1.  See *note Local Entropy
+     Weighting:: and *note Options entropy-window-size and
+     entropy-cutoff: Expert Options.
+
+`--exposure-weight=WEIGHT'
+     (This option supersedes the deprecated option `--wExposureMu'.)
+
      Sets the relative WEIGHT of the well-exposedness criterion.
      Increasing this weight relative to the others will make
      well-exposed pixels contribute more to the final output.  Default:
-     1.0.  Valid range: 0.0 <= WEIGHT <= 1.0.  *Note Exposure
-     Weighting::.
+     1.0.  Valid range: 0 <= WEIGHT <= 1.  *Note Exposure Weighting::.
 
-`--wMu=MEAN'
+`--exposure-mu=MEAN'
+     (This option supersedes the deprecated option `--wExposureMu'.)
+
      Set the MEAN (this is, the center) of the Gaussian exposure weight
-     curve.  Default: 0.5.  Valid range: 0.0 <= MEAN <=
-     1.0.
+     curve.  Default: 0.5.  Valid range: 0 <= MEAN <=
+     1.
 
      Use this option to fine-tune exposure weighting (*note Exposure
      Weighting::).
 
-`--wSaturation=WEIGHT'
-     Sets the relative WEIGHT of high-saturation pixels.  Increasing
-     this weight makes pixels with high saturation contribute more to
-     the final output.  Default: 0.2.  Valid range:
-     0.0 <= WEIGHT <= 1.0.  Saturation weighting is only defined for
-     color images.  *Note Saturation Weighting::.
+`--exposure-sigma=STD-DEV'
+     (This option supersedes the deprecated option `--wExposureSigma'.)
 
-`--wSigma=STD-DEV'
      Standard deviation STD-DEV of the Gaussian exposure weight curve.
      Default: 0.2.  Low numbers give less weight to pixels that are far
      from `--wMu' and vice versa.  Valid range:
-     0.0 <= STD-DEV.
+     0 <= STD-DEV.
 
      Use this option to fine-tune exposure weighting (*note Exposure
      Weighting::).
+
+`--saturation-weight=WEIGHT'
+     (This option supersedes the deprecated option `--wSaturation'.)
+
+     Sets the relative WEIGHT of high-saturation pixels.  Increasing
+     this weight makes pixels with high saturation contribute more to
+     the final output.  Default: 0.2.  Valid range:
+     0 <= WEIGHT <= 1.  Saturation weighting is only defined for color
+     images.  *Note Saturation Weighting::.
 
 3.4 Expert Options
 ==================
@@ -617,7 +628,10 @@ contributes to the output image.
 Expert options influence the workings of Enfuse that require the user
 to read the manual before applying them successfully.
 
-`--ContrastWindowSize=SIZE'
+`--contrast-window-size=SIZE'
+     (This option supersedes the deprecated
+     option `--ContrastWindowSize'.)
+
      Set the window SIZE for local contrast analysis.  The window will
      be a square of SIZExSIZE pixels.
 
@@ -630,11 +644,13 @@ to read the manual before applying them successfully.
      If given an even SIZE, Enfuse will automatically use the next odd
      number.
 
-     See also *note Option -wContrast: Fusion Options. and `--HardMask'
-     below.
+     See also *note Option -contrast-weight: Fusion Options. and
+     `--hard-mask' below.
 
-`--EdgeScale=EDGE-SCALE'
-`--EdgeScale=EDGE-SCALE:LCE-SCALE:LCE-FACTOR'
+`--contrast-edge-scale=EDGE-SCALE'
+`--contrast-edge-scale=EDGE-SCALE:LCE-SCALE:LCE-FACTOR'
+     (This option supersedes the deprecated option `--EdgeScale'.)
+
      A non-zero value for EDGE-SCALE switches on the
      Laplacian-of-Gaussian (LoG) edge detection algorithm.  EDGE-SCALE
      is the radius of the Gaussian used in the search for edges.
@@ -652,8 +668,10 @@ to read the manual before applying them successfully.
      percentage of EDGE-SCALE.  Append `%' to LCE-FACTOR to specify the
      weight as a percentage.
 
-`--EntropyCutoff=LOWER-CUTOFF'
-`--EntropyCutoff=LOWER-CUTOFF:UPPER-CUTOFF'
+`--entropy-cutoff=LOWER-CUTOFF'
+`--entropy-cutoff=LOWER-CUTOFF:UPPER-CUTOFF'
+     (This option supersedes the deprecated option `--EntropyCutoff'.)
+
      The first form defines the lower cutoff value below which pixels
      are treated as pure black when calculating the local entropy.  The
      second form also defines the upper cutoff value above which pixels
@@ -710,13 +728,16 @@ to read the manual before applying them successfully.
 
         Note that a high LOWER-CUTOFF value lightens the resulting
      image, as dark (and presumably noisy) pixels are averaged with
-     _equal_ weights.  With `--EntropyCutoff=0', the default, on the
+     _equal_ weights.  With `--entropy-cutoff=0', the default, on the
      other hand, "noise" might be interpreted as high entropy and the
      noisy pixels get a high weight, which in turn renders the resulting
      image darker.  Analogously, a low UPPER-CUTOFF darkens the output
      image.
 
-  `--EntropyWindowSize=SIZE'
+  `--entropy-window-size=SIZE'
+        (This option supersedes the deprecated
+     option `--EntropyWindowSize'.)
+
         Window SIZE for local entropy analysis.  The window will be a
      square of SIZExSIZE pixels.
 
@@ -729,9 +750,12 @@ to read the manual before applying them successfully.
         If given an even SIZE Enfuse will automatically use the next odd
      number.
 
-  `--GrayProjector=PROJECTOR'
+  `--gray-projector=PROJECTOR'
+        (This option supersedes the deprecated
+     option `--GrayProjector'.)
+
         Use gray projector PROJECTOR for conversion of RGB images to
-     grayscale masks: (R, G, B) -> Y.  In version 4.0-e469d02bbf19 of
+     grayscale masks: (R, G, B) -> Y.  In version 4.0-1f34bd7a13f0 of
      Enfuse, the option is effective for exposure weighting and local
      contrast weighting.  Default: `average'.
 
@@ -748,9 +772,9 @@ to read the manual before applying them successfully.
                Y = RED-WEIGHT * R + GREEN-WEIGHT * G + BLUE-WEIGHT * B
 
           The weights are automatically normalized to one, so
-                   --GrayProjector=channel-mixer:0.25:0.5:0.25
-                   --GrayProjector=channel-mixer:1:2:1
-                   --GrayProjector=channel-mixer:25:50:25
+                   --gray-projector=channel-mixer:0.25:0.5:0.25
+                   --gray-projector=channel-mixer:1:2:1
+                   --gray-projector=channel-mixer:25:50:25
           all define the same mixer configuration.
 
           The three weights RED-WEIGHT, GREEN-WEIGHT, and BLUE-WEIGHT
@@ -783,37 +807,43 @@ to read the manual before applying them successfully.
           conversion of the image.
                Y = max(R, G, B)
 
-  `--HardMask'
+  `--hard-mask'
+        (This option supersedes the deprecated option `--HardMask'.)
+
         Force hard blend masks on the finest scale.  This is the
-     opposite flag of `--SoftMask'.
+     opposite flag of `--soft-mask'.
 
         This blending mode avoids averaging of fine details (only) at
      the expense of increasing the noise.  However it considerably
      improves the sharpness of focus stacks.  Blending with hard masks
      has only proven useful with focus stacks.
 
-        See also *note Option -wContrast: Fusion Options. and
-     `--ContrastWindowSize' above.
+        See also *note Option -contrast-weight: Fusion Options. and
+     `--contrast-window-size' above.
 
-  `--MinCurvature=CURVATURE'
+  `--contrast-min-curvature=CURVATURE'
+        (This option supersedes the deprecated option `--MinCurvature'.)
+
         Define the minimum CURVATURE for the LoG edge detection.
      Default: 0.  Append a `%' to specify the minimum curvature
      relative to maximum pixel value in the source image (for example
      255 or 65535).
 
         A positive value makes Enfuse use the local contrast data
-     (controlled with `--ContrastWindowSize') for curvatures less than
+     (controlled with `--contrast-window-size') for curvatures less than
      CURVATURE and LoG data for values above it.
 
         A negative value truncates all curvatures less than -CURVATURE
      to zero.  Values above CURVATURE are left unchanged.  This
      effectively suppresses weak edges.
 
-  `--SaveMasks'
-  `--SaveMasks=SOFT-MASK-TEMPLATE'
-  `--SaveMasks=SOFT-MASK-TEMPLATE:HARD-MASK-TEMPLATE'
+  `--save-masks'
+  `--save-masks=SOFT-MASK-TEMPLATE'
+  `--save-masks=SOFT-MASK-TEMPLATE:HARD-MASK-TEMPLATE'
+        (This option supersedes the deprecated option `--SaveMasks'.)
+
         Save all weight files as TIFF images.  First form: Save all
-     soft weight masks in files.  If option `--HardMask' is effective
+     soft weight masks in files.  If option `--hard-mask' is effective
      also save the hard masks.  The defaults are
      `softmask-%n.tif' and `hardmask-%n.tif'.  In the second form,
      SOFT-MASK-TEMPLATE defines the names of the soft-mask files.  In
@@ -837,7 +867,9 @@ to read the manual before applying them successfully.
      files nicely sorted, and decorates the mask filename with the name
      of the associated input file (`%f') for easy recognition.
 
-  `--SoftMask'
+  `--soft-mask'
+        (This option supersedes the deprecated option `--SoftMask'.)
+
         Consider all masks when fusing.  This is the default.
 
 `%%'
@@ -930,22 +962,22 @@ numeric arguments.
 
 Examples:
 
-`--EdgeScale=0.667:6.67:3.5'
+`--contrast-edge-scale=0.667:6.67:3.5'
      Separate all arguments with colons.
 
-`--EdgeScale=0.667;6.67;3.5'
+`--contrast-edge-scale=0.667;6.67;3.5'
      Use semi-colons.
 
-`--EdgeScale=0.667;6.67/3.5'
+`--contrast-edge-scale=0.667;6.67/3.5'
      Mix semicolon and slash in weird ways.
 
-`--EntropyCutoff=3%/99%'
+`--entropy-cutoff=3%/99%'
      All delimiters also work in conjunction with percentages.
 
-`--GrayProjector=channel-mixer:3/6/1'
+`--gray-projector=channel-mixer:3/6/1'
      Separate arguments with a colon and two slashes.
 
-`--GrayProjector=channel-mixer/30;60:10'
+`--gray-projector=channel-mixer/30;60:10'
      Go wild and Enfuse will understand.
 
 *Filename Arguments*
@@ -955,10 +987,10 @@ delimiters may be mixed within any option that has filename arguments.
 
 Examples:
 
-`--SaveMasks=soft-mask-%03i.tif:hard-mask-03%i.tif'
+`--save-masks=soft-mask-%03i.tif:hard-mask-03%i.tif'
      Separate all arguments with colons.
 
-`--SaveMasks=%d/soft-%n.tif,%d/hard-%n.tif'
+`--save-masks=%d/soft-%n.tif,%d/hard-%n.tif'
      Use a comma.
 
 4 Weighting Functions
@@ -997,9 +1029,10 @@ constraints
             w_ent * f_ent(P, r_ent),
    where we have abbreviated P(i, x, y) to P for simplicity.  The user
 defines the constants w_exp, w_sat, w_cont, and w_ent with the options
-`--wExposure', `--wSaturation', `--wContrast', and `--wEntropy'.  The
-functions f_exp, f_sat, f_cont, and f_ent along with the window
-sizes r_cont and r_ent are explained in the next sections.
+`--exposure-weight', `--saturation-weight', `--contrast-weight', and
+`--entropy-weight'.  The functions f_exp, f_sat, f_cont, and f_ent
+along with the window sizes r_cont and r_ent are explained in the next
+sections.
 
 4.1.1 Weighted Average
 ----------------------
@@ -1013,18 +1046,18 @@ input stack.  Extremes are not typical, however.
 average.  This is why we sometimes speak of the "averaging property" of
 this weighting algorithm, like smoothing out noise.
 
-4.1.2 Disabling Averaging: Option `--HardMask'
-----------------------------------------------
+4.1.2 Disabling Averaging: Option `--hard-mask'
+-----------------------------------------------
 
 The weighted average computation as described above has proven to be
 widely successful with the exception of one special case: focus
 stacking (*note Focus Stacks::), where the averaging noticeably softens
 the final image.
 
-   Use `--HardMask' to switch Enfuse into a different ("Super Trouper")
-weighting mode, where the pixel with the highest weight wins, this is,
-gets weight one, and all other pixels get the weight of zero ("The
-Winner Takes It All.").  With `--HardMask' Equation (W) becomes
+   Use `--hard-mask' to switch Enfuse into a different ("Super
+Trouper") weighting mode, where the pixel with the highest weight wins,
+this is, gets weight one, and all other pixels get the weight of zero
+("The Winner Takes It All.").  With `--hard-mask' Equation (W) becomes
      P(i, x, y) -> Q(x, y),
    where
      w(P(i, x, y)) >= w(P(j, x, y)) for all 1 <= j <= n.
@@ -1040,7 +1073,7 @@ Exposure weighting prefers pixels with a luminance Y close to the
 center of the normalized, real-valued luminance interval [0, 1].
 
    RGB-pixels get converted to luminance using the grayscale projector
-given by `--GrayProjector', which defaults to `average'.  Grayscale
+given by `--gray-projector', which defaults to `average'.  Grayscale
 pixels are identified with luminance.
 
    In the normalized luminance interval 0.0 represents pure black and
@@ -1058,9 +1091,9 @@ time; the pixel's neighborhood is not taken into account.
    The weighting function is the Gaussian
      w_exp(Y) = exp(-0.5 * ((Y - Mu) / Sigma)^2),
    whose center Mu and width Sigma are controlled by the command line
-options `--wMu' and `--wSigma' respectively.  Mu defaults to
-0.5 and Sigma defaults to 0.2.  *note Figure:gaussian:: shows a
-Gaussian.
+options `--exposure-mu' and `--exposure-sigma' respectively.  Mu
+defaults to 0.5 and Sigma defaults to 0.2.  *note Figure:gaussian::
+shows a Gaussian.
 
 
     1 ++----------+------------+---*****---+------------+----------++
@@ -1101,26 +1134,26 @@ Gaussian.
 Figure 4.1: Gaussian function with the parameters MU = 0.5 and SIGMA =
 0.2.
 
-   The options `--wMu' and `--wSigma' are for fine-tuning the final
-result without changing the set of input images.  Option `--wMu' sets
-the point MU of optimum exposure.  Increasing MU makes Enfuse prefer
-lighter pixels, rendering the final image lighter, and vice versa.
-Option `--wSigma' defines the range SIGMA of acceptable exposures.
-Small values of SIGMA penalize exposures that deviate from MU more, and
-vice versa.
+   The options `--exposure-mu' and `--exposure-sigma' are for
+fine-tuning the final result without changing the set of input images.
+Option `--exposure-mu' sets the point MU of optimum exposure.
+Increasing MU makes Enfuse prefer lighter pixels, rendering the final
+image lighter, and vice versa.  Option `--exposure-sigma' defines the
+range SIGMA of acceptable exposures.  Small values of SIGMA penalize
+exposures that deviate from MU more, and vice versa.
 
 *Summary of influential options*
 
-`--wExposure'
+`--exposure-weight'
      *note Fusion Options::
 
-`--wMu'
+`--exposure-mu'
      *note Fusion Options::
 
-`--wSigma'
+`--exposure-sigma'
      *note Fusion Options::
 
-`--GrayProjector'
+`--gray-projector'
      *note Expert Options::
 
 4.3 Saturation Weighting
@@ -1155,7 +1188,7 @@ time; the pixel's neighborhood is not taken into account.
 
 *Summary of influential options*
 
-`--wSaturation'
+`--saturation-weight'
      *note Fusion Options::
 
 4.4 Local Contrast Weighting
@@ -1175,7 +1208,7 @@ different criteria or by a blend of both:
      otherwise stick with LoG.  *Note Blend SDev and LoG::.
 
    Enfuse converts every RGB image to grayscale before it determines
-its contrast.  Option `--GrayProjector' (*note Expert Options::)
+its contrast.  Option `--gray-projector' (*note Expert Options::)
 controls the projector function.  Depending on the subject, one of
 several grayscale projectors may yield the best black-and-white
 contrast for image fusion.
@@ -1187,7 +1220,7 @@ contrast for image fusion.
 
 The pixel under consideration C sits exactly in the center of a square,
 the so-called "local analysis window".  It always has an uneven edge
-length.  The user sets the size with option `--ContrastWindowSize'.
+length.  The user sets the size with option `--contrast-window-size'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
@@ -1201,16 +1234,16 @@ contrast weight of every pixel.
 
 *Summary of influential options*
 
-`--wContrast'
+`--contrast-weight'
      *note Fusion Options::
 
-`--HardMask'
+`--hard-mask'
      *note Fusion Options::
 
-`--ContrastWindowSize'
+`--contrast-window-size'
      *note Expert Options::
 
-`--GrayProjector'
+`--gray-projector'
      *note Expert Options::
 
 4.4.1.1 Statistical Moments
@@ -1247,9 +1280,9 @@ variance becomes
 
    ---------- Footnotes ----------
 
-   (1) In the current implementation a `floor(ContrastWindowSize / 2)'
-wide border around the images remains unprocessed and gets a weight of
-zero.
+   (1) In the current implementation a `floor(contrast-window-size /
+2)' wide border around the images remains unprocessed and gets a weight
+of zero.
 
 4.4.2 Laplacian of Gaussian
 ---------------------------
@@ -1261,14 +1294,14 @@ operator.  A Laplacian-of-Gaussian operator,
 (http://hci.iwr.uni-heidelberg.de/vigra/doc/vigra/group__CommonConvolutionFilters.html)
 is part of the package VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
 that Enfuse is built upon and is used for edge detection if
-option `--EdgeScale' is non-zero and `--MinCurvature' equal to or less
-than zero.
+option `--contrast-edge-scale' is non-zero and
+`--contrast-min-curvature' equal to or less than zero.
 
    Let the Gaussian function be
      g(x, y) = 1/pi * exp((x^2 + y^2) / (2 * sigma^2))/(2 * sigma^2)
-   The parameter sigma, the argument of option `--EdgeScale', is the
-length scale on which edges are detected by g(x, y).  We apply the
-Laplacian operator in Cartesian coordinates
+   The parameter sigma, the argument of option `--contrast-edge-scale',
+is the length scale on which edges are detected by g(x, y).  We apply
+the Laplacian operator in Cartesian coordinates
      Delta := Nabla o Nabla = (d^2/dx^2 + d^2/dy^2)
    to g(x, y), to arrive at a continuous representation of the
 two-dimensional filter kernel
@@ -1324,11 +1357,12 @@ See also HIPR2: Laplacian of Gaussian
    Sometimes the LoG is plagued by noise in the input images.  After
 all, it is a numerical approximation of the second derivative and
 deriving always "roughens" a function.  The (normalized) mask files
-relentlessly disclose such problems.  Use option `--MinCurvature' with
-a _negative_ argument CURVATURE to suppress all edges with a curvature
-below -CURVATURE (which is a positive value).  Check the effects with
-the mask files and particularly the hard-mask files
-(`hardmask-%n.tif') if using option `--HardMask'.
+relentlessly disclose such problems.  Use
+option `--contrast-min-curvature' with a _negative_ argument CURVATURE
+to suppress all edges with a curvature below -CURVATURE (which is a
+positive value).  Check the effects with the mask files and
+particularly the hard-mask files (`hardmask-%n.tif') if using
+option `--hard-mask'.
 
    To indicate the CURVATURE in relative terms, which is particularly
 comprehensible for humans, append a percent sign (`%').  Try minimum
@@ -1336,16 +1370,16 @@ curvatures starting from -0.5% to -3%.
 
 *Summary of influential options*
 
-`--wContrast'
+`--contrast-weight'
      *note Fusion Options::
 
-`--HardMask'
+`--hard-mask'
      *note Fusion Options::
 
-`--EdgeScale'
+`--contrast-edge-scale'
      *note Expert Options::
 
-`--MinCurvature'
+`--contrast-min-curvature'
      *note Expert Options::
 
 4.4.3 Blend Standard Deviation and Laplacian of Gaussian
@@ -1353,13 +1387,13 @@ curvatures starting from -0.5% to -3%.
 
 Enfuse can team the standard deviation computation and Laplacian of
 Gaussian to deliver the best of both methods.  Use a _positive_
-argument CURVATURE with option `--MinCurvature' to combine both
-algorithms.  In this mode of operation Enfuse computes the SDev-weight
-and the LoG-weight, then uses the LoG to decide whether to go with that
-value or prefer the SDev data.  If the LoG is greater than CURVATURE
-Enfuse uses the weight delivered by the LoG, otherwise the SDev-weight
-is rescaled such that its maximum is equal to CURVATURE, and the scaled
-SDev is used as weight.
+argument CURVATURE with option `--contrast-min-curvature' to combine
+both algorithms.  In this mode of operation Enfuse computes the
+SDev-weight and the LoG-weight, then uses the LoG to decide whether to
+go with that value or prefer the SDev data.  If the LoG is greater than
+CURVATURE Enfuse uses the weight delivered by the LoG, otherwise the
+SDev-weight is rescaled such that its maximum is equal to CURVATURE,
+and the scaled SDev is used as weight.
 
    This technique merges the two edge detection methods where they are
 best.  The LoG excels with clear edges and cannot be fooled by strong
@@ -1372,22 +1406,22 @@ of images.
 
 *Summary of influential options*
 
-`--wContrast'
+`--contrast-weight'
      *note Fusion Options::
 
-`--HardMask'
+`--hard-mask'
      *note Fusion Options::
 
-`--ContrastWindowSize'
+`--contrast-window-size'
      *note Expert Options::
 
-`--GrayProjector'
+`--gray-projector'
      *note Expert Options::
 
-`--EdgeScale'
+`--contrast-edge-scale'
      *note Expert Options::
 
-`--MinCurvature'
+`--contrast-min-curvature'
      *note Expert Options::
 
 4.4.4 Scaling and Choice of Mode
@@ -1467,7 +1501,7 @@ outcomes.
 
    Enfuse computes a pixel's entropy by considering the pixel itself and
 its surrounding pixels quite similar to *note Local Contrast
-Weighting::.  The size of the window is set by `--EntropyWindowSize'.
+Weighting::.  The size of the window is set by `--entropy-window-size'.
 Choosing the right size is difficult, because there is a serious
 tradeoff between the locality of the data and the size of the sample
 used to compute H.  A large window results in a large sample size and
@@ -1479,24 +1513,24 @@ opposite holds true.
 function in dark parts of an image, that is, in areas where the
 signal-to-noise ratio is low.  Without any precautions, high noise is
 taken to be high entropy, which might not be desired.  Use
-option `--EntropyCutoff' to control the black level when computing the
+option `--entropy-cutoff' to control the black level when computing the
 entropy.
 
    On the other extreme side of lightness, very light parts of an image,
 the sensor might already have overflown without the signal reaching 1.0
 in the normalized luminance interval.  For these pixels the entropy is
 zero and Enfuse can be told of the threshold by properly setting the
-second argument of `--EntropyCutoff'.
+second argument of `--entropy-cutoff'.
 
 *Summary of influential options*
 
-`--wEntropy'
+`--entropy-weight'
      *note Fusion Options::
 
-`--EntropyWindowSize'
+`--entropy-window-size'
      *note Expert Options::
 
-`--EntropyCutoff'
+`--entropy-cutoff'
      *note Expert Options::
 
 5 Understanding Masks
@@ -1763,9 +1797,9 @@ high sensitivity setting disappears.
 multitude of techniques like, for example, differences.  The most
 prominent method in this class is dark-frame subtraction.
 
-   The defaults set `--wExposure=1.0' and
-`--wSaturation=0.2'.  Eliminating the saturation component with
-`--wSaturation=0.0' can be worth an extra run.
+   The defaults set `--exposure-weight=1.0' and
+`--saturation-weight=0.2'.  Eliminating the saturation component with
+`--saturation-weight=0.0' can be worth an extra run.
 
 7.3 Exposure Series - Dynamic Range Increase
 ============================================
@@ -1777,14 +1811,14 @@ except for the exposure time.  Some cameras even provide special
 functions to automate recording exposure series.  See the instruction
 manual of your model for details.
 
-   Enfuse's defaults, `--wExposure=1.0' and
-`--wSaturation=0.2' are well suited for fusion of _color_ images.
+   Enfuse's defaults, `--exposure-weight=1.0' and
+`--saturation-weight=0.2' are well suited for fusion of _color_ images.
 Remember that saturation weighting only works for RGB data.
-Option `--wSaturation' helps to control burnt-out highlights, as these
-are heavily desaturated.  If no image suffers from troublesome
+Option `--saturation-weight' helps to control burnt-out highlights, as
+these are heavily desaturated.  If no image suffers from troublesome
 highlights, the relative saturation weight can be reduced and even be
-set to zero.  For black and white images `--wEntropy' can be an
-alternative to `--wSaturation' because it suppresses overexposed
+set to zero.  For black and white images `--entropy-weight' can be an
+alternative to `--saturation-weight' because it suppresses overexposed
 pixels, as these contain little information.  However, entropy
 weighting is not limited to grayscale data; it has been successfully
 applied to RGB images, too.  Note that saturation weighting considers
@@ -1883,8 +1917,8 @@ space."
 *Main Purpose*:  Reflection suppression, saturation enhancement
 
 In the current implementation of Enfuse, it is not possible in general
-to fuse a polarization series.  Nai"vely abusing `--wSaturation' will
-not work.
+to fuse a polarization series.  Nai"vely abusing `--saturation-weight'
+will not work.
 
 7.6 Focus Stacks - Depth-of-Field Increase
 ==========================================
@@ -1945,32 +1979,32 @@ will do.  Naturally, high SNR input data always is welcome.
 A bare bones call to Enfuse for focus stacking could look like this.
 
      enfuse \
-         --wExposure=0 \
-         --wSaturation=0 \
-         --wContrast=1 \
-         --HardMask \
+         --exposure-weight=0 \
+         --saturation-weight=0 \
+         --contrast-weight=1 \
+         --hard-mask \
          ... \
          --output=output.tif \
          input-<0000-9999>.tif
 
 Here is what each option causes:
 
-`--wExposure=0'
+`--exposure-weight=0'
      Switch *off* exposure based pixel selection.  The default weight
      is 1.0.
 
-`--wSaturation=0'
+`--saturation-weight=0'
      Switch *off* saturation based pixel selection.  The default weight
      is 0.2.
 
-`--wContrast=1'
+`--contrast-weight=1'
      Switch *on* pixel selection based on local contrast.
 
-`--HardMask'
+`--hard-mask'
      Select the best pixel from the image stack and ignore all others.
      Without this option, Enfuse uses all pixels in the stack and
      weights them according to their respective quality, which in our
-     case is local contrast.  Without `--HardMask', the result will
+     case is local contrast.  Without `--hard-mask', the result will
      always look a bit soft.  *Note Local Contrast Weighting::.
 
 If you want to see some entertaining progress messages - local-contrast
@@ -2127,17 +2161,17 @@ high-quality lenses.
 
 Enfuse provides a Laplacian-based algorithm that can help in situations
 where weighting based on the standard deviation fails.  It is activated
-with a positive value for SCALE in `--EdgeScale'=SCALE.  The Laplacian
-will detect two-dimensional _curvature_ on the scale of SCALE.  Here
-and in the following we simply speak of "curvature" where we mean
-"magnitude of curvature".  That is, we shall not distinguish between
-convex and concave edges.  Enfuse always use the magnitude of curvature
-for weighting.
+with a positive value for SCALE in `--contrast-edge-scale'=SCALE.  The
+Laplacian will detect two-dimensional _curvature_ on the scale of
+SCALE.  Here and in the following we simply speak of "curvature" where
+we mean "magnitude of curvature".  That is, we shall not distinguish
+between convex and concave edges.  Enfuse always use the magnitude of
+curvature for weighting.
 
    Typically, SCALE ranges between 0.1pixels and 0.5pixels, where
 0.3pixels is a good starting point.  To find the best value for SCALE
 though, usually some experimentation will be necessary.  Use
-`--SaveMasks' to get all soft-mask (default:
+`--save-masks' to get all soft-mask (default:
 `softmask-%n.tif') and hard-mask files (default:
 `hardmask-%n.tif').  Check how different scales affect the artifacts.
 Also *note Understanding Masks::.
@@ -2145,10 +2179,10 @@ Also *note Understanding Masks::.
 7.6.5.3 Local Contrast Enhancement
 ..................................
 
-Sometimes Enfuse misses smoother edges with `--EdgeScale' and a little
-local contrast enhancement (LCE) helps.  Set
-`--EdgeScale'=SCALE:LCE-SCALE:LCE-FACTOR.  where LCE-SCALE and
-LCE-FACTOR work like the unsharp mask
+Sometimes Enfuse misses smoother edges with `--contrast-edge-scale' and
+a little local contrast enhancement (LCE) helps.  Set
+`--contrast-edge-scale'=SCALE:LCE-SCALE:LCE-FACTOR.  where LCE-SCALE
+and LCE-FACTOR work like the unsharp mask
 (http://www.cambridgeincolour.com/tutorials/unsharp-mask.htm) filters
 in various image manipulation programs.  Start with LCE-SCALE ten times
 the value of SCALE and a LCE-FACTOR of 2-5.
@@ -2156,10 +2190,10 @@ the value of SCALE and a LCE-FACTOR of 2-5.
    LCE-SCALE can be specified as a percentage of SCALE.  LCE-FACTOR
 also can be specified as a percentage.  Examples:
 
-     --EdgeScale=0.3:3.0:3
-     --EdgeScale=0.3:1000%:3.0
-     --EdgeScale=0.3:3:300%
-     --EdgeScale=0.3:1000%:300%
+     --contrast-edge-scale=0.3:3.0:3
+     --contrast-edge-scale=0.3:1000%:3.0
+     --contrast-edge-scale=0.3:3:300%
+     --contrast-edge-scale=0.3:1000%:300%
 
 By default LCE is turned off.
 
@@ -2173,16 +2207,16 @@ problem than the local-contrast algorithm, but it has two shortcomings:
 
   2. it fails to recognize faint edges.
 
-The `--MinCurvature' option helps to mitigate both flaws.
+The `--contrast-min-curvature' option helps to mitigate both flaws.
 
-   The argument to `--MinCurvature'=CURVATURE either is an absolute
-lightness value, for example 0..255 for 8bit data and 0..65535 for
-16bit data, or, when given with a `%'-sign it is a relative lightness
-value ranging from 0% to 100%.
+   The argument to `--contrast-min-curvature'=CURVATURE either is an
+absolute lightness value, for example 0..255 for 8bit data and 0..65535
+for 16bit data, or, when given with a `%'-sign it is a relative
+lightness value ranging from 0% to 100%.
 
    To suppress unreal edges or counter excessive noise, use the
-`--MinCurvature' option with a _negative_ curvature measure CURVATURE.
-This forces all curvatures less than -CURVATURE to zero.
+`--contrast-min-curvature' option with a _negative_ curvature measure
+CURVATURE.  This forces all curvatures less than -CURVATURE to zero.
 
    A _positive_ curvature measure CURVATURE makes Enfuse merge the LoG
 data with the local-contrast data.  Every curvature larger than or
@@ -2194,25 +2228,25 @@ over the whole range of edge curvatures.
 
 *Summary*
 
-`--EdgeScale=0.3'
+`--contrast-edge-scale=0.3'
      Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average'.
 
-`--EdgeScale=0.3 --GrayProjector=l-star'
+`--contrast-edge-scale=0.3 --gray-projector=l-star'
      Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      L*-grayscale projector.
 
-`--EdgeScale=0.3:3:300%'
+`--contrast-edge-scale=0.3:3:300%'
      Use LoG to detect edges on a scale of 0.3pixels, pre-sharpen the
      input images by 300% on a scale of 3pixels.  Apply the default
      grayscale projector: `average'.
 
-`--EdgeScale=0.3 --MinCurvature=-0.5%'
+`--contrast-edge-scale=0.3 --contrast-min-curvature=-0.5%'
      Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average' and throw away all edges
      with a curvature of less than 0.5%.
 
-`--EdgeScale=0.3 --MinCurvature=0.5% --ContrastWindowSize=7'
+`--contrast-edge-scale=0.3 --contrast-min-curvature=0.5% --contrast-window-size=7'
      Use LoG to detect edges on a scale of 0.3pixels.  Apply the
      default grayscale projector: `average' and throw away all edges
      with a curvature of less than 0.5% and replace the LoG data
@@ -2232,13 +2266,14 @@ contrast window.  Only if seams appear as described in *note Advanced
 Focus Stacking:: switch to Laplacian-of-Gaussian contrast detection.
 
    If some seams remain even in LoG-mode, decrease the sensitivity of
-the edge detection with a positive `--MinCurvature'.  A too high value
-of `--MinCurvature' suppresses fine detail though.  Part of the detail
-can be brought back with pre-sharpening, that is, *note Local Contrast
-Enhancement:: or combining LoG with local-contrast-window mode by using
-a negative `--MinCurvature'.
+the edge detection with a positive `--contrast-min-curvature'.  A too
+high value of `--contrast-min-curvature' suppresses fine detail though.
+Part of the detail can be brought back with pre-sharpening, that is,
+*note Local Contrast Enhancement:: or combining LoG with
+local-contrast-window mode by using a negative
+`--contrast-min-curvature'.
 
-   Carefully examining the masks (option `--SaveMasks') that Enfuse
+   Carefully examining the masks (option `--save-masks') that Enfuse
 uses helps to judge the effects of the parameters.
 
 7.6.6 Tips For Focus Stacking Experts
@@ -2263,7 +2298,7 @@ benefit.
    * Prefer a low-sensitivity setting ("ISO") on the camera to get
      low-noise images.
 
-     Fusing with `--HardMask' does not average, and thus does not
+     Fusing with `--hard-mask' does not average, and thus does not
      suppress any noise in the input images.
 
    * If the transition of in-focus to out-of-focus areas is too abrupt,
@@ -2445,10 +2480,11 @@ things:
 
      or:
 
-              ~/local/bin/enfuse -v \
-                  --wExposure=0 --wSaturation=0 --wEntropy=1 \
-                  --GrayProjector=l-star \
-                  --EntropyCutoff=1.667% \
+              /local/bin/enfuse \
+                  --verbose \
+                  --exposure-weight=0 --saturation-weight=0 --entropy-weight=1 \
+                  --gray-projector=l-star \
+                  --entropy-cutoff=1.667% \
                   layer-01.ppm layer-02.ppm layer-03.ppm
 
      If you call Enblend or Enfuse from within a GUI like, for example,
@@ -2965,72 +3001,86 @@ Figure 7.3: Focus stacking decision tree       See 7.6.5.5.
 Program Index
 *************
 
-ale:                                           See 8.        (line 2295)
-align_image_stack (Hugin):                     See 8.        (line 2302)
-cinepaint <1>:                                 See 8.        (line 2314)
+ale:                                           See 8.        (line 2330)
+align_image_stack (Hugin):                     See 8.        (line 2337)
+cinepaint <1>:                                 See 8.        (line 2349)
 cinepaint:                                     See 3.2.      (line  547)
-convert (ImageMagick):                         See 8.        (line 2325)
-dcraw <1>:                                     See 8.        (line 2285)
+convert (ImageMagick):                         See 8.        (line 2360)
+dcraw <1>:                                     See 8.        (line 2320)
 dcraw:                                         See 2.        (line  194)
-display (ImageMagick):                         See 8.        (line 2325)
-exiftool:                                      See 8.        (line 2353)
-exrdisplay (OpenEXR):                          See 8.        (line 2331)
-fulla (Hugin):                                 See 8.        (line 2302)
-gimp <1>:                                      See 8.        (line 2321)
+display (ImageMagick):                         See 8.        (line 2360)
+exiftool:                                      See 8.        (line 2388)
+exrdisplay (OpenEXR):                          See 8.        (line 2366)
+fulla (Hugin):                                 See 8.        (line 2337)
+gimp <1>:                                      See 8.        (line 2356)
 gimp <2>:                                      See 3.2.      (line  547)
 gimp:                                          See 2.        (line  194)
-gm (GraphicsMagick):                           See 8.        (line 2325)
-hugin <1>:                                     See 8.        (line 2299)
-hugin <2>:                                     See 7.1.      (line 1676)
+gm (GraphicsMagick):                           See 8.        (line 2360)
+hugin <1>:                                     See 8.        (line 2334)
+hugin <2>:                                     See 7.1.      (line 1710)
 hugin <3>:                                     See 3.2.      (line  538)
 hugin:                                         See 2.        (line  194)
-identify (ImageMagick) <1>:                    See 8.        (line 2325)
-identify (ImageMagick):                        See 5.1.      (line 1521)
-montage (ImageMagick):                         See 8.        (line 2325)
-nona (Hugin) <1>:                              See 8.        (line 2302)
+identify (ImageMagick) <1>:                    See 8.        (line 2360)
+identify (ImageMagick):                        See 5.1.      (line 1555)
+montage (ImageMagick):                         See 8.        (line 2360)
+nona (Hugin) <1>:                              See 8.        (line 2337)
 nona (Hugin):                                  See 3.2.      (line  538)
 PanoTools:                                     See 2.        (line  194)
-pfshdrcalibrate (PFScalibration):              See 8.        (line 2334)
-pfsin (PFSTools):                              See 8.        (line 2334)
-pfsout (PFSTools):                             See 8.        (line 2334)
-pfstmo_* (PFStmo):                             See 8.        (line 2334)
-pfsview (PFSTools):                            See 8.        (line 2334)
-PTmender (PanoTools):                          See 8.        (line 2307)
-PTOptimizer (PanoTools):                       See 8.        (line 2307)
-tifficc (LittleCMS):                           See 8.        (line 2357)
-tiffinfo (libtiff) <1>:                        See 8.        (line 2349)
-tiffinfo (libtiff):                            See 5.1.      (line 1521)
-ufraw <1>:                                     See 8.        (line 2288)
+pfshdrcalibrate (PFScalibration):              See 8.        (line 2369)
+pfsin (PFSTools):                              See 8.        (line 2369)
+pfsout (PFSTools):                             See 8.        (line 2369)
+pfstmo_* (PFStmo):                             See 8.        (line 2369)
+pfsview (PFSTools):                            See 8.        (line 2369)
+PTmender (PanoTools):                          See 8.        (line 2342)
+PTOptimizer (PanoTools):                       See 8.        (line 2342)
+tifficc (LittleCMS):                           See 8.        (line 2392)
+tiffinfo (libtiff) <1>:                        See 8.        (line 2384)
+tiffinfo (libtiff):                            See 5.1.      (line 1555)
+ufraw <1>:                                     See 8.        (line 2323)
 ufraw:                                         See 2.        (line  194)
-ufraw-batch:                                   See 8.        (line 2288)
+ufraw-batch:                                   See 8.        (line 2323)
 Option Index
 ************
 
 --compression:                                 See 3.1.      (line  281)
---ContrastWindowSize:                          See 3.4.      (line  621)
+--contrast-edge-scale:                         See 3.4.      (line  652)
+--contrast-min-curvature:                      See 3.4.      (line  825)
+--contrast-weight:                             See 3.3.      (line  573)
+--contrast-window-size:                        See 3.4.      (line  632)
+--ContrastWindowSize (deprecated):             See 3.4.      (line  632)
 --depth:                                       See 3.2.      (line  458)
---EdgeScale:                                   See 3.4.      (line  638)
---EntropyCutoff:                               See 3.4.      (line  657)
---EntropyWindowSize:                           See 3.4.      (line  720)
---GrayProjector:                               See 3.4.      (line  733)
---HardMask <1>:                                See 7.6.6.    (line 2263)
---HardMask <2>:                                See 4.1.2.    (line 1019)
---HardMask:                                    See 3.4.      (line  787)
+--EdgeScale (deprecated):                      See 3.4.      (line  652)
+--entropy-cutoff:                              See 3.4.      (line  673)
+--entropy-weight:                              See 3.3.      (line  580)
+--entropy-window-size:                         See 3.4.      (line  738)
+--EntropyCutoff (deprecated):                  See 3.4.      (line  673)
+--EntropyWindowSize (deprecated):              See 3.4.      (line  738)
+--exposure-mu:                                 See 3.3.      (line  596)
+--exposure-sigma:                              See 3.3.      (line  606)
+--exposure-weight:                             See 3.3.      (line  588)
+--gray-projector:                              See 3.4.      (line  754)
+--GrayProjector (deprecated):                  See 3.4.      (line  754)
+--hard-mask <1>:                               See 7.6.6.    (line 2298)
+--hard-mask <2>:                               See 4.1.2.    (line 1052)
+--hard-mask:                                   See 3.4.      (line  811)
+--HardMask (deprecated):                       See 3.4.      (line  811)
 --help:                                        See 3.1.      (line  318)
---MinCurvature:                                See 3.4.      (line  799)
+--MinCurvature (deprecated):                   See 3.4.      (line  825)
 --output:                                      See 3.1.      (line  333)
---SaveMasks:                                   See 3.4.      (line  815)
---SoftMask:                                    See 3.4.      (line  841)
+--saturation-weight:                           See 3.3.      (line  617)
+--save-masks:                                  See 3.4.      (line  843)
+--SaveMasks (deprecated):                      See 3.4.      (line  843)
+--soft-mask:                                   See 3.4.      (line  871)
+--SoftMask (deprecated):                       See 3.4.      (line  871)
 --verbose:                                     See 3.1.      (line  340)
 --version:                                     See 3.1.      (line  375)
---wContrast:                                   See 3.3.      (line  573)
---wEntropy:                                    See 3.3.      (line  578)
---wExposure:                                   See 3.3.      (line  584)
---wMu:                                         See 3.3.      (line  591)
+--wContrast (deprecated):                      See 3.3.      (line  573)
+--wEntropy (deprecated):                       See 3.3.      (line  580)
+--wExposureMu (deprecated):                    See 3.3.      (line  588)
+--wExposureSigma (deprecated):                 See 3.3.      (line  606)
 --wrap:                                        See 3.1.      (line  382)
---wSaturation:                                 See 3.3.      (line  599)
---wSigma:                                      See 3.3.      (line  606)
--b <1>:                                        See 6.        (line 1595)
+--wSaturation (deprecated):                    See 3.3.      (line  617)
+-b <1>:                                        See 6.        (line 1629)
 -b:                                            See 3.2.      (line  436)
 -c:                                            See 3.2.      (line  447)
 -d:                                            See 3.2.      (line  458)
@@ -3038,7 +3088,7 @@ Option Index
 -g:                                            See 3.2.      (line  543)
 -h:                                            See 3.1.      (line  318)
 -l:                                            See 3.1.      (line  321)
--m <1>:                                        See 6.        (line 1595)
+-m <1>:                                        See 6.        (line 1629)
 -m:                                            See 3.2.      (line  555)
 -o:                                            See 3.1.      (line  333)
 -V:                                            See 3.1.      (line  375)
@@ -3049,31 +3099,31 @@ General Index
 
 360o panoramas:                                See 3.1.      (line  382)
 a.tif:                                         See 3.1.      (line  335)
-advanced focus stacking:                       See 7.6.5.    (line 2011)
+advanced focus stacking:                       See 7.6.5.    (line 2045)
 advanced focus stacking, recognizing faint edges:See 7.6.5.4.
-                                                             (line 2169)
-advanced focus stacking, suppressing noise:    See 7.6.5.4.  (line 2169)
+                                                             (line 2203)
+advanced focus stacking, suppressing noise:    See 7.6.5.4.  (line 2203)
 affine transformation:                         See 2.        (line  231)
 alpha channel <1>:                             See 2.        (line  252)
 alpha channel:                                 See 1.        (line  155)
 alpha channel, associated:                     See 3.2.      (line  543)
-aperture, sweet spot:                          See 7.6.1.    (line 1920)
-applications of enfuse:                        See 7.        (line 1662)
+aperture, sweet spot:                          See 7.6.1.    (line 1954)
+applications of enfuse:                        See 7.        (line 1696)
 authors, list of:                              See Appendix B.
-                                                             (line 2511)
-average, disabling:                            See 4.1.2.    (line 1019)
-average, weighted:                             See 4.1.1.    (line 1007)
-basic focus stacking:                          See 7.6.4.    (line 1983)
-binary mask:                                   See 5.        (line 1505)
+                                                             (line 2547)
+average, disabling:                            See 4.1.2.    (line 1052)
+average, weighted:                             See 4.1.1.    (line 1040)
+basic focus stacking:                          See 7.6.4.    (line 2017)
+binary mask:                                   See 5.        (line 1539)
 bits per channel:                              See 3.2.      (line  458)
-blending exposures:                            See 7.3.2.    (line 1838)
+blending exposures:                            See 7.3.2.    (line 1872)
 bug reports:                                   See Appendix A.
-                                                             (line 2365)
+                                                             (line 2400)
 Burt-Adelson multiresolution spline:           See 1.        (line  112)
 channel width:                                 See 3.2.      (line  458)
 channel, alpha:                                See 1.        (line  155)
 CIECAM02:                                      See 3.2.      (line  447)
-circle-of-confusion:                           See 7.6.1.    (line 1908)
+circle-of-confusion:                           See 7.6.1.    (line 1942)
 color appearance model:                        See 3.2.      (line  447)
 color space, sRGB:                             See 3.2.      (line  449)
 compression:                                   See 3.1.      (line  281)
@@ -3081,125 +3131,125 @@ compression, deflate:                          See 3.1.      (line  296)
 compression, JPEG:                             See 3.1.      (line  287)
 compression, LZW:                              See 3.1.      (line  302)
 compression, packbits:                         See 3.1.      (line  306)
-contrast enhancement, local:                   See 7.6.5.3.  (line 2148)
-contrast weighting using a blend of methods:   See 4.4.3.    (line 1354)
-contrast weighting using laplacian-of-gaussian:See 4.4.2.    (line 1257)
-contrast weighting using standard deviation:   See 4.4.1.    (line 1188)
-conversion, L*a*b*:                            See 3.4.      (line  761)
+contrast enhancement, local:                   See 7.6.5.3.  (line 2182)
+contrast weighting using a blend of methods:   See 4.4.3.    (line 1388)
+contrast weighting using laplacian-of-gaussian:See 4.4.2.    (line 1290)
+contrast weighting using standard deviation:   See 4.4.1.    (line 1221)
+conversion, L*a*b*:                            See 3.4.      (line  785)
 conversion, raw:                               See 2.        (line  218)
-dark frame:                                    See 7.6.6.    (line 2259)
-decision tree, focus stacking:                 See 7.6.5.5.  (line 2225)
+dark frame:                                    See 7.6.6.    (line 2294)
+decision tree, focus stacking:                 See 7.6.5.5.  (line 2259)
 default output filename:                       See 3.1.      (line  335)
 deflate compression:                           See 3.1.      (line  296)
-delimiters, option:                            See 3.5.      (line  920)
-depth-of-field:                                See 7.6.1.    (line 1911)
-depth-of-focus increase:                       See 7.6.      (line 1892)
-digital blending:                              See 7.3.2.    (line 1838)
-disabling average:                             See 4.1.2.    (line 1019)
+delimiters, option:                            See 3.5.      (line  952)
+depth-of-field:                                See 7.6.1.    (line 1945)
+depth-of-focus increase:                       See 7.6.      (line 1926)
+digital blending:                              See 7.3.2.    (line 1872)
+disabling average:                             See 4.1.2.    (line 1052)
 double precision float, IEEE754:               See 3.2.      (line  510)
-dynamic range increase <1>:                    See 7.4.      (line 1876)
-dynamic range increase:                        See 7.3.      (line 1773)
-edge detection, laplacian:                     See 7.6.5.2.  (line 2128)
-entropy:                                       See 4.5.      (line 1415)
-entropy, definition:                           See 4.5.      (line 1412)
-estimators:                                    See 4.4.1.2.  (line 1238)
-expectation value:                             See 4.4.1.1.  (line 1222)
-expert focus stacking tips:                    See 7.6.6.    (line 2247)
-exposure series:                               See 7.3.      (line 1773)
-exposure series, common misconceptions:        See 7.3.2.    (line 1835)
-exposure series, tips for beginners:           See 7.3.1.    (line 1811)
-filename template:                             See 3.4.      (line  818)
-flash exposure series:                         See 7.4.      (line 1876)
-focus stacking decision tree:                  See 7.6.5.5.  (line 2225)
-focus stacking, advanced:                      See 7.6.5.    (line 2011)
-focus stacking, basic:                         See 7.6.4.    (line 1983)
-focus stacks:                                  See 7.6.      (line 1892)
-focus stacks, fusing:                          See 7.6.3.    (line 1945)
-focus stacks, preparation:                     See 7.6.2.    (line 1931)
-focus stacks, why create them:                 See 7.6.1.    (line 1902)
+dynamic range increase <1>:                    See 7.4.      (line 1910)
+dynamic range increase:                        See 7.3.      (line 1807)
+edge detection, laplacian:                     See 7.6.5.2.  (line 2162)
+entropy:                                       See 4.5.      (line 1449)
+entropy, definition:                           See 4.5.      (line 1446)
+estimators:                                    See 4.4.1.2.  (line 1271)
+expectation value:                             See 4.4.1.1.  (line 1255)
+expert focus stacking tips:                    See 7.6.6.    (line 2282)
+exposure series:                               See 7.3.      (line 1807)
+exposure series, common misconceptions:        See 7.3.2.    (line 1869)
+exposure series, tips for beginners:           See 7.3.1.    (line 1845)
+filename template:                             See 3.4.      (line  848)
+flash exposure series:                         See 7.4.      (line 1910)
+focus stacking decision tree:                  See 7.6.5.5.  (line 2259)
+focus stacking, advanced:                      See 7.6.5.    (line 2045)
+focus stacking, basic:                         See 7.6.4.    (line 2017)
+focus stacks:                                  See 7.6.      (line 1926)
+focus stacks, fusing:                          See 7.6.3.    (line 1979)
+focus stacks, preparation:                     See 7.6.2.    (line 1965)
+focus stacks, why create them:                 See 7.6.1.    (line 1936)
 free documentation license (FDL):              See Appendix C.
-                                                             (line 2550)
-fusing, local-contrast-based:                  See 7.6.3.    (line 1945)
+                                                             (line 2586)
+fusing, local-contrast-based:                  See 7.6.3.    (line 1979)
 general index:
-          See ``General Index''.                             (line 3050)
+          See ``General Index''.                             (line 3100)
 GNU free documentation license:                See Appendix C.
-                                                             (line 2550)
-gray projector:                                See 3.4.      (line  733)
-gray projector, average:                       See 3.4.      (line  741)
-gray projector, channel-mixer:                 See 3.4.      (line  747)
-gray projector, l-star:                        See 3.4.      (line  761)
-gray projector, lightness:                     See 3.4.      (line  771)
-gray projector, luminance:                     See 3.4.      (line  776)
-gray projector, value:                         See 3.4.      (line  782)
+                                                             (line 2586)
+gray projector:                                See 3.4.      (line  754)
+gray projector, average:                       See 3.4.      (line  765)
+gray projector, channel-mixer:                 See 3.4.      (line  771)
+gray projector, l-star:                        See 3.4.      (line  785)
+gray projector, lightness:                     See 3.4.      (line  795)
+gray projector, luminance:                     See 3.4.      (line  800)
+gray projector, value:                         See 3.4.      (line  806)
 half precision float, OpenEXR:                 See 3.2.      (line  525)
-helpful programs:                              See 8.        (line 2281)
-hot pixels:                                    See 7.6.6.    (line 2259)
-Hugin:                                         See A.2.      (line 2454)
+helpful programs:                              See 8.        (line 2316)
+hot pixels:                                    See 7.6.6.    (line 2294)
+Hugin:                                         See A.2.      (line 2490)
 ICC profile:                                   See 3.2.      (line  449)
 IEEE754 double precision float:                See 3.2.      (line  510)
 IEEE754 single precision float:                See 3.2.      (line  501)
-image cache:                                   See 6.        (line 1598)
+image cache:                                   See 6.        (line 1632)
 image cache, block size:                       See 3.2.      (line  436)
 image cache, cache size:                       See 3.2.      (line  555)
-images, fusable:                               See 7.1.      (line 1669)
+images, fusable:                               See 7.1.      (line 1703)
 index, general:
-          See ``General Index''.                             (line 3050)
+          See ``General Index''.                             (line 3100)
 index, option:
-          See ``Option Index''.                              (line 3009)
+          See ``Option Index''.                              (line 3045)
 index, program:
-          See ``Program Index''.                             (line 2968)
-input mask:                                    See 5.1.      (line 1517)
+          See ``Program Index''.                             (line 3004)
+input mask:                                    See 5.1.      (line 1551)
 invocation:                                    See 3.        (line  271)
 JPEG compression:                              See 3.1.      (line  287)
-KImageFuser:                                   See A.2.      (line 2454)
-L*a*b* conversion:                             See 3.4.      (line  761)
-laplacian edge detection:                      See 7.6.5.2.  (line 2128)
-Laplacian of Gaussian (LoG):                   See 4.4.2.    (line 1257)
+KImageFuser:                                   See A.2.      (line 2490)
+L*a*b* conversion:                             See 3.4.      (line  785)
+laplacian edge detection:                      See 7.6.5.2.  (line 2162)
+Laplacian of Gaussian (LoG):                   See 4.4.2.    (line 1290)
 lens distortion, correction of:                See 2.        (line  231)
 levels, pyramid:                               See 3.1.      (line  321)
-LibJPEG:                                       See 8.        (line 2338)
-LibPNG:                                        See 8.        (line 2341)
-LibTiff:                                       See 8.        (line 2345)
-light probe:                                   See 7.3.2.    (line 1857)
-local analysis window:                         See 4.4.1.    (line 1188)
-local contrast enhancement:                    See 7.6.5.3.  (line 2148)
-local contrast problem:                        See 7.6.5.1.  (line 2018)
-local-contrast-based fusing:                   See 7.6.3.    (line 1945)
+LibJPEG:                                       See 8.        (line 2373)
+LibPNG:                                        See 8.        (line 2376)
+LibTiff:                                       See 8.        (line 2380)
+light probe:                                   See 7.3.2.    (line 1891)
+local analysis window:                         See 4.4.1.    (line 1221)
+local contrast enhancement:                    See 7.6.5.3.  (line 2182)
+local contrast problem:                        See 7.6.5.1.  (line 2052)
+local-contrast-based fusing:                   See 7.6.3.    (line 1979)
 LZW compression:                               See 3.1.      (line  302)
-mask template character, %:                    See 3.4.      (line  844)
-mask template character, B:                    See 3.4.      (line  893)
-mask template character, b:                    See 3.4.      (line  887)
-mask template character, D:                    See 3.4.      (line  884)
-mask template character, d:                    See 3.4.      (line  878)
-mask template character, E:                    See 3.4.      (line  912)
-mask template character, e:                    See 3.4.      (line  906)
-mask template character, F:                    See 3.4.      (line  902)
-mask template character, f:                    See 3.4.      (line  896)
-mask template character, i:                    See 3.4.      (line  847)
-mask template character, n:                    See 3.4.      (line  862)
-mask template character, P:                    See 3.4.      (line  875)
-mask template character, p:                    See 3.4.      (line  867)
-mask template characters, table of:            See 3.4.      (line  843)
-mask, binary:                                  See 5.        (line 1505)
-mask, filename template:                       See 3.4.      (line  818)
-mask, input files:                             See 5.1.      (line 1517)
-mask, saving:                                  See 3.4.      (line  815)
-mask, weight:                                  See 5.        (line 1505)
-masks, understanding:                          See 5.        (line 1505)
-memory, tuning usage of:                       See 6.        (line 1595)
+mask template character, %:                    See 3.4.      (line  876)
+mask template character, B:                    See 3.4.      (line  925)
+mask template character, b:                    See 3.4.      (line  919)
+mask template character, D:                    See 3.4.      (line  916)
+mask template character, d:                    See 3.4.      (line  910)
+mask template character, E:                    See 3.4.      (line  944)
+mask template character, e:                    See 3.4.      (line  938)
+mask template character, F:                    See 3.4.      (line  934)
+mask template character, f:                    See 3.4.      (line  928)
+mask template character, i:                    See 3.4.      (line  879)
+mask template character, n:                    See 3.4.      (line  894)
+mask template character, P:                    See 3.4.      (line  907)
+mask template character, p:                    See 3.4.      (line  899)
+mask template characters, table of:            See 3.4.      (line  875)
+mask, binary:                                  See 5.        (line 1539)
+mask, filename template:                       See 3.4.      (line  848)
+mask, input files:                             See 5.1.      (line 1551)
+mask, saving:                                  See 3.4.      (line  845)
+mask, weight:                                  See 5.        (line 1539)
+masks, understanding:                          See 5.        (line 1539)
+memory, tuning usage of:                       See 6.        (line 1629)
 Mertens-Kautz-Van Reeth exposure fusion:       See 1.        (line   97)
-mode of operation (SDev, LoG, ...):            See 4.4.4.    (line 1396)
-natural sharp-unsharp transition:              See 7.6.6.    (line 2274)
-noise reduction:                               See 7.2.      (line 1751)
+mode of operation (SDev, LoG, ...):            See 4.4.4.    (line 1430)
+natural sharp-unsharp transition:              See 7.6.6.    (line 2309)
+noise reduction:                               See 7.2.      (line 1785)
 Octave:                                        See Appendix A.
-                                                             (line 2365)
+                                                             (line 2400)
 OpenEXR, data format:                          See 3.2.      (line  521)
 OpenEXR, half precision float:                 See 3.2.      (line  525)
-option delimiters:                             See 3.5.      (line  920)
+option delimiters:                             See 3.5.      (line  952)
 option index:
-          See ``Option Index''.                              (line 3009)
+          See ``Option Index''.                              (line 3045)
 options, common:                               See 3.1.      (line  278)
-options, expert:                               See 3.4.      (line  617)
+options, expert:                               See 3.4.      (line  628)
 options, extended:                             See 3.2.      (line  432)
 options, fusion:                               See 3.3.      (line  569)
 output file compression:                       See 3.1.      (line  281)
@@ -3209,64 +3259,63 @@ overview:                                      See 1.        (line   97)
 packbits compression:                          See 3.1.      (line  306)
 parallax error:                                See 2.        (line  241)
 photometric alignment:                         See 2.        (line  233)
-pixels, hot:                                   See 7.6.6.    (line 2259)
-polarization series:                           See 7.5.      (line 1883)
-probability function:                          See 4.4.1.1.  (line 1219)
+pixels, hot:                                   See 7.6.6.    (line 2294)
+polarization series:                           See 7.5.      (line 1917)
+probability function:                          See 4.4.1.1.  (line 1252)
 problem reports:                               See Appendix A.
-                                                             (line 2368)
-problem, local contrast:                       See 7.6.5.1.  (line 2018)
+                                                             (line 2403)
+problem, local contrast:                       See 7.6.5.1.  (line 2052)
 profile, ICC:                                  See 3.2.      (line  449)
 program index:
-          See ``Program Index''.                             (line 2968)
-programs, helpful additional:                  See 8.        (line 2281)
+          See ``Program Index''.                             (line 3004)
+programs, helpful additional:                  See 8.        (line 2316)
 pyramid levels:                                See 3.1.      (line  321)
 raw conversion:                                See 2.        (line  218)
-saturation enhancement:                        See 7.5.      (line 1883)
-scaling of parameters:                         See 4.4.4.    (line 1396)
-sensor, use of clean:                          See 7.6.6.    (line 2250)
-series, exposure:                              See 7.3.      (line 1773)
-series, flash exposure:                        See 7.4.      (line 1876)
-series, polarization:                          See 7.5.      (line 1883)
-series, simple:                                See 7.2.      (line 1751)
-simple series:                                 See 7.2.      (line 1751)
+saturation enhancement:                        See 7.5.      (line 1917)
+scaling of parameters:                         See 4.4.4.    (line 1430)
+sensor, use of clean:                          See 7.6.6.    (line 2285)
+series, exposure:                              See 7.3.      (line 1807)
+series, flash exposure:                        See 7.4.      (line 1910)
+series, polarization:                          See 7.5.      (line 1917)
+series, simple:                                See 7.2.      (line 1785)
+simple series:                                 See 7.2.      (line 1785)
 single precision float, IEEE754:               See 3.2.      (line  501)
 SourceForge <1>:                               See Appendix A.
-                                                             (line 2371)
+                                                             (line 2406)
 SourceForge:                                   See 1.        (line  163)
 SourceForge, tracker:                          See Appendix A.
-                                                             (line 2371)
+                                                             (line 2406)
 sRGB color space:                              See 3.2.      (line  449)
-standard deviation:                            See 4.4.1.1.  (line 1228)
-statistical moments:                           See 4.4.1.1.  (line 1219)
-subtraction of dark frame:                     See 7.6.6.    (line 2259)
-sweet spot aperture:                           See 7.6.1.    (line 1920)
-tips, focus stacking experts:                  See 7.6.6.    (line 2247)
+standard deviation:                            See 4.4.1.1.  (line 1261)
+statistical moments:                           See 4.4.1.1.  (line 1252)
+subtraction of dark frame:                     See 7.6.6.    (line 2294)
+sweet spot aperture:                           See 7.6.1.    (line 1954)
+tips, focus stacking experts:                  See 7.6.6.    (line 2282)
 tracker, SourceForge:                          See Appendix A.
-                                                             (line 2371)
+                                                             (line 2406)
 transformation, affine:                        See 2.        (line  231)
-transition, natural sharp-unsharp:             See 7.6.6.    (line 2274)
-understanding masks:                           See 5.        (line 1505)
-variance:                                      See 4.4.1.1.  (line 1225)
-weight mask:                                   See 5.        (line 1505)
-weight, entropy:                               See 3.3.      (line  578)
-weight, exposure:                              See 3.3.      (line  584)
+transition, natural sharp-unsharp:             See 7.6.6.    (line 2309)
+understanding masks:                           See 5.        (line 1539)
+variance:                                      See 4.4.1.1.  (line 1258)
+weight mask:                                   See 5.        (line 1539)
+weight, entropy:                               See 3.3.      (line  580)
+weight, exposure:                              See 3.3.      (line  588)
 weight, local contrast:                        See 3.3.      (line  573)
-weight, saturation:                            See 3.3.      (line  599)
-weighted average:                              See 4.1.1.    (line 1007)
-weighting functions:                           See 4.        (line  967)
-weighting, contrast using a blend of methods:  See 4.4.3.    (line 1354)
-weighting, contrast using laplacian-of-gaussian:See 4.4.2.   (line 1257)
-weighting, contrast using standard deviation:  See 4.4.1.    (line 1188)
-weighting, exposure <1>:                       See 4.2.      (line 1039)
+weighted average:                              See 4.1.1.    (line 1040)
+weighting functions:                           See 4.        (line  999)
+weighting, contrast using a blend of methods:  See 4.4.3.    (line 1388)
+weighting, contrast using laplacian-of-gaussian:See 4.4.2.   (line 1290)
+weighting, contrast using standard deviation:  See 4.4.1.    (line 1221)
+weighting, exposure <1>:                       See 4.2.      (line 1072)
 weighting, exposure:                           See 1.        (line  121)
-weighting, general concept of:                 See 4.1.      (line  974)
-weighting, local contrast <1>:                 See 4.4.      (line 1164)
+weighting, general concept of:                 See 4.1.      (line 1006)
+weighting, local contrast <1>:                 See 4.4.      (line 1197)
 weighting, local contrast:                     See 1.        (line  130)
-weighting, local entropy <1>:                  See 4.5.      (line 1410)
+weighting, local entropy <1>:                  See 4.5.      (line 1444)
 weighting, local entropy:                      See 1.        (line  135)
-weighting, saturation <1>:                     See 4.3.      (line 1129)
+weighting, saturation <1>:                     See 4.3.      (line 1162)
 weighting, saturation:                         See 1.        (line  126)
-window, local-analysis:                        See 4.4.1.    (line 1188)
+window, local-analysis:                        See 4.4.1.    (line 1221)
 workflow:                                      See 2.        (line  183)
 workflow with Enblend:                         See 2.        (line  194)
 workflow with Enfuse:                          See 2.        (line  194)

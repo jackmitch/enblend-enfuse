@@ -85,7 +85,7 @@ boost::mt19937 Twister;
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 int Verbose = 1;                //< src::default-verbosity-level 1
-unsigned int ExactLevels = 0;
+unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
@@ -196,43 +196,43 @@ void dump_global_variables(const char* file, unsigned line,
         "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputOffsetXCmdLine = " << OutputOffsetXCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputOffsetYCmdLine = " << OutputOffsetYCmdLine << ", argument to option \"-f\"\n" <<
-        "+ WExposure = " << WExposure << ", argument to option \"--wExposure\"\n" <<
-        "+     WMu = " << WMu  << ", argument to option \"--wMu\"\n" <<
-        "+     WSigma = " << WSigma << ", argument to option \"--wSigma\"\n" <<
-        "+ WContrast = " << WContrast << ", argument to option \"--wContrast\"\n" <<
-        "+ WSaturation = " << WSaturation << ", argument to option \"--wSaturation\"\n" <<
-        "+ WEntropy = " << WEntropy << ", argument to option \"--wEntropy\"\n" <<
+        "+ WExposure = " << WExposure << ", argument to option \"--exposure-weight\"\n" <<
+        "+     WMu = " << WMu  << ", argument to option \"--exposure-mu\"\n" <<
+        "+     WSigma = " << WSigma << ", argument to option \"--exposure-sigma\"\n" <<
+        "+ WContrast = " << WContrast << ", argument to option \"--contrast-weight\"\n" <<
+        "+ WSaturation = " << WSaturation << ", argument to option \"--saturation-weight\"\n" <<
+        "+ WEntropy = " << WEntropy << ", argument to option \"--entropy-weight\"\n" <<
         "+ WSaturationIsDefault = " << enblend::stringOfBool(WSaturationIsDefault) << "\n" <<
         "+ ContrastWindowSize = " << ContrastWindowSize <<
-        ", argument to option \"--ContrastWindowSize\"\n" <<
+        ", argument to option \"--contrast-window-size\"\n" <<
         "+ GrayscaleProjector = <" << GrayscaleProjector <<
-        ">, argument to option \"--GrayProjector\"\n" <<
+        ">, argument to option \"--gray-projector\"\n" <<
         "+ FilterConfig = {\n" <<
         "+     edgeScale = " << FilterConfig.edgeScale << ",\n" <<
         "+     lceScale = " << FilterConfig.lceScale <<  ",\n" <<
         "+     lceFactor = " << FilterConfig.lceFactor <<  "\n" <<
-        "+ }, arguments to option \"--EdgeScale\"\n" <<
+        "+ }, arguments to option \"--contrast-edge-scale\"\n" <<
         "+ MinCurvature = {\n"
         "+     value = " << MinCurvature.value << ",\n" <<
         "+     isPercentage = " << enblend::stringOfBool(MinCurvature.isPercentage) << "\n" <<
-        "+ }, arguments to option \"--MinCurvature\"\n" <<
+        "+ }, arguments to option \"--contrast-min-curvature\"\n" <<
         "+ EntropyWindowSize = " << EntropyWindowSize <<
-        ", argument to option \"--EntropyWindowSize\"\n" <<
+        ", argument to option \"--entropy-window-size\"\n" <<
         "+ EntropyLowerCutoff = {\n"
         "+     value = " << EntropyLowerCutoff.value << ",\n" <<
         "+     isPercentage = " << enblend::stringOfBool(EntropyLowerCutoff.isPercentage) << "\n" <<
-        "+ }, first argument to option \"--EntropyCutoff\"\n" <<
+        "+ }, first argument to option \"--entropy-cutoff\"\n" <<
         "+ EntropyUpperCutoff = {\n"
         "+     value = " << EntropyUpperCutoff.value << ",\n" <<
         "+     isPercentage = " << enblend::stringOfBool(EntropyUpperCutoff.isPercentage) << "\n" <<
-        "+ }, second argument to option \"--EntropyCutoff\"\n" <<
+        "+ }, second argument to option \"--entropy-cutoff\"\n" <<
         "+ UseHardMask = " << enblend::stringOfBool(UseHardMask) <<
-        ", option \"--HardMask\" or \"--SoftMask\"\n" <<
-        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--SaveMasks\"\n" <<
+        ", option \"--hard-mask\" or \"--soft-mask\"\n" <<
+        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-masks\"\n" <<
         "+     SoftMaskTemplate = <" << SoftMaskTemplate <<
-        ">, first argument to option \"--SaveMasks\"\n" <<
+        ">, first argument to option \"--save-masks\"\n" <<
         "+     HardMaskTemplate = <" << HardMaskTemplate <<
-        ">, second argument to option \"--SaveMasks\"\n" <<
+        ">, second argument to option \"--save-masks\"\n" <<
         "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
         "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n" <<
@@ -346,36 +346,41 @@ void printUsageAndExit(const bool error = true) {
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
         "\n" <<
         "Fusion options:\n" <<
-        "  --wExposure=WEIGHT     weight given to well-exposed pixels\n" <<
+        "  --exposure-weight=WEIGHT\n" <<
+        "                         weight given to well-exposed pixels\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WExposure << "\n" <<
-        "  --wSaturation=WEIGHT   weight given to highly-saturated pixels\n" <<
+        "  --saturation-weight=WEIGHT\n" <<
+        "                         weight given to highly-saturated pixels\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WSaturation << "\n" <<
-        "  --wContrast=WEIGHT     weight given to pixels in high-contrast neighborhoods \n" <<
+        "  --contrast-weight=WEIGHT\n" <<
+        "                         weight given to pixels in high-contrast neighborhoods \n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WContrast << "\n" <<
-        "  --wEntropy=WEIGHT      weight given to pixels in high-entropy neighborhoods\n" <<
+        "  --entropy-weight=WEIGHT\n" <<
+        "                         weight given to pixels in high entropy neighborhoods\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
-        "  --wMu=MEAN             center also known as MEAN of Gaussian weighting\n" <<
+        "  --exposure-mu=MEAN     center also known as MEAN of Gaussian weighting\n" <<
         "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
-        "  --wSigma=SIGMA         standard deviation of Gaussian weighting\n" <<
+        "  --exposure-sigma=SIGMA standard deviation of Gaussian weighting\n" <<
         "                         function (SIGMA > 0); default: " << WSigma << "\n" <<
-        "  --SoftMask             average over all masks; this is the default\n" <<
-        "  --HardMask             force hard blend masks and no averaging on finest\n" <<
+        "  --soft-mask            average over all masks; this is the default\n" <<
+        "  --hard-mask            force hard blend masks and no averaging on finest\n" <<
         "                         scale; this is especially useful for focus\n" <<
         "                         stacks with thin and high contrast features,\n" <<
         "                         but leads to increased noise\n" <<
         "\n" <<
         "Expert options:\n" <<
-        "  --ContrastWindowSize=SIZE\n" <<
+        "  --contrast-window-size=SIZE\n" <<
         "                         set window SIZE for local-contrast analysis\n" <<
         "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
-        "  --GrayProjector=OPERATOR\n" <<
-        "                         apply gray-scale projection OPERATOR, where\n" <<
-        "                         OPERATOR is one of \"average\", \"l-star\",\n" <<
-        "                         \"lightness\", \"value\", \"luminance\", or\n" <<
+        "  --gray-projector=OPERATOR\n" <<
+        "                         apply gray-scale projection OPERATOR in exposure\n" <<
+        "                         or contrast weighing, where OPERATOR is one of\n" <<
+        "                         \"average\", \"l-star\", \"lightness\", \"value\",\n" <<
+        "                         \"luminance\", or\n" <<
         "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
         "                         default: \"" <<
         enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
-        "  --EdgeScale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
+        "  --contrast-edge-scale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
         "                         set scale on which to look for edges; positive\n" <<
         "                         LCESCALE switches on local contrast enhancement\n" <<
         "                         by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0);\n" <<
@@ -383,28 +388,26 @@ void printUsageAndExit(const bool error = true) {
         "                         EDGESCALE; append \"%\" to LCEFACTOR for relative\n" <<
         "                         value; defaults: " <<
         FilterConfig.edgeScale << ":" << FilterConfig.lceScale << ":" << FilterConfig.lceFactor << "\n" <<
-        "  --MinCurvature=CURVATURE\n" <<
+        "  --contrast-min-curvature=CURVATURE\n" <<
         "                         minimum CURVATURE for an edge to qualify; append\n" <<
         "                         \"%\" for relative values; default: " << MinCurvature.str() << "\n" <<
-        "  --EntropyWindowSize=SIZE\n" <<
+        "  --entropy-window-size=SIZE\n" <<
         "                         set window SIZE for local entropy analysis\n" <<
         "                         (SIZE >= 3); default: " << EntropyWindowSize  << "\n" <<
-        "  --EntropyCutoff=LOWERCUTOFF[:UPPERCUTOFF]\n" <<
+        "  --entropy-cutoff=LOWERCUTOFF[:UPPERCUTOFF]\n" <<
         "                         LOWERCUTOFF is the value below of which pixels are\n" <<
         "                         treated as black and UPPERCUTOFF is the value above\n" <<
         "                         of which pixels are treated as white in the entropy\n" <<
         "                         weighting; append \"%\" signs for relative values;\n" <<
         "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
-        "  --SaveMasks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
+        "  --save-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
         "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
         "                         conversion chars: %i: mask index, %n: mask number,\n" <<
         "                         %p: full path, %d: dirname, %b: basename,\n" <<
         "                         %f: filename, %e: extension; lowercase characters\n" <<
-        "                         refer to input images uppercase to output image;\n" <<
+        "                         refer to input images uppercase to the output image;\n" <<
         "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
-        "  --debug                output mask images for debugging (deprecated);\n" <<
-        "                         use \"--SaveMasks\" instead\n" <<
         "\n" <<
         "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
@@ -441,7 +444,7 @@ enum AllPossibleOptions {
     SizeAndPositionOption /* -f */, CacheSizeOption,
     ExposureWeightOption, SaturationWeightOption,
     ContrastWeightOption, EntropyWeightOption,
-    ExposureMuOption /* -wMu */, ExposureSigmaOption /* -wSigma */,
+    ExposureMuOption /* --contrast-mu */, ExposureSigmaOption /* --contrast-sigma */,
     SoftMaskOption, HardMaskOption,
     ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
     MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
@@ -463,14 +466,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
         if (contains(optionSet, ExposureMuOption)) {
             cerr << command <<
-                ": warning: option \"--wMu\" has no effect as exposure weight\n" <<
+                ": warning: option \"--exposure-mu\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
                 endl;
         }
         if (contains(optionSet, ExposureSigmaOption)) {
             cerr << command <<
-                ": warning: option \"--wSigma\" has no effect as exposure weight\n" <<
+                ": warning: option \"--exposure-sigma\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
                 endl;
@@ -479,7 +482,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (WContrast == 0.0 && contains(optionSet, ContrastWindowSizeOption)) {
         cerr << command <<
-            ": warning: option \"--ContrastWindowSize\" has no effect as contrast\n" <<
+            ": warning: option \"--contrast-window-size\" has no effect as contrast\n" <<
             command <<
             ": warning:     weight is zero" <<
             endl;
@@ -487,7 +490,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (WExposure == 0.0 && WContrast == 0.0 && contains(optionSet, GrayProjectorOption)) {
         cerr << command <<
-            ": warning: option \"--GrayProjector\" has no effect as exposure\n" <<
+            ": warning: option \"--gray-projector\" has no effect as exposure\n" <<
             command <<
             ": warning:     and contrast weight both are zero" <<
             endl;
@@ -496,14 +499,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (WContrast == 0.0) {
         if (contains(optionSet, EdgeScaleOption)) {
             cerr << command <<
-                ": warning: option \"--EdgeScale\" has no effect as contrast\n" <<
+                ": warning: option \"--contrast-edge-scale\" has no effect as contrast\n" <<
                 command <<
                 ": warning:     weight is zero" <<
                 endl;
         }
         if (contains(optionSet, MinCurvatureOption)) {
             cerr << command <<
-                ": warning: option \"--MinCurvature\" has no effect as contrast\n" <<
+                ": warning: option \"--contrast-min-curvature\" has no effect as contrast\n" <<
                 command <<
                 ": warning:     weight is zero" <<
                 endl;
@@ -512,11 +515,11 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         if (FilterConfig.edgeScale > 0.0 &&
             contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value <= 0.0) {
             cerr << command <<
-                ": warning: option \"--ContrastWindowSize\" has no effect as\n" <<
+                ": warning: option \"--contrast-window-size\" has no effect as\n" <<
                 command <<
-                ": warning:     EDGESCALE in \"--EdgeScale\" is positive and" <<
+                ": warning:     EDGESCALE in \"--contrast-edge-scale\" is positive and" <<
                 command <<
-                ": warning:     \"--MinCurvature\" is non-positive" <<
+                ": warning:     \"--contrast-min-curvature\" is non-positive" <<
                 endl;
         }
     }
@@ -524,14 +527,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (WEntropy == 0.0) {
         if (contains(optionSet, EntropyWindowSizeOption)) {
             cerr << command <<
-                ": warning: option \"--EntropyWindowSize\" has no effect as\n" <<
+                ": warning: option \"--entropy-window-size\" has no effect as\n" <<
                 command <<
                 ": warning:     entropy weight is zero" <<
                 endl;
         }
         if (contains(optionSet, EntropyCutoffOption)) {
             cerr << command <<
-                ": warning: option \"--EntropyCutoff\" has no effect as entropy\n" <<
+                ": warning: option \"--entropy-cutoff\" has no effect as entropy\n" <<
                 command <<
                 ": warning:     weight is zero" <<
                 endl;
@@ -579,439 +582,516 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 }
 
 
-int process_options(int argc, char** argv) {
-    enum OptionArgumentKind {
-        NoArgument,
-        StringArgument,
-        FloatArgument,
-        IntegerArgument
-    };
-
-    // NOTE: An OptionId is the index of a command line option in
-    // "long_options".  Every change in "enum OptionId" must be
-    // reflected in "long_options" and vice versa.
+int process_options(int argc, char** argv)
+{
     enum OptionId {
-        CompressionId,           //  0
-        WeightExposureId,        //  1
-        WeightContrastId,        //  2
-        WeightSaturationId,      //  3
-        WeightMuId,              //  4
-        WeightSigmaId,           //  5
-        MinCurvatureId,          //  6
-        EdgeScaleId,             //  7
-        ContrastWindowSizeId,    //  8
-        HardMaskId,              //  9
-        GrayProjectorId,         // 10
-        DebugId,                 // 11
-        WeightEntropyId,         // 12
-        EntropyWindowSizeId,     // 13
-        EntropyCutoffId,         // 14
-        SoftMaskId,              // 15
-        VerboseId,               // 16
-        HelpId,                  // 17
-        VersionId,               // 18
-        DepthId,                 // 19
-        OutputId,                // 20
-        SaveMasksId,             // 21
-        WrapAroundId             // 22
+        OPTION_ID_OFFSET = 1023,    // Ids start at 1024
+        CompressionId,
+        WeightExposureId, Deprecated_WeightExposureId,
+        WeightContrastId, Deprecated_WeightContrastId,
+        WeightSaturationId, Deprecated_WeightSaturationId,
+        WeightMuId, Deprecated_WeightMuId,
+        WeightSigmaId, Deprecated_WeightSigmaId,
+        MinCurvatureId, Deprecated_MinCurvatureId,
+        EdgeScaleId, Deprecated_EdgeScaleId,
+        ContrastWindowSizeId, Deprecated_ContrastWindowSizeId,
+        HardMaskId, Deprecated_HardMaskId,
+        GrayProjectorId, Deprecated_GrayProjectorId,
+        WeightEntropyId, Deprecated_WeightEntropyId,
+        EntropyWindowSizeId, Deprecated_EntropyWindowSizeId,
+        EntropyCutoffId, Deprecated_EntropyCutoffId,
+        SoftMaskId, Deprecated_SoftMaskId,
+        VerboseId,
+        HelpId,
+        VersionId,
+        DepthId,
+        OutputId,
+        SaveMasksId, Deprecated_SaveMasksId,
+        WrapAroundId
     };
 
-    // NOTE: See note attached to "enum OptionId" above.
     static struct option long_options[] = {
-        {"compression", required_argument, 0, StringArgument},           //  0
-        {"wExposure", required_argument, 0, FloatArgument},              //  1
-        {"wContrast", required_argument, 0, FloatArgument},              //  2
-        {"wSaturation", required_argument, 0, FloatArgument},            //  3
-        {"wMu", required_argument, 0, FloatArgument},                    //  4
-        {"wSigma", required_argument, 0, FloatArgument},                 //  5
-        {"MinCurvature", required_argument, 0, StringArgument},          //  6
-        {"EdgeScale", required_argument, 0, StringArgument},             //  7
-        {"ContrastWindowSize", required_argument, 0, IntegerArgument},   //  8
-        {"HardMask", no_argument, 0, NoArgument},                        //  9
-        {"GrayProjector", required_argument, 0, StringArgument},         // 10
-        {"debug", no_argument, 0, NoArgument},                           // 11
-        {"wEntropy", required_argument, 0, FloatArgument},               // 12
-        {"EntropyWindowSize", required_argument, 0, IntegerArgument},    // 13
-        {"EntropyCutoff", required_argument, 0, StringArgument},         // 14
-        {"SoftMask", no_argument, 0, NoArgument},                        // 15
-        {"verbose", optional_argument, 0, IntegerArgument},              // 16
-        {"help", no_argument, 0, NoArgument},                            // 17
-        {"version", no_argument, 0, NoArgument},                         // 18
-        {"depth", required_argument, 0, StringArgument},                 // 19
-        {"output", required_argument, 0, StringArgument},                // 20
-        {"SaveMasks", optional_argument, 0, StringArgument},             // 21
-        {"wrap", optional_argument, 0, StringArgument},                  // 22
+        {"compression", required_argument, 0, CompressionId},
+        {"exposure-weight", required_argument, 0, WeightExposureId},
+        {"wExposure", required_argument, 0, Deprecated_WeightExposureId},
+        {"contrast-weight", required_argument, 0, WeightContrastId},
+        {"wContrast", required_argument, 0, Deprecated_WeightContrastId},
+        {"saturation-weight", required_argument, 0, WeightSaturationId},
+        {"wSaturation", required_argument, 0, Deprecated_WeightSaturationId},
+        {"exposure-mu", required_argument, 0, WeightMuId},
+        {"wMu", required_argument, 0, Deprecated_WeightMuId},
+        {"exposure-sigma", required_argument, 0, WeightSigmaId},
+        {"wSigma", required_argument, 0, Deprecated_WeightSigmaId},
+        {"contrast-min-curvature", required_argument, 0, MinCurvatureId},
+        {"MinCurvature", required_argument, 0, Deprecated_MinCurvatureId},
+        {"contrast-edge-scale", required_argument, 0, EdgeScaleId},
+        {"EdgeScale", required_argument, 0, Deprecated_EdgeScaleId},
+        {"contrast-window-size", required_argument, 0, ContrastWindowSizeId},
+        {"ContrastWindowSize", required_argument, 0, Deprecated_ContrastWindowSizeId},
+        {"hard-mask", no_argument, 0, HardMaskId},
+        {"HardMask", no_argument, 0, Deprecated_HardMaskId},
+        {"gray-projector", required_argument, 0, GrayProjectorId},
+        {"GrayProjector", required_argument, 0, Deprecated_GrayProjectorId},
+        {"entropy-weight", required_argument, 0, WeightEntropyId},
+        {"wEntropy", required_argument, 0, Deprecated_WeightEntropyId},
+        {"entropy-window-size", required_argument, 0, EntropyWindowSizeId},
+        {"EntropyWindowSize", required_argument, 0, Deprecated_EntropyWindowSizeId},
+        {"entropy-cutoff", required_argument, 0, EntropyCutoffId},
+        {"EntropyCutoff", required_argument, 0, Deprecated_EntropyCutoffId},
+        {"soft-mask", no_argument, 0, SoftMaskId},
+        {"SoftMask", no_argument, 0, Deprecated_SoftMaskId},
+        {"verbose", optional_argument, 0, VerboseId},
+        {"help", no_argument, 0, HelpId},
+        {"version", no_argument, 0, VersionId},
+        {"depth", required_argument, 0, DepthId},
+        {"output", required_argument, 0, OutputId},
+        {"save-mask", optional_argument, 0, SaveMasksId}, // singular form: not documented, not deprecated
+        {"save-masks", optional_argument, 0, SaveMasksId},
+        {"SaveMasks", optional_argument, 0, Deprecated_SaveMasksId},
+        {"wrap", optional_argument, 0, WrapAroundId},
         {0, 0, 0, 0}
     };
 
+    bool failed = false;
     bool justPrintVersion = false;
     bool justPrintUsage = false;
     OptionSetType optionSet;
 
-    // Parse command line.
-    int option_index = 0;
-    int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:v::w::z",
-                            long_options, &option_index)) != -1) {
-        switch (c) {
-        case NoArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-            switch (option_index) {
-            case HardMaskId:
-                UseHardMask = true;
-                optionSet.insert(HardMaskOption);
-                break;
-            case SoftMaskId:
-                UseHardMask = false;
-                optionSet.insert(SoftMaskOption);
-                break;
-            case DebugId:
-                cerr << command
-                     << ": warning: option \"--debug\" is deprecated; use \"--SaveMasks\" instead"
-                     << endl;
-                SaveMasks = true;
-                optionSet.insert(DebugOption);
-                break;
-            case HelpId:
-                justPrintUsage = true;
-                optionSet.insert(HelpOption);
-                break;
-            case VersionId:
-                justPrintVersion = true;
-                optionSet.insert(VersionOption);
-                break;
-            default:
-                cerr << command
-                     << ": internal error: unhandled \"NoArgument\" option"
-                     << endl;
-                exit(1);
-            }
+    while (true) {
+        int option_index;
+        const int code = getopt_long(argc, argv, "Vb:cd:f:ghl:m:o:v::w::",
+                                     long_options, &option_index);
+
+        if (code == -1) {
             break;
-        } // end of "case NoArgument"
+        }
 
-        case StringArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-            switch (option_index) {
-            case WrapAroundId:
-                if (optarg != NULL && *optarg != 0) {
-                    WrapAround = enblend::wraparoundOfString(optarg);
-                    if (WrapAround == UnknownWrapAround) {
-                        cerr << command
-                             << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
-                        exit(1);
-                    }
-                } else {
-                    WrapAround = HorizontalStrip;
-                }
-                optionSet.insert(WrapAroundOption);
-                break;
-            case MinCurvatureId: {
-                char *tail;
-                errno = 0;
-                MinCurvature.value = strtod(optarg, &tail);
-                if (errno == 0) {
-                    if (*tail == 0) {
-                        MinCurvature.isPercentage = false;
-                    } else if (strcmp(tail, "%") == 0) {
-                        MinCurvature.isPercentage = true;
-                    } else {
-                        cerr << command << ": unrecognized minimum gradient \""
-                             << optarg << "\" specification." << endl;
-                        exit(1);
-                    }
-                } else {
-                    cerr << command << ": illegal numeric format \""
-                         << optarg << "\" for minimum gradient: "
-                         << enblend::errorMessage(errno) << endl;
-                    exit(1);
-                }
-                optionSet.insert(MinCurvatureOption);
-                break;
-            }
+        switch (code) {
+        case Deprecated_HardMaskId:
+            PENALIZE_DEPRECATED_OPTION("--HardMask", "--hard-mask");
+            // FALLTHROUGH
+        case HardMaskId:
+            UseHardMask = true;
+            optionSet.insert(HardMaskOption);
+            break;
 
-            case EdgeScaleId: {
-                char* s = new char[strlen(optarg) + 1];
-                strcpy(s, optarg);
-                char* save_ptr = NULL;
-                char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                char* tail;
+        case Deprecated_SoftMaskId:
+            PENALIZE_DEPRECATED_OPTION("--SoftMask", "--soft-mask");
+            // FALLTHROUGH
+        case SoftMaskId:
+            UseHardMask = false;
+            optionSet.insert(SoftMaskOption);
+            break;
 
-                if (token == NULL || *token == 0) {
-                    cerr << command << ": no scale given to --EdgeScale.  "
-                         << "EdgeScale is required." << endl;
-                    exit(1);
-                }
-                errno = 0;
-                FilterConfig.edgeScale = strtod(token, &tail);
-                if (errno == 0) {
-                    if (*tail != 0) {
-                        cerr << command << ": could not decode \"" << tail
-                             << "\" in edge scale specification \""
-                             << token << "\" for EdgeScale." << endl;
-                        exit(1);
-                    }
-                } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" for EdgeScale: "
-                         << enblend::errorMessage(errno) << endl;
-                    exit(1);
-                }
+        case 'h': // FALLTHROUGH
+        case HelpId:
+            justPrintUsage = true;
+            optionSet.insert(HelpOption);
+            break;
 
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    FilterConfig.lceScale = strtod(token, &tail);
-                    if (errno == 0) {
-                        if (strcmp(tail, "%") == 0) {
-                            FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
-                        } else if (*tail != 0) {
-                            cerr << command << ": could not decode \"" << tail
-                                 << "\" in specification \"" << token
-                                 << "\" for LCE-scale." << endl;
-                            exit(1);
-                        }
-                    } else {
-                        cerr << command << ": illegal numeric format \""
-                             << token << "\" for LCE-Scale: "
-                             << enblend::errorMessage(errno) << endl;
-                        exit(1);
-                    }
-                }
+        case 'V': // FALLTHROUGH
+        case VersionId:
+            justPrintVersion = true;
+            optionSet.insert(VersionOption);
+            break;
 
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    FilterConfig.lceFactor = strtod(token, &tail);
-                    if (errno == 0) {
-                        if (strcmp(tail, "%") == 0) {
-                            FilterConfig.lceFactor /= 100.0;
-                        } else if (*tail != 0) {
-                            cerr << command << ": could not decode \"" << tail
-                                 << "\" in specification \"" << token
-                                 << "\" for LCE-factor." << endl;
-                            exit(1);
-                        }
-                    } else {
-                        cerr << command << ": illegal numeric format \""
-                             << token << "\" for LCE-factor: "
-                             << enblend::errorMessage(errno) << endl;
-                        exit(1);
-                    }
-                }
-
-                if (save_ptr != NULL && *save_ptr != 0) {
-                    cerr << command << ": warning: ignoring trailing garbage \""
-                         << save_ptr << "\" in argument to --EdgeScale" << endl;
-                }
-
-                delete [] s;
-                optionSet.insert(EdgeScaleOption);
-                break;
-            }
-
-            case EntropyCutoffId: {
-                char* s = new char[strlen(optarg) + 1];
-                strcpy(s, optarg);
-                char* save_ptr = NULL;
-                char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                char* tail;
-
-                if (token == NULL || *token == 0) {
-                    cerr << command << ": no scale given to --EntropyCutoff.  "
-                         << "LowerCutOff is required." << endl;
-                    exit(1);
-                }
-                errno = 0;
-                EntropyLowerCutoff.value = strtod(token, &tail);
-                if (errno == 0) {
-                    if (*tail == 0) {
-                        EntropyLowerCutoff.isPercentage = false;
-                    } else if (strcmp(tail, "%") == 0) {
-                        EntropyLowerCutoff.isPercentage = true;
-                    } else {
-                        cerr << command << ": unrecognized entropy's lower cutoff \""
-                             << tail << "\" in \"" << token << "\"" << endl;
-                        exit(1);
-                    }
-                } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" of entropy's lower cutoff: "
-                         << enblend::errorMessage(errno) << endl;
-                    exit(1);
-                }
-
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    EntropyUpperCutoff.value = strtod(token, &tail);
-                    if (errno == 0) {
-                        if (*tail == 0) {
-                            EntropyUpperCutoff.isPercentage = false;
-                        } else if (strcmp(tail, "%") == 0) {
-                            EntropyUpperCutoff.isPercentage = true;
-                        } else {
-                            cerr << command << ": unrecognized entropy's upper cutoff \""
-                                 << tail << "\" in \"" << token << "\"" << endl;
-                            exit(1);
-                        }
-                    } else {
-                        cerr << command << ": illegal numeric format \""
-                             << token << "\" of entropy's upper cutoff: "
-                             << enblend::errorMessage(errno) << endl;
-                        exit(1);
-                    }
-                }
-
-                if (save_ptr != NULL && *save_ptr != 0) {
-                    cerr << command << ": warning: ignoring trailing garbage \""
-                         << save_ptr << "\" in argument to --EntropyCutoff" << endl;
-                }
-
-                delete [] s;
-                optionSet.insert(EntropyCutoffOption);
-                break;
-            }
-
-            case CompressionId:
-                OutputCompression = optarg;
-                optionSet.insert(CompressionOption);
-                break;
-
-            case GrayProjectorId:
-                GrayscaleProjector = optarg;
-                optionSet.insert(GrayProjectorOption);
-                break;
-
-            case DepthId:
-                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
-                optionSet.insert(DepthOption);
-                break;
-
-            case OutputId:
-                if (contains(optionSet, OutputOption)) {
+        case 'w': // FALLTHROUGH
+        case WrapAroundId:
+            if (optarg != NULL && *optarg != 0) {
+                WrapAround = enblend::wraparoundOfString(optarg);
+                if (WrapAround == UnknownWrapAround) {
                     cerr << command
-                         << ": warning: more than one output file specified"
-                         << endl;
+                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    failed = true;
                 }
-                OutputFileName = optarg;
-                optionSet.insert(OutputOption);
-                break;
-
-            case SaveMasksId:
-                SaveMasks = true;
-                optionSet.insert(SaveMasksOption);
-                if (optarg != NULL && *optarg != 0) {
-                    char* s = new char[strlen(optarg) + 1];
-                    strcpy(s, optarg);
-                    char* save_ptr = NULL;
-                    char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
-                    SoftMaskTemplate = token;
-                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                    if (token != NULL && *token != 0) {
-                        HardMaskTemplate = token;
-                    }
-                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                    if (token != NULL && *token != 0) {
-                        cerr << command
-                             << ": warning: ignoring trailing garbage in --SaveMasks" << endl;
-                    }
-                    delete [] s;
-                }
-                break;
-
-            default:
-                cerr << command << ": internal error: unhandled \"StringArgument\" option"
-                     << endl;
-                exit(1);
+            } else {
+                WrapAround = HorizontalStrip;
             }
+            optionSet.insert(WrapAroundOption);
             break;
-        } // end of "case StringArgument"
 
-        case FloatArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-            double *optionDouble = NULL;
-            switch (option_index) {
-            case WeightExposureId:
-                optionDouble = &WExposure;
-                optionSet.insert(ExposureWeightOption);
-                break;
-            case WeightContrastId:
-                optionDouble = &WContrast;
-                optionSet.insert(ContrastWeightOption);
-                break;
-            case WeightSaturationId:
-                optionDouble = &WSaturation;
-                WSaturationIsDefault = false;
-                optionSet.insert(SaturationWeightOption);
-                break;
-            case WeightMuId:
-                optionDouble = &WMu;
-                optionSet.insert(ExposureMuOption);
-                break;
-            case WeightSigmaId:
-                optionDouble = &WSigma;
-                optionSet.insert(ExposureSigmaOption);
-                break;
-            case WeightEntropyId:
-                optionDouble = &WEntropy;
-                optionSet.insert(EntropyWeightOption);
-                break;
-            default:
-                cerr << command
-                     << ": internal error: unhandled \"FloatArgument\" option"
-                     << endl;
-                exit(1);
-            }
-
-            char *lastChar = NULL;
-            double value = strtod(optarg, &lastChar);
-            //< src::minimum-float-argument 0.0
-            //< src::maximum-float-argument 1.0
-            if ((lastChar == optarg || value < 0.0 || value > 1.0) &&
-                (option_index == WeightExposureId || option_index == WeightContrastId ||
-                 option_index == WeightSaturationId || option_index == WeightEntropyId ||
-                 option_index == WeightMuId)) {
-                cerr << command << ": " << long_options[option_index].name
-                     << " must be in the range [0.0, 1.0]." << endl;
-                exit(1);
-            }
-            if ((lastChar == optarg || value < 0.0) && option_index == WeightSigmaId) {
-                cerr << command << ": " << long_options[option_index].name
-                     << " must be non-negative." << endl;
-                exit(1);
-            }
-
-            *optionDouble = value;
-            break;
-        } // end of "case FloatArgument"
-
-        case IntegerArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-
-            switch (option_index) {
-            case VerboseId:
-                if (optarg != NULL && *optarg != 0) {
-                    Verbose =
-                        enblend::numberOfString(optarg,
-                                                _1 >= 0,
-                                                "verbosity level less than 0; will use 0",
-                                                0);
+        case Deprecated_MinCurvatureId:
+            PENALIZE_DEPRECATED_OPTION("--MinCurvature", "--contrast-min-curvature");
+            // FALLTHROUGH
+        case MinCurvatureId: {
+            char *tail;
+            errno = 0;
+            MinCurvature.value = strtod(optarg, &tail);
+            if (errno == 0) {
+                if (*tail == 0) {
+                    MinCurvature.isPercentage = false;
+                } else if (strcmp(tail, "%") == 0) {
+                    MinCurvature.isPercentage = true;
                 } else {
-                    Verbose++;
+                    cerr << command << ": unrecognized minimum gradient \""
+                         << optarg << "\" specification." << endl;
+                    failed = true;
                 }
-                optionSet.insert(VerboseOption);
-                break;
+            } else {
+                cerr << command << ": illegal numeric format \""
+                     << optarg << "\" for minimum gradient: "
+                     << enblend::errorMessage(errno) << endl;
+                failed = true;
+            }
+            optionSet.insert(MinCurvatureOption);
+            break;
+        }
 
-            case ContrastWindowSizeId:
+        case Deprecated_EdgeScaleId:
+            PENALIZE_DEPRECATED_OPTION("--EdgeScale", "--contrast-edge-scale");
+            // FALLTHROUGH
+        case EdgeScaleId: {
+            char* s = new char[strlen(optarg) + 1];
+            strcpy(s, optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* tail;
+
+            if (token == NULL || *token == 0) {
+                cerr << command << ": no scale given to --contrast-edge-scale.  "
+                     << "scale is required." << endl;
+                failed = true;
+            }
+            errno = 0;
+            FilterConfig.edgeScale = strtod(token, &tail);
+            if (errno == 0) {
+                if (*tail != 0) {
+                    cerr << command << ": could not decode \"" << tail
+                         << "\" in edge scale specification \""
+                         << token << "\" for edge scale." << endl;
+                    failed = true;
+                }
+            } else {
+                cerr << command << ": illegal numeric format \""
+                     << token << "\" for edge scale: "
+                     << enblend::errorMessage(errno) << endl;
+                failed = true;
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                FilterConfig.lceScale = strtod(token, &tail);
+                if (errno == 0) {
+                    if (strcmp(tail, "%") == 0) {
+                        FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
+                    } else if (*tail != 0) {
+                        cerr << command << ": could not decode \"" << tail
+                             << "\" in specification \"" << token
+                             << "\" for LCE-scale." << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" for LCE-Scale: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                FilterConfig.lceFactor = strtod(token, &tail);
+                if (errno == 0) {
+                    if (strcmp(tail, "%") == 0) {
+                        FilterConfig.lceFactor /= 100.0;
+                    } else if (*tail != 0) {
+                        cerr << command << ": could not decode \"" << tail
+                             << "\" in specification \"" << token
+                             << "\" for LCE-factor." << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" for LCE-factor: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            if (save_ptr != NULL && *save_ptr != 0) {
+                cerr << command << ": warning: ignoring trailing garbage \""
+                     << save_ptr << "\" in argument to --contrast-edge-scale" << endl;
+            }
+
+            delete [] s;
+            optionSet.insert(EdgeScaleOption);
+            break;
+        }
+
+        case Deprecated_EntropyCutoffId:
+            PENALIZE_DEPRECATED_OPTION("--EntropyCutoff", "--entropy-cutoff");
+            // FALLTHROUGH
+        case EntropyCutoffId: {
+            char* s = new char[strlen(optarg) + 1];
+            strcpy(s, optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* tail;
+
+            if (token == NULL || *token == 0) {
+                cerr << command << ": no scale given to --entropy-cutoff.  "
+                     << "lower cutoff is required." << endl;
+                failed = true;
+            }
+            errno = 0;
+            EntropyLowerCutoff.value = strtod(token, &tail);
+            if (errno == 0) {
+                if (*tail == 0) {
+                    EntropyLowerCutoff.isPercentage = false;
+                } else if (strcmp(tail, "%") == 0) {
+                    EntropyLowerCutoff.isPercentage = true;
+                } else {
+                    cerr << command << ": unrecognized entropy's lower cutoff \""
+                         << tail << "\" in \"" << token << "\"" << endl;
+                    failed = true;
+                }
+            } else {
+                cerr << command << ": illegal numeric format \""
+                     << token << "\" of entropy's lower cutoff: "
+                     << enblend::errorMessage(errno) << endl;
+                failed = true;
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                EntropyUpperCutoff.value = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        EntropyUpperCutoff.isPercentage = false;
+                    } else if (strcmp(tail, "%") == 0) {
+                        EntropyUpperCutoff.isPercentage = true;
+                    } else {
+                        cerr << command << ": unrecognized entropy's upper cutoff \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of entropy's upper cutoff: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            if (save_ptr != NULL && *save_ptr != 0) {
+                cerr << command << ": warning: ignoring trailing garbage \""
+                     << save_ptr << "\" in argument to --entropy-cutoff" << endl;
+            }
+
+            delete [] s;
+            optionSet.insert(EntropyCutoffOption);
+            break;
+        }
+
+        case CompressionId:
+            if (optarg != NULL && *optarg != 0) {
+                OutputCompression = optarg;
+            } else {
+                cerr << command << ": option \"--compression\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(CompressionOption);
+            break;
+
+        case Deprecated_GrayProjectorId:
+            PENALIZE_DEPRECATED_OPTION("--GrayProjector", "--gray-projector");
+            // FALLTHROUGH
+        case GrayProjectorId:
+            if (optarg != NULL && *optarg != 0) {
+                GrayscaleProjector = optarg;
+            } else {
+                cerr << command << ": option \"--gray-projector\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(GrayProjectorOption);
+            break;
+
+        case 'd': // FALLTHROUGH
+        case DepthId:
+            if (optarg != NULL && *optarg != 0) {
+                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+            } else {
+                cerr << command << ": options \"-d\" or \"--depth\" require arguments" << endl;
+                failed = true;
+            }
+            optionSet.insert(DepthOption);
+            break;
+
+        case 'o': // FALLTHROUGH
+        case OutputId:
+            if (contains(optionSet, OutputOption)) {
+                cerr << command
+                     << ": warning: more than one output file specified"
+                     << endl;
+            }
+            if (optarg != NULL && *optarg != 0) {
+                OutputFileName = optarg;
+            } else {
+                cerr << command << ": options \"-o\" or \"--output\" reqire arguments" << endl;
+                failed = true;
+            }
+            optionSet.insert(OutputOption);
+            break;
+
+        case Deprecated_SaveMasksId:
+            PENALIZE_DEPRECATED_OPTION("--SaveMasks", "--save-masks");
+            // FALLTHROUGH
+        case SaveMasksId:
+            if (optarg != NULL && *optarg != 0) {
+                char* s = new char[strlen(optarg) + 1];
+                strcpy(s, optarg);
+                char* save_ptr = NULL;
+                char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+                SoftMaskTemplate = token;
+                token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    HardMaskTemplate = token;
+                }
+                token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                if (token != NULL && *token != 0) {
+                    cerr << command
+                         << ": warning: ignoring trailing garbage in --save-masks" << endl;
+                }
+                delete [] s;
+            }
+            SaveMasks = true;
+            optionSet.insert(SaveMasksOption);
+            break;
+
+        case Deprecated_WeightExposureId:
+            PENALIZE_DEPRECATED_OPTION("--wExposure", "--exposure-weight");
+            // FALLTHROUGH
+        case WeightExposureId:
+            if (optarg != NULL && *optarg != 0) {
+                WExposure = enblend::numberOfString(optarg,
+                                                    _1 >= 0.0, //< src::minimum-weight-exposure 0
+                                                    "exposure weight less than 0; will use 0",
+                                                    0.0,
+                                                    _1 <= 1.0, //< src::maximum-weight-exposure 1
+                                                    "exposure weight greater than 1; will use 1",
+                                                    1.0);
+            } else {
+                cerr << command << ": option \"--exposure-weight\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(ExposureWeightOption);
+            break;
+
+        case Deprecated_WeightContrastId:
+            PENALIZE_DEPRECATED_OPTION("--wContrast", "--contrast-weight");
+            // FALLTHROUGH
+        case WeightContrastId:
+            if (optarg != NULL && *optarg != 0) {
+                WContrast = enblend::numberOfString(optarg,
+                                                    _1 >= 0.0, //< src::minimum-weight-contrast 0
+                                                    "contrast weight less than 0; will use 0",
+                                                    0.0,
+                                                    _1 <= 1.0, //< src::maximum-weight-contrast 1
+                                                    "contrast weight greater than 1; will use 1",
+                                                    0.0);
+            } else {
+                cerr << command << ": option \"--contrast-weight\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(ContrastWeightOption);
+            break;
+
+        case Deprecated_WeightSaturationId:
+            PENALIZE_DEPRECATED_OPTION("--wSaturation", "--saturation-weight");
+            // FALLTHROUGH
+        case WeightSaturationId:
+            if (optarg != NULL && *optarg != 0) {
+                WSaturation = enblend::numberOfString(optarg,
+                                                      _1 >= 0.0, //< src::minimum-weight-saturation 0
+                                                      "saturation weight less than 0; will use 0",
+                                                      0.0,
+                                                      _1 <= 1.0, //< src::maximum-weight-saturation 1
+                                                      "saturation weight greater than 1; will use 1",
+                                                      1.0);
+            } else {
+                cerr << command << ": option \"--saturation-weight\" reqires an argument" << endl;
+                failed = true;
+            }
+            WSaturationIsDefault = false;
+            optionSet.insert(SaturationWeightOption);
+            break;
+
+        case Deprecated_WeightMuId:
+            PENALIZE_DEPRECATED_OPTION("--wMu", "--exposure-mu");
+            // FALLTHROUGH
+        case WeightMuId:
+            if (optarg != NULL && *optarg != 0) {
+                WMu = enblend::numberOfString(optarg,
+                                              _1 >= 0.0, //< src::minimum-exposure-mu 0
+                                              "exposure center value (mu) less than 0; will use 0",
+                                              0.0,
+                                              _1 <= 1.0, //< src::maximum-exposure-mu 1
+                                              "exposure center value (mu) geater than 1; will use 1",
+                                              1.0);
+            } else {
+                cerr << command << ": option \"--exposure-mu\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(ExposureMuOption);
+            break;
+
+        case Deprecated_WeightSigmaId:
+            PENALIZE_DEPRECATED_OPTION("--wSigma", "--exposure-sigma");
+            // FALLTHROUGH
+        case WeightSigmaId:
+            if (optarg != NULL && *optarg != 0) {
+                WSigma = enblend::numberOfString(optarg,
+                                                 _1 >= 0.0, //< src::minimum-exposure-sigma 0
+                                                 "exposure standard deviation (sigma) less than 0; will use 1/1024",
+                                                 1.0 / 1024.0);
+            } else {
+                cerr << command << ": option \"--exposure-sigma\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(ExposureSigmaOption);
+            break;
+
+        case Deprecated_WeightEntropyId:
+            PENALIZE_DEPRECATED_OPTION("--wEntropy", "--entropy-weight");
+            // FALLTHROUGH
+        case WeightEntropyId:
+            if (optarg != NULL && *optarg != 0) {
+                WEntropy = enblend::numberOfString(optarg,
+                                                   _1 >= 0.0, //< src::minimum-weight-entropy 0
+                                                   "entropy weight less than 0; will use 0",
+                                                   0.0,
+                                                   _1 <= 1.0, //< src::maximum-weight-entropy 1
+                                                   "entropy weight greater than 1; will use 1",
+                                                   1.0);
+            } else {
+                cerr << command << ": option \"--entropy-weight\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(EntropyWeightOption);
+            break;
+
+        case 'v': // FALLTHROUGH
+        case VerboseId:
+            if (optarg != NULL && *optarg != 0) {
+                Verbose = enblend::numberOfString(optarg,
+                                                  _1 >= 0, //< src::minimum-verbosity-level 0
+                                                  "verbosity level less than 0; will use 0",
+                                                  0);
+            } else {
+                Verbose++;
+            }
+            optionSet.insert(VerboseOption);
+            break;
+
+        case Deprecated_ContrastWindowSizeId:
+            PENALIZE_DEPRECATED_OPTION("--ContrastWindowSize", "--contrast-window-size");
+            // FALLTHROUGH
+        case ContrastWindowSizeId:
+            if (optarg != NULL && *optarg != 0) {
                 ContrastWindowSize =
                     enblend::numberOfString(optarg,
                                             _1 >= 3, //< src::minimum-contrast-window-size 3
@@ -1023,10 +1103,18 @@ int process_options(int argc, char** argv) {
                          << endl;
                     ContrastWindowSize++;
                 }
-                optionSet.insert(ContrastWindowSizeOption);
-                break;
+            } else {
+                cerr << command << ": option \"--contrast-window-size\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(ContrastWindowSizeOption);
+            break;
 
-            case EntropyWindowSizeId:
+        case Deprecated_EntropyWindowSizeId:
+            PENALIZE_DEPRECATED_OPTION("--EntropyWindowSize", "--entropy-window-size");
+            // FALLTHROUGH
+        case EntropyWindowSizeId:
+            if (optarg != NULL && *optarg != 0) {
                 EntropyWindowSize =
                     enblend::numberOfString(optarg,
                                             _1 >= 3, //< src::minimum-entropy-window-size 3
@@ -1038,156 +1126,115 @@ int process_options(int argc, char** argv) {
                          << endl;
                     EntropyWindowSize++;
                 }
-                optionSet.insert(EntropyWindowSizeOption);
-                break;
-
-            default:
-                cerr << command << ": internal error: unhandled \"IntegerArgument\" option"
-                     << endl;
-                exit(1);
+            } else {
+                cerr << command << ": option \"--entropy-window-size\" reqires an argument" << endl;
+                failed = true;
             }
+            optionSet.insert(EntropyWindowSizeOption);
             break;
-        } // end of "case IntegerArgument"
 
-        case 'V':
-            justPrintVersion = true;
-            optionSet.insert(VersionOption);
-            break;
-        case 'b': {
-            const int cache_block_size =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1,
-                                        "cache block size must be 1 KB or more; will use 1 KB",
-                                        1);
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
+        case 'b':
+            if (optarg != NULL && *optarg != 0) {
+                const int cache_block_size =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1, //< src::minimum-cache-block-size 1@dmn{KB}
+                                            "cache block size must be 1 KB or more; will use 1 KB",
+                                            1);
+                CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
+            } else {
+                cerr << command << ": option \"-b\" reqires an argument" << endl;
+                failed = true;
+            }
             optionSet.insert(BlockSizeOption);
             break;
-        }
+
         case 'c':
             UseCIECAM = true;
             optionSet.insert(CIECAM02Option);
             break;
-        case 'd':
-            OutputPixelType = enblend::outputPixelTypeOfString(optarg);
-            optionSet.insert(DepthOption);
-            break;
-        case 'f': {
-            OutputSizeGiven = true;
-            const int nP = sscanf(optarg,
-                                  "%dx%d+%d+%d",
-                                  &OutputWidthCmdLine, &OutputHeightCmdLine,
-                                  &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
-            if (nP == 4) {
-                ; // ok: full geometry string
-            } else if (nP == 2) {
-                OutputOffsetXCmdLine = 0;
-                OutputOffsetYCmdLine = 0;
+
+        case 'f':
+            if (optarg != NULL && *optarg != 0) {
+                const int n = sscanf(optarg,
+                                     "%dx%d+%d+%d",
+                                     &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                     &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+                if (n == 4) {
+                    ; // ok: full geometry string
+                } else if (n == 2) {
+                    OutputOffsetXCmdLine = 0;
+                    OutputOffsetYCmdLine = 0;
+                } else {
+                    cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
+                    failed = true;
+                }
             } else {
-                cerr << command << ": option \"-f\" requires a parameter\n"
-                     << "Try \"enfuse --help\" for more information." << endl;
-                exit(1);
+                cerr << command << ": option \"-f\" reqires 2 or 4 arguments" << endl;
+                failed = true;
             }
+            OutputSizeGiven = true;
             optionSet.insert(SizeAndPositionOption);
             break;
-        }
+
         case 'g':
             GimpAssociatedAlphaHack = true;
             optionSet.insert(AssociatedAlphaOption);
             break;
-        case 'h':
-            justPrintUsage = true;
-            optionSet.insert(HelpOption);
-            break;
-        case 'l': {
-            // We take care of "too many levels" in "bounds.h".
-            //< src::minimum-pyramid-levels 1
-            ExactLevels =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1U,
-                                        "too few levels; will use one level",
-                                        1U);
+
+        case 'l':
+            // We shall take care of "too many levels" in "bounds.h".
+            if (optarg != NULL && *optarg != 0) {
+                ExactLevels =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1U, //< src::minimum-pyramid-levels 1
+                                            "too few levels; will use one level",
+                                            1U);
+            } else {
+                cerr << command << ": option \"-l\" reqires an argument" << endl;
+                failed = true;
+            }
             optionSet.insert(LevelsOption);
             break;
-        }
-        case 'm': {
-            const int cache_size =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1,
-                                        "cache memory limit less than 1 MB; will use 1 MB",
-                                        1);
-            CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
+
+        case 'm':
+            if (optarg != NULL && *optarg != 0) {
+                const int cache_size =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1, //< src::minimum-cache-size 1@dmn{MB}
+                                            "cache memory limit less than 1 MB; will use 1 MB",
+                                            1);
+                CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
+            } else {
+                cerr << command << ": option \"-m\" reqires an argument" << endl;
+                failed = true;
+            }
             optionSet.insert(CacheSizeOption);
             break;
-        }
-        case 'o':
-            if (contains(optionSet, OutputOption)) {
-                cerr << command
-                     << ": warning: more than one output file specified"
-                     << endl;
-            }
-            OutputFileName = optarg;
-            optionSet.insert(OutputOption);
-            break;
-        case 'v':
-            if (optarg != NULL && *optarg != 0) {
-                Verbose =
-                    enblend::numberOfString(optarg,
-                                            _1 >= 0,
-                                            "verbosity level less than 0; will use 0",
-                                            0);
-            } else {
-                Verbose++;
-            }
-            optionSet.insert(VerboseOption);
-            break;
-        case 'w':
-            if (optarg != NULL && *optarg != 0) {
-                WrapAround = enblend::wraparoundOfString(optarg);
-                if (WrapAround == UnknownWrapAround) {
-                    cerr << command
-                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
-                    exit(1);
-                }
-            } else {
-                WrapAround = HorizontalStrip;
-            }
-            optionSet.insert(WrapAroundOption);
-            break;
-        case 'z':
-            cerr << command
-                 << ": info: flag \"-z\" is deprecated; use \"--compression=LZW\" instead"
-                 << endl;
-            OutputCompression = "LZW";
-            optionSet.insert(LZWCompressionOption);
-            break;
+
         case '?':
             switch (optopt) {
-                case 0: // unknown long option
-                    cerr << command
-                         << ": unknown option \""
-                         << argv[optind - 1]
-                         << "\"\n";
-                    break;
-                case 'b':           // FALLTHROUGH
-                case 'd':           // FALLTHROUGH
-                case 'f':           // FALLTHROUGH
-                case 'l':           // FALLTHROUGH
-                case 'm':           // FALLTHROUGH
-                case 'o':
-                    cerr << command
-                         << ": option \"-"
-                         << static_cast<char>(optopt)
-                         << "\" requires an argument"
-                         << endl;
-                    break;
-                default:
-                    cerr << command << ": unknown option ";
-                    if (isprint(optopt)) {
-                        cerr << "\"-" << static_cast<char>(optopt) << "\"";
-                    } else {
-                        cerr << "character 0x" << hex << optopt;
-                    }
-                    cerr << endl;
+            case 0: // unknown long option
+                cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
+                break;
+            case 'b':           // FALLTHROUGH
+            case 'd':           // FALLTHROUGH
+            case 'f':           // FALLTHROUGH
+            case 'l':           // FALLTHROUGH
+            case 'm':           // FALLTHROUGH
+            case 'o':
+                cerr << command
+                     << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
+                     << endl;
+                break;
+
+            default:
+                cerr << command << ": unknown option ";
+                if (isprint(optopt)) {
+                    cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                } else {
+                    cerr << "character 0x" << hex << optopt;
+                }
+                cerr << endl;
             }
             cerr << "Try \"enfuse --help\" for more information." << endl;
             exit(1);
@@ -1198,6 +1245,10 @@ int process_options(int argc, char** argv) {
                  << endl;
             exit(1);
         }
+    }
+
+    if (failed) {
+        exit(1);
     }
 
     if (justPrintUsage) {

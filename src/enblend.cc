@@ -93,8 +93,8 @@ const int fineMaskVectorizeDistance = 20; //< src::fine-mask-vectorize-distance 
 boost::mt19937 Twister;
 
 // Global values from command line parameters.
-int Verbose = 1;                //< src::default-verbosity-level 1
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
+int Verbose = 1;                //< src::default-verbosity-level 1
 unsigned int ExactLevels = 0U;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
@@ -210,10 +210,10 @@ void dump_global_variables(const char* file, unsigned line,
         ", options \"--coarse-mask\" and \"--fine-mask\"\n" <<
         "+     CoarsenessFactor = " << CoarsenessFactor << ", argument to option \"--coarse-mask\"\n" <<
         "+ DifferenceBlurRadius = " << DifferenceBlurRadius << ", option \"--smooth-difference\"\n" <<
-        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-mask\"\n" <<
-        "+     SaveMaskTemplate = <" << SaveMaskTemplate << ">, argument to option \"--save-mask\"\n" <<
-        "+ LoadMasks = " << enblend::stringOfBool(LoadMasks) << ", option \"--load-mask\"\n" <<
-        "+     LoadMaskTemplate = <" << LoadMaskTemplate << ">, argument to option \"--load-mask\"\n" <<
+        "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-masks\"\n" <<
+        "+     SaveMaskTemplate = <" << SaveMaskTemplate << ">, argument to option \"--save-masks\"\n" <<
+        "+ LoadMasks = " << enblend::stringOfBool(LoadMasks) << ", option \"--load-masks\"\n" <<
+        "+     LoadMaskTemplate = <" << LoadMaskTemplate << ">, argument to option \"--load-masks\"\n" <<
         "+ VisualizeSeam = " << enblend::stringOfBool(VisualizeSeam) << ", option \"--visualize\"\n" <<
         "+     VisualizeTemplate = <" << VisualizeTemplate << ">, argument to option \"--visualize\"\n" <<
         "+ OptimizerWeights = {\n" <<
@@ -396,9 +396,6 @@ void printUsageAndExit(const bool error = true) {
         "                         TIFF images, such as those produced by Nona\n" <<
         "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
-        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
-        "                         characters as \"--save-mask\"; default: \"" <<
-        VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Mask generation options:\n" <<
         "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
@@ -423,21 +420,26 @@ void printUsageAndExit(const bool error = true) {
         coarseMaskVectorizeDistance << " for coarse masks and\n" <<
         "                         " <<
         fineMaskVectorizeDistance << " for fine masks\n" <<
-        "  --anneal=TAU[:DELTAEMAX[:DELTAEMIN[:KMAX]]]]\n" <<
-        "                         set annealing parameters of strategy 1; defaults:\n" <<
-        "                         " << AnnealPara.tau << ':' <<
+        "  --anneal=TAU[:DELTAEMAX[:DELTAEMIN[:KMAX]]]\n" <<
+        "                         set annealing parameters of optimizer strategy 1;\n" <<
+        "                         defaults: " << AnnealPara.tau << ':' <<
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
-        "  --dijkstra=RADIUS      set search RADIUS of strategy 2; default: " <<
-        DijkstraRadius << " pixels\n" <<
-        "  --save-mask[=TEMPLATE] save generated masks in TEMPLATE; default: \"" <<
-        SaveMaskTemplate << "\"\n" <<
-        "                         conversion chars: %i: mask index, mask %n: number,\n" <<
+        "  --dijkstra=RADIUS      set search RADIUS of optimizer strategy 2; default:\n" <<
+        "                         " << DijkstraRadius << " pixels\n" <<
+        "  --save-masks[=TEMPLATE]\n" <<
+        "                         save generated masks in TEMPLATE; default: \"" <<
+        SaveMaskTemplate << "\";\n" <<
+        "                         conversion chars: %i: mask index, %n: mask number,\n" <<
         "                         %p: full path, %d: dirname, %b: basename,\n" <<
         "                         %f: filename, %e: extension; lowercase characters\n" <<
-        "                         refer to input images uppercase to output image\n" <<
-        "  --load-mask[=TEMPLATE] use existing masks in TEMPLATE instead of generating\n" <<
-        "                         them; same template characters as \"--save-mask\";\n" <<
+        "                         refer to input images uppercase to the output image\n" <<
+        "  --load-masks[=TEMPLATE]\n" <<
+        "                         use existing masks in TEMPLATE instead of generating\n" <<
+        "                         them; same template characters as \"--save-masks\";\n" <<
         "                         default: \"" << LoadMaskTemplate << "\"\n" <<
+        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
+        "                         characters as \"--save-masks\"; default: \"" <<
+        VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
@@ -592,548 +594,415 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 }
 
 
-int process_options(int argc, char** argv) {
-    enum OptionArgumentKind {
-        NoArgument,
-        StringArgument,
-        FloatArgument,
-        IntegerArgument
-    };
-
-    // NOTE: An OptionId is the index of a command line option in
-    // "long_options".  Every change in "enum OptionId" must be
-    // reflected in "long_options" and vice versa.
+int process_options(int argc, char** argv)
+{
     enum OptionId {
-        UseGpuId,                   //  0
-        CoarseMaskId,               //  1
-        FineMaskId,                 //  2
-        OptimizeMaskId,             //  3
-        NoOptimizeMaskId,           //  4
-        SaveMaskId,                 //  5
-        LoadMaskId,                 //  6
-        VisualizeId,                //  7
-        AnnealId,                   //  8
-        DijkstraRadiusId,           //  9
-        MaskVectorizeDistanceId,    // 10
-        CompressionId,              // 11
-        VerboseId,                  // 12
-        HelpId,                     // 13
-        VersionId,                  // 14
-        DepthId,                    // 15
-        OutputId,                   // 16
-        WrapAroundId,               // 17
-        SmoothDifferenceId,         // 18
-        OptimizerWeightsId          // 19
+        OPTION_ID_OFFSET = 1023,    // Ids start at 1024
+        UseGpuId,
+        CoarseMaskId,
+        FineMaskId,
+        OptimizeMaskId,
+        NoOptimizeMaskId,
+        SaveMaskId,
+        LoadMaskId,
+        VisualizeId,
+        AnnealId,
+        DijkstraRadiusId,
+        MaskVectorizeDistanceId,
+        CompressionId,
+        VerboseId,
+        HelpId,
+        VersionId,
+        DepthId,
+        OutputId,
+        WrapAroundId,
+        SmoothDifferenceId,
+        OptimizerWeightsId
     };
 
-    // NOTE: See note attached to "enum OptionId" above.
     static struct option long_options[] = {
-        {"gpu", no_argument, 0, NoArgument},                                   //  0
-        {"coarse-mask", optional_argument, 0, IntegerArgument},                //  1
-        {"fine-mask", no_argument, 0, NoArgument},                             //  2
-        {"optimize", no_argument, 0, NoArgument},                              //  3
-        {"no-optimize", no_argument, 0, NoArgument},                           //  4
-        {"save-mask", optional_argument, 0, StringArgument},                   //  5
-        {"load-mask", optional_argument, 0, StringArgument},                   //  6
-        {"visualize", optional_argument, 0, StringArgument},                   //  7
-        {"anneal", required_argument, 0, StringArgument},                      //  8
-        {"dijkstra", required_argument, 0, IntegerArgument},                   //  9
-        {"mask-vectorize", required_argument, 0, StringArgument},              // 10
-        {"compression", required_argument, 0, StringArgument},                 // 11
-        {"verbose", optional_argument, 0, IntegerArgument},                    // 12
-        {"help", no_argument, 0, NoArgument},                                  // 13
-        {"version", no_argument, 0, NoArgument},                               // 14
-        {"depth", required_argument, 0, StringArgument},                       // 15
-        {"output", required_argument, 0, StringArgument},                      // 16
-        {"wrap", optional_argument, 0, StringArgument},                        // 17
-        {"smooth-difference", required_argument, 0, StringArgument},           // 18
-        {"optimizer-weights", required_argument, 0, StringArgument},           // 19
+        {"gpu", no_argument, 0, UseGpuId},
+        {"coarse-mask", optional_argument, 0, CoarseMaskId},
+        {"fine-mask", no_argument, 0, FineMaskId},
+        {"optimize", no_argument, 0, OptimizeMaskId},
+        {"no-optimize", no_argument, 0, NoOptimizeMaskId},
+        {"save-mask", optional_argument, 0, SaveMaskId}, // singular form: not documented, not deprecated
+        {"save-masks", optional_argument, 0, SaveMaskId},
+        {"load-mask", optional_argument, 0, LoadMaskId}, // singular form: not documented, not deprecated
+        {"load-masks", optional_argument, 0, LoadMaskId},
+        {"visualize", optional_argument, 0, VisualizeId},
+        {"anneal", required_argument, 0, AnnealId},
+        {"dijkstra", required_argument, 0, DijkstraRadiusId},
+        {"mask-vectorize", required_argument, 0, MaskVectorizeDistanceId},
+        {"compression", required_argument, 0, CompressionId},
+        {"verbose", optional_argument, 0, VerboseId},
+        {"help", no_argument, 0, HelpId},
+        {"version", no_argument, 0, VersionId},
+        {"depth", required_argument, 0, DepthId},
+        {"output", required_argument, 0, OutputId},
+        {"wrap", optional_argument, 0, WrapAroundId},
+        {"smooth-difference", required_argument, 0, SmoothDifferenceId},
+        {"optimizer-weights", required_argument, 0, OptimizerWeightsId},
         {0, 0, 0, 0}
     };
 
+    bool failed = false;
     bool justPrintVersion = false;
     bool justPrintUsage = false;
     OptionSetType optionSet;
 
-    // Parse command line.
-    int option_index = 0;
-    int c;
     opterr = 0;       // we have our own "unrecognized option" message
-    while ((c = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:sv::w::xz",
-                            long_options, &option_index)) != -1) {
-        switch (c) {
-        case NoArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-            switch (option_index) {
-            case UseGpuId:
-                UseGPU = true;
-                optionSet.insert(GPUOption);
-                break;
-            case FineMaskId:
-                CoarseMask = false;
-                optionSet.insert(FineMaskOption);
-                break;
-            case OptimizeMaskId:
-                OptimizeMask = true;
-                optionSet.insert(OptimizeOption);
-                break;
-            case NoOptimizeMaskId:
-                OptimizeMask = false;
-                optionSet.insert(NoOptimizeOption);
-                break;
-            case HelpId:
-                justPrintUsage = true;
-                optionSet.insert(HelpOption);
-                break;
-            case VersionId:
-                justPrintVersion = true;
-                optionSet.insert(VersionOption);
-                break;
-            default:
-                cerr << command
-                     << ": internal error: unhandled \"NoArgument\" option"
-                     << endl;
-                exit(1);
-            }
+    while (true) {
+        int option_index;
+        const int code = getopt_long(argc, argv, "Vab:cd:f:ghl:m:o:sv::w::x",
+                                     long_options, &option_index);
+
+        if (code == -1) {
             break;
-        } // end of "case NoArgument"
+        }
 
-        case StringArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
+        switch (code) {
+        case UseGpuId:
+            UseGPU = true;
+            optionSet.insert(GPUOption);
+            break;
+
+        case FineMaskId:
+            CoarseMask = false;
+            optionSet.insert(FineMaskOption);
+            break;
+
+        case OptimizeMaskId:
+            OptimizeMask = true;
+            optionSet.insert(OptimizeOption);
+            break;
+
+        case NoOptimizeMaskId:
+            OptimizeMask = false;
+            optionSet.insert(NoOptimizeOption);
+            break;
+
+        case 'h': // FALLTHROUGH
+        case HelpId:
+            justPrintUsage = true;
+            optionSet.insert(HelpOption);
+            break;
+
+        case 'V': // FALLTHROUGH
+        case VersionId:
+            justPrintVersion = true;
+            optionSet.insert(VersionOption);
+            break;
+
+        case 'w': // FALLTHROUGH
+        case WrapAroundId:
+            if (optarg != NULL && *optarg != 0) {
+                WrapAround = enblend::wraparoundOfString(optarg);
+                if (WrapAround == UnknownWrapAround) {
+                    cerr << command
+                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    failed = true;
+                }
+            } else {
+                WrapAround = HorizontalStrip;
             }
-            switch (option_index) {
-            case WrapAroundId:
-                if (optarg != NULL && *optarg != 0) {
-                    WrapAround = enblend::wraparoundOfString(optarg);
-                    if (WrapAround == UnknownWrapAround) {
-                        cerr << command
-                             << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
-                        exit(1);
-                    }
-                } else {
-                    WrapAround = HorizontalStrip;
-                }
-                optionSet.insert(WrapAroundOption);
-                break;
-            case SaveMaskId:
-                if (optarg != NULL && *optarg != 0) {
-                    SaveMaskTemplate = optarg;
-                }
-                SaveMasks = true;
-                optionSet.insert(SaveMaskOption);
-                break;
-            case LoadMaskId:
-                if (optarg != NULL && *optarg != 0) {
-                    LoadMaskTemplate = optarg;
-                }
-                LoadMasks = true;
-                optionSet.insert(LoadMaskOption);
-                break;
-            case VisualizeId:
-                if (optarg != NULL && *optarg != 0) {
-                    VisualizeTemplate = optarg;
-                }
-                VisualizeSeam = true;
-                optionSet.insert(VisualizeOption);
-                break;
-            case CompressionId:
+            optionSet.insert(WrapAroundOption);
+            break;
+
+        case SaveMaskId:
+            if (optarg != NULL && *optarg != 0) {
+                SaveMaskTemplate = optarg;
+            }
+            SaveMasks = true;
+            optionSet.insert(SaveMaskOption);
+            break;
+
+        case LoadMaskId:
+            if (optarg != NULL && *optarg != 0) {
+                LoadMaskTemplate = optarg;
+            }
+            LoadMasks = true;
+            optionSet.insert(LoadMaskOption);
+            break;
+
+        case VisualizeId:
+            if (optarg != NULL && *optarg != 0) {
+                VisualizeTemplate = optarg;
+            }
+            VisualizeSeam = true;
+            optionSet.insert(VisualizeOption);
+            break;
+
+        case CompressionId:
+            if (optarg != NULL && *optarg != 0) {
                 OutputCompression = optarg;
-                optionSet.insert(CompressionOption);
-                break;
-            case DepthId:
-                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
-                optionSet.insert(DepthOption);
-                break;
-            case OutputId:
-                if (contains(optionSet, OutputOption)) {
-                    cerr << command
-                         << ": warning: more than one output file specified"
-                         << endl;
-                }
-                OutputFileName = optarg;
-                optionSet.insert(OutputOption);
-                break;
-            case AnnealId: {
-                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
-                strcpy(s.get(), optarg);
-                char* save_ptr = NULL;
-                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                char* tail;
-
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    double tau = strtod(token, &tail);
-                    if (errno != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": illegal numeric format \""
-                             << token << "\" of tau: " << enblend::errorMessage(errno)
-                             << endl;
-                        exit(1);
-                    }
-                    if (*tail != 0) {
-                        if (*tail == '%') {
-                            tau /= 100.0;
-                        } else {
-                            cerr << command
-                                 << ": --anneal: trailing garbage \""
-                                 << tail << "\" in tau: \"" << token << "\""
-                                 << endl;
-                            exit(1);
-                        }
-                    }
-                    //< src::minimum-anneal-tau 0
-                    if (tau <= 0.0) {
-                        cerr << command
-                             << ": option \"--anneal\": tau must be larger than zero"
-                             << endl;
-                        exit(1);
-                    }
-                    //< src::maximum-anneal-tau 1
-                    if (tau >= 1.0) {
-                        cerr << command
-                             << ": option \"--anneal\": tau must be less than one"
-                             << endl;
-                        exit(1);
-                    }
-                    AnnealPara.tau = tau;
-                }
-
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    AnnealPara.deltaEMax = strtod(token, &tail);
-                    if (errno != 0) {
-                        cerr << command << ": option \"--anneal\": illegal numeric format \""
-                             << token << "\" of deltaE_max: " << enblend::errorMessage(errno)
-                             << endl;
-                        exit(1);
-                    }
-                    if (*tail != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": trailing garbage \""
-                             << tail << "\" in deltaE_max: \""
-                             << token << "\"" << endl;
-                        exit(1);
-                    }
-                    //< src::minimum-anneal-deltae-max 0
-                    if (AnnealPara.deltaEMax <= 0.0) {
-                        cerr << command
-                             << ": option \"--anneal\": deltaE_max must be larger than zero"
-                             << endl;
-                        exit(1);
-                    }
-                }
-
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    AnnealPara.deltaEMin = strtod(token, &tail);
-                    if (errno != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": illegal numeric format \""
-                             << token << "\" of deltaE_min: " << enblend::errorMessage(errno)
-                             << endl;
-                        exit(1);
-                    }
-                    if (*tail != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": trailing garbage \""
-                             << tail << "\" in deltaE_min: \""
-                             << token << "\"" << endl;
-                        exit(1);
-                    }
-                    //< src::minimum-anneal-deltae-min 0
-                    if (AnnealPara.deltaEMin <= 0.0) {
-                        cerr << command
-                             << ": option \"--anneal\": deltaE_min must be larger than zero"
-                             << endl;
-                        exit(1);
-                    }
-                }
-                if (AnnealPara.deltaEMin >= AnnealPara.deltaEMax) {
-                    cerr << command
-                         << ": option \"--anneal\": deltaE_min must be less than deltaE_max"
-                         << endl;
-                    exit(1);
-                }
-
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    errno = 0;
-                    const long int kmax = strtol(token, &tail, 10);
-                    if (errno != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": illegal numeric format \""
-                             << token << "\" of k_max: " << enblend::errorMessage(errno)
-                             << endl;
-                        exit(1);
-                    }
-                    if (*tail != 0) {
-                        cerr << command
-                             << ": option \"--anneal\": trailing garbage \""
-                             << tail << "\" in k_max: \""
-                             << token << "\"" << endl;
-                        exit(1);
-                    }
-                    //< src::minimum-anneal-kmax 3
-                    if (kmax < 3L) {
-                        cerr << command
-                             << ": option \"--anneal\": k_max must larger or equal to 3"
-                             << endl;
-                        exit(1);
-                    }
-                    AnnealPara.kmax = static_cast<unsigned int>(kmax);
-                }
-
-                optionSet.insert(AnnealOption);
-                break;
+            } else {
+                cerr << command << ": option \"--compression\" reqires an argument" << endl;
+                failed = true;
             }
+            optionSet.insert(CompressionOption);
+            break;
 
-            case MaskVectorizeDistanceId: {
-                char* tail;
-                MaskVectorizeDistance.isPercentage = false;
+        case 'd': // FALLTHROUGH
+        case DepthId:
+            if (optarg != NULL && *optarg != 0) {
+                OutputPixelType = enblend::outputPixelTypeOfString(optarg);
+            } else {
+                cerr << command << ": options \"-d\" or \"--depth\" require arguments" << endl;
+                failed = true;
+            }
+            optionSet.insert(DepthOption);
+            break;
+
+        case 'o': // FALLTHROUGH
+        case OutputId:
+            if (contains(optionSet, OutputOption)) {
+                cerr << command
+                     << ": warning: more than one output file specified"
+
+                     << endl;
+            }
+            if (optarg != NULL && *optarg != 0) {
+                OutputFileName = optarg;
+            } else {
+                cerr << command << ": options \"-o\" or \"--output\" reqire arguments" << endl;
+                failed = true;
+            }
+            optionSet.insert(OutputOption);
+            break;
+
+        case AnnealId: {
+            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            strcpy(s.get(), optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* tail;
+
+            if (token != NULL && *token != 0) {
                 errno = 0;
-                MaskVectorizeDistance.value = strtod(optarg, &tail);
+                double tau = strtod(token, &tail);
                 if (errno != 0) {
                     cerr << command
-                         << ": option \"--mask-vectorize\": illegal numeric format \""
-                         << optarg << "\": " << enblend::errorMessage(errno)
+                         << ": option \"--anneal\": illegal numeric format \""
+                         << token << "\" of tau: " << enblend::errorMessage(errno)
                          << endl;
-                    exit(1);
+                    failed = true;
                 }
                 if (*tail != 0) {
                     if (*tail == '%') {
-                        MaskVectorizeDistance.isPercentage = true;
+                        tau /= 100.0;
                     } else {
                         cerr << command
-                             << ": option \"--mask-vectorize\": trailing garbage \""
-                             << tail << "\" in \"" << optarg << "\"" << endl;
-                        exit(1);
+                             << ": --anneal: trailing garbage \""
+                             << tail << "\" in tau: \"" << token << "\""
+                             << endl;
+                        failed = true;
                     }
                 }
-                if (MaskVectorizeDistance.value <= 0.0) {
+                //< src::minimum-anneal-tau 0
+                if (tau <= 0.0) {
                     cerr << command
-                         << ": option \"--mask-vectorize\": distance must be positive"
+                         << ": option \"--anneal\": tau must be larger than zero"
                          << endl;
-                    exit(1);
+                    failed = true;
                 }
-
-                optionSet.insert(MaskVectorizeDistanceOption);
-                break;
+                //< src::maximum-anneal-tau 1
+                if (tau >= 1.0) {
+                    cerr << command
+                         << ": option \"--anneal\": tau must be less than one"
+                         << endl;
+                    failed = true;
+                }
+                AnnealPara.tau = tau;
             }
 
-            case SmoothDifferenceId: {
-                char* tail;
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
                 errno = 0;
-                const double radius = strtod(optarg, &tail);
+                AnnealPara.deltaEMax = strtod(token, &tail);
                 if (errno != 0) {
-                    cerr << command
-                         << ": option \"--smooth-difference\": illegal numeric format \""
-                         << optarg << "\": " << enblend::errorMessage(errno)
+                    cerr << command << ": option \"--anneal\": illegal numeric format \""
+                         << token << "\" of deltaE_max: " << enblend::errorMessage(errno)
                          << endl;
-                    exit(1);
+                    failed = true;
                 }
                 if (*tail != 0) {
                     cerr << command
-                         << ": option \"--smooth-difference\": trailing garbage \""
-                         << tail << "\" in \"" << optarg << "\"" << endl;
-                    exit(1);
+                         << ": option \"--anneal\": trailing garbage \""
+                         << tail << "\" in deltaE_max: \""
+                         << token << "\"" << endl;
+                    failed = true;
                 }
-                //< src::minimum-smooth-difference 0.0
-                if (radius < 0.0) {
+                //< src::minimum-anneal-deltae-max 0
+                if (AnnealPara.deltaEMax <= 0.0) {
                     cerr << command
-                         << ": option \"--smooth-difference\": negative radius; will not blur"
+                         << ": option \"--anneal\": deltaE_max must be larger than zero"
                          << endl;
-                    DifferenceBlurRadius = 0.0;
-                } else {
-                    DifferenceBlurRadius = radius;
+                    failed = true;
                 }
-
-                optionSet.insert(SmoothDifferenceOption);
-                break;
             }
 
-            case OptimizerWeightsId: {
-                boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
-                strcpy(s.get(), optarg);
-                char* save_ptr = NULL;
-                char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                OptimizerWeights.first =
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                AnnealPara.deltaEMin = strtod(token, &tail);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": illegal numeric format \""
+                         << token << "\" of deltaE_min: " << enblend::errorMessage(errno)
+                         << endl;
+                    failed = true;
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": trailing garbage \""
+                         << tail << "\" in deltaE_min: \""
+                         << token << "\"" << endl;
+                    failed = true;
+                }
+                //< src::minimum-anneal-deltae-min 0
+                if (AnnealPara.deltaEMin <= 0.0) {
+                    cerr << command
+                         << ": option \"--anneal\": deltaE_min must be larger than zero"
+                         << endl;
+                    failed = true;
+                }
+            }
+            if (AnnealPara.deltaEMin >= AnnealPara.deltaEMax) {
+                cerr << command
+                     << ": option \"--anneal\": deltaE_min must be less than deltaE_max"
+                     << endl;
+                failed = true;
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                const long int kmax = strtol(token, &tail, 10);
+                if (errno != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": illegal numeric format \""
+                         << token << "\" of k_max: " << enblend::errorMessage(errno)
+                         << endl;
+                    failed = true;
+                }
+                if (*tail != 0) {
+                    cerr << command
+                         << ": option \"--anneal\": trailing garbage \""
+                         << tail << "\" in k_max: \""
+                         << token << "\"" << endl;
+                    failed = true;
+                }
+                //< src::minimum-anneal-kmax 3
+                if (kmax < 3L) {
+                    cerr << command
+                         << ": option \"--anneal\": k_max must larger or equal to 3"
+                         << endl;
+                    failed = true;
+                }
+                AnnealPara.kmax = static_cast<unsigned int>(kmax);
+            }
+
+            optionSet.insert(AnnealOption);
+            break;
+        }
+
+        case MaskVectorizeDistanceId: {
+            char* tail;
+            MaskVectorizeDistance.isPercentage = false;
+            errno = 0;
+            MaskVectorizeDistance.value = strtod(optarg, &tail);
+            if (errno != 0) {
+                cerr << command
+                     << ": option \"--mask-vectorize\": illegal numeric format \""
+                     << optarg << "\": " << enblend::errorMessage(errno)
+                     << endl;
+                failed = true;
+            }
+            if (*tail != 0) {
+                if (*tail == '%') {
+                    MaskVectorizeDistance.isPercentage = true;
+                } else {
+                    cerr << command
+                         << ": option \"--mask-vectorize\": trailing garbage \""
+                         << tail << "\" in \"" << optarg << "\"" << endl;
+                    failed = true;
+                }
+            }
+            if (MaskVectorizeDistance.value <= 0.0) {
+                cerr << command
+                     << ": option \"--mask-vectorize\": distance must be positive"
+                     << endl;
+                failed = true;
+            }
+
+            optionSet.insert(MaskVectorizeDistanceOption);
+            break;
+        }
+
+        case SmoothDifferenceId: {
+            char* tail;
+            errno = 0;
+            const double radius = strtod(optarg, &tail);
+            if (errno != 0) {
+                cerr << command
+                     << ": option \"--smooth-difference\": illegal numeric format \""
+                     << optarg << "\": " << enblend::errorMessage(errno)
+                     << endl;
+                failed = true;
+            }
+            if (*tail != 0) {
+                cerr << command
+                     << ": option \"--smooth-difference\": trailing garbage \""
+                     << tail << "\" in \"" << optarg << "\"" << endl;
+                failed = true;
+            }
+            //< src::minimum-smooth-difference 0.0
+            if (radius < 0.0) {
+                cerr << command
+                     << ": option \"--smooth-difference\": negative radius; will not blur"
+                     << endl;
+                DifferenceBlurRadius = 0.0;
+            } else {
+                DifferenceBlurRadius = radius;
+            }
+
+            optionSet.insert(SmoothDifferenceOption);
+            break;
+        }
+
+        case OptimizerWeightsId: {
+            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            strcpy(s.get(), optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            OptimizerWeights.first =
+                enblend::numberOfString(token,
+                                        _1 >= 0.0,
+                                        "negative optimizer weight; will use 0.0",
+                                        0.0);
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                OptimizerWeights.second =
                     enblend::numberOfString(token,
                                             _1 >= 0.0,
                                             "negative optimizer weight; will use 0.0",
                                             0.0);
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    OptimizerWeights.second =
-                        enblend::numberOfString(token,
-                                                _1 >= 0.0,
-                                                "negative optimizer weight; will use 0.0",
-                                                0.0);
-                }
-                if (OptimizerWeights.first == 0.0 && OptimizerWeights.second == 0.0) {
-                    cerr << command
-                         << ": optimizer weights cannot be both zero"
-                         << endl;
-                }
-                break;
             }
-
-            default:
+            if (OptimizerWeights.first == 0.0 && OptimizerWeights.second == 0.0) {
                 cerr << command
-                     << ": internal error: unhandled \"StringArgument\" option"
-                     << endl;
-                exit(1);
-            }
-            break;
-        } // end of "case StringArgument"
-
-        // case FloatArgument: {
-        // ...
-        // } // end of "case FloatArgument"
-
-        case IntegerArgument: {
-            if (long_options[option_index].flag != 0) {
-                break;
-            }
-            switch (option_index) {
-            case VerboseId:
-                if (optarg != NULL && *optarg != 0) {
-                    Verbose =
-                        enblend::numberOfString(optarg,
-                                                _1 >= 0,
-                                                "verbosity level less than 0; will use 0",
-                                                0);
-                } else {
-                    Verbose++;
-                }
-                optionSet.insert(VerboseOption);
-                break;
-            case CoarseMaskId:
-                CoarseMask = true;
-                if (optarg != NULL && *optarg != 0) {
-                    CoarsenessFactor =
-                        enblend::numberOfString(optarg,
-                                                _1 >= 1U,
-                                                "coarseness factor less or equal to 0; will use 1",
-                                                1U);
-                }
-                optionSet.insert(CoarseMaskOption);
-                break;
-            case DijkstraRadiusId:
-                //< src::minimum-dijkstra-radius 1
-                DijkstraRadius =
-                    enblend::numberOfString(optarg,
-                                            _1 >= 1U,
-                                            "Dijkstra radius is 0; will use 1",
-                                            1U);
-                optionSet.insert(DijkstraRadiusOption);
-                break;
-            default:
-                cerr << command
-                     << ": internal error: unhandled \"IntegerArgument\" option"
-                     << endl;
-                exit(1);
-            }
-            break;
-        } // end of "case IntegerArgument"
-
-        case 'V':
-            justPrintVersion = true;
-            optionSet.insert(VersionOption);
-            break;
-        case 'a':
-            OneAtATime = false;
-            optionSet.insert(PreAssembleOption);
-            break;
-        case 'b': {
-            const int cache_block_size =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1,
-                                        "cache block size must be 1 KB or more; will use 1 KB",
-                                        1);
-            CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
-            optionSet.insert(BlockSizeOption);
-            break;
-        }
-        case 'c':
-            UseCIECAM = true;
-            optionSet.insert(CIECAM02Option);
-            break;
-        case 'd':
-            OutputPixelType = enblend::outputPixelTypeOfString(optarg);
-            optionSet.insert(DepthOption);
-            break;
-        case 'f': {
-            OutputSizeGiven = true;
-            const int nP = sscanf(optarg,
-                                  "%dx%d+%d+%d",
-                                  &OutputWidthCmdLine, &OutputHeightCmdLine,
-                                  &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
-            if (nP == 4) {
-                ; // ok: full geometry string
-            } else if (nP == 2) {
-                OutputOffsetXCmdLine = 0;
-                OutputOffsetYCmdLine = 0;
-            } else {
-                cerr << command << ": option \"-f\" requires a parameter\n"
-                     << "Try \"enblend --help\" for more information." << endl;
-                exit(1);
-            }
-            optionSet.insert(SizeAndPositionOption);
-            break;
-        }
-        case 'g':
-            GimpAssociatedAlphaHack = true;
-            optionSet.insert(AssociatedAlphaOption);
-            break;
-        case 'h':
-            justPrintUsage = true;
-            optionSet.insert(HelpOption);
-            break;
-        case 'l':
-            // We take care of "too many levels" in "bounds.h".
-            //< src::minimum-pyramid-levels 1
-            ExactLevels =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1U,
-                                        "too few levels; will use one level",
-                                        1U);
-            optionSet.insert(LevelsOption);
-            break;
-        case 'm': {
-            const int cache_size =
-                enblend::numberOfString(optarg,
-                                        _1 >= 1,
-                                        "cache memory limit less than 1 MB; will use 1 MB",
-                                        1);
-            CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
-            optionSet.insert(CacheSizeOption);
-            break;
-        }
-        case 'o':
-            if (contains(optionSet, OutputOption)) {
-                cerr << command
-                     << ": warning: more than one output file specified"
+                     << ": optimizer weights cannot be both zero"
                      << endl;
             }
-            OutputFileName = optarg;
-            optionSet.insert(OutputOption);
             break;
-        case 's':
-            // Deprecated sequential blending flag.
-            OneAtATime = true;
-            cerr << command << ": warning: flag \"-s\" is deprecated." << endl;
-            optionSet.insert(SequentialBlendingOption);
-            break;
-        case 'v':
+        }
+
+        case 'v': // FALLTHROUGH
+        case VerboseId:
             if (optarg != NULL && *optarg != 0) {
                 Verbose =
                     enblend::numberOfString(optarg,
-                                            _1 >= 0,
+                                            _1 >= 0, //< src::minimum-verbosity-level 0
                                             "verbosity level less than 0; will use 0",
                                             0);
             } else {
@@ -1141,57 +1010,147 @@ int process_options(int argc, char** argv) {
             }
             optionSet.insert(VerboseOption);
             break;
-        case 'w':
+
+        case CoarseMaskId:
+            CoarseMask = true;
             if (optarg != NULL && *optarg != 0) {
-                WrapAround = enblend::wraparoundOfString(optarg);
-                if (WrapAround == UnknownWrapAround) {
-                    cerr << command
-                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
-                    exit(1);
+                CoarsenessFactor =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1U,
+                                            "coarseness factor less or equal to 0; will use 1",
+                                            1U);
+            }
+            optionSet.insert(CoarseMaskOption);
+            break;
+
+        case DijkstraRadiusId:
+            DijkstraRadius =
+                enblend::numberOfString(optarg,
+                                        _1 >= 1U, //< src::minimum-dijkstra-radius 1
+                                        "Dijkstra radius is 0; will use 1",
+                                        1U);
+            optionSet.insert(DijkstraRadiusOption);
+            break;
+
+        case 'a':
+            OneAtATime = false;
+            optionSet.insert(PreAssembleOption);
+            break;
+
+        case 'b':
+            if (optarg != NULL && *optarg != 0) {
+                const int cache_block_size =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1, //< src::minimum-cache-block-size 1@dmn{KB}
+                                            "cache block size must be 1 KB or more; will use 1 KB",
+                                            1);
+                CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
+            } else {
+                cerr << command << ": option \"-b\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(BlockSizeOption);
+            break;
+
+        case 'c':
+            UseCIECAM = true;
+            optionSet.insert(CIECAM02Option);
+            break;
+
+        case 'f':
+            if (optarg != NULL && *optarg != 0) {
+                const int n = sscanf(optarg,
+                                     "%dx%d+%d+%d",
+                                     &OutputWidthCmdLine, &OutputHeightCmdLine,
+                                     &OutputOffsetXCmdLine, &OutputOffsetYCmdLine);
+                if (n == 4) {
+                    ; // ok: full geometry string
+                } else if (n == 2) {
+                    OutputOffsetXCmdLine = 0;
+                    OutputOffsetYCmdLine = 0;
+                } else {
+                    cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
+                    failed = true;
                 }
             } else {
-                WrapAround = HorizontalStrip;
+                cerr << command << ": option \"-f\" reqires 2 or 4 arguments" << endl;
+                failed = true;
             }
-            optionSet.insert(WrapAroundOption);
+            OutputSizeGiven = true;
+            optionSet.insert(SizeAndPositionOption);
             break;
+
+        case 'g':
+            GimpAssociatedAlphaHack = true;
+            optionSet.insert(AssociatedAlphaOption);
+            break;
+
+        case 'l':
+            // We shall take care of "too many levels" in "bounds.h".
+            if (optarg != NULL && *optarg != 0) {
+                ExactLevels =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1U, //< src::minimum-pyramid-levels 1
+                                            "too few levels; will use one level",
+                                            1U);
+            } else {
+                cerr << command << ": option \"-l\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(LevelsOption);
+            break;
+
+        case 'm':
+            if (optarg != NULL && *optarg != 0) {
+                const int cache_size =
+                    enblend::numberOfString(optarg,
+                                            _1 >= 1, //< src::minimum-cache-size 1@dmn{MB}
+                                            "cache memory limit less than 1 MB; will use 1 MB",
+                                            1);
+                CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
+            } else {
+                cerr << command << ": option \"-m\" reqires an argument" << endl;
+                failed = true;
+            }
+            optionSet.insert(CacheSizeOption);
+            break;
+
+        case 's':
+            // Deprecated sequential blending flag.
+            OneAtATime = true;
+            cerr << command << ": warning: flag \"-s\" is deprecated." << endl;
+            optionSet.insert(SequentialBlendingOption);
+            break;
+
         case 'x':
             Checkpoint = true;
             optionSet.insert(CheckpointOption);
             break;
-        case 'z':
-            cerr << command
-                 << ": info: flag \"-z\" is deprecated; use \"--compression=LZW\" instead"
-                 << endl;
-            OutputCompression = "LZW";
-            optionSet.insert(LZWCompressionOption);
-            break;
+
         case '?':
             switch (optopt) {
-                case 0: // unknown long option
-                    cerr << command
-                         << ": unknown option \""
-                         << argv[optind - 1]
-                         << "\"\n";
-                    break;
-                case 'b':           // FALLTHROUGH
-                case 'f':           // FALLTHROUGH
-                case 'l':           // FALLTHROUGH
-                case 'm':           // FALLTHROUGH
-                case 'o':
-                    cerr << command
-                         << ": option \"-"
-                         << static_cast<char>(optopt)
-                         << "\" requires an argument"
-                         << endl;
-                    break;
-                default:
-                    cerr << command << ": unknown option ";
-                    if (isprint(optopt)) {
-                        cerr << "\"-" << static_cast<char>(optopt) << "\"";
-                    } else {
-                        cerr << "character 0x" << hex << optopt;
-                    }
-                    cerr << endl;
+            case 0: // unknown long option
+                cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
+                break;
+            case 'b':           // FALLTHROUGH
+            case 'd':           // FALLTHROUGH
+            case 'f':           // FALLTHROUGH
+            case 'l':           // FALLTHROUGH
+            case 'm':           // FALLTHROUGH
+            case 'o':
+                cerr << command
+                     << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
+                     << endl;
+                break;
+
+            default:
+                cerr << command << ": unknown option ";
+                if (isprint(optopt)) {
+                    cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                } else {
+                    cerr << "character 0x" << hex << optopt;
+                }
+                cerr << endl;
             }
             cerr << "Try \"enblend --help\" for more information." << endl;
             exit(1);
@@ -1202,6 +1161,10 @@ int process_options(int argc, char** argv) {
                  << endl;
             exit(1);
         }
+    }
+
+    if (failed) {
+        exit(1);
     }
 
     if (justPrintUsage) {

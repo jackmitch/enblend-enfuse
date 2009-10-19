@@ -110,10 +110,11 @@ Examples:
 or:
 
 @example
-    ~/local/bin/enfuse -v \
-        --wExposure=0 --wSaturation=0 --wEntropy=1 \
-        --GrayProjector=l-star \
-        --EntropyCutoff=1.667% \
+    /local/bin/enfuse \
+        --verbose \
+        --exposure-weight=0 --saturation-weight=0 --entropy-weight=1 \
+        --gray-projector=l-star \
+        --entropy-cutoff=1.667% \
         layer-01.ppm layer-02.ppm layer-03.ppm
 @end example
 
