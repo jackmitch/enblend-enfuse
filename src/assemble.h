@@ -95,6 +95,7 @@ exportImagePreferablyWithAlpha(const ImageType* image,
         // Oh well, there is no alpha-channel.  So we export without it.
         exportImage(srcImageRange(*image), outputImageInfo);
     }
+    OutputIsValid = true;
 }
 
 

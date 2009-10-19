@@ -130,7 +130,9 @@ unsigned int DijkstraRadius = 25U; //< src::default-dijkstra-radius 25
 struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
 std::string OutputCompression;
 std::string OutputPixelType;
+
 TiffResolution ImageResolution;
+bool OutputIsValid = true;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -233,7 +235,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+ }, arguments to option \"--mask-vectorize\"\n" <<
         "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
-        "+ ImageResolution = " << ImageResolution.x << "dpi x " << ImageResolution.y << "dpi\n" <<
         "+ end of global variable dump\n";
 }
 
@@ -447,31 +448,50 @@ void printUsageAndExit(const bool error = true) {
     exit(error ? 1 : 0);
 }
 
-/** Make sure all cached file images get destroyed,
- *  and hence the temporary files deleted,
- *  if we are killed.
+
+void cleanup_output(void)
+{
+#if DEBUG
+    std::cout << "+ cleanup_output\n";
+#endif
+
+    if (!OutputIsValid) {
+        std::cerr << command << ": info: remove invalid output image \"" << OutputFileName << "\"\n";
+        errno = 0;
+        if (unlink(OutputFileName.c_str()) != 0) {
+            cerr << command <<
+                ": warning: could not remove invalid output image \"" << OutputFileName << "\": " <<
+                enblend::errorMessage(errno) << "\n";
+        }
+    }
+}
+
+
+/** Make sure all cached file images get destroyed, and hence the
+ *  temporary files deleted, if we are killed.
  */
-void sigint_handler(int sig) {
-    cerr << endl << "Interrupted." << endl;
-    // FIXME what if this occurs in a CFI atomic section?
-    // This is no longer necessary, temp files are unlinked during creation.
-    //CachedFileImageDirector::v().~CachedFileImageDirector();
+void sigint_handler(int sig)
+{
+    cerr << endl << command << ": interrupted" << endl;
+
+    cleanup_output();
+
 #ifdef HAVE_LIBGLEW
     if (UseGPU) {
         // FIXME what if this occurs in a GL atomic section?
-        //cout << "Cleaning up GPU state..." << endl;
         wrapupGPU();
     }
 #endif
-    #if !defined(__GW32C__) && !defined(_WIN32)
+
+#if !defined(__GW32C__) && !defined(_WIN32)
     struct sigaction action;
     action.sa_handler = SIG_DFL;
     sigemptyset(&(action.sa_mask));
-    sigaction(SIGINT, &action, NULL);
-    raise(SIGINT);
-    #else
-    exit(0);
-    #endif
+    sigaction(sig, &action, NULL);
+#else
+    signal(sig, SIG_DFL);
+#endif
+    raise(sig);
 }
 
 
@@ -1206,6 +1226,10 @@ int main(int argc, char** argv)
     signal(SIGINT, sigint_handler);
 #endif
 
+    if (atexit(cleanup_output) != 0) {
+        cerr << command << ": warning: could not install cleanup routine\n";
+    }
+
     sig.initialize();
 
     // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
@@ -1549,6 +1573,7 @@ int main(int argc, char** argv)
     }
 
     // Create the Info for the output file.
+    OutputIsValid = false;
     ImageExportInfo outputImageInfo(OutputFileName.c_str());
     if (!OutputCompression.empty()) {
         outputImageInfo.setCompression(OutputCompression.c_str());
