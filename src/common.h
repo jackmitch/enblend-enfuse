@@ -131,6 +131,11 @@ typedef enum {
 #endif
 
 
+#ifdef WIN32
+#define sleep(m_duration) Sleep(m_duration)
+#endif
+
+
 #if 0
 #define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name)
 #else

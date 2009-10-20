@@ -258,12 +258,22 @@ void printVersionAndExit() {
 
 #ifdef CACHE_IMAGES
         cout << "Extra feature: image cache: yes\n";
-        const char* tmpdir = getenv("TMPDIR");
-        cout << "  - environment variable TMPDIR ";
-        if (tmpdir == NULL) {
-            cout << "not set, cache file in default directory \"/tmp\"\n";
-        } else {
-            cout << "set, cache file located in \"" << tmpdir << "\"\n";
+        {
+#ifdef WIN32
+            char lpPathBuffer[MAX_PATH];
+            const DWORD dwRetVal = GetTempPath(MAX_PATH, lpPathBuffer);
+            if (dwRetVal <= MAX_PATH && dwRetVal != 0) {
+                cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
+            }
+#else
+            const char* tmpdir = getenv("TMPDIR");
+            cout << "  - environment variable TMPDIR ";
+            if (tmpdir == NULL) {
+                cout << "not set, cache file in default directory \"/tmp\"\n";
+            } else {
+                cout << "set, cache file located in \"" << tmpdir << "\"\n";
+            }
+#endif
         }
 #else
         cout << "Extra feature: image cache: no\n";
