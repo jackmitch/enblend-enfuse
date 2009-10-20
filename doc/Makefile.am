@@ -131,11 +131,11 @@ xhtml: $(HTMLS) html-local
 
 # Explicit Rules
 
-varsenblend.texi: $(VPATH)/../src/enblend.cc \
-                  $(VPATH)/../src/bounds.h \
-                  $(VPATH)/../src/common.h \
-                  $(VPATH)/../src/global.h
-	$(PERL) $(VPATH)/docstrings $^ > $@
+varsenblend.texi: $(srcdir)/../src/enblend.cc \
+                  $(srcdir)/../src/bounds.h \
+                  $(srcdir)/../src/common.h \
+                  $(srcdir)/../src/global.h
+	$(PERL) $(srcdir)/docstrings $^ > $@
 
 enblend.info: photographic-workflow.txt
 
@@ -148,11 +148,11 @@ enblend.html \
 enblend.pdf: photographic-workflow.png
 
 
-varsenfuse.texi: $(VPATH)/../src/enfuse.cc \
-                 $(VPATH)/../src/bounds.h \
-                 $(VPATH)/../src/common.h \
-                 $(VPATH)/../src/global.h
-	$(PERL) $(VPATH)/docstrings $^ > $@
+varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
+                 $(srcdir)/../src/bounds.h \
+                 $(srcdir)/../src/common.h \
+                 $(srcdir)/../src/global.h
+	$(PERL) $(srcdir)/docstrings $^ > $@
 
 enfuse.info: photographic-workflow.txt \
              focus-stack-decision-tree.txt \
