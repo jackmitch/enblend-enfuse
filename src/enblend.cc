@@ -1363,8 +1363,9 @@ int main(int argc, char** argv)
     unsigned layers = 0;
     while (inputFileNameIterator != inputFileNameList.end()) {
         ImageImportInfo* inputInfo = NULL;
-        try {
+        {
             std::string filename(*inputFileNameIterator);
+            enblend::try_opening_file(filename);
             ImageImportInfo info(filename.c_str());
             if (layers == 0) { // OPTIMIZATION: call only once per file
                 layers = info.numLayers();
@@ -1374,11 +1375,6 @@ int main(int argc, char** argv)
             }
             ++layer;
             inputInfo = new ImageImportInfo(filename.c_str());
-        } catch (StdException& e) {
-            cerr << '\n' << command
-                 << ": error opening input file \"" << *inputFileNameIterator << "\":\n"
-                 << e.what() << endl;
-            exit(1);
         }
 
         // Save this image info in the list.

@@ -194,26 +194,27 @@ std::string
 errorMessage(int anErrorNumber)
 {
 #if HAVE_STRERROR_R || HAVE_STRERROR
-    const size_t size = 256;
-    boost::scoped_ptr<char> message(new char[size]);
 #if HAVE_STRERROR_R
-    strerror_r(anErrorNumber, message.get(), size);
+    const size_t size = 4096;
+    boost::scoped_ptr<char> message_buffer(new char[size]);
+    const char* message = strerror_r(anErrorNumber, message_buffer.get(), size);
 #elif HAVE_STRERROR
-    strncpy(message.get(), strerror(anErrorNumber), size);
+    const char* message = strerror(anErrorNumber);
 #endif
-    if (strlen(message.get()) == 0)
+
+    if (strlen(message) == 0)
     {
         std::ostringstream oss;
-        oss << "no message available, error #" << anErrorNumber;
+        oss << "No error message available, error #" << anErrorNumber;
         return oss.str();
     }
     else
     {
-        return std::string(message.get());
+        return std::string(message);
     }
 #else
     std::ostringstream oss;
-    oss << "no message available, error #" << anErrorNumber;
+    oss << "No error message available, error #" << anErrorNumber;
     return oss.str();
 #endif
 }
@@ -244,6 +245,29 @@ std::string
 stringOfBool(bool b)
 {
     return b ? "true" : "false";
+}
+
+
+/** Try to open filename.  Exit with a nicely formatted error message,
+ *  if opening fails.  Otherwise immediately close the handle. */
+void
+try_opening_file(const std::string& filename)
+{
+    errno = 0;
+    FILE* file = fopen(filename.c_str(), "r");
+    if (file == NULL) {
+        std::cerr << command <<
+            ": failed to open \"" << filename << "\": " <<
+            errorMessage(errno) << "\n";
+        exit(1);
+    } else {
+        errno = 0;
+        if (fclose(file)) {
+            std::cerr << command <<
+                ": info: problems trying to close \"" << filename << "\": " <<
+                errorMessage(errno) << "\n";
+        }
+    }
 }
 
 
