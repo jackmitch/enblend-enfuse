@@ -1219,7 +1219,7 @@ Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 @caption{Enblend's two strategies to optimize the seam lines between
 images.}
 
-@shortcaption{optimizer strategies}
+@shortcaption{Optimizer strategies}
 @end float
 
 @item --optimizer-weights=@var{DISTANCE-WEIGHT}[:@var{MISMATCH-WEIGHT}]
@@ -1336,10 +1336,10 @@ Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
 the mask optimization process.  The default is
 @file{@value{src::default-visualize-template}}.
 
-This shows Enblend's view of the overlap region and how it decided to
-route the seam line.  If you are experiencing artifacts or unexpected
-output, it may be useful to include this visualization image in your
-bug report.
+The image shows Enblend's view of the overlap region and how it
+decided to route the seam line.  If you are experiencing artifacts or
+unexpected output, it may be useful to include this visualization
+image in your bug report.  @xref{Bug Reports}.
 
 @var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
 input file.  In a template, a percent sign (@samp{%}) introduces a
@@ -1350,24 +1350,55 @@ Options}).  @ref{Table:mask-template-characters} lists all variables.
 
 @sp 1
 @noindent
-@strong{Visualization File}
+@strong{Visualization Image}
+@cindex visualization image
+@cindex image, visualization
 @need 150
-The visualization file shows the symmetric difference of the pixels in
-the rectangular region where two images overlap.  Enblend paints
-non-overlapping parts of the image pair with dark red.
+The visualization image shows the (symmetric) difference of the pixels
+in the rectangular region where two images overlap.  The larger the
+difference the lighter shade of gray it appears in the visualization
+image.  Enblend paints non-overlapping parts of the image pair with
+@value{src::visualize-no-overlap-value-color}.
+@ref{Table:visualization-colors} shows the meanings of the colors,
+which are used in seam-line visualization.
 
-The optimizer's samples are shown in
-@value{src::visualize-state-space-color}.  If a sample is the first of
-a line segment, it is painted in
-@value{src::visualize-first-vertex-value-color}; other line segments
-are drawn in @value{src::visualize-next-vertex-value-color}.  Points
-in @value{src::visualize-state-space-inside-color} color indicate
-state space samples inside the @sc{Dijkstra} radius.  Non-converged
-points are drawn in
-@value{src::visualize-state-space-unconverged-color} color.  The final
-seam line is shown in @value{src::visualize-short-path-value-color}.
-For comparison purposes Enblend draws the initial seam line in
-@value{src::visualize-initial-path-color}.
+@float Table,Table:visualization-colors
+@table @asis
+@item @value{src::visualize-no-overlap-value-color}
+Non-overlapping parts of image pair
+
+@item various shades of gray
+Difference of the pixels in the overlap region
+
+@item @value{src::visualize-state-space-color}
+Location of an optimizer sample
+
+@item @value{src::visualize-first-vertex-value-color}
+First sample of a line segment
+
+@item @value{src::visualize-next-vertex-value-color}
+Any other but first sample of a line segment
+
+@item @value{src::visualize-state-space-inside-color}
+State space sample inside the @sc{Dijkstra} radius
+
+@item @value{src::visualize-state-space-unconverged-color}
+Non-converged point
+
+@item @value{src::visualize-initial-path-color}
+Initial seam line
+
+@item @value{src::visualize-short-path-value-color}
+Final seam line
+@end table
+
+@shortcaption{Visualization colors}
+@caption{Colors used in seam-line visualization images.}
+
+@cindex visualization image colors
+@cindex image colors, visualization
+@cindex colors, visualization image
+@end float
 @end table
 
 @page
