@@ -355,7 +355,7 @@ void printVersionAndExit(int argc, char** argv) {
     }
 
     if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
-        cout << sig.message() << "\n\n";
+        std::wcout << sig.message() << L"\n\n";
     }
 
     cout <<

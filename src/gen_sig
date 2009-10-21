@@ -52,9 +52,9 @@ class Signature
 public:
     Signature(): checksum_(@{[sprintf "0%011o", $checksum]}U), neg_checksum_(0U) {}
 
-    const char* message() const
+    const wchar_t* message() const
     {
-        return @{[octalize_string($signature)]};
+        return L@{[octalize_string($signature)]};
     }
 
     void initialize()
@@ -97,8 +97,8 @@ public:
 
     unsigned generate_checksum() const
     {
-        const char* m = message();
-        return m == NULL ? 0U : std::accumulate(m, m + strlen(m), 0U) & 037777777777U;
+        const wchar_t* m = message();
+        return m == NULL ? 0U : std::accumulate(m, m + wcslen(m), 0U) & 037777777777U;
     }
 
 private:
