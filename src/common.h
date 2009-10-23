@@ -27,6 +27,7 @@
 #include <errno.h>
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <map>
 #include <stdexcept>
@@ -248,23 +249,29 @@ stringOfBool(bool b)
 }
 
 
-/** Try to open filename.  Exit with a nicely formatted error message,
- *  if opening fails.  Otherwise immediately close the handle. */
+/** Try to open aFilename.  Exit with a nicely formatted error
+ *  message, if opening fails.  Otherwise immediately close the
+ *  handle. */
 void
-try_opening_file(const std::string& filename)
+try_opening_file(const std::string& aFilename)
 {
     errno = 0;
-    FILE* file = fopen(filename.c_str(), "r");
-    if (file == NULL) {
+    std::ifstream file(aFilename.c_str());
+    if (!file)
+    {
         std::cerr << command <<
-            ": failed to open \"" << filename << "\": " <<
+            ": failed to open \"" << aFilename << "\": " <<
             errorMessage(errno) << "\n";
         exit(1);
-    } else {
+    }
+    else
+    {
         errno = 0;
-        if (fclose(file)) {
+        file.close();
+        if (file.fail())
+        {
             std::cerr << command <<
-                ": info: problems trying to close \"" << filename << "\": " <<
+                ": info: problems when closing \"" << aFilename << "\": " <<
                 errorMessage(errno) << "\n";
         }
     }
