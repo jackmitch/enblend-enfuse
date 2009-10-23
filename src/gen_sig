@@ -16,7 +16,8 @@ use Sig;
 
 
 sub octalize_string {
-    my $string = shift;
+    my ($string, $prefix) = @_;
+    $prefix = '' unless $prefix;
 
     my $result;
     my $max_chars = 8;
@@ -25,11 +26,11 @@ sub octalize_string {
     for (my $i = 1; $i <= $length; $i++) {
         $result .= sprintf "\\%03o", ord(substr $string, $i - 1, 1);
         if ($i % $max_chars == 0 and $i != $length) {
-            $result .= qq("\n            ");
+            $result .= qq("\n            $prefix");
         }
     }
 
-    return qq("$result");
+    return qq($prefix"$result");
 }
 
 
@@ -54,12 +55,12 @@ public:
 
     const wchar_t* message() const
     {
-        return L@{[octalize_string($signature)]};
+        return @{[octalize_string($signature, q(L))]};
     }
 
     void initialize()
     {
-#ifdef DEBUG_FORCE_SIG_CHECK_FAILURE
+#ifdef DEBUG_FORCE_SIGNATURE_CHECK_FAILURE
         checksum_++;
         neg_checksum_ = checksum_;
 #else
@@ -69,6 +70,7 @@ public:
 
     void check() const
     {
+#if DEBUG_SIGNATURE_CHECK
         if (checksum_ != ~neg_checksum_)
         {
             std::cerr <<
@@ -82,6 +84,7 @@ public:
                 " does not match static checksum " << checksum_ << ", where\\n" <<
                 "+     message is <" << message() << ">\\n";
         }
+#endif
 
         if (generate_checksum() != checksum_ || checksum_ != ~neg_checksum_)
         {
