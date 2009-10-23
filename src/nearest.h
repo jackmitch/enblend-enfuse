@@ -292,26 +292,35 @@ struct saturating_subtract
 };
 
 
-template <class ValueType>
-struct tally
+template <class SrcImageIterator, class SrcAccessor>
+inline unsigned
+quick_tally(SrcImageIterator begin, SrcImageIterator end, SrcAccessor acc,
+            unsigned threshold)
 {
-    typedef ValueType argument_type;
-    typedef unsigned result_type;
+    typedef typename SrcAccessor::value_type SrcValueType;
 
-    tally() : count(result_type()) {}
-
-    void reset() {count = result_type();}
-
-    void operator()(const argument_type& x)
+    unsigned count = 0U;
+    SrcImageIterator i = begin;
+    while (count < threshold && i != end)
     {
-        if (x != argument_type())
+        if (acc(i) != SrcValueType())
         {
             ++count;
         }
+        ++i;
     }
 
-    result_type count;
-};
+    return count;
+}
+
+
+template <class SrcImageIterator, class SrcAccessor>
+inline unsigned
+quick_tally(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+            unsigned threshold)
+{
+    return quick_tally(src.first, src.second, src.third, threshold);
+}
 
 
 // Compute a mask (dest) that defines the seam line given the
@@ -359,8 +368,16 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         cerr.flush();
     }
 
-    tally<SrcPixelType> tally12;
-    tally<SrcPixelType> tally21;
+    const unsigned overlap_threshold =
+        // Arbitrary threshold of overlapping pixels below which we
+        // consider the overlap of the masks to be complete, i.e. the
+        // image pair as useless.
+        //
+        // The current value is 2x the circumference of the overlap
+        // rectangle.
+        2U * 2U * (static_cast<unsigned>(size.x) + static_cast<unsigned>(size.y));
+    unsigned tally12;
+    unsigned tally21;
 
 #ifdef OPENMP
 #pragma omp parallel sections
@@ -376,7 +393,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                                diff12.upperLeft(), diff12.accessor(),
                                saturating_subtract<SrcPixelType>());
 
-            vigra::inspectImage(srcImageRange(diff12), tally12);
+            tally12 = quick_tally(diff12.begin(), diff12.end(), diff12.accessor(),
+                                  overlap_threshold);
 
             switch (boundary)
             {
@@ -412,7 +430,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                                diff21.upperLeft(), diff21.accessor(),
                                saturating_subtract<SrcPixelType>());
 
-            vigra::inspectImage(srcImageRange(diff21), tally21);
+            tally21 = quick_tally(diff21.begin(), diff21.end(), diff21.accessor(),
+                                  overlap_threshold);
 
             switch (boundary)
             {
@@ -440,15 +459,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         cerr.flush();
     }
 
-    const unsigned overlap_threshold =
-        // Arbitrary threshold of overlapping pixels below which we
-        // consider the overlap of the masks to be complete, i.e. the
-        // image pair as useless.
-        //
-        // The current value is 2x the circumference of the overlap
-        // rectangle.
-        2U * 2U * (static_cast<unsigned>(size.x) + static_cast<unsigned>(size.y));
-    const unsigned overlap_tally = std::max(tally12.count, tally21.count);
+    const unsigned overlap_tally = std::max(tally12, tally21);
     if (overlap_tally < overlap_threshold)
     {
         cerr << "\n" <<
