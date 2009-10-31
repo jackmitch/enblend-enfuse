@@ -75,6 +75,7 @@ extern "C" int optind;
 #include "global.h"
 #include "signature.h"
 #include "self_test.h"
+#include "tiff_message.h"
 
 typedef struct {
     unsigned int kmax;          // maximum number of moves for a line segment
@@ -1257,10 +1258,8 @@ int main(int argc, char** argv)
 
     sig.initialize();
 
-    // Make sure libtiff is compiled with TIF_PLATFORM_CONSOLE
-    // to avoid interactive warning dialogs.
-    //TIFFSetWarningHandler(NULL);
-    //TIFFSetErrorHandler(NULL);
+    TIFFSetWarningHandler(tiff_warning);
+    TIFFSetErrorHandler(tiff_error);
 
     // List of input files.
     list<char*> inputFileNameList;
