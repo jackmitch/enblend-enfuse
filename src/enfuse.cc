@@ -1477,12 +1477,11 @@ int main(int argc, char** argv)
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
             cerr << command
-                 << ": warning: input image \""
-                 << *inputFileNameIterator
-                 << "\" does not have an alpha channel;\n"
+                 << ": info: input image \"" << *inputFileNameIterator << "\""
+                 << enblend::optional_layer_name(layer, layers)
+                 << " does not have an alpha channel;\n"
                  << command
-                 << ": warning: assuming all pixels should "
-                 << "contribute to the final image"
+                 << ": info: assuming all pixels should contribute to the final image"
                  << endl;
         }
 
@@ -1504,7 +1503,7 @@ int main(int argc, char** argv)
                     cerr << endl
                          << command << ": error parsing ICC profile data from file \""
                          << *inputFileNameIterator
-                         << "\"" << endl;
+                         << "\"" << enblend::optional_layer_name(layer, layers) << endl;
                     exit(1);
                 }
             }
@@ -1514,7 +1513,8 @@ int main(int argc, char** argv)
 
             if (isColor != inputInfo->isColor()) {
                 cerr << command << ": input image \""
-                     << *inputFileNameIterator << "\" is "
+                     << *inputFileNameIterator << "\""
+                     << enblend::optional_layer_name(layer, layers) << " is "
                      << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
                      << command << ":   but previous images are "
                      << (isColor ? "color" : "grayscale")
@@ -1523,7 +1523,8 @@ int main(int argc, char** argv)
             }
             if (pixelType != inputInfo->getPixelType()) {
                 cerr << command << ": input image \""
-                     << *inputFileNameIterator << "\" has pixel type "
+                     << *inputFileNameIterator << "\""
+                     << enblend::optional_layer_name(layer, layers) << " has pixel type "
                      << inputInfo->getPixelType() << ",\n"
                      << command << ":   but previous images have pixel type "
                      << pixelType
@@ -1533,7 +1534,8 @@ int main(int argc, char** argv)
             if (resolution !=
                 TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
                 cerr << command << ": info: input image \""
-                     << *inputFileNameIterator << "\" has resolution "
+                     << *inputFileNameIterator << "\""
+                     << enblend::optional_layer_name(layer, layers) << " has resolution "
                      << inputInfo->getXResolution() << " dpi x "
                      << inputInfo->getYResolution() << " dpi,\n"
                      << command << ": info:   but first image has resolution "
@@ -1552,14 +1554,14 @@ int main(int argc, char** argv)
                         cerr << endl
                              << command << ": error parsing ICC profile data from file \""
                              << *inputFileNameIterator
-                             << "\"" << endl;
+                             << "\"" << enblend::optional_layer_name(layer, layers) << endl;
                         exit(1);
                     }
                 }
 
                 cerr << endl << command << ": input image \""
                      << *inputFileNameIterator
-                     << "\" has ";
+                     << "\"" << enblend::optional_layer_name(layer, layers) << " has ";
                 if (newProfile) {
                     cerr << " ICC profile \""
                          << cmsTakeProductName(newProfile)

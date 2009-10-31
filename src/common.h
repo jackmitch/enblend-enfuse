@@ -784,6 +784,25 @@ expandFilenameTemplate(const std::string& aTemplate,
 }
 
 
+/** Answer a phrase that describes a layer in an image consisting of
+ *  multiple layers.  If the image has got only one layer, we avoid to
+ *  confuse the user and answer an empty string. */
+inline std::string
+optional_layer_name(unsigned layer_number, unsigned layer_total)
+{
+    if (layer_total <= 1U)
+    {
+        return std::string();
+    }
+    else
+    {
+        std::ostringstream oss;
+        oss << ", layer " << layer_number << "/" << layer_total;
+        return oss.str();
+    }
+}
+
+
 } // namespace enblend
 
 #endif /* __COMMON_H__ */
