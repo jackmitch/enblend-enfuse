@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\STLport-trunk\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxMSW-2.8.10\src\jpeg&quot;;&quot;..\..\wxMSW-2.8.10\src\png&quot;;&quot;..\..\wxMSW-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;win32helpers"
+				AdditionalIncludeDirectories="&quot;..\..\STLport-5.2.1\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;win32helpers"
 				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;ENBLEND_CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 				AdditionalDependencies="libtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib"
 				OutputFile="$(OutDir)/enfuse.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\..\wxMSW-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Debug&quot;;&quot;..\..\STLport-trunk\lib&quot;;..\..\Deploy\lib\Debug;&quot;..\..\tiff-3.8.2\libtiff&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Debug&quot;;&quot;..\..\STLport-5.2.1\lib&quot;;..\..\Deploy\lib\Debug;&quot;..\..\tiff-3.8.2\libtiff&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/enfuse.pdb"
 				SubSystem="1"
@@ -130,7 +130,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;..\..\STLport-trunk\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
+				AdditionalIncludeDirectories="&quot;..\..\STLport-5.2.1\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
 				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_LIBGLEW"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -156,7 +156,7 @@
 				AdditionalDependencies="libtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib glew32s.lib"
 				OutputFile="$(OutDir)/enfuse_nosse.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-trunk\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glew\lib;..\..\glut\Release"
+				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-5.2.1\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glew\lib;..\..\glut\Release"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				LargeAddressAware="2"
@@ -221,7 +221,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;..\..\STLport-trunk\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
+				AdditionalIncludeDirectories="&quot;..\..\STLport-5.2.1\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
 				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;CACHE_IMAGES;_WIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_LIBGLEW"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -247,7 +247,7 @@
 				AdditionalDependencies="libtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib glew32s.lib"
 				OutputFile="$(OutDir)/enfuse.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-trunk\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glew\lib;..\..\glut\Release"
+				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-5.2.1\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glew\lib;..\..\glut\Release"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				LargeAddressAware="2"
@@ -312,7 +312,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;..\..\STLport-trunk\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
+				AdditionalIncludeDirectories="&quot;..\..\STLport-5.2.1\stlport&quot;;..\include;..\..\include;&quot;..\..\tiff-3.8.2\libtiff&quot;;&quot;..\..\wxWidgets-2.8.10\src\jpeg&quot;;&quot;..\..\wxWidgets-2.8.10\src\png&quot;;&quot;..\..\wxWidgets-2.8.10\src\zlib&quot;;..\..\boost_1_39_0;&quot;..\..\lcms-1.18\include&quot;;&quot;..\..\libxmi-1.2&quot;;.;..\..\glew\include;..\..\glut\include;win32helpers"
 				PreprocessorDefinitions="VIGRA_STATIC_LIB;WIN32;__WIN32__;NDEBUG;_WIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_LIBGLEW"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -339,7 +339,7 @@
 				AdditionalDependencies="libtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib libxmi.lib lcms.lib IlmImf.lib Imath.lib IlmThread.lib Half.lib Iex.lib glew32s.lib glut32.lib"
 				OutputFile="$(OutDir)/enfuse_openmp.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-trunk\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glut\Release;..\..\glew\lib"
+				AdditionalLibraryDirectories="&quot;..\..\wxWidgets-2.8.10\lib\vc_lib&quot;;&quot;..\..\lcms-1.18\Lib\MS&quot;;&quot;..\..\libxmi-1.2\Release&quot;;&quot;..\..\STLport-5.2.1\lib&quot;;..\..\Deploy\lib\Release;&quot;..\..\tiff-3.8.2\libtiff&quot;;..\..\glut\Release;..\..\glew\lib"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				LargeAddressAware="2"
@@ -399,6 +399,10 @@
 			</File>
 			<File
 				RelativePath=".\self_test.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\tiff_message.cc"
 				>
 			</File>
 		</Filter>
@@ -473,6 +477,10 @@
 			</File>
 			<File
 				RelativePath=".\self_test.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tiff_message.h"
 				>
 			</File>
 			<File
