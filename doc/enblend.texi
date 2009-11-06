@@ -226,6 +226,8 @@ SourceForge} @uref{http://@/enblend.sourceforge.net/, web page}.
 Assemble the sequence of images @var{INPUT}@dots{} into a single
 @var{IMAGE}.
 
+@include filespec.texi
+
 @menu
 * Common Options::              General options
 * Extended Options::            Memory and @acronym{GPU} control
@@ -416,7 +418,7 @@ reading and writing of images
 mask generation, pyramid, and blending
 
 @item 3
-color conversions
+reading of response files, color conversions
 
 @item 4
 image sizes, bounding boxes and intersection sizes

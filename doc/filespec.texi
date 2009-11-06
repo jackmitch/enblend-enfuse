@@ -1,0 +1,173 @@
+@cindex literal filenames
+@cindex filenames, literal
+@cindex response files
+Input images are either specified literally or via so-called response
+files.  A response file contains filenames of images or other response
+filenames.  Introduce response file names with an at-character
+(@samp{@@}).
+
+Enblend and Enfuse process the list @var{INPUT}... from left to right,
+expanding response files depth-first.  The following examples only show
+Enblend, but Enfuse works exactly the same.
+
+@table @asis
+@item Solely literal filenames.
+Example:
+@example
+enblend image-1.tif image-2.tif image-3.tif
+@end example
+
+The ultimate order in which the images are processed is:
+@file{image-1.tif}, @file{image-2.tif}, @file{image-3.tif}.
+
+@item Single response file.
+Example:
+@example
+enblend @@list
+@end example
+where file@tie{}@file{list} contains
+@example
+img1.exr
+img2.exr
+img3.exr
+img4.exr
+@end example
+
+Ultimate order: @file{img1.exr}, @file{img2.exr}, @file{img3.exr},
+@file{img4.exr}.
+
+@item Mixed literal names and response files.
+Example:
+@example
+enblend @@master.list image-09.png image-10.png
+@end example
+where file@tie{}@file{master.list} comprises of
+@example
+image-01.png
+@@first.list
+image-04.png
+@@second.list
+image-08.png
+@end example
+@file{first.list} is
+@example
+image-02.png
+image-03.png
+@end example
+and @file{second.list} contains
+@example
+image-05.png
+image-06.png
+image-07.png
+@end example
+
+Ultimate order: @file{image-01.png}, @file{image-02.png},
+@file{image-03.png}, @file{image-04.png}, @file{image-05.png},
+@file{image-06.png}, @file{image-07.png}, @file{image-08.png},
+@file{image-09.png}, @file{image-10.png},
+@end table
+
+@sp 1
+@noindent
+@strong{Response File Format}
+@cindex response file, format
+@cindex format of response files
+@need 150
+Response files contain one filename per line.  Blank lines or lines
+beginning with a sharp sign (@samp{#}) are ignored.  Filenames that
+begin with an at-character (@samp{@@}) denote other response files.
+@ref{Table:response-file-format} states a formal grammar of response
+files in @uref{http://@/en.wikipedia.org/@/wiki/@/Ebnf,
+@acronym{EBNF}}.
+
+@float Table,Table:response-file-format
+@multitable {@var{response-file}} {::=} {abcdefghijklmnopqrstuvwxyzabcdefghijklm}
+@item @var{response-file}
+@tab ::=
+@tab @var{line}*
+@item @var{line}
+@tab ::=
+@tab (@var{comment} | @var{file-spec}) [@samp{\r}] @samp{\n}
+@item @var{comment}
+@tab ::=
+@tab @var{space}* @samp{#} @var{text}
+@item @var{file-spec}
+@tab ::=
+@tab @var{space}* @samp{@@} @var{filename} @var{space}*
+@item @var{space}
+@tab ::=
+@tab @samp{ } | @samp{\t}
+@end multitable
+
+@noindent
+where @var{text} is an arbitrary string and @var{filename} is any
+filename.
+
+@caption{@acronym{EBNF} definition of the grammar of response files.}
+@shortcaption{Response-file grammar}
+
+@cindex response file, grammar
+@cindex grammar, response file
+@end float
+
+In a response file all relative filenames are used relative the the
+response file itself, not relative to the current-working directory of
+the application.
+
+@noindent
+The above grammar might unpleasantly surprise the user in the
+some ways:
+
+@table @asis
+@item Literal filenames
+Inside a response file all filenames are treated as literals.  No
+filename globing or expansion is performed.  This is, the
+line
+@example
+img_*.tif
+@end example
+stands for exactly one file called @samp{img_*.tif}.
+
+@item Whitespace trimmed at both line ends
+For convenience whitespace at the beginning and at the end of each
+line is ignored.  However, this implies that response files cannot
+represent filenames that start or end with whitespace, as there is no
+quoting syntax.  Filenames with embedded whatespace cause no problems,
+though.
+
+@item Only whole-line comments
+Comments in response files always occupy a complete line.  There are
+no line-ending comments.  Thus in
+@example
+# exposure series
+img-0.33ev.tif # "middle" EV
+img-1.33ev.tif
+img+0.67ev.tif
+@end example
+only the first line contains a comment, whereas the second lines
+includes none.  Rather it refers to file@tie{}@w{@samp{img-0.33ev.tif
+# "middle" EV}}.
+
+@item Image filenames cannot start with @samp{@@}
+An at-sign always introduces a response file, even if the extension
+would hinto towards an image.
+@end table
+
+@noindent
+Here is an example of a valid response file.
+@example
+@group
+# 4\pi panorama!
+
+# These pictures were taken with the panorama head.
+@@round-shots.list
+
+# Freehand sky shot.
+zenith.tif
+
+# "Legs, will you go away?" images.
+nadir-2.tif
+nadir-5.tif
+nadir.tif
+@end group
+@end example

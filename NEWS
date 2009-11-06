@@ -20,6 +20,10 @@ Released on August 25, 2009.
   ("--disable-image-cache").  Speedups of up to 30% have been reported
   on the amd64 architecture.
 
+- Enblend and Enfuse accept repsonse files in addition to literal
+  image files.  Response files contain lists of image filenames or
+  names of other response files.
+
 - Lots of new warnings if a command-line option has no effect, like,
   for example, combining a mask optimization option with
   "--no-optimize".

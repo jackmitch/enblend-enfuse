@@ -7,7 +7,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    helpful-programs.texi \
                    tuning-memory-usage.texi \
                    understanding-masks.texi \
-                   workflow.texi \
+                   workflow.texi filespec.texi \
                    bug-reports.texi authors.texi \
                    photographic-workflow.fig \
                    default.css
@@ -18,7 +18,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   helpful-programs.texi \
                   tuning-memory-usage.texi \
                   understanding-masks.texi \
-                  workflow.texi \
+                  workflow.texi filespec.texi \
                   bug-reports.texi authors.texi \
                   config-edge.gp config.gp \
                   entropy-cutoff.gp.in \

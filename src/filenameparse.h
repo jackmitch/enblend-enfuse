@@ -23,6 +23,10 @@
 #include <string>
 
 namespace enblend {
+    /** Answer whether aFilename is specified with a relative path not
+     *  an absolute one. */
+    bool isRelativePath(const std::string& aFilename);
+
     /** Answer the directory part of aFilename.  The function duplicates
      *  dirname(1). */
     std::string extractDirname(const std::string& aFilename);
@@ -38,6 +42,15 @@ namespace enblend {
     /** Answer the extension part of aFilename including the leading
      *  dot. */
     std::string extractExtension(const std::string& aFilename);
+
+    /** Answer aPathname with all superfluous "." and ".." removed.
+     *  If keepDot is true an empty path gets normalized to "."
+     *  instead of the empty string. */
+    std::string canonicalizePath(const std::string& aPathname, bool keepDot);
+
+    /** Answer the concatenation of aPathname and anotherPathname. */
+    std::string concatPath(const std::string& aPathname,
+                           const std::string& anotherPathname);
 } // namespace enblend
 
 #endif /* __FILENAMEPARSE_H__ */

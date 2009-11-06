@@ -32,6 +32,7 @@
 #include <boost/static_assert.hpp>
 
 #include "common.h"
+#include "filespec.h"
 #include "openmp.h"
 #include "numerictraits.h"
 #include "fixmath.h"
@@ -1131,7 +1132,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 /** Enfuse's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enfuseMain(const list<char*>& anInputFileNameList,
+void enfuseMain(const FileNameList& anInputFileNameList,
                 const list<ImageImportInfo*>& anImageInfoList,
                 ImageExportInfo& anOutputImageInfo,
                 Rect2D& anInputUnion)
@@ -1168,7 +1169,7 @@ void enfuseMain(const list<char*>& anInputFileNameList,
     const unsigned numberOfImages = imageInfoList.size();
 
     unsigned m = 0;
-    list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
+    FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
         Rect2D imageBB;
         pair<ImageType*, AlphaType*> imagePair =

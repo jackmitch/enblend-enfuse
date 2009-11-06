@@ -65,7 +65,7 @@ namespace enblend {
 /** Enblend's main blending loop. Templatized to handle different image types.
  */
 template <typename ImagePixelType>
-void enblendMain(const list<char*>& anInputFileNameList,
+void enblendMain(const FileNameList& anInputFileNameList,
                  const list<ImageImportInfo*>& anImageInfoList,
                  ImageExportInfo& anOutputImageInfo,
                  Rect2D& anInputUnion)
@@ -121,7 +121,7 @@ void enblendMain(const list<char*>& anInputFileNameList,
 
     // Main blending loop.
     unsigned m = 0;
-    list<char*>::const_iterator inputFileNameIterator(anInputFileNameList.begin());
+    FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
         // Create the white image.
         Rect2D whiteBB;

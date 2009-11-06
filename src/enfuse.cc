@@ -165,6 +165,8 @@ using vigra::ImageImportInfo;
 using vigra::Rect2D;
 using vigra::StdException;
 
+using enblend::FileNameList;
+using enblend::TraceableFileNameList;
 using enblend::enfuseMain;
 
 #ifdef _WIN32
@@ -1345,10 +1347,6 @@ int main(int argc, char** argv)
     TIFFSetWarningHandler(tiff_warning);
     TIFFSetErrorHandler(tiff_error);
 
-    // List of input files.
-    list<char*> inputFileNameList;
-    list<char*>::iterator inputFileNameIterator;
-
     if (!getopt_long_works_ok())
     {
         cerr << command << ": cannot reliably parse command line; giving up\n";
@@ -1365,45 +1363,19 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    TraceableFileNameList inputTraceableFileNameList;
+
     // Remaining parameters are input files.
-    if (optind < argc) {
-        while (optind < argc) {
-#ifdef _WIN32
-            // There has got to be an easier way...
-            char drive[_MAX_DRIVE];
-            char dir[_MAX_DIR];
-            char fname[_MAX_FNAME];
-            char ext[_MAX_EXT];
-            char newFile[_MAX_PATH];
+    while (optind < argc) {
+        TraceableFileNameList files;
+        enblend::unfold_filename(files, std::string(argv[optind]));
+        inputTraceableFileNameList.insert(inputTraceableFileNameList.end(),
+                                          files.begin(), files.end());
+        optind++;
+    }
 
-            _splitpath(argv[optind], drive, dir, NULL, NULL);
-
-            struct _finddata_t finddata;
-            intptr_t findhandle;
-            int stop = 0;
-
-            findhandle = _findfirst(argv[optind], &finddata);
-            if (findhandle != -1) {
-                do {
-                    _splitpath(finddata.name, NULL, NULL, fname, ext);
-                    _makepath(newFile, drive, dir, fname, ext);
-
-                    // TODO (jbeda): This will leak -- the right way to
-                    // fix this is to make this a list of std::string.
-                    // I'll look into this after we get things working
-                    // on Win32
-                    inputFileNameList.push_back(strdup(newFile));
-                } while (_findnext(findhandle, &finddata) == 0);
-                _findclose(findhandle);
-            }
-
-            optind++;
-#else
-            inputFileNameList.push_back(argv[optind++]);
-#endif
-        }
-    } else {
-        cerr << command << ": no input files specified.\n";
+    if (inputTraceableFileNameList.empty()) {
+        cerr << command << ": no input files specified\n";
         exit(1);
     }
 
@@ -1424,31 +1396,49 @@ int main(int argc, char** argv)
     Rect2D inputUnion;
 
     // Check that all input images have the same parameters.
-    inputFileNameIterator = inputFileNameList.begin();
     unsigned layer = 0;
     unsigned layers = 0;
-    while (inputFileNameIterator != inputFileNameList.end()) {
+    FileNameList inputFileNameList;
+    TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
+    while (inputFileNameIterator != inputTraceableFileNameList.end()) {
         ImageImportInfo* inputInfo = NULL;
-        {
-            std::string filename(*inputFileNameIterator);
-            enblend::try_opening_file(filename);
+        std::string filename(inputFileNameIterator->first);
+        if (!enblend::can_open_file(filename)) {
+            enblend::unroll_trace(inputFileNameIterator->second);
+            exit(1);
+        }
+        try {
             ImageImportInfo info(filename.c_str());
             if (layers == 0) { // OPTIMIZATION: call only once per file
                 layers = info.numLayers();
             }
             if (layers >= 2) {
-                filename = vigra::join_filename_layer(*inputFileNameIterator, layer);
+                filename = vigra::join_filename_layer(inputFileNameIterator->first, layer);
+                inputInfo = new ImageImportInfo(filename.c_str());
+            } else {
+                inputInfo = new ImageImportInfo(info);
             }
             ++layer;
-            inputInfo = new ImageImportInfo(filename.c_str());
+        } catch (vigra::PreconditionViolation) {
+            cerr <<
+                command << ": cannot load image \"" << filename << "\", because the\n" <<
+                command << ":     format of the file is unrecognized or unknown\n";
+            if (enblend::maybe_response_file(filename)) {
+                cerr <<
+                    command << ": info: Maybe you meant a response file and forgot the initial '" <<
+                    RESPONSE_FILE_PREFIX_CHAR << "'?\n";
+            }
+            exit(1);
         }
+
         // Save this image info in the list.
         imageInfoList.push_back(inputInfo);
+        inputFileNameList.push_back(filename);
 
         if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
             cerr << command
                  << ": info: input image \""
-                 << *inputFileNameIterator
+                 << inputFileNameIterator->first
                  << "\" "
                  << layer << '/' << layers << ' ';
 
@@ -1476,10 +1466,11 @@ int main(int argc, char** argv)
         if (inputInfo->numExtraBands() < 1) {
             // Complain about lack of alpha channel.
             cerr << command
-                 << ": info: input image \"" << *inputFileNameIterator << "\""
+                 << ": info: input image \"" << inputFileNameIterator->first << "\""
                  << enblend::optional_layer_name(layer, layers)
-                 << " does not have an alpha channel;\n"
-                 << command
+                 << " does not have an alpha channel;\n";
+            enblend::unroll_trace(inputFileNameIterator->second);
+            cerr << command
                  << ": info: assuming all pixels should contribute to the final image"
                  << endl;
         }
@@ -1488,7 +1479,7 @@ int main(int argc, char** argv)
         Rect2D imageROI(Point2D(inputInfo->getPosition()),
                         Size2D(inputInfo->width(), inputInfo->height()));
 
-        if (inputFileNameIterator == inputFileNameList.begin()) {
+        if (inputFileNameIterator == inputTraceableFileNameList.begin()) {
             // First input image
             inputUnion = imageROI;
             isColor = inputInfo->isColor();
@@ -1501,8 +1492,9 @@ int main(int argc, char** argv)
                 if (InputProfile == NULL) {
                     cerr << endl
                          << command << ": error parsing ICC profile data from file \""
-                         << *inputFileNameIterator
+                         << inputFileNameIterator->first
                          << "\"" << enblend::optional_layer_name(layer, layers) << endl;
+                    enblend::unroll_trace(inputFileNameIterator->second);
                     exit(1);
                 }
             }
@@ -1512,34 +1504,37 @@ int main(int argc, char** argv)
 
             if (isColor != inputInfo->isColor()) {
                 cerr << command << ": input image \""
-                     << *inputFileNameIterator << "\""
+                     << inputFileNameIterator->first << "\""
                      << enblend::optional_layer_name(layer, layers) << " is "
                      << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
                      << command << ":   but previous images are "
                      << (isColor ? "color" : "grayscale")
                      << endl;
+                enblend::unroll_trace(inputFileNameIterator->second);
                 exit(1);
             }
             if (pixelType != inputInfo->getPixelType()) {
                 cerr << command << ": input image \""
-                     << *inputFileNameIterator << "\""
+                     << inputFileNameIterator->first << "\""
                      << enblend::optional_layer_name(layer, layers) << " has pixel type "
                      << inputInfo->getPixelType() << ",\n"
                      << command << ":   but previous images have pixel type "
                      << pixelType
                      << endl;
+                enblend::unroll_trace(inputFileNameIterator->second);
                 exit(1);
             }
             if (resolution !=
                 TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
                 cerr << command << ": info: input image \""
-                     << *inputFileNameIterator << "\""
+                     << inputFileNameIterator->first << "\""
                      << enblend::optional_layer_name(layer, layers) << " has resolution "
                      << inputInfo->getXResolution() << " dpi x "
                      << inputInfo->getYResolution() << " dpi,\n"
                      << command << ": info:   but first image has resolution "
                      << resolution.x << " dpi x " << resolution.y << " dpi"
                      << endl;
+                enblend::unroll_trace(inputFileNameIterator->second);
             }
             if (!std::equal(iccProfile.begin(),
                             iccProfile.end(),
@@ -1552,33 +1547,36 @@ int main(int argc, char** argv)
                     if (newProfile == NULL) {
                         cerr << endl
                              << command << ": error parsing ICC profile data from file \""
-                             << *inputFileNameIterator
+                             << inputFileNameIterator->first
                              << "\"" << enblend::optional_layer_name(layer, layers) << endl;
+                        enblend::unroll_trace(inputFileNameIterator->second);
                         exit(1);
                     }
                 }
 
                 cerr << endl << command << ": input image \""
-                     << *inputFileNameIterator
-                     << "\"" << enblend::optional_layer_name(layer, layers) << " has ";
+                     << inputFileNameIterator->first
+                     << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
+                enblend::unroll_trace(inputFileNameIterator->second);
+                cerr << command << ":     has ";
                 if (newProfile) {
-                    cerr << " ICC profile \""
+                    cerr << "ICC profile \""
                          << cmsTakeProductName(newProfile)
                          << " "
                          << cmsTakeProductDesc(newProfile)
                          << "\"";
                 } else {
-                    cerr << " no ICC profile";
+                    cerr << "no ICC profile";
                 }
-                cerr << " but previous images have ";
+                cerr << ", but previous images have ";
                 if (InputProfile) {
-                    cerr << " ICC profile \""
+                    cerr << "ICC profile \""
                          << cmsTakeProductName(InputProfile)
                          << " "
                          << cmsTakeProductDesc(InputProfile)
                          << "\"" << endl;
                 } else {
-                    cerr << " no ICC profile" << endl;
+                    cerr << "no ICC profile" << endl;
                 }
                 cerr << command
                      << ": warning: blending images with different color spaces\n"
@@ -1598,12 +1596,12 @@ int main(int argc, char** argv)
         {
             // We are about to process the next layer in the _same_
             // image.  The imageInfoList already has been updated, but
-            // inputFileNameList still lacks the filename.
-            inputFileNameList.insert(inputFileNameIterator, *inputFileNameIterator);
+            // inputTraceableFileNameList still lacks the filename.
+            inputTraceableFileNameList.insert(inputFileNameIterator, *inputFileNameIterator);
         }
     }
 
-    vigra_postcondition(imageInfoList.size() == inputFileNameList.size(),
+    vigra_postcondition(imageInfoList.size() == inputTraceableFileNameList.size(),
                         "filename list and image info list are inconsistent");
 
     // Check that more than one input file was given.
@@ -1620,7 +1618,7 @@ int main(int argc, char** argv)
     if (resolution == TiffResolution()) {
         cerr << command
              << ": warning: no usable resolution found in first image \""
-             << *inputFileNameList.begin() << "\";\n"
+             << inputTraceableFileNameList.begin()->first << "\";\n"
              << command
              << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi"
              << endl;

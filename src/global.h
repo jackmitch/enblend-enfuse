@@ -40,7 +40,9 @@
 #define VERBOSE_SIGNATURE_REPORTING         2
 #define VERBOSE_VERSION_REPORTING           2
 
+
 #define VERBOSE_COLOR_CONVERSION_MESSAGES   3
+#define VERBOSE_RESPONSE_FILES              3
 
 #define VERBOSE_ABB_MESSAGES                4
 #define VERBOSE_IBB_MESSAGES                4

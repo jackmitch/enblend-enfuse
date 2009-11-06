@@ -390,7 +390,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\error_message.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\filenameparse.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\filespec.cc"
 				>
 			</File>
 			<File
@@ -440,7 +448,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\error_message.h"
+				>
+			</File>
+			<File
 				RelativePath=".\filenameparse.h"
+				>
+			</File>
+			<File
+				RelativePath=".\filespec.h"
 				>
 			</File>
 			<File

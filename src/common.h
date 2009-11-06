@@ -29,8 +29,11 @@
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <map>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
@@ -39,6 +42,7 @@
 
 #include "vigra/numerictraits.hxx"
 
+#include "error_message.h"
 #include "filenameparse.h"
 
 #define NUMERIC_OPTION_DELIMITERS ";:/"
@@ -189,38 +193,6 @@ strtoken_r(char *str, const char *delim, char **save_ptr)
 }
 
 
-/** Answer the error message associated with anErrorNumber.
- */
-std::string
-errorMessage(int anErrorNumber)
-{
-#if HAVE_STRERROR_R || HAVE_STRERROR
-#if HAVE_STRERROR_R
-    const size_t size = 4096;
-    boost::scoped_ptr<char> message_buffer(new char[size]);
-    const char* message = strerror_r(anErrorNumber, message_buffer.get(), size);
-#elif HAVE_STRERROR
-    const char* message = strerror(anErrorNumber);
-#endif
-
-    if (strlen(message) == 0)
-    {
-        std::ostringstream oss;
-        oss << "No error message available, error #" << anErrorNumber;
-        return oss.str();
-    }
-    else
-    {
-        return std::string(message);
-    }
-#else
-    std::ostringstream oss;
-    oss << "No error message available, error #" << anErrorNumber;
-    return oss.str();
-#endif
-}
-
-
 /** Answer aString converted to uppercase letters. */
 std::string
 toUppercase(const std::string& aString)
@@ -249,11 +221,9 @@ stringOfBool(bool b)
 }
 
 
-/** Try to open aFilename.  Exit with a nicely formatted error
- *  message, if opening fails.  Otherwise immediately close the
- *  handle. */
-void
-try_opening_file(const std::string& aFilename)
+/** Answer whether we can open aFilename. */
+bool
+can_open_file(const std::string& aFilename)
 {
     errno = 0;
     std::ifstream file(aFilename.c_str());
@@ -262,7 +232,7 @@ try_opening_file(const std::string& aFilename)
         std::cerr << command <<
             ": failed to open \"" << aFilename << "\": " <<
             errorMessage(errno) << "\n";
-        exit(1);
+        return false;
     }
     else
     {
@@ -274,6 +244,7 @@ try_opening_file(const std::string& aFilename)
                 ": info: problems when closing \"" << aFilename << "\": " <<
                 errorMessage(errno) << "\n";
         }
+        return true;
     }
 }
 

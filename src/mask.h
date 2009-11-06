@@ -750,7 +750,7 @@ MaskType* createMask(const ImageType* const white,
                      const Rect2D& iBB,
                      bool wraparound,
                      unsigned numberOfImages,
-                     list<char*>::const_iterator inputFileNameIterator,
+                     FileNameList::const_iterator inputFileNameIterator,
                      unsigned m)
 {
     typedef typename ImageType::PixelType ImagePixelType;
