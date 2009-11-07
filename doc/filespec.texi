@@ -132,7 +132,7 @@ stands for exactly one file called @samp{img_*.tif}.
 For convenience whitespace at the beginning and at the end of each
 line is ignored.  However, this implies that response files cannot
 represent filenames that start or end with whitespace, as there is no
-quoting syntax.  Filenames with embedded whatespace cause no problems,
+quoting syntax.  Filenames with embedded whitespace cause no problems,
 though.
 
 @item Only whole-line comments
@@ -150,8 +150,22 @@ includes none.  Rather it refers to file@tie{}@w{@samp{img-0.33ev.tif
 
 @item Image filenames cannot start with @samp{@@}
 An at-sign always introduces a response file, even if the extension
-would hinto towards an image.
+would hint towards an image.
 @end table
+
+@cindex response file, force recognition
+If Enblend or Enfuse do not recognize a response file, they will issue
+a warning.  To force a file being recognized as a response file add
+one of the following syntactic comments to the @emph{first} line of
+the file.
+
+@example
+@group
+# response-file: true
+# enblend-response-file: true
+# enfuse-response-file: true
+@end group
+@end example
 
 @noindent
 Here is an example of a valid response file.

@@ -21,6 +21,7 @@
 
 #include <cerrno>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -111,6 +112,78 @@ glob_filename_win32(FileNameList& filelist, const std::string& filename)
     }
 }
 #endif
+
+
+// ANTICIPATED CHANGE: We already have the same function in
+// "common.h".
+static bool
+can_open_file(const std::string& aFilename)
+{
+    errno = 0;
+    std::ifstream file(aFilename.c_str());
+    if (!file)
+    {
+        std::cerr << command <<
+            ": failed to open \"" << aFilename << "\": " <<
+            errorMessage(errno) << "\n";
+        return false;
+    }
+    else
+    {
+        errno = 0;
+        file.close();
+        if (file.fail())
+        {
+            std::cerr << command <<
+                ": info: problems when closing \"" << aFilename << "\": " <<
+                errorMessage(errno) << "\n";
+        }
+        return true;
+    }
+}
+
+
+// ANTICIPATED CHANGE: We already have the same function in
+// "common.h".  There it is called toLower().  However, we cannot
+// include this file here.  The solution is to factor out string
+// functions into their own module.
+std::string
+lower_case(const std::string& aString)
+{
+    std::string result(aString);
+    std::transform(aString.begin(), aString.end(), result.begin(), tolower);
+    return result;
+}
+
+
+/** Convert a_string in a string that is printable.  This is it only
+ *  contains printable characters. */
+std::string
+printable_string(const std::string& a_string)
+{
+    std::string result;
+
+    for (std::string::const_iterator c = a_string.begin();
+         c != a_string.end();
+         ++c)
+    {
+        if (isprint(*c))
+        {
+            result.push_back(*c);
+        }
+        else
+        {
+            std::ostringstream oss;
+            oss <<
+                "\\x" <<
+                std::hex << std::setw(2) << std::setfill('0') <<
+                (static_cast<int>(*c) & 0xff);
+            result.append(oss.str());
+        }
+    }
+
+    return result;
+}
 
 
 /** Answer line will leading and trailing whitespace removed.
@@ -472,8 +545,10 @@ unfold_filename_iter(TraceableFileNameList& result,
     if (nesting_level > RESPONSE_FILE_MAX_NESTING_LEVEL)
     {
         std::cerr <<
-            command << ": warning: excessive nesting of " << nesting_level << " levels of response files;\n" <<
-            command << ": warning:     possible infinite recursion in \"" << filename << "\"\n";
+            command << ": warning: excessive nesting of " << nesting_level <<
+            " levels of response files;\n" <<
+            command << ": warning:     possible infinite recursion in \"" <<
+            printable_string(filename) << "\"\n";
         unroll_trace(trace);
         return;
     }
@@ -503,7 +578,8 @@ unfold_filename_iter(TraceableFileNameList& result,
             if (t->first == response_filepath)
             {
                 std::cerr << command <<
-                    ": warning: response file \"" << response_filepath << "\" recursively\n";
+                    ": warning: response file \"" << printable_string(response_filepath) <<
+                    "\" recursively\n";
                 unroll_trace(trace);
                 return;
             }
@@ -519,125 +595,131 @@ unfold_filename_iter(TraceableFileNameList& result,
         if (Verbose >= VERBOSE_RESPONSE_FILES)
         {
             std::cerr << command <<
-                ": info: consulting response file \"" << response_filepath << "\"\n";
+                ": info: consulting response file \"" <<
+                printable_string(response_filepath) << "\"\n";
+        }
+
+        if (!can_open_file(response_filepath))
+        {
+            std::cerr << command <<
+                ": failed to open response file \"" <<
+                printable_string(response_filepath) << "\": " <<
+                errorMessage(errno) << "\n";
+            unroll_trace(trace);
+            exit(1);
+        }
+
+        if (!maybe_response_file(response_filepath))
+        {
+            std::cerr << command <<
+                ": warning: malformed response file \"" <<
+                printable_string(response_filepath) << "\"\n";
+            unroll_trace(trace);
+            return;
         }
 
         errno = 0;
         std::ifstream response_file(response_filepath.c_str());
-        if (response_file)
+        Globbing glob;
+        unsigned line_number = 0U;
+
+        while (true)
         {
-            Globbing glob;
-            unsigned line_number = 0U;
+            std::string buffer;
 
-            while (true)
+            errno = 0;
+            getline(response_file, buffer);
+            if (!response_file.good())
             {
-                std::string buffer;
-
-                errno = 0;
-                getline(response_file, buffer);
-                if (!response_file.good())
+                if (!buffer.empty())
                 {
-                    if (!buffer.empty())
-                    {
-                        std::cerr <<
-                            command << ": warning: ignoring last line of response file \"" <<
-                            response_filepath << "\" line " << line_number + 1U << ",\n" <<
-                            command << ": warning:     because it does not end with a newline\n";
-                        unroll_trace(trace);
-                    }
-                    break;
+                    std::cerr <<
+                        command << ": warning: ignoring last line of response file \"" <<
+                        printable_string(response_filepath) << "\" line " << line_number + 1U << ",\n" <<
+                        command << ": warning:     because it does not end with a newline\n";
+                    unroll_trace(trace);
                 }
-                ++line_number;
-
-                if (line_number == 1U)
-                {
-                    const key_value_pair comment = get_syntactic_comment(buffer);
-                    if ((comment.first == "glob" || comment.first == "globbing") &&
-                        !comment.second.empty())
-                    {
-                        if (!glob.set_algorithm(comment.second))
-                        {
-                            std::cerr <<
-                                command <<
-                                ": warning: requested unknown globbing algorithm \"" <<
-                                comment.second <<
-                                "\" in response file \"" << response_filepath << "\" line " <<
-                                line_number << "\n" <<
-                                command <<
-                                ": warning:     will stick with algorithm \"" <<
-                                glob.get_algorithm() << "\"\n";
-                            unroll_trace(trace);
-                        }
-                    }
-                    // We silently ignore all other keys or empty
-                    // values with the right key.
-                }
-
-                const std::string line(normalize_response_file_line(buffer));
-                if (line.empty())
-                {
-                    continue;
-                }
-
-                const std::string response_directory = extractDirname(response_filepath);
-#ifdef DEBUG_FILESPEC
-                std::cout << "+ unfold_filename_iter: response_directory = " << response_directory << "\n";
-#endif
-                TraceableFileNameList partial_result;
-                trace.push_front(std::make_pair(response_filepath, line_number));
-                unfold_filename_iter(partial_result,
-                                     nesting_level + 1U, response_directory, trace,
-                                     line);
-
-                for (TraceableFileNameList::const_iterator p = partial_result.begin();
-                     p != partial_result.end();
-                     ++p)
-                {
-                    const FileNameList expanded_partial_result = glob.expand(p->first, trace);
-                    for (FileNameList::const_iterator q = expanded_partial_result.begin();
-                         q != expanded_partial_result.end();
-                         ++q)
-                    {
-                        if (enblend::isRelativePath(*q))
-                        {
-                            const std::string path =
-                                enblend::canonicalizePath(concatPath(response_directory, *q), false);
-#ifdef DEBUG_FILESPEC
-                            std::cout <<
-                                "+ unfold_filename_iter: relative path\n" <<
-                                "+ unfold_filename_iter:     q = " << *q << "\n" <<
-                                "+ unfold_filename_iter:     path = <" << path << ">\n";
-#endif
-                            result.insert(result.end(), std::make_pair(path, trace));
-                        }
-                        else
-                        {
-#ifdef DEBUG_FILESPEC
-                            std::cout << "+ unfold_filename_iter: absolute path\n";
-#endif
-                            result.insert(result.end(), std::make_pair(*q, trace));
-                        }
-                    }
-                }
-
-                trace.pop_front();
+                break;
             }
-            if (!response_file.eof())
+            ++line_number;
+
+            const key_value_pair comment = get_syntactic_comment(buffer);
+            if ((comment.first == "glob" || comment.first == "globbing") &&
+                !comment.second.empty())
+                // We silently ignore all other keys or empty
+                // values with the right key.
             {
-                std::cerr << command <<
-                    ": warning: filesystem signals problems in response file \"" <<
-                    response_filepath << "\" line " << line_number << ": " <<
-                    errorMessage(errno) << "\n";
-                unroll_trace(trace);
+                if (!glob.set_algorithm(lower_case(comment.second)))
+                {
+                    std::cerr <<
+                        command <<
+                        ": warning: requested unknown globbing algorithm \"" <<
+                        comment.second <<
+                        "\" in response file \"" << printable_string(response_filepath) <<
+                        "\" line " << line_number << "\n" <<
+                        command <<
+                        ": warning:     will stick with algorithm \"" <<
+                        glob.get_algorithm() << "\"\n";
+                    unroll_trace(trace);
+                }
             }
+
+            const std::string line(normalize_response_file_line(buffer));
+            if (line.empty())
+            {
+                continue;
+            }
+
+            const std::string response_directory = extractDirname(response_filepath);
+#ifdef DEBUG_FILESPEC
+            std::cout << "+ unfold_filename_iter: response_directory = " << response_directory << "\n";
+#endif
+            TraceableFileNameList partial_result;
+            trace.push_front(std::make_pair(response_filepath, line_number));
+            unfold_filename_iter(partial_result,
+                                 nesting_level + 1U, response_directory, trace,
+                                 line);
+
+            for (TraceableFileNameList::const_iterator p = partial_result.begin();
+                 p != partial_result.end();
+                 ++p)
+            {
+                const FileNameList expanded_partial_result = glob.expand(p->first, trace);
+                for (FileNameList::const_iterator q = expanded_partial_result.begin();
+                     q != expanded_partial_result.end();
+                     ++q)
+                {
+                    if (enblend::isRelativePath(*q))
+                    {
+                        const std::string path =
+                            enblend::canonicalizePath(concatPath(response_directory, *q), false);
+#ifdef DEBUG_FILESPEC
+                        std::cout <<
+                            "+ unfold_filename_iter: relative path\n" <<
+                            "+ unfold_filename_iter:     q = " << *q << "\n" <<
+                            "+ unfold_filename_iter:     path = <" << path << ">\n";
+#endif
+                        result.insert(result.end(), std::make_pair(path, trace));
+                    }
+                    else
+                    {
+#ifdef DEBUG_FILESPEC
+                        std::cout << "+ unfold_filename_iter: absolute path\n";
+#endif
+                        result.insert(result.end(), std::make_pair(*q, trace));
+                    }
+                }
+            }
+
+            trace.pop_front();
         }
-        else
+        if (!response_file.eof())
         {
             std::cerr << command <<
-                ": failed to open response file \"" << response_filepath << "\": " <<
+                ": warning: filesystem signals problems in response file \"" <<
+                printable_string(response_filepath) << "\" line " << line_number << ": " <<
                 errorMessage(errno) << "\n";
             unroll_trace(trace);
-            exit(1);
         }
     }
     else
@@ -681,19 +763,6 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
 }
 
 
-// ANTICIPATED CHANGE: We already have the same function in
-// "common.h".  There it is called toLower().  However, we cannot
-// include this file here.  The solution is to factor out string
-// functions into their own module.
-std::string
-lower_case(const std::string& aString)
-{
-    std::string result(aString);
-    std::transform(aString.begin(), aString.end(), result.begin(), tolower);
-    return result;
-}
-
-
 bool
 is_known_extension_to_vigra(const std::string& filename)
 {
@@ -725,20 +794,38 @@ maybe_response_file(const std::string& filename)
             }
             ++line_number;
 
+            if (line_number == 1U)
+            {
+                const key_value_pair comment = get_syntactic_comment(buffer);
+                if ((comment.first == "response-file" ||
+                     comment.first == "enblend-response-file" ||
+                     comment.first == "enfuse-response-file") &&
+                    lower_case(comment.second) == "true")
+                {
+                    return true;
+                }
+            }
+
             const std::string line(normalize_response_file_line(buffer));
             if (line.empty())
             {
+                ++score;
                 continue;
             }
 
             if (line[0] == RESPONSE_FILE_PREFIX_CHAR ||
                 is_known_extension_to_vigra(line))
             {
-                ++score;
+                score += 2U;
             }
         }
 
-        return line_number >= 1U && score * 8U >= line_number * 7U;
+#ifdef DEBUG_FILESPEC
+        std::cout <<
+            "+ maybe_response_file: score = " << score <<
+            ", lines = " << line_number << "\n";
+#endif
+        return score >= line_number;
     }
     else
     {

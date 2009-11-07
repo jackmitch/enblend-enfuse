@@ -24,9 +24,8 @@
 #include <config.h>
 #endif
 
-#include <errno.h>
-
 #include <algorithm>
+#include <cerrno>
 #include <fstream>
 #include <iomanip>
 #include <limits>
