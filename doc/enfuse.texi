@@ -356,15 +356,29 @@ SourceForge} @uref{http://@/enblend.sourceforge.net/, web page}.
 Fuse the sequence of images @var{INPUT}@dots{} into a single
 @var{IMAGE}.
 
-@include filespec.texi
+@cindex literal filename
+@cindex filename, literal
+@cindex response file
+Input images are either specified literally or via so-called response
+files (see below).  The latter are an alternative to specifying image
+filenames on the command line.
+
 
 @menu
+* Response Files::              Files listing the images' names
 * Common Options::              General options
 * Extended Options::            Memory control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
 @end menu
+
+
+@node Response Files
+@section Response Files
+@cindex response file
+
+@include filespec.texi
 
 
 @node Common Options
