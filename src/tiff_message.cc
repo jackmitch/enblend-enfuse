@@ -19,14 +19,12 @@
  */
 
 
+#include <stdio.h>
+
 #include <cstring>
 #include <iostream>
 #include <set>
 #include <string>
-
-#ifdef _WIN32
-#include <stdio.h>
-#endif
 
 #include <boost/scoped_ptr.hpp>
 
