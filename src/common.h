@@ -140,17 +140,13 @@ typedef enum {
 #endif
 
 
-#if 0
-#define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name)
-#else
 #define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name) \
     do { \
         cerr << command << \
             ": info: option \"" m_old_name "\" is deprecated; use \"" m_new_name "\" instead" << \
             endl; \
-        sleep(0); \
+        sleep(1); \
     } while (false)
-#endif
 
 
 #define lengthof(m_array) (sizeof(m_array) / sizeof(m_array[0]))

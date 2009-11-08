@@ -1043,6 +1043,7 @@ int process_options(int argc, char** argv)
                      << ": optimizer weights cannot be both zero"
                      << endl;
             }
+            optionSet.insert(OptimizerWeightsOption);
             break;
         }
 
