@@ -309,7 +309,7 @@ public:
 #ifdef WANT_WILDCARD_GLOBBING
 #ifdef _WIN32
 
-class ShellGlobbingAlgorithm: public AbstractGlobbingAlgorithm
+class WildcardGlobbingAlgorithm: public AbstractGlobbingAlgorithm
 {
 public:
     FileNameList do_glob(const std::string& a_filespec,
@@ -433,12 +433,16 @@ public:
             ("literal", MAKE_ALGORITHM(new LiteralGlobbingAlgorithm))
 #ifdef WANT_WILDCARD_GLOBBING
             ("wildcard", MAKE_ALGORITHM(new WildcardGlobbingAlgorithm))
+#ifndef _WIN32
             ("shell", MAKE_ALGORITHM(new ShellGlobbingAlgorithm))
-#endif
+#endif //_WIN32
+#endif //WAND_WILDCARD_GLOBBING
             ;
 
         setup_alias("literal", "none");
+#ifndef _WIN32
         setup_alias("shell", "sh");
+#endif
     }
 
     ~Globbing()
