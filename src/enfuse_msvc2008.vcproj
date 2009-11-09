@@ -460,10 +460,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\float_cast.h"
-				>
-			</File>
-			<File
 				RelativePath=".\win32helpers\getopt.h"
 				>
 			</File>

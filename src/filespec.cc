@@ -43,13 +43,6 @@
 
 #include <boost/assign/list_of.hpp>
 
-
-#ifdef _WIN32
-// FIXME: Defines lrint() for fast fromRealPromotes and _must_ be
-// included before "vigra/imageinfo.hxx".  This is ugly beyond belief!
-#include "float_cast.h"
-#endif
-
 #include "vigra/imageinfo.hxx"
 
 #ifdef HAVE_CONFIG_H

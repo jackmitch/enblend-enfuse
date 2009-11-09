@@ -46,6 +46,11 @@
 #include <complex>
 #include "vigra/metaprogramming.hxx"
 #include "vigra/sized_int.hxx"
+#ifdef _MSC_VER 
+    // define missing lrint, lrintf function in Visual C++
+    // needed for changes by Andrew Mihal 20061130 
+    #include "vigra/float_cast.h"
+#endif
 
 /********************************************************/
 /*                                                      */

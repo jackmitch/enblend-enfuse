@@ -9,7 +9,7 @@ bin_PROGRAMS = enblend enfuse
 
 enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
-                  float_cast.h global.h gpu.cc gpu.h mask.h \
+                  global.h gpu.cc gpu.h mask.h \
                   nearest.h numerictraits.h openmp.h path.h pyramid.h \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \
@@ -23,7 +23,7 @@ enblend_CXXFLAGS = $(AM_CXXFLAGS) $(OPENGL_CFLAGS) \
                    -I${top_srcdir}/include
 
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
-                 enfuse.h enfuse.cc fixmath.h float_cast.h \
+                 enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h openmp.h pyramid.h \
                  error_message.h error_message.cc \
                  filenameparse.h filenameparse.cc \

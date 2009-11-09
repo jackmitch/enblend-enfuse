@@ -26,10 +26,7 @@
 #include <win32helpers\win32config.h>
 #endif
 #define isnan _isnan
-#endif // _MSC_VER
-
-// Defines lrint for fast fromRealPromotes
-#include "float_cast.h"
+#endif //MSC_VER
 
 #ifdef _WIN32
 // Make sure we bring in windows.h the right way

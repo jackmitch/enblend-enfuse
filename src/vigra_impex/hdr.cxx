@@ -34,7 +34,6 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "../float_cast.h"
 #include "vigra/sized_int.hxx"
 #include "error.hxx"
 #include "hdr.hxx"

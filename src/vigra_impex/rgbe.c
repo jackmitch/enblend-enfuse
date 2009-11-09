@@ -2,7 +2,6 @@
  * WHILE THE AUTHORS HAVE TRIED TO ENSURE THE PROGRAM WORKS CORRECTLY,
  * IT IS STRICTLY USE AT YOUR OWN RISK.  */
 
-#include "../float_cast.h"
 #include "rgbe.h"
 #include <math.h>
 #include <stdlib.h>

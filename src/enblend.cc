@@ -28,9 +28,6 @@
 #define isnan _isnan
 #endif // _MSC_VER
 
-// Defines lrint for fast fromRealPromotes
-#include "float_cast.h"
-
 #ifdef _WIN32
 // Make sure we bring in windows.h the right way
 #define _STLP_VERBOSE_AUTO_LINK

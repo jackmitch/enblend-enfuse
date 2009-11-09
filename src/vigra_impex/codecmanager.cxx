@@ -45,7 +45,6 @@
 #include <iostream>
 #endif
 
-#include "../float_cast.h"
 #include "vigra/config.hxx"
 #include "vigra/error.hxx"
 #include "vigra/imageinfo.hxx"
