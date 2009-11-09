@@ -49,6 +49,14 @@ namespace enblend
 
     /** Answer whether we suspect filename is a response file. */
     bool maybe_response_file(const std::string& filename);
+
+
+    /** List of algorithm name / algorithm description pairs */
+    typedef std::list<std::pair<std::string, std::string> > algorithm_list;
+
+    /** Answer a list of all globbing algorithms including aliases
+     *  that are known, i.e., have been compiled in. */
+    algorithm_list known_globbing_algorithms();
 }
 
 #endif /* __FILESPEC_H__ */

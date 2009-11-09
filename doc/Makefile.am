@@ -54,8 +54,10 @@ CLEANFILES = entropy.{txt,png,eps,pdf} \
              *.fig.bak \
              *.msg
 
-# created by configure(1)
-DISTCLEANFILES = texinfo.tex
+# created by configure(1) or LaTeX
+DISTCLEANFILES = texinfo.tex \
+                 enblend.sc enblend.scs \
+                 enfuse.sc enfuse.scs
 
 MAINTAINERCLEANFILES = enblend.info enfuse.info
 

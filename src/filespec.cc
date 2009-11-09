@@ -19,27 +19,19 @@
  */
 
 
+#include <glob.h>
+#include <unistd.h>
+
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 #include <cerrno>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
-
-//#define WANT_WILDCARD_GLOBBING
-
-#ifdef WANT_WILDCARD_GLOBBING
-#ifdef _WIN32
-// ...
-#else
-#include <glob.h>
-#include <unistd.h>
-#endif // _WIN32
-#endif // WANT_WILDCARD_GLOBBING
-
-#ifdef _WIN32
-#include <io.h>
-#endif
 
 #include <boost/assign/list_of.hpp>
 
@@ -306,7 +298,6 @@ public:
 };
 
 
-#ifdef WANT_WILDCARD_GLOBBING
 #ifdef _WIN32
 
 class WildcardGlobbingAlgorithm: public AbstractGlobbingAlgorithm
@@ -403,7 +394,6 @@ public:
 };
 
 #endif // _WIN32
-#endif // WANT_WILDCARD_GLOBBING
 
 
 #define MAKE_ALGORITHM(m_algorithm_pointer) \
@@ -411,10 +401,6 @@ public:
 
 #define MAKE_ALIAS(m_algorithm_pointer) \
     std::make_pair(true, m_algorithm_pointer)
-
-
-// List of algorithm name / algorithm description pairs
-typedef std::list<std::pair<std::string, std::string> > algorithm_list;
 
 
 class Globbing
@@ -431,12 +417,10 @@ public:
         installed_algorithms_ =
             boost::assign::map_list_of
             ("literal", MAKE_ALGORITHM(new LiteralGlobbingAlgorithm))
-#ifdef WANT_WILDCARD_GLOBBING
             ("wildcard", MAKE_ALGORITHM(new WildcardGlobbingAlgorithm))
 #ifndef _WIN32
             ("shell", MAKE_ALGORITHM(new ShellGlobbingAlgorithm))
-#endif //_WIN32
-#endif //WAND_WILDCARD_GLOBBING
+#endif
             ;
 
         setup_alias("literal", "none");
@@ -521,7 +505,7 @@ private:
 
 
 algorithm_list
-known_algorithms()
+known_globbing_algorithms()
 {
     Globbing glob;
     return glob.get_known_algorithms();
@@ -641,7 +625,9 @@ unfold_filename_iter(TraceableFileNameList& result,
             ++line_number;
 
             const key_value_pair comment = get_syntactic_comment(buffer);
-            if ((comment.first == "glob" || comment.first == "globbing") &&
+            if ((comment.first == "glob" ||
+                 comment.first == "globbing" ||
+                 comment.first == "filename-globbing") &&
                 !comment.second.empty())
                 // We silently ignore all other keys or empty
                 // values with the right key.

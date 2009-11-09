@@ -1,12 +1,16 @@
+@cindex @samp{@@} (response file prefix)
 A response file contains names of images or other response filenames.
 Introduce response file names with an at-character (@samp{@@}).
 
+@cindex processing order
+@cindex order, of processing
 Enblend and Enfuse process the list @var{INPUT} strictly from left to
-right, expanding response files in depth-first order.  The following
+right, expanding response files in depth-first order.  (Multi-layer
+files are processed from first layer to the last.) The following
 examples only show Enblend, but Enfuse works exactly the same.
 
 @table @asis
-@item Solely literal filenames.
+@item Solely image filenames.
 Example:
 @example
 enblend image-1.tif image-2.tif image-3.tif
@@ -66,6 +70,7 @@ Ultimate order: @file{image-@/01.png}, @file{image-@/02.png},
 @c @menu
 @c * Response File Format::        Definition of the files' format
 @c * Syntactic Comments::          Control interpretation of response files
+@c * Globbing Algorithms::         Various ways to glob filenames
 @c @end menu
 
 @c @node Response File Format
@@ -73,6 +78,8 @@ Ultimate order: @file{image-@/01.png}, @file{image-@/02.png},
 @cindex response file, format
 @cindex format of response file
 
+@cindex @samp{#} (response file comment)
+@cindex response file, comment (@samp{#})
 Response files contain one filename per line.  Blank lines or lines
 beginning with a sharp sign (@samp{#}) are ignored; the latter can
 serve as comments.  Filenames that begin with an at-character
@@ -117,18 +124,9 @@ application.
 
 @noindent
 The above grammar might unpleasantly surprise the user in the
-some ways:
+some ways.
 
 @table @asis
-@item Literal filenames
-Inside a response file all filenames are treated as literals.  No
-filename globbing or filename expansion is performed.  This is, for
-example, the line
-@example
-img_*.tif
-@end example
-stands for exactly one file, called @samp{img_*.tif}.
-
 @item Whitespace trimmed at both line ends
 For convenience, whitespace at the beginning and at the end of each
 line is ignored.  However, this implies that response files cannot
@@ -145,26 +143,29 @@ img-0.33ev.tif # "middle" EV
 img-1.33ev.tif
 img+0.67ev.tif
 @end example
-only the first line contains a comment, whereas the second lines
+only the first line contains a comment, whereas the second line
 includes none.  Rather, it refers to a file called
 @w{@samp{img-@/0.33ev.tif # "middle" EV}}.
 
 @item Image filenames cannot start with @samp{@@}
-An at-sign always introduces a response file, even if the filename's
-extension hints towards an image.
+An at-sign invariably introduces a response file, even if the
+filename's extension hints towards an image.
 @end table
 
 @cindex response file, force recognition of
 If Enblend or Enfuse do not recognize a response file, they will skip
 the file and issue a warning.  To force a file being recognized as a
-response file add one of the following syntactic comments (see below)
-to the @emph{first} line of the file.
+response file add one of the following syntactic comments to the
+@emph{first} line of the file.
 
 @example
 @group
-# response-file: true
-# enblend-response-file: true
-# enfuse-response-file: true
+@scindex response-file
+response-file: true
+@scindex enblend-response-file
+enblend-response-file: true
+@scindex enfuse-response-file
+enfuse-response-file: true
 @end group
 @end example
 
@@ -195,7 +196,10 @@ nadir.tif
 
 Comments that follow the format described in
 @ref{Table:response-file-syntactic-comment} are treated as
-instructions how to interpret the rest of the response file.
+instructions how to interpret the rest of the response file.  A
+syntactic comment is effective immediately and its effect persists to
+the end of the response file, unless another syntactic comment undoes
+it.
 
 @float Table,Table:response-file-syntactic-comment
 @multitable {@var{syntactic-comment}} {::=} {abcdefghijklmnopqrstuvwxyzabcdefghijklm}
@@ -219,3 +223,91 @@ comments in response files.}
 @end float
 
 Unknown syntactic comments are silently ignored.
+
+
+@c @node Globbing Algorithms
+@subsection Globbing Algorithms
+@cindex globbing algorithms
+@cindex algorithms, globbing
+
+The three equivalent syntactic keys
+@itemize
+@item
+@scindex glob
+@code{glob},
+@item
+@scindex globbing
+@code{globbing}, or
+@item
+@scindex filename-globbing
+@code{filename-globbing}
+@end itemize
+control the algorithm that Enblend or Enfuse use to glob filenames in
+response files.
+
+@cindex globbing algorithm @samp{literal}
+@cindex globbing algorithm @samp{wildcard}
+All versions of Enblend and Enfuse support at least two algorithms:
+@code{literal}, which is the default, and @code{wildcard}.  See
+@ref{Table:globbing-algorithms} for a list of all possible globbing
+algorithms.  To find out about the algorithms in your version of
+Enblend or Enfuse team up the options@tie{}@option{--version} and
+@option{--verbose}.
+
+@float Table,Table:globbing-algorithms
+@table @code
+@item literal
+@cindex globbing algorithm @samp{literal}
+Do not glob.  Interpret all filenames in response files as literals.
+This is the default.
+
+Please keep in mind that whitespace at both ends of a line in a
+response file @emph{always} gets discarded.
+
+@item wildcard
+@cindex globbing algorithm @samp{wildcard}
+@cindex glob(7)
+Glob using the wildcard characters@tie{}@samp{?}, @samp{*}, @samp{[},
+and @samp{]}.
+
+The @acronym{W*N32} implementation only globs the filename part of a
+path, whereas all other implementations perform wildcard expansion in
+@emph{all} path components.  Also see
+@uref{http://www.kernel.org/@/doc/@/man-pages/@/online/@/pages/@/man7/@/glob.7.html,
+glob(7)}.
+
+@item none
+@cindex globbing algorithm @samp{none}
+Alias for @code{literal}.
+
+@item shell
+@cindex globbing algorithm @samp{shell}
+The @code{shell} globbing algorithm works as @code{literal} does.  In
+addition, it interprets the wildcard characters@tie{}@samp{@{},
+@samp{@}}, and @samp{~}.  This makes the expansion process behave more
+like common @acronym{UN*X} shells.
+
+@item sh
+@cindex globbing algorithm @samp{sh}
+Alias for @code{shell}.
+@end table
+
+@caption{Globbing algorithms for the use in response files}
+@shortcaption{Globbing algorithms}
+
+@cindex globbing algorithms
+@cindex algorithms, globbing
+@end float
+
+Example:
+@example
+@group
+# Horizontal panorama
+# 15 images
+
+# filename-globbing: wildcard
+
+image_000[0-9].tif
+image_001[0-4].tif
+@end group
+@end example

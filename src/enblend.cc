@@ -355,6 +355,15 @@ void printVersionAndExit(int argc, char** argv) {
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
     }
 
+    cout << "Supported following globbing algorithms:\n";
+    const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
+    for (enblend::algorithm_list::const_iterator i = algos.begin(); i != algos.end(); ++i) {
+        cout <<
+            "  " << i->first << "\n" <<
+            "    " << i->second << "\n";
+    }
+    cout << "\n";
+
     if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
         cout.flush();
         std::wcout << sig.message() << L"\n\n";
@@ -379,6 +388,9 @@ void printUsageAndExit(const bool error = true) {
     cout <<
         "Usage: enblend [options] [--output=IMAGE] INPUT...\n" <<
         "Blend INPUT images into a single IMAGE.\n" <<
+        "\n" <<
+        "INPUT... are image filenames or response filenames.  Response\n" <<
+        "filenames start with an \"" << RESPONSE_FILE_PREFIX_CHAR << "\" character.\n"
         "\n" <<
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<

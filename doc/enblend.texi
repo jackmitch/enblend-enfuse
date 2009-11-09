@@ -17,6 +17,8 @@
 @set default-image-cache-cachesize 1024@dmn{MB}
 @set default-image-cache-blocksize 2048@dmn{KB}
 
+@c Define a new index for syntactic comments.
+@defcodeindex sc
 @c Define a new index for options.
 @defcodeindex op
 @c %**end of header
@@ -124,6 +126,7 @@ see.
 * Authors::                     Major Contributors
 * FDL::                         @acronym{GNU} Free Documentation License
 * Program Index::               Names of programs referenced
+* Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
 * General Index::               Topic index
 @end menu
@@ -1547,6 +1550,14 @@ Final seam line
 @cindex index, program
 
 @printindex pg
+
+
+@node Syntactic-Comment Index
+@unnumbered Syntactic-Comment Index
+@cindex syntactic-comment index
+@cindex index, syntactic-comment
+
+@printindex sc
 
 
 @node Option Index
