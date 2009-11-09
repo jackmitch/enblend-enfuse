@@ -1020,6 +1020,7 @@ MaskType* createMask(const ImageType* const white,
                                     Arg3(),
                                     Param(NumericTraits<MismatchImagePixelType>::max())));
 
+#ifndef SKIP_OPTIMIZER
     // Strategy 1: Use GDA to optimize placement of snake vertices
     int segmentNumber;
     for (ContourVector::iterator currentContour = contours.begin();
@@ -1116,7 +1117,7 @@ MaskType* createMask(const ImageType* const white,
 
             // Print an explanation if every vertex in a closed contour ended up in the
             // max-cost region after annealing.
-            // FIXME explain how to fix this problem in the error message!
+            // FIXME: explain how to fix this problem in the error message!
             if (snake->empty()) {
                 cerr << endl
                      << command
@@ -1133,6 +1134,7 @@ MaskType* createMask(const ImageType* const white,
              << ": info: strategy 2:";
         cerr.flush();
     }
+#endif // !SKIP_OPTIMIZER
 
     // Adjust cost image for the shortest path algorithm.
     // Areas outside the union region have epsilon cost.
@@ -1154,6 +1156,7 @@ MaskType* createMask(const ImageType* const white,
                                         Arg3()));
     }
 
+#ifndef SKIP_OPTIMIZER
     Rect2D withinMismatchImage(mismatchImageSize);
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.
@@ -1250,6 +1253,7 @@ MaskType* createMask(const ImageType* const white,
     if (Verbose >= VERBOSE_MASK_MESSAGES) {
         cerr << endl;
     }
+#endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {
         const std::string visualizeFilename =
