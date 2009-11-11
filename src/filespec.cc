@@ -18,12 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-
-#include <glob.h>
-#include <unistd.h>
-
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <glob.h>
+#include <unistd.h>
 #endif
 
 #include <cerrno>
