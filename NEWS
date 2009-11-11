@@ -135,6 +135,9 @@ Released on August 25, 2009.
 - New option "--smooth-difference" to blur difference images prior to
   seam-line optimization.
 
+- Long option "--levels" to control the number of levels; duplicates
+  functionality of short option "-l".
+
 
 ** Removed Commandline Options
 

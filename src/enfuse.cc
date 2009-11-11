@@ -346,7 +346,7 @@ void printUsageAndExit(const bool error = true) {
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
-        "  -l LEVELS              number of blending LEVELS to use (1 to 29)\n" <<
+        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to 29)\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
@@ -655,7 +655,8 @@ int process_options(int argc, char** argv)
         DepthId,
         OutputId,
         SaveMasksId, Deprecated_SaveMasksId,
-        WrapAroundId
+        WrapAroundId,
+        LevelsId
     };
 
     static struct option long_options[] = {
@@ -697,6 +698,7 @@ int process_options(int argc, char** argv)
         {"save-masks", optional_argument, 0, SaveMasksId},
         {"SaveMasks", optional_argument, 0, Deprecated_SaveMasksId},
         {"wrap", optional_argument, 0, WrapAroundId},
+        {"levels", required_argument, 0, LevelsId},
         {0, 0, 0, 0}
     };
 
@@ -1238,7 +1240,8 @@ int process_options(int argc, char** argv)
             optionSet.insert(AssociatedAlphaOption);
             break;
 
-        case 'l':
+        case 'l': // FALLTHROUGH
+        case LevelsId:
             // We shall take care of "too many levels" in "bounds.h".
             if (optarg != NULL && *optarg != 0) {
                 ExactLevels =
@@ -1247,7 +1250,7 @@ int process_options(int argc, char** argv)
                                             "too few levels; will use one level",
                                             1U);
             } else {
-                cerr << command << ": option \"-l\" requires an argument" << endl;
+                cerr << command << ": options \"-l\" or \"--levels\" require an argument" << endl;
                 failed = true;
             }
             optionSet.insert(LevelsOption);

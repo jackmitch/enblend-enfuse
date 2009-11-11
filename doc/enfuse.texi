@@ -450,7 +450,9 @@ However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 Print information on the available options then exit.
 
 @item -l @var{LEVELS}
+@itemx --levels=@var{LEVELS}
 @opindex -l
+@opindex --levels
 @cindex pyramid levels
 @cindex levels, pyramid
 Use at most this many @var{LEVELS} for pyramid @footnote{As
