@@ -49,6 +49,11 @@
 
 #define MASK_COMPRESSION "DEFLATE"
 
+// IMPLEMENTATION NOTE: For 30 or more pyramid levels, the full width
+// will just barely fit in a 32-bit integer.  When this range is added
+// to a bounding box it will certainly overflow the vigra::Diff2D.
+#define MAX_PYRAMID_LEVELS 29   //< src::maximum-pyramid-levels 29
+
 // Colors used in the optimizer visualization
 #define VISUALIZE_RGB_COLOR_BLUE1    RGBValue<vigra::UInt8>(  0,   0, 255)
 #define VISUALIZE_RGB_COLOR_BLUE2    RGBValue<vigra::UInt8>(  0,   0, 238)

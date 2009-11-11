@@ -69,11 +69,8 @@ template <typename ImagePixelComponentType>
 unsigned int
 filterHalfWidth(const unsigned int levels)
 {
-    // For levels >= 30, the full width will just barely fit in int32.
-    // When this range is added to a bounding box it will certainly
-    // overflow the Diff2D.
-    vigra_precondition(levels >= 1 && levels <= 29,
-                       "filterHalfWidth: levels outside of range [1, 29]");
+    vigra_precondition(levels >= 1 && levels <= MAX_PYRAMID_LEVELS,
+                       "filterHalfWidth: levels outside of permissible range");
 
     // This is the arithmetic half width.
     const int halfWidth = levels == 1 ? 0 : (1 << (levels + 1)) - 4;

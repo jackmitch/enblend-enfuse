@@ -111,7 +111,7 @@ roiBounds(const Rect2D &inputUnion,
         // of levels that makes the mask spread out to the edges of
         // the iBB.
         const unsigned int shortDimension = min(iBB.width(), iBB.height());
-        while (levels <= 29 &&  //< src::maximum-pyramid-levels 29
+        while (levels <= MAX_PYRAMID_LEVELS &&
                (2 * filterHalfWidth<ImagePixelComponentType>(levels) <= shortDimension)) {
             ++levels;
         }

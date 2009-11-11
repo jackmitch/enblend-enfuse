@@ -396,7 +396,7 @@ void printUsageAndExit(const bool error = true) {
         "  -V, --version          output version information and exit\n" <<
         "  -a                     pre-assemble non-overlapping images\n" <<
         "  -h, --help             print this help message and exit\n" <<
-        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to 29)\n" <<
+        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ")\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
