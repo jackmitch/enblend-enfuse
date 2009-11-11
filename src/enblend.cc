@@ -93,7 +93,7 @@ boost::mt19937 Twister;
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 int Verbose = 1;                //< src::default-verbosity-level 1
-unsigned int ExactLevels = 0U;
+int ExactLevels = 0;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
@@ -396,7 +396,8 @@ void printUsageAndExit(const bool error = true) {
         "  -V, --version          output version information and exit\n" <<
         "  -a                     pre-assemble non-overlapping images\n" <<
         "  -h, --help             print this help message and exit\n" <<
-        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ")\n" <<
+        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ");\n" <<
+        "                         negative number of LEVELS decreases maximum\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
@@ -1148,13 +1149,19 @@ int process_options(int argc, char** argv)
 
         case 'l': // FALLTHROUGH
         case LevelsId:
-            // We shall take care of "too many levels" in "bounds.h".
             if (optarg != NULL && *optarg != 0) {
+                std::ostringstream oss;
+                oss <<
+                    "cannot use more than " << MAX_PYRAMID_LEVELS <<
+                    " pyramid levels; will use at most " << MAX_PYRAMID_LEVELS << " levels";
                 ExactLevels =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1U, //< src::minimum-pyramid-levels 1
-                                            "too few levels; will use one level",
-                                            1U);
+                                            _1 != 0,
+                                            "cannot blend with zero levels; will use at least one level",
+                                            1,
+                                            _1 <= MAX_PYRAMID_LEVELS,
+                                            oss.str(),
+                                            MAX_PYRAMID_LEVELS);
             } else {
                 cerr << command << ": options \"-l\" or \"--levels\" require an argument" << endl;
                 failed = true;

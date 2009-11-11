@@ -459,8 +459,9 @@ Use at most this many @var{LEVELS} for pyramid @footnote{As
 Dr.@tie{}Daniel Jackson correctly
 @uref{http://stargate.wikia.com/@/wiki/@/The_@/Tomb, noted}, actually,
 it is not a pyramid: ``Ziggaurat, it's a
-@uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.}
-blending.
+@uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.''}
+blending if @var{LEVELS} is positive, or reduce the maximum number of
+levels used by @minus{}@var{LEVELS} if @var{LEVELS} is negative.
 
 The number of levels used in a pyramid controls the balance between
 local and global image features (contrast, saturation, @dots{}) in the
@@ -469,11 +470,11 @@ global ones.  The more levels a pyramid has, the more global features
 will be taken into account.
 
 As a guideline, remember that each new level works on a linear scale
-twice as large as the previous level.  So, the zeroth layer, the
-original image, (obviously) defines the image at single-pixel scale,
-the first level works at two pixel scale, and generally, the
-@math{n}-th level contains image data at @math{2^n} pixel scale.  This
-is the reason why an image of
+twice as large as the previous one.  So, the zeroth layer, the
+original image, obviously defines the image at single-pixel scale, the
+first level works at two-pixel scale, and generally, the @math{n}-th
+level contains image data at @math{2^n}-pixel scale.  This is the
+reason why an image of
 @math{width}@classictimes{}@math{height}@tie{}pixels cannot be
 deconstructed into a pyramid of more than
 @ifinfo
@@ -513,16 +514,24 @@ $$
 @end tex
 levels.
 
-If too few levels are used, ``halos'' around regions of high local
-contrast can show up.  On the other hand, if too many levels are used,
-the image might contain too much global contrast.  Usually, the latter
-is not a problem, but is highly desired.  This is the reason, why the
-default is to use as many levels as is possible given the size of the
-overlap regions.  Enfuse may still use a smaller number of levels if
-the geometry of the images demands.
+If too few levels are used, ``halos'' around regions of strong local
+feature variation can show up.  On the other hand, if too many levels
+are used, the image might contain too much global features.  Usually,
+the latter is not a problem, but is highly desired.  This is the
+reason, why the default is to use as many levels as is possible given
+the size of the overlap regions.  Enfuse may still use a smaller
+number of levels if the geometry of the overlap region demands.
 
-The valid range of @var{LEVELS} is @value{src::minimum-pyramid-levels}
-to @value{src::maximum-pyramid-levels}.
+Positive values of @var{LEVELS} limit the maximum number of pyramid
+levels.  Depending on the size and geometry of the overlap regions
+this may or may not influence any pyramid.  Negative values of
+@var{LEVELS} reduce the number of pyramid levels below the maximum no
+matter what the actual maximum is and thus always influence all
+pyramids.
+
+The valid range of the absolute value of @var{LEVELS} is
+@value{src::minimum-pyramid-levels} to
+@value{src::maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}

@@ -102,7 +102,7 @@ roiBounds(const Rect2D &inputUnion,
           Rect2D &roiBB,
           bool wraparoundForMask)
 {
-    unsigned int levels = 1;
+    unsigned int levels = 1;    //< src::minimum-pyramid-levels 1
 
     if (ExactLevels <= 0) {
         // Estimate the number of blending levels to use based on the
@@ -119,6 +119,15 @@ roiBounds(const Rect2D &inputUnion,
         if (levels == 1) {
             cerr << command
                  << ": info: overlap region is too small to make more than one pyramid level"
+                 << endl;
+        }
+
+        if (static_cast<int>(levels) + ExactLevels >= 1) {
+            levels += ExactLevels;
+        } else {
+            levels = 1;
+            cerr << command
+                 << ": warning: will not use less than one pyramid level"
                  << endl;
         }
     } else {
@@ -151,7 +160,7 @@ roiBounds(const Rect2D &inputUnion,
         roiShortDimension = (roiShortDimension + 1) >> 1;
     }
 
-    if (ExactLevels > allowableLevels) {
+    if (levels > allowableLevels) {
         cerr << command
              <<": warning: image geometry precludes using more than "
              << allowableLevels

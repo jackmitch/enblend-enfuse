@@ -46,6 +46,12 @@ Released on August 25, 2009.
 - Without any output filename given, i.e. no "-o" option, the output
   filename now defaults to "a.tif", making "-o" truly an option.
 
+- The user has better control of the number of pyramid levels.
+  Previously only the maximum number in any blend could be reduced
+  by the "-l" option.  Now, the maximum number can be reduced by a
+  fixed amount no matter what the actual maximum number of permissible
+  pyramid levels is.
+
 - Use OpenMP to make better use of multi-processor machines.  As the
   image cache is not reentrant, OpenMP can only be activated when the
   image cache is disabled.
