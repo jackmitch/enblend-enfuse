@@ -101,7 +101,7 @@ using boost::lambda::ret;
 namespace enblend {
 
 /** Data structures for vector masks */
-typedef pair<bool, Point2D> SegmentPoint;
+typedef pair<bool, Point2D> SegmentPoint; // struct {bool isMovable; Point2D segmentPoint;}
 typedef slist<SegmentPoint> Segment;
 typedef vector<Segment*> Contour;
 typedef vector<Contour*> ContourVector;
@@ -115,10 +115,13 @@ dump_segment(const Segment& segment,
     unsigned n = 1U;
     const size_t size = segment.size();
 
-    out << prefix << "{segment with " << size << " point(s):\n" << prefix;
+    out <<
+        prefix << "{segment with " << size <<
+        " point(s): // suffix 'f' means frozen point\n" << prefix;
     for (Segment::const_iterator i = segment.begin(); i != segment.end(); ++i, ++n)
     {
-        out << ' ' << i->second << (i->first ? 'f' : ' ');
+        // Append an 'f' to non-movable ("frozen") segment points.
+        out << ' ' << i->second << (i->first ? ' ' : 'f');
         if (n % points_per_line == 0U && n != size)
         {
             out << '\n' << prefix;
@@ -151,6 +154,88 @@ dump_contourvector(const ContourVector& contourvector,
         dump_contour(**i, prefix + "    ", out);
     }
     out << prefix << "}\n";
+}
+
+
+template <typename ImageType>
+void
+visualizePoint(ImageType& image,
+               const Point2D& location,
+               typename ImageType::PixelType value)
+{
+    typedef typename ImageType::Iterator Iterator;
+
+    Iterator point(image.upperLeft() + location);
+
+    if (point.x >= image.upperLeft().x && point.x < image.lowerRight().x &&
+        point.y >= image.upperLeft().y && point.y < image.lowerRight().y) {
+        image.accessor().set(value, point);
+    }
+}
+
+
+template <typename ImageType>
+void
+visualizePoint(ImageType& image,
+               const Point2D& location,
+               typename ImageType::PixelType value,
+               marker_t marker,
+               int radius)
+{
+    if (radius <= 0)
+    {
+        return;
+    }
+
+    const int r_sqrt2 = rint(static_cast<double>(radius) / 1.414213562373095);
+
+    switch (marker)
+    {
+    case NO_MARKER: return;
+
+    case DOT_MARKER:
+        visualizePoint(image, location, value);
+        break;
+
+    case PLUS_MARKER:
+        for (int i = -radius; i <= radius; ++i)
+        {
+            visualizePoint(image, location + Point2D(i, 0), value);
+            visualizePoint(image, location + Point2D(0, i), value);
+        }
+        break;
+
+    case CROSS_MARKER:
+        for (int i = -r_sqrt2; i <= r_sqrt2; ++i)
+        {
+            visualizePoint(image, location + Point2D(i, i), value);
+            visualizePoint(image, location + Point2D(-i, i), value);
+        }
+        break;
+
+    case HOLLOW_SQUARE_MARKER:
+        for (int i = -r_sqrt2; i <= r_sqrt2; ++i)
+        {
+            visualizePoint(image, location + Point2D(-r_sqrt2, i), value);
+            visualizePoint(image, location + Point2D(r_sqrt2, i), value);
+            visualizePoint(image, location + Point2D(i, -r_sqrt2), value);
+            visualizePoint(image, location + Point2D(i, r_sqrt2), value);
+        }
+        break;
+
+    case HOLLOW_DIAMOND_MARKER:
+        for (int i = 0; i <= radius; ++i)
+        {
+            visualizePoint(image, location + Point2D(i - radius, i), value);
+            visualizePoint(image, location + Point2D(i, i - radius), value);
+            visualizePoint(image, location + Point2D(-i + radius, i), value);
+            visualizePoint(image, location + Point2D(-i, i - radius), value);
+        }
+        break;
+
+    default:
+        visualizePoint(image, location, value);
+    }
 }
 
 
@@ -993,6 +1078,16 @@ MaskType* createMask(const ImageType* const white,
         // Dump cost image into visualize image.
         copyImage(srcImageRange(mismatchImage), destImage(*visualizeImage));
 
+        // Color the parts of the visualize image where the two images
+        // to be blended do not overlap.
+        combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
+                             stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
+                             srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                             destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                             ifThenElse(Arg1() & Arg2(),
+                                        Arg3(),
+                                        Param(VISUALIZE_NO_OVERLAP_VALUE)));
+
         const Diff2D offset = Diff2D(vBB.upperLeft()) - Diff2D(uBB.upperLeft());
         // Draw the initial seam line as a reference.
         for (ContourVector::const_iterator v = contours.begin(); v != contours.end(); ++v) {
@@ -1006,6 +1101,11 @@ MaskType* createMask(const ImageType* const white,
                                       (next->second - offset) / mismatchImageStride,
                                       VISUALIZE_INITIAL_PATH);
                     }
+                    visualizePoint(*visualizeImage,
+                                   (s->second - offset) / mismatchImageStride,
+                                   s->first ? VISUALIZE_MOVABLE_POINT : VISUALIZE_FROZEN_POINT,
+                                   s->first ? MARK_MOVABLE_POINT : MARK_FROZEN_POINT,
+                                   2);
                 }
             }
         }
@@ -1134,7 +1234,6 @@ MaskType* createMask(const ImageType* const white,
              << ": info: strategy 2:";
         cerr.flush();
     }
-#endif // !SKIP_OPTIMIZER
 
     // Adjust cost image for the shortest path algorithm.
     // Areas outside the union region have epsilon cost.
@@ -1146,17 +1245,6 @@ MaskType* createMask(const ImageType* const white,
                                     Param(NumericTraits<MismatchImagePixelType>::one()),
                                     Arg3()));
 
-    if (visualizeImage) {
-        combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                             stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                             srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                             destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                             ifThenElse(Arg1() ^ Arg2(),
-                                        Param(VISUALIZE_NO_OVERLAP_VALUE),
-                                        Arg3()));
-    }
-
-#ifndef SKIP_OPTIMIZER
     Rect2D withinMismatchImage(mismatchImageSize);
 
     // Use Dijkstra to route between moveable snake vertices over mismatchImage.

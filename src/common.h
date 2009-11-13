@@ -59,27 +59,67 @@
 #define VISUALIZE_RGB_COLOR_BLUE2    RGBValue<vigra::UInt8>(  0,   0, 238)
 #define VISUALIZE_RGB_COLOR_BLUE3    RGBValue<vigra::UInt8>(  0,   0, 205)
 #define VISUALIZE_RGB_COLOR_BLUE4    RGBValue<vigra::UInt8>(  0,   0, 139)
+
 #define VISUALIZE_RGB_COLOR_CYAN1    RGBValue<vigra::UInt8>(  0, 255, 255)
 #define VISUALIZE_RGB_COLOR_CYAN2    RGBValue<vigra::UInt8>(  0, 238, 238)
 #define VISUALIZE_RGB_COLOR_CYAN3    RGBValue<vigra::UInt8>(  0, 205, 205)
 #define VISUALIZE_RGB_COLOR_CYAN4    RGBValue<vigra::UInt8>(  0, 139, 139)
+
+#define VISUALIZE_RGB_COLOR_GRAY0    RGBValue<vigra::UInt8>(  0,   0,   0)
+#define VISUALIZE_RGB_COLOR_GRAY63   RGBValue<vigra::UInt8>( 63,  63,  63)
+#define VISUALIZE_RGB_COLOR_GRAY127  RGBValue<vigra::UInt8>(127, 127, 127)
+#define VISUALIZE_RGB_COLOR_GRAY139  RGBValue<vigra::UInt8>(139, 139, 139)
+#define VISUALIZE_RGB_COLOR_GRAY191  RGBValue<vigra::UInt8>(191, 191, 191)
+#define VISUALIZE_RGB_COLOR_GRAY205  RGBValue<vigra::UInt8>(205, 205, 205)
+#define VISUALIZE_RGB_COLOR_GRAY238  RGBValue<vigra::UInt8>(238, 238, 238)
+#define VISUALIZE_RGB_COLOR_GRAY255  RGBValue<vigra::UInt8>(255, 255, 255)
+
 #define VISUALIZE_RGB_COLOR_GREEN1   RGBValue<vigra::UInt8>(  0, 255,   0)
 #define VISUALIZE_RGB_COLOR_GREEN2   RGBValue<vigra::UInt8>(  0, 238,   0)
 #define VISUALIZE_RGB_COLOR_GREEN3   RGBValue<vigra::UInt8>(  0, 205,   0)
 #define VISUALIZE_RGB_COLOR_GREEN4   RGBValue<vigra::UInt8>(  0, 139,   0)
+
 #define VISUALIZE_RGB_COLOR_MAGENTA1 RGBValue<vigra::UInt8>(255,   0, 255)
 #define VISUALIZE_RGB_COLOR_MAGENTA2 RGBValue<vigra::UInt8>(238,   0, 238)
 #define VISUALIZE_RGB_COLOR_MAGENTA3 RGBValue<vigra::UInt8>(205,   0, 205)
 #define VISUALIZE_RGB_COLOR_MAGENTA4 RGBValue<vigra::UInt8>(139,   0, 139)
+
+#define VISUALIZE_RGB_COLOR_ORANGE1  RGBValue<vigra::UInt8>(255, 165,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE2  RGBValue<vigra::UInt8>(238, 154,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE3  RGBValue<vigra::UInt8>(205, 133,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE4  RGBValue<vigra::UInt8>(139,  90,   0)
+
 #define VISUALIZE_RGB_COLOR_RED1     RGBValue<vigra::UInt8>(255,   0,   0)
 #define VISUALIZE_RGB_COLOR_RED2     RGBValue<vigra::UInt8>(238,   0,   0)
 #define VISUALIZE_RGB_COLOR_RED3     RGBValue<vigra::UInt8>(205,   0,   0)
 #define VISUALIZE_RGB_COLOR_RED4     RGBValue<vigra::UInt8>(139,   0,   0)
+
 #define VISUALIZE_RGB_COLOR_YELLOW1  RGBValue<vigra::UInt8>(255, 255,   0)
 #define VISUALIZE_RGB_COLOR_YELLOW2  RGBValue<vigra::UInt8>(238, 238,   0)
 #define VISUALIZE_RGB_COLOR_YELLOW3  RGBValue<vigra::UInt8>(205, 205,   0)
 #define VISUALIZE_RGB_COLOR_YELLOW4  RGBValue<vigra::UInt8>(139, 139,   0)
 
+
+// Different marker types offered by visualizePoint()
+typedef enum
+{
+    NO_MARKER,
+    DOT_MARKER,
+    PLUS_MARKER,
+    CROSS_MARKER,
+    HOLLOW_SQUARE_MARKER,
+    HOLLOW_DIAMOND_MARKER,
+} marker_t;
+
+
+//< src::visualize-movable-point light orange
+#define VISUALIZE_MOVABLE_POINT VISUALIZE_RGB_COLOR_ORANGE1
+//< src::mark-movable-point diamond
+#define MARK_MOVABLE_POINT HOLLOW_DIAMOND_MARKER
+//< src::visualize-frozen-point bright white
+#define VISUALIZE_FROZEN_POINT VISUALIZE_RGB_COLOR_GRAY255
+//< src::mark-frozen-point cross
+#define MARK_FROZEN_POINT CROSS_MARKER
 //< src::visualize-initial-path-color dark yellow
 #define VISUALIZE_INITIAL_PATH       VISUALIZE_RGB_COLOR_YELLOW4
 //< src::visualize-short-path-value-color bright yellow
