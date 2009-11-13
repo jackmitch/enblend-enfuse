@@ -353,16 +353,16 @@ void printVersionAndExit(int argc, char** argv) {
             "\n" <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
-    }
 
-    cout << "Supported following globbing algorithms:\n";
-    const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
-    for (enblend::algorithm_list::const_iterator i = algos.begin(); i != algos.end(); ++i) {
-        cout <<
-            "  " << i->first << "\n" <<
-            "    " << i->second << "\n";
+        cout << "Supported following globbing algorithms:\n";
+        const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
+        for (enblend::algorithm_list::const_iterator i = algos.begin(); i != algos.end(); ++i) {
+            cout <<
+                "  " << i->first << "\n" <<
+                "    " << i->second << "\n";
+        }
+        cout << "\n";
     }
-    cout << "\n";
 
     if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
         cout.flush();
