@@ -22,6 +22,18 @@
 
 #include <string>
 
+#if !defined(HAVE_DECL_STRERROR_R)
+#if defined(STRERROR_R_CHAR_P)
+// GNU
+//     http://www.gnu.org/software/hello/manual/libc/Error-Messages.html
+extern char* strerror_r(int errnum, char* buf, size_t buflen);
+#else
+// POSIX
+//     http://www.opengroup.org/onlinepubs/9699919799/functions/strerror_r.html
+extern int strerror_r(int errnum, char* buf, size_t buflen);
+#endif // STRERROR_R_CHAR_P
+#endif // !HAVE_DECL_STRERROR_R
+
 namespace enblend
 {
     /** Answer the error message associated with anErrorNumber. */
