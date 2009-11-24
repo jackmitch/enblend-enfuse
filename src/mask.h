@@ -174,6 +174,14 @@ visualizePoint(ImageType& image,
 }
 
 
+template <typename T>
+inline T
+round_to(double x)
+{
+    return static_cast<T>(x >= 0.0 ? x + 0.5 : x - 0.5);
+}
+
+
 template <typename ImageType>
 void
 visualizePoint(ImageType& image,
@@ -187,7 +195,7 @@ visualizePoint(ImageType& image,
         return;
     }
 
-    const int r_sqrt2 = rint(static_cast<double>(radius) / 1.414213562373095);
+    const int r_sqrt2 = round_to<int>(static_cast<double>(radius) / 1.414213562373095);
 
     switch (marker)
     {
