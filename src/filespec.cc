@@ -379,7 +379,7 @@ public:
     FileNameList do_glob(const std::string& a_filespec,
                          const FilePositionTrace& trace)
     {
-        run_glob(a_filespec, trace, GLOB_ERR | GLOB_BRACE | GLOB_TILDE_CHECK);
+        run_glob(a_filespec, trace, GLOB_ERR | GLOB_BRACE | GLOB_TILDE);
         convert_to_list();
         globfree(result_vector_);
 
