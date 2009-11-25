@@ -82,7 +82,7 @@ errorMessage(int anErrorNumber)
         return std::string(message);
     }
 #else
-    detail::noErrorMessageAvailable(anErrorNumber)
+    return detail::noErrorMessageAvailable(anErrorNumber);
 #endif // HAVE_STRERROR || HAVE_STRERROR_R
 }
 
