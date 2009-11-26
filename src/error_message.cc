@@ -48,7 +48,7 @@ std::string
 errorMessage(int anErrorNumber)
 {
 #if defined(HAVE_STRERROR) || defined(HAVE_STRERROR_R)
-    const char* message;
+    char* message;
     int return_code;
 #if defined(HAVE_STRERROR_R)
     const size_t buffer_size = 65536;
