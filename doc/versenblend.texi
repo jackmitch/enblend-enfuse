@@ -1,0 +1,4 @@
+@set UPDATED 12 November 2009
+@set UPDATED-MONTH November 2009
+@set EDITION 4.0-dd32463fe9de
+@set VERSION 4.0-dd32463fe9de

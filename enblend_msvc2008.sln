@@ -1,0 +1,52 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "enblend", "src\enblend_msvc2008.vcproj", "{A1402918-6CCA-4625-A83B-FF965635D7BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{687B0862-A655-447F-8B25-292F0911E776} = {687B0862-A655-447F-8B25-292F0911E776}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vigra_impex", "src\vigra_impex\vigra_impex_msvc2008.vcproj", "{687B0862-A655-447F-8B25-292F0911E776}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "enfuse", "src\enfuse_msvc2008.vcproj", "{11402918-6CCA-4625-A83B-FF965635D7BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A1402918-6CCA-4625-A83B-FF965635D7BE} = {A1402918-6CCA-4625-A83B-FF965635D7BE}
+		{687B0862-A655-447F-8B25-292F0911E776} = {687B0862-A655-447F-8B25-292F0911E776}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release_NoSSE|Win32 = Release_NoSSE|Win32
+		Release_OpenMP|Win32 = Release_OpenMP|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Debug|Win32.Build.0 = Debug|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release_NoSSE|Win32.ActiveCfg = Release_NoSSE|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release_NoSSE|Win32.Build.0 = Release_NoSSE|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release_OpenMP|Win32.ActiveCfg = Release_OpenMP|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release_OpenMP|Win32.Build.0 = Release_OpenMP|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release|Win32.ActiveCfg = Release|Win32
+		{A1402918-6CCA-4625-A83B-FF965635D7BE}.Release|Win32.Build.0 = Release|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Debug|Win32.ActiveCfg = Debug|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Debug|Win32.Build.0 = Debug|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release_NoSSE|Win32.ActiveCfg = Release_NoSSE|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release_NoSSE|Win32.Build.0 = Release_NoSSE|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release_OpenMP|Win32.ActiveCfg = Release_OpenMP|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release_OpenMP|Win32.Build.0 = Release_OpenMP|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release|Win32.ActiveCfg = Release|Win32
+		{687B0862-A655-447F-8B25-292F0911E776}.Release|Win32.Build.0 = Release|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Debug|Win32.Build.0 = Debug|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release_NoSSE|Win32.ActiveCfg = Release_NoSSE|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release_NoSSE|Win32.Build.0 = Release_NoSSE|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release_OpenMP|Win32.ActiveCfg = Release_OpenMP|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release_OpenMP|Win32.Build.0 = Release_OpenMP|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release|Win32.ActiveCfg = Release|Win32
+		{11402918-6CCA-4625-A83B-FF965635D7BE}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
