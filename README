@@ -58,8 +58,46 @@ Also see INSTALL for further information.
 
 ** Mercurial Repository
 
+*** AutoConf/AutoMake
+
+In the root directory of the project issue:
+
         make --makefile=Makefile.scm
         ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+The package fully supports VPATH builds.  Thus the following command
+sequence builds in a separate directory.
+
+        cd ROOT-DIRECTORY
+        make --makefile=Makefile.scm
+        mkdir BUILD-DIR
+        cd BUILD-DIR
+        ROOT-DIRECTORY/configure YOUR-OPTIONS-IF-ANY-GO-HERE
+        make
+        make install
+
+
+*** CMake
+
+The canonical way to build Enblend and Enfuse is with Autotools, this
+is, autoconf(1) and automake(1).  An alternative CMake build has been
+added since version 4.0.
+
+The CMake build strives to replicate the Autotools build.  It may or
+may not work for you.  It is currently maintained but not supported,
+meaning that it could break anywhere anytime in the future.
+
+        cmake .
+        make
+        make install
+
+Analogously to Autotools, CMake allows for VPATH builds:
+
+        mkdir BUILD-DIR
+        cd BUILD-DIR
+        cmake ROOT-DIRECTORY
         make
         make install
 
@@ -71,8 +109,12 @@ configure(1) script offers the following options to tailor Enblend and
 Enfuse.  Remember that configure(1) creates a file called "config.h"
 that can serve for fine-tuning the configuration.
 
+We write the default values of all configuration options in capital
+letters.
+
 
 ** --enable-gpu-support=CHECK/yes/no
+   -DENABLE_GPU:BOOL=OFF/on    (CMake)
 
 Enable code in Enblend to use the GPU for optimizing the seam line
 between two images if all necessary OpenGL libraries are found.
@@ -87,6 +129,7 @@ See also option "--with-apple-opengl-framework".
 
 
 ** --enable-openmp=yes/NO
+   -DENABLE_OPENMP:BOOL=ON/off    (CMake)
 
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
@@ -103,6 +146,7 @@ on the usage of these variables.
 
 
 ** --enable-split-doc=YES/no
+   -DNOSPLIT=OFF/on    (CMake)
 
 Split the documentation files in INFO or HTML format into small
 pieces.  The default is "yes", split documentation.
@@ -115,6 +159,7 @@ default is "no", build an optimized version without debugging symbols.
 
 
 ** --enable-image-cache=YES/no
+   -DENABLE_IMAGECACHE:BOOL=OFF/on    (CMake)
 
 Activate the image-cache feature, which allows for processing of large
 images.  The image cache handles swapping parts of the images to disk.
@@ -161,6 +206,82 @@ http://www.openexr.com/ for the required libraries.
 
 Set PATH to TrueType fonts.  This is only required for building the
 documentation.
+
+
+* CMake Specifics
+
+** Configuration Options
+
+These options only apply to CMake.
+
+
+*** -DCPACK_BINARY_<SYSTEM>:BOOL=OFF/on
+
+Create a package for the specified <SYSTEM>, where <SYSTEM> is "DEB",
+"RPM", or "NSIS".
+
+
+*** -DCPACK_BINARY_<SYSTEM>:BOOL=ON/off
+
+Create other packages for the specified <SYSTEM>, where <SYSTEM> is
+"TBZ2", "TGZ", "STGZ", or "TZ".
+
+
+*** -DPACK_SOURCE_<SYSTEM>:BOOL=OFF/on
+
+Create a source package for the specified <SYSTEM>, where <SYSTEM> is
+"TBZ2", "TGZ", "TZ", or "ZIP".
+
+
+** Configuration Example
+
+Creating a RedHat package on OpenSuSE
+
+        cmake . \
+            -DDOC=ON -DENABLE_GPU:BOOL=ON \
+            -DENABLE_IMAGECACHE:BOOL=OFF -DENABLE_OPENMP:BOOL=ON \
+            -DCPACK_BINARY_RPM:BOOL=ON
+        make package
+
+This will create a package enblend-4.0.595-Linux.rpm, which you may
+install with
+
+        sudo rpm -U enblend-4.0.595-Linux.rpm
+
+
+** Important Configured Make(1) Targets
+
+help                     List all available targets.
+
+edit_cache               If  cmake-gui(1) is installed, start the GUI
+                         to edit the "CMakeCache.txt" file.
+
+enblend                  Create an Enblend executable.
+
+enfuse                   Create an Enfuse executable.
+
+man                      Create the manual pages for Enblend and
+                         Enfuse.
+
+doc3                     Create the documentation.  This includes
+                         html, info, and pdf documents, if the
+                         cmake-option DOC was set.
+
+install                  Install everything in the proper places.
+
+package                  Create package(s) specified with the
+                         CPACK_BINARY_<SYSTEM>:BOOL parameter of
+                         CMake.  It is preferred to create a package
+                         and use the package manager to install it
+                         rather than using the "install" target.
+
+rebuild_cache            In a changed environment (e.g. newly
+                         installed packages) this is the way to
+                         discard cached values, so that CMake again
+                         starts searching for everything.
+
+package_source           Build a source package like autotools
+                         "make dist".
 
 
 * Extra Make(1) Variables
