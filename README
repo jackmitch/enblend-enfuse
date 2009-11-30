@@ -360,6 +360,160 @@ To avoid direct linkage to the two X11 libraries Xmi and Xi add
 
 ** Win
 
+*** General
+
+The archive contains two versions of Enblend and Enfuse.
+
+
+**** enblend.exe/enfuse.exe
+
+These executables are the standard release.  They are using one
+processor core and the Image Cache for processing very big images.
+
+
+**** enblend_openmp.exe/enfuse_openmp.exe
+
+These executables can utilize several cores of modern multi-core
+processors and are therefore significantly faster on modern
+processors.  But they may fail on very big images because they are
+working without the IMAGE CACHE.  In this case, please switch to the
+standard version.
+
+For running the OpenMP variants you will need "Microsoft Visual C++
+2008 Redistributable Package (x86)" found at
+
+        http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en
+
+Both variants can utilize a modern graphic card to accelerate the
+optimizing of the seam line between two images.
+
+
+*** Compiling on Windows
+
+**** Prerequisites
+
+You will need to following tools for compiling:
+
+- MS Visual C++ 2008, Express Edition suffices
+- CMake, at least version 2.4, though version 2.6 is preferred
+- Perl, e.g. ActiveState Perl
+
+CMake expects all sources and libraries in one folder.  So, create a
+folder, e.g., "d:\src", extract Enblend/Enfuse into this folder, and
+also put all libraries into this folder.
+
+You need the following libraries for reading and writing different
+image formats (in square brackets we give the version and foldername
+of the used libraries as of December 2009):
+
+- libtiff  [libtiff-4.0.0beta5]
+- zlib, required by libtiff  [1.2.3 in zlib]
+- libjpeg (optional)  [jpeg-7]
+- libpng (optional)  [libpng-1.2.40]
+- OpenEXR and IlmBase (optional), compiled libraries are
+   expected in folder "Deploy"  [OpenEXR-1.6.1 and IlmBase-1.0.1]
+
+Enblend/Enfuse also depends on the following libraries:
+
+- Boost  [1.39 in boost_1_39_0]
+    - Only header files are used by default.
+    - Optionally, Enblend/Enfuse can use the Filesystem Library.
+      However, this library needs to compiled against STLport.
+- Little-CMS  [1.18a in lcm-1.18]
+- libxmi  [libxmi-1.2]
+- STLport  [stlport-5.2.1]
+
+For compiling with GPU support, you need:
+
+- GLUT for Win32  [3.7.6 in glut]
+- OpenGL Extension Wrangler Library GLEW  [1.5.1 in glew]
+
+For compiling with OpenMP support you will additionally need Windows
+SDK for Windows Server 2008 and .NET Framework 3.5 found at
+
+        http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+
+
+**** Compile
+
+1. Start cmake-gui(1) or cmake-setup(1).
+2. Enter path to Enblend/Enfuse source in "Where is the source code".
+3. Enter path where to build the executable,
+   e.g. "d:\src\build-enblend".  In following, it will be denoted as
+   <BUILDDIR>.
+4. Select "Configure" when asked for a generator select "Visual Studio
+   9 2008" and "Use default native compiler".
+5. Activate the appropriate options.
+
+
+***** ENABLE_GPU=on/OFF
+
+Enable code in Enblend to use the GPU for optimizing the seam line
+between two images if all necessary OpenGL libraries are found.
+Enfuse does not benefit of this code.  OpenMP (see below) and GPU work
+together.
+
+Note that enabling GPU support does not mean Enblend will actually use
+the GPU.  Besides passing option "--gpu" to Enblend the hardware as
+well as the graphic card drivers have to fulfill certain requirements.
+
+
+***** ENABLE_IMAGECACHE=ON/off
+
+Activate the Image-Cache feature, which allows for processing of large
+images.  The Image Cache handles swapping parts of the images to disk.
+The default is "on", i.e., enable the image cache.
+
+The image cache is recommended on systems where memory is scarce, but
+the images to blend or fuse are large.
+
+The image-cache feature and OpenMP support must not be activated
+together.
+
+
+***** ENABLE_OPENMP=on/OFF
+
+Parallelize parts of Enblend and Enfuse with OpenMP.  See
+        http://www.openmp.org/
+
+Note that OpenMP support and the image cache must not be activated
+both.  The default is to configure with image cache and without
+OpenMP.
+
+If OpenMP support has been enabled, the utilization of special
+features of the actual, underlying OpenMP implementation can be
+controlled as usual with the environment variables OMP_NUM_THREADS,
+OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
+on the usage of these variables.
+
+
+***** ENABLE_SSE2=on/OFF
+
+Creates executable which make use of the advanced features (SSE2) of
+modern processors.
+
+
+***** DOC=OFF
+
+Set the variable DOC to off.  Building the documentation requires more
+tools and not all of them are available for Windows in the current
+version.
+
+
+**** Compile (cont.)
+
+ 6. Select "Configure".  Maybe you need start the configuration step
+    several times until all dependencies are resolved.
+ 7. Select "Generate".
+ 8. Close CMake.
+ 9. Open solution file <BUILDDIR>\enblend.sln.
+10. Select "Release" in Solution Configuration pull-down menu, and
+    then choose Build > Build Solution.  This step takes some time.
+11. Select project "INSTALL" in Solution Explorer, and then choose
+    Build > Project Only > Build Only INSTALL.
+12. Close Visual C++ 2008 Express Edition
+13. Find the generated executables in <BUILDDIR>\INSTALLDIR\FILES.
+
 
 * License
 
