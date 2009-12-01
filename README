@@ -114,7 +114,7 @@ letters.
 
 
 ** --enable-gpu-support=CHECK/yes/no
-   -DENABLE_GPU:BOOL=OFF/on    (CMake)
+   -DENABLE_GPU=OFF/on    (CMake)
 
 Enable code in Enblend to use the GPU for optimizing the seam line
 between two images if all necessary OpenGL libraries are found.
@@ -129,7 +129,7 @@ See also option "--with-apple-opengl-framework".
 
 
 ** --enable-openmp=yes/NO
-   -DENABLE_OPENMP:BOOL=ON/off    (CMake)
+   -DENABLE_OPENMP=ON/off    (CMake)
 
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
@@ -159,7 +159,7 @@ default is "no", build an optimized version without debugging symbols.
 
 
 ** --enable-image-cache=YES/no
-   -DENABLE_IMAGECACHE:BOOL=OFF/on    (CMake)
+   -DENABLE_IMAGECACHE=OFF/on    (CMake)
 
 Activate the image-cache feature, which allows for processing of large
 images.  The image cache handles swapping parts of the images to disk.
@@ -238,8 +238,8 @@ Create a source package for the specified <SYSTEM>, where <SYSTEM> is
 Creating a RedHat package on OpenSuSE
 
         cmake . \
-            -DDOC=ON -DENABLE_GPU:BOOL=ON \
-            -DENABLE_IMAGECACHE:BOOL=OFF -DENABLE_OPENMP:BOOL=ON \
+            -DDOC=ON -DENABLE_GPU=ON \
+            -DENABLE_IMAGECACHE=OFF -DENABLE_OPENMP=ON \
             -DCPACK_BINARY_RPM:BOOL=ON
         make package
 

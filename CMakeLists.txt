@@ -101,7 +101,7 @@ ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
 OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
-OPTION(DOC "Create Documentation" ON)
+OPTION(DOC "Create Documentation" OFF)
 OPTION(NOSPLIT "Do not split html-documents" OFF)
 
 IF(NOT CMAKE_CL_64)
@@ -381,7 +381,7 @@ MESSAGE(STATUS "")
 add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
-if (PERL_FOUND)
+if (PERL_FOUND AND DOC)
     add_subdirectory(doc)
 endif()
 
