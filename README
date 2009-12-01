@@ -382,7 +382,7 @@ standard version.
 For running the OpenMP variants you will need "Microsoft Visual C++
 2008 Redistributable Package (x86)" found at
 
-        http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en
+        http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
 
 Both variants can utilize a modern graphic card to accelerate the
 optimizing of the seam line between two images.
@@ -403,15 +403,15 @@ folder, e.g., "d:\src", extract Enblend/Enfuse into this folder, and
 also put all libraries into this folder.
 
 You need the following libraries for reading and writing different
-image formats (in square brackets we give the version and foldername
-of the used libraries as of December 2009):
+image formats.  We state the version and the folder name of the
+libraries used as of December 2009 in square brackets.
 
 - libtiff  [libtiff-4.0.0beta5]
 - zlib, required by libtiff  [1.2.3 in zlib]
 - libjpeg (optional)  [jpeg-7]
 - libpng (optional)  [libpng-1.2.40]
 - OpenEXR and IlmBase (optional), compiled libraries are
-   expected in folder "Deploy"  [OpenEXR-1.6.1 and IlmBase-1.0.1]
+  expected in folder "Deploy"  [OpenEXR-1.6.1 and IlmBase-1.0.1]
 
 Enblend/Enfuse also depends on the following libraries:
 
@@ -431,12 +431,12 @@ For compiling with GPU support, you need:
 For compiling with OpenMP support you will additionally need Windows
 SDK for Windows Server 2008 and .NET Framework 3.5 found at
 
-        http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+        http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en
 
 
 **** Compile
 
-1. Start cmake-gui(1) or cmake-setup(1).
+1. Start cmake-gui or cmake-setup.
 2. Enter path to Enblend/Enfuse source in "Where is the source code".
 3. Enter path where to build the executable,
    e.g. "d:\src\build-enblend".  In following, it will be denoted as
