@@ -3,8 +3,6 @@ AM_CFLAGS = $(EXTRACFLAGS)
 AM_CXXFLAGS = $(EXTRACXXFLAGS)
 AM_LDFLAGS = $(EXTRALDFLAGS)
 
-EXTRA_DIST = vigra_impex_msvc2008.vcproj
-
 noinst_LIBRARIES = libvigra_impex.a
 
 libvigra_impex_a_SOURCES = auto_file.hxx bmp.cxx bmp.hxx byteorder.cxx \

@@ -1,5 +1,4 @@
-EXTRA_DIST = VIGRA_LICENSE README.txt \
-             enblend_msvc2008.sln
+EXTRA_DIST = VIGRA_LICENSE README.txt
 
 if BUILD_DOC
   MAYBE_DOC = doc

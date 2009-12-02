@@ -36,8 +36,7 @@ enfuse_CXXFLAGS = $(AM_CXXFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                   -I${top_srcdir}/include
 
-EXTRA_DIST = enblend_msvc2008.vcproj enfuse_msvc2008.vcproj \
-             enblend.1 enfuse.1 \
+EXTRA_DIST = enblend.1 enfuse.1 \
              gen_sig DefaultSig.pm Sig.pm
 
 DISTCLEANFILES = enblend.1 enfuse.1
