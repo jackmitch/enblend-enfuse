@@ -177,7 +177,7 @@ together.
 Sometimes AutoConf fails to detect Apple's OpenGL framework.  Use this
 option on MAC OS X to force its usage without a test.
 
-See also option "--enable-gpu-support".
+See also option "--enable-gpu-support" and the section MacOSX below.
 
 
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
@@ -356,7 +356,73 @@ To avoid direct linkage to the two X11 libraries Xmi and Xi add
 "--without-x" to the parameters of configure(1).
 
 
-** MacOS
+** MacOSX
+
+*** Compiling on MacOSX
+
+On MacOSX you can build Enblend/Enfuse with Fink and with MacPorts.
+This README only describes the MacPorts way.
+
+
+**** Prerequisites
+
+- XCode: Install the XCode version for your MacOSX version.  Download it
+  from
+          http://developer.apple.com/tools/download/
+
+- MacPorts: Install MacPorts for your MacOSX version.  Download it
+  from
+          http://www.macports.org/
+
+
+**** Provide necessary dependencies
+
+From the command line:
+
+    $ sudo port install make lcms boost jpeg tiff libpng OpenEXR mercurial
+
+Note that Enblend/Enfuse can be build via AutoConf/AutoMake and via
+CMake.  The latter is experimental.  If you want to build via CMake,
+add "cmake" to the previous command line after "mercurial" like this:
+
+    $ sudo port install make lcms boost jpeg tiff libpng OpenEXR mercurial cmake
+
+
+**** Compile
+
+As MacPorts resides in /opt/local, which is not a standard
+library/binary/include path for most source packages, you need to
+specify that during the configure step.
+
+Via AutoConf/AutoMake:
+
+    cd enblend
+    make --makefile=Makefile.scm
+    mkdir build
+    cd build
+    CPPFLAGS=-I/opt/local/include LDFLAGS=-L/opt/local/lib ../configure --with-apple-opengl-framework
+    make
+    sudo make install
+
+
+Via CMake:
+
+    cd enblend
+    make --makefile=Makefile.scm
+    mkdir build
+    cd build
+    CPPFLAGS=-I/opt/local/include LDFLAGS=-L/opt/local/lib cmake ..
+    make
+    sudo make install
+
+This will install Enblend/Enfuse in /usr/local.
+
+
+**** Other compilation options
+
+Please also check the AutoConf/AutoMake and CMake variables for more
+build options.
+
 
 ** Win
 
