@@ -47,8 +47,6 @@ for more information.
 
 * Installation
 
-Also see INSTALL for further information.
-
 ** Tarball
 
         ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
