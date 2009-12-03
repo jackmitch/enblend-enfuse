@@ -68,11 +68,11 @@ MAINTAINERCLEANFILES = enblend.info enfuse.info
 html-local:
 	test -d enblend.html && \
             for i in $(enblend_TEXINFOS); do \
-              test -f $${i%.png}.png && cp $$i enblend.html; \
+              test -f $${i%%.*}.png && cp $${i%%.*}.png enblend.html; \
             done; true
 	test -d enfuse.html && \
             for i in $(enfuse_TEXINFOS); do \
-              test -f $${i%.png}.png && cp $$i enfuse.html; \
+              test -f $${i%%.*}.png && cp $${i%%.*}.png enfuse.html; \
             done; true
 
 .PHONY: clean-local
