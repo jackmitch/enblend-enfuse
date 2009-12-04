@@ -8,7 +8,7 @@
 
 @c %**start of header
 @setfilename enfuse.info
-@settitle Fusing Multiple Images with Enfuse@tie{}@value{VERSION}
+@settitle Fusing Multiple Images with Enfuse @value{VERSION}
 @include auxmac.texi
 @include versenfuse.texi
 @include varsenfuse.texi
@@ -40,16 +40,16 @@
 @c
 
 @copying
-This manual is for Enfuse (version@tie{}@value{VERSION},
-@value{UPDATED}), a program to merge different exposures of the same
-scene to produce an image that looks much like a tonemapped image.
+This manual is for Enfuse (version @value{VERSION}, @value{UPDATED}),
+a program to merge different exposures of the same scene to produce an
+image that looks much like a tonemapped image.
 
 Copyright @copyright{} 2004--2009 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the @acronym{GNU} Free Documentation License,
-Version@tie{}1.2 or any later version published by the Free Software
+Version 1.2 or any later version published by the Free Software
 Foundation; with no Invariant Sections, no Front-Cover Texts and no
 Back-Cover Texts.  A copy of the license is included in the section
 entitled ``@acronym{GNU} Free Documentation License''.
