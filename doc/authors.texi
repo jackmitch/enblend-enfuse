@@ -1,8 +1,6 @@
 @sc{Andrew Mihal} (@email{acmihal@@users.sourceforge.net}) has written
 Enblend and Enfuse.
 
-@sp 1
-
 @noindent
 @strong{Contributors}
 
@@ -15,7 +13,7 @@ contrast criteria.
 @sc{Joe Beda}: Win32 porting up to version@tie{}3.2.
 
 @item
-@sc{Kornel Benko}, @email{kornelbenko.sourceforge.net}: CMake support
+@sc{Kornel Benko}, @email{kornelbenko@@users.sourceforge.net}: CMake support
 for version@tie{}4.0.
 
 @item
@@ -28,10 +26,11 @@ for version@tie{}4.0.
 @sc{Mark} aka mjz: Win32 porting up to version@tie{}3.2.
 
 @item
-@sc{Thomas Modes}: Win32 porting of version@tie{}4.0.
+@sc{Thomas Modes}, @email{tmodes@@users.sourceforge.net}: Win32
+porting of version@tie{}4.0.
 
 @item
-@sc{Ryan Sleevi}, @email{ryansleevi.sourceforge.net}: Win32 porting
+@sc{Ryan Sleevi}, @email{ryansleevi@@users.sourceforge.net}: Win32 porting
 of version@tie{}4.0.
 
 @item
@@ -41,11 +40,9 @@ O(n)-algorithm for the calculation of local contrast, entropy
 weighting, and various other features.
 
 @item
-@sc{Brent Townshend}, @email{btownshend.sourceforge.net}:
+@sc{Brent Townshend}, @email{btownshend@@users.sourceforge.net}:
 @acronym{HDR} support.
 @end itemize
-
-@sp 1
 
 @noindent
 Thanks to @sc{Simon Andriot} and @sc{Pablo Joubert} for suggesting the

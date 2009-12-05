@@ -65,9 +65,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @math{omega}@c
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mi>&omega;</mi>
-</math>
+</mathinline>
 @end html
 @tex
 $\\omega$%
@@ -80,9 +80,9 @@ $\\omega$%
 @math{sigma}@c
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mi>&sigma;</mi>
-</math>
+</mathinline>
 @end html
 @tex
 $\\sigma$%
@@ -95,9 +95,9 @@ $\\sigma$%
 @math{xi}@c
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
     <mi>&xi;</mi>
-</math>
+</mathinline>
 @end html
 @tex
 $\\xi$%

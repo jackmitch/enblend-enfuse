@@ -408,6 +408,16 @@ dnl   can_build_doc=no
 dnl   missing_for_doc="$missing_for_doc dvips"
 dnl fi
 
+AC_CHECK_PROG(TIDY,
+              tidy,
+              tidy,
+              false)
+if test "x$TIDY" = xfalse; then
+    AC_MSG_WARN(cannot find tidy; will not be able to build XHTML documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc tidy"
+fi
+
 AM_CONDITIONAL([BUILD_DOC], [test $can_build_doc = yes])
 if test $can_build_doc = no; then
     no_doc_reason=", because of missing$missing_for_doc"

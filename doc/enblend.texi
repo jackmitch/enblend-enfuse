@@ -779,6 +779,7 @@ For floating-point format, use
 @cindex single precision float, @acronym{IEEE754}
 @acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
 24@dmn{bit} significant
+
 @itemize
 @item
 Minimum normalized value: @semilog{1.2, -38}
@@ -794,6 +795,7 @@ Maximum finite value: @semilog{3.4, 38}
 @cindex double precision float, @acronym{IEEE754}
 @acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
 53@dmn{bit} significant
+
 @itemize
 @item
 Minimum normalized value: @semilog{2.2, -308}
@@ -819,6 +821,7 @@ floating-point numbers.
 @uref{http://@/www.openexr.com/@/about.html#@/features,
 @acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
 10@dmn{bit} significant
+
 @itemize
 @item
 Minimum normalized value: @semilog{9.3, -10}
@@ -1329,6 +1332,7 @@ Set the weights of the seam-line optimizer.  If omitted,
 @var{MISMATCH-WEIGHT} defaults to 1.
 
 The seam-line optimizer considers two qualities of the seam line:
+
 @itemize
 @item
 The distance of the seam line from its initial position, which has
@@ -1446,7 +1450,6 @@ letters refer to the name of the respective input file, whereas
 uppercase ones refer to the name of the output file (@pxref{Common
 Options}).  @ref{Table:mask-template-characters} lists all variables.
 
-@sp 1
 @noindent
 @strong{Visualization Image}
 @cindex visualization image

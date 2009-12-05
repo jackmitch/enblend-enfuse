@@ -64,6 +64,12 @@ MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 # Phony Targets
 
+.PHONY: html
+html:
+	@echo "*** Target 'html' has been deprecated."
+	@echo "*** Use target 'xhtml' instead of 'html'."
+	false
+
 .PHONY: html-local
 html-local:
 	test -d enblend.html && \
@@ -80,23 +86,31 @@ clean-local:
 	-rm -rf enblend.xhtml enfuse.xhtml
 
 
-# The public id is in "tidy.cfg".
-DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+TIDY_FLAGS=-config $(srcdir)/tidy.cfg -file /dev/null
+SED_FLAGS_XHTML=-f $(srcdir)/tidy-post.sed
 
 .PHONY: xhtml
 xhtml: $(HTMLS) html-local
 	for x in $(HTMLS); do \
+          xhtml=$${x/%.html/.xhtml}; \
 	  if test -d $$x; then \
-            test -d $${x/%.html/.xhtml} || mkdir $${x/%.html/.xhtml}; \
-            cp *.png $${x/%.html/.xhtml}; \
+            test -d $$xhtml || mkdir $$xhtml; \
+            cp *.png $$xhtml; \
 	    for y in $$x/*.html; do \
-	      tidy -config @srcdir@/tidy.cfg -file $${y/%.html/.msg} $$y | \
-	        $(SED) -e '1,9s|""|$(DTD_SYSID)|' \
-                       -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' > $${y//.html/.xhtml}; \
+              if test "$$x/" = "$${y%Table_*}" -o "$$x/" = "$${y%Figure_*}"; then \
+                  $(SED) -e 's|>| />|' < $$y > $${y//.html/.xhtml}; \
+              else \
+		  $(TIDY) $(TIDY_FLAGS) $$y | \
+		    $(SED) $(SED_FLAGS_XHTML) \
+			   -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
+			   -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' \
+			   > $${y//.html/.xhtml}; \
+              fi \
             done; \
 	  else \
-	    tidy -config @srcdir@/tidy.cfg -file $${x/%.html/.msg} $$x | \
-	      $(SED) -e '1,9s|""|$(DTD_SYSID)|' > $${x/%.html/.xhtml}; \
+	    $(TIDY) $(TIDY_FLAGS) $$x | \
+	      $(SED) $(SED_FLAGS_XHTML) \
+	    	 -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' > $$xhtml; \
           fi; \
 	done
 

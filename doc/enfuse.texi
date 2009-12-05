@@ -512,6 +512,7 @@ $$
     \lfloor \log_2(\min(\mathit{width}, \mathit{height})) \rfloor
 $$
 @end tex
+
 levels.
 
 If too few levels are used, ``halos'' around regions of strong local
@@ -670,6 +671,7 @@ $$
     S_P(x, y) = \{P(x + m w, y): m \in Z\}.
 $$
 @end tex
+
 This is useful for 360@textdegree{} horizontal panoramas as it
 eliminates the left and right borders.
 
@@ -724,6 +726,7 @@ $$
     S_P(x, y) = \{P(x, y + n h): n \in Z\}.
 $$
 @end tex
+
 This is useful for 360@textdegree{} vertical panoramas, as it
 eliminates the top and bottom borders.
 
@@ -790,6 +793,7 @@ $$
     S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
 $$
 @end tex
+
 In this mode, both left and right borders, as well as top and bottom
 borders, are eliminated.
 @end table
@@ -898,6 +902,7 @@ For floating-point format use
 @cindex single precision float, @acronym{IEEE754}
 @acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
 24@dmn{bit} significant
+
 @itemize
 @item
 Minimal normalized value: @semilog{1.2, -38}
@@ -913,6 +918,7 @@ Maximal finite value: @semilog{3.4, 38}
 @cindex double precision float, @acronym{IEEE754}
 @acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
 53@dmn{bit} significant
+
 @itemize
 @item
 Minimal normalized value: @semilog{2.2, -308}
@@ -938,6 +944,7 @@ floating-point numbers.
 @uref{http://@/www.openexr.com/@/about.html#@/features,
 @acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
 10@dmn{bit} significant
+
 @itemize
 @item
 Minimum normalized value: @semilog{9.3, -10}
@@ -1032,6 +1039,7 @@ Default: @value{src::default-weight-contrast}.  Valid range:
 $@value{src::minimum-weight-contrast} \le \mathit{WEIGHT} \le
 @value{src::maximum-weight-contrast}$.
 @end tex
+
 See @ref{Local Contrast Weighting} and @ref{Expert Options, Option
 contrast-window-size}.
 
@@ -1064,6 +1072,7 @@ Sets the relative @var{WEIGHT} of high local entropy pixels.  Default:
 $@value{src::minimum-weight-entropy} \le \mathit{WEIGHT} \le
 @value{src::maximum-weight-entropy}$.
 @end tex
+
 See @ref{Local Entropy Weighting} and @ref{Expert Options, Options
 entropy-window-size and entropy-cutoff}.
 
@@ -1098,6 +1107,7 @@ pixels contribute more to the final output.  Default:
 $@value{src::minimum-weight-exposure} \le \mathit{WEIGHT} \le
 @value{src::maximum-weight-exposure}$.
 @end tex
+
 @xref{Exposure Weighting}.
 
 @item --exposure-mu=@var{MEAN}
@@ -1193,6 +1203,7 @@ range:
 $@value{src::minimum-weight-saturation} \le \mathit{WEIGHT} \le
 @value{src::maximum-weight-saturation}$.
 @end tex
+
 Saturation weighting is only defined for color images.
 @xref{Saturation Weighting}.
 @end table
@@ -1427,6 +1438,7 @@ Use gray projector@tie{}@var{PROJECTOR} for conversion of
 @tex
 $(R, G, B) \rightarrow Y.$
 @end tex
+
 In version@tie{}@value{VERSION} of Enfuse, the option is effective for
 exposure weighting and local contrast weighting.  Default:
 @samp{average}.
@@ -1510,11 +1522,13 @@ $$
 @end tex
 
 The weights are automatically normalized to one, so
+
 @example
     --gray-projector=channel-mixer:0.25:0.5:0.25
     --gray-projector=channel-mixer:1:2:1
     --gray-projector=channel-mixer:25:50:25
 @end example
+
 all define the same mixer configuration.
 
 The three weights @var{RED-WEIGHT}, @var{GREEN-WEIGHT}, and
@@ -1861,6 +1875,7 @@ $$
     P(i, x, y) \rightarrow Q(x, y),
 $$
 @end tex
+
 @noindent
 where @math{x} runs from 1 to the common width of the images, @math{y}
 from 1 to the common height, and @math{i} from 1 to the number of
@@ -1952,6 +1967,7 @@ $$
     Q(x, y),\hskip4em\hbox{(W)}
 $$
 @end tex
+
 @noindent
 where
 
@@ -1973,15 +1989,16 @@ same constraints
        w_cont * f_cont(P, r_cont) +
        w_ent * f_ent(P, r_ent),}
 @end display
+
 @noindent
 where we have abbreviated @math{P(i, x, y)} to @math{P} for
 simplicity.  The user defines the constants@tie{}@math{w_exp},
 @math{w_sat}, @math{w_cont}, and @math{w_ent} with the options
-@option{--exposure-weight}, @option{--saturation-weight}, @option{--contrast-weight},
-and @option{--entropy-weight}.  The functions@tie{}@math{f_exp},
-@math{f_sat}, @math{f_cont}, and @math{f_ent} along with the window
-sizes@tie{}@math{r_cont} and @math{r_ent} are explained in the next
-sections.
+@option{--exposure-weight}, @option{--saturation-weight},
+@option{--contrast-weight}, and @option{--entropy-weight}.  The
+functions@tie{}@math{f_exp}, @math{f_sat}, @math{f_cont}, and
+@math{f_ent} along with the window sizes@tie{}@math{r_cont} and
+@math{r_ent} are explained in the next sections.
 @end ifinfo
 @html
 </p>
@@ -2099,35 +2116,36 @@ sections.
     </mtable>
 </math>
 
-<p>where we have abbreviated <math
-xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-<mi>P</mi> <mfenced> <mi>i</mi> <mi>x</mi> <mi>y</mi> </mfenced>
-</math> to <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <mi>P</mi> </math> for simplicity.  The user defines
-the constants&nbsp;<math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>w</mi> <mtext>exp</mtext> </msub>
-</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>w</mi> <mtext>sat</mtext> </msub>
-</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>w</mi> <mtext>cont</mtext> </msub>
-</math>, and <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>w</mi> <mtext>ent</mtext> </msub> </math>
-with the options `<tt>--exposure-weight</tt>', `<tt>--saturation-weight</tt>',
-`<tt>--contrast-weight</tt>', and `<tt>--entropy-weight</tt>' respectively.  The
-functions&nbsp;<math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>f</mi> <mtext>exp</mtext> </msub>
-</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>f</mi> <mtext>sat</mtext> </msub>
-</math>, <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>f</mi> <mtext>cont</mtext> </msub>
-</math>, and <math xmlns="http://www.w3.org/1998/Math/MathML"
-display="inline"> <msub> <mi>f</mi> <mtext>ent</mtext> </msub> </math>
-along with the window sizes&nbsp;<math
-xmlns="http://www.w3.org/1998/Math/MathML" display="inline"> <msub>
-<mi>r</mi> <mtext>cont</mtext> </msub> </math> and <math
-xmlns="http://www.w3.org/1998/Math/MathML" display="inline"> <msub>
-<mi>r</mi> <mtext>ent</mtext> </msub> </math> are explained in the
-next sections.</p><p>
+<p>where we have abbreviated
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mi>P</mi> <mrowinline> <mo>(</mo> <mi>i</mi> <mo>,</mo> <mi>x</mi> <mo>,</mo>
+<mi>y</mi> <mo>)</mo> </mrowinline> </mathinline> to
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<mi>P</mi> </mathinline> for simplicity.  The user defines the
+constants&nbsp;<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>w</mi> <mtext>exp</mtext> </msubinline> </mathinline>,
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>w</mi> <mtext>sat</mtext> </msubinline> </mathinline>,
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>w</mi> <mtext>cont</mtext> </msubinline> </mathinline>, and
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>w</mi> <mtext>ent</mtext> </msubinline> </mathinline> with the options
+`<tt>--exposure-weight</tt>', `<tt>--saturation-weight</tt>',
+`<tt>--contrast-weight</tt>', and `<tt>--entropy-weight</tt>'
+respectively.  The
+functions&nbsp;<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>f</mi> <mtext>exp</mtext> </msubinline> </mathinline>,
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>f</mi> <mtext>sat</mtext> </msubinline> </mathinline>,
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>f</mi> <mtext>cont</mtext> </msubinline> </mathinline>, and
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>f</mi> <mtext>ent</mtext> </msubinline> </mathinline> along with the window
+sizes&nbsp;<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>r</mi> <mtext>cont</mtext> </msubinline> </mathinline> and
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<msubinline> <mi>r</mi> <mtext>ent</mtext> </msubinline> </mathinline> are explained in
+the next sections.</p><p>
 @end html
 @tex
 $$
@@ -2192,6 +2210,7 @@ becomes
 @display
 @math{P(i, x, y) --> Q(x, y),}
 @end display
+
 @noindent
 where
 @display
@@ -2359,6 +2378,7 @@ $$
               \left(Y - \mathit{Mu} \over \mathit{Sigma} \right)^2\right),
 $$
 @end tex
+
 @noindent
 whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
 by the command line options@tie{}@option{--exposure-mu} and @option{--exposure-sigma}
@@ -2583,6 +2603,7 @@ $$
     w: x \rightarrow p(\{\omega: X(\omega) = x\}).
 $$
 @end tex
+
 @noindent
 It associates a probability@tie{}@math{p} with each of the @math{n}
 different possible outcomes@tie{}@inlineomega{} of the random
@@ -2639,6 +2660,7 @@ $$
     \hbox{\sf Ex } X := \sum_{i = 1}^n x_i w(x_i).
 $$
 @end tex
+
 @cindex variance
 @noindent
 Using the definition of the expectation value, we define the
@@ -2685,6 +2707,7 @@ $$
     \hbox{\sf Var } X := \hbox{\sf Ex}\left( (X - \hbox{\sf Ex } X)^2 \right),
 $$
 @end tex
+
 @cindex standard deviation
 @noindent
 and the @dfn{standard deviation} as
@@ -2716,6 +2739,7 @@ $$
     \sigma X := \sqrt{\hbox{\sf Var } X}.
 $$
 @end tex
+
 Obviously, the variance of @math{X} is the expectation value of the
 squared deviation from the expectation value of @math{X} itself.  Note
 that the variance's dimension is @math{X}'s dimension squared; the
@@ -2776,6 +2800,7 @@ $$
     \hbox{\sf Ex } X := {1 \over n} \sum_{i = 1}^n x_i.
 $$
 @end tex
+
 @noindent
 In other words: the expectation value is the arithmetic mean of the
 lightness of all pixels in the local analysis window.  Analogously,
@@ -2925,6 +2950,7 @@ $$
     {\exp\left(-{{x^2 + y^2} \over {2 \sigma^2}}\right)}
 $$
 @end tex
+
 @noindent
 The parameter@tie{}@inlinesigma{}, the argument of
 option@tie{}@option{--contrast-edge-scale}, is the length scale on which edges
@@ -2986,6 +3012,7 @@ $$
     {\partial^2 \over \partial x^2} + {\partial^2 \over \partial y^2}
 $$
 @end tex
+
 to @math{g(x, y)}, to arrive at a continuous representation of the
 two-dimensional filter kernel
 @ifinfo
@@ -3045,6 +3072,7 @@ $$
     k(x, y) = {{\xi^2 - 1} \over {\pi \sigma^4}} \exp(-\xi^2),
 $$
 @end tex
+
 where we have used the dimensionless distance@tie{}@inlinexi{} from
 the origin
 @ifinfo
@@ -3094,6 +3122,7 @@ $$
     \xi^2 = {{x^2 + y^2} \over {2 \sigma^2}}.
 $$
 @end tex
+
 @noindent
 Enfuse uses a discrete approximation of @math{k} in the convolution
 with the image.  The operator is radially symmetric with respect to
@@ -3321,6 +3350,7 @@ $$
     H_a(n) := \sum_{x \in S} p(x) \log_a(1 / p(x))
 $$
 @end tex
+
 @cindex entropy
 @noindent
 per emitted message, where we assume the knowledge of the probability
@@ -3385,6 +3415,7 @@ $$
     H_b(n) = H_a(n) / \log_a(b)
 $$
 @end tex
+
 @noindent
 holds for all @math{b > 1}.  We use @math{a = 2} for entropy weighting
 and set the entropy of the ``impossible message'' to zero according to
@@ -3435,6 +3466,7 @@ $$
     \lim_{p \rightarrow 0} \, p \, \log_a(1 / p) = 0.
 $$
 @end tex
+
 @noindent
 @ref{Figure:entropy} shows an entropy function.
 

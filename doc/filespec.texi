@@ -231,6 +231,7 @@ Unknown syntactic comments are silently ignored.
 @cindex algorithms, globbing
 
 The three equivalent syntactic keys
+
 @itemize
 @item
 @scindex glob
@@ -242,6 +243,7 @@ The three equivalent syntactic keys
 @scindex filename-globbing
 @code{filename-globbing}
 @end itemize
+
 control the algorithm that Enblend or Enfuse use to glob filenames in
 response files.
 

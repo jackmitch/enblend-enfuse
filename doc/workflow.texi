@@ -43,6 +43,7 @@ converted multiple times to get several -- typically differently
 
 @noindent
 @emph{Exemplary Benefits}
+
 @itemize
 @item
 Many pictures taken from the same vantage point but showing different

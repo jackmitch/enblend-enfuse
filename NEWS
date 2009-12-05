@@ -4,8 +4,9 @@ Released on December 2, 2009.
 
 ** Improvements
 
-- Huge new documentation in Info, PS, PDF, HTML formats.  XHTML format
-  is still experimental.
+- Huge new documentation in Info, PS, PDF, and XHTML formats.  Plain
+  HTML format is not supported because it cannot portably render
+  MathML.
 
 - New manual pages.
 

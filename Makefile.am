@@ -11,3 +11,8 @@ ACLOCAL_AMFLAGS = -I m4
 
 # created by configure(1)
 DISTCLEANFILES = config-h.texi
+
+
+.PHONY: xhtml
+xhtml:
+	$(MAKE) --directory=doc $@
