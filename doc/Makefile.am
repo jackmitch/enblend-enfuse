@@ -102,6 +102,7 @@ xhtml: $(HTMLS) html-local
               else \
 		  $(TIDY) $(TIDY_FLAGS) $$y | \
 		    $(SED) $(SED_FLAGS_XHTML) \
+			   -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
 			   -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
 			   -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' \
 			   > $${y//.html/.xhtml}; \
@@ -110,6 +111,7 @@ xhtml: $(HTMLS) html-local
 	  else \
 	    $(TIDY) $(TIDY_FLAGS) $$x | \
 	      $(SED) $(SED_FLAGS_XHTML) \
+	    	 -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
 	    	 -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' > $$xhtml; \
           fi; \
 	done
