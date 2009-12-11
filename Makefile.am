@@ -16,3 +16,11 @@ DISTCLEANFILES = config-h.texi
 .PHONY: xhtml
 xhtml:
 	$(MAKE) --directory=doc $@
+
+.PHONY: install-xhtml
+install-xhtml:
+	$(MAKE) --directory=doc $@
+
+.PHONY: uninstall-xhtml
+uninstall-xhtml:
+	$(MAKE) --directory=doc $@

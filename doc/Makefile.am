@@ -64,10 +64,16 @@ MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 # Phony Targets
 
+.PHONY: install-html
+install-html:
+	@echo '*** Target "install-html" has been deprecated.'
+	@echo '*** Use target "install-xhtml" instead of "install-html".'
+	false
+
 .PHONY: html
 html:
-	@echo "*** Target 'html' has been deprecated."
-	@echo "*** Use target 'xhtml' instead of 'html'."
+	@echo '*** Target "html" has been deprecated.'
+	@echo '*** Use target "xhtml" instead of "html".'
 	false
 
 .PHONY: html-local
@@ -114,6 +120,33 @@ xhtml: $(HTMLS) html-local
 	    	 -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
 	    	 -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' > $$xhtml; \
           fi; \
+	done
+
+.PHONY: install-xhtml
+install-xhtml: xhtml
+	@$(NORMAL_INSTALL)
+	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)"
+	for x in $(HTMLS); do \
+          xhtml=$${x/%.html/.xhtml}; \
+	  if test -d $$x; then \
+	    test -d "$(DESTDIR)$(htmldir)/$$xhtml" || mkdir "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	    $(INSTALL_DATA) $$xhtml/* "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	  else \
+	    $(INSTALL_DATA) *.xhtml *.png "$(DESTDIR)$(htmldir)"; \
+	  fi; \
+	done
+
+.PHONY: uninstall-xhtml
+uninstall-xhtml:
+	@$(NORMAL_UNINSTALL)
+	for x in $(HTMLS); do \
+          xhtml=$${x/%.html/.xhtml}; \
+	  if test -d $$x; then \
+	    test -d "$(DESTDIR)$(htmldir)/$$xhtml" || mkdir "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	    echo rm -rf "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	  else \
+	    echo rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.png"; \
+	  fi; \
 	done
 
 
