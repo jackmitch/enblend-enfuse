@@ -32,7 +32,7 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.0-753b534c819d, 4 December 2009),
+This manual is for Enblend (version 4.1-6e6f573e57be, 4 December 2009),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -104,7 +104,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
- Figure 2.1: Photographic workflow with Enblend and Enfuse.
+Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images to form a panorama, an exposure series, a
@@ -716,7 +716,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.0-753b534c819d, only mask
+     In this version of Enblend, 4.1-6e6f573e57be, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -942,7 +942,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.0-753b534c819d)
+     version 3.2 used 1:1.  This version of Enblend (4.1-6e6f573e57be)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
