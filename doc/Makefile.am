@@ -36,7 +36,8 @@ AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    --css-include=@srcdir@/default.css
 export TEXINPUTS=$(top_builddir):$(srcdir)
 
-EXTRA_DIST = docstrings
+EXTRA_DIST = docstrings \
+             tidy.cfg tidy-post.sed
 
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
@@ -92,8 +93,8 @@ clean-local:
 	-rm -rf enblend.xhtml enfuse.xhtml
 
 
-TIDY_FLAGS=-config $(srcdir)/tidy.cfg -file /dev/null
-SED_FLAGS_XHTML=-f $(srcdir)/tidy-post.sed
+TIDY_FLAGS = -config $(srcdir)/tidy.cfg -file /dev/null
+SED_FLAGS_XHTML = -f $(srcdir)/tidy-post.sed
 
 .PHONY: xhtml
 xhtml: $(HTMLS) html-local
