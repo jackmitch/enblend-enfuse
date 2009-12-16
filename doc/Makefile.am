@@ -36,6 +36,8 @@ AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
                    --css-include=@srcdir@/default.css
 export TEXINPUTS=$(top_builddir):$(srcdir)
 
+TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
+
 EXTRA_DIST = docstrings \
              tidy.cfg tidy-post.sed
 

@@ -284,6 +284,8 @@ package_source           Build a source package like autotools
 
 * Extra Make(1) Variables
 
+** Compilation
+
 You can override Makefile variables the usual way.  In addition the
 build process supplies several variables, all starting with "EXTRA",
 that add their value to the "usual suspects".  These are
@@ -299,6 +301,29 @@ To compile for coverage analysis, say
         make EXTRACXXFLAGS="-O0 --coverage" EXTRALDFLAGS="--coverage"
 analogously for profiling analysis
         make EXTRACXXFLAGS=-pg EXTRALDFLAGS=-pg
+
+
+** Documentation Generation
+
+We have introduced the variable
+        EXTRATEXI2DVIFLAGS
+to give the maintainers a tighter control over the generation of the
+hard-copy version of the documentation.  Note that the variable does
+not have an equivalent non-EXTRA sibling in the Automake system.  It
+is particularly useful to supply texi2dvi(1) with "--command"
+parameters that explicitly set the paper size, like, for example,
+        EXTRATEXI2DVIFLAGS="--command=@afourpaper"
+
+    Common paper-size commands are:
+        @smallbook
+        @afivepaper
+        @afourpaper, @afourwide, @afourlatex
+
+    Moreover, you can specify the height and (optionally) width of the
+    main text area on a page with the
+        @pagesizes HEIGHT [, WIDTH]
+    command.  Remember to supply both HEIGHT and WIDTH with
+    appropriate units ("mm", "in", ...).
 
 
 * Documentation
