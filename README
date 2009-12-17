@@ -212,6 +212,10 @@ documentation.
 
 These options only apply to CMake.
 
+*** -DA4=off/ON
+
+Create pdf-documentation using a4 (as oposed to letter) paper size.
+
 
 *** -DCPACK_BINARY_<SYSTEM>:BOOL=OFF/on
 

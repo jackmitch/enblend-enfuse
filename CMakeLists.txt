@@ -103,6 +103,7 @@ OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" OFF)
 OPTION(NOSPLIT "Do not split html-documents" OFF)
+OPTION(A4 "Use A4 for pdf-doc's" ON)
 
 IF(NOT CMAKE_CL_64)
   OPTION(ENABLE_SSE2 "SSE2 Support(Release builds only)" OFF)

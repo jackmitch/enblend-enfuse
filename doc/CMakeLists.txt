@@ -91,6 +91,18 @@ add_custom_command(
 SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" GENERATED)
 list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi")
 
+# create versenblend.texi and versenfuse.texi
+foreach(_cmd enblend enfuse)
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/vers${_cmd}.texi"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/CreateVersTexi.pl" `sh ${TOP_SRC_DIR}/mdate-sh ${TOP_SRC_DIR}/doc/${_cmd}.texi` "${_version_lines}" ${A4} > "${CMAKE_CURRENT_BINARY_DIR}/vers${_cmd}.texi"
+    DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    COMMENT "perl: Creating vers${_cmd}.texi"
+    )
+  SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/vers${_cmd}.texi" GENERATED)
+  list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/vers${_cmd}.texi")
+endforeach(_cmd)
+
 # create varsenblend.texi and varsenfuse.texi
 foreach(_cmd enblend enfuse)
   set(_depends "${TOP_SRC_DIR}/src/${_cmd}.cc"
