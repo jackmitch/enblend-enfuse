@@ -4,6 +4,9 @@ Unreleased.  Current line of development.
 
 ** Improvements
 
+- All deprecated options since version 4.0 have been removed.
+
+
 ** Bug Fixes
 
 

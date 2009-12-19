@@ -1013,9 +1013,6 @@ contributes to the output image.
 @item --contrast-weight=@var{WEIGHT}
 @opindex --contrast-weight
 @cindex weight, local contrast
-@opindex --wContrast @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wContrast}.)
 
 Sets the relative @var{WEIGHT} of high local-contrast pixels.
 Default: @value{src::default-weight-contrast}.  Valid range:
@@ -1046,9 +1043,6 @@ contrast-window-size}.
 @item --entropy-weight=@var{WEIGHT}
 @opindex --entropy-weight
 @cindex weight, entropy
-@opindex --wEntropy @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wEntropy}.)
 
 Sets the relative @var{WEIGHT} of high local entropy pixels.  Default:
 @value{src::default-weight-entropy}.  Valid range:
@@ -1079,9 +1073,6 @@ entropy-window-size and entropy-cutoff}.
 @item --exposure-weight=@var{WEIGHT}
 @opindex --exposure-weight
 @cindex weight, exposure
-@opindex --wExposureMu @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wExposureMu}.)
 
 Sets the relative @var{WEIGHT} of the well-exposedness criterion.
 Increasing this weight relative to the others will make well-exposed
@@ -1112,9 +1103,6 @@ $@value{src::minimum-weight-exposure} \le \mathit{WEIGHT} \le
 
 @item --exposure-mu=@var{MEAN}
 @opindex --exposure-mu
-@opindex --wExposureMu @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wExposureMu}.)
 
 Set the @var{MEAN} (this is, the center) of the Gaussian exposure
 weight curve.  Default: @value{src::default-exposure-mu}.  Valid
@@ -1145,9 +1133,6 @@ Weighting}).
 
 @item --exposure-sigma=@var{STD-DEV}
 @opindex --exposure-sigma
-@opindex --wExposureSigma @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wExposureSigma}.)
 
 Standard deviation @var{STD-DEV} of the Gaussian exposure weight
 curve.  Default: @value{src::default-exposure-sigma}.  Low numbers
@@ -1175,9 +1160,6 @@ Weighting}).
 
 @item --saturation-weight=@var{WEIGHT}
 @opindex --saturation-weight
-@opindex --wSaturation @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--wSaturation}.)
 
 Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
@@ -1219,9 +1201,6 @@ to read the manual before applying them successfully.
 @table @code
 @item --contrast-window-size=@var{SIZE}
 @opindex --contrast-window-size
-@opindex --ContrastWindowSize @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--ContrastWindowSize}.)
 
 Set the window @var{SIZE} for local contrast analysis.  The window
 will be a square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
@@ -1257,9 +1236,6 @@ See also @ref{Fusion Options, Option --contrast-weight} and
 @item --contrast-edge-scale=@var{EDGE-SCALE}
 @itemx --contrast-edge-scale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
 @opindex --contrast-edge-scale
-@opindex --EdgeScale @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--EdgeScale}.)
 
 A non-zero value for @var{EDGE-SCALE} switches on the
 Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
@@ -1338,9 +1314,6 @@ weight as a percentage.
 @item --entropy-cutoff=@var{LOWER-CUTOFF}
 @itemx --entropy-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
 @opindex --entropy-cutoff
-@opindex --EntropyCutoff @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--EntropyCutoff}.)
 
 The first form defines the lower cutoff value below which pixels are
 treated as pure black when calculating the local entropy.  The second
@@ -1377,9 +1350,6 @@ output image.
 
 @item --entropy-window-size=@var{SIZE}
 @opindex --entropy-window-size
-@opindex --EntropyWindowSize @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--EntropyWindowSize}.)
 
 Window @var{SIZE} for local entropy analysis.  The window will be a
 square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
@@ -1412,9 +1382,6 @@ number.
 @item --gray-projector=@var{PROJECTOR}
 @opindex --gray-projector
 @cindex gray projector
-@opindex --GrayProjector @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--GrayProjector}.)
 
 Use gray projector@tie{}@var{PROJECTOR} for conversion of
 @acronym{RGB} images to grayscale masks:
@@ -1671,9 +1638,6 @@ $$
 
 @item --hard-mask
 @opindex --hard-mask
-@opindex --HardMask @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--HardMask}.)
 
 Force hard blend masks on the finest scale.  This is the opposite flag
 of @option{--soft-mask}.
@@ -1688,9 +1652,6 @@ See also @ref{Fusion Options, Option --contrast-weight} and
 
 @item --contrast-min-curvature=@var{CURVATURE}
 @opindex --contrast-min-curvature
-@opindex --MinCurvature @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--MinCurvature}.)
 
 Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
 detection.  Default: @value{src::default-minimum-curvature}.  Append a
@@ -1709,9 +1670,6 @@ left unchanged.  This effectively suppresses weak edges.
 @itemx --save-masks=@var{SOFT-MASK-TEMPLATE}
 @itemx --save-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
 @opindex --save-masks
-@opindex --SaveMasks @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--SaveMasks}.)
 
 Save all weight files as @acronym{TIFF} images.
 @cindex mask, saving
@@ -1746,9 +1704,6 @@ name of the associated input file (@samp{%f}) for easy recognition.
 
 @item --soft-mask
 @opindex --soft-mask
-@opindex --SoftMask @r{(deprecated)}
-(This option supersedes the deprecated
-option@tie{}@option{--SoftMask}.)
 
 Consider all masks when fusing.  This is the default.
 @end table

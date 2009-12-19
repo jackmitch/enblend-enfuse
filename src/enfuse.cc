@@ -633,26 +633,26 @@ int process_options(int argc, char** argv)
     enum OptionId {
         OPTION_ID_OFFSET = 1023,    // Ids start at 1024
         CompressionId,
-        WeightExposureId, Deprecated_WeightExposureId,
-        WeightContrastId, Deprecated_WeightContrastId,
-        WeightSaturationId, Deprecated_WeightSaturationId,
-        WeightMuId, Deprecated_WeightMuId,
-        WeightSigmaId, Deprecated_WeightSigmaId,
-        MinCurvatureId, Deprecated_MinCurvatureId,
-        EdgeScaleId, Deprecated_EdgeScaleId,
-        ContrastWindowSizeId, Deprecated_ContrastWindowSizeId,
-        HardMaskId, Deprecated_HardMaskId,
-        GrayProjectorId, Deprecated_GrayProjectorId,
-        WeightEntropyId, Deprecated_WeightEntropyId,
-        EntropyWindowSizeId, Deprecated_EntropyWindowSizeId,
-        EntropyCutoffId, Deprecated_EntropyCutoffId,
-        SoftMaskId, Deprecated_SoftMaskId,
+        WeightExposureId,
+        WeightContrastId,
+        WeightSaturationId,
+        WeightMuId,
+        WeightSigmaId,
+        MinCurvatureId,
+        EdgeScaleId,
+        ContrastWindowSizeId,
+        HardMaskId,
+        GrayProjectorId,
+        WeightEntropyId,
+        EntropyWindowSizeId,
+        EntropyCutoffId,
+        SoftMaskId,
         VerboseId,
         HelpId,
         VersionId,
         DepthId,
         OutputId,
-        SaveMasksId, Deprecated_SaveMasksId,
+        SaveMasksId,
         WrapAroundId,
         LevelsId
     };
@@ -660,33 +660,19 @@ int process_options(int argc, char** argv)
     static struct option long_options[] = {
         {"compression", required_argument, 0, CompressionId},
         {"exposure-weight", required_argument, 0, WeightExposureId},
-        {"wExposure", required_argument, 0, Deprecated_WeightExposureId},
         {"contrast-weight", required_argument, 0, WeightContrastId},
-        {"wContrast", required_argument, 0, Deprecated_WeightContrastId},
         {"saturation-weight", required_argument, 0, WeightSaturationId},
-        {"wSaturation", required_argument, 0, Deprecated_WeightSaturationId},
         {"exposure-mu", required_argument, 0, WeightMuId},
-        {"wMu", required_argument, 0, Deprecated_WeightMuId},
         {"exposure-sigma", required_argument, 0, WeightSigmaId},
-        {"wSigma", required_argument, 0, Deprecated_WeightSigmaId},
         {"contrast-min-curvature", required_argument, 0, MinCurvatureId},
-        {"MinCurvature", required_argument, 0, Deprecated_MinCurvatureId},
         {"contrast-edge-scale", required_argument, 0, EdgeScaleId},
-        {"EdgeScale", required_argument, 0, Deprecated_EdgeScaleId},
         {"contrast-window-size", required_argument, 0, ContrastWindowSizeId},
-        {"ContrastWindowSize", required_argument, 0, Deprecated_ContrastWindowSizeId},
         {"hard-mask", no_argument, 0, HardMaskId},
-        {"HardMask", no_argument, 0, Deprecated_HardMaskId},
         {"gray-projector", required_argument, 0, GrayProjectorId},
-        {"GrayProjector", required_argument, 0, Deprecated_GrayProjectorId},
         {"entropy-weight", required_argument, 0, WeightEntropyId},
-        {"wEntropy", required_argument, 0, Deprecated_WeightEntropyId},
         {"entropy-window-size", required_argument, 0, EntropyWindowSizeId},
-        {"EntropyWindowSize", required_argument, 0, Deprecated_EntropyWindowSizeId},
         {"entropy-cutoff", required_argument, 0, EntropyCutoffId},
-        {"EntropyCutoff", required_argument, 0, Deprecated_EntropyCutoffId},
         {"soft-mask", no_argument, 0, SoftMaskId},
-        {"SoftMask", no_argument, 0, Deprecated_SoftMaskId},
         {"verbose", optional_argument, 0, VerboseId},
         {"help", no_argument, 0, HelpId},
         {"version", no_argument, 0, VersionId},
@@ -694,7 +680,6 @@ int process_options(int argc, char** argv)
         {"output", required_argument, 0, OutputId},
         {"save-mask", optional_argument, 0, SaveMasksId}, // singular form: not documented, not deprecated
         {"save-masks", optional_argument, 0, SaveMasksId},
-        {"SaveMasks", optional_argument, 0, Deprecated_SaveMasksId},
         {"wrap", optional_argument, 0, WrapAroundId},
         {"levels", required_argument, 0, LevelsId},
         {0, 0, 0, 0}
@@ -716,17 +701,11 @@ int process_options(int argc, char** argv)
         }
 
         switch (code) {
-        case Deprecated_HardMaskId:
-            PENALIZE_DEPRECATED_OPTION("--HardMask", "--hard-mask");
-            // FALLTHROUGH
         case HardMaskId:
             UseHardMask = true;
             optionSet.insert(HardMaskOption);
             break;
 
-        case Deprecated_SoftMaskId:
-            PENALIZE_DEPRECATED_OPTION("--SoftMask", "--soft-mask");
-            // FALLTHROUGH
         case SoftMaskId:
             UseHardMask = false;
             optionSet.insert(SoftMaskOption);
@@ -759,9 +738,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(WrapAroundOption);
             break;
 
-        case Deprecated_MinCurvatureId:
-            PENALIZE_DEPRECATED_OPTION("--MinCurvature", "--contrast-min-curvature");
-            // FALLTHROUGH
         case MinCurvatureId: {
             char *tail;
             errno = 0;
@@ -786,9 +762,6 @@ int process_options(int argc, char** argv)
             break;
         }
 
-        case Deprecated_EdgeScaleId:
-            PENALIZE_DEPRECATED_OPTION("--EdgeScale", "--contrast-edge-scale");
-            // FALLTHROUGH
         case EdgeScaleId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
@@ -869,9 +842,6 @@ int process_options(int argc, char** argv)
             break;
         }
 
-        case Deprecated_EntropyCutoffId:
-            PENALIZE_DEPRECATED_OPTION("--EntropyCutoff", "--entropy-cutoff");
-            // FALLTHROUGH
         case EntropyCutoffId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
@@ -954,9 +924,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(CompressionOption);
             break;
 
-        case Deprecated_GrayProjectorId:
-            PENALIZE_DEPRECATED_OPTION("--GrayProjector", "--gray-projector");
-            // FALLTHROUGH
         case GrayProjectorId:
             if (optarg != NULL && *optarg != 0) {
                 GrayscaleProjector = optarg;
@@ -994,9 +961,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(OutputOption);
             break;
 
-        case Deprecated_SaveMasksId:
-            PENALIZE_DEPRECATED_OPTION("--SaveMasks", "--save-masks");
-            // FALLTHROUGH
         case SaveMasksId:
             if (optarg != NULL && *optarg != 0) {
                 char* s = new char[strlen(optarg) + 1];
@@ -1019,9 +983,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(SaveMasksOption);
             break;
 
-        case Deprecated_WeightExposureId:
-            PENALIZE_DEPRECATED_OPTION("--wExposure", "--exposure-weight");
-            // FALLTHROUGH
         case WeightExposureId:
             if (optarg != NULL && *optarg != 0) {
                 WExposure = enblend::numberOfString(optarg,
@@ -1038,9 +999,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(ExposureWeightOption);
             break;
 
-        case Deprecated_WeightContrastId:
-            PENALIZE_DEPRECATED_OPTION("--wContrast", "--contrast-weight");
-            // FALLTHROUGH
         case WeightContrastId:
             if (optarg != NULL && *optarg != 0) {
                 WContrast = enblend::numberOfString(optarg,
@@ -1057,9 +1015,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(ContrastWeightOption);
             break;
 
-        case Deprecated_WeightSaturationId:
-            PENALIZE_DEPRECATED_OPTION("--wSaturation", "--saturation-weight");
-            // FALLTHROUGH
         case WeightSaturationId:
             if (optarg != NULL && *optarg != 0) {
                 WSaturation = enblend::numberOfString(optarg,
@@ -1077,9 +1032,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(SaturationWeightOption);
             break;
 
-        case Deprecated_WeightMuId:
-            PENALIZE_DEPRECATED_OPTION("--wMu", "--exposure-mu");
-            // FALLTHROUGH
         case WeightMuId:
             if (optarg != NULL && *optarg != 0) {
                 WMu = enblend::numberOfString(optarg,
@@ -1096,9 +1048,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(ExposureMuOption);
             break;
 
-        case Deprecated_WeightSigmaId:
-            PENALIZE_DEPRECATED_OPTION("--wSigma", "--exposure-sigma");
-            // FALLTHROUGH
         case WeightSigmaId:
             if (optarg != NULL && *optarg != 0) {
                 WSigma = enblend::numberOfString(optarg,
@@ -1112,9 +1061,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(ExposureSigmaOption);
             break;
 
-        case Deprecated_WeightEntropyId:
-            PENALIZE_DEPRECATED_OPTION("--wEntropy", "--entropy-weight");
-            // FALLTHROUGH
         case WeightEntropyId:
             if (optarg != NULL && *optarg != 0) {
                 WEntropy = enblend::numberOfString(optarg,
@@ -1144,9 +1090,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(VerboseOption);
             break;
 
-        case Deprecated_ContrastWindowSizeId:
-            PENALIZE_DEPRECATED_OPTION("--ContrastWindowSize", "--contrast-window-size");
-            // FALLTHROUGH
         case ContrastWindowSizeId:
             if (optarg != NULL && *optarg != 0) {
                 ContrastWindowSize =
@@ -1167,9 +1110,6 @@ int process_options(int argc, char** argv)
             optionSet.insert(ContrastWindowSizeOption);
             break;
 
-        case Deprecated_EntropyWindowSizeId:
-            PENALIZE_DEPRECATED_OPTION("--EntropyWindowSize", "--entropy-window-size");
-            // FALLTHROUGH
         case EntropyWindowSizeId:
             if (optarg != NULL && *optarg != 0) {
                 EntropyWindowSize =
