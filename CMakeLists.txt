@@ -383,7 +383,11 @@ add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
 if (PERL_FOUND AND DOC)
-    add_subdirectory(doc)
+  # this should be set from comman line
+  # Possible values like described in README: @smallbook @afivepaper @afourpaper @afourwide @afourlatex
+  # @letterpaper is default
+  set(EXTRATEXI2DVIFLAGS "@letterpaper" CACHE STRING "Papersize: @letterpaper @smallbook @afivepaper @afourpaper @afourwide @afourlatex")
+  add_subdirectory(doc)
 endif()
 
 # Windows installer packaging related stuff

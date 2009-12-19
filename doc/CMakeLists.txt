@@ -232,6 +232,27 @@ if (DOC3:BOOL)
 endif()
 
 find_program(TEXI2DVI_EXE "texi2dvi")
+if(${EXTRATEXI2DVIFLAGS} MATCHES "^\\@")
+  set(TEXI2DVIFLAGS "--command=${EXTRATEXI2DVIFLAGS}")
+  message(STATUS "EXTRATEXI2DVIFLAGS = ${EXTRATEXI2DVIFLAGS}")
+  message(STATUS "Setting TEXI2DVIFLAGS to ${TEXI2DVIFLAGS}")
+else()
+  set(TEXI2DVIFLAGS)
+  message(STATUS "Resetting TEXI2DVIFLAGS")
+endif()
+
+set(_auxdepends)
+foreach(_f auxmac.texi auxmac.tex workflow.texi filespec.texi mask-template-characters.texi
+    understanding-masks.texi tuning-memory-usage.texi helpful-programs.texi bug-reports.texi
+    authors.texi fdl.texi)
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_f}" "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
+    DEPENDS "${TOP_SRC_DIR}/doc/${_f}"
+    )
+  list(APPEND _auxdepends "${CMAKE_CURRENT_BINARY_DIR}/${_f}")
+endforeach()
+
 foreach (_cmd "enblend" "enfuse")
   set(_created "${CMAKE_CURRENT_BINARY_DIR}/${_cmd}")
   if (NOT DOC3:BOOL OR ${MAKEINFO_EXE} MATCHES "-NOTFOUND" OR ${TEXI2DVI_EXE} MATCHES "-NOTFOUND")
@@ -274,12 +295,16 @@ foreach (_cmd "enblend" "enfuse")
       )
     install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
     add_custom_command(
-      OUTPUT "${_created}.pdf"
-      COMMAND ${TEXI2DVI_EXE} "--pdf" "--batch" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      OUTPUT "${_created}.texi"
+      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cmd}.texi" "${_created}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      )
+    add_custom_command(
+      OUTPUT "${_created}.pdf"
+      COMMAND ${TEXI2DVI_EXE} ${TEXI2DVIFLAGS} "--pdf" "--batch" "${_created}.texi"
+      DEPENDS "${_created}.texi"
       ${_${_cmd}_TEXINFOS} ${_depend_gp}
-      "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
+      "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" ${_auxdepends}
       COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
