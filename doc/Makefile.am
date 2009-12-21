@@ -105,12 +105,14 @@ xhtml: $(HTMLS) html-local
 	  if test -d $$x; then \
             test -d $$xhtml || mkdir $$xhtml; \
             cp *.png $$xhtml; \
+	    (cd $$x; ls -1 *.html | $(SED) -ne 's#\(.*\)\.html#s|\1\\.html|\1.xhtml|g#p' > fix-refs.sed); \
 	    for y in $$x/*.html; do \
               if test "$$x/" = "$${y%Table_*}" -o "$$x/" = "$${y%Figure_*}"; then \
                   $(SED) -e 's|>| />|' < $$y > $${y//.html/.xhtml}; \
               else \
 		  $(TIDY) $(TIDY_FLAGS) $$y | \
 		    $(SED) $(SED_FLAGS_XHTML) \
+                           -f $$x/fix-refs.sed \
 			   -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
 			   -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
 			   -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' \

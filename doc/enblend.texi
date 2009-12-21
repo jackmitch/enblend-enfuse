@@ -483,8 +483,8 @@ and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
 pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
 reminded of the
-@uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition},
-@sc{Born}-@sc{von K@'arm@'an} boundary condition.}.
+@uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition,
+@sc{Born}-@sc{von@tie{}K@'arm@'an} boundary condition}.}.
 
 @var{MODE} takes the following values:
 
