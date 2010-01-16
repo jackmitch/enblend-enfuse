@@ -390,6 +390,13 @@ filenames on the command line.
 
 Common options control some overall features of Enfuse.
 
+Enfuse accepts arguments to any option in uppercase as well as in
+lowercase letters.  For example, @samp{deflate}, @samp{Deflate} and
+@samp{DEFLATE} as arguments to the @code{--compression} option
+described below, all instruct Enfuse to use the @sc{Deflate}
+compression scheme.  This manual denotes all arguments in lowercase
+for consistency.
+
 @table @code
 @item --compression=@var{COMPRESSION}
 @opindex --compression
@@ -410,11 +417,11 @@ for @var{COMPRESSION}.
 @item @acronym{TIFF}
 @var{COMPRESSION} is one of the keywords:
 
-@table @samp
-@item NONE
+@table @code
+@item none
 Do not compress.  This is the default.
 
-@item DEFLATE
+@item deflate
 @cindex deflate compression
 @cindex compression, deflate
 Use the @sc{Deflate} compression scheme also called
@@ -422,13 +429,13 @@ Use the @sc{Deflate} compression scheme also called
 compression algorithm that uses a combination of the @acronym{LZ77}
 algorithm and @sc{Huffman} coding.
 
-@item LZW
+@item lzw
 @cindex @acronym{LZW} compression
 @cindex compression, @acronym{LZW}
 Use @sc{Lempel}-@sc{Ziv}-@sc{Welch} (@acronym{LZW}) adaptive
 compression scheme.  @acronym{LZW} compression is lossless.
 
-@item PACKBITS
+@item packbits
 @cindex packbits compression
 @cindex compression, packbits
 Use @sc{PackBits} compression scheme.  @sc{PackBits} is a particular

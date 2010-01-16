@@ -348,13 +348,13 @@ void printUsageAndExit(const bool error = true) {
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
-        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is\n" <<
-        "                         NONE, HORIZONTAL, VERTICAL, or BOTH; default: " <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\"\n" <<
+        "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
         "  --compression=COMPRESSION\n" <<
         "                         set compression of output image to COMPRESSION,\n" <<
         "                         where COMPRESSION is:\n" <<
-        "                         NONE, PACKBITS, LZW, DEFLATE for TIFF files and\n" <<
+        "                         \"none\", \"packbits\", \"lzw\", \"deflate\" for TIFF files and\n" <<
         "                         0 to 100 for JPEG files\n" <<
         "\n" <<
         "Extended options:\n" <<
@@ -362,7 +362,7 @@ void printUsageAndExit(const bool error = true) {
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c                     use CIECAM02 to blend colors\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
-        "                         image, where DEPTH is 8, 16, 32, r32, or r64\n" <<
+        "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -435,6 +435,9 @@ void printUsageAndExit(const bool error = true) {
         "                         %f: filename, %e: extension; lowercase characters\n" <<
         "                         refer to input images uppercase to the output image;\n" <<
         "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
+        "\n" <<
+        "Enfuse accepts arguments to any option in uppercase as\n" <<
+        "well as in lowercase letters.\n" <<
         "\n" <<
         "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         endl;
