@@ -1,7 +1,7 @@
 # This file is part of enblend.
 # Licence details can be found in the file COPYING.
 #
-# Copyright (c) 2009, Kornel Benko <Kornel.Benko@berlin.de>
+# Copyright (c) 2009-2010, Kornel Benko <Kornel.Benko@berlin.de>
 #
 
 include(GetPrerequisites)	# get function gp_append_unique()

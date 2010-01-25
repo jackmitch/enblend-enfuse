@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Christoph L. Spiel
+ * Copyright (C) 2009-2010 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *

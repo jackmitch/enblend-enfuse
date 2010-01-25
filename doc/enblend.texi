@@ -44,7 +44,7 @@ This manual is for Enblend (version @value{VERSION}, @value{UPDATED}),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
-Copyright @copyright{} 2004--2009 @sc{Andrew Mihal}.
+Copyright @copyright{} 2004--2010 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
