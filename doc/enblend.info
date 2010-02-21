@@ -32,9 +32,9 @@ General Index
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-60f6a8a30980, 25 January 2010),
-a tool for compositing images in such a way that the seam between the
-images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.1-60f6a8a30980, 21 February
+2010), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
 1 Overview
 **********
@@ -104,7 +104,7 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
 
-Figure 2.1: Photographic workflow with Enblend and Enfuse.
+ Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
      Take _multiple_ images to form a panorama, an exposure series, a
@@ -698,8 +698,8 @@ cropping of the output image.
 
 `-f WIDTHxHEIGHT'
 `-f WIDTHxHEIGHT+xXOFFSET+yYOFFSET'
-     Set the size of the output image manually to WIDTHxHEIGHT.
-     Optionally specify the X-OFFSET and Y-OFFSET, too.
+     Ensure that the minimum size of the output image is at least
+     WIDTHxHEIGHT.  Optionally specify the X-OFFSET and Y-OFFSET, too.
 
      This option is useful when the input images are cropped TIFF
      files, such as those produced by `nona'.  The stitcher `nona' is

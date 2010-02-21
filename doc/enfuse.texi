@@ -962,18 +962,25 @@ Maximum finite value: @semilog{4.3, 9}
 @end itemize
 
 @item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{X-OFFSET}+y@var{Y-OFFSET}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
 @opindex -f
 @cindex output image, set size of
-Set the size of the output image manually to
-@var{WIDTH}@classictimes{}@var{HEIGHT}.  Optionally specify the
-@var{X-OFFSET} and @var{Y-OFFSET}, too.
+@cindex canvas size
+@cindex size, canvas
+Ensure that the minimum ``canvas'' size of the output image is at
+least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
+the @var{XOFFSET} and @var{YOFFSET}, too.
 
 @pindex nona @r{(Hugin)}
 @pindex hugin
-This option is useful when the input images are cropped @acronym{TIFF}
-files, such as those produced by @command{nona}.  The stitcher
-@command{nona} is part of Hugin.  @xref{Helpful Programs}.
+This option only is useful when the input images are cropped
+@acronym{TIFF} files, such as those produced by
+@command{nona}@footnote{The stitcher @command{nona} is part of Hugin.
+@xref{Helpful Programs}.}.
+
+Note that option@tie{}@option{-f} neither rescales the output image,
+nor shrinks the canvas size below the minimum size occupied by the
+union of all input images.
 
 @item -g
 @opindex -g
