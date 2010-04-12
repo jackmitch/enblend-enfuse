@@ -65,9 +65,19 @@ extern "C"
 #include <png.h>
 }
 
+#define STRINGIFY(m_argument) #m_argument
+
 #if PNG_LIBPNG_VER < 10201
 #error "please update your libpng to at least 1.2.1"
 #endif
+
+#if PNG_LIBPNG_VER >= 10400
+#define PNG_SET_EXPAND_GRAY_1_2_4_TO_8_NAME png_set_expand_gray_1_2_4_to_8
+#else
+#define PNG_SET_EXPAND_GRAY_1_2_4_TO_8_NAME png_set_gray_1_2_4_to_8
+#endif
+#define PNG_SET_EXPAND_GRAY_1_2_4_TO_8_FUNCTION_NAME STRINGIFY(PNG_SET_EXPAND_GRAY_1_2_4_TO_8_NAME)
+#define PNG_SET_EXPAND_GRAY_1_2_4_TO_8(m_image) PNG_SET_EXPAND_GRAY_1_2_4_TO_8_NAME(m_image)
 
 // TODO: per-scanline reading/writing
 
@@ -274,8 +284,8 @@ namespace vigra {
         // expand gray values to at least one byte size
         if ( color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8 ) {
             if (setjmp(png->jmpbuf))
-                vigra_postcondition( false,png_error_message.insert(0, "error in png_set_gray_1_2_4_to_8(): ").c_str());
-            png_set_gray_1_2_4_to_8(png);
+                vigra_postcondition( false, png_error_message.insert(0, "error in " PNG_SET_EXPAND_GRAY_1_2_4_TO_8_FUNCTION_NAME " (): ").c_str());
+            PNG_SET_EXPAND_GRAY_1_2_4_TO_8(png);
             bit_depth = 8;
         }
 
