@@ -1375,10 +1375,10 @@ int main(int argc, char** argv)
                 inputInfo = new ImageImportInfo(info);
             }
             ++layer;
-        } catch (vigra::PreconditionViolation) {
+        } catch (vigra::ContractViolation& exception) {
             cerr <<
-                command << ": cannot load image \"" << filename << "\", because the\n" <<
-                command << ":     format of the file is unrecognized or unknown\n";
+                command << ": cannot load image \"" << filename << "\"\n" <<
+                command << ":     " << exception.message() << "\n";
             if (enblend::maybe_response_file(filename)) {
                 cerr <<
                     command << ": info: Maybe you meant a response file and forgot the initial '" <<

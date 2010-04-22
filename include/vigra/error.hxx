@@ -40,6 +40,7 @@
 
 #include <stdexcept>
 #include <stdio.h>
+#include <cstring>
 #include <string>
 #include "vigra/config.hxx"
           
@@ -127,22 +128,33 @@ class ContractViolation : public StdException
 {
   public:
     ContractViolation(char const * prefix, char const * message, 
-                      char const * file, int line)
+                      char const * file, int line) :
+        message_(new char[1 + strlen(message)])
     {
+        strcpy(message_, message);
         sprintf(what_, "\n%.30s\n%.900s\n(%.100s:%d)\n", prefix, message, file, line);
     }
     
-    ContractViolation(char const * prefix, char const * message)
+    ContractViolation(char const * prefix, char const * message) :
+        message_(new char[1 + strlen(message)])
     {
+        strcpy(message_, message);
         sprintf(what_, "\n%.30s\n%.900s\n", prefix, message);
     }
     
+    const char* message() const throw ()
+    {
+        return message_;
+    }
+
     virtual const char * what() const throw()
     {
         return what_;
     }
   
+    virtual ~ContractViolation() throw () {delete [] message_;}
   private:
+    char* message_;
     enum { bufsize_ = 1100 };
     char what_[bufsize_];
 };
