@@ -31,7 +31,7 @@
 
 #include <GL/glew.h>
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-#include <GLUT/glut.h>
+#include <OpenGL/OpenGL.h>
 #else
 #include <GL/glut.h>
 #endif
@@ -43,6 +43,10 @@ void checkGLErrors(const char* file, unsigned line);
 
 void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
+
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+void cgl_init();
+#endif
 
 bool initGPU(int*, char**);
 bool configureGPUTextures(unsigned int k, unsigned int vars);

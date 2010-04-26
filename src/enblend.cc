@@ -240,44 +240,53 @@ void dump_global_variables(const char* file, unsigned line,
 #ifdef HAVE_LIBGLEW
 void inspectGPU(int argc, char** argv)
 {
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    cgl_init();
+#else
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA);
 
     const int handle = glutCreateWindow("Enblend");
 
-    if (handle >= 1 && glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
-        cout <<
-            "  - " << GLGETSTRING(GL_VENDOR) << "\n" <<
-            "  - " << GLGETSTRING(GL_RENDERER) << "\n" <<
-            "  - version " << GLGETSTRING(GL_VERSION) << "\n"
-            "  - extensions\n";
-
-        const char* const extensions = GLGETSTRING(GL_EXTENSIONS);
-        const char* const extensions_end = extensions + strlen(extensions);
-        const unsigned extensions_per_line = 3U;
-        unsigned count = 1U;
-
-        cout << "    ";
-        for (const char* c = extensions; c != extensions_end; ++c) {
-            if (*c == ' ') {
-                if (count % extensions_per_line == 0U) {
-                    cout << "\n    ";
-                } else {
-                    cout << "  ";
-                }
-                ++count;
-            } else {
-                cout << *c;
-            }
-        }
-        cout << "\n\n";
-    } else {
+    if (!(handle >= 1 && glutGet(GLUT_DISPLAY_MODE_POSSIBLE))) {
         cout << "    <no reliable OpenGL information available>\n";
+        return;
     }
-
-    glutDestroyWindow(handle);
-}
 #endif
+
+    cout <<
+        "  - " << GLGETSTRING(GL_VENDOR) << "\n" <<
+        "  - " << GLGETSTRING(GL_RENDERER) << "\n" <<
+        "  - version " << GLGETSTRING(GL_VERSION) << "\n"
+        "  - extensions\n";
+
+    const char* const extensions = GLGETSTRING(GL_EXTENSIONS);
+    const char* const extensions_end = extensions + strlen(extensions);
+    const unsigned extensions_per_line = 3U;
+    unsigned count = 1U;
+
+    cout << "    ";
+    for (const char* c = extensions; c != extensions_end; ++c) {
+        if (*c == ' ') {
+            if (count % extensions_per_line == 0U) {
+                cout << "\n    ";
+            } else {
+                cout << "  ";
+            }
+            ++count;
+        } else {
+            cout << *c;
+        }
+    }
+    cout << "\n\n";
+
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    CGLDestroyContext(ctx);
+#else
+    glutDestroyWindow(handle);
+#endif
+}
+#endif // HAVE_LIBGLEW
 
 
 /** Print information on the current version and some configuration

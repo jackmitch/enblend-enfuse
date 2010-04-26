@@ -149,11 +149,43 @@ bool checkFramebufferStatus()
 }
 
 
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+void cgl_init()
+{
+    CGLPixelFormatAttribute attribs[] = {
+        kCGLPFAPBuffer,
+        kCGLPFAColorSize, (CGLPixelFormatAttribute) 32,
+        (CGLPixelFormatAttribute) 0
+    };
+    CGLPixelFormatObj pf = NULL;
+    CGLContextObj ctx = NULL;
+    GLint numPixelFormats = 0;
+    CGLError cglError;
+
+    cglError = CGLChoosePixelFormat(attribs, &pf, &numPixelFormats);
+    if (pf == NULL) {
+        cerr << command << ": error " << cglError << " occured when choosing pixel format." << endl;
+    } else {
+        cglError = CGLCreateContext(pf, NULL, &ctx);
+        if (!ctx) {
+            cerr << command << ": error " << cglError << " occured while creating a CGL context" << endl;
+        } else {
+            CGLSetCurrentContext(ctx);
+        }
+    }
+}
+#endif
+
+
 bool initGPU(int* argcp, char** argv)
 {
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    cgl_init();
+#else
     glutInit(argcp, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
     GlutWindowHandle = glutCreateWindow("Enblend");
+#endif
 
     const int err = glewInit();
     if (err != GLEW_OK) {
@@ -161,7 +193,11 @@ bool initGPU(int* argcp, char** argv)
              << command << ": " << glewGetErrorString(err) << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine"
              << endl;
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+        CGLDestroyContext(ctx);
+#else
         glutDestroyWindow(GlutWindowHandle);
+#endif
         exit(1);
     }
 
@@ -187,7 +223,11 @@ bool initGPU(int* argcp, char** argv)
              << command << ": extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << "\n"
              << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine" << endl;
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+        CGLDestroyContext(ctx);
+#else
         glutDestroyWindow(GlutWindowHandle);
+#endif
         exit(1);
     }
 
@@ -368,7 +408,15 @@ bool wrapupGPU()
         glDeleteTextures(1, &OutTexture);
     }
 
+#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
+    CGLContextObj ctx = CGLGetCurrentContext();
+    if (ctx)
+    {
+        CGLDestroyContext(ctx);
+    }
+#else
     glutDestroyWindow(GlutWindowHandle);
+#endif
 
     return true;
 }
