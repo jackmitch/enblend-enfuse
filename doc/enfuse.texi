@@ -610,6 +610,25 @@ details, like the extra features that have been compiled in.
 @cindex wrap around
 Blend around the boundaries of the panorama.
 
+As this option significantly increases memory usage and computation
+time only use it, if the panorama will be
+
+@itemize
+@item
+consulted for any kind measurement, this is, all boundaries must match
+as accurately as possible, or
+
+@item
+printed out and the boundaries glued together, or
+
+@item
+@cindex virtual reality
+fed into a virtual reality (@abbr{VR}) generator, which creates a
+seamless environment.
+@end itemize
+
+Otherwise, always avoid this option!
+
 With this option, Enfuse treats the panorama of width@tie{}@math{w}
 and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
