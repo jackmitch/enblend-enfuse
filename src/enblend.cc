@@ -1510,8 +1510,12 @@ int main(int argc, char** argv)
                      << endl;
                 enblend::unroll_trace(inputFileNameIterator->second);
             }
-            if (!std::equal(iccProfile.begin(),
-                            iccProfile.end(),
+            // IMPLEMENTATION NOTE: Newer Vigra libraries have
+            // ICCProfile::operator==.  We substitute STL's equal
+            // function plus some extra checks for the case of empty
+            // profiles.  -- cls @ Thu May 27 14:21:57 UTC 2010
+            if (iccProfile.empty() != inputInfo->getICCProfile().empty() ||
+                !std::equal(iccProfile.begin(), iccProfile.end(),
                             inputInfo->getICCProfile().begin())) {
                 ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                 cmsHPROFILE newProfile = NULL;
@@ -1528,36 +1532,27 @@ int main(int argc, char** argv)
                     }
                 }
 
-                cerr << endl << command << ": input image \""
+                cerr << endl << command << ": warning: input image \""
                      << inputFileNameIterator->first
                      << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
                 enblend::unroll_trace(inputFileNameIterator->second);
-                cerr << command << ":     has ";
+                cerr << command << ": warning: has ";
                 if (newProfile) {
-                    cerr << "ICC profile \""
-                         << cmsTakeProductName(newProfile)
-                         << " "
-                         << cmsTakeProductDesc(newProfile)
-                         << "\"";
+                    cerr << "ICC profile \"" << cmsTakeProductDesc(newProfile) << "\",\n";
                 } else {
-                    cerr << "no ICC profile";
+                    cerr << "no ICC profile,\n";
                 }
-                cerr << ", but previous images have ";
+                cerr << command << ": warning: but first image has ";
                 if (InputProfile) {
-                    cerr << "ICC profile \""
-                         << cmsTakeProductName(InputProfile)
-                         << " "
-                         << cmsTakeProductDesc(InputProfile)
-                         << "\"" << endl;
+                    cerr << "ICC profile \"" << cmsTakeProductDesc(InputProfile) << "\";\n";
                 } else {
-                    cerr << "no ICC profile" << endl;
+                    cerr << "no ICC profile;\n";
                 }
-                cerr << command
-                     << ": warning: blending images with different color spaces\n"
-                     << command
-                     << ": warning:     may have unexpected results"
+                cerr << command << ": warning: blending images with different color spaces\n"
+                     << command << ": warning: may have unexpected results"
                      << endl;
             }
+
             if (inputInfo->width() < minDim) {
                 minDim = inputInfo->width();
             }
