@@ -6,6 +6,11 @@ Unreleased.  Current line of development.
 
 - All deprecated options since version 4.0 have been removed.
 
+- Parallelize CIECAM02 color conversion (option "--ciecam").  Speedups
+  of up to 40% have been reported on the amd64 architecture.  The
+  computationally expensive color-space conversion still slows down
+  blending and fusing by some 25%.
+
 
 ** Bug Fixes
 

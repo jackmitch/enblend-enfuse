@@ -318,7 +318,7 @@ public:
         jch.h /= shift; // exp2(PyramidIntegerBits - 1 - 7);
 
         // convert cartesian to cylindrical
-        const double r = sqrt(jch.C * jch.C + jch.h * jch.h);
+        const double r = hypot(jch.C, jch.h);
         jch.h = (180.0 / M_PI) * atan2(jch.C, jch.h);
         if (jch.h < 0.0) {
             jch.h += 360.0;
@@ -386,27 +386,11 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 
     if (UseCIECAM) {
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << "CIECAM02 color conversion:";
-            cout.flush();
+            cerr << command << ": info: CIECAM02 color conversion" << endl;
         }
-        int w = src_lowerright.x - src_upperleft.x;
-        int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
-        int tick = 1;
-        for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++dest_upperleft.y, ++y) {
-            if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-                if ((y % twentyPercent) == 0) {
-                    cout << " " << tick++ << "/5";
-                    cout.flush();
-                }
-            }
-            transformLine(src_upperleft.rowIterator(),
-                          src_upperleft.rowIterator() + w, sa,
-                          dest_upperleft.rowIterator(), da,
-                          ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
-        }
-        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << endl;
-        }
+        transformImageMP(src_upperleft, src_lowerright, sa,
+                         dest_upperleft, da,
+                         ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
         transformImageMP(src_upperleft, src_lowerright, sa,
                          dest_upperleft, da,
@@ -492,28 +476,12 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 
     if (UseCIECAM) {
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << "CIECAM02 color conversion:";
-            cout.flush();
+            cerr << command << ": info: CIECAM02 color conversion" << endl;
         }
-        int w = src_lowerright.x - src_upperleft.x;
-        int twentyPercent = 1 + ((src_lowerright.y - src_upperleft.y) / 5);
-        int tick = 1;
-        for (int y = 0; src_upperleft.y < src_lowerright.y; ++src_upperleft.y, ++mask_upperleft.y, ++dest_upperleft.y, ++y) {
-            if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-                if ((y % twentyPercent) == 0) {
-                    cout << " " << tick++ << "/5";
-                    cout.flush();
-                }
-            }
-            transformLineIf(src_upperleft.rowIterator(),
-                            src_upperleft.rowIterator() + w, sa,
-                            mask_upperleft.rowIterator(), ma,
-                            dest_upperleft.rowIterator(), da,
-                            ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
-        }
-        if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cout << endl;
-        }
+        transformImageIfMP(src_upperleft, src_lowerright, sa,
+                           mask_upperleft, ma,
+                           dest_upperleft, da,
+                           ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
         // OpenMP changes the result here!  The maximum absolute
         // difference is 1 of 255 for 8-bit images.  -- cls
