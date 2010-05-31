@@ -730,21 +730,25 @@ for this option to be effective.  Find out about extra features with
 @code{enblend --version --verbose}.
 
 @item -c
+@itemx --ciecam
 @opindex -c
+@opindex --ciecam
 @cindex color appearance model
 @cindex @acronym{CIECAM02}
-Use the @acronym{CIECAM02} color appearance model for blending colors.
+Use the @uref{http://@/en.wikipedia.org/@/wiki/@/CIECAM02,
+@acronym{CIECAM02}} color appearance model for blending colors instead
+of blending inside the @acronym{RGB} color cube.
 
 @cindex @acronym{ICC} profile
 @cindex profile, @acronym{ICC}
 @cindex @acronym{sRGB} color space
 @cindex color space, @acronym{sRGB}
-The input files should have embedded @acronym{ICC} profiles if this
-option is specified.  If no @acronym{ICC} profile is present, Enblend
-will assume that the image uses the @acronym{sRGB} color space.  The
-difference between this option and Enblend's default color blending
-algorithm is very slight and will only be noticeable when areas of
-different primary colors are blended together.
+The input files should have embedded
+@uref{http://@/en.wikipedia.org/@/wiki/@/ICC_profile, @acronym{ICC}
+profiles} when this option is specified.  If no @acronym{ICC} profile
+is present, Enblend will assume that the image uses the
+@uref{http://@/en.wikipedia.org/@/wiki/@/SRGB, @acronym{sRGB}} color
+space.
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -924,6 +928,15 @@ Memory Usage} for details.
 Note that Enblend must have been compiled with the image-cache feature
 for this option to be effective.  Find out about extra features with
 @code{enblend --version --verbose}.
+
+@item --no-ciecam
+@opindex --no-ciecam
+@cindex color appearance model
+@cindex @acronym{CIECAM02}
+Disable the use of the @acronym{CIECAM02} color appearance model for
+blending colors.
+
+See option@tie{}@option{--ciecam} for details.
 @end table
 
 

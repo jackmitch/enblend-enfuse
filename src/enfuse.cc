@@ -23,7 +23,7 @@
 
 #ifdef _MSC_VER
 #define isnan _isnan
-#endif //MSC_VER
+#endif // _MSC_VER
 
 #ifdef _WIN32
 // Make sure we bring in windows.h the right way
@@ -33,7 +33,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 #undef DIFFERENCE
-#endif  //  _WIN32
+#endif  // _WIN32
 
 #ifdef __GW32C__
 #undef malloc
@@ -189,7 +189,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
-        "+ UseCIECAM = " << enblend::stringOfBool(UseCIECAM) << ", option \"-c\"\n" <<
+        "+ UseCIECAM = " << enblend::stringOfBool(UseCIECAM) << ", option \"--ciecam\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
         "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
@@ -348,9 +348,10 @@ void printUsageAndExit(const bool error = true) {
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
-        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\"\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
         "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
+        "                         without argument the option selects horizontal wrapping\n" <<
         "  --compression=COMPRESSION\n" <<
         "                         set compression of output image to COMPRESSION,\n" <<
         "                         where COMPRESSION is:\n" <<
@@ -360,7 +361,8 @@ void printUsageAndExit(const bool error = true) {
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
-        "  -c                     use CIECAM02 to blend colors\n" <<
+        "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
+        "                         \"--no-ciecam\"\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
@@ -488,7 +490,7 @@ void sigint_handler(int sig)
 enum AllPossibleOptions {
     VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
     WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
-    BlockSizeOption, CIECAM02Option /* -c */,
+    BlockSizeOption, CIECAM02Option, NoCIECAM02Option,
     DepthOption, AssociatedAlphaOption /* -g */,
     SizeAndPositionOption /* -f */, CacheSizeOption,
     ExposureWeightOption, SaturationWeightOption,
@@ -657,7 +659,9 @@ int process_options(int argc, char** argv)
         OutputId,
         SaveMasksId,
         WrapAroundId,
-        LevelsId
+        LevelsId,
+        CiecamId,
+        NoCiecamId
     };
 
     static struct option long_options[] = {
@@ -685,6 +689,8 @@ int process_options(int argc, char** argv)
         {"save-masks", optional_argument, 0, SaveMasksId},
         {"wrap", optional_argument, 0, WrapAroundId},
         {"levels", required_argument, 0, LevelsId},
+        {"ciecam", no_argument, 0, CiecamId},
+        {"no-ciecam", no_argument, 0, NoCiecamId},
         {0, 0, 0, 0}
     };
 
@@ -1148,9 +1154,15 @@ int process_options(int argc, char** argv)
             optionSet.insert(BlockSizeOption);
             break;
 
-        case 'c':
+        case 'c': // FALLTHROUGH
+        case CiecamId:
             UseCIECAM = true;
             optionSet.insert(CIECAM02Option);
+            break;
+
+        case NoCiecamId:
+            UseCIECAM = false;
+            optionSet.insert(NoCIECAM02Option);
             break;
 
         case 'f':
@@ -1670,9 +1682,9 @@ int main(int argc, char** argv)
         }
 
         // P2 Viewing Conditions: D50, 500 lumens
-        ViewingConditions.whitePoint.X = 96.42;
-        ViewingConditions.whitePoint.Y = 100.0;
-        ViewingConditions.whitePoint.Z = 82.49;
+        ViewingConditions.whitePoint.X = 100.0 * D50X;
+        ViewingConditions.whitePoint.Y = 100.0 * D50Y;
+        ViewingConditions.whitePoint.Z = 100.0 * D50Z;
         ViewingConditions.Yb = 20.0;
         ViewingConditions.La = 31.83;
         ViewingConditions.surround = AVG_SURROUND;

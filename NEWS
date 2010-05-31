@@ -10,6 +10,13 @@ Unreleased.  Current line of development.
 ** Bug Fixes
 
 
+** New Commandline Options
+
+- Short option "-c" now has a sibling called "--ciecam".  The long
+  option also has a negated form: "--no-ciecam"; the short one has
+  not.
+
+
 * Version 4.0
 
 Released on December 13, 2009.
