@@ -118,6 +118,7 @@ see.
 * Overview::                    Overview of Enblend's features
 * Workflow::                    Enblend's role in making panoramas
 * Invocation::                  Command line options and arguments
+* Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Helpful Programs::            Useful other programs
@@ -735,20 +736,22 @@ for this option to be effective.  Find out about extra features with
 @opindex --ciecam
 @cindex color appearance model
 @cindex @acronym{CIECAM02}
-Use the @uref{http://@/en.wikipedia.org/@/wiki/@/CIECAM02,
-@acronym{CIECAM02}} color appearance model for blending colors instead
-of blending inside the @acronym{RGB} color cube.
+Force the use of the @acronym{CIECAM02} color appearance model for
+blending colors instead of blending inside the @acronym{RGB} color
+cube.
 
+@cindex color profile
 @cindex @acronym{ICC} profile
 @cindex profile, @acronym{ICC}
 @cindex @acronym{sRGB} color space
 @cindex color space, @acronym{sRGB}
-The input files should have embedded
-@uref{http://@/en.wikipedia.org/@/wiki/@/ICC_profile, @acronym{ICC}
-profiles} when this option is specified.  If no @acronym{ICC} profile
-is present, Enblend will assume that the image uses the
-@uref{http://@/en.wikipedia.org/@/wiki/@/SRGB, @acronym{sRGB}} color
-space.
+All input files should have identical @acronym{ICC} profiles when this
+option is specified.  If no @acronym{ICC} profile is present, Enblend
+assumes that all images use the @acronym{sRGB} color space.
+@xref{Color Profiles}.
+
+This option can be negated; see option@tie{}@option{--no-ciecam}
+below.
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -936,7 +939,8 @@ for this option to be effective.  Find out about extra features with
 Disable the use of the @acronym{CIECAM02} color appearance model for
 blending colors.
 
-See option@tie{}@option{--ciecam} for details.
+See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
+Profiles}.
 @end table
 
 
@@ -1563,6 +1567,15 @@ Final seam line.
 @page
 
 @include mask-template-characters.texi
+
+
+@node Color Profiles
+@chapter Color Profiles
+@cindex profile, @acronym{ICC}
+@cindex @acronym{ICC} profile
+@cindex color profile
+
+@include color-profiles.texi
 
 
 @node Understanding Masks

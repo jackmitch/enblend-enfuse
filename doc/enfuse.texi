@@ -117,6 +117,7 @@ scene to produce an image that looks much like a tonemapped image.
 * Overview::                    Overview of Enfuse's features
 * Workflow::                    Enfuse's role in combining images
 * Invocation::                  Command line options and arguments
+* Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Weighting Functions::         Description of all weighting functions
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
@@ -147,6 +148,8 @@ Invocation
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
+
+Color Profiles
 
 Weighting Functions
 
@@ -858,20 +861,22 @@ for this option to be effective.  Find out about extra features with
 @opindex --ciecam
 @cindex color appearance model
 @cindex @acronym{CIECAM02}
-Use the @uref{http://@/en.wikipedia.org/@/wiki/@/CIECAM02,
-@acronym{CIECAM02}} color appearance model for blending colors instead
-of blending inside the @acronym{RGB} color cube.
+Force the use of the @acronym{CIECAM02} color appearance model for
+blending colors instead of blending inside the @acronym{RGB} color
+cube.
 
+@cindex color profile
 @cindex @acronym{ICC} profile
 @cindex profile, @acronym{ICC}
 @cindex @acronym{sRGB} color space
 @cindex color space, @acronym{sRGB}
-The input files should have embedded
-@uref{http://@/en.wikipedia.org/@/wiki/@/ICC_profile, @acronym{ICC}
-profiles} when this option is specified.  If no @acronym{ICC} profile
-is present, Enfuse will assume that the image uses the
-@uref{http://@/en.wikipedia.org/@/wiki/@/SRGB, @acronym{sRGB}} color
-space.
+All input files should have identical @acronym{ICC} profiles when this
+option is specified.  If no @acronym{ICC} profile is present, Enfuse
+assumes that all images use the @acronym{sRGB} color space.
+@xref{Color Profiles}.
+
+This option can be negated; see option@tie{}@option{--no-ciecam}
+below.
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -1044,7 +1049,8 @@ for this option to be effective.  Find out about extra features with
 Disable the use of the @acronym{CIECAM02} color appearance model for
 blending colors.
 
-See option@tie{}@option{--ciecam} for details.
+See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
+Profiles}.
 @end table
 
 
@@ -1817,6 +1823,15 @@ Separate all arguments with colons.
 @item --save-masks=%d/soft-%n.tif,%d/hard-%n.tif
 Use a comma.
 @end table
+
+
+@node Color Profiles
+@chapter Color Profiles
+@cindex profile, @acronym{ICC}
+@cindex @acronym{ICC} profile
+@cindex color profile
+
+@include color-profiles.texi
 
 
 @node Weighting Functions

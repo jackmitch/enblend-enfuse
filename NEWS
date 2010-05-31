@@ -11,8 +11,16 @@ Unreleased.  Current line of development.
   computationally expensive color-space conversion still slows down
   blending and fusing by some 25%.
 
+- Enblend and Enfuse integrate seamlessly in color-managed workflow.
+  Input images with color profiles automatically enable CIECAM
+  blending and the output image is assigned the input images' color
+  profile.
+
 
 ** Bug Fixes
+
+- Enblend and Enfuse consistently warn if they are passed input images
+  that alternate between with color profile and without.
 
 
 ** New Commandline Options

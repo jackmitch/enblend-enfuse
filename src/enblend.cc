@@ -63,6 +63,7 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
+#include <boost/logic/tribool.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
 
@@ -94,7 +95,7 @@ int ExactLevels = 0;
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
-bool UseCIECAM = false;
+boost::tribool UseCIECAM = boost::indeterminate;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
@@ -196,7 +197,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
-        "+ UseCIECAM = " << enblend::stringOfBool(UseCIECAM) << ", option \"--ciecam\"\n" <<
+        "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
         "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
@@ -1666,10 +1667,11 @@ int main(int argc, char** argv)
     // Set the output image ICC profile
     outputImageInfo.setICCProfile(iccProfile);
 
-    if (UseCIECAM) {
+    if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
+        UseCIECAM = true;
         if (InputProfile == NULL) {
             cerr << command
-                 << ": warning: input images do not have ICC profiles; assuming sRGB."
+                 << ": warning: input images do not have ICC profiles; assuming sRGB"
                  << endl;
             InputProfile = cmsCreate_sRGBProfile();
         }
