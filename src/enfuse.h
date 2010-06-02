@@ -316,7 +316,7 @@ public:
             for (size_t i = 1; i <= size; ++i)
             {
                 const double p = static_cast<double>(i) / static_cast<double>(size);
-                precomputedLog[i] = static_cast<double>(i);
+                precomputedLog[i] = log(static_cast<double>(i));
                 precomputedEntropy[i] = p * log(p);
             }
         }
