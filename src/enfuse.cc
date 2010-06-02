@@ -131,6 +131,7 @@ cmsHTRANSFORM InputToXYZTransform = NULL;
 cmsHTRANSFORM XYZToInputTransform = NULL;
 cmsViewingConditions ViewingConditions;
 LCMSHANDLE CIECAMTransform = NULL;
+cmsHPROFILE FallbackProfile = NULL;
 
 Signature sig;
 
@@ -191,6 +192,8 @@ void dump_global_variables(const char* file, unsigned line,
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
         "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
+        "+ FallbackProfile = " << (FallbackProfile ? cmsTakeProductDesc(FallbackProfile) : "[none]") <<
+        ", option \"--fallback-profile\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
         "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputHeightCmdLine = " << OutputHeightCmdLine << ", argument to option \"-f\"\n" <<
@@ -364,6 +367,8 @@ void printUsageAndExit(const bool error = true) {
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
         "                         \"--no-ciecam\"\n" <<
+        "  --fallback-profile=PROFILE-FILE\n" <<
+        "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
@@ -491,7 +496,7 @@ void sigint_handler(int sig)
 enum AllPossibleOptions {
     VersionOption, HelpOption, LevelsOption, OutputOption, VerboseOption,
     WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
-    BlockSizeOption, CIECAM02Option, NoCIECAM02Option,
+    BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
     SizeAndPositionOption /* -f */, CacheSizeOption,
     ExposureWeightOption, SaturationWeightOption,
@@ -662,7 +667,8 @@ int process_options(int argc, char** argv)
         WrapAroundId,
         LevelsId,
         CiecamId,
-        NoCiecamId
+        NoCiecamId,
+        FallbackProfileId
     };
 
     static struct option long_options[] = {
@@ -692,6 +698,7 @@ int process_options(int argc, char** argv)
         {"levels", required_argument, 0, LevelsId},
         {"ciecam", no_argument, 0, CiecamId},
         {"no-ciecam", no_argument, 0, NoCiecamId},
+        {"fallback-profile", required_argument, 0, FallbackProfileId},
         {0, 0, 0, 0}
     };
 
@@ -1164,6 +1171,19 @@ int process_options(int argc, char** argv)
         case NoCiecamId:
             UseCIECAM = false;
             optionSet.insert(NoCIECAM02Option);
+            break;
+
+        case FallbackProfileId:
+            if (enblend::can_open_file(optarg)) {
+                FallbackProfile = cmsOpenProfileFromFile(optarg, "r");
+                if (FallbackProfile == NULL) {
+                    cerr << command << ": failed to open fallback ICC profile file \"" << optarg << "\"\n";
+                    exit(1);
+                }
+            } else {
+                exit(1);
+            }
+            optionSet.insert(FallbackProfileOption);
             break;
 
         case 'f':
@@ -1645,10 +1665,16 @@ int main(int argc, char** argv)
     if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
         UseCIECAM = true;
         if (InputProfile == NULL) {
-            cerr << command
-                 << ": warning: input images do not have ICC profiles; assuming sRGB"
-                 << endl;
-            InputProfile = cmsCreate_sRGBProfile();
+            cerr << command << ": warning: input images do not have ICC profiles;\n";
+            if (FallbackProfile == NULL) {
+                cerr << command << ": warning: assuming sRGB profile" << endl;
+                InputProfile = cmsCreate_sRGBProfile();
+            } else {
+                cerr << command << ": warning: using fallback profile \""
+                     << cmsTakeProductDesc(FallbackProfile) << "\"" << endl;
+                InputProfile = FallbackProfile;
+                FallbackProfile = NULL; // avoid double freeing
+            }
         }
         XYZProfile = cmsCreateXYZProfile();
 
@@ -1693,6 +1719,12 @@ int main(int argc, char** argv)
                  << ": error initializing CIECAM02 transform"
                  << endl;
             exit(1);
+        }
+    } else {
+        if (FallbackProfile != NULL) {
+            cerr << command <<
+                ": warning: fusing in RGB cube; option \"--fallback-profile\" has no effect" <<
+                endl;
         }
     }
 
@@ -1800,11 +1832,12 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    if (CIECAMTransform) cmsCIECAM02Done(CIECAMTransform);
-    if (InputToXYZTransform) cmsDeleteTransform(InputToXYZTransform);
-    if (XYZToInputTransform) cmsDeleteTransform(XYZToInputTransform);
-    if (XYZProfile) cmsCloseProfile(XYZProfile);
-    if (InputProfile) cmsCloseProfile(InputProfile);
+    if (FallbackProfile) {cmsCloseProfile(FallbackProfile);}
+    if (CIECAMTransform) {cmsCIECAM02Done(CIECAMTransform);}
+    if (InputToXYZTransform) {cmsDeleteTransform(InputToXYZTransform);}
+    if (XYZToInputTransform) {cmsDeleteTransform(XYZToInputTransform);}
+    if (XYZProfile) {cmsCloseProfile(XYZProfile);}
+    if (InputProfile) {cmsCloseProfile(InputProfile);}
 
     // Success.
     return 0;

@@ -16,6 +16,9 @@ Unreleased.  Current line of development.
   blending and the output image is assigned the input images' color
   profile.
 
+- Assign different profiles to profile-free input images with option
+  "--fallback-profile" instead of being tied to sRGB.
+
 
 ** Bug Fixes
 
@@ -28,6 +31,10 @@ Unreleased.  Current line of development.
 - Short option "-c" now has a sibling called "--ciecam".  The long
   option also has a negated form: "--no-ciecam"; the short one has
   not.
+
+- The option --fallback-profile=PROFILE allows users to pass their own
+  profiles for image sets that come without ICC color profiles.
+  Before the hard-coded profile was sRGB.
 
 
 * Version 4.0

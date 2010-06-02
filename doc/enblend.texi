@@ -885,6 +885,19 @@ Note that option@tie{}@option{-f} neither rescales the output image,
 nor shrinks the canvas size below the minimum size occupied by the
 union of all input images.
 
+@item --fallback-profile=@var{PROFILE-FILENAME}
+@opindex --fallback-profile
+@cindex profile, fallback
+@cindex fallback profile
+@cindex @acronym{CIECAM02}
+Use the @acronym{ICC} profile in @var{PROFILE-FILENAME} instead of the
+default @acronym{sRGB}.  See option@tie{}@option{--ciecam} and
+@ref{Color Profiles}.
+
+This option only is effective if the input images come without color
+profiles and blending is performed in @acronym{CIECAM02} color
+appearance model.
+
 @item -g
 @opindex -g
 @cindex alpha channel, associated

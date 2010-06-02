@@ -34,21 +34,30 @@ leads to unpredictable results.
 The options@tie{}@option{--ciecam} (@pxref{Extended Options}) and its
 opposite @option{--no-ciecam} (@pxref{Extended Options}) overrule the
 default profile selection procedure described above.  Use
-option@tie{}@option{--ciecam} on a set of input images without color
-profiles to assign the default profile
-(@uref{http://@/en.wikipedia.org/@/wiki/@/SRGB, @acronym{sRGB}}) to
-them and perform the blending or fusing process in @acronym{CIECAM02}
-color space.  On the other hand, suppress the utilization of
-@acronym{CIECAM02} blending or fusing of a set of input images with
-color profiles with option@tie{}@option{--no-ciecam}.  The only reason
-for the latter is to shorten the blending- or fusing-time, because
-transforming to and back from the @acronym{CIECAM02} color space are
-computationally expensive operations.
+option@tie{}@option{--ciecam} on a set of input images @emph{without}
+color profiles to assign a profile to them and perform the blending or
+fusing process in @acronym{CIECAM02} color space.
 
-The effects of blending in @acronym{CIECAM02} color space as opposed
-to the @acronym{RGB} cube vary with the contents of the input images.
-Generally colors that are ``close together'' in @acronym{RGB} space
-experience less change when changing the blending spaces.  However,
+The default profile is @uref{http://@/en.wikipedia.org/@/wiki/@/SRGB,
+@acronym{sRGB}}.  Override this setting with
+option@tie{}@option{--fallback-profile} (@pxref{Extended Options}).
+
+On the other hand, suppress the utilization of @acronym{CIECAM02}
+blending or fusing of a set of input images @emph{with} color profiles
+with option@tie{}@option{--no-ciecam}.  The only reason for the latter
+is to shorten the blending- or fusing-time, because transforming to
+and back from the @acronym{CIECAM02} color space are computationally
+expensive operations.
+
+Option@tie{}@option{--ciecam} as well as @option{--fallback-profile}
+have no effect on images with attached color profiles, just as
+option@tie{}@option{--no-ciecam} has no effect on images without
+profiles.
+
+The impact of blending in @acronym{CIECAM02} color space as opposed to
+the @acronym{RGB} cube vary with the contents of the input images.
+Generally colors lying close together in @acronym{RGB} space
+experience less change when switching the blending spaces.  However,
 colors close the border of any color space can see marked changes.
 
 @sp 2
