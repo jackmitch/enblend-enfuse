@@ -150,29 +150,36 @@ bool checkFramebufferStatus()
 
 
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-void cgl_init()
+CGLContextObj cgl_init()
 {
     CGLPixelFormatAttribute attribs[] = {
         kCGLPFAPBuffer,
         kCGLPFAColorSize, (CGLPixelFormatAttribute) 32,
         (CGLPixelFormatAttribute) 0
     };
-    CGLPixelFormatObj pf = NULL;
-    CGLContextObj ctx = NULL;
-    GLint numPixelFormats = 0;
-    CGLError cglError;
+    CGLPixelFormatObj pixel_format = NULL;
+    CGLContextObj cgl_context = NULL;
+    GLint pixel_formats = 0;
+    CGLError cgl_error;
 
-    cglError = CGLChoosePixelFormat(attribs, &pf, &numPixelFormats);
-    if (pf == NULL) {
-        cerr << command << ": error " << cglError << " occured when choosing pixel format." << endl;
+
+    cgl_error = CGLChoosePixelFormat(attribs, &pixel_format, &pixel_formats);
+    if (pixel_format == NULL) {
+        cerr << command
+             << ": error " << cgl_error << " occured when choosing pixel format"
+             << endl;
     } else {
-        cglError = CGLCreateContext(pf, NULL, &ctx);
-        if (!ctx) {
-            cerr << command << ": error " << cglError << " occured while creating a CGL context" << endl;
+        cgl_error = CGLCreateContext(pixel_format, NULL, &cgl_context);
+        if (!cgl_context) {
+            cerr << command
+                 << ": error " << cgl_error << " occured while creating a CGL context"
+                 << endl;
         } else {
-            CGLSetCurrentContext(ctx);
+            CGLSetCurrentContext(cgl_context);
         }
     }
+
+    return cgl_context;
 }
 #endif
 
@@ -180,7 +187,7 @@ void cgl_init()
 bool initGPU(int* argcp, char** argv)
 {
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    cgl_init();
+    CGLContextObj cgl_context = cgl_init();
 #else
     glutInit(argcp, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA);
@@ -194,7 +201,7 @@ bool initGPU(int* argcp, char** argv)
              << command << ": \"--gpu\" flag is not going to work on this machine"
              << endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-        CGLDestroyContext(ctx);
+        CGLDestroyContext(cgl_context);
 #else
         glutDestroyWindow(GlutWindowHandle);
 #endif
@@ -224,7 +231,7 @@ bool initGPU(int* argcp, char** argv)
              << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine" << endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-        CGLDestroyContext(ctx);
+        CGLDestroyContext(cgl_context);
 #else
         glutDestroyWindow(GlutWindowHandle);
 #endif
@@ -409,10 +416,10 @@ bool wrapupGPU()
     }
 
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    CGLContextObj ctx = CGLGetCurrentContext();
-    if (ctx)
+    CGLContextObj cgl_context = CGLGetCurrentContext();
+    if (cgl_context != NULL)
     {
-        CGLDestroyContext(ctx);
+        CGLDestroyContext(cgl_context);
     }
 #else
     glutDestroyWindow(GlutWindowHandle);

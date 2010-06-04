@@ -245,7 +245,7 @@ void dump_global_variables(const char* file, unsigned line,
 void inspectGPU(int argc, char** argv)
 {
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    cgl_init();
+    CGLContextObj cgl_context = cgl_init();
 #else
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA);
@@ -285,7 +285,7 @@ void inspectGPU(int argc, char** argv)
     cout << "\n\n";
 
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    CGLDestroyContext(ctx);
+    CGLDestroyContext(cgl_context);
 #else
     glutDestroyWindow(handle);
 #endif

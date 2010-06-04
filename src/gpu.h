@@ -45,7 +45,7 @@ void printInfoLog(GLhandleARB obj);
 bool checkFramebufferStatus();
 
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-void cgl_init();
+CGLContextObj cgl_init();
 #endif
 
 bool initGPU(int*, char**);
