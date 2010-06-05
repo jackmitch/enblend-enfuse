@@ -159,7 +159,7 @@ CGLContextObj cgl_init()
     };
     CGLPixelFormatObj pixel_format = NULL;
     CGLContextObj cgl_context = NULL;
-    GLint pixel_formats = 0;
+    long int pixel_formats = 0L;
     CGLError cgl_error;
 
 
