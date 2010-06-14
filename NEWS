@@ -25,6 +25,14 @@ Unreleased.  Current line of development.
 - Enblend and Enfuse consistently warn if they are passed input images
   that alternate between with color profile and without.
 
+- Grant SourceForge feature request ID 2991909 (OSX only).  Previous
+  to that, Enblend, when launched from a terminal window with
+  GPU-acceleration (option "--gpu"), started a second, non-responsive
+  terminal window and when this new Enblend window tried to "steal"
+  the focus, it displayed the OSX rotating "beach ball".  With the fix
+  that all goes away.  Also the responsiveness of the screen improves,
+  which means that the non-functional window also hogged GUI resources.
+
 
 ** New Commandline Options
 
