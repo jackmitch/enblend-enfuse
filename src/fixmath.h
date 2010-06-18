@@ -27,6 +27,8 @@
 
 #ifdef _WIN32
 #include <cmath>
+#include <boost/math/special_functions.hpp>
+using namespace boost::math;
 #else
 #include <math.h>
 #endif
