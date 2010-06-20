@@ -59,27 +59,12 @@ foreach(_v_l ${_version_lines})
   if(_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\).*-\([0-9a-z]+\)")
     setstripped(ENBLEND_MAJOR_VERSION ${CMAKE_MATCH_1})
     setstripped(ENBLEND_MINOR_VERSION ${CMAKE_MATCH_2})
-    setstripped(ENBLEND_CHANGESET ${CMAKE_MATCH_3})
+    setstripped(PACKAGE_REVISION ${CMAKE_MATCH_3})
     message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}")
+    message(STATUS "Extracted revision = ${PACKAGE_REVISION}")
     set(PACKAGE_VERSION "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-hg")
   endif()
 endforeach(_v_l)
-
-# here I don't know, how to get the revision number from mercurial
-# so the try is "hg tip"
-FIND_PROGRAM(_hg hg)
-if(NOT ${_hg} MATCHES "-NOTFOUND")
-  EXECUTE_PROCESS(COMMAND ${_hg} summary WORKING_DIRECTORY "${TOP_SRC_DIR}" OUTPUT_VARIABLE _release OUTPUT_STRIP_TRAILING_WHITESPACE)
-  foreach(_v_l ${_release})
-    if(_v_l MATCHES "^.*: *[^0-9]*\([0-9]+\):\([a-z0-9]+\)")
-      set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_1})
-      set(PACKAGE_REVISION ${CMAKE_MATCH_2})
-      MESSAGE("-- Current HG revision is ${PACKAGE_REVISION}")
-    endif()
-  endforeach()
-else()
-  set(CPACK_PACKAGE_VERSION_PATCH 468)
-endif()
 
 # For Win32 builds, assume that all of the libraries are located
 # one directory above the current CMakeLists directory
