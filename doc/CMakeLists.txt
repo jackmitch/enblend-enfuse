@@ -13,11 +13,11 @@ ENDIF(WIN32)
 
 set(_docs)
 set(_enblend_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
-    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi
+    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
     photographic-workflow.fig default.css)
 
 set(_enfuse_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
-    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi
+    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
     config-edge.gp config.gp entropy-cutoff.gp.in entropy.gp.in gaussian.gp.in
     laplacian-of-gaussian.gp.in sharp-edge.gp.in sharp-edge.data
     smooth-edge.gp.in smooth-edge.data local-analysis-window.fig
@@ -244,7 +244,7 @@ endif()
 set(_auxdepends)
 foreach(_f auxmac.texi auxmac.tex workflow.texi filespec.texi mask-template-characters.texi
     understanding-masks.texi tuning-memory-usage.texi helpful-programs.texi bug-reports.texi
-    authors.texi fdl.texi)
+    authors.texi fdl.texi color-profiles.texi)
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
     COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_f}" "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
@@ -305,7 +305,7 @@ foreach (_cmd "enblend" "enfuse")
       DEPENDS "${_created}.texi"
       ${_${_cmd}_TEXINFOS} ${_depend_gp}
       "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" ${_auxdepends}
-      COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
+      COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi, cmdline="${TEXI2DVIFLAGS}
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     #message(STATUS "create ${_created}.html")
