@@ -546,9 +546,9 @@ void vectorizeSeamLine(Contour& rawSegments,
         hypot(static_cast<double>(nftOutputImage->width()),
               static_cast<double>(nftOutputImage->height()));
     int vectorizeDistance =
-        MaskVectorizeDistance.isPercentage ?
-        static_cast<int>(ceil(MaskVectorizeDistance.value / 100.0 * diagonalLength)) :
-        MaskVectorizeDistance.value;
+        MaskVectorizeDistance.is_percentage() ?
+        static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
+        MaskVectorizeDistance.value();
     if (vectorizeDistance < minimumVectorizeDistance) {
         cerr << command
              << ": warning: mask vectorization distance "

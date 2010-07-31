@@ -26,6 +26,8 @@
 
 #include <sstream>
 
+#include <vigra/numerictraits.hxx>
+
 
 // Defines to control how many -v flags are required for each type
 // of message to be produced on stdout.
@@ -68,16 +70,50 @@
      (const char*) (glGetString(m_name)))
 
 
-struct AlternativePercentage {
-    double value;
-    bool isPercentage;
+class AlternativePercentage
+{
+public:
+    AlternativePercentage(double value, bool is_percentage) :
+        value_(value), is_percentage_(is_percentage) {}
 
-    std::string str() const {
+    double value() const {return value_;}
+    double is_percentage() const {return is_percentage_;}
+
+    void set_value(double value) {value_ = value;}
+    void set_percentage(bool is_percentage) {is_percentage_ = is_percentage;}
+
+    std::string str() const
+    {
         std::ostringstream oss;
-        oss << value;
-        if (isPercentage) {oss << "%";}
+        oss << value_;
+        if (is_percentage_)
+        {
+            oss << "%";
+        }
         return oss.str();
     }
+
+    template <class T>
+    bool is_effective() const
+    {
+        return
+            value_ > 0.0 &&
+            ((is_percentage_ && value_ < 100.0) ||
+             (!is_percentage_ && value_ < vigra::NumericTraits<T>::max()));
+    }
+
+    template <class T>
+    T instantiate() const
+    {
+        return
+            is_percentage_ ?
+            value_ * static_cast<double>(vigra::NumericTraits<T>::max()) / 100.0 :
+            value_;
+    }
+
+private:
+    double value_;
+    bool is_percentage_;
 };
 
 

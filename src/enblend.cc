@@ -123,7 +123,7 @@ anneal_para_t AnnealPara = {
     5.0                         //< src::default-anneal-deltae-min 5.0
 };
 unsigned int DijkstraRadius = 25U; //< src::default-dijkstra-radius 25
-struct AlternativePercentage MaskVectorizeDistance = {0.0, false};
+AlternativePercentage MaskVectorizeDistance(0.0, false);
 std::string OutputCompression;
 std::string OutputPixelType;
 
@@ -232,8 +232,8 @@ void dump_global_variables(const char* file, unsigned line,
         "+ }, arguments to option \"--anneal\"\n" <<
         "+ DijkstraRadius = " << DijkstraRadius << ", option \"--dijkstra\"\n" <<
         "+ MaskVectorizeDistance = {\n" <<
-        "+     value = " << MaskVectorizeDistance.value << ",\n" <<
-        "+     isPercentage = " << enblend::stringOfBool(MaskVectorizeDistance.isPercentage) << "\n" <<
+        "+     value = " << MaskVectorizeDistance.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(MaskVectorizeDistance.is_percentage()) << "\n" <<
         "+ }, arguments to option \"--mask-vectorize\"\n" <<
         "+ OutputCompression = <" << OutputCompression << ">, option \"--compression\"\n" <<
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
@@ -991,9 +991,9 @@ int process_options(int argc, char** argv)
 
         case MaskVectorizeDistanceId: {
             char* tail;
-            MaskVectorizeDistance.isPercentage = false;
+            MaskVectorizeDistance.set_percentage(false);
             errno = 0;
-            MaskVectorizeDistance.value = strtod(optarg, &tail);
+            MaskVectorizeDistance.set_value(strtod(optarg, &tail));
             if (errno != 0) {
                 cerr << command
                      << ": option \"--mask-vectorize\": illegal numeric format \""
@@ -1003,7 +1003,7 @@ int process_options(int argc, char** argv)
             }
             if (*tail != 0) {
                 if (*tail == '%') {
-                    MaskVectorizeDistance.isPercentage = true;
+                    MaskVectorizeDistance.set_percentage(true);
                 } else {
                     cerr << command
                          << ": option \"--mask-vectorize\": trailing garbage \""
@@ -1011,7 +1011,7 @@ int process_options(int argc, char** argv)
                     failed = true;
                 }
             }
-            if (MaskVectorizeDistance.value <= 0.0) {
+            if (MaskVectorizeDistance.value() <= 0.0) {
                 cerr << command
                      << ": option \"--mask-vectorize\": distance must be positive"
                      << endl;
@@ -1633,10 +1633,9 @@ int main(int argc, char** argv)
         CoarseMask = false;
     }
 
-    if (MaskVectorizeDistance.value == 0) {
-        MaskVectorizeDistance.isPercentage = false;
-        MaskVectorizeDistance.value =
-            CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance;
+    if (MaskVectorizeDistance.value() == 0) {
+        MaskVectorizeDistance.set_percentage(false);
+        MaskVectorizeDistance.set_value(CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance);
     }
 
     // Make sure that inputUnion is at least as big as given by the -f paramater.

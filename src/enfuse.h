@@ -660,7 +660,7 @@ public:
     }
 
 protected:
-    double divisor;
+    const double divisor;
 };
 
 
@@ -685,8 +685,7 @@ protected:
         const RealType ra = NumericTraits<T>::toRealPromote(a);
         const double b = NumericTraits<T>::max() * mu;
         const double c = NumericTraits<T>::max() * sigma;
-        return NumericTraits<ResultType>::fromRealPromote(weight *
-                                                          gaussDistribution(ra, b, c));
+        return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
     }
 
     // RGB
@@ -695,10 +694,86 @@ protected:
         return f(acc.operator()(a), VigraTrueType());
     }
 
-    double weight;
-    double mu;
-    double sigma;
+    const double weight;
+    const double mu;
+    const double sigma;
     InputAccessor acc;
+};
+
+
+template <typename InputType, typename InputAccessor, typename ResultType>
+class CutoffExposureFunctor {
+public:
+    typedef ResultType result_type;
+
+    CutoffExposureFunctor(double w, double m, double s, InputAccessor a,
+                          const AlternativePercentage& lc, const AlternativePercentage& uc,
+                          InputAccessor lca, InputAccessor uca) :
+        weight(w), mu(m), sigma(s), acc(a),
+        lower_cutoff(lc.instantiate<typename InputAccessor::value_type>()),
+        upper_cutoff(uc.instantiate<typename InputAccessor::value_type>()),
+        lower_acc(lca), upper_acc(uca)
+    {
+        typedef typename InputAccessor::value_type value_type;
+
+        const value_type max = NumericTraits<value_type>::max();
+
+        if (lower_cutoff > upper_cutoff) {
+            cerr << command <<
+                ": lower exposure cutoff (" << lower_cutoff << "/" << max <<
+                " = " << 100.0 * lower_cutoff / max <<
+                "%) exceeds upper cutoff (" << upper_cutoff << "/" << max <<
+                " = " << 100.0 * upper_cutoff / max <<
+                "%)" << endl;
+            exit(1);
+        }
+    }
+
+    inline ResultType operator()(const InputType& a) const {
+        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        return f(a, srcIsScalar());
+    }
+
+protected:
+    // grayscale
+    template <typename T>
+    inline ResultType f(const T& a, VigraTrueType) const {
+        typedef typename NumericTraits<T>::RealPromote RealType;
+        const RealType ra = NumericTraits<T>::toRealPromote(a);
+        if (ra >= lower_cutoff && ra <= upper_cutoff) {
+            const double b = NumericTraits<T>::max() * mu;
+            const double c = NumericTraits<T>::max() * sigma;
+            return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+        } else {
+            return ResultType();
+        }
+    }
+
+    // RGB
+    template <typename T>
+    inline ResultType f(const T& a, VigraFalseType) const {
+        typedef typename T::value_type ValueType;
+        typedef typename NumericTraits<ValueType>::RealPromote RealType;
+        const RealType ra = NumericTraits<ValueType>::toRealPromote(acc.operator()(a));
+        const RealType lower_ra = NumericTraits<ValueType>::toRealPromote(lower_acc.operator()(a));
+        const RealType upper_ra = NumericTraits<ValueType>::toRealPromote(upper_acc.operator()(a));
+        if (lower_ra >= lower_cutoff && upper_ra <= upper_cutoff) {
+            const double b = NumericTraits<ValueType>::max() * mu;
+            const double c = NumericTraits<ValueType>::max() * sigma;
+            return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+        } else {
+            return ResultType();
+        }
+    }
+
+    const double weight;
+    const double mu;
+    const double sigma;
+    InputAccessor acc;
+    const double lower_cutoff;
+    const double upper_cutoff;
+    InputAccessor lower_acc;
+    InputAccessor upper_acc;
 };
 
 
@@ -750,7 +825,7 @@ protected:
         }
     }
 
-    double weight;
+    const double weight;
 };
 
 
@@ -801,7 +876,7 @@ protected:
         return NumericTraits<ResultType>::fromRealPromote(weight * ra);
     }
 
-    double weight;
+    const double weight;
 };
 
 
@@ -833,7 +908,7 @@ protected:
     }
 
 private:
-    double weight;
+    const double weight;
 };
 
 
@@ -884,7 +959,6 @@ public:
     }
 
 protected:
-    // Grayscale
     ResultType clamp(const InputType& x, VigraTrueType) const {
         return x <= lo ? loval : (x >= up ? upval : x);
     }
@@ -903,8 +977,8 @@ protected:
     }
 
 private:
-    InputType lo, up;
-    ResultType loval, upval;
+    const InputType lo, up;
+    const ResultType loval, upval;
 };
 
 
@@ -931,9 +1005,10 @@ public:
     }
 
 private:
-    InputType threshold;
-    double scale1, scale2;
+    const InputType threshold;
+    const double scale1, scale2;
 };
+
 
 template <typename ImageType, typename AlphaType, typename MaskType>
 void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::const_traverser, typename ImageType::ConstAccessor> src,
@@ -950,8 +1025,36 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     if (WExposure > 0.0) {
         typedef MultiGrayscaleAccessor<ImageValueType, ScalarType> MultiGrayAcc;
         MultiGrayAcc ga(GrayscaleProjector);
-        ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType> ef(WExposure, WMu, WSigma, ga);
-        transformImageIfMP(src, mask, result, ef);
+
+        if (ExposureLowerCutoff.is_effective<ScalarType>() ||
+            ExposureUpperCutoff.is_effective<ScalarType>()) {
+            MultiGrayAcc lca(ExposureLowerCutoffGrayscaleProjector.empty() ?
+                             GrayscaleProjector :
+                             ExposureLowerCutoffGrayscaleProjector);
+            MultiGrayAcc uca(ExposureUpperCutoffGrayscaleProjector.empty() ?
+                             ExposureLowerCutoffGrayscaleProjector :
+                             ExposureUpperCutoffGrayscaleProjector);
+            CutoffExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
+                cef(WExposure, WMu, WSigma, ga,
+                    ExposureLowerCutoff, ExposureUpperCutoff, lca, uca);
+#ifdef DEBUG_EXPOSURE
+            cout << "+ enfuseMask: cutoff - GrayscaleProjector = <" <<
+                GrayscaleProjector << ">\n" <<
+                "+ enfuseMask:          ExposureLowerCutoffGrayscaleProjector = <" <<
+                ExposureLowerCutoffGrayscaleProjector << ">\n" <<
+                "+ enfuseMask:          ExposureUpperCutoffGrayscaleProjector = <" <<
+                ExposureUpperCutoffGrayscaleProjector << ">\n";
+#endif
+            transformImageIfMP(src, mask, result, cef);
+        } else {
+            ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
+                ef(WExposure, WMu, WSigma, ga);
+#ifdef DEBUG_EXPOSURE
+            cout << "+ enfuseMask: plain - GrayscaleProjector = <" <<
+                GrayscaleProjector << ">\n";
+#endif
+            transformImageIfMP(src, mask, result, ef);
+        }
     }
 
     // Contrast
@@ -1002,10 +1105,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
             }
 #endif
 
-            const double minCurve =
-                MinCurvature.isPercentage ?
-                static_cast<double>(NumericTraits<ScalarType>::max()) * MinCurvature.value / 100.0 :
-                MinCurvature.value;
+            const double minCurve = static_cast<double>(MinCurvature.instantiate<ScalarType>());
             if (minCurve <= 0.0)
             {
 #ifdef DEBUG_LOG
@@ -1077,29 +1177,29 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         typedef IMAGETYPE<PixelType> Image;
         Image entropy(imageSize);
 
-        if (EntropyLowerCutoff.value > 0.0 ||
-            (EntropyLowerCutoff.isPercentage && EntropyLowerCutoff.value < 100.0) ||
-            (!EntropyLowerCutoff.isPercentage && EntropyUpperCutoff.value < NumericTraits<ScalarType>::max()))
+        if (EntropyLowerCutoff.is_effective<ScalarType>())
         {
-            const ScalarType lowerCutoff =
-                EntropyLowerCutoff.isPercentage ?
-                EntropyLowerCutoff.value *
-                static_cast<double>(NumericTraits<ScalarType>::max()) /
-                100.0 :
-                EntropyLowerCutoff.value;
-            const ScalarType upperCutoff =
-                EntropyUpperCutoff.isPercentage ?
-                EntropyUpperCutoff.value *
-                static_cast<double>(NumericTraits<ScalarType>::max()) /
-                100.0 :
-                EntropyUpperCutoff.value;
+            const ScalarType lowerCutoff = EntropyLowerCutoff.instantiate<ScalarType>();
+            const ScalarType upperCutoff = EntropyUpperCutoff.instantiate<ScalarType>();
 #ifdef DEBUG_ENTROPY
             cout <<
-                "+ EntropyLowerCutoff.value = " << EntropyLowerCutoff.value << ", " <<
+                "+ EntropyLowerCutoff.value = " << EntropyLowerCutoff.value() << ", " <<
                 "lowerCutoff = " << static_cast<double>(lowerCutoff) << "\n" <<
-                "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value << ", " <<
+                "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value() << ", " <<
                 "upperCutoff = " << static_cast<double>(upperCutoff) << endl;
 #endif
+            if (lowerCutoff > upperCutoff)
+            {
+                const double max = static_cast<double>(NumericTraits<ScalarType>::max());
+                cerr << command <<
+                    ": lower entropy cutoff (" << static_cast<double>(lowerCutoff) << "/" << max <<
+                    " = " << 100.0 * lowerCutoff / max <<
+                    "%) exceeds upper cutoff (" << static_cast<double>(upperCutoff) << "/" << max <<
+                    " = " << 100.0 * upperCutoff / max <<
+                    "%)" << endl;
+                exit(1);
+            }
+
             Image trunc(imageSize);
             ClampingFunctor<PixelType, PixelType>
                 cf((PixelType(lowerCutoff)),  // IMPLEMENTATION NOTE:

@@ -24,6 +24,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   bug-reports.texi authors.texi \
                   config-edge.gp config.gp \
                   entropy-cutoff.gp.in \
+                  exposure-cutoff.gp.in \
                   entropy.gp.in gaussian.gp.in \
                   laplacian-of-gaussian.gp.in \
                   sharp-edge.gp.in sharp-edge.data \
@@ -49,6 +50,7 @@ MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 # created by make(1)
 CLEANFILES = entropy.{txt,png,eps,pdf} \
              entropy-cutoff.{txt,png,eps,pdf} \
+             exposure-cutoff.{txt,png,eps,pdf} \
              gaussian.{txt,png,eps,pdf} \
              laplacian-of-gaussian.{txt,png,eps,pdf} \
              local-analysis-window.{txt,png,eps,pdf} \
@@ -216,6 +218,7 @@ enfuse.info: photographic-workflow.txt \
              focus-stack-decision-tree.txt \
              entropy.txt \
              entropy-cutoff.txt \
+             exposure-cutoff.txt \
              gaussian.txt \
              laplacian-of-gaussian.txt \
              local-analysis-window.txt \
@@ -227,6 +230,7 @@ enfuse.dvi: enfuse.texi \
             focus-stack-decision-tree.eps \
             entropy.eps \
             entropy-cutoff.eps \
+            exposure-cutoff.eps \
             gaussian.eps \
             laplacian-of-gaussian.eps \
             local-analysis-window.eps \
@@ -240,6 +244,7 @@ enfuse.pdf: photographic-workflow.png \
             focus-stack-decision-tree.png \
             entropy.png \
             entropy-cutoff.png \
+            exposure-cutoff.png \
             gaussian.png \
             laplacian-of-gaussian.png \
             local-analysis-window.png \

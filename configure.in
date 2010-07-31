@@ -515,6 +515,7 @@ fi
 
 AC_CONFIG_FILES([doc/entropy.gp
                  doc/entropy-cutoff.gp
+                 doc/exposure-cutoff.gp
                  doc/gaussian.gp
                  doc/laplacian-of-gaussian.gp
                  doc/sharp-edge.gp

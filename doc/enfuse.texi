@@ -292,7 +292,9 @@ problem of noisy images when using entropy weighting by setting a
 black threshold.
 @end table
 
-@caption{Enfuse's four weighting criteria.}
+@caption{Enfuse's four weighting criteria.  (Also see
+@ref{Table:default-weights} for the default weights of these
+criteria.)}
 
 @shortcaption{Weighting criteria}
 @end float
@@ -1444,6 +1446,109 @@ $\mathit{SIZE} \ge @value{src::minimum-entropy-window-size}$.
 If given an even @var{SIZE} Enfuse will automatically use the next odd
 number.
 
+@item --exposure-cutoff=@var{LOWER-CUTOFF}
+@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
+@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}:@var{LOWER-PROJECTOR}:@var{UPPER-PROJECTOR}
+@opindex --exposure-cutoff
+
+The first form sets the weight for all pixels below the lower cutoff
+to zero.  The second form sets the lower cutoff and the upper cutoff
+at the same time.  For color images the values of @var{LOWER-CUTOFF}
+and @var{UPPER-CUTOFF} refer to the gray-scale projection as selected
+with the option @option{--gray-projector}.
+
+The impact of this option is similar, but not identical to
+transforming @emph{all} input images with
+@uref{http://@/www.imagemagick.org/, ImageMagick's} @command{convert}
+(@pxref{Helpful Programs}) prior to fusing with the following
+commands.
+
+@example
+@group
+# First form
+convert IMAGE \
+        \( +clone -threshold LOWER-CUTOFF \) \
+        -compose copy_opacity -composite \
+        MASKED-IMAGE
+@end group
+
+@group
+# Second form
+convert IMAGE \
+        \( \
+            \( IMAGE -threshold LOWER-CUTOFF \) \
+            \( IMAGE -threshold UPPER-CUTOFF -negate \) \
+            -compose multiply -composite \
+        \) \
+        -compose copy_opacity -composite \
+        MASKED-IMAGE
+@end group
+@end example
+
+(Transforming some or all input images as shown in the above examples
+gives the user more flexibility because the thresholds can be chosen
+for each image individually.)
+
+The third form specifies projection operators as in
+option@tie{}@option{--gray-projector} for the @var{LOWER-CUTOFF} and
+@var{UPPER-CUTOFF} thresholds.
+
+This option can be helpful if the user wants to exclude underexposed
+or overexposed pixels from the fusing process in @emph{all} of the
+input images.  The values of @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF}
+as well as the gray-scale projector determine which pixels are
+considered ``underexposed'' or ``overexposed''.  As any change of the
+exposure-weight curve this option changes the brightness of the
+resulting image: increasing @var{LOWER-CUTOFF} lightens the final
+image and lowering @var{UPPER-CUTOFF} darkens it.
+
+Defaults: @value{src::default-exposure-lower-cutoff} for
+@var{LOWER-CUTOFF} and @value{src::default-exposure-upper-cutoff} for
+@var{UPPER-CUTOFF}, that is, all pixels' values are weighted according
+to the ``uncut'' exposure-weight curve.
+
+Append a @samp{%} to specify the cutoff relative to the maximum pixel
+value in the source image (for example 255 or 65535).
+
+@ref{Figure:exposure-cutoff} shows an example.
+
+The gray-scale projectors @var{LOWER-PROJECTOR} and
+@var{UPPER-PROJECTOR} default to
+@samp{@value{src::default-exposure-lower-cutoff-projector}} and
+@samp{@value{src::default-exposure-upper-cutoff-projector}}, which are
+usually the best choices for effective cutoff operations on the
+respective ends.
+
+@float Figure,Figure:exposure-cutoff
+@image{exposure-cutoff}
+
+@caption{Exposure weight, a Gaussian with @var{Mu} = 0.5 and
+@var{Sigma} = 0.2 submitted to an exposure-cutoff of
+@var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
+
+@shortcaption{Exposure cutoff function}
+@end float
+
+Note that the application of the respective cutoffs is completely
+independent of the actual shape of the exposure weight function.
+
+If a set of images stubbornly refuses to ``react'' to this option,
+look at their histograms to verify the cutoff actually falls into
+populated ranges of the histograms.  In the absence of an image
+manipulation program like @uref{http://@/www.gimp.org/, The Gimp},
+@uref{http://@/www.imagemagick.org/, ImageMagick} (@pxref{Helpful
+Programs}) can be used to generate
+@uref{http://@/www.imagemagick.org/@/Usage/@/files/@/#histogram,
+histograms}, like, for example,
+
+@example
+@group
+convert -define histogram:unique-colors=false \
+        IMAGE histogram:- | \
+    display
+@end group
+@end example
+
 @item --gray-projector=@var{PROJECTOR}
 @opindex --gray-projector
 @cindex gray projector
@@ -1478,8 +1583,45 @@ exposure weighting and local contrast weighting.  Default:
 Valid values for @var{PROJECTOR} are:
 
 @table @code
+@item anti-value
+@cindex gray projector, @samp{anti-value}
+@cindex @samp{anti-value} gray projector
+Do the opposite of the @samp{value} projector: take the minimum of all
+color channels.
+@ifinfo
+@display
+@math{Y = min(R, G, B)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+        <mi>Y</mi>
+        <mo>=</mo>
+        <mrow>
+            <mo>min</mo>
+            <mo>&ApplyFunction;</mo>
+            <mfenced>
+                <mi>R</mi>
+                <mi>G</mi>
+                <mi>B</mi>
+            </mfenced>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    Y = \min(R, G, B)
+$$
+@end tex
+This projector can be useful when exposure weighing while employing a
+lower cutoff (see option@tie{}@option{--exposure-cutoff}) to reduce
+the noise in the fused image.
+
 @item average
 @cindex gray projector, @samp{average}
+@cindex @samp{average} gray projector
 Average red, green, and blue channel with equal weights.  This is the
 default, and it often is a good projector for @math{gamma = 1} data.
 @ifinfo
@@ -1513,6 +1655,7 @@ $$
 
 @item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
 @cindex gray projector, @samp{channel-mixer}
+@cindex @samp{channel-mixer} gray projector
 Weight the channels as given.
 @ifinfo
 @display
@@ -1569,6 +1712,7 @@ channel.  The sum of all weights is normalized to one.
 
 @item l-star
 @cindex gray projector, @samp{l-star}
+@cindex @samp{l-star} gray projector
 @cindex L*a*b* conversion
 @cindex conversion, L*a*b*
 Use the L-channel of the L*a*b*-conversion of the image as its
@@ -1582,6 +1726,7 @@ space.
 
 @item lightness
 @cindex gray projector, @samp{lightness}
+@cindex @samp{lightness} gray projector
 Compute the lightness of each @acronym{RGB} pixel as in an
 Hue-Saturation-Lightness (@acronym{HSL}) conversion of the image.
 @ifinfo
@@ -1629,6 +1774,7 @@ $$
 
 @item luminance
 @cindex gray projector, @samp{luminance}
+@cindex @samp{luminance} gray projector
 Use the weighted average of the @acronym{RGB} pixel's channels as
 defined by @acronym{CIE} (``Commission Internationale de
 l'@'Eclairage'') and the @acronym{JPEG} standard.
@@ -1670,6 +1816,7 @@ $$
 
 @item value
 @cindex gray projector, @samp{value}
+@cindex @samp{value} gray projector
 Take the Value-channel of the Hue-Saturation-Value (@acronym{HSV})
 conversion of the image.
 @ifinfo
@@ -2198,6 +2345,7 @@ and $r_{\mathrm{ent}}$ are explained in the next sections.
 @menu
 * Weighted Average::            Enfuse's default weighting algorithm
 * Disabling Averaging::         ``Super Trouper'' weighting for focus stacks
+* Single Criterion Fusing::     Fusing with only one of the criteria
 @end menu
 
 
@@ -2214,7 +2362,6 @@ input stack.  Extremes are not typical, however.
 Equal weights are another extreme that turns (W) into an arithmetic
 average.  This is why we sometimes speak of the ``averaging property''
 of this weighting algorithm, like smoothing out noise.
-
 
 
 @node Disabling Averaging
@@ -2320,6 +2467,61 @@ $$
 Note that this ``averaging'' scheme lacks the nice noise-reduction
 property of the weighted average@tie{}(W), because only a single input
 pixel contributes to the output.
+
+
+@node Single Criterion Fusing
+@subsection Single Criterion Fusing
+@cindex single criterion fusing
+@cindex fusing, single criterion
+
+Enfuse allows the user to weight each pixel of an input image by up to
+four different criteria (@pxref{Overview}).  However, it does not
+force the user to do so.  For some applications and more often simply
+to gain further insight into the weighting and fusing process, looking
+at only a single criterion is the preferred way to work.
+
+@cindex active criterion
+@cindex criterion, active
+The version of Enfuse for which this documentation was prepared, uses
+the default weights as stated in @ref{Table:default-weights}.  Notice
+that by default @emph{more than one} weight is larger than zero, which
+means they are @emph{active}.
+
+@float Table,Table:default-weights
+
+@multitable {Local Contrast} {0.0}
+@headitem Criterion  @tab Weight
+@item Exposure       @tab @value{src::default-weight-exposure}
+@item Saturation     @tab @value{src::default-weight-saturation}
+@item Local Contrast @tab @value{src::default-weight-contrast}
+@item Local Entropy  @tab @value{src::default-weight-entropy}
+@end multitable
+
+@caption{Enfuse's default weights as compiled into version@tie{}@value{VERSION}.}
+
+@shortcaption{Default weights}
+
+@cindex default weights
+@cindex weights, default
+@end float
+
+To disable a particular criterion set its weight to zero as for
+example
+@example
+enfuse \
+    --exposure-weight=1 --saturation-weight=0 \
+    --contrast-weight=0 --entropy-weight=0 \
+    img_[1-3].png
+@end example
+instructs Enfuse to consider only the exposure weight.  Combine this
+with option@tie{}@option{--save-masks} and it will become clearer how
+Enfuse computes the exposure weight for the set of images.
+
+@cindex overpowering criteria
+@cindex criteria, overpowering one another
+Another problem that can be inspected by fusing with just a single
+active criterion and saving the masks is if the weights of one
+criterion completely overpower all others.
 
 
 @node Exposure Weighting
@@ -3730,21 +3932,24 @@ manual of your model for details.
 
 Enfuse's defaults,
 @samp{--exposure-weight=@value{src::default-weight-exposure}} and
-@samp{--saturation-weight=@value{src::default-weight-saturation}} are well
-suited for fusion of @emph{color} images.  Remember that saturation
-weighting only works for @acronym{RGB} data.
+@samp{--saturation-weight=@value{src::default-weight-saturation}} are
+well suited for fusion of @emph{color} images.  Remember that
+saturation weighting only works for @acronym{RGB} data.
 Option@tie{}@option{--saturation-weight} helps to control burnt-out
-highlights, as these are heavily desaturated.  If no image suffers
-from troublesome highlights, the relative saturation weight can be
-reduced and even be set to zero.  For black and white images
-@option{--entropy-weight} can be an alternative to
-@option{--saturation-weight} because it suppresses overexposed pixels, as
-these contain little information.  However, entropy weighting is not
-limited to grayscale data; it has been successfully applied to
-@acronym{RGB} images, too.  Note that saturation weighting considers
-@emph{each} color channel of an @acronym{RGB} image separately and
-chooses the channel with the minimum entropy as representative for the
-whole pixel.
+highlights, as these are heavily desaturated.  Alternatively, use
+option@tie{}@option{--exposure-cutoff} to suppress noise or blown-out
+highlights without altering the overall brightness too much.  If no
+image suffers from troublesome highlights, the relative saturation
+weight can be reduced and even be set to zero.
+
+For black and white images @option{--entropy-weight} can be an
+alternative to @option{--saturation-weight} because it suppresses
+overexposed pixels, as these contain little information.  However,
+entropy weighting is not limited to gray-scale data; it has been
+successfully applied to @acronym{RGB} images, too.  Note that entropy
+weighting considers @emph{each} color channel of an @acronym{RGB}
+image separately and chooses the channel with the minimum entropy as
+representative for the whole pixel.
 
 Enfuse offers the photographer tremendous flexibility in fusing
 differently exposed images.  Whether you combine only two pictures or

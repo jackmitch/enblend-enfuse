@@ -73,7 +73,7 @@ public:
     static const std::string defaultGrayscaleAccessorName() {return "average";}
 
 private:
-    typedef enum {AVERAGE, LSTAR, LIGHTNESS, VALUE, LUMINANCE, MIXER} AccKindType;
+    typedef enum {AVERAGE, LSTAR, LIGHTNESS, VALUE, ANTI_VALUE, LUMINANCE, MIXER} AccKindType;
     typedef std::map<std::string, AccKindType> NameMapType;
     typedef typename NameMapType::const_iterator NameMapConstIterType;
 
@@ -84,6 +84,7 @@ private:
         nameMap["l-star"] = LSTAR;
         nameMap["lightness"] = LIGHTNESS;
         nameMap["value"] = VALUE;
+        nameMap["anti-value"] = ANTI_VALUE;
         nameMap["luminance"] = LUMINANCE;
         nameMap[CHANNEL_MIXER] = MIXER;
     }
@@ -204,6 +205,8 @@ private:
                  2.0);
         case VALUE:
             return std::max(x.red(), std::max(x.green(), x.blue()));
+        case ANTI_VALUE:
+            return std::min(x.red(), std::min(x.green(), x.blue()));
         case LUMINANCE:
             return NumericTraits<ResultType>::fromRealPromote(x.luminance());
         case MIXER:

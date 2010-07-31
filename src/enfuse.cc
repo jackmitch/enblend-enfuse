@@ -94,6 +94,10 @@ int OutputOffsetYCmdLine = 0;
 std::string OutputCompression;
 std::string OutputPixelType;
 double WExposure = 1.0;         //< src::default-weight-exposure 1.0
+AlternativePercentage ExposureLowerCutoff(0.0, true); //< src::default-exposure-lower-cutoff 0%
+AlternativePercentage ExposureUpperCutoff(100.0, true); //< src::default-exposure-upper-cutoff 100%
+std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< src::default-exposure-lower-cutoff-projector anti-value
+std::string ExposureUpperCutoffGrayscaleProjector("value"); //< src::default-exposure-upper-cutoff-projector value
 double WContrast = 0.0;         //< src::default-weight-contrast 0.0
 double WSaturation = 0.2;       //< src::default-weight-saturation 0.2
 double WEntropy = 0.0;          //< src::default-weight-entropy 0.0
@@ -107,10 +111,10 @@ struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterCo
     0.0,                        //< src::default-lce-scale 0.0
     0.0                         //< src::default-lce-factor 0.0
 };
-struct AlternativePercentage MinCurvature = {0.0, false}; //< src::default-minimum-curvature 0
+AlternativePercentage MinCurvature(0.0, false); //< src::default-minimum-curvature 0
 int EntropyWindowSize = 3;      //< src::default-entropy-window-size 3
-struct AlternativePercentage EntropyLowerCutoff = {0.0, true}; //< src::default-entropy-lower-cutoff 0%
-struct AlternativePercentage EntropyUpperCutoff = {100.0, true}; //< src::default-entropy-upper-cutoff 100%
+AlternativePercentage EntropyLowerCutoff(0.0, true); //< src::default-entropy-lower-cutoff 0%
+AlternativePercentage EntropyUpperCutoff(100.0, true); //< src::default-entropy-upper-cutoff 100%
 bool UseHardMask = false;
 bool SaveMasks = false;
 std::string SoftMaskTemplate("softmask-%n.tif"); //< src::default-soft-mask-template softmask-%n.tif
@@ -202,6 +206,18 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WExposure = " << WExposure << ", argument to option \"--exposure-weight\"\n" <<
         "+     WMu = " << WMu  << ", argument to option \"--exposure-mu\"\n" <<
         "+     WSigma = " << WSigma << ", argument to option \"--exposure-sigma\"\n" <<
+        "+ ExposureLowerCutoff = {\n"
+        "+     value = " << ExposureLowerCutoff.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(ExposureLowerCutoff.is_percentage()) << "\n" <<
+        "+ }, first argument to option \"--exposure-cutoff\"\n" <<
+        "+ ExposureUpperCutoff = {\n"
+        "+     value = " << ExposureUpperCutoff.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(ExposureUpperCutoff.is_percentage()) << "\n" <<
+        "+ }, second argument to option \"--exposure-cutoff\"\n" <<
+        "+ ExposureLowerCutoffGrayscaleProjector = <" << ExposureLowerCutoffGrayscaleProjector <<
+        ">, third argument to option \"--exposure-cutoff\"\n" <<
+        "+ ExposureUpperCutoffGrayscaleProjector = <" << ExposureUpperCutoffGrayscaleProjector <<
+        ">, fourth argument to option \"--exposure-cutoff\"\n" <<
         "+ WContrast = " << WContrast << ", argument to option \"--contrast-weight\"\n" <<
         "+ WSaturation = " << WSaturation << ", argument to option \"--saturation-weight\"\n" <<
         "+ WEntropy = " << WEntropy << ", argument to option \"--entropy-weight\"\n" <<
@@ -216,18 +232,18 @@ void dump_global_variables(const char* file, unsigned line,
         "+     lceFactor = " << FilterConfig.lceFactor <<  "\n" <<
         "+ }, arguments to option \"--contrast-edge-scale\"\n" <<
         "+ MinCurvature = {\n"
-        "+     value = " << MinCurvature.value << ",\n" <<
-        "+     isPercentage = " << enblend::stringOfBool(MinCurvature.isPercentage) << "\n" <<
+        "+     value = " << MinCurvature.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(MinCurvature.is_percentage()) << "\n" <<
         "+ }, arguments to option \"--contrast-min-curvature\"\n" <<
         "+ EntropyWindowSize = " << EntropyWindowSize <<
         ", argument to option \"--entropy-window-size\"\n" <<
         "+ EntropyLowerCutoff = {\n"
-        "+     value = " << EntropyLowerCutoff.value << ",\n" <<
-        "+     isPercentage = " << enblend::stringOfBool(EntropyLowerCutoff.isPercentage) << "\n" <<
+        "+     value = " << EntropyLowerCutoff.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(EntropyLowerCutoff.is_percentage()) << "\n" <<
         "+ }, first argument to option \"--entropy-cutoff\"\n" <<
         "+ EntropyUpperCutoff = {\n"
-        "+     value = " << EntropyUpperCutoff.value << ",\n" <<
-        "+     isPercentage = " << enblend::stringOfBool(EntropyUpperCutoff.isPercentage) << "\n" <<
+        "+     value = " << EntropyUpperCutoff.value() << ",\n" <<
+        "+     is_percentage = " << enblend::stringOfBool(EntropyUpperCutoff.is_percentage()) << "\n" <<
         "+ }, second argument to option \"--entropy-cutoff\"\n" <<
         "+ UseHardMask = " << enblend::stringOfBool(UseHardMask) <<
         ", option \"--hard-mask\" or \"--soft-mask\"\n" <<
@@ -395,7 +411,8 @@ void printUsageAndExit(const bool error = true) {
         "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
         "  --exposure-mu=MEAN     center also known as MEAN of Gaussian weighting\n" <<
         "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
-        "  --exposure-sigma=SIGMA standard deviation of Gaussian weighting\n" <<
+        "  --exposure-sigma=SIGMA\n" <<
+        "                         standard deviation of Gaussian weighting\n" <<
         "                         function (SIGMA > 0); default: " << WSigma << "\n" <<
         "  --soft-mask            average over all masks; this is the default\n" <<
         "  --hard-mask            force hard blend masks and no averaging on finest\n" <<
@@ -404,14 +421,20 @@ void printUsageAndExit(const bool error = true) {
         "                         but leads to increased noise\n" <<
         "\n" <<
         "Expert options:\n" <<
+        "  --exposure-cutoff=LOWERCUTOFF[:UPPERCUTOFF[:LOWERPROJECTOR[:UPPERPROJECTOR]]]\n" <<
+        "                         LOWERCUTOFF and UPPERCUTOFF are the values below\n" <<
+        "                         or above of which pixels are weighted with zero\n" <<
+        "                         weight in exposure weighting; append \"%\" signs\n" <<
+        "                         for relative values; default: " <<
+        ExposureLowerCutoff.str() << ":" << ExposureUpperCutoff.str() << ":" <<
+        ExposureLowerCutoffGrayscaleProjector << ":" << ExposureUpperCutoffGrayscaleProjector << "\n" <<
         "  --contrast-window-size=SIZE\n" <<
         "                         set window SIZE for local-contrast analysis\n" <<
         "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
-        "  --gray-projector=OPERATOR\n" <<
-        "                         apply gray-scale projection OPERATOR in exposure\n" <<
-        "                         or contrast weighing, where OPERATOR is one of\n" <<
-        "                         \"average\", \"l-star\", \"lightness\", \"value\",\n" <<
-        "                         \"luminance\", or\n" <<
+        "  --gray-projector=PROJECTOR\n" <<
+        "                         apply gray-scale PROJECTOR in exposure or contrast\n" <<
+        "                         weighing, where PROJECTOR is \"anti-value\", \"average\", \n" <<
+        "                         \"l-star\", \"lightness\", \"value\", \"luminance\", or\n" <<
         "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
         "                         default: \"" <<
         enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
@@ -499,7 +522,7 @@ enum AllPossibleOptions {
     BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
     SizeAndPositionOption /* -f */, CacheSizeOption,
-    ExposureWeightOption, SaturationWeightOption,
+    ExposureWeightOption, ExposureCutoffOption, SaturationWeightOption,
     ContrastWeightOption, EntropyWeightOption,
     ExposureMuOption /* --contrast-mu */, ExposureSigmaOption /* --contrast-sigma */,
     SoftMaskOption, HardMaskOption,
@@ -537,6 +560,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         }
     }
 
+    if (WExposure == 0.0 && contains(optionSet, ExposureCutoffOption)) {
+        cerr << command <<
+            ": warning: option \"--exposure-cutoff\" has no effect as exposure weight\n" <<
+            command <<
+            ": warning:     is zero" <<
+            endl;
+    }
+
     if (WContrast == 0.0 && contains(optionSet, ContrastWindowSizeOption)) {
         cerr << command <<
             ": warning: option \"--contrast-window-size\" has no effect as contrast\n" <<
@@ -570,7 +601,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         }
     } else {
         if (FilterConfig.edgeScale > 0.0 &&
-            contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value <= 0.0) {
+            contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value() <= 0.0) {
             cerr << command <<
                 ": warning: option \"--contrast-window-size\" has no effect as\n" <<
                 command <<
@@ -668,7 +699,8 @@ int process_options(int argc, char** argv)
         LevelsId,
         CiecamId,
         NoCiecamId,
-        FallbackProfileId
+        FallbackProfileId,
+        ExposureCutoffId
     };
 
     static struct option long_options[] = {
@@ -699,6 +731,7 @@ int process_options(int argc, char** argv)
         {"ciecam", no_argument, 0, CiecamId},
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
+        {"exposure-cutoff", required_argument, 0, ExposureCutoffId},
         {0, 0, 0, 0}
     };
 
@@ -758,12 +791,12 @@ int process_options(int argc, char** argv)
         case MinCurvatureId: {
             char *tail;
             errno = 0;
-            MinCurvature.value = strtod(optarg, &tail);
+            MinCurvature.set_value(strtod(optarg, &tail));
             if (errno == 0) {
                 if (*tail == 0) {
-                    MinCurvature.isPercentage = false;
+                    MinCurvature.set_percentage(false);
                 } else if (strcmp(tail, "%") == 0) {
-                    MinCurvature.isPercentage = true;
+                    MinCurvature.set_percentage(true);
                 } else {
                     cerr << command << ": unrecognized minimum gradient \""
                          << optarg << "\" specification." << endl;
@@ -872,12 +905,12 @@ int process_options(int argc, char** argv)
                 failed = true;
             }
             errno = 0;
-            EntropyLowerCutoff.value = strtod(token, &tail);
+            EntropyLowerCutoff.set_value(strtod(token, &tail));
             if (errno == 0) {
                 if (*tail == 0) {
-                    EntropyLowerCutoff.isPercentage = false;
+                    EntropyLowerCutoff.set_percentage(false);
                 } else if (strcmp(tail, "%") == 0) {
-                    EntropyLowerCutoff.isPercentage = true;
+                    EntropyLowerCutoff.set_percentage(true);
                 } else {
                     cerr << command << ": unrecognized entropy's lower cutoff \""
                          << tail << "\" in \"" << token << "\"" << endl;
@@ -893,12 +926,12 @@ int process_options(int argc, char** argv)
             token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             if (token != NULL && *token != 0) {
                 errno = 0;
-                EntropyUpperCutoff.value = strtod(token, &tail);
+                EntropyUpperCutoff.set_value(strtod(token, &tail));
                 if (errno == 0) {
                     if (*tail == 0) {
-                        EntropyUpperCutoff.isPercentage = false;
+                        EntropyUpperCutoff.set_percentage(false);
                     } else if (strcmp(tail, "%") == 0) {
-                        EntropyUpperCutoff.isPercentage = true;
+                        EntropyUpperCutoff.set_percentage(true);
                     } else {
                         cerr << command << ": unrecognized entropy's upper cutoff \""
                              << tail << "\" in \"" << token << "\"" << endl;
@@ -919,6 +952,79 @@ int process_options(int argc, char** argv)
 
             delete [] s;
             optionSet.insert(EntropyCutoffOption);
+            break;
+        }
+
+        case ExposureCutoffId: {
+            char* s = new char[strlen(optarg) + 1];
+            strcpy(s, optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* tail;
+
+            if (token == NULL || *token == 0) {
+                cerr << command << ": no scale given to --exposure-cutoff.  "
+                     << "lower cutoff is required." << endl;
+                failed = true;
+            }
+            errno = 0;
+            ExposureLowerCutoff.set_value(strtod(token, &tail));
+            if (errno == 0) {
+                if (*tail == 0) {
+                    ExposureLowerCutoff.set_percentage(false);
+                } else if (strcmp(tail, "%") == 0) {
+                    ExposureLowerCutoff.set_percentage(true);
+                } else {
+                    cerr << command << ": unrecognized exposure's lower cutoff \""
+                         << tail << "\" in \"" << token << "\"" << endl;
+                    failed = true;
+                }
+            } else {
+                cerr << command << ": illegal numeric format \""
+                     << token << "\" of exposure's lower cutoff: "
+                     << enblend::errorMessage(errno) << endl;
+                failed = true;
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                ExposureUpperCutoff.set_value(strtod(token, &tail));
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        ExposureUpperCutoff.set_percentage(false);
+                    } else if (strcmp(tail, "%") == 0) {
+                        ExposureUpperCutoff.set_percentage(true);
+                    } else {
+                        cerr << command << ": unrecognized exposure's upper cutoff \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of exposure's upper cutoff: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                ExposureLowerCutoffGrayscaleProjector = token;
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                ExposureUpperCutoffGrayscaleProjector = token;
+            }
+
+            if (save_ptr != NULL && *save_ptr != 0) {
+                cerr << command << ": warning: ignoring trailing garbage \""
+                     << save_ptr << "\" in argument to --exposure-cutoff" << endl;
+            }
+
+            delete [] s;
+            optionSet.insert(ExposureCutoffOption);
             break;
         }
 

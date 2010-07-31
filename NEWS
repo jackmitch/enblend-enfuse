@@ -19,6 +19,11 @@ Unreleased.  Current line of development.
 - Assign different profiles to profile-free input images with option
   "--fallback-profile" instead of being tied to sRGB.
 
+- A new gray-scale projector called "anti-value" helps when fusing
+  with the intent of minimizing the noise in the output image.  When
+  employing a lower exposure cutoff this even is the default
+  projector.
+
 
 ** Bug Fixes
 
@@ -40,9 +45,14 @@ Unreleased.  Current line of development.
   option also has a negated form: "--no-ciecam"; the short one has
   not.
 
-- The option --fallback-profile=PROFILE allows users to pass their own
-  profiles for image sets that come without ICC color profiles.
+- The option "--fallback-profile=PROFILE" allows users to pass their
+  own profiles for image sets that come without ICC color profiles.
   Before the hard-coded profile was sRGB.
+
+- The option "--exposure-cutoff" facilitates tailoring the exposure
+  weight curve specifically to exclude underexposed (and probably
+  noisy) or overexposed pixels from fusion.
+
 
 
 * Version 4.0
