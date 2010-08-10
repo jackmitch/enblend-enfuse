@@ -1,5 +1,7 @@
 /* Settings for generic elements */
 body {
+    background: white;
+    color: black;
     margin-left: 6%;
     margin-right: 6%
 }
@@ -12,7 +14,7 @@ var {
     font-style: italic
 }
 
-/* Class- and attibute based settings */
+/* Class-based and attibute-based settings */
 div.contents {}
 div.float {
     border-bottom: 1px solid;

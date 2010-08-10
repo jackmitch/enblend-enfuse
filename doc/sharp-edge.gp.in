@@ -11,7 +11,7 @@ set terminal dumb Dumb_Width Dumb_Height enhanced
 replot
 
 set output "sharp-edge.png"
-set terminal png font FreeSans 10 size Png_Width, Png_Height enhanced
+set terminal png transparent font FreeSans 10 size Png_Width, Png_Height enhanced
 replot
 
 set output "sharp-edge.eps"

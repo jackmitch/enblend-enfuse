@@ -180,7 +180,7 @@ uninstall-xhtml:
                -e 's/^# \?//' < $< > $@
 
 .fig.png:
-	$(FIG2DEV) -L png $< $@
+	$(FIG2DEV) -L png -F $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@
 
 .fig.eps:
 	$(FIG2DEV) -L eps $< $@

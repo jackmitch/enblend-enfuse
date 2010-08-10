@@ -366,6 +366,26 @@ if test "x$FIG2DEV" = xfalse; then
     missing_for_doc="$missing_for_doc fig2dev"
 fi
 
+AC_CHECK_PROG(PNGTOPNM,
+              pngtopnm,
+              pngtopnm,
+              false)
+if test "x$PNGTOPNM" = xfalse; then
+    AC_MSG_WARN(cannot find pngtopnm; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc pngtopnm"
+fi
+
+AC_CHECK_PROG(PNMTOPNG,
+              pnmtopng,
+              pnmtopng,
+              false)
+if test "x$PNMTOPNG" = xfalse; then
+    AC_MSG_WARN(cannot find pnmtopng; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc pnmtopng"
+fi
+
 AC_PROG_SED
 
 # These variables are mentioned in the AutoMake documentation as being
