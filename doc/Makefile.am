@@ -35,8 +35,11 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   default.css
 
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
+                   -I $(top_builddir) -I $(srcdir)
+AM_MAKEINFOHTMLFLAGS = @AM_MAKEINFOHTMLFLAGS@ \
                    -I $(top_builddir) -I $(srcdir) \
-                   --css-include=@srcdir@/default.css
+                   --css-include=@srcdir@/default.css \
+                   $(MAKEINFOHTMLFLAGS)
 export TEXINPUTS=$(top_builddir):$(srcdir)
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)

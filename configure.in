@@ -456,14 +456,17 @@ if test "x$split_doc" = "xyes" \
      -o "x$split_doc" = "xYES" \
      -o "x$split_doc" = "xYes"; then
     AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS"
+    AM_MAKEINFOHTMLFLAGS="$AM_MAKEINFOHTMLFLAGS"
     AC_MSG_RESULT(yes)
     split_doc=yes
 else
-    AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split --no-headers"
+    AM_MAKEINFOFLAGS="$AM_MAKEINFOFLAGS --no-split"
+    AM_MAKEINFOHTMLFLAGS="$AM_MAKEINFOHTMLFLAGS --no-split --no-headers"
     AC_MSG_RESULT(no)
     split_doc=no
 fi
 AC_SUBST(AM_MAKEINFOFLAGS)
+AC_SUBST(AM_MAKEINFOHTMLFLAGS)
 
 # use a static vigra impex library
 CXXFLAGS="-DVIGRA_STATIC_LIB ${CXXFLAGS}"
@@ -572,7 +575,7 @@ AC_MSG_RESULT([
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 
  feature selection:
-   split *.info and *.html files:  ${split_doc}
+   split *.info and *.xhtml files: ${split_doc}
    enable debugging support:       ${enable_debug}
    enable malloc debugging:        ${enable_dmalloc}
    OpenEXR image format            ${have_exr}

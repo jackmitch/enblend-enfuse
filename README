@@ -333,6 +333,8 @@ Use the standard variable MAKEINFOFLAGS to control makeinfo(1), for
 example, to set the maximum length of lines in Info and plain text
 output with
     make MAKEINFOFLAGS="--fill-column=95" info
+The variable MAKEINFOHTMLFLAGS controls the formatting of XHTML; if
+set, it adds to MAKEINFOFLAGS.
 
 
 * Documentation
