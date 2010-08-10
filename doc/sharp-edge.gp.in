@@ -20,5 +20,5 @@ replot
 
 # Newer Gnuplots have a "pdf" terminal.
 set output "| ps2pdf -dEPSCrop - sharp-edge.pdf"
-set terminal postscript eps enhanced
+set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
 replot

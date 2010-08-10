@@ -96,7 +96,7 @@ General Index
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.1-cd12da20db1a, 31 July 2010), a
+This manual is for Enfuse (version 4.1-cd12da20db1a, 8 August 2010), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -209,6 +209,8 @@ Enblend and Enfuse are parts of a chain of tools to assemble images.
 
 *note Figure:photographic-workflow:: shows where Enblend and Enfuse sit
 in this tool chain.
+
+
 
 Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
@@ -979,34 +981,34 @@ to read the manual before applying them successfully.
      
            +-----------+------------+-----------+------------+-----------+
            +           +            +           +            +           +
-           |           :            :           :            :           |
+           |           :            :           :            :           *
          1 ++......................................................####***
-           |           :            :           :            :     #**** |
+           |           :            :           :            :      ***  |
            |           :            :           :            :    ***    |
-           |           :            :           :            :  ***      |
-           |           :            :           :            ****        |
+           |           :            :           :            : ****      |
+           |           :            :           :            ***#        |
        0.8 ++..............................................***..........++
-           |           :            :           :       **** :           |
-           |           :            :           :     ***    :           |
-           |           :            :           :   ***      :           |
-           |           :            :           :****        :           |
+           |           :            :           :       ***# :           |
+           |           :            :           :     ***#   :           |
+           |           :            :           :  ****      :           |
+           |           :            :           :***#        :           |
        0.6 ++..................................***......................++
-           |           :            :       ****:            :           |
-           |           :            :     ***   :            :           |
-           |           :            :   ***     :            :           |
-           |           :            :****       :            :           |
+           |           :            :       ***#:            :           |
+           |           :            :     ***#  :            :           |
+           |           :            :  ****     :            :           |
+           |           :            :***#       :            :           |
        0.4 ++......................***..................................++
-           |           :        ****:           :            :           |
-           |           :      ***   :           :            :           |
-           |           :    ***     :           :            :           |
-           |           : ****       :           :            :           |
+           |           :        ***#:           :            :           |
+           |           :      ***#  :           :            :           |
+           |           :   ****     :           :            :           |
+           |           : ***#       :           :            :           |
        0.2 ++..........***..............................................++
-           |        ****            :           :            :           |
-           |      ***  :            :           :            :           |
-           |    ***    :            :           :            :           |
-           | ****      :            :           :            :           |
-         0 ***#.................................................Y.******++
-           |           :           EntropyCutoff(Y, Lower, Upper) ###### |
+           |        ***#            :           :            :           |
+           |      ***# :            :           :            :           |
+           |   ****    :            :           :            :           |
+           | ***#      :            :           :            :           |
+         0 ***.........................................Y + Offset.******++
+           ####        :  EntropyCutoff(Y, Lower, Upper) - Offset ###### |
            +           +            +           +            +           +
            +-----------+------------+-----------+------------+-----------+
            0          0.2          0.4         0.6          0.8          1
@@ -1014,7 +1016,10 @@ to read the manual before applying them successfully.
 
      Figure 3.1: Linear lightness Y in comparison with an
      entropy-cutoff function for LOWER-CUTOFF = 5% and UPPER-CUTOFF =
-     90% which are rather extreme values.
+     90%, which are rather extreme values.  Please note that we have
+     shifted the original lightness curve up and the cut-off curve down
+     by a very small OFFSET to emphasize that the linear part of Y
+     remains unaltered under the cut-off operation.
 
         Note that a high LOWER-CUTOFF value lightens the resulting
      image, as dark (and presumably noisy) pixels are averaged with
@@ -1126,7 +1131,7 @@ to read the manual before applying them successfully.
            |      **   :            :           :            :   **      |
            |    ***    :            :           :            :    ***    |
            |  ***      :            :           :            :      ***  |
-           |  *        :            :           :            :        ** |
+           |           :            :           :            :        ** |
          0 ****........................................................***
            |           :          ExposureCutoff(Y, Lower, Upper) ****** |
            +           +            +           +            +           +
@@ -1608,35 +1613,35 @@ shows a Gaussian.
 
 
     1 ++----------+------------+---*****---+------------+----------++
-      +           +            +  *     *  +     Gaussian(Y) ****** +
+      +           +            + ***   *** +     Gaussian(Y) ****** +
       |                         **       **                         |
       |                        **         **                        |
-      |                       *             *                       |
-      |                       *             *                       |
+      |                       **           **                       |
+      |                      **             **                      |
   0.8 ++                     *               *                     ++
       |                     *                 *                     |
-      |                    *                   *                    |
-      |                    *                   *                    |
+      |                    **                 **                    |
+      |                   **                   **                   |
       |                   *                     *                   |
-      |                  *                       *                  |
-  0.6 ++                 *                       *                 ++
+      |                  **                     **                  |
+  0.6 ++                **                       **                ++
       |                 *                         *                 |
-      |                 *                         *                 |
-      |                *                           *                |
+      |                **                         **                |
+      |               **                           **               |
       |               *                             *               |
       |              **                             **              |
-      |             *                                 *             |
+      |             **                               **             |
   0.4 ++            *                                 *            ++
-      |            *                                   *            |
-      |            *                                   *            |
+      |            **                                 **            |
+      |           **                                   **           |
       |          **                                     **          |
-      |          *                                       *          |
+      |         **                                       **         |
       |        **                                         **        |
   0.2 ++      **                                           **      ++
       |      **                                             **      |
-      |     *                                                 *     |
-      |   **                                                   **   |
-      |***                                                       ***|
+      |    ***                                               ***    |
+      |  ***                                                   ***  |
+      ****                                                       ****
       *           +            +           +            +           *
     0 ++----------+------------+-----------+------------+----------++
       0          0.2          0.4         0.6          0.8          1
@@ -1734,6 +1739,8 @@ the so-called "local analysis window".  It always has an uneven edge
 length.  The user sets the size with option `--contrast-window-size'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
+
+
 
 Figure 5.2: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
@@ -1836,34 +1843,34 @@ Figure:laplacian-of-gaussian::, setting R = sqrt(x^2 + y^2).
 
   1 ++--------------+---------------+---------------+--------------++
     +               +             *****             +               +
-    |               :          **** :  *******      :               |
-    |               :        **     :        *******:               |
+    |               :         ***** : ********      :               |
+    |               :       ***     :        ********               |
   0 ++.....................**.......................*****************
     |               :    **         :               :               |
-    |               :    *          :               :               |
+    |               :   **          :               :               |
     |               :  **           :               :               |
-    |               :  *            :               :               |
+    |               : **            :               :               |
  -1 ++...............**............................................++
     |               :*              :               :               |
-    |               *               :               :               |
-    |               *               :               :               |
- -2 ++.............*...............................................++
+    |               **              :               :               |
+    |              **               :               :               |
+ -2 ++............**...............................................++
     |             * :               :               :               |
     |            ** :               :               :               |
-    |           *   :               :               :               |
-    |           *   :               :               :               |
+    |           **  :               :               :               |
+    |          **   :               :               :               |
  -3 ++.........*...................................................++
-    |         *     :               :               :               |
-    |         *     :               :               :               |
+    |         **    :               :               :               |
+    |        **     :               :               :               |
     |       **      :               :               :               |
- -4 ++......*......................................................++
+ -4 ++.....**......................................................++
     |      *        :               :               :               |
-    |     *         :               :               :               |
-    |    *          :               :               :               |
-    |  **           :               :               :               |
+    |    **         :               :               :               |
+    |   **          :               :               :               |
+    | ***           :               :               :               |
  -5 ***............................................................++
     |               :               :               :               |
-    |               :            LaplacianOfGaussian(R, 0.5) ****** |
+    |               :          LaplacianOfGaussian(R, Sigma) ****** |
     +               +               +               +               +
  -6 ++--------------+---------------+---------------+--------------++
     0              0.5              1              1.5              2
@@ -1981,38 +1988,38 @@ entropy of the "impossible message" to zero according to
 *note Figure:entropy:: shows an entropy function.
 
 
-    1 ++----------+------------+-*********-+------------+----------++
+    1 ++----------+------------+***********+------------+----------++
       +           +          ****         ****    Entropy(p) ****** +
       |                    ***               ***                    |
       |                  ***                   ***                  |
-      |                 **                       **                 |
+      |                ***                       ***                |
       |               **                           **               |
   0.8 ++             **                             **             ++
-      |             *                                 *             |
-      |            *                                   *            |
+      |             **                               **             |
+      |            **                                 **            |
       |           *                                     *           |
-      |          *                                       *          |
-      |         *                                         *         |
-  0.6 ++       *                                           *       ++
-      |        *                                           *        |
+      |          **                                     **          |
+      |         **                                       **         |
+  0.6 ++       **                                         **       ++
+      |       **                                           **       |
       |       *                                             *       |
       |      *                                               *      |
+      |     **                                               **     |
       |     *                                                 *     |
-      |     *                                                 *     |
-      |    *                                                   *    |
-  0.4 ++   *                                                    *  ++
+      |    **                                                 **    |
+  0.4 ++  **                                                   **  ++
       |   *                                                     *   |
-      |   *                                                     *   |
+      |  **                                                     **  |
       |  *                                                       *  |
-      |  *                                                       *  |
-      |  *                                                        * |
+      | **                                                       ** |
+      | *                                                         * |
   0.2 ++*                                                         *++
-      | *                                                          *|
+      |**                                                         **|
       |*                                                           *|
       |*                                                           *|
-      |                                                             |
-      +           +            +           +            +           +
-    0 ++----------+------------+-----------+------------+----------++
+      **                                                           **
+      *           +            +           +            +           *
+    0 *+----------+------------+-----------+------------+----------+*
       0          0.2          0.4         0.6          0.8          1
                                      p
 
@@ -2792,6 +2799,8 @@ over the whole range of edge curvatures.
 Figure *note Figure:focus-stacking-decision-tree:: helps the user to
 arrive at a well-fused focus stack with as few steps as possible.
 
+
+
 Figure 8.3: Focus stacking decision tree.
 
    Always start with the default, contrast weighting with a local
@@ -3538,395 +3547,395 @@ Figure 8.3: Focus stacking decision tree       See 8.6.5.5.
 Program Index
 *************
 
-ale:                                           See 9.        (line 2863)
-align_image_stack (Hugin):                     See 9.        (line 2870)
-cinepaint <1>:                                 See 9.        (line 2882)
-cinepaint:                                     See 3.3.      (line  838)
-convert (ImageMagick):                         See 9.        (line 2893)
-dcraw <1>:                                     See 9.        (line 2853)
+ale:                                           See 9.        (line 2872)
+align_image_stack (Hugin):                     See 9.        (line 2879)
+cinepaint <1>:                                 See 9.        (line 2891)
+cinepaint:                                     See 3.3.      (line  840)
+convert (ImageMagick):                         See 9.        (line 2902)
+dcraw <1>:                                     See 9.        (line 2862)
 dcraw:                                         See 2.        (line  213)
-display (ImageMagick):                         See 9.        (line 2893)
-exiftool:                                      See 9.        (line 2921)
-exrdisplay (OpenEXR):                          See 9.        (line 2899)
-fulla (Hugin):                                 See 9.        (line 2870)
-gimp <1>:                                      See 9.        (line 2889)
-gimp <2>:                                      See 3.3.      (line  838)
+display (ImageMagick):                         See 9.        (line 2902)
+exiftool:                                      See 9.        (line 2930)
+exrdisplay (OpenEXR):                          See 9.        (line 2908)
+fulla (Hugin):                                 See 9.        (line 2879)
+gimp <1>:                                      See 9.        (line 2898)
+gimp <2>:                                      See 3.3.      (line  840)
 gimp:                                          See 2.        (line  213)
-gm (GraphicsMagick):                           See 9.        (line 2893)
-hugin <1>:                                     See 9.        (line 2867)
-hugin <2>:                                     See 8.1.      (line 2239)
-hugin <3>:                                     See 3.3.      (line  818)
+gm (GraphicsMagick):                           See 9.        (line 2902)
+hugin <1>:                                     See 9.        (line 2876)
+hugin <2>:                                     See 8.1.      (line 2246)
+hugin <3>:                                     See 3.3.      (line  820)
 hugin:                                         See 2.        (line  213)
-identify (ImageMagick) <1>:                    See 9.        (line 2893)
-identify (ImageMagick):                        See 6.1.      (line 2078)
-montage (ImageMagick):                         See 9.        (line 2893)
-nona (Hugin) <1>:                              See 9.        (line 2870)
-nona (Hugin):                                  See 3.3.      (line  818)
+identify (ImageMagick) <1>:                    See 9.        (line 2902)
+identify (ImageMagick):                        See 6.1.      (line 2085)
+montage (ImageMagick):                         See 9.        (line 2902)
+nona (Hugin) <1>:                              See 9.        (line 2879)
+nona (Hugin):                                  See 3.3.      (line  820)
 PanoTools:                                     See 2.        (line  213)
-pfshdrcalibrate (PFScalibration):              See 9.        (line 2902)
-pfsin (PFSTools):                              See 9.        (line 2902)
-pfsout (PFSTools):                             See 9.        (line 2902)
-pfstmo_* (PFStmo):                             See 9.        (line 2902)
-pfsview (PFSTools):                            See 9.        (line 2902)
-PTmender (PanoTools):                          See 9.        (line 2875)
-PTOptimizer (PanoTools):                       See 9.        (line 2875)
-tifficc (LittleCMS):                           See 9.        (line 2925)
-tiffinfo (libtiff) <1>:                        See 9.        (line 2917)
-tiffinfo (libtiff):                            See 6.1.      (line 2078)
-ufraw <1>:                                     See 9.        (line 2856)
+pfshdrcalibrate (PFScalibration):              See 9.        (line 2911)
+pfsin (PFSTools):                              See 9.        (line 2911)
+pfsout (PFSTools):                             See 9.        (line 2911)
+pfstmo_* (PFStmo):                             See 9.        (line 2911)
+pfsview (PFSTools):                            See 9.        (line 2911)
+PTmender (PanoTools):                          See 9.        (line 2884)
+PTOptimizer (PanoTools):                       See 9.        (line 2884)
+tifficc (LittleCMS):                           See 9.        (line 2934)
+tiffinfo (libtiff) <1>:                        See 9.        (line 2926)
+tiffinfo (libtiff):                            See 6.1.      (line 2085)
+ufraw <1>:                                     See 9.        (line 2865)
 ufraw:                                         See 2.        (line  213)
-ufraw-batch:                                   See 9.        (line 2856)
+ufraw-batch:                                   See 9.        (line 2865)
 Syntactic-Comment Index
 ***********************
 
-enblend-response-file:                         See 3.1.1.    (line  402)
-enfuse-response-file:                          See 3.1.1.    (line  403)
-filename-globbing:                             See 3.1.3.    (line  448)
-glob:                                          See 3.1.3.    (line  444)
-globbing:                                      See 3.1.3.    (line  446)
-response-file:                                 See 3.1.1.    (line  401)
+enblend-response-file:                         See 3.1.1.    (line  404)
+enfuse-response-file:                          See 3.1.1.    (line  405)
+filename-globbing:                             See 3.1.3.    (line  450)
+glob:                                          See 3.1.3.    (line  446)
+globbing:                                      See 3.1.3.    (line  448)
+response-file:                                 See 3.1.1.    (line  403)
 Option Index
 ************
 
---ciecam:                                      See 3.3.      (line  723)
---compression:                                 See 3.2.      (line  509)
---contrast-edge-scale:                         See 3.5.      (line  946)
---contrast-min-curvature:                      See 3.5.      (line 1237)
---contrast-weight:                             See 3.4.      (line  875)
---contrast-window-size:                        See 3.5.      (line  929)
---depth:                                       See 3.3.      (line  734)
---entropy-cutoff:                              See 3.5.      (line  965)
---entropy-weight:                              See 3.4.      (line  882)
---entropy-window-size:                         See 3.5.      (line 1028)
---exposure-cutoff:                             See 3.5.      (line 1043)
---exposure-mu:                                 See 3.4.      (line  897)
---exposure-sigma:                              See 3.4.      (line  905)
---exposure-weight:                             See 3.4.      (line  889)
---fallback-profile:                            See 3.3.      (line  826)
---gray-projector:                              See 3.5.      (line 1159)
---hard-mask <1>:                               See 8.6.6.    (line 2831)
---hard-mask <2>:                               See 5.1.2.    (line 1523)
---hard-mask:                                   See 3.5.      (line 1225)
---help:                                        See 3.2.      (line  546)
---levels:                                      See 3.2.      (line  550)
---no-ciecam:                                   See 3.3.      (line  858)
---output:                                      See 3.2.      (line  592)
---saturation-weight:                           See 3.4.      (line  914)
---save-masks:                                  See 3.5.      (line 1253)
---soft-mask:                                   See 3.5.      (line 1279)
---verbose:                                     See 3.2.      (line  599)
---version:                                     See 3.2.      (line  634)
---wrap:                                        See 3.2.      (line  641)
--b <1>:                                        See 7.        (line 2152)
--b:                                            See 3.3.      (line  711)
--c:                                            See 3.3.      (line  723)
--d:                                            See 3.3.      (line  734)
--f:                                            See 3.3.      (line  814)
--g:                                            See 3.3.      (line  834)
--h:                                            See 3.2.      (line  546)
--l:                                            See 3.2.      (line  550)
--m <1>:                                        See 7.        (line 2152)
--m:                                            See 3.3.      (line  846)
--o:                                            See 3.2.      (line  592)
--V:                                            See 3.2.      (line  634)
--v:                                            See 3.2.      (line  599)
--w:                                            See 3.2.      (line  641)
+--ciecam:                                      See 3.3.      (line  725)
+--compression:                                 See 3.2.      (line  511)
+--contrast-edge-scale:                         See 3.5.      (line  948)
+--contrast-min-curvature:                      See 3.5.      (line 1242)
+--contrast-weight:                             See 3.4.      (line  877)
+--contrast-window-size:                        See 3.5.      (line  931)
+--depth:                                       See 3.3.      (line  736)
+--entropy-cutoff:                              See 3.5.      (line  967)
+--entropy-weight:                              See 3.4.      (line  884)
+--entropy-window-size:                         See 3.5.      (line 1033)
+--exposure-cutoff:                             See 3.5.      (line 1048)
+--exposure-mu:                                 See 3.4.      (line  899)
+--exposure-sigma:                              See 3.4.      (line  907)
+--exposure-weight:                             See 3.4.      (line  891)
+--fallback-profile:                            See 3.3.      (line  828)
+--gray-projector:                              See 3.5.      (line 1164)
+--hard-mask <1>:                               See 8.6.6.    (line 2840)
+--hard-mask <2>:                               See 5.1.2.    (line 1528)
+--hard-mask:                                   See 3.5.      (line 1230)
+--help:                                        See 3.2.      (line  548)
+--levels:                                      See 3.2.      (line  552)
+--no-ciecam:                                   See 3.3.      (line  860)
+--output:                                      See 3.2.      (line  594)
+--saturation-weight:                           See 3.4.      (line  916)
+--save-masks:                                  See 3.5.      (line 1258)
+--soft-mask:                                   See 3.5.      (line 1284)
+--verbose:                                     See 3.2.      (line  601)
+--version:                                     See 3.2.      (line  636)
+--wrap:                                        See 3.2.      (line  643)
+-b <1>:                                        See 7.        (line 2159)
+-b:                                            See 3.3.      (line  713)
+-c:                                            See 3.3.      (line  725)
+-d:                                            See 3.3.      (line  736)
+-f:                                            See 3.3.      (line  816)
+-g:                                            See 3.3.      (line  836)
+-h:                                            See 3.2.      (line  548)
+-l:                                            See 3.2.      (line  552)
+-m <1>:                                        See 7.        (line 2159)
+-m:                                            See 3.3.      (line  848)
+-o:                                            See 3.2.      (line  594)
+-V:                                            See 3.2.      (line  636)
+-v:                                            See 3.2.      (line  601)
+-w:                                            See 3.2.      (line  643)
 General Index
 *************
 
-# (response file comment):                     See 3.1.1.    (line  352)
-360o panoramas:                                See 3.2.      (line  641)
-@ (response file prefix):                      See 3.1.      (line  302)
-a.tif:                                         See 3.2.      (line  594)
-active criterion:                              See 5.1.3.    (line 1550)
-advanced focus stacking:                       See 8.6.5.    (line 2578)
+# (response file comment):                     See 3.1.1.    (line  354)
+360o panoramas:                                See 3.2.      (line  643)
+@ (response file prefix):                      See 3.1.      (line  304)
+a.tif:                                         See 3.2.      (line  596)
+active criterion:                              See 5.1.3.    (line 1555)
+advanced focus stacking:                       See 8.6.5.    (line 2585)
 advanced focus stacking, recognizing faint edges:See 8.6.5.4.
-                                                             (line 2736)
-advanced focus stacking, suppressing noise:    See 8.6.5.4.  (line 2736)
-affine transformation:                         See 2.        (line  251)
-algorithms, globbing:                          See 3.1.3.    (line  442)
-alpha channel <1>:                             See 2.        (line  272)
+                                                             (line 2743)
+advanced focus stacking, suppressing noise:    See 8.6.5.4.  (line 2743)
+affine transformation:                         See 2.        (line  253)
+algorithms, globbing:                          See 3.1.3.    (line  444)
+alpha channel <1>:                             See 2.        (line  274)
 alpha channel:                                 See 1.        (line  165)
-alpha channel, associated:                     See 3.3.      (line  834)
-anti-value gray projector:                     See 3.5.      (line 1169)
-aperture, sweet spot:                          See 8.6.1.    (line 2487)
-applications of enfuse:                        See 8.        (line 2225)
+alpha channel, associated:                     See 3.3.      (line  836)
+anti-value gray projector:                     See 3.5.      (line 1174)
+aperture, sweet spot:                          See 8.6.1.    (line 2494)
+applications of enfuse:                        See 8.        (line 2232)
 authors, list of:                              See Appendix B.
-                                                             (line 3080)
-average gray projector:                        See 3.5.      (line 1177)
-average, disabling:                            See 5.1.2.    (line 1523)
-average, weighted:                             See 5.1.1.    (line 1511)
-basic focus stacking:                          See 8.6.4.    (line 2550)
-binary mask:                                   See 6.        (line 2062)
-bits per channel:                              See 3.3.      (line  734)
-blending exposures:                            See 8.3.2.    (line 2405)
+                                                             (line 3089)
+average gray projector:                        See 3.5.      (line 1182)
+average, disabling:                            See 5.1.2.    (line 1528)
+average, weighted:                             See 5.1.1.    (line 1516)
+basic focus stacking:                          See 8.6.4.    (line 2557)
+binary mask:                                   See 6.        (line 2069)
+bits per channel:                              See 3.3.      (line  736)
+blending exposures:                            See 8.3.2.    (line 2412)
 bug reports:                                   See Appendix A.
-                                                             (line 2933)
+                                                             (line 2942)
 Burt-Adelson multiresolution spline:           See 1.        (line  121)
-canvas size:                                   See 3.3.      (line  814)
-channel width:                                 See 3.3.      (line  734)
+canvas size:                                   See 3.3.      (line  816)
+channel width:                                 See 3.3.      (line  736)
 channel, alpha:                                See 1.        (line  165)
-channel-mixer gray projector:                  See 3.5.      (line 1183)
-CIECAM02 <1>:                                  See 4.        (line 1414)
-CIECAM02:                                      See 3.3.      (line  723)
-circle-of-confusion:                           See 8.6.1.    (line 2475)
-color appearance model <1>:                    See 4.        (line 1414)
-color appearance model:                        See 3.3.      (line  723)
-color cube, RGB:                               See 4.        (line 1414)
-color profile <1>:                             See 4.        (line 1407)
-color profile:                                 See 3.3.      (line  726)
-color space, sRGB <1>:                         See 4.        (line 1425)
-color space, sRGB:                             See 3.3.      (line  726)
-compression:                                   See 3.2.      (line  509)
-compression, deflate:                          See 3.2.      (line  524)
-compression, JPEG:                             See 3.2.      (line  515)
-compression, LZW:                              See 3.2.      (line  530)
-compression, packbits:                         See 3.2.      (line  534)
-contrast enhancement, local:                   See 8.6.5.3.  (line 2715)
-contrast weighting using a blend of methods:   See 5.4.3.    (line 1908)
-contrast weighting using laplacian-of-gaussian:See 5.4.2.    (line 1806)
-contrast weighting using standard deviation:   See 5.4.1.    (line 1732)
-conversion, L*a*b*:                            See 3.5.      (line 1199)
-conversion, raw:                               See 2.        (line  238)
-criteria, overpowering one another:            See 5.1.3.    (line 1575)
-criterion, active:                             See 5.1.3.    (line 1550)
-D50 white point:                               See 4.        (line 1458)
-dark frame:                                    See 8.6.6.    (line 2827)
-decision tree, focus stacking:                 See 8.6.5.5.  (line 2792)
-default output filename:                       See 3.2.      (line  594)
-default weights:                               See 5.1.3.    (line 1562)
-deflate compression:                           See 3.2.      (line  524)
-delimiters, option:                            See 3.6.      (line 1360)
-depth-of-field:                                See 8.6.1.    (line 2478)
-depth-of-focus increase:                       See 8.6.      (line 2459)
-digital blending:                              See 8.3.2.    (line 2405)
-disabling average:                             See 5.1.2.    (line 1523)
-double precision float, IEEE754:               See 3.3.      (line  787)
-dynamic range increase <1>:                    See 8.4.      (line 2443)
-dynamic range increase:                        See 8.3.      (line 2336)
-edge detection, laplacian:                     See 8.6.5.2.  (line 2695)
-entropy:                                       See 5.5.      (line 1970)
-entropy, definition:                           See 5.5.      (line 1966)
-estimators:                                    See 5.4.1.2.  (line 1786)
-expectation value:                             See 5.4.1.1.  (line 1767)
-expert focus stacking tips:                    See 8.6.6.    (line 2815)
-exposure series:                               See 8.3.      (line 2336)
-exposure series, common misconceptions:        See 8.3.2.    (line 2402)
-exposure series, tips for beginners:           See 8.3.1.    (line 2378)
-fallback profile:                              See 3.3.      (line  826)
-filename template:                             See 3.5.      (line 1256)
-filename, literal:                             See 3.        (line  295)
-flash exposure series:                         See 8.4.      (line 2443)
-focus stacking decision tree:                  See 8.6.5.5.  (line 2792)
-focus stacking, advanced:                      See 8.6.5.    (line 2578)
-focus stacking, basic:                         See 8.6.4.    (line 2550)
-focus stacks:                                  See 8.6.      (line 2459)
-focus stacks, fusing:                          See 8.6.3.    (line 2512)
-focus stacks, preparation:                     See 8.6.2.    (line 2498)
-focus stacks, why create them:                 See 8.6.1.    (line 2469)
-format of response file:                       See 3.1.1.    (line  352)
+channel-mixer gray projector:                  See 3.5.      (line 1188)
+CIECAM02 <1>:                                  See 4.        (line 1419)
+CIECAM02:                                      See 3.3.      (line  725)
+circle-of-confusion:                           See 8.6.1.    (line 2482)
+color appearance model <1>:                    See 4.        (line 1419)
+color appearance model:                        See 3.3.      (line  725)
+color cube, RGB:                               See 4.        (line 1419)
+color profile <1>:                             See 4.        (line 1412)
+color profile:                                 See 3.3.      (line  728)
+color space, sRGB <1>:                         See 4.        (line 1430)
+color space, sRGB:                             See 3.3.      (line  728)
+compression:                                   See 3.2.      (line  511)
+compression, deflate:                          See 3.2.      (line  526)
+compression, JPEG:                             See 3.2.      (line  517)
+compression, LZW:                              See 3.2.      (line  532)
+compression, packbits:                         See 3.2.      (line  536)
+contrast enhancement, local:                   See 8.6.5.3.  (line 2722)
+contrast weighting using a blend of methods:   See 5.4.3.    (line 1915)
+contrast weighting using laplacian-of-gaussian:See 5.4.2.    (line 1813)
+contrast weighting using standard deviation:   See 5.4.1.    (line 1737)
+conversion, L*a*b*:                            See 3.5.      (line 1204)
+conversion, raw:                               See 2.        (line  240)
+criteria, overpowering one another:            See 5.1.3.    (line 1580)
+criterion, active:                             See 5.1.3.    (line 1555)
+D50 white point:                               See 4.        (line 1463)
+dark frame:                                    See 8.6.6.    (line 2836)
+decision tree, focus stacking:                 See 8.6.5.5.  (line 2799)
+default output filename:                       See 3.2.      (line  596)
+default weights:                               See 5.1.3.    (line 1567)
+deflate compression:                           See 3.2.      (line  526)
+delimiters, option:                            See 3.6.      (line 1365)
+depth-of-field:                                See 8.6.1.    (line 2485)
+depth-of-focus increase:                       See 8.6.      (line 2466)
+digital blending:                              See 8.3.2.    (line 2412)
+disabling average:                             See 5.1.2.    (line 1528)
+double precision float, IEEE754:               See 3.3.      (line  789)
+dynamic range increase <1>:                    See 8.4.      (line 2450)
+dynamic range increase:                        See 8.3.      (line 2343)
+edge detection, laplacian:                     See 8.6.5.2.  (line 2702)
+entropy:                                       See 5.5.      (line 1977)
+entropy, definition:                           See 5.5.      (line 1973)
+estimators:                                    See 5.4.1.2.  (line 1793)
+expectation value:                             See 5.4.1.1.  (line 1774)
+expert focus stacking tips:                    See 8.6.6.    (line 2824)
+exposure series:                               See 8.3.      (line 2343)
+exposure series, common misconceptions:        See 8.3.2.    (line 2409)
+exposure series, tips for beginners:           See 8.3.1.    (line 2385)
+fallback profile:                              See 3.3.      (line  828)
+filename template:                             See 3.5.      (line 1261)
+filename, literal:                             See 3.        (line  297)
+flash exposure series:                         See 8.4.      (line 2450)
+focus stacking decision tree:                  See 8.6.5.5.  (line 2799)
+focus stacking, advanced:                      See 8.6.5.    (line 2585)
+focus stacking, basic:                         See 8.6.4.    (line 2557)
+focus stacks:                                  See 8.6.      (line 2466)
+focus stacks, fusing:                          See 8.6.3.    (line 2519)
+focus stacks, preparation:                     See 8.6.2.    (line 2505)
+focus stacks, why create them:                 See 8.6.1.    (line 2476)
+format of response file:                       See 3.1.1.    (line  354)
 free documentation license (FDL):              See Appendix C.
-                                                             (line 3118)
-fusing, local-contrast-based:                  See 8.6.3.    (line 2512)
-fusing, single criterion:                      See 5.1.3.    (line 1544)
+                                                             (line 3127)
+fusing, local-contrast-based:                  See 8.6.3.    (line 2519)
+fusing, single criterion:                      See 5.1.3.    (line 1549)
 general index:
-          See ``General Index''.                             (line 3637)
-glob(7):                                       See 3.1.3.    (line  467)
-globbing algorithm literal:                    See 3.1.3.    (line  453)
-globbing algorithm none:                       See 3.1.3.    (line  475)
-globbing algorithm sh:                         See 3.1.3.    (line  484)
-globbing algorithm shell:                      See 3.1.3.    (line  478)
-globbing algorithm wildcard:                   See 3.1.3.    (line  453)
-globbing algorithms:                           See 3.1.3.    (line  442)
+          See ``General Index''.                             (line 3646)
+glob(7):                                       See 3.1.3.    (line  469)
+globbing algorithm literal:                    See 3.1.3.    (line  455)
+globbing algorithm none:                       See 3.1.3.    (line  477)
+globbing algorithm sh:                         See 3.1.3.    (line  486)
+globbing algorithm shell:                      See 3.1.3.    (line  480)
+globbing algorithm wildcard:                   See 3.1.3.    (line  455)
+globbing algorithms:                           See 3.1.3.    (line  444)
 GNU free documentation license:                See Appendix C.
-                                                             (line 3118)
-grammar, response file:                        See 3.1.1.    (line  366)
-grammar, syntactic comment:                    See 3.1.2.    (line  434)
-gray projector:                                See 3.5.      (line 1159)
-gray projector, anti-value:                    See 3.5.      (line 1169)
-gray projector, average:                       See 3.5.      (line 1177)
-gray projector, channel-mixer:                 See 3.5.      (line 1183)
-gray projector, l-star:                        See 3.5.      (line 1199)
-gray projector, lightness:                     See 3.5.      (line 1209)
-gray projector, luminance:                     See 3.5.      (line 1214)
-gray projector, value:                         See 3.5.      (line 1220)
-half precision float, OpenEXR:                 See 3.3.      (line  803)
-helpful programs:                              See 9.        (line 2849)
-hot pixels:                                    See 8.6.6.    (line 2827)
-Hugin:                                         See A.2.      (line 3023)
-ICC profile <1>:                               See 4.        (line 1407)
-ICC profile:                                   See 3.3.      (line  726)
-IEEE754 double precision float:                See 3.3.      (line  787)
-IEEE754 single precision float:                See 3.3.      (line  777)
-image cache:                                   See 7.        (line 2155)
-image cache, block size:                       See 3.3.      (line  711)
-image cache, cache size:                       See 3.3.      (line  846)
-image cache, location:                         See 7.        (line 2166)
+                                                             (line 3127)
+grammar, response file:                        See 3.1.1.    (line  368)
+grammar, syntactic comment:                    See 3.1.2.    (line  436)
+gray projector:                                See 3.5.      (line 1164)
+gray projector, anti-value:                    See 3.5.      (line 1174)
+gray projector, average:                       See 3.5.      (line 1182)
+gray projector, channel-mixer:                 See 3.5.      (line 1188)
+gray projector, l-star:                        See 3.5.      (line 1204)
+gray projector, lightness:                     See 3.5.      (line 1214)
+gray projector, luminance:                     See 3.5.      (line 1219)
+gray projector, value:                         See 3.5.      (line 1225)
+half precision float, OpenEXR:                 See 3.3.      (line  805)
+helpful programs:                              See 9.        (line 2858)
+hot pixels:                                    See 8.6.6.    (line 2836)
+Hugin:                                         See A.2.      (line 3032)
+ICC profile <1>:                               See 4.        (line 1412)
+ICC profile:                                   See 3.3.      (line  728)
+IEEE754 double precision float:                See 3.3.      (line  789)
+IEEE754 single precision float:                See 3.3.      (line  779)
+image cache:                                   See 7.        (line 2162)
+image cache, block size:                       See 3.3.      (line  713)
+image cache, cache size:                       See 3.3.      (line  848)
+image cache, location:                         See 7.        (line 2173)
 image, multi-layer:                            See 1.        (line  173)
-images, fusable:                               See 8.1.      (line 2232)
+images, fusable:                               See 8.1.      (line 2239)
 index, general:
-          See ``General Index''.                             (line 3637)
+          See ``General Index''.                             (line 3646)
 index, option:
-          See ``Option Index''.                              (line 3591)
+          See ``Option Index''.                              (line 3600)
 index, program:
-          See ``Program Index''.                             (line 3541)
+          See ``Program Index''.                             (line 3550)
 index, syntactic-comment:
-          See ``Syntactic-Comment Index''.                   (line 3582)
-input mask:                                    See 6.1.      (line 2074)
-invocation:                                    See 3.        (line  291)
-JPEG compression:                              See 3.2.      (line  515)
-KImageFuser:                                   See A.2.      (line 3023)
-L*a*b* conversion:                             See 3.5.      (line 1199)
-l-star gray projector:                         See 3.5.      (line 1199)
-laplacian edge detection:                      See 8.6.5.2.  (line 2695)
-Laplacian of Gaussian (LoG):                   See 5.4.2.    (line 1806)
-lens distortion, correction of:                See 2.        (line  251)
-levels, pyramid:                               See 3.2.      (line  550)
-LibJPEG:                                       See 9.        (line 2906)
-LibPNG:                                        See 9.        (line 2909)
-LibTiff:                                       See 9.        (line 2913)
-light probe:                                   See 8.3.2.    (line 2424)
-lightness gray projector:                      See 3.5.      (line 1209)
-literal filename:                              See 3.        (line  295)
-local analysis window:                         See 5.4.1.    (line 1732)
-local contrast enhancement:                    See 8.6.5.3.  (line 2715)
-local contrast problem:                        See 8.6.5.1.  (line 2585)
-local-contrast-based fusing:                   See 8.6.3.    (line 2512)
-luminance gray projector:                      See 3.5.      (line 1214)
-LZW compression:                               See 3.2.      (line  530)
-mask template character, %:                    See 3.5.      (line 1282)
-mask template character, B:                    See 3.5.      (line 1333)
-mask template character, b:                    See 3.5.      (line 1326)
-mask template character, D:                    See 3.5.      (line 1323)
-mask template character, d:                    See 3.5.      (line 1316)
-mask template character, E:                    See 3.5.      (line 1352)
-mask template character, e:                    See 3.5.      (line 1346)
-mask template character, F:                    See 3.5.      (line 1342)
-mask template character, f:                    See 3.5.      (line 1336)
-mask template character, i:                    See 3.5.      (line 1285)
-mask template character, n:                    See 3.5.      (line 1300)
-mask template character, P:                    See 3.5.      (line 1313)
-mask template character, p:                    See 3.5.      (line 1305)
-mask template characters, table of:            See 3.5.      (line 1281)
-mask, binary:                                  See 6.        (line 2062)
-mask, filename template:                       See 3.5.      (line 1256)
-mask, input files:                             See 6.1.      (line 2074)
-mask, saving:                                  See 3.5.      (line 1253)
-mask, weight:                                  See 6.        (line 2062)
-masks, understanding:                          See 6.        (line 2062)
-memory, tuning usage of:                       See 7.        (line 2152)
+          See ``Syntactic-Comment Index''.                   (line 3591)
+input mask:                                    See 6.1.      (line 2081)
+invocation:                                    See 3.        (line  293)
+JPEG compression:                              See 3.2.      (line  517)
+KImageFuser:                                   See A.2.      (line 3032)
+L*a*b* conversion:                             See 3.5.      (line 1204)
+l-star gray projector:                         See 3.5.      (line 1204)
+laplacian edge detection:                      See 8.6.5.2.  (line 2702)
+Laplacian of Gaussian (LoG):                   See 5.4.2.    (line 1813)
+lens distortion, correction of:                See 2.        (line  253)
+levels, pyramid:                               See 3.2.      (line  552)
+LibJPEG:                                       See 9.        (line 2915)
+LibPNG:                                        See 9.        (line 2918)
+LibTiff:                                       See 9.        (line 2922)
+light probe:                                   See 8.3.2.    (line 2431)
+lightness gray projector:                      See 3.5.      (line 1214)
+literal filename:                              See 3.        (line  297)
+local analysis window:                         See 5.4.1.    (line 1737)
+local contrast enhancement:                    See 8.6.5.3.  (line 2722)
+local contrast problem:                        See 8.6.5.1.  (line 2592)
+local-contrast-based fusing:                   See 8.6.3.    (line 2519)
+luminance gray projector:                      See 3.5.      (line 1219)
+LZW compression:                               See 3.2.      (line  532)
+mask template character, %:                    See 3.5.      (line 1287)
+mask template character, B:                    See 3.5.      (line 1338)
+mask template character, b:                    See 3.5.      (line 1331)
+mask template character, D:                    See 3.5.      (line 1328)
+mask template character, d:                    See 3.5.      (line 1321)
+mask template character, E:                    See 3.5.      (line 1357)
+mask template character, e:                    See 3.5.      (line 1351)
+mask template character, F:                    See 3.5.      (line 1347)
+mask template character, f:                    See 3.5.      (line 1341)
+mask template character, i:                    See 3.5.      (line 1290)
+mask template character, n:                    See 3.5.      (line 1305)
+mask template character, P:                    See 3.5.      (line 1318)
+mask template character, p:                    See 3.5.      (line 1310)
+mask template characters, table of:            See 3.5.      (line 1286)
+mask, binary:                                  See 6.        (line 2069)
+mask, filename template:                       See 3.5.      (line 1261)
+mask, input files:                             See 6.1.      (line 2081)
+mask, saving:                                  See 3.5.      (line 1258)
+mask, weight:                                  See 6.        (line 2069)
+masks, understanding:                          See 6.        (line 2069)
+memory, tuning usage of:                       See 7.        (line 2159)
 Mertens-Kautz-Van Reeth exposure fusion:       See 1.        (line  106)
-mode of operation (SDev, LoG, ...):            See 5.4.4.    (line 1950)
+mode of operation (SDev, LoG, ...):            See 5.4.4.    (line 1957)
 multi-directory TIFF:                          See 1.        (line  173)
 multi-layer image:                             See 1.        (line  173)
-natural sharp-unsharp transition:              See 8.6.6.    (line 2842)
-noise reduction:                               See 8.2.      (line 2314)
+natural sharp-unsharp transition:              See 8.6.6.    (line 2851)
+noise reduction:                               See 8.2.      (line 2321)
 Octave:                                        See Appendix A.
-                                                             (line 2933)
-OpenEXR, data format:                          See 3.3.      (line  799)
-OpenEXR, half precision float:                 See 3.3.      (line  803)
-option delimiters:                             See 3.6.      (line 1360)
+                                                             (line 2942)
+OpenEXR, data format:                          See 3.3.      (line  801)
+OpenEXR, half precision float:                 See 3.3.      (line  805)
+option delimiters:                             See 3.6.      (line 1365)
 option index:
-          See ``Option Index''.                              (line 3591)
-options, common:                               See 3.2.      (line  500)
-options, expert:                               See 3.5.      (line  925)
-options, extended:                             See 3.3.      (line  707)
-options, fusion:                               See 3.4.      (line  871)
-order, of processing:                          See 3.1.      (line  305)
-output file compression:                       See 3.2.      (line  509)
-output filename, default:                      See 3.2.      (line  594)
-output image, set size of:                     See 3.3.      (line  814)
-overpowering criteria:                         See 5.1.3.    (line 1575)
+          See ``Option Index''.                              (line 3600)
+options, common:                               See 3.2.      (line  502)
+options, expert:                               See 3.5.      (line  927)
+options, extended:                             See 3.3.      (line  709)
+options, fusion:                               See 3.4.      (line  873)
+order, of processing:                          See 3.1.      (line  307)
+output file compression:                       See 3.2.      (line  511)
+output filename, default:                      See 3.2.      (line  596)
+output image, set size of:                     See 3.3.      (line  816)
+overpowering criteria:                         See 5.1.3.    (line 1580)
 overview:                                      See 1.        (line  106)
-packbits compression:                          See 3.2.      (line  534)
-parallax error:                                See 2.        (line  261)
-perceptual rendering intent:                   See 4.        (line 1456)
-photometric alignment:                         See 2.        (line  253)
-pixels, hot:                                   See 8.6.6.    (line 2827)
-polarization series:                           See 8.5.      (line 2450)
-probability function:                          See 5.4.1.1.  (line 1763)
+packbits compression:                          See 3.2.      (line  536)
+parallax error:                                See 2.        (line  263)
+perceptual rendering intent:                   See 4.        (line 1461)
+photometric alignment:                         See 2.        (line  255)
+pixels, hot:                                   See 8.6.6.    (line 2836)
+polarization series:                           See 8.5.      (line 2457)
+probability function:                          See 5.4.1.1.  (line 1770)
 problem reports:                               See Appendix A.
-                                                             (line 2936)
-problem, local contrast:                       See 8.6.5.1.  (line 2585)
-processing order:                              See 3.1.      (line  305)
-profile, fallback:                             See 3.3.      (line  826)
-profile, ICC <1>:                              See 4.        (line 1407)
-profile, ICC:                                  See 3.3.      (line  726)
+                                                             (line 2945)
+problem, local contrast:                       See 8.6.5.1.  (line 2592)
+processing order:                              See 3.1.      (line  307)
+profile, fallback:                             See 3.3.      (line  828)
+profile, ICC <1>:                              See 4.        (line 1412)
+profile, ICC:                                  See 3.3.      (line  728)
 program index:
-          See ``Program Index''.                             (line 3541)
-programs, helpful additional:                  See 9.        (line 2849)
-pyramid levels:                                See 3.2.      (line  550)
-raw conversion:                                See 2.        (line  238)
-rendering intent, perceptual:                  See 4.        (line 1456)
-response file <1>:                             See 3.1.      (line  302)
-response file:                                 See 3.        (line  295)
-response file, comment (#):                    See 3.1.1.    (line  352)
-response file, force recognition of:           See 3.1.1.    (line  396)
-response file, format:                         See 3.1.1.    (line  352)
-response file, grammar:                        See 3.1.1.    (line  366)
-response file, syntactic comment:              See 3.1.2.    (line  422)
-RGB color cube:                                See 4.        (line 1414)
-saturation enhancement:                        See 8.5.      (line 2450)
-scaling of parameters:                         See 5.4.4.    (line 1950)
-sensor, use of clean:                          See 8.6.6.    (line 2818)
-series, exposure:                              See 8.3.      (line 2336)
-series, flash exposure:                        See 8.4.      (line 2443)
-series, polarization:                          See 8.5.      (line 2450)
-series, simple:                                See 8.2.      (line 2314)
-simple series:                                 See 8.2.      (line 2314)
-single criterion fusing:                       See 5.1.3.    (line 1544)
-single precision float, IEEE754:               See 3.3.      (line  777)
-size, canvas:                                  See 3.3.      (line  814)
+          See ``Program Index''.                             (line 3550)
+programs, helpful additional:                  See 9.        (line 2858)
+pyramid levels:                                See 3.2.      (line  552)
+raw conversion:                                See 2.        (line  240)
+rendering intent, perceptual:                  See 4.        (line 1461)
+response file <1>:                             See 3.1.      (line  304)
+response file:                                 See 3.        (line  297)
+response file, comment (#):                    See 3.1.1.    (line  354)
+response file, force recognition of:           See 3.1.1.    (line  398)
+response file, format:                         See 3.1.1.    (line  354)
+response file, grammar:                        See 3.1.1.    (line  368)
+response file, syntactic comment:              See 3.1.2.    (line  424)
+RGB color cube:                                See 4.        (line 1419)
+saturation enhancement:                        See 8.5.      (line 2457)
+scaling of parameters:                         See 5.4.4.    (line 1957)
+sensor, use of clean:                          See 8.6.6.    (line 2827)
+series, exposure:                              See 8.3.      (line 2343)
+series, flash exposure:                        See 8.4.      (line 2450)
+series, polarization:                          See 8.5.      (line 2457)
+series, simple:                                See 8.2.      (line 2321)
+simple series:                                 See 8.2.      (line 2321)
+single criterion fusing:                       See 5.1.3.    (line 1549)
+single precision float, IEEE754:               See 3.3.      (line  779)
+size, canvas:                                  See 3.3.      (line  816)
 SourceForge <1>:                               See Appendix A.
-                                                             (line 2939)
+                                                             (line 2948)
 SourceForge:                                   See 1.        (line  179)
 SourceForge, tracker:                          See Appendix A.
-                                                             (line 2939)
-sRGB color space <1>:                          See 4.        (line 1425)
-sRGB color space:                              See 3.3.      (line  726)
-standard deviation:                            See 5.4.1.1.  (line 1775)
-statistical moments:                           See 5.4.1.1.  (line 1763)
-subtraction of dark frame:                     See 8.6.6.    (line 2827)
-sweet spot aperture:                           See 8.6.1.    (line 2487)
-syntactic comment, grammar:                    See 3.1.2.    (line  434)
-syntactic comment, response file:              See 3.1.2.    (line  422)
+                                                             (line 2948)
+sRGB color space <1>:                          See 4.        (line 1430)
+sRGB color space:                              See 3.3.      (line  728)
+standard deviation:                            See 5.4.1.1.  (line 1782)
+statistical moments:                           See 5.4.1.1.  (line 1770)
+subtraction of dark frame:                     See 8.6.6.    (line 2836)
+sweet spot aperture:                           See 8.6.1.    (line 2494)
+syntactic comment, grammar:                    See 3.1.2.    (line  436)
+syntactic comment, response file:              See 3.1.2.    (line  424)
 syntactic-comment index:
-          See ``Syntactic-Comment Index''.                   (line 3582)
+          See ``Syntactic-Comment Index''.                   (line 3591)
 TIFF, multi-directory:                         See 1.        (line  173)
 tiffcopy:                                      See 1.        (line  173)
 tiffsplit:                                     See 1.        (line  173)
-tips, focus stacking experts:                  See 8.6.6.    (line 2815)
-TMPDIR:                                        See 7.        (line 2166)
+tips, focus stacking experts:                  See 8.6.6.    (line 2824)
+TMPDIR:                                        See 7.        (line 2173)
 tracker, SourceForge:                          See Appendix A.
-                                                             (line 2939)
-transformation, affine:                        See 2.        (line  251)
-transition, natural sharp-unsharp:             See 8.6.6.    (line 2842)
-understanding masks:                           See 6.        (line 2062)
-value gray projector:                          See 3.5.      (line 1220)
-variance:                                      See 5.4.1.1.  (line 1771)
-virtual reality:                               See 3.2.      (line  651)
-weight mask:                                   See 6.        (line 2062)
-weight, entropy:                               See 3.4.      (line  882)
-weight, exposure:                              See 3.4.      (line  889)
-weight, local contrast:                        See 3.4.      (line  875)
-weighted average:                              See 5.1.1.    (line 1511)
-weighting functions:                           See 5.        (line 1467)
-weighting, contrast using a blend of methods:  See 5.4.3.    (line 1908)
-weighting, contrast using laplacian-of-gaussian:See 5.4.2.   (line 1806)
-weighting, contrast using standard deviation:  See 5.4.1.    (line 1732)
-weighting, exposure <1>:                       See 5.2.      (line 1582)
+                                                             (line 2948)
+transformation, affine:                        See 2.        (line  253)
+transition, natural sharp-unsharp:             See 8.6.6.    (line 2851)
+understanding masks:                           See 6.        (line 2069)
+value gray projector:                          See 3.5.      (line 1225)
+variance:                                      See 5.4.1.1.  (line 1778)
+virtual reality:                               See 3.2.      (line  653)
+weight mask:                                   See 6.        (line 2069)
+weight, entropy:                               See 3.4.      (line  884)
+weight, exposure:                              See 3.4.      (line  891)
+weight, local contrast:                        See 3.4.      (line  877)
+weighted average:                              See 5.1.1.    (line 1516)
+weighting functions:                           See 5.        (line 1472)
+weighting, contrast using a blend of methods:  See 5.4.3.    (line 1915)
+weighting, contrast using laplacian-of-gaussian:See 5.4.2.   (line 1813)
+weighting, contrast using standard deviation:  See 5.4.1.    (line 1737)
+weighting, exposure <1>:                       See 5.2.      (line 1587)
 weighting, exposure:                           See 1.        (line  130)
-weighting, general concept of:                 See 5.1.      (line 1474)
-weighting, local contrast <1>:                 See 5.4.      (line 1708)
+weighting, general concept of:                 See 5.1.      (line 1479)
+weighting, local contrast <1>:                 See 5.4.      (line 1713)
 weighting, local contrast:                     See 1.        (line  139)
-weighting, local entropy <1>:                  See 5.5.      (line 1964)
+weighting, local entropy <1>:                  See 5.5.      (line 1971)
 weighting, local entropy:                      See 1.        (line  144)
-weighting, saturation <1>:                     See 5.3.      (line 1673)
+weighting, saturation <1>:                     See 5.3.      (line 1678)
 weighting, saturation:                         See 1.        (line  135)
-weights, default:                              See 5.1.3.    (line 1562)
-white point, D50:                              See 4.        (line 1458)
-window, local-analysis:                        See 5.4.1.    (line 1732)
+weights, default:                              See 5.1.3.    (line 1567)
+white point, D50:                              See 4.        (line 1463)
+window, local-analysis:                        See 5.4.1.    (line 1737)
 workflow:                                      See 2.        (line  202)
 workflow with Enblend:                         See 2.        (line  213)
 workflow with Enfuse:                          See 2.        (line  213)
-wrap around:                                   See 3.2.      (line  641)
+wrap around:                                   See 3.2.      (line  643)

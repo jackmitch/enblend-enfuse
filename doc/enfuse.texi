@@ -1402,7 +1402,11 @@ pixel value in the source image (for example 255 or 65535).
 
 @caption{Linear lightness@tie{}@var{Y} in comparison with an
 entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and
-@var{UPPER-CUTOFF} = 90% which are rather extreme values.}
+@var{UPPER-CUTOFF} = 90%, which are rather extreme values.  Please
+note that we have shifted the original lightness curve up and the
+cut-off curve down by a very small @var{Offset} to emphasize that the
+proportional part of @var{Y} remains unaltered under the cut-off
+operation.}
 
 @shortcaption{Entropy cutoff function}
 @end float
@@ -4351,8 +4355,9 @@ Masks}.
 @cindex local contrast enhancement
 @cindex contrast enhancement, local
 
-Sometimes Enfuse misses smoother edges with @option{--contrast-edge-scale} and a
-little local contrast enhancement (@acronym{LCE}) helps.  Set
+Sometimes Enfuse misses smoother edges with
+@option{--contrast-edge-scale} and a little local contrast enhancement
+(@acronym{LCE}) helps.  Set
 @code{--contrast-edge-scale}=@/@var{SCALE}:@/@var{LCE-SCALE}:@/@var{LCE-FACTOR}.
 where @var{LCE-SCALE} and @var{LCE-FACTOR} work like the
 @uref{http://@/www.cambridgeincolour.com/@/tutorials/@/unsharp-@/mask.htm,
@@ -4391,17 +4396,18 @@ it fails to recognize faint edges.
 @end enumerate
 
 @noindent
-The @option{--contrast-min-curvature} option helps to mitigate both flaws.
+The @option{--contrast-min-curvature} option helps to mitigate both
+flaws.
 
-The argument to @code{--contrast-min-curvature}=@var{CURVATURE} either is an
-absolute lightness value, for example 0..255 for 8@dmn{bit} data and
-0..65535 for 16@dmn{bit} data, or, when given with a @samp{%}-sign it
-is a relative lightness value ranging from 0% to 100%.
+The argument to @code{--contrast-min-curvature}=@var{CURVATURE} either
+is an absolute lightness value, for example 0..255 for 8@dmn{bit} data
+and 0..65535 for 16@dmn{bit} data, or, when given with a @samp{%}-sign
+it is a relative lightness value ranging from 0% to 100%.
 
 To suppress unreal edges or counter excessive noise, use the
-@option{--contrast-min-curvature} option with a @emph{negative} curvature
-measure @var{CURVATURE}.  This forces all curvatures less than
-@minus{}@var{CURVATURE} to zero.
+@option{--contrast-min-curvature} option with a @emph{negative}
+curvature measure @var{CURVATURE}.  This forces all curvatures less
+than @minus{}@var{CURVATURE} to zero.
 
 A @emph{positive} curvature measure @var{CURVATURE} makes Enfuse merge
 the @acronym{LoG} data with the local-contrast data.  Every curvature
@@ -4454,7 +4460,7 @@ Figure@tie{}@ref{Figure:focus-stacking-decision-tree} helps the user
 to arrive at a well-fused focus stack with as few steps as possible.
 
 @float Figure,Figure:focus-stacking-decision-tree
-@image{focus-stack-decision-tree}
+@image{focus-stack-decision-tree, 5in}
 
 @caption{Focus stacking decision tree.}
 
@@ -4467,11 +4473,12 @@ Focus Stacking} switch to Laplacian-of-Gaussian contrast detection.
 
 If some seams remain even in @acronym{LoG}-mode, decrease the
 sensitivity of the edge detection with a positive
-@option{--contrast-min-curvature}.  A too high value of @option{--contrast-min-curvature}
-suppresses fine detail though.  Part of the detail can be brought back
-with pre-sharpening, that is, @ref{Local Contrast Enhancement} or
-combining @acronym{LoG} with local-contrast-window mode by using a
-negative @option{--contrast-min-curvature}.
+@option{--contrast-min-curvature}.  A too high value of
+@option{--contrast-min-curvature} suppresses fine detail though.  Part
+of the detail can be brought back with pre-sharpening, that is,
+@ref{Local Contrast Enhancement} or combining @acronym{LoG} with
+local-contrast-window mode by using a negative
+@option{--contrast-min-curvature}.
 
 Carefully examining the masks (option@tie{}@option{--save-masks}) that
 Enfuse uses helps to judge the effects of the parameters.

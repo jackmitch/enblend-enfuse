@@ -319,11 +319,20 @@ parameters that explicitly set the paper size, like, for example,
         @afivepaper
         @afourpaper, @afourwide, @afourlatex
 
-    Moreover, you can specify the height and (optionally) width of the
-    main text area on a page with the
-        @pagesizes HEIGHT [, WIDTH]
-    command.  Remember to supply both HEIGHT and WIDTH with
-    appropriate units ("mm", "in", ...).
+Moreover, you can specify the height and (optionally) width of the
+main text area on a page with the
+    @pagesizes HEIGHT [, WIDTH]
+command.  Remember to supply both HEIGHT and WIDTH with appropriate
+units ("mm", "in", ...).
+
+Another useful Texinfo-command at this level is
+    @finalout
+which suppresses the black rectangles marking overfull hboxes.
+
+Use the standard variable MAKEINFOFLAGS to control makeinfo(1), for
+example, to set the maximum length of lines in Info and plain text
+output with
+    make MAKEINFOFLAGS="--fill-column=95" info
 
 
 * Documentation
