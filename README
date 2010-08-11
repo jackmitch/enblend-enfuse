@@ -352,6 +352,10 @@ PDF, and XHTML format.
         make pdf
         make xhtml
 
+The make process automatically ensures the validity of the XHTML
+documentation.  Additionally, it can be checked with
+        make validate-xhtml
+
 Note that some additional packages are required to build these
 formats:
         makeinfo       - GNU documentation generator.
@@ -371,6 +375,8 @@ formats:
                          Check out http://www.xfig.org/ for Transfig.
         tidy           - Convert HTML to (almost) XHTML.  Tidy is
                          available at http://tidy.sourceforge.net/.
+        xmllint        - Validate XHTML.  Get Xmllint e.g. from
+                         http://www.xmlsoft.org/.
 
 
 * Operating System Specific Instructions and Hints

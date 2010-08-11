@@ -60,8 +60,6 @@ Generally colors lying close together in @acronym{RGB} space
 experience less change when switching the blending spaces.  However,
 colors close the border of any color space can see marked changes.
 
-@sp 2
-@noindent
 For color geeks: The transformations to @acronym{CIECAM02} color space
 and back use
 

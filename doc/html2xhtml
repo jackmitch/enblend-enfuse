@@ -1,0 +1,254 @@
+#! /bin/sh
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:         html2xhtml
+# synopsis:     Convert the HTML output of makeinfo(1) to valid XHTML
+# author:       Dr. Christoph L. Spiel
+# bash version: 3.2.39
+
+
+readonly global__command=`basename $0`
+         global__document_version=unknown
+readonly global__sed=${SED:-sed}
+readonly global__tidy=${TIDY:-tidy}
+         global__tidy_flags=""
+readonly global__xmllint=${XMLLINT:-xmllint}
+         global__xmllint_flags="-valid --noblanks --noent --nsclean --format --encode iso-8859-1"
+
+
+function convert_with_tidy
+{
+    # We add the system identifier
+    #     "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+    # with sed(1) after tidy(1).  See function postprocess_tidy_output.
+
+    $global__tidy \
+        --add-xml-decl yes \
+        --doctype '"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"' \
+        --file /dev/null \
+        --new-blocklevel-tags "math, mfenced, mfrac, mover, mrow, msqrt, msub, msup, mtable, mtd, mtr, munder, munderover" \
+        --new-empty-tags mspace \
+        --new-inline-tags "mathinline, mi, mn, mo, mrowinline, msubinline, msupinline, mtext" \
+        --sort-attributes alpha \
+        --output-encoding latin1 \
+        --output-xhtml yes \
+        --preserve-entities yes \
+        --quiet yes \
+        --wrap 0 \
+        $global__tidy_flags \
+        "$@"
+}
+
+
+# We must postprocess tidy(1)'s output, because 1/ it still contains
+# elements that make an XML parser puke and 2/ we have intentionally
+# introduced pseudo MathML tags to coerce tidy(1) into formatting them
+# inline.  These tags must be reverted.
+function postprocess_tidy_output
+{
+    $global__sed \
+        -e '1,9s|""|"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"|' \
+        \
+        -e "s|^<head>|<head>\n<meta content=\"$global__document_version\" name=\"enblend-version\" />|" \
+        \
+        -e 's|<html\([^>]*\) lang="[^"]*"\([^>]*\)|<html\1\2|' \
+        -e 's|<ol[^>]*>|<ol>|' \
+        -e 's|<t\([dh]\)\([^>]*\)width="[^"]*"\([^>]*\)|<t\1\2\3|' \
+        -e 's|<ul\([^>]*\)compact="[^"]*"\([^>]*\)|<ul\1\2|' \
+        \
+        -e 's|<mathinline|<math|g' \
+        -e 's|</mathinline|</math|g' \
+        -e 's|<mrowinline|<mrow|g' \
+        -e 's|</mrowinline|</mrow|g' \
+        -e 's|<msubinline|<msub|g' \
+        -e 's|</msubinline|</msub|g' \
+        -e 's|<msupinline|<msup|g' \
+        -e 's|</msupinline|</msup|'
+}
+
+
+# Makeinfo(1) generates indirect-reference files for each float.
+# Their filenames start with "Table_" or "Figure_*", which is how we
+# distinguish them from the html files making up the body.
+function is_indirect_reference_file
+{
+    local filename=$1
+
+    test -z "${filename%Table_*}" -o -z "${filename%Figure_*}"
+}
+
+
+# Convert all html files iside the given directory.
+function convert_directory
+{
+    local html_directory=$1
+    local xhtml_directory=${html_directory/%.html/.xhtml}
+
+    test -d $xhtml_directory || mkdir $xhtml_directory
+
+    cp *.png $xhtml_directory
+
+    (
+        cd $html_directory
+        ls -1 *.html | \
+            $global__sed -ne 's#\(.*\)\.html#s|\1\\.html|\1.xhtml|g#p' > ,fix-file-refs.sed
+    )
+
+    echo -n '' > $html_directory/,fix-indir.sed
+    for html_file in $html_directory/*.html; do
+        local html_base=`basename $html_file`
+
+        if is_indirect_reference_file $html_base; then
+            url=`$global__sed -ne 's#^.*url=\([^"]*\)".*$#\1#p' < $html_file`
+            target_file=`echo $url | $global__sed -e 's/#.*$//'`
+            echo "s|$html_base|$target_file|" >> $html_directory/,fix-indir.sed
+        fi
+    done
+
+    for html_file in $html_directory/*.html; do
+        local html_base=`basename $html_file`
+
+        if ! is_indirect_reference_file $html_base; then
+            local xhtml_file=$xhtml_directory/${html_base/%.html/.xhtml}
+
+	    convert_with_tidy $html_file | \
+                postprocess_tidy_output | \
+	        $global__sed \
+                  -f $html_directory/,fix-indir.sed \
+                  -f $html_directory/,fix-file-refs.sed \
+	          -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
+	          -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' | \
+	        $global__xmllint $global__xmllint_flags --output $xhtml_file -
+        fi
+    done
+}
+
+
+# Convert a single standalone html file.
+function convert_file
+{
+    local html_file=$1
+    local xhtml_file=${html_file/%.html/.xhtml}
+
+    convert_with_tidy $html_file | \
+        postprocess_tidy_output | \
+        $global__sed -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' | \
+        $global__xmllint $global__xmllint_flags --output $xhtml_file -
+}
+
+
+function convert_html_to_xhtml
+{
+    local html=$1
+
+    if test -d "$html"; then
+        convert_directory "$html"
+    else
+        convert_file "$html"
+    fi
+}
+
+
+# We prefer to check for all binaries before we get an unpleasant
+# surprise in one of the pipes.
+function check_binaries
+{
+    for v in global__sed global__tidy global__xmllint; do
+        eval x=\$$v
+        test -z "$x" && {
+            echo "$global__command: utility \"${v#global__}\" is not defined" 1>&2
+            exit 1
+        }
+        $x --version > /dev/null 2>&1 || {
+            echo "$global__command: cannot execute \"$x\" for \"${v#global__}\"" 1>&2
+            exit 1
+        }
+    done
+}
+
+
+function parse_options
+{
+    let n=0
+
+    while [ -n "$1" ]; do
+        case "$1" in
+            --document-version=*)
+                global__document_version="${1/--document-version=/}"
+                ;;
+            -h | --help)
+                show_help
+                exit 0
+                ;;
+            --tidy-flags=*)
+                global__tidy_flags="$global__tidy_flags ${1/--tidy-flags=/}"
+                ;;
+            --xmllint-flags=*)
+                global__xmllint_flags="$global__xmllint_flags ${1/--xmllint-flags=/}"
+                ;;
+
+            --)
+                shift
+                let ++n
+                break 2
+                ;;
+
+            --*)
+                echo "unknown long option \"$1\"" 1>&2
+                exit 1
+                ;;
+            -*)
+                echo "unknown short option \"$1\"" 1>&2
+                exit 1
+                ;;
+
+            *)
+                break 2
+        esac
+        shift
+        let ++n
+    done
+
+    return $n
+}
+
+
+function show_help
+{
+    cat <<END_OF_HELP
+Usage: $global__command_name [OPTIONS] [HTML...]
+Convert HTML files or directories to XHTML.
+
+Options:
+      --document-version=VERSION
+                             set meta tag for documentation's version
+                             [default: "$global__document_version"]
+      --tidy-flags=FLAGS     set flags for tidy(1)
+      --xmllint-flags=FLAGS  set flags for xmllint(1)
+  -h, --help                 show this help screen
+
+Influential environment variables:
+  SED                        name of sed binary [default: "$global__sed"]
+  TIDY                       name of tidy binary [default: "$global__tidy"]
+  XMLLINT                    name of xmllint binary [default: "$global__xmllint"]
+END_OF_HELP
+}
+
+
+
+function main
+{
+    parse_options "$@"
+    shift $?                    # shift away all options
+
+    check_binaries
+
+    for x in "$@"; do
+        convert_html_to_xhtml "$x"
+    done
+}
+
+
+main "$@"

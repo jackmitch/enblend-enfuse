@@ -44,8 +44,7 @@ export TEXINPUTS=$(top_builddir):$(srcdir)
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
-EXTRA_DIST = docstrings \
-             tidy.cfg tidy-post.sed
+EXTRA_DIST = docstrings
 
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
@@ -102,35 +101,24 @@ clean-local:
 	-rm -rf enblend.xhtml enfuse.xhtml
 
 
-TIDY_FLAGS = -config $(srcdir)/tidy.cfg -file /dev/null
-SED_FLAGS_XHTML = -f $(srcdir)/tidy-post.sed
+XMLLINT_FLAGS = --noout --valid
+
+# The following exported variables are respected by html2xhml(1).
+export TIDY SED XMLLINT
 
 .PHONY: xhtml
-xhtml: $(HTMLS) html-local
+xhtml: $(HTMLS:.html=.xhtml) html-local
+
+.PHONY: validate-xhtml
+validate-xhtml: $(HTMLS:.html=.xhtml)
 	for x in $(HTMLS); do \
           xhtml=$${x/%.html/.xhtml}; \
-	  if test -d $$x; then \
-            test -d $$xhtml || mkdir $$xhtml; \
-            cp *.png $$xhtml; \
-	    (cd $$x; ls -1 *.html | $(SED) -ne 's#\(.*\)\.html#s|\1\\.html|\1.xhtml|g#p' > fix-refs.sed); \
-	    for y in $$x/*.html; do \
-              if test "$$x/" = "$${y%Table_*}" -o "$$x/" = "$${y%Figure_*}"; then \
-                  $(SED) -e 's|>| />|' < $$y > $${y//.html/.xhtml}; \
-              else \
-		  $(TIDY) $(TIDY_FLAGS) $$y | \
-		    $(SED) $(SED_FLAGS_XHTML) \
-                           -f $$x/fix-refs.sed \
-			   -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
-			   -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
-			   -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' \
-			   > $${y//.html/.xhtml}; \
-              fi \
-            done; \
+	  if test -d $$xhtml; then \
+	    for y in $$xhtml/*.xhtml; do \
+	      $(XMLLINT) $(XMLLINT_FLAGS) $$y; \
+	    done; \
 	  else \
-	    $(TIDY) $(TIDY_FLAGS) $$x | \
-	      $(SED) $(SED_FLAGS_XHTML) \
-	    	 -e 's|^<head>|<head>\n<meta content="$(VERSION)" name="enblend-version" />|' \
-	    	 -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' > $$xhtml; \
+	    $(XMLLINT) $(XMLLINT_FLAGS) $$xhtml; \
           fi; \
 	done
 
@@ -183,13 +171,25 @@ uninstall-xhtml:
                -e 's/^# \?//' < $< > $@
 
 .fig.png:
-	$(FIG2DEV) -L png -F $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@
+	if test "x$PNGTOPNM" = xfalse -o "x$PNMTOPNG" = xfalse; then \
+	    $(FIG2DEV) -L png -F $< > $@; \
+	else \
+	    $(FIG2DEV) -L png -F $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
+	fi
 
 .fig.eps:
 	$(FIG2DEV) -L eps $< $@
 
 .fig.pdf:
 	$(FIG2DEV) -L pdf $< $@
+
+
+.html.xhtml:
+	$(srcdir)/html2xhtml \
+	    --document-version=$(VERSION) \
+	    --tidy-flags="$(EXTRATIDYFLAGS)" \
+	    --xmllint-flags="$(EXTRAXMLLINTFLAGS)" \
+	    $<
 
 
 # Explicit Rules

@@ -371,7 +371,7 @@ AC_CHECK_PROG(PNGTOPNM,
               pngtopnm,
               false)
 if test "x$PNGTOPNM" = xfalse; then
-    AC_MSG_WARN(cannot find pngtopnm; will not be able to build documentation)
+    AC_MSG_NOTICE(cannot find pngtopnm; will not be able to add transparency to all PNG images)
     can_build_doc=no
     missing_for_doc="$missing_for_doc pngtopnm"
 fi
@@ -381,7 +381,7 @@ AC_CHECK_PROG(PNMTOPNG,
               pnmtopng,
               false)
 if test "x$PNMTOPNG" = xfalse; then
-    AC_MSG_WARN(cannot find pnmtopng; will not be able to build documentation)
+    AC_MSG_NOTICE(cannot find pnmtopng; will not be able to add transparency to all PNG images)
     can_build_doc=no
     missing_for_doc="$missing_for_doc pnmtopng"
 fi
@@ -438,6 +438,16 @@ if test "x$TIDY" = xfalse; then
     AC_MSG_WARN(cannot find tidy; will not be able to build XHTML documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc tidy"
+fi
+
+AC_CHECK_PROG(XMLLINT,
+              xmllint,
+              xmllint,
+              false)
+if test "x$XMLLINT" = xfalse; then
+    AC_MSG_WARN(cannot find xmllint; will not be able to build XHTML documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc xmllint"
 fi
 
 AM_CONDITIONAL([BUILD_DOC], [test $can_build_doc = yes])

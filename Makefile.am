@@ -24,3 +24,7 @@ install-xhtml:
 .PHONY: uninstall-xhtml
 uninstall-xhtml:
 	$(MAKE) --directory=doc $@
+
+.PHONY: validate-xhtml
+validate-xhtml:
+	$(MAKE) --directory=doc $@
