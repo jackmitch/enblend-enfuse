@@ -112,7 +112,7 @@ xhtml: $(HTMLS:.html=.xhtml) html-local
 .PHONY: validate-xhtml
 validate-xhtml: $(HTMLS:.html=.xhtml)
 	for x in $(HTMLS); do \
-          xhtml=$${x/%.html/.xhtml}; \
+          xhtml=`basename $$x .html`.xhtml; \
 	  if test -d $$xhtml; then \
 	    for y in $$xhtml/*.xhtml; do \
 	      $(XMLLINT) $(XMLLINT_FLAGS) $$y; \
@@ -127,9 +127,9 @@ install-xhtml: xhtml
 	@$(NORMAL_INSTALL)
 	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)"
 	for x in $(HTMLS); do \
-          xhtml=$${x/%.html/.xhtml}; \
+          xhtml=`basename $$x .html`.xhtml; \
 	  if test -d $$x; then \
-	    test -d "$(DESTDIR)$(htmldir)/$$xhtml" || mkdir "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	    $(MKDIR_P) "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	    $(INSTALL_DATA) $$xhtml/* "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
 	    $(INSTALL_DATA) *.xhtml *.png "$(DESTDIR)$(htmldir)"; \
@@ -140,12 +140,11 @@ install-xhtml: xhtml
 uninstall-xhtml:
 	@$(NORMAL_UNINSTALL)
 	for x in $(HTMLS); do \
-          xhtml=$${x/%.html/.xhtml}; \
+          xhtml=`basename $$x .html`.xhtml; \
 	  if test -d $$x; then \
-	    test -d "$(DESTDIR)$(htmldir)/$$xhtml" || mkdir "$(DESTDIR)$(htmldir)/$$xhtml"; \
-	    echo rm -rf "$(DESTDIR)$(htmldir)/$$xhtml"; \
+	    rm -rf "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
-	    echo rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.png"; \
+	    rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.png"; \
 	  fi; \
 	done
 
@@ -170,11 +169,12 @@ uninstall-xhtml:
                -e '/---END-TEXT---/,$$d' \
                -e 's/^# \?//' < $< > $@
 
+FIG2PNGFLAGS = -F
 .fig.png:
-	if test "x$PNGTOPNM" = xfalse -o "x$PNMTOPNG" = xfalse; then \
-	    $(FIG2DEV) -L png -F $< > $@; \
+	if test "$(PNGTOPNM)" = false || test "$(PNMTOPNG)" = false; then \
+	    $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< > $@; \
 	else \
-	    $(FIG2DEV) -L png -F $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
+	    $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
 	fi
 
 .fig.eps:
