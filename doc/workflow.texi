@@ -25,7 +25,7 @@ in this tool chain.
 @pindex PanoTools
 @pindex gimp
 
-@image{photographic-workflow, 5in}
+@vimage{photographic-workflow}
 
 @caption{Photographic workflow with Enblend and Enfuse.}
 @end float

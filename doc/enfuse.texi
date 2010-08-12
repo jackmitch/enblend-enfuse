@@ -1398,7 +1398,7 @@ pixel value in the source image (for example 255 or 65535).
 @ref{Figure:entropy-cutoff} shows an example.
 
 @float Figure,Figure:entropy-cutoff
-@image{entropy-cutoff}
+@vimage{entropy-cutoff}
 
 @caption{Linear lightness@tie{}@var{Y} in comparison with an
 entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and
@@ -1524,7 +1524,7 @@ usually the best choices for effective cutoff operations on the
 respective ends.
 
 @float Figure,Figure:exposure-cutoff
-@image{exposure-cutoff}
+@vimage{exposure-cutoff}
 
 @caption{Exposure weight, a Gaussian with @var{Mu} = 0.5 and
 @var{Sigma} = 0.2 submitted to an exposure-cutoff of
@@ -2622,7 +2622,7 @@ and @math{Sigma} defaults to @value{src::default-exposure-sigma}.
 @ref{Figure:gaussian} shows a Gaussian.
 
 @float Figure,Figure:gaussian
-@image{gaussian}
+@vimage{gaussian}
 
 @caption{Gaussian function with the parameters @var{Mu} = 0.5 and
 @var{Sigma} = 0.2.}
@@ -2754,7 +2754,7 @@ option@tie{}@option{--contrast-window-size}.
 sizes.
 
 @float Figure,Figure:local-analysis-window
-@image{local-analysis-window}
+@vimage{local-analysis-window}
 
 @caption{Examples of local analysis windows for the sizes 3 and 5.
 ``C'' marks the center where the pixel gets the weight.  ``N'' are
@@ -3393,7 +3393,7 @@ $R = \sqrt{x^2 + y^2}$.
 @end tex
 
 @float Figure,Figure:laplacian-of-gaussian
-@image{laplacian-of-gaussian}
+@vimage{laplacian-of-gaussian}
 
 @caption{Laplacian-of-Gaussian function for @inlinesigma{} = 0.5.}
 
@@ -3706,7 +3706,7 @@ $$
 @ref{Figure:entropy} shows an entropy function.
 
 @float Figure,Figure:entropy
-@image{entropy}
+@vimage{entropy}
 
 @caption{Entropy function@tie{}H for an experiment with exactly two
 outcomes.}
@@ -4291,7 +4291,7 @@ Images@tie{}@ref{Figure:sharp-edge} and @ref{Figure:smooth-edge} show
 plots of the matrices @code{sharp_edge} and @code{smooth_edge}.
 
 @float Figure,Figure:sharp-edge
-@image{sharp-edge}
+@vimage{sharp-edge}
 
 @caption{3D plot augmented by contour plot of the matrix
 @code{sharp_edge}.}
@@ -4300,7 +4300,7 @@ plots of the matrices @code{sharp_edge} and @code{smooth_edge}.
 @end float
 
 @float Figure,Figure:smooth-edge
-@image{smooth-edge}
+@vimage{smooth-edge}
 
 @caption{3D plot augmented by contour plot of the matrix
 @code{smooth_edge}.}
@@ -4460,7 +4460,7 @@ Figure@tie{}@ref{Figure:focus-stacking-decision-tree} helps the user
 to arrive at a well-fused focus stack with as few steps as possible.
 
 @float Figure,Figure:focus-stacking-decision-tree
-@image{focus-stack-decision-tree, 5in}
+@vimage{focus-stack-decision-tree}
 
 @caption{Focus stacking decision tree.}
 

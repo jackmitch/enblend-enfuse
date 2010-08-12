@@ -32,8 +32,3 @@ replot
 set output "entropy.eps"
 set terminal postscript eps enhanced
 replot
-
-# Newer Gnuplots have a "pdf" terminal.
-set output "| ps2pdf -dEPSCrop - entropy.pdf"
-set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
-replot

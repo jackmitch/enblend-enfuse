@@ -50,16 +50,16 @@ EXTRA_DIST = docstrings
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 
 # created by make(1)
-CLEANFILES = entropy.{txt,png,eps,pdf} \
-             entropy-cutoff.{txt,png,eps,pdf} \
-             exposure-cutoff.{txt,png,eps,pdf} \
-             gaussian.{txt,png,eps,pdf} \
-             laplacian-of-gaussian.{txt,png,eps,pdf} \
-             local-analysis-window.{txt,png,eps,pdf} \
-             photographic-workflow.{txt,png,eps,pdf} \
-             focus-stack-decision-tree.{txt,png,eps,pdf} \
-             sharp-edge.{txt,png,eps,pdf} \
-             smooth-edge.{txt,png,eps,pdf} \
+CLEANFILES = entropy.{txt,png,eps} \
+             entropy-cutoff.{txt,png,eps} \
+             exposure-cutoff.{txt,png,eps} \
+             gaussian.{txt,png,eps} \
+             laplacian-of-gaussian.{txt,png,eps} \
+             local-analysis-window.{txt,png,eps} \
+             photographic-workflow.{txt,png,eps} \
+             focus-stack-decision-tree.{txt,png,eps} \
+             sharp-edge.{txt,png,eps} \
+             smooth-edge.{txt,png,eps} \
              *.fig.bak \
              *.msg
 
@@ -169,12 +169,12 @@ uninstall-xhtml:
                -e '/---END-TEXT---/,$$d' \
                -e 's/^# \?//' < $< > $@
 
-FIG2PNGFLAGS = -F
+FIG2PNGFLAGS = -F -m 2
 .fig.png:
 	if test "$(PNGTOPNM)" = false || test "$(PNMTOPNG)" = false; then \
-	    $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< > $@; \
+	  $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< > $@; \
 	else \
-	    $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
+	  $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
 	fi
 
 .fig.eps:

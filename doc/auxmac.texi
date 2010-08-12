@@ -2,6 +2,25 @@
 @c Macro Definitions
 @c
 
+@c extended commands
+
+@macro vimage{filename}
+@ifinfo
+@image{\filename\}
+@end ifinfo
+@ifhtml
+@image{\filename\}
+@end ifhtml
+@tex
+\\ifpdf
+  \\imagexxx \filename\,15cm,,,,\\finish
+\\else
+  \\center\\image{\filename\}
+\\fi
+@end tex
+@end macro
+
+
 @c Operators
 
 @macro classictimes
