@@ -50,16 +50,16 @@ EXTRA_DIST = docstrings
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 
 # created by make(1)
-CLEANFILES = entropy.{txt,png,eps} \
-             entropy-cutoff.{txt,png,eps} \
-             exposure-cutoff.{txt,png,eps} \
-             gaussian.{txt,png,eps} \
-             laplacian-of-gaussian.{txt,png,eps} \
-             local-analysis-window.{txt,png,eps} \
-             photographic-workflow.{txt,png,eps} \
-             focus-stack-decision-tree.{txt,png,eps} \
-             sharp-edge.{txt,png,eps} \
-             smooth-edge.{txt,png,eps} \
+CLEANFILES = entropy.{txt,eps,svg,pdf} \
+             entropy-cutoff.{txt,eps,svg,pdf} \
+             exposure-cutoff.{txt,eps,svg,pdf} \
+             gaussian.{txt,eps,svg,pdf} \
+             laplacian-of-gaussian.{txt,eps,svg,pdf} \
+             local-analysis-window.{txt,eps,svg,pdf} \
+             photographic-workflow.{txt,eps,svg,pdf} \
+             focus-stack-decision-tree.{txt,eps,svg,pdf} \
+             sharp-edge.{txt,eps,svg,pdf} \
+             smooth-edge.{txt,eps,svg,pdf} \
              *.fig.bak \
              *.msg
 
@@ -85,17 +85,6 @@ html:
 	@echo '*** Use target "xhtml" instead of "html".'
 	false
 
-.PHONY: html-local
-html-local:
-	test -d enblend.html && \
-            for i in $(enblend_TEXINFOS); do \
-              test -f $${i%%.*}.png && cp $${i%%.*}.png enblend.html; \
-            done; true
-	test -d enfuse.html && \
-            for i in $(enfuse_TEXINFOS); do \
-              test -f $${i%%.*}.png && cp $${i%%.*}.png enfuse.html; \
-            done; true
-
 .PHONY: clean-local
 clean-local:
 	-rm -rf enblend.xhtml enfuse.xhtml
@@ -107,7 +96,7 @@ XMLLINT_FLAGS = --noout --valid
 export TIDY SED XMLLINT
 
 .PHONY: xhtml
-xhtml: $(HTMLS:.html=.xhtml) html-local
+xhtml: $(HTMLS:.html=.xhtml)
 
 .PHONY: validate-xhtml
 validate-xhtml: $(HTMLS:.html=.xhtml)
@@ -132,7 +121,7 @@ install-xhtml: xhtml
 	    $(MKDIR_P) "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	    $(INSTALL_DATA) $$xhtml/* "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
-	    $(INSTALL_DATA) *.xhtml *.png "$(DESTDIR)$(htmldir)"; \
+	    $(INSTALL_DATA) *.xhtml *.svg "$(DESTDIR)$(htmldir)"; \
 	  fi; \
 	done
 
@@ -144,7 +133,7 @@ uninstall-xhtml:
 	  if test -d $$x; then \
 	    rm -rf "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
-	    rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.png"; \
+	    rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.svg"; \
 	  fi; \
 	done
 
@@ -152,16 +141,16 @@ uninstall-xhtml:
 # Implicit Rules
 
 .gp.txt:
-	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-
-.gp.png:
-	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-
-.gp.eps:
-	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
+	$(GNUPLOT) $<
 
 .gp.pdf:
-	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
+	$(GNUPLOT) $<
+
+.gp.eps:
+	$(GNUPLOT) $<
+
+.gp.svg:
+	$(GNUPLOT) $<
 
 
 .fig.txt:
@@ -169,19 +158,15 @@ uninstall-xhtml:
                -e '/---END-TEXT---/,$$d' \
                -e 's/^# \?//' < $< > $@
 
-FIG2PNGFLAGS = -F -m 2
-.fig.png:
-	if test "$(PNGTOPNM)" = false || test "$(PNMTOPNG)" = false; then \
-	  $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< > $@; \
-	else \
-	  $(FIG2DEV) -L png $(FIG2PNGFLAGS) $< | $(PNGTOPNM) | $(PNMTOPNG) -transparent white > $@; \
-	fi
-
 .fig.eps:
 	$(FIG2DEV) -L eps $< $@
 
 .fig.pdf:
 	$(FIG2DEV) -L pdf $< $@
+
+.fig.svg:
+	$(FIG2DEV) -L svg $< | \
+	    $(SED) -e '/<desc>/d' -e 's/style="stroke-width:.025in/style="stroke-width:0.001px/' > $@
 
 
 .html.xhtml:
@@ -190,6 +175,14 @@ FIG2PNGFLAGS = -F -m 2
 	    --tidy-flags="$(EXTRATIDYFLAGS)" \
 	    --xmllint-flags="$(EXTRAXMLLINTFLAGS)" \
 	    $<
+	test -d "$<" && test "$<" = enblend.html && \
+            for i in $(enblend_TEXINFOS); do \
+              test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
+            done; true
+	test -d "$<" && test "$<" = enfuse.html && \
+            for i in $(enfuse_TEXINFOS); do \
+              test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
+            done; true
 
 
 # Explicit Rules
@@ -200,15 +193,22 @@ varsenblend.texi: $(srcdir)/../src/enblend.cc \
                   $(srcdir)/../src/global.h
 	$(PERL) $(srcdir)/docstrings $^ > $@
 
-enblend.info: photographic-workflow.txt
+enblend.info: $(enblend_TEXINFOS) \
+              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
+              photographic-workflow.txt
 
-enblend.dvi: enblend.texi \
+enblend.dvi: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
-             $(enblend_TEXINFOS) \
              photographic-workflow.eps
 
-enblend.html \
-enblend.pdf: photographic-workflow.png
+enblend.html: $(enblend_TEXINFOS) \
+              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
+              photographic-workflow.svg
+
+enblend.pdf: $(enblend_TEXINFOS) \
+             photographic-workflow.pdf
+
+enblend.xhtml: enblend.html
 
 
 varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
@@ -217,7 +217,9 @@ varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
                  $(srcdir)/../src/global.h
 	$(PERL) $(srcdir)/docstrings $^ > $@
 
-enfuse.info: photographic-workflow.txt \
+enfuse.info: $(enfuse_TEXINFOS) \
+             $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
+             photographic-workflow.txt \
              focus-stack-decision-tree.txt \
              entropy.txt \
              entropy-cutoff.txt \
@@ -228,7 +230,8 @@ enfuse.info: photographic-workflow.txt \
              sharp-edge.txt \
              smooth-edge.txt
 
-enfuse.dvi: enfuse.texi \
+enfuse.dvi: $(enfuse_TEXINFOS) \
+            $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
             photographic-workflow.eps \
             focus-stack-decision-tree.eps \
             entropy.eps \
@@ -238,18 +241,32 @@ enfuse.dvi: enfuse.texi \
             laplacian-of-gaussian.eps \
             local-analysis-window.eps \
             sharp-edge.eps \
-            smooth-edge.eps \
-            $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
-            $(enfuse_TEXINFOS)
+            smooth-edge.eps
 
-enfuse.html \
-enfuse.pdf: photographic-workflow.png \
-            focus-stack-decision-tree.png \
-            entropy.png \
-            entropy-cutoff.png \
-            exposure-cutoff.png \
-            gaussian.png \
-            laplacian-of-gaussian.png \
-            local-analysis-window.png \
-            sharp-edge.png \
-            smooth-edge.png
+enfuse.html: $(enfuse_TEXINFOS) \
+             $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
+             photographic-workflow.svg \
+             focus-stack-decision-tree.svg \
+             entropy.svg \
+             entropy-cutoff.svg \
+             exposure-cutoff.svg \
+             gaussian.svg \
+             laplacian-of-gaussian.svg \
+             local-analysis-window.svg \
+             sharp-edge.svg \
+             smooth-edge.svg
+
+enfuse.pdf: $(enfuse_TEXINFOS) \
+            $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
+            photographic-workflow.pdf \
+            focus-stack-decision-tree.pdf \
+            entropy.pdf \
+            entropy-cutoff.pdf \
+            exposure-cutoff.pdf \
+            gaussian.pdf \
+            laplacian-of-gaussian.pdf \
+            local-analysis-window.pdf \
+            sharp-edge.pdf \
+            smooth-edge.pdf
+
+enfuse.xhtml: enfuse.html

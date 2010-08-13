@@ -4287,8 +4287,8 @@ where @samp{;} separates the rows and @samp{,} separates the columns.
 This is in fact @uref{http://@/www.gnu.org/@/software/@/octave/,
 Octave} syntax.
 
-Images@tie{}@ref{Figure:sharp-edge} and @ref{Figure:smooth-edge} show
-plots of the matrices @code{sharp_edge} and @code{smooth_edge}.
+@ref{Figure:sharp-edge} and @ref{Figure:smooth-edge} show plots of the
+matrices @code{sharp_edge} and @code{smooth_edge}.
 
 @float Figure,Figure:sharp-edge
 @vimage{sharp-edge}
@@ -4456,8 +4456,8 @@ a window of 7@classictimes{}7@dmn{pixel} window to compute the
 @cindex focus stacking decision tree
 @cindex decision tree, focus stacking
 
-Figure@tie{}@ref{Figure:focus-stacking-decision-tree} helps the user
-to arrive at a well-fused focus stack with as few steps as possible.
+@ref{Figure:focus-stacking-decision-tree} helps the user to arrive at
+a well-fused focus stack with as few steps as possible.
 
 @float Figure,Figure:focus-stacking-decision-tree
 @vimage{focus-stack-decision-tree}

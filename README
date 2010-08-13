@@ -364,10 +364,6 @@ formats:
         freefonts      - Fonts for Gnuplot's PNG format.
         ghostscript    - Convert EPS to PDF.
         perl           - Run Perl programs.
-        pngtopnm       - Convert Portable Network Graphics (PNG) to
-                         portable anymap (PNM).  See http://www.libpng.org/.
-        pnmtopng       - Convert portable anymap (PNM) to Portable
-                         Network Graphics (PNG).  http://www.libpng.org/
         tetex          - Typeset the Texinfo documents in PS or PDF.
         texi2html      - Convert Texinfo to HTML.  Find more information
                          at http://www.nongnu.org/texi2html/.

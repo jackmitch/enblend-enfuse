@@ -8,16 +8,15 @@
 @ifinfo
 @image{\filename\}
 @end ifinfo
-@ifhtml
-@image{\filename\}
-@end ifhtml
-@tex
-\\ifpdf
-  \\imagexxx \filename\,15cm,,,,\\finish
-\\else
-  \\center\\image{\filename\}
-\\fi
-@end tex
+@html
+<object data="\filename\.svg" type="image/svg+xml" width="800" height="600">
+  <param name="src" value="\filename\.svg" />
+  <p>(Image "\filename\" not displayed because of lacking SVG support.)</p>
+</object>
+@end html
+@iftex
+@center@image{\filename\}
+@end iftex
 @end macro
 
 

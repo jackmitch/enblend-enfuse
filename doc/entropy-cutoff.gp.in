@@ -37,10 +37,15 @@ set output "entropy-cutoff.txt"
 set terminal dumb Dumb_Width Dumb_Height enhanced
 replot
 
-set output "entropy-cutoff.png"
-set terminal png transparent font FreeSans 10 size Png_Width, Png_Height enhanced
-replot
-
 set output "entropy-cutoff.eps"
 set terminal postscript eps enhanced
+replot
+
+set output "entropy-cutoff.svg"
+set terminal svg size Svg_Width, Svg_Height dynamic enhanced
+replot
+
+# Newer Gnuplots have a "pdf" terminal.
+set output "| ps2pdf -dEPSCrop - entropy-cutoff.pdf"
+set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
 replot

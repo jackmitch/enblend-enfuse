@@ -41,10 +41,15 @@ set output "exposure-cutoff.txt"
 set terminal dumb Dumb_Width Dumb_Height enhanced
 replot
 
-set output "exposure-cutoff.png"
-set terminal png transparent font FreeSans 10 size Png_Width, Png_Height enhanced
-replot
-
 set output "exposure-cutoff.eps"
 set terminal postscript eps enhanced
+replot
+
+set output "exposure-cutoff.svg"
+set terminal svg size Svg_Width, Svg_Height dynamic enhanced
+replot
+
+# Newer Gnuplots have a "pdf" terminal.
+set output "| ps2pdf -dEPSCrop - exposure-cutoff.pdf"
+set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
 replot

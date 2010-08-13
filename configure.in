@@ -351,26 +351,6 @@ if test "$FIG2DEV" = false; then
     missing_for_doc="$missing_for_doc fig2dev"
 fi
 
-AC_CHECK_PROG(PNGTOPNM,
-              pngtopnm,
-              pngtopnm,
-              false)
-if test "$PNGTOPNM" = false; then
-    AC_MSG_NOTICE(cannot find pngtopnm; will not be able to add transparency to all PNG images)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc pngtopnm"
-fi
-
-AC_CHECK_PROG(PNMTOPNG,
-              pnmtopng,
-              pnmtopng,
-              false)
-if test "$PNMTOPNG" = false; then
-    AC_MSG_NOTICE(cannot find pnmtopng; will not be able to add transparency to all PNG images)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc pnmtopng"
-fi
-
 AC_PROG_SED
 
 # These variables are mentioned in the AutoMake documentation as being

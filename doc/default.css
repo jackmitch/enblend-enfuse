@@ -17,8 +17,12 @@ var {
 /* Class-based and attibute-based settings */
 div.contents {}
 div.float {
+    /*background-color: #ffffcc;*/  /* for debugging */
     border-bottom: 1px solid;
     border-top: 1px solid;
+    margin-left: auto;
+    margin-right: auto;
+    width: 88%;
 }
 
 dl.compact {}

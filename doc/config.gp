@@ -1,9 +1,13 @@
 # Gnuplot configuration
 
 # ASCII size is given in characters.
-Dumb_Width = 71
-Dumb_Height = 36
+Dumb_Width = 131
+Dumb_Height = 98
 
-# PNG size is given in pixels.
-Png_Width = 800
-Png_Height = 600
+# SVG size is given in pixels.
+Svg_Width = 720
+Svg_Height = 540
+
+# PDF size is given in inches.
+Pdf_Width = 5
+Pdf_Height = 3.75

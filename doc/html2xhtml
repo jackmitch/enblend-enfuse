@@ -16,7 +16,7 @@ readonly global__sed=${SED:-sed}
 readonly global__tidy=${TIDY:-tidy}
          global__tidy_flags=""
 readonly global__xmllint=${XMLLINT:-xmllint}
-         global__xmllint_flags="-valid --noblanks --noent --nsclean --format --encode iso-8859-1"
+         global__xmllint_flags="--valid --noblanks --noent --nsclean --format --encode iso-8859-1"
 
 
 failwith_error ()
@@ -28,13 +28,14 @@ failwith_error ()
 
 convert_with_tidy ()
 {
-    # We add the system identifier
-    #     "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
-    # with sed(1) after tidy(1).  See function postprocess_tidy_output.
+    # We add the system identifier with sed(1) after tidy(1).  See
+    # function postprocess_tidy_output.  Also see
+    #     http://www.w3.org/QA/2002/04/valid-dtd-list.html
+    # for a list of recommended doctype declarations.
 
     $global__tidy \
         --add-xml-decl yes \
-        --doctype '"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"' \
+        --doctype '"-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN"' \
         --file /dev/null \
         --new-blocklevel-tags "math, mfenced, mfrac, mover, mrow, msqrt, msub, msup, mtable, mtd, mtr, munder, munderover" \
         --new-empty-tags mspace \
@@ -57,7 +58,7 @@ convert_with_tidy ()
 postprocess_tidy_output ()
 {
     $global__sed \
-        -e '1,9s|""|"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"|' \
+        -e '1,9s|""|"http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd"|' \
         \
         -e "s|^<head>|<head>\n<meta content=\"$global__document_version\" name=\"enblend-version\" />|" \
         \
@@ -96,8 +97,6 @@ convert_directory ()
 
     mkdir -p $xhtml_directory
 
-    cp *.png $xhtml_directory
-
     (
         cd $html_directory || failwith_error "cannot cd to \"$html_directory\""
         ls -1 *.html | \
@@ -129,6 +128,7 @@ convert_directory ()
 	          -e 's|<a\([^>]*\)name="[^"]*"\([^>]*\)|<a\1\2|g' \
 	          -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' | \
 	        $global__xmllint $global__xmllint_flags --output $xhtml_file -
+            test $? -eq 0 || { rm -f $xhtml_file; exit 1; }
         fi
     done
 }
@@ -144,6 +144,7 @@ convert_file ()
         postprocess_tidy_output | \
         $global__sed -e 's|<a\([^>]*\)name=\([^>]*\)|<a\1id=\2|g' | \
         $global__xmllint $global__xmllint_flags --output $xhtml_file -
+    test $? -eq 0 || { rm -f $xhtml_file; exit 1; }
 }
 
 
