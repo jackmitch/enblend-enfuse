@@ -180,7 +180,7 @@ uninstall-xhtml:
 
 .html.xhtml:
 	$(srcdir)/html2xhtml \
-	    --document-version=$(VERSION) \
+	    --meta="enblend-version,$(VERSION)" \
 	    --tidy-flags="$(EXTRATIDYFLAGS)" \
 	    --xmllint-flags="$(EXTRAXMLLINTFLAGS)" \
 	    $<

@@ -11,7 +11,7 @@
 
 
 readonly global__command=`basename $0`
-         global__document_version=unknown
+         global__meta_key_val=
 readonly global__sed=${SED:-sed}
 readonly global__tidy=${TIDY:-tidy}
          global__tidy_flags=""
@@ -57,10 +57,16 @@ convert_with_tidy ()
 # inline.  These tags must be reverted.
 postprocess_tidy_output ()
 {
+    if test -z "$lazy__meta_tag" && test -n "$global__meta_key_val"; then
+        lazy__meta_tag=`echo $global__meta_key_val | \
+                          $global__sed -e 's|;|\n|g' | \
+                          $global__sed -e 's|\([^,]*\),\(.*\)|<meta name="\1" content="\2" />|'`
+    fi
+
     $global__sed \
         -e '1,9s|""|"http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd"|' \
         \
-        -e "s|^<head>|<head>\n<meta content=\"$global__document_version\" name=\"enblend-version\" />|" \
+        -e "s|^<head>|<head>\n$lazy__meta_tag|" \
         \
         -e 's|<html\([^>]*\) lang="[^"]*"\([^>]*\)|<html\1\2|' \
         -e 's|<ol[^>]*>|<ol>|' \
@@ -179,8 +185,12 @@ parse_options ()
 
     while test -n "$1"; do
         case "$1" in
-            --document-version=*)
-                global__document_version="${1#--document-version=}"
+            --meta=*)
+                if test -z "$global__meta_key_val"; then
+                    global__meta_key_val="${1#--meta=}"
+                else
+                    global__meta_key_val="$global__meta_key_val;${1#--meta=}"
+                fi
                 ;;
             -h | --help)
                 show_help
@@ -224,9 +234,7 @@ Usage: $global__command_name [OPTIONS] [HTML...]
 Convert HTML files or directories to XHTML.
 
 Options:
-      --document-version=VERSION
-                             set meta tag for documentation's version
-                             [default: \"$global__document_version\"]
+      --meta=NAME,CONTENT    add meta tags with NAME and CONTENT
       --tidy-flags=FLAGS     set flags for tidy(1)
       --xmllint-flags=FLAGS  set flags for xmllint(1)
   -h, --help                 show this help screen
