@@ -358,6 +358,9 @@ documentation.  Additionally, it can be checked with
 
 Note that some additional packages are required to build these
 formats:
+        convert        - ImageMagick's swiss army knive of graphics
+                         format conversion found at
+                         http://www.imagemagick.org/.
         makeinfo       - GNU documentation generator.
         gnuplot        - Render plots (.gp) in text, PNG, EPS, and PDF
                          formats.  Check out http://www.gnuplot.info/.

@@ -7,9 +7,9 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-295dbf607a46, 31 May 2010),
-a tool for compositing images in such a way that the seam between the
-images is invisible, or at least very difficult to see.
+   This manual is for Enblend (version 4.1-8167e23829bb, 14 August
+2010), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
    Copyright (C) 2004-2010 ANDREW MIHAL.
 
@@ -26,8 +26,8 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-295dbf607a46, 31 May 2010), a
-tool for compositing images in such a way that the seam between the
+This manual is for Enblend (version 4.1-8167e23829bb, 14 August 2010),
+a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
 * Menu:
@@ -785,7 +785,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-295dbf607a46, only mask
+     In this version of Enblend, 4.1-8167e23829bb, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1025,7 +1025,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-295dbf607a46)
+     version 3.2 used 1:1.  This version of Enblend (4.1-8167e23829bb)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -2526,40 +2526,40 @@ General Index
 
 
 Tag Table:
-Node: Top900
-Node: Overview2020
-Ref: Overview-Footnote-14465
-Ref: Overview-Footnote-24646
-Node: Workflow4788
-Ref: Figure:photographic-workflow5301
-Node: Invocation8004
-Node: Response Files8642
-Ref: Table:response-file-format10639
-Ref: Table:response-file-syntactic-comment13104
-Ref: Table:globbing-algorithms14005
-Node: Common Options15061
-Ref: Common Options-Footnote-122124
-Ref: Common Options-Footnote-222316
-Node: Extended Options22475
-Ref: Extended Options-Footnote-128853
-Node: Mask Generation Options28926
-Ref: Table:mask-generation31618
-Ref: Table:optimizer-strategies36544
-Ref: Table:visualization-colors41794
-Ref: Table:mask-template-characters42680
-Ref: Mask Generation Options-Footnote-144932
-Node: Color Profiles45160
-Node: Understanding Masks47597
-Node: Tuning Memory Usage51390
-Ref: Table:cache-size-settings54131
-Node: Helpful Programs54566
-Node: Bug Reports58298
-Ref: Bug Reports-Footnote-164045
-Node: Authors64115
-Node: FDL65280
-Node: Program Index86261
-Node: Syntactic-Comment Index89257
-Node: Option Index89873
-Node: General Index93741
+Node: Top903
+Node: Overview2026
+Ref: Overview-Footnote-14471
+Ref: Overview-Footnote-24652
+Node: Workflow4794
+Ref: Figure:photographic-workflow5307
+Node: Invocation8010
+Node: Response Files8648
+Ref: Table:response-file-format10645
+Ref: Table:response-file-syntactic-comment13110
+Ref: Table:globbing-algorithms14011
+Node: Common Options15067
+Ref: Common Options-Footnote-122130
+Ref: Common Options-Footnote-222322
+Node: Extended Options22481
+Ref: Extended Options-Footnote-128859
+Node: Mask Generation Options28932
+Ref: Table:mask-generation31624
+Ref: Table:optimizer-strategies36550
+Ref: Table:visualization-colors41800
+Ref: Table:mask-template-characters42686
+Ref: Mask Generation Options-Footnote-144938
+Node: Color Profiles45166
+Node: Understanding Masks47603
+Node: Tuning Memory Usage51396
+Ref: Table:cache-size-settings54137
+Node: Helpful Programs54572
+Node: Bug Reports58304
+Ref: Bug Reports-Footnote-164051
+Node: Authors64121
+Node: FDL65286
+Node: Program Index86267
+Node: Syntactic-Comment Index89263
+Node: Option Index89879
+Node: General Index93747
 
 End Tag Table

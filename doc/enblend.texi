@@ -1575,6 +1575,48 @@ Final seam line.
 @cindex image colors, visualization
 @cindex colors, visualization image
 @end float
+
+@ifnotinfo
+@cindex seam-line visualization example
+@cindex visualization example
+@ref{Figure:seam-line-visualization} shows an example of a seam-line
+visualization.  It was produced with an Enblend run at all defaults,
+but @option{--fine-mask} and @option{--visualize} enabled.
+
+The large @value{src::visualize-no-overlap-value-color} border is
+``off-limits'' for Enblend, for the images do not overlap there.  The
+dark wedge inside the @value{src::visualize-no-overlap-value-color}
+frame is where the images share a common region.
+
+The initial seam-line (@value{src::visualize-initial-path-color}) is
+almost straight with the exception of a single bend on the left side
+of the image and the final seam-line
+(@value{src::visualize-short-path-value-color}) meanders around it.
+
+@ifhtml
+@float Figure,Figure:seam-line-visualization
+@image{seam-line-visualization}
+
+@caption{Seam-line visualization of a simple overlap.  The
+853@classictimes{}238@dmn{pixel} image is shown at a magification of
+100%.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end ifhtml
+
+@iftex
+@float Figure,Figure:seam-line-visualization
+@image{seam-line-visualization, 15cm}
+
+@caption{Seam-line visualization of a simple overlap.  The
+853@classictimes{}238@dmn{pixel} image has been rescaled to a width of
+approximately 15@dmn{cm}.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end iftex
+@end ifnotinfo
 @end table
 
 @page

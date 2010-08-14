@@ -11,6 +11,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    workflow.texi filespec.texi \
                    bug-reports.texi authors.texi \
                    photographic-workflow.fig \
+                   seam-line-visualization.tif \
                    default.css
 
 enfuse_TEXINFOS = auxmac.texi auxmac.tex \
@@ -44,7 +45,7 @@ export TEXINPUTS=$(top_builddir):$(srcdir)
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
-EXTRA_DIST = docstrings
+EXTRA_DIST = docstrings seam-line-visualization.tif
 
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
@@ -60,6 +61,7 @@ CLEANFILES = entropy.{txt,eps,svg,pdf} \
              focus-stack-decision-tree.{txt,eps,svg,pdf} \
              sharp-edge.{txt,eps,svg,pdf} \
              smooth-edge.{txt,eps,svg,pdf} \
+             seam-line-visualization.{eps,png} \
              *.fig.bak \
              *.msg
 
@@ -169,6 +171,13 @@ uninstall-xhtml:
 	    $(SED) -e '/<desc>/d' -e 's/style="stroke-width:.025in/style="stroke-width:0.001px/' > $@
 
 
+.tif.eps:
+	$(CONVERT) $< eps2:$@
+
+.tif.png:
+	$(CONVERT) $< $@
+
+
 .html.xhtml:
 	$(srcdir)/html2xhtml \
 	    --document-version=$(VERSION) \
@@ -178,10 +187,12 @@ uninstall-xhtml:
 	test -d "$<" && test "$<" = enblend.html && \
             for i in $(enblend_TEXINFOS); do \
               test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
+              test -f $${i%%.*}.png && cp $${i%%.*}.png "$@"; \
             done; true
 	test -d "$<" && test "$<" = enfuse.html && \
             for i in $(enfuse_TEXINFOS); do \
               test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
+              test -f $${i%%.*}.png && cp $${i%%.*}.png "$@"; \
             done; true
 
 
@@ -199,14 +210,17 @@ enblend.info: $(enblend_TEXINFOS) \
 
 enblend.dvi: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
-             photographic-workflow.eps
+             photographic-workflow.eps \
+             seam-line-visualization.eps
 
 enblend.html: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
-              photographic-workflow.svg
+              photographic-workflow.svg \
+              seam-line-visualization.png
 
 enblend.pdf: $(enblend_TEXINFOS) \
-             photographic-workflow.pdf
+             photographic-workflow.pdf \
+             seam-line-visualization.png
 
 enblend.xhtml: enblend.html
 

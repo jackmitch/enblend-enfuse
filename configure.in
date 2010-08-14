@@ -351,6 +351,16 @@ if test "$FIG2DEV" = false; then
     missing_for_doc="$missing_for_doc fig2dev"
 fi
 
+AC_CHECK_PROG(CONVERT,
+              convert,
+              convert,
+              false)
+if test "$CONVERT" = false; then
+    AC_MSG_WARN(cannot find convert; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc convert"
+fi
+
 AC_PROG_SED
 
 # These variables are mentioned in the AutoMake documentation as being
