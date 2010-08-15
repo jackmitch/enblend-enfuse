@@ -47,6 +47,8 @@ TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
 EXTRA_DIST = docstrings seam-line-visualization.tif
 
+RASTER_DIR = @RASTER_DIR@
+
 # created by make(1), user probably wants to rebuild (often?)
 MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 
@@ -89,7 +91,7 @@ html:
 
 .PHONY: clean-local
 clean-local:
-	-rm -rf enblend.xhtml enfuse.xhtml
+	-rm -rf enblend.xhtml enfuse.xhtml raster
 
 
 XMLLINT_FLAGS = --noout --valid
@@ -123,7 +125,7 @@ install-xhtml: xhtml
 	    $(MKDIR_P) "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	    $(INSTALL_DATA) $$xhtml/* "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
-	    $(INSTALL_DATA) *.xhtml *.svg "$(DESTDIR)$(htmldir)"; \
+	    $(INSTALL_DATA) *.xhtml *.svg $(RASTER_DIR) "$(DESTDIR)$(htmldir)"; \
 	  fi; \
 	done
 
@@ -135,65 +137,88 @@ uninstall-xhtml:
 	  if test -d $$x; then \
 	    rm -rf "$(DESTDIR)$(htmldir)/$$xhtml"; \
 	  else \
-	    rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" "$(DESTDIR)$(htmldir)/*.svg"; \
+	    rm -rf "$(DESTDIR)$(htmldir)/*.xhtml" \
+                   "$(DESTDIR)$(htmldir)/*.svg" \
+                   "$(DESTDIR)$(htmldir)/$(RASTER_DIR)"; \
 	  fi; \
 	done
 
 
 # Implicit Rules
 
-.gp.txt:
+%.txt: %.gp
+	$(MKDIR_P) $(RASTER_DIR)
 	$(GNUPLOT) $<
 
-.gp.pdf:
+%.pdf: %.gp
+	$(MKDIR_P) $(RASTER_DIR)
 	$(GNUPLOT) $<
 
-.gp.eps:
+%.eps: %.gp
+	$(MKDIR_P) $(RASTER_DIR)
 	$(GNUPLOT) $<
 
-.gp.svg:
+%.svg: %.gp
+	$(MKDIR_P) $(RASTER_DIR)
+	$(GNUPLOT) $<
+
+$(RASTER_DIR)/%.png: %.gp
+	$(MKDIR_P) $(RASTER_DIR)
 	$(GNUPLOT) $<
 
 
-.fig.txt:
+%.txt: %.fig
 	$(SED) -e '1,/---BEGIN-TEXT---/d' \
                -e '/---END-TEXT---/,$$d' \
                -e 's/^# \?//' < $< > $@
 
-.fig.eps:
+%.eps: %.fig
 	$(FIG2DEV) -L eps $< $@
 
-.fig.pdf:
+%.pdf: %.fig
 	$(FIG2DEV) -L pdf $< $@
 
-.fig.svg:
+%.png: %.fig
+	$(FIG2DEV) -L png $< $@
+
+%.svg: %.fig
 	$(FIG2DEV) -L svg $< | \
 	    $(SED) -e '/<desc>/d' -e 's/style="stroke-width:.025in/style="stroke-width:0.001px/' > $@
 
+$(RASTER_DIR)/%.png: %.fig
+	$(MKDIR_P) $(RASTER_DIR)
+	$(FIG2DEV) -L png $< $@
 
-.tif.eps:
+
+%.eps: %.tif
 	$(CONVERT) $< eps2:$@
 
-.tif.png:
+%.png: %.tif
 	$(CONVERT) $< $@
 
 
-.html.xhtml:
+%.xhtml: %.html
+	test -d "$<" && test "$<" = enblend.html && { \
+            $(MKDIR_P) "$@/$(RASTER_DIR)"; \
+            for i in $(enblend_TEXINFOS); do \
+              base="$${i%%.*}"; \
+              test -f "$$base.svg" && { cp "$$base.svg" "$@"; \
+                                        cp "$(RASTER_DIR)/$$base.png" "$@/$(RASTER_DIR)"; } ; \
+              test -f "$$base.png" && cp "$$base.png" "$@"; \
+            done; } ; true
+	test -d "$<" && test "$<" = enfuse.html && { \
+            $(MKDIR_P) "$@/$(RASTER_DIR)"; \
+            for i in $(enfuse_TEXINFOS); do \
+              base="$${i%%.*}"; \
+              test -f "$$base.svg" && { cp "$$base.svg" "$@"; \
+                                        cp "$(RASTER_DIR)/$$base.png" "$@/$(RASTER_DIR)"; } ; \
+              test -f "$$base.png" && cp "$$base.png" "$@"; \
+            done; } ; true
 	$(srcdir)/html2xhtml \
 	    --meta="enblend-version,$(VERSION)" \
 	    --tidy-flags="$(EXTRATIDYFLAGS)" \
 	    --xmllint-flags="$(EXTRAXMLLINTFLAGS)" \
 	    $<
-	test -d "$<" && test "$<" = enblend.html && \
-            for i in $(enblend_TEXINFOS); do \
-              test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
-              test -f $${i%%.*}.png && cp $${i%%.*}.png "$@"; \
-            done; true
-	test -d "$<" && test "$<" = enfuse.html && \
-            for i in $(enfuse_TEXINFOS); do \
-              test -f $${i%%.*}.svg && cp $${i%%.*}.svg "$@"; \
-              test -f $${i%%.*}.png && cp $${i%%.*}.png "$@"; \
-            done; true
 
 
 # Explicit Rules
@@ -215,7 +240,7 @@ enblend.dvi: $(enblend_TEXINFOS) \
 
 enblend.html: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
-              photographic-workflow.svg \
+              photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
               seam-line-visualization.png
 
 enblend.pdf: $(enblend_TEXINFOS) \
@@ -259,16 +284,16 @@ enfuse.dvi: $(enfuse_TEXINFOS) \
 
 enfuse.html: $(enfuse_TEXINFOS) \
              $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
-             photographic-workflow.svg \
-             focus-stack-decision-tree.svg \
-             entropy.svg \
-             entropy-cutoff.svg \
-             exposure-cutoff.svg \
-             gaussian.svg \
-             laplacian-of-gaussian.svg \
-             local-analysis-window.svg \
-             sharp-edge.svg \
-             smooth-edge.svg
+             photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
+             focus-stack-decision-tree.svg $(RASTER_DIR)/ \
+             entropy.svg $(RASTER_DIR)/entropy.png \
+             entropy-cutoff.svg $(RASTER_DIR)/entropy-cutoff.png \
+             exposure-cutoff.svg $(RASTER_DIR)/exposure-cutoff.png \
+             gaussian.svg $(RASTER_DIR)/gaussian.png \
+             laplacian-of-gaussian.svg $(RASTER_DIR)/laplacian-of-gaussian.png \
+             local-analysis-window.svg $(RASTER_DIR)/local-analysis-window.png \
+             sharp-edge.svg $(RASTER_DIR)/sharp-edge.png \
+             smooth-edge.svg $(RASTER_DIR)/smooth-edge.png
 
 enfuse.pdf: $(enfuse_TEXINFOS) \
             $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \

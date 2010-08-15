@@ -47,6 +47,10 @@ for more information.
 
 * Installation
 
+GNU Make is required to build the project, because some of the
+Makefiles contain pattern rules.
+
+
 ** Tarball
 
         ./configure YOUR-OPTIONS-IF-ANY-GO-HERE
@@ -200,10 +204,11 @@ Build with support for reading and writing OpenEXR images.  See
 http://www.openexr.com/ for the required libraries.
 
 
-** --with-ttf-path=<PATH>
+** --with-raster-dir=<DIR>
 
-Set PATH to TrueType fonts.  This is only required for building the
-documentation.
+Set the name of the raster-graphics directory, which always is a
+subdirectory of the XHTML documentation's root directory.  Default:
+"raster".
 
 
 * CMake Specifics

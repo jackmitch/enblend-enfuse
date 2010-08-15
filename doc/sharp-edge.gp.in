@@ -22,3 +22,7 @@ replot
 set output "| ps2pdf -dEPSCrop - sharp-edge.pdf"
 set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
 replot
+
+set output "@RASTER_DIR@/sharp-edge.png"
+set terminal png transparent size Png_Width, Png_Height enhanced
+replot

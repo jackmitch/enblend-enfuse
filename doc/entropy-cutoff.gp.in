@@ -49,3 +49,7 @@ replot
 set output "| ps2pdf -dEPSCrop - entropy-cutoff.pdf"
 set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
 replot
+
+set output "@RASTER_DIR@/entropy-cutoff.png"
+set terminal png transparent size Png_Width, Png_Height enhanced
+replot

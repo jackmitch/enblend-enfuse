@@ -4,14 +4,24 @@
 
 @c extended commands
 
+@c Include an image in a variety of ways: 1/ The Info format includes
+@c unchanged.  2/ XHTML first tries SVG then PNG in the ``raster''
+@c subdirectory; if both fail, we leave a textual tombstone.  Here,
+@c the CSS must take care of centering of the graphic.  3/ TeX and
+@c PDFTeX center the graphic.
 @macro vimage{filename}
 @ifinfo
 @image{\filename\}
 @end ifinfo
 @html
-<object data="\filename\.svg" type="image/svg+xml" width="800" height="600">
+<object data="\filename\.svg" type="image/svg+xml" width="100%" height="100%">
   <param name="src" value="\filename\.svg" />
-  <p>(Image "\filename\" not displayed because of lacking SVG support.)</p>
+  <object data="raster/\filename\.png" type="image/png">
+    <param name="src" value="raster/\filename\.png" />
+    <p>[Image "<samp><span class="file">\filename\</span></samp>" is
+not displayed, because of lacking <acronym>SVG</acronym> and
+<acronym>PNG</acronym> support.]</p>
+  </object>
 </object>
 @end html
 @iftex

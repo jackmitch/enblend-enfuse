@@ -321,25 +321,12 @@ if test "$GNUPLOT" = false; then
     missing_for_doc="$missing_for_doc gnuplot"
 fi
 
-AC_ARG_WITH([ttf-path],
-            AC_HELP_STRING([--with-ttf-path=<PATH>],
-                           [set path to TrueType fonts]),
-            [GDFONTPATH="$withval"],
-            [GDFONTPATH="/opt/local/share/fonts/freefont-ttf:/sw/share/fonts/freefont-ttf:/usr/X11/lib/X11/fonts/TTF:/usr/X11R6/lib/X11/fonts/TTF:/usr/share/fonts/truetype/freefont"])
-AC_ARG_VAR(GDFONTPATH, [path to TrueType fonts])
-have_freesans_font=no
-orig_ifs="$IFS"
-IFS=':'
-for dir in $GDFONTPATH; do \
-    if test -f "$dir/FreeSans.ttf"; then \
-        have_freesans_font=yes; \
-        break; \
-    fi; \
-done
-IFS="$orig_ifs"
-if test "$have_freesans_font" != yes; then
-    AC_MSG_WARN(cannot find font "FreeSans.ttf" anywhere in GDFONTPATH; text in the documentation's figures could look strange)
-fi
+AC_ARG_WITH([raster-dir],
+            AC_HELP_STRING([--with-raster-dir=<DIR>],
+                           [set raster image subdirectory @<:@default=raster@:>@]),
+            [RASTER_DIR="$withval"],
+            [RASTER_DIR=raster])
+AC_SUBST(RASTER_DIR)
 
 AC_CHECK_PROG(FIG2DEV,
               fig2dev,
@@ -519,6 +506,7 @@ AC_MSG_RESULT([
    OPENGL_LIBS:                    ${OPENGL_LIBS:-<none required>}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
+ raster subdirectory:              ${RASTER_DIR}
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 
  feature selection:
