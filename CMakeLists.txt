@@ -167,6 +167,8 @@ FIND_PACKAGE(LCMS REQUIRED)
 FIND_PACKAGE(LibXMI REQUIRED)
 FIND_PACKAGE(TIFF REQUIRED)
 FIND_PACKAGE(Perl REQUIRED)
+# this one is needed in doc. (Especially the program "convert")
+FIND_PACKAGE(ImageMagick REQUIRED)
 LIST(APPEND common_libs ${LCMS_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES})
 include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS_INCLUDE_DIR})
 
@@ -283,14 +285,16 @@ IF(ENABLE_GPU)
   ENDIF(WIN32)
   FIND_PACKAGE(GLUT REQUIRED)
   FIND_PACKAGE(GLEW REQUIRED)
-  IF(APPLE)
-    FIND_PACKAGE(OpenGL)
-	IF(OPENGL_FOUND)
-	  ADD_DEFINITIONS(-DHAVE_APPLE_OPENGL_FRAMEWORK)
-	  include_directories(${OPENGL_INCLUDE_DIR}})
-	  LIST(APPEND common_libs ${OPENGL_LIBRARIES})
-	ENDIF(OPENGL_FOUND)
-  ENDIF(APPLE)
+
+  FIND_PACKAGE(OpenGL)
+  IF(OPENGL_FOUND)
+    if(APPLE)
+            ADD_DEFINITIONS(-DHAVE_APPLE_OPENGL_FRAMEWORK)
+            include_directories(${OPENGL_INCLUDE_DIR}})
+    endif(APPLE)
+    LIST(APPEND common_libs ${OPENGL_LIBRARIES})
+  ENDIF(OPENGL_FOUND)
+
 
   ADD_DEFINITIONS(-DHAVE_LIBGLEW)
   include_directories(${GLEW_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
@@ -368,7 +372,7 @@ MESSAGE(STATUS "")
 add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
-if (PERL_FOUND AND DOC)
+if (PERL_FOUND AND IMAGEMAGICK_FOUND AND DOC)
   # this should be set from comman line
   # Possible values like described in README: @smallbook @afivepaper @afourpaper @afourwide @afourlatex
   # @letterpaper is default

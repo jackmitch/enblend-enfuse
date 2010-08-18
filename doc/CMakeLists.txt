@@ -11,14 +11,16 @@ ELSE(WIN32)
 set(DocumentsDirectory "doc/enblend")
 ENDIF(WIN32)
 
+# this is needed to convert some .gp.in-files
+set(RASTER_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(_docs)
 set(_enblend_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
-    photographic-workflow.fig default.css)
+    photographic-workflow.fig seam-line-visualization.tif default.css)
 
 set(_enfuse_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
-    config-edge.gp config.gp entropy-cutoff.gp.in entropy.gp.in gaussian.gp.in
+    config-edge.gp config.gp entropy-cutoff.gp.in entropy.gp.in exposure-cutoff.gp.in gaussian.gp.in
     laplacian-of-gaussian.gp.in sharp-edge.gp.in sharp-edge.data
     smooth-edge.gp.in smooth-edge.data local-analysis-window.fig
     photographic-workflow.fig focus-stack-decision-tree.fig default.css)
@@ -62,14 +64,19 @@ macro(create_selection _list _ext _destlist)
 endmacro(create_selection)
 
 set(_enblendenfuse_fig_images)
+set(_enblendenfuse_tif_images)
 set(_enblendenfuse_gp_images)
 
 foreach(_cmd "enblend" "enfuse")
   create_selection(_${_cmd}_Bases "fig" _${_cmd}_fig_images)
+  create_selection(_${_cmd}_Bases "tif" _${_cmd}_tif_images)
   create_selection(_${_cmd}_Bases "gp\\\\.in" _${_cmd}_gp_images)
-  set(_${_cmd}_images ${_${_cmd}_fig_images} ${_${_cmd}_gp_images})
+  set(_${_cmd}_images ${_${_cmd}_fig_images} ${_${_cmd}_tif_images} ${_${_cmd}_gp_images})
   foreach(_i ${_${_cmd}_fig_images})
     gp_append_unique(_enblendenfuse_fig_images ${_i})
+  endforeach(_i)
+  foreach(_i ${_${_cmd}_tif_images})
+    gp_append_unique(_enblendenfuse_tif_images ${_i})
   endforeach(_i)
   foreach(_i ${_${_cmd}_gp_images})
     gp_append_unique(_enblendenfuse_gp_images ${_i})
@@ -128,6 +135,26 @@ foreach(_fig ${_enblendenfuse_fig_images})
   SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt" GENERATED)
   list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/${_fig}.txt")
 endforeach(_fig)
+
+foreach(_tif ${_enblendenfuse_tif_images})
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.gif"
+    COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} "${TOP_SRC_DIR}/doc/${_tif}.tif" "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.gif"
+    DEPENDS "${TOP_SRC_DIR}/doc/${_tif}.tif"
+    COMMENT "convert: creating ${CMAKE_CURRENT_BINARY_DIR}/${_tif}.gif"
+    )
+  SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/${_tif}.gif" GENERATED)
+  list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.gif")
+  
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.png"
+    COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} "${TOP_SRC_DIR}/doc/${_tif}.tif" "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.png"
+    DEPENDS "${TOP_SRC_DIR}/doc/${_tif}.tif"
+    COMMENT "convert: creating ${CMAKE_CURRENT_BINARY_DIR}/${_tif}.png"
+    )
+  SET_SOURCE_FILES_PROPERTIES("${CMAKE_CURRENT_BINARY_DIR}/${_tif}.png" GENERATED)
+  list(APPEND _helpfiles "${CMAKE_CURRENT_BINARY_DIR}/${_tif}.png")
+endforeach(_tif)
 add_custom_target(doc0 ALL DEPENDS ${_helpfiles})
 
 project(doc1)
