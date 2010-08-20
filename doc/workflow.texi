@@ -15,6 +15,11 @@ direction, but taken with varying exposure parameters.
 in this tool chain.
 
 @float Figure,Figure:photographic-workflow
+@vimage{photographic-workflow}
+
+@caption{Photographic workflow with Enblend and Enfuse.}
+
+@shortcaption{Photographic workflow}
 
 @cindex workflow with Enblend
 @cindex workflow with Enfuse
@@ -24,22 +29,17 @@ in this tool chain.
 @pindex hugin
 @pindex PanoTools
 @pindex gimp
-
-@vimage{photographic-workflow}
-
-@caption{Photographic workflow with Enblend and Enfuse.}
 @end float
 
 @table @asis
+@dbtitle{Photographic Workflow}
 @item Take Images
 Take @emph{multiple} images to form a panorama, an exposure series, a
 focus stack, etc.
 
-@smalldisplay
 There is one exception with Enfuse when a single raw image is
 converted multiple times to get several -- typically differently
 ``exposed'' -- images.
-@end smalldisplay
 
 @noindent
 @emph{Exemplary Benefits}
@@ -73,12 +73,10 @@ capitalize on a high-quality conversion.
 @item Align Images
 Align the images so as to make them match as well as possible.
 
-@smalldisplay
 Again there is one exception and this is when images naturally align.
 For example, a series of images taken from a rock solid tripod with a
 cable release without touching the camera, or images taken with a
 shift lens, can align without further user intervention.
-@end smalldisplay
 
 @cindex affine transformation
 @cindex transformation, affine

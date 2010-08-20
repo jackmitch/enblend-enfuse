@@ -1,6 +1,6 @@
 @float Table,Table:mask-template-characters
-@cindex mask template characters, table of
 @table @code
+@dbtitle{Mask Template Characters}
 @item %%
 @cindex mask template character, @samp{%}
 Produces a literal @samp{%}-sign.
@@ -101,7 +101,10 @@ Example (cont.): @samp{%e} @result{} @file{.jpg}.
 @cindex mask template character, @samp{E}
 Is replaced with the extension of the output file.
 @end table
-@caption{Special characters to control the generation of mask
-filenames.}
+
+@caption{Special characters to control the generation of mask filenames.}
+
 @shortcaption{Mask template characters}
+
+@cindex mask template characters, table of
 @end float

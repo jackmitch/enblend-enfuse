@@ -45,7 +45,7 @@ export TEXINPUTS=$(top_builddir):$(srcdir)
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
-EXTRA_DIST = docstrings seam-line-visualization.tif
+EXTRA_DIST = docstrings seam-line-visualization.tif makeinfo-4.13-docbook.sed
 
 RASTER_DIR = @RASTER_DIR@
 
@@ -64,6 +64,7 @@ CLEANFILES = entropy.{txt,eps,svg,pdf} \
              sharp-edge.{txt,eps,svg,pdf} \
              smooth-edge.{txt,eps,svg,pdf} \
              seam-line-visualization.{eps,png} \
+             *.xml \
              *.fig.bak \
              *.msg
 
@@ -144,6 +145,16 @@ uninstall-xhtml:
 	done
 
 
+.PHONY: xml
+xml: $(info_TEXINFOS:.texi=.xml)
+
+.PHONY: validate-xml
+validate-xml: $(info_TEXINFOS:.texi=.xml)
+	for x in $(info_TEXINFOS); do \
+	  $(XMLLINT) $(XMLLINT_FLAGS) `basename $$x .texi`.xml; \
+	done
+
+
 # Implicit Rules
 
 %.txt: %.gp
@@ -221,6 +232,17 @@ $(RASTER_DIR)/%.png: %.fig
 	    $<
 
 
+%.xml: %.texi
+	- $(MAKEINFO) $(AM_MAKEINFOFLAGS) --docbook --output=- $< > $(basename $@)-orig.xml
+	$(SED) \
+	    -e '1,100s#<book id="\([^"]*\)"#<book id="$@"#' \
+	    -f $(srcdir)/../doc/makeinfo-4.13-docbook.sed \
+	    < $(basename $@)-orig.xml > $(basename $@)-clean.xml
+	$(XMLLINT) \
+	    --valid --noblanks --noent --nsclean --format --encode iso-8859-1 $(basename $@)-clean.xml \
+	    > $@ || { rm $@; false; }
+
+
 # Explicit Rules
 
 varsenblend.texi: $(srcdir)/../src/enblend.cc \
@@ -248,6 +270,11 @@ enblend.pdf: $(enblend_TEXINFOS) \
              seam-line-visualization.png
 
 enblend.xhtml: enblend.html
+
+enblend.xml: $(enblend_TEXINFOS) \
+             $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
+             photographic-workflow.svg \
+             seam-line-visualization.png
 
 
 varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
@@ -309,3 +336,16 @@ enfuse.pdf: $(enfuse_TEXINFOS) \
             smooth-edge.pdf
 
 enfuse.xhtml: enfuse.html
+
+enfuse.xml: $(enfuse_TEXINFOS) \
+            $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
+            photographic-workflow.svg \
+            focus-stack-decision-tree.svg \
+            entropy.svg \
+            entropy-cutoff.svg \
+            exposure-cutoff.svg \
+            gaussian.svg \
+            laplacian-of-gaussian.svg \
+            local-analysis-window.svg \
+            sharp-edge.svg \
+            smooth-edge.svg

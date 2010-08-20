@@ -39,7 +39,7 @@ convert_with_tidy ()
         --file /dev/null \
         --new-blocklevel-tags "math, mfenced, mfrac, mover, mrow, msqrt, msub, msup, mtable, mtd, mtr, munder, munderover" \
         --new-empty-tags mspace \
-        --new-inline-tags "mathinline, mi, mn, mo, mrowinline, msubinline, msupinline, mtext" \
+        --new-inline-tags "mathinline, mfencedinline, mi, mn, mo, mrowinline, msqrtinline, msubinline, msupinline, mtext" \
         --sort-attributes alpha \
         --output-encoding latin1 \
         --output-xhtml yes \
@@ -54,33 +54,26 @@ convert_with_tidy ()
 # We must postprocess tidy(1)'s output, because 1/ it still contains
 # elements that make an XML parser puke and 2/ we have intentionally
 # introduced pseudo MathML tags to coerce tidy(1) into formatting them
-# inline.  These tags must be reverted.
+# inline; these tags must be reverted.
 postprocess_tidy_output ()
 {
     if test -z "$lazy__meta_tag" && test -n "$global__meta_key_val"; then
         lazy__meta_tag=`echo $global__meta_key_val | \
-                          $global__sed -e 's|;|\n|g' | \
-                          $global__sed -e 's|\([^,]*\),\(.*\)|<meta name="\1" content="\2" />|'`
+                          $global__sed -e 's#;#\n#g' | \
+                          $global__sed -e 's#\([^,]*\),\(.*\)#<meta name="\1" content="\2" />#'`
     fi
 
     $global__sed \
-        -e '1,9s|""|"http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd"|' \
+        -e '1,9s#""#"http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd"#' \
         \
-        -e "s|^<head>|<head>\n$lazy__meta_tag|" \
+        -e "s#^<head>#<head>\n$lazy__meta_tag#" \
         \
-        -e 's|<html\([^>]*\) lang="[^"]*"\([^>]*\)|<html\1\2|' \
-        -e 's|<ol[^>]*>|<ol>|' \
-        -e 's|<t\([dh]\)\([^>]*\)width="[^"]*"\([^>]*\)|<t\1\2\3|' \
-        -e 's|<ul\([^>]*\)compact="[^"]*"\([^>]*\)|<ul\1\2|' \
+        -e 's#<html\([^>]*\) lang="[^"]*"\([^>]*\)#<html\1\2#' \
+        -e 's#<ol[^>]*>#<ol>#' \
+        -e 's#<t\([dh]\)\([^>]*\)width="[^"]*"\([^>]*\)#<t\1\2\3#' \
+        -e 's#<ul\([^>]*\)compact="[^"]*"\([^>]*\)#<ul\1\2#' \
         \
-        -e 's|<mathinline|<math|g' \
-        -e 's|</mathinline|</math|g' \
-        -e 's|<mrowinline|<mrow|g' \
-        -e 's|</mrowinline|</mrow|g' \
-        -e 's|<msubinline|<msub|g' \
-        -e 's|</msubinline|</msub|g' \
-        -e 's|<msupinline|<msup|g' \
-        -e 's|</msupinline|</msup|'
+        -e 's#<\(/*\)\(math\|mfenced\|mrow\|msqrt\|msub\|msup\)inline#<\1\2#g'
 }
 
 

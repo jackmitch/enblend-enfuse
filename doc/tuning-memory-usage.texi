@@ -141,6 +141,47 @@ for different amounts of available @acronym{RAM}.
     }
 }
 @end tex
+@docbook
+<table>
+    <title>Suggested cache-size settings</title>
+    <tgroup cols="4">
+        <thead>
+            <row>
+                <entry>RAM</entry>
+                <entry><varname>CACHE-SIZE</varname></entry>
+                <entry><varname>BUFFER-SIZE</varname></entry>
+                <entry>Comment</entry>
+            </row>
+            <row>
+                <entry>MB</entry>
+                <entry>MB</entry>
+                <entry>KB</entry>
+                <entry></entry>
+            </row>
+        </thead>
+        <tbody>
+            <row>
+                <entry>4096</entry>
+                <entry>1024</entry>
+                <entry>2048</entry>
+                <entry>default</entry>
+            </row>
+            <row>
+                <entry>2048</entry>
+                <entry>512&ndash;1024</entry>
+                <entry>1024</entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>1024</entry>
+                <entry>256&ndash;512</entry>
+                <entry>256&ndash;512</entry>
+                <entry></entry>
+            </row>
+        </tbody>
+    </tgroup>
+</table>
+@end docbook
 @caption{Suggested cache-size settings}
 @c @shortcaption{}
 @end float

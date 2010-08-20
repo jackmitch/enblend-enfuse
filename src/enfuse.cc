@@ -104,7 +104,7 @@ double WEntropy = 0.0;          //< src::default-weight-entropy 0.0
 double WMu = 0.5;               //< src::default-exposure-mu 0.5
 double WSigma = 0.2;            //< src::default-exposure-sigma 0.2
 bool WSaturationIsDefault = true;
-int ContrastWindowSize = 5;
+int ContrastWindowSize = 5;     //< src::default-contrast-window-size 5
 std::string GrayscaleProjector;
 struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {
     0.0,                        //< src::default-edge-scale 0.0

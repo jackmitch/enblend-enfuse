@@ -8,9 +8,9 @@
 
 @c %**start of header
 @setfilename enfuse.info
+@include versenfuse.texi
 @settitle Fusing Multiple Images with Enfuse @value{VERSION}
 @include auxmac.texi
-@include versenfuse.texi
 @include varsenfuse.texi
 @include config-h.texi
 
@@ -126,12 +126,14 @@ scene to produce an image that looks much like a tonemapped image.
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
 * FDL::                         @acronym{GNU} Free Documentation License
+@ifnotdocbook
 * List of Tables::              List of all tables
 * List of Figures::             List of all figures
 * Program Index::               Names of programs referenced
 * Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
 * General Index::               Topic index
+@end ifnotdocbook
 
 @detailmenu
 
@@ -265,8 +267,8 @@ Enfuse uses up to four criteria to judge the quality of a pixel, which
 @ref{Table:weighting-criteria} briefly describes.
 
 @float Table,Table:weighting-criteria
-
 @table @asis
+@dbtitle{Weighting Criteria}
 @item Exposure
 @cindex weighting, exposure
 The exposure criteria favors pixels with luminance close to the middle
@@ -292,9 +294,7 @@ problem of noisy images when using entropy weighting by setting a
 black threshold.
 @end table
 
-@caption{Enfuse's four weighting criteria.  (Also see
-@ref{Table:default-weights} for the default weights of these
-criteria.)}
+@caption{Enfuse's four weighting criteria.  (Also see @ref{Table:default-weights} for the default weights of these criteria.)}
 
 @shortcaption{Weighting criteria}
 @end float
@@ -459,7 +459,7 @@ However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 @itemx --help
 @opindex -h
 @opindex --help
-Print information on the available options then exit.
+Print information on the available options and exit.
 
 @item -l @var{LEVELS}
 @itemx --levels=@var{LEVELS}
@@ -485,9 +485,9 @@ As a guideline, remember that each new level works on a linear scale
 twice as large as the previous one.  So, the zeroth layer, the
 original image, obviously defines the image at single-pixel scale, the
 first level works at two-pixel scale, and generally, the @math{n}-th
-level contains image data at @math{2^n}-pixel scale.  This is the
+level contains image data at @power{2, n}-pixel scale.  This is the
 reason why an image of
-@math{width}@classictimes{}@math{height}@tie{}pixels cannot be
+@math{width}@classictimes{}@/@math{height}@dmn{pixels} cannot be
 deconstructed into a pyramid of more than
 @ifinfo
 @display
@@ -495,36 +495,57 @@ deconstructed into a pyramid of more than
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-    <mrow>
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
         <mo>&LeftFloor;</mo>
-        <mrow>
-            <msub>
+        <mrowinline>
+            <msubinline>
                 <mo>log</mo>
                 <mn>2</mo>
-            </msub>
+            </msubinline>
             <mo>&ApplyFunction;</mo>
             <mo>(</mo>
-            <mrow>
+            <mrowinline>
                 <mo>min</mo>
                 <mo>&ApplyFunction;</mo>
-                <mfenced>
+                <mfencedinline>
                     <mi mathvariant="italic">width</mi>
                     <mi mathvariant="italic">height</mi>
-                </mfenced>
-            </mrow>
+                </mfencedinline>
+            </mrowinline>
             <mo>)</mo>
-        </mrow>
+        </mrowinline>
         <mo>&RightFloor;</mo>
-    </mrow>
-</math>
+    </mrowinline>
+</mathinline>
 @end html
 @tex
-$$
-    \lfloor \log_2(\min(\mathit{width}, \mathit{height})) \rfloor
-$$
+$\lfloor \log_2(\min(\mathit{width}, \mathit{height})) \rfloor$
 @end tex
-
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:floor/>
+            <mml:apply>
+                <mml:log/>
+                <mml:logbase>
+                    <mml:cn>2</mml:cn>
+                </mml:logbase>
+                <mml:apply>
+                    <mml:min/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">width</mml:mi>
+                    </mml:csymbol>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">height</mml:mi>
+                    </mml:csymbol>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</inlineequation>&nbsp;
+@end docbook
 levels.
 
 If too few levels are used, ``halos'' around regions of strong local
@@ -637,10 +658,46 @@ Otherwise, always avoid this option!
 With this option, Enfuse treats the panorama of width@tie{}@math{w}
 and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
-pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
-reminded of the
+pixels
+@ifinfo
+@math{S_P(x, y)}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>S</mi>
+            <mi>P</mi>
+        </msubinline>
+        <mfencedinline>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfencedinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$S_P(x, y)$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:csymbol>
+                <mml:msub>
+                    <mml:mi>S</mml:mi>
+                    <mml:mi>P</mml:mi>
+                </mml:msub>
+            </mml:csymbol>
+            <mml:ci>x</mml:ci>
+            <mml:ci>y</mml:ci>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+@footnote{Solid-state physicists will be reminded of the
 @uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition,
-@sc{Born}-@sc{von K@'arm@'an} boundary condition}.}.
+@sc{Born}-@sc{von@tie{}K@'arm@'an} boundary condition}.}.
 
 @var{MODE} takes the following values:
 
@@ -659,7 +716,7 @@ Wrap around horizontally:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -702,6 +759,49 @@ $$
     S_P(x, y) = \{P(x + m w, y): m \in Z\}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>x</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>m</mml:ci>
+                                <mml:ci>w</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:ci>y</mml:ci>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:in/>
+                        <mml:ci>m</mml:ci>
+                        <mml:ci>Z</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 This is useful for 360@textdegree{} horizontal panoramas as it
 eliminates the left and right borders.
@@ -714,7 +814,7 @@ Wrap around vertically:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -771,7 +871,7 @@ Wrap around both horizontally and vertically:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -824,6 +924,65 @@ $$
     S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>x</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>m</mml:ci>
+                                <mml:ci>w</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>y</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>n</mml:ci>
+                                <mml:ci>h</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:and/>
+                        <mml:apply>
+                            <mml:in/>
+                            <mml:ci>n</mml:ci>
+                            <mml:ci>Z</mml:ci>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:in/>
+                            <mml:ci>m</mml:ci>
+                            <mml:ci>Z</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 In this mode, both left and right borders, as well as top and bottom
 borders, are eliminated.
@@ -911,7 +1070,7 @@ data benefits from the wider input channels for the longest time.
 @end itemize
 
 All @var{DEPTH} specifications are valid in lowercase as well as
-uppercase letters.  For integer format use
+uppercase letters.  For integer format, use
 
 @table @asis
 @item @code{8}, @code{uint8}
@@ -926,7 +1085,7 @@ Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
 Unsigned 32@dmn{bit}; range: 0..4294967295
 @end table
 
-For floating-point format use
+For floating-point format, use
 
 @c Minimum positive normalized value: 2^(2 - 2^k)
 @c Epsilon: 2^(1 - n)
@@ -942,11 +1101,11 @@ For floating-point format use
 
 @itemize
 @item
-Minimal normalized value: @semilog{1.2, -38}
+Minimum normalized value: @semilog{1.2, -38}
 @item
 Epsilon: @semilog{1.2, -7}
 @item
-Maximal finite value: @semilog{3.4, 38}
+Maximum finite value: @semilog{3.4, 38}
 @end itemize
 
 @c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
@@ -958,11 +1117,11 @@ Maximal finite value: @semilog{3.4, 38}
 
 @itemize
 @item
-Minimal normalized value: @semilog{2.2, -308}
+Minimum normalized value: @semilog{2.2, -308}
 @item
 Epsilon: @semilog{2.2, -16}
 @item
-Maximal finite value: @semilog{1.8, 308}
+Maximum finite value: @semilog{1.8, 308}
 @end itemize
 @end table
 
@@ -1037,8 +1196,8 @@ Save alpha channel as ``associated''.  See the
 Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
 Programs}) exhibit unusual behavior when loading images with
 unassociated alpha channels.  Use option @option{-g} to work around
-this problem.  With this flag Enfuse will create the output image with
-the associated alpha tag set, even though the image is really
+this problem.  With this flag Enfuse will create the output image
+with the associated alpha tag set, even though the image is really
 unassociated alpha.
 
 @item -m @var{CACHESIZE}
@@ -1082,27 +1241,11 @@ contributes to the output image.
 @cindex weight, local contrast
 
 Sets the relative @var{WEIGHT} of high local-contrast pixels.
-Default: @value{src::default-weight-contrast}.  Valid range:
-@ifinfo
-@value{src::minimum-weight-contrast} @leq{} @var{WEIGHT} @leq{}
-@value{src::maximum-weight-contrast}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-weight-contrast}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">WEIGHT</mi>
-        <mo>&le;</mo>
-        <mn>@value{src::maximum-weight-contrast}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-weight-contrast} \le \mathit{WEIGHT} \le
-@value{src::maximum-weight-contrast}$.
-@end tex
+
+Valid range: @value{src::minimum-weight-contrast} @leq{} @var{WEIGHT}
+@leq{} @value{src::maximum-weight-contrast}.
+
+Default: @value{src::default-weight-contrast}.
 
 See @ref{Local Contrast Weighting} and @ref{Expert Options, Option
 contrast-window-size}.
@@ -1111,28 +1254,12 @@ contrast-window-size}.
 @opindex --entropy-weight
 @cindex weight, entropy
 
-Sets the relative @var{WEIGHT} of high local entropy pixels.  Default:
-@value{src::default-weight-entropy}.  Valid range:
-@ifinfo
-@value{src::minimum-weight-entropy} @leq{} @var{WEIGHT} @leq{}
-@value{src::maximum-weight-entropy}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-weight-entropy}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">WEIGHT</mi>
-        <mo>&le;</mo>
-        <mn>@value{src::maximum-weight-entropy}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-weight-entropy} \le \mathit{WEIGHT} \le
-@value{src::maximum-weight-entropy}$.
-@end tex
+Sets the relative @var{WEIGHT} of high local entropy pixels.
+
+Valid range: @value{src::minimum-weight-entropy} @leq{} @var{WEIGHT}
+@leq{} @value{src::maximum-weight-entropy}.
+
+Default: @value{src::default-weight-entropy}.
 
 See @ref{Local Entropy Weighting} and @ref{Expert Options, Options
 entropy-window-size and entropy-cutoff}.
@@ -1143,28 +1270,12 @@ entropy-window-size and entropy-cutoff}.
 
 Sets the relative @var{WEIGHT} of the well-exposedness criterion.
 Increasing this weight relative to the others will make well-exposed
-pixels contribute more to the final output.  Default:
-@value{src::default-weight-exposure}.  Valid range:
-@ifinfo
-@value{src::minimum-weight-exposure} @leq{} @var{WEIGHT} @leq{}
-@value{src::maximum-weight-exposure}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-weight-exposure}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">WEIGHT</mi>
-        <mo>&le;</mo>
-        <mn>@value{src::maximum-weight-exposure}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-weight-exposure} \le \mathit{WEIGHT} \le
-@value{src::maximum-weight-exposure}$.
-@end tex
+pixels contribute more to the final output.
+
+Valid range: @value{src::minimum-weight-exposure} @leq{} @var{WEIGHT}
+@leq{} @value{src::maximum-weight-exposure}.
+
+Default: @value{src::default-weight-exposure}.
 
 @xref{Exposure Weighting}.
 
@@ -1172,28 +1283,12 @@ $@value{src::minimum-weight-exposure} \le \mathit{WEIGHT} \le
 @opindex --exposure-mu
 
 Set the @var{MEAN} (this is, the center) of the Gaussian exposure
-weight curve.  Default: @value{src::default-exposure-mu}.  Valid
-range:
-@ifinfo
-@value{src::minimum-exposure-mu} @leq{} @var{MEAN} @leq{}
-@value{src::maximum-exposure-mu}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-exposure-mu}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">MEAN</mi>
-        <mo>&le;</mo>
-        <mn>@value{src::maximum-exposure-mu}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-exposure-mu} \le \mathit{MEAN} \le
-@value{src::maximum-exposure-mu}$.
-@end tex
+weight curve.
+
+Valid range: @value{src::minimum-exposure-mu} @leq{} @var{MEAN}
+@leq{} @value{src::maximum-exposure-mu}.
+
+Default: @value{src::default-exposure-mu}.
 
 Use this option to fine-tune exposure weighting (@pxref{Exposure
 Weighting}).
@@ -1202,25 +1297,12 @@ Weighting}).
 @opindex --exposure-sigma
 
 Standard deviation @var{STD-DEV} of the Gaussian exposure weight
-curve.  Default: @value{src::default-exposure-sigma}.  Low numbers
-give less weight to pixels that are far from @option{--wMu} and vice
-versa.  Valid range:
-@ifinfo
-@value{src::minimum-exposure-sigma} @leq{} @var{STD-DEV}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-exposure-sigma}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">STD-DEV</mi>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-exposure-sigma} \le \mathit{STD-DEV}$.
-@end tex
+curve.  Low numbers give less weight to pixels that are far from
+@option{--wMu} and vice versa.
+
+Valid range: @var{STD-DEV} @geq{} @value{src::minimum-exposure-sigma}.
+
+Default: @value{src::default-exposure-sigma}.
 
 Use this option to fine-tune exposure weighting (@pxref{Exposure
 Weighting}).
@@ -1230,28 +1312,12 @@ Weighting}).
 
 Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
-final output.  Default: @value{src::default-weight-saturation}.  Valid
-range:
-@ifinfo
-@value{src::minimum-weight-saturation} @leq{} @var{WEIGHT} @leq{}
-@value{src::maximum-weight-saturation}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-weight-saturation}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">WEIGHT</mi>
-        <mo>&le;</mo>
-        <mn>@value{src::maximum-weight-saturation}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-weight-saturation} \le \mathit{WEIGHT} \le
-@value{src::maximum-weight-saturation}$.
-@end tex
+final output.
+
+Valid range: @value{src::minimum-weight-saturation}
+@leq{} @var{WEIGHT} @leq{} @value{src::maximum-weight-saturation}.
+
+Default: @value{src::default-weight-saturation}.
 
 Saturation weighting is only defined for color images.
 @xref{Saturation Weighting}.
@@ -1270,32 +1336,17 @@ to read the manual before applying them successfully.
 @opindex --contrast-window-size
 
 Set the window @var{SIZE} for local contrast analysis.  The window
-will be a square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
+will be a square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.  If
+given an even @var{SIZE}, Enfuse will automatically use the next odd
+number.
 
 For contrast analysis @var{SIZE} values larger than 5 might result in
 a blurry composite image.  Values of 3 and 5 have given good results
 on focus stacks.
 
-Valid range:
-@ifinfo
-@var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">SIZE</mi>
-        <mo>&ge;</mo>
-        <mn>@value{src::minimum-contrast-window-size}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{SIZE} \ge @value{src::minimum-contrast-window-size}$.
-@end tex
+Valid range: @var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
 
-If given an even @var{SIZE}, Enfuse will automatically use the next
-odd number.
+Default: @value{src::default-contrast-window-size}@dmn{pixels}.
 
 See also @ref{Fusion Options, Option --contrast-weight} and
 @option{--hard-mask} below.
@@ -1304,6 +1355,7 @@ See also @ref{Fusion Options, Option --contrast-weight} and
 @itemx --contrast-edge-scale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
 @opindex --contrast-edge-scale
 
+@cindex Laplacian-of-Gaussian
 A non-zero value for @var{EDGE-SCALE} switches on the
 Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
 @var{EDGE-SCALE} is the radius of the Gaussian used in the search for
@@ -1313,64 +1365,10 @@ A positive @var{LCE-SCALE} turns on local contrast enhancement
 (@acronym{LCE}) before the @acronym{LoG} edge detection.
 @var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
 step, @var{LCE-FACTOR} is the weight factor (``strength'').
-@ifinfo
-@display
-@math{enhanced =   (1 + LCE-FACTOR) * original
-           - LCE-FACTOR * GaussianSmooth(original, LCE-SCALE)}
-@end display
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-    <mtable>
-        <mtr>
-            <mtd>
-                <mi mathvariant="italic">enhanced</mi>
-            </mtd>
-            <mtd>
-                <mo>=</mo>
-            </mtd>
-            <mtd>
-                <mrow>
-                    <mo>(</mo>
-                    <mn>1</mn>
-                    <mo>+</mo>
-                    <mi mathvariant="italic">LCE-FACTOR</mi>
-                    <mo>)</mo>
-                </mrow>
-                <mo>&times;</mo>
-                <mi mathvariant="italic">original</mi>
-            </mtd>
-        </mtr>
-        <mtr>
-            <mtd></mtd>
-            <mtd></mtd>
-            <mtd>
-                <mo>-</mo>
-                <mrow>
-                    <mi mathvariant="italic">LCE-FACTOR</mi>
-                    <mo>&times;</mo>
-                    <mrow>
-                        <mo>GaussianSmooth</mo>
-                        <mo>&ApplyFunction;</mo>
-                        <mfenced>
-                            <mi mathvariant="italic">original</mi>
-                            <mi mathvariant="italic">LCE-SCALE</mi>
-                        </mfenced>
-                    </mrow>
-                </mrow>
-            </mtd>
-        </mtr>
-    </mtable>
-</math>
-@end html
-@tex
-$$
-    \eqalign{enhanced & = (1 + \mathit{LCE-FACTOR}) \; \mathit{original}\cr
-                      & - \mathit{LCE-FACTOR} \;
-                          \mathrm{GaussianSmooth}(\mathit{original},
-                                                  \mathit{LCE-SCALE})\cr}
-$$
-@end tex
+
+@var{enhanced} = (1 + @var{LCE-FACTOR}) @classictimes{} @var{original}
+@minus{} @var{LCE-FACTOR} @classictimes{} Gaussian@/Smooth(@var{original},
+@var{LCE-SCALE}).
 
 @var{LCE-SCALE} defaults to @value{src::default-lce-scale} pixels and
 @var{LCE-FACTOR} defaults to @value{src::default-lce-factor}.  Append
@@ -1400,13 +1398,7 @@ pixel value in the source image (for example 255 or 65535).
 @float Figure,Figure:entropy-cutoff
 @vimage{entropy-cutoff}
 
-@caption{Linear lightness@tie{}@var{Y} in comparison with an
-entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and
-@var{UPPER-CUTOFF} = 90%, which are rather extreme values.  Please
-note that we have shifted the original lightness curve up and the
-cut-off curve down by a very small @var{Offset} to emphasize that the
-proportional part of @var{Y} remains unaltered under the cut-off
-operation.}
+@caption{Linear lightness@tie{}@var{Y} in comparison with an entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 90%, which are rather extreme values.  Please note that we have shifted the original lightness curve up and the cut-off curve down by a very small @var{Offset} to emphasize that the proportional part of @var{Y} remains unaltered under the cut-off operation.}
 
 @shortcaption{Entropy cutoff function}
 @end float
@@ -1423,29 +1415,15 @@ output image.
 @opindex --entropy-window-size
 
 Window @var{SIZE} for local entropy analysis.  The window will be a
-square of @var{SIZE}@classictimes{}@var{SIZE} pixels.
+square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.
 
 In the entropy calculation @var{SIZE} values of 3 to 7 yield an
 acceptable compromise of the locality of the information and the
 significance of the local entropy value itself.
 
-Valid range:
-@ifinfo
-@var{SIZE} @geq{} @value{src::minimum-entropy-window-size}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">SIZE</mi>
-        <mo>&ge;</mo>
-        <mn>@value{src::minimum-entropy-window-size}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{SIZE} \ge @value{src::minimum-entropy-window-size}$.
-@end tex
+Valid range: @var{SIZE} @geq{} @value{src::minimum-entropy-window-size}.
+
+Default: @value{src::default-entropy-window-size}@dmn{pixels}.
 
 If given an even @var{SIZE} Enfuse will automatically use the next odd
 number.
@@ -1526,9 +1504,7 @@ respective ends.
 @float Figure,Figure:exposure-cutoff
 @vimage{exposure-cutoff}
 
-@caption{Exposure weight, a Gaussian with @var{Mu} = 0.5 and
-@var{Sigma} = 0.2 submitted to an exposure-cutoff of
-@var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
+@caption{Exposure weight, a Gaussian with @var{Mu} = 0.5 and @var{Sigma} = 0.2 submitted to an exposure-cutoff of @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
 
 @shortcaption{Exposure cutoff function}
 @end float
@@ -1558,27 +1534,43 @@ convert -define histogram:unique-colors=false \
 @cindex gray projector
 
 Use gray projector@tie{}@var{PROJECTOR} for conversion of
-@acronym{RGB} images to grayscale masks:
+@acronym{RGB} images to grayscale:
 @ifinfo
 @math{(R, G, B) --> Y.}
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mfenced>
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <mfencedinline>
             <mi>R</mi>
             <mi>G</mi>
             <mi>B</mi>
-        </mfenced>
+        </mfencedinline>
         <mo>&rightarrow;</mo>
         <mi>Y</mi>
         <mtext>.</mtext>
-    </mrow>
-</math>
+    </mrowinline>
+</mathinline>
 @end html
 @tex
 $(R, G, B) \rightarrow Y.$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:lambda>
+            <mml:bvar>
+                <mml:vector>
+                    <mml:ci>R</mml:ci>
+                    <mml:ci>G</mml:ci>
+                    <mml:ci>B</mml:ci>
+                </mml:vector>
+            </mml:bvar>
+            <mml:ci>Y</mml:ci>
+        </mml:lambda>
+    </mml:math>
+</informalequation>
+@end docbook
 
 In version@tie{}@value{VERSION} of Enfuse, the option is effective for
 exposure weighting and local contrast weighting.  Default:
@@ -1598,7 +1590,7 @@ color channels.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
@@ -1619,6 +1611,23 @@ $$
     Y = \min(R, G, B)
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply>
+                <mml:min/>
+                <mml:ci>R</mml:ci>
+                <mml:ci>G</mml:ci>
+                <mml:ci>B</mml:ci>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
+
 This projector can be useful when exposure weighing while employing a
 lower cutoff (see option@tie{}@option{--exposure-cutoff}) to reduce
 the noise in the fused image.
@@ -1634,7 +1643,7 @@ default, and it often is a good projector for @math{gamma = 1} data.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
@@ -1656,6 +1665,26 @@ $$
     Y = {R + G + B \over 3}
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply other='display="scriptstyle"'>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:plus/>
+                    <mml:ci>R</mml:ci>
+                    <mml:ci>G</mml:ci>
+                    <mml:ci>B</mml:ci>
+                </mml:apply>
+                <mml:cn>3</mml:cn>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @item channel-mixer:@var{RED-WEIGHT}:@var{GREEN-WEIGHT}:@var{BLUE-WEIGHT}
 @cindex gray projector, @samp{channel-mixer}
@@ -1667,7 +1696,7 @@ Weight the channels as given.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
@@ -1699,13 +1728,47 @@ $$
         & \mathit{BLUE-WEIGHT} \times B \cr}
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply>
+                <mml:plus/>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">RED-WEIGHT</mml:mi>
+                    </mml:csymbol>
+                    <mml:ci>R</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">GREEN-WEIGHT</mml:mi>
+                    </mml:csymbol>
+                    <mml:ci>G</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">BLUE-WEIGHT</mml:mi>
+                    </mml:csymbol>
+                    <mml:ci>B</mml:ci>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 The weights are automatically normalized to one, so
 
 @example
-    --gray-projector=channel-mixer:0.25:0.5:0.25
-    --gray-projector=channel-mixer:1:2:1
-    --gray-projector=channel-mixer:25:50:25
+--gray-projector=channel-mixer:0.25:0.5:0.25
+--gray-projector=channel-mixer:1:2:1
+--gray-projector=channel-mixer:25:50:25
 @end example
 
 all define the same mixer configuration.
@@ -1739,7 +1802,7 @@ Hue-Saturation-Lightness (@acronym{HSL}) conversion of the image.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
@@ -1775,6 +1838,35 @@ $$
     Y = {\max(R, G, B) + \min(R, G, B) \over 2}
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:plus/>
+                    <mml:apply>
+                        <mml:max/>
+                        <mml:ci>R</mml:ci>
+                        <mml:ci>G</mml:ci>
+                        <mml:ci>B</mml:ci>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:min/>
+                        <mml:ci>R</mml:ci>
+                        <mml:ci>G</mml:ci>
+                        <mml:ci>B</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+                <mml:cn>2</mml:cn>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @item luminance
 @cindex gray projector, @samp{luminance}
@@ -1788,25 +1880,25 @@ l'@'Eclairage'') and the @acronym{JPEG} standard.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
         <mrow>
             <mn>0.30</mn>
-            <mo>&InvisibleTimes;</mo>
+            <mo>&times;</mo>
             <mi>R</mi>
         </mrow>
         <mo>+</mo>
         <mrow>
             <mn>0.59</mn>
-            <mo>&InvisibleTimes;</mo>
+            <mo>&times;</mo>
             <mi>G</mi>
         </mrow>
         <mo>+</mo>
         <mrow>
             <mn>0.11</mn>
-            <mo>&InvisibleTimes;</mo>
+            <mo>&times;</mo>
             <mi>B</mi>
         </mrow>
     </mrow>
@@ -1814,9 +1906,37 @@ l'@'Eclairage'') and the @acronym{JPEG} standard.
 @end html
 @tex
 $$
-    Y = 0.30 \, R + 0.59 \, G + 0.11 \, B
+    Y = 0.30 \times R + 0.59 \times G + 0.11 \times B
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply>
+                <mml:plus/>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:cn type="real">0.30</mml:cn>
+                    <mml:ci>R</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:cn type="real">0.59</mml:cn>
+                    <mml:ci>G</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:cn type="real">0.11</mml:cn>
+                    <mml:ci>B</mml:ci>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @item value
 @cindex gray projector, @samp{value}
@@ -1829,7 +1949,7 @@ conversion of the image.
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>Y</mi>
         <mo>=</mo>
@@ -1850,6 +1970,22 @@ $$
     Y = \max(R, G, B)
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>Y</mml:ci>
+            <mml:apply>
+                <mml:max/>
+                <mml:ci>R</mml:ci>
+                <mml:ci>G</mml:ci>
+                <mml:ci>B</mml:ci>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 @end table
 
 @item --hard-mask
@@ -2028,7 +2164,7 @@ image:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mi>P</mi>
@@ -2055,11 +2191,46 @@ $$
     P(i, x, y) \rightarrow Q(x, y),
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:lambda>
+            <mml:bvar>
+                <mml:apply>
+                    <mml:ci>P</mml:ci>
+                    <mml:ci>i</mml:ci>
+                    <mml:ci>x</mml:ci>
+                    <mml:ci>y</mml:ci>
+                </mml:apply>
+            </mml:bvar>
+            <mml:apply>
+                <mml:ci>Q</mml:ci>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+        </mml:lambda>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 where @math{x} runs from 1 to the common width of the images, @math{y}
 from 1 to the common height, and @math{i} from 1 to the number of
 input images@tie{}@math{n}.
+
+@macro equationW{}
+@ifnotdocbook
+@ifnottex
+(W)
+@end ifnottex
+@end ifnotdocbook
+@tex
+(W)%
+@end tex
+@docbook
+<xref linkend="equ:pixel-weighting-function"/>
+@end docbook
+@end macro
 
 Enfuse allows for weighting the contribution of each @math{P(i, x, y)}
 to the final @math{Q(x, y)}:
@@ -2068,11 +2239,11 @@ to the final @math{Q(x, y)}:
 @math{w(P(1, x, y)) * P(1, x, y) +
 ... +
 w(P(n, x, y)) * P(n, x, y)
---> Q(x, y),}@w{                                                  }(W)
+--> Q(x, y),}@w{                                                  }@equationW{}
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mi>w</mi>
@@ -2136,7 +2307,7 @@ w(P(n, x, y)) * P(n, x, y)
         </mrow>
         <mtext>,</mtext>
         <mspace width="4em"/>
-        <mtext>(W)</mtext>
+        <mtext>@equationW{}</mtext>
     </mrow>
 </math>
 @end html
@@ -2144,9 +2315,65 @@ w(P(n, x, y)) * P(n, x, y)
 $$
     w(P(1, x, y)) P(1, x, y) + \ldots + w(P(n, x, y)) P(n, x, y)
     \rightarrow
-    Q(x, y),\hskip4em\hbox{(W)}
+    Q(x, y),\hskip4em\hbox{@equationW{}}
 $$
 @end tex
+@docbook
+<equation id="equ:pixel-weighting-function">
+    <title>Pixel Weighting Function</title>
+    <mml:math>
+        <mml:lambda>
+            <mml:bvar>
+                <mml:apply>
+                    <mml:plus/>
+                    <mml:apply>
+                        <mml:times/>
+                        <mml:apply>
+                            <mml:ci>w</mml:ci>
+                            <mml:apply>
+                                <mml:ci>P</mml:ci>
+                                <mml:cn>1</mml:cn>
+                                <mml:ci>x</mml:ci>
+                                <mml:ci>y</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:ci>P</mml:ci>
+                            <mml:cn>1</mml:cn>
+                            <mml:ci>x</mml:ci>
+                            <mml:ci>y</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:mo>...</mml:mo>
+                    <mml:apply>
+                        <mml:times/>
+                        <mml:apply>
+                            <mml:ci>w</mml:ci>
+                            <mml:apply>
+                                <mml:ci>P</mml:ci>
+                                <mml:ci>n</mml:ci>
+                                <mml:ci>x</mml:ci>
+                                <mml:ci>y</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:ci>P</mml:ci>
+                            <mml:ci>n</mml:ci>
+                            <mml:ci>x</mml:ci>
+                            <mml:ci>y</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:bvar>
+            <mml:apply>
+                <mml:ci>Q</mml:ci>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+        </mml:lambda>
+    </mml:math>
+</equation>
+@end docbook
 
 @noindent
 where
@@ -2182,7 +2409,7 @@ functions@tie{}@math{f_exp}, @math{f_sat}, @math{f_cont}, and
 @end ifinfo
 @html
 </p>
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mtable>
         <mtr>
             <mtd>
@@ -2345,6 +2572,149 @@ functions~$f_{\mathrm{exp}}$, $f_{\mathrm{sat}}$, $f_{\mathrm{cont}}$,
 and $f_{\mathrm{ent}}$ along with the window sizes~$r_{\mathrm{cont}}$
 and $r_{\mathrm{ent}}$ are explained in the next sections.
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:ci>w</mml:ci>
+                <mml:ci>P</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:plus/>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">exp</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>f</mml:mi>
+                                <mml:mi mathvariant="normal">exp</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                        <mml:ci>P</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">sat</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>f</mml:mi>
+                                <mml:mi mathvariant="normal">sat</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                        <mml:ci>P</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">cont</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>f</mml:mi>
+                                <mml:mi mathvariant="normal">cont</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                        <mml:ci>P</mml:ci>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>r</mml:mi>
+                                <mml:mi mathvariant="normal">cont</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                    </mml:apply>
+                </mml:apply>
+
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">ent</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>f</mml:mi>
+                                <mml:mi mathvariant="normal">ent</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                        <mml:ci>P</mml:ci>
+                        <mml:csymbol>
+                            <mml:msub>
+                                <mml:mi>r</mml:mi>
+                                <mml:mi mathvariant="normal">ent</mml:mi>
+                            </mml:msub>
+                        </mml:csymbol>
+                    </mml:apply>
+                </mml:apply>
+
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+
+where we have abbreviated <inlineequation> <mml:math> <mml:apply>
+<mml:ci>P</mml:ci> <mml:ci>i</mml:ci> <mml:ci>x</mml:ci>
+<mml:ci>y</mml:ci> </mml:apply> </mml:math> </inlineequation> to
+<inlineequation> <mml:math> <mml:ci>P</mml:ci> </mml:math>
+</inlineequation> for simplicity.  The user defines the
+constants&nbsp;<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>w</mml:mi> <mml:mi mathvariant="normal">exp</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>,
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>w</mml:mi> <mml:mi mathvariant="normal">sat</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>,
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>w</mml:mi> <mml:mi mathvariant="normal">cont</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>, and
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>w</mml:mi> <mml:mi mathvariant="normal">ent</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>, with the
+options <literal>--exposure-weight</literal>,
+<literal>--saturation-weight</literal>,
+<literal>--contrast-weight</literal>, and
+<literal>--entropy-weight</literal> respectively.  The
+functions&nbsp;<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>f</mml:mi> <mml:mi mathvariant="normal">exp</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>,
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>f</mml:mi> <mml:mi mathvariant="normal">sat</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>,
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>f</mml:mi> <mml:mi mathvariant="normal">cont</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation>, and
+<inlineequation> <mml:math> <mml:csymbol> <mml:msub>
+<mml:mi>f</mml:mi> <mml:mi mathvariant="normal">ent</mml:mi>
+</mml:msub> </mml:csymbol> </mml:math> </inlineequation> along with
+the window sizes&nbsp;<inlineequation> <mml:math> <mml:csymbol>
+<mml:msub> <mml:mi>r</mml:mi> <mml:mi
+mathvariant="normal">cont</mml:mi> </mml:msub>
+</mml:csymbol></mml:math> </inlineequation> and <inlineequation>
+<mml:math> <mml:csymbol> <mml:msub> <mml:mi>r</mml:mi> <mml:mi
+mathvariant="normal">ent</mml:mi> </mml:msub> </mml:csymbol>
+</mml:math> </inlineequation> are explained in the next sections.
+@end docbook
 
 @menu
 * Weighted Average::            Enfuse's default weighting algorithm
@@ -2363,9 +2733,9 @@ contributes as much as its weight demands.  Of course the weights can
 be extreme, favoring only a few pixels or even only one pixel in the
 input stack.  Extremes are not typical, however.
 
-Equal weights are another extreme that turns (W) into an arithmetic
-average.  This is why we sometimes speak of the ``averaging property''
-of this weighting algorithm, like smoothing out noise.
+Equal weights are another extreme that turns @equationW{} into an
+arithmetic average.  This is why we sometimes speak of the ``averaging
+property'' of this weighting algorithm, like smoothing out noise.
 
 
 @node Disabling Averaging
@@ -2384,7 +2754,7 @@ Trouper'') weighting mode, where the pixel with the highest weight
 wins, this is, gets weight@tie{}one, and all other pixels get the
 weight of zero
 (@uref{http://@/en.wikipedia.org/@/wiki/@/The_@/Winner_@/Takes_@/It_@/All,,``The
-Winner Takes It All.''}).  With @option{--hard-mask} Equation@tie{}(W)
+Winner Takes It All.''}).  With @option{--hard-mask} Equation@tie{}@equationW{}
 becomes
 @ifinfo
 @display
@@ -2398,7 +2768,7 @@ where
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mrow>
@@ -2466,11 +2836,71 @@ $$
     \hbox{ for all } 1 \le j \le n.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:lambda>
+            <mml:bvar>
+                <mml:apply>
+                    <mml:ci>P</mml:ci>
+                    <mml:ci>i</mml:ci>
+                    <mml:ci>x</mml:ci>
+                    <mml:ci>y</mml:ci>
+                </mml:apply>
+            </mml:bvar>
+            <mml:apply>
+                <mml:ci>Q</mml:ci>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+        </mml:lambda>
+    </mml:math>
+</informalequation>
+where
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:forall/>
+            <mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:leq/>
+                        <mml:cn>1</mml:cn>
+                        <mml:ci>j</mml:ci>
+                        <mml:ci>n</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+            </mml:bvar>
+            <mml:apply>
+                <mml:geq/>
+                <mml:apply>
+                    <mml:ci>w</mml:ci>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:ci>i</mml:ci>
+                        <mml:ci>x</mml:ci>
+                        <mml:ci>y</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:ci>w</mml:ci>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:ci>j</mml:ci>
+                        <mml:ci>x</mml:ci>
+                        <mml:ci>y</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 Note that this ``averaging'' scheme lacks the nice noise-reduction
-property of the weighted average@tie{}(W), because only a single input
-pixel contributes to the output.
+property of the weighted average@tie{}@equationW{}, because only a
+single input pixel contributes to the output.
 
 
 @node Single Criterion Fusing
@@ -2492,7 +2922,6 @@ that by default @emph{more than one} weight is larger than zero, which
 means they are @emph{active}.
 
 @float Table,Table:default-weights
-
 @multitable {Local Contrast} {0.0}
 @headitem Criterion  @tab Weight
 @item Exposure       @tab @value{src::default-weight-exposure}
@@ -2559,7 +2988,7 @@ The weighting function is the Gaussian
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <msub>
@@ -2613,6 +3042,51 @@ $$
               \left(Y - \mathit{Mu} \over \mathit{Sigma} \right)^2\right),
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>w</mml:mi>
+                        <mml:mi mathvariant="normal">exp</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>Y</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:exp/>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:apply>
+                            <mml:divide/>
+                            <mml:cn>1</mml:cn>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:apply>
+                            <mml:divide/>
+                            <mml:apply>
+                                <mml:minus/>
+                                <mml:ci>Y</mml:ci>
+                                <mml:ci>Mu</mml:ci>
+                            </mml:apply>
+                            <mml:ci>Sigma</mml:ci>
+                        </mml:apply>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
@@ -2624,8 +3098,7 @@ and @math{Sigma} defaults to @value{src::default-exposure-sigma}.
 @float Figure,Figure:gaussian
 @vimage{gaussian}
 
-@caption{Gaussian function with the parameters @var{Mu} = 0.5 and
-@var{Sigma} = 0.2.}
+@caption{Gaussian function with the parameters @var{Mu} = 0.5 and @var{Sigma} = 0.2.}
 
 @shortcaption{Gaussian function}
 @end float
@@ -2756,9 +3229,7 @@ sizes.
 @float Figure,Figure:local-analysis-window
 @vimage{local-analysis-window}
 
-@caption{Examples of local analysis windows for the sizes 3 and 5.
-``C'' marks the center where the pixel gets the weight.  ``N'' are
-neighboring pixels, which all contribute equally to the weight.}
+@caption{Examples of local analysis windows for the sizes 3 and 5.  ``C'' marks the center where the pixel gets the weight.  ``N'' are neighboring pixels, which all contribute equally to the weight.}
 
 @shortcaption{Local analysis window}
 @end float
@@ -2798,7 +3269,7 @@ variable@tie{}@math{X}:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mi>w</mi>
         <mo>:</mo>
@@ -2838,6 +3309,41 @@ $$
     w: x \rightarrow p(\{\omega: X(\omega) = x\}).
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:csymbol>
+                <mml:mo>:</mml:mo>
+            </mml:csymbol>
+            <mml:ci>w</mml:ci>
+            <mml:lambda>
+                <mml:bvar>
+                    <mml:ci>x</mml:ci>
+                </mml:bvar>
+                <mml:apply>
+                    <mml:ci>p</mml:ci>
+                    <mml:set>
+                        <mml:bvar>
+                            <mml:ci>&omega;</mml:ci>
+                        </mml:bvar>
+                        <mml:condition>
+                            <mml:apply>
+                                <mml:eq/>
+                                <mml:apply>
+                                    <mml:ci>X</mml:ci>
+                                    <mml:ci>&omega;</mml:ci>
+                                </mml:apply>
+                                <mml:ci>x</mml:ci>
+                            </mml:apply>
+                        </mml:condition>
+                    </mml:set>
+                </mml:apply>
+            </mml:lambda>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 It associates a probability@tie{}@math{p} with each of the @math{n}
@@ -2852,7 +3358,7 @@ Moment'' of the random variable@tie{}@math{X}:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mo mathvariant="sans-serif">Ex</mo>
@@ -2895,6 +3401,56 @@ $$
     \hbox{\sf Ex } X := \sum_{i = 1}^n x_i w(x_i).
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                </mml:csymbol>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:moment/>
+                <mml:degree>
+                    <mml:cn>1</mml:cn>
+                </mml:degree>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:sum/>
+                <mml:bvar>
+                    <mml:ci>i</mml:ci>
+                </mml:bvar>
+                <mml:lowlimit>
+                    <mml:cn>1</mml:cn>
+                </mml:lowlimit>
+                <mml:uplimit>
+                    <mml:ci>n</mml:ci>
+                </mml:uplimit>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:apply>
+                        <mml:selector/>
+                        <mml:ci>x</mml:ci>
+                        <mml:ci>i</mml:ci>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:ci>w</mml:ci>
+                        <mml:apply>
+                            <mml:selector/>
+                            <mml:ci>x</mml:ci>
+                            <mml:ci>i</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @cindex variance
 @noindent
@@ -2906,7 +3462,7 @@ Using the definition of the expectation value, we define the
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mo mathvariant="sans-serif">Var</mo>
         <mo>&ApplyFunction;</mo>
@@ -2942,6 +3498,51 @@ $$
     \hbox{\sf Var } X := \hbox{\sf Ex}\left( (X - \hbox{\sf Ex } X)^2 \right),
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:mtext mathvariant="sans-serif">Var</mml:mtext>
+                </mml:csymbol>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:variance/>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:moment/>
+                <mml:degree>
+                    <mml:cn>2</mml:cn>
+                </mml:degree>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                </mml:csymbol>
+                <mml:apply>
+                    <mml:power/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:ci>X</mml:ci>
+                        <mml:apply>
+                            <mml:csymbol>
+                                <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                            </mml:csymbol>
+                            <mml:ci>X</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:cn>2</mml:cn>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @cindex standard deviation
 @noindent
@@ -2952,7 +3553,7 @@ and the @dfn{standard deviation} as
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mo>&sigma;</mo>
@@ -2974,6 +3575,44 @@ $$
     \sigma X := \sqrt{\hbox{\sf Var } X}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:sdev/>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:root/>
+                <mml:degree>
+                    <mml:cn>2</mml:cn>
+                </mml:degree>
+                <mml:apply>
+                    <mml:moment/>
+                    <mml:degree>
+                        <mml:cn>2</mml:cn>
+                    </mml:degree>
+                    <mml:ci>X</mml:ci>
+                </mml:apply>
+            </mml:apply>
+            <mml:apply>
+                <mml:root/>
+                <mml:degree>
+                    <mml:cn>2</mml:cn>
+                </mml:degree>
+                <mml:apply>
+                    <mml:csymbol>
+                        <mml:mtext mathvariant="sans-serif">Var</mml:mtext>
+                    </mml:csymbol>
+                    <mml:ci>X</mml:ci>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 Obviously, the variance of @math{X} is the expectation value of the
 squared deviation from the expectation value of @math{X} itself.  Note
@@ -2996,7 +3635,7 @@ values like this
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mo mathvariant="sans-serif">Ex</mo>
@@ -3035,6 +3674,46 @@ $$
     \hbox{\sf Ex } X := {1 \over n} \sum_{i = 1}^n x_i.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                </mml:csymbol>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:times/>
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:cn>1</mml:cn>
+                    <mml:ci>n</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:sum/>
+                    <mml:bvar>
+                        <mml:ci>i</mml:ci>
+                    </mml:bvar>
+                    <mml:lowlimit>
+                        <mml:cn>1</mml:cn>
+                    </mml:lowlimit>
+                    <mml:uplimit>
+                        <mml:ci>n</mml:ci>
+                    </mml:uplimit>
+                    <mml:apply>
+                        <mml:selector/>
+                        <mml:ci>x</mml:ci>
+                        <mml:ci>i</mml:ci>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 In other words: the expectation value is the arithmetic mean of the
@@ -3046,7 +3725,7 @@ the variance becomes
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mo mathvariant="sans-serif">Var</mo>
@@ -3095,6 +3774,52 @@ $$
     {1 \over {n - 1}} \, \hbox{\sf Ex}\left( (X - \hbox{\sf Ex } X)^2 \right).
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:mtext mathvariant="sans-serif">Var</mml:mtext>
+                </mml:csymbol>
+                <mml:ci>X</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:times/>
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:cn>1</mml:cn>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:ci>n</mml:ci>
+                        <mml:cn>1</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:csymbol>
+                        <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:apply>
+                            <mml:minus/>
+                            <mml:ci>X</mml:ci>
+                            <mml:apply>
+                                <mml:csymbol>
+                                    <mml:mtext mathvariant="sans-serif">Ex</mml:mtext>
+                                </mml:csymbol>
+                                <mml:ci>X</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 
 @node Laplacian of Gaussian
@@ -3121,7 +3846,7 @@ Let the Gaussian function be
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mi>g</mi>
@@ -3185,6 +3910,68 @@ $$
     {\exp\left(-{{x^2 + y^2} \over {2 \sigma^2}}\right)}
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:ci>g</mml:ci>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:times/>
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:cn>1</mml:cn>
+                    <mml:apply>
+                        <mml:times/>
+                        <mml:cn>2</mml:cn>
+                        <mml:csymbol>&pi;</mml:csymbol>
+                        <mml:apply>
+                            <mml:power/>
+                            <mml:ci>&sigma;</mml:ci>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:exp/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:apply>
+                            <mml:divide/>
+                            <mml:apply>
+                                <mml:plus/>
+                                <mml:apply>
+                                    <mml:power/>
+                                    <mml:ci>x</mml:ci>
+                                    <mml:cn>2</mml:cn>
+                                </mml:apply>
+                                <mml:apply>
+                                    <mml:power/>
+                                    <mml:ci>y</mml:ci>
+                                    <mml:cn>2</mml:cn>
+                                </mml:apply>
+                            </mml:apply>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:cn>2</mml:cn>
+                                <mml:apply>
+                                    <mml:power/>
+                                    <mml:ci>&sigma;</mml:ci>
+                                    <mml:cn>2</mml:cn>
+                                </mml:apply>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 The parameter@tie{}@inlinesigma{}, the argument of
@@ -3197,7 +3984,7 @@ Cartesian coordinates
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mi>&Delta;</mi>
@@ -3247,6 +4034,48 @@ $$
     {\partial^2 \over \partial x^2} + {\partial^2 \over \partial y^2}
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:laplacian/>
+            </mml:apply>
+            <mml:apply>
+                <mml:scalarproduct/>
+                <mml:apply>
+                    <mml:grad/>
+                </mml:apply>
+                <mml:apply>
+                    <mml:grad/>
+                </mml:apply>
+            </mml:apply>
+            <mml:apply>
+                <mml:plus/>
+                <mml:apply>
+                    <mml:partialdiff/>
+                    <mml:bvar>
+                        <mml:ci>x</mml:ci>
+                        <mml:degree>
+                            <mml:cn>2</mml:cn>
+                        </mml:degree>
+                    </mml:bvar>
+                </mml:apply>
+                <mml:apply>
+                    <mml:partialdiff/>
+                    <mml:bvar>
+                        <mml:ci>y</mml:ci>
+                        <mml:degree>
+                            <mml:cn>2</mml:cn>
+                        </mml:degree>
+                    </mml:bvar>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 to @math{g(x, y)}, to arrive at a continuous representation of the
 two-dimensional filter kernel
@@ -3256,7 +4085,7 @@ two-dimensional filter kernel
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <mi>k</mi>
@@ -3307,6 +4136,55 @@ $$
     k(x, y) = {{\xi^2 - 1} \over {\pi \sigma^4}} \exp(-\xi^2),
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:ci>k</mml:ci>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:times/>
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:apply>
+                            <mml:power/>
+                            <mml:ci>&xi;</mml:ci>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                        <mml:cn>1</mml:cn>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:times/>
+                        <mml:csymbol>&pi;</mml:csymbol>
+                        <mml:apply>
+                            <mml:power/>
+                            <mml:ci>&sigma;</mml:ci>
+                            <mml:cn>4</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:exp/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:apply>
+                            <mml:power/>
+                            <mml:ci>&xi;</mml:ci>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 where we have used the dimensionless distance@tie{}@inlinexi{} from
 the origin
@@ -3316,7 +4194,7 @@ the origin
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <msup>
@@ -3357,6 +4235,45 @@ $$
     \xi^2 = {{x^2 + y^2} \over {2 \sigma^2}}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:power/>
+                <mml:ci>&xi;</mml:ci>
+                <mml:cn>2</mml:cn>
+            </mml:apply>
+            <mml:apply>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:plus/>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:ci>x</mml:ci>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:ci>y</mml:ci>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:cn>2</mml:cn>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:ci>&sigma;</mml:ci>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 Enfuse uses a discrete approximation of @math{k} in the convolution
@@ -3367,30 +4284,59 @@ the origin, which is why we can easily plot it in
 @math{R = sqrt(x^2 + y^2)}.
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
         <mi>R</mi>
         <mo>=</mo>
-        <mrow>
-            <msqrt>
-                <msup>
+        <mrowinline>
+            <msqrtinline>
+                <msupinline>
                     <mi>x</mi>
                     <mn>2</mn>
-                </msup>
+                </msupinline>
                 <mo>+</mo>
-                <msup>
+                <msupinline>
                     <mi>y</mi>
                     <mn>2</mn>
-                </msup>
-            </msqrt>
-        </mrow>
+                </msupinline>
+            </msqrtinline>
+        </mrowinline>
         <mtext>.</mtext>
-    </mrow>
-</math>
+    </mrowinline>
+</mathinline>
 @end html
 @tex
 $R = \sqrt{x^2 + y^2}$.
 @end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>R</mml:ci>
+            <mml:apply>
+                <mml:root/>
+                <mml:degree>
+                    <mml:cn>2</mml:cn>
+                </mml:degree>
+                <mml:apply>
+                    <mml:plus/>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:ci>x</mml:ci>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:power/>
+                        <mml:ci>y</mml:ci>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
 
 @float Figure,Figure:laplacian-of-gaussian
 @vimage{laplacian-of-gaussian}
@@ -3520,7 +4466,7 @@ Let @math{S} be an @math{n}-ary source.  Watching the output of
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <msub>
@@ -3585,6 +4531,57 @@ $$
     H_a(n) := \sum_{x \in S} p(x) \log_a(1 / p(x))
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:apply>
+                    <mml:selector/>
+                    <mml:ci>H</mml:ci>
+                    <mml:ci>a</mml:ci>
+                </mml:apply>
+                <mml:ci>n</mml:ci>
+            </mml:apply>
+            <mml:apply>
+                <mml:sum/>
+                <mml:bvar>
+                    <mml:ci>x</mml:ci>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:in/>
+                        <mml:ci>x</mml:ci>
+                        <mml:ci>S</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:apply>
+                        <mml:ci>p</mml:ci>
+                        <mml:ci>x</mml:ci>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:log/>
+                        <mml:logbase>
+                            <mml:ci>a</mml:ci>
+                        </mml:logbase>
+                        <mml:apply other='display="scriptstyle"'>
+                            <mml:divide/>
+                            <mml:cn>1</mml:cn>
+                            <mml:apply>
+                                <mml:ci>p</mml:ci>
+                                <mml:ci>x</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @cindex entropy
 @noindent
@@ -3600,7 +4597,7 @@ of the constant@tie{}@math{a > 1}.  Obviously
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <msub>
@@ -3650,6 +4647,41 @@ $$
     H_b(n) = H_a(n) / \log_a(b)
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:apply>
+                    <mml:selector/>
+                    <mml:ci>H</mml:ci>
+                    <mml:ci>b</mml:ci>
+                </mml:apply>
+                <mml:ci>n</mml:ci>
+            </mml:apply>
+             <mml:apply>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:apply>
+                        <mml:selector/>
+                        <mml:ci>H</mml:ci>
+                        <mml:ci>a</mml:ci>
+                    </mml:apply>
+                    <mml:ci>n</mml:ci>
+                </mml:apply>
+                <mml:apply>
+                    <mml:log/>
+                    <mml:logbase>
+                        <mml:ci>a</mml:ci>
+                    </mml:logbase>
+                    <mml:ci>b</mml:ci>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 holds for all @math{b > 1}.  We use @math{a = 2} for entropy weighting
@@ -3660,7 +4692,7 @@ and set the entropy of the ``impossible message'' to zero according to
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <mrow>
             <munder>
@@ -3701,6 +4733,44 @@ $$
     \lim_{p \rightarrow 0} \, p \, \log_a(1 / p) = 0.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:limit/>
+                <mml:bvar>
+                    <mml:ci>p</mml:ci>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:tendsto/>
+                        <mml:ci>p</mml:ci>
+                        <mml:ci>0</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:ci>p</mml:ci>
+                    <mml:apply>
+                        <mml:log/>
+                        <mml:logbase>
+                            <mml:ci>a</mml:ci>
+                        </mml:logbase>
+                        <mml:apply>
+                            <mml:divide/>
+                            <mml:cn>1</mml:cn>
+                            <mml:ci>p</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+            <mml:cn>0</mml:cn>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 @noindent
 @ref{Figure:entropy} shows an entropy function.
@@ -3708,8 +4778,7 @@ $$
 @float Figure,Figure:entropy
 @vimage{entropy}
 
-@caption{Entropy function@tie{}H for an experiment with exactly two
-outcomes.}
+@caption{Entropy function@tie{}H for an experiment with exactly two outcomes.}
 
 @shortcaption{Entropy function}
 @end float
@@ -4069,7 +5138,7 @@ the multiply occuring exposures and reducing noise.
 @mainpurpose Reflection suppression, saturation enhancement
 
 In the current implementation of Enfuse, it is not possible in general
-to fuse a polarization series.  Na@"{@dotless{i}}vely abusing
+to fuse a polarization series.  Naively abusing
 @option{--saturation-weight} will not work.
 
 
@@ -4293,8 +5362,7 @@ matrices @code{sharp_edge} and @code{smooth_edge}.
 @float Figure,Figure:sharp-edge
 @vimage{sharp-edge}
 
-@caption{3D plot augmented by contour plot of the matrix
-@code{sharp_edge}.}
+@caption{3D plot augmented by contour plot of the matrix@tie{}@code{sharp_edge}.}
 
 @shortcaption{Sharp edge}
 @end float
@@ -4302,8 +5370,7 @@ matrices @code{sharp_edge} and @code{smooth_edge}.
 @float Figure,Figure:smooth-edge
 @vimage{smooth-edge}
 
-@caption{3D plot augmented by contour plot of the matrix
-@code{smooth_edge}.}
+@caption{3D plot augmented by contour plot of the matrix@tie{}@code{smooth_edge}.}
 
 @shortcaption{Smooth edge}
 @end float
@@ -4570,6 +5637,7 @@ detail in the in-focus regions.
 @c The List-of-Tables and List-of-Figures go right before the indices
 @c in all formats but TeX.  For the TeX output they appear right after
 @c the Table-of-Contents.
+@ifnotdocbook
 @ifnottex
 @node List of Tables
 @unnumbered List of Tables
@@ -4612,5 +5680,6 @@ detail in the in-focus regions.
 @cindex index, general
 
 @printindex cp
+@end ifnotdocbook
 
 @bye

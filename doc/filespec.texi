@@ -10,6 +10,7 @@ files are processed from first layer to the last.) The following
 examples only show Enblend, but Enfuse works exactly the same.
 
 @table @asis
+@dbtitle{Response File Examples}
 @item Solely image filenames.
 Example:
 @example
@@ -127,6 +128,7 @@ The above grammar might unpleasantly surprise the user in the
 some ways.
 
 @table @asis
+@dbtitle{Response File Grammar}
 @item Whitespace trimmed at both line ends
 For convenience, whitespace at the beginning and at the end of each
 line is ignored.  However, this implies that response files cannot
@@ -258,6 +260,7 @@ Enblend or Enfuse team up the options@tie{}@option{--version} and
 
 @float Table,Table:globbing-algorithms
 @table @code
+@dbtitle{Globbing Algorithms}
 @item literal
 @cindex globbing algorithm @samp{literal}
 Do not glob.  Interpret all filenames in response files as literals.

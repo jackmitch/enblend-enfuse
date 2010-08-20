@@ -1,13 +1,12 @@
-This is ../../doc/enblend.info, produced by makeinfo version 4.11 from
+This is ../../doc/enblend.info, produced by makeinfo version 4.13 from
 ../../doc/enblend.texi.
 
 INFO-DIR-SECTION Individual utilities
-
 START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-467759d01f07, 14 August
+   This manual is for Enblend (version 4.1-619f95bd56d5, 19 August
 2010), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -26,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-467759d01f07, 14 August 2010),
+This manual is for Enblend (version 4.1-619f95bd56d5, 19 August 2010),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -40,8 +39,9 @@ images is invisible, or at least very difficult to see.
 * Tuning Memory Usage::         Balancing RAM and swap
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
-* Authors::                     Major Contributors
+* Authors::                     Major contributors
 * FDL::                         GNU Free Documentation License
+
 * Program Index::               Names of programs referenced
 * Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
@@ -53,17 +53,17 @@ File: enblend.info,  Node: Overview,  Next: Workflow,  Prev: Top,  Up: Top
 1 Overview
 **********
 
-Enblend overlays multiple TIFF images using the BURT-ADELSON
-multiresolution spline algorithm.(1)  This technique tries to make the
-seams between the input images invisible.  The basic idea is that image
-features should be blended across a transition zone proportional in
-size to the spatial frequency of the features.  For example, objects
-like trees and windowpanes have rapid changes in color.  By blending
-these features in a narrow zone, you will not be able to see the seam
-because the eye already expects to see color changes at the edge of
-these features.  Clouds and sky are the opposite.  These features have
-to be blended across a wide transition zone because any sudden change
-in color will be immediately noticeable.
+Enblend overlays multiple images using the BURT-ADELSON multiresolution
+spline algorithm.(1)  This technique tries to make the seams between
+the input images invisible.  The basic idea is that image features
+should be blended across a transition zone proportional in size to the
+spatial frequency of the features.  For example, objects like trees and
+windowpanes have rapid changes in color.  By blending these features in
+a narrow zone, you will not be able to see the seam because the eye
+already expects to see color changes at the edge of these features.
+Clouds and sky are the opposite.  These features have to be blended
+across a wide transition zone because any sudden change in color will
+be immediately noticeable.
 
    Enblend expects each input file to have an alpha channel.  The alpha
 channel should indicate the region of the file that has valid image
@@ -127,9 +127,9 @@ Take Images
      Take _multiple_ images to form a panorama, an exposure series, a
      focus stack, etc.
 
-          There is one exception with Enfuse when a single raw image is
-          converted multiple times to get several - typically differently
-          "exposed" - images.
+     There is one exception with Enfuse when a single raw image is
+     converted multiple times to get several - typically differently
+     "exposed" - images.
 
      _Exemplary Benefits_
 
@@ -154,10 +154,11 @@ Convert Images
 Align Images
      Align the images so as to make them match as well as possible.
 
-          Again there is one exception and this is when images naturally align.
-          For example, a series of images taken from a rock solid tripod with a
-          cable release without touching the camera, or images taken with a
-          shift lens, can align without further user intervention.
+     Again there is one exception and this is when images naturally
+     align.  For example, a series of images taken from a rock solid
+     tripod with a cable release without touching the camera, or images
+     taken with a shift lens, can align without further user
+     intervention.
 
      This step submits the images to affine transformations.  If
      necessary, it rectifies the lens' distortions (e.g. barrel or
@@ -443,7 +444,7 @@ arguments in lowercase for consistency.
 `--compression=COMPRESSION'
      Write a compressed output file.
 
-     Depending on the output file format Enblend accepts different
+     Depending on the output file format, Enblend accepts different
      values for COMPRESSION.
 
     JPEG
@@ -466,8 +467,9 @@ arguments in lowercase for consistency.
                LZW compression is lossless.
 
          `packbits'
-               Use PACKBITS compression scheme.  PACKBITS is particular
-               variant of run-length compression.  It is lossless.
+               Use PACKBITS compression scheme.  PACKBITS is a
+               particular variant of run-length compression; it is
+               lossless.
 
     Any other format
           Other formats do not accept a COMPRESSION setting.
@@ -495,9 +497,9 @@ arguments in lowercase for consistency.
      scale twice as large as the previous one.  So, the zeroth layer,
      the original image, obviously defines the image at single-pixel
      scale, the first level works at two-pixel scale, and generally,
-     the n-th level contains image data at 2^n-pixel scale.  This is the
-     reason why an image of widthxheight pixels cannot be deconstructed
-     into a pyramid of more than
+     the n-th level contains image data at 2^n -pixel scale.  This is
+     the reason why an image of widthxheight pixels cannot be
+     deconstructed into a pyramid of more than
           floor(log_2(min(width, height)))
      levels.
 
@@ -566,8 +568,8 @@ arguments in lowercase for consistency.
 `--version'
      Output information on the Enblend version.
 
-     Team this option with `--verbose' to inquire about configuration
-     details, like the extra features that have been compiled in.
+     Team this option with `--verbose' to show configuration details,
+     like the extra features that have been compiled in.
 
 `-w'
 `--wrap=MODE'
@@ -588,7 +590,7 @@ arguments in lowercase for consistency.
 
      With this option Enblend treats the panorama of width w and
      height h as an infinite data structure, where each pixel P(x, y)
-     of the input images represents the set of pixels S_P(x, y)(2).
+     of the input images represents the set of pixels S_P(x, y) (2).
 
      MODE takes the following values:
 
@@ -601,6 +603,7 @@ arguments in lowercase for consistency.
     `horizontal'
           Wrap around horizontally:
                S_P(x, y) = {P(x + m * w, y): m in Z}.
+
           This is useful for 360o horizontal panoramas as it eliminates
           the left and right borders.
 
@@ -615,6 +618,7 @@ arguments in lowercase for consistency.
     `vertical+horizontal'
           Wrap around both horizontally and vertically:
                S_P(x, y) = {P(x + m * w, y + n * h): m, n in Z}.
+
           In this mode, both left and right borders, as well as top and
           bottom borders, are eliminated.
 
@@ -648,7 +652,7 @@ cropping of the output image.
      Set the BLOCKSIZE in kilobytes (KB) of Enblend's image cache.
 
      This is the amount of data that Enblend will move to and from the
-     disk at one time.  The default is 2048KB, which should be ok for
+     disk at one time.  The default is 2048 KB, which should be ok for
      most systems.  See *note Tuning Memory Usage:: for details.
 
      Note that Enblend must have been compiled with the image-cache
@@ -695,24 +699,24 @@ cropping of the output image.
      uppercase letters.  For integer format, use
 
     `8', `uint8'
-          Unsigned 8bit; range: 0..255
+          Unsigned 8 bit; range: 0..255
 
     `int16'
-          Signed 16bit; range: -32768..32767
+          Signed 16 bit; range: -32768..32767
 
     `16', `uint16'
-          Unsigned 16bit; range: 0..65535
+          Unsigned 16 bit; range: 0..65535
 
     `int32'
-          Signed 32bit; range: -2147483648..2147483647
+          Signed 32 bit; range: -2147483648..2147483647
 
     `32', `uint32'
-          Unsigned 32bit; range: 0..4294967295
+          Unsigned 32 bit; range: 0..4294967295
 
      For floating-point format, use
 
     `r32', `real32', `float'
-          IEEE754 single precision floating-point, 32bit wide, 24bit
+          IEEE754 single precision floating-point, 32 bit wide, 24 bit
           significant
 
              * Minimum normalized value: 1.2*10^-38
@@ -722,7 +726,7 @@ cropping of the output image.
              * Maximum finite value: 3.4*10^38
 
     `r64', `real64', `double'
-          IEEE754 double precision floating-point, 64bit wide, 53bit
+          IEEE754 double precision floating-point, 64 bit wide, 53 bit
           significant
 
              * Minimum normalized value: 2.2*10^-308
@@ -739,7 +743,7 @@ cropping of the output image.
      precision floating-point numbers.
 
      OpenEXR (http://www.openexr.com/about.html#features) half
-     precision floating-point, 16bit wide, 10bit significant
+     precision floating-point, 16 bit wide, 10 bit significant
 
         * Minimum normalized value: 9.3*10^-10
 
@@ -773,10 +777,10 @@ cropping of the output image.
      (http://www.awaresystems.be/imaging/tiff/tifftags/extrasamples.html)
      for an explanation.
 
-     Gimp (before version 2.0) and Cinepaint (*note Helpful Programs::)
+     Gimp (before version 2.0) and CinePaint (*note Helpful Programs::)
      exhibit unusual behavior when loading images with unassociated
      alpha channels.  Use option `-g' to work around this problem.
-     With this flag Enblend creates the output image with the
+     With this flag Enblend will create the output image with the
      associated alpha tag set, even though the image is really
      unassociated alpha.
 
@@ -785,7 +789,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-467759d01f07, only mask
+     In this version of Enblend, 4.1-619f95bd56d5, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -797,7 +801,7 @@ cropping of the output image.
 
      This is the amount of memory Enblend will use for storing image
      data before swapping to disk.  The default is
-     1024MB which is good for systems with 3-4gigabytes (GB) of RAM.
+     1024 MB, which is good for systems with 3-4 gigabytes (GB) of RAM.
      See *note Tuning Memory Usage:: for details.
 
      Note that Enblend must have been compiled with the image-cache
@@ -877,7 +881,7 @@ These options control the generation and the usage of masks.
 
      If omitted FACTOR defaults to 8, this means,
      option `--coarse-mask' shrinks the overlapping _areas_ by a factor
-     of 8 x 8.  With FACTOR = 8 the total memory allocated during a run
+     of 8x8.  With FACTOR = 8 the total memory allocated during a run
      of Enblend shrinks approximately by 80% and the maximum amount of
      memory in use at a time is decreased to 60% (Enblend compiled with
      image cache) or 40% (Enblend compiled without image cache).
@@ -920,7 +924,7 @@ These options control the generation and the usage of masks.
 
         Valid range: RADIUS >= 1.
 
-        Default: 25pixels.
+        Default: 25 pixels.
 
   `--fine-mask'
         Instruct Enblend to employ the full-size images to create the
@@ -951,7 +955,7 @@ These options control the generation and the usage of masks.
      explained in the next paragraph.  In fine masks one mask pixel
      corresponds to one pixel in the input image, whereas in coarse
      masks one pixel represents for example
-     8pixels in the input image.
+     8 pixels in the input image.
 
         Append a percentage sign (`%') to DISTANCE to specify the
      segment length as a fraction of the diagonal of the rectangle
@@ -973,12 +977,14 @@ These options control the generation and the usage of masks.
      of the difference image with option `--smooth-difference'.  Use
      option `--visualize' to check the results.
 
-        Valid range: DISTANCE >= 4.  Enblend limits DISTANCE so that it
-     never gets below 4 even if it has been given as a percentage.  The
-     user will be warned in such cases.
+        Valid range: DISTANCE >= 4.
 
-        Default: 4pixels for coarse masks and
-     20pixels for fine masks.
+        Enblend limits DISTANCE so that it never gets below
+     4 even if it has been given as a percentage.  The user will be
+     warned in such cases.
+
+        Default: 4 pixels for coarse masks and
+     20 pixels for fine masks.
 
   `--no-optimize'
         Turn off seam line optimization.  Combined with
@@ -1025,7 +1031,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-467759d01f07)
+     version 3.2 used 1:1.  This version of Enblend (4.1-619f95bd56d5)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1041,7 +1047,7 @@ These options control the generation and the usage of masks.
 
   `--save-masks[=IMAGE-TEMPLATE]'
         Save the generated masks to IMAGE-TEMPLATE.  The default is
-     `mask-%n.tif'.  Enblend saves masks as 8bit grayscale (single
+     `mask-%n.tif'.  Enblend saves masks as 8 bit grayscale (single
      channel) images.  For accuracy we recommend to choose a lossless
      format.
 
@@ -1074,16 +1080,17 @@ These options control the generation and the usage of masks.
 
         If RADIUS is larger than zero Enblend blurs the difference
      images of the overlap regions with a GAUSSIAN filter having a
-     radius of RADIUSpixels.  Values of 0.5 to 1.5pixels for RADIUS are
-     good starting points; use option `--visualize' to directly judge
-     the effect.
+     radius of RADIUS pixels.  Values of 0.5 to 1.5 pixels for RADIUS
+     are good starting points; use option `--visualize' to directly
+     judge the effect.
 
         When using this option in conjunction with
-      `--coarse-mask'=FACTOR, keep in mind that the smoothing occurs
-     _after_ the overlap regions have been shrunken.  Thus, blurring
-     affects a FACTORxFACTOR times larger area in the original images.
+     option `--coarse-mask'=FACTOR, keep in mind that the smoothing
+     occurs _after_ the overlap regions have been shrunken.  Thus,
+     blurring affects a FACTORxFACTOR times larger area in the original
+     images.
 
-        Valid range: 0.0 <= RADIUS.
+        Valid range: RADIUS >= 0.0.
 
   `--visualize[=VISUALIZE-TEMPLATE]'
         Create an image according to VISUALIZE-TEMPLATE that visualizes
@@ -1103,7 +1110,7 @@ These options control the generation and the usage of masks.
      Common Options::).  *note Table:mask-template-characters:: lists
      all variables.
 
-     *Visualization Image* The visualization image shows the symmetric
+     *Visualization Image.* The visualization image shows the symmetric
      difference of the pixels in the rectangular region where two
      images overlap.  The larger the difference the lighter shade of
      gray it appears in the visualization image.  Enblend paints the
@@ -1139,7 +1146,7 @@ These options control the generation and the usage of masks.
           Enblend marks a non-movable ("frozen") endpoint of a seam-line
           segment with a bright white cross, whereas it uses a
           light orange diamond to denote an endpoint that the optimizer
-          may move around.
+          is allowed to move around.
 
     bright yellow
           Final seam line.
@@ -1391,7 +1398,7 @@ File: enblend.info,  Node: Tuning Memory Usage,  Next: Helpful Programs,  Prev: 
 *********************
 
 The default configuration of Enblend and Enfuse assumes a system with
-3-4GB of RAM.
+3-4 GB of RAM.
 
    If Enblend and Enfuse have been compiled with the "image-cache"
 feature, they do not rely on the operating system's memory management,
@@ -1457,7 +1464,7 @@ buffer-sizes for different amounts of available RAM.
 
 Table 6.1: Suggested cache-size settings
 
-   On systems with considerably more than 4GB of RAM it is recommended
+   On systems with considerably more than 4 GB of RAM it is recommended
 to run Enblend or Enfuse versions without image cache.
 
 
@@ -1501,14 +1508,14 @@ Enfuse and Enblend.
 *Image Manipulation*
         * CinePaint (http://www.cinepaint.org/) is a branch of an early
           Gimp forked off at version 1.0.4.  It sports much less
-          features than the current Gimp, but offers 8bit, 16bit and
-          32bit color channels, HDR (for example floating-point TIFF,
+          features than the current Gimp, but offers 8 bit, 16 bit and
+          32 bit color channels, HDR (for example floating-point TIFF,
           and OpenEXR), and a tightly integrated color management
           system.
 
         * The Gimp (http://www.gimp.org/) is a general purpose image
           manipulation program.  At the time of this writing it is
-          still limited to images with only 8bits per channel.
+          still limited to images with only 8 bits per channel.
 
         * ImageMagick (http://www.imagemagick.org/) and its clone
           GraphicsMagick (http://www.graphicsmagick.org/) are general
@@ -1629,19 +1636,19 @@ things:
 
      Examples:
 
-              ~/local/bin/enblend -v \
-                  --fine-mask \
-                  --optimizer-weights=3:2 --mask-vectorize=12.5% \
-                  image-1.png image-2.png
+          ~/local/bin/enblend -v \
+              --fine-mask \
+              --optimizer-weights=3:2 --mask-vectorize=12.5% \
+              image-1.png image-2.png
 
      or:
 
-              /local/bin/enfuse \
-                  --verbose \
-                  --exposure-weight=0 --saturation-weight=0 --entropy-weight=1 \
-                  --gray-projector=l-star \
-                  --entropy-cutoff=1.667% \
-                  layer-01.ppm layer-02.ppm layer-03.ppm
+          /local/bin/enfuse \
+              --verbose \
+              --exposure-weight=0 --saturation-weight=0 --entropy-weight=1 \
+              --gray-projector=l-star \
+              --entropy-cutoff=1.667% \
+              layer-01.ppm layer-02.ppm layer-03.ppm
 
      If you call Enblend or Enfuse from within a GUI like, for example,
      Hugin (http://hugin.sourceforge.net/) or KImageFuser
@@ -2226,29 +2233,29 @@ Option Index
 * --fine-mask:                           Mask Generation Options.
                                                               (line 108)
 * --gpu:                                 Extended Options.    (line 146)
-* --help:                                Common Options.      (line  59)
-* --levels:                              Common Options.      (line  63)
+* --help:                                Common Options.      (line  60)
+* --levels:                              Common Options.      (line  64)
 * --load-masks:                          Mask Generation Options.
                                                               (line 115)
 * --mask-vectorize:                      Mask Generation Options.
                                                               (line 121)
 * --no-ciecam:                           Extended Options.    (line 170)
 * --no-optimize:                         Mask Generation Options.
-                                                              (line 166)
+                                                              (line 168)
 * --optimize:                            Mask Generation Options.
-                                                              (line 174)
+                                                              (line 176)
 * --optimizer-weights:                   Mask Generation Options.
-                                                              (line 197)
-* --output:                              Common Options.      (line 104)
+                                                              (line 199)
+* --output:                              Common Options.      (line 105)
 * --save-masks:                          Mask Generation Options.
-                                                              (line 225)
+                                                              (line 227)
 * --smooth-difference:                   Mask Generation Options.
-                                                              (line 253)
-* --verbose:                             Common Options.      (line 111)
-* --version:                             Common Options.      (line 146)
+                                                              (line 255)
+* --verbose:                             Common Options.      (line 112)
+* --version:                             Common Options.      (line 147)
 * --visualize:                           Mask Generation Options.
-                                                              (line 271)
-* --wrap:                                Common Options.      (line 153)
+                                                              (line 274)
+* --wrap:                                Common Options.      (line 154)
 * -a:                                    Common Options.      (line  15)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
@@ -2256,15 +2263,15 @@ Option Index
 * -d:                                    Extended Options.    (line  34)
 * -f:                                    Extended Options.    (line 114)
 * -g:                                    Extended Options.    (line 134)
-* -h:                                    Common Options.      (line  59)
-* -l:                                    Common Options.      (line  63)
+* -h:                                    Common Options.      (line  60)
+* -l:                                    Common Options.      (line  64)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 158)
-* -o:                                    Common Options.      (line 104)
-* -V:                                    Common Options.      (line 146)
-* -v:                                    Common Options.      (line 111)
-* -w:                                    Common Options.      (line 153)
-* -x:                                    Common Options.      (line 203)
+* -o:                                    Common Options.      (line 105)
+* -V:                                    Common Options.      (line 147)
+* -v:                                    Common Options.      (line 112)
+* -w:                                    Common Options.      (line 154)
+* -x:                                    Common Options.      (line 206)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2276,12 +2283,12 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 153)
+* 360o panoramas:                        Common Options.      (line 154)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 106)
-* affine transformation:                 Workflow.            (line  55)
+* a.tif:                                 Common Options.      (line 107)
+* affine transformation:                 Workflow.            (line  56)
 * algorithms, globbing:                  Response Files.      (line 146)
-* alpha channel <1>:                     Workflow.            (line  76)
+* alpha channel <1>:                     Workflow.            (line  77)
 * alpha channel:                         Overview.            (line  18)
 * alpha channel, associated:             Extended Options.    (line 134)
 * anneal parameters:                     Mask Generation Options.
@@ -2290,12 +2297,13 @@ General Index
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Extended Options.    (line  34)
 * blur difference image:                 Mask Generation Options.
-                                                              (line 253)
+                                                              (line 255)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
 * canvas size:                           Extended Options.    (line 114)
 * channel width:                         Extended Options.    (line  34)
 * channel, alpha:                        Overview.            (line  18)
+* checkpoint results:                    Common Options.      (line 206)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
 * CIECAM02:                              Extended Options.    (line  22)
 * coarse mask:                           Mask Generation Options.
@@ -2308,7 +2316,7 @@ General Index
 * color space, sRGB <1>:                 Color Profiles.      (line  24)
 * color space, sRGB:                     Extended Options.    (line  25)
 * colors, visualization image:           Mask Generation Options.
-                                                              (line 329)
+                                                              (line 332)
 * compression:                           Common Options.      (line  23)
 * compression, deflate:                  Common Options.      (line  38)
 * compression, JPEG:                     Common Options.      (line  29)
@@ -2316,7 +2324,7 @@ General Index
 * compression, packbits:                 Common Options.      (line  48)
 * conversion, raw:                       Workflow.            (line  42)
 * D50 white point:                       Color Profiles.      (line  55)
-* default output filename:               Common Options.      (line 106)
+* default output filename:               Common Options.      (line 107)
 * deflate compression:                   Common Options.      (line  38)
 * DIJKSTRA radius:                       Mask Generation Options.
                                                               (line  95)
@@ -2329,7 +2337,7 @@ General Index
 * format of response file:               Response Files.      (line  56)
 * free documentation license (FDL):      FDL.                 (line   6)
 * frozen seam-line endpoint:             Mask Generation Options.
-                                                              (line 321)
+                                                              (line 324)
 * general index:                         General Index.       (line   6)
 * glob(7):                               Response Files.      (line 171)
 * globbing algorithm literal:            Response Files.      (line 157)
@@ -2355,10 +2363,10 @@ General Index
 * image cache, cache size:               Extended Options.    (line 158)
 * image cache, location:                 Tuning Memory Usage. (line  20)
 * image colors, visualization:           Mask Generation Options.
-                                                              (line 329)
+                                                              (line 332)
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
-                                                              (line 288)
+                                                              (line 291)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
 * index, program:                        Program Index.       (line   6)
@@ -2368,8 +2376,8 @@ General Index
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  29)
 * KImageFuser:                           Bug Reports.         (line  96)
-* lens distortion, correction of:        Workflow.            (line  55)
-* levels, pyramid:                       Common Options.      (line  63)
+* lens distortion, correction of:        Workflow.            (line  56)
+* levels, pyramid:                       Common Options.      (line  64)
 * LibJPEG:                               Helpful Programs.    (line  63)
 * LibPNG:                                Helpful Programs.    (line  66)
 * LibTiff:                               Helpful Programs.    (line  70)
@@ -2380,33 +2388,33 @@ General Index
                                                               (line 151)
 * LZW compression:                       Common Options.      (line  44)
 * mask template character, %:            Mask Generation Options.
-                                                              (line 333)
-* mask template character, B:            Mask Generation Options.
-                                                              (line 384)
-* mask template character, b:            Mask Generation Options.
-                                                              (line 377)
-* mask template character, D:            Mask Generation Options.
-                                                              (line 374)
-* mask template character, d:            Mask Generation Options.
-                                                              (line 367)
-* mask template character, E:            Mask Generation Options.
-                                                              (line 403)
-* mask template character, e:            Mask Generation Options.
-                                                              (line 397)
-* mask template character, F:            Mask Generation Options.
-                                                              (line 393)
-* mask template character, f:            Mask Generation Options.
-                                                              (line 387)
-* mask template character, i:            Mask Generation Options.
                                                               (line 336)
+* mask template character, B:            Mask Generation Options.
+                                                              (line 387)
+* mask template character, b:            Mask Generation Options.
+                                                              (line 380)
+* mask template character, D:            Mask Generation Options.
+                                                              (line 377)
+* mask template character, d:            Mask Generation Options.
+                                                              (line 370)
+* mask template character, E:            Mask Generation Options.
+                                                              (line 406)
+* mask template character, e:            Mask Generation Options.
+                                                              (line 400)
+* mask template character, F:            Mask Generation Options.
+                                                              (line 396)
+* mask template character, f:            Mask Generation Options.
+                                                              (line 390)
+* mask template character, i:            Mask Generation Options.
+                                                              (line 339)
 * mask template character, n:            Mask Generation Options.
-                                                              (line 351)
+                                                              (line 354)
 * mask template character, P:            Mask Generation Options.
-                                                              (line 364)
+                                                              (line 367)
 * mask template character, p:            Mask Generation Options.
-                                                              (line 356)
+                                                              (line 359)
 * mask template characters, table of:    Mask Generation Options.
-                                                              (line 332)
+                                                              (line 408)
 * mask, binary:                          Understanding Masks. (line   6)
 * mask, coarse:                          Mask Generation Options.
                                                               (line  55)
@@ -2418,9 +2426,9 @@ General Index
 * mask, load:                            Mask Generation Options.
                                                               (line 115)
 * mask, optimization visualization:      Mask Generation Options.
-                                                              (line 271)
+                                                              (line 274)
 * mask, save:                            Mask Generation Options.
-                                                              (line 225)
+                                                              (line 227)
 * mask, vectorization distance:          Mask Generation Options.
                                                               (line 121)
 * mask, weight:                          Understanding Masks. (line   6)
@@ -2434,13 +2442,13 @@ General Index
 * OpenEXR, data format:                  Extended Options.    (line  99)
 * OpenEXR, half precision float:         Extended Options.    (line 103)
 * optimize seam:                         Mask Generation Options.
-                                                              (line 166)
+                                                              (line 168)
 * optimize strategy:                     Mask Generation Options.
-                                                              (line 179)
+                                                              (line 195)
 * optimize, anneal parameters:           Mask Generation Options.
                                                               (line   9)
 * optimizer weights:                     Mask Generation Options.
-                                                              (line 197)
+                                                              (line 199)
 * optimizer, simulated annealing:        Mask Generation Options.
                                                               (line   9)
 * option index:                          Option Index.        (line   6)
@@ -2450,13 +2458,13 @@ General Index
                                                               (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  23)
-* output filename, default:              Common Options.      (line 106)
+* output filename, default:              Common Options.      (line 107)
 * output image, set size of:             Extended Options.    (line 114)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  48)
-* parallax error:                        Workflow.            (line  65)
+* parallax error:                        Workflow.            (line  66)
 * perceptual rendering intent:           Color Profiles.      (line  53)
-* photometric alignment:                 Workflow.            (line  57)
+* photometric alignment:                 Workflow.            (line  58)
 * problem reports:                       Bug Reports.         (line   9)
 * processing order:                      Response Files.      (line   9)
 * profile, fallback:                     Extended Options.    (line 126)
@@ -2464,7 +2472,7 @@ General Index
 * profile, ICC:                          Extended Options.    (line  25)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line  63)
+* pyramid levels:                        Common Options.      (line  64)
 * radius, DIJKSTRA:                      Mask Generation Options.
                                                               (line  95)
 * raw conversion:                        Workflow.            (line  42)
@@ -2476,21 +2484,22 @@ General Index
 * response file, format:                 Response Files.      (line  56)
 * response file, grammar:                Response Files.      (line  70)
 * response file, syntactic comment:      Response Files.      (line 126)
+* results, checkpoint:                   Common Options.      (line 206)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
-                                                              (line 225)
+                                                              (line 227)
 * seam line, loops:                      Mask Generation Options.
                                                               (line 151)
 * seam optimization:                     Mask Generation Options.
-                                                              (line 166)
+                                                              (line 168)
 * seam-line endpoint, frozen:            Mask Generation Options.
-                                                              (line 321)
+                                                              (line 324)
 * simulated annealing optimizer:         Mask Generation Options.
                                                               (line   9)
 * single precision float, IEEE754:       Extended Options.    (line  77)
 * size, canvas:                          Extended Options.    (line 114)
 * smooth difference image:               Mask Generation Options.
-                                                              (line 253)
+                                                              (line 255)
 * SourceForge <1>:                       Bug Reports.         (line  12)
 * SourceForge:                           Overview.            (line  45)
 * SourceForge, tracker:                  Bug Reports.         (line  12)
@@ -2505,61 +2514,61 @@ General Index
 * tiffsplit:                             Overview.            (line  39)
 * TMPDIR:                                Tuning Memory Usage. (line  20)
 * tracker, SourceForge:                  Bug Reports.         (line  12)
-* transformation, affine:                Workflow.            (line  55)
+* transformation, affine:                Workflow.            (line  56)
 * understanding masks:                   Understanding Masks. (line   6)
-* virtual reality:                       Common Options.      (line 163)
+* virtual reality:                       Common Options.      (line 164)
 * visualization image:                   Mask Generation Options.
-                                                              (line 288)
+                                                              (line 291)
 * visualization image colors:            Mask Generation Options.
-                                                              (line 329)
+                                                              (line 332)
 * visualization of mask optimization:    Mask Generation Options.
-                                                              (line 271)
+                                                              (line 274)
 * weight mask:                           Understanding Masks. (line   6)
 * weights, optimizer:                    Mask Generation Options.
-                                                              (line 197)
+                                                              (line 199)
 * white point, D50:                      Color Profiles.      (line  55)
 * workflow:                              Workflow.            (line   6)
 * workflow with Enblend:                 Workflow.            (line  17)
 * workflow with Enfuse:                  Workflow.            (line  17)
-* wrap around:                           Common Options.      (line 153)
+* wrap around:                           Common Options.      (line 154)
 
 
 
 Tag Table:
-Node: Top903
+Node: Top902
 Node: Overview2026
-Ref: Overview-Footnote-14471
-Ref: Overview-Footnote-24652
-Node: Workflow4794
-Ref: Figure:photographic-workflow5307
-Node: Invocation8010
-Node: Response Files8648
-Ref: Table:response-file-format10645
-Ref: Table:response-file-syntactic-comment13110
-Ref: Table:globbing-algorithms14011
-Node: Common Options15067
-Ref: Common Options-Footnote-122130
-Ref: Common Options-Footnote-222322
-Node: Extended Options22481
-Ref: Extended Options-Footnote-128859
-Node: Mask Generation Options28932
-Ref: Table:mask-generation31624
-Ref: Table:optimizer-strategies36550
-Ref: Table:visualization-colors41800
-Ref: Table:mask-template-characters42686
-Ref: Mask Generation Options-Footnote-144938
-Node: Color Profiles45166
-Node: Understanding Masks47603
-Node: Tuning Memory Usage51396
-Ref: Table:cache-size-settings54137
-Node: Helpful Programs54572
-Node: Bug Reports58304
-Ref: Bug Reports-Footnote-164051
-Node: Authors64121
-Node: FDL65286
-Node: Program Index86267
-Node: Syntactic-Comment Index89263
-Node: Option Index89879
-Node: General Index93747
+Ref: Overview-Footnote-14465
+Ref: Overview-Footnote-24646
+Node: Workflow4788
+Ref: Figure:photographic-workflow5301
+Node: Invocation7975
+Node: Response Files8613
+Ref: Table:response-file-format10610
+Ref: Table:response-file-syntactic-comment13075
+Ref: Table:globbing-algorithms13976
+Node: Common Options15032
+Ref: Common Options-Footnote-122107
+Ref: Common Options-Footnote-222299
+Node: Extended Options22458
+Ref: Extended Options-Footnote-128855
+Node: Mask Generation Options28928
+Ref: Table:mask-generation31618
+Ref: Table:optimizer-strategies36556
+Ref: Table:visualization-colors41821
+Ref: Table:mask-template-characters42717
+Ref: Mask Generation Options-Footnote-144969
+Node: Color Profiles45197
+Node: Understanding Masks47634
+Node: Tuning Memory Usage51427
+Ref: Table:cache-size-settings54169
+Node: Helpful Programs54605
+Node: Bug Reports58341
+Ref: Bug Reports-Footnote-164048
+Node: Authors64118
+Node: FDL65283
+Node: Program Index86264
+Node: Syntactic-Comment Index89260
+Node: Option Index89876
+Node: General Index93744
 
 End Tag Table

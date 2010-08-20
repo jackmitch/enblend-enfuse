@@ -352,14 +352,28 @@ and the manual pages in
         src/enfuse.1
 
 After the configuration you can build documentation in PostScript,
-PDF, and XHTML format.
+PDF, XHTML, and DocBook-XML format.
         make ps
         make pdf
         make xhtml
+        make xml
 
-The make process automatically ensures the validity of the XHTML
-documentation.  Additionally, it can be checked with
+The make process automatically ensures the validity of the XHTML and
+DocBook-XML documentation.  Additionally, it can be checked with
         make validate-xhtml
+        make validate-xml
+
+The DocBook-XML format can be processed with, e.g. dblatex(1), like
+        dblatex --type=ps enblend.xml
+        dblatex --type=ps enfuse.xml
+selecting a format with "--type=FORMAT", where FORMAT is "tex", "dvi",
+"ps", or "pdf" (default).  Another possibility is to use xmlto(1):
+        xmlto xhtml-nochunks enblend.xml    # or just "html"
+        xmlto ps enblend.xml
+        xmlto pdf enblend.xml
+
+The number of available output formats vary.  (See, e.g.
+/usr/share/xmlto/format/docbook)
 
 Note that some additional packages are required to build these
 formats:

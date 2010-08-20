@@ -8,9 +8,9 @@
 
 @c %**start of header
 @setfilename enblend.info
+@include versenblend.texi
 @settitle Combining Multiple Images with Enblend @value{VERSION}
 @include auxmac.texi
-@include versenblend.texi
 @include varsenblend.texi
 @include config-h.texi
 
@@ -74,6 +74,7 @@ entitled ``@acronym{GNU} Free Documentation License''.
 @end titlepage
 
 
+@c Enblend's TOC is so small that we do not need a Summary-TOC yet.
 @c @ifnothtml
 @c @summarycontents
 @c @end ifnothtml
@@ -123,12 +124,14 @@ see.
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
-* Authors::                     Major Contributors
+* Authors::                     Major contributors
 * FDL::                         @acronym{GNU} Free Documentation License
+@ifnotdocbook
 * Program Index::               Names of programs referenced
 * Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
 * General Index::               Topic index
+@end ifnotdocbook
 @end menu
 
 
@@ -148,21 +151,21 @@ see.
 @cindex overview
 
 @cindex Burt-Adelson multiresolution spline
-Enblend overlays multiple @acronym{TIFF} images using the
-@sc{Burt}-@sc{Adelson} multiresolution spline
-algorithm.@footnote{@sc{Peter J. Burt} and @sc{Edward H. Adelson}, ``A
-Multiresolution Spline With Application to Image Mosaics'',
-@acronym{ACM} Transactions on Graphics, @abbr{Vol@.} 2, @abbr{No@.} 4,
-October 1983, pages 217--236.}  This technique tries to make the seams
-between the input images invisible.  The basic idea is that image
-features should be blended across a transition zone proportional in
-size to the spatial frequency of the features.  For example, objects
-like trees and windowpanes have rapid changes in color.  By blending
-these features in a narrow zone, you will not be able to see the seam
-because the eye already expects to see color changes at the edge of
-these features.  Clouds and sky are the opposite.  These features have
-to be blended across a wide transition zone because any sudden change
-in color will be immediately noticeable.
+Enblend overlays multiple images using the @sc{Burt}-@sc{Adelson}
+multiresolution spline algorithm.@footnote{@sc{Peter J. Burt} and
+@sc{Edward H. Adelson}, ``A Multiresolution Spline With Application to
+Image Mosaics'', @acronym{ACM} Transactions on Graphics, @abbr{Vol@.}
+2, @abbr{No@.} 4, October 1983, pages 217--236.}  This technique tries
+to make the seams between the input images invisible.  The basic idea
+is that image features should be blended across a transition zone
+proportional in size to the spatial frequency of the features.  For
+example, objects like trees and windowpanes have rapid changes in
+color.  By blending these features in a narrow zone, you will not be
+able to see the seam because the eye already expects to see color
+changes at the edge of these features.  Clouds and sky are the
+opposite.  These features have to be blended across a wide transition
+zone because any sudden change in color will be immediately
+noticeable.
 
 @cindex alpha channel
 @cindex channel, alpha
@@ -280,7 +283,7 @@ fewer blending iterations, but it will do more work in each iteration.
 @cindex compression
 Write a compressed output file.
 
-Depending on the output file format Enblend accepts different values
+Depending on the output file format, Enblend accepts different values
 for @var{COMPRESSION}.
 
 @table @asis
@@ -314,8 +317,8 @@ compression scheme.  @acronym{LZW} compression is lossless.
 @item packbits
 @cindex packbits compression
 @cindex compression, packbits
-Use @sc{PackBits} compression scheme.  @sc{PackBits} is particular
-variant of run-length compression.  It is lossless.
+Use @sc{PackBits} compression scheme.  @sc{PackBits} is a particular
+variant of run-length compression; it is lossless.
 @end table
 
 @item Any other format
@@ -356,9 +359,9 @@ As a guideline, remember that each new level works on a linear scale
 twice as large as the previous one.  So, the zeroth layer, the
 original image, obviously defines the image at single-pixel scale, the
 first level works at two-pixel scale, and generally, the @math{n}-th
-level contains image data at @math{2^n}-pixel scale.  This is the
+level contains image data at @power{2, n}-pixel scale.  This is the
 reason why an image of
-@math{width}@classictimes{}@math{height}@tie{}pixels cannot be
+@math{width}@classictimes{}@/@math{height}@dmn{pixels} cannot be
 deconstructed into a pyramid of more than
 @ifinfo
 @display
@@ -366,35 +369,57 @@ deconstructed into a pyramid of more than
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-    <mrow>
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
         <mo>&LeftFloor;</mo>
-        <mrow>
-            <msub>
+        <mrowinline>
+            <msubinline>
                 <mo>log</mo>
                 <mn>2</mo>
-            </msub>
+            </msubinline>
             <mo>&ApplyFunction;</mo>
             <mo>(</mo>
-            <mrow>
+            <mrowinline>
                 <mo>min</mo>
                 <mo>&ApplyFunction;</mo>
-                <mfenced>
+                <mfencedinline>
                     <mi mathvariant="italic">width</mi>
                     <mi mathvariant="italic">height</mi>
-                </mfenced>
-            </mrow>
+                </mfencedinline>
+            </mrowinline>
             <mo>)</mo>
-        </mrow>
+        </mrowinline>
         <mo>&RightFloor;</mo>
-    </mrow>
-</math>
+    </mrowinline>
+</mathinline>
 @end html
 @tex
-$$
-    \lfloor \log_2(\min(\mathit{width}, \mathit{height})) \rfloor
-$$
+$\lfloor \log_2(\min(\mathit{width}, \mathit{height})) \rfloor$
 @end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:floor/>
+            <mml:apply>
+                <mml:log/>
+                <mml:logbase>
+                    <mml:cn>2</mml:cn>
+                </mml:logbase>
+                <mml:apply>
+                    <mml:min/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">width</mml:mi>
+                    </mml:csymbol>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">height</mml:mi>
+                    </mml:csymbol>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</inlineequation>&nbsp;
+@end docbook
 levels.
 
 If too few levels are used, ``halos'' around regions of strong local
@@ -474,9 +499,8 @@ The default verbosity level of Enblend is
 @opindex --version
 Output information on the Enblend version.
 
-Team this option with @option{--verbose} to inquire about
-configuration details, like the extra features that have been compiled
-in.
+Team this option with @option{--verbose} to show configuration
+details, like the extra features that have been compiled in.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -508,8 +532,44 @@ Otherwise, always avoid this option!
 With this option Enblend treats the panorama of width@tie{}@math{w}
 and height@tie{}@math{h} as an infinite data structure, where each
 pixel@tie{}@math{P(x, y)} of the input images represents the set of
-pixels@tie{}@math{S_P(x, y)}@footnote{Solid-state physicists will be
-reminded of the
+pixels
+@ifinfo
+@math{S_P(x, y)}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>S</mi>
+            <mi>P</mi>
+        </msubinline>
+        <mfencedinline>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfencedinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$S_P(x, y)$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:csymbol>
+                <mml:msub>
+                    <mml:mi>S</mml:mi>
+                    <mml:mi>P</mml:mi>
+                </mml:msub>
+            </mml:csymbol>
+            <mml:ci>x</mml:ci>
+            <mml:ci>y</mml:ci>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+@footnote{Solid-state physicists will be reminded of the
 @uref{http://@/en.wikipedia.org/@/wiki/@/Born-@/von_@/Karman_@/boundary_@/condition,
 @sc{Born}-@sc{von@tie{}K@'arm@'an} boundary condition}.}.
 
@@ -530,7 +590,7 @@ Wrap around horizontally:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -573,6 +633,50 @@ $$
     S_P(x, y) = \{P(x + m w, y): m \in Z\}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>x</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>m</mml:ci>
+                                <mml:ci>w</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:ci>y</mml:ci>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:in/>
+                        <mml:ci>m</mml:ci>
+                        <mml:ci>Z</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
+
 This is useful for 360@textdegree{} horizontal panoramas as it
 eliminates the left and right borders.
 
@@ -584,7 +688,7 @@ Wrap around vertically:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -627,6 +731,49 @@ $$
     S_P(x, y) = \{P(x, y + n h): n \in Z\}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:ci>x</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>y</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>n</mml:ci>
+                                <mml:ci>h</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:in/>
+                        <mml:ci>n</mml:ci>
+                        <mml:ci>Z</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 This is useful for 360@textdegree{} vertical panoramas as it
 eliminates the top and bottom borders.
 
@@ -640,7 +787,7 @@ Wrap around both horizontally and vertically:
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mrow>
         <msub>
             <mi>S</mi>
@@ -693,6 +840,66 @@ $$
     S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
 $$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>x</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>m</mml:ci>
+                                <mml:ci>w</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>y</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>n</mml:ci>
+                                <mml:ci>h</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:and/>
+                        <mml:apply>
+                            <mml:in/>
+                            <mml:ci>n</mml:ci>
+                            <mml:ci>Z</mml:ci>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:in/>
+                            <mml:ci>m</mml:ci>
+                            <mml:ci>Z</mml:ci>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
+
 In this mode, both left and right borders, as well as top and bottom
 borders, are eliminated.
 @end table
@@ -702,6 +909,8 @@ wrapping.
 
 @item -x
 @opindex -x
+@cindex checkpoint results
+@cindex results, checkpoint
 Checkpoint partial results to the output file after each blending
 step.
 @end table
@@ -907,11 +1116,11 @@ Save alpha channel as ``associated''.  See the
 
 @pindex gimp
 @pindex cinepaint
-Gimp (before version@tie{}2.0) and Cinepaint (@pxref{Helpful
+Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
 Programs}) exhibit unusual behavior when loading images with
 unassociated alpha channels.  Use option @option{-g} to work around
-this problem.  With this flag Enblend creates the output image with
-the associated alpha tag set, even though the image is really
+this problem.  With this flag Enblend will create the output image
+with the associated alpha tag set, even though the image is really
 unassociated alpha.
 
 @item --gpu
@@ -937,7 +1146,7 @@ cache.
 
 This is the amount of memory Enblend will use for storing image data
 before swapping to disk.  The default is
-@value{default-image-cache-cachesize} which is good for systems with
+@value{default-image-cache-cachesize}, which is good for systems with
 3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.  See @ref{Tuning
 Memory Usage} for details.
 
@@ -982,27 +1191,8 @@ be, and the longer it will take.
 
 Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
-Valid range:
-@ifinfo
-@value{src::minimum-anneal-tau} < @var{TAU} <
+Valid range: @value{src::minimum-anneal-tau} < @var{TAU} <
 @value{src::maximum-anneal-tau}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-anneal-tau}</mn>
-        <mo>&lt;</mo>
-        <mi mathvariant="italic">TAU</mi>
-        <mo>&lt;</mo>
-        <mn>@value{src::maximum-anneal-tau}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-anneal-tau} < \mathit{TAU} <
-@value{src::maximum-anneal-tau}$.
-@end tex
 
 The default is @value{src::default-anneal-tau}; values around 0.95 are
 reasonable.  Usually, slower cooling results in more converged points.
@@ -1012,26 +1202,8 @@ reasonable.  Usually, slower cooling results in more converged points.
 @var{DELTA-E-MAX} and @var{DELTA-E-MIN} are the maximum and minimum
 cost change possible by any single annealing move.
 
-Valid range:
-@ifinfo
-@value{src::minimum-anneal-deltae-min} < DELTA-E-MIN < DELTA-E-MAX.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-anneal-deltae-min}</mn>
-        <mo>&lt;</mo>
-        <mi mathvariant="italic">DELTA-E-MIN</mi>
-        <mo>&lt;</mo>
-        <mi mathvariant="italic">DELTA-E-MAX</mi>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-anneal-deltae-min} < \mathit{DELTA-E-MIN} <
-\mathit{DELTA-E-MAX}$.
-@end tex
+Valid range: @value{src::minimum-anneal-deltae-min} <
+@var{DELTA-E-MIN} < @var{DELTA-E-MAX}.
 
 In particular they determine the initial and final annealing
 temperatures according to:
@@ -1047,14 +1219,14 @@ T_final = ------------------------
 @end display
 @end ifinfo
 @html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
     <mtable>
         <mtr>
             <mtd>
                 <mrow>
                     <msub>
                         <mi mathvariant="italic">T</mi>
-                        <mi mathvariant="roman">initial</mi>
+                        <mi mathvariant="normal">initial</mi>
                     </msub>
                     <mo>=</mo>
                     <mfrac>
@@ -1086,7 +1258,7 @@ T_final = ------------------------
                 <mrow>
                     <msub>
                         <mi mathvariant="italic">T</mi>
-                        <mi mathvariant="roman">final</mi>
+                        <mi mathvariant="normal">final</mi>
                     </msub>
                     <mo>=</mo>
                     <mfrac>
@@ -1122,6 +1294,82 @@ $$\eqalign{
     {\mathit{DELTA-E-MIN} \over {\log(\mathit{K-MAX\/}^2 - \mathit{K-MAX} - 1)}} \cr
 }$$
 @end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:csymbol>
+                <mml:msub>
+                    <mml:mi mathvariant="italic">T</mml:mi>
+                    <mml:mi mathvariant="normal">initial</mml:mi>
+                </mml:msub>
+            </mml:csymbol>
+            <mml:apply>
+                <mml:divide/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">DELTA-E-MAX</mml:mi>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:log/>
+                        <mml:apply other='display="scriptstyle"'>
+                            <mml:divide/>
+                            <mml:csymbol>
+                                <mml:mi mathvariant="italic">K-MAX</mml:mi>
+                            </mml:csymbol>
+                            <mml:apply>
+                                <mml:minus/>
+                                <mml:csymbol>
+                                    <mml:mi mathvariant="italic">K-MAX</mml:mi>
+                                </mml:csymbol>
+                                <mml:cn>2</mml:cn>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:csymbol>
+                <mml:msub>
+                    <mml:mi mathvariant="italic">T</mml:mi>
+                    <mml:mi mathvariant="normal">final</mml:mi>
+                </mml:msub>
+            </mml:csymbol>
+            <mml:apply>
+                <mml:divide/>
+                    <mml:csymbol>
+                        <mml:mi mathvariant="italic">DELTA-E-MIN</mml:mi>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:log/>
+                        <mml:apply>
+                            <mml:minus/>
+                        <mml:apply>
+                            <mml:minus/>
+                                <mml:apply>
+                                    <mml:power/>
+                                    <mml:csymbol>
+                                        <mml:mi mathvariant="italic">K-MAX</mml:mi>
+                                    </mml:csymbol>
+                                    <mml:cn>2</mml:cn>
+                                </mml:apply>
+                                <mml:csymbol>
+                                    <mml:mi mathvariant="italic">K-MAX</mml:mi>
+                                </mml:csymbol>
+                            </mml:apply>
+                            <mml:cn>1</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
 
 The defaults are: @var{DELTA-E-MAX}:
 @value{src::default-anneal-deltae-max} and @var{DELTA-E-MIN}:
@@ -1132,23 +1380,7 @@ The defaults are: @var{DELTA-E-MAX}:
 for each line segment.  Higher values more accurately sample the state
 space, at the expense of a higher computation cost.
 
-Valid range:
-@ifinfo
-@var{K-MAX} @geq{} @value{src::minimum-anneal-kmax}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">K-MAX</mi>
-        <mo>&ge;</mo>
-        <mn></mn>
-        <mtext>@value{src::minimum-anneal-kmax}.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{K-MAX} \ge @value{src::minimum-anneal-kmax}$.
-@end tex
+Valid range: @var{K-MAX} @geq{} @value{src::minimum-anneal-kmax}.
 
 The default is @value{src::default-anneal-kmax}.  Values around 100
 seem reasonable.
@@ -1167,12 +1399,11 @@ If omitted @var{FACTOR} defaults to
 @value{src::default-coarseness-factor}, this means,
 option@tie{}@option{--coarse-mask} shrinks the overlapping
 @emph{areas} by a factor of
-@math{@value{src::default-coarseness-factor} @classictimes{}
-@value{src::default-coarseness-factor}}.  With
-@var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a run of
-Enblend shrinks approximately by 80% and the maximum amount of memory
-in use at a time is decreased to 60% (Enblend compiled with image
-cache) or 40% (Enblend compiled without image cache).
+@math{@value{src::default-coarseness-factor}@classictimes{}@/@value{src::default-coarseness-factor}}.
+With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
+run of Enblend shrinks approximately by 80% and the maximum amount of
+memory in use at a time is decreased to 60% (Enblend compiled with
+image cache) or 40% (Enblend compiled without image cache).
 
 Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
 
@@ -1206,9 +1437,7 @@ vertices with simulated annealing and @sc{Dijkstra's} shortest path
 algorithm, fill vector contours.
 @end multitable
 
-@caption{Various options that control the generation of masks.  All
-mask computations are based on the Nearest-Feature Transformation
-(@acronym{NFT}) of the overlap region.}
+@caption{Various options that control the generation of masks.  All mask computations are based on the Nearest-Feature Transformation (@acronym{NFT}) of the overlap region.}
 
 @shortcaption{Mask generation options}
 
@@ -1228,23 +1457,7 @@ A small value prefers straight line segments and thus shorter seam
 lines.  Larger values instruct the optimizer to let the seam line take
 more detours when searching for the best seam line.
 
-Valid range:
-@ifinfo
-@var{RADIUS} @geq{} @value{src::minimum-dijkstra-radius}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">RADIUS</mi>
-        <mo>&ge;</mo>
-        <mn>@value{src::minimum-dijkstra-radius}</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{RADIUS} \ge @value{src::minimum-dijkstra-radius}$.
-@end tex
+Valid range: @var{RADIUS} @geq{} @value{src::minimum-dijkstra-radius}.
 
 Default: @value{src::default-dijkstra-radius}@dmn{pixels}.
 
@@ -1310,23 +1523,8 @@ are closer to one, and blurring of the difference image with
 option@tie{}@option{--smooth-difference}.  Use
 option@tie{}@option{--visualize} to check the results.
 
-Valid range:
-@ifinfo
-@var{DISTANCE} @geq{} @value{src::minimum-vectorize-distance}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mi mathvariant="italic">DISTANCE</mi>
-        <mo>&ge;</mo>
-        <mn>4</mn>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$\mathit{DISTANCE} \ge @value{src::minimum-vectorize-distance}$.
-@end tex
+Valid range: @var{DISTANCE} @geq{} @value{src::minimum-vectorize-distance}.
+
 Enblend limits @var{DISTANCE} so that it never gets below
 @value{src::minimum-vectorize-distance} even if it has been given as a
 percentage.  The user will be warned in such cases.
@@ -1361,9 +1559,8 @@ in the overlap region.  This is the default.
 @ref{Table:mask-generation}.
 
 @float Table,Table:optimizer-strategies
-@cindex optimize strategy
-
 @table @asis
+@dbtitle{Optimizer Strategies}
 @item Stragegy 1: Simulated Annealing
 Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
 : @var{DELTA-E-MIN} : @var{K-MAX}.
@@ -1379,10 +1576,12 @@ Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 @sc{Dijkstra} algorithm}
 
 @end table
-@caption{Enblend's two strategies to optimize the seam lines between
-images.}
+
+@caption{Enblend's two strategies to optimize the seam lines between images.}
 
 @shortcaption{Optimizer strategies}
+
+@cindex optimize strategy
 @end float
 
 @item --optimizer-weights=@var{DISTANCE-WEIGHT}[:@var{MISMATCH-WEIGHT}]
@@ -1470,28 +1669,12 @@ for @var{RADIUS} are good starting points; use
 option@tie{}@option{--visualize} to directly judge the effect.
 
 When using this option in conjunction with
-@tie{}@option{--coarse-mask}=@var{FACTOR}, keep in mind that the
+option@tie{}@code{--coarse-mask}=@/@var{FACTOR}, keep in mind that the
 smoothing occurs @emph{after} the overlap regions have been shrunken.
-Thus, blurring affects a @var{FACTOR}@classictimes{}@var{FACTOR} times
-larger area in the original images.
+Thus, blurring affects a @var{FACTOR}@classictimes{}@/@var{FACTOR}
+times larger area in the original images.
 
-Valid range:
-@ifinfo
-@value{src::minimum-smooth-difference} @leq{} @var{RADIUS}.
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mrow>
-        <mn>@value{src::minimum-smooth-difference}</mn>
-        <mo>&le;</mo>
-        <mi mathvariant="italic">RADIUS</mi>
-        <mtext>.</mtext>
-    </mrow>
-</math>
-@end html
-@tex
-$@value{src::minimum-smooth-difference} \le \mathit{RADIUS}$.
-@end tex
+Valid range: @var{RADIUS} @geq{} @value{src::minimum-smooth-difference}.
 
 @item --visualize[=@var{VISUALIZE-TEMPLATE}]
 @opindex --visualize
@@ -1514,7 +1697,7 @@ uppercase ones refer to the name of the output file (@pxref{Common
 Options}).  @ref{Table:mask-template-characters} lists all variables.
 
 @noindent
-@strong{Visualization Image}
+@strong{Visualization Image.}
 @cindex visualization image
 @cindex image, visualization
 @need 150
@@ -1529,6 +1712,7 @@ that are used in seam-line visualization images.
 
 @float Table,Table:visualization-colors
 @table @asis
+@dbtitle{Visualization Colors}
 @item @value{src::visualize-no-overlap-value-color}
 Non-overlapping parts of image pair.
 
@@ -1562,14 +1746,15 @@ Enblend marks a non-movable (``frozen'') endpoint of a seam-line
 segment with a @value{src::visualize-frozen-point}
 @value{src::mark-frozen-point}, whereas it uses a
 @value{src::visualize-movable-point} @value{src::mark-movable-point}
-to denote an endpoint that the optimizer may move around.
+to denote an endpoint that the optimizer is allowed to move around.
 
 @item @value{src::visualize-short-path-value-color}
 Final seam line.
 @end table
 
-@shortcaption{Visualization colors}
 @caption{Colors used in seam-line visualization images.}
+
+@shortcaption{Visualization colors}
 
 @cindex visualization image colors
 @cindex image colors, visualization
@@ -1595,7 +1780,7 @@ of the image and the final seam-line
 
 @ifhtml
 @float Figure,Figure:seam-line-visualization
-@image{seam-line-visualization}
+@rimage{seam-line-visualization}
 
 @caption{Seam-line visualization of a simple overlap.  The
 853@classictimes{}238@dmn{pixel} image is shown at a magification of
@@ -1607,7 +1792,7 @@ of the image and the final seam-line
 
 @iftex
 @float Figure,Figure:seam-line-visualization
-@image{seam-line-visualization, 15cm}
+@rimage{seam-line-visualization, 15cm}
 
 @caption{Seam-line visualization of a simple overlap.  The
 853@classictimes{}238@dmn{pixel} image has been rescaled to a width of
@@ -1616,6 +1801,16 @@ approximately 15@dmn{cm}.}
 @shortcaption{Seam-line visualization}
 @end float
 @end iftex
+
+@ifdocbook
+@float Figure,Figure:seam-line-visualization
+@rimage{seam-line-visualization, 15cm}
+
+@caption{Seam-line visualization of a simple overlap.  The 853@classictimes{}238@dmn{pixel} image has been rescaled to a width of approximately 15@dmn{cm}.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end ifdocbook
 @end ifnotinfo
 @end table
 
@@ -1684,6 +1879,7 @@ approximately 15@dmn{cm}.}
 @c End of Document
 @c
 
+@ifnotdocbook
 @node Program Index
 @unnumbered Program Index
 @cindex program index
@@ -1714,5 +1910,6 @@ approximately 15@dmn{cm}.}
 @cindex index, general
 
 @printindex cp
+@end ifnotdocbook
 
 @bye

@@ -2,13 +2,53 @@
 @c Macro Definitions
 @c
 
+@c redefined commands
+
+@c Get the spacing of dimensions right.
+@ifnottex
+@macro dmn{unit}
+@tie{}\unit\
+@end macro
+@end ifnottex
+
+
 @c extended commands
 
-@c Include an image in a variety of ways: 1/ The Info format includes
-@c unchanged.  2/ XHTML first tries SVG then PNG in the ``raster''
-@c subdirectory; if both fail, we leave a textual tombstone.  Here,
-@c the CSS must take care of centering of the graphic.  3/ TeX and
-@c PDFTeX center the graphic.
+@c Add a title to a DocBook element.
+@macro dbtitle{title}
+@docbook
+\title\
+@end docbook
+@end macro
+
+
+@c Include a raster image.
+@macro rimage{filename, width}
+@ifinfo
+@image{\filename\, \width\}
+@end ifinfo
+@ifhtml
+@image{\filename\, \width\}
+@end ifhtml
+@iftex
+@center@image{\filename\, \width\}
+@end iftex
+@ifdocbook
+@image{\filename\, \width\}
+@end ifdocbook
+@docbook
+@c Yikes!  The DocBook output of makeinfo 4.13a is so broken that we
+@c must supply the closing tag here.
+</figure>
+@end docbook
+@end macro
+
+
+@c Include a vector image in a variety of ways: 1/ The Info format
+@c includes unchanged.  2/ XHTML first tries SVG then PNG in the
+@c ``raster'' subdirectory; if both fail, we leave a textual
+@c tombstone.  Here, the CSS must take care of centering of the
+@c graphic.  3/ TeX and PDFTeX center the graphic.  4/ DocBook?
 @macro vimage{filename}
 @ifinfo
 @image{\filename\}
@@ -27,10 +67,35 @@ not displayed, because of lacking <acronym>SVG</acronym> and
 @iftex
 @center@image{\filename\}
 @end iftex
+@ifdocbook
+@image{\filename\}
+@end ifdocbook
+@docbook
+@c Yikes!  The DocBook output of makeinfo 4.13a is so broken that we
+@c must supply the closing tag here.
+</figure>
+@end docbook
 @end macro
 
 
 @c Operators
+
+@c Generate a nice representation of base^exponent.
+@macro power{base, exponent}
+@ifinfo
+\base\^\exponent\
+@end ifinfo
+@html
+\base\<sup>\exponent\</sup>
+@end html
+@tex
+$\base\^{\exponent\}$%
+@end tex
+@docbook
+\base\<superscript>\exponent\</superscript>
+@end docbook
+@end macro
+
 
 @macro classictimes
 @ifinfo
@@ -42,6 +107,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @tex
 \\ifmmode\\times\\else$\\times$\\fi% gobble following newline  -- The Tricks of a TeX Wizard.
 @end tex
+@docbook
+&times;
+@end docbook
 @end macro
 
 
@@ -55,6 +123,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @html
 &ge;
 @end html
+@docbook
+&ge;
+@end docbook
 @end macro
 @end ifnottex
 
@@ -69,6 +140,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @html
 &le;
 @end html
+@docbook
+&le;
+@end docbook
 @end macro
 @end ifnottex
 
@@ -83,6 +157,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @tex
 \\ifmmode\\pm\\else$\\pm$\\fi%
 @end tex
+@docbook
+&plusmn;
+@end docbook
 @end macro
 
 
@@ -100,6 +177,9 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @tex
 $\\omega$%
 @end tex
+@docbook
+&omega;
+@end docbook
 @end macro
 
 
@@ -115,6 +195,9 @@ $\\omega$%
 @tex
 $\\sigma$%
 @end tex
+@docbook
+&sigma;
+@end docbook
 @end macro
 
 
@@ -130,6 +213,9 @@ $\\sigma$%
 @tex
 $\\xi$%
 @end tex
+@docbook
+&xi;
+@end docbook
 @end macro
 
 
@@ -169,4 +255,7 @@ $\\xi$%
 @tex
 \\ifmmode\significant\ \\times 10^{\exponent\}\\else$\significant\ \\times 10^{\exponent\}$\\fi%
 @end tex
+@docbook
+\significant\&times;10<superscript>\exponent\</superscript>
+@end docbook
 @end macro
