@@ -434,8 +434,9 @@ void printUsageAndExit(const bool error = true) {
         "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
         "  --gray-projector=PROJECTOR\n" <<
         "                         apply gray-scale PROJECTOR in exposure or contrast\n" <<
-        "                         weighing, where PROJECTOR is \"anti-value\", \"average\", \n" <<
-        "                         \"l-star\", \"lightness\", \"value\", \"luminance\", or\n" <<
+        "                         weighing, where PROJECTOR is one of \"anti-value\",\n" <<
+        "                         \"average\", \"l-star\", \"lightness\", \"luminance\",\n" <<
+        "                         \"pl-star\", \"value\", or\n" <<
         "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
         "                         default: \"" <<
         enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<

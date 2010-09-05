@@ -73,7 +73,9 @@ public:
     static const std::string defaultGrayscaleAccessorName() {return "average";}
 
 private:
-    typedef enum {AVERAGE, LSTAR, LIGHTNESS, VALUE, ANTI_VALUE, LUMINANCE, MIXER} AccKindType;
+    typedef enum {
+        AVERAGE, LSTAR, PRIMED_LSTAR, LIGHTNESS, VALUE, ANTI_VALUE, LUMINANCE, MIXER
+    } AccKindType;
     typedef std::map<std::string, AccKindType> NameMapType;
     typedef typename NameMapType::const_iterator NameMapConstIterType;
 
@@ -82,6 +84,7 @@ private:
     void initializeAccessorNameMap() {
         nameMap["average"] = AVERAGE;
         nameMap["l-star"] = LSTAR;
+        nameMap["pl-star"] = PRIMED_LSTAR;
         nameMap["lightness"] = LIGHTNESS;
         nameMap["value"] = VALUE;
         nameMap["anti-value"] = ANTI_VALUE;
@@ -179,7 +182,8 @@ private:
 
     void initializeTypeSpecific(VigraFalseType) {
         typedef typename InputType::value_type ValueType;
-        labfun = vigra::RGB2LabFunctor<double>(NumericTraits<ValueType>::max());
+        rgb_to_lab_fun = vigra::RGB2LabFunctor<double>(NumericTraits<ValueType>::max());
+        rgb_prime_to_lab_fun = vigra::RGBPrime2LabFunctor<double>(NumericTraits<ValueType>::max());
     }
 
     ResultType project(const InputType& x) const {
@@ -195,7 +199,13 @@ private:
         case LSTAR:
         {
             typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
-            const LABResultType y = labfun.operator()(x) / 100.0;
+            const LABResultType y = rgb_to_lab_fun.operator()(x) / 100.0;
+            return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
+        }
+        case PRIMED_LSTAR:
+        {
+            typedef typename vigra::RGBPrime2LabFunctor<double>::result_type LABResultType;
+            const LABResultType y = rgb_prime_to_lab_fun.operator()(x) / 100.0;
             return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
         }
         case LIGHTNESS:
@@ -247,7 +257,8 @@ private:
     NameMapType nameMap;
     AccKindType kind;
     double redWeight, greenWeight, blueWeight;
-    vigra::RGB2LabFunctor<double> labfun;
+    vigra::RGB2LabFunctor<double> rgb_to_lab_fun;
+    vigra::RGBPrime2LabFunctor<double> rgb_prime_to_lab_fun;
 };
 
 } // namespace enblend

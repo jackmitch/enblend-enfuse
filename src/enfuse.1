@@ -114,8 +114,9 @@ set window SIZE for local\-contrast analysis
 .TP
 \fB\-\-gray\-projector\fR=\fIPROJECTOR\fR
 apply gray\-scale PROJECTOR in exposure or contrast
-weighing, where PROJECTOR is "anti\-value", "average",
-"l\-star", "lightness", "value", "luminance", or
+weighing, where PROJECTOR is one of "anti\-value",
+"average", "l\-star", "lightness", "luminance",
+"pl\-star", "value", or
 "channel\-mixer:RED\-WEIGHT:GREEN\-WEIGHT:BLUE\-WEIGHT";
 default: "average"
 .TP
@@ -125,7 +126,7 @@ LCESCALE switches on local contrast enhancement
 by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0);
 append "%" to LCESCALE for values relative to
 EDGESCALE; append "%" to LCEFACTOR for relative
-value; defaults: 0:0:0
+value; default: 0:0:0
 .TP
 \fB\-\-contrast\-min\-curvature\fR=\fICURVATURE\fR
 minimum CURVATURE for an edge to qualify; append
@@ -144,17 +145,17 @@ default: 0%:100%
 .TP
 \fB\-\-save\-masks[\fR=\fISOFT\-TEMPLATE[\fR:HARD\-TEMPLATE]]
 save weight masks in SOFT\-TEMPLATE and HARD\-TEMPLATE;
-conversion chars: %i: mask index, %n: mask number,
-%p: full path, %d: dirname, %b: basename,
-%f: filename, %e: extension; lowercase characters
-refer to input images uppercase to the output image;
+conversion chars: "%i": mask index, "%n": mask number,
+"%p": full path, "%d": dirname, "%b": basename,
+"%f": filename, "%e": extension; lowercase characters
+refer to input images uppercase to the output image
 default: "softmask\-%n.tif":"hardmask\-%n.tif"
 .TP
 \fB\-\-load\-masks[\fR=\fISOFT\-TEMPLATE[\fR:HARD\-TEMPLATE]]
-skip internal calculation of weight maps and use
-the ones in the files matching the templates instead.
-These can be either hard or soft masks.  For template
-syntax see "\-\-save\-masks".
+skip calculation of weight maps and use the ones
+in the files matching the templates instead.  These
+can be either hard or soft masks.  For template
+syntax see "\-\-save\-masks";
 default: "softmask\-%n.tif":"hardmask\-%n.tif"
 .PP
 Enfuse accepts arguments to any option in uppercase as

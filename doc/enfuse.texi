@@ -1796,12 +1796,13 @@ channel.  The sum of all weights is normalized to one.
 @item l-star
 @cindex gray projector, @samp{l-star}
 @cindex @samp{l-star} gray projector
-@cindex L*a*b* conversion
-@cindex conversion, L*a*b*
+@cindex RGB-L*a*b* conversion
+@cindex conversion, RGB-L*a*b*
 Use the L-channel of the L*a*b*-conversion of the image as its
 grayscale representation.  This is a useful projector for gamma = 1
 data.  It reveals minute contrast variations even in the shadows and
-the highlights.  This projector is computationally expensive.
+the highlights.  This projector is computationally expensive.  Compare
+with @samp{pl-star}, which is intended for gamma-corrected images.
 
 See @uref{http://@/en.wikipedia.org/@/wiki/@/Lab_@/color_@/space,
 Wikipedia} for a detailed description of the @acronym{Lab}@tie{}color
@@ -1953,6 +1954,22 @@ $$
     </mml:math>
 </informalequation>
 @end docbook
+
+@item pl-star
+@cindex gray projector, @samp{pl-star}
+@cindex @samp{pl-star} gray projector
+@cindex RGB'-L*a*b* conversion
+@cindex conversion, RGB'-L*a*b*
+Use the L-channel of the L*a*b*-conversion of the image as its
+grayscale representation.  This is a useful projector for
+gamma-corrected data.  It reveals minute contrast variations even in
+the shadows and the highlights.  This projector is computationally
+expensive.  Compare with @samp{l-star}, which is intended for gamma =
+1 images.
+
+See @uref{http://@/en.wikipedia.org/@/wiki/@/Lab_@/color_@/space,
+Wikipedia} for a detailed description of the @acronym{Lab}@tie{}color
+space.
 
 @item value
 @cindex gray projector, @samp{value}
