@@ -473,9 +473,9 @@ void printUsageAndExit(const bool error = true) {
         "  --save-masks[=TEMPLATE]\n" <<
         "                         save generated masks in TEMPLATE; default: \"" <<
         SaveMaskTemplate << "\";\n" <<
-        "                         conversion chars: %i: mask index, %n: mask number,\n" <<
-        "                         %p: full path, %d: dirname, %b: basename,\n" <<
-        "                         %f: filename, %e: extension; lowercase characters\n" <<
+        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
+        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
+        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
         "                         refer to input images uppercase to the output image\n" <<
         "  --load-masks[=TEMPLATE]\n" <<
         "                         use existing masks in TEMPLATE instead of generating\n" <<

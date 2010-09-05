@@ -462,10 +462,10 @@ void printUsageAndExit(const bool error = true) {
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
         "  --save-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
         "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
-        "                         conversion chars: %i: mask index, %n: mask number,\n" <<
-        "                         %p: full path, %d: dirname, %b: basename,\n" <<
-        "                         %f: filename, %e: extension; lowercase characters\n" <<
-        "                         refer to input images uppercase to the output image;\n" <<
+        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
+        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
+        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to the output image\n" <<
         "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
         "  --load-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
         "                         skip calculation of weight maps and use the ones \n" <<
@@ -752,7 +752,7 @@ fill_mask_templates(const char* an_option_argument,
         token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
         if (token != NULL && *token != 0) {
             cerr << command
-                 << ": warning: ignoring trailing garbage in " << an_option_name << endl;
+                 << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << endl;
         }
 
         delete [] s;
@@ -913,7 +913,7 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to --contrast-edge-scale.  "
+                cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
                      << "scale is required." << endl;
                 failed = true;
             }
@@ -977,7 +977,7 @@ int process_options(int argc, char** argv)
 
             if (save_ptr != NULL && *save_ptr != 0) {
                 cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to --contrast-edge-scale" << endl;
+                     << save_ptr << "\" in argument to \"--contrast-edge-scale\"" << endl;
             }
 
             delete [] s;
@@ -993,7 +993,7 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to --entropy-cutoff.  "
+                cerr << command << ": no scale given to \"--entropy-cutoff\".  "
                      << "lower cutoff is required." << endl;
                 failed = true;
             }
@@ -1040,7 +1040,7 @@ int process_options(int argc, char** argv)
 
             if (save_ptr != NULL && *save_ptr != 0) {
                 cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to --entropy-cutoff" << endl;
+                     << save_ptr << "\" in argument to \"--entropy-cutoff\"" << endl;
             }
 
             delete [] s;
@@ -1056,7 +1056,7 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to --exposure-cutoff.  "
+                cerr << command << ": no scale given to \"--exposure-cutoff\".  "
                      << "lower cutoff is required." << endl;
                 failed = true;
             }
@@ -1113,7 +1113,7 @@ int process_options(int argc, char** argv)
 
             if (save_ptr != NULL && *save_ptr != 0) {
                 cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to --exposure-cutoff" << endl;
+                     << save_ptr << "\" in argument to \"--exposure-cutoff\"" << endl;
             }
 
             delete [] s;
@@ -1983,7 +1983,7 @@ int main(int argc, char** argv)
         } else {
             if (!WSaturationIsDefault && (WSaturation != 0.0)) {
                 cerr << command
-                     << ": warning: --WSaturation is not applicable to grayscale images;\n"
+                     << ": warning: \"--WSaturation\" is not applicable to grayscale images;\n"
                      << command
                      << ": warning:   this parameter will have no effect"
                      << endl;
