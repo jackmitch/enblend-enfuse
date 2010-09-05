@@ -1257,7 +1257,9 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
     // List of input image / input alpha / mask triples
-    list <triple<ImageType*, AlphaType*, MaskType*> > imageList;
+    typedef list< triple<ImageType*, AlphaType*, MaskType*> > imageListType;
+    typedef typename imageListType::iterator imageListIteratorType;
+    imageListType imageList;
 
     // Sum of all masks
     MaskType *normImage = new MaskType(anInputUnion.size());
@@ -1277,9 +1279,44 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         MaskType* mask = new MaskType(anInputUnion.size());
 
-        enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
-                                                   srcImage(*(imagePair.second)),
-                                                   destImage(*mask));
+        if (LoadMasks) {
+            // IMPLEMENTATION NOTE: For simplicity of the code, here
+            // we also load in hard masks.  Computing the set of hard
+            // masks from a set of soft masks is done by maximum
+            // selection, which is an idempotent function.
+            const std::string maskFilename =
+                enblend::expandFilenameTemplate(UseHardMask ? HardMaskTemplate : SoftMaskTemplate,
+                                                numberOfImages,
+                                                *inputFileNameIterator,
+                                                OutputFileName,
+                                                m);
+            if (can_open_file(maskFilename)) {
+                ImageImportInfo maskInfo(maskFilename.c_str());
+                if (Verbose >= VERBOSE_MASK_MESSAGES) {
+                    cerr << command
+                         << ": info: loading " << (UseHardMask ? "hard" : "soft")
+                         << "mask \"" << maskFilename << "\"" << endl;
+                }
+                if (maskInfo.width() != anInputUnion.width() || maskInfo.height() != anInputUnion.height()) {
+                    cerr << command
+                         << ": warning: mask in \"" << maskFilename << "\" has size "
+                         << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
+                         << command
+                         << ": warning:     but image union has size " << anInputUnion.size() << ";\n"
+                         << command
+                         << ": warning:     make sure this is the right mask for the given images"
+                         << endl;
+                }
+                importImage(maskInfo, destImage(*mask));
+            } else {
+                exit(1);
+            }
+        } else {
+            std::cout << "+ enfuseMain: LoadMasks is false\n";
+            enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
+                                                       srcImage(*(imagePair.second)),
+                                                       destImage(*mask));
+        }
 
         if (SaveMasks) {
             const std::string maskFilename =
@@ -1358,7 +1395,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                  << ": info: creating hard blend mask" << endl;
         }
         const Size2D sz = normImage->size();
-        typename list< triple<ImageType*, AlphaType*, MaskType*> >::iterator imageIter;
+        imageListIteratorType imageIter;
 #ifdef OPENMP
 #pragma omp parallel for private (imageIter)
 #endif

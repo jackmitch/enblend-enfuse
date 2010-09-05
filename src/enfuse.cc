@@ -117,6 +117,7 @@ AlternativePercentage EntropyLowerCutoff(0.0, true); //< src::default-entropy-lo
 AlternativePercentage EntropyUpperCutoff(100.0, true); //< src::default-entropy-upper-cutoff 100%
 bool UseHardMask = false;
 bool SaveMasks = false;
+bool LoadMasks = false;
 std::string SoftMaskTemplate("softmask-%n.tif"); //< src::default-soft-mask-template softmask-%n.tif
 std::string HardMaskTemplate("hardmask-%n.tif"); //< src::default-hard-mask-template hardmask-%n.tif
 
@@ -444,7 +445,7 @@ void printUsageAndExit(const bool error = true) {
         "                         by LCEFACTOR (EDGESCALE, LCESCALE, LCEFACTOR >= 0);\n" <<
         "                         append \"%\" to LCESCALE for values relative to\n" <<
         "                         EDGESCALE; append \"%\" to LCEFACTOR for relative\n" <<
-        "                         value; defaults: " <<
+        "                         value; default: " <<
         FilterConfig.edgeScale << ":" << FilterConfig.lceScale << ":" << FilterConfig.lceFactor << "\n" <<
         "  --contrast-min-curvature=CURVATURE\n" <<
         "                         minimum CURVATURE for an edge to qualify; append\n" <<
@@ -465,6 +466,12 @@ void printUsageAndExit(const bool error = true) {
         "                         %p: full path, %d: dirname, %b: basename,\n" <<
         "                         %f: filename, %e: extension; lowercase characters\n" <<
         "                         refer to input images uppercase to the output image;\n" <<
+        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
+        "  --load-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
+        "                         skip calculation of weight maps and use the ones \n" <<
+        "                         in the files matching the templates instead.  These\n" <<
+        "                         can be either hard or soft masks.  For template\n" <<
+        "                         syntax see \"--save-masks\";\n" <<
         "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
         "\n" <<
         "Enfuse accepts arguments to any option in uppercase as\n" <<
@@ -528,7 +535,7 @@ enum AllPossibleOptions {
     SoftMaskOption, HardMaskOption,
     ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
     MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
-    DebugOption, SaveMasksOption
+    DebugOption, SaveMasksOption, LoadMasksOption
 };
 
 typedef std::set<enum AllPossibleOptions> OptionSetType;
@@ -543,6 +550,61 @@ bool contains(const OptionSetType& optionSet,
 /** Warn if options given at the command line have no effect. */
 void warn_of_ineffective_options(const OptionSetType& optionSet)
 {
+    if (contains(optionSet, LoadMasksOption)) {
+        if (contains(optionSet, ExposureWeightOption)) {
+            cerr << command <<
+                ": warning: option \"--exposure-weight\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, ExposureCutoffOption)) {
+            cerr << command <<
+                ": warning: option \"--exposure-cutoff\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, SaturationWeightOption)) {
+            cerr << command <<
+                ": warning: option \"--saturation-weight\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, ContrastWeightOption)) {
+            cerr << command <<
+                ": warning: option \"--contrast-weight\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, EntropyWeightOption)) {
+            cerr << command <<
+                ": warning: option \"--entropy-weight\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, ExposureMuOption)) {
+            cerr << command <<
+                ": warning: option \"--exposure-mu\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, ExposureSigmaOption)) {
+            cerr << command <<
+                ": warning: option \"--exposure-sigma\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, ContrastWindowSizeOption)) {
+            cerr << command <<
+                ": warning: option \"--contrast-window-size\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, GrayProjectorOption)) {
+            cerr << command <<
+                ": warning: option \"--gray-projector\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, EdgeScaleOption)) {
+            cerr << command <<
+                ": warning: option \"--contrast-edge-scale\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, MinCurvatureOption)) {
+            cerr << command <<
+                ": warning: option \"--contrast-min-curvature\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, EntropyWindowSizeOption)) {
+            cerr << command <<
+                ": warning: option \"--entropy-window-size\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, EntropyCutoffOption)) {
+            cerr << command <<
+                ": warning: option \"--entropy-cutoff\" has no effect with \"--load-masks\"" << endl;
+        }
+    }
+
     if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
         if (contains(optionSet, ExposureMuOption)) {
             cerr << command <<
@@ -670,6 +732,34 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 }
 
 
+void
+fill_mask_templates(const char* an_option_argument,
+                    std::string& a_soft_mask_template, std::string& a_hard_mask_template,
+                    const std::string& an_option_name)
+{
+    if (an_option_argument != NULL && *an_option_argument != 0) {
+        char* s = new char[strlen(an_option_argument) + 1];
+        strcpy(s, an_option_argument);
+
+        char* save_ptr = NULL;
+        char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+        a_soft_mask_template = token;
+        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+        if (token != NULL && *token != 0) {
+            a_hard_mask_template = token;
+        }
+
+        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+        if (token != NULL && *token != 0) {
+            cerr << command
+                 << ": warning: ignoring trailing garbage in " << an_option_name << endl;
+        }
+
+        delete [] s;
+    }
+}
+
+
 int process_options(int argc, char** argv)
 {
     enum OptionId {
@@ -700,7 +790,8 @@ int process_options(int argc, char** argv)
         CiecamId,
         NoCiecamId,
         FallbackProfileId,
-        ExposureCutoffId
+        ExposureCutoffId,
+        LoadMasksId
     };
 
     static struct option long_options[] = {
@@ -732,6 +823,8 @@ int process_options(int argc, char** argv)
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"exposure-cutoff", required_argument, 0, ExposureCutoffId},
+        {"load-mask", optional_argument, 0, LoadMasksId}, // singular form: not documented, not deprecated
+        {"load-masks", optional_argument, 0, LoadMasksId},
         {0, 0, 0, 0}
     };
 
@@ -1084,24 +1177,14 @@ int process_options(int argc, char** argv)
             optionSet.insert(OutputOption);
             break;
 
+        case LoadMasksId:
+            fill_mask_templates(optarg, SoftMaskTemplate, HardMaskTemplate, "--load-masks");
+            LoadMasks = true;
+            optionSet.insert(LoadMasksOption);
+            break;
+
         case SaveMasksId:
-            if (optarg != NULL && *optarg != 0) {
-                char* s = new char[strlen(optarg) + 1];
-                strcpy(s, optarg);
-                char* save_ptr = NULL;
-                char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
-                SoftMaskTemplate = token;
-                token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    HardMaskTemplate = token;
-                }
-                token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                if (token != NULL && *token != 0) {
-                    cerr << command
-                         << ": warning: ignoring trailing garbage in --save-masks" << endl;
-                }
-                delete [] s;
-            }
+            fill_mask_templates(optarg, SoftMaskTemplate, HardMaskTemplate, "--save-masks");
             SaveMasks = true;
             optionSet.insert(SaveMasksOption);
             break;
@@ -1391,6 +1474,13 @@ int process_options(int argc, char** argv)
                  << endl;
             exit(1);
         }
+    }
+
+    if (contains(optionSet, SaveMasksOption) && contains(optionSet, LoadMasksOption))
+    {
+        cerr << command
+             << ": options \"--load-masks\" and \"--save-masks\" are mutually exclusive" << endl;
+        failed = true;
     }
 
     if (failed) {

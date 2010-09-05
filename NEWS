@@ -53,6 +53,10 @@ Unreleased.  Current line of development.
   weight curve specifically to exclude underexposed (and probably
   noisy) or overexposed pixels from fusion.
 
+- In Enblend option "--load-masks" disables all mask computations and
+  loads the blend masks directly from the specified files.  This is
+  the dual of Enblend's long-known option "--save-masks".
+
 
 
 * Version 4.0

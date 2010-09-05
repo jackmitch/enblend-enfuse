@@ -1332,25 +1332,6 @@ Expert options influence the workings of Enfuse that require the user
 to read the manual before applying them successfully.
 
 @table @code
-@item --contrast-window-size=@var{SIZE}
-@opindex --contrast-window-size
-
-Set the window @var{SIZE} for local contrast analysis.  The window
-will be a square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.  If
-given an even @var{SIZE}, Enfuse will automatically use the next odd
-number.
-
-For contrast analysis @var{SIZE} values larger than 5 might result in
-a blurry composite image.  Values of 3 and 5 have given good results
-on focus stacks.
-
-Valid range: @var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
-
-Default: @value{src::default-contrast-window-size}@dmn{pixels}.
-
-See also @ref{Fusion Options, Option --contrast-weight} and
-@option{--hard-mask} below.
-
 @item --contrast-edge-scale=@var{EDGE-SCALE}
 @itemx --contrast-edge-scale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
 @opindex --contrast-edge-scale
@@ -1375,6 +1356,41 @@ step, @var{LCE-FACTOR} is the weight factor (``strength'').
 @samp{%} to @var{LCE-SCALE} to specify the radius as a percentage of
 @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR} to specify the
 weight as a percentage.
+
+@item --contrast-min-curvature=@var{CURVATURE}
+@opindex --contrast-min-curvature
+
+Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
+detection.  Default: @value{src::default-minimum-curvature}.  Append a
+@samp{%} to specify the minimum curvature relative to maximum pixel
+value in the source image (for example 255 or 65535).
+
+A positive value makes Enfuse use the local contrast data (controlled
+with @option{--contrast-window-size}) for curvatures less than
+@var{CURVATURE} and @acronym{LoG} data for values above it.
+
+A negative value truncates all curvatures less than
+@minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
+left unchanged.  This effectively suppresses weak edges.
+
+@item --contrast-window-size=@var{SIZE}
+@opindex --contrast-window-size
+
+Set the window @var{SIZE} for local contrast analysis.  The window
+will be a square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.  If
+given an even @var{SIZE}, Enfuse will automatically use the next odd
+number.
+
+For contrast analysis @var{SIZE} values larger than 5 might result in
+a blurry composite image.  Values of 3 and 5 have given good results
+on focus stacks.
+
+Valid range: @var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
+
+Default: @value{src::default-contrast-window-size}@dmn{pixels}.
+
+See also @ref{Fusion Options, Option --contrast-weight} and
+@option{--hard-mask} below.
 
 @item --entropy-cutoff=@var{LOWER-CUTOFF}
 @itemx --entropy-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
@@ -2002,21 +2018,29 @@ useful with focus stacks.
 See also @ref{Fusion Options, Option --contrast-weight} and
 @option{--contrast-window-size} above.
 
-@item --contrast-min-curvature=@var{CURVATURE}
-@opindex --contrast-min-curvature
+@item --load-masks
+@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}
+@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
+@opindex --load-masks
 
-Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
-detection.  Default: @value{src::default-minimum-curvature}.  Append a
-@samp{%} to specify the minimum curvature relative to maximum pixel
-value in the source image (for example 255 or 65535).
+Load masks from images instead of computing them.
 
-A positive value makes Enfuse use the local contrast data (controlled
-with @option{--contrast-window-size}) for curvatures less than
-@var{CURVATURE} and @acronym{LoG} data for values above it.
+@cindex mask, loading
+First form: Load all soft-weight masks from files that were previously
+saved with option@tie{}@option{--save-masks}.  If
+option@tie{}@option{--hard-mask} is effective only load hard masks.
+The defaults are @file{@value{src::default-soft-mask-template}} and
+@file{@value{src::default-hard-mask-template}}.
+@cindex filename template
+@cindex mask, filename template
+In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
+soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
+additionally defines the names of the hard-mask files.  See
+option@tie{}@option{--save-masks} below for the description of mask
+templates.
 
-A negative value truncates all curvatures less than
-@minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
-left unchanged.  This effectively suppresses weak edges.
+Options@tie{}@option{--load-masks} and @option{--save-masks} are
+mutually exclusive.
 
 @item --save-masks
 @itemx --save-masks=@var{SOFT-MASK-TEMPLATE}
@@ -2024,8 +2048,9 @@ left unchanged.  This effectively suppresses weak edges.
 @opindex --save-masks
 
 Save all weight files as @acronym{TIFF} images.
+
 @cindex mask, saving
-First form: Save all soft weight masks in files.  If
+First form: Save all soft-weight masks in files.  If
 option@tie{}@option{--hard-mask} is effective also save the hard masks.
 The defaults are @file{@value{src::default-soft-mask-template}} and
 @file{@value{src::default-hard-mask-template}}.
@@ -2059,6 +2084,9 @@ name of the associated input file (@samp{%f}) for easy recognition.
 
 Consider all masks when fusing.  This is the default.
 @end table
+
+Options@tie{}@option{--save-masks} and @option{--load-masks} are
+mutually exclusive.
 
 @page
 
