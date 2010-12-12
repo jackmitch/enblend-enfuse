@@ -218,16 +218,19 @@ bool initGPU(int* argcp, char** argv)
     const GLboolean has_arb_vertex_shader = glewGetExtension("GL_ARB_vertex_shader");
     const GLboolean has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
     const GLboolean has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
+    const GLboolean has_arb_texture_float = glewGetExtension("GL_ARB_texture_float");
 
     if (!(has_arb_fragment_shader &&
           has_arb_vertex_shader &&
           has_arb_shader_objects &&
-          has_arb_shading_language)) {
+          has_arb_shading_language &&
+          has_arb_texture_float)) {
         const char* msg[] = {"false", "true"};
         cerr << command << ": extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << "\n"
              << command << ": extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << "\n"
              << command << ": extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << "\n"
              << command << ": extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << "\n"
+             << command << ": extension GL_ARB_texture_float = " << msg[has_arb_texture_float] << "\n"
              << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine" << endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
