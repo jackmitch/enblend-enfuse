@@ -144,7 +144,7 @@
 #define PACKAGE "enblend-enfuse"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "http://sourceforge.net/projects/enblend/"
+#define PACKAGE_BUGREPORT "https://bugs.launchpad.net/enblend"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "enblend-enfuse"

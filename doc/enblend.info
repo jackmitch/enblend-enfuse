@@ -1566,12 +1566,10 @@ Appendix A Bug Reports
 Bug reports play an important role in making Enblend and Enfuse
 reliable and enjoyable.
 
-   When you encounter a problem, the first thing to do is to see if it
-is already known.  On the package's SourceForge homepage
-(http://sourceforge.net/projects/enblend/) click "Develop" and on the
-development page click "Tracker".  Search the trackers for your
-particular problem.  If it is not known, then you should report the
-problem.
+   When you encounter a problem, the first thing to do is to update to
+a newer version of enblend and see if it solves the problem.  Next,
+check if the problem is already known.  You can comment on known
+problems or report new problems at https://bugs.launchpad.net/enblend
 
    In order for a bug report to serve its purpose, you must include the
 information that makes it possible to fix the bug.
