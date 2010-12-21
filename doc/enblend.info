@@ -264,15 +264,67 @@ filenames on the command line.
 
 * Menu:
 
+* Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
 * Extended Options::            Memory and GPU control
 * Mask Generation Options::     Mask generation control
 
 
-File: enblend.info,  Node: Response Files,  Next: Common Options,  Up: Invocation
+File: enblend.info,  Node: Image Requirements,  Next: Response Files,  Up: Invocation
 
-3.1 Response Files
+3.1 Image Requirements
+======================
+
+All input images must comply with the following requirements.
+
+   * Parts of the images overlap.
+
+   * Each image has an alpha channel also called "mask".
+
+   * The images agree on their number of channels:
+        - one plus alpha or
+
+        - three plus alpha.
+
+     This is, either all images are black-and-white (one channel and
+     alpha channel) or all are RGB-color images (three channels and
+     alpha channel).
+
+   * The images agree on their number of bits-per-channel, this is,
+     their "depth":
+        - `UINT8',
+
+        - `UINT16',
+
+        - `FLOAT',
+
+        - etc.
+
+     See option `--depth' below for an explanation of different
+     (output) depths.
+
+   * Enblend understands the images' filename extensions as well as
+     their file formats.
+
+     You can check the supported extensions and formats by calling
+     Enblend with the option pair `--version --verbose' and scan the
+     output for `Supported image formats' or `Supported file
+     extensions'.
+
+   Moreover, there are some "good practices", which are not enforced by
+the application, but almost certainly deliver superior results.
+
+   * Either all files lack an ICC profile, or all images are supplied
+     with the _same_ ICC profile.
+
+   * If the images' meta-data contains resolution information ("DPI"),
+     it is the same for all pictures.
+
+
+File: enblend.info,  Node: Response Files,  Next: Common Options,  Prev: Image Requirements,  Up: Invocation
+
+3.2 Response Files
 ==================
 
 A response file contains names of images or other response filenames.
@@ -322,7 +374,7 @@ Mixed literal names and response files.
      `image-04.png', `image-05.png', `image-06.png', `image-07.png',
      `image-08.png', `image-09.png', `image-10.png',
 
-3.1.1 Response File Format
+3.2.1 Response File Format
 --------------------------
 
 Response files contain one filename per line.  Blank lines or lines
@@ -392,7 +444,7 @@ Finally, here is an example of a valid response file.
      nadir-5.tif
      nadir.tif
 
-3.1.2 Syntactic Comments
+3.2.2 Syntactic Comments
 ------------------------
 
 Comments that follow the format described in *note
@@ -412,7 +464,7 @@ response files.
 
    Unknown syntactic comments are silently ignored.
 
-3.1.3 Globbing Algorithms
+3.2.3 Globbing Algorithms
 -------------------------
 
 The three equivalent syntactic keys
@@ -470,7 +522,7 @@ Table 3.3: Globbing algorithms for the use in response files
      image_000[0-9].tif
      image_001[0-4].tif
 
-3.1.4 Default Layer Selection
+3.2.4 Default Layer Selection
 -----------------------------
 
 The key `layer-selector' provides the same functionality as does the
@@ -484,7 +536,7 @@ another `layer-selector' overrides it.
 
 File: enblend.info,  Node: Common Options,  Next: Extended Options,  Prev: Response Files,  Up: Invocation
 
-3.2 Common Options
+3.3 Common Options
 ==================
 
 Common options control some overall features of Enblend.
@@ -729,7 +781,7 @@ boundary condition
 
 File: enblend.info,  Node: Extended Options,  Next: Mask Generation Options,  Prev: Common Options,  Up: Invocation
 
-3.3 Extended Options
+3.4 Extended Options
 ====================
 
 Extended options control the image cache, the color model, and the
@@ -909,7 +961,7 @@ cropping of the output image.
 
 File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up: Invocation
 
-3.4 Mask Generation Options
+3.5 Mask Generation Options
 ===========================
 
 These options control the generation and the usage of masks.
@@ -2469,6 +2521,7 @@ General Index
 * index, program:                        Program Index.       (line   6)
 * index, syntactic-comment:              Syntactic-Comment Index.
                                                               (line   6)
+* input image requirements:              Image Requirements.  (line   6)
 * input mask:                            Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  29)
@@ -2657,33 +2710,34 @@ Ref: Figure:photographic-workflow5451
 Node: External Mask Manipulation8125
 Ref: Figure:external-mask-workflow9442
 Node: Invocation9927
-Node: Response Files10565
-Ref: Table:response-file-format12562
-Ref: Table:response-file-syntactic-comment15027
-Ref: Table:globbing-algorithms15928
-Node: Common Options17387
-Ref: Common Options-Footnote-125332
-Ref: Common Options-Footnote-225524
-Node: Extended Options25683
-Ref: Extended Options-Footnote-132080
-Node: Mask Generation Options32153
-Ref: Table:mask-generation34843
-Ref: Table:optimizer-strategies39781
-Ref: Table:visualization-colors45313
-Ref: Table:mask-template-characters46209
-Ref: Mask Generation Options-Footnote-148461
-Node: Color Profiles48689
-Node: Understanding Masks51126
-Node: Tuning Memory Usage54919
-Ref: Table:cache-size-settings57661
-Node: Helpful Programs58097
-Node: Bug Reports61833
-Ref: Bug Reports-Footnote-167540
-Node: Authors67610
-Node: FDL68775
-Node: Program Index89756
-Node: Syntactic-Comment Index92752
-Node: Option Index93441
-Node: General Index97382
+Node: Image Requirements10622
+Node: Response Files12096
+Ref: Table:response-file-format14120
+Ref: Table:response-file-syntactic-comment16585
+Ref: Table:globbing-algorithms17486
+Node: Common Options18945
+Ref: Common Options-Footnote-126890
+Ref: Common Options-Footnote-227082
+Node: Extended Options27241
+Ref: Extended Options-Footnote-133638
+Node: Mask Generation Options33711
+Ref: Table:mask-generation36401
+Ref: Table:optimizer-strategies41339
+Ref: Table:visualization-colors46871
+Ref: Table:mask-template-characters47767
+Ref: Mask Generation Options-Footnote-150019
+Node: Color Profiles50247
+Node: Understanding Masks52684
+Node: Tuning Memory Usage56477
+Ref: Table:cache-size-settings59219
+Node: Helpful Programs59655
+Node: Bug Reports63391
+Ref: Bug Reports-Footnote-169098
+Node: Authors69168
+Node: FDL70333
+Node: Program Index91314
+Node: Syntactic-Comment Index94310
+Node: Option Index94999
+Node: General Index98940
 
 End Tag Table

@@ -398,6 +398,7 @@ filenames on the command line.
 
 
 @menu
+* Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
 * Extended Options::            Memory control and others
@@ -405,6 +406,57 @@ filenames on the command line.
 * Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
 @end menu
+
+
+@node Image Requirements
+@section Image Requirements
+@cindex input image requirements
+
+All input images must comply with the following requirements.
+
+@itemize
+@item
+The images overlap.
+
+@item
+The images agree on their number of bits-per-channel, this is, their
+``depth'':
+@itemize --
+@item
+@code{UINT8},
+@item
+@code{UINT16},
+@item
+@code{FLOAT},
+@item
+etc.
+@end itemize
+
+See option@tie{}@option{--depth} below for an explanation of different
+(output) depths.
+
+@item
+Enfuse understands the images' filename extensions as well as their
+file formats.
+
+You can check the supported extensions and formats by calling Enfuse
+with the option pair @option{--version@tie{}--verbose} and scan the
+output for @samp{Supported image formats} or @samp{Supported file
+extensions}.
+@end itemize
+
+Moreover, there are some ``good practices'', which are not enforced by
+the application, but almost certainly deliver superior results.
+
+@itemize
+@item
+Either all files lack an @acronym{ICC} profile, or all images are
+supplied with the @emph{same} @acronym{ICC} profile.
+
+@item
+If the images' meta-data contains resolution information
+(``@acronym{DPI}''), it is the same for all pictures.
+@end itemize
 
 
 @node Response Files
