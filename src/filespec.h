@@ -23,6 +23,8 @@
 #include <list>
 #include <string>
 
+#include "selector.h"
+
 
 #define RESPONSE_FILE_PREFIX_CHAR '@'
 #define RESPONSE_FILE_COMMENT_CHAR '#'
@@ -35,12 +37,35 @@ namespace enblend
 
     typedef std::pair<std::string, unsigned> FilePosition; /** Filename, line number pairs */
     typedef std::list<FilePosition> FilePositionTrace;     /** Traceback to a file position */
-    typedef std::pair<std::string, FilePositionTrace> TraceableFileName; /** Filename, traceback pairs */
-    typedef std::list<TraceableFileName> TraceableFileNameList; /** */
-
 
     /** Print the (back-)trace of all response files opened so far. */
-    void unroll_trace(const FilePositionTrace& trace);
+    void unroll_trace(const FilePositionTrace& a_trace);
+
+
+    class TraceableFileName
+    {
+    public:
+        TraceableFileName(const std::string& a_filename,
+                          const FilePositionTrace& a_trace,
+                          selector::Abstract* a_selector) :
+            filename_(a_filename), trace_(a_trace), selector_(a_selector) {}
+
+        virtual ~TraceableFileName() {}
+
+        const std::string& filename() const {return filename_;}
+        const FilePositionTrace& trace() const {return trace_;}
+        void unroll_trace() const {enblend::unroll_trace(trace_);}
+        selector::Abstract* selector() const {return selector_;}
+
+    private:
+        const std::string filename_;
+        const FilePositionTrace trace_;
+        selector::Abstract* const selector_;
+    };
+
+
+    typedef std::list<TraceableFileName> TraceableFileNameList; /** */
+
 
     /** Recursively unfold filename which may be a literal name or a
      *  response file.  The result is a list of only literal

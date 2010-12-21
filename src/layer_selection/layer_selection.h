@@ -60,8 +60,8 @@ public:
 
         for (const_iterator image = begin; image != end; ++image)
         {
-            ImageInfo image_info(image->first);
-            vigra::ImageImportInfo file_info(image->first.c_str());
+            ImageInfo image_info(image->filename());
+            vigra::ImageImportInfo file_info(image->filename().c_str());
 
             for (int layer = 0; layer < file_info.numLayers(); ++layer)
             {
@@ -69,7 +69,7 @@ public:
                 if (file_info.numLayers() >= 2)
                 {
                     layer_info =
-                        new vigra::ImageImportInfo(vigra::join_filename_layer(image->first, layer).c_str());
+                        new vigra::ImageImportInfo(vigra::join_filename_layer(image->filename(), layer).c_str());
                 }
                 else
                 {
@@ -85,7 +85,7 @@ public:
             }
 
             info_->append(image_info);
-            tally_->insert(file_tally_t::value_type(image->first, layer_tally_t(file_info.numLayers())));
+            tally_->insert(file_tally_t::value_type(image->filename(), layer_tally_t(file_info.numLayers())));
         }
     }
 

@@ -1488,8 +1488,8 @@ int main(int argc, char** argv)
     for (TraceableFileNameList::iterator i = inputTraceableFileNameList.begin();
          i != inputTraceableFileNameList.end();
          ++i) {
-        if (!enblend::can_open_file(i->first)) {
-            enblend::unroll_trace(i->second);
+        if (!enblend::can_open_file(i->filename())) {
+            i->unroll_trace();
             exit(1);
         }
     }
@@ -1523,7 +1523,7 @@ int main(int argc, char** argv)
     TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
     while (inputFileNameIterator != inputTraceableFileNameList.end()) {
         ImageImportInfo* inputInfo = NULL;
-        std::string filename(inputFileNameIterator->first);
+        std::string filename(inputFileNameIterator->filename());
         try {
             ImageImportInfo info(filename.c_str());
             if (layers == 0) { // OPTIMIZATION: call only once per file
@@ -1548,9 +1548,10 @@ int main(int argc, char** argv)
             exit(1);
         }
 
+        LayerSelection.set_selector(inputFileNameIterator->selector());
         if (LayerSelection.accept(filename, layer)) {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
-                cerr << command << ": info: layer selector " << LayerSelection.name() << " accepts\n"
+                cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" accepts\n"
                      << command << ": info:     layer " << layer << " of " << layers << " in image \""
                      << filename << "\"\n";
             }
@@ -1562,7 +1563,7 @@ int main(int argc, char** argv)
             if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
                 cerr << command
                      << ": info: input image \""
-                     << inputFileNameIterator->first
+                     << inputFileNameIterator->filename()
                      << "\" "
                      << layer << '/' << layers << ' ';
 
@@ -1590,10 +1591,10 @@ int main(int argc, char** argv)
             if (inputInfo->numExtraBands() < 1) {
                 // Complain about lack of alpha channel.
                 cerr << command
-                     << ": input image \"" << inputFileNameIterator->first << "\""
+                     << ": input image \"" << inputFileNameIterator->filename() << "\""
                      << enblend::optional_layer_name(layer, layers)
                      << " does not have an alpha channel\n";
-                enblend::unroll_trace(inputFileNameIterator->second);
+                inputFileNameIterator->unroll_trace();
                 exit(1);
             }
 
@@ -1615,9 +1616,9 @@ int main(int argc, char** argv)
                     if (InputProfile == NULL) {
                         cerr << endl
                              << command << ": error parsing ICC profile data from file \""
-                             << inputFileNameIterator->first
+                             << inputFileNameIterator->filename()
                              << "\"" << enblend::optional_layer_name(layer, layers) << endl;
-                        enblend::unroll_trace(inputFileNameIterator->second);
+                        inputFileNameIterator->unroll_trace();
                         exit(1);
                     }
                 }
@@ -1627,37 +1628,37 @@ int main(int argc, char** argv)
 
                 if (isColor != inputInfo->isColor()) {
                     cerr << command << ": input image \""
-                         << inputFileNameIterator->first << "\""
+                         << inputFileNameIterator->filename() << "\""
                          << enblend::optional_layer_name(layer, layers) << " is "
                          << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
                          << command << ":   but previous images are "
                          << (isColor ? "color" : "grayscale")
                          << endl;
-                    enblend::unroll_trace(inputFileNameIterator->second);
+                    inputFileNameIterator->unroll_trace();
                     exit(1);
                 }
                 if (pixelType != inputInfo->getPixelType()) {
                     cerr << command << ": input image \""
-                         << inputFileNameIterator->first << "\""
+                         << inputFileNameIterator->filename() << "\""
                          << enblend::optional_layer_name(layer, layers) << " has pixel type "
                          << inputInfo->getPixelType() << ",\n"
                          << command << ":   but previous images have pixel type "
                          << pixelType
                          << endl;
-                    enblend::unroll_trace(inputFileNameIterator->second);
+                    inputFileNameIterator->unroll_trace();
                     exit(1);
                 }
                 if (resolution !=
                     TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
                     cerr << command << ": info: input image \""
-                         << inputFileNameIterator->first << "\""
+                         << inputFileNameIterator->filename() << "\""
                          << enblend::optional_layer_name(layer, layers) << " has resolution "
                          << inputInfo->getXResolution() << " dpi x "
                          << inputInfo->getYResolution() << " dpi,\n"
                          << command << ": info:   but first image has resolution "
                          << resolution.x << " dpi x " << resolution.y << " dpi"
                          << endl;
-                    enblend::unroll_trace(inputFileNameIterator->second);
+                    inputFileNameIterator->unroll_trace();
                 }
                 // IMPLEMENTATION NOTE: Newer Vigra libraries have
                 // ICCProfile::operator==.  We substitute STL's equal
@@ -1674,17 +1675,17 @@ int main(int argc, char** argv)
                         if (newProfile == NULL) {
                             cerr << endl
                                  << command << ": error parsing ICC profile data from file \""
-                                 << inputFileNameIterator->first
+                                 << inputFileNameIterator->filename()
                                  << "\"" << enblend::optional_layer_name(layer, layers) << endl;
-                            enblend::unroll_trace(inputFileNameIterator->second);
+                            inputFileNameIterator->unroll_trace();
                             exit(1);
                         }
                     }
 
                     cerr << endl << command << ": warning: input image \""
-                         << inputFileNameIterator->first
+                         << inputFileNameIterator->filename()
                          << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
-                    enblend::unroll_trace(inputFileNameIterator->second);
+                    inputFileNameIterator->unroll_trace();
                     cerr << command << ": warning: has ";
                     if (newProfile) {
                         cerr << "ICC profile \"" << cmsTakeProductDesc(newProfile) << "\",\n";
@@ -1711,7 +1712,7 @@ int main(int argc, char** argv)
             }
         } else {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
-                cerr << command << ": info: layer selector " << LayerSelection.name() << " rejects\n"
+                cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" rejects\n"
                      << command << ": info:     layer " << layer << " of " << layers << " in image \""
                      << filename << "\"\n";
             }
@@ -1754,7 +1755,7 @@ int main(int argc, char** argv)
     if (resolution == TiffResolution()) {
         cerr << command
              << ": warning: no usable resolution found in first image \""
-             << inputTraceableFileNameList.begin()->first << "\";\n"
+             << inputTraceableFileNameList.begin()->filename() << "\";\n"
              << command
              << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
         ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,

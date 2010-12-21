@@ -173,7 +173,7 @@ printable_string(const std::string& a_string)
 }
 
 
-/** Answer line will leading and trailing whitespace removed.
+/** Answer line with leading and trailing whitespace removed.
  *  Normalize blank lines and lines starting with a comment character
  *  to an empty string.  Remove all whitespace between the
  *  response-file character and the following filename. */
@@ -520,11 +520,16 @@ known_globbing_algorithms()
 
 struct TraceInfo
 {
-    TraceInfo() : nesting_level(0U), current_directory(), file_position() {}
+    TraceInfo() : nesting_level(0U), current_directory(), file_position(), selection_algorithm()
+    {
+        selection_algorithm.push_front(LayerSelection.get_selector());
+    }
 
     unsigned nesting_level;
     const std::string current_directory;
     FilePositionTrace file_position;
+    typedef std::list<selector::Abstract*> selection_algorithm_stack;
+    selection_algorithm_stack selection_algorithm;
 };
 
 
@@ -532,7 +537,7 @@ void
 unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const std::string& filename)
 {
     // Checking the nesting_lavel acts as an emergency break in the
-    // case our usual recusion detection fails.
+    // case our usual recursion detection fails.
     if (trace_info.nesting_level > RESPONSE_FILE_MAX_NESTING_LEVEL)
     {
         std::cerr <<
@@ -543,6 +548,8 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
         unroll_trace(trace_info.file_position);
         return;
     }
+
+    selector::Abstract* selector = trace_info.selection_algorithm.front();
 
     if (filename.empty())
     {
@@ -555,7 +562,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
         const std::string response_filename(filename, 1); // filename alone
 #ifdef DEBUG_FILESPEC
         std::cout <<
-            "+ unfold_filename_iter: concatPath(trace_info.current_directory, response_filename) = <" <<
+            "+ unfold_filename_iter: concatPath = <" <<
             concatPath(trace_info.current_directory, response_filename) << ">\n";
 #endif
         const std::string response_filepath = // filename in the right path
@@ -611,7 +618,6 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             return;
         }
 
-        selector::Abstract* layer_selection_algorithm(NULL); // default
         std::ifstream response_file(response_filepath.c_str());
         Globbing glob; // instatiating a new Glob object restores the defaults
         unsigned line_number = 0U;
@@ -679,10 +685,10 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                 }
                 else
                 {
-                    layer_selection_algorithm = *new_selector;
+                    selector = *new_selector;
 #ifdef DEBUG_FILESPEC
                     std::cout << "+ unfold_filename_iter: new layer selection algorithm = " <<
-                        LayerSelection.name() << "\n";
+                        selector->name() << "\n";
 #endif
                 }
             }
@@ -698,6 +704,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             std::cout << "+ unfold_filename_iter: response_directory = " << response_directory << "\n";
 #endif
             TraceableFileNameList partial_result;
+            trace_info.selection_algorithm.push_front(selector);
             trace_info.file_position.push_front(std::make_pair(response_filepath, line_number));
             ++trace_info.nesting_level;
             unfold_filename_iter(partial_result, trace_info, line);
@@ -706,7 +713,8 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                  p != partial_result.end();
                  ++p)
             {
-                const FileNameList expanded_partial_result = glob.expand(p->first, trace_info.file_position);
+                const FileNameList expanded_partial_result =
+                    glob.expand(p->filename(), trace_info.file_position);
                 for (FileNameList::const_iterator q = expanded_partial_result.begin();
                      q != expanded_partial_result.end();
                      ++q)
@@ -721,19 +729,24 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                             "+ unfold_filename_iter:     q = " << *q << "\n" <<
                             "+ unfold_filename_iter:     path = <" << path << ">\n";
 #endif
-                        result.insert(result.end(), std::make_pair(path, trace_info.file_position));
+                        result.insert(result.end(),
+                                      enblend::TraceableFileName(path, p->trace(), p->selector()));
                     }
                     else
                     {
 #ifdef DEBUG_FILESPEC
-                        std::cout << "+ unfold_filename_iter: absolute path\n";
+                        std::cout <<
+                            "+ unfold_filename_iter: absolute path\n" <<
+                            "+ unfold_filename_iter:     q = " << *q << "\n";
 #endif
-                        result.insert(result.end(), std::make_pair(*q, trace_info.file_position));
+                        result.insert(result.end(),
+                                      enblend::TraceableFileName(*q, p->trace(), p->selector()));
                     }
                 }
             }
 
             trace_info.file_position.pop_front();
+            trace_info.selection_algorithm.pop_front();
         }
         if (!response_file.eof())
         {
@@ -746,7 +759,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
     }
     else
     {
-        result.push_back(std::make_pair(filename, trace_info.file_position));
+        result.push_back(enblend::TraceableFileName(filename, trace_info.file_position, selector));
     }
 }
 
@@ -771,9 +784,7 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
         glob_filename_win32(initial_files, filename);
     }
 
-    for (FileNameList::const_iterator i = initial_files.begin();
-         i != initial_files.end();
-         ++i)
+    for (FileNameList::const_iterator i = initial_files.begin(); i != initial_files.end(); ++i)
     {
         TraceInfo trace_info;
         unfold_filename_iter(result, trace_info, *i);
@@ -786,7 +797,12 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
 #ifdef DEBUG_FILESPEC
     for (TraceableFileNameList::const_iterator i = result.begin(); i != result.end(); ++i)
     {
-        std::cout << "+ unfold_filename: result \"" << i->first << "\"\n";
+        std::cout << "+ unfold_filename: filename: \"" << i->filename() <<
+            "\", selector \"" << i->selector()->name() << "\"\n";
+        for (FilePositionTrace::const_iterator j = i->trace().begin(); j != i->trace().end(); ++j)
+        {
+            std::cout << "+ unfold_filename:     pos = (" << j->first << ", " << j->second << ")\n";
+        }
     }
 #endif
 }
