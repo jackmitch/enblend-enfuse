@@ -65,6 +65,8 @@ Unreleased.  Current line of development.
   loads the blend masks directly from the specified files.  This is
   the dual of Enblend's long-known option "--save-masks".
 
+- The option "--layer-selector" overrides the standard default
+  layer selector.
 
 
 * Version 4.0

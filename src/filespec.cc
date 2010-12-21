@@ -44,6 +44,8 @@
 #include "error_message.h"
 #include "filenameparse.h"
 #include "filespec.h"
+#include "layer_selection.h"
+#include "selector.h"
 
 
 // How many lines at the beginning of a response file we check to
@@ -60,6 +62,7 @@ typedef std::pair<std::string, std::string> key_value_pair;
 
 extern const std::string command;
 extern int Verbose;
+extern LayerSelectionHost LayerSelection;
 
 
 namespace enblend
@@ -515,28 +518,36 @@ known_globbing_algorithms()
 #define RESPONSE_FILE_MAX_NESTING_LEVEL 63U
 
 
+struct TraceInfo
+{
+    TraceInfo() : nesting_level(0U), current_directory(), file_position() {}
+
+    unsigned nesting_level;
+    const std::string current_directory;
+    FilePositionTrace file_position;
+};
+
+
 void
-unfold_filename_iter(TraceableFileNameList& result,
-                     unsigned nesting_level, const std::string& current_directory, FilePositionTrace& trace,
-                     const std::string& filename)
+unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const std::string& filename)
 {
     // Checking the nesting_lavel acts as an emergency break in the
     // case our usual recusion detection fails.
-    if (nesting_level > RESPONSE_FILE_MAX_NESTING_LEVEL)
+    if (trace_info.nesting_level > RESPONSE_FILE_MAX_NESTING_LEVEL)
     {
         std::cerr <<
-            command << ": warning: excessive nesting of " << nesting_level <<
+            command << ": warning: excessive nesting of " << trace_info.nesting_level <<
             " levels of response files;\n" <<
             command << ": warning:     possible infinite recursion in \"" <<
             printable_string(filename) << "\"\n";
-        unroll_trace(trace);
+        unroll_trace(trace_info.file_position);
         return;
     }
 
     if (filename.empty())
     {
         std::cerr << command << ": info: empty filename\n";
-        unroll_trace(trace);
+        unroll_trace(trace_info.file_position);
         return;
     }
     else if (filename[0] == RESPONSE_FILE_PREFIX_CHAR)
@@ -544,30 +555,32 @@ unfold_filename_iter(TraceableFileNameList& result,
         const std::string response_filename(filename, 1); // filename alone
 #ifdef DEBUG_FILESPEC
         std::cout <<
-            "+ unfold_filename_iter: concatPath(current_directory, response_filename) = <" <<
-            concatPath(current_directory, response_filename) << ">\n";
+            "+ unfold_filename_iter: concatPath(trace_info.current_directory, response_filename) = <" <<
+            concatPath(trace_info.current_directory, response_filename) << ">\n";
 #endif
         const std::string response_filepath = // filename in the right path
             enblend::canonicalizePath(enblend::isRelativePath(response_filename) ?
-                                      concatPath(current_directory, response_filename) :
+                                      concatPath(trace_info.current_directory, response_filename) :
                                       response_filename,
                                       false);
 
-        for (FilePositionTrace::const_iterator t = trace.begin(); t != trace.end(); ++t)
+        for (FilePositionTrace::const_iterator t = trace_info.file_position.begin();
+             t != trace_info.file_position.end();
+             ++t)
         {
             if (t->first == response_filepath)
             {
                 std::cerr << command <<
                     ": warning: response file \"" << printable_string(response_filepath) <<
                     "\" recursively\n";
-                unroll_trace(trace);
+                unroll_trace(trace_info.file_position);
                 return;
             }
         }
 
 #ifdef DEBUG_FILESPEC
         std::cout <<
-            "+ unfold_filename_iter: current_directory = " << current_directory << "\n" <<
+            "+ unfold_filename_iter: current_directory = " << trace_info.current_directory << "\n" <<
             "+ unfold_filename_iter: response_filename = " << response_filename << "\n" <<
             "+ unfold_filename_iter: response_filepath = " << response_filepath << "\n";
 #endif
@@ -585,7 +598,7 @@ unfold_filename_iter(TraceableFileNameList& result,
                 ": failed to open response file \"" <<
                 printable_string(response_filepath) << "\": " <<
                 errorMessage(errno) << "\n";
-            unroll_trace(trace);
+            unroll_trace(trace_info.file_position);
             exit(1);
         }
 
@@ -594,13 +607,13 @@ unfold_filename_iter(TraceableFileNameList& result,
             std::cerr << command <<
                 ": warning: malformed response file \"" <<
                 printable_string(response_filepath) << "\"\n";
-            unroll_trace(trace);
+            unroll_trace(trace_info.file_position);
             return;
         }
 
-        errno = 0;
+        selector::Abstract* layer_selection_algorithm(NULL); // default
         std::ifstream response_file(response_filepath.c_str());
-        Globbing glob;
+        Globbing glob; // instatiating a new Glob object restores the defaults
         unsigned line_number = 0U;
 
         while (true)
@@ -617,7 +630,7 @@ unfold_filename_iter(TraceableFileNameList& result,
                         command << ": warning: ignoring last line of response file \"" <<
                         printable_string(response_filepath) << "\" line " << line_number + 1U << ",\n" <<
                         command << ": warning:     because it does not end with a newline\n";
-                    unroll_trace(trace);
+                    unroll_trace(trace_info.file_position);
                 }
                 break;
             }
@@ -628,8 +641,6 @@ unfold_filename_iter(TraceableFileNameList& result,
                  comment.first == "globbing" ||
                  comment.first == "filename-globbing") &&
                 !comment.second.empty())
-                // We silently ignore all other keys or empty
-                // values with the right key.
             {
                 if (!glob.set_algorithm(lower_case(comment.second)))
                 {
@@ -642,7 +653,37 @@ unfold_filename_iter(TraceableFileNameList& result,
                         command <<
                         ": warning:     will stick with algorithm \"" <<
                         glob.get_algorithm() << "\"\n";
-                    unroll_trace(trace);
+                    unroll_trace(trace_info.file_position);
+                }
+#ifdef DEBUG_FILESPEC
+                std::cout << "+ unfold_filename_iter: new globbing algorithm = " <<
+                    glob.get_algorithm() << "\n";
+#endif
+            }
+            if (comment.first == "layer-selector" && !comment.second.empty())
+            {
+                selector::algorithm_list::const_iterator new_selector =
+                    selector::find_by_name(lower_case(comment.second));
+                if (new_selector == selector::algorithms.end())
+                {
+                    std::cerr <<
+                        command <<
+                        ": warning: requested unknown default layer selector \"" <<
+                        comment.second <<
+                        "\" in response file \"" << printable_string(response_filepath) <<
+                        "\" line " << line_number << "\n" <<
+                        command <<
+                        ": warning:     will stick with selector \"" <<
+                        LayerSelection.name() << "\"\n";
+                    unroll_trace(trace_info.file_position);
+                }
+                else
+                {
+                    layer_selection_algorithm = *new_selector;
+#ifdef DEBUG_FILESPEC
+                    std::cout << "+ unfold_filename_iter: new layer selection algorithm = " <<
+                        LayerSelection.name() << "\n";
+#endif
                 }
             }
 
@@ -657,16 +698,15 @@ unfold_filename_iter(TraceableFileNameList& result,
             std::cout << "+ unfold_filename_iter: response_directory = " << response_directory << "\n";
 #endif
             TraceableFileNameList partial_result;
-            trace.push_front(std::make_pair(response_filepath, line_number));
-            unfold_filename_iter(partial_result,
-                                 nesting_level + 1U, response_directory, trace,
-                                 line);
+            trace_info.file_position.push_front(std::make_pair(response_filepath, line_number));
+            ++trace_info.nesting_level;
+            unfold_filename_iter(partial_result, trace_info, line);
 
             for (TraceableFileNameList::const_iterator p = partial_result.begin();
                  p != partial_result.end();
                  ++p)
             {
-                const FileNameList expanded_partial_result = glob.expand(p->first, trace);
+                const FileNameList expanded_partial_result = glob.expand(p->first, trace_info.file_position);
                 for (FileNameList::const_iterator q = expanded_partial_result.begin();
                      q != expanded_partial_result.end();
                      ++q)
@@ -681,19 +721,19 @@ unfold_filename_iter(TraceableFileNameList& result,
                             "+ unfold_filename_iter:     q = " << *q << "\n" <<
                             "+ unfold_filename_iter:     path = <" << path << ">\n";
 #endif
-                        result.insert(result.end(), std::make_pair(path, trace));
+                        result.insert(result.end(), std::make_pair(path, trace_info.file_position));
                     }
                     else
                     {
 #ifdef DEBUG_FILESPEC
                         std::cout << "+ unfold_filename_iter: absolute path\n";
 #endif
-                        result.insert(result.end(), std::make_pair(*q, trace));
+                        result.insert(result.end(), std::make_pair(*q, trace_info.file_position));
                     }
                 }
             }
 
-            trace.pop_front();
+            trace_info.file_position.pop_front();
         }
         if (!response_file.eof())
         {
@@ -701,12 +741,12 @@ unfold_filename_iter(TraceableFileNameList& result,
                 ": warning: filesystem signals problems in response file \"" <<
                 printable_string(response_filepath) << "\" line " << line_number << ": " <<
                 errorMessage(errno) << "\n";
-            unroll_trace(trace);
+            unroll_trace(trace_info.file_position);
         }
     }
     else
     {
-        result.push_back(std::make_pair(filename, trace));
+        result.push_back(std::make_pair(filename, trace_info.file_position));
     }
 }
 
@@ -735,12 +775,19 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
          i != initial_files.end();
          ++i)
     {
-        FilePositionTrace trace;
-        unfold_filename_iter(result, 0U, "", trace, *i);
+        TraceInfo trace_info;
+        unfold_filename_iter(result, trace_info, *i);
     }
 #else
-    FilePositionTrace trace;
-    unfold_filename_iter(result, 0U, "", trace, filename);
+    TraceInfo trace_info;
+    unfold_filename_iter(result, trace_info, filename);
+#endif
+
+#ifdef DEBUG_FILESPEC
+    for (TraceableFileNameList::const_iterator i = result.begin(); i != result.end(); ++i)
+    {
+        std::cout << "+ unfold_filename: result \"" << i->first << "\"\n";
+    }
 #endif
 }
 

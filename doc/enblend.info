@@ -470,6 +470,17 @@ Table 3.3: Globbing algorithms for the use in response files
      image_000[0-9].tif
      image_001[0-4].tif
 
+3.1.4 Default Layer Selection
+-----------------------------
+
+The key `layer-selector' provides the same functionality as does the
+command-line option `--layer-selector', but on a per response-file
+basis.  *Note Common Options::.
+
+   This syntactic comment affects the layer selection of all images
+listed after it including those in included response files until
+another `layer-selector' overrides it.
+
 
 File: enblend.info,  Node: Common Options,  Next: Extended Options,  Prev: Response Files,  Up: Invocation
 
@@ -527,6 +538,31 @@ arguments in lowercase for consistency.
 
           However, VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
           automatically compresses `png'-files with the DEFLATE method.
+
+`--layer-selector=ALGORITHM'
+     Override the standard layer selector algorithm, which is
+     `all-layers'.
+
+     This version of Enblend offers the following algorithms:
+    `all-layers'
+          Select all layers in all images.
+
+    `first-layer'
+          Select only first layer in each multi-layer image.  For
+          single-layer images this is the same as `all-layers'.
+
+    `largest-layer'
+          Select largest layer in each multi-layer image, where the
+          "largeness", this is the size is defined by the product of
+          the layer width and its height.  The channel width of the
+          layer is ignored.  For single-layer images this is the same
+          as `all-layers'.
+
+    `no-layer'
+          Do not select any layer in any image.
+
+          This algorithm is useful to temporarily exclude some images in
+          response files.
 
 `-h'
 `--help'
@@ -2267,6 +2303,7 @@ Syntactic-Comment Index
 * filename-globbing:                     Response Files.      (line 152)
 * glob:                                  Response Files.      (line 148)
 * globbing:                              Response Files.      (line 150)
+* layer-selector:                        Response Files.      (line 204)
 * response-file:                         Response Files.      (line 105)
 
 
@@ -2291,8 +2328,9 @@ Option Index
 * --fine-mask:                           Mask Generation Options.
                                                               (line 108)
 * --gpu:                                 Extended Options.    (line 146)
-* --help:                                Common Options.      (line  60)
-* --levels:                              Common Options.      (line  64)
+* --help:                                Common Options.      (line  85)
+* --layer-selector:                      Common Options.      (line  59)
+* --levels:                              Common Options.      (line  89)
 * --load-masks:                          Mask Generation Options.
                                                               (line 115)
 * --mask-vectorize:                      Mask Generation Options.
@@ -2304,16 +2342,16 @@ Option Index
                                                               (line 176)
 * --optimizer-weights:                   Mask Generation Options.
                                                               (line 199)
-* --output:                              Common Options.      (line 105)
+* --output:                              Common Options.      (line 130)
 * --save-masks:                          Mask Generation Options.
                                                               (line 228)
 * --smooth-difference:                   Mask Generation Options.
                                                               (line 262)
-* --verbose:                             Common Options.      (line 112)
-* --version:                             Common Options.      (line 147)
+* --verbose:                             Common Options.      (line 137)
+* --version:                             Common Options.      (line 172)
 * --visualize:                           Mask Generation Options.
                                                               (line 281)
-* --wrap:                                Common Options.      (line 154)
+* --wrap:                                Common Options.      (line 179)
 * -a:                                    Common Options.      (line  15)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
@@ -2321,15 +2359,15 @@ Option Index
 * -d:                                    Extended Options.    (line  34)
 * -f:                                    Extended Options.    (line 114)
 * -g:                                    Extended Options.    (line 134)
-* -h:                                    Common Options.      (line  60)
-* -l:                                    Common Options.      (line  64)
+* -h:                                    Common Options.      (line  85)
+* -l:                                    Common Options.      (line  89)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 158)
-* -o:                                    Common Options.      (line 105)
-* -V:                                    Common Options.      (line 147)
-* -v:                                    Common Options.      (line 112)
-* -w:                                    Common Options.      (line 154)
-* -x:                                    Common Options.      (line 206)
+* -o:                                    Common Options.      (line 130)
+* -V:                                    Common Options.      (line 172)
+* -v:                                    Common Options.      (line 137)
+* -w:                                    Common Options.      (line 179)
+* -x:                                    Common Options.      (line 231)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2341,9 +2379,9 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 154)
+* 360o panoramas:                        Common Options.      (line 179)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 107)
+* a.tif:                                 Common Options.      (line 132)
 * affine transformation:                 Standard Workflow.   (line  48)
 * algorithms, globbing:                  Response Files.      (line 146)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
@@ -2361,7 +2399,7 @@ General Index
 * canvas size:                           Extended Options.    (line 114)
 * channel width:                         Extended Options.    (line  34)
 * channel, alpha:                        Overview.            (line  18)
-* checkpoint results:                    Common Options.      (line 206)
+* checkpoint results:                    Common Options.      (line 231)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
 * CIECAM02:                              Extended Options.    (line  22)
 * coarse mask:                           Mask Generation Options.
@@ -2382,7 +2420,8 @@ General Index
 * compression, packbits:                 Common Options.      (line  48)
 * conversion, raw:                       Standard Workflow.   (line  34)
 * D50 white point:                       Color Profiles.      (line  55)
-* default output filename:               Common Options.      (line 107)
+* default layer selection:               Response Files.      (line 204)
+* default output filename:               Common Options.      (line 132)
 * deflate compression:                   Common Options.      (line  38)
 * DIJKSTRA radius:                       Mask Generation Options.
                                                               (line  95)
@@ -2434,8 +2473,14 @@ General Index
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  29)
 * KImageFuser:                           Bug Reports.         (line  96)
+* layer selection:                       Common Options.      (line  59)
+* layer selection, all layers:           Common Options.      (line  64)
+* layer selection, default:              Response Files.      (line 204)
+* layer selection, first layer:          Common Options.      (line  67)
+* layer selection, largest-layer:        Common Options.      (line  71)
+* layer selection, no layer:             Common Options.      (line  78)
 * lens distortion, correction of:        Standard Workflow.   (line  48)
-* levels, pyramid:                       Common Options.      (line  64)
+* levels, pyramid:                       Common Options.      (line  89)
 * LibJPEG:                               Helpful Programs.    (line  63)
 * LibPNG:                                Helpful Programs.    (line  66)
 * LibTiff:                               Helpful Programs.    (line  70)
@@ -2518,7 +2563,7 @@ General Index
                                                               (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  23)
-* output filename, default:              Common Options.      (line 107)
+* output filename, default:              Common Options.      (line 132)
 * output image, set size of:             Extended Options.    (line 114)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  48)
@@ -2532,7 +2577,7 @@ General Index
 * profile, ICC:                          Extended Options.    (line  25)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line  64)
+* pyramid levels:                        Common Options.      (line  89)
 * radius, DIJKSTRA:                      Mask Generation Options.
                                                               (line  95)
 * raw conversion:                        Standard Workflow.   (line  34)
@@ -2544,7 +2589,7 @@ General Index
 * response file, format:                 Response Files.      (line  56)
 * response file, grammar:                Response Files.      (line  70)
 * response file, syntactic comment:      Response Files.      (line 126)
-* results, checkpoint:                   Common Options.      (line 206)
+* results, checkpoint:                   Common Options.      (line 231)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
                                                               (line 228)
@@ -2578,7 +2623,7 @@ General Index
 * tracker, SourceForge:                  Bug Reports.         (line  12)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* virtual reality:                       Common Options.      (line 164)
+* virtual reality:                       Common Options.      (line 189)
 * visualization image:                   Mask Generation Options.
                                                               (line 298)
 * visualization image colors:            Mask Generation Options.
@@ -2597,7 +2642,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 154)
+* wrap around:                           Common Options.      (line 179)
 
 
 
@@ -2616,29 +2661,29 @@ Node: Response Files10565
 Ref: Table:response-file-format12562
 Ref: Table:response-file-syntactic-comment15027
 Ref: Table:globbing-algorithms15928
-Node: Common Options16984
-Ref: Common Options-Footnote-124059
-Ref: Common Options-Footnote-224251
-Node: Extended Options24410
-Ref: Extended Options-Footnote-130807
-Node: Mask Generation Options30880
-Ref: Table:mask-generation33570
-Ref: Table:optimizer-strategies38508
-Ref: Table:visualization-colors44040
-Ref: Table:mask-template-characters44936
-Ref: Mask Generation Options-Footnote-147188
-Node: Color Profiles47416
-Node: Understanding Masks49853
-Node: Tuning Memory Usage53646
-Ref: Table:cache-size-settings56388
-Node: Helpful Programs56824
-Node: Bug Reports60560
-Ref: Bug Reports-Footnote-166267
-Node: Authors66337
-Node: FDL67502
-Node: Program Index88483
-Node: Syntactic-Comment Index91479
-Node: Option Index92095
-Node: General Index95963
+Node: Common Options17387
+Ref: Common Options-Footnote-125332
+Ref: Common Options-Footnote-225524
+Node: Extended Options25683
+Ref: Extended Options-Footnote-132080
+Node: Mask Generation Options32153
+Ref: Table:mask-generation34843
+Ref: Table:optimizer-strategies39781
+Ref: Table:visualization-colors45313
+Ref: Table:mask-template-characters46209
+Ref: Mask Generation Options-Footnote-148461
+Node: Color Profiles48689
+Node: Understanding Masks51126
+Node: Tuning Memory Usage54919
+Ref: Table:cache-size-settings57661
+Node: Helpful Programs58097
+Node: Bug Reports61833
+Ref: Bug Reports-Footnote-167540
+Node: Authors67610
+Node: FDL68775
+Node: Program Index89756
+Node: Syntactic-Comment Index92752
+Node: Option Index93441
+Node: General Index97382
 
 End Tag Table

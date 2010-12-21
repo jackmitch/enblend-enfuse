@@ -480,6 +480,39 @@ However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
 @sc{Deflate} method.
 @end table
 
+@item --layer-selector=@var{ALGORITHM}
+@opindex --layer-selector
+@cindex layer selection
+@cindex layer selection
+Override the standard layer selector algorithm, which is
+@samp{@value{src::layer-selector}}.
+
+This version of Enfuse offers the following algorithms:
+@table @code
+@item all-layers
+@cindex layer selection, all-layers
+Select all layers in all images.
+
+@item first-layer
+@cindex layer selection, first-layer
+Select only first layer in each multi-layer image.  For single-layer
+images this is the same as @samp{all-layers}.
+
+@item largest-layer
+@cindex layer selection, largest-layer
+Select largest layer in each multi-layer image, where the
+``largeness'', this is the size is defined by the product of the layer
+width and its height.  The channel width of the layer is ignored.  For
+single-layer images this is the same as @samp{all-layers}.
+
+@item no-layer
+@cindex layer selection, no layer
+Do not select any layer in any image.
+
+This algorithm is useful to temporarily exclude some images in
+response files.
+@end table
+
 @item -h
 @itemx --help
 @opindex -h

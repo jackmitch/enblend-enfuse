@@ -316,3 +316,19 @@ image_000[0-9].tif
 image_001[0-4].tif
 @end group
 @end example
+
+
+@c @node Default Layer Selection
+@subsection Default Layer Selection
+@cindex default layer selection
+@cindex layer selection, default
+
+The key @code{layer-selector}
+@scindex layer-selector
+provides the same functionality as does the command-line
+option@tie{}@option{--layer-selector}, but on a per response-file
+basis.  @xref{Common Options}.
+
+This syntactic comment affects the layer selection of all images
+listed after it including those in included response files until
+another @code{layer-selector} overrides it.

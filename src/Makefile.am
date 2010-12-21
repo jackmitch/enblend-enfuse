@@ -3,7 +3,7 @@ AM_CFLAGS = $(EXTRACFLAGS)
 AM_CXXFLAGS = $(EXTRACXXFLAGS)
 AM_LDFLAGS = $(EXTRALDFLAGS)
 
-SUBDIRS = vigra_impex win32helpers
+SUBDIRS = layer_selection vigra_impex win32helpers
 
 bin_PROGRAMS = enblend enfuse
 
@@ -17,10 +17,10 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc
 enblend_LDFLAGS = $(AM_LDFLAGS) $(OPENGL_CFLAGS)
-enblend_LDADD = vigra_impex/libvigra_impex.a $(OPENGL_LIBS) @EXTRA_LIBS@
+enblend_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a $(OPENGL_LIBS) @EXTRA_LIBS@
 enblend_CXXFLAGS = $(AM_CXXFLAGS) $(OPENGL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                   -I${top_srcdir}/include
+                   -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  enfuse.h enfuse.cc fixmath.h \
@@ -31,10 +31,10 @@ enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  self_test.h self_test.cc \
                  tiff_message.h tiff_message.cc
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = vigra_impex/libvigra_impex.a @EXTRA_LIBS@
+enfuse_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                  -I${top_srcdir}/include
+                  -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
 EXTRA_DIST = enblend.1 enfuse.1 \
              gen_sig DefaultSig.pm Sig.pm

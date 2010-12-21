@@ -68,7 +68,9 @@ extern "C" int optind;
 #include <lcms.h>
 
 #include "global.h"
+#include "layer_selection.h"
 #include "signature.h"
+#include "selector.h"
 #include "self_test.h"
 #include "tiff_message.h"
 
@@ -146,6 +148,7 @@ LCMSHANDLE CIECAMTransform = NULL;
 cmsHPROFILE FallbackProfile = NULL;
 
 Signature sig;
+LayerSelectionHost LayerSelection;
 
 #include "common.h"
 #include "filespec.h"
@@ -422,6 +425,15 @@ void printUsageAndExit(const bool error = true) {
         "                         where COMPRESSION is:\n" <<
         "                         \"none\", \"packbits\", \"lzw\", \"deflate\" for TIFF files and\n" <<
         "                         0 to 100 for JPEG files\n" <<
+        "  --layer-selector=ALGORITHM\n" <<
+        "                         set the layer selector ALGORITHM;\n" <<
+        "                         default: \"" << LayerSelection.name() << "\"; available algorithms are:\n";
+    for (selector::algorithm_list::const_iterator i = selector::algorithms.begin();
+         i != selector::algorithms.end();
+         ++i) {
+        cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
+    }
+    cout <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
@@ -554,6 +566,7 @@ enum AllPossibleOptions {
     SaveMasksOption, LoadMasksOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     SmoothDifferenceOption, OptimizerWeightsOption,
+    LayerSelectorOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -762,7 +775,8 @@ int process_options(int argc, char** argv)
         LevelsId,
         CiecamId,
         NoCiecamId,
-        FallbackProfileId
+        FallbackProfileId,
+        LayerSelectorId
     };
 
     static struct option long_options[] = {
@@ -792,6 +806,7 @@ int process_options(int argc, char** argv)
         {"ciecam", no_argument, 0, CiecamId},
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
+        {"layer-selector", required_argument, 0, LayerSelectorId},
         {0, 0, 0, 0}
     };
 
@@ -1310,6 +1325,18 @@ int process_options(int argc, char** argv)
             optionSet.insert(CheckpointOption);
             break;
 
+        case LayerSelectorId: {
+            selector::algorithm_list::const_iterator selector = selector::find_by_name(optarg);
+            if (selector != selector::algorithms.end()) {
+                LayerSelection.set_selector(*selector);
+            } else {
+                cerr << command << ": unknown selector algorithm \"" << optarg << "\"";
+                exit(1);
+            }
+            optionSet.insert(LayerSelectorOption);
+            break;
+        }
+
         case '?':
             switch (optopt) {
             case 0: // unknown long option
@@ -1407,6 +1434,9 @@ int main(int argc, char** argv)
     TIFFSetWarningHandler(tiff_warning);
     TIFFSetErrorHandler(tiff_error);
 
+    //< src::layer-selector all-layers
+    LayerSelection.set_selector(*selector::find_by_id(selector::AllLayersId));
+
     if (!getopt_long_works_ok())
     {
         cerr << command << ": cannot reliably parse command line; giving up\n";
@@ -1455,6 +1485,18 @@ int main(int argc, char** argv)
 
     sig.check();
 
+    for (TraceableFileNameList::iterator i = inputTraceableFileNameList.begin();
+         i != inputTraceableFileNameList.end();
+         ++i) {
+        if (!enblend::can_open_file(i->first)) {
+            enblend::unroll_trace(i->second);
+            exit(1);
+        }
+    }
+
+    LayerSelection.retrive_image_information(inputTraceableFileNameList.begin(),
+                                             inputTraceableFileNameList.end());
+
     //if (CachedFileImageDirector::v()->getManagedBlocks() < 4) {
     //    // Max simultaneous image access is in:
     //    // 4 in any of many calls to combineThreeImages
@@ -1482,10 +1524,6 @@ int main(int argc, char** argv)
     while (inputFileNameIterator != inputTraceableFileNameList.end()) {
         ImageImportInfo* inputInfo = NULL;
         std::string filename(inputFileNameIterator->first);
-        if (!enblend::can_open_file(filename)) {
-            enblend::unroll_trace(inputFileNameIterator->second);
-            exit(1);
-        }
         try {
             ImageImportInfo info(filename.c_str());
             if (layers == 0) { // OPTIMIZATION: call only once per file
@@ -1510,124 +1548,71 @@ int main(int argc, char** argv)
             exit(1);
         }
 
-        // Save this image info in the list.
-        imageInfoList.push_back(inputInfo);
-        inputFileNameList.push_back(filename);
-
-        if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
-            cerr << command
-                 << ": info: input image \""
-                 << inputFileNameIterator->first
-                 << "\" "
-                 << layer << '/' << layers << ' ';
-
-            if (inputInfo->isColor()) {
-                cerr << "RGB ";
+        if (LayerSelection.accept(filename, layer)) {
+            if (Verbose >= VERBOSE_LAYER_SELECTION) {
+                cerr << command << ": info: layer selector " << LayerSelection.name() << " accepts\n"
+                     << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                     << filename << "\"\n";
             }
 
-            if (!inputInfo->getICCProfile().empty()) {
-                cerr << "ICC ";
-            }
+            // Save this image info in the list.
+            imageInfoList.push_back(inputInfo);
+            inputFileNameList.push_back(filename);
 
-            cerr << inputInfo->getPixelType()
-                 << " position="
-                 << inputInfo->getPosition().x
-                 << "x"
-                 << inputInfo->getPosition().y
-                 << " "
-                 << "size="
-                 << inputInfo->width()
-                 << "x"
-                 << inputInfo->height()
-                 << endl;
-        }
+            if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
+                cerr << command
+                     << ": info: input image \""
+                     << inputFileNameIterator->first
+                     << "\" "
+                     << layer << '/' << layers << ' ';
 
-        if (inputInfo->numExtraBands() < 1) {
-            // Complain about lack of alpha channel.
-            cerr << command
-                 << ": input image \"" << inputFileNameIterator->first << "\""
-                 << enblend::optional_layer_name(layer, layers)
-                 << " does not have an alpha channel"
-                 << endl;
-            enblend::unroll_trace(inputFileNameIterator->second);
-            exit(1);
-        }
-
-        // Get input image's position and size.
-        Rect2D imageROI(Point2D(inputInfo->getPosition()),
-                        Size2D(inputInfo->width(), inputInfo->height()));
-
-        if (inputFileNameIterator == inputTraceableFileNameList.begin()) {
-            // First input image
-            minDim = std::min(inputInfo->width(), inputInfo->height());
-            inputUnion = imageROI;
-            isColor = inputInfo->isColor();
-            pixelType = inputInfo->getPixelType();
-            resolution = TiffResolution(inputInfo->getXResolution(),
-                                        inputInfo->getYResolution());
-            iccProfile = inputInfo->getICCProfile();
-            if (!iccProfile.empty()) {
-                InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
-                if (InputProfile == NULL) {
-                    cerr << endl
-                         << command << ": error parsing ICC profile data from file \""
-                         << inputFileNameIterator->first
-                         << "\"" << enblend::optional_layer_name(layer, layers) << endl;
-                    enblend::unroll_trace(inputFileNameIterator->second);
-                    exit(1);
+                if (inputInfo->isColor()) {
+                    cerr << "RGB ";
                 }
-            }
-        } else {
-            // Second and later images
-            inputUnion |= imageROI;
 
-            if (isColor != inputInfo->isColor()) {
-                cerr << command << ": input image \""
-                     << inputFileNameIterator->first << "\""
-                     << enblend::optional_layer_name(layer, layers) << " is "
-                     << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                     << command << ":   but previous images are "
-                     << (isColor ? "color" : "grayscale")
+                if (!inputInfo->getICCProfile().empty()) {
+                    cerr << "ICC ";
+                }
+
+                cerr << inputInfo->getPixelType()
+                     << " position="
+                     << inputInfo->getPosition().x
+                     << "x"
+                     << inputInfo->getPosition().y
+                     << " "
+                     << "size="
+                     << inputInfo->width()
+                     << "x"
+                     << inputInfo->height()
                      << endl;
+            }
+
+            if (inputInfo->numExtraBands() < 1) {
+                // Complain about lack of alpha channel.
+                cerr << command
+                     << ": input image \"" << inputFileNameIterator->first << "\""
+                     << enblend::optional_layer_name(layer, layers)
+                     << " does not have an alpha channel\n";
                 enblend::unroll_trace(inputFileNameIterator->second);
                 exit(1);
             }
-            if (pixelType != inputInfo->getPixelType()) {
-                cerr << command << ": input image \""
-                     << inputFileNameIterator->first << "\""
-                     << enblend::optional_layer_name(layer, layers) << " has pixel type "
-                     << inputInfo->getPixelType() << ",\n"
-                     << command << ":   but previous images have pixel type "
-                     << pixelType
-                     << endl;
-                enblend::unroll_trace(inputFileNameIterator->second);
-                exit(1);
-            }
-            if (resolution !=
-                TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
-                cerr << command << ": info: input image \""
-                     << inputFileNameIterator->first << "\""
-                     << enblend::optional_layer_name(layer, layers) << " has resolution "
-                     << inputInfo->getXResolution() << " dpi x "
-                     << inputInfo->getYResolution() << " dpi,\n"
-                     << command << ": info:   but first image has resolution "
-                     << resolution.x << " dpi x " << resolution.y << " dpi"
-                     << endl;
-                enblend::unroll_trace(inputFileNameIterator->second);
-            }
-            // IMPLEMENTATION NOTE: Newer Vigra libraries have
-            // ICCProfile::operator==.  We substitute STL's equal
-            // function plus some extra checks for the case of empty
-            // profiles.  -- cls @ Thu May 27 14:21:57 UTC 2010
-            if (iccProfile.empty() != inputInfo->getICCProfile().empty() ||
-                !std::equal(iccProfile.begin(), iccProfile.end(),
-                            inputInfo->getICCProfile().begin())) {
-                ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
-                cmsHPROFILE newProfile = NULL;
-                if (!mismatchProfile.empty()) {
-                    newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
-                                                       mismatchProfile.size());
-                    if (newProfile == NULL) {
+
+            // Get input image's position and size.
+            Rect2D imageROI(Point2D(inputInfo->getPosition()),
+                            Size2D(inputInfo->width(), inputInfo->height()));
+
+            if (inputFileNameIterator == inputTraceableFileNameList.begin()) {
+                // First input image
+                minDim = std::min(inputInfo->width(), inputInfo->height());
+                inputUnion = imageROI;
+                isColor = inputInfo->isColor();
+                pixelType = inputInfo->getPixelType();
+                resolution = TiffResolution(inputInfo->getXResolution(),
+                                            inputInfo->getYResolution());
+                iccProfile = inputInfo->getICCProfile();
+                if (!iccProfile.empty()) {
+                    InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
+                    if (InputProfile == NULL) {
                         cerr << endl
                              << command << ": error parsing ICC profile data from file \""
                              << inputFileNameIterator->first
@@ -1636,44 +1621,107 @@ int main(int argc, char** argv)
                         exit(1);
                     }
                 }
+            } else {
+                // Second and later images
+                inputUnion |= imageROI;
 
-                cerr << endl << command << ": warning: input image \""
-                     << inputFileNameIterator->first
-                     << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
-                enblend::unroll_trace(inputFileNameIterator->second);
-                cerr << command << ": warning: has ";
-                if (newProfile) {
-                    cerr << "ICC profile \"" << cmsTakeProductDesc(newProfile) << "\",\n";
-                } else {
-                    cerr << "no ICC profile,\n";
+                if (isColor != inputInfo->isColor()) {
+                    cerr << command << ": input image \""
+                         << inputFileNameIterator->first << "\""
+                         << enblend::optional_layer_name(layer, layers) << " is "
+                         << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
+                         << command << ":   but previous images are "
+                         << (isColor ? "color" : "grayscale")
+                         << endl;
+                    enblend::unroll_trace(inputFileNameIterator->second);
+                    exit(1);
                 }
-                cerr << command << ": warning: but first image has ";
-                if (InputProfile) {
-                    cerr << "ICC profile \"" << cmsTakeProductDesc(InputProfile) << "\";\n";
-                } else {
-                    cerr << "no ICC profile;\n";
+                if (pixelType != inputInfo->getPixelType()) {
+                    cerr << command << ": input image \""
+                         << inputFileNameIterator->first << "\""
+                         << enblend::optional_layer_name(layer, layers) << " has pixel type "
+                         << inputInfo->getPixelType() << ",\n"
+                         << command << ":   but previous images have pixel type "
+                         << pixelType
+                         << endl;
+                    enblend::unroll_trace(inputFileNameIterator->second);
+                    exit(1);
                 }
-                cerr << command << ": warning: blending images with different color spaces\n"
-                     << command << ": warning: may have unexpected results"
-                     << endl;
-            }
+                if (resolution !=
+                    TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
+                    cerr << command << ": info: input image \""
+                         << inputFileNameIterator->first << "\""
+                         << enblend::optional_layer_name(layer, layers) << " has resolution "
+                         << inputInfo->getXResolution() << " dpi x "
+                         << inputInfo->getYResolution() << " dpi,\n"
+                         << command << ": info:   but first image has resolution "
+                         << resolution.x << " dpi x " << resolution.y << " dpi"
+                         << endl;
+                    enblend::unroll_trace(inputFileNameIterator->second);
+                }
+                // IMPLEMENTATION NOTE: Newer Vigra libraries have
+                // ICCProfile::operator==.  We substitute STL's equal
+                // function plus some extra checks for the case of empty
+                // profiles.  -- cls @ Thu May 27 14:21:57 UTC 2010
+                if (iccProfile.empty() != inputInfo->getICCProfile().empty() ||
+                    !std::equal(iccProfile.begin(), iccProfile.end(),
+                                inputInfo->getICCProfile().begin())) {
+                    ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
+                    cmsHPROFILE newProfile = NULL;
+                    if (!mismatchProfile.empty()) {
+                        newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
+                                                           mismatchProfile.size());
+                        if (newProfile == NULL) {
+                            cerr << endl
+                                 << command << ": error parsing ICC profile data from file \""
+                                 << inputFileNameIterator->first
+                                 << "\"" << enblend::optional_layer_name(layer, layers) << endl;
+                            enblend::unroll_trace(inputFileNameIterator->second);
+                            exit(1);
+                        }
+                    }
 
-            if (inputInfo->width() < minDim) {
-                minDim = inputInfo->width();
+                    cerr << endl << command << ": warning: input image \""
+                         << inputFileNameIterator->first
+                         << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
+                    enblend::unroll_trace(inputFileNameIterator->second);
+                    cerr << command << ": warning: has ";
+                    if (newProfile) {
+                        cerr << "ICC profile \"" << cmsTakeProductDesc(newProfile) << "\",\n";
+                    } else {
+                        cerr << "no ICC profile,\n";
+                    }
+                    cerr << command << ": warning: but first image has ";
+                    if (InputProfile) {
+                        cerr << "ICC profile \"" << cmsTakeProductDesc(InputProfile) << "\";\n";
+                    } else {
+                        cerr << "no ICC profile;\n";
+                    }
+                    cerr << command << ": warning: blending images with different color spaces\n"
+                         << command << ": warning: may have unexpected results"
+                         << endl;
+                }
+
+                if (inputInfo->width() < minDim) {
+                    minDim = inputInfo->width();
+                }
+                if (inputInfo->height() < minDim) {
+                    minDim = inputInfo->height();
+                }
             }
-            if (inputInfo->height() < minDim) {
-                minDim = inputInfo->height();
+        } else {
+            if (Verbose >= VERBOSE_LAYER_SELECTION) {
+                cerr << command << ": info: layer selector " << LayerSelection.name() << " rejects\n"
+                     << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                     << filename << "\"\n";
             }
         }
 
-        if (layers == 1 || layer == layers)
-        {
+        if (layers == 1 || layer == layers) {
             layer = 0;
             layers = 0;
-            inputFileNameIterator++;
-        }
-        else
-        {
+            ++inputFileNameIterator;
+        } else {
             // We are about to process the next layer in the _same_
             // image.  The imageInfoList already has been updated, but
             // inputTraceableFileNameList still lacks the filename.
@@ -1681,18 +1729,26 @@ int main(int argc, char** argv)
         }
     }
 
-    vigra_postcondition(imageInfoList.size() == inputTraceableFileNameList.size(),
-                        "filename list and image info list are inconsistent");
-
     // Check that more than one input file was given.
     if (imageInfoList.size() <= 1) {
-        cerr << command
-             << ": warning: only one input image given.\n"
-             << command
-             << ": warning: Enblend needs two or more overlapping input images in order to do\n"
-             << command
-             << ": warning: blending calculations.  The output will be the same as the input."
-             << endl;
+        const size_t n = inputTraceableFileNameList.size();
+        const size_t m = imageInfoList.size();
+
+        if (n > m) {
+            cerr << command << ": warning: selector has rejected " << n - m << " out of " << n << " images\n";
+        }
+
+        switch (m) {
+        case 0:
+            cerr << command << ": no input images given\n";
+            exit(1);
+            break;
+        case 1:
+            cerr << command << ": warning: only one input image given;\n"
+                 << command << ": warning: Enblend needs two or more overlapping input images in order to do\n"
+                 << command << ": warning: blending calculations.  The output will be the same as the input.\n";
+            break;
+        }
     }
 
     if (resolution == TiffResolution()) {
@@ -1700,8 +1756,7 @@ int main(int argc, char** argv)
              << ": warning: no usable resolution found in first image \""
              << inputTraceableFileNameList.begin()->first << "\";\n"
              << command
-             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi"
-             << endl;
+             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
         ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
                                          DEFAULT_TIFF_RESOLUTION);
     } else {
