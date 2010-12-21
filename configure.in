@@ -181,6 +181,10 @@ AC_CHECK_HEADER(png.h, [],
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
+AC_CHECK_HEADER(boost/algorithm/string/case_conv.hpp, [],
+                AC_MSG_ERROR([Boost "case_conv" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
+                AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp, [],
                 AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
@@ -189,8 +193,6 @@ AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
                 AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/static_assert.hpp, [],
                 AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
-                AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],

@@ -152,9 +152,11 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
 #endif
             exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
         } else {
+            std::string pixel_type(outputImageInfo.getPixelType());
+            boost::algorithm::to_lower(pixel_type);
             cerr << command
                  << ": info: narrowing channel width for output as \""
-                 << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+                 << pixel_type << "\"" << endl;
 
             ImageType lowDepthImage(image->width(), image->height());
             transformImageMP(srcImageRange(*image),
@@ -166,9 +168,11 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
+        std::string pixel_type(outputImageInfo.getPixelType());
+        boost::algorithm::to_lower(pixel_type);
         cerr << command
              << ": info: rescaling floating-point data for output as \""
-             << toLowercase(outputImageInfo.getPixelType()) << "\"" << endl;
+             << pixel_type << "\"" << endl;
 
         typedef typename IntegralSelect<ImagePixelType>::Result IntegralPixelType;
         typedef typename EnblendNumericTraits<IntegralPixelType>::ImagePixelComponentType

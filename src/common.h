@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -233,26 +234,6 @@ strtoken_r(char *str, const char *delim, char **save_ptr)
 }
 
 
-/** Answer aString converted to uppercase letters. */
-std::string
-toUppercase(const std::string& aString)
-{
-    std::string result(aString);
-    std::transform(aString.begin(), aString.end(), result.begin(), toupper);
-    return result;
-}
-
-
-/** Answer aString converted to lowercase letters. */
-std::string
-toLowercase(const std::string& aString)
-{
-    std::string result(aString);
-    std::transform(aString.begin(), aString.end(), result.begin(), tolower);
-    return result;
-}
-
-
 /** Answer the string representation of the boolean b. */
 std::string
 stringOfBool(bool b)
@@ -294,8 +275,9 @@ can_open_file(const std::string& aFilename)
 std::string
 getFileType(const std::string& aFileName)
 {
-    const std::string ext =
-        toUppercase(aFileName.substr(aFileName.rfind(".") + 1));
+    std::string ext = aFileName.substr(aFileName.rfind(".") + 1);
+
+    boost::algorithm::to_upper(ext);
 
     if (ext == "JPG") return "JPEG";
     else if (ext == "TIF") return "TIFF";
@@ -310,7 +292,9 @@ getFileType(const std::string& aFileName)
 boundary_t
 wraparoundOfString(const char* aWraparoundMode)
 {
-    const std::string mode = toUppercase(std::string(aWraparoundMode));
+    std::string mode = std::string(aWraparoundMode);
+
+    boost::algorithm::to_upper(mode);
 
     if (mode == "NONE" || mode == "OPEN") return OpenBoundaries;
     else if (mode == "HORIZONTAL") return HorizontalStrip;
@@ -502,7 +486,9 @@ outputPixelTypeOfString(const char* anOutputDepth)
         ("REAL32", "FLOAT")
         ("REAL64", "DOUBLE");
 
-    Str2StrMapType::const_iterator p = depthMap.find(toUppercase(anOutputDepth));
+    std::string output_depth(anOutputDepth);
+    boost::algorithm::to_upper(output_depth);
+    Str2StrMapType::const_iterator p = depthMap.find(output_depth);
     if (p == depthMap.end())
     {
         throw std::invalid_argument(std::string("unknown output depth \"") +

@@ -899,7 +899,8 @@ int process_options(int argc, char** argv)
 
         case CompressionId:
             if (optarg != NULL && *optarg != 0) {
-                const std::string upper_opt(enblend::toUppercase(optarg));
+                std::string upper_opt(optarg);
+                boost::algorithm::to_upper(upper_opt);
                 if (upper_opt == "NONE") {
                     ;           // stick with default
                 } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS" ||
@@ -1802,23 +1803,22 @@ int main(int argc, char** argv)
         // best match.
         {
             const std::string outputFileType = enblend::getFileType(OutputFileName);
-            const std::string neededPixelType =
-                OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
-            const std::string bestPixelType =
-                enblend::bestPixelType(outputFileType, neededPixelType);
+            const std::string neededPixelType = OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
+            const std::string bestPixelType = enblend::bestPixelType(outputFileType, neededPixelType);
+
             if (neededPixelType != bestPixelType) {
                 cerr << command
                      << ": warning: "
                      << (OutputPixelType.empty() ? "deduced" : "requested")
                      << " output pixel type is \""
-                     << enblend::toLowercase(neededPixelType)
+                     << neededPixelType
                      << "\", but image type \""
-                     << enblend::toLowercase(outputFileType)
+                     << outputFileType
                      << "\"\n"
                      << command << ": warning:   supports \""
-                     << enblend::toLowercase(bestPixelType)
+                     << bestPixelType
                      << "\" at best;  will use \""
-                     << enblend::toLowercase(bestPixelType)
+                     << bestPixelType
                      << "\""
                      << endl;
             }

@@ -32,6 +32,7 @@
 #include <list>
 #include <map>
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include "vigra/imageinfo.hxx"
@@ -127,19 +128,6 @@ can_open_file(const std::string& aFilename)
         }
         return true;
     }
-}
-
-
-// ANTICIPATED CHANGE: We already have the same function in
-// "common.h".  There it is called toLower().  However, we cannot
-// include this file here.  The solution is to factor out string
-// functions into their own module.
-std::string
-lower_case(const std::string& aString)
-{
-    std::string result(aString);
-    std::transform(aString.begin(), aString.end(), result.begin(), tolower);
-    return result;
 }
 
 
@@ -642,13 +630,15 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             }
             ++line_number;
 
-            const key_value_pair comment = get_syntactic_comment(buffer);
+            key_value_pair comment = get_syntactic_comment(buffer);
+            boost::algorithm::to_lower(comment.first);
+            boost::algorithm::to_lower(comment.second);
             if ((comment.first == "glob" ||
                  comment.first == "globbing" ||
                  comment.first == "filename-globbing") &&
                 !comment.second.empty())
             {
-                if (!glob.set_algorithm(lower_case(comment.second)))
+                if (!glob.set_algorithm(comment.second))
                 {
                     std::cerr <<
                         command <<
@@ -669,7 +659,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             if (comment.first == "layer-selector" && !comment.second.empty())
             {
                 selector::algorithm_list::const_iterator new_selector =
-                    selector::find_by_name(lower_case(comment.second));
+                    selector::find_by_name(comment.second);
                 if (new_selector == selector::algorithms.end())
                 {
                     std::cerr <<
@@ -812,8 +802,9 @@ bool
 is_known_extension_to_vigra(const std::string& filename)
 {
     const std::string known_extensions = vigra::impexListExtensions();
-    const std::string extension =
-        lower_case(filename.substr(filename.rfind(".") + 1));
+    std::string extension = filename.substr(filename.rfind(".") + 1);
+
+    boost::algorithm::to_lower(extension);
 
     return known_extensions.find(extension) != std::string::npos;
 }
@@ -845,7 +836,7 @@ maybe_response_file(const std::string& filename)
                 if ((comment.first == "response-file" ||
                      comment.first == "enblend-response-file" ||
                      comment.first == "enfuse-response-file") &&
-                    lower_case(comment.second) == "true")
+                    comment.second == "true")
                 {
                     return true;
                 }
