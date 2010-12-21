@@ -205,7 +205,7 @@ AS_IF([test "$with_boost_filesystem" = no],
              [AC_MSG_NOTICE([forcing use of Boost "filesystem" library])
               AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
                         [Define if you have boost/filesystem.hpp])
-              EXTRA_LIBS="-lboost_filesystem ${EXTRA_LIBS}"],
+              EXTRA_LIBS="-lboost_filesystem -lboost_system ${EXTRA_LIBS}"],
              [AC_CHECK_HEADER(boost/filesystem.hpp,
                               [],
                               AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
@@ -220,7 +220,8 @@ AS_IF([test "$with_boost_filesystem" = no],
                   fi
                   LIBS_ORIG=$LIBS
                   for x in $candidates; do
-                      LIBS="$LIBS_ORIG $x"
+                      y=`echo $x | sed s/boost_filesystem/boost_system/g`
+                      LIBS="$LIBS_ORIG $x $y"
                       AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <string>
 #include "boost/filesystem.hpp"
@@ -233,7 +234,7 @@ basename(p);
 extension(p);
 ]]
 )],
-                                     [EXTRA_LIBS="$x ${EXTRA_LIBS}"
+                                     [EXTRA_LIBS="$x $y ${EXTRA_LIBS}"
                                       found_boost_filesystem_lib=yes
                                       AC_MSG_NOTICE([compiling with Boost's generic filename parsing support.])
                                       break])
