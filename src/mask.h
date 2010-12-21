@@ -866,14 +866,26 @@ MaskType* createMask(const ImageType* const white,
                  << ": info: loading mask \"" << maskFilename << "\"" << endl;
         }
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
+            const bool too_small = maskInfo.width() < uBB.width() || maskInfo.height() < uBB.height();
+
+            std::string category;
+            if (too_small) {
+                category = "warning: ";
+            }
+
             cerr << command
-                 << ": warning: mask in \"" << maskFilename << "\" has size "
+                 << ": " << category << "mask in \"" << maskFilename << "\" has size "
                  << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
                  << command
-                 << ": warning:     but image union has size " << uBB.size() << ";\n"
+                 << ": " << category << "    but image union has size " << uBB.size() << ";\n"
                  << command
-                 << ": warning:     make sure this is the right mask for the given images"
+                 << ": " << category << "    make sure this is the right mask for the given images"
                  << endl;
+
+            if (!too_small) {
+                // Mask is too large, loading it would cause a segmentation fault.
+                exit(1);
+            }
         }
         importImage(maskInfo, destImage(*mask));
         return mask;

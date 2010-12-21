@@ -347,6 +347,24 @@ void enblendMain(const FileNameList& anInputFileNameList,
             WrapAround != OpenBoundaries &&
             roiBB.width() == anInputUnion.width();
 
+        if (StopAfterMaskGeneration) {
+            copyImageIf(uBB.apply(srcImageRange(*(whitePair.first))),
+                        maskImage(*mask),
+                        uBB.apply(destImage(*(blackPair.first))));
+            initImageIf(whiteBB.apply(destImageRange(*(blackPair.second))),
+                        whiteBB.apply(maskImage(*(whitePair.second))),
+                        NumericTraits<AlphaPixelType>::max());
+
+            delete whitePair.first;
+            delete whitePair.second;
+
+            blackBB = uBB;
+            ++m;
+            ++inputFileNameIterator;
+
+            continue;
+        }
+
         // Estimate memory requirements for this blend iteration
         if (Verbose >= VERBOSE_MEMORY_ESTIMATION_MESSAGES) {
             // Maximum utilization is when all three pyramids have been built
@@ -587,8 +605,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType,
-            ImagePyramidIntegerBits, ImagePyramidFractionBits>(
-                                                               srcImageRange(*((*blackLP)[0])),
+            ImagePyramidIntegerBits, ImagePyramidFractionBits>(srcImageRange(*((*blackLP)[0])),
                                                                roiBB.apply(maskImage(*(blackPair.second))),
                                                                roiBB.apply(destImage(*(blackPair.first))));
 
@@ -632,7 +649,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
         ++inputFileNameIterator;
     } // end main blending loop
 
-    if (!Checkpoint) {
+    if (!StopAfterMaskGeneration && !Checkpoint) {
         if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
             cerr << command << ": info: writing final output" << endl;
         }

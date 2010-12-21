@@ -143,6 +143,10 @@ Overview
 
 Workflow
 
+* Standard Workflow::           The usual, all-in-one thing
+* External Mask Manipulation::  Fiddling around with the masks yourself
+
+
 Invocation
 
 * Common Options::              General options
@@ -350,7 +354,28 @@ SourceForge} @uref{http://@/enblend.sourceforge.net/, web page}.
 @chapter Workflow
 @cindex workflow
 
+Enfuse is a part of a chain of tools to assemble images.  It merges
+photos of the same subject at the same location and same direction,
+but taken with varying exposure parameters.
+
+@menu
+* Standard Workflow::           The usual, all-in-one thing
+* External Mask Manipulation::  Fiddling around with the masks yourself
+@end menu
+
+
+@node Standard Workflow
+@section Standard Workflow
+@cindex workflow, standard
+
 @include workflow.texi
+
+
+@node External Mask Manipulation
+@section External Mask Manipulation
+@cindex workflow, external mask manipulation
+
+@include external-masks.texi
 
 
 @node Invocation
@@ -2063,10 +2088,10 @@ mutually exclusive.
 @itemx --save-masks=@var{SOFT-MASK-TEMPLATE}
 @itemx --save-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
 @opindex --save-masks
+@cindex mask, save
+@cindex save mask
+Save the generated weight masks to image files.
 
-Save all weight files as @acronym{TIFF} images.
-
-@cindex mask, saving
 First form: Save all soft-weight masks in files.  If
 option@tie{}@option{--hard-mask} is effective also save the hard masks.
 The defaults are @file{@value{src::default-soft-mask-template}} and
@@ -2076,6 +2101,13 @@ The defaults are @file{@value{src::default-soft-mask-template}} and
 In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
 soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
 additionally defines the names of the hard-mask files.
+
+@cindex save mask, only
+@cindex only save mask
+Enfuse will stop after saving all masks unless
+option@tie{}@option{--output} is given, too.  With both options given,
+this is, @option{--save-masks} and @option{--output}, Enfuse saves all
+masks and then proceeds to fuse the output image.
 
 Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
 templates that are expanded for each mask file.  In a template a

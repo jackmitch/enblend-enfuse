@@ -108,6 +108,7 @@ bool CoarseMask = true;
 unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
 double DifferenceBlurRadius = 0.0;
 bool SaveMasks = false;
+bool StopAfterMaskGeneration = false;
 std::string SaveMaskTemplate("mask-%n.tif"); //< src::default-mask-template mask-%n.tif
 bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
@@ -550,7 +551,7 @@ enum AllPossibleOptions {
     SizeAndPositionOption /* -f */, CacheSizeOption,
     VisualizeOption, CoarseMaskOption, FineMaskOption,
     OptimizeOption, NoOptimizeOption,
-    SaveMaskOption, LoadMaskOption,
+    SaveMasksOption, LoadMasksOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     SmoothDifferenceOption, OptimizerWeightsOption,
     // currently below the radar...
@@ -569,6 +570,80 @@ bool contains(const OptionSetType& optionSet,
 /** Warn if options given at the command line have no effect. */
 void warn_of_ineffective_options(const OptionSetType& optionSet)
 {
+    if (contains(optionSet, LoadMasksOption)) {
+        if (contains(optionSet, GPUOption)) {
+            cerr << command <<
+                ": warning: option \"--gpu\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, VisualizeOption)) {
+            cerr << command <<
+                ": warning: option \"--visualize\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, CoarseMaskOption)) {
+            cerr << command <<
+                ": warning: option \"--coarse-mask\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, FineMaskOption)) {
+            cerr << command <<
+                ": warning: option \"--fine-mask\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, OptimizeOption)) {
+            cerr << command <<
+                ": warning: option \"--optimize\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, NoOptimizeOption)) {
+            cerr << command <<
+                ": warning: option \"--no-optimize\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, AnnealOption)) {
+            cerr << command <<
+                ": warning: option \"--anneal\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, DijkstraRadiusOption)) {
+            cerr << command <<
+                ": warning: option \"--dijkstra\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, MaskVectorizeDistanceOption)) {
+            cerr << command <<
+                ": warning: option \"--mask-vectorize\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, SmoothDifferenceOption)) {
+            cerr << command <<
+                ": warning: option \"--smooth-difference\" has no effect with \"--load-masks\"" << endl;
+        }
+        if (contains(optionSet, OptimizerWeightsOption)) {
+            cerr << command <<
+                ": warning: option \"--optimizer-weights\" has no effect with \"--load-masks\"" << endl;
+        }
+    }
+
+    if (contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption)) {
+        if (contains(optionSet, LevelsOption)) {
+            cerr << command <<
+                ": warning: option \"--levels\" has no effect with \"--save-masks\" and no \"--output\"" <<
+                endl;
+        }
+        if (contains(optionSet, WrapAroundOption)) {
+            cerr << command <<
+                ": warning: option \"--wrap\" has no effect with \"--save-masks\" and no \"--output\"" <<
+                endl;
+        }
+        if (contains(optionSet, CompressionOption)) {
+            cerr << command <<
+                ": warning: option \"--compression\" has no effect with \"--save-masks\" and no \"--output\"" <<
+                endl;
+        }
+        if (contains(optionSet, DepthOption)) {
+            cerr << command <<
+                ": warning: option \"--depth\" has no effect with \"--save-masks\" and no \"--output\"" <<
+                endl;
+        }
+        if (contains(optionSet, SizeAndPositionOption)) {
+            cerr << command <<
+                ": warning: option \"-f\" has no effect with \"--save-masks\" and no \"--output\"" << endl;
+        }
+    }
+
     if (contains(optionSet, CompressionOption) &&
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
@@ -788,7 +863,7 @@ int process_options(int argc, char** argv)
                 SaveMaskTemplate = optarg;
             }
             SaveMasks = true;
-            optionSet.insert(SaveMaskOption);
+            optionSet.insert(SaveMasksOption);
             break;
 
         case LoadMaskId:
@@ -796,7 +871,7 @@ int process_options(int argc, char** argv)
                 LoadMaskTemplate = optarg;
             }
             LoadMasks = true;
-            optionSet.insert(LoadMaskOption);
+            optionSet.insert(LoadMasksOption);
             break;
 
         case VisualizeId:
@@ -1271,6 +1346,13 @@ int process_options(int argc, char** argv)
         }
     }
 
+    if (contains(optionSet, SaveMasksOption) && contains(optionSet, LoadMasksOption))
+    {
+        cerr << command
+             << ": options \"--load-masks\" and \"--save-masks\" are mutually exclusive" << endl;
+        failed = true;
+    }
+
     if (failed) {
         exit(1);
     }
@@ -1284,6 +1366,8 @@ int process_options(int argc, char** argv)
         printVersionAndExit(argc, argv);
         // never reached
     }
+
+    StopAfterMaskGeneration = contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption);
 
     warn_of_ineffective_options(optionSet);
 
@@ -1638,154 +1722,158 @@ int main(int argc, char** argv)
         MaskVectorizeDistance.set_value(CoarseMask ? coarseMaskVectorizeDistance : fineMaskVectorizeDistance);
     }
 
-    // Make sure that inputUnion is at least as big as given by the -f paramater.
-    if (OutputSizeGiven) {
-        inputUnion |= Rect2D(OutputOffsetXCmdLine,
-                             OutputOffsetYCmdLine,
-                             OutputOffsetXCmdLine + OutputWidthCmdLine,
-                             OutputOffsetYCmdLine + OutputHeightCmdLine);
-    }
-
     // Create the Info for the output file.
-    OutputIsValid = false;
     ImageExportInfo outputImageInfo(OutputFileName.c_str());
-    if (!OutputCompression.empty()) {
-        outputImageInfo.setCompression(OutputCompression.c_str());
-    }
 
-    // If not overridden by the command line, the pixel type of the
-    // output image is the same as the input images'.  If the pixel
-    // type is not supported by the output format, replace it with the
-    // best match.
-    {
-        const std::string outputFileType = enblend::getFileType(OutputFileName);
-        const std::string neededPixelType =
-            OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
-        const std::string bestPixelType =
-            enblend::bestPixelType(outputFileType, neededPixelType);
-        if (neededPixelType != bestPixelType) {
-            cerr << command
-                 << ": warning: "
-                 << (OutputPixelType.empty() ? "deduced" : "requested")
-                 << " output pixel type is \""
-                 << enblend::toLowercase(neededPixelType)
-                 << "\", but image type \""
-                 << enblend::toLowercase(outputFileType)
-                 << "\"\n"
-                 << command << ": warning:   supports \""
-                 << enblend::toLowercase(bestPixelType)
-                 << "\" at best;  will use \""
-                 << enblend::toLowercase(bestPixelType)
-                 << "\""
-                 << endl;
+    if (!StopAfterMaskGeneration) {
+        OutputIsValid = false;
+
+        // Make sure that inputUnion is at least as big as given by the -f paramater.
+        if (OutputSizeGiven) {
+            inputUnion |= Rect2D(OutputOffsetXCmdLine,
+                                 OutputOffsetYCmdLine,
+                                 OutputOffsetXCmdLine + OutputWidthCmdLine,
+                                 OutputOffsetYCmdLine + OutputHeightCmdLine);
         }
-        outputImageInfo.setPixelType(bestPixelType.c_str());
-        pixelType = enblend::maxPixelType(pixelType, bestPixelType);
-    }
 
-    // Set the output image ICC profile
-    outputImageInfo.setICCProfile(iccProfile);
+        if (!OutputCompression.empty()) {
+            outputImageInfo.setCompression(OutputCompression.c_str());
+        }
 
-    if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
-        UseCIECAM = true;
-        if (InputProfile == NULL) {
-            cerr << command << ": warning: input images do not have ICC profiles;\n";
-            if (FallbackProfile == NULL) {
-                cerr << command << ": warning: assuming sRGB profile" << endl;
-                InputProfile = cmsCreate_sRGBProfile();
-            } else {
-                cerr << command << ": warning: using fallback profile \""
-                     << cmsTakeProductDesc(FallbackProfile) << "\"" << endl;
-                InputProfile = FallbackProfile;
-                FallbackProfile = NULL; // avoid double freeing
+        // If not overridden by the command line, the pixel type of the
+        // output image is the same as the input images'.  If the pixel
+        // type is not supported by the output format, replace it with the
+        // best match.
+        {
+            const std::string outputFileType = enblend::getFileType(OutputFileName);
+            const std::string neededPixelType =
+                OutputPixelType.empty() ? std::string(pixelType) : OutputPixelType;
+            const std::string bestPixelType =
+                enblend::bestPixelType(outputFileType, neededPixelType);
+            if (neededPixelType != bestPixelType) {
+                cerr << command
+                     << ": warning: "
+                     << (OutputPixelType.empty() ? "deduced" : "requested")
+                     << " output pixel type is \""
+                     << enblend::toLowercase(neededPixelType)
+                     << "\", but image type \""
+                     << enblend::toLowercase(outputFileType)
+                     << "\"\n"
+                     << command << ": warning:   supports \""
+                     << enblend::toLowercase(bestPixelType)
+                     << "\" at best;  will use \""
+                     << enblend::toLowercase(bestPixelType)
+                     << "\""
+                     << endl;
+            }
+            outputImageInfo.setPixelType(bestPixelType.c_str());
+            pixelType = enblend::maxPixelType(pixelType, bestPixelType);
+        }
+
+        // Set the output image ICC profile
+        outputImageInfo.setICCProfile(iccProfile);
+
+        if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
+            UseCIECAM = true;
+            if (InputProfile == NULL) {
+                cerr << command << ": warning: input images do not have ICC profiles;\n";
+                if (FallbackProfile == NULL) {
+                    cerr << command << ": warning: assuming sRGB profile" << endl;
+                    InputProfile = cmsCreate_sRGBProfile();
+                } else {
+                    cerr << command << ": warning: using fallback profile \""
+                         << cmsTakeProductDesc(FallbackProfile) << "\"" << endl;
+                    InputProfile = FallbackProfile;
+                    FallbackProfile = NULL; // avoid double freeing
+                }
+            }
+            XYZProfile = cmsCreateXYZProfile();
+
+            InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
+                                                     XYZProfile, TYPE_XYZ_DBL,
+                                                     INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
+            if (InputToXYZTransform == NULL) {
+                cerr << command << ": error building color transform from \""
+                     << cmsTakeProductName(InputProfile)
+                     << " "
+                     << cmsTakeProductDesc(InputProfile)
+                     << "\" to XYZ" << endl;
+                exit(1);
+            }
+
+            XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
+                                                     InputProfile, TYPE_RGB_DBL,
+                                                     INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
+            if (XYZToInputTransform == NULL) {
+                cerr << command
+                     << ": error building color transform from XYZ to \""
+                     << cmsTakeProductName(InputProfile)
+                     << " "
+                     << cmsTakeProductDesc(InputProfile)
+                     << "\"" << endl;
+                exit(1);
+            }
+
+            // P2 Viewing Conditions: D50, 500 lumens
+            ViewingConditions.whitePoint.X = 100.0 * D50X;
+            ViewingConditions.whitePoint.Y = 100.0 * D50Y;
+            ViewingConditions.whitePoint.Z = 100.0 * D50Z;
+            ViewingConditions.Yb = 20.0;
+            ViewingConditions.La = 31.83;
+            ViewingConditions.surround = AVG_SURROUND;
+            ViewingConditions.D_value = 1.0;
+
+            CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
+            if (!CIECAMTransform) {
+                cerr << endl
+                     << command
+                     << ": error initializing CIECAM02 transform"
+                     << endl;
+                exit(1);
+            }
+        } else {
+            if (FallbackProfile != NULL) {
+                cerr << command <<
+                    ": warning: blending in RGB cube; option \"--fallback-profile\" has no effect" <<
+                    endl;
             }
         }
-        XYZProfile = cmsCreateXYZProfile();
 
-        InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
-                                                 XYZProfile, TYPE_XYZ_DBL,
-                                                 INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
-        if (InputToXYZTransform == NULL) {
-            cerr << command << ": error building color transform from \""
-                 << cmsTakeProductName(InputProfile)
-                 << " "
-                 << cmsTakeProductDesc(InputProfile)
-                 << "\" to XYZ" << endl;
-            exit(1);
-        }
-
-        XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
-                                                 InputProfile, TYPE_RGB_DBL,
-                                                 INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
-        if (XYZToInputTransform == NULL) {
+        // The size of the output image.
+        if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
             cerr << command
-                 << ": error building color transform from XYZ to \""
-                 << cmsTakeProductName(InputProfile)
-                 << " "
-                 << cmsTakeProductDesc(InputProfile)
-                 << "\"" << endl;
-            exit(1);
+                 << ": info: output image size: "
+                 << inputUnion
+                 << endl;
         }
 
-        // P2 Viewing Conditions: D50, 500 lumens
-        ViewingConditions.whitePoint.X = 100.0 * D50X;
-        ViewingConditions.whitePoint.Y = 100.0 * D50Y;
-        ViewingConditions.whitePoint.Z = 100.0 * D50Z;
-        ViewingConditions.Yb = 20.0;
-        ViewingConditions.La = 31.83;
-        ViewingConditions.surround = AVG_SURROUND;
-        ViewingConditions.D_value = 1.0;
+        // Set the output image position and resolution.
+        outputImageInfo.setXResolution(ImageResolution.x);
+        outputImageInfo.setYResolution(ImageResolution.y);
+        outputImageInfo.setPosition(inputUnion.upperLeft());
 
-        CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
-        if (!CIECAMTransform) {
+        // Sanity check on the output image file.
+        try {
+            // This seems to be a reasonable way to check if
+            // the output file is going to work after blending
+            // is done.
+            encoder(outputImageInfo);
+        } catch (StdException & e) {
             cerr << endl
                  << command
-                 << ": error initializing CIECAM02 transform"
+                 << ": error opening output file \""
+                 << OutputFileName
+                 << "\";\n"
+                 << command
+                 << ": "
+                 << e.what()
                  << endl;
             exit(1);
         }
-    } else {
-        if (FallbackProfile != NULL) {
-            cerr << command <<
-                ": warning: blending in RGB cube; option \"--fallback-profile\" has no effect" <<
-                endl;
+
+        if (!OutputPixelType.empty()) {
+            pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
         }
-    }
-
-    // The size of the output image.
-    if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-        cerr << command
-             << ": info: output image size: "
-             << inputUnion
-             << endl;
-    }
-
-    // Set the output image position and resolution.
-    outputImageInfo.setXResolution(ImageResolution.x);
-    outputImageInfo.setYResolution(ImageResolution.y);
-    outputImageInfo.setPosition(inputUnion.upperLeft());
-
-    // Sanity check on the output image file.
-    try {
-        // This seems to be a reasonable way to check if
-        // the output file is going to work after blending
-        // is done.
-        encoder(outputImageInfo);
-    } catch (StdException & e) {
-        cerr << endl
-             << command
-             << ": error opening output file \""
-             << OutputFileName
-             << "\";\n"
-             << command
-             << ": "
-             << e.what()
-             << endl;
-        exit(1);
-    }
-
-    if (!OutputPixelType.empty()) {
-        pixelType = enblend::maxPixelType(pixelType, OutputPixelType);
     }
 
     // Invoke templatized blender.

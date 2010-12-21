@@ -24,6 +24,14 @@ Unreleased.  Current line of development.
   employing a lower exposure cutoff this even is the default
   projector.
 
+- Both Enblend and Enfuse stop right after saving all generated masks
+  to files, if option "--save-masks" is given, but option "--output"
+  is not.  This allows to splice tools that manipulate the masks and
+  feed the masks back into Enblend and Enfuse with option
+  "--load-masks".  When combining option "--output" and "--save-masks"
+  Enblend and Enfuse write all masks and the final output image as
+  before.
+
 
 ** Bug Fixes
 

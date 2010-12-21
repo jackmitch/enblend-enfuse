@@ -1,18 +1,5 @@
-Enblend and Enfuse are parts of a chain of tools to assemble images.
-
-@itemize
-@item
-Enblend combines a series of pictures taken at the same location but
-in different directions.
-
-@item
-Enfuse merges photos of the same subject at the same location and same
-direction, but taken with varying exposure parameters.
-@end itemize
-
-@noindent
 @ref{Figure:photographic-workflow} shows where Enblend and Enfuse sit
-in this tool chain.
+in the tool chain of the standard workflow.
 
 @float Figure,Figure:photographic-workflow
 @vimage{photographic-workflow}

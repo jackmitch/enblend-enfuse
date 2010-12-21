@@ -9,8 +9,10 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    tuning-memory-usage.texi \
                    understanding-masks.texi \
                    workflow.texi filespec.texi \
+                   external-masks.texi \
                    bug-reports.texi authors.texi \
                    photographic-workflow.fig \
+                   external-mask-workflow.fig \
                    seam-line-visualization.tif \
                    default.css
 
@@ -22,6 +24,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   tuning-memory-usage.texi \
                   understanding-masks.texi \
                   workflow.texi filespec.texi \
+                  external-masks.texi \
                   bug-reports.texi authors.texi \
                   config-edge.gp config.gp \
                   entropy-cutoff.gp.in \
@@ -33,6 +36,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   local-analysis-window.fig \
                   photographic-workflow.fig \
                   focus-stack-decision-tree.fig \
+                  external-mask-workflow.fig \
                   default.css
 
 AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
@@ -56,6 +60,7 @@ MOSTLYCLEANFILES = varsenblend.texi varsenfuse.texi
 CLEANFILES = entropy.{txt,eps,svg,pdf} \
              entropy-cutoff.{txt,eps,svg,pdf} \
              exposure-cutoff.{txt,eps,svg,pdf} \
+             external-mask-workflow.{txt,eps,svg,pdf} \
              gaussian.{txt,eps,svg,pdf} \
              laplacian-of-gaussian.{txt,eps,svg,pdf} \
              local-analysis-window.{txt,eps,svg,pdf} \
@@ -253,20 +258,24 @@ varsenblend.texi: $(srcdir)/../src/enblend.cc \
 
 enblend.info: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
-              photographic-workflow.txt
+              photographic-workflow.txt \
+              external-mask-workflow.txt
 
 enblend.dvi: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
              photographic-workflow.eps \
+             external-mask-workflow.eps \
              seam-line-visualization.eps
 
 enblend.html: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
               photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
+              external-mask-workflow.svg $(RASTER_DIR)/external-mask-workflow.png \
               seam-line-visualization.png
 
 enblend.pdf: $(enblend_TEXINFOS) \
              photographic-workflow.pdf \
+             external-mask-workflow.pdf \
              seam-line-visualization.png
 
 enblend.xhtml: enblend.html
@@ -274,6 +283,7 @@ enblend.xhtml: enblend.html
 enblend.xml: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
              photographic-workflow.svg \
+             external-mask-workflow.svg \
              seam-line-visualization.png
 
 
@@ -286,6 +296,7 @@ varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
 enfuse.info: $(enfuse_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
              photographic-workflow.txt \
+             external-mask-workflow.txt \
              focus-stack-decision-tree.txt \
              entropy.txt \
              entropy-cutoff.txt \
@@ -299,6 +310,7 @@ enfuse.info: $(enfuse_TEXINFOS) \
 enfuse.dvi: $(enfuse_TEXINFOS) \
             $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
             photographic-workflow.eps \
+            external-mask-workflow.eps \
             focus-stack-decision-tree.eps \
             entropy.eps \
             entropy-cutoff.eps \
@@ -312,6 +324,7 @@ enfuse.dvi: $(enfuse_TEXINFOS) \
 enfuse.html: $(enfuse_TEXINFOS) \
              $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
              photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
+             external-mask-workflow.svg $(RASTER_DIR)/external-mask-workflow.png \
              focus-stack-decision-tree.svg $(RASTER_DIR)/ \
              entropy.svg $(RASTER_DIR)/entropy.png \
              entropy-cutoff.svg $(RASTER_DIR)/entropy-cutoff.png \
@@ -325,6 +338,7 @@ enfuse.html: $(enfuse_TEXINFOS) \
 enfuse.pdf: $(enfuse_TEXINFOS) \
             $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
             photographic-workflow.pdf \
+            external-mask-workflow.pdf \
             focus-stack-decision-tree.pdf \
             entropy.pdf \
             entropy-cutoff.pdf \
@@ -340,6 +354,7 @@ enfuse.xhtml: enfuse.html
 enfuse.xml: $(enfuse_TEXINFOS) \
             $(srcdir)/versenfuse.texi $(top_builddir)/config-h.texi \
             photographic-workflow.svg \
+            external-mask-workflow.svg \
             focus-stack-decision-tree.svg \
             entropy.svg \
             entropy-cutoff.svg \

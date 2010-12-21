@@ -1,4 +1,4 @@
-@set UPDATED 5 September 2010
-@set UPDATED-MONTH September 2010
-@set EDITION 4.1-619f95bd56d5
-@set VERSION 4.1-619f95bd56d5
+@set UPDATED 21 December 2010
+@set UPDATED-MONTH December 2010
+@set EDITION 4.1-52f7d2be1220
+@set VERSION 4.1-52f7d2be1220

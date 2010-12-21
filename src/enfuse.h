@@ -1312,7 +1312,6 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 exit(1);
             }
         } else {
-            std::cout << "+ enfuseMain: LoadMasks is false\n";
             enfuseMask<ImageType, AlphaType, MaskType>(srcImageRange(*(imagePair.first)),
                                                        srcImage(*(imagePair.second)),
                                                        destImage(*mask));
@@ -1382,6 +1381,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         ++m;
         ++inputFileNameIterator;
+    }
+
+    if (StopAfterMaskGeneration && !UseHardMask) {
+        exit(0);
     }
 
     const int totalImages = imageList.size();
@@ -1478,6 +1481,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
             v.resetCacheMisses();
         }
 #endif
+    }
+
+    if (StopAfterMaskGeneration) {
+        exit(0);
     }
 
     Rect2D junkBB;

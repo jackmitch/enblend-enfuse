@@ -218,7 +218,28 @@ SourceForge} @uref{http://@/enblend.sourceforge.net/, web page}.
 @chapter Workflow
 @cindex workflow
 
+Enblend is a part of a chain of tools to assemble images.  It combines
+a series of pictures taken at the same location but in different
+directions.
+
+@menu
+* Standard Workflow::           The usual, all-in-one thing
+* External Mask Manipulation::  Fiddling around with the masks yourself
+@end menu
+
+
+@node Standard Workflow
+@section Standard Workflow
+@cindex workflow, standard
+
 @include workflow.texi
+
+
+@node External Mask Manipulation
+@section External Mask Manipulation
+@cindex workflow, external mask manipulation
+
+@include external-masks.texi
 
 
 @node Invocation
@@ -238,7 +259,6 @@ Assemble the sequence of images @var{INPUT}@dots{} into a single
 Input images are either specified literally or via so-called response
 files (see below).  The latter are an alternative to specifying image
 filenames on the command line.
-
 
 @menu
 * Response Files::              Files listing the images' names
@@ -1622,7 +1642,8 @@ Both weights must be non-negative.  They cannot be both zero at the
 same time.  Otherwise, their absolute values are not important as
 Enblend normalizes their sum.
 
-@item --save-masks[=@var{IMAGE-TEMPLATE}]
+@item --save-masks
+@itemx --save-masks=@var{IMAGE-TEMPLATE}
 @opindex --save-masks
 @cindex mask, save
 @cindex save mask
@@ -1633,8 +1654,15 @@ recommend to choose a lossless format.
 
 Use this option if you wish to edit the location of the seam line by
 hand.  This will give you images of the right sizes that you can edit
-to make your changes.  Later, use @option{--load-masks} to blend the
-project with your custom seam lines.
+to make your changes.  Later, use option@tie{}@option{--load-masks} to
+blend the project with your custom seam lines.
+
+@cindex save mask, only
+@cindex only save mask
+Enblend will stop after saving all masks unless
+option@tie{}@option{--output} is given, too.  With both options given,
+this is, @option{--save-masks} and @option{--output}, Enblend saves
+all masks and then proceeds to blend the output image.
 
 @var{IMAGE-TEMPLATE} defines a template that is expanded for each
 input file.  In a template a percent sign (@samp{%}) introduces a
