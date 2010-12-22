@@ -30,10 +30,13 @@ foreach(_cmd ${_COMMANDS})
 endforeach(_cmd)
 
 if (WIN32)
-  file(GLOB winhelper_sources ${TOP_SRC_DIR}/src/win32helpers/*.c)
+  file(GLOB winhelper_sources ${TOP_SRC_DIR}/src/win32helpers/*.c ${TOP_SRC_DIR}/src/win32helpers/*.h)
   list(APPEND all_sources ${winhelper_sources})
 endif(WIN32)
 
+file(GLOB layer_selection ${TOP_SRC_DIR}/src/layer_selection/*.cc ${TOP_SRC_DIR}/src/layer_selection/*.h)
+list(APPEND all_sources ${layer_selection})
+include_directories(${TOP_SRC_DIR}/src/layer_selection)
 list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
