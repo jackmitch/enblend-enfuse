@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2007 Andrew Mihal
+ * Copyright (C) 2004-2011 Andrew Mihal
  *
  * This file is part of Enblend.
  *

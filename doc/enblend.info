@@ -6,11 +6,11 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-a37d5346c5b1, 21 December
-2010), a tool for compositing images in such a way that the seam
+   This manual is for Enblend (version 4.1-1798aefd49cc, 1 January
+2011), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
-   Copyright (C) 2004-2010 ANDREW MIHAL.
+   Copyright (C) 2004-2011 ANDREW MIHAL.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,9 +25,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-a37d5346c5b1, 21 December
-2010), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.1-1798aefd49cc, 1 January 2011),
+a tool for compositing images in such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -928,7 +928,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-a37d5346c5b1, only mask
+     In this version of Enblend, 4.1-1798aefd49cc, only mask
      optimization strategy 1 benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1170,7 +1170,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-a37d5346c5b1)
+     version 3.2 used 1:1.  This version of Enblend (4.1-1798aefd49cc)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -2700,44 +2700,44 @@ General Index
 
 
 Tag Table:
-Node: Top904
-Node: Overview2030
-Ref: Overview-Footnote-14469
-Ref: Overview-Footnote-24650
-Node: Workflow4792
-Node: Standard Workflow5191
-Ref: Figure:photographic-workflow5451
-Node: External Mask Manipulation8125
-Ref: Figure:external-mask-workflow9442
-Node: Invocation9927
-Node: Image Requirements10622
-Node: Response Files12096
-Ref: Table:response-file-format14120
-Ref: Table:response-file-syntactic-comment16585
-Ref: Table:globbing-algorithms17486
-Node: Common Options18945
-Ref: Common Options-Footnote-126890
-Ref: Common Options-Footnote-227082
-Node: Extended Options27241
-Ref: Extended Options-Footnote-133638
-Node: Mask Generation Options33711
-Ref: Table:mask-generation36401
-Ref: Table:optimizer-strategies41339
-Ref: Table:visualization-colors46871
-Ref: Table:mask-template-characters47767
-Ref: Mask Generation Options-Footnote-150019
-Node: Color Profiles50247
-Node: Understanding Masks52684
-Node: Tuning Memory Usage56477
-Ref: Table:cache-size-settings59219
-Node: Helpful Programs59655
-Node: Bug Reports63391
-Ref: Bug Reports-Footnote-169098
-Node: Authors69168
-Node: FDL70333
-Node: Program Index91314
-Node: Syntactic-Comment Index94310
-Node: Option Index94999
-Node: General Index98940
+Node: Top902
+Node: Overview2026
+Ref: Overview-Footnote-14465
+Ref: Overview-Footnote-24646
+Node: Workflow4788
+Node: Standard Workflow5187
+Ref: Figure:photographic-workflow5447
+Node: External Mask Manipulation8121
+Ref: Figure:external-mask-workflow9438
+Node: Invocation9923
+Node: Image Requirements10618
+Node: Response Files12092
+Ref: Table:response-file-format14116
+Ref: Table:response-file-syntactic-comment16581
+Ref: Table:globbing-algorithms17482
+Node: Common Options18941
+Ref: Common Options-Footnote-126886
+Ref: Common Options-Footnote-227078
+Node: Extended Options27237
+Ref: Extended Options-Footnote-133634
+Node: Mask Generation Options33707
+Ref: Table:mask-generation36397
+Ref: Table:optimizer-strategies41335
+Ref: Table:visualization-colors46867
+Ref: Table:mask-template-characters47763
+Ref: Mask Generation Options-Footnote-150015
+Node: Color Profiles50243
+Node: Understanding Masks52680
+Node: Tuning Memory Usage56473
+Ref: Table:cache-size-settings59215
+Node: Helpful Programs59651
+Node: Bug Reports63387
+Ref: Bug Reports-Footnote-169094
+Node: Authors69164
+Node: FDL70329
+Node: Program Index91310
+Node: Syntactic-Comment Index94306
+Node: Option Index94995
+Node: General Index98936
 
 End Tag Table
