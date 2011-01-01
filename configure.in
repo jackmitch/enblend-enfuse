@@ -486,6 +486,7 @@ AC_CONFIG_FILES([Makefile
                  include/vigra/Makefile
                  include/vigra_ext/Makefile
                  src/Makefile
+                 src/layer_selection/Makefile
                  src/vigra_impex/Makefile
                  src/win32helpers/Makefile
                  doc/Makefile])
