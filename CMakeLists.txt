@@ -375,8 +375,8 @@ add_subdirectory(src)
 if (PERL_FOUND AND IMAGEMAGICK_FOUND AND DOC)
   # this should be set from comman line
   # Possible values like described in README: @smallbook @afivepaper @afourpaper @afourwide @afourlatex
-  # @letterpaper is default
-  set(EXTRATEXI2DVIFLAGS "@letterpaper" CACHE STRING "Papersize: @letterpaper @smallbook @afivepaper @afourpaper @afourwide @afourlatex")
+  # @letter is default
+  set(EXTRATEXI2DVIFLAGS "@afourpaper" CACHE STRING "Papersize: @letter @smallbook @afivepaper @afourpaper @afourwide @afourlatex")
   add_subdirectory(doc)
 endif()
 

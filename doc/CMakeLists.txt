@@ -16,7 +16,7 @@ set(RASTER_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(_docs)
 set(_enblend_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
-    photographic-workflow.fig seam-line-visualization.tif default.css)
+    photographic-workflow.fig seam-line-visualization.tif external-mask-workflow.fig default.css)
 
 set(_enfuse_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
     tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
@@ -269,15 +269,17 @@ else()
 endif()
 
 set(_auxdepends)
-foreach(_f auxmac.texi auxmac.tex workflow.texi filespec.texi mask-template-characters.texi
-    understanding-masks.texi tuning-memory-usage.texi helpful-programs.texi bug-reports.texi
-    authors.texi fdl.texi color-profiles.texi)
-  add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
-    COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_f}" "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
-    DEPENDS "${TOP_SRC_DIR}/doc/${_f}"
-    )
-  list(APPEND _auxdepends "${CMAKE_CURRENT_BINARY_DIR}/${_f}")
+
+FILE(GLOB tmp_texi RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.tex*")
+foreach(_f ${tmp_texi})
+  if (NOT ${_f} MATCHES "vers.*")
+    add_custom_command(
+      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
+      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_f}" "${CMAKE_CURRENT_BINARY_DIR}/${_f}"
+      DEPENDS "${TOP_SRC_DIR}/doc/${_f}"
+      )
+    list(APPEND _auxdepends "${CMAKE_CURRENT_BINARY_DIR}/${_f}")
+  endif()
 endforeach()
 
 foreach (_cmd "enblend" "enfuse")
@@ -326,9 +328,11 @@ foreach (_cmd "enblend" "enfuse")
       COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cmd}.texi" "${_created}.texi"
       DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
       )
+    #message(STATUS "${TEXI2DVI_EXE} ${TEXI2DVIFLAGS} --pdf --batch ${_created}.texi")
+    file(RELATIVE_PATH _tmp_created "${CMAKE_CURRENT_BINARY_DIR}" "${_created}.texi")
     add_custom_command(
       OUTPUT "${_created}.pdf"
-      COMMAND ${TEXI2DVI_EXE} ${TEXI2DVIFLAGS} "--pdf" "--batch" "${_created}.texi"
+      COMMAND ${TEXI2DVI_EXE} ${TEXI2DVIFLAGS} "--pdf" "--batch" "--build=local" "${_tmp_created}"
       DEPENDS "${_created}.texi"
       ${_${_cmd}_TEXINFOS} ${_depend_gp}
       "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" ${_auxdepends}
@@ -360,7 +364,6 @@ foreach (_cmd "enblend" "enfuse")
 	set(_needed_image "${_created}.html/${_img}.png")
 	set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
 	#message(STATUS "_needed_image = ${_needed_image}")
-	#message(STATUS "_parent_image = ${_parent_image}")
 	add_custom_command(
 	  OUTPUT "${_needed_image}"
 	  COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
