@@ -9,7 +9,7 @@ bin_PROGRAMS = enblend enfuse
 
 enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
-                  global.h gpu.cc gpu.h mask.h \
+                  global.h gpu.cc gpu.h masktypedefs.h mask.h postoptimizer.h \
                   nearest.h numerictraits.h openmp.h path.h pyramid.h \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \

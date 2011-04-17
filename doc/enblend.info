@@ -6,9 +6,9 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-1798aefd49cc, 1 January
-2011), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
+   This manual is for Enblend (version 4.1-152ffb1b6463, 17 April 2011),
+a tool for compositing images in such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
    Copyright (C) 2004-2011 ANDREW MIHAL.
 
@@ -25,8 +25,8 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-1798aefd49cc, 1 January 2011),
-a tool for compositing images in such a way that the seam between the
+This manual is for Enblend (version 4.1-152ffb1b6463, 17 April 2011), a
+tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
 * Menu:
@@ -928,8 +928,8 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-1798aefd49cc, only mask
-     optimization strategy 1 benefits from this option.
+     In this version of Enblend, 4.1-152ffb1b6463, only mask
+     optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
      this option to be available.  Find out about this feature with
@@ -967,8 +967,8 @@ File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up
 These options control the generation and the usage of masks.
 
 `--anneal=TAU[:DELTA-E-MAX[:DELTA-E-MIN[:K-MAX]]]'
-     Set the parameters of the Simulated Annealing optimizer used in
-     Optimizer Strategy 1 (see *note Table:optimizer-strategies::).
+     Set the parameters of the Simulated Annealing optimizer (see *note
+     Table:optimizer-strategies::).
 
     TAU
           TAU is the temperature reduction factor in the Simulated
@@ -1054,7 +1054,7 @@ These options control the generation and the usage of masks.
 
   `--dijkstra=RADIUS'
         Set the search RADIUS of the DIJKSTRA Shortest Path algorithm
-     used in Optimizer Strategy 2 (see *note
+     used in DIJKSTRA Optimization (see *note
      Table:optimizer-strategies::).
 
         A small value prefers straight line segments and thus shorter
@@ -1134,27 +1134,27 @@ These options control the generation and the usage of masks.
         Also see *note Table 3.4: Table:mask-generation.
 
   `--optimize'
-        Use a two-strategy approach to route the seam line around
+        Use a multi-strategy approach to route the seam line around
      mismatches in the overlap region.  This is the default.  *note
      Table:optimizer-strategies:: explains these strategies; also see
      *note Table 3.4: Table:mask-generation.
 
-    Stragegy 1: Simulated Annealing
+    Simulated Annealing
           Tune with option `--anneal' = TAU : DELTA-E-MAX : DELTA-E-MIN
           : K-MAX.
 
           Simulated-Annealing
           (http://en.wikipedia.org/wiki/Simulated_annealing)
 
-    Stragegy 2: DIJKSTRA Shortest Path
+    DIJKSTRA Shortest Path
           Tune with option `--dijkstra' = RADIUS.
 
           DIJKSTRA algorithm
           (http://en.wikipedia.org/wiki/Dijkstra_algorithm)
 
 
-     Table 3.5: Enblend's two strategies to optimize the seam lines
-     between images.
+     Table 3.5: Enblend's strategies to optimize the seam lines between
+     images.
 
   `--optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]'
         Set the weights of the seam-line optimizer.  If omitted,
@@ -1170,7 +1170,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-1798aefd49cc)
+     version 3.2 used 1:1.  This version of Enblend (4.1-152ffb1b6463)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -2607,8 +2607,9 @@ General Index
                                                               (line   9)
 * optimizer weights:                     Mask Generation Options.
                                                               (line 199)
-* optimizer, simulated annealing:        Mask Generation Options.
+* optimizer, simulated annealing <1>:    Mask Generation Options.
                                                               (line   9)
+* optimizer, simulated annealing:        Extended Options.    (line 149)
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
 * options, extended:                     Extended Options.    (line   6)
@@ -2654,8 +2655,9 @@ General Index
                                                               (line 168)
 * seam-line endpoint, frozen:            Mask Generation Options.
                                                               (line 331)
-* simulated annealing optimizer:         Mask Generation Options.
+* simulated annealing optimizer <1>:     Mask Generation Options.
                                                               (line   9)
+* simulated annealing optimizer:         Extended Options.    (line 149)
 * single precision float, IEEE754:       Extended Options.    (line  77)
 * size, canvas:                          Extended Options.    (line 114)
 * smooth difference image:               Mask Generation Options.
@@ -2700,44 +2702,44 @@ General Index
 
 
 Tag Table:
-Node: Top902
-Node: Overview2026
-Ref: Overview-Footnote-14465
-Ref: Overview-Footnote-24646
-Node: Workflow4788
-Node: Standard Workflow5187
-Ref: Figure:photographic-workflow5447
-Node: External Mask Manipulation8121
-Ref: Figure:external-mask-workflow9438
-Node: Invocation9923
-Node: Image Requirements10618
-Node: Response Files12092
-Ref: Table:response-file-format14116
-Ref: Table:response-file-syntactic-comment16581
-Ref: Table:globbing-algorithms17482
-Node: Common Options18941
-Ref: Common Options-Footnote-126886
-Ref: Common Options-Footnote-227078
-Node: Extended Options27237
-Ref: Extended Options-Footnote-133634
-Node: Mask Generation Options33707
-Ref: Table:mask-generation36397
-Ref: Table:optimizer-strategies41335
-Ref: Table:visualization-colors46867
-Ref: Table:mask-template-characters47763
-Ref: Mask Generation Options-Footnote-150015
-Node: Color Profiles50243
-Node: Understanding Masks52680
-Node: Tuning Memory Usage56473
-Ref: Table:cache-size-settings59215
-Node: Helpful Programs59651
-Node: Bug Reports63387
-Ref: Bug Reports-Footnote-169094
-Node: Authors69164
-Node: FDL70329
-Node: Program Index91310
-Node: Syntactic-Comment Index94306
-Node: Option Index94995
-Node: General Index98936
+Node: Top901
+Node: Overview2024
+Ref: Overview-Footnote-14463
+Ref: Overview-Footnote-24644
+Node: Workflow4786
+Node: Standard Workflow5185
+Ref: Figure:photographic-workflow5445
+Node: External Mask Manipulation8119
+Ref: Figure:external-mask-workflow9436
+Node: Invocation9921
+Node: Image Requirements10616
+Node: Response Files12090
+Ref: Table:response-file-format14114
+Ref: Table:response-file-syntactic-comment16579
+Ref: Table:globbing-algorithms17480
+Node: Common Options18939
+Ref: Common Options-Footnote-126884
+Ref: Common Options-Footnote-227076
+Node: Extended Options27235
+Ref: Extended Options-Footnote-133644
+Node: Mask Generation Options33717
+Ref: Table:mask-generation36378
+Ref: Table:optimizer-strategies41319
+Ref: Table:visualization-colors46823
+Ref: Table:mask-template-characters47719
+Ref: Mask Generation Options-Footnote-149971
+Node: Color Profiles50199
+Node: Understanding Masks52636
+Node: Tuning Memory Usage56429
+Ref: Table:cache-size-settings59171
+Node: Helpful Programs59607
+Node: Bug Reports63343
+Ref: Bug Reports-Footnote-169050
+Node: Authors69120
+Node: FDL70285
+Node: Program Index91266
+Node: Syntactic-Comment Index94262
+Node: Option Index94951
+Node: General Index98892
 
 End Tag Table

@@ -33,10 +33,12 @@
 #include <slist>
 #endif
 
+
 #include "common.h"
 #include "anneal.h"
 #include "nearest.h"
 #include "path.h"
+#include "postoptimizer.h"
 
 #include "vigra/contourcirculator.hxx"
 #include "vigra/error.hxx"
@@ -99,13 +101,6 @@ using boost::lambda::protect;
 using boost::lambda::ret;
 
 namespace enblend {
-
-/** Data structures for vector masks */
-typedef pair<bool, Point2D> SegmentPoint; // struct {bool isMovable; Point2D segmentPoint;}
-typedef slist<SegmentPoint> Segment;
-typedef vector<Segment*> Contour;
-typedef vector<Contour*> ContourVector;
-
 
 void
 dump_segment(const Segment& segment,
@@ -1142,121 +1137,17 @@ MaskType* createMask(const ImageType* const white,
 
 #ifndef SKIP_OPTIMIZER
     // Strategy 1: Use GDA to optimize placement of snake vertices
-    int segmentNumber;
-    for (ContourVector::iterator currentContour = contours.begin();
-         currentContour != contours.end();
-         ++currentContour) {
-        segmentNumber = 0;
-        for (Contour::iterator currentSegment = (*currentContour)->begin();
-             currentSegment != (*currentContour)->end();
-             ++currentSegment, ++segmentNumber) {
-            Segment* snake = *currentSegment;
+    OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+        defaultOptimizerChain(&mismatchImage, visualizeImage,
+                              &mismatchImageSize, &mismatchImageStride,
+                              &uvBBStrideOffset, &contours, &uBB, &vBB, new(vector<double>),
+                              whiteAlpha, blackAlpha, &uvBB);
 
-            if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << command
-                     << ": info: strategy 1, s"
-                     << segmentNumber << ":";
-                cerr.flush();
-            }
+    defaultOptimizerChain.addOptimizer("anneal");
+    defaultOptimizerChain.addOptimizer("dijkstra");
 
-            if (snake->empty()) {
-                cerr << endl
-                     << command
-                     << ": warning: seam s"
-                     << segmentNumber - 1
-                     << " is a tiny closed contour and was removed before optimization"
-                     << endl;
-                continue;
-            }
+    defaultOptimizerChain.runNextOptimizer();
 
-            // Move snake points to mismatchImage-relative coordinates
-            for (Segment::iterator vertexIterator = snake->begin();
-                 vertexIterator != snake->end();
-                 ++vertexIterator) {
-                vertexIterator->second =
-                    (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft())
-                    / mismatchImageStride;
-            }
-
-            annealSnake(&mismatchImage, OptimizerWeights,
-                        snake, visualizeImage);
-
-            // Post-process annealed vertices
-            Segment::iterator lastVertex = snake->previous(snake->end());
-            for (Segment::iterator vertexIterator = snake->begin();
-                 vertexIterator != snake->end();) {
-                if (vertexIterator->first
-                    && mismatchImage[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max()) {
-                    // Vertex is still in max-cost region. Delete it.
-                    if (vertexIterator == snake->begin()) {
-                        snake->pop_front();
-                        vertexIterator = snake->begin();
-                    } else {
-                        vertexIterator = snake->erase_after(lastVertex);
-                    }
-
-                    bool needsBreak = false;
-                    if (vertexIterator == snake->end()) {
-                        vertexIterator = snake->begin();
-                        needsBreak = true;
-                    }
-
-                    // vertexIterator now points to next entry.
-
-                    // It is conceivable but very unlikely that every vertex in a closed contour
-                    // ended up in the max-cost region after annealing.
-                    if (snake->empty()) {
-                        break;
-                    }
-
-                    if (!(lastVertex->first || vertexIterator->first)) {
-                        // We deleted an entire range of moveable points between two nonmoveable points.
-                        // insert dummy point after lastVertex so dijkstra can work over this range.
-                        if (vertexIterator == snake->begin()) {
-                            snake->push_front(make_pair(true, vertexIterator->second));
-                            lastVertex = snake->begin();
-                        } else {
-                            lastVertex = snake->insert_after(lastVertex,
-                                                             make_pair(true, vertexIterator->second));
-                        }
-                    }
-
-                    if (needsBreak) {
-                        break;
-                    }
-                }
-                else {
-                    lastVertex = vertexIterator;
-                    ++vertexIterator;
-                }
-            }
-
-            if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << endl;
-            }
-
-            // Print an explanation if every vertex in a closed contour ended up in the
-            // max-cost region after annealing.
-            // FIXME: explain how to fix this problem in the error message!
-            if (snake->empty()) {
-                cerr << endl
-                     << command
-                     << ": seam s"
-                     << segmentNumber - 1
-                     << " is a tiny closed contour and was removed after optimization"
-                     << endl;
-            }
-        }
-    }
-
-    if (Verbose >= VERBOSE_MASK_MESSAGES) {
-        cerr << command
-             << ": info: strategy 2:";
-        cerr.flush();
-    }
-
-    // Adjust cost image for the shortest path algorithm.
-    // Areas outside the union region have epsilon cost.
     combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
                          stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
                          srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
@@ -1265,102 +1156,7 @@ MaskType* createMask(const ImageType* const white,
                                     Param(NumericTraits<MismatchImagePixelType>::one()),
                                     Arg3()));
 
-    Rect2D withinMismatchImage(mismatchImageSize);
-
-    // Use Dijkstra to route between moveable snake vertices over mismatchImage.
-    for (ContourVector::iterator currentContour = contours.begin();
-         currentContour != contours.end();
-         ++currentContour) {
-        segmentNumber = 0;
-        for (Contour::iterator currentSegment = (*currentContour)->begin();
-             currentSegment != (*currentContour)->end();
-             ++currentSegment, ++segmentNumber) {
-            Segment* snake = *currentSegment;
-
-            if (snake->empty()) {
-                continue;
-            }
-
-            if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << " s" << segmentNumber;
-                cerr.flush();
-            }
-
-            for (Segment::iterator currentVertex = snake->begin(); ; ) {
-                Segment::iterator nextVertex = currentVertex;
-                ++nextVertex;
-                if (nextVertex == snake->end()) {
-                    nextVertex = snake->begin();
-                }
-
-                if (currentVertex->first || nextVertex->first) {
-                    // Find shortest path between these points
-                    Point2D currentPoint = currentVertex->second;
-                    Point2D nextPoint = nextVertex->second;
-
-                    Rect2D pointSurround(currentPoint, Size2D(1, 1));
-                    pointSurround |= Rect2D(nextPoint, Size2D(1, 1));
-                    pointSurround.addBorder(DijkstraRadius);
-                    pointSurround &= withinMismatchImage;
-
-                    // Make BasicImage to hold pointSurround portion of mismatchImage.
-                    // min cost path needs inexpensive random access to cost image.
-                    BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
-                    copyImage(pointSurround.apply(srcImageRange(mismatchImage)),
-                              destImage(mismatchROIImage));
-
-                    vector<Point2D>* shortPath =
-                        minCostPath(srcImageRange(mismatchROIImage),
-                                    Point2D(nextPoint - pointSurround.upperLeft()),
-                                    Point2D(currentPoint - pointSurround.upperLeft()));
-
-                    for (vector<Point2D>::iterator shortPathPoint = shortPath->begin();
-                         shortPathPoint != shortPath->end();
-                         ++shortPathPoint) {
-                        snake->insert_after(currentVertex,
-                                            make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
-
-                        if (visualizeImage) {
-                            (*visualizeImage)[*shortPathPoint + pointSurround.upperLeft()] =
-                                VISUALIZE_SHORT_PATH_VALUE;
-                        }
-                    }
-
-                    delete shortPath;
-
-                    if (visualizeImage) {
-                        (*visualizeImage)[currentPoint] =
-                            currentVertex->first ?
-                            VISUALIZE_FIRST_VERTEX_VALUE :
-                            VISUALIZE_NEXT_VERTEX_VALUE;
-                        (*visualizeImage)[nextPoint] =
-                            nextVertex->first ?
-                            VISUALIZE_FIRST_VERTEX_VALUE :
-                            VISUALIZE_NEXT_VERTEX_VALUE;
-                    }
-                }
-
-                currentVertex = nextVertex;
-                if (nextVertex == snake->begin()) {
-                    break;
-                }
-            }
-
-            // Move snake vertices from mismatchImage-relative
-            // coordinates to uBB-relative coordinates.
-            for (Segment::iterator currentVertex = snake->begin();
-                 currentVertex != snake->end();
-                 ++currentVertex) {
-                currentVertex->second =
-                    currentVertex->second * mismatchImageStride
-                    + vBB.upperLeft() - uBB.upperLeft();
-            }
-        }
-    }
-
-    if (Verbose >= VERBOSE_MASK_MESSAGES) {
-        cerr << endl;
-    }
+    defaultOptimizerChain.runNextOptimizer();
 #endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {

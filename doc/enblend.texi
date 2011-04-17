@@ -1252,9 +1252,11 @@ unassociated alpha.
 Use the graphics card -- in fact the graphics processing unit
 (@acronym{GPU}) -- to accelerate some computations.
 
+@cindex simulated annealing optimizer
+@cindex optimizer, simulated annealing
 This is an experimental feature that may not work on all systems.  In
-this version of Enblend, @value{VERSION}, only mask optimization
-strategy@tie{}1 benefits from this option.
+this version of Enblend, @value{VERSION}, only mask optimization by
+Simulated Annealing benefits from this option.
 
 Note that @acronym{GPU}-support must have been compiled into Enblend
 for this option to be available.  Find out about this feature with
@@ -1301,8 +1303,8 @@ These options control the generation and the usage of masks.
 @cindex anneal parameters
 @cindex simulated annealing optimizer
 @cindex optimizer, simulated annealing
-Set the parameters of the Simulated Annealing optimizer used in
-Optimizer Strategy@tie{}1 (see @ref{Table:optimizer-strategies}).
+Set the parameters of the Simulated Annealing optimizer (see
+@ref{Table:optimizer-strategies}).
 
 @table @var
 @item TAU
@@ -1572,7 +1574,7 @@ algorithm, fill vector contours.
 @cindex @sc{Dijkstra} radius
 @cindex radius, @sc{Dijkstra}
 Set the search @var{RADIUS} of the @sc{Dijkstra} Shortest Path
-algorithm used in Optimizer Strategy@tie{}2 (see
+algorithm used in @sc{Dijkstra} Optimization (see
 @ref{Table:optimizer-strategies}).
 
 A small value prefers straight line segments and thus shorter seam
@@ -1675,7 +1677,7 @@ Also see @ref{Table:mask-generation}.
 @opindex --optimize
 @cindex optimize seam
 @cindex seam optimization
-Use a two-strategy approach to route the seam line around mismatches
+Use a multi-strategy approach to route the seam line around mismatches
 in the overlap region.  This is the default.
 @ref{Table:optimizer-strategies} explains these strategies; also see
 @ref{Table:mask-generation}.
@@ -1683,7 +1685,7 @@ in the overlap region.  This is the default.
 @float Table,Table:optimizer-strategies
 @table @asis
 @dbtitle{Optimizer Strategies}
-@item Stragegy 1: Simulated Annealing
+@item Simulated Annealing
 Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
 : @var{DELTA-E-MIN} : @var{K-MAX}.
 
@@ -1691,7 +1693,7 @@ Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
 Simulated-Annealing}
 
 
-@item Stragegy 2: @sc{Dijkstra} Shortest Path
+@item @sc{Dijkstra} Shortest Path
 Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 
 @uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_@/algorithm,
@@ -1699,7 +1701,7 @@ Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 
 @end table
 
-@caption{Enblend's two strategies to optimize the seam lines between images.}
+@caption{Enblend's strategies to optimize the seam lines between images.}
 
 @shortcaption{Optimizer strategies}
 
