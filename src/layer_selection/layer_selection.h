@@ -31,7 +31,7 @@
 
 namespace selector
 {
-    class Abstract; // forward declaration for class in "selector.h"
+    struct Abstract; // forward declaration for class in "selector.h"
 }
 
 
