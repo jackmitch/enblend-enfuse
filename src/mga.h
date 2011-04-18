@@ -73,7 +73,7 @@ public:
     static const std::string defaultGrayscaleAccessorName() {return "average";}
 
 private:
-    typedef enum {
+    typedef enum AccessorKind {
         AVERAGE, LSTAR, PRIMED_LSTAR, LIGHTNESS, VALUE, ANTI_VALUE, LUMINANCE, MIXER
     } AccKindType;
     typedef std::map<std::string, AccKindType> NameMapType;
