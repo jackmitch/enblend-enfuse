@@ -300,6 +300,11 @@ that add their value to the "usual suspects".  These are
         CXXFLAGS  --  EXTRACXXFLAGS
         LDFLAGS   --  EXTRALDFLAGS
 
+All these "EXTRA" are intentionally unaffected by the
+Automake/Autoconf generation of the Makefiles proper.  That way
+developers can override configured settings in any make(1) run or
+quickly build the project with new combinations of flags.
+
 For example, to quickly add an additional define, use
         make EXTRACPPFLAGS=-DDEBUG_8BIT_ONLY
 To compile for coverage analysis, say
