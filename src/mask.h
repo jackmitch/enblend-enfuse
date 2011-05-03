@@ -1126,15 +1126,6 @@ MaskType* createMask(const ImageType* const white,
         }
     }
 
-    // Areas other than intersection region have maximum cost.
-    combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                         stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                         srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                         destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                         ifThenElse(Arg1() & Arg2(),
-                                    Arg3(),
-                                    Param(NumericTraits<MismatchImagePixelType>::max())));
-
 #ifndef SKIP_OPTIMIZER
     
     
@@ -1154,17 +1145,7 @@ MaskType* createMask(const ImageType* const white,
     defaultOptimizerChain->addOptimizer("dijkstra");
    
         // Fire optimizer chain (runs every optimizer on the list in sequence)
-    defaultOptimizerChain->runCurrentOptimizer();
-
-    combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                         stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                         srcIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                         destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                         ifThenElse(!(Arg1() || Arg2()),
-                                    Param(NumericTraits<MismatchImagePixelType>::one()),
-                                    Arg3()));
-
-    defaultOptimizerChain->runCurrentOptimizer();
+    defaultOptimizerChain->runOptimizerChain();
     
     delete params;
     delete defaultOptimizerChain;

@@ -62,7 +62,6 @@ public:
         uBB(aUBB), vBB(aVBB),
         parameters(*someParameters),
         whiteAlpha(aWhiteAlpha), blackAlpha(aBlackAlpha), uvBB(aUVBB) {
-        configureOptimizer();
     }
 
     virtual void runOptimizer() {}
@@ -107,10 +106,12 @@ public:
               mismatchImageSize, mismatchImageStride,
               uvBBStrideOffset, contours,
               uBB, vBB, parameters, whiteAlpha, blackAlpha, uvBB) {
-        configureOptimizer();
     }
 
     virtual void runOptimizer() {
+        
+        configureOptimizer();
+        
         int segmentNumber;
 
         for (ContourVector::iterator currentContour = (*this->contours).begin();
@@ -224,14 +225,12 @@ public:
 
 private:
     void configureOptimizer() {
-#if 0
-         Areas other than intersection region have maximum cost.
-        combineThreeImagesMP(stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
-          stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
+         //Areas other than intersection region have maximum cost.
+        combineThreeImagesMP(stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
+          stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
           srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
           destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
           ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
-#endif
     }
     AnnealOptimizer(AnnealOptimizer* other);           // NOT IMPLEMENTED
     AnnealOptimizer& operator=(const AnnealOptimizer &other);   // NOT IMPLEMENTED
@@ -257,6 +256,9 @@ public:
               uBB, vBB, parameters, whiteAlpha, blackAlpha, uvBB) {}
 
     virtual void runOptimizer() {
+        
+        configureOptimizer();
+        
         Rect2D withinMismatchImage(*this->mismatchImageSize);
         int segmentNumber;
 
@@ -367,13 +369,11 @@ public:
 
 private:
     void configureOptimizer() {
-#if 0
-        combineThreeImagesMP(stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
-                             stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
-                             srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                             destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                             ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
-#endif
+        combineThreeImagesMP(stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
+          stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
+          srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+          destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+          ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
     }
     DijkstraOptimizer(DijkstraOptimizer* other);           // NOT IMPLEMENTED
     DijkstraOptimizer& operator=(const DijkstraOptimizer &other);   // NOT IMPLEMENTED
