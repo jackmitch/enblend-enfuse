@@ -9,6 +9,9 @@ file(GLOB vigra_impex_cxx_sources ${TOP_SRC_DIR}/src/vigra_impex/*.cxx ${TOP_SRC
 file(GLOB vigra_impex_hxx_headers ${TOP_SRC_DIR}/src/vigra_impex/*.hxx ${TOP_SRC_DIR}/src/vigra_impex/*.h)
 
 #add_definitions(${EXR_CFLAGS})
-include_directories(${TOP_SRC_DIR}/src/vigra_impex ${OPENEXR_INCLUDE_DIR})
+include_directories(${TOP_SRC_DIR}/src/vigra_impex)
+IF(OPENEXR_FOUND)
+include_directories(${OPENEXR_INCLUDE_DIR})
+ENDIF()
 add_library(vigra_impex ${library_type} ${vigra_impex_cxx_sources})
 target_link_libraries(vigra_impex ${JPEG_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES})
