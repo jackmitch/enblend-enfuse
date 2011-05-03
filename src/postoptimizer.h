@@ -44,8 +44,11 @@ using vigra::functor::UnaryFunctor;
 namespace enblend
 {
 
+    
+    
 template <typename MismatchImageType, typename VisualizeImageType, typename AlphaType>
 class PostOptimizer {
+    //Base abstract class for optimizer plugins
 public:
     PostOptimizer(MismatchImageType* aMismatchImage, VisualizeImageType* aVisualizeImage,
                   vigra::Size2D* aMismatchImageSize, int* aMismatchImageStride,
@@ -90,6 +93,7 @@ private:
 
 template <class MismatchImagePixelType, class MismatchImageType, class VisualizeImageType, class AlphaType>
 class AnnealOptimizer : public PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> {
+    //Optimizer strategy 1: Anneal optimizer
 public:
     typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
 
@@ -221,7 +225,7 @@ public:
 private:
     void configureOptimizer() {
 #if 0
-        // Areas other than intersection region have maximum cost.
+         Areas other than intersection region have maximum cost.
         combineThreeImagesMP(stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
           stride(this->mismatchImageStride, this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
           srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
@@ -237,6 +241,7 @@ private:
 
 template <class MismatchImagePixelType, class MismatchImageType, class VisualizeImageType, class AlphaType>
 class DijkstraOptimizer : public PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> {
+    //Optimizer Strategy 2: Dijkstra optimizer
 public:
     typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
 
@@ -429,12 +434,17 @@ public:
         }
     }
 
+    //Runs every optimizer added to the list sequentially in FIFO order
     void runOptimizerChain() {
         for (typename optimizer_list_t::iterator i = optimizerList.begin(); i != optimizerList.end(); ++i) {
             (*i)->runOptimizer();
         }
     }
 
+    /*Runs current optimizer and increments the counter provided there are still
+     * optimizers in the chain to run. Used primarily for debugging purposes. 
+     * For other uses, use the runOptimizerChain() function
+     */
     void runCurrentOptimizer() {
         if (currentOptimizer < optimizerList.size()) {
             optimizerList[currentOptimizer]->runOptimizer();

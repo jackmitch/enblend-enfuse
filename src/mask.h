@@ -1136,7 +1136,7 @@ MaskType* createMask(const ImageType* const white,
                                     Param(NumericTraits<MismatchImagePixelType>::max())));
 
 #ifndef SKIP_OPTIMIZER
-    // Strategy 1: Use GDA to optimize placement of snake vertices
+    
     
     vector<double> *params = new(vector<double>);
     
@@ -1146,10 +1146,14 @@ MaskType* createMask(const ImageType* const white,
                               &mismatchImageSize, &mismatchImageStride,
                               &uvBBStrideOffset, &contours, &uBB, &vBB, params,
                               whiteAlpha, blackAlpha, &uvBB);
-
+    
+        // Add Strategy 1: Use GDA to optimize placement of snake vertices
     defaultOptimizerChain->addOptimizer("anneal");
+    
+        // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
     defaultOptimizerChain->addOptimizer("dijkstra");
-
+   
+        // Fire optimizer chain (runs every optimizer on the list in sequence)
     defaultOptimizerChain->runCurrentOptimizer();
 
     combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
