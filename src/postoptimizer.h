@@ -82,6 +82,8 @@ protected:
     const Rect2D* uvBB;
 
 private:
+    PostOptimizer(PostOptimizer* other);           // NOT IMPLEMENTED
+    PostOptimizer& operator=(const PostOptimizer &other);   // NOT IMPLEMENTED
     PostOptimizer();            // NOT IMPLEMENTED
 };
 
@@ -227,7 +229,8 @@ private:
           ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
 #endif
     }
-
+    AnnealOptimizer(AnnealOptimizer* other);           // NOT IMPLEMENTED
+    AnnealOptimizer& operator=(const AnnealOptimizer &other);   // NOT IMPLEMENTED
     AnnealOptimizer();          // NOT IMPLEMENTED
 };
 
@@ -367,7 +370,8 @@ private:
                              ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
 #endif
     }
-
+    DijkstraOptimizer(DijkstraOptimizer* other);           // NOT IMPLEMENTED
+    DijkstraOptimizer& operator=(const DijkstraOptimizer &other);   // NOT IMPLEMENTED
     DijkstraOptimizer();        // NOT IMPLEMENTED
 };
 
@@ -425,13 +429,13 @@ public:
         }
     }
 
-    void runOptimizer() {
+    void runOptimizerChain() {
         for (typename optimizer_list_t::iterator i = optimizerList.begin(); i != optimizerList.end(); ++i) {
             (*i)->runOptimizer();
         }
     }
 
-    void runNextOptimizer() {
+    void runCurrentOptimizer() {
         if (currentOptimizer < optimizerList.size()) {
             optimizerList[currentOptimizer]->runOptimizer();
             ++currentOptimizer;
@@ -443,6 +447,8 @@ public:
     }
 
 private:
+    OptimizerChain(OptimizerChain* other);           // NOT IMPLEMENTED
+    OptimizerChain& operator=(const OptimizerChain &other);   // NOT IMPLEMENTED
     OptimizerChain();           // NOT IMPLEMENTED
 
     optimizer_list_t optimizerList;

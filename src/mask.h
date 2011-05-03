@@ -1137,16 +1137,20 @@ MaskType* createMask(const ImageType* const white,
 
 #ifndef SKIP_OPTIMIZER
     // Strategy 1: Use GDA to optimize placement of snake vertices
+    
+    vector<double> *params = new(vector<double>);
+    
     OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-        defaultOptimizerChain(&mismatchImage, visualizeImage,
+        *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+                              (&mismatchImage, visualizeImage,
                               &mismatchImageSize, &mismatchImageStride,
-                              &uvBBStrideOffset, &contours, &uBB, &vBB, new(vector<double>),
+                              &uvBBStrideOffset, &contours, &uBB, &vBB, params,
                               whiteAlpha, blackAlpha, &uvBB);
 
-    defaultOptimizerChain.addOptimizer("anneal");
-    defaultOptimizerChain.addOptimizer("dijkstra");
+    defaultOptimizerChain->addOptimizer("anneal");
+    defaultOptimizerChain->addOptimizer("dijkstra");
 
-    defaultOptimizerChain.runNextOptimizer();
+    defaultOptimizerChain->runCurrentOptimizer();
 
     combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
                          stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
@@ -1156,7 +1160,11 @@ MaskType* createMask(const ImageType* const white,
                                     Param(NumericTraits<MismatchImagePixelType>::one()),
                                     Arg3()));
 
-    defaultOptimizerChain.runNextOptimizer();
+    defaultOptimizerChain->runCurrentOptimizer();
+    
+    delete params;
+    delete defaultOptimizerChain;
+    
 #endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {
