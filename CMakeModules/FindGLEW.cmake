@@ -14,7 +14,7 @@ IF(WIN32)
   )
 ELSE(WIN32)
   FIND_PATH(GLEW_INCLUDE_DIR GL/glew.h PATHS /usr/include /usr/local/include)
-  FIND_LIBRARY(GLEW_LIBRARIES GLEW PATHS /usr/lib /usr/local/lib)
+  FIND_LIBRARY(GLEW_LIBRARIES GLEW PATHS ${SYSTEM_LIB_DIRS})
 ENDIF(WIN32)
 
 include(FindPackageHandleStandardArgs)

@@ -31,7 +31,7 @@ include(FindLibraryWithDebug)
 find_library_with_debug(ZLIB_LIBRARIES
   WIN32_DEBUG_POSTFIX d
   NAMES z zlib
-  PATHS /usr/lib /usr/local/lib ${SOURCE_BASE_DIR}/zlib
+  PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/zlib
 )
 
 

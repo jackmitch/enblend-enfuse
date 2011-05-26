@@ -30,7 +30,7 @@ IF (ZLIB_FOUND)
   find_library_with_debug(PNG_LIBRARIES
     WIN32_DEBUG_POSTFIX d
     NAMES png libpng
-    PATHS /usr/lib /usr/local/lib     ${SOURCE_BASE_DIR}/libpng-1.2.40/lib
+    PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/libpng-1.2.40/lib
   )
 
   include(FindPackageHandleStandardArgs)

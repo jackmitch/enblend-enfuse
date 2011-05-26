@@ -27,7 +27,7 @@ include(FindLibraryWithDebug)
 find_library_with_debug(TIFF_LIBRARIES
   WIN32_DEBUG_POSTFIX d
   NAMES tiff libtiff 
-  PATHS /usr/lib /usr/local/lib
+  PATHS ${SYSTEM_LIB_DIRS}
         ${SOURCE_BASE_DIR}/tiff-4.0.0beta5/libtiff
         ${SOURCE_BASE_DIR}/tiff-3.9.2/libtiff
         ${SOURCE_BASE_DIR}/tiff-3.8.2/libtiff

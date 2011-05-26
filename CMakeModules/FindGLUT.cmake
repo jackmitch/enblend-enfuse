@@ -58,7 +58,7 @@ ELSE (WIN32)
       )
     
     FIND_LIBRARY( GLUT_Xi_LIBRARY Xi
-      /usr/openwin/lib
+      /usr/openwin/lib ${SYSTEM_LIB_DIRS}
       )
     
     FIND_LIBRARY( GLUT_Xmu_LIBRARY Xmu
