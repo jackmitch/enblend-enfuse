@@ -481,7 +481,7 @@ template <typename MaskType, typename AlphaType>
 void vectorizeSeamLine(Contour& rawSegments,
                        const AlphaType* const whiteAlpha, const AlphaType* const blackAlpha,
                        const Rect2D& uBB,
-                       int nftStride, MaskType* nftOutputImage)
+                       int nftStride, MaskType* nftOutputImage, int vectorizeDistance = 0)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
@@ -489,10 +489,12 @@ void vectorizeSeamLine(Contour& rawSegments,
     const double diagonalLength =
         hypot(static_cast<double>(nftOutputImage->width()),
               static_cast<double>(nftOutputImage->height()));
-    int vectorizeDistance =
-        MaskVectorizeDistance.is_percentage() ?
-        static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
-        MaskVectorizeDistance.value();
+    if(vectorizeDistance == 0)
+        vectorizeDistance =
+            MaskVectorizeDistance.is_percentage() ?
+            static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
+            MaskVectorizeDistance.value();
+    
     if (vectorizeDistance < minimumVectorizeDistance) {
         cerr << command
              << ": warning: mask vectorization distance "
@@ -874,10 +876,14 @@ MaskType* createMask(const ImageType* const white,
     graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
                             stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
                             destIter(mainOutputImage->upperLeft() + mainOutputOffset),
-                            stride(mainStride, mainStride, iBB.apply(srcImageRange(*whiteAlpha))),
-                            stride(mainStride, mainStride, iBB.apply(srcImage(*blackAlpha))),
+                            stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                            stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                             ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries);
+                            wraparound ? HorizontalStrip : OpenBoundaries,
+                            iBB);
+
+#define SKIP_OPTIMIZER
+    bool graphCutDebug = true;
     /*nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                             stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                             destIter(mainOutputImage->upperLeft() + mainOutputOffset),
@@ -927,7 +933,13 @@ MaskType* createMask(const ImageType* const white,
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
+    if(graphCutDebug)
     vectorizeSeamLine(rawSegments,
+                      whiteAlpha, blackAlpha,
+                      uBB,
+                      mainStride, mainOutputImage, 4);
+    else 
+        vectorizeSeamLine(rawSegments,
                       whiteAlpha, blackAlpha,
                       uBB,
                       mainStride, mainOutputImage);
