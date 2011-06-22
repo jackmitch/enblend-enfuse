@@ -57,7 +57,10 @@ using vigra::NumericTraits;
 using vigra::triple;
 using vigra::stride;
 using vigra::StridedImageIterator;
+using vigra::Kernel2D;
+using vigra::Kernel1D;
 using vigra::kernel2d;
+using vigra::kernel1d;
 using vigra::BorderTreatmentMode;
 using vigra::labelImage;
 
@@ -66,7 +69,7 @@ using vigra::labelImage;
 #define BIT_MASK_OPDIR 0x02
 #define BIT_MASK_OPEN 0x04
 #define BIT_MASK_DIVIDE 0x0F
-//#define GRAPHCUT_DBG
+#define GRAPHCUT_DBG
 
 namespace enblend{
     
@@ -184,12 +187,12 @@ namespace enblend{
     struct CostComparer
     {
         public:
-            CostComparer(ImageType* image):img(image){}
-            bool operator()(Point2D& a, Point2D& b){
+            CostComparer(const ImageType* image):img(image){}
+            bool operator()(const Point2D& a, const Point2D& b) const {
                 return (*img)[a] > (*img)[b];
             }
         protected:
-            ImageType* img;
+            const ImageType* img;
     };
     
     
@@ -359,7 +362,7 @@ namespace enblend{
         //uint *heur(Point2D, Point2D, ImageType*) = &heuristic_dummy;
         long score;
         long count = 0;
-        bool scoreIsBetter;
+        bool scoreIsBetter, pushflag;
         Point2D list[4], current, neighbour;
         openset->push(srcpt);
         
@@ -377,11 +380,12 @@ namespace enblend{
             for(int i = 0; i < 4; i++){
                 score = 0;
                 scoreIsBetter = false;
+                pushflag = false;
                 neighbour = list[i];
                 if(neighbour != Point2D(-1,-1) && (*img)[neighbour(1,1)] == zeroVal){
-                    score = (*img)[neighbour] + getEdgeWeight(i, current, img);
+                    score = (*img)[current] + getEdgeWeight(i, current, img);
                     if(((*img)[neighbour(1,1)] & BIT_MASK_OPEN) == 0){
-                        openset->push(neighbour);
+                        pushflag = true;
                         (*img)[neighbour(1,1)] += BIT_MASK_OPEN;
                         scoreIsBetter = true;
                     }
@@ -393,6 +397,8 @@ namespace enblend{
                         (*img)[neighbour(1,1)] += i;
                         (*img)[neighbour(1,1)] ^= BIT_MASK_OPDIR;
                         (*img)[neighbour] = score;
+                        if(pushflag)
+                                openset->push(neighbour);
                     }
                     
                 }
@@ -448,7 +454,7 @@ namespace enblend{
                     break;
                 }
             } else if(*currentDual == cut->back()){
-            
+            /*
                 if(current.y == 0){
                     left->insert(current);
                     right->insert(current(1, 0));
@@ -466,6 +472,41 @@ namespace enblend{
                     right->insert(current(1,1));
                     left->insert(current(2,0));
                     right->insert(current(2,1));
+                }
+                */
+                
+                switch((*img)[(*previousDual)(1,1)] & BIT_MASK_DIR){
+                    case 0: // top->top
+                        left->insert(current);
+                        right->insert(current(1,0));
+                        left->insert(current(0,1));
+                        right->insert(current(1,1));
+                        break;
+                    case 1://right->top
+                        left->insert(current);
+                        right->insert(current(1,0));
+                        right->insert(current(0,1));
+                        right->insert(current(1,1));
+                        break;
+                    case 3://left->top
+                        left->insert(current);
+                        right->insert(current(1,0));
+                        left->insert(current(0,1));
+                        left->insert(current(1,1));
+                        break;
+                    case 2:// bottom->top
+                    default:
+                    #ifdef GRAPHCUT_DBG
+                        cout<<"path dividing error: endpoint problem"<<endl;
+                    #endif
+                    break;
+                }
+                
+                Point2D tmp = current;
+                while(tmp.y > -2){
+                    tmp.y--;
+                    left->insert(tmp);
+                    right->insert(tmp(1,0));
                 }
                     
             } else{
@@ -603,10 +644,10 @@ namespace enblend{
                           masksize(mask1_lowerright.x - mask1_upperleft.x,
                           mask1_lowerright.y - mask1_upperleft.y);
 
-        IMAGETYPE<BasePixelType> tmp(size), mask(size+Diff2D(2,2));
+        IMAGETYPE<BasePixelType> tmp(size), mask(size+Diff2D(2,2)), gradientX(size), gradientY(size);
         IMAGETYPE<BasePromotePixelType> graphtmp(size + size + Diff2D(1,1));
         IMAGETYPE<GraphPixelType> graph(size + size + Diff2D(1,1));
-        IMAGETYPE<MaskPixelType> testmask(masksize);
+        IMAGETYPE<MaskPixelType> finalmask(masksize);
         IMAGETYPE<BasePixelType>::traverser pts[4];
         vector<Point2D>* dualPath;
         boost::unordered_set<Point2D, pointHash> a, b;
@@ -616,9 +657,15 @@ namespace enblend{
                           graph.lowerRight().y - graph.upperLeft().y);
         const Rect2D gBB(Point2D(1,1), Size2D(graphsize)),
                      bBB(Point2D(1,1), Size2D(size));
-        
-        
-        
+        Kernel2D<BasePromotePixelType> edgeWeightKernel;
+        edgeWeightKernel.initExplicitly(Diff2D(-1,-1), Diff2D(1,1)) =  // upper left and lower right
+                         0, 1, 0,
+                         1, 1, 1,
+                         0, 1, 0;
+        edgeWeightKernel.setBorderTreatment(vigra::BORDER_TREATMENT_CLIP);
+        Kernel1D<BasePixelType> gradientKernel;
+        gradientKernel.initSymmetricGradient(1);
+       
         //difference image calculation
         combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1, 
                 src2_upperleft, sa2,
@@ -634,6 +681,10 @@ namespace enblend{
                 ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3())
                 );
         
+        //computing image gradient for a better cost function
+        vigra::separableConvolveX(srcImageRange(tmp), destImage(gradientX), kernel1d(gradientKernel));
+        vigra::separableConvolveY(srcImageRange(tmp), destImage(gradientY), kernel1d(gradientKernel));
+        
         //look for possible start and end points     
         findExtremePoints<IMAGETYPE<BasePixelType>::traverser,
         IMAGETYPE<BasePixelType>::Accessor, BasePixelType>
@@ -643,22 +694,18 @@ namespace enblend{
         copyImage(srcImageRange(tmp), stride(2,2,gBB.apply(destImage(graphtmp))));
                      
 #ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(tmp), ImageExportInfo("diff.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(graphtmp), ImageExportInfo("diff2.tif").setPixelType("UINT8"));
-        exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("mask1.tif").setPixelType("UINT8"));
-        exportImage(mask2_upperleft, mask1_lowerright, ma2, ImageExportInfo("mask2.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(tmp), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(graphtmp), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
+        exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
+        exportImage(mask2_upperleft, mask1_lowerright, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(gradientX), ImageExportInfo("./debug/gradx.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
 #endif
         //calculating differences between pixels that are adjacent in the original image
-        vigra::Kernel2D<BasePromotePixelType> edgeWeightKernel;
-        edgeWeightKernel.initExplicitly(Diff2D(-1,-1), Diff2D(1,1)) =  // upper left and lower right
-                         0, 1, 0,
-                         1, 1, 1,
-                         0, 1, 0;
-        edgeWeightKernel.setBorderTreatment(vigra::BORDER_TREATMENT_CLIP);
         convolveImage(srcImageRange(graphtmp), destImage(graph), kernel2d(edgeWeightKernel));
         
 #ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(graph), ImageExportInfo("graph.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(graph), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
 #endif
         //find optimal cut in dual graph
         dualPath = A_star<IMAGETYPE<GraphPixelType>, BasePixelType>(
@@ -668,29 +715,29 @@ namespace enblend{
         
         dividePath<IMAGETYPE<GraphPixelType> >(&graph, dualPath, &a, &b);
         
-        //labels areas to belong to left/right images
+        //labels areas that belong to left/right images
         //adds a 1-pixel border to catch any area that is cut off by the seam
         labelImage(srcIterRange(Diff2D(), Diff2D() + size + Diff2D(2,2)), 
                         destImage(mask), 
                         false, PathEqualityFunctor(&a, &b));
 #ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(mask), ImageExportInfo("labels.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(mask), ImageExportInfo("./debug/labels.tif").setPixelType("UINT8"));
 #endif
-        copyImage(bBB.apply(srcImageRange(mask)), destIter(testmask.upperLeft() += iBB.upperLeft()));
+        copyImage(bBB.apply(srcImageRange(mask)), destIter(finalmask.upperLeft() += iBB.upperLeft()));
         
         if(ma1(mask1_upperleft) == 255)
         {
                 combineThreeImagesMP(mask1_upperleft, mask1_lowerright, ma1,
                              mask2_upperleft, ma2,
-                             testmask.upperLeft(), testmask.accessor(),
+                             finalmask.upperLeft(), finalmask.accessor(),
                              dest_upperleft, da,
-                             FinalMaskFunctor<MaskPixelType, DestPixelType>(2, 255));
+                             FinalMaskFunctor<MaskPixelType, DestPixelType>(1, 255));
         } else{
                 combineThreeImagesMP(mask2_upperleft, mask1_lowerright, ma2,
                              mask1_upperleft, ma1,
-                             testmask.upperLeft(), testmask.accessor(),
+                             finalmask.upperLeft(), finalmask.accessor(),
                              dest_upperleft, da,
-                             FinalMaskFunctor<MaskPixelType, DestPixelType>(2, 0));
+                             FinalMaskFunctor<MaskPixelType, DestPixelType>(1, 0));
         }
     }
     
