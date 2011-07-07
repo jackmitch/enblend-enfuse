@@ -838,21 +838,32 @@ MaskType* createMask(const ImageType* const white,
     }
 
     // Start by using the nearest feature transform to generate a mask.
-    Size2D mainInputSize;
+    Size2D mainInputSize, mainInputBBSize;
     Rect2D mainInputBB;
+#define SKIP_OPTIMIZER
+    bool graphCutDebug = true;
+    
     int mainStride;
-    if (CoarseMask) {
+    if (CoarseMask && !graphCutDebug) {
         // Do NFT at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                               (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-        mainInputBB = Rect2D(Size2D(uBB.width() / CoarsenessFactor,
-                                   uBB.height() / CoarsenessFactor));
+        mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+                              (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+        //mainInputBB = Rect2D(Size2D(uBB.width() / CoarsenessFactor,
+          //                         uBB.height() / CoarsenessFactor));
+        mainInputBB = Rect2D(Point2D((iBB.upperLeft().x - uBB.upperLeft().x + CoarsenessFactor - 1)/ CoarsenessFactor, 
+                            (iBB.upperLeft().y - uBB.upperLeft().y + CoarsenessFactor - 1)/CoarsenessFactor),
+                            mainInputBBSize);
         mainStride = CoarsenessFactor;
     } else {
         // Do NFT at 1/1 scale.
         mainInputSize = uBB.size();
-        mainInputBB = Rect2D(mainInputSize);
+        mainInputBB = Rect2D(iBB);
+        if(mainInputBB.upperLeft().x >= uBB.upperLeft().x)
+                mainInputBB.moveBy(-uBB.upperLeft());
+        else mainInputBB.moveBy(uBB.upperLeft());
         mainStride = 1;
     }
 
@@ -872,6 +883,10 @@ MaskType* createMask(const ImageType* const white,
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
     MaskType* mainOutputImage = new MaskType(mainOutputSize);
+    
+    #ifdef GRAPHCUT_DBG
+        cout<<iBB<<endl<<mainInputBB<<endl;
+#endif
 
     graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
                             stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
@@ -879,11 +894,15 @@ MaskType* createMask(const ImageType* const white,
                             stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                             stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                             ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries,
-                            iBB);
+                            wraparound ? HorizontalStrip : OpenBoundaries, 
+                            mainInputBB);
+    
+ 
+    
+#ifdef GRAPHCUT_DBG
+        exportImage(srcImageRange(*mainOutputImage), ImageExportInfo("./debug/output.tif").setPixelType("UINT8"));
+#endif
 
-#define SKIP_OPTIMIZER
-    bool graphCutDebug = true;
     /*nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                             stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                             destIter(mainOutputImage->upperLeft() + mainOutputOffset),
