@@ -95,7 +95,7 @@ namespace enblend{
             BoundingPixels(){}
             boost::unordered_set<Point2D, pointHash> top, left, right, bottom,
                                         topbest, leftbest, rightbest, bottombest;
-            
+            Point2D topleft, topright, bottomleft, bottomright;
             ~BoundingPixels(){
                 top.clear();
                 bottom.clear();
@@ -109,6 +109,9 @@ namespace enblend{
             
     };
     
+    int distab(const Point2D& a, const Point2D& b){
+        return std::abs((a.x-b.x))+std::abs((a.y-b.y));
+    }
     
     template<class MaskImageIterator, class MaskAccessor, typename GraphmaskPixelType>
     void findExtremePoints(MaskImageIterator upperleft, MaskImageIterator lowerright, MaskAccessor ma, 
@@ -121,7 +124,7 @@ namespace enblend{
         IteratorType iter = temp.upperLeft();
         Point2D tmpPoint = Point2D(lowerright - upperleft), 
                 tempupperleft = Point2D(1,1), 
-                tempupperright = Point2D(lowerright - upperleft);
+                templowerright = Point2D(lowerright - upperleft);
         float a, tmpa, tmpb;
         a = tmpPoint.y;
         a = a / tmpPoint.x;
@@ -150,6 +153,13 @@ namespace enblend{
         vigra::CrackContourCirculator<MaskImageIterator> circ(iter, vigra::FourNeighborCode::South);
         vigra::CrackContourCirculator<MaskImageIterator> end(iter, vigra::FourNeighborCode::South);
         
+        tmpPoint = Point2D(circ.outerPixel() - temp.upperLeft());
+        
+        bp->topleft = tmpPoint;
+        bp->bottomleft = tmpPoint;
+        bp->topright = tmpPoint;
+        bp->bottomright = tmpPoint;
+        
         do{
             tmpPoint = Point2D(circ.outerPixel() - temp.upperLeft());
             
@@ -159,35 +169,81 @@ namespace enblend{
                 
                 tmpa = a * tmpPoint.x;
                 tmpb = -a * tmpPoint.x + (temp.lowerRight()-temp.upperLeft()).y;
-                        
+                //top        
                 if(tmpPoint.y < tmpa && tmpPoint.y < tmpb){
                     if(tmpPoint.y == tempupperleft.y || tmpPoint.x == tempupperleft.x)
                         bp->topbest.insert(tmpPoint*2 - Diff2D(1,1));
                     else
                         bp->top.insert(tmpPoint*2 - Diff2D(1,1));
+                    if(distab(tmpPoint, tempupperleft) < 
+                            distab(bp->topleft, tempupperleft))
+                        bp->topleft = tmpPoint;
+                    if(distab(tmpPoint, Point2D(templowerright.x-1,tempupperleft.y)) < 
+                            distab(bp->topright, Point2D(templowerright.x-1,tempupperleft.y)))
+                        bp->topright = tmpPoint;
                 }
+                //left
                 else if(tmpPoint.y > tmpa && tmpPoint.y < tmpb){
                     if(tmpPoint.x == tempupperleft.x || tmpPoint.y == tempupperleft.y)
                         bp->leftbest.insert(tmpPoint*2 - Diff2D(1,1));
                     else
                         bp->left.insert(tmpPoint*2 - Diff2D(1,1));
+                    if(distab(tmpPoint, tempupperleft) < 
+                            distab(bp->topleft, tempupperleft))
+                        bp->topleft = tmpPoint;
+                    if(distab(tmpPoint, Point2D(tempupperleft.x, templowerright.y-1)) < 
+                            distab(bp->bottomleft, Point2D(tempupperleft.x, templowerright.y-1)))
+                        bp->bottomleft = tmpPoint;
+                    
                 }
+                //bottom
                 else if(tmpPoint.y > tmpa && tmpPoint.y > tmpb){
-                    if(tmpPoint.y == tempupperright.y || tmpPoint.x == tempupperleft.x)
+                    if(tmpPoint.y == templowerright.y || tmpPoint.x == tempupperleft.x)
                         bp->bottombest.insert(tmpPoint*2 - Diff2D(1,1));
                     else
                         bp->bottom.insert(tmpPoint*2 - Diff2D(1,1));
+                    if(distab(tmpPoint, templowerright-Diff2D(1,1)) < 
+                            distab(bp->bottomright, templowerright-Diff2D(1,1)))
+                        bp->bottomright = tmpPoint;
+                    if(distab(tmpPoint, Point2D(tempupperleft.x, templowerright.y-1)) < 
+                            distab(bp->bottomleft, Point2D(tempupperleft.x, templowerright.y-1)))
+                        bp->bottomleft = tmpPoint;
                 }
+                //right
                 else{
-                    if(tmpPoint.x == tempupperright.x || tmpPoint.y == tempupperleft.y)
+                    if(tmpPoint.x == templowerright.x || tmpPoint.y == tempupperleft.y)
                         bp->rightbest.insert(tmpPoint*2 - Diff2D(1,1));
                     else
                         bp->right.insert(tmpPoint*2 - Diff2D(1,1));
+                    if(distab(tmpPoint, Point2D(templowerright.x-1,tempupperleft.y)) < 
+                            distab(bp->topright, Point2D(templowerright.x-1,tempupperleft.y)))
+                        bp->topright = tmpPoint;
+                    if(distab(tmpPoint, templowerright-Diff2D(1,1)) < 
+                            distab(bp->bottomright, templowerright-Diff2D(1,1)))
+                        bp->bottomright = tmpPoint;
                 }
                 
             }
         }while(++circ != end);
         
+        bp->topleft *= 2;
+        bp->bottomleft *= 2;
+        bp->topright *= 2;
+        bp->bottomright *= 2;
+        bp->topleft -= Diff2D(1,1);
+        bp->bottomleft -= Diff2D(1,1);
+        bp->topright -= Diff2D(1,1);
+        bp->bottomright -= Diff2D(1,1);
+        
+        
+        if(bp->topbest.empty() || bp->topbest.size() < 15){
+            bp->topbest.insert(bp->topleft);
+            bp->bottombest.clear();
+            bp->bottombest.insert(bp->bottomright);
+        }
+        /*if(bp->bottombest.empty()){
+            bp->bottombest.insert(bp->bottomright);
+        }*/
 #ifdef GRAPHCUT_DBG
         cout<<"Top: "<<bp->top.size()<<endl
                 <<"Top best: "<<bp->topbest.size()<<endl
@@ -196,7 +252,12 @@ namespace enblend{
                 <<"Bottom: "<<bp->bottom.size()<<endl
                 <<"Bottom best: "<<bp->bottombest.size()<<endl
                 <<"Left: "<<bp->left.size()<<endl
-                <<"Left best: "<<bp->leftbest.size()<<endl;
+                <<"Left best: "<<bp->leftbest.size()<<endl
+                <<"Top left: "<<bp->topleft<<endl
+                <<"Top right: "<<bp->topright<<endl
+                <<"Bottom left: "<<bp->bottomleft<<endl
+                <<"Top left: "<<bp->bottomright<<endl;
+        
 #endif
         
     }
@@ -989,6 +1050,9 @@ namespace enblend{
         exportImage(srcImageRange(graphtmp), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
         exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
         exportImage(mask2_upperleft, mask1_lowerright, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
+        exportImage(src1_upperleft, src1_lowerright, sa1, ImageExportInfo("./debug/src1.tif").setPixelType("UINT8"));
+        exportImage(src2_upperleft, src1_lowerright, sa2, ImageExportInfo("./debug/src2.tif").setPixelType("UINT8"));
+   
         exportImage(srcImageRange(gradientX), ImageExportInfo("./debug/gradx.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
 #endif
@@ -1020,7 +1084,7 @@ namespace enblend{
         
         if(isLeftImageWhite<MaskImageIterator, MaskAccessor>(
                 mask1_upperleft + iBB.upperLeft()-Diff2D(1,0), 
-                mask1_lowerright + iBB.upperLeft()-Diff2D(1,0), ma1))
+                mask1_upperleft + iBB.lowerRight()-Diff2D(1,0), ma1))
         {
             transformImage(
                     srcIterRange(finalmask.upperLeft()+Diff2D(1,1), 
