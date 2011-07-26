@@ -110,7 +110,7 @@ double erf(T x)
 
 #else
 
-using VIGRA_CSTD::erf;
+using ::erf;
 
 #endif
 

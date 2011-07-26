@@ -407,7 +407,7 @@ protected:
                         // FIXME eco.n.hi is overflowing into NaN range!
                         double piTAn = piT / (1.0 + eco.d);
                         if (
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__sun__)
                             isnan(piTAn)
 #else
                             std::isnan(piTAn)

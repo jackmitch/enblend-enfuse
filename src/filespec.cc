@@ -20,6 +20,9 @@
 
 #ifdef _WIN32
 #include <io.h>
+#elif defined(__sun__)
+#include <ast/prototyped.h>
+#include <ast/glob.h>
 #else
 #include <glob.h>
 #include <unistd.h>
@@ -370,7 +373,11 @@ public:
     FileNameList do_glob(const std::string& a_filespec,
                          const FilePositionTrace& trace)
     {
-        run_glob(a_filespec, trace, GLOB_ERR | GLOB_BRACE | GLOB_TILDE);
+       int flags = GLOB_ERR | GLOB_BRACE;
+#ifndef __sun__
+       flags |= GLOB_TILDE;
+#endif
+        run_glob(a_filespec, trace, flags);
         convert_to_list();
         globfree(result_vector_);
 
