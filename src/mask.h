@@ -844,7 +844,7 @@ MaskType* createMask(const ImageType* const white,
     bool graphCutDebug = true;
     
     int mainStride;
-    if (CoarseMask && !graphCutDebug) {
+    if (CoarseMask) {
         // Do NFT at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
