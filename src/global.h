@@ -129,6 +129,11 @@ typedef enum BoundaryKind
     DoubleStrip                 // non-contractible
 } boundary_t;
 
+enum MainAlgo{
+    NFT, GraphCut
+};
+
+
 
 //< src::default-tiff-resolution 300@dmn{dpi}
 #define DEFAULT_TIFF_RESOLUTION 300.0f

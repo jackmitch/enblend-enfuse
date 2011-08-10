@@ -840,8 +840,6 @@ MaskType* createMask(const ImageType* const white,
     // Start by using the nearest feature transform to generate a mask.
     Size2D mainInputSize, mainInputBBSize;
     Rect2D mainInputBB;
-#define SKIP_OPTIMIZER
-    bool graphCutDebug = true;
     
     int mainStride;
     if (CoarseMask) {
@@ -849,13 +847,14 @@ MaskType* createMask(const ImageType* const white,
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                               (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-        mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+		mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                               (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-        //mainInputBB = Rect2D(Size2D(uBB.width() / CoarsenessFactor,
-          //                         uBB.height() / CoarsenessFactor));
-        mainInputBB = Rect2D(Point2D((iBB.upperLeft().x - uBB.upperLeft().x + CoarsenessFactor - 1)/ CoarsenessFactor, 
-                            (iBB.upperLeft().y - uBB.upperLeft().y + CoarsenessFactor - 1)/CoarsenessFactor),
-                            mainInputBBSize);
+	
+        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x)/ CoarsenessFactor), 
+                            std::floor((iBB.upperLeft().y - uBB.upperLeft().y)/CoarsenessFactor)),
+							mainInputBBSize
+                            );
+	
         mainStride = CoarsenessFactor;
     } else {
         // Do NFT at 1/1 scale.
@@ -865,6 +864,7 @@ MaskType* createMask(const ImageType* const white,
                 mainInputBB.moveBy(-uBB.upperLeft());
         else mainInputBB.moveBy(uBB.upperLeft());
         mainStride = 1;
+		
     }
 
     Size2D mainOutputSize;
@@ -883,11 +883,8 @@ MaskType* createMask(const ImageType* const white,
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
     MaskType* mainOutputImage = new MaskType(mainOutputSize);
-    
-    #ifdef GRAPHCUT_DBG
-        cout<<iBB<<endl<<mainInputBB<<endl;
-#endif
 
+	if(MainAlgorithm == GraphCut)
     graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
                             stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
                             destIter(mainOutputImage->upperLeft() + mainOutputOffset),
@@ -896,18 +893,13 @@ MaskType* createMask(const ImageType* const white,
                             ManhattanDistance,
                             wraparound ? HorizontalStrip : OpenBoundaries, 
                             mainInputBB);
-    
  
-    
-#ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(*mainOutputImage), ImageExportInfo("./debug/output.tif").setPixelType("UINT8"));
-#endif
-
-    /*nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+	else if(MainAlgorithm == NFT)
+		nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                             stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                             destIter(mainOutputImage->upperLeft() + mainOutputOffset),
                             ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries);*/
+                            wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
@@ -952,7 +944,7 @@ MaskType* createMask(const ImageType* const white,
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
-    if(graphCutDebug)
+    if(MainAlgorithm == GraphCut)
     vectorizeSeamLine(rawSegments,
                       whiteAlpha, blackAlpha,
                       uBB,

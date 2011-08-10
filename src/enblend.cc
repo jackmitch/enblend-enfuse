@@ -103,6 +103,7 @@ int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
+MainAlgo MainAlgorithm = NFT;
 bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
@@ -497,6 +498,8 @@ void printUsageAndExit(const bool error = true) {
         "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
         "                         characters as \"--save-masks\"; default: \"" <<
         VisualizeTemplate << "\"\n" <<
+        "  --main-algorithm=NAME      set main seam finder to NAME; default:\n" <<
+        "                         " << MainAlgorithm << "\n" <<
         "\n" <<
         "Enblend accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
@@ -566,7 +569,7 @@ enum AllPossibleOptions {
     SaveMasksOption, LoadMasksOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     SmoothDifferenceOption, OptimizerWeightsOption,
-    LayerSelectorOption,
+    LayerSelectorOption, GraphCutOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -727,6 +730,24 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             ": warning:     or coarse mask has no effect" <<
             endl;
     }
+    
+    if (!CoarseMask && contains(optionSet, GraphCutOption) && contains(optionSet, FineMaskOption)){
+        cerr << command <<
+            ": warning: option \"--fine-mask\" combined with option \"--main-algorithm=graphcut\"\n" <<
+            command <<
+            ": warning:     incompatible with mask optimization,\n" <<
+            command <<
+            ": warning:     defaulting to no optimization" <<
+            endl;
+		OptimizeMask = false;
+		if (contains(optionSet, VisualizeOption)) {
+			cerr << command <<
+				": warning: option \"--visualize\" without mask optimization\n" <<
+				command <<
+				": warning:     has no effect" <<
+				endl;
+        }
+    }
 
 #ifndef CACHE_IMAGES
     if (contains(optionSet, CacheSizeOption)) {
@@ -776,7 +797,8 @@ int process_options(int argc, char** argv)
         CiecamId,
         NoCiecamId,
         FallbackProfileId,
-        LayerSelectorId
+        LayerSelectorId,
+		MainAlgoId
     };
 
     static struct option long_options[] = {
@@ -807,6 +829,7 @@ int process_options(int argc, char** argv)
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"layer-selector", required_argument, 0, LayerSelectorId},
+		{"main-algorithm", optional_argument, 0, MainAlgoId},
         {0, 0, 0, 0}
     };
 
@@ -1248,6 +1271,24 @@ int process_options(int argc, char** argv)
             }
             optionSet.insert(FallbackProfileOption);
             break;
+			
+		case MainAlgoId:
+			if (optarg != NULL && *optarg != 0) {
+                if(!strcmp(optarg, "graphcut")){
+					MainAlgorithm = GraphCut;
+					optionSet.insert(GraphCutOption);
+				}
+				else if(!strcmp(optarg, "nft"))
+					MainAlgorithm = NFT;
+				else {
+					cerr << command << ": option \"-b\": unrecognized argument, defaulting to NFT"  << endl;
+					MainAlgorithm = NFT;
+				}
+            } else {
+                cerr << command << ": option \"-b\" requires an argument" << endl;
+                failed = true;
+            }
+			break;
 
         case 'f':
             if (optarg != NULL && *optarg != 0) {
@@ -1772,6 +1813,23 @@ int main(int argc, char** argv)
              << ": warning: input images to small for coarse mask; switching to fine mask"
              << endl;
         CoarseMask = false;
+		if(MainAlgorithm == GraphCut){
+			cerr << command
+				<< ": warning: fine mask combined with graphcut incompatible with mask optimization;\n"
+				<< command
+				<<": warning:     defaulting to no optimization."
+				<< endl;
+				
+			OptimizeMask = false;
+			
+			if (VisualizeSeam) {
+			cerr << command <<
+				": warning: option \"--visualize\" without mask optimization\n" <<
+				command <<
+				": warning:     has no effect" <<
+				endl;
+			}
+		}
     }
 
     if (MaskVectorizeDistance.value() == 0) {
