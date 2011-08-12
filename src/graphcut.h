@@ -72,7 +72,7 @@ using namespace vigra::functor;
 #define BIT_MASK_OPDIR 0x02
 #define BIT_MASK_OPEN 0x04
 #define BIT_MASK_DIVIDE 0x0F
-//#define GRAPHCUT_DBG
+#define GRAPHCUT_DBG
 
 namespace enblend{
     
@@ -1147,7 +1147,7 @@ namespace enblend{
                 tmp2.upperLeft(), tmp2.accessor(),
                 MapFunctor<SrcPixelType, BasePixelType>()
                 ); 
-        transformImage(src2_upperleft, src1_lowerright, sa1,
+        transformImage(src2_upperleft, src1_lowerright, sa2,
                 tmp.upperLeft(), tmp.accessor(),
                 MapFunctor<SrcPixelType, BasePixelType>()
                 ); 
