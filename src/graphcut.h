@@ -1193,9 +1193,9 @@ namespace enblend{
         exportImage(srcImageRange(tmp), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(graphtmp), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
         exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
-        exportImage(mask2_upperleft, mask1_lowerright, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
+        exportImage(mask2_upperleft, mask2_upperleft + masksize, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
         exportImage(src1_upperleft, src1_lowerright, sa1, ImageExportInfo("./debug/src1.tif").setPixelType("UINT8"));
-        exportImage(src2_upperleft, src1_lowerright, sa2, ImageExportInfo("./debug/src2.tif").setPixelType("UINT8"));
+        exportImage(src2_upperleft, src2_upperleft+size, sa2, ImageExportInfo("./debug/src2.tif").setPixelType("UINT8"));
    
         exportImage(srcImageRange(gradientX), ImageExportInfo("./debug/gradx.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
