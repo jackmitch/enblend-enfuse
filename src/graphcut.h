@@ -1112,9 +1112,9 @@ namespace enblend{
         typedef typename BasePromotePixelTraits::Promote GraphPixelType;
 
         const Diff2D size(src1_lowerright.x - src1_upperleft.x,
-                          src1_lowerright.y - src1_upperleft.y),
-                          masksize(mask1_lowerright.x - mask1_upperleft.x,
-                          mask1_lowerright.y - mask1_upperleft.y);
+                          src1_lowerright.y - src1_upperleft.y);
+        const Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
+                              mask1_lowerright.y - mask1_upperleft.y);
 
         IMAGETYPE<BasePixelType> tmp(size);
         IMAGETYPE<BasePromotePixelType> graphtmp(size + size + Diff2D(1,1)), tmp2(size);
@@ -1147,7 +1147,7 @@ namespace enblend{
                 tmp2.upperLeft(), tmp2.accessor(),
                 MapFunctor<SrcPixelType, BasePixelType>()
                 ); 
-        transformImage(src2_upperleft, src1_lowerright, sa2,
+        transformImage(src2_upperleft, src2_upperleft + size, sa2,
                 tmp.upperLeft(), tmp.accessor(),
                 MapFunctor<SrcPixelType, BasePixelType>()
                 ); 
