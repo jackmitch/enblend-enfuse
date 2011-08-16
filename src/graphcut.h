@@ -72,7 +72,7 @@ using namespace vigra::functor;
 #define BIT_MASK_OPDIR 0x02
 #define BIT_MASK_OPEN 0x04
 #define BIT_MASK_DIVIDE 0x0F
-//#define GRAPHCUT_DBG
+//#define DEBUG_GRAPHCUT
 
 namespace enblend{
     
@@ -106,7 +106,7 @@ namespace enblend{
     
     template<class MaskImageIterator, class MaskAccessor, 
         class MaskPixelType, class DestImageIterator, class DestAccessor>
-    vector<Point2D>* findExtremePoints(MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, 
+    vector<Point2D>* findIntermediatePoints(MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, 
                                        MaskAccessor ma1, MaskImageIterator mask2_upperleft, MaskAccessor ma2, 
                                        DestImageIterator dest_upperleft, DestAccessor da, 
                                        nearest_neigbor_metric_t& norm, boundary_t& boundary,
@@ -115,28 +115,28 @@ namespace enblend{
         typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
         typedef typename IMAGETYPE<MaskPixelType>::traverser IteratorType;
         typedef vigra::CrackContourCirculator<IteratorType> Circulator;
-        typedef triple<IteratorType, IteratorType, uint> EPointContainer;
-        IMAGETYPE<MaskPixelType> nfttmp(mask1_lowerright - mask1_upperleft + Diff2D(2,2), MaskPixelTraits::max() / 2),
+        typedef triple<IteratorType, IteratorType, uint> EntryPointContainer;
+        IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + Diff2D(2,2), MaskPixelTraits::max() / 2),
                                 nft(iBB.lowerRight() - iBB.upperLeft() + Diff2D(2,2), MaskPixelTraits::max() / 2),
                                 overlap(iBB.lowerRight() - iBB.upperLeft() + Diff2D(2,2));
-        IteratorType nftiter = nft.upperLeft(), overlapiter = overlap.upperLeft(), previous;
+        IteratorType nftIter = nft.upperLeft(), previous;
         Circulator *circ, *end; bool offTheBorder = false, inOverlap = false, ready = false;
-        vector<Point2D> *list = new vector<Point2D>();
-        vector<EPointContainer> entryPointList;
-        EPointContainer *max = NULL;
-        pair<IteratorType, IteratorType> tmp;
-        Point2D tmpPoint;
+        vector<Point2D> *interPointList = new vector<Point2D>();
+        vector<EntryPointContainer> entryPointList;
+        EntryPointContainer *max = NULL;
+        pair<IteratorType, IteratorType> entryPoint;
+        Point2D intermediatePoint;
         uint counter = 0;
         
         nearestFeatureTransform(srcIterRange(mask1_upperleft, mask1_lowerright, ma1),
                                 srcIter(mask2_upperleft, ma2),
-                                destIter(nfttmp.upperLeft() + Diff2D(1,1)),
+                                destIter(nftTempImg.upperLeft() + Diff2D(1,1)),
                                 norm, boundary);
         
-        copyImage(srcIterRange(nfttmp.upperLeft() + Diff2D(1,1), nfttmp.lowerRight() - Diff2D(1,1)),
+        copyImage(srcIterRange(nftTempImg.upperLeft() + Diff2D(1,1), nftTempImg.lowerRight() - Diff2D(1,1)),
                   destIter(dest_upperleft, da));
 
-        copyImage(iBB.apply(srcIterRange(nfttmp.upperLeft() + Diff2D(1,1), nfttmp.lowerRight() - Diff2D(1,1))),
+        copyImage(iBB.apply(srcIterRange(nftTempImg.upperLeft() + Diff2D(1,1), nftTempImg.lowerRight() - Diff2D(1,1))),
                   destIter(nft.upperLeft() + Diff2D(1,1)));
     
         combineTwoImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
@@ -144,14 +144,14 @@ namespace enblend{
                            destIter(overlap.upperLeft() + Diff2D(1,1)),
                            ifThenElse(Arg1() && Arg2(), Param(MaskPixelTraits::max()), Param(MaskPixelTraits::zero())));
         
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(nfttmp), ImageExportInfo("./debug/nfttotal.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(nft), ImageExportInfo("./debug/nft.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(overlap), ImageExportInfo("./debug/overlap.tif").setPixelType("UINT8"));
 #endif
         
-        circ = new Circulator(nftiter + Diff2D(1,0), vigra::FourNeighborCode::South);
-        end = new Circulator(nftiter + Diff2D(1,0), vigra::FourNeighborCode::South);
+        circ = new Circulator(nftIter + Diff2D(1,0), vigra::FourNeighborCode::South);
+        end = new Circulator(nftIter + Diff2D(1,0), vigra::FourNeighborCode::South);
         
         previous = circ->outerPixel();
         
@@ -159,12 +159,12 @@ namespace enblend{
             (*circ)++;
             if (nft.accessor()(previous) != nft.accessor()(circ->outerPixel())) {
                 if (ready) {
-                    entryPointList.push_back(EPointContainer(tmp.first, tmp.second, counter));
-                    tmp.first = previous;
-                    tmp.second = circ->outerPixel();
+                    entryPointList.push_back(EntryPointContainer(entryPoint.first, entryPoint.second, counter));
+                    entryPoint.first = previous;
+                    entryPoint.second = circ->outerPixel();
                 } else {
                     ready = true;
-                    tmp = pair<IteratorType, IteratorType>(previous, circ->outerPixel());
+                    entryPoint = pair<IteratorType, IteratorType>(previous, circ->outerPixel());
                 }
                 counter = 0;
             }
@@ -173,9 +173,9 @@ namespace enblend{
         } while(*circ != *end);
         
         if (entryPointList.empty())
-            return list;
+            return interPointList;
         
-        for (typename vector<EPointContainer>::iterator i = entryPointList.begin(); i != entryPointList.end(); ++i) {
+        for (typename vector<EntryPointContainer>::iterator i = entryPointList.begin(); i != entryPointList.end(); ++i) {
             if (max == NULL) {
                 max = &(*i);
                 continue;
@@ -202,56 +202,56 @@ namespace enblend{
                 circ = new Circulator(max->second, vigra::FourNeighborCode::North);
                 end = new Circulator(max->second, vigra::FourNeighborCode::North);
             }
-        } else return list;
+        } else return interPointList;
         
         while (circ != end) {
             (*circ)++;
-            tmpPoint = circ->outerPixel() - nft.upperLeft();
+            intermediatePoint = circ->outerPixel() - nft.upperLeft();
             if (!offTheBorder && !(nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2)) {
                 offTheBorder = true;
-                Point2D tmpPoint2 = Point2D((tmpPoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
-                if ((tmpPoint.x /*- iBB.upperLeft().y*/) >= 0 &&
-                    (tmpPoint.y /*- iBB.upperLeft().y*/) >= 0 &&
-                    (tmpPoint.x /*- iBB.upperLeft().x*/) < iBB.lowerRight().x && 
-                    (tmpPoint.y /*- iBB.upperLeft().y*/) < iBB.lowerRight().y)
-                    list->push_back(tmpPoint2);
-#ifdef GRAPHCUT_DBG
-                    cout<<"Start point: "<<tmpPoint2<<endl;
+                Point2D dualGraphPoint = Point2D((intermediatePoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
+                if ((intermediatePoint.x /*- iBB.upperLeft().y*/) >= 0 &&
+                    (intermediatePoint.y /*- iBB.upperLeft().y*/) >= 0 &&
+                    (intermediatePoint.x /*- iBB.upperLeft().x*/) < iBB.lowerRight().x && 
+                    (intermediatePoint.y /*- iBB.upperLeft().y*/) < iBB.lowerRight().y)
+                    interPointList->push_back(dualGraphPoint);
+#ifdef DEBUG_GRAPHCUT
+                    cout<<"Start point: "<<dualGraphPoint<<endl;
 #endif
             }
             
             if (offTheBorder) {
-                if (!inOverlap && overlap[tmpPoint] == MaskPixelTraits::max()) {
+                if (!inOverlap && overlap[intermediatePoint] == MaskPixelTraits::max()) {
                     inOverlap = true;
-                    Point2D tmpPoint2 = Point2D((tmpPoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
-                    if (!list->empty() && *(list->begin()) != tmpPoint2 && tmpPoint.x >= 0 && tmpPoint.y >= 0)
-                        list->push_back(tmpPoint2);
+                    Point2D dualGraphPoint = Point2D((intermediatePoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
+                    if (!interPointList->empty() && *(interPointList->begin()) != dualGraphPoint && intermediatePoint.x >= 0 && intermediatePoint.y >= 0)
+                        interPointList->push_back(dualGraphPoint);
 
-#ifdef GRAPHCUT_DBG
-                    cout<<"Entering overlap: "<<tmpPoint2<<endl;
+#ifdef DEBUG_GRAPHCUT
+                    cout<<"Entering overlap: "<<dualGraphPoint<<endl;
 #endif
                 }
                 
-                if (inOverlap && overlap[tmpPoint] == MaskPixelTraits::zero() &&
+                if (inOverlap && overlap[intermediatePoint] == MaskPixelTraits::zero() &&
                     nft.accessor()(circ->outerPixel()) != MaskPixelTraits::max() / 2) {
                     
                     inOverlap = false;
-                    Point2D tmpPoint2 = Point2D((tmpPoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
-                    if(tmpPoint.x >= 0 && tmpPoint.y >= 0)
-                        list->push_back(tmpPoint2);
+                    Point2D dualGraphPoint = Point2D((intermediatePoint/*- iBB.upperLeft()*/) * 2 - Diff2D(1,1));
+                    if(intermediatePoint.x >= 0 && intermediatePoint.y >= 0)
+                        interPointList->push_back(dualGraphPoint);
 
-#ifdef GRAPHCUT_DBG
-                    cout<<"Leaving overlap: "<<tmpPoint2<<endl;
+#ifdef DEBUG_GRAPHCUT
+                    cout<<"Leaving overlap: "<<dualGraphPoint<<endl;
 #endif
                 }
 
                 if (nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2) {
-                    Point2D tmpPoint2 = Point2D((previous - nft.upperLeft()/*- iBB.upperLeft()- Diff2D(0,1)*/) * 2 - Diff2D(1,1));
-                    if (!list->empty() && *(list->rbegin()) != tmpPoint2 && tmpPoint.x >= 0 && tmpPoint.y >= 0)
-                        list->push_back(tmpPoint2);
+                    Point2D dualGraphPoint = Point2D((previous - nft.upperLeft()/*- iBB.upperLeft()- Diff2D(0,1)*/) * 2 - Diff2D(1,1));
+                    if (!interPointList->empty() && *(interPointList->rbegin()) != dualGraphPoint && intermediatePoint.x >= 0 && intermediatePoint.y >= 0)
+                        interPointList->push_back(dualGraphPoint);
 
-#ifdef GRAPHCUT_DBG
-                    cout<<"Endpoint reached: "<<tmpPoint2<<endl;
+#ifdef DEBUG_GRAPHCUT
+                    cout<<"Endpoint reached: "<<dualGraphPoint<<endl;
 #endif
                     break;
                 }
@@ -261,7 +261,7 @@ namespace enblend{
 
         delete circ;
         delete end;
-        return list;
+        return interPointList;
     }
     
     template <typename ImageType>
@@ -283,9 +283,9 @@ namespace enblend{
             long totalScore;
     };
     
-    struct PathEqualityFunctor {
+    struct OutputLabelingFunctor {
         public:
-            PathEqualityFunctor(boost::unordered_set<Point2D, pointHash>* a_, 
+            OutputLabelingFunctor(boost::unordered_set<Point2D, pointHash>* a_, 
                                 boost::unordered_set<Point2D, pointHash>* b_,
                                 Point2D offset_):left(a_), right(b_), offset(offset_) {}
                                 
@@ -304,26 +304,6 @@ namespace enblend{
             boost::unordered_set<Point2D, pointHash>* left;
             boost::unordered_set<Point2D, pointHash>* right;
             Point2D offset;
-    };
-    
-    template<class MaskPixelType, class DestPixelType>
-    struct FinalMaskFunctor {
-        public:
-            FinalMaskFunctor(int l, int w) : leftMaskLabel(l), leftMaskColor(w) {
-                if(leftMaskColor == 255)
-                    rightMaskColor = 0;
-                else rightMaskColor = 255;
-            }
-            
-            DestPixelType operator()(MaskPixelType const& arg1) const {
-                if(arg1 == leftMaskLabel)
-                    return leftMaskColor;
-                else return rightMaskColor;
-            }
-        protected:
-            int leftMaskLabel;
-            int leftMaskColor;
-            int rightMaskColor;
     };
     
     template<class MaskPixelType>
@@ -365,7 +345,7 @@ namespace enblend{
     
     template <class ImageType, class MaskPixelType>
     void getNeighbourList(Point2D src, ImageType* img, Point2D* list,
-                          Diff2D bounds, CheckpointPixels* bp) {
+                          Diff2D bounds, CheckpointPixels* srcDestPoints) {
         //MaskPixelType maskVal = NumericTraits<MaskPixelType>::max();
         //return neighbour points from top to left in clockwise order
         bool check = false;
@@ -389,7 +369,7 @@ namespace enblend{
             check = true;
         } else list[3] = src(-2,0);
         
-        if (bp->bottom.find(src) != bp->bottom.end()) {
+        if (srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end()) {
             list[0] = Point2D(-20,-20);
             list[1] = Point2D(-20,-20);
             list[2] = Point2D(-20,-20);
@@ -398,10 +378,10 @@ namespace enblend{
         
         if (check) {
             
-            if(bp->bottom.find(src) != bp->bottom.end() ||
-                bp->bottom.find(src(1,0)) != bp->bottom.end() ||
-                bp->bottom.find(src(1,1)) != bp->bottom.end() ||
-                bp->bottom.find(src(0,1)) != bp->bottom.end()) {
+            if(srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end() ||
+                srcDestPoints->bottom.find(src(1,0)) != srcDestPoints->bottom.end() ||
+                srcDestPoints->bottom.find(src(1,1)) != srcDestPoints->bottom.end() ||
+                srcDestPoints->bottom.find(src(0,1)) != srcDestPoints->bottom.end()) {
                 
                 if (list[1] == Point2D(-1,-1)) 
                     list[1] = Point2D(-20,-20);
@@ -414,15 +394,15 @@ namespace enblend{
     }
     
     template <class ImageType, class MaskPixelType>
-    void getNeighbourList(CheckpointPixels* bp, boost::unordered_set<Point2D, pointHash>::iterator* auxList1,
+    void getNeighbourList(CheckpointPixels* srcDestPoints, boost::unordered_set<Point2D, pointHash>::iterator* auxList1,
                           boost::unordered_set<Point2D, pointHash>::iterator* auxList2) {
         
-        *auxList1 = bp->top.begin();
-        *auxList2 = bp->top.end();
+        *auxList1 = srcDestPoints->top.begin();
+        *auxList2 = srcDestPoints->top.end();
     }
     
     template <class ImageType>
-    vector<Point2D>* path(Point2D pt, Point2D srcpt, ImageType* img, CheckpointPixels* bp) {
+    vector<Point2D>* tracePath(Point2D pt, Point2D srcpt, ImageType* img, CheckpointPixels* srcDestPoints) {
         
         vector<Point2D>* vec = new vector<Point2D>;
         Point2D current = pt;
@@ -442,13 +422,13 @@ namespace enblend{
                     vec->push_back(current(-2, 0));
                     break;
                 default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                     cout<<"path tracing error"<<endl;
 #endif
                     break;
             }
             current = vec->back();
-        } while (bp->top.find(current) == bp->top.end());
+        } while (srcDestPoints->top.find(current) == srcDestPoints->top.end());
         return vec;
     }
     
@@ -485,16 +465,16 @@ namespace enblend{
     template <class ImageType, class GradientImageType, class MaskPixelType>
     vector<Point2D>* A_star(Point2D srcpt, Point2D destpt, ImageType* img,
                             GradientImageType* gradientX, GradientImageType* gradientY, 
-                            Diff2D bounds, CheckpointPixels* bp) {
+                            Diff2D bounds, CheckpointPixels* srcDestPoints) {
         MaskPixelType zeroVal = NumericTraits<MaskPixelType>::zero();
         typedef priority_queue<Point2D, vector<Point2D>, CostComparer<ImageType> > Queue;
         CostComparer<ImageType> costcomp(img);
         Queue *openset = new Queue(costcomp);
         //uint *heur(Point2D, Point2D, ImageType*) = &heuristic_dummy;
         long score = 0, totalScore = 0;
-        long count = 0;
-        int grada, gradb;
-        bool scoreIsBetter, pushflag, destOpen = false;
+        long iterCount = 0;
+        int gradientA, gradientB;
+        bool scoreIsBetter, pushToList, destOpen = false;
         Point2D list[4], current, neighbour, destNeighbour;
         boost::unordered_set<Point2D, pointHash>::iterator auxListBegin, auxListEnd;
         openset->push(srcpt);
@@ -502,24 +482,24 @@ namespace enblend{
         while (!openset->empty()) {
             current = openset->top();
             openset->pop();
-            count++;
+            iterCount++;
             if (current == destpt) {
-#ifdef GRAPHCUT_DBG
-                cout<<"Graphcut completed after visiting "<<count<<" nodes"<<endl;
+#ifdef DEBUG_GRAPHCUT
+                cout<<"Graphcut completed after visiting "<<iterCount<<" nodes"<<endl;
 #endif
                 delete openset;
-                return path<ImageType>(destNeighbour, srcpt, img, bp);
+                return tracePath<ImageType>(destNeighbour, srcpt, img, srcDestPoints);
             }
             
             if (current == Point2D(-10, -10))
-                getNeighbourList<ImageType, MaskPixelType>(bp, &auxListBegin, &auxListEnd);
-            else getNeighbourList<ImageType, MaskPixelType>(current, img, list, bounds, bp);
+                getNeighbourList<ImageType, MaskPixelType>(srcDestPoints, &auxListBegin, &auxListEnd);
+            else getNeighbourList<ImageType, MaskPixelType>(current, img, list, bounds, srcDestPoints);
             
             if (current != Point2D(-10, -10)) {
                 for (int i = 0; i < 4; i++) {
                     score = 0;
                     scoreIsBetter = false;
-                    pushflag = false;
+                    pushToList = false;
                     neighbour = list[i];
                     if (neighbour == Point2D(-20, -20) || (neighbour != Point2D(-1, -1) && 
                         neighbour != Point2D(-10, -10) && (*img)[neighbour(1, 1)] == zeroVal)) {
@@ -528,25 +508,25 @@ namespace enblend{
                             score = (*img)[current] + getEdgeWeight(i, current, img, true, bounds);
                         else { 
                             if (i%2 == 0) {
-                                grada = std::abs((*gradientY)[(current) / 2]);
-                                gradb = std::abs((*gradientY)[(neighbour) / 2]);
+                                gradientA = std::abs((*gradientY)[(current) / 2]);
+                                gradientB = std::abs((*gradientY)[(neighbour) / 2]);
                             } else {
-                                grada = std::abs((*gradientX)[(current) / 2]);
-                                gradb = std::abs((*gradientX)[(neighbour) / 2]);
+                                gradientA = std::abs((*gradientX)[(current) / 2]);
+                                gradientB = std::abs((*gradientX)[(neighbour) / 2]);
                             }
                             
-                            if ((grada + gradb) > 0)
+                            if ((gradientA + gradientB) > 0)
                                 score = (*img)[current] + getEdgeWeight(i, current, img, false, bounds) *
-                                    (grada + gradb);
+                                    (gradientA + gradientB);
                             else score = (*img)[current] + getEdgeWeight(i, current, img, false, bounds);
                         }
                         
                         if (neighbour == Point2D(-20, -20) && !destOpen) {
-                            pushflag = true;
+                            pushToList = true;
                             destOpen = true;
                             scoreIsBetter = true;
                         } else if (neighbour != Point2D(-20, -20) && ((*img)[neighbour(1, 1)] & BIT_MASK_OPEN) == 0) {
-                            pushflag = true;
+                            pushToList = true;
                             (*img)[neighbour(1, 1)] += BIT_MASK_OPEN;
                             scoreIsBetter = true;
                         } else if ((neighbour == Point2D(-20, -20) && score < totalScore) || (neighbour != Point2D(-20, -20) && score < (*img)[neighbour]))
@@ -564,7 +544,7 @@ namespace enblend{
                                 (*img)[neighbour] = score;
                             }
                             
-                            if (pushflag)
+                            if (pushToList)
                                     openset->push(neighbour);
                         }
                     }
@@ -573,12 +553,12 @@ namespace enblend{
                 for (boost::unordered_set<Point2D, pointHash>::iterator x = auxListBegin; x != auxListEnd; ++x) {
                     score = 0;
                     scoreIsBetter = false;
-                    pushflag = false;
+                    pushToList = false;
                     neighbour = *x;
                     if (neighbour != Point2D(-1, -1) && (*img)[neighbour(1, 1)] == zeroVal) {
                         score = 0;    
                         if (((*img)[neighbour(1, 1)] & BIT_MASK_OPEN) == 0) {
-                            pushflag = true;
+                            pushToList = true;
                             (*img)[neighbour(1, 1)] += BIT_MASK_OPEN;
                             scoreIsBetter = true;
                         } else if(score < (*img)[neighbour])
@@ -587,15 +567,15 @@ namespace enblend{
                         if (scoreIsBetter) {
                             (*img)[neighbour(1, 1)] &= BIT_MASK_OPEN;
                             (*img)[neighbour] = score;
-                            if (pushflag)
+                            if (pushToList)
                                     openset->push(neighbour);
                         }
                     }
                 }
             }
         }
-#ifdef GRAPHCUT_DBG
-        cout<<"Graphcut failed after visiting "<<count<<" nodes"<<endl;
+#ifdef DEBUG_GRAPHCUT
+        cout<<"Graphcut failed after visiting "<<iterCount<<" nodes"<<endl;
 #endif
         delete openset;
         return new vector<Point2D>();
@@ -614,7 +594,7 @@ namespace enblend{
                     boost::unordered_set<Point2D, pointHash>* right,
                     Diff2D bounds, const Rect2D& iBB) {
         
-        Point2D previous, current, next, tmp;
+        Point2D previous, current, next, endIterPoint;
         ushort closest = 0;
         Diff2D dim(iBB.lowerRight() - iBB.upperLeft());
         std::vector<Point2D>::iterator previousDual, nextDual;
@@ -664,27 +644,27 @@ namespace enblend{
                         left->insert(current(0, 0));
                         break;
                     default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                         cout<<"path dividing error"<<endl;
 #endif
                         break;
                 }
                 
-                int a;
+                int previousDir;
                 
                 if (next.x == current.x) {
                     if (next.y < current.y)
-                        a = 0;
-                    else a = 2;
+                        previousDir = 0;
+                    else previousDir = 2;
                 } else {
                     if (next.x > current.x)
-                        a = 1;
-                    else a = 3;
+                        previousDir = 1;
+                    else previousDir = 3;
                 }
                 
                 switch (closest) {
                     case 0:
-                        switch(a) {
+                        switch(previousDir) {
                             case 2:
                                 right->insert(current(0, 1));
                                 left->insert(current(1, 1));
@@ -702,7 +682,7 @@ namespace enblend{
                                 right->insert(current(1, 0));
                                 break;
                             default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                                 cout<<"path dividing error"<<endl;
 #endif
                                 break;
@@ -710,7 +690,7 @@ namespace enblend{
                         break;
                         
                     case 1:
-                        switch (a) {
+                        switch (previousDir) {
                             case 0:
                                 left->insert(current(0, 0));
                                 left->insert(current(0, 1));
@@ -728,7 +708,7 @@ namespace enblend{
                                 left->insert(current(1, 0));
                                 break;
                             default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                                 cout<<"path dividing error"<<endl;
 #endif
                                 break;
@@ -736,7 +716,7 @@ namespace enblend{
                         break;
                         
                     case 2:
-                        switch (a) {
+                        switch (previousDir) {
                             case 0:
                                 left->insert(current);
                                 right->insert(current(1, 0));
@@ -754,7 +734,7 @@ namespace enblend{
                                 right->insert(current(0, 1));
                                 break;
                             default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                                 cout<<"path dividing error"<<endl;
 #endif
                                 break;
@@ -762,7 +742,7 @@ namespace enblend{
                         break;
                         
                     case 3:
-                        switch (a) {
+                        switch (previousDir) {
                             case 2:
                                 left->insert(current(1, 0));
                                 left->insert(current(1, 1));
@@ -780,7 +760,7 @@ namespace enblend{
                                 left->insert(current(0, 1));
                                 break;
                             default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                                 cout<<"path dividing error"<<endl;
 #endif
                                 break;
@@ -790,58 +770,58 @@ namespace enblend{
                 
                 switch (closest) {
                     case 0:
-                        tmp = current;
-                        while (tmp.y + iBB.upperLeft().y > -2) {
-                            tmp.y--;
-                            left->insert(tmp(1, 0));
-                            right->insert(tmp);
+                        endIterPoint = current;
+                        while (endIterPoint.y + iBB.upperLeft().y > -2) {
+                            endIterPoint.y--;
+                            left->insert(endIterPoint(1, 0));
+                            right->insert(endIterPoint);
                         }
                         break;
                     case 1:
-                        tmp = current;
-                        while (tmp.x < iBB.lowerRight().x + 2) {
-                            tmp.x++;
-                            left->insert(tmp(0, 1));
-                            right->insert(tmp);
+                        endIterPoint = current;
+                        while (endIterPoint.x < iBB.lowerRight().x + 2) {
+                            endIterPoint.x++;
+                            left->insert(endIterPoint(0, 1));
+                            right->insert(endIterPoint);
                         }
                         break;
                     case 2:
-                        tmp = current;
-                        while (tmp.y < iBB.lowerRight().y + 2) {
-                            tmp.y++;
-                            left->insert(tmp);
-                            right->insert(tmp(1, 0));
+                        endIterPoint = current;
+                        while (endIterPoint.y < iBB.lowerRight().y + 2) {
+                            endIterPoint.y++;
+                            left->insert(endIterPoint);
+                            right->insert(endIterPoint(1, 0));
                         }
                         break;
                     case 3:
-                        tmp = current;
-                        while (tmp.x > -2) {
-                            tmp.x--;
-                            left->insert(tmp);
-                            right->insert(tmp(0, 1));
+                        endIterPoint = current;
+                        while (endIterPoint.x > -2) {
+                            endIterPoint.x--;
+                            left->insert(endIterPoint);
+                            right->insert(endIterPoint(0, 1));
                         }
                         break;
                     default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                         cout<<"path dividing error"<<endl;
 #endif
                         break;
 
                 }
             } else {                
-                int a, b;
+                int previousDir, currentDir;
                 
                 if (previous.x == current.x) {
                     if (previous.y > current.y)
-                        a = 0;
-                    else a = 2;
+                        previousDir = 0;
+                    else previousDir = 2;
                 } else {
                     if (previous.x < current.x)
-                        a = 1;
-                    else a = 3;
+                        previousDir = 1;
+                    else previousDir = 3;
                 }
                 
-                a = a << 2;
+                previousDir = previousDir << 2;
                 
                 if (nextDual == cut->end()) {
                     int dist;
@@ -862,18 +842,18 @@ namespace enblend{
                         closest = 3;
                     }
                     
-                    b = closest;
+                    currentDir = closest;
                 } else if (next.x == current.x) {
                     if (next.y < current.y)
-                        b = 0;
-                    else b = 2;
+                        currentDir = 0;
+                    else currentDir = 2;
                 } else {
                     if (next.x > current.x)
-                        b = 1;
-                    else b = 3;
+                        currentDir = 1;
+                    else currentDir = 3;
                 }
                 
-                switch (a + b) {
+                switch (previousDir + currentDir) {
                     case 0: // top -> top
                         left->insert(current);
                         right->insert(current(1, 0));
@@ -951,7 +931,7 @@ namespace enblend{
                     case 8://bottom->top
                     case 13://left->right
                     default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                         cout<<"path dividing error: two-point loop"<<endl;
 #endif
                         break;
@@ -960,8 +940,8 @@ namespace enblend{
                 if (*currentDual == cut->back()) {
                     switch (closest /*^ BIT_MASK_OPDIR*/) {
                         case 2:
-                            tmp = current;
-                            switch (b) {
+                            endIterPoint = current;
+                            switch (currentDir) {
                                 case 1:
                                     left->insert(current);
                                     left->insert(current(1, 0));
@@ -975,15 +955,15 @@ namespace enblend{
                                     left->insert(current(1, 1));
                                     break;
                             }
-                            while (tmp.y < iBB.lowerRight().y + 2) {
-                                tmp.y++;
-                                left->insert(tmp(1, 0));
-                                right->insert(tmp);
+                            while (endIterPoint.y < iBB.lowerRight().y + 2) {
+                                endIterPoint.y++;
+                                left->insert(endIterPoint(1, 0));
+                                right->insert(endIterPoint);
                             }
                             break;
                         case 3:
-                            tmp = current;
-                            switch (b) {
+                            endIterPoint = current;
+                            switch (currentDir) {
                                 case 0:
                                     right->insert(current);
                                     right->insert(current(1, 0));
@@ -998,15 +978,15 @@ namespace enblend{
                                     break;
                             }
                             
-                            while (tmp.x > -2) {
-                                tmp.x--;
-                                left->insert(tmp(0, 1));
-                                right->insert(tmp);
+                            while (endIterPoint.x > -2) {
+                                endIterPoint.x--;
+                                left->insert(endIterPoint(0, 1));
+                                right->insert(endIterPoint);
                             }
                             break;
                         case 0:
-                            tmp = current;
-                            switch (b) {
+                            endIterPoint = current;
+                            switch (currentDir) {
                                 case 1:
                                     left->insert(current);
                                     right->insert(current(1, 0));
@@ -1020,15 +1000,15 @@ namespace enblend{
                                     left->insert(current(1, 1));
                                     break;
                             }
-                            while (tmp.y + iBB.upperLeft().y  > -2) {
-                                tmp.y--;
-                                left->insert(tmp);
-                                right->insert(tmp(1, 0));
+                            while (endIterPoint.y + iBB.upperLeft().y  > -2) {
+                                endIterPoint.y--;
+                                left->insert(endIterPoint);
+                                right->insert(endIterPoint(1, 0));
                             }
                             break;
                         case 1:
-                            tmp = current;
-                            switch (b) {
+                            endIterPoint = current;
+                            switch (currentDir) {
                                 case 0:
                                     left->insert(current);
                                     left->insert(current(1, 0));
@@ -1042,14 +1022,14 @@ namespace enblend{
                                     right->insert(current(1, 1));
                                     break;
                             }
-                            while (tmp.x < iBB.lowerRight().x + 2) {
-                                tmp.x++;
-                                left->insert(tmp);
-                                right->insert(tmp(0, 1));
+                            while (endIterPoint.x < iBB.lowerRight().x + 2) {
+                                endIterPoint.x++;
+                                left->insert(endIterPoint);
+                                right->insert(endIterPoint(0, 1));
                             }
                             break;
                         default:
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
                             cout<<"path dividing error"<<endl;
 #endif
                             break;
@@ -1104,22 +1084,22 @@ namespace enblend{
         const Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
                               mask1_lowerright.y - mask1_upperleft.y);
 
-        IMAGETYPE<BasePixelType> tmp(size);
-        IMAGETYPE<BasePromotePixelType> graphtmp(size + size + Diff2D(1, 1)), tmp2(size);
+        IMAGETYPE<BasePixelType> intermediateImg(size);
+        IMAGETYPE<BasePromotePixelType> intermediateGraphImg(size + size + Diff2D(1, 1)), gradientPreConvolve(size);
         IMAGETYPE<GradientPixelType> gradientX(size), gradientY(size);
-        IMAGETYPE<GraphPixelType> graph(size + size + Diff2D(1, 1));
+        IMAGETYPE<GraphPixelType> graphImg(size + size + Diff2D(1, 1));
         IMAGETYPE<MaskPixelType> finalmask(size + Diff2D(2, 2));
 	
         vector<Point2D> *dualPath = NULL;
         vector<Point2D> totalDualPath;
-        vector<Point2D> *list;
-        Point2D tmpPoint;
-        boost::unordered_set<Point2D, pointHash> a, b;
-        CheckpointPixels* bounds = new CheckpointPixels();
+        vector<Point2D> *intermediatePointList;
+        Point2D intermediatePoint;
+        boost::unordered_set<Point2D, pointHash> pixelsLeftOfCut, pixelsRightOfCut;
+        CheckpointPixels* srcDestPoints = new CheckpointPixels();
         
         
-        const Diff2D graphsize(graph.lowerRight().x - graph.upperLeft().x,
-                               graph.lowerRight().y - graph.upperLeft().y);
+        const Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
+                               graphImg.lowerRight().y - graphImg.upperLeft().y);
         const Rect2D gBB(Point2D(1, 1), Size2D(graphsize)),
                      bBB(Point2D(1, 1), Size2D(size));
                      
@@ -1135,50 +1115,50 @@ namespace enblend{
         
         //gradient images calculation
         transformImage(src1_upperleft, src1_lowerright, sa1, 
-                       tmp2.upperLeft(), tmp2.accessor(),
+                       gradientPreConvolve.upperLeft(), gradientPreConvolve.accessor(),
                        MapFunctor<SrcPixelType, BasePixelType>()); 
         transformImage(src2_upperleft, src2_upperleft + size, sa2, 
-                       tmp.upperLeft(), tmp.accessor(),
+                       intermediateImg.upperLeft(), intermediateImg.accessor(),
                        MapFunctor<SrcPixelType, BasePixelType>()); 
-        combineTwoImagesMP(srcImageRange(tmp2), srcImage(tmp), destImage(tmp2), Arg1() + Arg2());
+        combineTwoImagesMP(srcImageRange(gradientPreConvolve), srcImage(intermediateImg), destImage(gradientPreConvolve), Arg1() + Arg2());
         
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(tmp), ImageExportInfo("./debug/sum.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(tmp2), ImageExportInfo("./debug/sum2.tif").setPixelType("UINT8"));
 #endif
         //computing image gradient for a better cost function
-        vigra::separableConvolveX(srcImageRange(tmp2), destImage(gradientX), kernel1d(gradientKernel));
-        vigra::separableConvolveY(srcImageRange(tmp2), destImage(gradientY), kernel1d(gradientKernel));
+        vigra::separableConvolveX(srcImageRange(gradientPreConvolve), destImage(gradientX), kernel1d(gradientKernel));
+        vigra::separableConvolveY(srcImageRange(gradientPreConvolve), destImage(gradientY), kernel1d(gradientKernel));
 
         //difference image calculation
         combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1, 
                            src2_upperleft, sa2,
-                           tmp.upperLeft(), tmp.accessor(),
+                           intermediateImg.upperLeft(), intermediateImg.accessor(),
                            PixelDifferenceFunctor<SrcPixelType, BasePixelType>());     
         
         //masking overlap region borders
         combineThreeImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)), 
                              iBB.apply(srcIter(mask2_upperleft, ma2)),
-                             srcIter(tmp.upperLeft(), tmp.accessor()),
-                             destIter(tmp.upperLeft(), tmp.accessor()),
+                             srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                             destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
                              ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
             
         //look for possible start and end points     
-        list = findExtremePoints<MaskImageIterator, MaskAccessor, BasePixelType>
+        intermediatePointList = findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
             (mask1_upperleft, mask1_lowerright, ma1,
              mask2_upperleft, ma2, dest_upperleft, da,
              norm, boundary, iBB);
             
         //in case something goes wrong with point finding, returns regular nft image
-        if(list->empty())
+        if(intermediatePointList->empty())
             return;
         
         //copying to a grid
-        copyImage(srcImageRange(tmp), stride(2, 2, gBB.apply(destImage(graphtmp))));
+        copyImage(srcImageRange(intermediateImg), stride(2, 2, gBB.apply(destImage(intermediateGraphImg))));
                      
-#ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(tmp), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(graphtmp), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
+#ifdef DEBUG_GRAPHCUT
+        exportImage(srcImageRange(intermediateImg), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(intermediateGraphImg), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
         exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
         exportImage(mask2_upperleft, mask2_upperleft + masksize, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
         exportImage(src1_upperleft, src1_lowerright, sa1, ImageExportInfo("./debug/src1.tif").setPixelType("UINT8"));
@@ -1188,48 +1168,48 @@ namespace enblend{
         exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
 #endif
         //calculating differences between pixels that are adjacent in the original image
-        convolveImage(srcImageRange(graphtmp), destImage(graph), kernel2d(edgeWeightKernel));
-        copyImage(srcImageRange(graph), destImage(graphtmp));
+        convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), kernel2d(edgeWeightKernel));
+        copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
         
-#ifdef GRAPHCUT_DBG
-        exportImage(srcImageRange(graph), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
+#ifdef DEBUG_GRAPHCUT
+        exportImage(srcImageRange(graphImg), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
 #endif
         //find optimal cut in dual graph
-        for (vector<Point2D>::iterator i = list->begin(); i != list->end(); ++i) {
-            if (i == list->begin()) {
-                tmpPoint = *i;
+        for (vector<Point2D>::iterator i = intermediatePointList->begin(); i != intermediatePointList->end(); ++i) {
+            if (i == intermediatePointList->begin()) {
+                intermediatePoint = *i;
                 continue;
             }
             
-            bounds->clear();
-            bounds->top.insert(tmpPoint);
-            bounds->bottom.insert(*i);
+            srcDestPoints->clear();
+            srcDestPoints->top.insert(intermediatePoint);
+            srcDestPoints->bottom.insert(*i);
             
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
             cout<<"Running graph-cut: "<<tmpPoint<<":"<<*i<<endl;
 #endif
         
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
-                (Point2D(-10, -10), Point2D(-20, -20), &graphtmp, &gradientX, 
-                 &gradientY, graphsize - Diff2D(1, 1), bounds);
+                (Point2D(-10, -10), Point2D(-20, -20), &intermediateGraphImg, &gradientX, 
+                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints);
             
             for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
                 if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin())
                     totalDualPath.push_back(*j);
             }
             
-            copyImage(srcImageRange(graph), destImage(graphtmp));
-            tmpPoint = *i;
+            copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
+            intermediatePoint = *i;
         }
         
-        dividePath<IMAGETYPE<GraphPixelType> >(&graph, &totalDualPath, &a, &b, graphsize - Diff2D(1, 1), iBB);
+        dividePath<IMAGETYPE<GraphPixelType> >(&graphImg, &totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, graphsize - Diff2D(1, 1), iBB);
         
         //labels areas that belong to left/right images
         //adds a 1-pixel border to catch any area that is cut off by the seam
         labelImage(srcIterRange(Diff2D(), Diff2D() + size + Diff2D(2, 2)), destImage(finalmask), 
-                   false, PathEqualityFunctor(&a, &b, iBB.upperLeft()));
+                   false, OutputLabelingFunctor(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
         
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels.tif").setPixelType("UINT8"));
 #endif
         
@@ -1245,7 +1225,7 @@ namespace enblend{
         inspectTwoImages(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1), 
                          finalmask.lowerRight() - Diff2D(1, 1)),
                          srcIter(dest_upperleft + iBB.upperLeft(), da), c);
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels1.tif").setPixelType("UINT8"));
 #endif
         
@@ -1264,7 +1244,7 @@ namespace enblend{
                            Param(BasePixelTraits::max())));
         }
         
-#ifdef GRAPHCUT_DBG
+#ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels2.tif").setPixelType("UINT8"));
 #endif
         
@@ -1276,11 +1256,13 @@ namespace enblend{
                     finalmask.lowerRight() - Diff2D(1,1)), srcImage(gradientX),
                     destIter(dest_upperleft + iBB.upperLeft(), da));
         
-        delete list;
+        delete intermediatePointList;
         delete dualPath;
     }
     
 
 }/* namespace enblend */
 #endif	/* GRAPHCUT_H */
+
+
 
