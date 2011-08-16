@@ -846,14 +846,13 @@ MaskType* createMask(const ImageType* const white,
         // Do NFT at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
-                              (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-		mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
-                              (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-	
-        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x)/ CoarsenessFactor), 
-                            std::floor((iBB.upperLeft().y - uBB.upperLeft().y)/CoarsenessFactor)),
-							mainInputBBSize
-                            );
+                               (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+        mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+                                 (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+
+        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor), 
+                             std::floor((iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
+                             mainInputBBSize);
 	
         mainStride = CoarsenessFactor;
     } else {
@@ -884,22 +883,22 @@ MaskType* createMask(const ImageType* const white,
     //                  !CoarseMask: uBB * MaskType
     MaskType* mainOutputImage = new MaskType(mainOutputSize);
 
-	if(MainAlgorithm == GraphCut)
-    graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
-                            stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
-                            destIter(mainOutputImage->upperLeft() + mainOutputOffset),
-                            stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                            stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
-                            ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries, 
-                            mainInputBB);
- 
-	else if(MainAlgorithm == NFT)
-		nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                            stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
-                            destIter(mainOutputImage->upperLeft() + mainOutputOffset),
-                            ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries);
+    if (MainAlgorithm == GraphCut)
+        graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
+                stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
+                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+                stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
+                ManhattanDistance,
+                wraparound ? HorizontalStrip : OpenBoundaries, 
+                mainInputBB);
+    
+    else if (MainAlgorithm == NFT)
+        nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
+                                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+                                ManhattanDistance,
+                                wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
@@ -944,11 +943,11 @@ MaskType* createMask(const ImageType* const white,
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
-    if(MainAlgorithm == GraphCut)
-    vectorizeSeamLine(rawSegments,
-                      whiteAlpha, blackAlpha,
-                      uBB,
-                      mainStride, mainOutputImage, 4);
+    if (MainAlgorithm == GraphCut)
+        vectorizeSeamLine(rawSegments,
+                        whiteAlpha, blackAlpha,
+                        uBB,
+                        mainStride, mainOutputImage, 4);
     else 
         vectorizeSeamLine(rawSegments,
                       whiteAlpha, blackAlpha,
@@ -1132,9 +1131,9 @@ MaskType* createMask(const ImageType* const white,
     OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
         *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
                               (&mismatchImage, visualizeImage,
-                              &mismatchImageSize, &mismatchImageStride,
-                              &uvBBStrideOffset, &contours, &uBB, &vBB, params,
-                              whiteAlpha, blackAlpha, &uvBB);
+                               &mismatchImageSize, &mismatchImageStride,
+                               &uvBBStrideOffset, &contours, &uBB, &vBB, params,
+                               whiteAlpha, blackAlpha, &uvBB);
     
         // Add Strategy 1: Use GDA to optimize placement of snake vertices
     defaultOptimizerChain->addOptimizer("anneal");

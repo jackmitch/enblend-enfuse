@@ -21,7 +21,7 @@
 #define	MASKCOMMON_H
 
 using vigra::LinearIntensityTransform;
-namespace enblend{
+namespace enblend {
     
     template <typename PixelType, typename ResultType>
     class PixelDifferenceFunctor
@@ -97,13 +97,7 @@ namespace enblend{
         ResultType sum(const PixelType& a, const PixelType& b, VigraFalseType) const {
             PixelComponentType aLum = a.luminance();
             PixelComponentType bLum = b.luminance();
-            PixelComponentType aHue = a.hue();
-            PixelComponentType bHue = b.hue();
-            PixelComponentType lumDiff = (aLum + bLum)/2;
-            PixelComponentType hueDiff = (aHue + bHue)/2;
-            if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) {
-                hueDiff = NumericTraits<PixelComponentType>::min() - hueDiff;
-            }
+            PixelComponentType lumDiff = (aLum + bLum) / 2;
             return rm(lumDiff);
         }
 
