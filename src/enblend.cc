@@ -437,6 +437,9 @@ void printUsageAndExit(const bool error = true) {
     cout <<
         "\n" <<
         "Extended options:\n" <<
+        "  --primary-seam-generator=NAME      set main seam finder to NAME; default:\n" <<
+        "                         " << "nft" << "\n" <<
+        "\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
@@ -498,9 +501,6 @@ void printUsageAndExit(const bool error = true) {
         "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
         "                         characters as \"--save-masks\"; default: \"" <<
         VisualizeTemplate << "\"\n" <<
-        "  --main-algorithm=NAME      set main seam finder to NAME; default:\n" <<
-        "                         " << MainAlgorithm << "\n" <<
-        "\n" <<
         "Enblend accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
         "\n" <<
@@ -1280,11 +1280,11 @@ int process_options(int argc, char** argv)
                 } else if (!strcmp(optarg, "nft"))
                     MainAlgorithm = NFT;
                 else {
-                    cerr << command << ": option \"-b\": unrecognized argument, defaulting to NFT"  << endl;
+                    cerr << command << ": option \"--primary-seam-generator\": unrecognized argument, defaulting to NFT"  << endl;
                     MainAlgorithm = NFT;
                 }
             } else {
-                cerr << command << ": option \"-b\" requires an argument" << endl;
+                cerr << command << ": option \"--primary-seam-generator\" requires an argument" << endl;
                 failed = true;
             }
             break;
