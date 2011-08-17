@@ -343,7 +343,6 @@ namespace enblend{
                  norm, boundary, iBB);
     }
     
-    template <class ImageType, class MaskPixelType>
     void getNeighbourList(Point2D src, Point2D* list,
                           Diff2D bounds, CheckpointPixels* srcDestPoints) {
         //return neighbour points from top to left in clockwise order
@@ -392,7 +391,6 @@ namespace enblend{
         }
     }
     
-    template <class ImageType, class MaskPixelType>
     void getNeighbourList(CheckpointPixels* srcDestPoints, boost::unordered_set<Point2D, pointHash>::iterator* auxList1,
                           boost::unordered_set<Point2D, pointHash>::iterator* auxList2) {
         
@@ -498,8 +496,8 @@ namespace enblend{
             }
             
             if (current == Point2D(-10, -10))
-                getNeighbourList<ImageType, MaskPixelType>(srcDestPoints, &auxListBegin, &auxListEnd);
-            else getNeighbourList<ImageType, MaskPixelType>(current, list, bounds, srcDestPoints);
+                getNeighbourList(srcDestPoints, &auxListBegin, &auxListEnd);
+            else getNeighbourList(current, list, bounds, srcDestPoints);
             
             if (current != Point2D(-10, -10)) {
                 for (int i = 0; i < 4; i++) {
@@ -594,7 +592,6 @@ namespace enblend{
     }
     
     
-    template<class ImageType>
     void dividePath(vector<Point2D>* cut,
                     boost::unordered_set<Point2D, pointHash>* left,
                     boost::unordered_set<Point2D, pointHash>* right,
@@ -1055,168 +1052,27 @@ namespace enblend{
             previousDual = currentDual;
         }
     }
-    /* Graph-cut
-     * implementation of an algorithm based on an article by:
-     * V.Kwatra, A.Schoedl, I.Essa, G.Turk, A.Bobick
-     * "Graphcut Textures: Image and Video Synthesis Using Graph Cuts"
-     * 
-     * The algorithm finds the best seam between two images using a graph-based approach.
-    */
     
-    template <class SrcImageIterator, class SrcAccessor, class DestImageIterator, 
-        class DestAccessor, class MaskImageIterator, class MaskAccessor>
-    void graphCut(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor sa1,
-                  SrcImageIterator src2_upperleft, SrcAccessor sa2,
-                  DestImageIterator dest_upperleft, DestAccessor da,
-                  MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, MaskAccessor ma1,
+    template <class DestImageIterator, class DestAccessor, class MaskImageIterator, class MaskAccessor, class MaskPixelType>
+    void processCutResults(MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, MaskAccessor ma1,
                   MaskImageIterator mask2_upperleft, MaskAccessor ma2,
-                  nearest_neigbor_metric_t norm, boundary_t boundary, const Rect2D& iBB) {
+                  DestImageIterator dest_upperleft, DestAccessor da,
+                  vector<Point2D>& totalDualPath, const Rect2D& iBB) {
         
-        typedef typename SrcAccessor::value_type SrcPixelType;
-        typedef vigra::NumericTraits<SrcPixelType> SrcPixelTraits;
-        typedef typename SrcPixelTraits::Promote SrcPromoteType;
-
-        typedef typename DestAccessor::value_type DestPixelType;
-        typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
+        const Diff2D size(iBB.lowerRight().x - iBB.upperLeft().x,
+                          iBB.lowerRight().y - iBB.upperLeft().y);
         
-        typedef typename MaskAccessor::value_type MaskPixelType;
-        typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
+        IMAGETYPE<MaskPixelType> finalmask(size + Diff2D(2, 2));
+        IMAGETYPE<MaskPixelType> tempImg(size);
         
         typedef UInt8 BasePixelType;
-        typedef float GradientPixelType;
         typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
-        typedef vigra::NumericTraits<GradientPixelType> GradientPixelTraits;
-        typedef typename BasePixelTraits::Promote BasePromotePixelType;
-        typedef vigra::NumericTraits<BasePromotePixelType> BasePromotePixelTraits;
-        typedef typename BasePromotePixelTraits::Promote GraphPixelType;
-
-        const Diff2D size(src1_lowerright.x - src1_upperleft.x,
-                          src1_lowerright.y - src1_upperleft.y);
-        const Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
-                              mask1_lowerright.y - mask1_upperleft.y);
-
-        IMAGETYPE<BasePixelType> intermediateImg(size);
-        IMAGETYPE<BasePromotePixelType> intermediateGraphImg(size + size + Diff2D(1, 1));
-        IMAGETYPE<BasePromotePixelType> gradientPreConvolve(size);
-        IMAGETYPE<GradientPixelType> gradientX(size);
-        IMAGETYPE<GradientPixelType> gradientY(size);
-        IMAGETYPE<GraphPixelType> graphImg(size + size + Diff2D(1, 1));
-        IMAGETYPE<MaskPixelType> finalmask(size + Diff2D(2, 2));
-	
-        vector<Point2D>* dualPath = NULL;
-        vector<Point2D> totalDualPath;
-        vector<Point2D>* intermediatePointList;
-        Point2D intermediatePoint;
+        typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
+        
         boost::unordered_set<Point2D, pointHash> pixelsLeftOfCut;
         boost::unordered_set<Point2D, pointHash> pixelsRightOfCut;
-        CheckpointPixels* srcDestPoints = new CheckpointPixels();
         
-        
-        const Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
-                               graphImg.lowerRight().y - graphImg.upperLeft().y);
-        const Rect2D gBB(Point2D(1, 1), Size2D(graphsize)),
-                     bBB(Point2D(1, 1), Size2D(size));
-                     
-        Kernel2D<BasePromotePixelType> edgeWeightKernel;
-        
-        edgeWeightKernel.initExplicitly(Diff2D(-1, -1), Diff2D(1, 1)) =  // upper left and lower right
-            0, 1, 0,
-            1, 1, 1,
-            0, 1, 0;
-        edgeWeightKernel.setBorderTreatment(vigra::BORDER_TREATMENT_CLIP);
-        Kernel1D<float> gradientKernel;
-        gradientKernel.initSymmetricGradient();
-        
-        //gradient images calculation
-        transformImage(src1_upperleft, src1_lowerright, sa1, 
-                       gradientPreConvolve.upperLeft(), gradientPreConvolve.accessor(),
-                       MapFunctor<SrcPixelType, BasePixelType>()); 
-        transformImage(src2_upperleft, src2_upperleft + size, sa2, 
-                       intermediateImg.upperLeft(), intermediateImg.accessor(),
-                       MapFunctor<SrcPixelType, BasePixelType>()); 
-        combineTwoImagesMP(srcImageRange(gradientPreConvolve), srcImage(intermediateImg), destImage(gradientPreConvolve), Arg1() + Arg2());
-        
-#ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(tmp), ImageExportInfo("./debug/sum.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(tmp2), ImageExportInfo("./debug/sum2.tif").setPixelType("UINT8"));
-#endif
-        //computing image gradient for a better cost function
-        vigra::separableConvolveX(srcImageRange(gradientPreConvolve), destImage(gradientX), kernel1d(gradientKernel));
-        vigra::separableConvolveY(srcImageRange(gradientPreConvolve), destImage(gradientY), kernel1d(gradientKernel));
-
-        //difference image calculation
-        combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1, 
-                           src2_upperleft, sa2,
-                           intermediateImg.upperLeft(), intermediateImg.accessor(),
-                           PixelDifferenceFunctor<SrcPixelType, BasePixelType>());     
-        
-        //masking overlap region borders
-        combineThreeImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)), 
-                             iBB.apply(srcIter(mask2_upperleft, ma2)),
-                             srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
-                             destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
-                             ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
-            
-        //look for possible start and end points     
-        intermediatePointList = findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
-            (mask1_upperleft, mask1_lowerright, ma1,
-             mask2_upperleft, ma2, dest_upperleft, da,
-             norm, boundary, iBB);
-            
-        //in case something goes wrong with point finding, returns regular nft image
-        if(intermediatePointList->empty())
-            return;
-        
-        //copying to a grid
-        copyImage(srcImageRange(intermediateImg), stride(2, 2, gBB.apply(destImage(intermediateGraphImg))));
-                     
-#ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(intermediateImg), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(intermediateGraphImg), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
-        exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
-        exportImage(mask2_upperleft, mask2_upperleft + masksize, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
-        exportImage(src1_upperleft, src1_lowerright, sa1, ImageExportInfo("./debug/src1.tif").setPixelType("UINT8"));
-        exportImage(src2_upperleft, src2_upperleft + size, sa2, ImageExportInfo("./debug/src2.tif").setPixelType("UINT8"));
-   
-        exportImage(srcImageRange(gradientX), ImageExportInfo("./debug/gradx.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
-#endif
-        //calculating differences between pixels that are adjacent in the original image
-        convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), kernel2d(edgeWeightKernel));
-        copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
-        
-#ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(graphImg), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
-#endif
-        //find optimal cut in dual graph
-        for (vector<Point2D>::iterator i = intermediatePointList->begin(); i != intermediatePointList->end(); ++i) {
-            if (i == intermediatePointList->begin()) {
-                intermediatePoint = *i;
-                continue;
-            }
-            
-            srcDestPoints->clear();
-            srcDestPoints->top.insert(intermediatePoint);
-            srcDestPoints->bottom.insert(*i);
-            
-#ifdef DEBUG_GRAPHCUT
-            cout<<"Running graph-cut: "<<tmpPoint<<":"<<*i<<endl;
-#endif
-        
-            dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
-                (Point2D(-10, -10), Point2D(-20, -20), &intermediateGraphImg, &gradientX, 
-                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints);
-            
-            for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
-                if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin())
-                    totalDualPath.push_back(*j);
-            }
-            
-            copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
-            intermediatePoint = *i;
-        }
-        
-        dividePath<IMAGETYPE<GraphPixelType> >(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
+        dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
         
         //labels areas that belong to left/right images
         //adds a 1-pixel border to catch any area that is cut off by the seam
@@ -1227,7 +1083,8 @@ namespace enblend{
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels.tif").setPixelType("UINT8"));
 #endif
         
-        int colorSum=0, count=0;
+        int colorSum=0;
+        int count=0;
         CountFunctor<MaskPixelType> c(&colorSum, &count); 
         
         transformImage(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1), 
@@ -1263,12 +1120,162 @@ namespace enblend{
 #endif
         
         combineTwoImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                           iBB.apply(srcIter(mask2_upperleft, ma2)), destImage(gradientX),
+                           iBB.apply(srcIter(mask2_upperleft, ma2)), destImage(tempImg),
                            ifThenElse(Arg1() && Arg2(), Param(MaskPixelTraits::max()), Param(MaskPixelTraits::zero())));
 
         copyImageIf(srcIterRange(finalmask.upperLeft() + Diff2D(1,1), 
-                    finalmask.lowerRight() - Diff2D(1,1)), srcImage(gradientX),
+                    finalmask.lowerRight() - Diff2D(1,1)), srcImage(tempImg),
                     destIter(dest_upperleft + iBB.upperLeft(), da));
+        
+    }
+    
+    /* Graph-cut
+     * implementation of an algorithm based on an article by:
+     * V.Kwatra, A.Schoedl, I.Essa, G.Turk, A.Bobick
+     * "Graphcut Textures: Image and Video Synthesis Using Graph Cuts"
+     * 
+     * The algorithm finds the best seam between two images using a graph-based approach.
+     * 
+     * Min-cost pathfinding is based on using the initial image graph's dual graph
+    */
+    
+    template <class SrcImageIterator, class SrcAccessor, class DestImageIterator, 
+        class DestAccessor, class MaskImageIterator, class MaskAccessor>
+    void graphCut(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor sa1,
+                  SrcImageIterator src2_upperleft, SrcAccessor sa2,
+                  DestImageIterator dest_upperleft, DestAccessor da,
+                  MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, MaskAccessor ma1,
+                  MaskImageIterator mask2_upperleft, MaskAccessor ma2,
+                  nearest_neigbor_metric_t norm, boundary_t boundary, const Rect2D& iBB) {
+        
+        typedef typename SrcAccessor::value_type SrcPixelType;
+        typedef typename MaskAccessor::value_type MaskPixelType;
+        
+        typedef UInt8 BasePixelType;
+        typedef float GradientPixelType;
+        typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
+        typedef vigra::NumericTraits<GradientPixelType> GradientPixelTraits;
+        typedef typename BasePixelTraits::Promote BasePromotePixelType;
+        typedef vigra::NumericTraits<BasePromotePixelType> BasePromotePixelTraits;
+        typedef typename BasePromotePixelTraits::Promote GraphPixelType;
+
+        const Diff2D size(src1_lowerright.x - src1_upperleft.x,
+                          src1_lowerright.y - src1_upperleft.y);
+        const Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
+                              mask1_lowerright.y - mask1_upperleft.y);
+
+        IMAGETYPE<BasePixelType> intermediateImg(size);
+        IMAGETYPE<BasePromotePixelType> intermediateGraphImg(size + size + Diff2D(1, 1));
+        IMAGETYPE<BasePromotePixelType> gradientPreConvolve(size);
+        IMAGETYPE<GradientPixelType> gradientX(size);
+        IMAGETYPE<GradientPixelType> gradientY(size);
+        IMAGETYPE<GraphPixelType> graphImg(size + size + Diff2D(1, 1));
+	
+        vector<Point2D>* dualPath = NULL;
+        vector<Point2D> totalDualPath;
+        vector<Point2D>* intermediatePointList;
+        Point2D intermediatePoint;
+        CheckpointPixels* srcDestPoints = new CheckpointPixels();
+        
+        const Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
+                               graphImg.lowerRight().y - graphImg.upperLeft().y);
+        const Rect2D gBB(Point2D(1, 1), Size2D(graphsize));
+                     
+        Kernel2D<BasePromotePixelType> edgeWeightKernel;
+        
+        edgeWeightKernel.initExplicitly(Diff2D(-1, -1), Diff2D(1, 1)) =  // upper left and lower right
+            0, 1, 0,
+            1, 1, 1,
+            0, 1, 0;
+        edgeWeightKernel.setBorderTreatment(vigra::BORDER_TREATMENT_CLIP);
+        Kernel1D<float> gradientKernel;
+        gradientKernel.initSymmetricGradient();
+        
+        //gradient images calculation
+        transformImage(src1_upperleft, src1_lowerright, sa1, 
+                       gradientPreConvolve.upperLeft(), gradientPreConvolve.accessor(),
+                       MapFunctor<SrcPixelType, BasePixelType>()); 
+        transformImage(src2_upperleft, src2_upperleft + size, sa2, 
+                       intermediateImg.upperLeft(), intermediateImg.accessor(),
+                       MapFunctor<SrcPixelType, BasePixelType>()); 
+        combineTwoImagesMP(srcImageRange(gradientPreConvolve), srcImage(intermediateImg), destImage(gradientPreConvolve), Arg1() + Arg2());
+
+        //computing image gradient for a better cost function
+        vigra::separableConvolveX(srcImageRange(gradientPreConvolve), destImage(gradientX), kernel1d(gradientKernel));
+        vigra::separableConvolveY(srcImageRange(gradientPreConvolve), destImage(gradientY), kernel1d(gradientKernel));
+
+        //difference image calculation
+        combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1, 
+                           src2_upperleft, sa2,
+                           intermediateImg.upperLeft(), intermediateImg.accessor(),
+                           PixelDifferenceFunctor<SrcPixelType, BasePixelType>());     
+        
+        //masking overlap region borders
+        combineThreeImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)), 
+                             iBB.apply(srcIter(mask2_upperleft, ma2)),
+                             srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                             destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                             ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
+            
+        //look for possible start and end points     
+        intermediatePointList = findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
+            (mask1_upperleft, mask1_lowerright, ma1,
+             mask2_upperleft, ma2, dest_upperleft, da,
+             norm, boundary, iBB);
+            
+        //in case something goes wrong with start/end point finding, returns regular nft image
+        if(intermediatePointList->empty())
+            return;
+        
+        //copying to a grid
+        copyImage(srcImageRange(intermediateImg), stride(2, 2, gBB.apply(destImage(intermediateGraphImg))));
+
+        //calculating differences between pixels that are adjacent in the original image
+        convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), kernel2d(edgeWeightKernel));
+        copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));       
+                     
+#ifdef DEBUG_GRAPHCUT
+        exportImage(srcImageRange(intermediateImg), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(intermediateGraphImg), ImageExportInfo("./debug/diff2.tif").setPixelType("UINT8"));
+        exportImage(mask1_upperleft, mask1_lowerright, ma1, ImageExportInfo("./debug/mask1.tif").setPixelType("UINT8"));
+        exportImage(mask2_upperleft, mask2_upperleft + masksize, ma2, ImageExportInfo("./debug/mask2.tif").setPixelType("UINT8"));
+        exportImage(src1_upperleft, src1_lowerright, sa1, ImageExportInfo("./debug/src1.tif").setPixelType("UINT8"));
+        exportImage(src2_upperleft, src2_upperleft + size, sa2, ImageExportInfo("./debug/src2.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(gradientX), ImageExportInfo("./debug/gradx.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(graphImg), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
+#endif
+        //find optimal cuts in dual graph
+        for (vector<Point2D>::iterator i = intermediatePointList->begin(); i != intermediatePointList->end(); ++i) {
+            if (i == intermediatePointList->begin()) {
+                intermediatePoint = *i;
+                continue;
+            }
+            
+            srcDestPoints->clear();
+            srcDestPoints->top.insert(intermediatePoint);
+            srcDestPoints->bottom.insert(*i);
+            
+#ifdef DEBUG_GRAPHCUT
+            cout<<"Running graph-cut: "<<tmpPoint<<":"<<*i<<endl;
+#endif
+        
+            dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
+                (Point2D(-10, -10), Point2D(-20, -20), &intermediateGraphImg, &gradientX, 
+                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints);
+            
+            for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
+                if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin())
+                    totalDualPath.push_back(*j);
+            }
+            
+            copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
+            intermediatePoint = *i;
+        }
+        
+        processCutResults<DestImageIterator, DestAccessor, MaskImageIterator, MaskAccessor, MaskPixelType>
+            (mask1_upperleft, mask1_lowerright, ma1, mask2_upperleft, ma2,
+             dest_upperleft, da, totalDualPath, iBB);
         
         delete intermediatePointList;
         delete dualPath;
