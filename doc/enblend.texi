@@ -119,6 +119,7 @@ see.
 * Overview::                    Overview of Enblend's features
 * Workflow::                    Enblend's role in making panoramas
 * Invocation::                  Command line options and arguments
+* Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
@@ -1287,6 +1288,20 @@ blending colors.
 
 See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
 Profiles}.
+
+@item --primary-seam-generator
+@opindex --primary-seam-generator
+@cindex primary seam generator
+@cindex seam, generator
+Select the algorithm responsible for generating the general seam route.
+
+This is the algorithm that produces an initial seam line, which is
+the basis for later, optional optimizations. Nearest Feature Transform
+is the original algorithm.
+
+Possible values: nft, graphcut.
+
+See also: @ref{Primary Seam Generators}
 @end table
 
 
@@ -1949,6 +1964,13 @@ approximately 15@dmn{cm}.}
 @page
 
 @include mask-template-characters.texi
+
+@node Primary Seam Generators
+@chapter Primary Seam Generators
+@cindex primary seam generator
+@cindex seam, generator
+
+@include seam-generators.texi
 
 
 @node Color Profiles
