@@ -22,14 +22,17 @@
 #define GRAPHCUT_H
 
 #include <iostream>
+
 #ifdef _WIN32
 #include <cmath>
 #else
 #include <math.h>
 #endif
+
 #include <stdlib.h>
 #include <utility>
 #include <queue>
+
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
 
@@ -44,17 +47,12 @@
 #include "vigra/labelimage.hxx"
 #include "vigra/transformimage.hxx"
 #include "vigra/contourcirculator.hxx"
-#include <vigra/mathutil.hxx>
+#include "vigra/mathutil.hxx"
+
 #include "common.h"
 #include "maskcommon.h"
 #include "masktypedefs.h"
 #include "nearest.h"
-
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::pair;
-using std::priority_queue;
 
 using vigra::NumericTraits;
 using vigra::triple;
@@ -68,15 +66,18 @@ using vigra::BorderTreatmentMode;
 using vigra::labelImage;
 using namespace vigra::functor;
 
+
 #define BIT_MASK_DIR 0x03
 #define BIT_MASK_OPDIR 0x02
 #define BIT_MASK_OPEN 0x04
 #define BIT_MASK_DIVIDE 0x0F
 
+
 namespace enblend {
 
-    struct pointHash {
-        std::size_t operator()(vigra::Point2D const& p) const
+    struct pointHash
+    {
+        std::size_t operator()(const vigra::Point2D& p) const
         {
             std::size_t seed = 0;
 
@@ -141,7 +142,7 @@ namespace enblend {
         vector<Point2D>* interPointList = new vector<Point2D>();
         vector<EntryPointContainer> entryPointList;
         EntryPointContainer* max = NULL;
-        pair<IteratorType, IteratorType> entryPoint;
+        std::pair<IteratorType, IteratorType> entryPoint;
         Point2D intermediatePoint;
         uint counter = 0;
 
@@ -184,7 +185,7 @@ namespace enblend {
                     entryPoint.second = circ->outerPixel();
                 } else {
                     ready = true;
-                    entryPoint = pair<IteratorType, IteratorType>(previous, circ->outerPixel());
+                    entryPoint = std::pair<IteratorType, IteratorType>(previous, circ->outerPixel());
                 }
                 counter = 0;
             }
@@ -237,7 +238,7 @@ namespace enblend {
             intermediatePoint = circ->outerPixel() - nft.upperLeft();
             if (!offTheBorder && !(nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2)) {
                 offTheBorder = true;
-                Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
                 if (intermediatePoint.x >= 0 &&
                     intermediatePoint.y >= 0 &&
                     intermediatePoint.x < iBB.lowerRight().x &&
@@ -246,14 +247,14 @@ namespace enblend {
                 }
 
 #ifdef DEBUG_GRAPHCUT
-                cout << "Start point: " << dualGraphPoint << endl;
+                std::cout << "Start point: " << dualGraphPoint << std::endl;
 #endif
             }
 
             if (offTheBorder) {
                 if (!inOverlap && overlap[intermediatePoint] == MaskPixelTraits::max()) {
                     inOverlap = true;
-                    Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                    const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
                     if (!interPointList->empty() &&
                         *(interPointList->begin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
@@ -262,7 +263,7 @@ namespace enblend {
                     }
 
 #ifdef DEBUG_GRAPHCUT
-                    cout << "Entering overlap: " << dualGraphPoint << endl;
+                    std::cout << "Entering overlap: " << dualGraphPoint << std::endl;
 #endif
                 }
 
@@ -270,18 +271,18 @@ namespace enblend {
                     overlap[intermediatePoint] == MaskPixelTraits::zero() &&
                     nft.accessor()(circ->outerPixel()) != MaskPixelTraits::max() / 2) {
                     inOverlap = false;
-                    Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                    const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
                     if (intermediatePoint.x >= 0 && intermediatePoint.y >= 0) {
                         interPointList->push_back(dualGraphPoint);
                     }
 
 #ifdef DEBUG_GRAPHCUT
-                    cout<<"Leaving overlap: "<<dualGraphPoint<<endl;
+                    std::cout << "Leaving overlap: " << dualGraphPoint << std::endl;
 #endif
                 }
 
                 if (nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2) {
-                    Point2D dualGraphPoint = Point2D((previous - nft.upperLeft()) * 2 - Diff2D(1, 1));
+                    const Point2D dualGraphPoint = Point2D((previous - nft.upperLeft()) * 2 - Diff2D(1, 1));
                     if (!interPointList->empty() &&
                         *(interPointList->rbegin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
@@ -290,7 +291,7 @@ namespace enblend {
                     }
 
 #ifdef DEBUG_GRAPHCUT
-                    cout<<"Endpoint reached: "<<dualGraphPoint<<endl;
+                    std::cout << "Endpoint reached: " << dualGraphPoint << std::endl;
 #endif
                     break;
                 }
@@ -314,8 +315,7 @@ namespace enblend {
         {
             if (a == Point2D(-20, -20)) {
                 return totalScore > (*img)[b];
-            }
-            else if (b == Point2D(-20, -20)) {
+            } else if (b == Point2D(-20, -20)) {
                 return (*img)[a] > totalScore;
             }
 
@@ -366,7 +366,7 @@ namespace enblend {
     public:
         CountFunctor(int* c, int* c2) : color(c), count(c2) {}
 
-        MaskPixelType operator()(MaskPixelType const& arg1, MaskPixelType const& arg2) const
+        MaskPixelType operator()(const MaskPixelType& arg1, const MaskPixelType& arg2) const
         {
             if (arg1 > 0 && arg1 == arg2) {
                 (*color)++;
@@ -386,10 +386,10 @@ namespace enblend {
               class DestAccessor, class MaskImageIterator, class MaskAccessor>
     inline void
     graphCut(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
-             pair<SrcImageIterator, SrcAccessor> src2,
-             pair<DestImageIterator, DestAccessor> dest,
+             std::pair<SrcImageIterator, SrcAccessor> src2,
+             std::pair<DestImageIterator, DestAccessor> dest,
              triple<MaskImageIterator, MaskImageIterator, MaskAccessor> mask1,
-             pair<MaskImageIterator, MaskAccessor> mask2,
+             std::pair<MaskImageIterator, MaskAccessor> mask2,
              nearest_neigbor_metric_t norm, boundary_t boundary, const Rect2D& iBB)
     {
         graphCut(src1.first, src1.second, src1.third,
@@ -407,51 +407,51 @@ namespace enblend {
         // return neighbour points from top to left in clockwise order
         bool check = false;
         if (src.y == 1) {
-            list[0] = Point2D(-1,-1);
+            list[0] = Point2D(-1, -1);
             check = true;
         } else {
-            list[0] = src(0,-2);
+            list[0] = src(0, -2);
         }
 
         if (src.x == bounds.x - 1) {
-            list[1] = Point2D(-1,-1);
+            list[1] = Point2D(-1, -1);
             check = true;
         } else {
-            list[1] = src(2,0);
+            list[1] = src(2, 0);
         }
 
         if (src.y == bounds.y - 1) {
-            list[2] = Point2D(-1,-1);
+            list[2] = Point2D(-1, -1);
             check = true;
         } else {
-            list[2] = src(0,2);
+            list[2] = src(0, 2);
         }
 
         if (src.x == 1) {
-            list[3] = Point2D(-1,-1);
+            list[3] = Point2D(-1, -1);
             check = true;
         } else {
-            list[3] = src(-2,0);
+            list[3] = src(-2, 0);
         }
 
         if (srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end()) {
-            list[0] = Point2D(-20,-20);
-            list[1] = Point2D(-20,-20);
-            list[2] = Point2D(-20,-20);
-            list[3] = Point2D(-20,-20);
+            list[0] = Point2D(-20, -20);
+            list[1] = Point2D(-20, -20);
+            list[2] = Point2D(-20, -20);
+            list[3] = Point2D(-20, -20);
         }
 
         if (check) {
             if (srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end() ||
-                srcDestPoints->bottom.find(src(1,0)) != srcDestPoints->bottom.end() ||
-                srcDestPoints->bottom.find(src(1,1)) != srcDestPoints->bottom.end() ||
-                srcDestPoints->bottom.find(src(0,1)) != srcDestPoints->bottom.end()) {
-                if (list[1] == Point2D(-1,-1)) {
-                    list[1] = Point2D(-20,-20);
-                } else if (list[2] == Point2D(-1,-1)) {
-                    list[2] = Point2D(-20,-20);
-                } else if (list[3] == Point2D(-1,-1)) {
-                    list[3] = Point2D(-20,-20);
+                srcDestPoints->bottom.find(src(1, 0)) != srcDestPoints->bottom.end() ||
+                srcDestPoints->bottom.find(src(1, 1)) != srcDestPoints->bottom.end() ||
+                srcDestPoints->bottom.find(src(0, 1)) != srcDestPoints->bottom.end()) {
+                if (list[1] == Point2D(-1, -1)) {
+                    list[1] = Point2D(-20, -20);
+                } else if (list[2] == Point2D(-1, -1)) {
+                    list[2] = Point2D(-20, -20);
+                } else if (list[3] == Point2D(-1, -1)) {
+                    list[3] = Point2D(-20, -20);
                 }
             }
         }
@@ -475,7 +475,7 @@ namespace enblend {
         Point2D current = pt;
         vec->push_back(pt);
         do {
-            switch ((*img)[current(1,1)] & BIT_MASK_DIR) {
+            switch ((*img)[current(1, 1)] & BIT_MASK_DIR) {
             case 0:
                 vec->push_back(current(0, -2));
                 break;
@@ -490,7 +490,7 @@ namespace enblend {
                 break;
             default:
 #ifdef DEBUG_GRAPHCUT
-                cout << "path tracing error" << endl;
+                std::cout << "path tracing error" << std::endl;
 #endif
                 break;
             }
@@ -542,7 +542,7 @@ namespace enblend {
            Diff2D bounds, CheckpointPixels* srcDestPoints)
     {
         MaskPixelType zeroVal = NumericTraits<MaskPixelType>::zero();
-        typedef priority_queue<Point2D, vector<Point2D>, CostComparer<ImageType> > Queue;
+        typedef std::priority_queue<Point2D, vector<Point2D>, CostComparer<ImageType> > Queue;
         CostComparer<ImageType> costcomp(img);
         Queue* openset = new Queue(costcomp);
         long score = 0;
@@ -567,7 +567,7 @@ namespace enblend {
             iterCount++;
             if (current == destpt) {
 #ifdef DEBUG_GRAPHCUT
-                cout << "Graphcut completed after visiting " << iterCount << " nodes" << endl;
+                std::cout << "Graphcut completed after visiting " << iterCount << " nodes" << std::endl;
 #endif
                 delete openset;
                 return tracePath<ImageType>(destNeighbour, img, srcDestPoints);
@@ -600,7 +600,7 @@ namespace enblend {
                                 gradientB = std::abs((*gradientX)[(neighbour) / 2]);
                             }
 
-                            if ((gradientA + gradientB) > 0) {
+                            if (gradientA + gradientB > 0) {
                                 score =
                                     (*img)[current] +
                                     getEdgeWeight(i, current, img, false, bounds) * (gradientA + gradientB);
@@ -669,7 +669,7 @@ namespace enblend {
             }
         }
 #ifdef DEBUG_GRAPHCUT
-        cout << "Graphcut failed after visiting " << iterCount << " nodes" << endl;
+        std::cout << "Graphcut failed after visiting " << iterCount << " nodes" << std::endl;
 #endif
         delete openset;
         return new vector<Point2D>();
@@ -678,7 +678,7 @@ namespace enblend {
 
     Point2D convertFromDual(const Point2D& dualPixel)
     {
-        int stride = 2;
+        const int stride = 2;
         return (Point2D((dualPixel->x - 1) / stride, (dualPixel->y - 1) / stride));
     }
 
@@ -696,6 +696,7 @@ namespace enblend {
         Diff2D dim(iBB.lowerRight() - iBB.upperLeft());
         std::vector<Point2D>::iterator previousDual;
         std::vector<Point2D>::iterator nextDual;
+
         for (std::vector<Point2D>::iterator currentDual = cut->begin(), nextDual = cut->begin();
              currentDual != cut->end();
              ++currentDual) {
@@ -708,7 +709,7 @@ namespace enblend {
                 next = convertFromDual(*nextDual);
                 // find closest edge
                 int dist;
-                Diff2D toLowerRight = dim - current;
+                const Diff2D toLowerRight = dim - current;
                 closest = 0;
                 dist = current.y;
                 if (toLowerRight.x < dist) {
@@ -744,7 +745,7 @@ namespace enblend {
                     break;
                 default:
 #ifdef DEBUG_GRAPHCUT
-                    cout << "path dividing error" << endl;
+                    std::cout << "path dividing error" << std::endl;
 #endif
                     break;
                 }
@@ -786,7 +787,7 @@ namespace enblend {
                         break;
                     default:
 #ifdef DEBUG_GRAPHCUT
-                        cout << "path dividing error" << endl;
+                        std::cout << "path dividing error" << std::endl;
 #endif
                         break;
                     }
@@ -812,7 +813,7 @@ namespace enblend {
                         break;
                     default:
 #ifdef DEBUG_GRAPHCUT
-                        cout << "path dividing error" << endl;
+                        std::cout << "path dividing error" << std::endl;
 #endif
                         break;
                     }
@@ -838,7 +839,7 @@ namespace enblend {
                         break;
                     default:
 #ifdef DEBUG_GRAPHCUT
-                        cout << "path dividing error" << endl;
+                        std::cout << "path dividing error" << std::endl;
 #endif
                         break;
                     }
@@ -864,7 +865,7 @@ namespace enblend {
                         break;
                     default:
 #ifdef DEBUG_GRAPHCUT
-                        cout << "path dividing error" << endl;
+                        std::cout << "path dividing error" << std::endl;
 #endif
                         break;
                     }
@@ -906,7 +907,7 @@ namespace enblend {
                     break;
                 default:
 #ifdef DEBUG_GRAPHCUT
-                    cout << "path dividing error" << endl;
+                    std::cout << "path dividing error" << std::endl;
 #endif
                     break;
 
@@ -933,7 +934,7 @@ namespace enblend {
 
                 if (nextDual == cut->end()) {
                     int dist;
-                    Diff2D toLowerRight = dim - current;
+                    const Diff2D toLowerRight = dim - current;
                     closest = 0;
                     dist = current.y;
                     if (toLowerRight.x < dist) {
@@ -1044,7 +1045,7 @@ namespace enblend {
                 case 13:        // left->right
                 default:
 #ifdef DEBUG_GRAPHCUT
-                    cout << "path dividing error: two-point loop" << endl;
+                    std::cout << "path dividing error: two-point loop" << std::endl;
 #endif
                     break;
                 }
@@ -1142,7 +1143,7 @@ namespace enblend {
                         break;
                     default:
 #ifdef DEBUG_GRAPHCUT
-                        cout << "path dividing error" << endl;
+                        std::cout << "path dividing error" << std::endl;
 #endif
                         break;
                     }
@@ -1379,7 +1380,7 @@ namespace enblend {
             srcDestPoints->bottom.insert(*i);
 
 #ifdef DEBUG_GRAPHCUT
-            cout << "Running graph-cut: " << tmpPoint << ":" << *i << endl;
+            std::cout << "Running graph-cut: " << tmpPoint << ":" << *i << std::endl;
 #endif
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
