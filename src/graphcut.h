@@ -192,8 +192,9 @@ namespace enblend {
             previous = circ->outerPixel();
         } while (*circ != *end);
 
-        if (entryPointList.empty())
+        if (entryPointList.empty()) {
             return interPointList;
+        }
 
         for (typename vector<EntryPointContainer>::iterator i = entryPointList.begin();
              i != entryPointList.end();
@@ -202,8 +203,9 @@ namespace enblend {
                 max = &(*i);
                 continue;
             }
-            if (i->third > max->third)
+            if (i->third > max->third) {
                 max = &(*i);
+            }
         }
 
         if (max != NULL) {
@@ -211,20 +213,24 @@ namespace enblend {
             delete end;
             Diff2D dir = max->second - max->first;
             if (dir.x != 0) {
-                if (max->second.x < max->first.x)
+                if (max->second.x < max->first.x) {
                     max->second = max->first;
+                }
 
                 circ = new Circulator(max->second, vigra::FourNeighborCode::West);
                 end = new Circulator(max->second, vigra::FourNeighborCode::West);
 
             } else if (dir.y != 0) {
-                if (max->second.y < max->first.y)
+                if (max->second.y < max->first.y) {
                     max->second = max->first;
+                }
 
                 circ = new Circulator(max->second, vigra::FourNeighborCode::North);
                 end = new Circulator(max->second, vigra::FourNeighborCode::North);
             }
-        } else return interPointList;
+        } else {
+            return interPointList;
+        }
 
         while (circ != end) {
             (*circ)++;
@@ -235,8 +241,10 @@ namespace enblend {
                 if (intermediatePoint.x >= 0 &&
                     intermediatePoint.y >= 0 &&
                     intermediatePoint.x < iBB.lowerRight().x &&
-                    intermediatePoint.y < iBB.lowerRight().y)
+                    intermediatePoint.y < iBB.lowerRight().y) {
                     interPointList->push_back(dualGraphPoint);
+                }
+
 #ifdef DEBUG_GRAPHCUT
                 cout << "Start point: " << dualGraphPoint << endl;
 #endif
@@ -249,8 +257,9 @@ namespace enblend {
                     if (!interPointList->empty() &&
                         *(interPointList->begin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
-                        intermediatePoint.y >= 0)
+                        intermediatePoint.y >= 0) {
                         interPointList->push_back(dualGraphPoint);
+                    }
 
 #ifdef DEBUG_GRAPHCUT
                     cout << "Entering overlap: " << dualGraphPoint << endl;
@@ -262,8 +271,9 @@ namespace enblend {
                     nft.accessor()(circ->outerPixel()) != MaskPixelTraits::max() / 2) {
                     inOverlap = false;
                     Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
-                    if (intermediatePoint.x >= 0 && intermediatePoint.y >= 0)
+                    if (intermediatePoint.x >= 0 && intermediatePoint.y >= 0) {
                         interPointList->push_back(dualGraphPoint);
+                    }
 
 #ifdef DEBUG_GRAPHCUT
                     cout<<"Leaving overlap: "<<dualGraphPoint<<endl;
@@ -275,8 +285,9 @@ namespace enblend {
                     if (!interPointList->empty() &&
                         *(interPointList->rbegin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
-                        intermediatePoint.y >= 0)
+                        intermediatePoint.y >= 0) {
                         interPointList->push_back(dualGraphPoint);
+                    }
 
 #ifdef DEBUG_GRAPHCUT
                     cout<<"Endpoint reached: "<<dualGraphPoint<<endl;
@@ -301,10 +312,13 @@ namespace enblend {
 
         bool operator()(const Point2D& a, const Point2D& b) const
         {
-            if (a == Point2D(-20, -20))
+            if (a == Point2D(-20, -20)) {
                 return totalScore > (*img)[b];
-            else if (b == Point2D(-20, -20))
+            }
+            else if (b == Point2D(-20, -20)) {
                 return (*img)[a] > totalScore;
+            }
+
             return (*img)[a] > (*img)[b];
         }
 
@@ -354,10 +368,12 @@ namespace enblend {
 
         MaskPixelType operator()(MaskPixelType const& arg1, MaskPixelType const& arg2) const
         {
-            if (arg1 > 0 && arg1 == arg2)
+            if (arg1 > 0 && arg1 == arg2) {
                 (*color)++;
-            if (arg1 == 255)
+            }
+            if (arg1 == 255) {
                 (*count)++;
+            }
             return arg1;
         }
 
@@ -388,27 +404,35 @@ namespace enblend {
     void getNeighbourList(Point2D src, Point2D* list,
                           Diff2D bounds, CheckpointPixels* srcDestPoints)
     {
-        //return neighbour points from top to left in clockwise order
+        // return neighbour points from top to left in clockwise order
         bool check = false;
         if (src.y == 1) {
             list[0] = Point2D(-1,-1);
             check = true;
-        } else list[0] = src(0,-2);
+        } else {
+            list[0] = src(0,-2);
+        }
 
         if (src.x == bounds.x - 1) {
             list[1] = Point2D(-1,-1);
             check = true;
-        } else list[1] = src(2,0);
+        } else {
+            list[1] = src(2,0);
+        }
 
         if (src.y == bounds.y - 1) {
             list[2] = Point2D(-1,-1);
             check = true;
-        } else list[2] = src(0,2);
+        } else {
+            list[2] = src(0,2);
+        }
 
         if (src.x == 1) {
             list[3] = Point2D(-1,-1);
             check = true;
-        } else list[3] = src(-2,0);
+        } else {
+            list[3] = src(-2,0);
+        }
 
         if (srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end()) {
             list[0] = Point2D(-20,-20);
@@ -422,12 +446,13 @@ namespace enblend {
                 srcDestPoints->bottom.find(src(1,0)) != srcDestPoints->bottom.end() ||
                 srcDestPoints->bottom.find(src(1,1)) != srcDestPoints->bottom.end() ||
                 srcDestPoints->bottom.find(src(0,1)) != srcDestPoints->bottom.end()) {
-                if (list[1] == Point2D(-1,-1))
+                if (list[1] == Point2D(-1,-1)) {
                     list[1] = Point2D(-20,-20);
-                else if (list[2] == Point2D(-1,-1))
+                } else if (list[2] == Point2D(-1,-1)) {
                     list[2] = Point2D(-20,-20);
-                else if (list[3] == Point2D(-1,-1))
+                } else if (list[3] == Point2D(-1,-1)) {
                     list[3] = Point2D(-20,-20);
+                }
             }
         }
     }
@@ -495,14 +520,15 @@ namespace enblend {
                 break;
             }
         } else {
-            if (pt.y == 1)
+            if (pt.y == 1) {
                 return (*img)[pt(1, 0)];
-            else if (pt.x == bounds.x - 2)
+            } else if (pt.x == bounds.x - 2) {
                 return (*img)[pt(2, 1)];
-            else if (pt.y == bounds.y - 2)
+            } else if (pt.y == bounds.y - 2) {
                 return (*img)[pt(1, 2)];
-            else if (pt.x == 1)
+            } else if (pt.x == 1) {
                 return (*img)[pt(0, 1)];
+            }
         }
 
         return 0;
@@ -547,9 +573,11 @@ namespace enblend {
                 return tracePath<ImageType>(destNeighbour, img, srcDestPoints);
             }
 
-            if (current == Point2D(-10, -10))
+            if (current == Point2D(-10, -10)) {
                 getNeighbourList(srcDestPoints, &auxListBegin, &auxListEnd);
-            else getNeighbourList(current, list, bounds, srcDestPoints);
+            } else {
+                getNeighbourList(current, list, bounds, srcDestPoints);
+            }
 
             if (current != Point2D(-10, -10)) {
                 for (int i = 0; i < 4; i++) {
@@ -561,10 +589,9 @@ namespace enblend {
                         (neighbour != Point2D(-1, -1) &&
                          neighbour != Point2D(-10, -10) &&
                          (*img)[neighbour(1, 1)] == zeroVal)) {
-
-                        if (neighbour == Point2D(-20, -20))
+                        if (neighbour == Point2D(-20, -20)) {
                             score = (*img)[current] + getEdgeWeight(i, current, img, true, bounds);
-                        else {
+                        } else {
                             if (i % 2 == 0) {
                                 gradientA = std::abs((*gradientY)[(current) / 2]);
                                 gradientB = std::abs((*gradientY)[(neighbour) / 2]);
@@ -573,11 +600,13 @@ namespace enblend {
                                 gradientB = std::abs((*gradientX)[(neighbour) / 2]);
                             }
 
-                            if ((gradientA + gradientB) > 0)
+                            if ((gradientA + gradientB) > 0) {
                                 score =
                                     (*img)[current] +
                                     getEdgeWeight(i, current, img, false, bounds) * (gradientA + gradientB);
-                            else score = (*img)[current] + getEdgeWeight(i, current, img, false, bounds);
+                            } else {
+                                score = (*img)[current] + getEdgeWeight(i, current, img, false, bounds);
+                            }
                         }
 
                         if (neighbour == Point2D(-20, -20) && !destOpen) {
@@ -590,8 +619,9 @@ namespace enblend {
                             (*img)[neighbour(1, 1)] += BIT_MASK_OPEN;
                             scoreIsBetter = true;
                         } else if ((neighbour == Point2D(-20, -20) && score < totalScore) ||
-                                   (neighbour != Point2D(-20, -20) && score < (*img)[neighbour]))
+                                   (neighbour != Point2D(-20, -20) && score < (*img)[neighbour])) {
                             scoreIsBetter = true;
+                        }
 
                         if (scoreIsBetter) {
                             if (neighbour == Point2D(-20, -20)) {
@@ -605,8 +635,9 @@ namespace enblend {
                                 (*img)[neighbour] = score;
                             }
 
-                            if (pushToList)
+                            if (pushToList) {
                                 openset->push(neighbour);
+                            }
                         }
                     }
                 }
@@ -622,14 +653,16 @@ namespace enblend {
                             pushToList = true;
                             (*img)[neighbour(1, 1)] += BIT_MASK_OPEN;
                             scoreIsBetter = true;
-                        } else if (score < (*img)[neighbour])
+                        } else if (score < (*img)[neighbour]) {
                             scoreIsBetter = true;
+                        }
 
                         if (scoreIsBetter) {
                             (*img)[neighbour(1, 1)] &= BIT_MASK_OPEN;
                             (*img)[neighbour] = score;
-                            if (pushToList)
+                            if (pushToList) {
                                 openset->push(neighbour);
+                            }
                         }
                     }
                 }
@@ -719,13 +752,17 @@ namespace enblend {
                 int previousDir;
 
                 if (next.x == current.x) {
-                    if (next.y < current.y)
+                    if (next.y < current.y) {
                         previousDir = 0;
-                    else previousDir = 2;
+                    } else {
+                        previousDir = 2;
+                    }
                 } else {
-                    if (next.x > current.x)
+                    if (next.x > current.x) {
                         previousDir = 1;
-                    else previousDir = 3;
+                    } else {
+                        previousDir = 3;
+                    }
                 }
 
                 switch (closest) {
@@ -879,13 +916,17 @@ namespace enblend {
                 int currentDir;
 
                 if (previous.x == current.x) {
-                    if (previous.y > current.y)
+                    if (previous.y > current.y) {
                         previousDir = 0;
-                    else previousDir = 2;
+                    } else {
+                        previousDir = 2;
+                    }
                 } else {
-                    if (previous.x < current.x)
+                    if (previous.x < current.x) {
                         previousDir = 1;
-                    else previousDir = 3;
+                    } else {
+                        previousDir = 3;
+                    }
                 }
 
                 previousDir = previousDir << 2;
@@ -911,13 +952,17 @@ namespace enblend {
 
                     currentDir = closest;
                 } else if (next.x == current.x) {
-                    if (next.y < current.y)
+                    if (next.y < current.y) {
                         currentDir = 0;
-                    else currentDir = 2;
+                    } else {
+                        currentDir = 2;
+                    }
                 } else {
-                    if (next.x > current.x)
+                    if (next.x > current.x) {
                         currentDir = 1;
-                    else currentDir = 3;
+                    } else {
+                        currentDir = 3;
+                    }
                 }
 
                 switch (previousDir + currentDir) {
@@ -1104,8 +1149,9 @@ namespace enblend {
                 }
             }
 
-            if (nextDual != cut->end())
+            if (nextDual != cut->end()) {
                 ++nextDual;
+            }
 
             previous = current;
             previousDual = currentDual;
@@ -1296,8 +1342,9 @@ namespace enblend {
              norm, boundary, iBB);
 
         // in case something goes wrong with start/end point finding, returns regular nft image
-        if (intermediatePointList->empty())
+        if (intermediatePointList->empty()) {
             return;
+        }
 
         // copying to a grid
         copyImage(srcImageRange(intermediateImg), stride(2, 2, gBB.apply(destImage(intermediateGraphImg))));
@@ -1340,8 +1387,9 @@ namespace enblend {
                  &gradientY, graphsize - Diff2D(1, 1), srcDestPoints);
 
             for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
-                if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin())
+                if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin()) {
                     totalDualPath.push_back(*j);
+                }
             }
 
             copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
