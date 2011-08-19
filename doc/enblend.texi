@@ -1760,11 +1760,15 @@ is the basis for later, optional optimizations (see
 the original algorithm up to and including Enblend version@tie{}4.0.
 Version@tie{}4.1 adds a Graph-Cut (@acronym{GC}) algorithm.
 
+Valid @var{ALGORITHM} names are:
+
 @table @asis
-@item nft
+@item nearest-feature-transform
+@itemx nft
 @cindex nearest feature transform (@acronym{NFT})
 Nearest Feature Transform
-@item gc
+@item graph-cut
+@itemx gc
 @cindex graph-cut (@acronym{GC})
 Graph-Cut
 @end table

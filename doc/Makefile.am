@@ -5,6 +5,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    varsenblend.texi fdl.texi \
                    mask-template-characters.texi \
                    helpful-programs.texi \
+                   seam-generators.texi \
                    color-profiles.texi \
                    tuning-memory-usage.texi \
                    understanding-masks.texi \

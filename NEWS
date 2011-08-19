@@ -6,6 +6,10 @@ Unreleased.  Current line of development.
 
 - All deprecated options since version 4.0 have been removed.
 
+- A new primary seam-line generator, based on a Graph-Cut algorithm,
+  has been implemented during GSoC 2011 by Mikołaj Leszczyński.  It is
+  the default now.
+
 - Parallelize CIECAM02 color conversion (option "--ciecam").  Speedups
   of up to 40% have been reported on the amd64 architecture.  The
   computationally expensive color-space conversion still slows down
@@ -48,6 +52,9 @@ Unreleased.  Current line of development.
 
 
 ** New Commandline Options
+
+- Option "--primary-seam-generator" controls the primary seam-line
+  generation algorithm.
 
 - Short option "-c" now has a sibling called "--ciecam".  The long
   option also has a negated form: "--no-ciecam"; the short one has

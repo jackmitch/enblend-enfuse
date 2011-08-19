@@ -166,3 +166,6 @@ namespace enblend {
 
 #endif	/* MASKCOMMON_H */
 
+// Local Variables:
+// mode: c++
+// End:

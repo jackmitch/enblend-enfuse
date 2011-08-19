@@ -103,7 +103,7 @@ int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
-MainAlgo MainAlgorithm = NFT;
+MainAlgo MainAlgorithm = GraphCut;
 bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
@@ -458,7 +458,7 @@ void printUsageAndExit(const bool error = true) {
         "Mask generation options:\n" <<
         "  --primary-seam-generator=ALGORITHM\n" <<
         "                         use main seam finder ALGORITHM, where ALGORITHM is\n"<<
-        "                         \"nft\" or \"gc\"; default: \"nft\"\n" <<
+        "                         \"nft\" or \"gc\"; default: \"gc\"\n" <<
         "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
         "                         generation; this is the default; if omitted FACTOR\n" <<
         "                         defaults to " <<
@@ -569,7 +569,7 @@ enum AllPossibleOptions {
     SaveMasksOption, LoadMasksOption,
     AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     SmoothDifferenceOption, OptimizerWeightsOption,
-    LayerSelectorOption, GraphCutOption,
+    LayerSelectorOption, NearestFeatureTransformOption, GraphCutOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -730,7 +730,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             ": warning:     or coarse mask has no effect" <<
             endl;
     }
-    
+
     if (!CoarseMask && contains(optionSet, GraphCutOption) && contains(optionSet, FineMaskOption)) {
         cerr << command <<
             ": warning: option \"--fine-mask\" combined with option \"--main-algorithm=graphcut\"\n" <<
@@ -829,7 +829,7 @@ int process_options(int argc, char** argv)
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"layer-selector", required_argument, 0, LayerSelectorId},
-        {"main-algorithm", optional_argument, 0, MainAlgoId},
+        {"primary-seam-generator", required_argument, 0, MainAlgoId},
         {0, 0, 0, 0}
     };
 
@@ -1274,14 +1274,23 @@ int process_options(int argc, char** argv)
 
         case MainAlgoId:
             if (optarg != NULL && *optarg != 0) {
-                if(!strcmp(optarg, "graphcut")){
+                std::string algo_name(optarg);
+                boost::algorithm::to_upper(algo_name);
+                if (algo_name == "GRAPH-CUT" ||
+                    algo_name == "GRAPHCUT" ||
+                    algo_name == "GC") {
                     MainAlgorithm = GraphCut;
                     optionSet.insert(GraphCutOption);
-                } else if (!strcmp(optarg, "nft"))
+                } else if (algo_name == "NEAREST-FEATURE-TRANSFORM" ||
+                           algo_name == "NEARESTFEATURETRANSFORM" ||
+                           algo_name == "NFT") {
                     MainAlgorithm = NFT;
-                else {
-                    cerr << command << ": option \"--primary-seam-generator\": unrecognized argument, defaulting to NFT"  << endl;
+                    optionSet.insert(NearestFeatureTransformOption);
+                } else {
+                    cerr << command << ": warning: option \"--primary-seam-generator\": " <<
+                        "unrecognized argument \"" << optarg << "\", defaulting to NFT" << endl;
                     MainAlgorithm = NFT;
+                    optionSet.insert(NearestFeatureTransformOption);
                 }
             } else {
                 cerr << command << ": option \"--primary-seam-generator\" requires an argument" << endl;
@@ -1818,9 +1827,9 @@ int main(int argc, char** argv)
                 << command
                 <<": warning:     defaulting to no optimization."
                 << endl;
-                
+
             OptimizeMask = false;
-            
+
             if (VisualizeSeam) {
             cerr << command <<
                 ": warning: option \"--visualize\" without mask optimization\n" <<
