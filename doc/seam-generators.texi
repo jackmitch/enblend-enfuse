@@ -1,56 +1,66 @@
-Enblend at this time supports two main algorithms to generate seam lines:
+This version (@value{VERSION}) of Enblend supports two main algorithms
+to generate seam lines.
 
-@enumerate
+@table @asis
+@item Nearest Feature Transform (@acronym{NFT})
+@cindex nearest feature transform (@acronym{NFT})
+This is Enblend's original seam generator developed by @sc{Andrew
+Mihal}.  @acronym{NFT} is a fast and efficient technique to produce
+the required seam line route given the geometries of multiple
+overlapping images.
+
+@item Graph-Cut (@acronym{GC})
+@cindex graphcut (@acronym{GC})
+This is an algorithm implemented by @sc{Miko@l{}aj Leszczy@'nski} in
+version@tie{}4.1.  The generator is based on the idea of finding a
+minimum cost ``cut'' of a graph created from a given image pair.  A
+``cut'' is where the seam line appears.
+@end table
+
+@noindent
+Use option@tie{}@option{--primary-seam-generator} to select one of the
+generators.
+
+@cindex graphcut, details
+@cindex seam generation, details
+The most significant difference between the two algorithms is the
+output mask gradation.  @acronym{NFT} produces a coarse approximation
+of the seam, running as far away from the overlap-region borders as
+possible.  The resulting mask could then be blended as-is, however,
+Enblend by default runs image-content dependent optimizers to increase
+the mask gradation and for example omit the regions where the images
+greatly differ.  The result is a finer seam line, which only loosely
+follows the shape of @acronym{NFT}'s primary seam.
+
+Graph-Cut, on the other hand, is capable of producing the final mask
+in one pass without the need of further optimizers.  It looks for a
+seam line that is @emph{globally} optimal, taking into account
+@itemize
 @item
-Nearest Feature Transform
+feature frequency, as well as
 @item
-Graph-Cut
-@end enumerate
+image dissimilarity.
+@end itemize
+@noindent
+This means, the seam is less likely to cross lines like for example
+fences, lampposts, or road markings, where they would be visible.
 
-@cindex seam generation
-@cindex seam, algorithm
-@cindex graphcut, @acronym{NFT}
+The optimizers which run after @acronym{NFT} can also be run after
+@acronym{GC}.  Nevertheless, @acronym{GC} works best just with a fine
+mask (@option{--fine-mask}); optimizers are then automatically
+@emph{turned off} to take full advantage of the detailed seam
+@acronym{GC} produces.
 
-Algorithm number 1 is the original seam generator developed by
-@sc{Andrew Mihal}. It is a fast and efficient technique of
-producing an accurate approximation of the required seam line route.
-
-Algorithm number 2 is a seam generator based on the idea of finding
-a minimum cost "cut" of a graph created out of a given image pair. A "cut"
-is essentially where the seam line appears.
-
-@cindex graphcut details
-@cindex seam generation details
-@cindex seam algorithm details
-The most significant difference between the two algorithms is the output
-mask gradation. @acronym{NFT} produces a coarse approximation of the seam,
-running as far away from the overlap region borders as possible. The mask 
-can then be blended as-is, but usually additional optimizers are run to 
-increase the mask gradation and omit the regions where the images greatly 
-differ. The outcome is a fine seam line that loosely follows the shape
-of the approximated seam.
-
-Graph-Cut, on the other hand, is capable of producing a complete mask.
-It looks for a seam line that is @emph{globally} best. This takes into
-account feature frequency, as well as image dissimilarity. This means
-the seam is less likely to cross lines, fences etc. where it would be 
-visible. The optimizers which run after @acronym{NFT} can also be run 
-after Graph-Cut. Nevertheless, Graph-Cut works best with a fine mask 
-(@option{--fine-mask}). Optimizers are then automatically turned off 
-to take advantage of the detailed seam Graph-Cut produces.
-
-Graph-Cut requires more memory and time to complete than Nearest Feature
-Transform (without taking seam-line optimizers into account, as they run
-equally as fast for both algorithms). Knowing this fact, it is best to
-use @acronym{NFT} where the images used are large and execution time is
-crucial. If quality is the priority, Graph-Cut using a fine mask usually 
-produces better results.
+@acronym{GC} requires more memory and computation time to complete
+than @acronym{NFT}.  Thus, it is best to prefer @acronym{NFT} where
+the images used are large and execution time is crucial.  If quality
+is the priority, using @acronym{GC} and fine mask usually produces
+visually more pleasing results.
 
 @cindex graphcut, limitations
-Graph-Cut is currently limited to seams that begin and end on the image 
-borders. This means that it does not run in cases where, for example, 
-one image is contained in another one, resulting in a ring-like seam. 
-In such cases, though, it outputs a Nearest Feature Transform seam, 
-making it transparent to the user. It can therefore be safely used 
-with any image set.
-
+@acronym{GC} is currently limited to seams that begin and end on the
+images' borders.  This means that it does not run in cases where, for
+example, one image is contained in another, resulting in a loop-like
+seam.  In such cases, though, it outputs a @acronym{NFT} seam, making
+it transparent to the user.  Therefore, it can be used with any image
+set.

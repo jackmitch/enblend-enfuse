@@ -437,9 +437,6 @@ void printUsageAndExit(const bool error = true) {
     cout <<
         "\n" <<
         "Extended options:\n" <<
-        "  --primary-seam-generator=NAME      set main seam finder to NAME; default:\n" <<
-        "                         " << "nft" << "\n" <<
-        "\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
@@ -459,6 +456,9 @@ void printUsageAndExit(const bool error = true) {
         (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
         "\n" <<
         "Mask generation options:\n" <<
+        "  --primary-seam-generator=ALGORITHM\n" <<
+        "                         use main seam finder ALGORITHM, where ALGORITHM is\n"<<
+        "                         \"nft\" or \"gc\"; default: \"nft\"\n" <<
         "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
         "                         generation; this is the default; if omitted FACTOR\n" <<
         "                         defaults to " <<
