@@ -119,6 +119,7 @@ see.
 * Overview::                    Overview of Enblend's features
 * Workflow::                    Enblend's role in making panoramas
 * Invocation::                  Command line options and arguments
+* Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Understanding Masks::         How to interpret masks and mask files
 * Tuning Memory Usage::         Balancing @acronym{RAM} and swap
@@ -1746,6 +1747,30 @@ Both weights must be non-negative.  They cannot be both zero at the
 same time.  Otherwise, their absolute values are not important as
 Enblend normalizes their sum.
 
+@item --primary-seam-generator=@var{ALGORITHM}
+@opindex --primary-seam-generator
+@cindex primary seam generator
+@cindex seam, primary generator
+@cindex generator, seam
+Select the algorithm responsible for generating the general seam route.
+
+This is the @var{ALGORITHM} that produces an initial seam line, which
+is the basis for later, optional optimizations (see
+@option{--optimize}).  Nearest Feature Transform (@acronym{NFT}) is
+the original algorithm up to and including Enblend version@tie{}4.0.
+Version@tie{}4.1 adds a Graph-Cut (@acronym{GC}) algorithm.
+
+@table @asis
+@item nft
+@cindex nearest feature transform (@acronym{NFT})
+Nearest Feature Transform
+@item gc
+@cindex graph-cut (@acronym{GC})
+Graph-Cut
+@end table
+
+See @ref{Primary Seam Generators} for details.
+
 @item --save-masks
 @itemx --save-masks=@var{IMAGE-TEMPLATE}
 @opindex --save-masks
@@ -1949,6 +1974,13 @@ approximately 15@dmn{cm}.}
 @page
 
 @include mask-template-characters.texi
+
+@node Primary Seam Generators
+@chapter Primary Seam Generators
+@cindex primary seam generator
+@cindex seam generation
+
+@include seam-generators.texi
 
 
 @node Color Profiles

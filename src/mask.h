@@ -39,6 +39,8 @@
 #include "nearest.h"
 #include "path.h"
 #include "postoptimizer.h"
+#include "graphcut.h"
+#include "maskcommon.h"
 
 #include "vigra/contourcirculator.hxx"
 #include "vigra/error.hxx"
@@ -314,59 +316,6 @@ visualizeLine(ImageType& image,
     }
 }
 
-
-template <typename PixelType, typename ResultType>
-class PixelDifferenceFunctor
-{
-    typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
-    typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
-    typedef LinearIntensityTransform<ResultType> RangeMapper;
-
-public:
-    PixelDifferenceFunctor() :
-        rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
-                              NumericTraits<PixelComponentType>::max(),
-                              ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                              ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
-
-    ResultType operator()(const PixelType& a, const PixelType& b) const {
-        typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
-        return diff(a, b, src_is_scalar());
-    }
-
-protected:
-    ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
-        PixelComponentType aLum = a.luminance();
-        PixelComponentType bLum = b.luminance();
-        PixelComponentType aHue = a.hue();
-        PixelComponentType bHue = b.hue();
-        PixelComponentType lumDiff = (aLum > bLum) ? (aLum - bLum) : (bLum - aLum);
-        PixelComponentType hueDiff = (aHue > bHue) ? (aHue - bHue) : (bHue - aHue);
-        if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) {
-            hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
-        }
-        return rm(std::max(hueDiff, lumDiff));
-    }
-
-    ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
-        typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
-        return scalar_diff(a, b, src_is_signed());
-    }
-
-    ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
-        return rm(std::abs(a - b));
-    }
-
-    // This appears necessary because NumericTraits<unsigned int>::Promote
-    // is an unsigned int instead of an int.
-    ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
-        return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
-    }
-
-    RangeMapper rm;
-};
-
-
 template <typename ValueType, typename AccessorType>
 class XorAccessor
 {
@@ -532,7 +481,7 @@ template <typename MaskType, typename AlphaType>
 void vectorizeSeamLine(Contour& rawSegments,
                        const AlphaType* const whiteAlpha, const AlphaType* const blackAlpha,
                        const Rect2D& uBB,
-                       int nftStride, MaskType* nftOutputImage)
+                       int nftStride, MaskType* nftOutputImage, int vectorizeDistance = 0)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
@@ -540,10 +489,12 @@ void vectorizeSeamLine(Contour& rawSegments,
     const double diagonalLength =
         hypot(static_cast<double>(nftOutputImage->width()),
               static_cast<double>(nftOutputImage->height()));
-    int vectorizeDistance =
-        MaskVectorizeDistance.is_percentage() ?
-        static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
-        MaskVectorizeDistance.value();
+    if(vectorizeDistance == 0)
+        vectorizeDistance =
+            MaskVectorizeDistance.is_percentage() ?
+            static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
+            MaskVectorizeDistance.value();
+    
     if (vectorizeDistance < minimumVectorizeDistance) {
         cerr << command
              << ": warning: mask vectorization distance "
@@ -887,46 +838,67 @@ MaskType* createMask(const ImageType* const white,
     }
 
     // Start by using the nearest feature transform to generate a mask.
-    Size2D nftInputSize;
-    Rect2D nftInputBB;
-    int nftStride;
+    Size2D mainInputSize, mainInputBBSize;
+    Rect2D mainInputBB;
+    
+    int mainStride;
     if (CoarseMask) {
         // Do NFT at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
-        nftInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
-                              (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-        nftInputBB = Rect2D(Size2D(uBB.width() / CoarsenessFactor,
-                                   uBB.height() / CoarsenessFactor));
-        nftStride = CoarsenessFactor;
+        mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+                               (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+        mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+                                 (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+
+        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor), 
+                             std::floor((iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
+                             mainInputBBSize);
+	
+        mainStride = CoarsenessFactor;
     } else {
         // Do NFT at 1/1 scale.
-        nftInputSize = uBB.size();
-        nftInputBB = Rect2D(nftInputSize);
-        nftStride = 1;
+        mainInputSize = uBB.size();
+        mainInputBB = Rect2D(iBB);
+        if(mainInputBB.upperLeft().x >= uBB.upperLeft().x)
+                mainInputBB.moveBy(-uBB.upperLeft());
+        else mainInputBB.moveBy(uBB.upperLeft());
+        mainStride = 1;
+		
     }
 
-    Size2D nftOutputSize;
-    Diff2D nftOutputOffset;
+    Size2D mainOutputSize;
+    Diff2D mainOutputOffset;
     if (!CoarseMask && !OptimizeMask) {
         // We are not going to vectorize the mask.
-        nftOutputSize = nftInputSize;
-        nftOutputOffset = Diff2D(0, 0);
+        mainOutputSize = mainInputSize;
+        mainOutputOffset = Diff2D(0, 0);
     } else {
         // Add 1-pixel border all around the image for the vectorization algorithm.
-        nftOutputSize = nftInputSize + Diff2D(2, 2);
-        nftOutputOffset = Diff2D(1, 1);
+        mainOutputSize = mainInputSize + Diff2D(2, 2);
+        mainOutputOffset = Diff2D(1, 1);
     }
 
     // mem usage before: 0
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
-    MaskType* nftOutputImage = new MaskType(nftOutputSize);
+    MaskType* mainOutputImage = new MaskType(mainOutputSize);
 
-    nearestFeatureTransform(stride(nftStride, nftStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                            stride(nftStride, nftStride, uBB.apply(srcImage(*blackAlpha))),
-                            destIter(nftOutputImage->upperLeft() + nftOutputOffset),
-                            ManhattanDistance,
-                            wraparound ? HorizontalStrip : OpenBoundaries);
+    if (MainAlgorithm == GraphCut)
+        graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
+                stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
+                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+                stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
+                ManhattanDistance,
+                wraparound ? HorizontalStrip : OpenBoundaries, 
+                mainInputBB);
+    
+    else if (MainAlgorithm == NFT)
+        nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
+                                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
+                                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+                                ManhattanDistance,
+                                wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
@@ -936,7 +908,7 @@ MaskType* createMask(const ImageType* const white,
             std::make_pair("blackmask", blackAlpha),
             std::make_pair("whitemask", whiteAlpha),
             //std::make_pair("nft-input", nftInputImage),
-            std::make_pair("nft-output", nftOutputImage)
+            std::make_pair("nft-output", mainOutputImage)
         };
 
         for (size_t i = 0; i < sizeof(nft) / sizeof(ImagePair); ++i) {
@@ -966,16 +938,22 @@ MaskType* createMask(const ImageType* const white,
 
     if (!CoarseMask && !OptimizeMask) {
         // nftOutputImage is the final mask in this case.
-        return nftOutputImage;
+        return mainOutputImage;
     }
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
-    vectorizeSeamLine(rawSegments,
+    if (MainAlgorithm == GraphCut)
+        vectorizeSeamLine(rawSegments,
+                        whiteAlpha, blackAlpha,
+                        uBB,
+                        mainStride, mainOutputImage, 4);
+    else 
+        vectorizeSeamLine(rawSegments,
                       whiteAlpha, blackAlpha,
                       uBB,
-                      nftStride, nftOutputImage);
-    delete nftOutputImage;
+                      mainStride, mainOutputImage);
+    delete mainOutputImage;
 
 #ifdef DEBUG_SEAM_LINE
     std::cout << "+ createMask: rawSegments\n";
@@ -1128,15 +1106,34 @@ MaskType* createMask(const ImageType* const white,
 
 #ifndef SKIP_OPTIMIZER
     
+    int segmentNumber;
+    // Move snake points to mismatchImage-relative coordinates
+    for (ContourVector::iterator currentContour = contours.begin();
+             currentContour != contours.end();
+             ++currentContour) {
+            segmentNumber = 0;
+            for (Contour::iterator currentSegment = (*currentContour)->begin();
+                 currentSegment != (*currentContour)->end();
+                 ++currentSegment, ++segmentNumber) {
+                Segment* snake = *currentSegment;
+                for (Segment::iterator vertexIterator = snake->begin();
+                     vertexIterator != snake->end();
+                     ++vertexIterator) {
+                    vertexIterator->second =
+                        (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
+                        mismatchImageStride;
+                }
+            }
+    }
     
     vector<double> *params = new(vector<double>);
     
     OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
         *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
                               (&mismatchImage, visualizeImage,
-                              &mismatchImageSize, &mismatchImageStride,
-                              &uvBBStrideOffset, &contours, &uBB, &vBB, params,
-                              whiteAlpha, blackAlpha, &uvBB);
+                               &mismatchImageSize, &mismatchImageStride,
+                               &uvBBStrideOffset, &contours, &uBB, &vBB, params,
+                               whiteAlpha, blackAlpha, &uvBB);
     
         // Add Strategy 1: Use GDA to optimize placement of snake vertices
     defaultOptimizerChain->addOptimizer("anneal");
@@ -1146,6 +1143,26 @@ MaskType* createMask(const ImageType* const white,
    
         // Fire optimizer chain (runs every optimizer on the list in sequence)
     defaultOptimizerChain->runOptimizerChain();
+    
+    // Move snake vertices from mismatchImage-relative
+    // coordinates to uBB-relative coordinates.    
+    for (ContourVector::iterator currentContour = contours.begin();
+             currentContour != contours.end();
+             ++currentContour) {
+            segmentNumber = 0;
+            for (Contour::iterator currentSegment = (*currentContour)->begin();
+                 currentSegment != (*currentContour)->end();
+                 ++currentSegment, ++segmentNumber) {
+                Segment* snake = *currentSegment;
+                for (Segment::iterator currentVertex = snake->begin();
+                     currentVertex != snake->end();
+                     ++currentVertex) {
+                    currentVertex->second =
+                        currentVertex->second * mismatchImageStride +
+                        vBB.upperLeft() - uBB.upperLeft();
+                }
+            }
+    }
     
     delete params;
     delete defaultOptimizerChain;

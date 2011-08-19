@@ -140,15 +140,6 @@ public:
                     continue;
                 }
 
-                // Move snake points to mismatchImage-relative coordinates
-                for (Segment::iterator vertexIterator = snake->begin();
-                     vertexIterator != snake->end();
-                     ++vertexIterator) {
-                    vertexIterator->second =
-                        (vertexIterator->second + this->uBB->upperLeft() - this->vBB->upperLeft()) /
-                        *this->mismatchImageStride;
-                }
-
                 annealSnake(this->mismatchImage, OptimizerWeights,
                             snake, this->visualizeImage);
 
@@ -348,15 +339,6 @@ public:
                     }
                 }
 
-                // Move snake vertices from mismatchImage-relative
-                // coordinates to uBB-relative coordinates.
-                for (Segment::iterator currentVertex = snake->begin();
-                     currentVertex != snake->end();
-                     ++currentVertex) {
-                    currentVertex->second =
-                        currentVertex->second * (*this->mismatchImageStride) +
-                        this->vBB->upperLeft() - this->uBB->upperLeft();
-                }
             }
         }
 
