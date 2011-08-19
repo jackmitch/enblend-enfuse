@@ -18,11 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #ifndef MASKCOMMON_H
-#define	MASKCOMMON_H
+#define MASKCOMMON_H
 
 using vigra::LinearIntensityTransform;
+
 namespace enblend {
-    
+
     template <typename PixelType, typename ResultType>
     class PixelDifferenceFunctor
     {
@@ -73,7 +74,8 @@ namespace enblend {
 
         RangeMapper rm;
     };
-    
+
+
     template <typename PixelType, typename ResultType>
     class PixelSumFunctor
     {
@@ -118,7 +120,8 @@ namespace enblend {
 
         RangeMapper rm;
     };
-    
+
+
     template <typename PixelType, typename ResultType>
     class MapFunctor
     {
@@ -161,10 +164,10 @@ namespace enblend {
 
         RangeMapper rm;
     };
-    
-} //namespace enblend
 
-#endif	/* MASKCOMMON_H */
+} // namespace enblend
+
+#endif  /* MASKCOMMON_H */
 
 // Local Variables:
 // mode: c++

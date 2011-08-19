@@ -494,7 +494,7 @@ void vectorizeSeamLine(Contour& rawSegments,
             MaskVectorizeDistance.is_percentage() ?
             static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
             MaskVectorizeDistance.value();
-    
+
     if (vectorizeDistance < minimumVectorizeDistance) {
         cerr << command
              << ": warning: mask vectorization distance "
@@ -840,7 +840,7 @@ MaskType* createMask(const ImageType* const white,
     // Start by using the nearest feature transform to generate a mask.
     Size2D mainInputSize, mainInputBBSize;
     Rect2D mainInputBB;
-    
+
     int mainStride;
     if (CoarseMask) {
         // Do NFT at 1/CoarsenessFactor scale.
@@ -850,10 +850,10 @@ MaskType* createMask(const ImageType* const white,
         mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                                  (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
 
-        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor), 
+        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
                              std::floor((iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
                              mainInputBBSize);
-	
+
         mainStride = CoarsenessFactor;
     } else {
         // Do NFT at 1/1 scale.
@@ -863,7 +863,6 @@ MaskType* createMask(const ImageType* const white,
                 mainInputBB.moveBy(-uBB.upperLeft());
         else mainInputBB.moveBy(uBB.upperLeft());
         mainStride = 1;
-		
     }
 
     Size2D mainOutputSize;
@@ -890,9 +889,9 @@ MaskType* createMask(const ImageType* const white,
                 stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                 stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
                 ManhattanDistance,
-                wraparound ? HorizontalStrip : OpenBoundaries, 
+                wraparound ? HorizontalStrip : OpenBoundaries,
                 mainInputBB);
-    
+
     else if (MainAlgorithm == NFT)
         nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                                 stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
@@ -948,7 +947,7 @@ MaskType* createMask(const ImageType* const white,
                         whiteAlpha, blackAlpha,
                         uBB,
                         mainStride, mainOutputImage, 4);
-    else 
+    else
         vectorizeSeamLine(rawSegments,
                       whiteAlpha, blackAlpha,
                       uBB,
@@ -1105,7 +1104,7 @@ MaskType* createMask(const ImageType* const white,
     }
 
 #ifndef SKIP_OPTIMIZER
-    
+
     int segmentNumber;
     // Move snake points to mismatchImage-relative coordinates
     for (ContourVector::iterator currentContour = contours.begin();
@@ -1125,27 +1124,27 @@ MaskType* createMask(const ImageType* const white,
                 }
             }
     }
-    
+
     vector<double> *params = new(vector<double>);
-    
+
     OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
         *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
                               (&mismatchImage, visualizeImage,
                                &mismatchImageSize, &mismatchImageStride,
                                &uvBBStrideOffset, &contours, &uBB, &vBB, params,
                                whiteAlpha, blackAlpha, &uvBB);
-    
+
         // Add Strategy 1: Use GDA to optimize placement of snake vertices
     defaultOptimizerChain->addOptimizer("anneal");
-    
+
         // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
     defaultOptimizerChain->addOptimizer("dijkstra");
-   
+
         // Fire optimizer chain (runs every optimizer on the list in sequence)
     defaultOptimizerChain->runOptimizerChain();
-    
+
     // Move snake vertices from mismatchImage-relative
-    // coordinates to uBB-relative coordinates.    
+    // coordinates to uBB-relative coordinates.
     for (ContourVector::iterator currentContour = contours.begin();
              currentContour != contours.end();
              ++currentContour) {
@@ -1163,10 +1162,10 @@ MaskType* createMask(const ImageType* const white,
                 }
             }
     }
-    
+
     delete params;
     delete defaultOptimizerChain;
-    
+
 #endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {
