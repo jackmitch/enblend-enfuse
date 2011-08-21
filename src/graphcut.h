@@ -126,7 +126,7 @@ namespace enblend {
         typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
         typedef typename IMAGETYPE<MaskPixelType>::traverser IteratorType;
         typedef vigra::CrackContourCirculator<IteratorType> Circulator;
-        typedef triple<IteratorType, IteratorType, uint> EntryPointContainer;
+        typedef triple<IteratorType, IteratorType, unsigned int> EntryPointContainer;
         IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + Diff2D(2, 2),
                                             MaskPixelTraits::max() / 2);
         IMAGETYPE<MaskPixelType> nft(iBB.lowerRight() - iBB.upperLeft() + Diff2D(2, 2),
@@ -144,7 +144,7 @@ namespace enblend {
         EntryPointContainer* max = NULL;
         std::pair<IteratorType, IteratorType> entryPoint;
         Point2D intermediatePoint;
-        uint counter = 0;
+        unsigned int counter = 0;
 
         nearestFeatureTransform(srcIterRange(mask1_upperleft, mask1_lowerright, ma1),
                                 srcIter(mask2_upperleft, ma2),
@@ -502,7 +502,7 @@ namespace enblend {
 
 
     template <class ImageType>
-    uint getEdgeWeight(int dir, Point2D pt, ImageType* img, bool endpt, Diff2D bounds)
+    unsigned int getEdgeWeight(int dir, Point2D pt, ImageType* img, bool endpt, Diff2D bounds)
     {
         if (!endpt) {
             switch (dir) {
@@ -692,7 +692,7 @@ namespace enblend {
         Point2D current;
         Point2D next;
         Point2D endIterPoint;
-        ushort closest = 0;
+        unsigned short closest = 0;
         Diff2D dim(iBB.lowerRight() - iBB.upperLeft());
         std::vector<Point2D>::iterator previousDual;
         std::vector<Point2D>::iterator nextDual;

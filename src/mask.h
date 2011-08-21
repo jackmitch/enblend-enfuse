@@ -850,8 +850,8 @@ MaskType* createMask(const ImageType* const white,
         mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                                  (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
 
-        mainInputBB = Rect2D(Point2D(std::floor((iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
-                             std::floor((iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
+        mainInputBB = Rect2D(Point2D(std::floor(double(iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
+                             std::floor(double(iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
                              mainInputBBSize);
 
         mainStride = CoarsenessFactor;
