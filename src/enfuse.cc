@@ -960,21 +960,22 @@ int process_options(int argc, char** argv)
                 cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
                      << "scale is required." << endl;
                 failed = true;
-            }
-            errno = 0;
-            FilterConfig.edgeScale = strtod(token, &tail);
-            if (errno == 0) {
-                if (*tail != 0) {
-                    cerr << command << ": could not decode \"" << tail
-                         << "\" in edge scale specification \""
-                         << token << "\" for edge scale." << endl;
+            } else {
+                errno = 0;
+                FilterConfig.edgeScale = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail != 0) {
+                        cerr << command << ": could not decode \"" << tail
+                             << "\" in edge scale specification \""
+                             << token << "\" for edge scale." << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" for edge scale: "
+                         << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
-            } else {
-                cerr << command << ": illegal numeric format \""
-                     << token << "\" for edge scale: "
-                     << enblend::errorMessage(errno) << endl;
-                failed = true;
             }
 
             token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
@@ -1040,24 +1041,25 @@ int process_options(int argc, char** argv)
                 cerr << command << ": no scale given to \"--entropy-cutoff\".  "
                      << "lower cutoff is required." << endl;
                 failed = true;
-            }
-            errno = 0;
-            EntropyLowerCutoff.set_value(strtod(token, &tail));
-            if (errno == 0) {
-                if (*tail == 0) {
-                    EntropyLowerCutoff.set_percentage(false);
-                } else if (strcmp(tail, "%") == 0) {
-                    EntropyLowerCutoff.set_percentage(true);
+            } else {
+                errno = 0;
+                EntropyLowerCutoff.set_value(strtod(token, &tail));
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        EntropyLowerCutoff.set_percentage(false);
+                    } else if (strcmp(tail, "%") == 0) {
+                        EntropyLowerCutoff.set_percentage(true);
+                    } else {
+                        cerr << command << ": unrecognized entropy's lower cutoff \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
                 } else {
-                    cerr << command << ": unrecognized entropy's lower cutoff \""
-                         << tail << "\" in \"" << token << "\"" << endl;
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of entropy's lower cutoff: "
+                         << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
-            } else {
-                cerr << command << ": illegal numeric format \""
-                     << token << "\" of entropy's lower cutoff: "
-                     << enblend::errorMessage(errno) << endl;
-                failed = true;
             }
 
             token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
@@ -1103,24 +1105,25 @@ int process_options(int argc, char** argv)
                 cerr << command << ": no scale given to \"--exposure-cutoff\".  "
                      << "lower cutoff is required." << endl;
                 failed = true;
-            }
-            errno = 0;
-            ExposureLowerCutoff.set_value(strtod(token, &tail));
-            if (errno == 0) {
-                if (*tail == 0) {
-                    ExposureLowerCutoff.set_percentage(false);
-                } else if (strcmp(tail, "%") == 0) {
-                    ExposureLowerCutoff.set_percentage(true);
+            } else {
+                errno = 0;
+                ExposureLowerCutoff.set_value(strtod(token, &tail));
+                if (errno == 0) {
+                    if (*tail == 0) {
+                        ExposureLowerCutoff.set_percentage(false);
+                    } else if (strcmp(tail, "%") == 0) {
+                        ExposureLowerCutoff.set_percentage(true);
+                    } else {
+                        cerr << command << ": unrecognized exposure's lower cutoff \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
                 } else {
-                    cerr << command << ": unrecognized exposure's lower cutoff \""
-                         << tail << "\" in \"" << token << "\"" << endl;
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of exposure's lower cutoff: "
+                         << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
-            } else {
-                cerr << command << ": illegal numeric format \""
-                     << token << "\" of exposure's lower cutoff: "
-                     << enblend::errorMessage(errno) << endl;
-                failed = true;
             }
 
             token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
