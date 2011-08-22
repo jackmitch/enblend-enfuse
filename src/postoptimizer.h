@@ -141,7 +141,7 @@ namespace enblend
                                 snake, this->visualizeImage);
 
                     // Post-process annealed vertices
-                    Segment::iterator lastVertex = snake->previous(snake->end());
+                    Segment::iterator lastVertex = enblend::prev(snake->end());
                     for (Segment::iterator vertexIterator = snake->begin();
                          vertexIterator != snake->end();) {
                         if (vertexIterator->first &&
@@ -151,7 +151,7 @@ namespace enblend
                                 snake->pop_front();
                                 vertexIterator = snake->begin();
                             } else {
-                                vertexIterator = snake->erase_after(lastVertex);
+                                vertexIterator = snake->erase(enblend::next(lastVertex));
                             }
 
                             bool needsBreak = false;
@@ -175,8 +175,8 @@ namespace enblend
                                     snake->push_front(std::make_pair(true, vertexIterator->second));
                                     lastVertex = snake->begin();
                                 } else {
-                                    lastVertex = snake->insert_after(lastVertex,
-                                                                     std::make_pair(true, vertexIterator->second));
+                                    lastVertex = snake->insert(enblend::next(lastVertex),
+                                                               std::make_pair(true, vertexIterator->second));
                                 }
                             }
 
@@ -306,9 +306,8 @@ namespace enblend
                             for (std::vector<Point2D>::iterator shortPathPoint = shortPath->begin();
                                  shortPathPoint != shortPath->end();
                                  ++shortPathPoint) {
-                                snake->insert_after(currentVertex,
-                                                    std::make_pair(false,
-                                                                   *shortPathPoint + pointSurround.upperLeft()));
+                                snake->insert(enblend::next(currentVertex),
+                                              std::make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
 
                                 if (this->visualizeImage) {
                                     (*this->visualizeImage)[*shortPathPoint + pointSurround.upperLeft()] =

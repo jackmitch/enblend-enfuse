@@ -20,18 +20,13 @@
 #ifndef __MASKTYPEDEFS_H__
 #define __MASKTYPEDEFS_H__
 
-#ifdef HAVE_EXT_SLIST
-#include <ext/slist>
-using __gnu_cxx::slist;
-#else
-#include <slist>
-using std::slist;
-#endif
+#include <list>
+#include <vector>
 
 namespace enblend
 {
     typedef std::pair<bool, vigra::Point2D> SegmentPoint;
-    typedef slist<SegmentPoint> Segment;
+    typedef std::list<SegmentPoint> Segment;
     typedef std::vector<Segment*> Contour;
     typedef std::vector<Contour*> ContourVector;
 }

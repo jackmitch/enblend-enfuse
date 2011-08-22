@@ -214,6 +214,24 @@ typedef enum
 } nearest_neigbor_metric_t;
 
 
+/** Answer the previous iterator of i. */
+template <class iterator>
+inline iterator
+prev(iterator i)
+{
+    return --i;
+}
+
+
+/** Answer the following iterator of i. */
+template <class iterator>
+inline iterator
+next(iterator i)
+{
+    return ++i;
+}
+
+
 /** String tokenizer similar to strtok_r().
  *  In contrast to strtok_r this function returns an empty string for
  *  each pair of successive delimiters.  Function strtok_r skips them.

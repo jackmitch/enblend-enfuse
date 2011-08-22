@@ -27,11 +27,6 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
-#ifdef HAVE_EXT_SLIST
-#include <ext/slist>
-#else
-#include <slist>
-#endif
 #include <algorithm>
 #include <vector>
 
@@ -49,16 +44,14 @@
 #include "vigra/iteratoradapter.hxx"
 #include "vigra_ext/XMIWrapper.h"
 
+#include "masktypedefs.h"
+
+
 using std::for_each;
 using std::pair;
 using std::scientific;
 using std::setprecision;
 using std::setw;
-#ifdef HAVE_EXT_SLIST
-using __gnu_cxx::slist;
-#else
-using std::slist;
-#endif
 using std::vector;
 
 using boost::lambda::bind;
@@ -71,6 +64,7 @@ using vigra::Rect2D;
 
 using vigra_ext::copyPaintedSetToImage;
 
+
 namespace enblend {
 
 template <typename CostImage, typename VisualizeImage>
@@ -81,7 +75,7 @@ public:
     typedef typename NumericTraits<CostImagePixelType>::Promote CostImagePromoteType;
     typedef typename CostImage::const_traverser CostIterator;
 
-    GDAConfiguration(const CostImage* const d, slist<pair<bool, Point2D> >* v, VisualizeImage* const vi) :
+    GDAConfiguration(const CostImage* const d, Segment* v, VisualizeImage* const vi) :
         costImage(d), visualizeStateSpaceImage(vi) {
         kMax = 1;
         distanceWeight = 1.0;
@@ -91,9 +85,8 @@ public:
         // Determine state space of currentPoint
         const int stateSpaceWidth = costImageShortDimension / 3;
 
-        slist<pair<bool, Point2D> >::iterator last = v->previous(v->end());
-        Point2D previousPoint = last->second;
-        for (slist<pair<bool, Point2D> >::iterator current = v->begin(); current != v->end();) {
+        Point2D previousPoint = v->back().second;
+        for (Segment::iterator current = v->begin(); current != v->end();) {
             bool currentMoveable = current->first;
             Point2D currentPoint = current->second;
             ++current;
@@ -723,7 +716,7 @@ protected:
 template <typename CostImage, typename VisualizeImage>
 void annealSnake(const CostImage* const ci,
                  const pair<double, double>& optimizerWeights,
-                 slist<pair<bool, Point2D> >* snake,
+                 Segment* snake,
                  VisualizeImage* const vi)
 {
     GDAConfiguration<CostImage, VisualizeImage> cfg(ci, snake, vi);
@@ -732,7 +725,7 @@ void annealSnake(const CostImage* const ci,
     cfg.run();
 
     vector<Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
-    for (slist<pair<bool, Point2D> >::iterator snakePoint = snake->begin();
+    for (Segment::iterator snakePoint = snake->begin();
          snakePoint != snake->end();
          ++snakePoint, ++annealedPoint) {
         snakePoint->second = *annealedPoint;

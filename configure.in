@@ -163,13 +163,6 @@ AC_ARG_WITH(dmalloc,
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 
-# The check for ext/slist fails on OSX, just remove it and declare that
-# it is available anyhow (Its part of the GNU stl implementation)
-#AC_CHECK_HEADER(ext/slist,
-#                AC_DEFINE(HAVE_EXT_SLIST, 1, Define if you have the <ext/slist> header file),
-#                AC_MSG_WARN([ext/slist is required to compile Enblend]))
-AC_DEFINE(HAVE_EXT_SLIST, 1, [Define if you have the <ext/slist> header file])
-
 AC_CHECK_HEADERS([fenv.h limits.h stdlib.h string.h unistd.h])
 
 AC_CHECK_HEADER(tiffio.h, [],
