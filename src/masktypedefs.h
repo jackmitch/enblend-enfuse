@@ -30,7 +30,7 @@ using std::slist;
 
 namespace enblend
 {
-    typedef pair<bool, vigra::Point2D> SegmentPoint;
+    typedef std::pair<bool, vigra::Point2D> SegmentPoint;
     typedef slist<SegmentPoint> Segment;
     typedef std::vector<Segment*> Contour;
     typedef std::vector<Contour*> ContourVector;

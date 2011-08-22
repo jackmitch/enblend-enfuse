@@ -27,12 +27,6 @@
 #include <iostream>
 #include <functional>
 #include <numeric>
-#ifdef HAVE_EXT_SLIST
-#include <ext/slist>
-#else
-#include <slist>
-#endif
-
 
 #include "common.h"
 #include "anneal.h"
@@ -41,6 +35,7 @@
 #include "postoptimizer.h"
 #include "graphcut.h"
 #include "maskcommon.h"
+#include "masktypedefs.h"
 
 #include "vigra/contourcirculator.hxx"
 #include "vigra/error.hxx"
@@ -58,13 +53,6 @@
 #include <boost/lambda/construct.hpp>
 #include <boost/lambda/if.hpp>
 
-using std::make_pair;
-using std::vector;
-#ifdef HAVE_EXT_SLIST
-using __gnu_cxx::slist;
-#else
-using std::slist;
-#endif
 
 using vigra::combineThreeImages;
 using vigra::combineTwoImages;
@@ -101,6 +89,7 @@ using boost::lambda::call_end;
 using boost::lambda::constant;
 using boost::lambda::protect;
 using boost::lambda::ret;
+
 
 namespace enblend {
 
@@ -548,14 +537,14 @@ void vectorizeSeamLine(Contour& rawSegments,
                             || (currentPoint.x == border.left() && currentPoint.y == border.bottom())
                             || (currentPoint.x == border.right() && currentPoint.y == border.top())
                             || (currentPoint.x == border.right() && currentPoint.y == border.bottom())) {
-                            snake->push_front(make_pair(false, currentPoint));
+                            snake->push_front(std::make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         } else if (!lastPointFrozen
                                    || (nextPoint.x != border.left()
                                        && nextPoint.x != border.right()
                                        && nextPoint.y != border.top()
                                        && nextPoint.y != border.bottom())) {
-                            snake->push_front(make_pair(false, currentPoint));
+                            snake->push_front(std::make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         } else {
                             excessPoints.push_back(currentPoint);
@@ -564,7 +553,7 @@ void vectorizeSeamLine(Contour& rawSegments,
                     } else {
                         // Current point is not frozen.
                         if (distanceLastPoint % vectorizeDistance == 0) {
-                            snake->push_front(make_pair(true, currentPoint));
+                            snake->push_front(std::make_pair(true, currentPoint));
                             distanceLastPoint = 0;
                         } else {
                             excessPoints.push_back(currentPoint);
