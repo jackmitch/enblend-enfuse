@@ -33,8 +33,9 @@
 #include <utility>
 #include <queue>
 
-#include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "vigra/functorexpression.hxx"
 #include "vigra/inspectimage.hxx"
@@ -1285,9 +1286,8 @@ namespace enblend {
 
         vector<Point2D>* dualPath = NULL;
         vector<Point2D> totalDualPath;
-        vector<Point2D>* intermediatePointList;
         Point2D intermediatePoint;
-        CheckpointPixels* srcDestPoints = new CheckpointPixels();
+        boost::scoped_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());
 
         const Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
                                graphImg.lowerRight().y - graphImg.upperLeft().y);
@@ -1337,13 +1337,15 @@ namespace enblend {
                              ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
 
         // look for possible start and end points
-        intermediatePointList = findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
+        vector<Point2D>* intermediatePointList =
+            findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
             (mask1_upperleft, mask1_lowerright, ma1,
              mask2_upperleft, ma2, dest_upperleft, da,
              norm, boundary, iBB);
 
         // in case something goes wrong with start/end point finding, returns regular nft image
         if (intermediatePointList->empty()) {
+            delete intermediatePointList;
             return;
         }
 
@@ -1385,7 +1387,7 @@ namespace enblend {
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
                 (Point2D(-10, -10), Point2D(-20, -20), &intermediateGraphImg, &gradientX,
-                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints);
+                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints.get());
 
             for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
                 if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin()) {
