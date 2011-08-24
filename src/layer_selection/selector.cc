@@ -81,7 +81,7 @@ namespace selector
     {
         const ImageInfo* image_info = an_image_info->image_info_on(a_filename);
         const unsigned n = image_info->number_of_layers();
-        unsigned max_index;
+        unsigned max_index = 0;
 
         int max_area = -1;
         for (unsigned i = 0; i != n; ++i)
