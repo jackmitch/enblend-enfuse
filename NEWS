@@ -76,6 +76,13 @@ Unreleased.  Current line of development.
   layer selector.
 
 
+** Developer Stuff
+
+- XHTML validation does not rely on network access anymore.  This
+  means all necessary DTDs must be available locally and all catalogs
+  must be set up correctly to build the XHTML documentation.
+
+
 * Version 4.0
 
 Released on December 13, 2009.
