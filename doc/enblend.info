@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-21fbcc71f475, 19 August
+   This manual is for Enblend (version 4.1-cddb14fe6456, 19 August
 2011), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-21fbcc71f475, 19 August 2011),
+This manual is for Enblend (version 4.1-cddb14fe6456, 19 August 2011),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -929,7 +929,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-21fbcc71f475, only mask
+     In this version of Enblend, 4.1-cddb14fe6456, only mask
      optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1171,7 +1171,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-21fbcc71f475)
+     version 3.2 used 1:1.  This version of Enblend (4.1-cddb14fe6456)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1412,45 +1412,53 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.1-21fbcc71f475) of Enblend supports two main algorithms
-to generate seam lines.
+This version (4.1-cddb14fe6456) of Enblend supports two main algorithms
+to generate seam lines.  Use option `--primary-seam-generator' to
+select one of the generators.
 
 Nearest Feature Transform (NFT)
-     This is Enblend's original seam generator developed by ANDREW
-     MIHAL.  NFT is a fast and efficient technique to produce the
-     required seam line route given the geometries of multiple
-     overlapping images.
+     The NFT, also known as Distance Transform
+     (http://en.wikipedia.org/wiki/Distance_transform), is a fast and
+     efficient technique to produce a seam line route given the
+     geometries of multiple overlapping images.
+
+     NFT as implemented in this version of Enblend only takes into
+     account the _shape of the overlap area._  It completely ignore the
+     images' contents.
 
 Graph-Cut (GC)
-     This is an algorithm implemented by MIKO/LAJ LESZCZYN'SKI in
-     version 4.1.  The generator is based on the idea of finding a
-     minimum cost "cut" of a graph created from a given image pair.  A
-     "cut" is where the seam line appears.
+     GC (http://en.wikipedia.org/wiki/Graph_cuts_in_computer_vision) is
+     a region-oriented way of segmenting images.
 
-Use option `--primary-seam-generator' to select one of the generators.
+     The generator is based on the idea of finding a minimum cost "cut"
+     of a graph created from a given image pair.  A "cut" is where the
+     seam line appears.  GC determines the cost from the overlapping
+     images' contents.
 
    The most significant difference between the two algorithms is the
 output mask gradation.  NFT produces a coarse approximation of the
 seam, running as far away from the overlap-region borders as possible.
 The resulting mask could then be blended as-is, however, Enblend by
 default runs image-content dependent optimizers to increase the mask
-gradation and for example omit the regions where the images greatly
-differ.  The result is a finer seam line, which only loosely follows
-the shape of NFT's primary seam.
+gradation and for example omits the regions where the images differ.
+The result is a finer seam line, which only loosely follows the shape
+of NFT's primary seam.
 
    Graph-Cut, on the other hand, is capable of producing the final mask
 in one pass without the need of further optimizers.  It looks for a
 seam line that is _globally_ optimal, taking into account
+
    * feature frequency, as well as
 
    * image dissimilarity.
-   This means, the seam is less likely to cross lines like for example
+
+This means, the seam is less likely to cross lines like for example
 fences, lampposts, or road markings, where they would be visible.
 
    The optimizers which run after NFT can also be run after GC.
-Nevertheless, GC works best just with a fine mask (`--fine-mask');
-optimizers are then automatically _turned off_ to take full advantage
-of the detailed seam GC produces.
+Nevertheless, GC works best just with a fine mask
+(option `--fine-mask'); optimizers are then automatically _turned off_
+to take full advantage of the detailed seam GC produces.
 
    GC requires more memory and computation time to complete than NFT.
 Thus, it is best to prefer NFT where the images used are large and
@@ -1458,10 +1466,10 @@ execution time is crucial.  If quality is the priority, using GC and
 fine mask usually produces visually more pleasing results.
 
    GC is currently limited to seams that begin and end on the images'
-borders.  This means that it does not run in cases where, for example,
-one image is contained in another, resulting in a loop-like seam.  In
-such cases, though, it outputs a NFT seam, making it transparent to the
-user.  Therefore, it can be used with any image set.
+borders.  This means that the algorithm cannot run in cases where, for
+example, one image is contained in another, resulting in a loop-like
+seam.  In such cases, though, Enblend automatically falls back to a
+NFT-generated seam, making its application transparent to the user.
 
 
 File: enblend.info,  Node: Color Profiles,  Next: Understanding Masks,  Prev: Primary Seam Generators,  Up: Top
@@ -2586,11 +2594,11 @@ General Index
 * graph-cut (GC):                        Mask Generation Options.
                                                               (line 244)
 * graphcut (GC):                         Primary Seam Generators.
-                                                              (line  16)
+                                                              (line  21)
 * graphcut, details:                     Primary Seam Generators.
-                                                              (line  23)
+                                                              (line  29)
 * graphcut, limitations:                 Primary Seam Generators.
-                                                              (line  51)
+                                                              (line  59)
 * graphics processing unit:              Extended Options.    (line 146)
 * half precision float, OpenEXR:         Extended Options.    (line 103)
 * helpful programs:                      Helpful Programs.    (line   6)
@@ -2685,7 +2693,7 @@ General Index
 * multi-directory TIFF:                  Overview.            (line  39)
 * multi-layer image:                     Overview.            (line  39)
 * nearest feature transform (NFT) <1>:   Primary Seam Generators.
-                                                              (line  10)
+                                                              (line  11)
 * nearest feature transform (NFT):       Mask Generation Options.
                                                               (line 240)
 * nearest-feature transform (NFT):       Mask Generation Options.
@@ -2752,7 +2760,7 @@ General Index
 * seam generation:                       Primary Seam Generators.
                                                               (line   6)
 * seam generation, details:              Primary Seam Generators.
-                                                              (line  23)
+                                                              (line  29)
 * seam line, loops:                      Mask Generation Options.
                                                               (line 151)
 * seam optimization:                     Mask Generation Options.
@@ -2835,18 +2843,18 @@ Ref: Table:visualization-colors47553
 Ref: Table:mask-template-characters48449
 Ref: Mask Generation Options-Footnote-150701
 Node: Primary Seam Generators50929
-Node: Color Profiles53526
-Node: Understanding Masks55976
-Node: Tuning Memory Usage59769
-Ref: Table:cache-size-settings62511
-Node: Helpful Programs62947
-Node: Bug Reports66683
-Ref: Bug Reports-Footnote-172390
-Node: Authors72460
-Node: FDL73625
-Node: Program Index94606
-Node: Syntactic-Comment Index97602
-Node: Option Index98291
-Node: General Index102371
+Node: Color Profiles53815
+Node: Understanding Masks56265
+Node: Tuning Memory Usage60058
+Ref: Table:cache-size-settings62800
+Node: Helpful Programs63236
+Node: Bug Reports66972
+Ref: Bug Reports-Footnote-172679
+Node: Authors72749
+Node: FDL73914
+Node: Program Index94895
+Node: Syntactic-Comment Index97891
+Node: Option Index98580
+Node: General Index102660
 
 End Tag Table
