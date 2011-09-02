@@ -418,7 +418,8 @@ namespace vigra
             info.comp_info[i].v_samp_factor = 1;
         }
 #ifdef C_ARITH_CODING_SUPPORTED
-        info.arith_code = TRUE;
+        // arithmetic JPEG coding isn't very portable, disable
+        info.arith_code = FALSE;
 #endif
 #ifdef ENTROPY_OPT_SUPPORTED
         info.optimize_coding = TRUE;
