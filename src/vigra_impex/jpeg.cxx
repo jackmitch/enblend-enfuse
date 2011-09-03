@@ -417,9 +417,6 @@ namespace vigra
             info.comp_info[i].h_samp_factor = 1;
             info.comp_info[i].v_samp_factor = 1;
         }
-#ifdef C_ARITH_CODING_SUPPORTED
-        info.arith_code = TRUE;
-#endif
 #ifdef ENTROPY_OPT_SUPPORTED
         info.optimize_coding = TRUE;
 #endif
