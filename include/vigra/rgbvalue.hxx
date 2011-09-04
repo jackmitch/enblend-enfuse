@@ -289,16 +289,21 @@ class RGBValue
 
     // mihal 20061017 quick-and-dirty hue calculation
     value_type hue() const {
-        value_type max = std::max(red(), std::max(green(), blue()));
-        value_type min = std::min(red(), std::min(green(), blue()));
-        value_type delta = (max - min) * 6;
-        typename NumericTraits<value_type>::RealPromote rdelta = NumericTraits<value_type>::toRealPromote(delta);
-        typename NumericTraits<value_type>::RealPromote h = 0.0;
-        if (red() == max) h = (green() - blue()) / rdelta;
-        else if (green() == max) h = (1/3) + ((blue() - red()) / rdelta);
-        else h = (2/3) + ((red() - green()) / rdelta);
-        if (h < 0.0) h += 1.0;
-        return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
+        typedef typename NumericTraits<value_type>::RealPromote real_value_type;
+
+        const value_type max = std::max(red(), std::max(green(), blue()));
+        const value_type min = std::min(red(), std::min(green(), blue()));
+
+        if (min == max) return NumericTraits<value_type>::max();
+        else {
+            const real_value_type delta = NumericTraits<value_type>::toRealPromote(6 * (max - min));
+            real_value_type h = 0.0;
+            if (red() == max) h = (green() - blue()) / delta;
+            else if (green() == max) h = (1.0 / 3.0) + (blue() - red()) / delta;
+            else h = (2.0 / 3.0) + (red() - green()) / delta;
+            if (h < 0.0) h += 1.0;
+            return NumericTraits<value_type>::fromRealPromote(h * NumericTraits<value_type>::max());
+        }
     }
 
     value_type saturation() const {
