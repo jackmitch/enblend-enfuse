@@ -872,7 +872,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -908,7 +908,7 @@ $$
                     </mml:apply>
                 </mml:condition>
             </mml:set>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -1037,7 +1037,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -1089,7 +1089,7 @@ $$
                     </mml:apply>
                 </mml:condition>
             </mml:set>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -1740,7 +1740,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply>
@@ -1749,7 +1749,7 @@ $$
                 <mml:ci>G</mml:ci>
                 <mml:ci>B</mml:ci>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -1794,7 +1794,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply other='display="scriptstyle"'>
@@ -1807,7 +1807,7 @@ $$
                 </mml:apply>
                 <mml:cn>3</mml:cn>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -1857,7 +1857,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply>
@@ -1884,7 +1884,7 @@ $$
                     <mml:ci>B</mml:ci>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -1968,7 +1968,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply>
@@ -1990,7 +1990,7 @@ $$
                 </mml:apply>
                 <mml:cn>2</mml:cn>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -2039,7 +2039,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply>
@@ -2060,7 +2060,7 @@ $$
                     <mml:ci>B</mml:ci>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -2116,7 +2116,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>Y</mml:ci>
             <mml:apply>
@@ -2125,7 +2125,7 @@ $$
                 <mml:ci>G</mml:ci>
                 <mml:ci>B</mml:ci>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -2744,7 +2744,7 @@ and $r_{\mathrm{ent}}$ are explained in the next sections.
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:ci>w</mml:ci>
@@ -2839,7 +2839,7 @@ and $r_{\mathrm{ent}}$ are explained in the next sections.
                 </mml:apply>
 
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 
@@ -3032,15 +3032,15 @@ where
             <mml:forall/>
             <mml:bvar>
                 <mml:condition>
-                    <mml:apply>
+                    <mml:reln>
                         <mml:leq/>
                         <mml:cn>1</mml:cn>
                         <mml:ci>j</mml:ci>
                         <mml:ci>n</mml:ci>
-                    </mml:apply>
+                    </mml:reln>
                 </mml:condition>
             </mml:bvar>
-            <mml:apply>
+            <mml:reln>
                 <mml:geq/>
                 <mml:apply>
                     <mml:ci>w</mml:ci>
@@ -3060,7 +3060,7 @@ where
                         <mml:ci>y</mml:ci>
                     </mml:apply>
                 </mml:apply>
-            </mml:apply>
+            </mml:reln>
         </mml:apply>
     </mml:math>
 </informalequation>
@@ -3214,7 +3214,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -3252,7 +3252,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -3497,14 +3497,14 @@ $$
                             <mml:ci>&omega;</mml:ci>
                         </mml:bvar>
                         <mml:condition>
-                            <mml:apply>
+                            <mml:reln>
                                 <mml:eq/>
                                 <mml:apply>
                                     <mml:ci>X</mml:ci>
                                     <mml:ci>&omega;</mml:ci>
                                 </mml:apply>
                                 <mml:ci>x</mml:ci>
-                            </mml:apply>
+                            </mml:reln>
                         </mml:condition>
                     </mml:set>
                 </mml:apply>
@@ -3573,7 +3573,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -3616,7 +3616,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -3670,7 +3670,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -3708,7 +3708,7 @@ $$
                     <mml:cn>2</mml:cn>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -3747,7 +3747,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:sdev/>
@@ -3778,7 +3778,7 @@ $$
                     <mml:ci>X</mml:ci>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -3846,7 +3846,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -3879,7 +3879,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -3946,7 +3946,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:csymbol>
@@ -3985,7 +3985,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4082,7 +4082,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:ci>g</mml:ci>
@@ -4137,7 +4137,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4206,7 +4206,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:laplacian/>
@@ -4241,7 +4241,7 @@ $$
                     </mml:bvar>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4308,7 +4308,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:ci>k</mml:ci>
@@ -4350,7 +4350,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4407,7 +4407,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:power/>
@@ -4439,7 +4439,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4480,7 +4480,7 @@ $R = \sqrt{x^2 + y^2}$.
 @docbook
 <inlineequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:ci>R</mml:ci>
             <mml:apply>
@@ -4502,7 +4502,7 @@ $R = \sqrt{x^2 + y^2}$.
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </inlineequation>
 @end docbook
@@ -4703,7 +4703,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:apply>
@@ -4747,7 +4747,7 @@ $$
                     </mml:apply>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4819,7 +4819,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:apply>
@@ -4847,7 +4847,7 @@ $$
                     <mml:ci>b</mml:ci>
                 </mml:apply>
             </mml:apply>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
@@ -4905,7 +4905,7 @@ $$
 @docbook
 <informalequation>
     <mml:math>
-        <mml:apply>
+        <mml:reln>
             <mml:eq/>
             <mml:apply>
                 <mml:limit/>
@@ -4936,7 +4936,7 @@ $$
                 </mml:apply>
             </mml:apply>
             <mml:cn>0</mml:cn>
-        </mml:apply>
+        </mml:reln>
     </mml:math>
 </informalequation>
 @end docbook
