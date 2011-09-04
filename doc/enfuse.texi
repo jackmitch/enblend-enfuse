@@ -2219,8 +2219,15 @@ name of the associated input file (@samp{%f}) for easy recognition.
 Consider all masks when fusing.  This is the default.
 @end table
 
+@c The extra <para>s fix another stupid Texinfo problem with DocBook.
+@docbook
+<para>
+@end docbook
 Options@tie{}@option{--save-masks} and @option{--load-masks} are
 mutually exclusive.
+@docbook
+</para>
+@end docbook
 
 @page
 

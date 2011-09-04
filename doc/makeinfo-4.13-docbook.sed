@@ -38,7 +38,7 @@ s#id="\(Table\|Figure\):\([^"]*\)"#id="\1-\2"#g
 # correct floating elements we must attach IDs to
 # variablelist-elements.
 
-\#<Para><anchor id="[^"]*"></anchor></para>#N;s#<para><anchor id="\([^"]*\)"></anchor></para>[ \t\n]*<variablelist#<variablelist id="\1"#
+\#<para><anchor id="[^"]*"></anchor></para>#N;s#<para><anchor id="\([^"]*\)"></anchor></para>[ \t\n]*<variablelist#<variablelist id="\1"#
 
 
 # Our graphics are never inline.  Mazel tov!

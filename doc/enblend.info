@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-cddb14fe6456, 19 August
+   This manual is for Enblend (version 4.1-cddb14fe6456, 28 August
 2011), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-cddb14fe6456, 19 August 2011),
+This manual is for Enblend (version 4.1-cddb14fe6456, 28 August 2011),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
