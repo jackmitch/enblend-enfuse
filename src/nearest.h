@@ -364,7 +364,13 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     IMAGETYPE<SrcPromoteType> dist21(size);
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
-        cerr << command << ": info: creating blend mask: 1/3";
+        cerr << command << ": info: creating ";
+        if (CoarseMask) {
+            cerr << "coarse/" << CoarsenessFactor;
+        } else {
+            cerr << "fine";
+        }
+        cerr << " blend mask: 1/3";
         cerr.flush();
     }
 
