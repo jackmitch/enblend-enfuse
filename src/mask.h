@@ -305,6 +305,54 @@ visualizeLine(ImageType& image,
     }
 }
 
+
+template <typename value, typename predicate>
+class FindAverageAndVarianceIf
+{
+public:
+    typedef value argument_type;
+    typedef value first_argument_type;
+    typedef double second_argument_type;
+    typedef typename vigra::NumericTraits<value>::RealPromote result_type;
+    typedef typename vigra::NumericTraits<value>::RealPromote value_type;
+
+    FindAverageAndVarianceIf(predicate aPredicate) :
+        sum_(0.0), sum_of_squares_(0.0), count_(0.0), pred_(aPredicate) {}
+
+    void reset() {
+        count_ = 0.0;
+        sum_of_squares_ = 0.0;
+        count_ = 0.0;
+    }
+
+    void operator()(const argument_type& v) {
+        if (pred_(v)) {
+            count_ += 1.0;
+            sum_ += static_cast<double>(v);
+            sum_of_squares_ += square(static_cast<double>(v));
+        }
+    }
+
+    unsigned count() const {return static_cast<unsigned>(count_);}
+
+    result_type average() const {
+        assert(count_ != 0.0);
+        return static_cast<result_type>(sum_ / count_);
+    }
+
+    result_type variance() const {
+        assert(count_ != 0.0);
+        return static_cast<result_type>((sum_of_squares_ - square(sum_) / count_) / count_);
+    }
+
+private:
+    double sum_;
+    double sum_of_squares_;
+    double count_;
+    predicate pred_;
+};
+
+
 template <typename ValueType, typename AccessorType>
 class XorAccessor
 {
@@ -1061,6 +1109,26 @@ MaskType* createMask(const ImageType* const white,
         break;
     default:
         assert(false);
+    }
+
+    if (Verbose >= VERBOSE_DIFFERENCE_STATISTICS) {
+        typedef std::binder2nd<std::not_equal_to<MismatchImagePixelType> > predicate;
+
+        predicate non_maximum(std::bind2nd(std::not_equal_to<MismatchImagePixelType>(),
+                                           vigra::NumericTraits<MismatchImagePixelType>::max()));
+        enblend::FindAverageAndVarianceIf<MismatchImagePixelType, predicate> statistics(non_maximum);
+        const double range = static_cast<double>(vigra::NumericTraits<MismatchImagePixelType>::max() -
+                                                 vigra::NumericTraits<MismatchImagePixelType>::min());
+
+        vigra::inspectImage(srcImageRange(mismatchImage), statistics);
+        cerr << command << ": info: difference statistics: overlap size = "
+             << std::count_if(mismatchImage.begin(), mismatchImage.end(), non_maximum) << " pixels\n"
+             << command << ": info: difference statistics: mismatch average = "
+             << statistics.average() / range << " ["
+             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]\n"
+             << command << ": info: difference statistics: standard deviation = "
+             << sqrt(statistics.variance()) / range << " ["
+             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]" << endl;
     }
 
     if (DifferenceBlurRadius > 0.0) {

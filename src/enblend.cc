@@ -75,11 +75,27 @@ extern "C" int optind;
 #include "self_test.h"
 #include "tiff_message.h"
 
+
 typedef enum {
     UnknownDifference,
     HueLuminanceMaxDifference,  // maximum of hue difference and luminance difference
     DeltaEDifference            // L*a*b*-based Delta E
 } difference_functor_t;
+
+
+std::string
+stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
+{
+    switch (aFunctor)
+    {
+    case HueLuminanceMaxDifference: return "maximum-hue-luminance";
+    case DeltaEDifference: return "delta-e";
+    default: assert(false);
+    }
+
+    return "unknown";
+}
+
 
 typedef struct {
     unsigned int kmax;          // maximum number of moves for a line segment
@@ -87,6 +103,7 @@ typedef struct {
     double deltaEMax;           // maximum cost change possible by any single annealing move
     double deltaEMin;           // minimum cost change possible by any single annealing move
 } anneal_para_t;
+
 
 // Globals
 const std::string command("enblend");
@@ -216,20 +233,6 @@ differenceFunctorOfString(const char* aDifferenceFunctorName)
     } else {
         return UnknownDifference;
     }
-}
-
-
-std::string
-stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
-{
-    switch (aFunctor)
-    {
-    case HueLuminanceMaxDifference: return "maximum-hue-luminance";
-    case DeltaEDifference: return "delta-e";
-    default: assert(false);
-    }
-
-    return "unknown";
 }
 
 

@@ -2196,6 +2196,16 @@ weighting function.
 The default @var{LUMINANCE-WEIGHT} is @value{src::default-luminance-difference-weight}
 and the default @var{CHROMINANCE-WEIGHT} is @value{src::default-chrominance-difference-weight}.
 
+@cindex match quality
+@cindex quality, match
+At higher verbosity levels Enblend computes the true size of the
+overlap area in pixels and it calculates the average and standard
+deviation of the difference per pixel in the normalized luminance
+interval@tie{}[0@dots{}1].  These statistical measures are based on
+@var{ALGORITHM}, therefore they should only be compared for identical
+@var{ALGORITHM}s.  The average difference is a rough measure of
+quality with lower values meaning better matches.
+
 @item --load-masks[=@var{IMAGE-TEMPLATE}]
 @opindex --load-masks
 @cindex mask, load
