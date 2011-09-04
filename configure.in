@@ -176,8 +176,28 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER(boost/algorithm/string/case_conv.hpp, [],
                 AC_MSG_ERROR([Boost "case_conv" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/algorithm/string/erase.hpp, [],
+                AC_MSG_ERROR([Boost "erase" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/assign/list_inserter.hpp, [],
+                AC_MSG_ERROR([Boost "list_inserter" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/assign/list_of.hpp, [],
+                AC_MSG_ERROR([Boost "list_of" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/functional/hash.hpp, [],
+                AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lambda/algorithm.hpp, [],
+                AC_MSG_ERROR([Boost "algorithm" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lambda/bind.hpp, [],
+                AC_MSG_ERROR([Boost "bind" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lambda/construct.hpp, [],
+                AC_MSG_ERROR([Boost "construct" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lambda/if.hpp, [],
+                AC_MSG_ERROR([Boost "if" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lambda/lambda.hpp, [],
+                AC_MSG_ERROR([Boost "lambda" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
                 AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/math/special_functions.hpp, [],
+                AC_MSG_ERROR([Boost "special_functions" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp, [],
                 AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
@@ -186,6 +206,8 @@ AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
                 AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/static_assert.hpp, [],
                 AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/unordered_set.hpp, [],
+                AC_MSG_ERROR([Boost "unordered_set" header file is required to compile Enblend.]))
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],
