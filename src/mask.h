@@ -1043,10 +1043,25 @@ MaskType* createMask(const ImageType* const white,
     //                  !Visualize && !CoarseMask: iBB * UInt8
 
     // Calculate mismatch image
-    combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
-                       stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
-                       destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                       PixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>());
+    switch (PixelDifferenceFunctor)
+    {
+    case HueLuminanceMaxDifference:
+        combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
+                           stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
+                           destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                           MaxHueLuminanceDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
+                           (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+        break;
+    case DeltaEDifference:
+        combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
+                           stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
+                           destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                           DeltaEPixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
+                           (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+        break;
+    default:
+        assert(false);
+    }
 
     if (DifferenceBlurRadius > 0.0) {
         gaussianSmoothing(srcImageRange(mismatchImage),

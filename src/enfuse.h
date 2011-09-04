@@ -86,12 +86,6 @@ using boost::lambda::const_parameters;
 
 namespace enblend {
 
-static inline double square(double x)
-{
-    return x * x;
-}
-
-
 static inline double gaussDistribution(double x, double mu, double sigma)
 {
     return exp(-0.5 * square((x - mu) / sigma));

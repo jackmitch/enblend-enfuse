@@ -63,6 +63,7 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
+#include <boost/algorithm/string/erase.hpp>
 #include <boost/logic/tribool.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <lcms.h>
@@ -73,6 +74,12 @@ extern "C" int optind;
 #include "selector.h"
 #include "self_test.h"
 #include "tiff_message.h"
+
+typedef enum {
+    UnknownDifference,
+    HueLuminanceMaxDifference,  // maximum of hue difference and luminance difference
+    DeltaEDifference            // L*a*b*-based Delta E
+} difference_functor_t;
 
 typedef struct {
     unsigned int kmax;          // maximum number of moves for a line segment
@@ -109,6 +116,9 @@ bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
 unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
+difference_functor_t PixelDifferenceFunctor = DeltaEDifference; //< src::default-difference-functor Delta-E
+double LuminanceDifferenceWeight = 1.0; //< src::default-luminance-difference-weight 1.0
+double ChrominanceDifferenceWeight = 1.0; //< src::default-chrominance-difference-weight 1.0
 double DifferenceBlurRadius = 0.0;
 bool SaveMasks = false;
 bool StopAfterMaskGeneration = false;
@@ -190,6 +200,39 @@ using enblend::enblendMain;
 #endif
 
 
+difference_functor_t
+differenceFunctorOfString(const char* aDifferenceFunctorName)
+{
+    std::string name(aDifferenceFunctorName);
+
+    boost::algorithm::erase_all(name, "-");
+    boost::algorithm::to_lower(name);
+
+    if (name == "maximumhueluminance" || name == "maximumhuelum" ||
+        name == "maxhueluminance" || name == "maxhuelum" || name == "max") {
+        return HueLuminanceMaxDifference;
+    } else if (name == "deltae" || name == "de") {
+        return DeltaEDifference;
+    } else {
+        return UnknownDifference;
+    }
+}
+
+
+std::string
+stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
+{
+    switch (aFunctor)
+    {
+    case HueLuminanceMaxDifference: return "maximum-hue-luminance";
+    case DeltaEDifference: return "delta-e";
+    default: assert(false);
+    }
+
+    return "unknown";
+}
+
+
 #define DUMP_GLOBAL_VARIABLES(...) dump_global_variables(__FILE__, __LINE__, ##__VA_ARGS__)
 void dump_global_variables(const char* file, unsigned line,
                            std::ostream& out = std::cout)
@@ -218,6 +261,10 @@ void dump_global_variables(const char* file, unsigned line,
         "+ CoarseMask = " << enblend::stringOfBool(CoarseMask) <<
         ", options \"--coarse-mask\" and \"--fine-mask\"\n" <<
         "+     CoarsenessFactor = " << CoarsenessFactor << ", argument to option \"--coarse-mask\"\n" <<
+        "+ PixelDifferenceFunctor = " << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) <<
+        "+     LuminanceDifferenceWeight = " << LuminanceDifferenceWeight << "\n" <<
+        "+     ChrominanceDifferenceWeight = " << ChrominanceDifferenceWeight <<
+        ", option \"--image-difference\"\n" <<
         "+ DifferenceBlurRadius = " << DifferenceBlurRadius << ", option \"--smooth-difference\"\n" <<
         "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-masks\"\n" <<
         "+     SaveMaskTemplate = <" << SaveMaskTemplate << ">, argument to option \"--save-masks\"\n" <<
@@ -458,7 +505,15 @@ void printUsageAndExit(const bool error = true) {
         "Mask generation options:\n" <<
         "  --primary-seam-generator=ALGORITHM\n" <<
         "                         use main seam finder ALGORITHM, where ALGORITHM is\n"<<
-        "                         \"nft\" or \"gc\"; default: \"gc\"\n" <<
+        "                         \"nearest-feature-transform\" or \"graph-cut\";\n" <<
+        "                         default: \"graph-cut\"\n" <<
+        "  --image-difference=ALGORITHM[:LUMINANCE-WEIGHT[:CHROMINANCE-WEIGHT]]\n" <<
+        "                         use ALGORITHM for calculation of the difference image,\n" <<
+        "                         where ALGORITHM is \"max-hue-luminance\" or \"delta-e\";\n" <<
+        "                         LUMINANCE-WEIGHT and CHROMINANCE-WEIGHT define the weights\n" <<
+        "                         of lightness and color; default: " <<
+        stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << ":" << LuminanceDifferenceWeight <<
+        ": " << ChrominanceDifferenceWeight << "\n" <<
         "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
         "                         generation; this is the default; if omitted FACTOR\n" <<
         "                         defaults to " <<
@@ -471,7 +526,7 @@ void printUsageAndExit(const bool error = true) {
         "                         default: " << DifferenceBlurRadius << " pixels\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
-        "  --optimizer-weights=DISTANCEWEIGHT[:MISMATCHWEIGHT]\n" <<
+        "  --optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]\n" <<
         "                         set the optimizer's weigths for distance and mismatch;\n" <<
         "                         default: " << OptimizerWeights.first << ':' <<
         OptimizerWeights.second << "\n" <<
@@ -481,7 +536,7 @@ void printUsageAndExit(const bool error = true) {
         coarseMaskVectorizeDistance << " for coarse masks and\n" <<
         "                         " <<
         fineMaskVectorizeDistance << " for fine masks\n" <<
-        "  --anneal=TAU[:DELTAEMAX[:DELTAEMIN[:KMAX]]]\n" <<
+        "  --anneal=TAU[:DELTAE-MAX[:DELTAE-MIN[:K-MAX]]]\n" <<
         "                         set annealing parameters of optimizer strategy 1;\n" <<
         "                         defaults: " << AnnealPara.tau << ':' <<
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
@@ -567,7 +622,7 @@ enum AllPossibleOptions {
     VisualizeOption, CoarseMaskOption, FineMaskOption,
     OptimizeOption, NoOptimizeOption,
     SaveMasksOption, LoadMasksOption,
-    AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
+    ImageDifferenceOption, AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     SmoothDifferenceOption, OptimizerWeightsOption,
     LayerSelectorOption, NearestFeatureTransformOption, GraphCutOption,
     // currently below the radar...
@@ -798,7 +853,8 @@ int process_options(int argc, char** argv)
         NoCiecamId,
         FallbackProfileId,
         LayerSelectorId,
-        MainAlgoId
+        MainAlgoId,
+        ImageDifferenceId
     };
 
     static struct option long_options[] = {
@@ -830,6 +886,7 @@ int process_options(int argc, char** argv)
         {"fallback-profile", required_argument, 0, FallbackProfileId},
         {"layer-selector", required_argument, 0, LayerSelectorId},
         {"primary-seam-generator", required_argument, 0, MainAlgoId},
+        {"image-difference", required_argument, 0, ImageDifferenceId},
         {0, 0, 0, 0}
     };
 
@@ -966,6 +1023,82 @@ int process_options(int argc, char** argv)
             }
             optionSet.insert(OutputOption);
             break;
+
+        case ImageDifferenceId: {
+            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            strcpy(s.get(), optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* tail;
+
+            if (token == NULL || *token == 0) {
+                cerr << command << ": option \"--image-difference\" requires an argument" << endl;
+                failed = true;
+            } else {
+                PixelDifferenceFunctor = differenceFunctorOfString(token);
+                if (PixelDifferenceFunctor == UnknownDifference) {
+                    cerr << command << ": unknown image difference algorithm \"" << token << "\"" << endl;
+                    failed = true;
+                }
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                LuminanceDifferenceWeight = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail != 0) {
+                        cerr << command << ": unrecognized luminance weight \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
+                    if (LuminanceDifferenceWeight < 0.0) {
+                        cerr << command << ": luminance weight must be non-negative" << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of luminance weight: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != NULL && *token != 0) {
+                errno = 0;
+                ChrominanceDifferenceWeight = strtod(token, &tail);
+                if (errno == 0) {
+                    if (*tail != 0) {
+                        cerr << command << ": unrecognized chrominance weight \""
+                             << tail << "\" in \"" << token << "\"" << endl;
+                        failed = true;
+                    }
+                    if (ChrominanceDifferenceWeight < 0.0) {
+                        cerr << command << ": chrominance weight must be non-negative" << endl;
+                        failed = true;
+                    }
+                } else {
+                    cerr << command << ": illegal numeric format \""
+                         << token << "\" of chrominance weight: "
+                         << enblend::errorMessage(errno) << endl;
+                    failed = true;
+                }
+            }
+
+            if (save_ptr != NULL && *save_ptr != 0) {
+                cerr << command << ": warning: ignoring trailing garbage \""
+                     << save_ptr << "\" in argument to \"--image-difference\"" << endl;
+            }
+
+            if (LuminanceDifferenceWeight + ChrominanceDifferenceWeight == 0.0) {
+                cerr << command << ": luminance weight and chrominance weight cannot both be zero" << endl;
+                failed = true;
+            }
+
+            optionSet.insert(ImageDifferenceOption);
+            break;
+        }
 
         case AnnealId: {
             boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);

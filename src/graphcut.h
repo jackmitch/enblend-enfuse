@@ -1324,10 +1324,25 @@ namespace enblend {
                                   kernel1d(gradientKernel));
 
         // difference image calculation
-        combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
-                           src2_upperleft, sa2,
-                           intermediateImg.upperLeft(), intermediateImg.accessor(),
-                           PixelDifferenceFunctor<SrcPixelType, BasePixelType>());
+        switch (PixelDifferenceFunctor)
+        {
+        case HueLuminanceMaxDifference:
+            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
+                               src2_upperleft, sa2,
+                               intermediateImg.upperLeft(), intermediateImg.accessor(),
+                               MaxHueLuminanceDifferenceFunctor<SrcPixelType, BasePixelType>
+                               (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+            break;
+        case DeltaEDifference:
+            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
+                               src2_upperleft, sa2,
+                               intermediateImg.upperLeft(), intermediateImg.accessor(),
+                               DeltaEPixelDifferenceFunctor<SrcPixelType, BasePixelType>
+                               (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+            break;
+        default:
+            assert(false);
+        }
 
         // masking overlap region borders
         combineThreeImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),

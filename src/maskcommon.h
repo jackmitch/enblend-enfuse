@@ -20,59 +20,140 @@
 #ifndef MASKCOMMON_H
 #define MASKCOMMON_H
 
-using vigra::LinearIntensityTransform;
+#include "vigra/colorconversions.hxx"
 
 namespace enblend {
 
     template <typename PixelType, typename ResultType>
-    class PixelDifferenceFunctor
+    class DifferenceFunctor
     {
+    public:
         typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
         typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
-        typedef LinearIntensityTransform<ResultType> RangeMapper;
+        typedef vigra::LinearIntensityTransform<ResultType> RangeMapper;
 
-    public:
-        PixelDifferenceFunctor() :
-            rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
-                                  NumericTraits<PixelComponentType>::max(),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
+        DifferenceFunctor() :
+            scale_(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
+                                      NumericTraits<PixelComponentType>::max(),
+                                      ResultType(NumericTraits<ResultPixelComponentType>::min()),
+                                      ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
+
+        virtual ~DifferenceFunctor() {}
 
         ResultType operator()(const PixelType& a, const PixelType& b) const {
             typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
-            return diff(a, b, src_is_scalar());
+            return difference(a, b, src_is_scalar());
         }
 
     protected:
-        ResultType diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
-            PixelComponentType aLum = a.luminance();
-            PixelComponentType bLum = b.luminance();
-            PixelComponentType aHue = a.hue();
-            PixelComponentType bHue = b.hue();
-            PixelComponentType lumDiff = (aLum > bLum) ? (aLum - bLum) : (bLum - aLum);
-            PixelComponentType hueDiff = (aHue > bHue) ? (aHue - bHue) : (bHue - aHue);
-            if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) {
-                hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
-            }
-            return rm(std::max(hueDiff, lumDiff));
-        }
+        virtual ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
+                                      const vigra::RGBValue<PixelComponentType>& b,
+                                      VigraFalseType) const = 0;
 
-        ResultType diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
+        ResultType difference(PixelType a, PixelType b, VigraTrueType) const {
             typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
-            return scalar_diff(a, b, src_is_signed());
+            return scalar_difference(a, b, src_is_signed());
         }
 
-        ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraTrueType) const {
-            return rm(std::abs(a - b));
+        ResultType scalar_difference(PixelType a, PixelType b, VigraTrueType) const {
+            return scale_(std::abs(a - b));
         }
 
         // This appears necessary because NumericTraits<unsigned int>::Promote
         // is an unsigned int instead of an int.
-        ResultType scalar_diff(const PixelType& a, const PixelType& b, VigraFalseType) const {
-            return rm(std::abs(static_cast<int>(a) - static_cast<int>(b)));
+        ResultType scalar_difference(PixelType a, PixelType b, VigraFalseType) const {
+            return scale_(std::abs(static_cast<int>(a) - static_cast<int>(b)));
         }
 
-        RangeMapper rm;
+        RangeMapper scale_;
+    };
+
+
+    template <typename PixelType, typename ResultType>
+    class MaxHueLuminanceDifferenceFunctor : public DifferenceFunctor<PixelType, ResultType>
+    {
+        typedef DifferenceFunctor<PixelType, ResultType> super;
+
+    public:
+        typedef typename super::PixelComponentType PixelComponentType;
+
+        MaxHueLuminanceDifferenceFunctor(double aLuminanceWeight, double aChrominanceWeight) {
+            const double total = aLuminanceWeight + aChrominanceWeight;
+            assert(total != 0.0);
+            luma_ = aLuminanceWeight / total;
+            chroma_ = aChrominanceWeight / total;
+        }
+
+    protected:
+        ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
+                              const vigra::RGBValue<PixelComponentType>& b,
+                              VigraFalseType) const {
+            const PixelComponentType aLum = a.luminance();
+            const PixelComponentType bLum = b.luminance();
+            const PixelComponentType aHue = a.hue();
+            const PixelComponentType bHue = b.hue();
+            const PixelComponentType lumDiff = aLum > bLum ? aLum - bLum : bLum - aLum;
+            PixelComponentType hueDiff = aHue > bHue ? aHue - bHue : bHue - aHue;
+
+            if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) {
+                hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
+            }
+
+            return super::scale_(std::max(luma_ * lumDiff, chroma_ * hueDiff));
+        }
+
+    private:
+        MaxHueLuminanceDifferenceFunctor(); // NOT IMPLEMENTED
+
+        double luma_;
+        double chroma_;
+    };
+
+
+    template <typename PixelType, typename ResultType>
+    class DeltaEPixelDifferenceFunctor : public DifferenceFunctor<PixelType, ResultType>
+    {
+        typedef DifferenceFunctor<PixelType, ResultType> super;
+
+    public:
+        typedef typename super::PixelComponentType PixelComponentType;
+
+        DeltaEPixelDifferenceFunctor(double aLuminanceWeight, double aChrominanceWeight) :
+            rgb_to_lab_(vigra::RGB2LabFunctor<double>(NumericTraits<PixelComponentType>::max())) {
+            const double total = aLuminanceWeight + 2.0 * aChrominanceWeight;
+            assert(total != 0.0);
+            luma_ = aLuminanceWeight / total;
+            chroma_ = aChrominanceWeight / total;
+        }
+
+    protected:
+        ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
+                              const vigra::RGBValue<PixelComponentType>& b,
+                              VigraFalseType) const {
+            typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
+
+            const LABResultType lab_a = rgb_to_lab_(a);
+            const LABResultType lab_b = rgb_to_lab_(b);
+            // See, e.g. http://en.wikipedia.org/wiki/Color_difference
+            // or http://www.colorwiki.com/wiki/Delta_E:_The_Color_Difference
+            const double delta_e = sqrt(luma_ * square(lab_a[0] - lab_b[0]) +
+                                        chroma_ * square(lab_a[1] - lab_b[1]) +
+                                        chroma_ * square(lab_a[2] - lab_b[2]));
+
+            // Vigra documentation: 0 <= L* <= 100.0, -86.1813 <= a* <= 98.2352, -107.862 <= b* <= 94.4758
+            // => Maximum delta_e = 291.4619.  Real differences are much smaller and fromRealPromote()
+            // clips out-of-destination-range values anyhow.  We use 128.0, which yields values comparable
+            // to MaxHueLuminanceDifferenceFunctor.
+            return super::scale_(NumericTraits<PixelComponentType>::
+                                 fromRealPromote(delta_e * NumericTraits<PixelComponentType>::max() / 128.0));
+        }
+
+    private:
+        DeltaEPixelDifferenceFunctor(); // NOT IMPLEMENTED
+
+        double luma_;
+        double chroma_;
+        vigra::RGB2LabFunctor<double> rgb_to_lab_;
     };
 
 
@@ -81,7 +162,7 @@ namespace enblend {
     {
         typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
         typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
-        typedef LinearIntensityTransform<ResultType> RangeMapper;
+        typedef vigra::LinearIntensityTransform<ResultType> RangeMapper;
 
     public:
         PixelSumFunctor() :
@@ -127,7 +208,7 @@ namespace enblend {
     {
         typedef typename EnblendNumericTraits<PixelType>::ImagePixelComponentType PixelComponentType;
         typedef typename EnblendNumericTraits<ResultType>::ImagePixelComponentType ResultPixelComponentType;
-        typedef LinearIntensityTransform<ResultType> RangeMapper;
+        typedef vigra::LinearIntensityTransform<ResultType> RangeMapper;
 
     public:
         MapFunctor() :

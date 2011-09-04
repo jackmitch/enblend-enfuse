@@ -214,6 +214,15 @@ typedef enum
 } nearest_neigbor_metric_t;
 
 
+/** Answer the square of the argument x. */
+template <typename t>
+inline t
+square(t x)
+{
+    return x * x;
+}
+
+
 /** Answer the previous iterator of i. */
 template <class iterator>
 inline iterator

@@ -1596,6 +1596,605 @@ very narrow overlap regions.
 
 Also see @ref{Table:mask-generation}.
 
+@item --image-difference=@var{ALGORITHM}[:@var{LUMINANCE-WEIGHT}[:@var{CHROMINANCE-WEIGHT}]]
+@opindex --image-difference
+@cindex image difference
+@cindex difference image
+@cindex luminance weight
+@cindex weight, luminance
+@cindex chrominance weight
+@cindex weight, chrominance
+
+Enblend calculates the difference of a pair of overlapping color
+images when it generates the primary seam with a Graph-Cut or before
+it optimizes a seam.  It employs a user-selectable @var{ALGORITHM}
+that itself is controlled by the weights for luminance differences
+@var{LUMINANCE-WEIGHT},
+@ifinfo
+@math{w_luminance}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>w</mi>
+            <mtext>luminance</mtext>
+        </msubinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$w_{\mathrm{luminance}}$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:csymbol>
+            <mml:msub>
+                <mml:mi mathvariant="italic">w</mml:mi>
+                <mml:mi mathvariant="normal">luminance</mml:mi>
+            </mml:msub>
+        </mml:csymbol>
+    </mml:math>
+</inlineequation>
+@end docbook
+and color differences @var{CHROMINANCE-WEIGHT},
+@ifinfo
+@math{w_chrominance}.
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>w</mi>
+            <mtext>chrominance</mtext>
+        </msubinline>
+        <mtext>.</mtext>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$w_{\mathrm{chrominance}}$.
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:csymbol>
+            <mml:msub>
+                <mml:mi mathvariant="italic">w</mml:mi>
+                <mml:mi mathvariant="normal">chrominance</mml:mi>
+            </mml:msub>
+        </mml:csymbol>
+    </mml:math>
+</inlineequation>
+@end docbook
+
+For black-and-white images the difference is simple the absolute
+difference of each pair of pixels.
+
+@table @code
+@item maximum-hue-luminance
+@itemx maximum-hue-lum
+@itemx max-hue-luminance
+@itemx max-hue-lum
+@itemx max
+@cindex maximum hue-luminance
+@cindex hue-luminance maximum
+@cindex luminance-hue maximum
+Calculate the difference@tie{}@math{d} as the maximum of the
+differences of the luminances@tie{}@math{l} and hues@tie{}@math{h} of
+each pair of pixels
+@ifinfo
+@math{P1}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>P</mi>
+            <mn>1</mn>
+        </msubinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$P_1$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:csymbol>
+            <mml:msub>
+                <mml:mi>P</mml:mi>
+                <mml:cn>1</mml:cn>
+            </mml:msub>
+        </mml:csymbol>
+    </mml:math>
+</inlineequation>
+@end docbook
+and
+@ifinfo
+@math{P2}:
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>P</mi>
+            <mn>2</mn>
+        </msubinline>
+        <mtext>:</mtext>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$P_2$:
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:csymbol>
+            <mml:msub>
+                <mml:mi>P</mml:mi>
+                <mml:cn>2</mml:cn>
+            </mml:msub>
+        </mml:csymbol>
+    </mml:math>
+</inlineequation>
+@end docbook
+
+@ifinfo
+@display
+@math{d = max(w_luminance * |l(P_1) - l(P_2)|, w_chrominance * |h(P_1) - h(p_2)|)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <mi>d</mi>
+        <mo>=</mo>
+        <mrow>
+            <mo>max</mo>
+            <mo>&ApplyFunction;</mo>
+            <mfenced>
+                <mrow>
+                    <msub>
+                        <mi>w</mi>
+                        <mtext>luminance</mtext>
+                    </msub>
+                    <mo>&times;</mo>
+                    <mrow>
+                        <mo>|</mo>
+                        <mi>l</mi>
+                        <mo>&ApplyFunction;</mo>
+                        <mfenced>
+                            <msub>
+                                <mi>P</mi>
+                                <mn>1</mn>
+                            </msub>
+                        </mfenced>
+                        <mo>-</mo>
+                        <mi>l</mi>
+                        <mo>&ApplyFunction;</mo>
+                        <mfenced>
+                            <msub>
+                                <mi>P</mi>
+                                <mn>2</mn>
+                            </msub>
+                        </mfenced>
+                        <mo>|</mo>
+                    </mrow>
+                </mrow>
+
+                <mrow>
+                    <msub>
+                        <mi>w</mi>
+                        <mtext>chrominance</mtext>
+                    </msub>
+                    <mo>&times;</mo>
+                    <mrow>
+                        <mo>|</mo>
+                        <mi>h</mi>
+                        <mo>&ApplyFunction;</mo>
+                        <mfenced>
+                            <msub>
+                                <mi>P</mi>
+                                <mn>1</mn>
+                            </msub>
+                        </mfenced>
+                        <mo>-</mo>
+                        <mi>h</mi>
+                        <mo>&ApplyFunction;</mo>
+                        <mfenced>
+                            <msub>
+                                <mi>P</mi>
+                                <mn>2</mn>
+                            </msub>
+                        </mfenced>
+                        <mo>|</mo>
+                    </mrow>
+                </mrow>
+            </mfenced>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \eqalign{d = \max(& w_{\mathrm{luminance}} \times |l(P_1) - l(P_2)|, \cr
+                      & w_{\mathrm{chrominance}} \times |h(P_1) - h(P_2)|) \cr}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>d</mml:ci>
+            <mml:apply>
+                <mml:max/>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">luminance</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:abs/>
+                        <mml:apply>
+                            <mml:minus/>
+                            <mml:apply>
+                                <mml:ci>l</mml:ci>
+                                <mml:csymbol>
+                                    <mml:msub>
+                                        <mml:mi>P</mml:mi>
+                                        <mml:cn>1</mml:cn>
+                                    </mml:msub>
+                                </mml:csymbol>
+                            </mml:apply>
+                            <mml:apply>
+                                <mml:ci>l</mml:ci>
+                                <mml:csymbol>
+                                    <mml:msub>
+                                        <mml:mi>P</mml:mi>
+                                        <mml:cn>2</mml:cn>
+                                    </mml:msub>
+                                </mml:csymbol>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+                <mml:apply>
+                    <mml:times/>
+                    <mml:csymbol>
+                        <mml:msub>
+                            <mml:mi>w</mml:mi>
+                            <mml:mi mathvariant="normal">chrominance</mml:mi>
+                        </mml:msub>
+                    </mml:csymbol>
+                    <mml:apply>
+                        <mml:abs/>
+                        <mml:apply>
+                            <mml:minus/>
+                            <mml:apply>
+                                <mml:ci>h</mml:ci>
+                                <mml:csymbol>
+                                    <mml:msub>
+                                        <mml:mi>P</mml:mi>
+                                        <mml:cn>1</mml:cn>
+                                    </mml:msub>
+                                </mml:csymbol>
+                            </mml:apply>
+                            <mml:apply>
+                                <mml:ci>h</mml:ci>
+                                <mml:csymbol>
+                                    <mml:msub>
+                                        <mml:mi>P</mml:mi>
+                                        <mml:cn>2</mml:cn>
+                                    </mml:msub>
+                                </mml:csymbol>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
+
+This algorithm was the default for Enblend up to version@tie{}4.0.
+
+@item delta-e
+@itemx de
+@cindex delta-E
+Calulate the difference@tie{}@math{d} as the @sc{Euclidean} distance
+of the pixels in L*a*b* space:
+@ifinfo
+@display
+@math{d = sqrt(w_luminance * (L(P_1) - L(P_2))^2 +
+         w_chrominance * (a(P_1) - a(P_2))^2 +
+         w_chrominance * (b(P_1) - b(P_2))^2)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <mi>d</mi>
+        <mo>=</mo>
+        <msup>
+            <mrow>
+                <mo>(</mo>
+                <mrow>
+                    <msub>
+                        <mi>w</mi>
+                        <mtext>luminance</mtext>
+                    </msub>
+                    <mo>&times;</mo>
+                    <msup>
+                        <mrow>
+                            <mo>(</mo>
+                                <mi>L</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>1</mn>
+                                    </msub>
+                                </mfenced>
+                                <mo>-</mo>
+                                <mi>L</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>2</mn>
+                                    </msub>
+                                </mfenced>
+                            <mo>)</mo>
+                        </mrow>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+                <mo>+</mo>
+                <mrow>
+                    <msub>
+                        <mi>w</mi>
+                        <mtext>chrominance</mtext>
+                    </msub>
+                    <mo>&times;</mo>
+                    <msup>
+                        <mrow>
+                            <mo>(</mo>
+                                <mi>a</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>1</mn>
+                                    </msub>
+                                </mfenced>
+                                <mo>-</mo>
+                                <mi>a</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>2</mn>
+                                    </msub>
+                                </mfenced>
+                            <mo>)</mo>
+                        </mrow>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+                <mo>+</mo>
+                <mrow>
+                    <msub>
+                        <mi>w</mi>
+                        <mtext>chrominance</mtext>
+                    </msub>
+                    <mo>&times;</mo>
+                    <msup>
+                        <mrow>
+                            <mo>(</mo>
+                                <mi>b</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>1</mn>
+                                    </msub>
+                                </mfenced>
+                                <mo>-</mo>
+                                <mi>b</mi>
+                                <mo>&ApplyFunction;</mo>
+                                <mfenced>
+                                    <msub>
+                                        <mi>P</mi>
+                                        <mn>2</mn>
+                                    </msub>
+                                </mfenced>
+                            <mo>)</mo>
+                        </mrow>
+                        <mn>2</mn>
+                    </msup>
+                </mrow>
+                <mo>)</mo>
+            </mrow>
+            <mn>1/2</mn>
+        </msup>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    \eqalign{d = (& w_{\mathrm{luminance}} \, \times (L(P_1) - L(P_2))^2 \; + \cr
+                  & w_{\mathrm{chrominance}} \, \times (a(P_1) - a(P_2))^2 \; + \cr
+                  & w_{\mathrm{chrominance}} \, \times (b(P_1) - b(P_2))^2)^{1/2}\cr}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:apply>
+            <mml:eq/>
+            <mml:ci>d</mml:ci>
+            <mml:apply>
+                <mml:power/>
+                <!-- base -->
+                <mml:apply>
+                    <mml:csymbol><!-- empty --></mml:csymbol>
+                    <mml:apply>
+                        <mml:plus/>
+                        <!-- first summand -->
+                        <mml:apply>
+                            <mml:times/>
+                            <mml:csymbol>
+                                <mml:msub>
+                                    <mml:mi>w</mml:mi>
+                                    <mml:mi mathvariant="normal">luminance</mml:mi>
+                                </mml:msub>
+                            </mml:csymbol>
+                            <mml:apply>
+                                <mml:power/>
+                                <mml:apply>
+                                    <mml:csymbol><!-- empty --></mml:csymbol>
+                                    <mml:apply>
+                                        <mml:minus/>
+                                        <mml:apply>
+                                            <mml:ci>L</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>1</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                        <mml:apply>
+                                            <mml:ci>L</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>2</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                    </mml:apply>
+                                </mml:apply>
+                                <mml:cn>2</mml:cn>
+                            </mml:apply>
+                        </mml:apply>
+                        <!-- second summand -->
+                        <mml:apply>
+                            <mml:times/>
+                            <mml:csymbol>
+                                <mml:msub>
+                                    <mml:mi>w</mml:mi>
+                                    <mml:mi mathvariant="normal">chrominance</mml:mi>
+                                </mml:msub>
+                            </mml:csymbol>
+                            <mml:apply>
+                                <mml:power/>
+                                <mml:apply>
+                                    <mml:csymbol><!-- empty --></mml:csymbol>
+                                    <mml:apply>
+                                        <mml:minus/>
+                                        <mml:apply>
+                                            <mml:ci>a</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>1</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                        <mml:apply>
+                                            <mml:ci>a</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>2</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                    </mml:apply>
+                                </mml:apply>
+                                <mml:cn>2</mml:cn>
+                            </mml:apply>
+                        </mml:apply>
+                        <!-- third summand -->
+                        <mml:apply>
+                            <mml:times/>
+                            <mml:csymbol>
+                                <mml:msub>
+                                    <mml:mi>w</mml:mi>
+                                    <mml:mi mathvariant="normal">chrominance</mml:mi>
+                                </mml:msub>
+                            </mml:csymbol>
+                            <mml:apply>
+                                <mml:power/>
+                                <mml:apply>
+                                    <mml:csymbol><!-- empty --></mml:csymbol>
+                                    <mml:apply>
+                                        <mml:minus/>
+                                        <mml:apply>
+                                            <mml:ci>b</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>1</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                        <mml:apply>
+                                            <mml:ci>b</mml:ci>
+                                            <mml:csymbol>
+                                                <mml:msub>
+                                                    <mml:mi>P</mml:mi>
+                                                    <mml:cn>2</mml:cn>
+                                                </mml:msub>
+                                            </mml:csymbol>
+                                        </mml:apply>
+                                    </mml:apply>
+                                </mml:apply>
+                                <mml:cn>2</mml:cn>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+                <!-- power -->
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:cn>1</mml:cn>
+                    <mml:cn>2</mml:cn>
+                </mml:apply>
+            </mml:apply>
+       </mml:apply>
+    </mml:math>
+</informalequation>
+@end docbook
+
+This is the default in Enblend version@tie{}4.1 and later.
+
+Note that the ``delta-E'' mentioned here has nothing to do with
+@var{DELTA-E-MAX} and @var{DELTA-E-MIN} of
+option@tie{}@option{--anneal}.
+@end table
+
+Both @var{LUMINANCE-WEIGHT} and @var{CHROMINANCE-WEIGHT} must be
+non-negative, their sum must be positive.  Enblend automatically
+normalizes the sum of @var{LUMINANCE-WEIGHT} and
+@var{CHROMINANCE-WEIGHT} to one.  Thus
+@samp{--image-difference=delta-e:2:1} and
+@samp{--image-difference=delta-e:0.6667:0.3333} define the same
+weighting function.
+
+The default @var{LUMINANCE-WEIGHT} is @value{src::default-luminance-difference-weight}
+and the default @var{CHROMINANCE-WEIGHT} is @value{src::default-chrominance-difference-weight}.
+
 @item --load-masks[=@var{IMAGE-TEMPLATE}]
 @opindex --load-masks
 @cindex mask, load

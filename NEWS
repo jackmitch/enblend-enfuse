@@ -10,6 +10,11 @@ Unreleased.  Current line of development.
   has been implemented during GSoC 2011 by Mikołaj Leszczyński.  It is
   the default now.
 
+- The difference image on which Enblend's seam-line optimization
+  relies for color images uses a perceptual model by default (option
+  "--image-difference"), yielding a true CIE76 "Delta E" with the
+  (default) luminance and chrominance weights of 1.
+
 - Parallelize CIECAM02 color conversion (option "--ciecam").  Speedups
   of up to 40% have been reported on the amd64 architecture.  The
   computationally expensive color-space conversion still slows down
@@ -55,6 +60,10 @@ Unreleased.  Current line of development.
 
 - Option "--primary-seam-generator" controls the primary seam-line
   generation algorithm.
+
+- Option "--image-difference" selects the difference image calculation
+  algorithm and optionally assigns weights to the luminance and the
+  chrominance part of the difference image.
 
 - Short option "-c" now has a sibling called "--ciecam".  The long
   option also has a negated form: "--no-ciecam"; the short one has
