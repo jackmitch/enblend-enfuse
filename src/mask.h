@@ -658,7 +658,6 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
 
         // Check if snake is a closed contour
         bool closedContour = true;
-        Segment::iterator vertexIterator = snake->begin();
         for (Segment::iterator vertexIterator = snake->begin();
              vertexIterator != snake->end();
              ++vertexIterator) {
