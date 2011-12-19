@@ -35,6 +35,7 @@
 #include <vector>
 
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -137,6 +138,14 @@ typedef enum
 #define VISUALIZE_STATE_SPACE_INSIDE VISUALIZE_RGB_COLOR_CYAN1
 //< src::visualize-state-space-unconverged-color bright magenta
 #define VISUALIZE_STATE_SPACE_UNCONVERGED VISUALIZE_RGB_COLOR_MAGENTA1
+
+
+// For CIECAM blending, Enblend and Enfuse transform the input images
+// from their respective RGB color spaces to XYZ space (and then on to
+// JCh).  The following two #defines control the color transformation
+// from and to XYZ space.
+#define RENDERING_INTENT_FOR_BLENDING INTENT_PERCEPTUAL
+#define TRANSFORMATION_FLAGS_FOR_BLENDING cmsFLAGS_NOCACHE
 
 
 // Macros for optimizing at source level
@@ -826,6 +835,31 @@ optional_layer_name(unsigned layer_number, unsigned layer_total)
     }
 }
 
+
+inline std::string
+profileInfo(cmsHPROFILE profile, cmsInfoType info)
+{
+    const size_t size = cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, NULL, 0);
+    std::string information(size, '\000');
+    cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, &information[0], size);
+    boost::trim_if(information, std::bind2nd(std::less_equal<char>(), '\040'));
+
+    return information;
+}
+
+
+inline std::string
+profileDescription(cmsHPROFILE profile)
+{
+    return profileInfo(profile, cmsInfoDescription);
+}
+
+
+inline std::string
+profileName(cmsHPROFILE profile)
+{
+    return profileInfo(profile, cmsInfoModel);
+}
 
 } // namespace enblend
 

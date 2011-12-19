@@ -65,7 +65,7 @@ extern "C" int optind;
 
 #include <boost/logic/tribool.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <lcms.h>
+#include <lcms2.h>
 
 #include "global.h"
 #include "layer_selection.h"
@@ -138,7 +138,7 @@ cmsHPROFILE XYZProfile = NULL;
 cmsHTRANSFORM InputToXYZTransform = NULL;
 cmsHTRANSFORM XYZToInputTransform = NULL;
 cmsViewingConditions ViewingConditions;
-LCMSHANDLE CIECAMTransform = NULL;
+cmsHANDLE CIECAMTransform = NULL;
 cmsHPROFILE FallbackProfile = NULL;
 
 Signature sig;
@@ -201,7 +201,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
         "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
-        "+ FallbackProfile = " << (FallbackProfile ? cmsTakeProductDesc(FallbackProfile) : "[none]") <<
+        "+ FallbackProfile = " << (FallbackProfile ? enblend::profileDescription(FallbackProfile) : "[none]") <<
         ", option \"--fallback-profile\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
         "+     OutputWidthCmdLine = " << OutputWidthCmdLine << ", argument to option \"-f\"\n" <<
@@ -1833,13 +1833,13 @@ int main(int argc, char** argv)
                     inputFileNameIterator->unroll_trace();
                     cerr << command << ": warning: has ";
                     if (newProfile) {
-                        cerr << "ICC profile \"" << cmsTakeProductDesc(newProfile) << "\",\n";
+                        cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
                     } else {
                         cerr << "no ICC profile,\n";
                     }
                     cerr << command << ": warning: but first image has ";
                     if (InputProfile) {
-                        cerr << "ICC profile \"" << cmsTakeProductDesc(InputProfile) << "\";\n";
+                        cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
                     } else {
                         cerr << "no ICC profile;\n";
                     }
@@ -1961,7 +1961,7 @@ int main(int argc, char** argv)
                     InputProfile = cmsCreate_sRGBProfile();
                 } else {
                     cerr << command << ": warning: using fallback profile \""
-                         << cmsTakeProductDesc(FallbackProfile) << "\"" << endl;
+                         << enblend::profileDescription(FallbackProfile) << "\"" << endl;
                     InputProfile = FallbackProfile;
                     FallbackProfile = NULL; // avoid double freeing
                 }
@@ -1970,39 +1970,41 @@ int main(int argc, char** argv)
 
             InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
                                                      XYZProfile, TYPE_XYZ_DBL,
-                                                     INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
+                                                     RENDERING_INTENT_FOR_BLENDING,
+                                                     TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (InputToXYZTransform == NULL) {
                 cerr << command << ": error building color transform from \""
-                     << cmsTakeProductName(InputProfile)
+                     << enblend::profileName(InputProfile)
                      << " "
-                     << cmsTakeProductDesc(InputProfile)
+                     << enblend::profileDescription(InputProfile)
                      << "\" to XYZ" << endl;
                 exit(1);
             }
 
             XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
                                                      InputProfile, TYPE_RGB_DBL,
-                                                     INTENT_PERCEPTUAL, cmsFLAGS_NOTPRECALC);
+                                                     RENDERING_INTENT_FOR_BLENDING,
+                                                     TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (XYZToInputTransform == NULL) {
                 cerr << command
                      << ": error building color transform from XYZ to \""
-                     << cmsTakeProductName(InputProfile)
+                     << enblend::profileName(InputProfile)
                      << " "
-                     << cmsTakeProductDesc(InputProfile)
+                     << enblend::profileDescription(InputProfile)
                      << "\"" << endl;
                 exit(1);
             }
 
             // P2 Viewing Conditions: D50, 500 lumens
-            ViewingConditions.whitePoint.X = 100.0 * D50X;
-            ViewingConditions.whitePoint.Y = 100.0 * D50Y;
-            ViewingConditions.whitePoint.Z = 100.0 * D50Z;
+            ViewingConditions.whitePoint.X = XYZ_SCALE * cmsD50_XYZ()->X;
+            ViewingConditions.whitePoint.Y = XYZ_SCALE * cmsD50_XYZ()->Y;
+            ViewingConditions.whitePoint.Z = XYZ_SCALE * cmsD50_XYZ()->Z;
             ViewingConditions.Yb = 20.0;
             ViewingConditions.La = 31.83;
             ViewingConditions.surround = AVG_SURROUND;
             ViewingConditions.D_value = 1.0;
 
-            CIECAMTransform = cmsCIECAM02Init(&ViewingConditions);
+            CIECAMTransform = cmsCIECAM02Init(NULL, &ViewingConditions);
             if (!CIECAMTransform) {
                 cerr << endl
                      << command

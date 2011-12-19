@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.1-48edb6264ad8, 4 September
+   This manual is for Enfuse (version 4.1-812c57be5fd1, 3 December
 2011), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.1-48edb6264ad8, 4 September 2011),
+This manual is for Enfuse (version 4.1-812c57be5fd1, 3 December 2011),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -1516,7 +1516,7 @@ to read the manual before applying them successfully.
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.1-48edb6264ad8 of Enfuse, the option is effective
+        In version 4.1-812c57be5fd1 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -1976,7 +1976,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.1-48edb6264ad8.
+version 4.1-812c57be5fd1.
 
    To disable a particular criterion set its weight to zero as for
 example
@@ -3790,7 +3790,7 @@ reliable and enjoyable.
 
    When you encounter a problem, the first thing to do is to see if it
 is already known.  On the package's SourceForge homepage
-(http://sourceforge.net/projects/enblend/) click "Develop" and on the
+(https://bugs.launchpad.net/enblend) click "Develop" and on the
 development page click "Tracker".  Search the trackers for your
 particular problem.  If it is not known, then you should report the
 problem.
@@ -4887,92 +4887,92 @@ General Index
 
 
 Tag Table:
-Node: Top892
-Node: Overview4966
-Ref: Table:weighting-criteria6159
-Ref: Overview-Footnote-18731
-Ref: Overview-Footnote-28900
-Ref: Overview-Footnote-39081
-Ref: Overview-Footnote-49263
-Node: Workflow9405
-Node: Standard Workflow9835
-Ref: Figure:photographic-workflow10094
-Node: External Mask Manipulation12768
-Ref: Figure:external-mask-workflow14084
-Node: Invocation14569
-Node: Image Requirements15414
-Node: Response Files16550
-Ref: Table:response-file-format18573
-Ref: Table:response-file-syntactic-comment21038
-Ref: Table:globbing-algorithms21939
-Node: Common Options23398
-Ref: Common Options-Footnote-130940
-Ref: Common Options-Footnote-231132
-Node: Extended Options31291
-Ref: Extended Options-Footnote-137178
-Node: Fusion Options37251
-Node: Expert Options39253
-Ref: Figure:entropy-cutoff42279
-Ref: Figure:exposure-cutoff58994
-Ref: Table:mask-template-characters78783
-Node: Option Delimiters80999
-Node: Color Profiles82383
-Node: Weighting Functions84819
-Node: Weighting Pixels85487
-Node: Weighted Average87076
-Node: Disabling Averaging87669
-Node: Single Criterion Fusing88657
-Ref: Table:default-weights89395
-Node: Exposure Weighting90191
-Ref: Figure:gaussian91627
-Node: Saturation Weighting104585
-Node: Local Contrast Weighting105700
-Node: Standard Deviation107062
-Ref: Figure:local-analysis-window107511
-Ref: Standard Deviation-Footnote-1109579
-Node: Laplacian of Gaussian109730
-Ref: Figure:laplacian-of-gaussian111304
-Node: Blend SDev and LoG124601
-Node: Scaling and Choice of Mode126281
-Node: Local Entropy Weighting127127
-Ref: Figure:entropy128110
-Node: Understanding Masks141922
-Node: Tuning Memory Usage145719
-Ref: Table:cache-size-settings148456
-Node: Applications148892
-Node: What Images149616
-Node: Repetition152803
-Node: Exposure Series153886
-Node: Exposure Series Tips156268
-Node: Exposure Series Misconceptions157380
-Ref: Exposure Series Misconceptions-Footnote-1159161
-Node: Flash Exposure Series159374
-Node: Polarization Series159616
-Node: Focus Stacks160056
-Node: Why Focus Stacks160938
-Node: Preparing Focus Stacks162273
-Node: Local Contrast Based Fusing163023
-Node: Basic Focus Stacking164358
-Node: Advanced Focus Stacking165731
-Node: Local Contrast Problem166495
-Ref: Figure:sharp-edge167679
-Ref: Figure:smooth-edge174728
-Node: Laplacian Edge Detection183005
-Node: Local Contrast Enhancement184139
-Node: Suppressing Noise or Recognizing Faint Edges185115
-Node: Focus Stacking Decision Tree187746
-Ref: Figure:focus-stacking-decision-tree188091
-Node: Expert Stacking188875
-Node: Helpful Programs190398
-Node: Bug Reports194126
-Ref: Bug Reports-Footnote-1199832
-Node: Authors199902
-Node: FDL201066
-Node: List of Tables222047
-Node: List of Figures222667
-Node: Program Index223538
-Node: Syntactic-Comment Index226472
-Node: Option Index227160
-Node: General Index230600
+Node: Top891
+Node: Overview4964
+Ref: Table:weighting-criteria6157
+Ref: Overview-Footnote-18729
+Ref: Overview-Footnote-28898
+Ref: Overview-Footnote-39079
+Ref: Overview-Footnote-49261
+Node: Workflow9403
+Node: Standard Workflow9833
+Ref: Figure:photographic-workflow10092
+Node: External Mask Manipulation12766
+Ref: Figure:external-mask-workflow14082
+Node: Invocation14567
+Node: Image Requirements15412
+Node: Response Files16548
+Ref: Table:response-file-format18571
+Ref: Table:response-file-syntactic-comment21036
+Ref: Table:globbing-algorithms21937
+Node: Common Options23396
+Ref: Common Options-Footnote-130938
+Ref: Common Options-Footnote-231130
+Node: Extended Options31289
+Ref: Extended Options-Footnote-137176
+Node: Fusion Options37249
+Node: Expert Options39251
+Ref: Figure:entropy-cutoff42277
+Ref: Figure:exposure-cutoff58992
+Ref: Table:mask-template-characters78781
+Node: Option Delimiters80997
+Node: Color Profiles82381
+Node: Weighting Functions84817
+Node: Weighting Pixels85485
+Node: Weighted Average87074
+Node: Disabling Averaging87667
+Node: Single Criterion Fusing88655
+Ref: Table:default-weights89393
+Node: Exposure Weighting90189
+Ref: Figure:gaussian91625
+Node: Saturation Weighting104583
+Node: Local Contrast Weighting105698
+Node: Standard Deviation107060
+Ref: Figure:local-analysis-window107509
+Ref: Standard Deviation-Footnote-1109577
+Node: Laplacian of Gaussian109728
+Ref: Figure:laplacian-of-gaussian111302
+Node: Blend SDev and LoG124599
+Node: Scaling and Choice of Mode126279
+Node: Local Entropy Weighting127125
+Ref: Figure:entropy128108
+Node: Understanding Masks141920
+Node: Tuning Memory Usage145717
+Ref: Table:cache-size-settings148454
+Node: Applications148890
+Node: What Images149614
+Node: Repetition152801
+Node: Exposure Series153884
+Node: Exposure Series Tips156266
+Node: Exposure Series Misconceptions157378
+Ref: Exposure Series Misconceptions-Footnote-1159159
+Node: Flash Exposure Series159372
+Node: Polarization Series159614
+Node: Focus Stacks160054
+Node: Why Focus Stacks160936
+Node: Preparing Focus Stacks162271
+Node: Local Contrast Based Fusing163021
+Node: Basic Focus Stacking164356
+Node: Advanced Focus Stacking165729
+Node: Local Contrast Problem166493
+Ref: Figure:sharp-edge167677
+Ref: Figure:smooth-edge174726
+Node: Laplacian Edge Detection183003
+Node: Local Contrast Enhancement184137
+Node: Suppressing Noise or Recognizing Faint Edges185113
+Node: Focus Stacking Decision Tree187744
+Ref: Figure:focus-stacking-decision-tree188089
+Node: Expert Stacking188873
+Node: Helpful Programs190396
+Node: Bug Reports194124
+Ref: Bug Reports-Footnote-1199824
+Node: Authors199894
+Node: FDL201058
+Node: List of Tables222039
+Node: List of Figures222659
+Node: Program Index223530
+Node: Syntactic-Comment Index226464
+Node: Option Index227152
+Node: General Index230592
 
 End Tag Table

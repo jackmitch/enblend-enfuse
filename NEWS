@@ -87,6 +87,8 @@ Unreleased.  Current line of development.
 
 ** Developer Stuff
 
+- Enblend and Enfuse now use LittleCMS version 2.x.
+
 - XHTML validation does not rely on network access anymore.  This
   means all necessary DTDs must be available locally and all catalogs
   must be set up correctly to build the XHTML documentation.

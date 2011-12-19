@@ -32,9 +32,9 @@ AC_CHECK_LIB(png, png_init_io,
 AC_CHECK_LIB(tiff, TIFFOpen,
              [LIBS="-ltiff ${LIBS}"; AC_DEFINE(HasTIFF, 1, [Define if you have the tiff library])],
              AC_MSG_ERROR([libtiff is required to compile Enblend.]), [])
-AC_CHECK_LIB(lcms, cmsCreateTransform,
+AC_CHECK_LIB(lcms2, cmsCreateTransform,
              [],
-             AC_MSG_ERROR([liblcms is required to compile Enblend.]), [])
+             AC_MSG_ERROR([liblcms2 is required to compile Enblend.]), [])
 AC_CHECK_LIB(xmi, miNewPaintedSet,
              [],
              AC_MSG_ERROR([libxmi is required to compile Enblend.]), [])
@@ -176,6 +176,8 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER(boost/algorithm/string/case_conv.hpp, [],
                 AC_MSG_ERROR([Boost "case_conv" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/algorithm/string/trim.hpp, [],
+                AC_MSG_ERROR([Boost "trim" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/algorithm/string/erase.hpp, [],
                 AC_MSG_ERROR([Boost "erase" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/assign/list_inserter.hpp, [],
@@ -269,8 +271,8 @@ extension(p);
 AC_LANG_RESTORE
 AC_SUBST(EXTRA_LIBS)
 
-AC_CHECK_HEADER(lcms.h, [],
-                AC_MSG_ERROR([lcms header files are required to compile Enblend.]))
+AC_CHECK_HEADER(lcms2.h, [],
+                AC_MSG_ERROR([lcms2 header files are required to compile Enblend.]))
 AC_CHECK_HEADER(xmi.h, [],
                 AC_MSG_ERROR([xmi header files are required to compile Enblend.]))
 

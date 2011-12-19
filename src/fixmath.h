@@ -39,6 +39,10 @@ using namespace boost::math;
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
 
+
+#define XYZ_SCALE 100.0
+
+
 using std::pair;
 
 using vigra::NumericTraits;
