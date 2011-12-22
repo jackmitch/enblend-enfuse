@@ -1146,6 +1146,9 @@ option is specified.  If no @acronym{ICC} profile is present, Enfuse
 assumes that all images use the @acronym{sRGB} color space.
 @xref{Color Profiles}.
 
+Please keep in mind that using @acronym{CIECAM02} blending may change
+the colors in the output image.
+
 This option can be negated; see option@tie{}@option{--no-ciecam}
 below.
 

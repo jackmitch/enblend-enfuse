@@ -1,4 +1,4 @@
-@set UPDATED 3 December 2011
+@set UPDATED 19 December 2011
 @set UPDATED-MONTH December 2011
-@set EDITION 4.1-812c57be5fd1
-@set VERSION 4.1-812c57be5fd1
+@set EDITION 4.1-d0828152af73
+@set VERSION 4.1-d0828152af73

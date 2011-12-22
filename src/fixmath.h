@@ -25,12 +25,13 @@
 #include <config.h>
 #endif
 
-#ifdef _WIN32
 #include <cmath>
+
+#include <boost/assign/list_of.hpp>
+
+#ifdef _WIN32
 #include <boost/math/special_functions.hpp>
 using namespace boost::math;
-#else
-#include <math.h>
 #endif
 
 #include "vigra/basicimage.hxx"
@@ -40,6 +41,10 @@ using namespace boost::math;
 #include "vigra/utilities.hxx"
 
 
+#define MAXIMUM_LIGHTNESS 100.0 // J
+#define MAXIMUM_CHROMA 120.0    // C
+#define MAXIMUM_HUE 360.0       // h
+
 #define XYZ_SCALE 100.0
 
 
@@ -48,7 +53,67 @@ using std::pair;
 using vigra::NumericTraits;
 using vigra::triple;
 
+
 namespace enblend {
+
+static inline double
+radian_of_degree(double x)
+{
+    return x * M_PI / 180.0;
+}
+
+
+static inline double
+degree_of_radian(double x)
+{
+    return x * 180.0 / M_PI;
+}
+
+
+static inline double
+wrap_cyclically(double x, double modulus)
+{
+    assert(modulus > 0.0);
+
+    while (x < 0.0) {
+        x += modulus;
+    }
+
+    return x;
+}
+
+
+static inline void
+rgb_to_jch(cmsHTRANSFORM rgb2xyz_transform, cmsHANDLE ciecam_transform,
+           const double* rgb, cmsJCh* jch)
+{
+    std::vector<double> xyz(3U);
+    cmsDoTransform(rgb2xyz_transform, rgb, &xyz[0], 1U);
+
+    const cmsCIEXYZ scaled_xyz = {XYZ_SCALE * xyz[0], XYZ_SCALE * xyz[1], XYZ_SCALE * xyz[2]};
+    cmsCIECAM02Forward(CIECAMTransform, &scaled_xyz, jch);
+    // J in range [0, 100], C in range [0, 120], h in range [0, 360]
+}
+
+
+static inline void
+jch_to_rgb(cmsHANDLE ciecam_transform, cmsHTRANSFORM xyz2rgb_transform,
+           const cmsJCh* jch, double* rgb)
+{
+    cmsCIEXYZ scaled_xyz;
+    cmsCIECAM02Reverse(CIECAMTransform, jch, &scaled_xyz);
+    // xyz values in range [0, 100]
+
+    // scale xyz values to range [0, 1]
+    const std::vector<double> xyz = boost::assign::list_of
+        (scaled_xyz.X / XYZ_SCALE)
+        (scaled_xyz.Y / XYZ_SCALE)
+        (scaled_xyz.Z / XYZ_SCALE);
+
+    cmsDoTransform(XYZToInputTransform, &xyz[0], rgb, 1U);
+    // rgb values in range [0, 1]
+}
+
 
 /** A functor for converting scalar pixel values to the number representation used
  *  for pyramids.  These are either fixed-point integers or floating-point numbers.
@@ -180,8 +245,6 @@ protected:
         // Undo logarithmic/rational mapping that was done in building
         // the pyramid.  See ConvertScalarToPyramidFunctor::doConvert
         // for the forward transformation.
-        //
-        // v >= 1.0 ? exp(v - 1.0) - 1.0 : 1.0 - 1.0 / v
         return v >= 1.0 ? expm1(v - 1.0) : 1.0 - 1.0 / v;
     }
 
@@ -209,7 +272,6 @@ protected:
         return NumericTraits<PyramidPixelType>::toRealPromote(v) /
             static_cast<double>(1U << PyramidFractionBits);
     }
-
 };
 
 
@@ -262,48 +324,39 @@ class ConvertVectorToJCHPyramidFunctor {
                                           PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
 
 public:
-    ConvertVectorToJCHPyramidFunctor() : cf() {
-        scale = 1.0 / NumericTraits<SrcComponentType>::toRealPromote(NumericTraits<SrcComponentType>::max());
-    }
+    ConvertVectorToJCHPyramidFunctor() :
+        cf(),
+        scale(1.0 / NumericTraits<SrcComponentType>::toRealPromote(NumericTraits<SrcComponentType>::max())),
+        shift(double(1U << (PyramidIntegerBits - 1 - 7)))
+    {}
 
     inline PyramidVectorType operator()(const SrcVectorType& v) const {
-        // rgb values must be in range [0,1]
-        double rgb[3];
-        rgb[0] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.red());
-        rgb[1] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.green());
-        rgb[2] = scale * NumericTraits<SrcComponentType>::toRealPromote(v.blue());
-
-        double xyz[3];
-        cmsDoTransform(InputToXYZTransform, rgb, xyz, 1);
-        // xyz values are in range [0,1]
-
-        // relative xyz values must be in range [0,100]
-        cmsCIEXYZ cmsxyz;
-        cmsxyz.X = xyz[0] * 100.0;
-        cmsxyz.Y = xyz[1] * 100.0;
-        cmsxyz.Z = xyz[2] * 100.0;
-
+        // rgb values must be in range [0, 1]
+        const std::vector<double> rgb = boost::assign::list_of
+            (scale * NumericTraits<SrcComponentType>::toRealPromote(v.red()))
+            (scale * NumericTraits<SrcComponentType>::toRealPromote(v.green()))
+            (scale * NumericTraits<SrcComponentType>::toRealPromote(v.blue()));
         cmsJCh jch;
-        cmsCIECAM02Forward(CIECAMTransform, &cmsxyz, &jch);
-        // J in range [0,100], C in range [0,120], h in range [0,360]
 
-        // convert cylindrical to cartesian
-        const double theta = jch.h * M_PI / 180.0;
+        rgb_to_jch(InputToXYZTransform, CIECAMTransform, &rgb[0], &jch);
+
+        // convert cylindrical 'JCh' to cartesian, but reuse (yikes!) the cylindrical structure
+        const double theta = radian_of_degree(jch.h);
         jch.h = jch.C * cos(theta);
         jch.C = jch.C * sin(theta);
 
-        // Scale to maximize usage of fixed-point type
-        const double shift = double(1U << (PyramidIntegerBits - 1 - 7));
-        jch.J *= shift; // exp2(PyramidIntegerBits - 1 - 7);
-        jch.C *= shift; // exp2(PyramidIntegerBits - 1 - 7);
-        jch.h *= shift; // exp2(PyramidIntegerBits - 1 - 7);
+        // scale to maximize usage of fixed-point type
+        jch.J *= shift;
+        jch.C *= shift;
+        jch.h *= shift;
 
         return PyramidVectorType(cf(jch.J), cf(jch.C), cf(jch.h));
     }
 
 protected:
     ConvertFunctorType cf;
-    double scale;
+    const double scale;
+    const double shift;
 };
 
 
@@ -316,52 +369,37 @@ class ConvertJCHPyramidToVectorFunctor {
                                           PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
 
 public:
-    ConvertJCHPyramidToVectorFunctor() : cf() {
-        scale = NumericTraits<DestComponentType>::toRealPromote(NumericTraits<DestComponentType>::max());
-    }
+    ConvertJCHPyramidToVectorFunctor() :
+        cf(),
+        scale(NumericTraits<DestComponentType>::toRealPromote(NumericTraits<DestComponentType>::max())),
+        shift(double(1U << (PyramidIntegerBits - 1 - 7)))
+    {}
 
     inline DestVectorType operator()(const PyramidVectorType& v) const {
-        cmsJCh jch;
-        jch.J = cf(v.red());
-        jch.C = cf(v.green());
-        jch.h = cf(v.blue());
+        cmsJCh jch = {cf(v.red()), cf(v.green()), cf(v.blue())};
 
-        // Scale back to range J[0,100], C[0,120], h[0,120]
-        const double shift = double(1U << (PyramidIntegerBits - 1 - 7));
-        jch.J /= shift; // exp2(PyramidIntegerBits - 1 - 7);
-        jch.C /= shift; // exp2(PyramidIntegerBits - 1 - 7);
-        jch.h /= shift; // exp2(PyramidIntegerBits - 1 - 7);
+        // scale back to range J: [0, 100], C: [0, 120], h: [0, 120]
+        jch.J /= shift;
+        jch.C /= shift;
+        jch.h /= shift;
 
         // convert cartesian to cylindrical
-        const double r = hypot(jch.C, jch.h);
-        jch.h = (180.0 / M_PI) * atan2(jch.C, jch.h);
-        if (jch.h < 0.0) {
-            jch.h += 360.0;
-        }
-        jch.C = r;
+        const double chroma = hypot(jch.C, jch.h);
+        jch.h = wrap_cyclically(degree_of_radian(atan2(jch.C, jch.h)), MAXIMUM_HUE);
+        jch.C = chroma;
 
-        cmsCIEXYZ cmsxyz;
-        cmsCIECAM02Reverse(CIECAMTransform, &jch, &cmsxyz);
-        // xyz values in range [0,100]
+        std::vector<double> rgb(3U);
+        jch_to_rgb(CIECAMTransform, XYZToInputTransform, &jch, &rgb[0]);
 
-        // scale xyz values to range [0,1]
-        double xyz[3];
-        xyz[0] = cmsxyz.X / 100.0;
-        xyz[1] = cmsxyz.Y / 100.0;
-        xyz[2] = cmsxyz.Z / 100.0;
-
-        double rgb[3];
-        cmsDoTransform(XYZToInputTransform, xyz, rgb, 1);
-        // rgb values in range [0,1]
-
-        return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(rgb[0] * scale),
-                              NumericTraits<DestComponentType>::fromRealPromote(rgb[1] * scale),
-                              NumericTraits<DestComponentType>::fromRealPromote(rgb[2] * scale));
+        return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[0]),
+                              NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[1]),
+                              NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[2]));
     }
 
 protected:
     ConvertFunctorType cf;
-    double scale;
+    const double scale;
+    const double shift;
 };
 
 
@@ -401,7 +439,11 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 
     if (UseCIECAM) {
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cerr << command << ": info: CIECAM02 color conversion" << endl;
+            cerr << command << ": info: CIECAM02 color conversion";
+            if (!enblend::profileName(InputProfile).empty()) {
+                cerr << "from/to \"" << enblend::profileName(InputProfile) << "\" profile";
+            }
+            cerr << "\n";
         }
         transformImageMP(src_upperleft, src_lowerright, sa,
                          dest_upperleft, da,
@@ -549,7 +591,6 @@ copyFromPyramidImageIf(triple<typename PyramidImageType::const_traverser, typena
          dest.first,
          dest.second);
 }
-
 
 } // namespace enblend
 

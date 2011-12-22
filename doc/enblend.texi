@@ -1082,6 +1082,11 @@ option is specified.  If no @acronym{ICC} profile is present, Enblend
 assumes that all images use the @acronym{sRGB} color space.
 @xref{Color Profiles}.
 
+Please keep in mind that using @acronym{CIECAM02} blending may not
+only change the colors in the output image, but Enblend may choose
+different seam line routes as some seam-line optimizers are guided by
+image differences.
+
 This option can be negated; see option@tie{}@option{--no-ciecam}
 below.
 
