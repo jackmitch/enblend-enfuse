@@ -79,7 +79,19 @@ wrap_cyclically(double x, double modulus)
         x += modulus;
     }
 
-    return x;
+    return fmod(x, modulus);
+}
+
+
+static inline double
+limit(double x, double lower_limit, double upper_limit)
+{
+    assert(lower_limit <= upper_limit);
+    if (x != x) {
+        throw std::range_error("limit: not a number");
+    }
+
+    return std::min(std::max(lower_limit, x), upper_limit);
 }
 
 
@@ -377,6 +389,10 @@ public:
 
     inline DestVectorType operator()(const PyramidVectorType& v) const {
         cmsJCh jch = {cf(v.red()), cf(v.green()), cf(v.blue())};
+        if (jch.J <= 0.0) {
+            // Lasciate ogne speranza, voi ch'intrate.
+            return DestVectorType(0, 0, 0);
+        }
 
         // scale back to range J: [0, 100], C: [0, 120], h: [0, 120]
         jch.J /= shift;
@@ -390,6 +406,10 @@ public:
 
         std::vector<double> rgb(3U);
         jch_to_rgb(CIECAMTransform, XYZToInputTransform, &jch, &rgb[0]);
+
+        for (std::vector<double>::iterator x = rgb.begin(); x != rgb.end(); ++x) {
+            *x = limit(*x, 0.0, 1.0);
+        }
 
         return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[0]),
                               NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[1]),
