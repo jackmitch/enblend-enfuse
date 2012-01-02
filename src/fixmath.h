@@ -28,6 +28,9 @@
 #include <cmath>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #ifdef _WIN32
 #include <boost/math/special_functions.hpp>
@@ -39,6 +42,8 @@ using namespace boost::math;
 #include "vigra/mathutil.hxx"
 #include "vigra/numerictraits.hxx"
 #include "vigra/utilities.hxx"
+
+#include "minimizer.h"
 
 
 #define MAXIMUM_LIGHTNESS 100.0 // J
@@ -96,11 +101,10 @@ limit(double x, double lower_limit, double upper_limit)
 
 
 static inline void
-rgb_to_jch(cmsHTRANSFORM rgb2xyz_transform, cmsHANDLE ciecam_transform,
-           const double* rgb, cmsJCh* jch)
+rgb_to_jch(const double* rgb, cmsJCh* jch)
 {
     std::vector<double> xyz(3U);
-    cmsDoTransform(rgb2xyz_transform, rgb, &xyz[0], 1U);
+    cmsDoTransform(InputToXYZTransform, rgb, &xyz[0], 1U);
 
     const cmsCIEXYZ scaled_xyz = {XYZ_SCALE * xyz[0], XYZ_SCALE * xyz[1], XYZ_SCALE * xyz[2]};
     cmsCIECAM02Forward(CIECAMTransform, &scaled_xyz, jch);
@@ -109,8 +113,7 @@ rgb_to_jch(cmsHTRANSFORM rgb2xyz_transform, cmsHANDLE ciecam_transform,
 
 
 static inline void
-jch_to_rgb(cmsHANDLE ciecam_transform, cmsHTRANSFORM xyz2rgb_transform,
-           const cmsJCh* jch, double* rgb)
+jch_to_rgb(const cmsJCh* jch, double* rgb)
 {
     cmsCIEXYZ scaled_xyz;
     cmsCIECAM02Reverse(CIECAMTransform, jch, &scaled_xyz);
@@ -124,6 +127,78 @@ jch_to_rgb(cmsHANDLE ciecam_transform, cmsHTRANSFORM xyz2rgb_transform,
 
     cmsDoTransform(XYZToInputTransform, &xyz[0], rgb, 1U);
     // rgb values in range [0, 1]
+}
+
+
+struct extra_minimizer_parameter
+{
+    extra_minimizer_parameter(const cmsJCh& out_of_box_jch) : jch(out_of_box_jch)
+    {jch_to_rgb(&jch, bad_rgb);}
+
+    cmsJCh jch;
+    double bad_rgb[3];
+};
+
+
+inline double
+delta_e_of_rgb(const double* rgb_1, const double* rgb_2)
+{
+    cmsCIELab lab_1;
+    cmsCIELab lab_2;
+
+    cmsDoTransform(InputToLabTransform, rgb_1, &lab_1, 1);
+    cmsDoTransform(InputToLabTransform, rgb_2, &lab_2, 1);
+
+    return cmsCMCdeltaE(&lab_1, &lab_2, 2.0, 1.0);
+}
+
+
+inline double
+out_of_box_penalty(std::vector<double>::const_iterator first,
+                   std::vector<double>::const_iterator last)
+{
+    const double infinite_badness = 100.0;
+    double result = 0.0;
+
+    for (std::vector<double>::const_iterator x = first; x != last; ++x) {
+        if (*x > 1.0) {
+            result += *x * infinite_badness;
+        } else if (*x < 0.0) {
+            result += (1.0 - *x) * infinite_badness;
+        }
+    }
+
+    return result;
+}
+
+
+inline double
+delta_e_cost(const cmsJCh* jch, const extra_minimizer_parameter* parameter)
+{
+    std::vector<double> rgb(3U);
+    jch_to_rgb(jch, &rgb[0]);
+
+    return delta_e_of_rgb(parameter->bad_rgb, &rgb[0]) + out_of_box_penalty(rgb.begin(), rgb.end());
+}
+
+
+double
+delta_e_min_cost(double luminance, void* data)
+{
+    const extra_minimizer_parameter* parameter = static_cast<const extra_minimizer_parameter*>(data);
+    const cmsJCh jch = {luminance, parameter->jch.C, parameter->jch.h};
+
+    return delta_e_cost(&jch, parameter);
+}
+
+
+double
+delta_e_multimin_cost(const gsl_vector* x, void* data)
+{
+    const extra_minimizer_parameter* parameter = static_cast<const extra_minimizer_parameter*>(data);
+    const cmsJCh jch = {gsl_vector_get(x, 0), gsl_vector_get(x, 1), parameter->jch.h};
+
+    return delta_e_cost(&jch, parameter);
 }
 
 
@@ -350,7 +425,7 @@ public:
             (scale * NumericTraits<SrcComponentType>::toRealPromote(v.blue()));
         cmsJCh jch;
 
-        rgb_to_jch(InputToXYZTransform, CIECAMTransform, &rgb[0], &jch);
+        rgb_to_jch(&rgb[0], &jch);
 
         // convert cylindrical 'JCh' to cartesian, but reuse (yikes!) the cylindrical structure
         const double theta = radian_of_degree(jch.h);
@@ -383,6 +458,57 @@ limit_sequence(forward_iterator first, forward_iterator last, double lower_limit
 }
 
 
+static inline void
+bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, double x_upper)
+{
+    const double y_minimum_bound =
+        std::min(cost.function(x_lower, cost.params), cost.function(x_upper, cost.params));
+    double y_initial = cost.function(x_initial, cost.params);
+
+    if (y_initial < y_minimum_bound) {
+        return;
+    }
+
+    const unsigned maximum_tries = 100U;
+    unsigned i = 0U;
+
+    boost::uniform_real<> distribution(std::max(0.001, 1.001 * x_lower), 0.999 * x_upper);
+    boost::mt19937 seed(1000003); // fixed seed for reproducibility
+    boost::variate_generator<boost::mt19937&, boost::uniform_real<> > random(seed, distribution);
+
+    while (y_initial >= y_minimum_bound && i < maximum_tries) {
+        x_initial = random();
+        y_initial = cost.function(x_initial, cost.params);
+        ++i;
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ highlight recovery -- bracket minimum: x = " << x_initial << ", y = " << y_initial <<
+            std::endl;
+    }
+}
+
+
+static inline double
+lightness_guess(const cmsJCh& jch)
+{
+    return std::min(0.984 * jch.J,              // heuristic function with fitted parameter
+                    0.995 * MAXIMUM_LIGHTNESS); // backstop such that our guess is less than the maximum
+}
+
+
+#define LOFI_ERROR (0.5 / 256.0)
+#define HIFI_ERROR (0.5 / 65536.0)
+#define SUPER_HIFI_ERROR (0.5 / 16777216.0)
+#define CIECAM_OPTIMIZER_ERROR HIFI_ERROR
+
+#define LOFI_GOAL 1.0
+#define HIFI_GOAL 0.5
+#define SUPER_HIFI_GOAL 0.0
+#define CIECAM_OPTIMIZER_GOAL HIFI_GOAL
+
+
 /** Fixed point converter that uses ICC profile transformation */
 template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertJCHPyramidToVectorFunctor {
@@ -401,6 +527,10 @@ public:
     inline DestVectorType operator()(const PyramidVectorType& v) const {
         cmsJCh jch = {cf(v.red()), cf(v.green()), cf(v.blue())};
         if (jch.J <= 0.0) {
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout << "+ unrecoverable dark shadow: J = " << jch.J << "\n" << std::endl;
             // Lasciate ogne speranza, voi ch'intrate.
             return DestVectorType(0, 0, 0);
         }
@@ -416,7 +546,69 @@ public:
         jch.C = chroma;
 
         std::vector<double> rgb(3U);
-        jch_to_rgb(CIECAMTransform, XYZToInputTransform, &jch, &rgb[0]);
+        jch_to_rgb(&jch, &rgb[0]);
+
+        if (rgb[0] < 0.0 || rgb[1] < 0.0 || rgb[2] < 0.0) {
+            extra_minimizer_parameter extra(jch);
+            gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
+            const MinimizerMultiDimensionSimplex::array_type initial = boost::assign::list_of(jch.J)(jch.C);
+            const MinimizerMultiDimensionSimplex::array_type step = boost::assign::list_of(1.0)(1.2);
+            MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
+
+            std::vector<double> initial_rgb(3U); // for debug print only
+            std::copy(rgb.begin(), rgb.end(), initial_rgb.begin());
+
+            optimizer.set_absolute_error(CIECAM_OPTIMIZER_ERROR)->set_goal(CIECAM_OPTIMIZER_GOAL);
+            optimizer.run();
+
+            MinimizerMultiDimensionSimplex::array_type minimum_parameter(2U);
+            optimizer.x_minimum(minimum_parameter.begin());
+
+            jch.J = minimum_parameter[0];
+            jch.C = minimum_parameter[1];
+            jch_to_rgb(&jch, &rgb[0]);
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout <<
+                "+ shadow recovery: ini J = " << initial[0] << ", C = " << initial[1] <<  ", ini RGB = (" <<
+                initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+                "+ shadow recovery: opt J = " << minimum_parameter[0] << ", C = " << minimum_parameter[1] <<
+                " after " << optimizer.number_of_iterations() << " iterations\n" <<
+                "+ shadow recovery: opt delta-E = " << optimizer.f_minimum() <<
+                ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                std::endl;
+        } else if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0) {
+            extra_minimizer_parameter extra(jch);
+            gsl_function cost = {delta_e_min_cost, &extra};
+            double j_initial = lightness_guess(jch);
+
+            bracket_minimum(cost, j_initial, 0.0, MAXIMUM_LIGHTNESS);
+            GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, MAXIMUM_LIGHTNESS);
+
+            const double initial_j = jch.J; // for debug print only
+            std::vector<double> initial_rgb(3U); // for debug print only
+            std::copy(rgb.begin(), rgb.end(), initial_rgb.begin());
+
+            optimizer.set_absolute_error(CIECAM_OPTIMIZER_ERROR)->
+                set_goal(CIECAM_OPTIMIZER_GOAL)->
+                set_maximum_number_of_iterations(50U);
+            optimizer.run();
+
+            jch.J = optimizer.x_minimum();
+            jch_to_rgb(&jch, &rgb[0]);
+#ifdef OPENMP
+#pragma omp critical
+#endif
+            std::cout <<
+                "+ highlight recovery: ini J = " << initial_j << ", {C = " << jch.C << "}, ini RGB = (" <<
+                initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+                "+ highlight recovery: opt J = " << optimizer.x_minimum() <<
+                " after " << optimizer.number_of_iterations() << " iterations\n" <<
+                "+ highlight recovery: opt delta-E = " << optimizer.f_minimum() <<
+                ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                std::endl;
+        }
 
         limit_sequence(rgb.begin(), rgb.end(), 0.0, 1.0);
 

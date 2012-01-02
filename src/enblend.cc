@@ -1620,6 +1620,8 @@ int main(int argc, char** argv)
 
     sig.initialize();
 
+    gsl_set_error_handler_off();
+
     TIFFSetWarningHandler(tiff_warning);
     TIFFSetErrorHandler(tiff_error);
 

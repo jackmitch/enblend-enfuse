@@ -16,10 +16,12 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   filenameparse.h filenameparse.cc \
                   filespec.h filespec.cc \
                   self_test.h self_test.cc \
-                  tiff_message.h tiff_message.cc
+                  tiff_message.h tiff_message.cc \
+                  minimizer.h
 enblend_LDFLAGS = $(AM_LDFLAGS) $(OPENGL_CFLAGS)
-enblend_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a $(OPENGL_LIBS) @EXTRA_LIBS@
-enblend_CXXFLAGS = $(AM_CXXFLAGS) $(OPENGL_CFLAGS) \
+enblend_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a \
+                $(GSL_LIBS) $(OPENGL_LIBS) @EXTRA_LIBS@
+enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) $(OPENGL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                    -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
@@ -30,10 +32,12 @@ enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  filenameparse.h filenameparse.cc \
                  filespec.h filespec.cc \
                  self_test.h self_test.cc \
-                 tiff_message.h tiff_message.cc
+                 tiff_message.h tiff_message.cc \
+                 minimizer.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a @EXTRA_LIBS@
-enfuse_CXXFLAGS = $(AM_CXXFLAGS) \
+enfuse_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a \
+               $(GSL_LIBS) @EXTRA_LIBS@
+enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                   -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 

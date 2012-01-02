@@ -25,6 +25,12 @@ Unreleased.  Current line of development.
   blending and the output image is assigned the input images' color
   profile.
 
+- Enblend and Enfuse exploit a new feature in LittleCMS Version 2.x
+  called "Unbounded CMM".  Thereby, the hue and saturation of extreme
+  shadows and highlights can be preserved much longer before pure
+  black or white are reached.  See:
+  http://www.littlecms.com/CIC18_UnboundedCMM.pdf
+
 - Assign different profiles to profile-free input images with option
   "--fallback-profile" instead of being tied to sRGB.
 
