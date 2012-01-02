@@ -372,6 +372,17 @@ protected:
 };
 
 
+template <typename forward_iterator>
+static inline void
+limit_sequence(forward_iterator first, forward_iterator last, double lower_limit, double upper_limit)
+{
+    while (first != last) {
+        *first = limit(*first, lower_limit, upper_limit);
+        ++first;
+    }
+}
+
+
 /** Fixed point converter that uses ICC profile transformation */
 template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertJCHPyramidToVectorFunctor {
@@ -407,9 +418,7 @@ public:
         std::vector<double> rgb(3U);
         jch_to_rgb(CIECAMTransform, XYZToInputTransform, &jch, &rgb[0]);
 
-        for (std::vector<double>::iterator x = rgb.begin(); x != rgb.end(); ++x) {
-            *x = limit(*x, 0.0, 1.0);
-        }
+        limit_sequence(rgb.begin(), rgb.end(), 0.0, 1.0);
 
         return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[0]),
                               NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[1]),

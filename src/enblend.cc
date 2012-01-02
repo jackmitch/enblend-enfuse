@@ -169,8 +169,11 @@ sigset_t SigintMask;
 // Objects for ICC profiles
 cmsHPROFILE InputProfile = NULL;
 cmsHPROFILE XYZProfile = NULL;
+cmsHPROFILE LabProfile = NULL;
 cmsHTRANSFORM InputToXYZTransform = NULL;
 cmsHTRANSFORM XYZToInputTransform = NULL;
+cmsHTRANSFORM InputToLabTransform = NULL;
+cmsHTRANSFORM LabToInputTransform = NULL;
 cmsViewingConditions ViewingConditions;
 cmsHANDLE CIECAMTransform = NULL;
 cmsHPROFILE FallbackProfile = NULL;
@@ -2056,7 +2059,7 @@ int main(int argc, char** argv)
                      << enblend::profileName(InputProfile)
                      << " "
                      << enblend::profileDescription(InputProfile)
-                     << "\" to XYZ" << endl;
+                     << "\" to XYZ space" << endl;
                 exit(1);
             }
 
@@ -2066,7 +2069,7 @@ int main(int argc, char** argv)
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (XYZToInputTransform == NULL) {
                 cerr << command
-                     << ": error building color transform from XYZ to \""
+                     << ": error building color transform from XYZ space to \""
                      << enblend::profileName(InputProfile)
                      << " "
                      << enblend::profileDescription(InputProfile)
@@ -2089,6 +2092,54 @@ int main(int argc, char** argv)
                      << command
                      << ": error initializing CIECAM02 transform"
                      << endl;
+                exit(1);
+            }
+
+            cmsCIExyY white_point;
+            if (cmsIsTag(InputProfile, cmsSigMediaWhitePointTag)) {
+                cmsXYZ2xyY(&white_point,
+                           (const cmsCIEXYZ*) cmsReadTag(InputProfile, cmsSigMediaWhitePointTag));
+                if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
+                    double temperature;
+                    cmsTempFromWhitePoint(&temperature, &white_point);
+                    cerr << command
+                         << ": info: using white point of input profile at " << temperature << "K"
+                         << endl;
+                }
+            } else {
+                memcpy(&white_point, cmsD50_xyY(), sizeof(cmsCIExyY));
+                if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
+                    double temperature;
+                    cmsTempFromWhitePoint(&temperature, &white_point);
+                    cerr << command
+                         << ": info: falling back to predefined (D50) white point at " << temperature << "K"
+                         << endl;
+                }
+            }
+            LabProfile = cmsCreateLab2Profile(&white_point);
+            InputToLabTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
+                                                     LabProfile, TYPE_Lab_DBL,
+                                                     RENDERING_INTENT_FOR_BLENDING,
+                                                     TRANSFORMATION_FLAGS_FOR_BLENDING);
+            if (!InputToLabTransform) {
+                cerr << command << ": error building color transform from \""
+                     << enblend::profileName(InputProfile)
+                     << " "
+                     << enblend::profileDescription(InputProfile)
+                     << "\" to Lab space" << endl;
+                exit(1);
+            }
+            LabToInputTransform = cmsCreateTransform(LabProfile, TYPE_Lab_DBL,
+                                                     InputProfile, TYPE_RGB_DBL,
+                                                     RENDERING_INTENT_FOR_BLENDING,
+                                                     TRANSFORMATION_FLAGS_FOR_BLENDING);
+            if (!LabToInputTransform) {
+                cerr << command
+                     << ": error building color transform from Lab space to \""
+                     << enblend::profileName(InputProfile)
+                     << " "
+                     << enblend::profileDescription(InputProfile)
+                     << "\"" << endl;
                 exit(1);
             }
         } else {
@@ -2197,6 +2248,9 @@ int main(int argc, char** argv)
     }
 
     if (FallbackProfile) {cmsCloseProfile(FallbackProfile);}
+    if (LabProfile) {cmsCloseProfile(LabProfile);}
+    if (InputToLabTransform) {cmsCIECAM02Done(InputToLabTransform);}
+    if (LabToInputTransform) {cmsCIECAM02Done(LabToInputTransform);}
     if (CIECAMTransform) {cmsCIECAM02Done(CIECAMTransform);}
     if (InputToXYZTransform) {cmsDeleteTransform(InputToXYZTransform);}
     if (XYZToInputTransform) {cmsDeleteTransform(XYZToInputTransform);}
