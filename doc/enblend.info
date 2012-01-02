@@ -6,11 +6,11 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-04a83babcfc5, 19 December
-2011), a tool for compositing images in such a way that the seam
+   This manual is for Enblend (version 4.1-cf8082d24ef7, 2 January
+2012), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
-   Copyright (C) 2004-2011 ANDREW MIHAL.
+   Copyright (C) 2004-2012 ANDREW MIHAL.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,9 +25,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-04a83babcfc5, 19 December
-2011), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.1-cf8082d24ef7, 2 January 2012),
+a tool for compositing images in such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -934,7 +934,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-04a83babcfc5, only mask
+     In this version of Enblend, 4.1-cf8082d24ef7, only mask
      optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1232,7 +1232,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-04a83babcfc5)
+     version 3.2 used 1:1.  This version of Enblend (4.1-cf8082d24ef7)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1473,7 +1473,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.1-04a83babcfc5) of Enblend supports two main algorithms
+This version (4.1-cf8082d24ef7) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2903,45 +2903,45 @@ General Index
 
 
 Tag Table:
-Node: Top904
-Node: Overview2108
-Ref: Overview-Footnote-14547
-Ref: Overview-Footnote-24728
-Node: Workflow4870
-Node: Standard Workflow5269
-Ref: Figure:photographic-workflow5529
-Node: External Mask Manipulation8203
-Ref: Figure:external-mask-workflow9520
-Node: Invocation10005
-Node: Image Requirements10709
-Node: Response Files12183
-Ref: Table:response-file-format14207
-Ref: Table:response-file-syntactic-comment16672
-Ref: Table:globbing-algorithms17573
-Node: Common Options19032
-Ref: Common Options-Footnote-126977
-Ref: Common Options-Footnote-227169
-Node: Extended Options27328
-Ref: Extended Options-Footnote-133971
-Node: Mask Generation Options34044
-Ref: Table:mask-generation36705
-Ref: Table:optimizer-strategies44057
-Ref: Table:visualization-colors50202
-Ref: Table:mask-template-characters51098
-Ref: Mask Generation Options-Footnote-153350
-Node: Primary Seam Generators53578
-Node: Color Profiles56464
-Node: Understanding Masks58914
-Node: Tuning Memory Usage62707
-Ref: Table:cache-size-settings65449
-Node: Helpful Programs65885
-Node: Bug Reports69621
-Ref: Bug Reports-Footnote-175322
-Node: Authors75392
-Node: FDL76557
-Node: Program Index97538
-Node: Syntactic-Comment Index100534
-Node: Option Index101223
-Node: General Index105442
+Node: Top902
+Node: Overview2104
+Ref: Overview-Footnote-14543
+Ref: Overview-Footnote-24724
+Node: Workflow4866
+Node: Standard Workflow5265
+Ref: Figure:photographic-workflow5525
+Node: External Mask Manipulation8199
+Ref: Figure:external-mask-workflow9516
+Node: Invocation10001
+Node: Image Requirements10705
+Node: Response Files12179
+Ref: Table:response-file-format14203
+Ref: Table:response-file-syntactic-comment16668
+Ref: Table:globbing-algorithms17569
+Node: Common Options19028
+Ref: Common Options-Footnote-126973
+Ref: Common Options-Footnote-227165
+Node: Extended Options27324
+Ref: Extended Options-Footnote-133967
+Node: Mask Generation Options34040
+Ref: Table:mask-generation36701
+Ref: Table:optimizer-strategies44053
+Ref: Table:visualization-colors50198
+Ref: Table:mask-template-characters51094
+Ref: Mask Generation Options-Footnote-153346
+Node: Primary Seam Generators53574
+Node: Color Profiles56460
+Node: Understanding Masks58910
+Node: Tuning Memory Usage62703
+Ref: Table:cache-size-settings65445
+Node: Helpful Programs65881
+Node: Bug Reports69617
+Ref: Bug Reports-Footnote-175318
+Node: Authors75388
+Node: FDL76553
+Node: Program Index97534
+Node: Syntactic-Comment Index100530
+Node: Option Index101219
+Node: General Index105438
 
 End Tag Table
