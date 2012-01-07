@@ -1,6 +1,7 @@
 
 IF(NOT WIN32)
-	FIND_LIBRARY(LCMS_LIBRARIES lcms)
+	FIND_LIBRARY(LCMS_LIBRARIES lcms HINTS /usr/lib/x86_64-linux-gnu /usr/lib32)
+	FIND_LIBRARY(LCMS2_LIBRARIES lcms2 HINTS /usr/lib/x86_64-linux-gnu /usr/lib32)
 ELSE(NOT WIN32)
 	FIND_PATH(LCMS_ROOT_DIR
 	  NAMES include/lcms.h

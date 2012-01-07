@@ -66,7 +66,7 @@ ELSE (WIN32)
       /opt/graphics/OpenGL/include
     )
 
-    FIND_LIBRARY(OPENGL_gl_LIBRARY
+    FIND_LIBRARY(OPENGL_gl_LIBRARY HINTS /usr/lib/x86_64-linux-gnu /usr/lib32
       NAMES GL MesaGL
       PATHS /opt/graphics/OpenGL/lib
             /usr/openwin/lib
@@ -90,7 +90,7 @@ ELSE (WIN32)
     ENDIF (OPENGL_gl_LIBRARY)
 
     FIND_LIBRARY(OPENGL_glu_LIBRARY
-      NAMES GLU MesaGLU
+      NAMES GLU MesaGLU HINTS /usr/lib/x86_64-linux-gnu /usr/lib32
       PATHS ${OPENGL_gl_LIBRARY}
             /opt/graphics/OpenGL/lib
             /usr/openwin/lib
