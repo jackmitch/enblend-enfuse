@@ -140,7 +140,7 @@ ELSE(WIN32)
     ELSE(GSL_CONFIG)
       MESSAGE("FindGSL.cmake: gsl-config not found. Please set it manually. GSL_CONFIG=${GSL_CONFIG}")
     ENDIF(GSL_CONFIG)
-    INCLUDE(FindPackageHandleStandardArgs.cmake)
+    INCLUDE(FindPackageHandleStandardArgs)
     FIND_PACKAGE_HANDLE_STANDARD_ARGS(GSL DEFAULT_MSG GSL_CONFIG)
 
   ENDIF(UNIX)
