@@ -14,16 +14,44 @@ ENDIF(WIN32)
 # this is needed to convert some .gp.in-files
 set(RASTER_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(_docs)
-set(_enblend_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
-    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
-    photographic-workflow.fig seam-line-visualization.tif external-mask-workflow.fig default.css)
+set(_enblend_Bases auxmac.texi auxmac.tex
+    fdl.texi
+    mask-template-characters.texi
+    helpful-programs.texi
+    seam-generators.texi
+    color-profiles.texi
+    tuning-memory-usage.texi
+    understanding-masks.texi
+    workflow.texi filespec.texi
+    external-masks.texi
+    bug-reports.texi authors.texi
+    photographic-workflow.fig
+    external-mask-workflow.fig
+    seam-line-visualization.tif
+    default.css)
 
-set(_enfuse_Bases auxmac.texi auxmac.tex fdl.texi mask-template-characters.texi helpful-programs.texi
-    tuning-memory-usage.texi understanding-masks.texi workflow.texi authors.texi color-profiles.texi
-    config-edge.gp config.gp entropy-cutoff.gp.in entropy.gp.in exposure-cutoff.gp.in gaussian.gp.in
-    laplacian-of-gaussian.gp.in sharp-edge.gp.in sharp-edge.data
-    smooth-edge.gp.in smooth-edge.data local-analysis-window.fig
-    photographic-workflow.fig focus-stack-decision-tree.fig default.css)
+set(_enfuse_Bases auxmac.texi auxmac.tex
+    fdl.texi
+    mask-template-characters.texi
+    helpful-programs.texi
+    color-profiles.texi
+    tuning-memory-usage.texi
+    understanding-masks.texi
+    workflow.texi filespec.texi
+    external-masks.texi
+    bug-reports.texi authors.texi
+    config-edge.gp config.gp
+    entropy-cutoff.gp.in
+    exposure-cutoff.gp.in
+    entropy.gp.in gaussian.gp.in
+    laplacian-of-gaussian.gp.in
+    sharp-edge.gp.in sharp-edge.data
+    smooth-edge.gp.in smooth-edge.data
+    local-analysis-window.fig
+    photographic-workflow.fig
+    focus-stack-decision-tree.fig
+    external-mask-workflow.fig
+    default.css)
 
 set(_enblend_TEXINFOS)
 foreach(_e ${_enblend_Bases})
@@ -386,172 +414,3 @@ if(DOC3:BOOL)
 endif()
 
 
-#original Makefile.am contents follow:
-
-#info_TEXINFOS = enblend.texi \
-#                enfuse.texi
-#
-#enblend_TEXINFOS = auxmac.texi auxmac.tex \
-#                   fdl.texi \
-#                   mask-template-characters.texi \
-#                   helpful-programs.texi \
-#                   tuning-memory-usage.texi \
-#                   understanding-masks.texi \
-#                   workflow.texi \
-#                   authors.texi \
-#                   photographic-workflow.fig \
-#                   default.css
-#
-#enfuse_TEXINFOS = auxmac.texi auxmac.tex \
-#                  fdl.texi \
-#                  mask-template-characters.texi \
-#                  helpful-programs.texi \
-#                  tuning-memory-usage.texi \
-#                  understanding-masks.texi \
-#                  workflow.texi \
-#                  authors.texi \
-#                  config-edge.gp config.gp \
-#                  entropy-cutoff.gp.in \
-#                  entropy.gp.in gaussian.gp.in \
-#                  laplacian-of-gaussian.gp.in \
-#                  sharp-edge.gp.in sharp-edge.data \
-#                  smooth-edge.gp.in smooth-edge.data \
-#                  local-analysis-window.fig \
-#                  photographic-workflow.fig \
-#                  focus-stack-decision-tree.fig \
-#                  default.css
-#
-#AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
-#                   --css-include=@srcdir@/default.css
-#
-## created by make(1), user pobably wants to rebuild (often?)
-#MOSTLYCLEANFILES =
-#
-## created by make(1)
-#CLEANFILES = entropy.{txt,png,eps,pdf} \
-#             entropy-cutoff.{txt,png,eps,pdf} \
-#             gaussian.{txt,png,eps,pdf} \
-#             laplacian-of-gaussian.{txt,png,eps,pdf} \
-#             local-analysis-window.{txt,png,eps,pdf} \
-#             photographic-workflow.{txt,png,eps,pdf} \
-#             focus-stack-decision-tree.{txt,png,eps,pdf} \
-#             sharp-edge.{txt,png,eps,pdf} \
-#             smooth-edge.{txt,png,eps,pdf} \
-#             *.fig.bak \
-#             *.msg
-#
-## created by configure(1)
-#DISTCLEANFILES = texinfo.tex
-#
-#MAINTAINERCLEANFILES = enblend.info enfuse.info
-#
-#
-## Phony Targets
-#
-#.PHONY: html-local
-#html-local:
-#	test -d enblend.html && \
-#            for i in $(enblend_TEXINFOS); do \
-#              test -f $${i%.png}.png && cp $$i enblend.html; \
-#            done; true
-#	test -d enfuse.html && \
-#            for i in $(enfuse_TEXINFOS); do \
-#              test -f $${i%.png}.png && cp $$i enfuse.html; \
-#            done; true
-#
-#.PHONY: clean-local
-#clean-local:
-#	-rm -rf enblend.xhtml enfuse.xhtml
-#
-#
-## The public id is in "tidy.cfg".
-#DTD_SYSID="http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
-#
-#.PHONY: xhtml
-#xhtml: $(HTMLS) html-local
-#	for x in $(HTMLS); do \
-#	  if test -d $$x; then \
-#            test -d $${x/%.html/.xhtml} || mkdir $${x/%.html/.xhtml}; \
-#            cp *.png $${x/%.html/.xhtml}; \
-#	    for y in $$x/*.html; do \
-#	      tidy -config @srcdir@/tidy.cfg -file $${y/%.html/.msg} $$y | \
-#	        $(SED) -e '1,9s|""|$(DTD_SYSID)|' \
-#                       -e 's|\("[^/"]*\)\.html\([#"]\)|\1.xhtml\2|' > $${y//.html/.xhtml}; \
-#            done; \
-#	  else \
-#	    tidy -config @srcdir@/tidy.cfg -file $${x/%.html/.msg} $$x | \
-#	      $(SED) -e '1,9s|""|$(DTD_SYSID)|' > $${x/%.html/.xhtml}; \
-#          fi; \
-#	done
-#
-#
-## Implicit Rules
-#
-#.gp.txt:
-#	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-#
-#.gp.png:
-#	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-#
-#.gp.eps:
-#	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-#
-#.gp.pdf:
-#	GDFONTPATH=$${GDFONTPATH:-@GDFONTPATH@} $(GNUPLOT) $<
-#
-#
-#.fig.txt:
-#	$(SED) -e '1,/---BEGIN-TEXT---/d' \
-#               -e '/---END-TEXT---/,$$d' \
-#               -e 's/^# \?//' < $< > $@
-#
-#.fig.png:
-#	$(FIG2DEV) -L png $< $@
-#
-#.fig.eps:
-#	$(FIG2DEV) -L eps $< $@
-#
-#.fig.pdf:
-#	$(FIG2DEV) -L pdf $< $@
-#
-#
-## Explicit Rules
-#
-#enblend.info: photographic-workflow.txt
-#
-#enblend.dvi: photographic-workflow.eps
-#
-#enblend.html \
-#enblend.pdf: photographic-workflow.png
-#
-#
-#enfuse.info: photographic-workflow.txt \
-#             focus-stack-decision-tree.txt \
-#             entropy.txt \
-#             entropy-cutoff.txt \
-#             gaussian.txt \
-#             laplacian-of-gaussian.txt \
-#             local-analysis-window.txt \
-#             sharp-edge.txt \
-#             smooth-edge.txt
-#
-#enfuse.dvi: photographic-workflow.eps \
-#            focus-stack-decision-tree.eps \
-#            entropy.eps \
-#            entropy-cutoff.eps \
-#            gaussian.eps \
-#            laplacian-of-gaussian.eps \
-#            local-analysis-window.eps \
-#            sharp-edge.eps \
-#            smooth-edge.eps
-#
-#enfuse.html \
-#enfuse.pdf: photographic-workflow.png \
-#            focus-stack-decision-tree.png \
-#            entropy.png \
-#            entropy-cutoff.png \
-#            gaussian.png \
-#            laplacian-of-gaussian.png \
-#            local-analysis-window.png \
-#            sharp-edge.png \
-#            smooth-edge.png
