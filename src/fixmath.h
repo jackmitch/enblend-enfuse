@@ -493,7 +493,7 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
 static inline double
 lightness_guess(const cmsJCh& jch)
 {
-    return std::min(0.984 * jch.J,              // heuristic function with fitted parameter
+    return std::min(0.975 * jch.J,              // heuristic function with fitted parameter
                     0.995 * MAXIMUM_LIGHTNESS); // backstop such that our guess is less than the maximum
 }
 
@@ -581,10 +581,11 @@ public:
         } else if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0) {
             extra_minimizer_parameter extra(jch);
             gsl_function cost = {delta_e_min_cost, &extra};
+            const double j_max = std::max(MAXIMUM_LIGHTNESS, jch.J);
             double j_initial = lightness_guess(jch);
 
-            bracket_minimum(cost, j_initial, 0.0, MAXIMUM_LIGHTNESS);
-            GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, MAXIMUM_LIGHTNESS);
+            bracket_minimum(cost, j_initial, 0.0, j_max);
+            GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
 
             const double initial_j = jch.J; // for debug print only
             std::vector<double> initial_rgb(3U); // for debug print only
@@ -592,7 +593,7 @@ public:
 
             optimizer.set_absolute_error(CIECAM_OPTIMIZER_ERROR)->
                 set_goal(CIECAM_OPTIMIZER_GOAL)->
-                set_maximum_number_of_iterations(50U);
+                set_maximum_number_of_iterations(100U);
             optimizer.run();
 
             jch.J = optimizer.x_minimum();
