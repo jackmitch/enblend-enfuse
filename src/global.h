@@ -23,8 +23,21 @@
 // Here we define macros and types that we already need in the
 // definitions of global variables.
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+#include <cerrno>
 #include <sstream>
+#include <stdexcept>
+
+#ifdef HAVE_UNORDERED_MAP
+#include <unordered_map>
+#else
+#include <map>
+#endif
+
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include <vigra/numerictraits.hxx>
 
@@ -66,9 +79,9 @@
 
 
 // Safely retrieve the string associated with m_name from OpenGL.
-#define GLGETSTRING(m_name) \
-    (glGetString(m_name) == NULL ? \
-     "<cannot retrieve " #m_name ">" : \
+#define GLGETSTRING(m_name)                     \
+    (glGetString(m_name) == NULL ?              \
+     "<cannot retrieve " #m_name ">" :          \
      (const char*) (glGetString(m_name)))
 
 
@@ -157,6 +170,219 @@ struct TiffResolution {
     float x;
     float y;
 };
+
+
+struct conversion_error : public std::runtime_error
+{
+    conversion_error(const std::string& a_message) : std::runtime_error(a_message) {}
+};
+
+
+class ParameterValue
+{
+public:
+    ParameterValue() :
+        value_as_string(std::string()),
+        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+    {initialize();}
+
+    ParameterValue(const std::string& a_string) :
+        value_as_string(a_string),
+        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+    {initialize();}
+
+    ParameterValue(const ParameterValue& parameter_value) :
+        value_as_string(parameter_value.value_as_string),
+        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+    {copy_cached_values(parameter_value);}
+
+    ParameterValue& operator=(const ParameterValue& parameter_value)
+    {
+        if (this != &parameter_value)
+        {
+            value_as_string = parameter_value.value_as_string;
+            release_memory();
+            copy_cached_values(parameter_value);
+        }
+
+        return *this;
+    }
+
+    virtual ~ParameterValue() {release_memory();}
+
+    std::string as_string() const {return value_as_string;}
+    const char* as_c_string() const {return value_as_string.c_str();}
+
+    int as_integer() const
+    {
+        if (integer == NULL)
+        {
+            throw conversion_error("cannot convert \"" + value_as_string + "\" to an integer");
+        }
+        else
+        {
+            return *integer;
+        }
+    }
+
+    unsigned as_unsigned() const
+    {
+        if (unsigned_integer == NULL)
+        {
+            throw conversion_error("cannot convert \"" + value_as_string + "\" to an unsigned integer");
+        }
+        else
+        {
+            return *unsigned_integer;
+        }
+    }
+
+    double as_double() const
+    {
+        if (floating_point == NULL)
+        {
+            throw conversion_error("cannot convert \"" + value_as_string + "\" to a floating-point number");
+        }
+        else
+        {
+            return *floating_point;
+        }
+    }
+
+    bool as_boolean() const
+    {
+        if (boolean == NULL)
+        {
+            throw conversion_error("cannot convert \"" + value_as_string + "\" to a boolean");
+        }
+        else
+        {
+            return *boolean;
+        }
+    }
+
+private:
+    void initialize()
+    {
+        initialize_integer();
+        initialize_unsigned_integer();
+        initialize_floating_point();
+        initialize_boolean();
+    }
+
+    void initialize_integer()
+    {
+        char* end;
+        errno = 0;
+        const int i = strtol(value_as_string.c_str(), &end, 10);
+        if (errno == 0 && *end == 0)
+        {
+            integer = new int;
+            *integer = i;
+        }
+    }
+
+    void initialize_unsigned_integer()
+    {
+        char* end;
+        errno = 0;
+        const unsigned u = strtoul(value_as_string.c_str(), &end, 10);
+        if (errno == 0 && *end == 0)
+        {
+            unsigned_integer = new unsigned;
+            *unsigned_integer = u;
+        }
+    }
+
+    void initialize_floating_point()
+    {
+        char* end;
+        errno = 0;
+        const double x = strtod(value_as_string.c_str(), &end);
+        if (errno == 0 && *end == 0)
+        {
+            floating_point = new double;
+            *floating_point = x;
+        }
+    }
+
+    void initialize_boolean()
+    {
+        std::string s(value_as_string);
+        boost::algorithm::to_lower(s);
+
+        bool b;
+        if (s.empty() || s == "f" || s == "false")
+        {
+            b = false;
+        }
+        else if (s == "t" || s == "true")
+        {
+            b = true;
+        }
+        else
+        {
+            char* end;
+            errno = 0;
+            b = strtol(value_as_string.c_str(), &end, 10);
+            if (errno != 0 || *end != 0)
+            {
+                return;
+            }
+        }
+
+        boolean = new bool;
+        *boolean = b;
+    }
+
+    void copy_cached_values(const ParameterValue& parameter_value)
+    {
+        if (parameter_value.integer != NULL)
+        {
+            integer = new int;
+            *integer = *parameter_value.integer;
+        }
+
+        if (parameter_value.unsigned_integer != NULL)
+        {
+            unsigned_integer = new unsigned;
+            *unsigned_integer = *parameter_value.unsigned_integer;
+        }
+
+        if (parameter_value.floating_point != NULL)
+        {
+            floating_point = new double;
+            *floating_point = *parameter_value.floating_point;
+        }
+
+        if (parameter_value.boolean != NULL)
+        {
+            boolean = new bool;
+            *boolean = *parameter_value.boolean;
+        }
+    }
+
+    void release_memory()
+    {
+        delete integer;
+        delete unsigned_integer;
+        delete floating_point;
+        delete boolean;
+    }
+
+    std::string value_as_string;
+    int* integer;
+    unsigned* unsigned_integer;
+    double* floating_point;
+    bool* boolean;
+};
+
+
+#ifdef HAVE_UNORDERED_MAP
+typedef std::unordered_map<std::string, ParameterValue> parameter_map;
+#else
+typedef std::map<std::string, ParameterValue> parameter_map;
+#endif
 
 #endif /* __GLOBAL_H__ */
 

@@ -689,6 +689,20 @@ Place output in @var{FILE}.
 If @option{--output} is not specified, the default is to put the
 resulting image in @file{@value{src::default-output-filename}}.
 
+@item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
+Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
+option is cumulative.  Separate multiple pairs with the usual numeric
+delimiters.
+
+This option has the negated form @option{--no-parameter},
+@opindex --no-parameter
+which takes one or more @var{KEY}s and removes them from the list of
+defined parameters.  The special key@tie{}@samp{*} deletes all
+parameters at once.
+
+Parameters allow the developers to change the internal
+workings of Enfuse without the need to recompile.
+
 @item -v
 @itemx --verbose[=@var{LEVEL}]
 @opindex -v

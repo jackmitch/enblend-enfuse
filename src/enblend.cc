@@ -161,6 +161,8 @@ std::string OutputPixelType;
 TiffResolution ImageResolution;
 bool OutputIsValid = true;
 
+parameter_map Parameter;
+
 // Globals related to catching SIGINT
 #ifndef _WIN32
 sigset_t SigintMask;
@@ -488,6 +490,8 @@ void printUsageAndExit(const bool error = true) {
         cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
     }
     cout <<
+        "  --parameter=KEY1[=VALUE1][:KEY2[=VALUE2][:...]]\n" <<
+        "                         set one or more KEY-VALUE pairs\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
@@ -860,7 +864,9 @@ int process_options(int argc, char** argv)
         FallbackProfileId,
         LayerSelectorId,
         MainAlgoId,
-        ImageDifferenceId
+        ImageDifferenceId,
+        ParameterId,
+        NoParameterId
     };
 
     static struct option long_options[] = {
@@ -893,6 +899,8 @@ int process_options(int argc, char** argv)
         {"layer-selector", required_argument, 0, LayerSelectorId},
         {"primary-seam-generator", required_argument, 0, MainAlgoId},
         {"image-difference", required_argument, 0, ImageDifferenceId},
+        {"parameter", required_argument, 0, ParameterId},
+        {"no-parameter", required_argument, 0, NoParameterId},
         {0, 0, 0, 0}
     };
 
@@ -1523,6 +1531,58 @@ int process_options(int argc, char** argv)
                 exit(1);
             }
             optionSet.insert(LayerSelectorOption);
+            break;
+        }
+
+        case ParameterId: {
+            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            strcpy(s.get(), optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+
+            while (token != NULL) {
+                std::string key;
+                std::string value;
+                char* delimiter = strpbrk(token, ASSIGNMENT_CHARACTERS);
+
+                if (delimiter == NULL) {
+                    key = token;
+                } else {
+                    key = std::string(token, delimiter);
+                    value = delimiter + 1;
+                }
+
+                if (enblend::parameter::is_valid_identifier(key)) {
+                    Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
+                } else {
+                    cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
+                        "\" is not a valid identifier; ignoring\n";
+                }
+
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            }
+
+            break;
+        }
+
+        case NoParameterId: {
+            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            strcpy(s.get(), optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+
+            while (token != NULL) {
+                if (strcmp(token, "*") == 0) {
+                    Parameter.clear();
+                } else if (enblend::parameter::is_valid_identifier(token)) {
+                    Parameter.erase(token);
+                } else {
+                    cerr << command << ": warning: key \"" << token <<
+                        "\" is not a valid identifier; ignoring\n";
+                }
+                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            }
+
             break;
         }
 

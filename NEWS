@@ -99,6 +99,15 @@ Unreleased.  Current line of development.
   means all necessary DTDs must be available locally and all catalogs
   must be set up correctly to build the XHTML documentation.
 
+- The option "--parameter" allows developers to pass arbitrary
+  key-value pairs to Enblend and Enfuse.  The keys must match the
+  regular expression [A-Za-z][A-Za-z0-9_-]*; the values can be almost
+  any string.  No further checking or validation is performed.
+
+  For more explanations on how to use parameters in the source code,
+  see the block-comment within "namespace parameter" in file
+  "common.h".
+
 
 * Version 4.0
 
