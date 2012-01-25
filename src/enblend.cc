@@ -1551,6 +1551,8 @@ int process_options(int argc, char** argv)
                     key = std::string(token, delimiter);
                     value = delimiter + 1;
                 }
+                boost::trim(key);
+                boost::trim(value);
 
                 if (enblend::parameter::is_valid_identifier(key)) {
                     Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
@@ -1572,14 +1574,18 @@ int process_options(int argc, char** argv)
             char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
 
             while (token != NULL) {
-                if (strcmp(token, "*") == 0) {
+                std::string key(token);
+                boost::trim(key);
+
+                if (key == "*") {
                     Parameter.clear();
-                } else if (enblend::parameter::is_valid_identifier(token)) {
-                    Parameter.erase(token);
+                } else if (enblend::parameter::is_valid_identifier(key)) {
+                    Parameter.erase(key);
                 } else {
-                    cerr << command << ": warning: key \"" << token <<
+                    cerr << command << ": warning: key \"" << key <<
                         "\" is not a valid identifier; ignoring\n";
                 }
+
                 token = strtok_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             }
 
