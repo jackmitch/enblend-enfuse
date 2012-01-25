@@ -123,17 +123,17 @@ public:
 
     virtual double f_minimum() const = 0;
 
-protected:
-    virtual double absolute_error() const
-    {
-        return absolute_error_ ? *absolute_error_ : sqrt(std::numeric_limits<double>::epsilon());
-    }
-
     virtual bool has_reached_goal() const {return f_goal_ && f_minimum() <= *f_goal_;}
 
     virtual bool has_reached_maximum_iteration() const
     {
         return maximum_iteration_ && iteration_ >= *maximum_iteration_;
+    }
+
+protected:
+    virtual double absolute_error() const
+    {
+        return absolute_error_ ? *absolute_error_ : sqrt(std::numeric_limits<double>::epsilon());
     }
 
 private:
@@ -401,7 +401,7 @@ public:
         }
 
         copy_to_gsl_vector(start.begin(), start.end(), xs_);
-        set_step_sizes(step_sizes);
+        initialize_step_sizes(step_sizes);
     }
 
 
@@ -475,34 +475,30 @@ public:
         gsl_multimin_fminimizer_free(minimizer_);
     }
 
-    void set_step_sizes(const array_type& step_sizes)
+    void set_start(const array_type& start)
     {
-        if (step_sizes.size() == dimension())
+        if (start.size() == dimension())
         {
-            array_type::const_iterator x = step_sizes.begin();
-            unsigned i = 0U;
-
-            while (x != step_sizes.end())
-            {
-                if (*x > 0.0)
-                {
-                    gsl_vector_set(step_sizes_, i, *x);
-                }
-                else
-                {
-                    throw std::runtime_error("MinimizerMultiDimensionNoDerivative::set_step_sizes: "
-                                             "non-positive step size");
-                }
-
-                ++x;
-                ++i;
-            }
+            copy_to_gsl_vector(start.begin(), start.end(), xs_);
         }
         else
         {
-            throw std::invalid_argument("MinimizerMultiDimensionNoDerivative::set_step_sizes: "
-                                        "dimension mismatch");
+            throw std::invalid_argument("MinimizerMultiDimensionNoDerivative::set_start: dimension mismatch");
         }
+
+        set();
+    }
+
+    void set_step_sizes(const array_type& step_sizes)
+    {
+        initialize_step_sizes(step_sizes);
+        set();
+    }
+
+    template <class output_iterator>
+    output_iterator get_step_sizes(output_iterator result) const
+    {
+        return copy_from_gsl_vector(step_sizes_, result);
     }
 
     virtual std::string proper_name() const {return std::string(gsl_multimin_fminimizer_name(minimizer_));}
@@ -525,6 +521,9 @@ public:
             characteristic_size_ = gsl_multimin_fminimizer_size(minimizer_);
             test_status = gsl_multimin_test_size(characteristic_size_, absolute_error());
         }
+
+        characteristic_size_ = gsl_multimin_fminimizer_size(minimizer_);
+        gsl_vector_memcpy(xs_, gsl_multimin_fminimizer_x(minimizer_));
     }
 
     template <class output_iterator>
@@ -539,6 +538,47 @@ public:
 protected:
     virtual const gsl_multimin_fminimizer_type* type() const = 0;
 
+    void initialize_step_sizes(const array_type& step_sizes)
+    {
+        if (step_sizes.size() == dimension())
+        {
+            array_type::const_iterator x = step_sizes.begin();
+            unsigned i = 0U;
+
+            while (x != step_sizes.end())
+            {
+                if (*x > 0.0)
+                {
+                    gsl_vector_set(step_sizes_, i, *x);
+                }
+                else
+                {
+                    throw std::runtime_error("MinimizerMultiDimensionNoDerivative::initialize_step_sizes: "
+                                             "non-positive step size");
+                }
+
+                ++x;
+                ++i;
+            }
+        }
+        else
+        {
+            throw std::invalid_argument("MinimizerMultiDimensionNoDerivative::initialize_step_sizes: "
+                                        "dimension mismatch");
+        }
+    }
+
+    void set()
+    {
+        assert(minimizer_ != NULL);
+        const int status = gsl_multimin_fminimizer_set(minimizer_, &function_, xs_, step_sizes_);
+
+        if (status != GSL_SUCCESS)
+        {
+            throw std::runtime_error("MinimizerMultiDimensionNoDerivative::set");
+        }
+    }
+
     void initialize()
     {
         assert(minimizer_ == NULL);
@@ -548,11 +588,7 @@ protected:
             throw std::runtime_error("MinimizerMultiDimensionNoDerivative::initialize: no memory");
         }
 
-        const int status = gsl_multimin_fminimizer_set(minimizer_, &function_, xs_, step_sizes_);
-        if (status != GSL_SUCCESS)
-        {
-            throw std::runtime_error("MinimizerMultiDimensionNoDerivative::initialize");
-        }
+        set();
     }
 
 private:
