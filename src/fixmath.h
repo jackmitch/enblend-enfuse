@@ -494,17 +494,6 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
 }
 
 
-#define LOFI_ERROR (0.5 / 256.0)
-#define HIFI_ERROR (0.5 / 65536.0)
-#define SUPER_HIFI_ERROR (0.5 / 16777216.0)
-#define CIECAM_OPTIMIZER_ERROR HIFI_ERROR
-
-#define LOFI_GOAL 1.0
-#define HIFI_GOAL 0.5
-#define SUPER_HIFI_GOAL 0.0
-#define CIECAM_OPTIMIZER_GOAL HIFI_GOAL
-
-
 /** Fixed point converter that uses ICC profile transformation */
 template <typename DestVectorType, typename PyramidVectorType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertJCHPyramidToVectorFunctor {
@@ -517,22 +506,60 @@ public:
     ConvertJCHPyramidToVectorFunctor() :
         cf(),
         scale(NumericTraits<DestComponentType>::toRealPromote(NumericTraits<DestComponentType>::max())),
-        shift(double(1U << (PyramidIntegerBits - 1 - 7)))
+        shift(double(1U << (PyramidIntegerBits - 1 - 7))),
+
+        // Parameters for highlight optimizer only
+        highlight_lightness_guess_factor(limit(enblend::parameter::as_double("highlight-recovery-lightness-guess-factor", 0.975),
+                                               0.25, 4.0)),
+        highlight_lightness_guess_offset(enblend::parameter::as_double("highlight-recovery-lightness-guess-offset", 0.0)),
+
+        maximum_highlight_iterations(limit(enblend::parameter::as_unsigned("highlight-recovery-maximum-iterations", 100U),
+                                           10U, 1000U)),
+
+        // Parameters for shadow optimizer only
+        shadow_lightness_lightness_guess_factor(enblend::parameter::as_double("shadow-recovery-lightness-lightness-guess-factor", 1.24)),
+        shadow_lightness_chroma_guess_factor(enblend::parameter::as_double("shadow-recovery-lightness-chroma-guess-factor", -0.136)),
+        shadow_lightness_guess_offset(enblend::parameter::as_double("shadow-recovery-lightness-guess-offset", 0.0)),
+        shadow_chroma_lightness_guess_factor(enblend::parameter::as_double("shadow-recovery-chroma-lightness-guess-factor", -0.604)),
+        shadow_chroma_chroma_guess_factor(enblend::parameter::as_double("shadow-recovery-chroma-chroma-guess-factor", 1.33)),
+        shadow_chroma_guess_offset(enblend::parameter::as_double("shadow-recovery-chroma-guess-offset", 0.0)),
+
+        simplex_lightness_step_length(limit(enblend::parameter::as_double("shadow-recovery-lightness-step-length", 0.625),
+                                            1.0 / 65536.0, 100.0)),
+        simplex_chroma_step_length(limit(enblend::parameter::as_double("shadow-recovery-chroma-step-length", 1.25),
+                                         1.0 / 65536.0, 120.0)),
+        iterations_per_leg(limit(enblend::parameter::as_unsigned("shadow-recovery-iterations-per-leg", 40U),
+                                 4U, 400U)),
+        maximum_shadow_leg(limit(enblend::parameter::as_unsigned("shadow-recovery-maximum-legs", 5U),
+                                 1U, 50U)),
+
+        // Parameters for both optimizers
+        // Desired error limits: LoFi: 0.5/2^8, HiFi: 0.5/2^16, Super-HiFi: 0.5/2^24
+        optimizer_error(limit(enblend::parameter::as_double("ciecam-optimizer-error", 0.5 / 65536.0),
+                              0.5 / 16777216.0, 1.0)),
+        // Delta-E goals: LoFi: 1.0, HiFi: 0.5, Super-HiFi: 0.0
+        optimizer_goal(limit(enblend::parameter::as_double("ciecam-optimizer-deltae-goal", 0.5),
+                             0.0, 10.0))
     {}
 
     inline double highlight_lightness_guess(const cmsJCh& jch) const {
-        return std::min(0.975 * jch.J, // heuristic function with fitted parameter
+        return std::min( // heuristic function with fitted parameter
+                        highlight_lightness_guess_factor * jch.J + highlight_lightness_guess_offset,
                         0.995 * MAXIMUM_LIGHTNESS); // backstop such that our guess is less than the maximum
     }
 
     inline double shadow_lightness_guess(const cmsJCh& jch) const {
-        return std::max(1.24 * jch.J +
-                        (-0.136) * jch.C, 0.0);
+        return std::max(shadow_lightness_lightness_guess_factor * jch.J +
+                        shadow_lightness_chroma_guess_factor * jch.C +
+                        shadow_lightness_guess_offset,
+                        0.0);
     }
 
     inline double shadow_chroma_guess(const cmsJCh& jch) const {
-        return std::max(-0.604 * jch.J +
-                        1.33 * jch.C, 0.0);
+        return std::max(shadow_chroma_lightness_guess_factor * jch.J +
+                        shadow_chroma_chroma_guess_factor * jch.C +
+                        shadow_chroma_guess_offset,
+                        0.0);
     }
 
     inline DestVectorType operator()(const PyramidVectorType& v) const {
@@ -564,15 +591,16 @@ public:
             gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
             const MinimizerMultiDimensionSimplex::array_type initial =
                 boost::assign::list_of(shadow_lightness_guess(jch))(shadow_chroma_guess(jch));
-            MinimizerMultiDimensionSimplex::array_type step = boost::assign::list_of(1.0)(1.2);
+            MinimizerMultiDimensionSimplex::array_type step =
+                boost::assign::list_of(simplex_lightness_step_length)(simplex_chroma_step_length);
             MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
 
             double initial_rgb[3]; // for debug print only
             memcpy(rgb, initial_rgb, 3U * sizeof(double));
 
-            optimizer.set_absolute_error(CIECAM_OPTIMIZER_ERROR)->set_goal(CIECAM_OPTIMIZER_GOAL);
-            for (unsigned leg = 1U; leg <= 5U; ++leg) {
-                optimizer.set_maximum_number_of_iterations(leg * 40U);
+            optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);
+            for (unsigned leg = 1U; leg <= maximum_shadow_leg; ++leg) {
+                optimizer.set_maximum_number_of_iterations(leg * iterations_per_leg);
                 optimizer.run();
                 if (optimizer.has_reached_goal()) {
                     break;
@@ -614,9 +642,9 @@ public:
             double initial_rgb[3]; // for debug print only
             memcpy(rgb, initial_rgb, 3U * sizeof(double));
 
-            optimizer.set_absolute_error(CIECAM_OPTIMIZER_ERROR)->
-                set_goal(CIECAM_OPTIMIZER_GOAL)->
-                set_maximum_number_of_iterations(100U);
+            optimizer.set_absolute_error(optimizer_error)->
+                set_goal(optimizer_goal)->
+                set_maximum_number_of_iterations(maximum_highlight_iterations);
             optimizer.run();
 
             jch.J = optimizer.x_minimum();
@@ -645,6 +673,25 @@ protected:
     ConvertFunctorType cf;
     const double scale;
     const double shift;
+
+    const double highlight_lightness_guess_factor;
+    const double highlight_lightness_guess_offset;
+    const unsigned maximum_highlight_iterations;
+
+    const double shadow_lightness_lightness_guess_factor;
+    const double shadow_lightness_chroma_guess_factor;
+    const double shadow_lightness_guess_offset;
+    const double shadow_chroma_lightness_guess_factor;
+    const double shadow_chroma_chroma_guess_factor;
+    const double shadow_chroma_guess_offset;
+
+    const double simplex_lightness_step_length;
+    const double simplex_chroma_step_length;
+    const unsigned iterations_per_leg;
+    const unsigned maximum_shadow_leg;
+
+    const double optimizer_error;
+    const double optimizer_goal;
 };
 
 
