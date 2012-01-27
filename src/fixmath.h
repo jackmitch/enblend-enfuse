@@ -128,26 +128,34 @@ jch_to_rgb(const cmsJCh* jch, double* rgb)
 }
 
 
+static inline void
+jch_to_lab(const cmsJCh* jch, cmsCIELab* lab)
+{
+    double rgb[3];
+
+    jch_to_rgb(jch, rgb);
+    cmsDoTransform(InputToLabTransform, rgb, lab, 1);
+}
+
+
 struct extra_minimizer_parameter
 {
     extra_minimizer_parameter(const cmsJCh& out_of_box_jch) : jch(out_of_box_jch)
-    {jch_to_rgb(&jch, bad_rgb);}
+    {jch_to_lab(&jch, &bad_lab);}
 
     cmsJCh jch;
-    double bad_rgb[3];
+    cmsCIELab bad_lab;
 };
 
 
 inline double
-delta_e_of_rgb(const double* rgb_1, const double* rgb_2)
+delta_e_of_lab_and_rgb(const cmsCIELab* lab, const double* rgb)
 {
-    cmsCIELab lab_1;
-    cmsCIELab lab_2;
+    cmsCIELab lab_of_rgb;
 
-    cmsDoTransform(InputToLabTransform, rgb_1, &lab_1, 1);
-    cmsDoTransform(InputToLabTransform, rgb_2, &lab_2, 1);
+    cmsDoTransform(InputToLabTransform, rgb, &lab_of_rgb, 1);
 
-    return cmsCMCdeltaE(&lab_1, &lab_2, 2.0, 1.0);
+    return cmsCMCdeltaE(lab, &lab_of_rgb, 2.0, 1.0);
 }
 
 
@@ -175,7 +183,7 @@ delta_e_cost(const cmsJCh* jch, const extra_minimizer_parameter* parameter)
     double rgb[3];
     jch_to_rgb(jch, rgb);
 
-    return delta_e_of_rgb(parameter->bad_rgb, rgb) + out_of_box_penalty(rgb);
+    return delta_e_of_lab_and_rgb(&parameter->bad_lab, rgb) + out_of_box_penalty(rgb);
 }
 
 
