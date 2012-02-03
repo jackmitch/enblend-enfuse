@@ -764,7 +764,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 #ifndef CACHE_IMAGES
     if (contains(optionSet, CacheSizeOption)) {
         cerr << command <<
-            ": warning: option \"-m\" has no effect in this version of " << command << ",\n" <<
+            ": warning: option \"-m\" has no effect in this " << command << " binary,\n" <<
             command <<
             ": warning:     because it was compiled without image cache" <<
             endl;
@@ -772,7 +772,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (contains(optionSet, BlockSizeOption)) {
         cerr << command <<
-            ": warning: option \"-b\" has no effect in this version of " << command << ",\n" <<
+            ": warning: option \"-b\" has no effect in this " << command << " binary,\n" <<
             command <<
             ": warning:     because it was compiled without image cache" <<
             endl;
