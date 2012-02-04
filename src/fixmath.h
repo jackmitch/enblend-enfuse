@@ -741,7 +741,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cerr << command << ": info: CIECAM02 color conversion";
             if (!enblend::profileName(InputProfile).empty()) {
-                cerr << "from/to \"" << enblend::profileName(InputProfile) << "\" profile";
+                cerr << " from/to \"" << enblend::profileName(InputProfile) << "\" profile";
             }
             cerr << "\n";
         }
