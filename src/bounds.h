@@ -97,9 +97,9 @@ inspectOverlap(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
  */
 template <typename ImagePixelComponentType>
 unsigned int
-roiBounds(const Rect2D &inputUnion,
-          const Rect2D &iBB, const Rect2D &mBB, const Rect2D &uBB,
-          Rect2D &roiBB,
+roiBounds(const Rect2D& inputUnion,
+          const Rect2D& iBB, const Rect2D& mBB, const Rect2D& uBB,
+          Rect2D& roiBB,        // roiBB is an _output_ parameter!
           bool wraparoundForMask)
 {
     unsigned int levels = 1;    //< src::minimum-pyramid-levels 1
@@ -112,7 +112,7 @@ roiBounds(const Rect2D &inputUnion,
         // the iBB.
         const unsigned int shortDimension = min(iBB.width(), iBB.height());
         while (levels <= MAX_PYRAMID_LEVELS &&
-               (2 * filterHalfWidth<ImagePixelComponentType>(levels) <= shortDimension)) {
+               filterHalfWidth(levels) <= shortDimension) {
             ++levels;
         }
 
@@ -135,7 +135,7 @@ roiBounds(const Rect2D &inputUnion,
     }
 
     roiBB = mBB;
-    roiBB.addBorder(filterHalfWidth<ImagePixelComponentType>(levels));
+    roiBB.addBorder(filterHalfWidth(levels + 1U));
 
     if (wraparoundForMask &&
         (roiBB.left() < 0 || roiBB.right() > uBB.right())) {
@@ -160,7 +160,7 @@ roiBounds(const Rect2D &inputUnion,
         roiShortDimension = (roiShortDimension + 1) >> 1;
     }
 
-    if (levels > allowableLevels) {
+    if (ExactLevels > static_cast<int>(allowableLevels)) {
         cerr << command
              <<": warning: image geometry precludes using more than "
              << allowableLevels

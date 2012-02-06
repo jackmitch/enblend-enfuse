@@ -65,17 +65,14 @@ namespace enblend {
  *  and the last non-zero input is at location 0.
  *  Returns the location of the last non-zero output.
  */
-template <typename ImagePixelComponentType>
-unsigned int
+inline unsigned int
 filterHalfWidth(const unsigned int levels)
 {
     vigra_precondition(levels >= 1 && levels <= MAX_PYRAMID_LEVELS,
                        "filterHalfWidth: levels outside of permissible range");
 
     // This is the arithmetic half width.
-    const int halfWidth = levels == 1 ? 0 : (1 << (levels + 1)) - 4;
-
-    return halfWidth;
+    return levels == 1 ? 0 : (1 << (levels + 1)) - 4;
 }
 
 
