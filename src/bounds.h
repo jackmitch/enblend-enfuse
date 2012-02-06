@@ -102,7 +102,7 @@ roiBounds(const Rect2D& inputUnion,
           Rect2D& roiBB,        // roiBB is an _output_ parameter!
           bool wraparoundForMask)
 {
-    unsigned int levels = 1;    //< src::minimum-pyramid-levels 1
+    unsigned int levels = 1U;   //< src::minimum-pyramid-levels 1
 
     if (ExactLevels <= 0) {
         // Estimate the number of blending levels to use based on the
@@ -116,18 +116,9 @@ roiBounds(const Rect2D& inputUnion,
             ++levels;
         }
 
-        if (levels == 1) {
+        if (levels == 1U) {
             cerr << command
                  << ": info: overlap region is too small to make more than one pyramid level"
-                 << endl;
-        }
-
-        if (static_cast<int>(levels) + ExactLevels >= 1) {
-            levels += ExactLevels;
-        } else {
-            levels = 1;
-            cerr << command
-                 << ": warning: will not use less than one pyramid level"
                  << endl;
         }
     } else {
@@ -148,16 +139,19 @@ roiBounds(const Rect2D& inputUnion,
 
     // ROI must not be bigger than uBB.
     roiBB &= uBB;
+    if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
+        cerr << command << ": info: region-of-interest bounding box: " << roiBB << endl;
+    }
 
     // Verify the number of levels based on the size of the ROI.
     unsigned int roiShortDimension = min(roiBB.width(), roiBB.height());
     unsigned int allowableLevels;
-    for (allowableLevels = 1; allowableLevels <= levels; allowableLevels++) {
-        if (roiShortDimension <= 8) {
+    for (allowableLevels = 1U; allowableLevels <= levels; ++allowableLevels) {
+        if (roiShortDimension <= 8U) {
             // ROI dimensions preclude using more levels than allowableLevels.
             break;
         }
-        roiShortDimension = (roiShortDimension + 1) >> 1;
+        roiShortDimension = (roiShortDimension + 1U) >> 1;
     }
 
     if (ExactLevels > static_cast<int>(allowableLevels)) {
@@ -167,11 +161,17 @@ roiBounds(const Rect2D& inputUnion,
              << " levels" << endl;
     }
 
+    if (ExactLevels < 0) {
+        if (static_cast<int>(allowableLevels) + ExactLevels >= 1) {
+            allowableLevels += ExactLevels;
+        } else {
+            allowableLevels = 1U;
+            cerr << command << ": warning: will not use less than one pyramid level" << endl;
+        }
+    }
+
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
         cerr << command << ": info: using " << allowableLevels << " blending levels" << endl;
-    }
-    if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cerr << command << ": info: region-of-interest bounding box: " << roiBB << endl;
     }
 
     return allowableLevels;
