@@ -36,16 +36,11 @@
 # --------------------------------
 
 IF(WIN32)
-  # JW tested with gsl-1.8, Windows XP, MSVS 7.1
   SET(GSL_POSSIBLE_ROOT_DIRS
-    ${GSL_ROOT_DIR}
-    $ENV{GSL_ROOT_DIR}
-    ${GSL_DIR}
-    ${GSL_HOME}    
-    $ENV{GSL_DIR}
-    $ENV{GSL_HOME}
-    $ENV{EXTRA}
-    )
+    ${SOURCE_BASE_DIR}/gsl-1.17
+    ${SOURCE_BASE_DIR}/gsl-1.16
+    ${SOURCE_BASE_DIR}/gsl-1.15
+  )
   FIND_PATH(GSL_INCLUDE_DIR
     NAMES gsl/gsl_cdf.h gsl/gsl_randist.h
     PATHS ${GSL_POSSIBLE_ROOT_DIRS}
@@ -65,7 +60,7 @@ IF(WIN32)
     PATH_SUFFIXES lib
     DOC "GSL cblas library dir" )
   
-  SET(GSL_LIBRARIES ${GSL_GSL_LIBRARY})
+  SET(GSL_LIBRARIES ${GSL_GSL_LIBRARY} ${GSL_GSLCBLAS_LIBRARY})
 
   #MESSAGE("DBG\n"
   #  "GSL_GSL_LIBRARY=${GSL_GSL_LIBRARY}\n"
