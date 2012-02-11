@@ -32,6 +32,9 @@
 #ifdef _WIN32
 #include <boost/math/special_functions.hpp>
 using namespace boost::math;
+#ifdef __MINGW32__
+#include <pthread.h>  // for rand_r
+#endif
 #endif
 
 #include "vigra/basicimage.hxx"
