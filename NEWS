@@ -90,6 +90,11 @@ Unreleased.  Current line of development.
 - The option "--layer-selector" overrides the standard default
   layer selector.
 
+- In addition to the usual integral values option "--levels" takes the
+  keyword "auto", which restores the default.  (The default is to
+  automatically choose the maximum number of pyramid levels for each
+  separate overlapping region.)
+
 
 ** Developer Stuff
 

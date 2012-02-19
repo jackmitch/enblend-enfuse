@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.1-cdd46ecbe6f4, 19 January
+   This manual is for Enfuse (version 4.1-cdd46ecbe6f4, 9 February
 2012), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.1-cdd46ecbe6f4, 19 January 2012),
+This manual is for Enfuse (version 4.1-cdd46ecbe6f4, 9 February 2012),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -737,7 +737,9 @@ arguments in lowercase for consistency.
 `--levels=LEVELS'
      Use at most this many LEVELS for pyramid (1) blending if LEVELS is
      positive, or reduce the maximum number of levels used by -LEVELS
-     if LEVELS is negative.
+     if LEVELS is negative; `auto' or `automatic' restore the default,
+     which is to use the maximum possible number of levels for each
+     overlapping region.
 
      The number of levels used in a pyramid controls the balance between
      local and global image features (contrast, saturation, ...) in the
@@ -769,7 +771,8 @@ arguments in lowercase for consistency.
      this may or may not influence any pyramid.  Negative values of
      LEVELS reduce the number of pyramid levels below the maximum no
      matter what the actual maximum is and thus always influence all
-     pyramids.
+     pyramids.  Use `auto' or `automatic' as LEVELS to restore the
+     automatic calculation of the maximum number of levels.
 
      The valid range of the absolute value of LEVELS is
      1 to 29.
@@ -4517,14 +4520,14 @@ Option Index
 * --levels:                              Common Options.      (line  81)
 * --load-masks:                          Expert Options.      (line 476)
 * --no-ciecam:                           Extended Options.    (line 160)
-* --no-parameter:                        Common Options.      (line 132)
-* --output:                              Common Options.      (line 122)
+* --no-parameter:                        Common Options.      (line 135)
+* --output:                              Common Options.      (line 125)
 * --saturation-weight:                   Fusion Options.      (line  64)
 * --save-masks:                          Expert Options.      (line 493)
 * --soft-mask:                           Expert Options.      (line 525)
-* --verbose:                             Common Options.      (line 141)
-* --version:                             Common Options.      (line 176)
-* --wrap:                                Common Options.      (line 183)
+* --verbose:                             Common Options.      (line 144)
+* --version:                             Common Options.      (line 179)
+* --wrap:                                Common Options.      (line 186)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
 * -c:                                    Extended Options.    (line  22)
@@ -4535,10 +4538,10 @@ Option Index
 * -l:                                    Common Options.      (line  81)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 148)
-* -o:                                    Common Options.      (line 122)
-* -V:                                    Common Options.      (line 176)
-* -v:                                    Common Options.      (line 141)
-* -w:                                    Common Options.      (line 183)
+* -o:                                    Common Options.      (line 125)
+* -V:                                    Common Options.      (line 179)
+* -v:                                    Common Options.      (line 144)
+* -w:                                    Common Options.      (line 186)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -4550,9 +4553,9 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 183)
+* 360o panoramas:                        Common Options.      (line 186)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 124)
+* a.tif:                                 Common Options.      (line 127)
 * active criterion:                      Single Criterion Fusing.
                                                               (line  12)
 * advanced focus stacking:               Advanced Focus Stacking.
@@ -4620,7 +4623,7 @@ General Index
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
                                                               (line   6)
 * default layer selection:               Response Files.      (line 204)
-* default output filename:               Common Options.      (line 124)
+* default output filename:               Common Options.      (line 127)
 * default weights:                       Single Criterion Fusing.
                                                               (line  24)
 * deflate compression:                   Common Options.      (line  30)
@@ -4786,7 +4789,7 @@ General Index
 * options, fusion:                       Fusion Options.      (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  15)
-* output filename, default:              Common Options.      (line 124)
+* output filename, default:              Common Options.      (line 127)
 * output image, set size of:             Extended Options.    (line 116)
 * overpowering criteria:                 Single Criterion Fusing.
                                                               (line  37)
@@ -4861,7 +4864,7 @@ General Index
 * understanding masks:                   Understanding Masks. (line   6)
 * value gray projector:                  Expert Options.      (line 457)
 * variance:                              Standard Deviation.  (line  45)
-* virtual reality:                       Common Options.      (line 193)
+* virtual reality:                       Common Options.      (line 196)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, entropy:                       Fusion Options.      (line  20)
 * weight, exposure:                      Fusion Options.      (line  30)
@@ -4898,7 +4901,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 183)
+* wrap around:                           Common Options.      (line 186)
 
 
 
@@ -4922,73 +4925,73 @@ Ref: Table:response-file-format18571
 Ref: Table:response-file-syntactic-comment21036
 Ref: Table:globbing-algorithms21937
 Node: Common Options23396
-Ref: Common Options-Footnote-131437
-Ref: Common Options-Footnote-231629
-Node: Extended Options31788
-Ref: Extended Options-Footnote-137778
-Node: Fusion Options37851
-Node: Expert Options39853
-Ref: Figure:entropy-cutoff42879
-Ref: Figure:exposure-cutoff59594
-Ref: Table:mask-template-characters79383
-Node: Option Delimiters81599
-Node: Color Profiles82983
-Node: Weighting Functions85419
-Node: Weighting Pixels86087
-Node: Weighted Average87676
-Node: Disabling Averaging88269
-Node: Single Criterion Fusing89257
-Ref: Table:default-weights89995
-Node: Exposure Weighting90791
-Ref: Figure:gaussian92227
-Node: Saturation Weighting105185
-Node: Local Contrast Weighting106300
-Node: Standard Deviation107662
-Ref: Figure:local-analysis-window108111
-Ref: Standard Deviation-Footnote-1110179
-Node: Laplacian of Gaussian110330
-Ref: Figure:laplacian-of-gaussian111904
-Node: Blend SDev and LoG125201
-Node: Scaling and Choice of Mode126881
-Node: Local Entropy Weighting127727
-Ref: Figure:entropy128710
-Node: Understanding Masks142522
-Node: Tuning Memory Usage146319
-Ref: Table:cache-size-settings149056
-Node: Applications149492
-Node: What Images150216
-Node: Repetition153403
-Node: Exposure Series154486
-Node: Exposure Series Tips156868
-Node: Exposure Series Misconceptions157980
-Ref: Exposure Series Misconceptions-Footnote-1159761
-Node: Flash Exposure Series159974
-Node: Polarization Series160216
-Node: Focus Stacks160656
-Node: Why Focus Stacks161538
-Node: Preparing Focus Stacks162873
-Node: Local Contrast Based Fusing163623
-Node: Basic Focus Stacking164958
-Node: Advanced Focus Stacking166331
-Node: Local Contrast Problem167095
-Ref: Figure:sharp-edge168279
-Ref: Figure:smooth-edge175328
-Node: Laplacian Edge Detection183605
-Node: Local Contrast Enhancement184739
-Node: Suppressing Noise or Recognizing Faint Edges185715
-Node: Focus Stacking Decision Tree188346
-Ref: Figure:focus-stacking-decision-tree188691
-Node: Expert Stacking189475
-Node: Helpful Programs190998
-Node: Bug Reports194726
-Ref: Bug Reports-Footnote-1200426
-Node: Authors200496
-Node: FDL201660
-Node: List of Tables222641
-Node: List of Figures223261
-Node: Program Index224132
-Node: Syntactic-Comment Index227066
-Node: Option Index227754
-Node: General Index231267
+Ref: Common Options-Footnote-131685
+Ref: Common Options-Footnote-231877
+Node: Extended Options32036
+Ref: Extended Options-Footnote-138026
+Node: Fusion Options38099
+Node: Expert Options40101
+Ref: Figure:entropy-cutoff43127
+Ref: Figure:exposure-cutoff59842
+Ref: Table:mask-template-characters79631
+Node: Option Delimiters81847
+Node: Color Profiles83231
+Node: Weighting Functions85667
+Node: Weighting Pixels86335
+Node: Weighted Average87924
+Node: Disabling Averaging88517
+Node: Single Criterion Fusing89505
+Ref: Table:default-weights90243
+Node: Exposure Weighting91039
+Ref: Figure:gaussian92475
+Node: Saturation Weighting105433
+Node: Local Contrast Weighting106548
+Node: Standard Deviation107910
+Ref: Figure:local-analysis-window108359
+Ref: Standard Deviation-Footnote-1110427
+Node: Laplacian of Gaussian110578
+Ref: Figure:laplacian-of-gaussian112152
+Node: Blend SDev and LoG125449
+Node: Scaling and Choice of Mode127129
+Node: Local Entropy Weighting127975
+Ref: Figure:entropy128958
+Node: Understanding Masks142770
+Node: Tuning Memory Usage146567
+Ref: Table:cache-size-settings149304
+Node: Applications149740
+Node: What Images150464
+Node: Repetition153651
+Node: Exposure Series154734
+Node: Exposure Series Tips157116
+Node: Exposure Series Misconceptions158228
+Ref: Exposure Series Misconceptions-Footnote-1160009
+Node: Flash Exposure Series160222
+Node: Polarization Series160464
+Node: Focus Stacks160904
+Node: Why Focus Stacks161786
+Node: Preparing Focus Stacks163121
+Node: Local Contrast Based Fusing163871
+Node: Basic Focus Stacking165206
+Node: Advanced Focus Stacking166579
+Node: Local Contrast Problem167343
+Ref: Figure:sharp-edge168527
+Ref: Figure:smooth-edge175576
+Node: Laplacian Edge Detection183853
+Node: Local Contrast Enhancement184987
+Node: Suppressing Noise or Recognizing Faint Edges185963
+Node: Focus Stacking Decision Tree188594
+Ref: Figure:focus-stacking-decision-tree188939
+Node: Expert Stacking189723
+Node: Helpful Programs191246
+Node: Bug Reports194974
+Ref: Bug Reports-Footnote-1200674
+Node: Authors200744
+Node: FDL201908
+Node: List of Tables222889
+Node: List of Figures223509
+Node: Program Index224380
+Node: Syntactic-Comment Index227314
+Node: Option Index228002
+Node: General Index231515
 
 End Tag Table

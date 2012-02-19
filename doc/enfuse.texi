@@ -583,7 +583,9 @@ Dr.@tie{}Daniel Jackson correctly
 it is not a pyramid: ``Ziggaurat, it's a
 @uref{http://en.wikipedia.org/@/wiki/@/Ziggaurat, Ziggaurat}.''}
 blending if @var{LEVELS} is positive, or reduce the maximum number of
-levels used by @minus{}@var{LEVELS} if @var{LEVELS} is negative.
+levels used by @minus{}@var{LEVELS} if @var{LEVELS} is negative;
+@samp{auto} or @samp{automatic} restore the default, which is to use
+the maximum possible number of levels for each overlapping region.
 
 The number of levels used in a pyramid controls the balance between
 local and global image features (contrast, saturation, @dots{}) in the
@@ -671,7 +673,8 @@ levels.  Depending on the size and geometry of the overlap regions
 this may or may not influence any pyramid.  Negative values of
 @var{LEVELS} reduce the number of pyramid levels below the maximum no
 matter what the actual maximum is and thus always influence all
-pyramids.
+pyramids.  Use @samp{auto} or @samp{automatic} as @var{LEVELS} to
+restore the automatic calculation of the maximum number of levels.
 
 The valid range of the absolute value of @var{LEVELS} is
 @value{src::minimum-pyramid-levels} to

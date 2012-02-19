@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-cdd46ecbe6f4, 19 January
+   This manual is for Enblend (version 4.1-cdd46ecbe6f4, 9 February
 2012), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-cdd46ecbe6f4, 19 January 2012),
+This manual is for Enblend (version 4.1-cdd46ecbe6f4, 9 February 2012),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -625,7 +625,9 @@ arguments in lowercase for consistency.
 `--levels=LEVELS'
      Use at most this many LEVELS for pyramid (1) blending if LEVELS is
      positive, or reduce the maximum number of levels used by -LEVELS
-     if LEVELS is negative.
+     if LEVELS is negative; `auto' or `automatic' restore the default,
+     which is to use the maximum possible number of levels for each
+     overlapping region.
 
      The number of levels used in a pyramid controls the balance between
      local and global image features (contrast, saturation, ...) in the
@@ -657,7 +659,8 @@ arguments in lowercase for consistency.
      this may or may not influence any pyramid.  Negative values of
      LEVELS reduce the number of pyramid levels below the maximum no
      matter what the actual maximum is and thus always influence all
-     pyramids.
+     pyramids.  Use `auto' or `automatic' as LEVELS to restore the
+     automatic calculation of the maximum number of levels.
 
      The valid range of the absolute value of LEVELS is
      1 to 29.
@@ -2553,24 +2556,24 @@ Option Index
 * --no-ciecam:                           Extended Options.    (line 175)
 * --no-optimize:                         Mask Generation Options.
                                                               (line 224)
-* --no-parameter:                        Common Options.      (line 140)
+* --no-parameter:                        Common Options.      (line 143)
 * --optimize:                            Mask Generation Options.
                                                               (line 232)
 * --optimizer-weights:                   Mask Generation Options.
                                                               (line 255)
-* --output:                              Common Options.      (line 130)
-* --parameter:                           Common Options.      (line 136)
+* --output:                              Common Options.      (line 133)
+* --parameter:                           Common Options.      (line 139)
 * --primary-seam-generator:              Mask Generation Options.
                                                               (line 283)
 * --save-masks:                          Mask Generation Options.
                                                               (line 306)
 * --smooth-difference:                   Mask Generation Options.
                                                               (line 340)
-* --verbose:                             Common Options.      (line 149)
-* --version:                             Common Options.      (line 184)
+* --verbose:                             Common Options.      (line 152)
+* --version:                             Common Options.      (line 187)
 * --visualize:                           Mask Generation Options.
                                                               (line 359)
-* --wrap:                                Common Options.      (line 191)
+* --wrap:                                Common Options.      (line 194)
 * -a:                                    Common Options.      (line  15)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b:                                    Extended Options.    (line  10)
@@ -2582,11 +2585,11 @@ Option Index
 * -l:                                    Common Options.      (line  89)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m:                                    Extended Options.    (line 163)
-* -o:                                    Common Options.      (line 130)
-* -V:                                    Common Options.      (line 184)
-* -v:                                    Common Options.      (line 149)
-* -w:                                    Common Options.      (line 191)
-* -x:                                    Common Options.      (line 243)
+* -o:                                    Common Options.      (line 133)
+* -V:                                    Common Options.      (line 187)
+* -v:                                    Common Options.      (line 152)
+* -w:                                    Common Options.      (line 194)
+* -x:                                    Common Options.      (line 246)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2598,9 +2601,9 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 191)
+* 360o panoramas:                        Common Options.      (line 194)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 132)
+* a.tif:                                 Common Options.      (line 135)
 * affine transformation:                 Standard Workflow.   (line  48)
 * algorithms, globbing:                  Response Files.      (line 146)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
@@ -2618,7 +2621,7 @@ General Index
 * canvas size:                           Extended Options.    (line 119)
 * channel width:                         Extended Options.    (line  39)
 * channel, alpha:                        Overview.            (line  18)
-* checkpoint results:                    Common Options.      (line 243)
+* checkpoint results:                    Common Options.      (line 246)
 * chrominance weight:                    Mask Generation Options.
                                                               (line 115)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
@@ -2642,7 +2645,7 @@ General Index
 * conversion, raw:                       Standard Workflow.   (line  34)
 * D50 white point:                       Color Profiles.      (line  55)
 * default layer selection:               Response Files.      (line 204)
-* default output filename:               Common Options.      (line 132)
+* default output filename:               Common Options.      (line 135)
 * deflate compression:                   Common Options.      (line  38)
 * delta-E:                               Mask Generation Options.
                                                               (line 140)
@@ -2816,7 +2819,7 @@ General Index
                                                               (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  23)
-* output filename, default:              Common Options.      (line 132)
+* output filename, default:              Common Options.      (line 135)
 * output image, set size of:             Extended Options.    (line 119)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  48)
@@ -2848,7 +2851,7 @@ General Index
 * response file, format:                 Response Files.      (line  56)
 * response file, grammar:                Response Files.      (line  70)
 * response file, syntactic comment:      Response Files.      (line 126)
-* results, checkpoint:                   Common Options.      (line 243)
+* results, checkpoint:                   Common Options.      (line 246)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
                                                               (line 306)
@@ -2889,7 +2892,7 @@ General Index
 * tracker, SourceForge:                  Bug Reports.         (line  12)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* virtual reality:                       Common Options.      (line 201)
+* virtual reality:                       Common Options.      (line 204)
 * visualization image:                   Mask Generation Options.
                                                               (line 376)
 * visualization image colors:            Mask Generation Options.
@@ -2912,7 +2915,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 191)
+* wrap around:                           Common Options.      (line 194)
 
 
 
@@ -2933,29 +2936,29 @@ Ref: Table:response-file-format14205
 Ref: Table:response-file-syntactic-comment16670
 Ref: Table:globbing-algorithms17571
 Node: Common Options19030
-Ref: Common Options-Footnote-127475
-Ref: Common Options-Footnote-227667
-Node: Extended Options27826
-Ref: Extended Options-Footnote-134469
-Node: Mask Generation Options34542
-Ref: Table:mask-generation37203
-Ref: Table:optimizer-strategies44555
-Ref: Table:visualization-colors50700
-Ref: Table:mask-template-characters51596
-Ref: Mask Generation Options-Footnote-153848
-Node: Primary Seam Generators54076
-Node: Color Profiles56962
-Node: Understanding Masks59412
-Node: Tuning Memory Usage63205
-Ref: Table:cache-size-settings65947
-Node: Helpful Programs66383
-Node: Bug Reports70119
-Ref: Bug Reports-Footnote-175820
-Node: Authors75890
-Node: FDL77055
-Node: Program Index98036
-Node: Syntactic-Comment Index101032
-Node: Option Index101721
-Node: General Index106086
+Ref: Common Options-Footnote-127723
+Ref: Common Options-Footnote-227915
+Node: Extended Options28074
+Ref: Extended Options-Footnote-134717
+Node: Mask Generation Options34790
+Ref: Table:mask-generation37451
+Ref: Table:optimizer-strategies44803
+Ref: Table:visualization-colors50948
+Ref: Table:mask-template-characters51844
+Ref: Mask Generation Options-Footnote-154096
+Node: Primary Seam Generators54324
+Node: Color Profiles57210
+Node: Understanding Masks59660
+Node: Tuning Memory Usage63453
+Ref: Table:cache-size-settings66195
+Node: Helpful Programs66631
+Node: Bug Reports70367
+Ref: Bug Reports-Footnote-176068
+Node: Authors76138
+Node: FDL77303
+Node: Program Index98284
+Node: Syntactic-Comment Index101280
+Node: Option Index101969
+Node: General Index106334
 
 End Tag Table

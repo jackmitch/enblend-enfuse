@@ -83,7 +83,7 @@ boost::mt19937 Twister;
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
 int Verbose = 1;                //< src::default-verbosity-level 1
-int ExactLevels = 0;
+int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
@@ -373,8 +373,9 @@ void printUsageAndExit(const bool error = true) {
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  -h, --help             print this help message and exit\n" <<
-        "  -l, --levels=LEVELS    number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ");\n" <<
-        "                         negative number of LEVELS decreases maximum\n" <<
+        "  -l, --levels=LEVELS    limit number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ");\n" <<
+        "                         negative number of LEVELS decreases maximum;\n" <<
+        "                         \"auto\" restores the default automatic maximization\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
@@ -1465,18 +1466,28 @@ int process_options(int argc, char** argv)
         case 'l': // FALLTHROUGH
         case LevelsId:
             if (optarg != NULL && *optarg != 0) {
-                std::ostringstream oss;
-                oss <<
-                    "cannot use more than " << MAX_PYRAMID_LEVELS <<
-                    " pyramid levels; will use at most " << MAX_PYRAMID_LEVELS << " levels";
-                ExactLevels =
-                    enblend::numberOfString(optarg,
-                                            _1 != 0,
-                                            "cannot blend with zero levels; will use at least one level",
-                                            1,
-                                            _1 <= MAX_PYRAMID_LEVELS,
-                                            oss.str(),
-                                            MAX_PYRAMID_LEVELS);
+                std::string levels(optarg);
+                boost::algorithm::to_upper(levels);
+                if (levels == "AUTO" || levels == "AUTOMATIC") {
+                    ExactLevels = 0;
+                } else if (levels.find_first_not_of("+-0123456789") != std::string::npos) {
+                    cerr << command <<
+                        ": options \"-l\" or \"--levels\" require an integer argument or \"auto\"" << endl;
+                    failed = true;
+                } else {
+                    std::ostringstream oss;
+                    oss <<
+                        "cannot use more than " << MAX_PYRAMID_LEVELS <<
+                        " pyramid levels; will use at most " << MAX_PYRAMID_LEVELS << " levels";
+                    ExactLevels =
+                        enblend::numberOfString(optarg,
+                                                _1 != 0,
+                                                "cannot blend with zero levels; will use one level",
+                                                1,
+                                                _1 <= MAX_PYRAMID_LEVELS,
+                                                oss.str(),
+                                                MAX_PYRAMID_LEVELS);
+                }
             } else {
                 cerr << command << ": options \"-l\" or \"--levels\" require an argument" << endl;
                 failed = true;
