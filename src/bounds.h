@@ -29,7 +29,6 @@
 
 using std::cerr;
 using std::endl;
-using std::min;
 
 using vigra::Point2D;
 
@@ -102,31 +101,8 @@ roiBounds(const Rect2D& inputUnion,
           Rect2D& roiBB,        // roiBB is an _output_ parameter!
           bool wraparoundForMask)
 {
-    unsigned int levels = 1U;   //< src::minimum-pyramid-levels 1
-
-    if (ExactLevels <= 0) {
-        // Estimate the number of blending levels to use based on the
-        // size of the iBB.  Assume the transition line runs
-        // approximately down the center of the iBB.  Choose a number
-        // of levels that makes the mask spread out to the edges of
-        // the iBB.
-        const unsigned int shortDimension = min(iBB.width(), iBB.height());
-        while (levels <= MAX_PYRAMID_LEVELS &&
-               filterHalfWidth(levels) <= shortDimension) {
-            ++levels;
-        }
-
-        if (levels == 1U) {
-            cerr << command
-                 << ": info: overlap region is too small to make more than one pyramid level"
-                 << endl;
-        }
-    } else {
-        levels = ExactLevels;
-    }
-
     roiBB = mBB;
-    roiBB.addBorder(filterHalfWidth(levels + 1U));
+    roiBB.addBorder(filterHalfWidth(MAX_PYRAMID_LEVELS));
 
     if (wraparoundForMask &&
         (roiBB.left() < 0 || roiBB.right() > uBB.right())) {
@@ -144,35 +120,48 @@ roiBounds(const Rect2D& inputUnion,
     }
 
     // Verify the number of levels based on the size of the ROI.
-    unsigned int roiShortDimension = min(roiBB.width(), roiBB.height());
-    unsigned int allowableLevels;
-    for (allowableLevels = 1U; allowableLevels <= levels; ++allowableLevels) {
+    unsigned int roiShortDimension = std::min(roiBB.width(), roiBB.height());
+    const unsigned int minimumPyramidLevels = 1U; //< src::minimum-pyramid-levels 1
+    unsigned int allowableLevels = minimumPyramidLevels;
+    while (allowableLevels <= MAX_PYRAMID_LEVELS) {
         if (roiShortDimension <= 8U) {
             // ROI dimensions preclude using more levels than allowableLevels.
             break;
         }
         roiShortDimension = (roiShortDimension + 1U) >> 1;
+        ++allowableLevels;
     }
 
-    if (ExactLevels > static_cast<int>(allowableLevels)) {
-        cerr << command
-             <<": warning: image geometry precludes using more than "
-             << allowableLevels
-             << " levels" << endl;
-    }
-
-    if (ExactLevels < 0) {
-        if (static_cast<int>(allowableLevels) + ExactLevels >= 1) {
-            allowableLevels += ExactLevels;
-        } else {
-            allowableLevels = 1U;
-            cerr << command << ": warning: will not use less than one pyramid level" << endl;
+    if (allowableLevels <= minimumPyramidLevels) {
+        cerr << command << ": info: overlap region is too small to make more than "
+             << minimumPyramidLevels << " pyramid level(s)" << endl;
+    } else {
+        if (ExactLevels >= 1) {
+            if (ExactLevels > static_cast<int>(allowableLevels)) {
+                cerr << command << ": warning: cannot blend with " << ExactLevels << " pyramid level(s) as\n"
+                     << command << ": warning:     image geometry precludes using more than "
+                     << allowableLevels << " pyramid level(s)" << endl;
+            }
+            allowableLevels = std::min(allowableLevels, static_cast<unsigned int>(ExactLevels));
+        } else if (ExactLevels < 0) {
+            if (static_cast<int>(allowableLevels) + ExactLevels >= static_cast<int>(minimumPyramidLevels)) {
+                allowableLevels -= static_cast<unsigned int>(-ExactLevels);
+            } else {
+                cerr << ": warning: cannot sensibly blend with " << allowableLevels << ExactLevels
+                     << " levels\n"
+                     << command << ": warning:     will not use less than " << minimumPyramidLevels
+                     << " pyramid level(s)" << endl;
+                allowableLevels = minimumPyramidLevels;
+            }
         }
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: using " << allowableLevels << " blending levels" << endl;
+        cerr << command << ": info: using " << allowableLevels << " blending level(s)" << endl;
     }
+
+    assert(allowableLevels >= minimumPyramidLevels);
+    assert(allowableLevels <= MAX_PYRAMID_LEVELS);
 
     return allowableLevels;
 }
