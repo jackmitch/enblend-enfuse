@@ -495,12 +495,14 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
         x_initial = uniform_random(&seed) * (upper - lower) + lower;
         y_initial = cost.function(x_initial, cost.params);
         ++i;
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
         std::cout <<
             "+ highlight recovery -- bracket minimum: x = " << x_initial << ", y = " << y_initial <<
             std::endl;
+#endif
     }
 }
 
@@ -576,10 +578,12 @@ public:
     inline DestVectorType operator()(const PyramidVectorType& v) const {
         cmsJCh jch = {cf(v.red()), cf(v.green()), cf(v.blue())};
         if (jch.J <= 0.0) {
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
             std::cout << "+ unrecoverable dark shadow: J = " << jch.J << "\n" << std::endl;
+#endif
             // Lasciate ogne speranza, voi ch'intrate.
             return DestVectorType(0, 0, 0);
         }
@@ -606,8 +610,10 @@ public:
                 boost::assign::list_of(simplex_lightness_step_length)(simplex_chroma_step_length);
             MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
 
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
             double initial_rgb[3]; // for debug print only
             memcpy(rgb, initial_rgb, 3U * sizeof(double));
+#endif
 
             optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);
             for (unsigned leg = 1U; leg <= maximum_shadow_leg; ++leg) {
@@ -628,6 +634,7 @@ public:
             jch.J = minimum_parameter[0];
             jch.C = minimum_parameter[1];
             jch_to_rgb(&jch, &rgb[0]);
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -640,6 +647,7 @@ public:
                 "+ shadow recovery: opt delta-E = " << optimizer.f_minimum() <<
                 ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
                 std::endl;
+#endif
         } else if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0) {
             extra_minimizer_parameter extra(jch);
             gsl_function cost = {delta_e_min_cost, &extra};
@@ -649,9 +657,11 @@ public:
             bracket_minimum(cost, j_initial, 0.0, j_max);
             GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
 
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
             const double initial_j = jch.J; // for debug print only
             double initial_rgb[3]; // for debug print only
             memcpy(rgb, initial_rgb, 3U * sizeof(double));
+#endif
 
             optimizer.set_absolute_error(optimizer_error)->
                 set_goal(optimizer_goal)->
@@ -660,6 +670,7 @@ public:
 
             jch.J = optimizer.x_minimum();
             jch_to_rgb(&jch, &rgb[0]);
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -671,6 +682,7 @@ public:
                 "+ highlight recovery: opt delta-E = " << optimizer.f_minimum() <<
                 ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
                 std::endl;
+#endif
         }
 
         limit_sequence(rgb, rgb + 3U, 0.0, 1.0);
