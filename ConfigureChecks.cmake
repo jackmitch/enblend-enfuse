@@ -34,7 +34,7 @@ endforeach()
 set(CMAKE_REQUIRED_LIBRARIES -lm)
 foreach(_fc fesetround floor fseeko lrint lrintf
     memset mkstemp pow rint sqrt malloc
-    strchr strcspn strdup strerror strerror_r strrchr strtol)
+    strchr strcspn strdup strerror strerror_r strrchr strtol strtok_r)
   string(TOUPPER "${_fc}" _FC)
   check_function_exists(${_fc} "HAVE_${_FC}")
 endforeach()

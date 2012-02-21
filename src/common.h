@@ -256,15 +256,24 @@ next(iterator i)
 char*
 strtoken_r(char *str, const char *delim, char **save_ptr)
 {
-    char *s = str == NULL ? *save_ptr : str;
-    if (s == NULL) return NULL;
-    else
+    char *s = str ? str : *save_ptr;
+
+    if (s)
     {
         char *token = s;
-        while (*s != 0 && strchr(delim, (int) *s) == NULL) s++;
+
+        while (*s != 0 && !strchr(delim, (int) *s))
+        {
+            s++;
+        }
         *save_ptr = *s == 0 ? NULL : s + 1;
         *s = 0;
+
         return token;
+    }
+    else
+    {
+        return NULL;
     }
 }
 
@@ -1098,6 +1107,49 @@ namespace parameter
 } // namespace parameter
 
 } // namespace enblend
+
+
+#ifndef HAVE_STRTOK_R
+char*
+strtok_r(char *str, const char *delim, char **save_ptr)
+{
+    char *s = str ? str : *save_ptr;
+
+    if (s)
+    {
+        while (*s != 0 && strchr(delim, (int) *s))
+        {
+            s++;
+        }
+
+        if (*s)
+        {
+            char *token = s;
+
+            while (*s != 0 && !strchr(delim, (int) *s))
+            {
+                s++;
+            }
+            if (*s)
+            {
+                *s = 0;
+                s++;
+            }
+            *save_ptr = s;
+
+            return token;
+        }
+        else
+        {
+            return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+}
+#endif
 
 #endif /* __COMMON_H__ */
 

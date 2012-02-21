@@ -117,6 +117,9 @@
 /* Define to 1 if you have the `strtol' function. */
 #cmakedefine HAVE_STRTOL 1
 
+/* Define to 1 if you have the `strtok_r' function. */
+#cmakedefine HAVE_STRTOK_R 1
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #cmakedefine HAVE_SYS_DIR_H 1

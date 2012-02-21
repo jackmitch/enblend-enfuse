@@ -1549,7 +1549,7 @@ int process_options(int argc, char** argv)
             boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
             char* save_ptr = NULL;
-            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
 
             while (token != NULL) {
                 std::string key;
@@ -1572,7 +1572,7 @@ int process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = strtok_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             }
 
             break;
@@ -1582,7 +1582,7 @@ int process_options(int argc, char** argv)
             boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
             char* save_ptr = NULL;
-            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
 
             while (token != NULL) {
                 std::string key(token);
@@ -1597,7 +1597,7 @@ int process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = strtok_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             }
 
             break;
