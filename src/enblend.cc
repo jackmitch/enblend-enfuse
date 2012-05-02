@@ -797,7 +797,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             endl;
     }
 
-    if (!CoarseMask && contains(optionSet, GraphCutOption) && contains(optionSet, FineMaskOption)) {
+    if (!CoarseMask && MainAlgorithm == GraphCut && contains(optionSet, FineMaskOption)) {
         cerr << command <<
             ": warning: option \"--fine-mask\" combined with option \"--main-algorithm=graphcut\"\n" <<
             command <<
