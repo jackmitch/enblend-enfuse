@@ -748,13 +748,6 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (!OptimizeMask) {
-        if (contains(optionSet, VisualizeOption)) {
-            cerr << command <<
-                ": warning: option \"--visualize\" without mask optimization\n" <<
-                command <<
-                ": warning:     has no effect" <<
-                endl;
-        }
 
         if (contains(optionSet, AnnealOption)) {
             cerr << command <<
@@ -806,13 +799,6 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             ": warning:     defaulting to no optimization" <<
             endl;
         OptimizeMask = false;
-        if (contains(optionSet, VisualizeOption)) {
-            cerr << command <<
-                ": warning: option \"--visualize\" without mask optimization\n" <<
-                command <<
-                ": warning:     has no effect" <<
-                endl;
-        }
     }
 
 #ifndef CACHE_IMAGES
@@ -2047,14 +2033,6 @@ int main(int argc, char** argv)
                 << endl;
 
             OptimizeMask = false;
-
-            if (VisualizeSeam) {
-            cerr << command <<
-                ": warning: option \"--visualize\" without mask optimization\n" <<
-                command <<
-                ": warning:     has no effect" <<
-                endl;
-            }
         }
     }
 

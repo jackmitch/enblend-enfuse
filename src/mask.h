@@ -875,10 +875,10 @@ MaskType* createMask(const ImageType* const white,
     // Start by using the nearest feature transform to generate a mask.
     Size2D mainInputSize, mainInputBBSize;
     Rect2D mainInputBB;
-
     int mainStride;
+    
     if (CoarseMask) {
-        // Do NFT at 1/CoarsenessFactor scale.
+        // Do MainAlgorithm at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                                (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
@@ -891,7 +891,7 @@ MaskType* createMask(const ImageType* const white,
 
         mainStride = CoarsenessFactor;
     } else {
-        // Do NFT at 1/1 scale.
+        // Do MainAlgorithm at 1/1 scale.
         mainInputSize = uBB.size();
         mainInputBB = Rect2D(iBB);
         if(mainInputBB.upperLeft().x >= uBB.upperLeft().x)
@@ -902,21 +902,23 @@ MaskType* createMask(const ImageType* const white,
 
     Size2D mainOutputSize;
     Diff2D mainOutputOffset;
-    if (!CoarseMask && !OptimizeMask) {
-        // We are not going to vectorize the mask.
-        mainOutputSize = mainInputSize;
-        mainOutputOffset = Diff2D(0, 0);
+    
+    // GraphCut supports seam visualization without optimizers
+    if (!CoarseMask && !OptimizeMask && !VisualizeSeam) {
+	// We are not going to vectorize the mask.
+	mainOutputSize = mainInputSize;
+	mainOutputOffset = Diff2D(0, 0);
     } else {
-        // Add 1-pixel border all around the image for the vectorization algorithm.
-        mainOutputSize = mainInputSize + Diff2D(2, 2);
-        mainOutputOffset = Diff2D(1, 1);
+	// Add 1-pixel border all around the image for the vectorization algorithm.
+	mainOutputSize = mainInputSize + Diff2D(2, 2);
+	mainOutputOffset = Diff2D(1, 1);
     }
 
     // mem usage before: 0
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
-    MaskType* mainOutputImage = new MaskType(mainOutputSize);
-
+    MaskType* mainOutputImage = new MaskType(mainOutputSize);;
+    
     if (MainAlgorithm == GraphCut)
         graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
                 stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
@@ -926,7 +928,6 @@ MaskType* createMask(const ImageType* const white,
                 ManhattanDistance,
                 wraparound ? HorizontalStrip : OpenBoundaries,
                 mainInputBB);
-
     else if (MainAlgorithm == NFT)
         nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
                                 stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
@@ -970,7 +971,7 @@ MaskType* createMask(const ImageType* const white,
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
 
-    if (!CoarseMask && !OptimizeMask) {
+    if (!VisualizeSeam && !CoarseMask && !OptimizeMask) {
         // nftOutputImage is the final mask in this case.
         return mainOutputImage;
     }
@@ -996,7 +997,7 @@ MaskType* createMask(const ImageType* const white,
 
     // mem usage after: 0
 
-    if (!OptimizeMask) {
+    if (!OptimizeMask && !VisualizeSeam) {
         // Simply fill contours to get final unoptimized mask.
         MaskType* mask = new MaskType(uBB.size());
         fillContour(mask, rawSegments, Diff2D(0, 0));
@@ -1163,7 +1164,8 @@ MaskType* createMask(const ImageType* const white,
                                       (next->second - offset) / mismatchImageStride,
                                       VISUALIZE_INITIAL_PATH);
                     }
-                    visualizePoint(*visualizeImage,
+                    if (OptimizeMask)
+			visualizePoint(*visualizeImage,
                                    (s->second - offset) / mismatchImageStride,
                                    s->first ? VISUALIZE_MOVABLE_POINT : VISUALIZE_FROZEN_POINT,
                                    s->first ? MARK_MOVABLE_POINT : MARK_FROZEN_POINT,
@@ -1175,67 +1177,69 @@ MaskType* createMask(const ImageType* const white,
 
 #ifndef SKIP_OPTIMIZER
 
-    int segmentNumber;
-    // Move snake points to mismatchImage-relative coordinates
-    for (ContourVector::iterator currentContour = contours.begin();
-             currentContour != contours.end();
-             ++currentContour) {
-            segmentNumber = 0;
-            for (Contour::iterator currentSegment = (*currentContour)->begin();
-                 currentSegment != (*currentContour)->end();
-                 ++currentSegment, ++segmentNumber) {
-                Segment* snake = *currentSegment;
-                for (Segment::iterator vertexIterator = snake->begin();
-                     vertexIterator != snake->end();
-                     ++vertexIterator) {
-                    vertexIterator->second =
-                        (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
-                        mismatchImageStride;
-                }
-            }
+    if (OptimizeMask) {
+    
+	int segmentNumber;
+	// Move snake points to mismatchImage-relative coordinates
+	for (ContourVector::iterator currentContour = contours.begin();
+		currentContour != contours.end();
+		++currentContour) {
+		segmentNumber = 0;
+		for (Contour::iterator currentSegment = (*currentContour)->begin();
+		    currentSegment != (*currentContour)->end();
+		    ++currentSegment, ++segmentNumber) {
+		    Segment* snake = *currentSegment;
+		    for (Segment::iterator vertexIterator = snake->begin();
+			vertexIterator != snake->end();
+			++vertexIterator) {
+			vertexIterator->second =
+			    (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
+			    mismatchImageStride;
+		    }
+		}
+	}
+
+	vector<double> *params = new(vector<double>);
+
+	OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+	    *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+				(&mismatchImage, visualizeImage,
+				&mismatchImageSize, &mismatchImageStride,
+				&uvBBStrideOffset, &contours, &uBB, &vBB, params,
+				whiteAlpha, blackAlpha, &uvBB);
+
+	    // Add Strategy 1: Use GDA to optimize placement of snake vertices
+	defaultOptimizerChain->addOptimizer("anneal");
+
+	    // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
+	defaultOptimizerChain->addOptimizer("dijkstra");
+
+	    // Fire optimizer chain (runs every optimizer on the list in sequence)
+	defaultOptimizerChain->runOptimizerChain();
+
+	// Move snake vertices from mismatchImage-relative
+	// coordinates to uBB-relative coordinates.
+	for (ContourVector::iterator currentContour = contours.begin();
+		currentContour != contours.end();
+		++currentContour) {
+		segmentNumber = 0;
+		for (Contour::iterator currentSegment = (*currentContour)->begin();
+		    currentSegment != (*currentContour)->end();
+		    ++currentSegment, ++segmentNumber) {
+		    Segment* snake = *currentSegment;
+		    for (Segment::iterator currentVertex = snake->begin();
+			currentVertex != snake->end();
+			++currentVertex) {
+			currentVertex->second =
+			    currentVertex->second * mismatchImageStride +
+			    vBB.upperLeft() - uBB.upperLeft();
+		    }
+		}
+	}
+
+	delete params;
+	delete defaultOptimizerChain;
     }
-
-    vector<double> *params = new(vector<double>);
-
-    OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-        *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-                              (&mismatchImage, visualizeImage,
-                               &mismatchImageSize, &mismatchImageStride,
-                               &uvBBStrideOffset, &contours, &uBB, &vBB, params,
-                               whiteAlpha, blackAlpha, &uvBB);
-
-        // Add Strategy 1: Use GDA to optimize placement of snake vertices
-    defaultOptimizerChain->addOptimizer("anneal");
-
-        // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
-    defaultOptimizerChain->addOptimizer("dijkstra");
-
-        // Fire optimizer chain (runs every optimizer on the list in sequence)
-    defaultOptimizerChain->runOptimizerChain();
-
-    // Move snake vertices from mismatchImage-relative
-    // coordinates to uBB-relative coordinates.
-    for (ContourVector::iterator currentContour = contours.begin();
-             currentContour != contours.end();
-             ++currentContour) {
-            segmentNumber = 0;
-            for (Contour::iterator currentSegment = (*currentContour)->begin();
-                 currentSegment != (*currentContour)->end();
-                 ++currentSegment, ++segmentNumber) {
-                Segment* snake = *currentSegment;
-                for (Segment::iterator currentVertex = snake->begin();
-                     currentVertex != snake->end();
-                     ++currentVertex) {
-                    currentVertex->second =
-                        currentVertex->second * mismatchImageStride +
-                        vBB.upperLeft() - uBB.upperLeft();
-                }
-            }
-    }
-
-    delete params;
-    delete defaultOptimizerChain;
-
 #endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {
