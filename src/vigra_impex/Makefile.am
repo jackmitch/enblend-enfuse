@@ -15,6 +15,7 @@ libvigra_impex_a_SOURCES = auto_file.hxx bmp.cxx bmp.hxx byteorder.cxx \
                            viff.hxx void_vector.cxx void_vector.hxx exr.cxx \
                            exr.hxx
 
-libvigra_impex_a_CXXFLAGS = $(AM_CXXFLAGS) \
+libvigra_impex_a_CPPFLAGS = $(AM_CPPFLAGS) \
                             -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                             -I${top_srcdir}/include
+libvigra_impex_a_CXXFLAGS = $(AM_CXXFLAGS)
