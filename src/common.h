@@ -222,6 +222,15 @@ typedef enum
 } nearest_neigbor_metric_t;
 
 
+/** Define our own reentrant, uniform pseudo-random number generator. */
+inline int
+rand_r(unsigned int *seed)
+{
+    *seed = *seed * 1103515245U + 12345U;
+    return static_cast<int>(*seed % (static_cast<unsigned int>(RAND_MAX) + 1U));
+}
+
+
 /** Answer the square of the argument x. */
 template <typename t>
 inline t

@@ -32,9 +32,6 @@
 #ifdef _WIN32
 #include <boost/math/special_functions.hpp>
 using namespace boost::math;
-#ifdef __MINGW32__
-#include <pthread.h>  // for rand_r
-#endif
 #endif
 
 #include "vigra/basicimage.hxx"
@@ -470,7 +467,7 @@ limit_sequence(forward_iterator first, forward_iterator last, double lower_limit
 static inline double
 uniform_random(unsigned* seed)
 {
-    return static_cast<double>(rand_r(seed)) / static_cast<double>(RAND_MAX);
+    return static_cast<double>(enblend::rand_r(seed)) / static_cast<double>(RAND_MAX);
 }
 
 
