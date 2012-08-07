@@ -38,7 +38,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/assign/list_of.hpp>
 
-#include "vigra/imageinfo.hxx"
+#include <vigra/imageinfo.hxx>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

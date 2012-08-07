@@ -27,28 +27,15 @@
 #include <functional>
 #include <vector>
 
-#include "vigra/convolution.hxx"
-#include "vigra/error.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/rgbvalue.hxx"
-#include "vigra/sized_int.hxx"
-#include "vigra/transformimage.hxx"
+#include <vigra/convolution.hxx>
+#include <vigra/error.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/rgbvalue.hxx>
+#include <vigra/sized_int.hxx>
+#include <vigra/transformimage.hxx>
 
 #include "fixmath.h"
-
-using std::cout;
-using std::vector;
-
-using vigra::Diff2D;
-using vigra::linearRangeMapping;
-using vigra::ImageExportInfo;
-using vigra::NumericTraits;
-using vigra::transformImage;
-using vigra::triple;
-using vigra::UInt16;
-using vigra::UInt16Image;
-using vigra::UInt16RGBImage;
 
 
 namespace enblend {
@@ -212,12 +199,12 @@ reduce(bool wraparound,
     SKIPSMAlphaPixelType* ascp = new SKIPSMAlphaPixelType[dst_w + 1];
 
     // Convenient constants
-    const SKIPSMImagePixelType SKIPSMImageZero(NumericTraits<SKIPSMImagePixelType>::zero());
-    const SKIPSMAlphaPixelType SKIPSMAlphaZero(NumericTraits<SKIPSMAlphaPixelType>::zero());
-    const SKIPSMAlphaPixelType SKIPSMAlphaOne(NumericTraits<SKIPSMAlphaPixelType>::one());
-    const DestPixelType DestImageZero(NumericTraits<DestPixelType>::zero());
-    const DestAlphaPixelType DestAlphaZero(NumericTraits<DestAlphaPixelType>::zero());
-    const DestAlphaPixelType DestAlphaMax(NumericTraits<DestAlphaPixelType>::max());
+    const SKIPSMImagePixelType SKIPSMImageZero(vigra::NumericTraits<SKIPSMImagePixelType>::zero());
+    const SKIPSMAlphaPixelType SKIPSMAlphaZero(vigra::NumericTraits<SKIPSMAlphaPixelType>::zero());
+    const SKIPSMAlphaPixelType SKIPSMAlphaOne(vigra::NumericTraits<SKIPSMAlphaPixelType>::one());
+    const DestPixelType DestImageZero(vigra::NumericTraits<DestPixelType>::zero());
+    const DestAlphaPixelType DestAlphaZero(vigra::NumericTraits<DestAlphaPixelType>::zero());
+    const DestAlphaPixelType DestAlphaMax(vigra::NumericTraits<DestAlphaPixelType>::max());
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dx = dy;
@@ -238,12 +225,15 @@ reduce(bool wraparound,
     // First row
     {
         if (wraparound) {
-            asr0 = aa(ay, Diff2D(src_w - 2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+            asr0 = aa(ay, vigra::Diff2D(src_w - 2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
             asr1 = SKIPSMAlphaZero;
-            asrp = aa(ay, Diff2D(src_w - 1, 0)) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero;
-            isr0 = aa(ay, Diff2D(src_w - 2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 2, 0))) : SKIPSMImageZero;
+            asrp = aa(ay, vigra::Diff2D(src_w - 1, 0)) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero;
+            isr0 = aa(ay, vigra::Diff2D(src_w - 2, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 2, 0))) : SKIPSMImageZero;
             isr1 = SKIPSMImageZero;
-            isrp = aa(ay, Diff2D(src_w - 1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0))) * 4) : SKIPSMImageZero;
+            isrp =
+                aa(ay, vigra::Diff2D(src_w - 1, 0)) ?
+                vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0))) * 4) :
+                SKIPSMImageZero;
         } else {
             asr0 = SKIPSMAlphaZero;
             asr1 = SKIPSMAlphaZero;
@@ -281,10 +271,19 @@ reduce(bool wraparound,
             ++dstx;
             if (wraparound) {
                 asc1[dstx] = SKIPSMAlphaZero;
-                asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                asc0[dstx] =
+                    asr1 + AMUL6(asr0) +
+                    (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) +
+                    (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) * 4) : SKIPSMImageZero)
-                    + (aa(ay, Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1, 0))) : SKIPSMImageZero);
+                isc0[dstx] =
+                    isr1 + IMUL6(isr0) +
+                    (aa(ay) ?
+                     vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
+                     SKIPSMImageZero) +
+                    (aa(ay, vigra::Diff2D(1, 0)) ?
+                     vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)))) :
+                     SKIPSMImageZero);
             } else {
                 asc1[dstx] = SKIPSMAlphaZero;
                 asc0[dstx] = asr1 + AMUL6(asr0);
@@ -313,12 +312,15 @@ reduce(bool wraparound,
     {
         for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y, ++ay.y) {
             if (wraparound) {
-                asr0 = aa(ay, Diff2D(src_w - 2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
+                asr0 = aa(ay, vigra::Diff2D(src_w - 2, 0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero;
                 asr1 = SKIPSMAlphaZero;
-                asrp = aa(ay, Diff2D(src_w - 1, 0)) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero;
-                isr0 = aa(ay, Diff2D(src_w - 2, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 2,0))) : SKIPSMImageZero;
+                asrp = aa(ay, vigra::Diff2D(src_w - 1, 0)) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero;
+                isr0 = aa(ay, vigra::Diff2D(src_w - 2, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 2,0))) : SKIPSMImageZero;
                 isr1 = SKIPSMImageZero;
-                isrp = aa(ay, Diff2D(src_w - 1, 0)) ? (SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1,0))) * 4) : SKIPSMImageZero;
+                isrp =
+                    aa(ay, vigra::Diff2D(src_w - 1, 0)) ?
+                    vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1,0))) * 4) :
+                    SKIPSMImageZero;
             } else {
                 asr0 = SKIPSMAlphaZero;
                 asr1 = SKIPSMAlphaZero;
@@ -391,7 +393,7 @@ reduce(bool wraparound,
                     SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
                     asc1[dstx] = asc0[dstx] + ascp[dstx];
                     if (wraparound) {
-                        asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                        asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) + (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     } else {
                         asc0[dstx] = asr1 + AMUL6(asr0);
                     }
@@ -400,8 +402,12 @@ reduce(bool wraparound,
                     SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) * 4) : SKIPSMImageZero)
-                            + (aa(ay, Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1, 0))) : SKIPSMImageZero);
+                        isc0[dstx] =
+                            isr1 + IMUL6(isr0) +
+                            (aa(ay) ?
+                             vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
+                             SKIPSMImageZero) +
+                            (aa(ay, vigra::Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0))) : SKIPSMImageZero);
                     } else {
                         isc0[dstx] = isr1 + IMUL6(isr0);
                     }
@@ -484,11 +490,13 @@ reduce(bool wraparound,
                     ++dstx;
                     if (wraparound) {
                         ascp[dstx] = (asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero)
-                                      + (aa(ay, Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero)
-                                      ) * 4;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + (aa(ay) ? (SKIPSMImagePixelType(sa(sy)) * 4) : SKIPSMImageZero)
-                                      + (aa(ay, Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, Diff2D(1, 0))) : SKIPSMImageZero)
-                                      ) * 4;
+                                      + (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero)) * 4;
+                        iscp[dstx] =
+                            (isr1 + IMUL6(isr0) +
+                             (aa(ay) ?
+                              vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
+                              SKIPSMImageZero) +
+                             (aa(ay, vigra::Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0))) : SKIPSMImageZero)) * 4;
                     } else {
                         ascp[dstx] = (asr1 + AMUL6(asr0)) * 4;
                         iscp[dstx] = (isr1 + IMUL6(isr0)) * 4;
@@ -566,10 +574,10 @@ template <typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType,
           typename DestAlphaIterator, typename DestAlphaAccessor>
 inline void
 reduce(bool wraparound,
-       triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-       pair<AlphaIterator, AlphaAccessor> mask,
-       triple<DestImageIterator, DestImageIterator, DestAccessor> dest,
-       triple<DestAlphaIterator, DestAlphaIterator, DestAlphaAccessor> destMask)
+       vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+       vigra::pair<AlphaIterator, AlphaAccessor> mask,
+       vigra::triple<DestImageIterator, DestImageIterator, DestAccessor> dest,
+       vigra::triple<DestAlphaIterator, DestAlphaIterator, DestAlphaAccessor> destMask)
 {
     reduce<SKIPSMImagePixelType, SKIPSMAlphaPixelType>(wraparound,
                                                        src.first, src.second, src.third,
@@ -612,7 +620,7 @@ reduce(bool wraparound,
     SKIPSMImagePixelType* iscp = new SKIPSMImagePixelType[dst_w + 1];
 
     // Convenient constants
-    const SKIPSMImagePixelType SKIPSMImageZero(NumericTraits<SKIPSMImagePixelType>::zero());
+    const SKIPSMImagePixelType SKIPSMImageZero(vigra::NumericTraits<SKIPSMImagePixelType>::zero());
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dx = dy;
@@ -629,9 +637,9 @@ reduce(bool wraparound,
     // First row
     {
         if (wraparound) {
-            isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 2, 0)));
+            isr0 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 2, 0)));
             isr1 = SKIPSMImageZero;
-            isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0))) * 4;
+            isrp = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0))) * 4;
         } else {
             isr0 = SKIPSMImagePixelType(sa(sy));
             isr1 = SKIPSMImageZero;
@@ -661,7 +669,7 @@ reduce(bool wraparound,
             ++dstx;
             if (wraparound) {
                 isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
-                    + SKIPSMImagePixelType(sa(sy, Diff2D(1, 0)));
+                    + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)));
                 isc1[dstx] = IMUL5(isc0[dstx]);
             } else {
                 isc0[dstx] = isr1 + IMUL11(isr0);
@@ -684,9 +692,9 @@ reduce(bool wraparound,
     {
         for (evenY = false, srcy = 1; srcy < src_h; ++srcy, ++sy.y) {
             if (wraparound) {
-                isr0 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 2, 0)));
+                isr0 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 2, 0)));
                 isr1 = SKIPSMImageZero;
-                isrp = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0))) * 4;
+                isrp = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0))) * 4;
             } else {
                 isr0 = SKIPSMImagePixelType(sa(sy));
                 isr1 = SKIPSMImageZero;
@@ -733,7 +741,7 @@ reduce(bool wraparound,
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
                         isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
-                            + SKIPSMImagePixelType(sa(sy, Diff2D(1, 0)));
+                            + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)));
                     } else {
                         isc0[dstx] = isr1 + IMUL11(isr0);
                     }
@@ -782,7 +790,7 @@ reduce(bool wraparound,
                     ++dstx;
                     if (wraparound) {
                         iscp[dstx] = (isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
-                                      + SKIPSMImagePixelType(sa(sy, Diff2D(1, 0)))
+                                      + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)))
                                       ) * 4;
                     } else {
                         iscp[dstx] = (isr1 + IMUL11(isr0)) * 4;
@@ -839,8 +847,8 @@ template <typename SKIPSMImagePixelType,
           typename DestImageIterator, typename DestAccessor>
 inline void
 reduce(bool wraparound,
-       triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-       triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
+       vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+       vigra::triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
 {
     reduce<SKIPSMImagePixelType>(wraparound,
                                  src.first, src.second, src.third,
@@ -1109,7 +1117,7 @@ expand(bool add, bool wraparound,
     SKIPSMImagePixelType* sc1b = new SKIPSMImagePixelType[src_w + 1];
 
     // Convenient constants
-    const SKIPSMImagePixelType SKIPSMImageZero(NumericTraits<SKIPSMImagePixelType>::zero());
+    const SKIPSMImagePixelType SKIPSMImageZero(vigra::NumericTraits<SKIPSMImagePixelType>::zero());
 
     DestImageIterator dy = dest_upperleft;
     DestImageIterator dyy = dest_upperleft;
@@ -1130,7 +1138,7 @@ expand(bool add, bool wraparound,
         sx = sy;
         sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
-            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0)));
+            sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0)));
             if (!dst_w_even) {
                 sr1 = IMUL4(sr1);
             }
@@ -1184,7 +1192,7 @@ expand(bool add, bool wraparound,
         sx = sy;
         sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
-            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w - 1, 0)));
+            sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0)));
             if (!dst_w_even) {
                 sr1 = IMUL4(sr1);
             }
@@ -1296,7 +1304,7 @@ expand(bool add, bool wraparound,
         sx = sy;
         sr0 = SKIPSMImagePixelType(sa(sx));
         if (wraparound) {
-            sr1 = SKIPSMImagePixelType(sa(sy, Diff2D(src_w-1,0)));
+            sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w-1,0)));
             if (!dst_w_even) {
                 sr1 = IMUL4(sr1);
             }
@@ -1405,7 +1413,7 @@ struct FromPromotePlusFunctorWrapper :
     public std::binary_function<T1, T2, T3>
 {
     inline T3 operator()(const T1& a, const T2& b) const {
-        return NumericTraits<T3>::fromPromote(a + b);
+        return vigra::NumericTraits<T3>::fromPromote(a + b);
     }
 };
 
@@ -1416,8 +1424,8 @@ template <typename SKIPSMImagePixelType,
           typename DestImageIterator, typename DestAccessor>
 inline void
 expand(bool add, bool wraparound,
-       triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
-       triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
+       vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+       vigra::triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
 {
     typedef typename DestAccessor::value_type DestPixelType;
 
@@ -1439,7 +1447,7 @@ expand(bool add, bool wraparound,
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
-vector<PyramidImageType*>*
+std::vector<PyramidImageType*>*
 gaussianPyramid(unsigned int numLevels,
                 bool wraparound,
                 typename SrcImageType::const_traverser src_upperleft,
@@ -1448,7 +1456,7 @@ gaussianPyramid(unsigned int numLevels,
                 typename AlphaImageType::const_traverser alpha_upperleft,
                 typename AlphaImageType::ConstAccessor aa)
 {
-    vector<PyramidImageType*>* gp = new vector<PyramidImageType*>();
+    std::vector<PyramidImageType*>* gp = new std::vector<PyramidImageType*>();
 
     // Size of pyramid level 0
     int w = src_lowerright.x - src_upperleft.x;
@@ -1464,7 +1472,7 @@ gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: generating Gaussian pyramid:  g0";
+        std::cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
@@ -1472,8 +1480,8 @@ gaussianPyramid(unsigned int numLevels,
     AlphaImageType* lastA = NULL;
     for (unsigned int l = 1; l < numLevels; l++) {
         if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-            cerr << " g" << l;
-            cerr.flush();
+            std::cerr << " g" << l;
+            std::cerr.flush();
         }
 
         // Size of next level
@@ -1505,7 +1513,7 @@ gaussianPyramid(unsigned int numLevels,
     delete lastA;
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << endl;
+        std::cerr << std::endl;
     }
 
     return gp;
@@ -1516,11 +1524,11 @@ gaussianPyramid(unsigned int numLevels,
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
-inline vector<PyramidImageType*>*
+inline std::vector<PyramidImageType*>*
 gaussianPyramid(unsigned int numLevels,
                 bool wraparound,
-                triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
-                pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha)
+                vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+                vigra::pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha)
 {
     return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMAlphaPixelType>
         (numLevels, wraparound,
@@ -1533,14 +1541,14 @@ gaussianPyramid(unsigned int numLevels,
 template <typename SrcImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType>
-vector<PyramidImageType*>*
+std::vector<PyramidImageType*>*
 gaussianPyramid(unsigned int numLevels,
                 bool wraparound,
                 typename SrcImageType::const_traverser src_upperleft,
                 typename SrcImageType::const_traverser src_lowerright,
                 typename SrcImageType::ConstAccessor sa)
 {
-    vector<PyramidImageType*>* gp = new vector<PyramidImageType*>();
+    std::vector<PyramidImageType*>* gp = new std::vector<PyramidImageType*>();
 
     // Size of pyramid level 0
     int w = src_lowerright.x - src_upperleft.x;
@@ -1557,15 +1565,15 @@ gaussianPyramid(unsigned int numLevels,
     gp->push_back(gp0);
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: generating Gaussian pyramid:  g0";
+        std::cerr << command << ": info: generating Gaussian pyramid:  g0";
     }
 
     // Make remaining levels.
     PyramidImageType* lastGP = gp0;
     for (unsigned int l = 1; l < numLevels; l++) {
         if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-            cerr << " g" << l;
-            cerr.flush();
+            std::cerr << " g" << l;
+            std::cerr.flush();
         }
 
         // Size of next level
@@ -1582,7 +1590,7 @@ gaussianPyramid(unsigned int numLevels,
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << endl;
+        std::cerr << std::endl;
     }
 
     return gp;
@@ -1593,10 +1601,10 @@ gaussianPyramid(unsigned int numLevels,
 template <typename SrcImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType>
-inline vector<PyramidImageType*>*
+inline std::vector<PyramidImageType*>*
 gaussianPyramid(unsigned int numLevels,
                 bool wraparound,
-                triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src)
+                vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src)
 {
     return gaussianPyramid<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>
         (numLevels,
@@ -1609,7 +1617,7 @@ gaussianPyramid(unsigned int numLevels,
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
-vector<PyramidImageType*>*
+std::vector<PyramidImageType*>*
 laplacianPyramid(const char* exportName, unsigned int numLevels,
                  bool wraparound,
                  typename SrcImageType::const_traverser src_upperleft,
@@ -1619,7 +1627,7 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
                  typename AlphaImageType::ConstAccessor aa)
 {
     // First create a Gaussian pyramid.
-    vector <PyramidImageType*>* gp =
+    std::vector <PyramidImageType*>* gp =
         gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMAlphaPixelType>
         (numLevels, wraparound,
          src_upperleft, src_lowerright, sa,
@@ -1628,37 +1636,37 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
     //exportPyramid(gp, exportName);
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: generating Laplacian pyramid:";
-        cerr.flush();
+        std::cerr << command << ": info: generating Laplacian pyramid:";
+        std::cerr.flush();
     }
 
     // For each level, subtract the expansion of the next level.
     // Stop if there is no next level.
     for (unsigned int l = 0; l < (numLevels-1); l++) {
         if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-            cerr << " l" << l;
-            cerr.flush();
+            std::cerr << " l" << l;
+            std::cerr.flush();
         }
 
         //if (l == 4) {
         //    int dst_w = (*((*gp)[l])).width();
-        //    cout << "dst_w=" << dst_w << endl;
-        //    cout << endl << "pre-expand l4 gp:" << endl;
+        //    cout << "dst_w=" << dst_w << std::endl;
+        //    cout << std::endl << "pre-expand l4 gp:" << std::endl;
         //    for (int y = 30; y < 35; y++) {
-        //        cout << "y=" << y << endl;
+        //        cout << "y=" << y << std::endl;
         //        for (int x = -4; x < 4; ++x) {
         //            int modX = (x < 0) ? x+dst_w : x;
-        //            cout << (*((*gp)[l]))(modX,y) << endl;
+        //            cout << (*((*gp)[l]))(modX,y) << std::endl;
         //        }
         //    }
         //    int src_w = (*((*gp)[l+1])).width();
-        //    cout << "src_w=" << src_w << endl;
-        //    cout << endl << "l5 gp:" << endl;
+        //    cout << "src_w=" << src_w << std::endl;
+        //    cout << std::endl << "l5 gp:" << std::endl;
         //    for (int y = 15; y < 18; y++) {
-        //        cout << "y=" << y << endl;
+        //        cout << "y=" << y << std::endl;
         //        for (int x = -2; x < 2; ++x) {
         //            int modX = (x < 0) ? x+src_w : x;
-        //            cout << (*((*gp)[l+1]))(modX,y) << endl;
+        //            cout << (*((*gp)[l+1]))(modX,y) << std::endl;
         //        }
         //    }
         //}
@@ -1669,19 +1677,19 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
 
         //if (l == 4) {
         //    int dst_w = (*((*gp)[l])).width();
-        //    cout << endl << "post-expand l4 gp:" << endl;
+        //    cout << std::endl << "post-expand l4 gp:" << std::endl;
         //    for (int y = 30; y < 35; y++) {
-        //        cout << "y=" << y << endl;
+        //        cout << "y=" << y << std::endl;
         //        for (int x = -4; x < 4; ++x) {
         //            int modX = (x < 0) ? x+dst_w : x;
-        //            cout << (*((*gp)[l]))(modX,y) << endl;
+        //            cout << (*((*gp)[l]))(modX,y) << std::endl;
         //        }
         //    }
         //}
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << " l" << (numLevels-1) << endl;
+        std::cerr << " l" << (numLevels-1) << std::endl;
     }
 
     //exportPyramid(gp, exportName);
@@ -1694,11 +1702,11 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
 template <typename SrcImageType, typename AlphaImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType, typename SKIPSMAlphaPixelType>
-inline vector<PyramidImageType*>*
+inline std::vector<PyramidImageType*>*
 laplacianPyramid(const char* exportName, unsigned int numLevels,
                  bool wraparound,
-                 triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
-                 pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha)
+                 vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+                 vigra::pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha)
 {
     return laplacianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMAlphaPixelType>
         (exportName,
@@ -1711,20 +1719,20 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
 /** Collapse the given Laplacian pyramid. */
 template <typename SKIPSMImagePixelType, typename PyramidImageType>
 void
-collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
+collapsePyramid(bool wraparound, std::vector<PyramidImageType*>* p)
 {
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: collapsing Laplacian pyramid: "
+        std::cerr << command << ": info: collapsing Laplacian pyramid: "
              << "l" << p->size() - 1;
-        cerr.flush();
+        std::cerr.flush();
     }
 
     // For each level, add the expansion of the next level.
     // Work backwards from the smallest level to the largest.
     for (int l = (p->size()-2); l >= 0; l--) {
         if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-            cerr << " l" << l;
-            cerr.flush();
+            std::cerr << " l" << l;
+            std::cerr.flush();
         }
 
         expand<SKIPSMImagePixelType>(true, wraparound,
@@ -1733,7 +1741,7 @@ collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << endl;
+        std::cerr << std::endl;
     }
  }
 
@@ -1741,13 +1749,13 @@ collapsePyramid(bool wraparound, vector<PyramidImageType*> *p)
 // Export a scalar pyramid as a set of UINT16 tiff files.
 template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
-exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
+exportPyramid(std::vector<PyramidImageType*>* v, const char* prefix, vigra::VigraTrueType)
 {
     typedef typename PyramidImageType::value_type PyramidValueType;
 
     //for (unsigned int i = 0; i < (v->size() - 1); i++) {
     //    // Clear all levels except last.
-    //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
+    //    initImage(destImageRange(*((*v)[i])), vigra::NumericTraits<PyramidValueType>::zero());
     //}
     //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
@@ -1756,15 +1764,15 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
         snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
 
         // Rescale the pyramid values to fit in UINT16.
-        UInt16Image usPyramid((*v)[i]->width(), (*v)[i]->height());
+        vigra::UInt16Image usPyramid((*v)[i]->width(), (*v)[i]->height());
         transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                         linearRangeMapping(NumericTraits<PyramidValueType>::min(),
-                                            NumericTraits<PyramidValueType>::max(),
-                                            NumericTraits<UInt16>::min(),
-                                            NumericTraits<UInt16>::max()));
+                         vigra::linearRangeMapping(vigra::NumericTraits<PyramidValueType>::min(),
+                                            vigra::NumericTraits<PyramidValueType>::max(),
+                                            vigra::NumericTraits<vigra::UInt16>::min(),
+                                            vigra::NumericTraits<vigra::UInt16>::max()));
 
-        ImageExportInfo info(filenameBuf);
-        exportImage(srcImageRange(usPyramid), info);
+        vigra::ImageExportInfo info(filenameBuf);
+        vigra::exportImage(srcImageRange(usPyramid), info);
     }
 }
 
@@ -1772,14 +1780,14 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraTrueType)
 // Export a vector pyramid as a set of UINT16 tiff files.
 template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
-exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
+exportPyramid(std::vector<PyramidImageType*> *v, const char *prefix, vigra::VigraFalseType)
 {
     typedef typename PyramidImageType::value_type PyramidVectorType;
     typedef typename PyramidVectorType::value_type PyramidValueType;
 
     //for (unsigned int i = 0; i < (v->size() - 1); i++) {
     //    // Clear all levels except last.
-    //    initImage(destImageRange(*((*v)[i])), NumericTraits<PyramidValueType>::zero());
+    //    initImage(destImageRange(*((*v)[i])), vigra::NumericTraits<PyramidValueType>::zero());
     //}
     //collapsePyramid<SKIPSMImagePyramidType, PyramidImageType>(false, v);
 
@@ -1788,15 +1796,15 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
         snprintf(filenameBuf, 512, "%s%04u.tif", prefix, i);
 
         // Rescale the pyramid values to fit in UINT16.
-        UInt16RGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
+        vigra::UInt16RGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
         transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                         linearRangeMapping(PyramidVectorType(NumericTraits<PyramidValueType>::min()),
-                                            PyramidVectorType(NumericTraits<PyramidValueType>::max()),
-                                            typename UInt16RGBImage::value_type(NumericTraits<UInt16>::min()),
-                                            typename UInt16RGBImage::value_type(NumericTraits<UInt16>::max())));
+                         vigra::linearRangeMapping(PyramidVectorType(vigra::NumericTraits<PyramidValueType>::min()),
+                                            PyramidVectorType(vigra::NumericTraits<PyramidValueType>::max()),
+                                            typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::min()),
+                                            typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::max())));
 
-        ImageExportInfo info(filenameBuf);
-        exportImage(srcImageRange(usPyramid), info);
+        vigra::ImageExportInfo info(filenameBuf);
+        vigra::exportImage(srcImageRange(usPyramid), info);
     }
 }
 
@@ -1804,9 +1812,9 @@ exportPyramid(vector<PyramidImageType*> *v, const char *prefix, VigraFalseType)
 // Export a pyramid as a set of UINT16 tiff files.
 template <typename SKIPSMImagePyramidType, typename PyramidImageType>
 void
-exportPyramid(vector<PyramidImageType*> *v, const char *prefix)
+exportPyramid(std::vector<PyramidImageType*>* v, const char* prefix)
 {
-    typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
+    typedef typename vigra::NumericTraits<typename PyramidImageType::value_type>::isScalar pyramid_is_scalar;
     exportPyramid<SKIPSMImagePyramidType, PyramidImageType>(v, prefix, pyramid_is_scalar());
 }
 

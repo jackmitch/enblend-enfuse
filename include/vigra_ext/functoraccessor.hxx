@@ -1,5 +1,5 @@
 // -*- c-basic-offset: 4 -*-
-/** @file FunctorAccessor.h
+/** @file functoraccessor.hxx
  *
  *  @author Pablo d'Angelo <pablo.dangelo@web.de>
  *
@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef _FUNCTORACCESSOR_H
-#define _FUNCTORACCESSOR_H
+#ifndef FUNCTORACCESSOR_HXX_
+#define FUNCTORACCESSOR_HXX_
 
 #include <vigra/numerictraits.hxx>
 
@@ -618,5 +618,4 @@ struct Multiply
 }  // namespace
 
 
-
-#endif // _FUNCTORACCESSOR_H
+#endif // FUNCTORACCESSOR_HXX

@@ -27,9 +27,11 @@
 #include <vigra/accessor.hxx>
 #include <vigra/rgbvalue.hxx>
 #include <vigra/sized_int.hxx>
-#include <vigra/cachedfileimage.hxx>
 
-namespace vigra {
+#include "vigra_ext/cachedfileimage.hxx"
+
+
+namespace vigra_ext {
 
 #define CFI_DEFINE_ITERATORTRAITS(VALUETYPE, ACCESSOR, CONSTACCESSOR) \
     template<> \
@@ -102,53 +104,53 @@ namespace vigra {
         typedef CONSTACCESSOR<VALUETYPE >                       DefaultAccessor; \
     };
 
-CFI_DEFINE_ITERATORTRAITS(UInt8, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<UInt8> UInt8CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::UInt8, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::UInt8> UInt8CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(Int8, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<Int8> Int8CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::Int8, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::Int8> Int8CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(UInt16, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<UInt16> UInt16CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::UInt16, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::UInt16> UInt16CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(Int16, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<Int16> Int16CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::Int16, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::Int16> Int16CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(UInt32, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<UInt32> UInt32CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::UInt32, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::UInt32> UInt32CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(Int32, StandardValueAccessor, StandardConstValueAccessor)
-typedef CachedFileImage<Int32> Int32CFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::Int32, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
+typedef CachedFileImage<vigra::Int32> Int32CFImage;
 
-CFI_DEFINE_ITERATORTRAITS(float, StandardValueAccessor, StandardConstValueAccessor)
+CFI_DEFINE_ITERATORTRAITS(float, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
 typedef CachedFileImage<float> FCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(double, StandardValueAccessor, StandardConstValueAccessor)
+CFI_DEFINE_ITERATORTRAITS(double, vigra::StandardValueAccessor, vigra::StandardConstValueAccessor)
 typedef CachedFileImage<double> DCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt8>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<UInt8> > UInt8RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::UInt8>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::UInt8> > UInt8RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<Int8>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<Int8> > Int8RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::Int8>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::Int8> > Int8RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt16>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<UInt16> > UInt16RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::UInt16>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::UInt16> > UInt16RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<Int16>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<Int16> > Int16RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::Int16>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::Int16> > Int16RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<UInt32>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<UInt32> > UInt32RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::UInt32>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::UInt32> > UInt32RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<Int32>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<Int32> > Int32RGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<vigra::Int32>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<vigra::Int32> > Int32RGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<float>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<float> > FRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<float>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<float> > FRGBCFImage;
 
-CFI_DEFINE_ITERATORTRAITS(RGBValue<double>, RGBAccessor, RGBAccessor)
-typedef CachedFileImage<RGBValue<double> > DRGBCFImage;
+CFI_DEFINE_ITERATORTRAITS(vigra::RGBValue<double>, vigra::RGBAccessor, vigra::RGBAccessor)
+typedef CachedFileImage<vigra::RGBValue<double> > DRGBCFImage;
 
 #ifndef NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
@@ -167,8 +169,8 @@ struct IteratorTraits<CachedFileImageIterator<T> >
     typedef typename iterator::difference_type   difference_type;
     typedef typename iterator::row_iterator      row_iterator;
     typedef typename iterator::column_iterator   column_iterator;
-    typedef StandardAccessor<T>                  DefaultAccessor;
-    typedef StandardAccessor<T>                  default_accessor;
+    typedef vigra::StandardAccessor<T>           DefaultAccessor;
+    typedef vigra::StandardAccessor<T>           default_accessor;
 };
 
 template <class T>
@@ -184,12 +186,12 @@ struct IteratorTraits<ConstCachedFileImageIterator<T> >
     typedef typename iterator::difference_type     difference_type;
     typedef typename iterator::row_iterator        row_iterator;
     typedef typename iterator::column_iterator     column_iterator;
-    typedef StandardConstAccessor<T>               DefaultAccessor;
-    typedef StandardConstAccessor<T>               default_accessor;
+    typedef vigra::StandardConstAccessor<T>        DefaultAccessor;
+    typedef vigra::StandardConstAccessor<T>        default_accessor;
 };
 
 #endif
 
-} // namespace vigra
+} // namespace vigra_ext
 
 #endif /* VIGRA_EXT_STDCACHEDFILEIMAGE_HXX */

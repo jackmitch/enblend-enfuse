@@ -28,6 +28,24 @@
 #include <functional>
 #include <numeric>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/algorithm.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/if.hpp>
+
+#include <vigra/contourcirculator.hxx>
+#include <vigra/error.hxx>
+#include <vigra/functorexpression.hxx>
+#include <vigra/impex.hxx>
+#include <vigra/initimage.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/transformimage.hxx>
+
+#include "vigra_ext/rect2d.hxx"
+#include "vigra_ext/stdcachedfileimage.hxx"
+#include "vigra_ext/impexalpha.hxx"
+#include "vigra_ext/XMIWrapper.h"
+
 #include "common.h"
 #include "anneal.h"
 #include "nearest.h"
@@ -37,49 +55,6 @@
 #include "maskcommon.h"
 #include "masktypedefs.h"
 
-#include "vigra/contourcirculator.hxx"
-#include "vigra/error.hxx"
-#include "vigra/functorexpression.hxx"
-#include "vigra/impex.hxx"
-#include "vigra/initimage.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/transformimage.hxx"
-#include "vigra/stdcachedfileimage.hxx"
-#include "vigra_ext/impexalpha.hxx"
-#include "vigra_ext/XMIWrapper.h"
-
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/algorithm.hpp>
-#include <boost/lambda/construct.hpp>
-#include <boost/lambda/if.hpp>
-
-
-using vigra::combineThreeImages;
-using vigra::combineTwoImages;
-using vigra::CrackContourCirculator;
-using vigra::exportImage;
-using vigra::ImageExportInfo;
-using vigra::ImageImportInfo;
-using vigra::importImageAlpha;
-using vigra::initImageIf;
-using vigra::LinearIntensityTransform;
-using vigra::linearRangeMapping;
-using vigra::NumericTraits;
-using vigra::Point2D;
-using vigra::Rect2D;
-using vigra::RGBToGrayAccessor;
-using vigra::Size2D;
-using vigra::transformImage;
-using vigra::transformImageIf;
-
-using vigra::functor::Arg1;
-using vigra::functor::Arg2;
-using vigra::functor::Arg3;
-using vigra::functor::ifThenElse;
-using vigra::functor::Param;
-using vigra::functor::UnaryFunctor;
-
-using vigra_ext::copyPaintedSetToImage;
 
 using boost::lambda::_1;
 using boost::lambda::_2;
@@ -90,12 +65,19 @@ using boost::lambda::constant;
 using boost::lambda::protect;
 using boost::lambda::ret;
 
+using vigra::functor::Arg1;
+using vigra::functor::Arg2;
+using vigra::functor::Arg3;
+using vigra::functor::ifThenElse;
+using vigra::functor::Param;
+using vigra::functor::UnaryFunctor;
+
 
 namespace enblend {
 
 void
 dump_segment(const Segment& segment,
-             const std::string& prefix = "", std::ostream& out = std::cout)
+             const std::string& prefix = std::string(), std::ostream& out = std::cout)
 {
     const unsigned points_per_line = 5U;
     unsigned n = 1U;
@@ -119,7 +101,7 @@ dump_segment(const Segment& segment,
 
 void
 dump_contour(const Contour& contour,
-             const std::string& prefix = "", std::ostream& out = std::cout)
+             const std::string& prefix = std::string(), std::ostream& out = std::cout)
 {
     out << prefix << "{contour with " << contour.size() << " segment(s):\n";
     for (Contour::const_iterator i = contour.begin(); i != contour.end(); ++i)
@@ -132,7 +114,7 @@ dump_contour(const Contour& contour,
 
 void
 dump_contourvector(const ContourVector& contourvector,
-                   const std::string& prefix = "", std::ostream& out = std::cout)
+                   const std::string& prefix = std::string(), std::ostream& out = std::cout)
 {
     out << prefix << "{contourvector with " << contourvector.size() << " contour(s):\n";
     for (ContourVector::const_iterator i = contourvector.begin(); i != contourvector.end(); ++i)
@@ -146,7 +128,7 @@ dump_contourvector(const ContourVector& contourvector,
 template <typename ImageType>
 void
 visualizePoint(ImageType& image,
-               const Point2D& location,
+               const vigra::Point2D& location,
                typename ImageType::PixelType value)
 {
     typedef typename ImageType::Iterator Iterator;
@@ -171,7 +153,7 @@ round_to(double x)
 template <typename ImageType>
 void
 visualizePoint(ImageType& image,
-               const Point2D& location,
+               const vigra::Point2D& location,
                typename ImageType::PixelType value,
                marker_t marker,
                int radius)
@@ -194,36 +176,36 @@ visualizePoint(ImageType& image,
     case PLUS_MARKER:
         for (int i = -radius; i <= radius; ++i)
         {
-            visualizePoint(image, location + Point2D(i, 0), value);
-            visualizePoint(image, location + Point2D(0, i), value);
+            visualizePoint(image, location + vigra::Point2D(i, 0), value);
+            visualizePoint(image, location + vigra::Point2D(0, i), value);
         }
         break;
 
     case CROSS_MARKER:
         for (int i = -r_sqrt2; i <= r_sqrt2; ++i)
         {
-            visualizePoint(image, location + Point2D(i, i), value);
-            visualizePoint(image, location + Point2D(-i, i), value);
+            visualizePoint(image, location + vigra::Point2D(i, i), value);
+            visualizePoint(image, location + vigra::Point2D(-i, i), value);
         }
         break;
 
     case HOLLOW_SQUARE_MARKER:
         for (int i = -r_sqrt2; i <= r_sqrt2; ++i)
         {
-            visualizePoint(image, location + Point2D(-r_sqrt2, i), value);
-            visualizePoint(image, location + Point2D(r_sqrt2, i), value);
-            visualizePoint(image, location + Point2D(i, -r_sqrt2), value);
-            visualizePoint(image, location + Point2D(i, r_sqrt2), value);
+            visualizePoint(image, location + vigra::Point2D(-r_sqrt2, i), value);
+            visualizePoint(image, location + vigra::Point2D(r_sqrt2, i), value);
+            visualizePoint(image, location + vigra::Point2D(i, -r_sqrt2), value);
+            visualizePoint(image, location + vigra::Point2D(i, r_sqrt2), value);
         }
         break;
 
     case HOLLOW_DIAMOND_MARKER:
         for (int i = 0; i <= radius; ++i)
         {
-            visualizePoint(image, location + Point2D(i - radius, i), value);
-            visualizePoint(image, location + Point2D(i, i - radius), value);
-            visualizePoint(image, location + Point2D(-i + radius, i), value);
-            visualizePoint(image, location + Point2D(-i, i - radius), value);
+            visualizePoint(image, location + vigra::Point2D(i - radius, i), value);
+            visualizePoint(image, location + vigra::Point2D(i, i - radius), value);
+            visualizePoint(image, location + vigra::Point2D(-i + radius, i), value);
+            visualizePoint(image, location + vigra::Point2D(-i, i - radius), value);
         }
         break;
 
@@ -241,7 +223,7 @@ visualizePoint(ImageType& image,
 template <typename ImageType>
 void
 visualizeLine(ImageType& image,
-              const Point2D& begin, const Point2D& end,
+              const vigra::Point2D& begin, const vigra::Point2D& end,
               typename ImageType::PixelType value)
 {
     typedef typename ImageType::Iterator Iterator;
@@ -385,11 +367,11 @@ private:
 
 
 template <typename MaskType>
-void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
+void fillContour(MaskType* mask, const Contour& contour, vigra::Diff2D offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::Accessor MaskAccessor;
-    typedef NumericTraits<MaskPixelType> MaskPixelTraits;
+    typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
 
     const size_t totalPoints =
         std::accumulate(contour.begin(), contour.end(),
@@ -422,9 +404,9 @@ void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 
     delete [] points;
 
-    copyPaintedSetToImage(mask->upperLeft(), mask->lowerRight(),
-                          XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
-                          paintedSet, offset);
+    vigra_ext::copyPaintedSetToImage(mask->upperLeft(), mask->lowerRight(),
+                                     XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
+                                     paintedSet, offset);
 
     miDeletePaintedSet(paintedSet);
     miDeleteGC(pGC);
@@ -432,7 +414,7 @@ void fillContour(MaskType* mask, const Contour& contour, Diff2D offset)
 
 
 template <typename MaskType>
-void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
+void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
@@ -440,36 +422,36 @@ void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
 
     // Find the bounding box of the mask transition line and put it in mBB.
     // mBB starts out as empty rectangle.
-    mBB = Rect2D(Point2D(mask->size()), Point2D(0, 0));
+    mBB = vigra::Rect2D(vigra::Point2D(mask->size()), vigra::Point2D(0, 0));
 
     MaskIteratorType myPrev = mask->upperLeft();
-    MaskIteratorType my = mask->upperLeft() + Diff2D(0, 1);
+    MaskIteratorType my = mask->upperLeft() + vigra::Diff2D(0, 1);
     MaskIteratorType mend = mask->lowerRight();
     MaskIteratorType mxLeft = myPrev;
-    MaskIteratorType mx = myPrev + Diff2D(1, 0);
+    MaskIteratorType mx = myPrev + vigra::Diff2D(1, 0);
 
     for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x) {
         if (*mxLeft != *mx) {
-            mBB |= Rect2D(x - 1, 0, x + 1, 1);
+            mBB |= vigra::Rect2D(x - 1, 0, x + 1, 1);
         }
     }
     for (int y = 1; my.y < mend.y; ++y, ++my.y, ++myPrev.y) {
         mxLeft = my;
-        mx = my + Diff2D(1, 0);
+        mx = my + vigra::Diff2D(1, 0);
         MaskIteratorType mxUpLeft = myPrev;
-        MaskIteratorType mxUp = myPrev + Diff2D(1, 0);
+        MaskIteratorType mxUp = myPrev + vigra::Diff2D(1, 0);
 
         if (*mxUpLeft != *mxLeft) {
             // Transition line is between mxUpLeft and mxLeft.
-            mBB |= Rect2D(0, y - 1, 1, y + 1);
+            mBB |= vigra::Rect2D(0, y - 1, 1, y + 1);
         }
 
         for (int x = 1; mx.x < mend.x; ++x, ++mx.x, ++mxLeft.x, ++mxUp.x) {
             if (*mxLeft != *mx) {
-                mBB |= Rect2D(x - 1, y, x + 1, y + 1);
+                mBB |= vigra::Rect2D(x - 1, y, x + 1, y + 1);
             }
             if (*mxUp != *mx) {
-                mBB |= Rect2D(x, y - 1, x + 1, y + 1);
+                mBB |= vigra::Rect2D(x, y - 1, x + 1, y + 1);
             }
         }
     }
@@ -478,7 +460,7 @@ void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
     if (mBB.isEmpty()) {
         // No transition pixels were found in the mask at all.  This
         // means that one image has no contribution.
-        if (*(mask->upperLeft()) == NumericTraits<MaskPixelType>::zero()) {
+        if (*(mask->upperLeft()) == vigra::NumericTraits<MaskPixelType>::zero()) {
             // If the mask is entirely black, then inspectOverlap
             // should have caught this.  It should have said that the
             // white image is redundant.
@@ -517,7 +499,7 @@ void maskBounds(MaskType* mask, const Rect2D& uBB, Rect2D& mBB)
 template <typename MaskType, typename AlphaType>
 void vectorizeSeamLine(Contour& rawSegments,
                        const AlphaType* const whiteAlpha, const AlphaType* const blackAlpha,
-                       const Rect2D& uBB,
+                       const vigra::Rect2D& uBB,
                        int nftStride, MaskType* nftOutputImage, int vectorizeDistance = 0)
 {
     typedef typename MaskType::PixelType MaskPixelType;
@@ -548,32 +530,32 @@ void vectorizeSeamLine(Contour& rawSegments,
         vectorizeDistance = minimumVectorizeDistance;
     }
 
-    const Rect2D border(1, 1, nftOutputImage->width() - 1, nftOutputImage->height() - 1);
+    const vigra::Rect2D border(1, 1, nftOutputImage->width() - 1, nftOutputImage->height() - 1);
 
-    MaskIteratorType my = nftOutputImage->upperLeft() + Diff2D(1, 1);
-    MaskIteratorType mend = nftOutputImage->lowerRight() + Diff2D(-1, -1);
+    MaskIteratorType my = nftOutputImage->upperLeft() + vigra::Diff2D(1, 1);
+    MaskIteratorType mend = nftOutputImage->lowerRight() + vigra::Diff2D(-1, -1);
     for (int y = 1; my.y < mend.y; ++y, ++my.y) {
         MaskIteratorType mx = my;
-        MaskPixelType lastColor = NumericTraits<MaskPixelType>::zero();
+        MaskPixelType lastColor = vigra::NumericTraits<MaskPixelType>::zero();
 
         for (int x = 1; mx.x < mend.x; ++x, ++mx.x) {
-            if (*mx == NumericTraits<MaskPixelType>::max()
-                && lastColor == NumericTraits<MaskPixelType>::zero()) {
+            if (*mx == vigra::NumericTraits<MaskPixelType>::max()
+                && lastColor == vigra::NumericTraits<MaskPixelType>::zero()) {
                 // Found the corner of a previously unvisited white region.
                 // Create a Segment to hold the border of this region.
-                vector<Point2D> excessPoints;
+                std::vector<vigra::Point2D> excessPoints;
                 Segment* snake = new Segment();
                 rawSegments.push_back(snake);
 
                 // Walk around border of white region.
-                CrackContourCirculator<MaskIteratorType> crack(mx);
-                CrackContourCirculator<MaskIteratorType> crackEnd(crack);
+                vigra::CrackContourCirculator<MaskIteratorType> crack(mx);
+                vigra::CrackContourCirculator<MaskIteratorType> crackEnd(crack);
                 bool lastPointFrozen = false;
                 int distanceLastPoint = 0;
                 do {
-                    Point2D currentPoint = *crack + Diff2D(x, y);
+                    vigra::Point2D currentPoint = *crack + vigra::Diff2D(x, y);
                     crack++;
-                    Point2D nextPoint = *crack + Diff2D(x, y);
+                    vigra::Point2D nextPoint = *crack + vigra::Diff2D(x, y);
 
                     // See if currentPoint lies on border.
                     if (currentPoint.x == border.left()
@@ -614,26 +596,26 @@ void vectorizeSeamLine(Contour& rawSegments,
                 // Paint the border so this region will not be found again
                 for (Segment::iterator vertexIterator = snake->begin();
                      vertexIterator != snake->end(); ++vertexIterator) {
-                    (*nftOutputImage)[vertexIterator->second] = NumericTraits<MaskPixelType>::one();
+                    (*nftOutputImage)[vertexIterator->second] = vigra::NumericTraits<MaskPixelType>::one();
 
                     // While we're at it, convert vertices to uBB-relative coordinates.
                     vertexIterator->second =
-                        nftStride * (vertexIterator->second + Diff2D(-1, -1));
+                        nftStride * (vertexIterator->second + vigra::Diff2D(-1, -1));
 
                     // While we're at it, mark vertices outside the union region as not moveable.
                     if (vertexIterator->first
-                        && (*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero()
-                        && (*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == NumericTraits<MaskPixelType>::zero()) {
+                        && (*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == vigra::NumericTraits<MaskPixelType>::zero()
+                        && (*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == vigra::NumericTraits<MaskPixelType>::zero()) {
                         vertexIterator->first = false;
                     }
                 }
-                for (vector<Point2D>::iterator vertexIterator = excessPoints.begin();
+                for (std::vector<vigra::Point2D>::iterator vertexIterator = excessPoints.begin();
                      vertexIterator != excessPoints.end(); ++vertexIterator) {
                     // These are points on the border of the white
                     // region that are not in the snake.  Recolor them
                     // so that this white region will not be found
                     // again.
-                    (*nftOutputImage)[*vertexIterator] = NumericTraits<MaskPixelType>::one();
+                    (*nftOutputImage)[*vertexIterator] = vigra::NumericTraits<MaskPixelType>::one();
                 }
             }
 
@@ -769,9 +751,9 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
 
 /** Find extent of moveable snake vertices, and vertices bordering
  *  moveable vertices vertex bounding box. */
-Rect2D vertexBoundingBox(ContourVector& contours)
+vigra::Rect2D vertexBoundingBox(ContourVector& contours)
 {
-    Rect2D box;
+    vigra::Rect2D box;
     bool initializedVBB = false;
 
     for (ContourVector::iterator currentContour = contours.begin();
@@ -787,7 +769,7 @@ Rect2D vertexBoundingBox(ContourVector& contours)
                  ++vertexIterator) {
                 if (vertexIterator->first) {
                     if (!initializedVBB) {
-                        box = Rect2D(vertexIterator->second, Size2D(1, 1));
+                        box = vigra::Rect2D(vertexIterator->second, vigra::Size2D(1, 1));
                         initializedVBB = true;
                     } else {
                         box |= vertexIterator->second;
@@ -820,8 +802,8 @@ MaskType* createMask(const ImageType* const white,
                      const ImageType* const black,
                      const AlphaType* const whiteAlpha,
                      const AlphaType* const blackAlpha,
-                     const Rect2D& uBB,
-                     const Rect2D& iBB,
+                     const vigra::Rect2D& uBB,
+                     const vigra::Rect2D& iBB,
                      bool wraparound,
                      unsigned numberOfImages,
                      FileNameList::const_iterator inputFileNameIterator,
@@ -841,7 +823,7 @@ MaskType* createMask(const ImageType* const white,
                                             *inputFileNameIterator,
                                             OutputFileName,
                                             m);
-        ImageImportInfo maskInfo(maskFilename.c_str());
+        vigra::ImageImportInfo maskInfo(maskFilename.c_str());
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
             cerr << command
                  << ": info: loading mask \"" << maskFilename << "\"" << endl;
@@ -873,19 +855,19 @@ MaskType* createMask(const ImageType* const white,
     }
 
     // Start by using the nearest feature transform to generate a mask.
-    Size2D mainInputSize, mainInputBBSize;
-    Rect2D mainInputBB;
+    vigra::Size2D mainInputSize, mainInputBBSize;
+    vigra::Rect2D mainInputBB;
     int mainStride;
-    
+
     if (CoarseMask) {
         // Do MainAlgorithm at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
-        mainInputSize = Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+        mainInputSize = vigra::Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                                (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
-        mainInputBBSize = Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
+        mainInputBBSize = vigra::Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
                                  (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
 
-        mainInputBB = Rect2D(Point2D(std::floor(double(iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
+        mainInputBB = vigra::Rect2D(vigra::Point2D(std::floor(double(iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
                              std::floor(double(iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
                              mainInputBBSize);
 
@@ -893,45 +875,45 @@ MaskType* createMask(const ImageType* const white,
     } else {
         // Do MainAlgorithm at 1/1 scale.
         mainInputSize = uBB.size();
-        mainInputBB = Rect2D(iBB);
+        mainInputBB = vigra::Rect2D(iBB);
         if(mainInputBB.upperLeft().x >= uBB.upperLeft().x)
                 mainInputBB.moveBy(-uBB.upperLeft());
         else mainInputBB.moveBy(uBB.upperLeft());
         mainStride = 1;
     }
 
-    Size2D mainOutputSize;
-    Diff2D mainOutputOffset;
-    
+    vigra::Size2D mainOutputSize;
+    vigra::Diff2D mainOutputOffset;
+
     // GraphCut supports seam visualization without optimizers
     if (!CoarseMask && !OptimizeMask && !VisualizeSeam) {
-	// We are not going to vectorize the mask.
-	mainOutputSize = mainInputSize;
-	mainOutputOffset = Diff2D(0, 0);
+        // We are not going to vectorize the mask.
+        mainOutputSize = mainInputSize;
+        mainOutputOffset = vigra::Diff2D(0, 0);
     } else {
-	// Add 1-pixel border all around the image for the vectorization algorithm.
-	mainOutputSize = mainInputSize + Diff2D(2, 2);
-	mainOutputOffset = Diff2D(1, 1);
+        // Add 1-pixel border all around the image for the vectorization algorithm.
+        mainOutputSize = mainInputSize + vigra::Diff2D(2, 2);
+        mainOutputOffset = vigra::Diff2D(1, 1);
     }
 
     // mem usage before: 0
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
     MaskType* mainOutputImage = new MaskType(mainOutputSize);;
-    
+
     if (MainAlgorithm == GraphCut)
-        graphCut(stride(mainStride, mainStride, iBB.apply(srcImageRange(*white))),
-                stride(mainStride, mainStride, iBB.apply(srcImage(*black))),
-                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
-                stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
-                ManhattanDistance,
-                wraparound ? HorizontalStrip : OpenBoundaries,
-                mainInputBB);
+        graphCut(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(iBB, srcImageRange(*white))),
+                 vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(iBB, srcImage(*black))),
+                 vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+                 vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImageRange(*whiteAlpha))),
+                 vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImage(*blackAlpha))),
+                 ManhattanDistance,
+                 wraparound ? HorizontalStrip : OpenBoundaries,
+                 mainInputBB);
     else if (MainAlgorithm == NFT)
-        nearestFeatureTransform(stride(mainStride, mainStride, uBB.apply(srcImageRange(*whiteAlpha))),
-                                stride(mainStride, mainStride, uBB.apply(srcImage(*blackAlpha))),
-                                destIter(mainOutputImage->upperLeft() + mainOutputOffset),
+        nearestFeatureTransform(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImageRange(*whiteAlpha))),
+                                vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImage(*blackAlpha))),
+                                vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
                                 ManhattanDistance,
                                 wraparound ? HorizontalStrip : OpenBoundaries);
 
@@ -959,9 +941,9 @@ MaskType* createMask(const ImageType* const white,
                      << ": info: saving nearest-feature-transform image \""
                      << nftMaskFilename << "\"" << endl;
             }
-            ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
+            vigra::ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
             nftMaskInfo.setCompression(MASK_COMPRESSION);
-            exportImage(srcImageRange(*nft[i].second), nftMaskInfo);
+            vigra::exportImage(srcImageRange(*nft[i].second), nftMaskInfo);
         }
     }
 #endif
@@ -1000,7 +982,7 @@ MaskType* createMask(const ImageType* const white,
     if (!OptimizeMask && !VisualizeSeam) {
         // Simply fill contours to get final unoptimized mask.
         MaskType* mask = new MaskType(uBB.size());
-        fillContour(mask, rawSegments, Diff2D(0, 0));
+        fillContour(mask, rawSegments, vigra::Diff2D(0, 0));
         // delete all segments in rawSegments
         std::for_each(rawSegments.begin(), rawSegments.end(), bind(delete_ptr(), _1));
         return mask;
@@ -1034,50 +1016,50 @@ MaskType* createMask(const ImageType* const white,
         }
     }
 
-    Rect2D vBB = vertexBoundingBox(contours);
+    vigra::Rect2D vBB = vertexBoundingBox(contours);
     vBB.moveBy(uBB.upperLeft()); // move vBB to be root-relative
 
     // Make sure that vBB is bigger than iBB by one pixel in each
     // direction.  This will create a max-cost border to keep the seam
     // line from leaving the intersection region.
-    Rect2D iBBPlus = iBB;
+    vigra::Rect2D iBBPlus = iBB;
     iBBPlus.addBorder(1);
     vBB |= iBBPlus;
 
     // Vertex-Union bounding box: portion of uBB inside vBB
-    const Rect2D uvBB = vBB & uBB;
+    const vigra::Rect2D uvBB = vBB & uBB;
 
     // Offset between vBB and uvBB
-    const Diff2D uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
+    const vigra::Diff2D uvBBOffset = uvBB.upperLeft() - vBB.upperLeft();
 
-    Size2D mismatchImageSize;
+    vigra::Size2D mismatchImageSize;
     int mismatchImageStride;
-    Diff2D uvBBStrideOffset;
+    vigra::Diff2D uvBBStrideOffset;
 
     if (CoarseMask) {
         // Prepare to stride by two over uvBB to create cost image.
         // Push ul corner of vBB so that there is an even number of
         // pixels between vBB and uvBB.
         if (uvBBOffset.x % 2) {
-            vBB.setUpperLeft(vBB.upperLeft() + Diff2D(-1, 0));
+            vBB.setUpperLeft(vBB.upperLeft() + vigra::Diff2D(-1, 0));
         }
         if (uvBBOffset.y % 2) {
-            vBB.setUpperLeft(vBB.upperLeft() + Diff2D(0, -1));
+            vBB.setUpperLeft(vBB.upperLeft() + vigra::Diff2D(0, -1));
         }
         uvBBStrideOffset = (uvBB.upperLeft() - vBB.upperLeft()) / 2;
         mismatchImageStride = 2;
-        mismatchImageSize = (vBB.size() + Diff2D(1, 1)) / 2;
+        mismatchImageSize = (vBB.size() + vigra::Diff2D(1, 1)) / 2;
     } else {
         uvBBStrideOffset = uvBBOffset;
         mismatchImageStride = 1;
         mismatchImageSize = vBB.size();
     }
 
-    typedef UInt8 MismatchImagePixelType;
-    typedef BasicImage<MismatchImagePixelType> MismatchImageType;
-    typedef BasicImage<RGBValue<MismatchImagePixelType> > VisualizeImageType;
+    typedef vigra::UInt8 MismatchImagePixelType;
+    typedef vigra::BasicImage<MismatchImagePixelType> MismatchImageType;
+    typedef vigra::BasicImage<vigra::RGBValue<MismatchImagePixelType> > VisualizeImageType;
     MismatchImageType mismatchImage(mismatchImageSize,
-                                    NumericTraits<MismatchImagePixelType>::max());
+                                    vigra::NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
     VisualizeImageType* visualizeImage = NULL;
@@ -1094,16 +1076,16 @@ MaskType* createMask(const ImageType* const white,
     switch (PixelDifferenceFunctor)
     {
     case HueLuminanceMaxDifference:
-        combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
-                           stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
-                           destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+        combineTwoImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
+                           vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
+                           vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
                            MaxHueLuminanceDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
                            (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
         break;
     case DeltaEDifference:
-        combineTwoImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*white))),
-                           stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*black))),
-                           destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+        combineTwoImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
+                           vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
+                           vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
                            DeltaEPixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
                            (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
         break;
@@ -1143,15 +1125,15 @@ MaskType* createMask(const ImageType* const white,
 
         // Color the parts of the visualize image where the two images
         // to be blended do not overlap.
-        combineThreeImagesMP(stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImageRange(*whiteAlpha))),
-                             stride(mismatchImageStride, mismatchImageStride, uvBB.apply(srcImage(*blackAlpha))),
-                             srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                             destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+        combineThreeImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*whiteAlpha))),
+                             vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*blackAlpha))),
+                             vigra::srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                             vigra::destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
                              ifThenElse(Arg1() & Arg2(),
                                         Arg3(),
                                         Param(VISUALIZE_NO_OVERLAP_VALUE)));
 
-        const Diff2D offset = Diff2D(vBB.upperLeft()) - Diff2D(uBB.upperLeft());
+        const vigra::Diff2D offset = vigra::Diff2D(vBB.upperLeft()) - vigra::Diff2D(uBB.upperLeft());
         // Draw the initial seam line as a reference.
         for (ContourVector::const_iterator v = contours.begin(); v != contours.end(); ++v) {
             for (Contour::const_iterator c = (*v)->begin(); c != (*v)->end(); ++c) {
@@ -1165,7 +1147,7 @@ MaskType* createMask(const ImageType* const white,
                                       VISUALIZE_INITIAL_PATH);
                     }
                     if (OptimizeMask)
-			visualizePoint(*visualizeImage,
+                        visualizePoint(*visualizeImage,
                                    (s->second - offset) / mismatchImageStride,
                                    s->first ? VISUALIZE_MOVABLE_POINT : VISUALIZE_FROZEN_POINT,
                                    s->first ? MARK_MOVABLE_POINT : MARK_FROZEN_POINT,
@@ -1178,67 +1160,67 @@ MaskType* createMask(const ImageType* const white,
 #ifndef SKIP_OPTIMIZER
 
     if (OptimizeMask) {
-    
-	int segmentNumber;
-	// Move snake points to mismatchImage-relative coordinates
-	for (ContourVector::iterator currentContour = contours.begin();
-		currentContour != contours.end();
-		++currentContour) {
-		segmentNumber = 0;
-		for (Contour::iterator currentSegment = (*currentContour)->begin();
-		    currentSegment != (*currentContour)->end();
-		    ++currentSegment, ++segmentNumber) {
-		    Segment* snake = *currentSegment;
-		    for (Segment::iterator vertexIterator = snake->begin();
-			vertexIterator != snake->end();
-			++vertexIterator) {
-			vertexIterator->second =
-			    (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
-			    mismatchImageStride;
-		    }
-		}
-	}
 
-	vector<double> *params = new(vector<double>);
+        int segmentNumber;
+        // Move snake points to mismatchImage-relative coordinates
+        for (ContourVector::iterator currentContour = contours.begin();
+                currentContour != contours.end();
+                ++currentContour) {
+                segmentNumber = 0;
+                for (Contour::iterator currentSegment = (*currentContour)->begin();
+                    currentSegment != (*currentContour)->end();
+                    ++currentSegment, ++segmentNumber) {
+                    Segment* snake = *currentSegment;
+                    for (Segment::iterator vertexIterator = snake->begin();
+                        vertexIterator != snake->end();
+                        ++vertexIterator) {
+                        vertexIterator->second =
+                            (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
+                            mismatchImageStride;
+                    }
+                }
+        }
 
-	OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-	    *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-				(&mismatchImage, visualizeImage,
-				&mismatchImageSize, &mismatchImageStride,
-				&uvBBStrideOffset, &contours, &uBB, &vBB, params,
-				whiteAlpha, blackAlpha, &uvBB);
+        std::vector<double> *params = new(std::vector<double>);
 
-	    // Add Strategy 1: Use GDA to optimize placement of snake vertices
-	defaultOptimizerChain->addOptimizer("anneal");
+        OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+            *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+                                (&mismatchImage, visualizeImage,
+                                &mismatchImageSize, &mismatchImageStride,
+                                &uvBBStrideOffset, &contours, &uBB, &vBB, params,
+                                whiteAlpha, blackAlpha, &uvBB);
 
-	    // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
-	defaultOptimizerChain->addOptimizer("dijkstra");
+            // Add Strategy 1: Use GDA to optimize placement of snake vertices
+        defaultOptimizerChain->addOptimizer("anneal");
 
-	    // Fire optimizer chain (runs every optimizer on the list in sequence)
-	defaultOptimizerChain->runOptimizerChain();
+            // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
+        defaultOptimizerChain->addOptimizer("dijkstra");
 
-	// Move snake vertices from mismatchImage-relative
-	// coordinates to uBB-relative coordinates.
-	for (ContourVector::iterator currentContour = contours.begin();
-		currentContour != contours.end();
-		++currentContour) {
-		segmentNumber = 0;
-		for (Contour::iterator currentSegment = (*currentContour)->begin();
-		    currentSegment != (*currentContour)->end();
-		    ++currentSegment, ++segmentNumber) {
-		    Segment* snake = *currentSegment;
-		    for (Segment::iterator currentVertex = snake->begin();
-			currentVertex != snake->end();
-			++currentVertex) {
-			currentVertex->second =
-			    currentVertex->second * mismatchImageStride +
-			    vBB.upperLeft() - uBB.upperLeft();
-		    }
-		}
-	}
+            // Fire optimizer chain (runs every optimizer on the list in sequence)
+        defaultOptimizerChain->runOptimizerChain();
 
-	delete params;
-	delete defaultOptimizerChain;
+        // Move snake vertices from mismatchImage-relative
+        // coordinates to uBB-relative coordinates.
+        for (ContourVector::iterator currentContour = contours.begin();
+                currentContour != contours.end();
+                ++currentContour) {
+                segmentNumber = 0;
+                for (Contour::iterator currentSegment = (*currentContour)->begin();
+                    currentSegment != (*currentContour)->end();
+                    ++currentSegment, ++segmentNumber) {
+                    Segment* snake = *currentSegment;
+                    for (Segment::iterator currentVertex = snake->begin();
+                        currentVertex != snake->end();
+                        ++currentVertex) {
+                        currentVertex->second =
+                            currentVertex->second * mismatchImageStride +
+                            vBB.upperLeft() - uBB.upperLeft();
+                    }
+                }
+        }
+
+        delete params;
+        delete defaultOptimizerChain;
     }
 #endif // !SKIP_OPTIMIZER
 
@@ -1269,9 +1251,9 @@ MaskType* createMask(const ImageType* const white,
                      << ": info: saving seam visualization \""
                      << visualizeFilename << "\"" << endl;
             }
-            ImageExportInfo visualizeInfo(visualizeFilename.c_str());
+            vigra::ImageExportInfo visualizeInfo(visualizeFilename.c_str());
             visualizeInfo.setCompression(MASK_COMPRESSION);
-            exportImage(srcImageRange(*visualizeImage), visualizeInfo);
+            vigra::exportImage(srcImageRange(*visualizeImage), visualizeInfo);
         }
 
         delete visualizeImage;
@@ -1285,7 +1267,7 @@ MaskType* createMask(const ImageType* const white,
     // Fill contours to get final optimized mask.
     MaskType* mask = new MaskType(uBB.size());
     std::for_each(contours.begin(), contours.end(),
-                  bind(fillContour<MaskType>, mask, *_1, Diff2D(0, 0)));
+                  bind(fillContour<MaskType>, mask, *_1, vigra::Diff2D(0, 0)));
 
     // Clean up contours
     std::for_each(contours.begin(), contours.end(),

@@ -143,7 +143,7 @@ typedef enum BoundaryKind
     DoubleStrip                 // non-contractible
 } boundary_t;
 
-enum MainAlgo{
+enum MainAlgo {
     NFT, GraphCut
 };
 

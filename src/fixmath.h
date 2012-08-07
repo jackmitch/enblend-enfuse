@@ -34,11 +34,12 @@
 using namespace boost::math;
 #endif
 
-#include "vigra/basicimage.hxx"
-#include "vigra/cachedfileimage.hxx"
-#include "vigra/mathutil.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/utilities.hxx"
+#include <vigra/basicimage.hxx>
+#include <vigra/mathutil.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/utilities.hxx>
+
+#include "vigra_ext/cachedfileimage.hxx"
 
 #include "minimizer.h"
 
@@ -48,12 +49,6 @@ using namespace boost::math;
 #define MAXIMUM_HUE 360.0       // h
 
 #define XYZ_SCALE 100.0
-
-
-using std::pair;
-
-using vigra::NumericTraits;
-using vigra::triple;
 
 
 namespace enblend {
@@ -220,26 +215,26 @@ public:
     }
 
 protected:
-    typedef typename NumericTraits<SrcPixelType>::isIntegral SrcIsIntegral;
-    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
+    typedef typename vigra::NumericTraits<SrcPixelType>::isIntegral SrcIsIntegral;
+    typedef typename vigra::NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
 
     // Convert an integral pixel type to an integral pyramid value type.
-    inline PyramidPixelType doConvert(const SrcPixelType& v, VigraTrueType, VigraTrueType) const {
+    inline PyramidPixelType doConvert(const SrcPixelType& v, vigra::VigraTrueType, vigra::VigraTrueType) const {
         return convertIntegerToFixedPoint(v);
     }
 
     // Convert an integral pixel type to a real pyramid value type.
-    inline PyramidPixelType doConvert(const SrcPixelType& v, VigraTrueType, VigraFalseType) const {
-        return NumericTraits<SrcPixelType>::toRealPromote(v);
+    inline PyramidPixelType doConvert(const SrcPixelType& v, vigra::VigraTrueType, vigra::VigraFalseType) const {
+        return vigra::NumericTraits<SrcPixelType>::toRealPromote(v);
     }
 
     // Convert a real pixel type to an integral pyramid value type.
-    inline PyramidPixelType doConvert(const SrcPixelType& v, VigraFalseType, VigraTrueType) const {
+    inline PyramidPixelType doConvert(const SrcPixelType& v, vigra::VigraFalseType, vigra::VigraTrueType) const {
         return convertDoubleToFixedPoint(v);
     }
 
     // Convert a real pixel type to a real pyramid value type.
-    inline PyramidPixelType doConvert(const SrcPixelType& v, VigraFalseType, VigraFalseType) const {
+    inline PyramidPixelType doConvert(const SrcPixelType& v, vigra::VigraFalseType, vigra::VigraFalseType) const {
         // Convert real data using a log transform.  These achieves
         // two purposes:
         //  1. During blending, even completely non-negative images
@@ -265,7 +260,7 @@ protected:
     inline PyramidPixelType convertDoubleToFixedPoint(const double& v) const {
         // Shift v to get the appropriate number of fraction bits into the integer part,
         // then fromRealPromote this value into the fixed-point type.
-        return NumericTraits<PyramidPixelType>::fromRealPromote(v * static_cast<double>(1U << PyramidFractionBits));
+        return vigra::NumericTraits<PyramidPixelType>::fromRealPromote(v * static_cast<double>(1U << PyramidFractionBits));
     }
 
     inline PyramidPixelType convertIntegerToFixedPoint(const SrcPixelType& v) const {
@@ -290,13 +285,13 @@ public:
     }
 
 protected:
-    typedef typename NumericTraits<DestPixelType>::isIntegral DestIsIntegral;
-    typedef typename NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
+    typedef typename vigra::NumericTraits<DestPixelType>::isIntegral DestIsIntegral;
+    typedef typename vigra::NumericTraits<PyramidPixelType>::isIntegral PyramidIsIntegral;
 
     // test time with floating-point dithering: 100.01 sec
     // test time with integer dithering: 94.89 sec
     // Convert an integral pyramid pixel to an integral image pixel.
-    inline DestPixelType doConvert(const PyramidPixelType& v, VigraTrueType, VigraTrueType) const {
+    inline DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType, vigra::VigraTrueType) const {
         // Integer Dithering
         PyramidPixelType half = 1U << (PyramidFractionBits - 1);
         PyramidPixelType quarter = 1U << (PyramidFractionBits - 2);
@@ -307,33 +302,33 @@ protected:
         if ((vFraction >= quarter) && (vFraction < threeQuarter)) {
             PyramidPixelType random = (PyramidPixelType(::Twister()) & (half - 1)) + quarter;
             if (random <= vFraction) {
-                return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
+                return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
             } else {
-                return DestPixelType(NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
+                return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
             }
         }
         else if (vFraction >= quarter) {
-            return DestPixelType(NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
+            return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
         }
         else {
-            return DestPixelType(NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
+            return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
         }
 
     }
 
     // Convert a real pyramid pixel to an integral image pixel.
-    inline DestPixelType doConvert(const PyramidPixelType& v, VigraTrueType, VigraFalseType) const {
+    inline DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType, vigra::VigraFalseType) const {
         const double d = dither(v);
-        return NumericTraits<DestPixelType>::fromRealPromote(d);
+        return vigra::NumericTraits<DestPixelType>::fromRealPromote(d);
     }
 
     // Convert an integral pyramid pixel to a real image pixel.
-    inline DestPixelType doConvert(const PyramidPixelType& v, VigraFalseType, VigraTrueType) const {
+    inline DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType, vigra::VigraTrueType) const {
         return convertFixedPointToDouble(v);
     }
 
     // Convert a real pyramid pixel to a real image pixel.
-    inline DestPixelType doConvert(const PyramidPixelType& v, VigraFalseType, VigraFalseType) const {
+    inline DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType, vigra::VigraFalseType) const {
         // Undo logarithmic/rational mapping that was done in building
         // the pyramid.  See ConvertScalarToPyramidFunctor::doConvert
         // for the forward transformation.
@@ -361,7 +356,7 @@ protected:
     }
 
     inline double convertFixedPointToDouble(const PyramidPixelType& v) const {
-        return NumericTraits<PyramidPixelType>::toRealPromote(v) /
+        return vigra::NumericTraits<PyramidPixelType>::toRealPromote(v) /
             static_cast<double>(1U << PyramidFractionBits);
     }
 };
@@ -418,16 +413,16 @@ class ConvertVectorToJCHPyramidFunctor {
 public:
     ConvertVectorToJCHPyramidFunctor() :
         cf(),
-        scale(1.0 / NumericTraits<SrcComponentType>::toRealPromote(NumericTraits<SrcComponentType>::max())),
+        scale(1.0 / vigra::NumericTraits<SrcComponentType>::toRealPromote(vigra::NumericTraits<SrcComponentType>::max())),
         shift(double(1U << (PyramidIntegerBits - 1 - 7)))
     {}
 
     inline PyramidVectorType operator()(const SrcVectorType& v) const {
         // rgb values must be in range [0, 1]
         const double rgb[] = {
-            scale * NumericTraits<SrcComponentType>::toRealPromote(v.red()),
-            scale * NumericTraits<SrcComponentType>::toRealPromote(v.green()),
-            scale * NumericTraits<SrcComponentType>::toRealPromote(v.blue())
+            scale * vigra::NumericTraits<SrcComponentType>::toRealPromote(v.red()),
+            scale * vigra::NumericTraits<SrcComponentType>::toRealPromote(v.green()),
+            scale * vigra::NumericTraits<SrcComponentType>::toRealPromote(v.blue())
         };
         cmsJCh jch;
 
@@ -515,7 +510,7 @@ class ConvertJCHPyramidToVectorFunctor {
 public:
     ConvertJCHPyramidToVectorFunctor() :
         cf(),
-        scale(NumericTraits<DestComponentType>::toRealPromote(NumericTraits<DestComponentType>::max())),
+        scale(vigra::NumericTraits<DestComponentType>::toRealPromote(vigra::NumericTraits<DestComponentType>::max())),
         shift(double(1U << (PyramidIntegerBits - 1 - 7))),
 
         // Parameters for highlight optimizer only
@@ -684,9 +679,9 @@ public:
 
         limit_sequence(rgb, rgb + 3U, 0.0, 1.0);
 
-        return DestVectorType(NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[0]),
-                              NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[1]),
-                              NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[2]));
+        return DestVectorType(vigra::NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[0]),
+                              vigra::NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[1]),
+                              vigra::NumericTraits<DestComponentType>::fromRealPromote(scale * rgb[2]));
     }
 
 protected:
@@ -723,7 +718,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         typename SrcImageType::ConstAccessor sa,
         typename PyramidImageType::traverser dest_upperleft,
         typename PyramidImageType::Accessor da,
-        VigraTrueType)
+        vigra::VigraTrueType)
 {
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
@@ -744,7 +739,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
                    typename SrcImageType::ConstAccessor sa,
                    typename PyramidImageType::traverser dest_upperleft,
                    typename PyramidImageType::Accessor da,
-                   VigraFalseType)
+                   vigra::VigraFalseType)
 {
     typedef typename SrcImageType::value_type SrcVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
@@ -777,7 +772,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
                    typename PyramidImageType::traverser dest_upperleft,
                    typename PyramidImageType::Accessor da)
 {
-    typedef typename NumericTraits<typename SrcImageType::value_type>::isScalar src_is_scalar;
+    typedef typename vigra::NumericTraits<typename SrcImageType::value_type>::isScalar src_is_scalar;
 
     copyToPyramidImage<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits>
         (src_upperleft,
@@ -792,8 +787,8 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 // Version using argument object factories.
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
 inline void
-copyToPyramidImage(triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
-                   pair<typename PyramidImageType::traverser, typename PyramidImageType::Accessor> dest)
+copyToPyramidImage(vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
+                   vigra::pair<typename PyramidImageType::traverser, typename PyramidImageType::Accessor> dest)
 {
     copyToPyramidImage<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits>
         (src.first,
@@ -814,7 +809,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename MaskImageType::ConstAccessor ma,
                        typename DestImageType::traverser dest_upperleft,
                        typename DestImageType::Accessor da,
-                       VigraTrueType)
+                       vigra::VigraTrueType)
 {
     typedef typename DestImageType::value_type DestPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
@@ -838,7 +833,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename MaskImageType::ConstAccessor ma,
                        typename DestImageType::traverser dest_upperleft,
                        typename DestImageType::Accessor da,
-                       VigraFalseType)
+                       vigra::VigraFalseType)
 {
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
@@ -873,7 +868,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename DestImageType::traverser dest_upperleft,
                        typename DestImageType::Accessor da)
 {
-    typedef typename NumericTraits<typename PyramidImageType::value_type>::isScalar src_is_scalar;
+    typedef typename vigra::NumericTraits<typename PyramidImageType::value_type>::isScalar src_is_scalar;
 
     copyFromPyramidImageIf<PyramidImageType, MaskImageType, DestImageType, PyramidIntegerBits, PyramidFractionBits>
         (src_upperleft,
@@ -890,9 +885,9 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 // Version using argument object factories.
 template <typename PyramidImageType, typename MaskImageType, typename DestImageType, int PyramidIntegerBits, int PyramidFractionBits>
 inline void
-copyFromPyramidImageIf(triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
-                       pair<typename MaskImageType::const_traverser, typename MaskImageType::ConstAccessor> mask,
-                       pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest)
+copyFromPyramidImageIf(vigra::triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
+                       vigra::pair<typename MaskImageType::const_traverser, typename MaskImageType::ConstAccessor> mask,
+                       vigra::pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest)
 {
     copyFromPyramidImageIf<PyramidImageType, MaskImageType, DestImageType, PyramidIntegerBits, PyramidFractionBits>
         (src.first,

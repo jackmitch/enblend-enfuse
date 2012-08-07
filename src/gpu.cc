@@ -29,10 +29,6 @@
 
 #ifdef HAVE_LIBGLEW
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
 static const std::string command("enblend");
 
 static GLuint GlutWindowHandle;
@@ -78,9 +74,9 @@ void checkGLErrors(const char* file, unsigned line)
     const GLenum errCode = glGetError();
 
     if (errCode != GL_NO_ERROR) {
-        cerr << command
+        std::cerr << command
              << ": OpenGL error in " << file << ":" << line << ": "
-             << gluErrorString(errCode) << endl;
+             << gluErrorString(errCode) << std::endl;
         exit(1);
     }
 }
@@ -96,7 +92,7 @@ void printInfoLog(GLhandleARB obj)
     if (infologLength > 1) {
         infoLog = new char[infologLength];
         glGetInfoLogARB(obj, infologLength, &charsWritten, infoLog);
-        cerr << command << ": info: GL info log\n" << infoLog << endl;
+        std::cerr << command << ": info: GL info log\n" << infoLog << std::endl;
         delete [] infoLog;
     }
 }
@@ -109,39 +105,39 @@ bool checkFramebufferStatus()
     case GL_FRAMEBUFFER_COMPLETE_EXT:
         return true;
     case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-        cerr << command
+        std::cerr << command
              << ": GL error: Framebuffer incomplete, incomplete attachment"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-        cerr << command
+        std::cerr << command
              << ": unsupported framebuffer format"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-        cerr << command
+        std::cerr << command
              << ": framebuffer incomplete, missing attachment"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-        cerr << command
+        std::cerr << command
              << ": framebuffer incomplete, attached images must have same dimensions"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
-        cerr << command
+        std::cerr << command
              << ": framebuffer incomplete, attached images must have same format"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
-        cerr << command
+        std::cerr << command
              << ": framebuffer incomplete, missing draw buffer"
-             << endl;
+             << std::endl;
         return false;
     case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
-        cerr << command
+        std::cerr << command
              << ": framebuffer incomplete, missing read buffer"
-             << endl;
+             << std::endl;
         return false;
     }
 
@@ -165,15 +161,15 @@ CGLContextObj cgl_init()
 
     cgl_error = CGLChoosePixelFormat(attribs, &pixel_format, &pixel_formats);
     if (pixel_format == NULL) {
-        cerr << command
+        std::cerr << command
              << ": error " << cgl_error << " occured when choosing pixel format"
-             << endl;
+             << std::endl;
     } else {
         cgl_error = CGLCreateContext(pixel_format, NULL, &cgl_context);
         if (!cgl_context) {
-            cerr << command
+            std::cerr << command
                  << ": error " << cgl_error << " occured while creating a CGL context"
-                 << endl;
+                 << std::endl;
         } else {
             CGLSetCurrentContext(cgl_context);
         }
@@ -196,10 +192,10 @@ bool initGPU(int* argcp, char** argv)
 
     const int err = glewInit();
     if (err != GLEW_OK) {
-        cerr << command << ": an error occured while setting up the GPU\n"
+        std::cerr << command << ": an error occured while setting up the GPU\n"
              << command << ": " << glewGetErrorString(err) << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine"
-             << endl;
+             << std::endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
         CGLDestroyContext(cgl_context);
 #else
@@ -209,7 +205,7 @@ bool initGPU(int* argcp, char** argv)
     }
 
     if (Verbose >= VERBOSE_GPU_MESSAGES) {
-        cerr << command << ": info: using graphics card: " << GLGETSTRING(GL_VENDOR) << "\n"
+        std::cerr << command << ": info: using graphics card: " << GLGETSTRING(GL_VENDOR) << "\n"
              << command << ": info:   renderer: " << GLGETSTRING(GL_RENDERER) << "\n"
              << command << ": info:   version: " << GLGETSTRING(GL_VERSION) << "\n";
     }
@@ -226,13 +222,13 @@ bool initGPU(int* argcp, char** argv)
           has_arb_shading_language &&
           has_arb_texture_float)) {
         const char* msg[] = {"false", "true"};
-        cerr << command << ": extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << "\n"
+        std::cerr << command << ": extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << "\n"
              << command << ": extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << "\n"
              << command << ": extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << "\n"
              << command << ": extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << "\n"
              << command << ": extension GL_ARB_texture_float = " << msg[has_arb_texture_float] << "\n"
              << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
-             << command << ": \"--gpu\" flag is not going to work on this machine" << endl;
+             << command << ": \"--gpu\" flag is not going to work on this machine" << std::endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK
         CGLDestroyContext(cgl_context);
 #else
@@ -254,7 +250,7 @@ bool initGPU(int* argcp, char** argv)
     GLint success;
     glGetObjectParameterivARB(ProgramObject, GL_OBJECT_LINK_STATUS_ARB, &success);
     if (!success) {
-        cerr << command << ": GPU ARB shader program could not be linked\n";
+        std::cerr << command << ": GPU ARB shader program could not be linked\n";
         exit(1);
     }
 
@@ -279,11 +275,11 @@ bool configureGPUTextures(unsigned int k, unsigned int vars)
     // http://www.opengl.org/documentation/specs/man_pages/hardcopy/GL/html/gl/teximage2d.html
     if (width > 2 + GL_MAX_TEXTURE_SIZE ||
         height > 2 + GL_MAX_TEXTURE_SIZE) {
-        cerr << command << ": texture size exceeds GPU's maximum\n";
+        std::cerr << command << ": texture size exceeds GPU's maximum\n";
         exit(1);
     }
     if (width % 2 != 0 || height % 2 != 0) {
-        cerr << command << ": warning: odd texture size may be invalid for OpenGL\n";
+        std::cerr << command << ": warning: odd texture size may be invalid for OpenGL\n";
     }
 
     glGenTextures(1, &PiTexture);

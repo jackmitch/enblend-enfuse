@@ -100,6 +100,10 @@ Unreleased.  Current line of development.
 
 - Enblend and Enfuse now use LittleCMS version 2.x.
 
+- Enblend and Enfuse no longer rely on their own versions of the Vigra
+  imaging library.  Vigra version 1.8 or later is now required to
+  build.
+
 - XHTML validation does not rely on network access anymore.  This
   means all necessary DTDs must be available locally and all catalogs
   must be set up correctly to build the XHTML documentation.

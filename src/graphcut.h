@@ -37,34 +37,27 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/unordered_set.hpp>
 
-#include "vigra/functorexpression.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/stdcachedfileimage.hxx"
-#include "vigra/copyimage.hxx"
-#include "vigra/imageiterator.hxx"
-#include "vigra/stdconvolution.hxx"
-#include "vigra/bordertreatment.hxx"
-#include "vigra/labelimage.hxx"
-#include "vigra/transformimage.hxx"
-#include "vigra/contourcirculator.hxx"
-#include "vigra/mathutil.hxx"
+#include <vigra/functorexpression.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/copyimage.hxx>
+#include <vigra/imageiterator.hxx>
+#include <vigra/stdconvolution.hxx>
+#include <vigra/bordertreatment.hxx>
+#include <vigra/labelimage.hxx>
+#include <vigra/transformimage.hxx>
+#include <vigra/contourcirculator.hxx>
+#include <vigra/mathutil.hxx>
+
+#include "vigra_ext/rect2d.hxx"
+#include "vigra_ext/stdcachedfileimage.hxx"
 
 #include "common.h"
 #include "maskcommon.h"
 #include "masktypedefs.h"
 #include "nearest.h"
 
-using vigra::NumericTraits;
-using vigra::triple;
-using vigra::stride;
-using vigra::StridedImageIterator;
-using vigra::Kernel2D;
-using vigra::Kernel1D;
-using vigra::kernel2d;
-using vigra::kernel1d;
-using vigra::BorderTreatmentMode;
-using vigra::labelImage;
+
 using namespace vigra::functor;
 
 
@@ -94,7 +87,7 @@ namespace enblend {
     {
     public:
         CheckpointPixels() {}
-        boost::unordered_set<Point2D, pointHash> top, bottom;
+        boost::unordered_set<vigra::Point2D, pointHash> top, bottom;
 
         ~CheckpointPixels()
         {
@@ -109,7 +102,7 @@ namespace enblend {
     };
 
 
-    int distab(const Point2D& a, const Point2D& b)
+    int distab(const vigra::Point2D& a, const vigra::Point2D& b)
     {
         return std::abs((a.x - b.x)) + std::abs((a.y - b.y));
     }
@@ -117,22 +110,22 @@ namespace enblend {
 
     template<class MaskImageIterator, class MaskAccessor,
              class MaskPixelType, class DestImageIterator, class DestAccessor>
-    vector<Point2D>*
+    std::vector<vigra::Point2D>*
     findIntermediatePoints(MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright,
                            MaskAccessor ma1, MaskImageIterator mask2_upperleft, MaskAccessor ma2,
                            DestImageIterator dest_upperleft, DestAccessor da,
-                           nearest_neigbor_metric_t& norm, boundary_t& boundary,
-                           const Rect2D& iBB)
+                           nearest_neighbor_metric_t& norm, boundary_t& boundary,
+                           const vigra::Rect2D& iBB)
     {
         typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
         typedef typename IMAGETYPE<MaskPixelType>::traverser IteratorType;
         typedef vigra::CrackContourCirculator<IteratorType> Circulator;
-        typedef triple<IteratorType, IteratorType, unsigned int> EntryPointContainer;
-        IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + Diff2D(2, 2),
+        typedef vigra::triple<IteratorType, IteratorType, unsigned int> EntryPointContainer;
+        IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + vigra::Diff2D(2, 2),
                                             MaskPixelTraits::max() / 2);
-        IMAGETYPE<MaskPixelType> nft(iBB.lowerRight() - iBB.upperLeft() + Diff2D(2, 2),
+        IMAGETYPE<MaskPixelType> nft(iBB.lowerRight() - iBB.upperLeft() + vigra::Diff2D(2, 2),
                                      MaskPixelTraits::max() / 2);
-        IMAGETYPE<MaskPixelType> overlap(iBB.lowerRight() - iBB.upperLeft() + Diff2D(2, 2));
+        IMAGETYPE<MaskPixelType> overlap(iBB.lowerRight() - iBB.upperLeft() + vigra::Diff2D(2, 2));
         IteratorType nftIter = nft.upperLeft();
         IteratorType previous;
         Circulator* circ;
@@ -140,28 +133,28 @@ namespace enblend {
         bool offTheBorder = false;
         bool inOverlap = false;
         bool ready = false;
-        vector<Point2D>* interPointList = new vector<Point2D>();
-        vector<EntryPointContainer> entryPointList;
+        std::vector<vigra::Point2D>* interPointList = new std::vector<vigra::Point2D>();
+        std::vector<EntryPointContainer> entryPointList;
         EntryPointContainer* max = NULL;
         std::pair<IteratorType, IteratorType> entryPoint;
-        Point2D intermediatePoint;
+        vigra::Point2D intermediatePoint;
         unsigned int counter = 0;
 
-        nearestFeatureTransform(srcIterRange(mask1_upperleft, mask1_lowerright, ma1),
-                                srcIter(mask2_upperleft, ma2),
-                                destIter(nftTempImg.upperLeft() + Diff2D(1, 1)),
+        nearestFeatureTransform(vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1),
+                                vigra::srcIter(mask2_upperleft, ma2),
+                                vigra::destIter(nftTempImg.upperLeft() + vigra::Diff2D(1, 1)),
                                 norm, boundary);
 
-        copyImage(srcIterRange(nftTempImg.upperLeft() + Diff2D(1, 1), nftTempImg.lowerRight() - Diff2D(1, 1)),
-                  destIter(dest_upperleft, da));
+        copyImage(vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1), nftTempImg.lowerRight() - vigra::Diff2D(1, 1)),
+                  vigra::destIter(dest_upperleft, da));
 
-        copyImage(iBB.apply(srcIterRange(nftTempImg.upperLeft() + Diff2D(1, 1),
-                                         nftTempImg.lowerRight() - Diff2D(1, 1))),
-                  destIter(nft.upperLeft() + Diff2D(1, 1)));
+        copyImage(vigra_ext::apply(iBB, vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1),
+                                                     nftTempImg.lowerRight() - vigra::Diff2D(1, 1))),
+                  vigra::destIter(nft.upperLeft() + vigra::Diff2D(1, 1)));
 
-        combineTwoImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                           iBB.apply(srcIter(mask2_upperleft, ma2)),
-                           destIter(overlap.upperLeft() + Diff2D(1, 1)),
+        combineTwoImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                           vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
+                           vigra::destIter(overlap.upperLeft() + vigra::Diff2D(1, 1)),
                            ifThenElse(Arg1() && Arg2(),
                                       Param(MaskPixelTraits::max()),
                                       Param(MaskPixelTraits::zero())));
@@ -172,8 +165,8 @@ namespace enblend {
         exportImage(srcImageRange(overlap), ImageExportInfo("./debug/overlap.tif").setPixelType("UINT8"));
 #endif
 
-        circ = new Circulator(nftIter + Diff2D(1, 0), vigra::FourNeighborCode::South);
-        end = new Circulator(nftIter + Diff2D(1, 0), vigra::FourNeighborCode::South);
+        circ = new Circulator(nftIter + vigra::Diff2D(1, 0), vigra::FourNeighborCode::South);
+        end = new Circulator(nftIter + vigra::Diff2D(1, 0), vigra::FourNeighborCode::South);
 
         previous = circ->outerPixel();
 
@@ -198,7 +191,7 @@ namespace enblend {
             return interPointList;
         }
 
-        for (typename vector<EntryPointContainer>::iterator i = entryPointList.begin();
+        for (typename std::vector<EntryPointContainer>::iterator i = entryPointList.begin();
              i != entryPointList.end();
              ++i) {
             if (max == NULL) {
@@ -213,7 +206,7 @@ namespace enblend {
         if (max != NULL) {
             delete circ;
             delete end;
-            Diff2D dir = max->second - max->first;
+            vigra::Diff2D dir = max->second - max->first;
             if (dir.x != 0) {
                 if (max->second.x < max->first.x) {
                     max->second = max->first;
@@ -239,7 +232,7 @@ namespace enblend {
             intermediatePoint = circ->outerPixel() - nft.upperLeft();
             if (!offTheBorder && !(nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2)) {
                 offTheBorder = true;
-                const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                const vigra::Point2D dualGraphPoint = vigra::Point2D(intermediatePoint * 2 - vigra::Diff2D(1, 1));
                 if (intermediatePoint.x >= 0 &&
                     intermediatePoint.y >= 0 &&
                     intermediatePoint.x < iBB.lowerRight().x &&
@@ -255,7 +248,7 @@ namespace enblend {
             if (offTheBorder) {
                 if (!inOverlap && overlap[intermediatePoint] == MaskPixelTraits::max()) {
                     inOverlap = true;
-                    const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                    const vigra::Point2D dualGraphPoint = vigra::Point2D(intermediatePoint * 2 - vigra::Diff2D(1, 1));
                     if (!interPointList->empty() &&
                         *(interPointList->begin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
@@ -272,7 +265,7 @@ namespace enblend {
                     overlap[intermediatePoint] == MaskPixelTraits::zero() &&
                     nft.accessor()(circ->outerPixel()) != MaskPixelTraits::max() / 2) {
                     inOverlap = false;
-                    const Point2D dualGraphPoint = Point2D(intermediatePoint * 2 - Diff2D(1, 1));
+                    const vigra::Point2D dualGraphPoint = vigra::Point2D(intermediatePoint * 2 - vigra::Diff2D(1, 1));
                     if (intermediatePoint.x >= 0 && intermediatePoint.y >= 0) {
                         interPointList->push_back(dualGraphPoint);
                     }
@@ -283,7 +276,7 @@ namespace enblend {
                 }
 
                 if (nft.accessor()(circ->outerPixel()) == MaskPixelTraits::max() / 2) {
-                    const Point2D dualGraphPoint = Point2D((previous - nft.upperLeft()) * 2 - Diff2D(1, 1));
+                    const vigra::Point2D dualGraphPoint = vigra::Point2D((previous - nft.upperLeft()) * 2 - vigra::Diff2D(1, 1));
                     if (!interPointList->empty() &&
                         *(interPointList->rbegin()) != dualGraphPoint &&
                         intermediatePoint.x >= 0 &&
@@ -312,11 +305,11 @@ namespace enblend {
     public:
         CostComparer(const ImageType* image) : img(image) {}
 
-        bool operator()(const Point2D& a, const Point2D& b) const
+        bool operator()(const vigra::Point2D& a, const vigra::Point2D& b) const
         {
-            if (a == Point2D(-20, -20)) {
+            if (a == vigra::Point2D(-20, -20)) {
                 return totalScore > (*img)[b];
-            } else if (b == Point2D(-20, -20)) {
+            } else if (b == vigra::Point2D(-20, -20)) {
                 return (*img)[a] > totalScore;
             }
 
@@ -337,27 +330,27 @@ namespace enblend {
     struct OutputLabelingFunctor
     {
     public:
-        OutputLabelingFunctor(boost::unordered_set<Point2D, pointHash>* a_,
-                              boost::unordered_set<Point2D, pointHash>* b_,
-                              Point2D offset_) :
+        OutputLabelingFunctor(boost::unordered_set<vigra::Point2D, pointHash>* a_,
+                              boost::unordered_set<vigra::Point2D, pointHash>* b_,
+                              vigra::Point2D offset_) :
             left(a_), right(b_), offset(offset_) {}
 
-        bool operator()(Diff2D a2, Diff2D b2)
+        bool operator()(vigra::Diff2D a2, vigra::Diff2D b2)
         {
-            Point2D a(a2);
-            Point2D b(b2);
+            vigra::Point2D a(a2);
+            vigra::Point2D b(b2);
             //add border to detect seams close to border
-            a -= Point2D(1,1);
-            b -= Point2D(1,1);
+            a -= vigra::Point2D(1,1);
+            b -= vigra::Point2D(1,1);
             //a-= offset; b-= offset;
             return !((left->find(a) != left->end() && right->find(b) != right->end()) ||
                      (right->find(a) != right->end() && left->find(b) != left->end()));
         }
 
     protected:
-        boost::unordered_set<Point2D, pointHash>* left;
-        boost::unordered_set<Point2D, pointHash>* right;
-        Point2D offset;
+        boost::unordered_set<vigra::Point2D, pointHash>* left;
+        boost::unordered_set<vigra::Point2D, pointHash>* right;
+        vigra::Point2D offset;
     };
 
 
@@ -386,12 +379,12 @@ namespace enblend {
     template <class SrcImageIterator, class SrcAccessor, class DestImageIterator,
               class DestAccessor, class MaskImageIterator, class MaskAccessor>
     inline void
-    graphCut(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
-             std::pair<SrcImageIterator, SrcAccessor> src2,
-             std::pair<DestImageIterator, DestAccessor> dest,
-             triple<MaskImageIterator, MaskImageIterator, MaskAccessor> mask1,
-             std::pair<MaskImageIterator, MaskAccessor> mask2,
-             nearest_neigbor_metric_t norm, boundary_t boundary, const Rect2D& iBB)
+    graphCut(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+             vigra::pair<SrcImageIterator, SrcAccessor> src2,
+             vigra::pair<DestImageIterator, DestAccessor> dest,
+             vigra::triple<MaskImageIterator, MaskImageIterator, MaskAccessor> mask1,
+             vigra::pair<MaskImageIterator, MaskAccessor> mask2,
+             nearest_neighbor_metric_t norm, boundary_t boundary, const vigra::Rect2D& iBB)
     {
         graphCut(src1.first, src1.second, src1.third,
                  src2.first, src2.second,
@@ -402,44 +395,44 @@ namespace enblend {
     }
 
 
-    void getNeighbourList(Point2D src, Point2D* list,
-                          Diff2D bounds, CheckpointPixels* srcDestPoints)
+    void getNeighbourList(vigra::Point2D src, vigra::Point2D* list,
+                          vigra::Diff2D bounds, CheckpointPixels* srcDestPoints)
     {
         // return neighbour points from top to left in clockwise order
         bool check = false;
         if (src.y == 1) {
-            list[0] = Point2D(-1, -1);
+            list[0] = vigra::Point2D(-1, -1);
             check = true;
         } else {
             list[0] = src(0, -2);
         }
 
         if (src.x == bounds.x - 1) {
-            list[1] = Point2D(-1, -1);
+            list[1] = vigra::Point2D(-1, -1);
             check = true;
         } else {
             list[1] = src(2, 0);
         }
 
         if (src.y == bounds.y - 1) {
-            list[2] = Point2D(-1, -1);
+            list[2] = vigra::Point2D(-1, -1);
             check = true;
         } else {
             list[2] = src(0, 2);
         }
 
         if (src.x == 1) {
-            list[3] = Point2D(-1, -1);
+            list[3] = vigra::Point2D(-1, -1);
             check = true;
         } else {
             list[3] = src(-2, 0);
         }
 
         if (srcDestPoints->bottom.find(src) != srcDestPoints->bottom.end()) {
-            list[0] = Point2D(-20, -20);
-            list[1] = Point2D(-20, -20);
-            list[2] = Point2D(-20, -20);
-            list[3] = Point2D(-20, -20);
+            list[0] = vigra::Point2D(-20, -20);
+            list[1] = vigra::Point2D(-20, -20);
+            list[2] = vigra::Point2D(-20, -20);
+            list[3] = vigra::Point2D(-20, -20);
         }
 
         if (check) {
@@ -447,12 +440,12 @@ namespace enblend {
                 srcDestPoints->bottom.find(src(1, 0)) != srcDestPoints->bottom.end() ||
                 srcDestPoints->bottom.find(src(1, 1)) != srcDestPoints->bottom.end() ||
                 srcDestPoints->bottom.find(src(0, 1)) != srcDestPoints->bottom.end()) {
-                if (list[1] == Point2D(-1, -1)) {
-                    list[1] = Point2D(-20, -20);
-                } else if (list[2] == Point2D(-1, -1)) {
-                    list[2] = Point2D(-20, -20);
-                } else if (list[3] == Point2D(-1, -1)) {
-                    list[3] = Point2D(-20, -20);
+                if (list[1] == vigra::Point2D(-1, -1)) {
+                    list[1] = vigra::Point2D(-20, -20);
+                } else if (list[2] == vigra::Point2D(-1, -1)) {
+                    list[2] = vigra::Point2D(-20, -20);
+                } else if (list[3] == vigra::Point2D(-1, -1)) {
+                    list[3] = vigra::Point2D(-20, -20);
                 }
             }
         }
@@ -461,8 +454,8 @@ namespace enblend {
 
     void
     getNeighbourList(CheckpointPixels* srcDestPoints,
-                     boost::unordered_set<Point2D, pointHash>::iterator* auxList1,
-                     boost::unordered_set<Point2D, pointHash>::iterator* auxList2)
+                     boost::unordered_set<vigra::Point2D, pointHash>::iterator* auxList1,
+                     boost::unordered_set<vigra::Point2D, pointHash>::iterator* auxList2)
     {
         *auxList1 = srcDestPoints->top.begin();
         *auxList2 = srcDestPoints->top.end();
@@ -470,10 +463,10 @@ namespace enblend {
 
 
     template <class ImageType>
-    vector<Point2D>* tracePath(Point2D pt, ImageType* img, CheckpointPixels* srcDestPoints)
+    std::vector<vigra::Point2D>* tracePath(vigra::Point2D pt, ImageType* img, CheckpointPixels* srcDestPoints)
     {
-        vector<Point2D>* vec = new vector<Point2D>;
-        Point2D current = pt;
+        std::vector<vigra::Point2D>* vec = new std::vector<vigra::Point2D>;
+        vigra::Point2D current = pt;
         vec->push_back(pt);
         do {
             switch ((*img)[current(1, 1)] & BIT_MASK_DIR) {
@@ -503,7 +496,7 @@ namespace enblend {
 
 
     template <class ImageType>
-    unsigned int getEdgeWeight(int dir, Point2D pt, ImageType* img, bool endpt, Diff2D bounds)
+    unsigned int getEdgeWeight(int dir, vigra::Point2D pt, ImageType* img, bool endpt, vigra::Diff2D bounds)
     {
         if (!endpt) {
             switch (dir) {
@@ -537,13 +530,13 @@ namespace enblend {
 
 
     template <class ImageType, class GradientImageType, class MaskPixelType>
-    vector<Point2D>*
-    A_star(Point2D srcpt, Point2D destpt, ImageType* img,
+    std::vector<vigra::Point2D>*
+    A_star(vigra::Point2D srcpt, vigra::Point2D destpt, ImageType* img,
            GradientImageType* gradientX, GradientImageType* gradientY,
-           Diff2D bounds, CheckpointPixels* srcDestPoints)
+           vigra::Diff2D bounds, CheckpointPixels* srcDestPoints)
     {
-        MaskPixelType zeroVal = NumericTraits<MaskPixelType>::zero();
-        typedef std::priority_queue<Point2D, vector<Point2D>, CostComparer<ImageType> > Queue;
+        MaskPixelType zeroVal = vigra::NumericTraits<MaskPixelType>::zero();
+        typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>, CostComparer<ImageType> > Queue;
         CostComparer<ImageType> costcomp(img);
         Queue* openset = new Queue(costcomp);
         long score = 0;
@@ -554,12 +547,12 @@ namespace enblend {
         bool scoreIsBetter;
         bool pushToList;
         bool destOpen = false;
-        Point2D list[4];
-        Point2D current;
-        Point2D neighbour;
-        Point2D destNeighbour;
-        boost::unordered_set<Point2D, pointHash>::iterator auxListBegin;
-        boost::unordered_set<Point2D, pointHash>::iterator auxListEnd;
+        vigra::Point2D list[4];
+        vigra::Point2D current;
+        vigra::Point2D neighbour;
+        vigra::Point2D destNeighbour;
+        boost::unordered_set<vigra::Point2D, pointHash>::iterator auxListBegin;
+        boost::unordered_set<vigra::Point2D, pointHash>::iterator auxListEnd;
         openset->push(srcpt);
 
         while (!openset->empty()) {
@@ -574,23 +567,23 @@ namespace enblend {
                 return tracePath<ImageType>(destNeighbour, img, srcDestPoints);
             }
 
-            if (current == Point2D(-10, -10)) {
+            if (current == vigra::Point2D(-10, -10)) {
                 getNeighbourList(srcDestPoints, &auxListBegin, &auxListEnd);
             } else {
                 getNeighbourList(current, list, bounds, srcDestPoints);
             }
 
-            if (current != Point2D(-10, -10)) {
+            if (current != vigra::Point2D(-10, -10)) {
                 for (int i = 0; i < 4; i++) {
                     score = 0;
                     scoreIsBetter = false;
                     pushToList = false;
                     neighbour = list[i];
-                    if (neighbour == Point2D(-20, -20) ||
-                        (neighbour != Point2D(-1, -1) &&
-                         neighbour != Point2D(-10, -10) &&
+                    if (neighbour == vigra::Point2D(-20, -20) ||
+                        (neighbour != vigra::Point2D(-1, -1) &&
+                         neighbour != vigra::Point2D(-10, -10) &&
                          (*img)[neighbour(1, 1)] == zeroVal)) {
-                        if (neighbour == Point2D(-20, -20)) {
+                        if (neighbour == vigra::Point2D(-20, -20)) {
                             score = (*img)[current] + getEdgeWeight(i, current, img, true, bounds);
                         } else {
                             if (i % 2 == 0) {
@@ -610,22 +603,22 @@ namespace enblend {
                             }
                         }
 
-                        if (neighbour == Point2D(-20, -20) && !destOpen) {
+                        if (neighbour == vigra::Point2D(-20, -20) && !destOpen) {
                             pushToList = true;
                             destOpen = true;
                             scoreIsBetter = true;
-                        } else if (neighbour != Point2D(-20, -20) &&
+                        } else if (neighbour != vigra::Point2D(-20, -20) &&
                                    ((*img)[neighbour(1, 1)] & BIT_MASK_OPEN) == 0) {
                             pushToList = true;
                             (*img)[neighbour(1, 1)] += BIT_MASK_OPEN;
                             scoreIsBetter = true;
-                        } else if ((neighbour == Point2D(-20, -20) && score < totalScore) ||
-                                   (neighbour != Point2D(-20, -20) && score < (*img)[neighbour])) {
+                        } else if ((neighbour == vigra::Point2D(-20, -20) && score < totalScore) ||
+                                   (neighbour != vigra::Point2D(-20, -20) && score < (*img)[neighbour])) {
                             scoreIsBetter = true;
                         }
 
                         if (scoreIsBetter) {
-                            if (neighbour == Point2D(-20, -20)) {
+                            if (neighbour == vigra::Point2D(-20, -20)) {
                                 totalScore = score;
                                 destNeighbour = current;
                                 costcomp.setTotalScore(totalScore);
@@ -643,12 +636,12 @@ namespace enblend {
                     }
                 }
             } else {
-                for (boost::unordered_set<Point2D, pointHash>::iterator x = auxListBegin; x != auxListEnd; ++x) {
+                for (boost::unordered_set<vigra::Point2D, pointHash>::iterator x = auxListBegin; x != auxListEnd; ++x) {
                     score = 0;
                     scoreIsBetter = false;
                     pushToList = false;
                     neighbour = *x;
-                    if (neighbour != Point2D(-1, -1) && (*img)[neighbour(1, 1)] == zeroVal) {
+                    if (neighbour != vigra::Point2D(-1, -1) && (*img)[neighbour(1, 1)] == zeroVal) {
                         score = 0;
                         if (((*img)[neighbour(1, 1)] & BIT_MASK_OPEN) == 0) {
                             pushToList = true;
@@ -673,32 +666,32 @@ namespace enblend {
         std::cout << "Graphcut failed after visiting " << iterCount << " nodes" << std::endl;
 #endif
         delete openset;
-        return new vector<Point2D>();
+        return new std::vector<vigra::Point2D>();
     }
 
 
-    Point2D convertFromDual(const Point2D& dualPixel)
+    vigra::Point2D convertFromDual(const vigra::Point2D& dualPixel)
     {
         const int stride = 2;
-        return (Point2D((dualPixel->x - 1) / stride, (dualPixel->y - 1) / stride));
+        return (vigra::Point2D((dualPixel->x - 1) / stride, (dualPixel->y - 1) / stride));
     }
 
 
-    void dividePath(vector<Point2D>* cut,
-                    boost::unordered_set<Point2D, pointHash>* left,
-                    boost::unordered_set<Point2D, pointHash>* right,
-                    const Rect2D& iBB)
+    void dividePath(std::vector<vigra::Point2D>* cut,
+                    boost::unordered_set<vigra::Point2D, pointHash>* left,
+                    boost::unordered_set<vigra::Point2D, pointHash>* right,
+                    const vigra::Rect2D& iBB)
     {
-        Point2D previous;
-        Point2D current;
-        Point2D next;
-        Point2D endIterPoint;
+        vigra::Point2D previous;
+        vigra::Point2D current;
+        vigra::Point2D next;
+        vigra::Point2D endIterPoint;
         unsigned short closest = 0;
-        Diff2D dim(iBB.lowerRight() - iBB.upperLeft());
-        std::vector<Point2D>::iterator previousDual;
-        std::vector<Point2D>::iterator nextDual;
+        vigra::Diff2D dim(iBB.lowerRight() - iBB.upperLeft());
+        std::vector<vigra::Point2D>::iterator previousDual;
+        std::vector<vigra::Point2D>::iterator nextDual;
 
-        for (std::vector<Point2D>::iterator currentDual = cut->begin(), nextDual = cut->begin();
+        for (std::vector<vigra::Point2D>::iterator currentDual = cut->begin(), nextDual = cut->begin();
              currentDual != cut->end();
              ++currentDual) {
 
@@ -710,7 +703,7 @@ namespace enblend {
                 next = convertFromDual(*nextDual);
                 // find closest edge
                 int dist;
-                const Diff2D toLowerRight = dim - current;
+                const vigra::Diff2D toLowerRight = dim - current;
                 closest = 0;
                 dist = current.y;
                 if (toLowerRight.x < dist) {
@@ -935,7 +928,7 @@ namespace enblend {
 
                 if (nextDual == cut->end()) {
                     int dist;
-                    const Diff2D toLowerRight = dim - current;
+                    const vigra::Diff2D toLowerRight = dim - current;
                     closest = 0;
                     dist = current.y;
                     if (toLowerRight.x < dist) {
@@ -1167,27 +1160,27 @@ namespace enblend {
     processCutResults(MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, MaskAccessor ma1,
                       MaskImageIterator mask2_upperleft, MaskAccessor ma2,
                       DestImageIterator dest_upperleft, DestAccessor da,
-                      vector<Point2D>& totalDualPath, const Rect2D& iBB)
+                      std::vector<vigra::Point2D>& totalDualPath, const vigra::Rect2D& iBB)
     {
-        const Diff2D size(iBB.lowerRight().x - iBB.upperLeft().x,
+        const vigra::Diff2D size(iBB.lowerRight().x - iBB.upperLeft().x,
                           iBB.lowerRight().y - iBB.upperLeft().y);
 
-        IMAGETYPE<MaskPixelType> finalmask(size + Diff2D(2, 2));
+        IMAGETYPE<MaskPixelType> finalmask(size + vigra::Diff2D(2, 2));
         IMAGETYPE<MaskPixelType> tempImg(size);
 
-        typedef UInt8 BasePixelType;
+        typedef vigra::UInt8 BasePixelType;
         typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
         typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
 
-        boost::unordered_set<Point2D, pointHash> pixelsLeftOfCut;
-        boost::unordered_set<Point2D, pointHash> pixelsRightOfCut;
+        boost::unordered_set<vigra::Point2D, pointHash> pixelsLeftOfCut;
+        boost::unordered_set<vigra::Point2D, pointHash> pixelsRightOfCut;
 
         dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
 
         // labels areas that belong to left/right images
         // adds a 1-pixel border to catch any area that is cut off by the seam
-        labelImage(srcIterRange(Diff2D(), Diff2D() + size + Diff2D(2, 2)), destImage(finalmask),
-                   false, OutputLabelingFunctor(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
+        vigra::labelImage(vigra::srcIterRange(vigra::Diff2D(), vigra::Diff2D() + size + vigra::Diff2D(2, 2)), destImage(finalmask),
+                          false, OutputLabelingFunctor(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
 
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels.tif").setPixelType("UINT8"));
@@ -1197,30 +1190,30 @@ namespace enblend {
         int count = 0;
         CountFunctor<MaskPixelType> c(&colorSum, &count);
 
-        transformImage(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1),
-                                    finalmask.lowerRight() - Diff2D(1, 1)),
-                       destIter(finalmask.upperLeft() + Diff2D(1, 1)),
+        transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
+                                    finalmask.lowerRight() - vigra::Diff2D(1, 1)),
+                       vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
                        ifThenElse(Arg1() == Param(1), Param(BasePixelTraits::max()),
                                   Param(BasePixelTraits::zero())));
 
-        inspectTwoImages(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1),
-                                      finalmask.lowerRight() - Diff2D(1, 1)),
-                         srcIter(dest_upperleft + iBB.upperLeft(), da), c);
+        inspectTwoImages(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
+                                      finalmask.lowerRight() - vigra::Diff2D(1, 1)),
+                         vigra::srcIter(dest_upperleft + iBB.upperLeft(), da), c);
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels1.tif").setPixelType("UINT8"));
 #endif
 
         // if colorSum < half the pixels labeled as "1" in finalmask should be black
         if (colorSum < count / 2) {
-            transformImage(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1),
-                                        finalmask.lowerRight() - Diff2D(1, 1)),
-                           destIter(finalmask.upperLeft() + Diff2D(1, 1)),
+            transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
+                                        finalmask.lowerRight() - vigra::Diff2D(1, 1)),
+                           vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
                            ifThenElse(Arg1() == Param(0), Param(BasePixelTraits::max()),
                                       Param(BasePixelTraits::zero())));
         } else {
-            transformImage(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1),
-                                        finalmask.lowerRight() - Diff2D(1, 1)),
-                           destIter(finalmask.upperLeft() + Diff2D(1, 1)),
+            transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
+                                        finalmask.lowerRight() - vigra::Diff2D(1, 1)),
+                           vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
                            ifThenElse(Arg1() == Param(0), Param(BasePixelTraits::zero()),
                                       Param(BasePixelTraits::max())));
         }
@@ -1229,15 +1222,15 @@ namespace enblend {
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels2.tif").setPixelType("UINT8"));
 #endif
 
-        combineTwoImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                           iBB.apply(srcIter(mask2_upperleft, ma2)), destImage(tempImg),
+        combineTwoImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                           vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)), destImage(tempImg),
                            ifThenElse(Arg1() && Arg2(),
                                       Param(MaskPixelTraits::max()),
                                       Param(MaskPixelTraits::zero())));
 
-        copyImageIf(srcIterRange(finalmask.upperLeft() + Diff2D(1, 1),
-                                 finalmask.lowerRight() - Diff2D(1, 1)), srcImage(tempImg),
-                    destIter(dest_upperleft + iBB.upperLeft(), da));
+        copyImageIf(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
+                                 finalmask.lowerRight() - vigra::Diff2D(1, 1)), srcImage(tempImg),
+                    vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
     }
 
 
@@ -1259,12 +1252,12 @@ namespace enblend {
              DestImageIterator dest_upperleft, DestAccessor da,
              MaskImageIterator mask1_upperleft, MaskImageIterator mask1_lowerright, MaskAccessor ma1,
              MaskImageIterator mask2_upperleft, MaskAccessor ma2,
-             nearest_neigbor_metric_t norm, boundary_t boundary, const Rect2D& iBB)
+             nearest_neighbor_metric_t norm, boundary_t boundary, const vigra::Rect2D& iBB)
     {
         typedef typename SrcAccessor::value_type SrcPixelType;
         typedef typename MaskAccessor::value_type MaskPixelType;
 
-        typedef UInt8 BasePixelType;
+        typedef vigra::UInt8 BasePixelType;
         typedef float GradientPixelType;
         typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
         typedef vigra::NumericTraits<GradientPixelType> GradientPixelTraits;
@@ -1272,35 +1265,37 @@ namespace enblend {
         typedef vigra::NumericTraits<BasePromotePixelType> BasePromotePixelTraits;
         typedef typename BasePromotePixelTraits::Promote GraphPixelType;
 
-        const Diff2D size(src1_lowerright.x - src1_upperleft.x,
+        const vigra::Diff2D size(src1_lowerright.x - src1_upperleft.x,
                           src1_lowerright.y - src1_upperleft.y);
-        const Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
+#ifdef DEBUG_GRAPHCUT
+        const vigra::Diff2D masksize(mask1_lowerright.x - mask1_upperleft.x,
                               mask1_lowerright.y - mask1_upperleft.y);
+#endif
 
         IMAGETYPE<BasePixelType> intermediateImg(size);
-        IMAGETYPE<BasePromotePixelType> intermediateGraphImg(size + size + Diff2D(1, 1));
+        IMAGETYPE<BasePromotePixelType> intermediateGraphImg(size + size + vigra::Diff2D(1, 1));
         IMAGETYPE<BasePromotePixelType> gradientPreConvolve(size);
         IMAGETYPE<GradientPixelType> gradientX(size);
         IMAGETYPE<GradientPixelType> gradientY(size);
-        IMAGETYPE<GraphPixelType> graphImg(size + size + Diff2D(1, 1));
+        IMAGETYPE<GraphPixelType> graphImg(size + size + vigra::Diff2D(1, 1));
 
-        vector<Point2D>* dualPath = NULL;
-        vector<Point2D> totalDualPath;
-        Point2D intermediatePoint;
+        std::vector<vigra::Point2D>* dualPath = NULL;
+        std::vector<vigra::Point2D> totalDualPath;
+        vigra::Point2D intermediatePoint;
         boost::scoped_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());
 
-        const Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
+        const vigra::Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
                                graphImg.lowerRight().y - graphImg.upperLeft().y);
-        const Rect2D gBB(Point2D(1, 1), Size2D(graphsize));
+        const vigra::Rect2D gBB(vigra::Point2D(1, 1), vigra::Size2D(graphsize));
 
-        Kernel2D<BasePromotePixelType> edgeWeightKernel;
+        vigra::Kernel2D<BasePromotePixelType> edgeWeightKernel;
 
-        edgeWeightKernel.initExplicitly(Diff2D(-1, -1), Diff2D(1, 1)) =  // upper left and lower right
+        edgeWeightKernel.initExplicitly(vigra::Diff2D(-1, -1), vigra::Diff2D(1, 1)) =  // upper left and lower right
             0, 1, 0,
             1, 1, 1,
             0, 1, 0;
         edgeWeightKernel.setBorderTreatment(vigra::BORDER_TREATMENT_CLIP);
-        Kernel1D<float> gradientKernel;
+        vigra::Kernel1D<float> gradientKernel;
         gradientKernel.initSymmetricGradient();
 
         // gradient images calculation
@@ -1318,10 +1313,10 @@ namespace enblend {
         // computing image gradient for a better cost function
         vigra::separableConvolveX(srcImageRange(gradientPreConvolve),
                                   destImage(gradientX),
-                                  kernel1d(gradientKernel));
+                                  vigra::kernel1d(gradientKernel));
         vigra::separableConvolveY(srcImageRange(gradientPreConvolve),
                                   destImage(gradientY),
-                                  kernel1d(gradientKernel));
+                                  vigra::kernel1d(gradientKernel));
 
         // difference image calculation
         switch (PixelDifferenceFunctor)
@@ -1345,14 +1340,14 @@ namespace enblend {
         }
 
         // masking overlap region borders
-        combineThreeImagesMP(iBB.apply(srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                             iBB.apply(srcIter(mask2_upperleft, ma2)),
-                             srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
-                             destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+        combineThreeImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                             vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
+                             vigra::srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                             vigra::destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
                              ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
 
         // look for possible start and end points
-        vector<Point2D>* intermediatePointList =
+        std::vector<vigra::Point2D>* intermediatePointList =
             findIntermediatePoints<MaskImageIterator, MaskAccessor, BasePixelType>
             (mask1_upperleft, mask1_lowerright, ma1,
              mask2_upperleft, ma2, dest_upperleft, da,
@@ -1365,10 +1360,11 @@ namespace enblend {
         }
 
         // copying to a grid
-        copyImage(srcImageRange(intermediateImg), stride(2, 2, gBB.apply(destImage(intermediateGraphImg))));
+        copyImage(srcImageRange(intermediateImg),
+                  vigra_ext::stride(2, 2, vigra_ext::apply(gBB, destImage(intermediateGraphImg))));
 
         // calculating differences between pixels that are adjacent in the original image
-        convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), kernel2d(edgeWeightKernel));
+        convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), vigra::kernel2d(edgeWeightKernel));
         copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
 
 #ifdef DEBUG_GRAPHCUT
@@ -1384,7 +1380,7 @@ namespace enblend {
 #endif
 
         // find optimal cuts in dual graph
-        for (vector<Point2D>::iterator i = intermediatePointList->begin();
+        for (std::vector<vigra::Point2D>::iterator i = intermediatePointList->begin();
              i != intermediatePointList->end();
              ++i) {
             if (i == intermediatePointList->begin()) {
@@ -1401,10 +1397,10 @@ namespace enblend {
 #endif
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
-                (Point2D(-10, -10), Point2D(-20, -20), &intermediateGraphImg, &gradientX,
-                 &gradientY, graphsize - Diff2D(1, 1), srcDestPoints.get());
+                (vigra::Point2D(-10, -10), vigra::Point2D(-20, -20), &intermediateGraphImg, &gradientX,
+                 &gradientY, graphsize - vigra::Diff2D(1, 1), srcDestPoints.get());
 
-            for (vector<Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
+            for (std::vector<vigra::Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
                 if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin()) {
                     totalDualPath.push_back(*j);
                 }

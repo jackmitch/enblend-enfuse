@@ -77,7 +77,7 @@ void copyPaintedSetToImage(DestIterator dest_upperleft,
                            DestIterator dest_lowerright,
                            DestAccessor da,
                            const miPaintedSet* paintedSet,
-                           const Diff2D offset)
+                           const vigra::Diff2D offset)
 {
     const vigra::Diff2D size(dest_lowerright - dest_upperleft);
 
@@ -118,7 +118,7 @@ void copyPaintedSetToImage(DestIterator dest_upperleft,
                 const int xstart_clip = xstart < 0 ? 0 : xstart;
                 const int xend_clip = xend >= size.x ? size.x - 1 : xend;
 
-                DestIterator dx = dest_upperleft + Diff2D(xstart_clip, y);
+                DestIterator dx = dest_upperleft + vigra::Diff2D(xstart_clip, y);
                 for (int x = xstart_clip; x <= xend_clip; ++x, ++dx.x)
                 {
                     da.set(pixel, dx);
@@ -132,7 +132,7 @@ void copyPaintedSetToImage(DestIterator dest_upperleft,
 template<class DestIterator, class DestAccessor>
 void copyPaintedSetToImage(vigra::triple<DestIterator, DestIterator, DestAccessor> image,
                            const miPaintedSet* paintedSet,
-                           const Diff2D offset)
+                           const vigra::Diff2D offset)
 {
     copyPaintedSetToImage(image.first, image.second, image.third, paintedSet, offset);
 }

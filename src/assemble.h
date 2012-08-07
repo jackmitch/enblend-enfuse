@@ -26,46 +26,24 @@
 
 #include <iostream>
 #include <list>
-#include <stdlib.h>
-#include <string.h>
 
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-#include "common.h"
-#include "fixmath.h"
-#include "vigra/copyimage.hxx"
-#include "vigra/imageinfo.hxx"
-#include "vigra/impex.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/transformimage.hxx"
-#include "vigra_ext/FunctorAccessor.h"
+#include <vigra/copyimage.hxx>
+#include <vigra/imageinfo.hxx>
+#include <vigra/impex.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/transformimage.hxx>
+
+#include "vigra_ext/functoraccessor.hxx"
 #include "vigra_ext/impexalpha.hxx"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::list;
-using std::pair;
+#include "common.h"
+#include "fixmath.h"
 
-using vigra::copyImageIf;
-using vigra::Diff2D;
-using vigra::exportImageAlpha;
-using vigra::FindBoundingRectangle;
-using vigra::ImageExportInfo;
-using vigra::ImageImportInfo;
-using vigra::importImageAlpha;
-using vigra::inspectImageIf;
-using vigra::NumericTraits;
-using vigra::Rect2D;
-using vigra::Threshold;
-using vigra::transformImage;
-using vigra::linearRangeMapping;
-
-using vigra_ext::ReadFunctorAccessor;
-using vigra_ext::WriteFunctorAccessor;
 
 namespace enblend {
 
@@ -85,12 +63,18 @@ void
 exportImagePreferablyWithAlpha(const ImageType* image,
                                const AlphaType* mask,
                                const Accessor& accessor,
-                               const ImageExportInfo& outputImageInfo)
+                               const vigra::ImageExportInfo& outputImageInfo)
 {
     try {
-        exportImageAlpha(srcImageRange(*image),
-                         srcIter(mask->upperLeft(), accessor),
-                         outputImageInfo);
+#ifdef EXPORT_WITH_ALPHA_CHANNEL
+        // ANTICIPATED CHANGE: Exporting with alpha channel does not
+        // yet work with the latest version of Vigra.
+        vigra_ext::exportImageAlpha(srcImageRange(*image),
+                                    srcIter(mask->upperLeft(), accessor),
+                                    outputImageInfo);
+#else
+        exportImage(srcImageRange(*image), outputImageInfo);
+#endif
     } catch (std::exception&) {
         // Oh well, there is no alpha-channel.  So we export without it.
         exportImage(srcImageRange(*image), outputImageInfo);
@@ -103,8 +87,8 @@ exportImagePreferablyWithAlpha(const ImageType* image,
  */
 template <typename ImageType, typename AlphaType>
 void
-checkpoint(const pair<ImageType*, AlphaType*>& p,
-           const ImageExportInfo& outputImageInfo)
+checkpoint(const std::pair<ImageType*, AlphaType*>& p,
+           const vigra::ImageExportInfo& outputImageInfo)
 {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
@@ -115,30 +99,30 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
     ImageType* image = p.first;
     AlphaType* mask = p.second;
 
-    ReadFunctorAccessor<Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
-        ata(Threshold<AlphaPixelType, ImagePixelComponentType>
+    vigra_ext::ReadFunctorAccessor<vigra::Threshold<AlphaPixelType, ImagePixelComponentType>, AlphaAccessor>
+        ata(vigra::Threshold<AlphaPixelType, ImagePixelComponentType>
             (AlphaTraits<AlphaPixelType>::zero(),
              AlphaTraits<AlphaPixelType>::zero(),
              AlphaTraits<ImagePixelComponentType>::max(),
              AlphaTraits<ImagePixelComponentType>::zero()),
             mask->accessor());
 
-    const pair<double, double> outputRange =
+    const std::pair<double, double> outputRange =
         enblend::rangeOfPixelType(outputImageInfo.getPixelType());
     const ImagePixelComponentType inputMin =
-        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
-        NumericTraits<ImagePixelComponentType>::min() :
+        vigra::NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        vigra::NumericTraits<ImagePixelComponentType>::min() :
         0.0;
     const ImagePixelComponentType inputMax =
-        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
-        NumericTraits<ImagePixelComponentType>::max() :
+        vigra::NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        vigra::NumericTraits<ImagePixelComponentType>::max() :
         1.0;
 #ifdef DEBUG
-    cerr << "+ checkpoint: input range:  ("
-         << static_cast<double>(inputMin) << ", "
-         << static_cast<double>(inputMax) << ")\n"
-         << "+ checkpoint: output range: ("
-         << outputRange.first << ", " << outputRange.second << ")" << endl;
+    std::cerr << "+ checkpoint: input range:  ("
+              << static_cast<double>(inputMin) << ", "
+              << static_cast<double>(inputMax) << ")\n"
+              << "+ checkpoint: output range: ("
+              << outputRange.first << ", " << outputRange.second << ")" << std::endl;
 #endif
 
     if (inputMin <= outputRange.first && inputMax >= outputRange.second) {
@@ -148,31 +132,31 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
             // leave the channel width alone.
             ;
 #ifdef DEBUG
-            cerr << "+ checkpoint: leaving channel width alone" << endl;
+            std::cerr << "+ checkpoint: leaving channel width alone" << std::endl;
 #endif
             exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
         } else {
             std::string pixel_type(outputImageInfo.getPixelType());
             boost::algorithm::to_lower(pixel_type);
-            cerr << command
-                 << ": info: narrowing channel width for output as \""
-                 << pixel_type << "\"" << endl;
+            std::cerr << command
+                      << ": info: narrowing channel width for output as \""
+                      << pixel_type << "\"" << std::endl;
 
             ImageType lowDepthImage(image->width(), image->height());
             transformImageMP(srcImageRange(*image),
                              destImage(lowDepthImage),
-                             linearRangeMapping(ImagePixelType(inputMin),
-                                                ImagePixelType(inputMax),
-                                                ImagePixelType(outputRange.first),
-                                                ImagePixelType(outputRange.second)));
+                             vigra::linearRangeMapping(ImagePixelType(inputMin),
+                                                       ImagePixelType(inputMax),
+                                                       ImagePixelType(outputRange.first),
+                                                       ImagePixelType(outputRange.second)));
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
         std::string pixel_type(outputImageInfo.getPixelType());
         boost::algorithm::to_lower(pixel_type);
-        cerr << command
-             << ": info: rescaling floating-point data for output as \""
-             << pixel_type << "\"" << endl;
+        std::cerr << command
+                  << ": info: rescaling floating-point data for output as \""
+                  << pixel_type << "\"" << std::endl;
 
         typedef typename IntegralSelect<ImagePixelType>::Result IntegralPixelType;
         typedef typename EnblendNumericTraits<IntegralPixelType>::ImagePixelComponentType
@@ -180,8 +164,8 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
 
         IMAGETYPE<IntegralPixelType> integralImage(image->width(), image->height());
 
-        ReadFunctorAccessor<Threshold<AlphaPixelType, IntegralPixelComponentType>, AlphaAccessor>
-            ata(Threshold<AlphaPixelType, IntegralPixelComponentType>
+        vigra_ext::ReadFunctorAccessor<vigra::Threshold<AlphaPixelType, IntegralPixelComponentType>, AlphaAccessor>
+            ata(vigra::Threshold<AlphaPixelType, IntegralPixelComponentType>
                 (AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<IntegralPixelComponentType>::max(),
@@ -190,10 +174,10 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
 
         transformImageMP(srcImageRange(*image),
                          destImage(integralImage),
-                         linearRangeMapping(ImagePixelType(inputMin),
-                                            ImagePixelType(inputMax),
-                                            IntegralPixelType(outputRange.first),
-                                            IntegralPixelType(outputRange.second)));
+                         vigra::linearRangeMapping(ImagePixelType(inputMin),
+                                                   ImagePixelType(inputMax),
+                                                   IntegralPixelType(outputRange.first),
+                                                   IntegralPixelType(outputRange.second)));
         exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
     }
 }
@@ -202,31 +186,31 @@ checkpoint(const pair<ImageType*, AlphaType*>& p,
 template <typename DestIterator, typename DestAccessor,
           typename AlphaIterator, typename AlphaAccessor>
 void
-import(const ImageImportInfo& info,
-       const pair<DestIterator, DestAccessor>& image,
-       const pair<AlphaIterator, AlphaAccessor>& alpha)
+import(const vigra::ImageImportInfo& info,
+       const std::pair<DestIterator, DestAccessor>& image,
+       const std::pair<AlphaIterator, AlphaAccessor>& alpha)
 {
     typedef typename DestIterator::PixelType ImagePixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType
         ImagePixelComponentType;
     typedef typename AlphaIterator::PixelType AlphaPixelType;
 
-    const Diff2D extent = Diff2D(info.width(), info.height());
+    const vigra::Diff2D extent = vigra::Diff2D(info.width(), info.height());
     const std::string pixelType = info.getPixelType();
     const range_t inputRange = enblend::rangeOfPixelType(pixelType);
 
     if (info.numExtraBands() > 0) {
         // Threshold the alpha mask so that all pixels are either
         // contributing or not contributing.
-        WriteFunctorAccessor<Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
-            ata(Threshold<ImagePixelComponentType, AlphaPixelType>
+        vigra_ext::WriteFunctorAccessor<vigra::Threshold<ImagePixelComponentType, AlphaPixelType>, AlphaAccessor>
+            ata(vigra::Threshold<ImagePixelComponentType, AlphaPixelType>
                 (inputRange.second / 2,
                  inputRange.second,
                  AlphaTraits<AlphaPixelType>::zero(),
                  AlphaTraits<AlphaPixelType>::max()),
                 alpha.second);
 
-        importImageAlpha(info, image, destIter(alpha.first, ata));
+        vigra_ext::importImageAlpha(info, image, vigra::destIter(alpha.first, ata));
     } else {
         // Import image without alpha.  Initialize the alpha image to 100%.
         importImage(info, image.first, image.second);
@@ -237,41 +221,41 @@ import(const ImageImportInfo& info,
     // Performance Optimization: Transform only if ranges do not
     // match.
     const double min =
-        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
-        static_cast<double>(NumericTraits<ImagePixelComponentType>::min()) :
+        vigra::NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(vigra::NumericTraits<ImagePixelComponentType>::min()) :
         0.0;
     const double max =
-        NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
-        static_cast<double>(NumericTraits<ImagePixelComponentType>::max()) :
+        vigra::NumericTraits<ImagePixelComponentType>::isIntegral::asBool ?
+        static_cast<double>(vigra::NumericTraits<ImagePixelComponentType>::max()) :
         1.0;
     if (inputRange.first != min || inputRange.second != max) {
         transformImageMP(srcIterRange(image.first, image.first + extent, image.second),
-                         destIter(image.first, image.second),
-                         linearRangeMapping(ImagePixelType(inputRange.first),
-                                            ImagePixelType(inputRange.second),
-                                            ImagePixelType(min),
-                                            ImagePixelType(max)));
+                         vigra::destIter(image.first, image.second),
+                         vigra::linearRangeMapping(ImagePixelType(inputRange.first),
+                                                   ImagePixelType(inputRange.second),
+                                                   ImagePixelType(min),
+                                                   ImagePixelType(max)));
     }
 }
 
 
-/** Find images that don't overlap and assemble them into one image.
+/** Find images that do not overlap and assemble them into one image.
  *  Uses a greedy heuristic.
  *  Removes used images from given list of ImageImportInfos.
  *  Returns an ImageImportInfo for the temporary file.
  *  memory xsection = 2 * (ImageType*inputUnion + AlphaType*inputUnion)
  */
 template <typename ImageType, typename AlphaType>
-pair<ImageType*, AlphaType*>
-assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
+std::pair<ImageType*, AlphaType*>
+assemble(std::list<vigra::ImageImportInfo*>& imageInfoList, vigra::Rect2D& inputUnion, vigra::Rect2D& bb)
 {
     typedef typename AlphaType::traverser AlphaIteratorType;
     typedef typename AlphaType::Accessor AlphaAccessor;
 
     // No more images to assemble?
     if (imageInfoList.empty()) {
-        return pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
-                                            static_cast<AlphaType*>(NULL));
+        return std::pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
+                                                 static_cast<AlphaType*>(NULL));
     }
 
     // Create an image to assemble input images into.
@@ -279,39 +263,36 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     AlphaType* imageA = new AlphaType(inputUnion.size());
 
     if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
-        const vigra::FilenameLayerPair file_layer =
-            vigra::split_filename(imageInfoList.front()->getFileName());
-        const int layers = imageInfoList.front()->numLayers();
+        const std::string filename(imageInfoList.front()->getFileName());
+        const int layer(imageInfoList.front()->getImageIndex());
+        const int layers(imageInfoList.front()->numImages());
+
         if (OneAtATime) {
-            cerr << command
-                 << ": info: loading next image: "
-                 << file_layer.first << " "
-                 << file_layer.second + 1 << '/' << layers
-                 << endl;
+            std::cerr << command
+                      << ": info: loading next image: " << filename << " " << layer + 1 << '/' << layers
+                      << std::endl;
         } else {
-            cerr << command
-                 << ": info: combining non-overlapping images: "
-                 << file_layer.first << " "
-                 << file_layer.second + 1 << '/' << layers;
-            cerr.flush();
+            std::cerr << command
+                      << ": info: combining non-overlapping images: " << filename << " " << layer + 1 << '/' << layers;
+            std::cerr.flush();
         }
     }
 
-    const Diff2D imagePos = imageInfoList.front()->getPosition();
+    const vigra::Diff2D imagePos = imageInfoList.front()->getPosition();
     import(*imageInfoList.front(),
-           destIter(image->upperLeft() + imagePos - inputUnion.upperLeft()),
-           destIter(imageA->upperLeft() + imagePos - inputUnion.upperLeft()));
+           vigra::destIter(image->upperLeft() + imagePos - inputUnion.upperLeft()),
+           vigra::destIter(imageA->upperLeft() + imagePos - inputUnion.upperLeft()));
     imageInfoList.erase(imageInfoList.begin());
 
     if (!OneAtATime) {
         // Attempt to assemble additional non-overlapping images.
 
         // List of ImageImportInfos we decide to assemble.
-        list<list<ImageImportInfo*>::iterator> toBeRemoved;
+        std::list<std::list<vigra::ImageImportInfo*>::iterator> toBeRemoved;
 
-        list<ImageImportInfo*>::iterator i;
+        std::list<vigra::ImageImportInfo*>::iterator i;
         for (i = imageInfoList.begin(); i != imageInfoList.end(); i++) {
-            ImageImportInfo* info = *i;
+            vigra::ImageImportInfo* info = *i;
 
             // Load the next image.
             ImageType* src = new ImageType(info->size());
@@ -336,24 +317,26 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
                         break;
                     }
                 }
-                if (overlapFound) break;
+                if (overlapFound) {
+                    break;
+                }
             }
 
             if (!overlapFound) {
                 // Copy src and srcA into image and imageA.
 
                 if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES) {
-                    cerr << " " << info->getFileName();
-                    cerr.flush();
+                    std::cerr << " " << info->getFileName();
+                    std::cerr.flush();
                 }
 
-                const Diff2D srcPos = info->getPosition();
-                copyImageIf(srcImageRange(*src),
-                            maskImage(*srcA),
-                            destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
-                copyImageIf(srcImageRange(*srcA),
-                            maskImage(*srcA),
-                            destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
+                const vigra::Diff2D srcPos = info->getPosition();
+                vigra::copyImageIf(srcImageRange(*src),
+                                   maskImage(*srcA),
+                                   vigra::destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
+                vigra::copyImageIf(srcImageRange(*srcA),
+                                   maskImage(*srcA),
+                                   vigra::destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
@@ -364,7 +347,7 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
         }
 
         // Erase the ImageImportInfos we used.
-        for (list<list<ImageImportInfo*>::iterator>::iterator r = toBeRemoved.begin();
+        for (std::list<std::list<vigra::ImageImportInfo*>::iterator>::iterator r = toBeRemoved.begin();
              r != toBeRemoved.end();
              ++r) {
             imageInfoList.erase(*r);
@@ -372,23 +355,23 @@ assemble(list<ImageImportInfo*>& imageInfoList, Rect2D& inputUnion, Rect2D& bb)
     }
 
     if (Verbose >= VERBOSE_ASSEMBLE_MESSAGES && !OneAtATime) {
-        cerr << endl;
+        std::cerr << std::endl;
     }
 
     // Calculate bounding box of image.
-    FindBoundingRectangle unionRect;
-    inspectImageIf(srcIterRange(Diff2D(), Diff2D() + image->size()),
-                   srcImage(*imageA), unionRect);
+    vigra::FindBoundingRectangle unionRect;
+    vigra::inspectImageIf(srcIterRange(vigra::Diff2D(), vigra::Diff2D() + image->size()),
+                          srcImage(*imageA), unionRect);
     bb = unionRect();
 
     if (Verbose >= VERBOSE_ABB_MESSAGES) {
-        cerr << command
-             << ": info: assembled images bounding box: "
-             << unionRect()
-             << endl;
+        std::cerr << command
+                  << ": info: assembled images bounding box: "
+                  << unionRect()
+                  << std::endl;
     }
 
-    return pair<ImageType*, AlphaType*>(image, imageA);
+    return std::pair<ImageType*, AlphaType*>(image, imageA);
 }
 
 } // namespace enblend

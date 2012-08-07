@@ -39,7 +39,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#include "vigra/numerictraits.hxx"
+#include <vigra/numerictraits.hxx>
 
 #include "error_message.h"
 #include "filenameparse.h"
@@ -56,49 +56,49 @@
 #define MAX_PYRAMID_LEVELS 29   //< src::maximum-pyramid-levels 29
 
 // Colors used in the optimizer visualization
-#define VISUALIZE_RGB_COLOR_BLUE1    RGBValue<vigra::UInt8>(  0,   0, 255)
-#define VISUALIZE_RGB_COLOR_BLUE2    RGBValue<vigra::UInt8>(  0,   0, 238)
-#define VISUALIZE_RGB_COLOR_BLUE3    RGBValue<vigra::UInt8>(  0,   0, 205)
-#define VISUALIZE_RGB_COLOR_BLUE4    RGBValue<vigra::UInt8>(  0,   0, 139)
+#define VISUALIZE_RGB_COLOR_BLUE1    vigra::RGBValue<vigra::UInt8>(  0,   0, 255)
+#define VISUALIZE_RGB_COLOR_BLUE2    vigra::RGBValue<vigra::UInt8>(  0,   0, 238)
+#define VISUALIZE_RGB_COLOR_BLUE3    vigra::RGBValue<vigra::UInt8>(  0,   0, 205)
+#define VISUALIZE_RGB_COLOR_BLUE4    vigra::RGBValue<vigra::UInt8>(  0,   0, 139)
 
-#define VISUALIZE_RGB_COLOR_CYAN1    RGBValue<vigra::UInt8>(  0, 255, 255)
-#define VISUALIZE_RGB_COLOR_CYAN2    RGBValue<vigra::UInt8>(  0, 238, 238)
-#define VISUALIZE_RGB_COLOR_CYAN3    RGBValue<vigra::UInt8>(  0, 205, 205)
-#define VISUALIZE_RGB_COLOR_CYAN4    RGBValue<vigra::UInt8>(  0, 139, 139)
+#define VISUALIZE_RGB_COLOR_CYAN1    vigra::RGBValue<vigra::UInt8>(  0, 255, 255)
+#define VISUALIZE_RGB_COLOR_CYAN2    vigra::RGBValue<vigra::UInt8>(  0, 238, 238)
+#define VISUALIZE_RGB_COLOR_CYAN3    vigra::RGBValue<vigra::UInt8>(  0, 205, 205)
+#define VISUALIZE_RGB_COLOR_CYAN4    vigra::RGBValue<vigra::UInt8>(  0, 139, 139)
 
-#define VISUALIZE_RGB_COLOR_GRAY0    RGBValue<vigra::UInt8>(  0,   0,   0)
-#define VISUALIZE_RGB_COLOR_GRAY63   RGBValue<vigra::UInt8>( 63,  63,  63)
-#define VISUALIZE_RGB_COLOR_GRAY127  RGBValue<vigra::UInt8>(127, 127, 127)
-#define VISUALIZE_RGB_COLOR_GRAY139  RGBValue<vigra::UInt8>(139, 139, 139)
-#define VISUALIZE_RGB_COLOR_GRAY191  RGBValue<vigra::UInt8>(191, 191, 191)
-#define VISUALIZE_RGB_COLOR_GRAY205  RGBValue<vigra::UInt8>(205, 205, 205)
-#define VISUALIZE_RGB_COLOR_GRAY238  RGBValue<vigra::UInt8>(238, 238, 238)
-#define VISUALIZE_RGB_COLOR_GRAY255  RGBValue<vigra::UInt8>(255, 255, 255)
+#define VISUALIZE_RGB_COLOR_GRAY0    vigra::RGBValue<vigra::UInt8>(  0,   0,   0)
+#define VISUALIZE_RGB_COLOR_GRAY63   vigra::RGBValue<vigra::UInt8>( 63,  63,  63)
+#define VISUALIZE_RGB_COLOR_GRAY127  vigra::RGBValue<vigra::UInt8>(127, 127, 127)
+#define VISUALIZE_RGB_COLOR_GRAY139  vigra::RGBValue<vigra::UInt8>(139, 139, 139)
+#define VISUALIZE_RGB_COLOR_GRAY191  vigra::RGBValue<vigra::UInt8>(191, 191, 191)
+#define VISUALIZE_RGB_COLOR_GRAY205  vigra::RGBValue<vigra::UInt8>(205, 205, 205)
+#define VISUALIZE_RGB_COLOR_GRAY238  vigra::RGBValue<vigra::UInt8>(238, 238, 238)
+#define VISUALIZE_RGB_COLOR_GRAY255  vigra::RGBValue<vigra::UInt8>(255, 255, 255)
 
-#define VISUALIZE_RGB_COLOR_GREEN1   RGBValue<vigra::UInt8>(  0, 255,   0)
-#define VISUALIZE_RGB_COLOR_GREEN2   RGBValue<vigra::UInt8>(  0, 238,   0)
-#define VISUALIZE_RGB_COLOR_GREEN3   RGBValue<vigra::UInt8>(  0, 205,   0)
-#define VISUALIZE_RGB_COLOR_GREEN4   RGBValue<vigra::UInt8>(  0, 139,   0)
+#define VISUALIZE_RGB_COLOR_GREEN1   vigra::RGBValue<vigra::UInt8>(  0, 255,   0)
+#define VISUALIZE_RGB_COLOR_GREEN2   vigra::RGBValue<vigra::UInt8>(  0, 238,   0)
+#define VISUALIZE_RGB_COLOR_GREEN3   vigra::RGBValue<vigra::UInt8>(  0, 205,   0)
+#define VISUALIZE_RGB_COLOR_GREEN4   vigra::RGBValue<vigra::UInt8>(  0, 139,   0)
 
-#define VISUALIZE_RGB_COLOR_MAGENTA1 RGBValue<vigra::UInt8>(255,   0, 255)
-#define VISUALIZE_RGB_COLOR_MAGENTA2 RGBValue<vigra::UInt8>(238,   0, 238)
-#define VISUALIZE_RGB_COLOR_MAGENTA3 RGBValue<vigra::UInt8>(205,   0, 205)
-#define VISUALIZE_RGB_COLOR_MAGENTA4 RGBValue<vigra::UInt8>(139,   0, 139)
+#define VISUALIZE_RGB_COLOR_MAGENTA1 vigra::RGBValue<vigra::UInt8>(255,   0, 255)
+#define VISUALIZE_RGB_COLOR_MAGENTA2 vigra::RGBValue<vigra::UInt8>(238,   0, 238)
+#define VISUALIZE_RGB_COLOR_MAGENTA3 vigra::RGBValue<vigra::UInt8>(205,   0, 205)
+#define VISUALIZE_RGB_COLOR_MAGENTA4 vigra::RGBValue<vigra::UInt8>(139,   0, 139)
 
-#define VISUALIZE_RGB_COLOR_ORANGE1  RGBValue<vigra::UInt8>(255, 165,   0)
-#define VISUALIZE_RGB_COLOR_ORANGE2  RGBValue<vigra::UInt8>(238, 154,   0)
-#define VISUALIZE_RGB_COLOR_ORANGE3  RGBValue<vigra::UInt8>(205, 133,   0)
-#define VISUALIZE_RGB_COLOR_ORANGE4  RGBValue<vigra::UInt8>(139,  90,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE1  vigra::RGBValue<vigra::UInt8>(255, 165,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE2  vigra::RGBValue<vigra::UInt8>(238, 154,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE3  vigra::RGBValue<vigra::UInt8>(205, 133,   0)
+#define VISUALIZE_RGB_COLOR_ORANGE4  vigra::RGBValue<vigra::UInt8>(139,  90,   0)
 
-#define VISUALIZE_RGB_COLOR_RED1     RGBValue<vigra::UInt8>(255,   0,   0)
-#define VISUALIZE_RGB_COLOR_RED2     RGBValue<vigra::UInt8>(238,   0,   0)
-#define VISUALIZE_RGB_COLOR_RED3     RGBValue<vigra::UInt8>(205,   0,   0)
-#define VISUALIZE_RGB_COLOR_RED4     RGBValue<vigra::UInt8>(139,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED1     vigra::RGBValue<vigra::UInt8>(255,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED2     vigra::RGBValue<vigra::UInt8>(238,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED3     vigra::RGBValue<vigra::UInt8>(205,   0,   0)
+#define VISUALIZE_RGB_COLOR_RED4     vigra::RGBValue<vigra::UInt8>(139,   0,   0)
 
-#define VISUALIZE_RGB_COLOR_YELLOW1  RGBValue<vigra::UInt8>(255, 255,   0)
-#define VISUALIZE_RGB_COLOR_YELLOW2  RGBValue<vigra::UInt8>(238, 238,   0)
-#define VISUALIZE_RGB_COLOR_YELLOW3  RGBValue<vigra::UInt8>(205, 205,   0)
-#define VISUALIZE_RGB_COLOR_YELLOW4  RGBValue<vigra::UInt8>(139, 139,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW1  vigra::RGBValue<vigra::UInt8>(255, 255,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW2  vigra::RGBValue<vigra::UInt8>(238, 238,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW3  vigra::RGBValue<vigra::UInt8>(205, 205,   0)
+#define VISUALIZE_RGB_COLOR_YELLOW4  vigra::RGBValue<vigra::UInt8>(139, 139,   0)
 
 
 // Different marker types offered by visualizePoint()
@@ -183,9 +183,9 @@ typedef enum {
 // Select our preferred type of image depending on what ./configure
 // tells us.
 #ifdef CACHE_IMAGES
-#define IMAGETYPE CachedFileImage
+#define IMAGETYPE vigra_ext::CachedFileImage
 #else
-#define IMAGETYPE BasicImage
+#define IMAGETYPE vigra::BasicImage
 #endif
 
 
@@ -219,12 +219,12 @@ typedef enum
     ChessboardDistance,         // 0
     ManhattanDistance,          // 1, L1 norm
     EuclideanDistance           // 2, L2 norm
-} nearest_neigbor_metric_t;
+} nearest_neighbor_metric_t;
 
 
 /** Define our own reentrant, uniform pseudo-random number generator. */
 inline int
-rand_r(unsigned int *seed)
+rand_r(unsigned int* seed)
 {
     *seed = *seed * 1103515245U + 12345U;
     return static_cast<int>(*seed % (static_cast<unsigned int>(RAND_MAX) + 1U));
@@ -263,7 +263,7 @@ next(iterator i)
  *  each pair of successive delimiters.  Function strtok_r skips them.
  */
 char*
-strtoken_r(char *str, const char *delim, char **save_ptr)
+strtoken_r(char* str, const char* delim, char** save_ptr)
 {
     char *s = str ? str : *save_ptr;
 
@@ -672,7 +672,7 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
  */
 
 template <typename T>
-int
+inline int
 sign(T x)
 {
     return x > T() ? 1 : (x < T() ? -1 : 0);
@@ -681,7 +681,7 @@ sign(T x)
 
 /** Compute the integral logarithm of n to the base 10.  We do not
  *  need to take special care of the case n == 0 for our purposes. */
-unsigned
+inline unsigned
 ilog10(unsigned n)
 {
     return n <= 9 ? 0 : 1 + ilog10(n / 10);
@@ -1120,7 +1120,7 @@ namespace parameter
 
 #ifndef HAVE_STRTOK_R
 char*
-strtok_r(char *str, const char *delim, char **save_ptr)
+strtok_r(char* str, const char* delim, char** save_ptr)
 {
     char *s = str ? str : *save_ptr;
 

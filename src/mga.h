@@ -26,18 +26,11 @@
 
 #include <iostream>
 #include <iomanip>
-#include <stdio.h>
+
+#include <vigra/colorconversions.hxx>
 
 #include "common.h"
 
-#include "vigra/colorconversions.hxx"
-
-using std::cerr;
-using std::endl;
-
-using vigra::NumericTraits;
-using vigra::VigraFalseType;
-using vigra::VigraTrueType;
 
 namespace enblend {
 
@@ -48,25 +41,25 @@ public:
     typedef ResultType value_type;
 
     MultiGrayscaleAccessor(const std::string& accessorName) {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         initializeTypeSpecific(srcIsScalar());
         initialize(accessorName);
     }
 
     ResultType operator()(const InputType& x) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(x, srcIsScalar());
     }
 
     template <class Iterator>
     ResultType operator()(const Iterator& i) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(i, srcIsScalar());
     }
 
     template <class Iterator, class Difference>
     ResultType operator()(const Iterator& i, Difference d) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(i, d, srcIsScalar());
     }
 
@@ -123,9 +116,9 @@ private:
                 }
                 else
                 {
-                    cerr << command
+                    std::cerr << command
                          << ": unknown grayscale projector \"" << accessorName << "\""
-                         << endl;
+                         << std::endl;
                     exit(1);
                 }
 
@@ -135,11 +128,11 @@ private:
                 kind = k->second;
                 if (kind == MIXER)
                 {
-                    cerr << command
+                    std::cerr << command
                          << ": \"" CHANNEL_MIXER "\" is a grayscale projector requiring\n"
                          << command
                          << ":      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\""
-                         << endl;
+                         << std::endl;
                     exit(1);
                 }
             }
@@ -150,40 +143,40 @@ private:
         // TODO: check for isnormal(WEIGHT) before comparison
         if (red < 0.0)
         {
-            cerr << command
+            std::cerr << command
                  << ": nonsensical weight of red channel (" << red << ")"
-                 << endl;
+                 << std::endl;
             exit(1);
         }
         if (green < 0.0)
         {
-            cerr << command
+            std::cerr << command
                  << ": nonsensical weight of green channel (" << green << ")"
-                 << endl;
+                 << std::endl;
             exit(1);
         }
         if (blue < 0.0)
         {
-            cerr << command
+            std::cerr << command
                  << ": nonsensical weight of blue channel (" << blue << ")"
-                 << endl;
+                 << std::endl;
             exit(1);
         }
         if (red + green + blue == 0.0)
         {
-            cerr << command
+            std::cerr << command
                  << ": sum of channel weights is zero"
-                 << endl;
+                 << std::endl;
             exit(1);
         }
     }
 
-    void initializeTypeSpecific(VigraTrueType) {}
+    void initializeTypeSpecific(vigra::VigraTrueType) {}
 
-    void initializeTypeSpecific(VigraFalseType) {
+    void initializeTypeSpecific(vigra::VigraFalseType) {
         typedef typename InputType::value_type ValueType;
-        rgb_to_lab_fun = vigra::RGB2LabFunctor<double>(NumericTraits<ValueType>::max());
-        rgb_prime_to_lab_fun = vigra::RGBPrime2LabFunctor<double>(NumericTraits<ValueType>::max());
+        rgb_to_lab_fun = vigra::RGB2LabFunctor<double>(vigra::NumericTraits<ValueType>::max());
+        rgb_prime_to_lab_fun = vigra::RGBPrime2LabFunctor<double>(vigra::NumericTraits<ValueType>::max());
     }
 
     ResultType project(const InputType& x) const {
@@ -191,25 +184,25 @@ private:
         switch (kind)
         {
         case AVERAGE:
-            return NumericTraits<ResultType>::fromRealPromote
-                ((NumericTraits<ValueType>::toRealPromote(x.red()) +
-                  NumericTraits<ValueType>::toRealPromote(x.green()) +
-                  NumericTraits<ValueType>::toRealPromote(x.blue())) /
+            return vigra::NumericTraits<ResultType>::fromRealPromote
+                ((vigra::NumericTraits<ValueType>::toRealPromote(x.red()) +
+                  vigra::NumericTraits<ValueType>::toRealPromote(x.green()) +
+                  vigra::NumericTraits<ValueType>::toRealPromote(x.blue())) /
                  3.0);
         case LSTAR:
         {
             typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
             const LABResultType y = rgb_to_lab_fun.operator()(x) / 100.0;
-            return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
+            return vigra::NumericTraits<ResultType>::fromRealPromote(vigra::NumericTraits<ValueType>::max() * y[0]);
         }
         case PRIMED_LSTAR:
         {
             typedef typename vigra::RGBPrime2LabFunctor<double>::result_type LABResultType;
             const LABResultType y = rgb_prime_to_lab_fun.operator()(x) / 100.0;
-            return NumericTraits<ResultType>::fromRealPromote(NumericTraits<ValueType>::max() * y[0]);
+            return vigra::NumericTraits<ResultType>::fromRealPromote(vigra::NumericTraits<ValueType>::max() * y[0]);
         }
         case LIGHTNESS:
-            return NumericTraits<ResultType>::fromRealPromote
+            return vigra::NumericTraits<ResultType>::fromRealPromote
                 ((std::min(x.red(), std::min(x.green(), x.blue())) +
                   std::max(x.red(), std::max(x.green(), x.blue()))) /
                  2.0);
@@ -218,12 +211,12 @@ private:
         case ANTI_VALUE:
             return std::min(x.red(), std::min(x.green(), x.blue()));
         case LUMINANCE:
-            return NumericTraits<ResultType>::fromRealPromote(x.luminance());
+            return vigra::NumericTraits<ResultType>::fromRealPromote(x.luminance());
         case MIXER:
-            return NumericTraits<ResultType>::fromRealPromote
-                (redWeight * NumericTraits<ValueType>::toRealPromote(x.red()) +
-                 greenWeight * NumericTraits<ValueType>::toRealPromote(x.green()) +
-                 blueWeight * NumericTraits<ValueType>::toRealPromote(x.blue()));
+            return vigra::NumericTraits<ResultType>::fromRealPromote
+                (redWeight * vigra::NumericTraits<ValueType>::toRealPromote(x.red()) +
+                 greenWeight * vigra::NumericTraits<ValueType>::toRealPromote(x.green()) +
+                 blueWeight * vigra::NumericTraits<ValueType>::toRealPromote(x.blue()));
         }
 
         // never reached
@@ -231,28 +224,28 @@ private:
     }
 
     // RGB
-    ResultType f(const InputType& x, VigraFalseType) const {
+    ResultType f(const InputType& x, vigra::VigraFalseType) const {
         return project(x);
     }
 
     template <class Iterator>
-    ResultType f(const Iterator& i, VigraFalseType) const {
+    ResultType f(const Iterator& i, vigra::VigraFalseType) const {
         return project(*i);
     }
 
     template <class Iterator, class Difference>
-    ResultType f(const Iterator& i, Difference d, VigraFalseType) const {
+    ResultType f(const Iterator& i, Difference d, vigra::VigraFalseType) const {
         return project(i[d]);
     }
 
     // grayscale
-    ResultType f(const InputType& x, VigraTrueType) const {return x;}
+    ResultType f(const InputType& x, vigra::VigraTrueType) const {return x;}
 
     template <class Iterator>
-    ResultType f(const Iterator& i, VigraTrueType) const {return *i;}
+    ResultType f(const Iterator& i, vigra::VigraTrueType) const {return *i;}
 
     template <class Iterator, class Difference>
-    ResultType f(const Iterator& i, Difference d, VigraTrueType) const {return i[d];}
+    ResultType f(const Iterator& i, Difference d, vigra::VigraTrueType) const {return i[d];}
 
     NameMapType nameMap;
     AccKindType kind;

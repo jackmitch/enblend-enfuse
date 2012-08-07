@@ -1,5 +1,4 @@
-// -*- c-basic-offset: 4 -*-
-/** @file impexImageAlpha.h
+/** @file impexalpha.hxx
  *
  *  Routines to save images with alpha masks.
  *
@@ -26,280 +25,224 @@
  *
  */
 
-#ifndef VIGRA_EXT_IMPEX_ALPHA_IMAGE_H
-#define VIGRA_EXT_IMPEX_ALPHA_IMAGE_H
+#ifndef IMPEXALPHA_HXX_
+#define IMPEXALPHA_HXX_
 
-#include <iostream>
 #include <vigra/imageiterator.hxx>
 #include <vigra/transformimage.hxx>
 #include <vigra/initimage.hxx>
 #include <vigra/numerictraits.hxx>
-
 #include <vigra/impex.hxx>
 
-namespace vigra {
+
+namespace vigra_ext {
+
+// define values for mask true value. max for integers, 1 for floats
+template <class T1> struct GetMaskTrue;
+
+#define VIGRA_EXT_GETMASKTRUE(T1, S)            \
+    template<>                                  \
+    struct GetMaskTrue<T1>                      \
+    {                                           \
+        static T1 get()                         \
+        {                                       \
+            return S;                           \
+        }                                       \
+    }
+
+#define VIGRA_EXT_GETMASKMAX(T1)                        \
+    template<>                                          \
+    struct GetMaskTrue<T1>                              \
+    {                                                   \
+        static T1 get()                                 \
+        {                                               \
+            return vigra::NumericTraits<T1>::max();     \
+        }                                               \
+    }
+
+VIGRA_EXT_GETMASKMAX(vigra::UInt8);
+VIGRA_EXT_GETMASKMAX(vigra::Int16);
+VIGRA_EXT_GETMASKMAX(vigra::UInt16);
+VIGRA_EXT_GETMASKMAX(vigra::Int32);
+VIGRA_EXT_GETMASKMAX(vigra::UInt32);
+
+VIGRA_EXT_GETMASKTRUE(float, 1.0f);
+VIGRA_EXT_GETMASKTRUE(double, 1.0);
 
 
-/** define values for mask true value. max for integers, 1 for floats
- */
-template <class T1>
-struct GetMaskTrue;
-
-#define VIGRA_EXT_GETMASKTRUE(T1, S) \
-template<> \
-struct GetMaskTrue<T1> \
-{ \
-    static T1 get() \
-{ \
-	return S; \
-} \
-};
-
-#define VIGRA_EXT_GETMASKMAX(T1) \
-template<> \
-struct GetMaskTrue<T1> \
-{ \
-    static T1 get() \
-{ \
-	return vigra::NumericTraits<T1>::max(); \
-} \
-};
-
-VIGRA_EXT_GETMASKMAX(vigra::UInt8)
-VIGRA_EXT_GETMASKMAX(vigra::Int16)
-VIGRA_EXT_GETMASKMAX(vigra::UInt16)
-VIGRA_EXT_GETMASKMAX(vigra::Int32)
-VIGRA_EXT_GETMASKMAX(vigra::UInt32)
-VIGRA_EXT_GETMASKTRUE(float, 1.0f)
-VIGRA_EXT_GETMASKTRUE(double, 1.0)
-
-template <class Iter1, class Acc1, class Iter2, class Acc2>
+template <class ValueIterator, class ValueAccessor, class AlphaIterator, class AlphaAccessor>
 class MultiImageMaskAccessor2
 {
 public:
-        /** The accessors value_type: construct a pair that contains
-            the corresponding image values.
-        */
-    typedef vigra::TinyVector<typename Acc1::value_type, 2> value_type;
-    typedef typename Acc1::value_type component_type;
-    typedef typename Acc2::value_type alpha_type;
+    enum {STATIC_SIZE = 2};
 
-        /** Construct from two image iterators and associated accessors.
-        */
-    MultiImageMaskAccessor2(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2)
-    : i1_(i1), a1_(a1), i2_(i2), a2_(a2)
+    typedef typename ValueAccessor::value_type component_type;
+    typedef typename AlphaAccessor::value_type alpha_type;
+    typedef vigra::TinyVector<component_type, STATIC_SIZE> value_type;
+
+    //typedef vigra::VectorElementAccessor<vigra::VectorAccessor<value_type> > ElementAccessor;
+    //operator vigra::VectorAccessor<value_type>() {return a_;}
+
+    MultiImageMaskAccessor2(ValueIterator i1, ValueAccessor a1, AlphaIterator i2, AlphaAccessor a2) :
+        i1_(i1), a1_(a1), i2_(i2), a2_(a2)
     {}
 
-        /** read the current data item
-        */
-    template <class DIFFERENCE>
-    value_type operator()(DIFFERENCE const & d) const
+    template <class Difference>
+    value_type operator()(const Difference& d) const
     {
-        //return value_type(a1_(i1_, d),
-        //                  a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
         return value_type(a1_(i1_, d), a2_(i2_, d));
     }
 
-        /** read the data item at an offset
-        */
-    template <class DIFFERENCE1, class DIFFERENCE2>
-    value_type operator()(DIFFERENCE1 d, DIFFERENCE2 const & d2) const
+    template <class ValueDifference, class AlphaDifference>
+    value_type operator()(ValueDifference d, const AlphaDifference& d2) const
     {
         d += d2;
         return value_type(a1_(i1_, d), a2_(i2_, d));
-        //return value_type(a1_(i1_, d),
-        //                  a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
-
-//        return std::make_pair(a1_(i1_, d1), a2_(i2_, d1));
     }
 
-        /** write the current data item
-         */
-    template <class DIFFERENCE>
-    value_type set(const value_type & vt, DIFFERENCE const & d) const
+    template <class Difference>
+    value_type set(const value_type& v, const Difference& d) const
     {
-        a1_.set(vt[0], i1_, d);
-        a2_.set(vt[1], i2_, d);
-        //a2_.set(vt[1] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
+        a1_.set(v[0], i1_, d);
+        a2_.set(v[1], i2_, d);
     }
 
-    /** scalar & scalar image */
-    template <class V, class ITERATOR>
-    void setComponent( V const & value, ITERATOR const & i, int idx ) const
+    template <class Value, class Iterator>
+    void setComponent(const Value& value, const Iterator& i, int index) const
     {
-        switch (idx) {
+        switch (index) {
         case 0:
             a1_.set(value, i1_, *i);
             break;
         case 1:
-            //a2_.set(value ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
             a2_.set(value, i2_, *i);
             break;
         default:
-            vigra_fail("too many components in input value");
+            vigra_fail("MultiImageMaskAccessor2::setComponent: index out of range");
         }
     }
 
-    /** read one component */
-    template <class ITERATOR>
-    component_type getComponent(ITERATOR const & i, int idx) const
+    template <class Iterator>
+    component_type getComponent(const Iterator& i, int index) const
     {
-        switch (idx) {
-            case 0:
-                return a1_( i1_, *i );
-            case 1:
-                return a2_( i2_, *i );
-                //return a2_( i2_, *i ) ? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
-            default:
-                vigra_fail("too many components in input value");
-            // never reached, but here to silence compiler
-                exit(1);
+        switch (index) {
+        case 0:
+            return a1_(i1_, *i);
+        case 1:
+            return a2_(i2_, *i);
+        default:
+            vigra_fail("MultiImageMaskAccessor2::getComponent: index out of range");
         }
     }
 
-    template <class ITERATOR>
-    unsigned int size ( ITERATOR const & i ) const
+    template <class Iterator>
+    unsigned size(const Iterator& i) const
     {
-        return 2;
+        return STATIC_SIZE;
     }
 
 private:
-    Iter1 i1_;
-    Acc1 a1_;
-    Iter2 i2_;
-    Acc2 a2_;
+    ValueIterator i1_;
+    ValueAccessor a1_;
+    AlphaIterator i2_;
+    AlphaAccessor a2_;
 };
 
 
-
-template <class Iter1, class Acc1, class Iter2, class Acc2>
+template <class ValueIterator, class ValueAccessor, class AlphaIterator, class AlphaAccessor>
 class MultiImageVectorMaskAccessor4
 {
 public:
-        /** The accessors value_type: construct a pair that contains
-            the corresponding image values.
-        */
-    typedef typename Acc1::value_type VT1;
-    // todo.. check static_size, currently static_size == 4
-    enum { static_size = 4 };
+    enum {STATIC_SIZE = 4};
 
-    typedef vigra::TinyVector<typename VT1::value_type, static_size> value_type;
+    typedef typename ValueAccessor::value_type VT1;
+    typedef typename AlphaAccessor::value_type alpha_type;
+
+    typedef vigra::TinyVector<typename VT1::value_type, STATIC_SIZE> value_type;
     typedef typename value_type::value_type component_type;
 
-    typedef typename Acc2::value_type alpha_type;
-
-        /** Construct from two image iterators and associated accessors.
-        */
-    MultiImageVectorMaskAccessor4(Iter1 i1, Acc1 a1, Iter2 i2, Acc2 a2)
-    : i1_(i1), a1_(a1), i2_(i2), a2_(a2)
+    MultiImageVectorMaskAccessor4(ValueIterator i1, ValueAccessor a1, AlphaIterator i2, AlphaAccessor a2) :
+        i1_(i1), a1_(a1), i2_(i2), a2_(a2)
     {}
 
-        /** read the current data item
-        */
-    template <class DIFFERENCE>
-    value_type operator()(DIFFERENCE const & d) const
+    template <class Difference>
+    value_type operator()(const Difference& d) const
     {
-        const VT1 & v1 = a1_.get(i1_,d);
-        return value_type(v1[0],
-                          v1[1],
-                          v1[2],
+        const VT1& v1 = a1_.get(i1_, d);
+        return value_type(v1[0], v1[1], v1[2],
                           a2_(i2_, d));
-                          //a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
     }
 
-        /** read the data item at an offset
-        */
-    template <class DIFFERENCE1, class DIFFERENCE2>
-    value_type operator()(DIFFERENCE1 d, DIFFERENCE2 const & d2) const
+    template <class ValueDifference, class AlphaDifference>
+    value_type operator()(ValueDifference d, const AlphaDifference& d2) const
     {
         d += d2;
-        const VT1 & v1 = a1_.get(i1_,d);
-        return value_type(v1[0],
-                          v1[1],
-                          v1[2],
+        const VT1& v1 = a1_.get(i1_, d);
+        return value_type(v1[0], v1[1], v1[2],
                           a2_(i2_, d));
-                          //a2_(i2_, d)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero());
     }
 
-        /** write the current data item
-         */
-    template <class DIFFERENCE>
-    value_type set(const value_type & vt, DIFFERENCE const & d) const
+    template <class Difference>
+    value_type set(const value_type& v, const Difference& d) const
     {
-        Iter1 i1(i1_);
-        i1 +=d;
-        a1_.setComponent(vt[0], i1_, 0);
-        a1_.setComponent(vt[1], i1_, 1);
-        a1_.setComponent(vt[2], i1_, 2);
-        //a2_.set(vt[3] ? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, d);
-        a2_.set(vt[3], i2_, d);
+        for (int index = 0; index != STATIC_SIZE; ++index) {
+            a1_.setComponent(v[index], i1_, index);
+        }
+        a2_.set(v[3], i2_, d);
     }
 
-    /** vector & scalar image */
-    template <class V, class ITERATOR>
-    void setComponent( V const & value, ITERATOR const & i, int idx ) const
+    template <class Value, class Iterator>
+    void setComponent(const Value& value, const Iterator& i, int index) const
     {
-        if ( idx < static_size - 1 ) {
-            a1_.setComponent(value, i1_, *i, idx);
-        } else if ( idx == static_size - 1 ) {
+        if (index < STATIC_SIZE - 1) {
+            a1_.setComponent(value, i1_, *i, index);
+        } else if (index == STATIC_SIZE - 1) {
             a2_.set(value, i2_, *i);
-            //a2_.set(value? GetMaskTrue<alpha_type>::get() : vigra::NumericTraits<alpha_type>::zero(), i2_, *i);
         } else {
-            vigra_fail("too many components in input value");
+            vigra_fail("MultiImageVectorMaskAccessor4::setComponent: index out of range");
         }
     }
 
-    /** read one component */
-    template <class ITERATOR>
-    component_type getComponent(ITERATOR const & i, int idx) const
+    template <class Iterator>
+    component_type getComponent(const Iterator& i, int index) const
     {
-        if ( idx < static_size - 1 ) {
-            return a1_.getComponent(i1_, *i, idx);
-        } else 
-#ifndef DEBUG
+        if (index < STATIC_SIZE - 1) {
+            return a1_.getComponent(i1_, *i, index);
+        } else if (index == STATIC_SIZE - 1) {
             return a2_(i2_, *i);
-            //return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
-#else
-            if ( idx == static_size - 1 ) {
-                return a2_(i2_, *i);
-                //return a2_(i2_, *i)? GetMaskTrue<component_type>::get() : vigra::NumericTraits<component_type>::zero();
         } else {
-            vigra_fail("too many components in input value");
-            // just to silence the compiler warning. this is
-            // never reached, since vigra_fail will always
-            // throw an exception.
-            throw 0;
+            vigra_fail("MultiImageVectorMaskAccessor4::getComponent: index out of range");
         }
-#endif
     }
 
-    template <class ITERATOR>
-    unsigned int size ( ITERATOR const & i ) const
+    template <class Iterator>
+    unsigned size (const Iterator& i) const
     {
-        return static_size;
+        return STATIC_SIZE;
     }
 
-  private:
-    Iter1 i1_;
-    Acc1 a1_;
-    Iter2 i2_;
-    Acc2 a2_;
+private:
+    ValueIterator i1_;
+    ValueAccessor a1_;
+    AlphaIterator i2_;
+    AlphaAccessor a2_;
 };
 
 
 // scalar image
 template<class SrcIterator, class SrcAccessor,
          class AlphaIterator, class AlphaAccessor>
-void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha,
-		      vigra::ImageExportInfo const & info,
-		      vigra::VigraTrueType)
+void
+exportImageAlpha(const vigra::triple<SrcIterator, SrcIterator, SrcAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha,
+                 const vigra::ImageExportInfo& info,
+                 vigra::VigraTrueType)
 {
-    typedef MultiImageMaskAccessor2<SrcIterator, SrcAccessor, AlphaIterator, AlphaAccessor> MAcc;
+    typedef MultiImageMaskAccessor2<SrcIterator, SrcAccessor, AlphaIterator, AlphaAccessor> MultiAccessor;
 
     exportImage(vigra::CoordinateIterator(),
-                vigra::CoordinateIterator() + (image.second - image.first),
-                MAcc(image.first, image.third, alpha.first, alpha.second),
+                vigra::CoordinateIterator(image.second - image.first),
+                MultiAccessor(image.first, image.third, alpha.first, alpha.second),
                 info);
 }
 
@@ -307,15 +250,18 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
 // vector image
 template<class SrcIterator, class SrcAccessor,
          class AlphaIterator, class AlphaAccessor>
-void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha,
-		      vigra::ImageExportInfo const & info,
-		      vigra::VigraFalseType)
+void
+exportImageAlpha(const vigra::triple<SrcIterator, SrcIterator, SrcAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha,
+                 const vigra::ImageExportInfo& info,
+                 vigra::VigraFalseType)
 {
-    typedef MultiImageVectorMaskAccessor4<SrcIterator, SrcAccessor, AlphaIterator, AlphaAccessor> MAcc;
+    typedef MultiImageVectorMaskAccessor4<SrcIterator, SrcAccessor, AlphaIterator, AlphaAccessor> MultiAccessor;
 
-    exportImage(vigra::CoordinateIterator(), vigra::CoordinateIterator(image.second - image.first),
-                MAcc(image.first, image.third, alpha.first, alpha.second), info );
+    exportImage(vigra::CoordinateIterator(),
+                vigra::CoordinateIterator(image.second - image.first),
+                MultiAccessor(image.first, image.third, alpha.first, alpha.second),
+                info);
 }
 
 
@@ -329,47 +275,53 @@ void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image
  */
 template<class SrcIterator, class SrcAccessor,
          class AlphaIterator, class AlphaAccessor>
-void exportImageAlpha(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha,
-		      vigra::ImageExportInfo const & info)
-		      {
+void
+exportImageAlpha(const vigra::triple<SrcIterator, SrcIterator, SrcAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha,
+                 const vigra::ImageExportInfo& info)
+{
     typedef typename vigra::NumericTraits<typename SrcAccessor::value_type>::isScalar is_scalar;
-    // select function for scalar, or vector image, depending on source type.
-    // the alpha image has to be scalar all the time. stuff will break with strange
-    // compile error if it isn't
-    exportImageAlpha( image, alpha, info, is_scalar());
+
+    // Select function for scalar, or vector image, depending on
+    // source type.  The alpha image has to be scalar all the time;
+    // stuff will break with strange compile error if it is not.
+    exportImageAlpha(image, alpha, info, is_scalar());
 }
 
 
 // vector image
 template<class DestIterator, class DestAccessor,
          class AlphaIterator, class AlphaAccessor>
-void importImageAlpha(vigra::ImageImportInfo const & info,
-		      std::pair<DestIterator, DestAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha,
-		      		      vigra::VigraFalseType)
+void
+importImageAlpha(const vigra::ImageImportInfo& info,
+                 const std::pair<DestIterator, DestAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha,
+                 vigra::VigraFalseType)
 {
     vigra_precondition(image.second(image.first).size() == 3,
-                       "only scalar and 3 channel (vector) images supported by impexalpha.hxx");
+                       "only scalar and 3-channel (i.e. vector) images supported by vigra_ext/impexalpha.hxx");
 
-    typedef MultiImageVectorMaskAccessor4<DestIterator, DestAccessor, AlphaIterator, AlphaAccessor> MAcc;
+    typedef MultiImageVectorMaskAccessor4<DestIterator, DestAccessor, AlphaIterator, AlphaAccessor> MultiAccessor;
+
     importImage(info,
                 vigra::CoordinateIterator(),
-                MAcc(image.first, image.second, alpha.first, alpha.second) );
+                MultiAccessor(image.first, image.second, alpha.first, alpha.second));
 }
 
 // scalar image
 template<class DestIterator, class DestAccessor,
          class AlphaIterator, class AlphaAccessor>
-void importImageAlpha(vigra::ImageImportInfo const & info,
-		      std::pair<DestIterator, DestAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha,
-		      vigra::VigraTrueType)
+void
+importImageAlpha(const vigra::ImageImportInfo& info,
+                 const std::pair<DestIterator, DestAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha,
+                 vigra::VigraTrueType)
 {
-    typedef MultiImageMaskAccessor2<DestIterator, DestAccessor, AlphaIterator, AlphaAccessor> MAcc;
+    typedef MultiImageMaskAccessor2<DestIterator, DestAccessor, AlphaIterator, AlphaAccessor> MultiAccessor;
 
-    importImage(info, vigra::CoordinateIterator(),
-                MAcc(image.first, image.second, alpha.first, alpha.second) );
+    importImage(info,
+                vigra::CoordinateIterator(),
+                MultiAccessor(image.first, image.second, alpha.first, alpha.second));
 }
 
 
@@ -387,29 +339,29 @@ void importImageAlpha(vigra::ImageImportInfo const & info,
  */
 template<class DestIterator, class DestAccessor,
          class AlphaIterator, class AlphaAccessor>
-void importImageAlpha(vigra::ImageImportInfo const & info,
-		      vigra::pair<DestIterator, DestAccessor> image,
-		      std::pair<AlphaIterator, AlphaAccessor> alpha
-		      )
+void
+importImageAlpha(const vigra::ImageImportInfo& info,
+                 const vigra::pair<DestIterator, DestAccessor>& image,
+                 const std::pair<AlphaIterator, AlphaAccessor>& alpha)
 {
     typedef typename vigra::NumericTraits<typename DestAccessor::value_type>::isScalar is_scalar;
 
-    if (info.numExtraBands() == 1 ) {
+    if (info.numExtraBands() == 1) {
 	// import image and alpha channel
 	importImageAlpha(info, image, alpha, is_scalar());
-    } else if (info.numExtraBands() == 0 ) {
-	// no alphachannel in file, import as usual.
+    } else if (info.numExtraBands() == 0) {
+	// no alpha channel in file, import as usual.
 	importImage(info, image);
 	// fill alpha image
-	vigra::initImage(alpha.first ,
+	vigra::initImage(alpha.first,
                          alpha.first + vigra::Diff2D(info.width(), info.height()),
                          alpha.second,
                          255);
     } else {
-	vigra_fail("Images with two or more alpha channel are not supported");
+	vigra_fail("Images with two or more alpha channels are not supported");
     }
 }
 
-} // namespace
+} // namespace vigra_ext
 
-#endif // VIGRA_EXT_IMPEX_ALPHA_IMAGE_H
+#endif // IMPEXALPHA_HXX

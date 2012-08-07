@@ -33,18 +33,12 @@
 #include <stdlib.h>
 #include <utility>
 
-#include "vigra/functorexpression.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/stdcachedfileimage.hxx"
+#include <vigra/functorexpression.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/numerictraits.hxx>
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::pair;
+#include "vigra_ext/stdcachedfileimage.hxx"
 
-using vigra::NumericTraits;
-using vigra::triple;
 
 namespace enblend {
 
@@ -347,7 +341,7 @@ void
 nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright, SrcAccessor sa1,
                         SrcImageIterator src2_upperleft, SrcAccessor sa2,
                         DestImageIterator dest_upperleft, DestAccessor da,
-                        nearest_neigbor_metric_t norm, boundary_t boundary)
+                        nearest_neighbor_metric_t norm, boundary_t boundary)
 {
     typedef typename SrcAccessor::value_type SrcPixelType;
     typedef vigra::NumericTraits<SrcPixelType> SrcPixelTraits;
@@ -357,21 +351,21 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
 
     const SrcPixelType background = SrcPixelTraits::zero();
-    const Diff2D size(src1_lowerright.x - src1_upperleft.x,
-                      src1_lowerright.y - src1_upperleft.y);
+    const vigra::Diff2D size(src1_lowerright.x - src1_upperleft.x,
+                             src1_lowerright.y - src1_upperleft.y);
 
     IMAGETYPE<SrcPromoteType> dist12(size);
     IMAGETYPE<SrcPromoteType> dist21(size);
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
-        cerr << command << ": info: creating ";
+        std::cerr << command << ": info: creating ";
         if (CoarseMask) {
-            cerr << "coarse/" << CoarsenessFactor;
+            std::cerr << "coarse/" << CoarsenessFactor;
         } else {
-            cerr << "fine";
+            std::cerr << "fine";
         }
-        cerr << " blend mask: 1/3";
-        cerr.flush();
+        std::cerr << " blend mask: 1/3";
+        std::cerr.flush();
     }
 
     const unsigned overlap_threshold =
@@ -427,8 +421,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         {
             if (Verbose >= VERBOSE_NFT_MESSAGES)
             {
-                cerr << " 2/3";
-                cerr.flush();
+                std::cerr << " 2/3";
+                std::cerr.flush();
             }
             IMAGETYPE<SrcPixelType> diff21(size);
             combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
@@ -461,14 +455,14 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
-        cerr << " 3/3";
-        cerr.flush();
+        std::cerr << " 3/3";
+        std::cerr.flush();
     }
 
     const unsigned overlap_tally = std::max(tally12, tally21);
     if (overlap_tally < overlap_threshold)
     {
-        cerr << "\n" <<
+        std::cerr << "\n" <<
             command << ": excessive overlap detected; remove one of the images\n";
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
         cout <<
@@ -490,7 +484,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
-        cerr << endl;
+        std::cerr << std::endl;
     }
 }
 
@@ -498,10 +492,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 template <class SrcImageIterator, class SrcAccessor,
           class DestImageIterator, class DestAccessor>
 inline void
-nearestFeatureTransform(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
-                        pair<SrcImageIterator, SrcAccessor> src2,
-                        pair<DestImageIterator, DestAccessor> dest,
-                        nearest_neigbor_metric_t norm, boundary_t boundary)
+nearestFeatureTransform(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+                        vigra::pair<SrcImageIterator, SrcAccessor> src2,
+                        vigra::pair<DestImageIterator, DestAccessor> dest,
+                        nearest_neighbor_metric_t norm, boundary_t boundary)
 {
     nearestFeatureTransform(src1.first, src1.second, src1.third,
                             src2.first, src2.second,

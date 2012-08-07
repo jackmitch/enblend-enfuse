@@ -26,13 +26,13 @@
 
 #include <limits>
 
-#include "vigra/diff2d.hxx"
-#include "vigra/initimage.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/transformimage.hxx"
-#include "vigra/combineimages.hxx"
-#include "vigra/convolution.hxx"
-#include "vigra/distancetransform.hxx"
+#include <vigra/diff2d.hxx>
+#include <vigra/initimage.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/transformimage.hxx>
+#include <vigra/combineimages.hxx>
+#include <vigra/convolution.hxx>
+#include <vigra/distancetransform.hxx>
 
 
 #if _OPENMP >= 200203 // at least OpenMP version 2.0

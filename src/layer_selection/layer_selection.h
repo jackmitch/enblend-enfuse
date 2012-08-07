@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2011 Dr. Christoph L. Spiel
+ * Copyright (C) 2010-2012 Dr. Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -21,10 +21,11 @@
 #define __LAYER_SELECTION_H__
 
 
+#include <map>
 #include <string>
 #include <vector>
 
-#include "vigra/imageinfo.hxx"
+#include <vigra/imageinfo.hxx>
 
 #include "info.h"
 
@@ -50,7 +51,7 @@ public:
     void set_selector(selector::Abstract* a_selector);
 
     template <class const_iterator>
-    void retrive_image_information(const_iterator begin, const_iterator end)
+    void retrieve_image_information(const_iterator begin, const_iterator end)
     {
         delete info_;
         info_ = new ImageListInformation;
@@ -63,18 +64,10 @@ public:
             ImageInfo image_info(image->filename());
             vigra::ImageImportInfo file_info(image->filename().c_str());
 
-            for (int layer = 0; layer < file_info.numLayers(); ++layer)
+            for (int layer = 0; layer < file_info.numImages(); ++layer)
             {
-                vigra::ImageImportInfo* layer_info;
-                if (file_info.numLayers() >= 2)
-                {
-                    layer_info =
-                        new vigra::ImageImportInfo(vigra::join_filename_layer(image->filename(), layer).c_str());
-                }
-                else
-                {
-                    layer_info = new vigra::ImageImportInfo(file_info);
-                }
+                vigra::ImageImportInfo* layer_info(new vigra::ImageImportInfo(file_info));
+                layer_info->setImageIndex(layer);
 
                 image_info.append(LayerInfo(layer_info->width(), layer_info->height(),
                                             layer_info->isColor(), layer_info->pixelType(),
@@ -85,7 +78,7 @@ public:
             }
 
             info_->append(image_info);
-            tally_->insert(file_tally_t::value_type(image->filename(), layer_tally_t(file_info.numLayers())));
+            tally_->insert(file_tally_t::value_type(image->filename(), layer_tally_t(file_info.numImages())));
         }
     }
 

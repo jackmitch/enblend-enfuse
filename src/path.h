@@ -27,11 +27,6 @@
 #include <queue>
 #include <vector>
 
-using std::priority_queue;
-using std::vector;
-
-using vigra::Point2D;
-using vigra::UInt8Image;
 
 namespace enblend {
 
@@ -57,17 +52,17 @@ protected:
 
 
 template <class CostImageIterator, class CostAccessor>
-vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
-                             CostImageIterator cost_lowerright,
-                             CostAccessor ca,
-                             Point2D startingPoint,
-                             Point2D endingPoint)
+std::vector<vigra::Point2D>* minCostPath(CostImageIterator cost_upperleft,
+                                         CostImageIterator cost_lowerright,
+                                         CostAccessor ca,
+                                         vigra::Point2D startingPoint,
+                                         vigra::Point2D endingPoint)
 {
     typedef typename CostAccessor::value_type CostPixelType;
-    typedef typename NumericTraits<CostPixelType>::Promote WorkingPixelType;
-    typedef BasicImage<WorkingPixelType> WorkingImageType;
+    typedef typename vigra::NumericTraits<CostPixelType>::Promote WorkingPixelType;
+    typedef vigra::BasicImage<WorkingPixelType> WorkingImageType;
     typedef typename WorkingImageType::traverser WorkingImageIterator;
-    typedef priority_queue<Point2D, vector<Point2D>, PathCompareFunctor<Point2D, WorkingImageType> > PQ;
+    typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>, PathCompareFunctor<vigra::Point2D, WorkingImageType> > PQ;
 
     const int w = cost_lowerright.x - cost_upperleft.x;
     const int h = cost_lowerright.y - cost_upperleft.y;
@@ -77,14 +72,14 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
     // 2  0  1
     // 6  4  5
     //const unsigned char neighborArray[] = {0xA, 8, 9, 1, 5, 4, 6, 2};
-    const UInt8 neighborArray[] = {0xA, 1, 6, 8, 5, 2, 9, 4};
+    const vigra::UInt8 neighborArray[] = {0xA, 1, 6, 8, 5, 2, 9, 4};
     //const unsigned char neighborArrayInverse[] = {5, 4, 6, 2, 0xA, 8, 9, 1};
-    const UInt8 neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
+    const vigra::UInt8 neighborArrayInverse[] = {5, 2, 9, 4, 0xA, 1, 6, 8};
 
-    UInt8Image* pathNextHop = new UInt8Image(w, h, UInt8(0));
-    WorkingImageType* costSoFar = new WorkingImageType(w, h, NumericTraits<WorkingPixelType>::max());
-    PQ* pq = new PQ(PathCompareFunctor<Point2D, WorkingImageType>(costSoFar));
-    vector<Point2D>* result = new vector<Point2D>;
+    vigra::UInt8Image* pathNextHop = new vigra::UInt8Image(w, h, vigra::UInt8(0));
+    WorkingImageType* costSoFar = new WorkingImageType(w, h, vigra::NumericTraits<WorkingPixelType>::max());
+    PQ* pq = new PQ(PathCompareFunctor<vigra::Point2D, WorkingImageType>(costSoFar));
+    std::vector<vigra::Point2D>* result = new std::vector<vigra::Point2D>;
 
 #ifdef DEBUG_PATH
     cout << "+ minCostPath: w = " << w << ", h = " << h << "\n"
@@ -93,12 +88,12 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
 #endif
 
     (*costSoFar)[endingPoint] =
-        std::max(NumericTraits<WorkingPixelType>::one(),
-                 NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + endingPoint)));
+        std::max(vigra::NumericTraits<WorkingPixelType>::one(),
+                 vigra::NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + endingPoint)));
     pq->push(endingPoint);
 
     while (!pq->empty()) {
-        Point2D top = pq->top();
+        vigra::Point2D top = pq->top();
         pq->pop();
 #ifdef DEBUG_PATH
         cout << "+ minCostPath: visiting point = " << top << endl;
@@ -113,8 +108,8 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
             // For each 8-neighbor of top with costSoFar == 0 do relax
             for (int i = 0; i < 8; i++) {
                 // get the negihbor;
-                UInt8 neighborDirection = neighborArray[i];
-                Point2D neighborPoint = top;
+                vigra::UInt8 neighborDirection = neighborArray[i];
+                vigra::Point2D neighborPoint = top;
                 if (neighborDirection & 0x8) {--neighborPoint.y;}
                 if (neighborDirection & 0x4) {++neighborPoint.y;}
                 if (neighborDirection & 0x2) {--neighborPoint.x;}
@@ -136,17 +131,17 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
 #ifdef DEBUG_PATH
                 cout << "+ minCostPath: neighborPreviousCost = " << neighborPreviousCost << endl;
 #endif
-                if (neighborPreviousCost != NumericTraits<WorkingPixelType>::max()) {
+                if (neighborPreviousCost != vigra::NumericTraits<WorkingPixelType>::max()) {
                     continue;
                 }
 
                 WorkingPixelType neighborCost =
-                    std::max(NumericTraits<WorkingPixelType>::one(),
-                             NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
+                    std::max(vigra::NumericTraits<WorkingPixelType>::one(),
+                             vigra::NumericTraits<CostPixelType>::toPromote(ca(cost_upperleft + neighborPoint)));
 #ifdef DEBUG_PATH
                 cout << "+ minCostPath: neighborCost = " << neighborCost << endl;
 #endif
-                if (neighborCost == NumericTraits<CostPixelType>::max()) {
+                if (neighborCost == vigra::NumericTraits<CostPixelType>::max()) {
                     neighborCost *= 65536; // Can't use << since neighborCost may be floating-point
                 }
 
@@ -166,7 +161,7 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
         } else {
             // If yes then follow back to beginning using pathNextHop
             // include neither start nor end point in result
-            UInt8 nextHop = (*pathNextHop)[top];
+            vigra::UInt8 nextHop = (*pathNextHop)[top];
             while (nextHop != 0) {
                 if (nextHop & 0x8) {--top.y;}
                 if (nextHop & 0x4) {++top.y;}
@@ -190,8 +185,9 @@ vector<Point2D>* minCostPath(CostImageIterator cost_upperleft,
 
 
 template <class CostImageIterator, class CostAccessor>
-vector<Point2D>* minCostPath(triple<CostImageIterator, CostImageIterator, CostAccessor> cost,
-                             Point2D startingPoint, Point2D endingPoint)
+inline std::vector<vigra::Point2D>*
+minCostPath(vigra::triple<CostImageIterator, CostImageIterator, CostAccessor> cost,
+            vigra::Point2D startingPoint, vigra::Point2D endingPoint)
 {
     return minCostPath(cost.first, cost.second, cost.third, startingPoint, endingPoint);
 }

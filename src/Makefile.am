@@ -3,7 +3,7 @@ AM_CFLAGS = $(EXTRACFLAGS)
 AM_CXXFLAGS = $(EXTRACXXFLAGS)
 AM_LDFLAGS = $(EXTRALDFLAGS)
 
-SUBDIRS = layer_selection vigra_impex win32helpers
+SUBDIRS = layer_selection win32helpers
 
 bin_PROGRAMS = enblend enfuse
 
@@ -19,7 +19,7 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   tiff_message.h tiff_message.cc \
                   minimizer.h
 enblend_LDFLAGS = $(AM_LDFLAGS) $(OPENGL_CFLAGS)
-enblend_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a \
+enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) $(OPENGL_LIBS) @EXTRA_LIBS@
 enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) $(OPENGL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
@@ -35,7 +35,7 @@ enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  tiff_message.h tiff_message.cc \
                  minimizer.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = layer_selection/liblayersel.a vigra_impex/libvigra_impex.a \
+enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \

@@ -666,11 +666,6 @@ You should have received a copy of the GNU General Public License
 along with Enblend; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Enblend uses the VIGRA computer vision library.
-VIGRA is Copyright 1998-2002 by Ullrich Koethe
-Cognitive Systems Group, University of Hamburg, Germany
-Please see the file VIGRA_LICENSE for details.
-
 
 
 Local Variables:

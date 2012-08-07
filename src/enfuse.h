@@ -27,9 +27,20 @@
 #include <iostream>
 #include <iomanip>
 #include <list>
-#include <stdio.h>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
 #include <boost/static_assert.hpp>
+
+#include <vigra/flatmorphology.hxx>
+#include <vigra/functorexpression.hxx>
+#include <vigra/imageiterator.hxx>
+#include <vigra/impex.hxx>
+#include <vigra/initimage.hxx>
+#include <vigra/inspectimage.hxx>
+#include <vigra/stdimage.hxx>
+#include <vigra/transformimage.hxx>
 
 #include "common.h"
 #include "filespec.h"
@@ -42,47 +53,16 @@
 #include "pyramid.h"
 #include "mga.h"
 
-#include "vigra/flatmorphology.hxx"
-#include "vigra/functorexpression.hxx"
-#include "vigra/impex.hxx"
-#include "vigra/initimage.hxx"
-#include "vigra/inspectimage.hxx"
-#include "vigra/stdimage.hxx"
-#include "vigra/transformimage.hxx"
-
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/construct.hpp>
-
-using std::cout;
-using std::endl;
-using std::list;
-using std::pair;
-
-using vigra::functor::Arg1;
-using vigra::functor::Arg2;
-using vigra::functor::Param;
-using vigra::BasicImage;
-using vigra::CachedFileImage;
-using vigra::CachedFileImageDirector;
-using vigra::FImage;
-using vigra::FindMinMax;
-using vigra::ImageExportInfo;
-using vigra::ImageImportInfo;
-using vigra::initImage;
-using vigra::initImageIf;
-using vigra::inspectImage;
-using vigra::NumericTraits;
-using vigra::Size2D;
-using vigra::VigraFalseType;
-using vigra::VigraTrueType;
-using vigra::Kernel1D;
-using vigra::VectorNormFunctor;
 
 using boost::lambda::_1;
 using boost::lambda::_2;
 using boost::lambda::bind;
 using boost::lambda::const_parameters;
+
+using vigra::functor::Arg1;
+using vigra::functor::Arg2;
+using vigra::functor::Param;
+
 
 namespace enblend {
 
@@ -109,10 +89,10 @@ template <class SrcIterator, class SrcAccessor,
 void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                    MaskIterator mask_ul, MaskAccessor mask_acc,
                    DestIterator dest_ul, DestAccessor dest_acc,
-                   Size2D size)
+                   vigra::Size2D size)
 {
-    typedef typename NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
-    typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+    typedef typename vigra::NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
+    typedef vigra::NumericTraits<typename DestAccessor::value_type> DestTraits;
     typedef typename SrcIterator::PixelType SrcPixelType;
     typedef typename SrcIterator::row_iterator SrcRowIterator;
     typedef typename MaskIterator::row_iterator MaskRowIterator;
@@ -130,11 +110,11 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
     const typename SrcIterator::difference_type imageSize = src_lr - src_ul;
     ScratchPadArray scratchPad(imageSize.x + 1);
 
-    const Diff2D border(size.x / 2, size.y / 2);
-    const Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
+    const vigra::Diff2D border(size.x / 2, size.y / 2);
+    const vigra::Diff2D nextUpperRight(size.x / 2 + 1, -size.y / 2);
 
     SrcIterator const srcEnd(src_lr - border);
-    SrcIterator const srcEndXm1(srcEnd - Diff2D(1, 0));
+    SrcIterator const srcEndXm1(srcEnd - vigra::Diff2D(1, 0));
 
     // For each row in the source image...
 #ifdef OPENMP
@@ -142,13 +122,13 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
 #endif
     for (int row = 0; row < imageSize.y - 2 * border.y; ++row)
     {
-        SrcIterator srcRow(src_ul + border + Diff2D(0, row));
-        MaskIterator maskRow(mask_ul + border + Diff2D(0, row));
-        DestIterator destRow(dest_ul + border + Diff2D(0, row));
+        SrcIterator srcRow(src_ul + border + vigra::Diff2D(0, row));
+        MaskIterator maskRow(mask_ul + border + vigra::Diff2D(0, row));
+        DestIterator destRow(dest_ul + border + vigra::Diff2D(0, row));
 
         // Row's running values
-        SrcSumType sum = NumericTraits<SrcSumType>::zero();
-        SrcSumType sumSqr = NumericTraits<SrcSumType>::zero();
+        SrcSumType sum = vigra::NumericTraits<SrcSumType>::zero();
+        SrcSumType sumSqr = vigra::NumericTraits<SrcSumType>::zero();
         size_t n = 0;
 
         SrcIterator const windowSrcUpperLeft(srcRow - border);
@@ -164,8 +144,8 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
              windowSrc.x <= windowSrcLowerRight.x;
              ++windowSrc.x, ++windowMask.x, ++spCol)
         {
-            SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
-            SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+            SrcSumType sumInit = vigra::NumericTraits<SrcSumType>::zero();
+            SrcSumType sumSqrInit = vigra::NumericTraits<SrcSumType>::zero();
             size_t nInit = 0;
 
             for (windowSrc.y = windowSrcUpperLeft.y, windowMask.y = windowMaskUpperLeft.y;
@@ -206,7 +186,7 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
             {
                 const SrcSumType result =
                     n <= 1 ?
-                    NumericTraits<SrcSumType>::zero() :
+                    vigra::NumericTraits<SrcSumType>::zero() :
                     sqrt((sumSqr - square(sum) / n) / (n - 1));
                 dest_acc.set(DestTraits::fromRealPromote(result), destCol);
             }
@@ -216,8 +196,8 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
             }
 
             // Compute auxilliary values of next column
-            SrcSumType sumInit = NumericTraits<SrcSumType>::zero();
-            SrcSumType sumSqrInit = NumericTraits<SrcSumType>::zero();
+            SrcSumType sumInit = vigra::NumericTraits<SrcSumType>::zero();
+            SrcSumType sumSqrInit = vigra::NumericTraits<SrcSumType>::zero();
             size_t nInit = 0;
 
             for (windowSrc = srcCol + nextUpperRight, windowMask = maskCol + nextUpperRight;
@@ -260,14 +240,14 @@ class Histogram
     enum {GRAY = 0, CHANNELS = 3};
 
 public:
-    typedef NumericTraits<InputPixelType> InputPixelTraits;
+    typedef vigra::NumericTraits<InputPixelType> InputPixelTraits;
     typedef typename InputPixelTraits::ValueType KeyType; // scalar values are our keys
     typedef typename InputPixelTraits::isScalar pixelIsScalar;
     typedef unsigned DataType;  // pixel counts are our data
-    typedef NumericTraits<ResultPixelType> ResultPixelTraits;
+    typedef vigra::NumericTraits<ResultPixelType> ResultPixelTraits;
     typedef typename ResultPixelTraits::ValueType ResultType;
     typedef map<KeyType, DataType> MapType;
-    typedef pair<KeyType, DataType> PairType;
+    typedef std::pair<KeyType, DataType> PairType;
     typedef typename MapType::const_iterator MapConstIterator;
     typedef typename MapType::iterator MapIterator;
     typedef typename MapType::size_type MapSizeType;
@@ -410,11 +390,11 @@ protected:
     }
 
     // Grayscale
-    void insertFun(const InputPixelType& x, VigraTrueType) {
+    void insertFun(const InputPixelType& x, vigra::VigraTrueType) {
         insertInChannel(GRAY, PairType(x, 1U));
     }
 
-    void insertFun(const Histogram* other, VigraTrueType) {
+    void insertFun(const Histogram* other, vigra::VigraTrueType) {
         MapConstIterator const end = other->histogram[GRAY].end();
         for (MapConstIterator i = other->histogram[GRAY].begin(); i != end; ++i)
         {
@@ -422,11 +402,11 @@ protected:
         }
     }
 
-    void eraseFun(const InputPixelType& x, VigraTrueType) {
+    void eraseFun(const InputPixelType& x, vigra::VigraTrueType) {
         eraseInChannel(GRAY, PairType(x, 1U));
     }
 
-    void eraseFun(const Histogram* other, VigraTrueType) {
+    void eraseFun(const Histogram* other, vigra::VigraTrueType) {
         MapConstIterator const end = other->histogram[GRAY].end();
         for (MapConstIterator i = other->histogram[GRAY].begin(); i != end; ++i)
         {
@@ -434,19 +414,19 @@ protected:
         }
     }
 
-    ResultPixelType entropyFun(VigraTrueType) const {
-        const double max = static_cast<double>(NumericTraits<KeyType>::max());
+    ResultPixelType entropyFun(vigra::VigraTrueType) const {
+        const double max = static_cast<double>(vigra::NumericTraits<KeyType>::max());
         return ResultPixelType(ResultPixelTraits::fromRealPromote(entropyOfChannel(GRAY) * max));
     }
 
     // RGB
-    void insertFun(const InputPixelType& x, VigraFalseType) {
+    void insertFun(const InputPixelType& x, vigra::VigraFalseType) {
         for (int channel = 0; channel < CHANNELS; ++channel) {
             insertInChannel(channel, PairType(x[channel], 1U));
         }
     }
 
-    void insertFun(const Histogram* other, VigraFalseType) {
+    void insertFun(const Histogram* other, vigra::VigraFalseType) {
         for (int channel = 0; channel < CHANNELS; ++channel)
         {
             MapConstIterator const end = other->histogram[channel].end();
@@ -457,13 +437,13 @@ protected:
         }
     }
 
-    void eraseFun(const InputPixelType& x, VigraFalseType) {
+    void eraseFun(const InputPixelType& x, vigra::VigraFalseType) {
         for (int channel = 0; channel < CHANNELS; ++channel) {
             eraseInChannel(channel, PairType(x[channel], 1U));
         }
     }
 
-    void eraseFun(const Histogram* other, VigraFalseType) {
+    void eraseFun(const Histogram* other, vigra::VigraFalseType) {
         for (int channel = 0; channel < CHANNELS; ++channel)
         {
             MapConstIterator const end = other->histogram[channel].end();
@@ -474,11 +454,11 @@ protected:
         }
     }
 
-    ResultPixelType entropyFun(VigraFalseType) const {
-        const double max = static_cast<double>(NumericTraits<KeyType>::max());
-        return ResultPixelType(NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(0) * max),
-                               NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(1) * max),
-                               NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(2) * max));
+    ResultPixelType entropyFun(vigra::VigraFalseType) const {
+        const double max = static_cast<double>(vigra::NumericTraits<KeyType>::max());
+        return ResultPixelType(vigra::NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(0) * max),
+                               vigra::NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(1) * max),
+                               vigra::NumericTraits<ResultType>::fromRealPromote(entropyOfChannel(2) * max));
     }
 
 private:
@@ -496,9 +476,9 @@ template <class SrcIterator, class SrcAccessor,
 void localEntropyIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                     MaskIterator mask_ul, MaskAccessor mask_acc,
                     DestIterator dest_ul, DestAccessor dest_acc,
-                    Size2D size)
+                    vigra::Size2D size)
 {
-    typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
+    typedef vigra::NumericTraits<typename DestAccessor::value_type> DestTraits;
     typedef typename SrcIterator::PixelType SrcPixelType;
     typedef typename SrcIterator::row_iterator SrcRowIterator;
     typedef typename MaskIterator::row_iterator MaskRowIterator;
@@ -514,10 +494,10 @@ void localEntropyIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
 
     ScratchPadType::setPrecomputedEntropySize(size.x * size.y);
 
-    const Diff2D border(size.x / 2, size.y / 2);
-    const Diff2D deltaX(size.x / 2, 0);
-    const Diff2D deltaXp1(size.x / 2 + 1, 0);
-    const Diff2D deltaY(0, size.y / 2);
+    const vigra::Diff2D border(size.x / 2, size.y / 2);
+    const vigra::Diff2D deltaX(size.x / 2, 0);
+    const vigra::Diff2D deltaXp1(size.x / 2 + 1, 0);
+    const vigra::Diff2D deltaY(0, size.y / 2);
 
     // Fill scratch pad for the first time.
     {
@@ -608,10 +588,10 @@ template <typename SrcIterator, typename SrcAccessor,
           typename MaskIterator, typename MaskAccessor,
           typename DestIterator, typename DestAccessor>
 inline void
-localEntropyIf(triple<SrcIterator, SrcIterator, SrcAccessor> src,
-               pair<MaskIterator, MaskAccessor> mask,
-               pair<DestIterator, DestAccessor> dest,
-               Size2D size)
+localEntropyIf(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> src,
+               vigra::pair<MaskIterator, MaskAccessor> mask,
+               vigra::pair<DestIterator, DestAccessor> dest,
+               vigra::Size2D size)
 {
     localEntropyIf(src.first, src.second, src.third,
                    mask.first, mask.second,
@@ -624,10 +604,10 @@ template <typename SrcIterator, typename SrcAccessor,
           typename MaskIterator, typename MaskAccessor,
           typename DestIterator, typename DestAccessor>
 inline void
-localStdDevIf(triple<SrcIterator, SrcIterator, SrcAccessor> src,
-              pair<MaskIterator, MaskAccessor> mask,
-              pair<DestIterator, DestAccessor> dest,
-              Size2D size)
+localStdDevIf(vigra::triple<SrcIterator, SrcIterator, SrcAccessor> src,
+              vigra::pair<MaskIterator, MaskAccessor> mask,
+              vigra::pair<DestIterator, DestAccessor> dest,
+              vigra::Size2D size)
 {
     localStdDevIf(src.first, src.second, src.third,
                   mask.first, mask.second,
@@ -640,17 +620,17 @@ template <typename MaskPixelType>
 class ImageMaskMultiplyFunctor {
 public:
     ImageMaskMultiplyFunctor(MaskPixelType d) :
-        divisor(NumericTraits<MaskPixelType>::toRealPromote(d)) {}
+        divisor(vigra::NumericTraits<MaskPixelType>::toRealPromote(d)) {}
 
     template <typename ImagePixelType>
     ImagePixelType operator()(const ImagePixelType& iP, const MaskPixelType& maskP) const {
-        typedef typename NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
+        typedef typename vigra::NumericTraits<ImagePixelType>::RealPromote RealImagePixelType;
 
         // Convert mask pixel to blend coefficient in range [0.0, 1.0].
-        const double maskCoeff = NumericTraits<MaskPixelType>::toRealPromote(maskP) / divisor;
-        const RealImagePixelType riP = NumericTraits<ImagePixelType>::toRealPromote(iP);
+        const double maskCoeff = vigra::NumericTraits<MaskPixelType>::toRealPromote(maskP) / divisor;
+        const RealImagePixelType riP = vigra::NumericTraits<ImagePixelType>::toRealPromote(iP);
         const RealImagePixelType blendP = riP * maskCoeff;
-        return NumericTraits<ImagePixelType>::fromRealPromote(blendP);
+        return vigra::NumericTraits<ImagePixelType>::fromRealPromote(blendP);
     }
 
 protected:
@@ -667,25 +647,25 @@ public:
         weight(w), mu(m), sigma(s), acc(a) {}
 
     inline ResultType operator()(const InputType& a) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
 
 protected:
     // grayscale
     template <typename T>
-    inline ResultType f(const T& a, VigraTrueType) const {
-        typedef typename NumericTraits<T>::RealPromote RealType;
-        const RealType ra = NumericTraits<T>::toRealPromote(a);
-        const double b = NumericTraits<T>::max() * mu;
-        const double c = NumericTraits<T>::max() * sigma;
-        return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+    inline ResultType f(const T& a, vigra::VigraTrueType) const {
+        typedef typename vigra::NumericTraits<T>::RealPromote RealType;
+        const RealType ra = vigra::NumericTraits<T>::toRealPromote(a);
+        const double b = vigra::NumericTraits<T>::max() * mu;
+        const double c = vigra::NumericTraits<T>::max() * sigma;
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
     }
 
     // RGB
     template <typename T>
-    inline ResultType f(const T& a, VigraFalseType) const {
-        return f(acc.operator()(a), VigraTrueType());
+    inline ResultType f(const T& a, vigra::VigraFalseType) const {
+        return f(acc.operator()(a), vigra::VigraTrueType());
     }
 
     const double weight;
@@ -710,10 +690,10 @@ public:
     {
         typedef typename InputAccessor::value_type value_type;
 
-        const value_type max = NumericTraits<value_type>::max();
+        const value_type max = vigra::NumericTraits<value_type>::max();
 
         if (lower_cutoff > upper_cutoff) {
-            cerr << command <<
+            std::cerr << command <<
                 ": lower exposure cutoff (" << lower_cutoff << "/" << max <<
                 " = " << 100.0 * lower_cutoff / max <<
                 "%) exceeds upper cutoff (" << upper_cutoff << "/" << max <<
@@ -724,20 +704,20 @@ public:
     }
 
     inline ResultType operator()(const InputType& a) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
 
 protected:
     // grayscale
     template <typename T>
-    inline ResultType f(const T& a, VigraTrueType) const {
-        typedef typename NumericTraits<T>::RealPromote RealType;
-        const RealType ra = NumericTraits<T>::toRealPromote(a);
+    inline ResultType f(const T& a, vigra::VigraTrueType) const {
+        typedef typename vigra::NumericTraits<T>::RealPromote RealType;
+        const RealType ra = vigra::NumericTraits<T>::toRealPromote(a);
         if (ra >= lower_cutoff && ra <= upper_cutoff) {
-            const double b = NumericTraits<T>::max() * mu;
-            const double c = NumericTraits<T>::max() * sigma;
-            return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+            const double b = vigra::NumericTraits<T>::max() * mu;
+            const double c = vigra::NumericTraits<T>::max() * sigma;
+            return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
         } else {
             return ResultType();
         }
@@ -745,16 +725,16 @@ protected:
 
     // RGB
     template <typename T>
-    inline ResultType f(const T& a, VigraFalseType) const {
+    inline ResultType f(const T& a, vigra::VigraFalseType) const {
         typedef typename T::value_type ValueType;
-        typedef typename NumericTraits<ValueType>::RealPromote RealType;
-        const RealType ra = NumericTraits<ValueType>::toRealPromote(acc.operator()(a));
-        const RealType lower_ra = NumericTraits<ValueType>::toRealPromote(lower_acc.operator()(a));
-        const RealType upper_ra = NumericTraits<ValueType>::toRealPromote(upper_acc.operator()(a));
+        typedef typename vigra::NumericTraits<ValueType>::RealPromote RealType;
+        const RealType ra = vigra::NumericTraits<ValueType>::toRealPromote(acc.operator()(a));
+        const RealType lower_ra = vigra::NumericTraits<ValueType>::toRealPromote(lower_acc.operator()(a));
+        const RealType upper_ra = vigra::NumericTraits<ValueType>::toRealPromote(upper_acc.operator()(a));
         if (lower_ra >= lower_cutoff && upper_ra <= upper_cutoff) {
-            const double b = NumericTraits<ValueType>::max() * mu;
-            const double c = NumericTraits<ValueType>::max() * sigma;
-            return NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+            const double b = vigra::NumericTraits<ValueType>::max() * mu;
+            const double c = vigra::NumericTraits<ValueType>::max() * sigma;
+            return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
         } else {
             return ResultType();
         }
@@ -779,23 +759,23 @@ public:
     SaturationFunctor(double w) : weight(w) {}
 
     inline ResultType operator()(const InputType& a) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
 
 protected:
     // grayscale
     template <typename T>
-    inline ResultType f(const T& a, VigraTrueType) const {
-        return NumericTraits<ResultType>::zero();
+    inline ResultType f(const T& a, vigra::VigraTrueType) const {
+        return vigra::NumericTraits<ResultType>::zero();
     }
 
     // RGB
     template <typename T>
-    inline ResultType f(const T& a, VigraFalseType) const {
+    inline ResultType f(const T& a, vigra::VigraFalseType) const {
         typedef typename T::value_type value_type;
-        typedef NumericTraits<value_type> value_traits;
-        typedef NumericTraits<ResultType> result_traits;
+        typedef vigra::NumericTraits<value_type> value_traits;
+        typedef vigra::NumericTraits<ResultType> result_traits;
 
         const value_type max = std::max(a.red(), std::max(a.green(), a.blue()));
         const value_type min = std::min(a.red(), std::min(a.green(), a.blue()));
@@ -831,43 +811,43 @@ public:
     ContrastFunctor(double w) : weight(w) {}
 
     inline ResultType operator()(const InputType& a) const {
-        typedef typename NumericTraits<InputType>::isScalar srcIsScalar;
-        typedef typename NumericTraits<ScaleType>::isIntegral scaleIsIntegral;
+        typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
+        typedef typename vigra::NumericTraits<ScaleType>::isIntegral scaleIsIntegral;
         return f(a, srcIsScalar(), scaleIsIntegral());
     }
 
 protected:
     // grayscale, integral
     template <typename T>
-    inline ResultType f(const T& a, VigraTrueType, VigraTrueType) const {
-        const typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
-        return NumericTraits<ResultType>::fromRealPromote(weight * ra / NumericTraits<ScaleType>::max());
+    inline ResultType f(const T& a, vigra::VigraTrueType, vigra::VigraTrueType) const {
+        const typename vigra::NumericTraits<T>::RealPromote ra = vigra::NumericTraits<T>::toRealPromote(a);
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * ra / vigra::NumericTraits<ScaleType>::max());
     }
 
     // grayscale, floating-point
     template <typename T>
-    inline ResultType f(const T& a, VigraTrueType, VigraFalseType) const {
-        const typename NumericTraits<T>::RealPromote ra = NumericTraits<T>::toRealPromote(a);
-        return NumericTraits<ResultType>::fromRealPromote(weight * ra);
+    inline ResultType f(const T& a, vigra::VigraTrueType, vigra::VigraFalseType) const {
+        const typename vigra::NumericTraits<T>::RealPromote ra = vigra::NumericTraits<T>::toRealPromote(a);
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * ra);
     }
 
     // RGB, integral
     template <typename T>
-    inline ResultType f(const T& a, VigraFalseType, VigraTrueType) const {
+    inline ResultType f(const T& a, vigra::VigraFalseType, vigra::VigraTrueType) const {
         typedef typename T::value_type TComponentType;
-        typedef typename NumericTraits<TComponentType>::RealPromote RealTComponentType;
+        typedef typename vigra::NumericTraits<TComponentType>::RealPromote RealTComponentType;
         typedef typename ScaleType::value_type ScaleComponentType;
         const RealTComponentType ra = static_cast<RealTComponentType>(a.lightness());
-        return NumericTraits<ResultType>::fromRealPromote(weight * ra / NumericTraits<ScaleComponentType>::max());
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * ra / vigra::NumericTraits<ScaleComponentType>::max());
     }
 
     // RGB, floating-point
     template <typename T>
-    inline ResultType f(const T& a, VigraFalseType, VigraFalseType) const {
+    inline ResultType f(const T& a, vigra::VigraFalseType, vigra::VigraFalseType) const {
         typedef typename T::value_type TComponentType;
-        typedef typename NumericTraits<TComponentType>::RealPromote RealTComponentType;
+        typedef typename vigra::NumericTraits<TComponentType>::RealPromote RealTComponentType;
         const RealTComponentType ra = static_cast<RealTComponentType>(a.lightness());
-        return NumericTraits<ResultType>::fromRealPromote(weight * ra);
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * ra);
     }
 
     const double weight;
@@ -877,8 +857,8 @@ protected:
 template <typename InputType, typename ResultType>
 class EntropyFunctor {
 public:
-    typedef NumericTraits<InputType> InputTraits;
-    typedef NumericTraits<ResultType> ResultTraits;
+    typedef vigra::NumericTraits<InputType> InputTraits;
+    typedef vigra::NumericTraits<ResultType> ResultTraits;
     typedef ResultType result_type;
 
     EntropyFunctor(double w) : weight(w) {}
@@ -890,12 +870,12 @@ public:
 
 protected:
     // Grayscale
-    ResultType entropy(const InputType& x, VigraTrueType) const {
+    ResultType entropy(const InputType& x, vigra::VigraTrueType) const {
         return ResultTraits::fromRealPromote(weight * ResultTraits::toRealPromote(x));
     }
 
     // RGB
-    ResultType entropy(const InputType& x, VigraFalseType) const {
+    ResultType entropy(const InputType& x, vigra::VigraFalseType) const {
         const typename ResultTraits::RealPromote minimum =
             ResultTraits::toRealPromote(std::min(std::min(x.red(), x.green()), x.blue()));
         return ResultTraits::fromRealPromote(weight * minimum);
@@ -940,12 +920,12 @@ template <typename InputType, typename ResultType>
 class ClampingFunctor
 {
 public:
-    typedef NumericTraits<InputType> InputTraits;
+    typedef vigra::NumericTraits<InputType> InputTraits;
 
     ClampingFunctor(InputType lower, ResultType lowerValue,
                     InputType upper, ResultType upperValue) :
         lo(lower), up(upper), loval(lowerValue), upval(upperValue)
-        {}
+    {}
 
     ResultType operator()(const InputType& x) const {
         typedef typename InputTraits::isScalar srcIsScalar;
@@ -953,12 +933,12 @@ public:
     }
 
 protected:
-    ResultType clamp(const InputType& x, VigraTrueType) const {
+    ResultType clamp(const InputType& x, vigra::VigraTrueType) const {
         return x <= lo ? loval : (x >= up ? upval : x);
     }
 
     // RGB
-    ResultType clamp(const InputType& x, VigraFalseType) const {
+    ResultType clamp(const InputType& x, vigra::VigraFalseType) const {
         return ResultType(x.red() <= lo.red() ?
                           loval.red() :
                           (x.red() >= up.red() ? upval.red() : x.red()),
@@ -985,16 +965,16 @@ class FillInFunctor
 public:
     FillInFunctor(InputType thr, double s1, double s2) :
         threshold(thr), scale1(s1), scale2(s2)
-        {}
+    {}
 
     ResultType operator()(const InputType& x, const InputType& y) const {
         if (x >= threshold)
         {
-            return NumericTraits<ResultType>::fromRealPromote(scale1 * x);
+            return vigra::NumericTraits<ResultType>::fromRealPromote(scale1 * x);
         }
         else
         {
-            return NumericTraits<ResultType>::fromRealPromote(scale2 * y);
+            return vigra::NumericTraits<ResultType>::fromRealPromote(scale2 * y);
         }
     }
 
@@ -1005,12 +985,12 @@ private:
 
 
 template <typename ImageType, typename AlphaType, typename MaskType>
-void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::const_traverser, typename ImageType::ConstAccessor> src,
-                pair<typename AlphaType::const_traverser, typename AlphaType::ConstAccessor> mask,
-                pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
+void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename ImageType::const_traverser, typename ImageType::ConstAccessor> src,
+                vigra::pair<typename AlphaType::const_traverser, typename AlphaType::ConstAccessor> mask,
+                vigra::pair<typename MaskType::traverser, typename MaskType::Accessor> result) {
     typedef typename ImageType::value_type ImageValueType;
     typedef typename ImageType::PixelType PixelType;
-    typedef typename NumericTraits<PixelType>::ValueType ScalarType;
+    typedef typename vigra::NumericTraits<PixelType>::ValueType ScalarType;
     typedef typename MaskType::value_type MaskValueType;
 
     const typename ImageType::difference_type imageSize = src.second - src.first;
@@ -1032,7 +1012,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                 cef(WExposure, WMu, WSigma, ga,
                     ExposureLowerCutoff, ExposureUpperCutoff, lca, uca);
 #ifdef DEBUG_EXPOSURE
-            cout << "+ enfuseMask: cutoff - GrayscaleProjector = <" <<
+            std::cout << "+ enfuseMask: cutoff - GrayscaleProjector = <" <<
                 GrayscaleProjector << ">\n" <<
                 "+ enfuseMask:          ExposureLowerCutoffGrayscaleProjector = <" <<
                 ExposureLowerCutoffGrayscaleProjector << ">\n" <<
@@ -1044,7 +1024,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
             ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
                 ef(WExposure, WMu, WSigma, ga);
 #ifdef DEBUG_EXPOSURE
-            cout << "+ enfuseMask: plain - GrayscaleProjector = <" <<
+            std::cout << "+ enfuseMask: plain - GrayscaleProjector = <" <<
                 GrayscaleProjector << ">\n";
 #endif
             transformImageIfMP(src, mask, result, ef);
@@ -1053,7 +1033,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 
     // Contrast
     if (WContrast > 0.0) {
-        typedef typename NumericTraits<ScalarType>::Promote LongScalarType;
+        typedef typename vigra::NumericTraits<ScalarType>::Promote LongScalarType;
         typedef IMAGETYPE<LongScalarType> GradImage;
         typedef typename GradImage::iterator GradIterator;
 
@@ -1063,38 +1043,38 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
         if (FilterConfig.edgeScale > 0.0)
         {
 #ifdef DEBUG_LOG
-            cout << "+ Laplacian Edge Detection, scale = "
-                 << FilterConfig.edgeScale << " pixels" << endl;
+            std::cout << "+ Laplacian Edge Detection, scale = "
+                      << FilterConfig.edgeScale << " pixels" << endl;
 #endif
             GradImage laplacian(imageSize);
 
             if (FilterConfig.lceScale > 0.0)
             {
 #ifdef DEBUG_LOG
-                cout << "+ Local Contrast Enhancement, (scale, amount) = "
-                     << FilterConfig.lceScale << " pixels, "
-                     << (100.0 * FilterConfig.lceFactor) << "%" << endl;
+                std::cout << "+ Local Contrast Enhancement, (scale, amount) = "
+                          << FilterConfig.lceScale << " pixels, "
+                          << (100.0 * FilterConfig.lceFactor) << "%" << endl;
 #endif
                 GradImage lce(imageSize);
-                gaussianSharpening(src.first, src.second, ga,
-                                   lce.upperLeft(), lce.accessor(),
-                                   FilterConfig.lceFactor, FilterConfig.lceScale);
-                laplacianOfGaussian(lce.upperLeft(), lce.lowerRight(), lce.accessor(),
-                                    laplacian.upperLeft(), MagnitudeAccessor<LongScalarType>(),
-                                    FilterConfig.edgeScale);
+                vigra::gaussianSharpening(src.first, src.second, ga,
+                                          lce.upperLeft(), lce.accessor(),
+                                          FilterConfig.lceFactor, FilterConfig.lceScale);
+                vigra::laplacianOfGaussian(lce.upperLeft(), lce.lowerRight(), lce.accessor(),
+                                           laplacian.upperLeft(), MagnitudeAccessor<LongScalarType>(),
+                                           FilterConfig.edgeScale);
             }
             else
             {
-                laplacianOfGaussian(src.first, src.second, ga,
-                                    laplacian.upperLeft(), MagnitudeAccessor<LongScalarType>(),
-                                    FilterConfig.edgeScale);
+                vigra::laplacianOfGaussian(src.first, src.second, ga,
+                                           laplacian.upperLeft(), MagnitudeAccessor<LongScalarType>(),
+                                           FilterConfig.edgeScale);
             }
 
 #ifdef DEBUG_LOG
             {
                 vigra::FindMinMax<LongScalarType> minmax;
-                inspectImage(srcImageRange(laplacian), minmax);
-                cout << "+ after Laplacian and Magnitude: min = " <<
+                vigra::inspectImage(srcImageRange(laplacian), minmax);
+                std::cout << "+ after Laplacian and Magnitude: min = " <<
                     minmax.min << ", max = " << minmax.max << endl;
             }
 #endif
@@ -1103,26 +1083,26 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
             if (minCurve <= 0.0)
             {
 #ifdef DEBUG_LOG
-                cout << "+ truncate values below " << -minCurve << endl;;
+                std::cout << "+ truncate values below " << -minCurve << endl;;
 #endif
                 transformImageIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
                                    mask.first, mask.second,
                                    grad.upperLeft(), grad.accessor(),
                                    ClampingFunctor<LongScalarType, LongScalarType>
                                    (static_cast<LongScalarType>(-minCurve), LongScalarType(),
-                                    NumericTraits<LongScalarType>::max(), NumericTraits<LongScalarType>::max()));
+                                    vigra::NumericTraits<LongScalarType>::max(), vigra::NumericTraits<LongScalarType>::max()));
             }
             else
             {
 #ifdef DEBUG_LOG
-                cout << "+ merge local contrast and edges - switch at " << minCurve << endl;
+                std::cout << "+ merge local contrast and edges - switch at " << minCurve << endl;
 #endif
                 GradImage localContrast(imageSize);
                 // TODO: use localStdDev
                 localStdDevIf(src.first, src.second, ga,
                               mask.first, mask.second,
                               localContrast.upperLeft(), localContrast.accessor(),
-                              Size2D(ContrastWindowSize, ContrastWindowSize));
+                              vigra::Size2D(ContrastWindowSize, ContrastWindowSize));
 
                 combineTwoImagesIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
                                      localContrast.upperLeft(), localContrast.accessor(),
@@ -1131,25 +1111,25 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                                      FillInFunctor<LongScalarType, LongScalarType>
                                      (static_cast<LongScalarType>(minCurve), // threshold
                                       1.0, // scale factor for "laplacian"
-                                      minCurve / NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
+                                      minCurve / vigra::NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
             }
         }
         else
         {
 #ifdef DEBUG_LOG
-            cout << "+ Variance of Local Contrast" << endl;
+            std::cout << "+ Variance of Local Contrast" << endl;
 #endif
             localStdDevIf(src.first, src.second, ga,
                           mask.first, mask.second,
                           grad.upperLeft(), grad.accessor(),
-                          Size2D(ContrastWindowSize, ContrastWindowSize));
+                          vigra::Size2D(ContrastWindowSize, ContrastWindowSize));
         }
 
 #ifdef DEBUG_LOG
         {
             vigra::FindMinMax<LongScalarType> minmax;
-            inspectImage(srcImageRange(grad), minmax);
-            cout << "+ final grad: min = " << minmax.min << ", max = " << minmax.max << endl;
+            vigra::inspectImage(srcImageRange(grad), minmax);
+            std::cout << "+ final grad: min = " << minmax.min << ", max = " << minmax.max << endl;
         }
 #endif
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
@@ -1167,7 +1147,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
     // Entropy
     if (WEntropy > 0.0) {
         typedef typename ImageType::PixelType PixelType;
-        typedef typename NumericTraits<PixelType>::ValueType ScalarType;
+        typedef typename vigra::NumericTraits<PixelType>::ValueType ScalarType;
         typedef IMAGETYPE<PixelType> Image;
         Image entropy(imageSize);
 
@@ -1176,7 +1156,7 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
             const ScalarType lowerCutoff = EntropyLowerCutoff.instantiate<ScalarType>();
             const ScalarType upperCutoff = EntropyUpperCutoff.instantiate<ScalarType>();
 #ifdef DEBUG_ENTROPY
-            cout <<
+            std::cout <<
                 "+ EntropyLowerCutoff.value = " << EntropyLowerCutoff.value() << ", " <<
                 "lowerCutoff = " << static_cast<double>(lowerCutoff) << "\n" <<
                 "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value() << ", " <<
@@ -1184,8 +1164,8 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
 #endif
             if (lowerCutoff > upperCutoff)
             {
-                const double max = static_cast<double>(NumericTraits<ScalarType>::max());
-                cerr << command <<
+                const double max = static_cast<double>(vigra::NumericTraits<ScalarType>::max());
+                std::cerr << command <<
                     ": lower entropy cutoff (" << static_cast<double>(lowerCutoff) << "/" << max <<
                     " = " << 100.0 * lowerCutoff / max <<
                     "%) exceeds upper cutoff (" << static_cast<double>(upperCutoff) << "/" << max <<
@@ -1199,21 +1179,21 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
                 cf((PixelType(lowerCutoff)),  // IMPLEMENTATION NOTE:
                    (PixelType(ScalarType())), //     The extra parenthesis avoid a bug in the VC9 compiler.
                    (PixelType(upperCutoff)),
-                   (PixelType(NumericTraits<ScalarType>::max())));
+                   (PixelType(vigra::NumericTraits<ScalarType>::max())));
             transformImageMP(src.first, src.second, src.third,
                              trunc.upperLeft(), trunc.accessor(),
                              cf);
             localEntropyIf(trunc.upperLeft(), trunc.lowerRight(), trunc.accessor(),
                            mask.first, mask.second,
                            entropy.upperLeft(), entropy.accessor(),
-                           Size2D(EntropyWindowSize, EntropyWindowSize));
+                           vigra::Size2D(EntropyWindowSize, EntropyWindowSize));
         }
         else
         {
             localEntropyIf(src.first, src.second, src.third,
                            mask.first, mask.second,
                            entropy.upperLeft(), entropy.accessor(),
-                           Size2D(EntropyWindowSize, EntropyWindowSize));
+                           vigra::Size2D(EntropyWindowSize, EntropyWindowSize));
         }
 
         EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
@@ -1227,9 +1207,9 @@ void enfuseMask(triple<typename ImageType::const_traverser, typename ImageType::
  */
 template <typename ImagePixelType>
 void enfuseMain(const FileNameList& anInputFileNameList,
-                const list<ImageImportInfo*>& anImageInfoList,
-                ImageExportInfo& anOutputImageInfo,
-                Rect2D& anInputUnion)
+                const std::list<vigra::ImageImportInfo*>& anImageInfoList,
+                vigra::ImageExportInfo& anOutputImageInfo,
+                vigra::Rect2D& anInputUnion)
 {
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -1251,7 +1231,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
     // List of input image / input alpha / mask triples
-    typedef list< triple<ImageType*, AlphaType*, MaskType*> > imageListType;
+    typedef std::list< vigra::triple<ImageType*, AlphaType*, MaskType*> > imageListType;
     typedef typename imageListType::iterator imageListIteratorType;
     imageListType imageList;
 
@@ -1259,17 +1239,17 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     MaskType *normImage = new MaskType(anInputUnion.size());
 
     // Result image. Alpha will be union of all input alphas.
-    pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
-                                            new AlphaType(anInputUnion.size()));
-    list<ImageImportInfo*> imageInfoList(anImageInfoList);
+    std::pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
+                                                 new AlphaType(anInputUnion.size()));
+    std::list<vigra::ImageImportInfo*> imageInfoList(anImageInfoList);
     const unsigned numberOfImages = imageInfoList.size();
 
     unsigned m = 0;
     FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
-        Rect2D imageBB;
-        pair<ImageType*, AlphaType*> imagePair =
-                assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
+        vigra::Rect2D imageBB;
+        std::pair<ImageType*, AlphaType*> imagePair =
+            assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, imageBB);
 
         MaskType* mask = new MaskType(anInputUnion.size());
 
@@ -1285,21 +1265,21 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                                                 OutputFileName,
                                                 m);
             if (can_open_file(maskFilename)) {
-                ImageImportInfo maskInfo(maskFilename.c_str());
+                vigra::ImageImportInfo maskInfo(maskFilename.c_str());
                 if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                    cerr << command
-                         << ": info: loading " << (UseHardMask ? "hard" : "soft")
-                         << "mask \"" << maskFilename << "\"" << endl;
+                    std::cerr << command
+                              << ": info: loading " << (UseHardMask ? "hard" : "soft")
+                              << "mask \"" << maskFilename << "\"" << endl;
                 }
                 if (maskInfo.width() != anInputUnion.width() || maskInfo.height() != anInputUnion.height()) {
-                    cerr << command
-                         << ": warning: mask in \"" << maskFilename << "\" has size "
-                         << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
-                         << command
-                         << ": warning:     but image union has size " << anInputUnion.size() << ";\n"
-                         << command
-                         << ": warning:     make sure this is the right mask for the given images"
-                         << endl;
+                    std::cerr << command
+                              << ": warning: mask in \"" << maskFilename << "\" has size "
+                              << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
+                              << command
+                              << ": warning:     but image union has size " << anInputUnion.size() << ";\n"
+                              << command
+                              << ": warning:     make sure this is the right mask for the given images"
+                              << endl;
                 }
                 importImage(maskInfo, destImage(*mask));
             } else {
@@ -1319,25 +1299,25 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                                                 OutputFileName,
                                                 m);
             if (maskFilename == *inputFileNameIterator) {
-                cerr << command
-                     << ": will not overwrite input image \""
-                     << *inputFileNameIterator
-                     << "\" with soft mask file"
-                     << endl;
+                std::cerr << command
+                          << ": will not overwrite input image \""
+                          << *inputFileNameIterator
+                          << "\" with soft mask file"
+                          << endl;
                 exit(1);
             } else if (maskFilename == OutputFileName) {
-                cerr << command
-                     << ": will not overwrite output image \""
-                     << OutputFileName
-                     << "\" with soft mask file"
-                     << endl;
+                std::cerr << command
+                          << ": will not overwrite output image \""
+                          << OutputFileName
+                          << "\" with soft mask file"
+                          << endl;
                 exit(1);
             } else {
                 if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                    cerr << command
-                         << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                    std::cerr << command
+                              << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
                 }
-                ImageExportInfo maskInfo(maskFilename.c_str());
+                vigra::ImageExportInfo maskInfo(maskFilename.c_str());
                 maskInfo.setXResolution(ImageResolution.x);
                 maskInfo.setYResolution(ImageResolution.y);
                 maskInfo.setCompression(MASK_COMPRESSION);
@@ -1356,19 +1336,19 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                            destImage(*normImage),
                            Arg1() + Arg2());
 
-        imageList.push_back(make_triple(imagePair.first, imagePair.second, mask));
+        imageList.push_back(vigra::make_triple(imagePair.first, imagePair.second, mask));
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after loading image "
-                 << m << "\n";
-            v.printStats(cerr, command + ": info:     image", imagePair.first);
-            v.printStats(cerr, command + ": info:     alpha", imagePair.second);
-            v.printStats(cerr, command + ": info:     weight", mask);
-            v.printStats(cerr, command + ": info:     normImage", normImage);
-            v.printStats(cerr, command + ": info: ");
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after loading image "
+                      << m << "\n";
+            v.printStats(std::cerr, command + ": info:     image", imagePair.first);
+            v.printStats(std::cerr, command + ": info:     alpha", imagePair.second);
+            v.printStats(std::cerr, command + ": info:     weight", mask);
+            v.printStats(std::cerr, command + ": info:     normImage", normImage);
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -1384,14 +1364,14 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     const int totalImages = imageList.size();
 
     typename EnblendNumericTraits<ImagePixelType>::MaskPixelType maxMaskPixelType =
-        NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
+        vigra::NumericTraits<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType>::max();
 
     if (UseHardMask) {
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
-            cerr << command
-                 << ": info: creating hard blend mask" << endl;
+            std::cerr << command
+                      << ": info: creating hard blend mask" << endl;
         }
-        const Size2D sz = normImage->size();
+        const vigra::Size2D sz = normImage->size();
         imageListIteratorType imageIter;
 #ifdef OPENMP
 #pragma omp parallel for private (imageIter)
@@ -1439,25 +1419,25 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                                                     OutputFileName,
                                                     i);
                 if (maskFilename == *inputFileNameIterator) {
-                    cerr << command
-                         << ": will not overwrite input image \""
-                         << *inputFileNameIterator
-                         << "\" with hard mask"
-                         << endl;
+                    std::cerr << command
+                              << ": will not overwrite input image \""
+                              << *inputFileNameIterator
+                              << "\" with hard mask"
+                              << endl;
                     exit(1);
                 } else if (maskFilename == OutputFileName) {
-                    cerr << command
-                         << ": will not overwrite output image \""
-                         << OutputFileName
-                         << "\" with hard mask"
-                         << endl;
+                    std::cerr << command
+                              << ": will not overwrite output image \""
+                              << OutputFileName
+                              << "\" with hard mask"
+                              << endl;
                     exit(1);
                 } else {
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                        cerr << command
-                             << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
+                        std::cerr << command
+                                  << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
                     }
-                    ImageExportInfo maskInfo(maskFilename.c_str());
+                    vigra::ImageExportInfo maskInfo(maskFilename.c_str());
                     maskInfo.setXResolution(ImageResolution.x);
                     maskInfo.setYResolution(ImageResolution.y);
                     maskInfo.setCompression(MASK_COMPRESSION);
@@ -1468,10 +1448,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         }
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after creating hard mask\n";
-            v.printStats(cerr, command + ": info: ");
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after creating hard mask\n";
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -1481,17 +1461,17 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         exit(0);
     }
 
-    Rect2D junkBB;
+    vigra::Rect2D junkBB;
     const unsigned int numLevels =
         roiBounds<ImagePixelComponentType>(anInputUnion, anInputUnion, anInputUnion, anInputUnion,
                                            junkBB,
                                            WrapAround != OpenBoundaries);
 
-    vector<ImagePyramidType*> *resultLP = NULL;
+    std::vector<ImagePyramidType*> *resultLP = NULL;
 
     m = 0;
     while (!imageList.empty()) {
-        triple<ImageType*, AlphaType*, MaskType*> imageTriple = imageList.front();
+        vigra::triple<ImageType*, AlphaType*, MaskType*> imageTriple = imageList.front();
         imageList.erase(imageList.begin());
 
         std::ostringstream oss0;
@@ -1499,14 +1479,14 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         // imageLP is constructed using the image's own alpha channel
         // as the boundary for extrapolation.
-        vector<ImagePyramidType*> *imageLP =
-                laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
-                                 ImagePyramidIntegerBits, ImagePyramidFractionBits,
-                                 SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
-                        oss0.str().c_str(),
-                        numLevels, WrapAround != OpenBoundaries,
-                        srcImageRange(*(imageTriple.first)),
-                        maskImage(*(imageTriple.second)));
+        std::vector<ImagePyramidType*> *imageLP =
+            laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
+                             ImagePyramidIntegerBits, ImagePyramidFractionBits,
+                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>(
+                                                                         oss0.str().c_str(),
+                                                                         numLevels, WrapAround != OpenBoundaries,
+                                                                         srcImageRange(*(imageTriple.first)),
+                                                                         maskImage(*(imageTriple.second)));
 
         delete imageTriple.first;
         delete imageTriple.second;
@@ -1528,10 +1508,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         // maskGP is constructed using the union of the input alpha channels
         // as the boundary for extrapolation.
-        vector<MaskPyramidType*> *maskGP =
+        std::vector<MaskPyramidType*> *maskGP =
             gaussianPyramid<MaskType, AlphaType, MaskPyramidType,
-                            MaskPyramidIntegerBits, MaskPyramidFractionBits,
-                            SKIPSMMaskPixelType, SKIPSMAlphaPixelType>
+            MaskPyramidIntegerBits, MaskPyramidFractionBits,
+            SKIPSMMaskPixelType, SKIPSMAlphaPixelType>
             (numLevels,
              WrapAround != OpenBoundaries,
              srcImageRange(*(imageTriple.third)),
@@ -1544,9 +1524,9 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         //exportPyramid<MaskPyramidType>(maskGP, oss2.str().c_str());
 
         ConvertScalarToPyramidFunctor<typename EnblendNumericTraits<ImagePixelType>::MaskPixelType,
-                                      MaskPyramidPixelType,
-                                      MaskPyramidIntegerBits,
-                                      MaskPyramidFractionBits> maskConvertFunctor;
+            MaskPyramidPixelType,
+            MaskPyramidIntegerBits,
+            MaskPyramidFractionBits> maskConvertFunctor;
         MaskPyramidPixelType maxMaskPyramidPixelValue = maskConvertFunctor(maxMaskPixelType);
 
         for (unsigned int i = 0; i < maskGP->size(); ++i) {
@@ -1595,10 +1575,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     outputPair.first = new ImageType(anInputUnion.size());
 
     copyFromPyramidImageIf<ImagePyramidType, AlphaType, ImageType,
-                           ImagePyramidIntegerBits, ImagePyramidFractionBits>(
-            srcImageRange(*((*resultLP)[0])),
-            maskImage(*(outputPair.second)),
-            destImage(*(outputPair.first)));
+                           ImagePyramidIntegerBits, ImagePyramidFractionBits>
+        (srcImageRange(*((*resultLP)[0])),
+         maskImage(*(outputPair.second)),
+         destImage(*(outputPair.first)));
 
     // Delete result pyramid.
     for (unsigned int i = 0; i < resultLP->size(); ++i) {
@@ -1610,8 +1590,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
     delete outputPair.first;
     delete outputPair.second;
-
-};
+}
 
 } // namespace enblend
 

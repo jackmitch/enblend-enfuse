@@ -27,10 +27,6 @@
 #include "common.h"
 #include "pyramid.h"
 
-using std::cerr;
-using std::endl;
-
-using vigra::Point2D;
 
 namespace enblend {
 
@@ -82,8 +78,8 @@ inspectOverlap(SrcImageIterator src1_upperleft, SrcImageIterator src1_lowerright
 // Argument object factory version.
 template <typename SrcImageIterator, typename SrcAccessor>
 Overlap
-inspectOverlap(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
-               pair<SrcImageIterator, SrcAccessor> src2)
+inspectOverlap(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
+               vigra::pair<SrcImageIterator, SrcAccessor> src2)
 {
     return inspectOverlap(src1.first, src1.second, src1.third,
                           src2.first, src2.second);
@@ -96,9 +92,9 @@ inspectOverlap(triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src1,
  */
 template <typename ImagePixelComponentType>
 unsigned int
-roiBounds(const Rect2D& inputUnion,
-          const Rect2D& iBB, const Rect2D& mBB, const Rect2D& uBB,
-          Rect2D& roiBB,        // roiBB is an _output_ parameter!
+roiBounds(const vigra::Rect2D& inputUnion,
+          const vigra::Rect2D& iBB, const vigra::Rect2D& mBB, const vigra::Rect2D& uBB,
+          vigra::Rect2D& roiBB,        // roiBB is an _output_ parameter!
           bool wraparoundForMask)
 {
     roiBB = mBB;
@@ -109,14 +105,14 @@ roiBounds(const Rect2D& inputUnion,
         // If the ROI goes off either edge of the uBB, and the uBB is
         // the full size of the output image, and the wraparound flag
         // is specified, then make roiBB the full width of uBB.
-        roiBB.setUpperLeft(Point2D(0, roiBB.top()));
-        roiBB.setLowerRight(Point2D(uBB.right(), roiBB.bottom()));
+        roiBB.setUpperLeft(vigra::Point2D(0, roiBB.top()));
+        roiBB.setLowerRight(vigra::Point2D(uBB.right(), roiBB.bottom()));
     }
 
     // ROI must not be bigger than uBB.
     roiBB &= uBB;
     if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cerr << command << ": info: region-of-interest bounding box: " << roiBB << endl;
+        std::cerr << command << ": info: region-of-interest bounding box: " << roiBB << std::endl;
     }
 
     // Verify the number of levels based on the size of the ROI.
@@ -133,31 +129,31 @@ roiBounds(const Rect2D& inputUnion,
     }
 
     if (allowableLevels <= minimumPyramidLevels) {
-        cerr << command << ": info: overlap region is too small to make more than "
-             << minimumPyramidLevels << " pyramid level(s)" << endl;
+        std::cerr << command << ": info: overlap region is too small to make more than "
+                  << minimumPyramidLevels << " pyramid level(s)" << std::endl;
     } else {
         if (ExactLevels >= 1) {
             if (ExactLevels > static_cast<int>(allowableLevels)) {
-                cerr << command << ": warning: cannot blend with " << ExactLevels << " pyramid level(s) as\n"
-                     << command << ": warning:     image geometry precludes using more than "
-                     << allowableLevels << " pyramid level(s)" << endl;
+                std::cerr << command << ": warning: cannot blend with " << ExactLevels << " pyramid level(s) as\n"
+                          << command << ": warning:     image geometry precludes using more than "
+                          << allowableLevels << " pyramid level(s)" << std::endl;
             }
             allowableLevels = std::min(allowableLevels, static_cast<unsigned int>(ExactLevels));
         } else if (ExactLevels < 0) {
             if (static_cast<int>(allowableLevels) + ExactLevels >= static_cast<int>(minimumPyramidLevels)) {
                 allowableLevels -= static_cast<unsigned int>(-ExactLevels);
             } else {
-                cerr << ": warning: cannot sensibly blend with " << allowableLevels << ExactLevels
-                     << " levels\n"
-                     << command << ": warning:     will not use less than " << minimumPyramidLevels
-                     << " pyramid level(s)" << endl;
+                std::cerr << ": warning: cannot sensibly blend with " << allowableLevels << ExactLevels
+                          << " levels\n"
+                          << command << ": warning:     will not use less than " << minimumPyramidLevels
+                          << " pyramid level(s)" << std::endl;
                 allowableLevels = minimumPyramidLevels;
             }
         }
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        cerr << command << ": info: using " << allowableLevels << " blending level(s)" << endl;
+        std::cerr << command << ": info: using " << allowableLevels << " blending level(s)" << std::endl;
     }
 
     assert(allowableLevels >= minimumPyramidLevels);

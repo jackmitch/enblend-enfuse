@@ -149,39 +149,23 @@ cmsHPROFILE FallbackProfile = NULL;
 Signature sig;
 LayerSelectionHost LayerSelection;
 
-#include "common.h"
-#include "enfuse.h"
-
-#include "vigra/imageinfo.hxx"
-#include "vigra/impex.hxx"
-#include "vigra/sized_int.hxx"
+#include <vigra/imageinfo.hxx>
+#include <vigra/impex.hxx>
+#include <vigra/sized_int.hxx>
 
 #include <tiffio.h>
+
+#include "common.h"
+#include "enfuse.h"
 
 #ifdef DMALLOC
 #include "dmalloc.h"            // must be last #include
 #endif
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::hex;
-using std::list;
-
-using vigra::CachedFileImageDirector;
-using vigra::Diff2D;
-using vigra::ImageExportInfo;
-using vigra::ImageImportInfo;
-using vigra::Rect2D;
-using vigra::StdException;
-
-using enblend::FileNameList;
-using enblend::TraceableFileNameList;
-using enblend::enfuseMain;
-
 #ifdef _WIN32
 #define strdup _strdup
 #endif
+
 
 // Initialize data structures for precomputed entropy and logarithm.
 template <typename InputPixelType, typename ResultPixelType>
@@ -271,10 +255,10 @@ void dump_global_variables(const char* file, unsigned line,
 /** Print information on the current version and some configuration
  * details. */
 void printVersionAndExit() {
-    cout << "enfuse " << VERSION << "\n\n";
+    std::cout << "enfuse " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
-        cout <<
+        std::cout <<
             "Extra feature: dmalloc support: " <<
 #ifdef DMALLOC
             "yes" <<
@@ -284,32 +268,32 @@ void printVersionAndExit() {
             "\n";
 
 #ifdef CACHE_IMAGES
-        cout << "Extra feature: image cache: yes\n";
+        std::cout << "Extra feature: image cache: yes\n";
         {
 #ifdef WIN32
             char lpPathBuffer[MAX_PATH];
             const DWORD dwRetVal = GetTempPath(MAX_PATH, lpPathBuffer);
             if (dwRetVal <= MAX_PATH && dwRetVal != 0) {
-                cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
+                std::cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
             }
 #else
             const char* tmpdir = getenv("TMPDIR");
-            cout << "  - environment variable TMPDIR ";
+            std::cout << "  - environment variable TMPDIR ";
             if (tmpdir == NULL) {
-                cout << "not set, cache file in default directory \"/tmp\"\n";
+                std::cout << "not set, cache file in default directory \"/tmp\"\n";
             } else {
-                cout << "set, cache file located in \"" << tmpdir << "\"\n";
+                std::cout << "set, cache file located in \"" << tmpdir << "\"\n";
             }
 #endif
         }
 #else
-        cout << "Extra feature: image cache: no\n";
+        std::cout << "Extra feature: image cache: no\n";
 #endif
 
 #ifdef OPENMP
         const bool have_nested = have_openmp_nested();
         const bool have_dynamic = have_openmp_dynamic();
-        cout <<
+        std::cout <<
             "Extra feature: OpenMP: yes\n" <<
             "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
             "  - " << (have_nested ? "" : "no ") <<
@@ -324,31 +308,31 @@ void printVersionAndExit() {
             omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
             omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n";
 #else
-        cout << "Extra feature: OpenMP: no\n";
+        std::cout << "Extra feature: OpenMP: no\n";
 #endif
 
-        cout <<
+        std::cout <<
             "\n" <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<
             "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
 
-        cout << "Supported following globbing algorithms:\n";
+        std::cout << "Supported following globbing algorithms:\n";
         const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
         for (enblend::algorithm_list::const_iterator i = algos.begin(); i != algos.end(); ++i) {
-            cout <<
+            std::cout <<
                 "  " << i->first << "\n" <<
                 "    " << i->second << "\n";
         }
-        cout << "\n";
+        std::cout << "\n";
     }
 
     if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
-        cout.flush();
+        std::cout.flush();
         std::wcout << sig.message() << L"\n\n";
         std::wcout.flush();
     }
 
-    cout <<
+    std::cout <<
         "Copyright (C) 2004-2012 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
@@ -363,7 +347,7 @@ void printVersionAndExit() {
 
 /** Print the usage information and quit. */
 void printUsageAndExit(const bool error = true) {
-    cout <<
+    std::cout <<
         "Usage: enfuse [options] [--output=IMAGE] INPUT...\n" <<
         "Fuse INPUT images into a single IMAGE.\n" <<
         "\n" <<
@@ -394,15 +378,15 @@ void printUsageAndExit(const bool error = true) {
     for (selector::algorithm_list::const_iterator i = selector::algorithms.begin();
          i != selector::algorithms.end();
          ++i) {
-        cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
+        std::cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
     }
-    cout <<
+    std::cout <<
         "  --parameter=KEY1[=VALUE1][:KEY2[=VALUE2][:...]]\n" <<
         "                         set one or more KEY-VALUE pairs\n" <<
         "\n" <<
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
-        (CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
+        (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
         "                         \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
@@ -416,7 +400,7 @@ void printUsageAndExit(const bool error = true) {
         "                         image; useful for cropped and shifted input\n" <<
         "                         TIFF images, such as those produced by Nona\n" <<
         "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
-        (CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
+        (vigra_ext::CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
         "\n" <<
         "Fusion options:\n" <<
         "  --exposure-weight=WEIGHT\n" <<
@@ -460,7 +444,7 @@ void printUsageAndExit(const bool error = true) {
         "                         \"pl-star\", \"value\", or\n" <<
         "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
         "                         default: \"" <<
-        enblend::MultiGrayscaleAccessor<UInt8, NumericTraits<UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
+        enblend::MultiGrayscaleAccessor<vigra::UInt8, vigra::NumericTraits<vigra::UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
         "  --contrast-edge-scale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
         "                         set scale on which to look for edges; positive\n" <<
         "                         LCESCALE switches on local contrast enhancement\n" <<
@@ -516,7 +500,7 @@ void cleanup_output(void)
         std::cerr << command << ": info: remove invalid output image \"" << OutputFileName << "\"\n";
         errno = 0;
         if (unlink(OutputFileName.c_str()) != 0) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: could not remove invalid output image \"" << OutputFileName << "\": " <<
                 enblend::errorMessage(errno) << "\n";
         }
@@ -529,7 +513,7 @@ void cleanup_output(void)
  */
 void sigint_handler(int sig)
 {
-    cerr << endl << command << ": interrupted" << endl;
+    std::cerr << endl << command << ": interrupted" << endl;
 
     cleanup_output();
 
@@ -575,96 +559,96 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 {
     if (contains(optionSet, LoadMasksOption)) {
         if (contains(optionSet, ExposureWeightOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-weight\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, ExposureCutoffOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-cutoff\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, SaturationWeightOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--saturation-weight\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, ContrastWeightOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-weight\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, EntropyWeightOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--entropy-weight\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, ExposureMuOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-mu\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, ExposureSigmaOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-sigma\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, ContrastWindowSizeOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-window-size\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, GrayProjectorOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--gray-projector\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, EdgeScaleOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-edge-scale\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, MinCurvatureOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-min-curvature\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, EntropyWindowSizeOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--entropy-window-size\" has no effect with \"--load-masks\"" << endl;
         }
         if (contains(optionSet, EntropyCutoffOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--entropy-cutoff\" has no effect with \"--load-masks\"" << endl;
         }
     }
 
     if (contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption)) {
         if (contains(optionSet, LevelsOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--levels\" has no effect with \"--save-masks\" and no \"--output\"" <<
                 endl;
         }
         if (contains(optionSet, WrapAroundOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--wrap\" has no effect with \"--save-masks\" and no \"--output\"" <<
                 endl;
         }
         if (contains(optionSet, CompressionOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--compression\" has no effect with \"--save-masks\" and no \"--output\"" <<
                 endl;
         }
         if (contains(optionSet, DepthOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--depth\" has no effect with \"--save-masks\" and no \"--output\"" <<
                 endl;
         }
         if (contains(optionSet, SizeAndPositionOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"-f\" has no effect with \"--save-masks\" and no \"--output\"" << endl;
         }
     }
 
     if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
         if (contains(optionSet, ExposureMuOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-mu\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
                 endl;
         }
         if (contains(optionSet, ExposureSigmaOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--exposure-sigma\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
@@ -673,7 +657,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (WExposure == 0.0 && contains(optionSet, ExposureCutoffOption)) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"--exposure-cutoff\" has no effect as exposure weight\n" <<
             command <<
             ": warning:     is zero" <<
@@ -681,7 +665,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (WContrast == 0.0 && contains(optionSet, ContrastWindowSizeOption)) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"--contrast-window-size\" has no effect as contrast\n" <<
             command <<
             ": warning:     weight is zero" <<
@@ -689,7 +673,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (WExposure == 0.0 && WContrast == 0.0 && contains(optionSet, GrayProjectorOption)) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"--gray-projector\" has no effect as exposure\n" <<
             command <<
             ": warning:     and contrast weight both are zero" <<
@@ -698,14 +682,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (WContrast == 0.0) {
         if (contains(optionSet, EdgeScaleOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-edge-scale\" has no effect as contrast\n" <<
                 command <<
                 ": warning:     weight is zero" <<
                 endl;
         }
         if (contains(optionSet, MinCurvatureOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-min-curvature\" has no effect as contrast\n" <<
                 command <<
                 ": warning:     weight is zero" <<
@@ -714,7 +698,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     } else {
         if (FilterConfig.edgeScale > 0.0 &&
             contains(optionSet, ContrastWindowSizeOption) && MinCurvature.value() <= 0.0) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--contrast-window-size\" has no effect as\n" <<
                 command <<
                 ": warning:     EDGESCALE in \"--contrast-edge-scale\" is positive and" <<
@@ -726,14 +710,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (WEntropy == 0.0) {
         if (contains(optionSet, EntropyWindowSizeOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--entropy-window-size\" has no effect as\n" <<
                 command <<
                 ": warning:     entropy weight is zero" <<
                 endl;
         }
         if (contains(optionSet, EntropyCutoffOption)) {
-            cerr << command <<
+            std::cerr << command <<
                 ": warning: option \"--entropy-cutoff\" has no effect as entropy\n" <<
                 command <<
                 ": warning:     weight is zero" <<
@@ -744,7 +728,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     if (contains(optionSet, CompressionOption) &&
         !(enblend::getFileType(OutputFileName) == "TIFF" ||
           enblend::getFileType(OutputFileName) == "JPEG")) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: compression is not supported with output\n" <<
             command <<
             ": warning:     file type \"" <<
@@ -754,7 +738,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (contains(optionSet, AssociatedAlphaOption) &&
         enblend::getFileType(OutputFileName) != "TIFF") {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"-g\" has no effect with output\n" <<
             command <<
             ": warning:     file type \"" <<
@@ -764,7 +748,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
 #ifndef CACHE_IMAGES
     if (contains(optionSet, CacheSizeOption)) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"-m\" has no effect in this " << command << " binary,\n" <<
             command <<
             ": warning:     because it was compiled without image cache" <<
@@ -772,7 +756,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (contains(optionSet, BlockSizeOption)) {
-        cerr << command <<
+        std::cerr << command <<
             ": warning: option \"-b\" has no effect in this " << command << " binary,\n" <<
             command <<
             ": warning:     because it was compiled without image cache" <<
@@ -801,8 +785,8 @@ fill_mask_templates(const char* an_option_argument,
 
         token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
         if (token != NULL && *token != 0) {
-            cerr << command
-                 << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << endl;
+            std::cerr << command
+                      << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << endl;
         }
 
         delete [] s;
@@ -927,8 +911,8 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 WrapAround = enblend::wraparoundOfString(optarg);
                 if (WrapAround == UnknownWrapAround) {
-                    cerr << command
-                         << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
+                    std::cerr << command
+                              << ": unrecognized wrap-around mode \"" << optarg << "\"\n" << endl;
                     failed = true;
                 }
             } else {
@@ -947,14 +931,14 @@ int process_options(int argc, char** argv)
                 } else if (strcmp(tail, "%") == 0) {
                     MinCurvature.set_percentage(true);
                 } else {
-                    cerr << command << ": unrecognized minimum gradient \""
-                         << optarg << "\" specification." << endl;
+                    std::cerr << command << ": unrecognized minimum gradient \""
+                              << optarg << "\" specification." << endl;
                     failed = true;
                 }
             } else {
-                cerr << command << ": illegal numeric format \""
-                     << optarg << "\" for minimum gradient: "
-                     << enblend::errorMessage(errno) << endl;
+                std::cerr << command << ": illegal numeric format \""
+                          << optarg << "\" for minimum gradient: "
+                          << enblend::errorMessage(errno) << endl;
                 failed = true;
             }
             optionSet.insert(MinCurvatureOption);
@@ -969,23 +953,23 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
-                     << "scale is required." << endl;
+                std::cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
+                          << "scale is required." << endl;
                 failed = true;
             } else {
                 errno = 0;
                 FilterConfig.edgeScale = strtod(token, &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
-                        cerr << command << ": could not decode \"" << tail
-                             << "\" in edge scale specification \""
-                             << token << "\" for edge scale." << endl;
+                        std::cerr << command << ": could not decode \"" << tail
+                                  << "\" in edge scale specification \""
+                                  << token << "\" for edge scale." << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" for edge scale: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" for edge scale: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
@@ -998,15 +982,15 @@ int process_options(int argc, char** argv)
                     if (strcmp(tail, "%") == 0) {
                         FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
                     } else if (*tail != 0) {
-                        cerr << command << ": could not decode \"" << tail
-                             << "\" in specification \"" << token
-                             << "\" for LCE-scale." << endl;
+                        std::cerr << command << ": could not decode \"" << tail
+                                  << "\" in specification \"" << token
+                                  << "\" for LCE-scale." << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" for LCE-Scale: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" for LCE-Scale: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
@@ -1019,22 +1003,22 @@ int process_options(int argc, char** argv)
                     if (strcmp(tail, "%") == 0) {
                         FilterConfig.lceFactor /= 100.0;
                     } else if (*tail != 0) {
-                        cerr << command << ": could not decode \"" << tail
-                             << "\" in specification \"" << token
-                             << "\" for LCE-factor." << endl;
+                        std::cerr << command << ": could not decode \"" << tail
+                                  << "\" in specification \"" << token
+                                  << "\" for LCE-factor." << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" for LCE-factor: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" for LCE-factor: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
 
             if (save_ptr != NULL && *save_ptr != 0) {
-                cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to \"--contrast-edge-scale\"" << endl;
+                std::cerr << command << ": warning: ignoring trailing garbage \""
+                          << save_ptr << "\" in argument to \"--contrast-edge-scale\"" << endl;
             }
 
             delete [] s;
@@ -1050,8 +1034,8 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to \"--entropy-cutoff\".  "
-                     << "lower cutoff is required." << endl;
+                std::cerr << command << ": no scale given to \"--entropy-cutoff\".  "
+                          << "lower cutoff is required." << endl;
                 failed = true;
             } else {
                 errno = 0;
@@ -1062,14 +1046,14 @@ int process_options(int argc, char** argv)
                     } else if (strcmp(tail, "%") == 0) {
                         EntropyLowerCutoff.set_percentage(true);
                     } else {
-                        cerr << command << ": unrecognized entropy's lower cutoff \""
-                             << tail << "\" in \"" << token << "\"" << endl;
+                        std::cerr << command << ": unrecognized entropy's lower cutoff \""
+                                  << tail << "\" in \"" << token << "\"" << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" of entropy's lower cutoff: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" of entropy's lower cutoff: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
@@ -1084,21 +1068,21 @@ int process_options(int argc, char** argv)
                     } else if (strcmp(tail, "%") == 0) {
                         EntropyUpperCutoff.set_percentage(true);
                     } else {
-                        cerr << command << ": unrecognized entropy's upper cutoff \""
-                             << tail << "\" in \"" << token << "\"" << endl;
+                        std::cerr << command << ": unrecognized entropy's upper cutoff \""
+                                  << tail << "\" in \"" << token << "\"" << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" of entropy's upper cutoff: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" of entropy's upper cutoff: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
 
             if (save_ptr != NULL && *save_ptr != 0) {
-                cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to \"--entropy-cutoff\"" << endl;
+                std::cerr << command << ": warning: ignoring trailing garbage \""
+                          << save_ptr << "\" in argument to \"--entropy-cutoff\"" << endl;
             }
 
             delete [] s;
@@ -1114,8 +1098,8 @@ int process_options(int argc, char** argv)
             char* tail;
 
             if (token == NULL || *token == 0) {
-                cerr << command << ": no scale given to \"--exposure-cutoff\".  "
-                     << "lower cutoff is required." << endl;
+                std::cerr << command << ": no scale given to \"--exposure-cutoff\".  "
+                          << "lower cutoff is required." << endl;
                 failed = true;
             } else {
                 errno = 0;
@@ -1126,14 +1110,14 @@ int process_options(int argc, char** argv)
                     } else if (strcmp(tail, "%") == 0) {
                         ExposureLowerCutoff.set_percentage(true);
                     } else {
-                        cerr << command << ": unrecognized exposure's lower cutoff \""
-                             << tail << "\" in \"" << token << "\"" << endl;
+                        std::cerr << command << ": unrecognized exposure's lower cutoff \""
+                                  << tail << "\" in \"" << token << "\"" << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" of exposure's lower cutoff: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" of exposure's lower cutoff: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
@@ -1148,14 +1132,14 @@ int process_options(int argc, char** argv)
                     } else if (strcmp(tail, "%") == 0) {
                         ExposureUpperCutoff.set_percentage(true);
                     } else {
-                        cerr << command << ": unrecognized exposure's upper cutoff \""
-                             << tail << "\" in \"" << token << "\"" << endl;
+                        std::cerr << command << ": unrecognized exposure's upper cutoff \""
+                                  << tail << "\" in \"" << token << "\"" << endl;
                         failed = true;
                     }
                 } else {
-                    cerr << command << ": illegal numeric format \""
-                         << token << "\" of exposure's upper cutoff: "
-                         << enblend::errorMessage(errno) << endl;
+                    std::cerr << command << ": illegal numeric format \""
+                              << token << "\" of exposure's upper cutoff: "
+                              << enblend::errorMessage(errno) << endl;
                     failed = true;
                 }
             }
@@ -1171,8 +1155,8 @@ int process_options(int argc, char** argv)
             }
 
             if (save_ptr != NULL && *save_ptr != 0) {
-                cerr << command << ": warning: ignoring trailing garbage \""
-                     << save_ptr << "\" in argument to \"--exposure-cutoff\"" << endl;
+                std::cerr << command << ": warning: ignoring trailing garbage \""
+                          << save_ptr << "\" in argument to \"--exposure-cutoff\"" << endl;
             }
 
             delete [] s;
@@ -1190,11 +1174,11 @@ int process_options(int argc, char** argv)
                            upper_opt.find_first_not_of("0123456789") == std::string::npos) {
                     OutputCompression = upper_opt;
                 } else {
-                    cerr << command << ": unrecognized compression \"" << optarg << "\"" << endl;
+                    std::cerr << command << ": unrecognized compression \"" << optarg << "\"" << endl;
                     failed = true;
                 }
             } else {
-                cerr << command << ": option \"--compression\" requires an argument" << endl;
+                std::cerr << command << ": option \"--compression\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CompressionOption);
@@ -1204,7 +1188,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 GrayscaleProjector = optarg;
             } else {
-                cerr << command << ": option \"--gray-projector\" requires an argument" << endl;
+                std::cerr << command << ": option \"--gray-projector\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(GrayProjectorOption);
@@ -1215,7 +1199,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
             } else {
-                cerr << command << ": options \"-d\" or \"--depth\" require arguments" << endl;
+                std::cerr << command << ": options \"-d\" or \"--depth\" require arguments" << endl;
                 failed = true;
             }
             optionSet.insert(DepthOption);
@@ -1224,14 +1208,14 @@ int process_options(int argc, char** argv)
         case 'o': // FALLTHROUGH
         case OutputId:
             if (contains(optionSet, OutputOption)) {
-                cerr << command
-                     << ": warning: more than one output file specified"
-                     << endl;
+                std::cerr << command
+                          << ": warning: more than one output file specified"
+                          << endl;
             }
             if (optarg != NULL && *optarg != 0) {
                 OutputFileName = optarg;
             } else {
-                cerr << command << ": options \"-o\" or \"--output\" require arguments" << endl;
+                std::cerr << command << ": options \"-o\" or \"--output\" require arguments" << endl;
                 failed = true;
             }
             optionSet.insert(OutputOption);
@@ -1259,7 +1243,7 @@ int process_options(int argc, char** argv)
                                                     "exposure weight greater than 1; will use 1",
                                                     1.0);
             } else {
-                cerr << command << ": option \"--exposure-weight\" requires an argument" << endl;
+                std::cerr << command << ": option \"--exposure-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureWeightOption);
@@ -1275,7 +1259,7 @@ int process_options(int argc, char** argv)
                                                     "contrast weight greater than 1; will use 1",
                                                     0.0);
             } else {
-                cerr << command << ": option \"--contrast-weight\" requires an argument" << endl;
+                std::cerr << command << ": option \"--contrast-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ContrastWeightOption);
@@ -1291,7 +1275,7 @@ int process_options(int argc, char** argv)
                                                       "saturation weight greater than 1; will use 1",
                                                       1.0);
             } else {
-                cerr << command << ": option \"--saturation-weight\" requires an argument" << endl;
+                std::cerr << command << ": option \"--saturation-weight\" requires an argument" << endl;
                 failed = true;
             }
             WSaturationIsDefault = false;
@@ -1308,7 +1292,7 @@ int process_options(int argc, char** argv)
                                               "exposure center value (mu) geater than 1; will use 1",
                                               1.0);
             } else {
-                cerr << command << ": option \"--exposure-mu\" requires an argument" << endl;
+                std::cerr << command << ": option \"--exposure-mu\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureMuOption);
@@ -1321,7 +1305,7 @@ int process_options(int argc, char** argv)
                                                  "exposure standard deviation (sigma) less than 0; will use 1/1024",
                                                  1.0 / 1024.0);
             } else {
-                cerr << command << ": option \"--exposure-sigma\" requires an argument" << endl;
+                std::cerr << command << ": option \"--exposure-sigma\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ExposureSigmaOption);
@@ -1337,7 +1321,7 @@ int process_options(int argc, char** argv)
                                                    "entropy weight greater than 1; will use 1",
                                                    1.0);
             } else {
-                cerr << command << ": option \"--entropy-weight\" requires an argument" << endl;
+                std::cerr << command << ": option \"--entropy-weight\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(EntropyWeightOption);
@@ -1364,13 +1348,13 @@ int process_options(int argc, char** argv)
                                             "contrast window size to small; will use size = 3",
                                             3);
                 if (ContrastWindowSize % 2 != 1) {
-                    cerr << command << ": warning: contrast window size \""
-                         << ContrastWindowSize << "\" is even; increasing size to next odd number"
-                         << endl;
+                    std::cerr << command << ": warning: contrast window size \""
+                              << ContrastWindowSize << "\" is even; increasing size to next odd number"
+                              << endl;
                     ContrastWindowSize++;
                 }
             } else {
-                cerr << command << ": option \"--contrast-window-size\" requires an argument" << endl;
+                std::cerr << command << ": option \"--contrast-window-size\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(ContrastWindowSizeOption);
@@ -1384,13 +1368,13 @@ int process_options(int argc, char** argv)
                                             "entropy window size to small; will use size = 3",
                                             3);
                 if (EntropyWindowSize % 2 != 1) {
-                    cerr << command << ": warning: entropy window size \""
-                         << EntropyWindowSize << "\" is even; increasing size to next odd number"
-                         << endl;
+                    std::cerr << command << ": warning: entropy window size \""
+                              << EntropyWindowSize << "\" is even; increasing size to next odd number"
+                              << endl;
                     EntropyWindowSize++;
                 }
             } else {
-                cerr << command << ": option \"--entropy-window-size\" requires an argument" << endl;
+                std::cerr << command << ": option \"--entropy-window-size\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(EntropyWindowSizeOption);
@@ -1403,9 +1387,9 @@ int process_options(int argc, char** argv)
                                             _1 >= 1, //< src::minimum-cache-block-size 1@dmn{KB}
                                             "cache block size must be 1 KB or more; will use 1 KB",
                                             1);
-                CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
+                vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
             } else {
-                cerr << command << ": option \"-b\" requires an argument" << endl;
+                std::cerr << command << ": option \"-b\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(BlockSizeOption);
@@ -1426,7 +1410,7 @@ int process_options(int argc, char** argv)
             if (enblend::can_open_file(optarg)) {
                 FallbackProfile = cmsOpenProfileFromFile(optarg, "r");
                 if (FallbackProfile == NULL) {
-                    cerr << command << ": failed to open fallback ICC profile file \"" << optarg << "\"\n";
+                    std::cerr << command << ": failed to open fallback ICC profile file \"" << optarg << "\"\n";
                     exit(1);
                 }
             } else {
@@ -1447,11 +1431,11 @@ int process_options(int argc, char** argv)
                     OutputOffsetXCmdLine = 0;
                     OutputOffsetYCmdLine = 0;
                 } else {
-                    cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
+                    std::cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
                     failed = true;
                 }
             } else {
-                cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
+                std::cerr << command << ": option \"-f\" requires 2 or 4 arguments" << endl;
                 failed = true;
             }
             OutputSizeGiven = true;
@@ -1471,7 +1455,7 @@ int process_options(int argc, char** argv)
                 if (levels == "AUTO" || levels == "AUTOMATIC") {
                     ExactLevels = 0;
                 } else if (levels.find_first_not_of("+-0123456789") != std::string::npos) {
-                    cerr << command <<
+                    std::cerr << command <<
                         ": options \"-l\" or \"--levels\" require an integer argument or \"auto\"" << endl;
                     failed = true;
                 } else {
@@ -1489,7 +1473,7 @@ int process_options(int argc, char** argv)
                                                 MAX_PYRAMID_LEVELS);
                 }
             } else {
-                cerr << command << ": options \"-l\" or \"--levels\" require an argument" << endl;
+                std::cerr << command << ": options \"-l\" or \"--levels\" require an argument" << endl;
                 failed = true;
             }
             optionSet.insert(LevelsOption);
@@ -1502,9 +1486,9 @@ int process_options(int argc, char** argv)
                                             _1 >= 1, //< src::minimum-cache-size 1@dmn{MB}
                                             "cache memory limit less than 1 MB; will use 1 MB",
                                             1);
-                CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
+                vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
             } else {
-                cerr << command << ": option \"-m\" requires an argument" << endl;
+                std::cerr << command << ": option \"-m\" requires an argument" << endl;
                 failed = true;
             }
             optionSet.insert(CacheSizeOption);
@@ -1515,7 +1499,7 @@ int process_options(int argc, char** argv)
             if (selector != selector::algorithms.end()) {
                 LayerSelection.set_selector(*selector);
             } else {
-                cerr << command << ": unknown selector algorithm \"" << optarg << "\"";
+                std::cerr << command << ": unknown selector algorithm \"" << optarg << "\"";
                 exit(1);
             }
             optionSet.insert(LayerSelectorOption);
@@ -1545,7 +1529,7 @@ int process_options(int argc, char** argv)
                 if (enblend::parameter::is_valid_identifier(key)) {
                     Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
                 } else {
-                    cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
+                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
                         "\" is not a valid identifier; ignoring\n";
                 }
 
@@ -1570,7 +1554,7 @@ int process_options(int argc, char** argv)
                 } else if (enblend::parameter::is_valid_identifier(key)) {
                     Parameter.erase(key);
                 } else {
-                    cerr << command << ": warning: key \"" << key <<
+                    std::cerr << command << ": warning: key \"" << key <<
                         "\" is not a valid identifier; ignoring\n";
                 }
 
@@ -1583,7 +1567,7 @@ int process_options(int argc, char** argv)
         case '?':
             switch (optopt) {
             case 0: // unknown long option
-                cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
+                std::cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
                 break;
             case 'b':           // FALLTHROUGH
             case 'd':           // FALLTHROUGH
@@ -1591,35 +1575,35 @@ int process_options(int argc, char** argv)
             case 'l':           // FALLTHROUGH
             case 'm':           // FALLTHROUGH
             case 'o':
-                cerr << command
-                     << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
-                     << endl;
+                std::cerr << command
+                          << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
+                          << endl;
                 break;
 
             default:
-                cerr << command << ": unknown option ";
+                std::cerr << command << ": unknown option ";
                 if (isprint(optopt)) {
-                    cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                    std::cerr << "\"-" << static_cast<char>(optopt) << "\"";
                 } else {
-                    cerr << "character 0x" << hex << optopt;
+                    std::cerr << "character 0x" << std::hex << optopt;
                 }
-                cerr << endl;
+                std::cerr << endl;
             }
-            cerr << "Try \"enfuse --help\" for more information." << endl;
+            std::cerr << "Try \"enfuse --help\" for more information." << endl;
             exit(1);
 
         default:
-            cerr << command
-                 << ": internal error: unhandled command line option"
-                 << endl;
+            std::cerr << command
+                      << ": internal error: unhandled command line option"
+                      << endl;
             exit(1);
         }
     }
 
     if (contains(optionSet, SaveMasksOption) && contains(optionSet, LoadMasksOption))
     {
-        cerr << command
-             << ": options \"--load-masks\" and \"--save-masks\" are mutually exclusive" << endl;
+        std::cerr << command
+                  << ": options \"--load-masks\" and \"--save-masks\" are mutually exclusive" << endl;
         failed = true;
     }
 
@@ -1669,7 +1653,7 @@ int main(int argc, char** argv)
 #endif
 
     if (atexit(cleanup_output) != 0) {
-        cerr << command << ": warning: could not install cleanup routine\n";
+        std::cerr << command << ": warning: could not install cleanup routine\n";
     }
 
     sig.initialize();
@@ -1684,25 +1668,25 @@ int main(int argc, char** argv)
 
     if (!getopt_long_works_ok())
     {
-        cerr << command << ": cannot reliably parse command line; giving up\n";
+        std::cerr << command << ": cannot reliably parse command line; giving up\n";
         exit(1);
     }
 
     int optind;
     try {
         optind = process_options(argc, argv);
-    } catch (StdException& e) {
-        cerr << command << ": error while processing command line options\n"
-             << command << ":     " << e.what()
-             << endl;
+    } catch (vigra::StdException& e) {
+        std::cerr << command << ": error while processing command line options\n"
+                  << command << ":     " << e.what()
+                  << endl;
         exit(1);
     }
 
-    TraceableFileNameList inputTraceableFileNameList;
+    enblend::TraceableFileNameList inputTraceableFileNameList;
 
     // Remaining parameters are input files.
     while (optind < argc) {
-        TraceableFileNameList files;
+        enblend::TraceableFileNameList files;
         enblend::unfold_filename(files, std::string(argv[optind]));
         inputTraceableFileNameList.insert(inputTraceableFileNameList.end(),
                                           files.begin(), files.end());
@@ -1710,7 +1694,7 @@ int main(int argc, char** argv)
     }
 
     if (inputTraceableFileNameList.empty()) {
-        cerr << command << ": no input files specified\n";
+        std::cerr << command << ": no input files specified\n";
         exit(1);
     }
 
@@ -1720,7 +1704,7 @@ int main(int argc, char** argv)
 
     sig.check();
 
-    for (TraceableFileNameList::iterator i = inputTraceableFileNameList.begin();
+    for (enblend::TraceableFileNameList::iterator i = inputTraceableFileNameList.begin();
          i != inputTraceableFileNameList.end();
          ++i) {
         if (!enblend::can_open_file(i->filename())) {
@@ -1729,45 +1713,41 @@ int main(int argc, char** argv)
         }
     }
 
-    LayerSelection.retrive_image_information(inputTraceableFileNameList.begin(),
-                                             inputTraceableFileNameList.end());
+    LayerSelection.retrieve_image_information(inputTraceableFileNameList.begin(),
+                                              inputTraceableFileNameList.end());
 
     // List of info structures for each input image.
-    list<ImageImportInfo*> imageInfoList;
-    list<ImageImportInfo*>::iterator imageInfoIterator;
+    std::list<vigra::ImageImportInfo*> imageInfoList;
+    std::list<vigra::ImageImportInfo*>::iterator imageInfoIterator;
 
     bool isColor = false;
     std::string pixelType;
     TiffResolution resolution;
-    ImageImportInfo::ICCProfile iccProfile;
-    Rect2D inputUnion;
+    vigra::ImageImportInfo::ICCProfile iccProfile;
+    vigra::Rect2D inputUnion;
 
     // Check that all input images have the same parameters.
     unsigned layer = 0;
     unsigned layers = 0;
-    FileNameList inputFileNameList;
-    TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
+    enblend::FileNameList inputFileNameList;
+    enblend::TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
     while (inputFileNameIterator != inputTraceableFileNameList.end()) {
-        ImageImportInfo* inputInfo = NULL;
+        vigra::ImageImportInfo* inputInfo = NULL;
         std::string filename(inputFileNameIterator->filename());
         try {
-            ImageImportInfo info(filename.c_str());
+            vigra::ImageImportInfo info(filename.c_str());
             if (layers == 0) { // OPTIMIZATION: call only once per file
-                layers = info.numLayers();
+                layers = info.numImages();
             }
-            if (layers >= 2) {
-                filename = vigra::join_filename_layer(filename, layer);
-                inputInfo = new ImageImportInfo(filename.c_str());
-            } else {
-                inputInfo = new ImageImportInfo(info);
-            }
+            inputInfo = new vigra::ImageImportInfo(info);
+            inputInfo->setImageIndex(layer);
             ++layer;
         } catch (vigra::ContractViolation& exception) {
-            cerr <<
+            std::cerr <<
                 command << ": cannot load image \"" << filename << "\"\n" <<
-                command << ":     " << exception.message() << "\n";
+                command << ":     " << exception.what() << "\n";
             if (enblend::maybe_response_file(filename)) {
-                cerr <<
+                std::cerr <<
                     command << ": info: Maybe you meant a response file and forgot the initial '" <<
                     RESPONSE_FILE_PREFIX_CHAR << "'?\n";
             }
@@ -1777,9 +1757,9 @@ int main(int argc, char** argv)
         LayerSelection.set_selector(inputFileNameIterator->selector());
         if (LayerSelection.accept(filename, layer)) {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
-                cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" accepts\n"
-                     << command << ": info:     layer " << layer << " of " << layers << " in image \""
-                     << filename << "\"\n";
+                std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" accepts\n"
+                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << filename << "\"\n";
             }
 
             // Save this image info in the list.
@@ -1787,48 +1767,48 @@ int main(int argc, char** argv)
             inputFileNameList.push_back(filename);
 
             if (Verbose >= VERBOSE_INPUT_IMAGE_INFO_MESSAGES) {
-                cerr << command
-                     << ": info: input image \""
-                     << inputFileNameIterator->filename()
-                     << "\" "
-                     << layer << '/' << layers << ' ';
+                std::cerr << command
+                          << ": info: input image \""
+                          << inputFileNameIterator->filename()
+                          << "\" "
+                          << layer << '/' << layers << ' ';
 
                 if (inputInfo->isColor()) {
-                    cerr << "RGB ";
+                    std::cerr << "RGB ";
                 }
 
                 if (!inputInfo->getICCProfile().empty()) {
-                    cerr << "ICC ";
+                    std::cerr << "ICC ";
                 }
 
-                cerr << inputInfo->getPixelType()
-                     << " position="
-                     << inputInfo->getPosition().x
-                     << "x"
-                     << inputInfo->getPosition().y
-                     << " "
-                     << "size="
-                     << inputInfo->width()
-                     << "x"
-                     << inputInfo->height()
-                     << endl;
+                std::cerr << inputInfo->getPixelType()
+                          << " position="
+                          << inputInfo->getPosition().x
+                          << "x"
+                          << inputInfo->getPosition().y
+                          << " "
+                          << "size="
+                          << inputInfo->width()
+                          << "x"
+                          << inputInfo->height()
+                          << endl;
             }
 
             if (inputInfo->numExtraBands() < 1) {
                 // Complain about lack of alpha channel.
-                cerr << command
-                     << ": info: input image \"" << inputFileNameIterator->filename() << "\""
-                     << enblend::optional_layer_name(layer, layers)
-                     << " does not have an alpha channel;\n";
+                std::cerr << command
+                          << ": info: input image \"" << inputFileNameIterator->filename() << "\""
+                          << enblend::optional_layer_name(layer, layers)
+                          << " does not have an alpha channel;\n";
                 inputFileNameIterator->unroll_trace();
-                cerr << command
-                     << ": info: assuming all pixels should contribute to the final image"
-                     << endl;
+                std::cerr << command
+                          << ": info: assuming all pixels should contribute to the final image"
+                          << endl;
             }
 
             // Get input image's position and size.
-            Rect2D imageROI(Point2D(inputInfo->getPosition()),
-                            Size2D(inputInfo->width(), inputInfo->height()));
+            vigra::Rect2D imageROI(vigra::Point2D(inputInfo->getPosition()),
+                                   vigra::Size2D(inputInfo->width(), inputInfo->height()));
 
             if (inputFileNameIterator == inputTraceableFileNameList.begin()) {
                 // First input image
@@ -1841,10 +1821,10 @@ int main(int argc, char** argv)
                 if (!iccProfile.empty()) {
                     InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
                     if (InputProfile == NULL) {
-                        cerr << endl
-                             << command << ": error parsing ICC profile data from file \""
-                             << inputFileNameIterator->filename()
-                             << "\"" << enblend::optional_layer_name(layer, layers) << endl;
+                        std::cerr << endl
+                                  << command << ": error parsing ICC profile data from file \""
+                                  << inputFileNameIterator->filename()
+                                  << "\"" << enblend::optional_layer_name(layer, layers) << endl;
                         inputFileNameIterator->unroll_trace();
                         exit(1);
                     }
@@ -1854,37 +1834,37 @@ int main(int argc, char** argv)
                 inputUnion |= imageROI;
 
                 if (isColor != inputInfo->isColor()) {
-                    cerr << command << ": input image \""
-                         << inputFileNameIterator->filename() << "\""
-                         << enblend::optional_layer_name(layer, layers) << " is "
-                         << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                         << command << ":   but previous images are "
-                         << (isColor ? "color" : "grayscale")
-                         << endl;
+                    std::cerr << command << ": input image \""
+                              << inputFileNameIterator->filename() << "\""
+                              << enblend::optional_layer_name(layer, layers) << " is "
+                              << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
+                              << command << ":   but previous images are "
+                              << (isColor ? "color" : "grayscale")
+                              << endl;
                     inputFileNameIterator->unroll_trace();
                     exit(1);
                 }
                 if (pixelType != inputInfo->getPixelType()) {
-                    cerr << command << ": input image \""
-                         << inputFileNameIterator->filename() << "\""
-                         << enblend::optional_layer_name(layer, layers) << " has pixel type "
-                         << inputInfo->getPixelType() << ",\n"
-                         << command << ":   but previous images have pixel type "
-                         << pixelType
-                         << endl;
+                    std::cerr << command << ": input image \""
+                              << inputFileNameIterator->filename() << "\""
+                              << enblend::optional_layer_name(layer, layers) << " has pixel type "
+                              << inputInfo->getPixelType() << ",\n"
+                              << command << ":   but previous images have pixel type "
+                              << pixelType
+                              << endl;
                     inputFileNameIterator->unroll_trace();
                     exit(1);
                 }
                 if (resolution !=
                     TiffResolution(inputInfo->getXResolution(), inputInfo->getYResolution())) {
-                    cerr << command << ": info: input image \""
-                         << inputFileNameIterator->filename() << "\""
-                         << enblend::optional_layer_name(layer, layers) << " has resolution "
-                         << inputInfo->getXResolution() << " dpi x "
-                         << inputInfo->getYResolution() << " dpi,\n"
-                         << command << ": info:   but first image has resolution "
-                         << resolution.x << " dpi x " << resolution.y << " dpi"
-                         << endl;
+                    std::cerr << command << ": info: input image \""
+                              << inputFileNameIterator->filename() << "\""
+                              << enblend::optional_layer_name(layer, layers) << " has resolution "
+                              << inputInfo->getXResolution() << " dpi x "
+                              << inputInfo->getYResolution() << " dpi,\n"
+                              << command << ": info:   but first image has resolution "
+                              << resolution.x << " dpi x " << resolution.y << " dpi"
+                              << endl;
                     inputFileNameIterator->unroll_trace();
                 }
                 // IMPLEMENTATION NOTE: Newer Vigra libraries have
@@ -1894,47 +1874,47 @@ int main(int argc, char** argv)
                 if (iccProfile.empty() != inputInfo->getICCProfile().empty() ||
                     !std::equal(iccProfile.begin(), iccProfile.end(),
                                 inputInfo->getICCProfile().begin())) {
-                    ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
+                    vigra::ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
                     cmsHPROFILE newProfile = NULL;
                     if (!mismatchProfile.empty()) {
                         newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
                                                            mismatchProfile.size());
                         if (newProfile == NULL) {
-                            cerr << endl
-                                 << command << ": error parsing ICC profile data from file \""
-                                 << inputFileNameIterator->filename()
-                                 << "\"" << enblend::optional_layer_name(layer, layers) << endl;
+                            std::cerr << endl
+                                      << command << ": error parsing ICC profile data from file \""
+                                      << inputFileNameIterator->filename()
+                                      << "\"" << enblend::optional_layer_name(layer, layers) << endl;
                             inputFileNameIterator->unroll_trace();
                             exit(1);
                         }
                     }
 
-                    cerr << endl << command << ": warning: input image \""
-                         << inputFileNameIterator->filename()
-                         << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
+                    std::cerr << endl << command << ": warning: input image \""
+                              << inputFileNameIterator->filename()
+                              << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
                     inputFileNameIterator->unroll_trace();
-                    cerr << command << ": warning: has ";
+                    std::cerr << command << ": warning: has ";
                     if (newProfile) {
-                        cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
+                        std::cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
                     } else {
-                        cerr << "no ICC profile,\n";
+                        std::cerr << "no ICC profile,\n";
                     }
-                    cerr << command << ": warning: but first image has ";
+                    std::cerr << command << ": warning: but first image has ";
                     if (InputProfile) {
-                        cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
+                        std::cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
                     } else {
-                        cerr << "no ICC profile;\n";
+                        std::cerr << "no ICC profile;\n";
                     }
-                    cerr << command << ": warning: blending images with different color spaces\n"
-                         << command << ": warning: may have unexpected results"
-                         << endl;
+                    std::cerr << command << ": warning: blending images with different color spaces\n"
+                              << command << ": warning: may have unexpected results"
+                              << endl;
                 }
             }
         } else {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
-                cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" rejects\n"
-                     << command << ": info:     layer " << layer << " of " << layers << " in image \""
-                     << filename << "\"\n";
+                std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" rejects\n"
+                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << filename << "\"\n";
             }
         }
 
@@ -1956,28 +1936,28 @@ int main(int argc, char** argv)
         const size_t m = imageInfoList.size();
 
         if (n > m) {
-            cerr << command << ": warning: selector has rejected " << n - m << " out of " << n << " images\n";
+            std::cerr << command << ": warning: selector has rejected " << n - m << " out of " << n << " images\n";
         }
 
         switch (m) {
         case 0:
-            cerr << command << ": no input images given\n";
+            std::cerr << command << ": no input images given\n";
             exit(1);
             break;
         case 1:
-            cerr << command << ": warning: only one input image given;\n"
-                 << command << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
-                 << command << ": warning: blending calculations.  The output will be the same as the input.\n";
+            std::cerr << command << ": warning: only one input image given;\n"
+                      << command << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
+                      << command << ": warning: blending calculations.  The output will be the same as the input.\n";
             break;
         }
     }
 
     if (resolution == TiffResolution()) {
-        cerr << command
-             << ": warning: no usable resolution found in first image \""
-             << inputTraceableFileNameList.begin()->filename() << "\";\n"
-             << command
-             << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
+        std::cerr << command
+                  << ": warning: no usable resolution found in first image \""
+                  << inputTraceableFileNameList.begin()->filename() << "\";\n"
+                  << command
+                  << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
         ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
                                          DEFAULT_TIFF_RESOLUTION);
     } else {
@@ -1985,17 +1965,17 @@ int main(int argc, char** argv)
     }
 
     // Create the Info for the output file.
-    ImageExportInfo outputImageInfo(OutputFileName.c_str());
+    vigra::ImageExportInfo outputImageInfo(OutputFileName.c_str());
 
     if (!StopAfterMaskGeneration) {
         OutputIsValid = false;
 
         // Make sure that inputUnion is at least as big as given by the -f paramater.
         if (OutputSizeGiven) {
-            inputUnion |= Rect2D(OutputOffsetXCmdLine,
-                                 OutputOffsetYCmdLine,
-                                 OutputOffsetXCmdLine + OutputWidthCmdLine,
-                                 OutputOffsetYCmdLine + OutputHeightCmdLine);
+            inputUnion |= vigra::Rect2D(OutputOffsetXCmdLine,
+                                        OutputOffsetYCmdLine,
+                                        OutputOffsetXCmdLine + OutputWidthCmdLine,
+                                        OutputOffsetYCmdLine + OutputHeightCmdLine);
         }
 
         if (!OutputCompression.empty()) {
@@ -2012,20 +1992,20 @@ int main(int argc, char** argv)
             const std::string bestPixelType = enblend::bestPixelType(outputFileType, neededPixelType);
 
             if (neededPixelType != bestPixelType) {
-                cerr << command
-                     << ": warning: "
-                     << (OutputPixelType.empty() ? "deduced" : "requested")
-                     << " output pixel type is \""
-                     << neededPixelType
-                     << "\", but image type \""
-                     << outputFileType
-                     << "\"\n"
-                     << command << ": warning:   supports \""
-                     << bestPixelType
-                     << "\" at best;  will use \""
-                     << bestPixelType
-                     << "\""
-                     << endl;
+                std::cerr << command
+                          << ": warning: "
+                          << (OutputPixelType.empty() ? "deduced" : "requested")
+                          << " output pixel type is \""
+                          << neededPixelType
+                          << "\", but image type \""
+                          << outputFileType
+                          << "\"\n"
+                          << command << ": warning:   supports \""
+                          << bestPixelType
+                          << "\" at best;  will use \""
+                          << bestPixelType
+                          << "\""
+                          << endl;
             }
             outputImageInfo.setPixelType(bestPixelType.c_str());
             pixelType = enblend::maxPixelType(pixelType, bestPixelType);
@@ -2037,13 +2017,13 @@ int main(int argc, char** argv)
         if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
             UseCIECAM = true;
             if (InputProfile == NULL) {
-                cerr << command << ": warning: input images do not have ICC profiles;\n";
+                std::cerr << command << ": warning: input images do not have ICC profiles;\n";
                 if (FallbackProfile == NULL) {
-                    cerr << command << ": warning: assuming sRGB profile" << endl;
+                    std::cerr << command << ": warning: assuming sRGB profile" << endl;
                     InputProfile = cmsCreate_sRGBProfile();
                 } else {
-                    cerr << command << ": warning: using fallback profile \""
-                         << enblend::profileDescription(FallbackProfile) << "\"" << endl;
+                    std::cerr << command << ": warning: using fallback profile \""
+                              << enblend::profileDescription(FallbackProfile) << "\"" << endl;
                     InputProfile = FallbackProfile;
                     FallbackProfile = NULL; // avoid double freeing
                 }
@@ -2055,11 +2035,11 @@ int main(int argc, char** argv)
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (InputToXYZTransform == NULL) {
-                cerr << command << ": error building color transform from \""
-                     << enblend::profileName(InputProfile)
-                     << " "
-                     << enblend::profileDescription(InputProfile)
-                     << "\" to XYZ space" << endl;
+                std::cerr << command << ": error building color transform from \""
+                          << enblend::profileName(InputProfile)
+                          << " "
+                          << enblend::profileDescription(InputProfile)
+                          << "\" to XYZ space" << endl;
                 exit(1);
             }
 
@@ -2068,12 +2048,12 @@ int main(int argc, char** argv)
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (XYZToInputTransform == NULL) {
-                cerr << command
-                     << ": error building color transform from XYZ space to \""
-                     << enblend::profileName(InputProfile)
-                     << " "
-                     << enblend::profileDescription(InputProfile)
-                     << "\"" << endl;
+                std::cerr << command
+                          << ": error building color transform from XYZ space to \""
+                          << enblend::profileName(InputProfile)
+                          << " "
+                          << enblend::profileDescription(InputProfile)
+                          << "\"" << endl;
                 exit(1);
             }
 
@@ -2088,10 +2068,10 @@ int main(int argc, char** argv)
 
             CIECAMTransform = cmsCIECAM02Init(NULL, &ViewingConditions);
             if (!CIECAMTransform) {
-                cerr << endl
-                     << command
-                     << ": error initializing CIECAM02 transform"
-                     << endl;
+                std::cerr << endl
+                          << command
+                          << ": error initializing CIECAM02 transform"
+                          << endl;
                 exit(1);
             }
 
@@ -2102,18 +2082,18 @@ int main(int argc, char** argv)
                 if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
                     double temperature;
                     cmsTempFromWhitePoint(&temperature, &white_point);
-                    cerr << command
-                         << ": info: using white point of input profile at " << temperature << "K"
-                         << endl;
+                    std::cerr << command
+                              << ": info: using white point of input profile at " << temperature << "K"
+                              << endl;
                 }
             } else {
                 memcpy(&white_point, cmsD50_xyY(), sizeof(cmsCIExyY));
                 if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
                     double temperature;
                     cmsTempFromWhitePoint(&temperature, &white_point);
-                    cerr << command
-                         << ": info: falling back to predefined (D50) white point at " << temperature << "K"
-                         << endl;
+                    std::cerr << command
+                              << ": info: falling back to predefined (D50) white point at " << temperature << "K"
+                              << endl;
                 }
             }
             LabProfile = cmsCreateLab2Profile(cmsD50_xyY());
@@ -2122,11 +2102,11 @@ int main(int argc, char** argv)
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (!InputToLabTransform) {
-                cerr << command << ": error building color transform from \""
-                     << enblend::profileName(InputProfile)
-                     << " "
-                     << enblend::profileDescription(InputProfile)
-                     << "\" to Lab space" << endl;
+                std::cerr << command << ": error building color transform from \""
+                          << enblend::profileName(InputProfile)
+                          << " "
+                          << enblend::profileDescription(InputProfile)
+                          << "\" to Lab space" << endl;
                 exit(1);
             }
             LabToInputTransform = cmsCreateTransform(LabProfile, TYPE_Lab_DBL,
@@ -2134,17 +2114,17 @@ int main(int argc, char** argv)
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (!LabToInputTransform) {
-                cerr << command
-                     << ": error building color transform from Lab space to \""
-                     << enblend::profileName(InputProfile)
-                     << " "
-                     << enblend::profileDescription(InputProfile)
-                     << "\"" << endl;
+                std::cerr << command
+                          << ": error building color transform from Lab space to \""
+                          << enblend::profileName(InputProfile)
+                          << " "
+                          << enblend::profileDescription(InputProfile)
+                          << "\"" << endl;
                 exit(1);
             }
         } else {
             if (FallbackProfile != NULL) {
-                cerr << command <<
+                std::cerr << command <<
                     ": warning: fusing in RGB cube; option \"--fallback-profile\" has no effect" <<
                     endl;
             }
@@ -2152,10 +2132,10 @@ int main(int argc, char** argv)
 
         // The size of the output image.
         if (Verbose >= VERBOSE_INPUT_UNION_SIZE_MESSAGES) {
-            cerr << command
-                 << ": info: output image size: "
-                 << inputUnion
-                 << endl;
+            std::cerr << command
+                      << ": info: output image size: "
+                      << inputUnion
+                      << endl;
         }
 
         // Set the output image position and resolution.
@@ -2169,16 +2149,16 @@ int main(int argc, char** argv)
             // the output file is going to work after blending
             // is done.
             encoder(outputImageInfo);
-        } catch (StdException & e) {
-            cerr << endl
-                 << command
-                 << ": error opening output file \""
-                 << OutputFileName
-                 << "\";\n"
-                 << command
-                 << ": "
-                 << e.what()
-                 << endl;
+        } catch (vigra::StdException& e) {
+            std::cerr << endl
+                      << command
+                      << ": error opening output file \""
+                      << OutputFileName
+                      << "\";\n"
+                      << command
+                      << ": "
+                      << e.what()
+                      << endl;
             exit(1);
         }
 
@@ -2190,68 +2170,68 @@ int main(int argc, char** argv)
     // Invoke templatized blender.
     try {
         if (isColor) {
-            if      (pixelType == "UINT8")  enfuseMain<RGBValue<UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblend::enfuseMain<vigra::RGBValue<vigra::UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enfuseMain<RGBValue<Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enfuseMain<RGBValue<UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enfuseMain<RGBValue<Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enfuseMain<RGBValue<UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enfuseMain<RGBValue<Int32 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enfuseMain<RGBValue<float > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enfuseMain<RGBValue<double> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblend::enfuseMain<vigra::RGBValue<vigra::Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblend::enfuseMain<vigra::RGBValue<vigra::UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblend::enfuseMain<vigra::RGBValue<vigra::Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblend::enfuseMain<vigra::RGBValue<vigra::UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblend::enfuseMain<vigra::RGBValue<vigra::Int32 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblend::enfuseMain<vigra::RGBValue<float > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblend::enfuseMain<vigra::RGBValue<double> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << command << ": RGB images with pixel type \""
-                     << pixelType
-                     << "\" are not supported"
-                     << endl;
+                std::cerr << command << ": RGB images with pixel type \""
+                          << pixelType
+                          << "\" are not supported"
+                          << endl;
                 exit(1);
             }
         } else {
             if (!WSaturationIsDefault && (WSaturation != 0.0)) {
-                cerr << command
-                     << ": warning: \"--WSaturation\" is not applicable to grayscale images;\n"
-                     << command
-                     << ": warning:   this parameter will have no effect"
-                     << endl;
+                std::cerr << command
+                          << ": warning: \"--WSaturation\" is not applicable to grayscale images;\n"
+                          << command
+                          << ": warning:   this parameter will have no effect"
+                          << endl;
                 WSaturation = 0.0;
             }
-            if      (pixelType == "UINT8")  enfuseMain<UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            if      (pixelType == "UINT8")  enblend::enfuseMain<vigra::UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enfuseMain<Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT16") enfuseMain<UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT16")  enfuseMain<Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "UINT32") enfuseMain<UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "INT32")  enfuseMain<Int32 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "FLOAT")  enfuseMain<float >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
-            else if (pixelType == "DOUBLE") enfuseMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT8")   enblend::enfuseMain<vigra::Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT16") enblend::enfuseMain<vigra::UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT16")  enblend::enfuseMain<vigra::Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "UINT32") enblend::enfuseMain<vigra::UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "INT32")  enblend::enfuseMain<vigra::Int32 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "FLOAT")  enblend::enfuseMain<float >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
+            else if (pixelType == "DOUBLE") enblend::enfuseMain<double>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #endif
             else {
-                cerr << command
-                     << ": black&white images with pixel type \""
-                     << pixelType
-                     << "\" are not supported"
-                     << endl;
+                std::cerr << command
+                          << ": black&white images with pixel type \""
+                          << pixelType
+                          << "\" are not supported"
+                          << endl;
                 exit(1);
             }
         }
 
-        for (list<ImageImportInfo*>::iterator i = imageInfoList.begin();
+        for (std::list<vigra::ImageImportInfo*>::iterator i = imageInfoList.begin();
              i != imageInfoList.end();
              ++i) {
             delete *i;
         }
     } catch (std::bad_alloc& e) {
-        cerr << endl
-             << command << ": out of memory\n"
-             << command << ": " << e.what()
-             << endl;
+        std::cerr << endl
+                  << command << ": out of memory\n"
+                  << command << ": " << e.what()
+                  << endl;
         exit(1);
-    } catch (StdException& e) {
-        cerr << endl
-             << command << ": an exception occured\n"
-             << command << ": " << e.what()
-             << endl;
+    } catch (vigra::StdException& e) {
+        std::cerr << endl
+                  << command << ": an exception occured\n"
+                  << command << ": " << e.what()
+                  << endl;
         exit(1);
     }
 

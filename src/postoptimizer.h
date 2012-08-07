@@ -22,16 +22,11 @@
 
 #include <vector>
 
+#include "vigra_ext/rect2d.hxx"
+
 #include "anneal.h"
 #include "masktypedefs.h"
 #include "mask.h"
-
-using vigra::LineIterator;
-using vigra::Point2D;
-using vigra::UInt8Image;
-using vigra::Rect2D;
-using vigra::Size2D;
-using vigra::Diff2D;
 
 using vigra::functor::Arg1;
 using vigra::functor::Arg2;
@@ -51,10 +46,10 @@ namespace enblend
     public:
         PostOptimizer(MismatchImageType* aMismatchImage, VisualizeImageType* aVisualizeImage,
                       vigra::Size2D* aMismatchImageSize, int* aMismatchImageStride,
-                      Diff2D* aUVBBStrideOffset, ContourVector* someContours,
-                      const Rect2D* aUBB, Rect2D* aVBB,
+                      vigra::Diff2D* aUVBBStrideOffset, ContourVector* someContours,
+                      const vigra::Rect2D* aUBB, vigra::Rect2D* aVBB,
                       std::vector<double>* someParameters,
-                      const AlphaType* aWhiteAlpha, const AlphaType* aBlackAlpha, const Rect2D* aUVBB) :
+                      const AlphaType* aWhiteAlpha, const AlphaType* aBlackAlpha, const vigra::Rect2D* aUVBB) :
             mismatchImage(aMismatchImage), visualizeImage(aVisualizeImage),
             mismatchImageSize(aMismatchImageSize), mismatchImageStride(aMismatchImageStride),
             uvBBStrideOffset(aUVBBStrideOffset), contours(someContours),
@@ -72,14 +67,14 @@ namespace enblend
         VisualizeImageType* visualizeImage;
         vigra::Size2D* mismatchImageSize;
         int* mismatchImageStride;
-        Diff2D* uvBBStrideOffset;
+        vigra::Diff2D* uvBBStrideOffset;
         ContourVector* contours;
-        const Rect2D* uBB;
-        Rect2D* vBB;
+        const vigra::Rect2D* uBB;
+        vigra::Rect2D* vBB;
         std::vector<double> parameters;
         const AlphaType* whiteAlpha;
         const AlphaType* blackAlpha;
-        const Rect2D* uvBB;
+        const vigra::Rect2D* uvBB;
 
     private:
         PostOptimizer(PostOptimizer* other); // NOT IMPLEMENTED
@@ -96,10 +91,10 @@ namespace enblend
 
         AnnealOptimizer(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                         vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
-                        Diff2D* uvBBStrideOffset, ContourVector* contours,
-                        const Rect2D* uBB, Rect2D* vBB,
+                        vigra::Diff2D* uvBBStrideOffset, ContourVector* contours,
+                        const vigra::Rect2D* uBB, vigra::Rect2D* vBB,
                         std::vector<double>* parameters,
-                        const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const Rect2D* uvBB) :
+                        const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const vigra::Rect2D* uvBB) :
             super(mismatchImage, visualizeImage,
                   mismatchImageSize, mismatchImageStride,
                   uvBBStrideOffset, contours,
@@ -145,7 +140,7 @@ namespace enblend
                     for (Segment::iterator vertexIterator = snake->begin();
                          vertexIterator != snake->end();) {
                         if (vertexIterator->first &&
-                            (*this->mismatchImage)[vertexIterator->second] == NumericTraits<MismatchImagePixelType>::max()) {
+                            (*this->mismatchImage)[vertexIterator->second] == vigra::NumericTraits<MismatchImagePixelType>::max()) {
                             // Vertex is still in max-cost region. Delete it.
                             if (vertexIterator == snake->begin()) {
                                 snake->pop_front();
@@ -213,16 +208,21 @@ namespace enblend
 
     private:
         void configureOptimizer() {
-            //Areas other than intersection region have maximum cost.
-            combineThreeImagesMP(stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
-                                 stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
+            // Areas other than intersection region have maximum cost.
+            combineThreeImagesMP(vigra_ext::stride(*this->mismatchImageStride,
+                                                   *this->mismatchImageStride,
+                                                   vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
+                                 vigra_ext::stride(*this->mismatchImageStride,
+                                                   *this->mismatchImageStride,
+                                                   vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
                                  srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
                                  destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 ifThenElse(Arg1() & Arg2(), Arg3(), Param(NumericTraits<MismatchImagePixelType>::max())));
+                                 ifThenElse(Arg1() & Arg2(), Arg3(), Param(vigra::NumericTraits<MismatchImagePixelType>::max())));
         }
-        AnnealOptimizer(AnnealOptimizer* other);           // NOT IMPLEMENTED
+
+        AnnealOptimizer(AnnealOptimizer* other);                    // NOT IMPLEMENTED
         AnnealOptimizer& operator=(const AnnealOptimizer &other);   // NOT IMPLEMENTED
-        AnnealOptimizer();          // NOT IMPLEMENTED
+        AnnealOptimizer();                                          // NOT IMPLEMENTED
     };
 
 
@@ -234,10 +234,10 @@ namespace enblend
 
         DijkstraOptimizer(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                           vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
-                          Diff2D* uvBBStrideOffset, ContourVector* contours,
-                          const Rect2D* uBB, Rect2D* vBB,
+                          vigra::Diff2D* uvBBStrideOffset, ContourVector* contours,
+                          const vigra::Rect2D* uBB, vigra::Rect2D* vBB,
                           std::vector<double>* parameters,
-                          const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const Rect2D* uvBB) :
+                          const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const vigra::Rect2D* uvBB) :
             super(mismatchImage, visualizeImage,
                   mismatchImageSize, mismatchImageStride,
                   uvBBStrideOffset, contours,
@@ -247,7 +247,7 @@ namespace enblend
 
             configureOptimizer();
 
-            Rect2D withinMismatchImage(*this->mismatchImageSize);
+            vigra::Rect2D withinMismatchImage(*this->mismatchImageSize);
             int segmentNumber;
 
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
@@ -284,26 +284,26 @@ namespace enblend
 
                         if (currentVertex->first || nextVertex->first) {
                             // Find shortest path between these points
-                            Point2D currentPoint = currentVertex->second;
-                            Point2D nextPoint = nextVertex->second;
+                            vigra::Point2D currentPoint = currentVertex->second;
+                            vigra::Point2D nextPoint = nextVertex->second;
 
-                            Rect2D pointSurround(currentPoint, Size2D(1, 1));
-                            pointSurround |= Rect2D(nextPoint, Size2D(1, 1));
+                            vigra::Rect2D pointSurround(currentPoint, vigra::Size2D(1, 1));
+                            pointSurround |= vigra::Rect2D(nextPoint, vigra::Size2D(1, 1));
                             pointSurround.addBorder(DijkstraRadius);
                             pointSurround &= withinMismatchImage;
 
                             // Make BasicImage to hold pointSurround portion of mismatchImage.
                             // min cost path needs inexpensive random access to cost image.
-                            BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
-                            copyImage(pointSurround.apply(srcImageRange(*this->mismatchImage)),
+                            vigra::BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
+                            copyImage(vigra_ext::apply(pointSurround, srcImageRange(*this->mismatchImage)),
                                       destImage(mismatchROIImage));
 
-                            std::vector<Point2D>* shortPath =
+                            std::vector<vigra::Point2D>* shortPath =
                                 minCostPath(srcImageRange(mismatchROIImage),
-                                            Point2D(nextPoint - pointSurround.upperLeft()),
-                                            Point2D(currentPoint - pointSurround.upperLeft()));
+                                            vigra::Point2D(nextPoint - pointSurround.upperLeft()),
+                                            vigra::Point2D(currentPoint - pointSurround.upperLeft()));
 
-                            for (std::vector<Point2D>::iterator shortPathPoint = shortPath->begin();
+                            for (std::vector<vigra::Point2D>::iterator shortPathPoint = shortPath->begin();
                                  shortPathPoint != shortPath->end();
                                  ++shortPathPoint) {
                                 snake->insert(enblend::next(currentVertex),
@@ -347,11 +347,15 @@ namespace enblend
 
     private:
         void configureOptimizer() {
-            combineThreeImagesMP(stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImageRange(*this->whiteAlpha))),
-                                 stride(*this->mismatchImageStride, *this->mismatchImageStride, this->uvBB->apply(srcImage(*this->blackAlpha))),
+            combineThreeImagesMP(vigra_ext::stride(*this->mismatchImageStride,
+                                                   *this->mismatchImageStride,
+                                                   vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
+                                 vigra_ext::stride(*this->mismatchImageStride,
+                                                   *this->mismatchImageStride,
+                                                   vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
                                  srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
                                  destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 ifThenElse(!(Arg1() || Arg2()), Param(NumericTraits<MismatchImagePixelType>::one()), Arg3()));
+                                 ifThenElse(!(Arg1() || Arg2()), Param(vigra::NumericTraits<MismatchImagePixelType>::one()), Arg3()));
         }
         DijkstraOptimizer(DijkstraOptimizer* other); // NOT IMPLEMENTED
         DijkstraOptimizer& operator=(const DijkstraOptimizer &other); // NOT IMPLEMENTED
@@ -367,10 +371,10 @@ namespace enblend
 
         OptimizerChain(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                        vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
-                       Diff2D* uvBBStrideOffset, ContourVector* contours,
-                       const Rect2D* uBB, Rect2D* vBB,
+                       vigra::Diff2D* uvBBStrideOffset, ContourVector* contours,
+                       const vigra::Rect2D* uBB, vigra::Rect2D* vBB,
                        std::vector<double>* parameters,
-                       const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const Rect2D* uvBB) :
+                       const AlphaType* whiteAlpha, const AlphaType* blackAlpha, const vigra::Rect2D* uvBB) :
             super(mismatchImage, visualizeImage,
                   mismatchImageSize, mismatchImageStride,
                   uvBBStrideOffset, contours,
@@ -435,9 +439,9 @@ namespace enblend
         }
 
     private:
-        OptimizerChain(OptimizerChain* other); // NOT IMPLEMENTED
+        OptimizerChain(OptimizerChain* other);                  // NOT IMPLEMENTED
         OptimizerChain& operator=(const OptimizerChain &other); // NOT IMPLEMENTED
-        OptimizerChain();       // NOT IMPLEMENTED
+        OptimizerChain();                                       // NOT IMPLEMENTED
 
         optimizer_list_t optimizerList;
         size_t currentOptimizer;

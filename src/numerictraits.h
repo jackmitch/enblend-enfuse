@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Enblend is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,33 +24,19 @@
 #include <config.h>
 #endif
 
-#include "vigra/basicimage.hxx"
-#include "vigra/cachedfileimage.hxx"
-#include "vigra/rgbvalue.hxx"
-#include "vigra/numerictraits.hxx"
-#include "vigra/utilities.hxx"
+#include <vigra/basicimage.hxx>
+#include <vigra/rgbvalue.hxx>
+#include <vigra/numerictraits.hxx>
+#include <vigra/utilities.hxx>
+
+#include "vigra_ext/cachedfileimage.hxx"
 
 #include "common.h"
 
-using vigra::BasicImage;
-using vigra::CachedFileImage;
-using vigra::NumericTraits;
-using vigra::RGBValue;
-using vigra::VigraFalseType;
-using vigra::VigraTrueType;
-
-using vigra::Int8;
-using vigra::Int16;
-using vigra::Int32;
-using vigra::Int64;
-using vigra::UInt8;
-using vigra::UInt16;
-using vigra::UInt32;
-using vigra::UInt64;
 
 namespace enblend {
 
-struct Error_EnblendNumericTraits_not_specialized_for_this_case { };
+struct Error_EnblendNumericTraits_not_specialized_for_this_case {};
 
 template<class A>
 struct EnblendNumericTraits {
@@ -94,7 +80,7 @@ struct EnblendNumericTraits<IMAGECOMPONENT> { \
     typedef IMAGECOMPONENT ImagePixelComponentType; \
     typedef IMAGECOMPONENT ImagePixelType; \
     typedef IMAGE<IMAGECOMPONENT> ImageType; \
-    typedef VigraTrueType ImageIsScalar; \
+    typedef vigra::VigraTrueType ImageIsScalar; \
     typedef ALPHA AlphaPixelType; \
     typedef IMAGE<ALPHA> AlphaType; \
     typedef MASK MaskPixelType; \
@@ -114,46 +100,46 @@ struct EnblendNumericTraits<IMAGECOMPONENT> { \
     typedef SKIPSMMASK SKIPSMMaskPixelType; \
 };\
 template<> \
-struct EnblendNumericTraits<RGBValue<IMAGECOMPONENT,0,1,2> > { \
+struct EnblendNumericTraits<vigra::RGBValue<IMAGECOMPONENT,0,1,2> > { \
     typedef IMAGECOMPONENT ImagePixelComponentType; \
-    typedef RGBValue<IMAGECOMPONENT,0,1,2> ImagePixelType; \
-    typedef IMAGE<RGBValue<IMAGECOMPONENT,0,1,2> > ImageType; \
-    typedef VigraFalseType ImageIsScalar; \
+    typedef vigra::RGBValue<IMAGECOMPONENT,0,1,2> ImagePixelType; \
+    typedef IMAGE<vigra::RGBValue<IMAGECOMPONENT,0,1,2> > ImageType; \
+    typedef vigra::VigraFalseType ImageIsScalar;                     \
     typedef ALPHA AlphaPixelType; \
     typedef IMAGE<ALPHA> AlphaType; \
     typedef MASK MaskPixelType; \
     typedef IMAGE<MASK> MaskType; \
     typedef PYRAMIDCOMPONENT ImagePyramidPixelComponentType; \
-    typedef RGBValue<PYRAMIDCOMPONENT,0,1,2> ImagePyramidPixelType; \
-    typedef IMAGE<RGBValue<PYRAMIDCOMPONENT,0,1,2> > ImagePyramidType; \
+    typedef vigra::RGBValue<PYRAMIDCOMPONENT,0,1,2> ImagePyramidPixelType; \
+    typedef IMAGE<vigra::RGBValue<PYRAMIDCOMPONENT,0,1,2> > ImagePyramidType; \
     enum {ImagePyramidIntegerBits = PYRAMIDINTEGER}; \
     enum {ImagePyramidFractionBits = PYRAMIDFRACTION}; \
     typedef SKIPSMIMAGE SKIPSMImagePixelComponentType; \
-    typedef RGBValue<SKIPSMIMAGE,0,1,2> SKIPSMImagePixelType; \
+    typedef vigra::RGBValue<SKIPSMIMAGE,0,1,2> SKIPSMImagePixelType; \
     typedef SKIPSMALPHA SKIPSMAlphaPixelType; \
     typedef MASKPYRAMID MaskPyramidPixelType; \
     typedef IMAGE<MASKPYRAMID> MaskPyramidType; \
     enum {MaskPyramidIntegerBits = MASKPYRAMIDINTEGER}; \
     enum {MaskPyramidFractionBits = MASKPYRAMIDFRACTION}; \
     typedef SKIPSMMASK SKIPSMMaskPixelType; \
-};
+}
 
 // Traits for converting between image pixel types and pyramid pixel types
 // Pyramids require one more bit of precision than the regular image type.
 // SKIPSM math requires 6 bits on top of the pyramid type.
-//                                     IMCOMP  ALPHA  MASK   IMPYR   I   F  SKIPI   SKIPA  MASKPYR I  F  SKIPM
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, Int8,   UInt8, UInt8, Int16,  9,  7, Int32,  Int16, Int16, 9,  7, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt8,  UInt8, UInt8, Int16,  9,  7, Int32,  Int16, Int16, 9,  7, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, Int16,  UInt8, UInt8, Int32, 17,  7, Int32,  Int16, Int32, 9, 15, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt16, UInt8, UInt8, Int32, 17,  7, Int32,  Int16, Int32, 9, 15, Int32)
-//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, Int32,  UInt8, UInt8, Int64, 33, 25, Int64,  Int16, Int32, 9, 17, Int32)
-//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt32, UInt8, UInt8, Int64, 33, 25, Int64,  Int16, Int32, 9, 17, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, Int32,  UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt32, UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
-//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, Int64,  UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 17, Int32)
-//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, UInt64, UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 17, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, float,  UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
-DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE, double, UInt8, UInt8, double, 8,  0, double, Int16, Int32, 9, 15, Int32)
+//                                      IMCOMP          ALPHA          MASK           IMPYR           I    F   SKIPI          SKIPA          MASKPYR        I    F   SKIPM
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::Int8,    vigra::UInt8,  vigra::UInt8,  vigra::Int16,   9,   7,  vigra::Int32,  vigra::Int16,  vigra::Int16,  9,   7,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::UInt8,   vigra::UInt8,  vigra::UInt8,  vigra::Int16,   9,   7,  vigra::Int32,  vigra::Int16,  vigra::Int16,  9,   7,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::Int16,   vigra::UInt8,  vigra::UInt8,  vigra::Int32,  17,   7,  vigra::Int32,  vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::UInt16,  vigra::UInt8,  vigra::UInt8,  vigra::Int32,  17,   7,  vigra::Int32,  vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
+//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::Int32,   vigra::UInt8,  vigra::UInt8,  vigra::Int64,  33,  25,  vigra::Int64,  vigra::Int16,  vigra::Int32,  9,  17,  vigra::Int32);
+//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::UInt32,  vigra::UInt8,  vigra::UInt8,  vigra::Int64,  33,  25,  vigra::Int64,  vigra::Int16,  vigra::Int32,  9,  17,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::Int32,   vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::UInt32,  vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
+//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::Int64,   vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  17,  vigra::Int32);
+//DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  vigra::UInt64,  vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  17,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  float,          vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
+DEFINE_ENBLENDNUMERICTRAITS(IMAGETYPE,  double,         vigra::UInt8,  vigra::UInt8,  double,         8,   0,  double,        vigra::Int16,  vigra::Int32,  9,  15,  vigra::Int32);
 
 
 
@@ -183,7 +169,7 @@ struct AlphaTraits<vigra::RGBValue<T1> > \
 { \
     return 0; \
 } \
-};
+}
 
 template <class T1>
 struct AlphaTraits;
@@ -202,3 +188,7 @@ ALPHA_TRAITS(double, 1.0);
 } // namespace enblend
 
 #endif /* __NUMERICTRAITS_H__ */
+
+// Local Variables:
+// mode: c++
+// End:

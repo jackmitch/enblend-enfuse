@@ -17,6 +17,7 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __ANNEAL_H__
 #define __ANNEAL_H__
 
@@ -24,11 +25,12 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
+#include <vector>
+
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
-#include <algorithm>
-#include <vector>
 
 #ifdef _WIN32
 #include <cmath>
@@ -36,33 +38,20 @@
 #include <math.h>
 #endif
 
-#ifdef HAVE_LIBGLEW
-#include "gpu.h"
-#endif
+#include <vigra/diff2d.hxx>
+#include <vigra/iteratoradapter.hxx>
 
-#include "vigra/diff2d.hxx"
-#include "vigra/iteratoradapter.hxx"
 #include "vigra_ext/XMIWrapper.h"
 
 #include "masktypedefs.h"
 
-
-using std::for_each;
-using std::pair;
-using std::scientific;
-using std::setprecision;
-using std::setw;
-using std::vector;
+#ifdef HAVE_LIBGLEW
+#include "gpu.h"
+#endif
 
 using boost::lambda::bind;
 using boost::lambda::_1;
 using boost::lambda::delete_ptr;
-
-using vigra::LineIterator;
-using vigra::Point2D;
-using vigra::Rect2D;
-
-using vigra_ext::copyPaintedSetToImage;
 
 
 namespace enblend {
@@ -72,8 +61,7 @@ class GDAConfiguration
 {
 public:
     typedef typename CostImage::PixelType CostImagePixelType;
-    typedef typename NumericTraits<CostImagePixelType>::Promote CostImagePromoteType;
-    typedef typename CostImage::const_traverser CostIterator;
+    typedef typename vigra::NumericTraits<CostImagePixelType>::Promote CostImagePromoteType;
 
     GDAConfiguration(const CostImage* const d, Segment* v, VisualizeImage* const vi) :
         costImage(d), visualizeStateSpaceImage(vi) {
@@ -85,38 +73,38 @@ public:
         // Determine state space of currentPoint
         const int stateSpaceWidth = costImageShortDimension / 3;
 
-        Point2D previousPoint = v->back().second;
+        vigra::Point2D previousPoint = v->back().second;
         for (Segment::iterator current = v->begin(); current != v->end();) {
             bool currentMoveable = current->first;
-            Point2D currentPoint = current->second;
+            vigra::Point2D currentPoint = current->second;
             ++current;
-            Point2D nextPoint = current == v->end() ? v->begin()->second : current->second;
+            vigra::Point2D nextPoint = current == v->end() ? v->begin()->second : current->second;
 
             mfEstimates.push_back(currentPoint);
 
-            vector<Point2D>* stateSpace = new vector<Point2D>();
+            std::vector<vigra::Point2D>* stateSpace = new std::vector<vigra::Point2D>();
             pointStateSpaces.push_back(stateSpace);
 
-            vector<int>* stateDistances = new vector<int>();
+            std::vector<int>* stateDistances = new std::vector<int>();
             pointStateDistances.push_back(stateDistances);
 
             if (currentMoveable) {
-                // vp = vector from previousPoint to currentPoint
-                Diff2D vp(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y);
-                // vn = vector from currentPoint to nextPoint
-                Diff2D vn(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
+                // vp = std::vector from previousPoint to currentPoint
+                vigra::Diff2D vp(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y);
+                // vn = std::vector from currentPoint to nextPoint
+                vigra::Diff2D vn(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
                 // np = normal to vp
-                Diff2D np(-vp.y, vp.x);
+                vigra::Diff2D np(-vp.y, vp.x);
                 // nn = normal to vn
-                Diff2D nn(-vn.y, vn.x);
+                vigra::Diff2D nn(-vn.y, vn.x);
 
                 // normal = normal vector at currentPoint
                 // normal points to the left of vp and vn.
-                Diff2D normal = np + nn;
+                vigra::Diff2D normal = np + nn;
                 normal *= stateSpaceWidth / normal.magnitude();
 
-                Diff2D leftPoint = currentPoint + normal;
-                Diff2D rightPoint = currentPoint - normal;
+                vigra::Diff2D leftPoint = currentPoint + normal;
+                vigra::Diff2D rightPoint = currentPoint - normal;
 
                 // Choose a reasonable number of state points between these extremes
                 const int lineLength = std::max(std::abs(rightPoint.x - leftPoint.x),
@@ -124,16 +112,16 @@ public:
                 const int spaceBetweenPoints =
                     static_cast<int>(ceil(lineLength / static_cast<double>(AnnealPara.kmax)));
 
-                LineIterator<Diff2D> linePoint(currentPoint, leftPoint);
+                vigra::LineIterator<vigra::Diff2D> linePoint(currentPoint, leftPoint);
                 for (int i = 0; i < (lineLength + 1) / 2; ++i, ++linePoint) {
                     // Stop searching along the line if we leave the
                     // cost image or enter a max-cost region.
                     if (!costImage->isInside(*linePoint)) {
                         break;
-                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                    } else if ((*costImage)[*linePoint] == vigra::NumericTraits<CostImagePixelType>::max()) {
                         break;
                     } else if (i % spaceBetweenPoints == 0) {
-                        stateSpace->push_back(Point2D(*linePoint));
+                        stateSpace->push_back(vigra::Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
                         if (visualizeStateSpaceImage) {
@@ -141,17 +129,17 @@ public:
                         }
                     }
                 }
-                linePoint = LineIterator<Diff2D>(currentPoint, rightPoint);
+                linePoint = vigra::LineIterator<vigra::Diff2D>(currentPoint, rightPoint);
                 ++linePoint;
                 for (int i = 1; i < 1 + lineLength / 2; ++i, ++linePoint) {
                     // Stop searching along the line if we leave the
                     // cost image or enter a max-cost region.
                     if (!costImage->isInside(*linePoint)) {
                         break;
-                    } else if ((*costImage)[*linePoint] == NumericTraits<CostImagePixelType>::max()) {
+                    } else if ((*costImage)[*linePoint] == vigra::NumericTraits<CostImagePixelType>::max()) {
                         break;
                     } else if (i % spaceBetweenPoints == 0) {
-                        stateSpace->push_back(Point2D(*linePoint));
+                        stateSpace->push_back(vigra::Point2D(*linePoint));
                         stateDistances->push_back(std::max(std::abs(linePoint->x - currentPoint.x),
                                                            std::abs(linePoint->y - currentPoint.y)) / 2);
                         if (visualizeStateSpaceImage) {
@@ -179,7 +167,7 @@ public:
 
             kMax = std::max(kMax, localK);
 
-            pointStateProbabilities.push_back(new vector<double>(localK, 1.0 / localK));
+            pointStateProbabilities.push_back(new std::vector<double>(localK, 1.0 / localK));
 
             convergedPoints.push_back(localK < 2);
 
@@ -195,9 +183,9 @@ public:
     }
 
     ~GDAConfiguration() {
-        for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
-        for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
-        for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
+        std::for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
+        std::for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
+        std::for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
     }
 
     void run() {
@@ -225,9 +213,9 @@ public:
                 const std::ios_base::fmtflags ioFlags(cerr.flags());
                 cerr << "\n"
                      << command
-                     << ": info: t = " << scientific << setprecision(3) << tCurrent
-                     << ", eta = " << setw(4) << eta
-                     << ", k_max = " << setw(3) << kMax;
+                     << ": info: t = " << std::scientific << std::setprecision(3) << tCurrent
+                     << ", eta = " << std::setw(4) << eta
+                     << ", k_max = " << std::setw(3) << kMax;
                 cerr.flush();
                 cerr.flags(ioFlags);
             }
@@ -268,9 +256,9 @@ public:
         if (visualizeStateSpaceImage) {
             // Remaining unconverged state space points
             for (unsigned int i = 0; i < pointStateSpaces.size(); ++i) {
-                vector<Point2D>* stateSpace = pointStateSpaces[i];
+                std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[i];
                 for (unsigned int j = 0; j < stateSpace->size(); ++j) {
-                    Point2D point = (*stateSpace)[j];
+                    vigra::Point2D point = (*stateSpace)[j];
                     if (visualizeStateSpaceImage->isInside(point)) {
                         (*visualizeStateSpaceImage)[point] = VISUALIZE_STATE_SPACE_UNCONVERGED;
                     }
@@ -285,8 +273,8 @@ public:
                     cerr << command
                          << ": info: unconverged point: "
                          << endl;
-                    vector<Point2D>* stateSpace = pointStateSpaces[i];
-                    vector<double>* stateProbabilities = pointStateProbabilities[i];
+                    std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[i];
+                    std::vector<double>* stateProbabilities = pointStateProbabilities[i];
                     const unsigned int localK = stateSpace->size();
                     for (unsigned int state = 0; state < localK; ++state) {
                         cerr << command
@@ -302,7 +290,7 @@ public:
         }
     }
 
-    const vector<Point2D>& getCurrentPoints() const {
+    const std::vector<vigra::Point2D>& getCurrentPoints() const {
         return mfEstimates;
     }
 
@@ -339,16 +327,16 @@ protected:
                     continue;
                 }
 
-                const vector<Point2D>* stateSpace = pointStateSpaces[index];
-                vector<double>* stateProbabilities = pointStateProbabilities[index];
-                const vector<int>* stateDistances = pointStateDistances[index];
+                const std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
+                std::vector<double>* stateProbabilities = pointStateProbabilities[index];
+                const std::vector<int>* stateDistances = pointStateDistances[index];
                 const unsigned int localK = stateSpace->size();
 
                 const int lastIndex = index == 0 ? mf_size - 1 : index - 1;
                 const unsigned int nextIndex = (index + 1) % mf_size;
-                const Point2D lastPointEstimate = mfEstimates[lastIndex];
+                const vigra::Point2D lastPointEstimate = mfEstimates[lastIndex];
                 const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-                const Point2D nextPointEstimate = mfEstimates[nextIndex];
+                const vigra::Point2D nextPointEstimate = mfEstimates[nextIndex];
                 const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
 
                 // Calculate E values.
@@ -356,7 +344,7 @@ protected:
                 // for all e_i, e_j, in E: -700 < e_j-e_i < 700
                 const double exp_a = 1512775.0 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
                 for (unsigned int i = 0; i < localK; ++i) {
-                    const Point2D currentPoint = (*stateSpace)[i];
+                    const vigra::Point2D currentPoint = (*stateSpace)[i];
                     const int distanceCost = (*stateDistances)[i];
                     int mismatchCost = 0;
                     if (lastPointInCostImage) {
@@ -369,7 +357,7 @@ protected:
                     const double cost =
                         distanceWeight * static_cast<double>(distanceCost) +
                         mismatchWeight * static_cast<double>(mismatchCost);
-                    E[i] = NumericTraits<int>::fromRealPromote(cost * exp_a);
+                    E[i] = vigra::NumericTraits<int>::fromRealPromote(cost * exp_a);
                     Pi[i] = 0.0;
                 }
 
@@ -440,21 +428,21 @@ protected:
             float* EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
             float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
-            const vector<Point2D>* stateSpace = pointStateSpaces[index];
-            vector<double>* stateProbabilities = pointStateProbabilities[index];
-            const vector<int>* stateDistances = pointStateDistances[index];
+            const std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
+            std::vector<double>* stateProbabilities = pointStateProbabilities[index];
+            const std::vector<int>* stateDistances = pointStateDistances[index];
             const unsigned int localK = stateSpace->size();
 
             const unsigned int lastIndex = index == 0 ? mf_size - 1 : index - 1;
             const unsigned int nextIndex = (index + 1) % mf_size;
-            const Point2D lastPointEstimate = mfEstimates[lastIndex];
+            const vigra::Point2D lastPointEstimate = mfEstimates[lastIndex];
             const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            const Point2D nextPointEstimate = mfEstimates[nextIndex];
+            const vigra::Point2D nextPointEstimate = mfEstimates[nextIndex];
             const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
 
             // Calculate E values.
             for (unsigned int i = 0; i < localK; ++i) {
-                const Point2D currentPoint = (*stateSpace)[i];
+                const vigra::Point2D currentPoint = (*stateSpace)[i];
                 const int distanceCost = (*stateDistances)[i];
                 int mismatchCost = 0;
                 if (lastPointInCostImage) {
@@ -492,7 +480,7 @@ protected:
             const unsigned int vectorIndex = unconvergedPoints % 4;
             float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
 
-            vector<double>* stateProbabilities = pointStateProbabilities[index];
+            std::vector<double>* stateProbabilities = pointStateProbabilities[index];
             const unsigned int localK = stateProbabilities->size();
 
             for (unsigned int i = 0; i < localK; ++i) {
@@ -532,9 +520,9 @@ protected:
                     continue;
                 }
 
-                vector<Point2D>* stateSpace = pointStateSpaces[index];
-                vector<double>* stateProbabilities = pointStateProbabilities[index];
-                vector<int>* stateDistances = pointStateDistances[index];
+                std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
+                std::vector<double>* stateProbabilities = pointStateProbabilities[index];
+                std::vector<int>* stateDistances = pointStateDistances[index];
                 unsigned int localK = stateSpace->size();
                 double estimateX = 0.0;
                 double estimateY = 0.0;
@@ -548,15 +536,15 @@ protected:
                     if (weight > 0.99) {
                         hasHighWeightState = true;
                     }
-                    const Point2D state = (*stateSpace)[k];
+                    const vigra::Point2D state = (*stateSpace)[k];
                     estimateX += weight * static_cast<double>(state.x);
                     estimateY += weight * static_cast<double>(state.y);
                 }
                 estimateX /= totalWeight;
                 estimateY /= totalWeight;
 
-                Point2D newEstimate(NumericTraits<int>::fromRealPromote(estimateX),
-                                    NumericTraits<int>::fromRealPromote(estimateY));
+                vigra::Point2D newEstimate(vigra::NumericTraits<int>::fromRealPromote(estimateX),
+                                           vigra::NumericTraits<int>::fromRealPromote(estimateY));
 
                 // Sanity check
                 if (!costImage->isInside(newEstimate)) {
@@ -626,29 +614,33 @@ protected:
         } // omp parallel
     }
 
-    int costImageCost(const Point2D& start, const Point2D& end) const {
-        const int shortLineThreshold = 8; // We penalize lines below this limit.
+    int costImageCost(const vigra::Point2D& start_point, const vigra::Point2D& end_point) const {
+        typedef typename CostImage::ConstIterator CostIterator;
 
-        const CostIterator lineEnd(costImage->upperLeft() + end);
-        LineIterator<CostIterator> line(costImage->upperLeft() + start, lineEnd);
+        const int shortLineThreshold = 8; // We penalize lines below this limit.
+        const CostIterator end(costImage->upperLeft() + end_point);
+
+        vigra::LineIterator<CostIterator> lineEnd(end, end);
+        vigra::LineIterator<CostIterator> line(costImage->upperLeft() + start_point, end);
         int cost = 0;
+
         while (line != lineEnd) {
             cost += *line;
             ++line;
         }
 
         const int lineLength =
-            std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
+            std::max(std::abs(end_point.x - start_point.x), std::abs(end_point.y - start_point.y));
 
         if (lineLength < shortLineThreshold) {
-            cost += NumericTraits<CostImagePixelType>::max() * (shortLineThreshold - lineLength);
+            cost += vigra::NumericTraits<CostImagePixelType>::max() * (shortLineThreshold - lineLength);
         }
 
         return cost;
     }
 
-    bool segmentIntersect(const Point2D& l1a, const Point2D& l1b,
-                          const Point2D& l2a, const Point2D& l2b) const {
+    bool segmentIntersect(const vigra::Point2D& l1a, const vigra::Point2D& l1b,
+                          const vigra::Point2D& l2a, const vigra::Point2D& l2b) const {
         int denom = (l2b.y - l2a.y) * (l1b.x - l1a.x) - (l2b.x - l2a.x) * (l1b.y - l1a.y);
         if (denom == 0) {
             return false;       // lines are parallel or coincident
@@ -671,18 +663,18 @@ protected:
     VisualizeImage *visualizeStateSpaceImage;
 
     // Mean-field estimates of current point locations
-    vector<Point2D> mfEstimates;
+    std::vector<vigra::Point2D> mfEstimates;
 
     // State spaces of each point
-    vector<vector<Point2D>*> pointStateSpaces;
+    std::vector<std::vector<vigra::Point2D>*> pointStateSpaces;
 
     // Probability vectors for each state space
-    vector<vector<double>*> pointStateProbabilities;
+    std::vector<std::vector<double>*> pointStateProbabilities;
 
-    vector<vector<int>*> pointStateDistances;
+    std::vector<std::vector<int>*> pointStateDistances;
 
     // Flags indicate which points have converged
-    vector<bool> convergedPoints;
+    std::vector<bool> convergedPoints;
 
     // Initial Temperature
     double tInitial;
@@ -715,7 +707,7 @@ protected:
 
 template <typename CostImage, typename VisualizeImage>
 void annealSnake(const CostImage* const ci,
-                 const pair<double, double>& optimizerWeights,
+                 const std::pair<double, double>& optimizerWeights,
                  Segment* snake,
                  VisualizeImage* const vi)
 {
@@ -724,7 +716,7 @@ void annealSnake(const CostImage* const ci,
     cfg.setOptimizerWeights(optimizerWeights.first, optimizerWeights.second);
     cfg.run();
 
-    vector<Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
+    std::vector<vigra::Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
     for (Segment::iterator snakePoint = snake->begin();
          snakePoint != snake->end();
          ++snakePoint, ++annealedPoint) {

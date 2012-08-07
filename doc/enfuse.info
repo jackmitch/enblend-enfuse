@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.1-e378b04ea3b7, 19 February
+   This manual is for Enfuse (version 4.1-cb7d1cf15223, 19 February
 2012), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.1-e378b04ea3b7, 19 February 2012),
+This manual is for Enfuse (version 4.1-cb7d1cf15223, 19 February 2012),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -1338,7 +1338,7 @@ to read the manual before applying them successfully.
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.1-e378b04ea3b7 of Enfuse, the option is effective
+        In version 4.1-cb7d1cf15223 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -1798,7 +1798,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.1-e378b04ea3b7.
+version 4.1-cb7d1cf15223.
 
    To disable a particular criterion set its weight to zero as for
 example

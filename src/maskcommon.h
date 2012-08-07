@@ -20,7 +20,7 @@
 #ifndef MASKCOMMON_H
 #define MASKCOMMON_H
 
-#include "vigra/colorconversions.hxx"
+#include <vigra/colorconversions.hxx>
 
 namespace enblend {
 
@@ -33,40 +33,74 @@ namespace enblend {
         typedef vigra::LinearIntensityTransform<ResultType> RangeMapper;
 
         DifferenceFunctor() :
-            scale_(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
-                                      NumericTraits<PixelComponentType>::max(),
-                                      ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                                      ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
+            scale_(vigra::linearRangeMapping(vigra::NumericTraits<PixelComponentType>::min(),
+                                             vigra::NumericTraits<PixelComponentType>::max(),
+                                             ResultType(vigra::NumericTraits<ResultPixelComponentType>::min()),
+                                             ResultType(vigra::NumericTraits<ResultPixelComponentType>::max()))) {}
 
         virtual ~DifferenceFunctor() {}
 
         ResultType operator()(const PixelType& a, const PixelType& b) const {
-            typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
+            typedef typename vigra::NumericTraits<PixelType>::isScalar src_is_scalar;
             return difference(a, b, src_is_scalar());
         }
 
     protected:
         virtual ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
                                       const vigra::RGBValue<PixelComponentType>& b,
-                                      VigraFalseType) const = 0;
+                                      vigra::VigraFalseType) const = 0;
 
-        ResultType difference(PixelType a, PixelType b, VigraTrueType) const {
-            typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        ResultType difference(PixelType a, PixelType b, vigra::VigraTrueType) const {
+            typedef typename vigra::NumericTraits<PixelType>::isSigned src_is_signed;
             return scalar_difference(a, b, src_is_signed());
         }
 
-        ResultType scalar_difference(PixelType a, PixelType b, VigraTrueType) const {
+        ResultType scalar_difference(PixelType a, PixelType b, vigra::VigraTrueType) const {
             return scale_(std::abs(a - b));
         }
 
         // This appears necessary because NumericTraits<unsigned int>::Promote
         // is an unsigned int instead of an int.
-        ResultType scalar_difference(PixelType a, PixelType b, VigraFalseType) const {
+        ResultType scalar_difference(PixelType a, PixelType b, vigra::VigraFalseType) const {
             return scale_(std::abs(static_cast<int>(a) - static_cast<int>(b)));
         }
 
         RangeMapper scale_;
     };
+
+
+    template <typename value_type>
+    value_type
+    hue(const vigra::RGBValue<value_type>& pixel)
+    {
+        typedef typename vigra::NumericTraits<value_type>::RealPromote real_value_type;
+
+        const value_type red = pixel.red();
+        const value_type green = pixel.green();
+        const value_type blue = pixel.blue();
+
+        const value_type max = std::max(red, std::max(green, blue));
+        const value_type min = std::min(red, std::min(green, blue));
+
+        if (min == max) {
+            return vigra::NumericTraits<value_type>::max();
+        } else {
+            const real_value_type delta = vigra::NumericTraits<value_type>::toRealPromote(6 * (max - min));
+            real_value_type h = 0.0;
+            if (red == max) {
+                h = (green - blue) / delta;
+            } else if (green == max) {
+                h = (1.0 / 3.0) + (blue - red) / delta;
+            } else {
+                h = (2.0 / 3.0) + (red - green) / delta;
+            }
+            if (h < 0.0) {
+                h += 1.0;
+            }
+
+            return vigra::NumericTraits<value_type>::fromRealPromote(h * vigra::NumericTraits<value_type>::max());
+        }
+    }
 
 
     template <typename PixelType, typename ResultType>
@@ -87,16 +121,16 @@ namespace enblend {
     protected:
         ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
                               const vigra::RGBValue<PixelComponentType>& b,
-                              VigraFalseType) const {
+                              vigra::VigraFalseType) const {
             const PixelComponentType aLum = a.luminance();
             const PixelComponentType bLum = b.luminance();
-            const PixelComponentType aHue = a.hue();
-            const PixelComponentType bHue = b.hue();
+            const PixelComponentType aHue = hue(a);
+            const PixelComponentType bHue = hue(b);
             const PixelComponentType lumDiff = aLum > bLum ? aLum - bLum : bLum - aLum;
             PixelComponentType hueDiff = aHue > bHue ? aHue - bHue : bHue - aHue;
 
-            if (hueDiff > (NumericTraits<PixelComponentType>::max() / 2)) {
-                hueDiff = NumericTraits<PixelComponentType>::max() - hueDiff;
+            if (hueDiff > (vigra::NumericTraits<PixelComponentType>::max() / 2)) {
+                hueDiff = vigra::NumericTraits<PixelComponentType>::max() - hueDiff;
             }
 
             return super::scale_(std::max(luma_ * lumDiff, chroma_ * hueDiff));
@@ -119,7 +153,7 @@ namespace enblend {
         typedef typename super::PixelComponentType PixelComponentType;
 
         DeltaEPixelDifferenceFunctor(double aLuminanceWeight, double aChrominanceWeight) :
-            rgb_to_lab_(vigra::RGB2LabFunctor<double>(NumericTraits<PixelComponentType>::max())) {
+            rgb_to_lab_(vigra::RGB2LabFunctor<double>(vigra::NumericTraits<PixelComponentType>::max())) {
             const double total = aLuminanceWeight + 2.0 * aChrominanceWeight;
             assert(total != 0.0);
             luma_ = aLuminanceWeight / total;
@@ -129,7 +163,7 @@ namespace enblend {
     protected:
         ResultType difference(const vigra::RGBValue<PixelComponentType>& a,
                               const vigra::RGBValue<PixelComponentType>& b,
-                              VigraFalseType) const {
+                              vigra::VigraFalseType) const {
             typedef typename vigra::RGB2LabFunctor<double>::result_type LABResultType;
 
             const LABResultType lab_a = rgb_to_lab_(a);
@@ -144,8 +178,8 @@ namespace enblend {
             // => Maximum delta_e = 291.4619.  Real differences are much smaller and fromRealPromote()
             // clips out-of-destination-range values anyhow.  We use 128.0, which yields values comparable
             // to MaxHueLuminanceDifferenceFunctor.
-            return super::scale_(NumericTraits<PixelComponentType>::
-                                 fromRealPromote(delta_e * NumericTraits<PixelComponentType>::max() / 128.0));
+            return super::scale_(vigra::NumericTraits<PixelComponentType>::
+                                 fromRealPromote(delta_e * vigra::NumericTraits<PixelComponentType>::max() / 128.0));
         }
 
     private:
@@ -166,36 +200,36 @@ namespace enblend {
 
     public:
         PixelSumFunctor() :
-            rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
-                                  NumericTraits<PixelComponentType>::max(),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
+            rm(linearRangeMapping(vigra::NumericTraits<PixelComponentType>::min(),
+                                  vigra::NumericTraits<PixelComponentType>::max(),
+                                  ResultType(vigra::NumericTraits<ResultPixelComponentType>::min()),
+                                  ResultType(vigra::NumericTraits<ResultPixelComponentType>::max()))) {}
 
         ResultType operator()(const PixelType& a, const PixelType& b) const {
-            typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
+            typedef typename vigra::NumericTraits<PixelType>::isScalar src_is_scalar;
             return sum(a, b, src_is_scalar());
         }
 
     protected:
-        ResultType sum(const PixelType& a, const PixelType& b, VigraFalseType) const {
+        ResultType sum(const PixelType& a, const PixelType& b, vigra::VigraFalseType) const {
             PixelComponentType aLum = a.luminance();
             PixelComponentType bLum = b.luminance();
             PixelComponentType lumDiff = (aLum + bLum) / 2;
             return rm(lumDiff);
         }
 
-        ResultType sum(const PixelType& a, const PixelType& b, VigraTrueType) const {
-            typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        ResultType sum(const PixelType& a, const PixelType& b, vigra::VigraTrueType) const {
+            typedef typename vigra::NumericTraits<PixelType>::isSigned src_is_signed;
             return scalar_sum(a, b, src_is_signed());
         }
 
-        ResultType scalar_sum(const PixelType& a, const PixelType& b, VigraTrueType) const {
+        ResultType scalar_sum(const PixelType& a, const PixelType& b, vigra::VigraTrueType) const {
             return rm(a + b);
         }
 
         // This appears necessary because NumericTraits<unsigned int>::Promote
         // is an unsigned int instead of an int.
-        ResultType scalar_sum(const PixelType& a, const PixelType& b, VigraFalseType) const {
+        ResultType scalar_sum(const PixelType& a, const PixelType& b, vigra::VigraFalseType) const {
             return rm(std::abs(static_cast<int>(a) + static_cast<int>(b)));
         }
 
@@ -212,34 +246,34 @@ namespace enblend {
 
     public:
         MapFunctor() :
-            rm(linearRangeMapping(NumericTraits<PixelComponentType>::min(),
-                                  NumericTraits<PixelComponentType>::max(),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::min()),
-                                  ResultType(NumericTraits<ResultPixelComponentType>::max()))) {}
+            rm(vigra::linearRangeMapping(vigra::NumericTraits<PixelComponentType>::min(),
+                                         vigra::NumericTraits<PixelComponentType>::max(),
+                                         ResultType(vigra::NumericTraits<ResultPixelComponentType>::min()),
+                                         ResultType(vigra::NumericTraits<ResultPixelComponentType>::max()))) {}
 
         ResultType operator()(const PixelType& a) const {
-            typedef typename NumericTraits<PixelType>::isScalar src_is_scalar;
+            typedef typename vigra::NumericTraits<PixelType>::isScalar src_is_scalar;
             return map(a, src_is_scalar());
         }
 
     protected:
-        ResultType map(const PixelType& a, VigraFalseType) const {
+        ResultType map(const PixelType& a, vigra::VigraFalseType) const {
             PixelComponentType aLum = a.luminance();
             return rm(aLum);
         }
 
-        ResultType map(const PixelType& a, VigraTrueType) const {
-            typedef typename NumericTraits<PixelType>::isSigned src_is_signed;
+        ResultType map(const PixelType& a, vigra::VigraTrueType) const {
+            typedef typename vigra::NumericTraits<PixelType>::isSigned src_is_signed;
             return scalar_map(a, src_is_signed());
         }
 
-        ResultType scalar_map(const PixelType& a, VigraTrueType) const {
+        ResultType scalar_map(const PixelType& a, vigra::VigraTrueType) const {
             return rm(a);
         }
 
         // This appears necessary because NumericTraits<unsigned int>::Promote
         // is an unsigned int instead of an int.
-        ResultType scalar_map(const PixelType& a, VigraFalseType) const {
+        ResultType scalar_map(const PixelType& a, vigra::VigraFalseType) const {
             return rm(std::abs(static_cast<int>(a)));
         }
 

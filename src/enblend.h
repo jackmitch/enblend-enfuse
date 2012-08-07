@@ -26,9 +26,14 @@
 
 #include <iostream>
 #include <list>
-#include <stdio.h>
 
 #include <boost/static_assert.hpp>
+
+#include <vigra/impex.hxx>
+#include <vigra/initimage.hxx>
+#include <vigra/transformimage.hxx>
+
+#include "vigra_ext/rect2d.hxx"
 
 #include "common.h"
 #include "openmp.h"
@@ -40,25 +45,6 @@
 #include "mask.h"
 #include "pyramid.h"
 
-#include "vigra/impex.hxx"
-#include "vigra/initimage.hxx"
-#include "vigra/transformimage.hxx"
-
-using std::cout;
-using std::endl;
-using std::list;
-using std::pair;
-
-using vigra::BasicImage;
-using vigra::CachedFileImage;
-using vigra::CachedFileImageDirector;
-using vigra::ImageExportInfo;
-using vigra::ImageImportInfo;
-using vigra::initImage;
-using vigra::initImageIf;
-using vigra::NumericTraits;
-using vigra::VigraFalseType;
-using vigra::VigraTrueType;
 
 namespace enblend {
 
@@ -66,9 +52,9 @@ namespace enblend {
  */
 template <typename ImagePixelType>
 void enblendMain(const FileNameList& anInputFileNameList,
-                 const list<ImageImportInfo*>& anImageInfoList,
-                 ImageExportInfo& anOutputImageInfo,
-                 Rect2D& anInputUnion)
+                 const std::list<vigra::ImageImportInfo*>& anImageInfoList,
+                 vigra::ImageExportInfo& anOutputImageInfo,
+                 vigra::Rect2D& anInputUnion)
 {
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
@@ -89,11 +75,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMAlphaPixelType SKIPSMAlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::SKIPSMMaskPixelType SKIPSMMaskPixelType;
 
-    list<ImageImportInfo*> imageInfoList(anImageInfoList);
+    std::list<vigra::ImageImportInfo*> imageInfoList(anImageInfoList);
 
     // Create the initial black image.
-    Rect2D blackBB;
-    pair<ImageType*, AlphaType*> blackPair =
+    vigra::Rect2D blackBB;
+    std::pair<ImageType*, AlphaType*> blackPair =
         assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, blackBB);
 
     if (Checkpoint) {
@@ -107,12 +93,12 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef CACHE_IMAGES
     if (Verbose >= VERBOSE_CFI_MESSAGES) {
-        CachedFileImageDirector& v = CachedFileImageDirector::v();
-        cerr << command
-             << ": info: image cache statistics after loading black image\n";
-        v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-        v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-        v.printStats(cerr, command + ": info: ");
+        vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+        std::cerr << command
+                  << ": info: image cache statistics after loading black image\n";
+        v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+        v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+        v.printStats(std::cerr, command + ": info: ");
         v.resetCacheMisses();
     }
 #endif
@@ -124,8 +110,8 @@ void enblendMain(const FileNameList& anInputFileNameList,
     FileNameList::const_iterator inputFileNameIterator(anInputFileNameList.begin());
     while (!imageInfoList.empty()) {
         // Create the white image.
-        Rect2D whiteBB;
-        pair<ImageType*, AlphaType*> whitePair =
+        vigra::Rect2D whiteBB;
+        std::pair<ImageType*, AlphaType*> whitePair =
             assemble<ImageType, AlphaType>(imageInfoList, anInputUnion, whiteBB);
 
         // mem usage before = anInputUnion*ImageValueType + anInputUnion*AlphaValueType
@@ -135,68 +121,68 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 <<": info: image cache statistics after loading white image\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
-            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
-            v.printStats(cerr, command + ": info: ");
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      <<": info: image cache statistics after loading white image\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(std::cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
 
         // Union bounding box of whiteImage and blackImage.
-        Rect2D uBB = blackBB | whiteBB;
+        vigra::Rect2D uBB = blackBB | whiteBB;
 
         if (Verbose >= VERBOSE_UBB_MESSAGES) {
-            cerr << command
-                 << ": info: image union bounding box: "
-                 << uBB
-                 << endl;
+            std::cerr << command
+                      << ": info: image union bounding box: "
+                      << uBB
+                      << std::endl;
         }
 
         // Intersection bounding box of whiteImage and blackImage.
-        Rect2D iBB = blackBB & whiteBB;
+        vigra::Rect2D iBB = blackBB & whiteBB;
         bool iBBValid = !iBB.isEmpty();
 
         if (Verbose >= VERBOSE_IBB_MESSAGES) {
-            cerr << command << ": info: image intersection bounding box: ";
+            std::cerr << command << ": info: image intersection bounding box: ";
             if (iBBValid) {
-                cerr << iBB;
+                std::cerr << iBB;
             } else {
-                cerr << "(no intersection)";
+                std::cerr << "(no intersection)";
             }
-            cerr << endl;
+            std::cerr << std::endl;
         }
 
         // Determine what kind of overlap we have.
         const Overlap overlap =
-            inspectOverlap(uBB.apply(srcImageRange(*(blackPair.second))),
-                           uBB.apply(srcImage(*(whitePair.second))));
+            inspectOverlap(vigra_ext::apply(uBB, srcImageRange(*(blackPair.second))),
+                           vigra_ext::apply(uBB, srcImage(*(whitePair.second))));
 
         // If white image is redundant, skip it and go to next images.
         if (overlap == CompleteOverlap) {
             // White image is redundant.
             delete whitePair.first;
             delete whitePair.second;
-            cerr << command << ": warning: some images are redundant and will not be blended"
-                 << endl;
+            std::cerr << command << ": warning: some images are redundant and will not be blended"
+                      << std::endl;
             continue;
         } else if (overlap == NoOverlap && ExactLevels == 0) {
             // Images do not actually overlap.
-            cerr << command << ": images do not overlap - they will be combined without blending\n"
-                 << command << ": use the \"-l\" flag to force blending with a certain number of levels"
-                 << endl;
+            std::cerr << command << ": images do not overlap - they will be combined without blending\n"
+                      << command << ": use the \"-l\" flag to force blending with a certain number of levels"
+                      << std::endl;
 
             // Copy white image into black image verbatim.
-            copyImageIf(srcImageRange(*(whitePair.first)),
-                        maskImage(*(whitePair.second)),
-                        destImage(*(blackPair.first)));
-            copyImageIf(srcImageRange(*(whitePair.second)),
-                        maskImage(*(whitePair.second)),
-                        destImage(*(blackPair.second)));
+            vigra::copyImageIf(srcImageRange(*(whitePair.first)),
+                               maskImage(*(whitePair.second)),
+                               destImage(*(blackPair.first)));
+            vigra::copyImageIf(srcImageRange(*(whitePair.second)),
+                               maskImage(*(whitePair.second)),
+                               destImage(*(blackPair.second)));
 
             delete whitePair.first;
             delete whitePair.second;
@@ -204,11 +190,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
             // Checkpoint results.
             if (Checkpoint) {
                 if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
-                    cerr << command << ": info: ";
+                    std::cerr << command << ": info: ";
                     if (imageInfoList.empty()) {
-                        cerr << "writing final output" << endl;
+                        std::cerr << "writing final output" << std::endl;
                     } else {
-                        cerr << "checkpointing" << endl;
+                        std::cerr << "checkpointing" << std::endl;
                     }
                 }
                 checkpoint(blackPair, anOutputImageInfo);
@@ -235,11 +221,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
             } else if (CoarseMask) {
                 nftBytes =
                     2 * 1/8 * uBB.area() * sizeof(MaskPixelType)
-                    + 2 * 1/8 * uBB.area() * sizeof(UInt32);
+                    + 2 * 1/8 * uBB.area() * sizeof(vigra::UInt32);
             } else {
                 nftBytes =
                     2 * uBB.area() * sizeof(MaskPixelType)
-                    + 2 * uBB.area() * sizeof(UInt32);
+                    + 2 * uBB.area() * sizeof(vigra::UInt32);
             }
 
             long long optBytes = 0;
@@ -248,9 +234,9 @@ void enblendMain(const FileNameList& anInputFileNameList,
             } else if (!OptimizeMask) {
                 optBytes = 0;
             } else if (CoarseMask) {
-                optBytes = 1/2 * iBB.area() * sizeof(UInt8);
+                optBytes = 1/2 * iBB.area() * sizeof(vigra::UInt8);
             } else {
-                optBytes = iBB.area() * sizeof(UInt8);
+                optBytes = iBB.area() * sizeof(vigra::UInt8);
             }
             if (VisualizeSeam) {
                 optBytes *= 2;
@@ -261,9 +247,9 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
             bytes = std::max(bytesDuringMask, bytesAfterMask);
 
-            cerr << command << ": info: estimated space required for mask generation: "
-                 << static_cast<int>(ceil(bytes / 1000000.0))
-                 << "MB" << endl;
+            std::cerr << command << ": info: estimated space required for mask generation: "
+                      << static_cast<int>(ceil(bytes / 1000000.0))
+                      << "MB" << std::endl;
         }
 
         // Create the blend mask.
@@ -279,7 +265,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
                                                        inputFileNameIterator, m);
 
         // Calculate bounding box of seam line.
-        Rect2D mBB;
+        vigra::Rect2D mBB;
         maskBounds(mask, uBB, mBB);
 
         if (SaveMasks) {
@@ -290,25 +276,25 @@ void enblendMain(const FileNameList& anInputFileNameList,
                                                 OutputFileName,
                                                 m);
             if (maskFilename == *inputFileNameIterator) {
-                cerr << command
-                     << ": will not overwrite input image \""
-                     << *inputFileNameIterator
-                     << "\" with mask file"
-                     << endl;
+                std::cerr << command
+                          << ": will not overwrite input image \""
+                          << *inputFileNameIterator
+                          << "\" with mask file"
+                          << std::endl;
                 exit(1);
             } else if (maskFilename == OutputFileName) {
-                cerr << command
-                     << ": will not overwrite output image \""
-                     << OutputFileName
-                     << "\" with mask file"
-                     << endl;
+                std::cerr << command
+                          << ": will not overwrite output image \""
+                          << OutputFileName
+                          << "\" with mask file"
+                          << std::endl;
                 exit(1);
             } else {
                 if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                    cerr << command
-                         << ": info: saving mask \"" << maskFilename << "\"" << endl;
+                    std::cerr << command
+                              << ": info: saving mask \"" << maskFilename << "\"" << std::endl;
                 }
-                ImageExportInfo maskInfo(maskFilename.c_str());
+                vigra::ImageExportInfo maskInfo(maskFilename.c_str());
                 maskInfo.setXResolution(ImageResolution.x);
                 maskInfo.setYResolution(ImageResolution.y);
                 maskInfo.setPosition(uBB.upperLeft());
@@ -323,22 +309,22 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after mask generation\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
-            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
-            v.printStats(cerr, command + ": info:     mask", mask);
-            v.printStats(cerr, command + ": info: ");
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after mask generation\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(std::cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(std::cerr, command + ": info:     mask", mask);
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
 
         // Calculate ROI bounds and number of levels from mBB.
         // ROI bounds must be at least mBB but not to extend uBB.
-        Rect2D roiBB;
+        vigra::Rect2D roiBB;
         const unsigned int numLevels =
             roiBounds<ImagePixelComponentType>(anInputUnion,
                                                iBB, mBB, uBB, roiBB,
@@ -348,12 +334,12 @@ void enblendMain(const FileNameList& anInputFileNameList,
             roiBB.width() == anInputUnion.width();
 
         if (StopAfterMaskGeneration) {
-            copyImageIf(uBB.apply(srcImageRange(*(whitePair.first))),
-                        maskImage(*mask),
-                        uBB.apply(destImage(*(blackPair.first))));
-            initImageIf(whiteBB.apply(destImageRange(*(blackPair.second))),
-                        whiteBB.apply(maskImage(*(whitePair.second))),
-                        NumericTraits<AlphaPixelType>::max());
+            vigra::copyImageIf(vigra_ext::apply(uBB, srcImageRange(*(whitePair.first))),
+                               maskImage(*mask),
+                               vigra_ext::apply(uBB, destImage(*(blackPair.first))));
+            vigra::initImageIf(vigra_ext::apply(whiteBB, destImageRange(*(blackPair.second))),
+                               vigra_ext::apply(whiteBB, maskImage(*(whitePair.second))),
+                               vigra::NumericTraits<AlphaPixelType>::max());
 
             delete whitePair.first;
             delete whitePair.second;
@@ -380,23 +366,23 @@ void enblendMain(const FileNameList& anInputFileNameList,
                 + (4 * roiBB.width()) * (sizeof(SKIPSMImagePixelType)
                                          + sizeof(SKIPSMAlphaPixelType));
 
-            cerr << command << ": info: estimated space required for this blend step: "
-                 << static_cast<int>(ceil(bytes / 1000000.0))
-                 << "MB" << endl;
+            std::cerr << command << ": info: estimated space required for this blend step: "
+                      << static_cast<int>(ceil(bytes / 1000000.0))
+                      << "MB" << std::endl;
         }
 
         // Create a version of roiBB relative to uBB upperleft corner.
         // This is to access roi within images of size uBB.
         // For example, the mask.
-        Rect2D roiBB_uBB = roiBB;
+        vigra::Rect2D roiBB_uBB = roiBB;
         roiBB_uBB.moveBy(-uBB.upperLeft());
 
         // Build Gaussian pyramid from mask.
-        vector<MaskPyramidType*> *maskGP =
+        std::vector<MaskPyramidType*> *maskGP =
             gaussianPyramid<MaskType, MaskPyramidType,
-            MaskPyramidIntegerBits, MaskPyramidFractionBits,
-            SKIPSMMaskPixelType>(numLevels, wraparoundForBlend,
-                                 roiBB_uBB.apply(srcImageRange(*mask)));
+                            MaskPyramidIntegerBits, MaskPyramidFractionBits,
+                            SKIPSMMaskPixelType>(numLevels, wraparoundForBlend,
+                                                 vigra_ext::apply(roiBB_uBB, srcImageRange(*mask)));
 #ifdef DEBUG_EXPORT_PYRAMID
         exportPyramid<SKIPSMMaskPixelType, MaskPyramidType>(maskGP, "mask");
 #endif
@@ -408,18 +394,18 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after calculating mask pyramid\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
-            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
-            v.printStats(cerr, command + ": info:     mask", mask);
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after calculating mask pyramid\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(std::cerr, command + ": info:     whiteAlpha", whitePair.second);
+            v.printStats(std::cerr, command + ": info:     mask", mask);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
+                v.printStats(std::cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
-            v.printStats(cerr, command + ": info: ");
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -427,16 +413,16 @@ void enblendMain(const FileNameList& anInputFileNameList,
         // Now it is safe to make changes to mask image.
         // Black out the ROI in the mask.
         // Make an roiBounds relative to uBB origin.
-        initImage(roiBB_uBB.apply(destImageRange(*mask)),
-                  NumericTraits<MaskPyramidPixelType>::zero());
+        vigra::initImage(vigra_ext::apply(roiBB_uBB, destImageRange(*mask)),
+                         vigra::NumericTraits<MaskPyramidPixelType>::zero());
 
         // Copy pixels inside whiteBB and inside white part of mask into black image.
         // These are pixels where the white image contributes outside of the ROI.
         // We cannot modify black image inside the ROI yet because we haven't built the
         // black pyramid.
-        copyImageIf(uBB.apply(srcImageRange(*(whitePair.first))),
-                    maskImage(*mask),
-                    uBB.apply(destImage(*(blackPair.first))));
+        vigra::copyImageIf(vigra_ext::apply(uBB, srcImageRange(*(whitePair.first))),
+                           maskImage(*mask),
+                           vigra_ext::apply(uBB, destImage(*(blackPair.first))));
 
         // We no longer need the mask.
         delete mask;
@@ -445,30 +431,30 @@ void enblendMain(const FileNameList& anInputFileNameList,
         //                   (4/3)*roiBB*MaskPyramidType
 
         // Build Laplacian pyramid from white image.
-        vector<ImagePyramidType*>* whiteLP =
+        std::vector<ImagePyramidType*>* whiteLP =
             laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
-            ImagePyramidIntegerBits, ImagePyramidFractionBits,
-            SKIPSMImagePixelType, SKIPSMAlphaPixelType>("whiteGP",
-                                                        numLevels, wraparoundForBlend,
-                                                        roiBB.apply(srcImageRange(*(whitePair.first))),
-                                                        roiBB.apply(maskImage(*(whitePair.second))));
+                             ImagePyramidIntegerBits, ImagePyramidFractionBits,
+                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>("whiteGP",
+                                                                         numLevels, wraparoundForBlend,
+                                                                         vigra_ext::apply(roiBB, srcImageRange(*(whitePair.first))),
+                                                                         vigra_ext::apply(roiBB, maskImage(*(whitePair.second))));
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after calculating white pyramid\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info:     whiteImage", whitePair.first);
-            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after calculating white pyramid\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info:     whiteImage", whitePair.first);
+            v.printStats(std::cerr, command + ": info:     whiteAlpha", whitePair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
+                v.printStats(std::cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
+                v.printStats(std::cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
-            v.printStats(cerr, command + ": info: ");
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -483,32 +469,32 @@ void enblendMain(const FileNameList& anInputFileNameList,
         //                   + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
 
         // Build Laplacian pyramid from black image.
-        vector<ImagePyramidType*>* blackLP =
+        std::vector<ImagePyramidType*>* blackLP =
             laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
-            ImagePyramidIntegerBits, ImagePyramidFractionBits,
-            SKIPSMImagePixelType, SKIPSMAlphaPixelType>("blackGP",
-                                                        numLevels, wraparoundForBlend,
-                                                        roiBB.apply(srcImageRange(*(blackPair.first))),
-                                                        roiBB.apply(maskImage(*(blackPair.second))));
+                             ImagePyramidIntegerBits, ImagePyramidFractionBits,
+                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>("blackGP",
+                                                                         numLevels, wraparoundForBlend,
+                                                                         vigra_ext::apply(roiBB, srcImageRange(*(blackPair.first))),
+                                                                         vigra_ext::apply(roiBB, maskImage(*(blackPair.second))));
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after calculating black pyramid\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info:     whiteAlpha", whitePair.second);
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after calculating black pyramid\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info:     whiteAlpha", whitePair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
+                v.printStats(std::cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
+                v.printStats(std::cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
+                v.printStats(std::cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats(cerr, command + ": info: ");
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -526,9 +512,9 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
         // Make the black image alpha equal to the union of the
         // white and black alpha channels.
-        initImageIf(whiteBB.apply(destImageRange(*(blackPair.second))),
-                    whiteBB.apply(maskImage(*(whitePair.second))),
-                    NumericTraits<AlphaPixelType>::max());
+        vigra::initImageIf(vigra_ext::apply(whiteBB, destImageRange(*(blackPair.second))),
+                           vigra_ext::apply(whiteBB, maskImage(*(whitePair.second))),
+                           vigra::NumericTraits<AlphaPixelType>::max());
 
         // We no longer need the white alpha data.
         delete whitePair.second;
@@ -538,24 +524,24 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
         // Blend pyramids
         ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
-        blend(maskGP, whiteLP, blackLP, whiteMask(NumericTraits<MaskPixelType>::max()));
+        blend(maskGP, whiteLP, blackLP, whiteMask(vigra::NumericTraits<MaskPixelType>::max()));
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after blending pyramids\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after blending pyramids\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
             for (unsigned int i = 0; i < maskGP->size(); i++) {
-                v.printStats(cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
+                v.printStats(std::cerr, command + ": info:     maskGP", i, (*maskGP)[i]);
             }
             for (unsigned int i = 0; i < whiteLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
+                v.printStats(std::cerr, command + ": info:     whiteLP", i, (*whiteLP)[i]);
             }
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
+                v.printStats(std::cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats(cerr, command + ": info: ");
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -590,24 +576,24 @@ void enblendMain(const FileNameList& anInputFileNameList,
         collapsePyramid<SKIPSMImagePixelType>(wraparoundForBlend, blackLP);
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after collapsing black pyramid\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after collapsing black pyramid\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
             for (unsigned int i = 0; i < blackLP->size(); i++) {
-                v.printStats(cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
+                v.printStats(std::cerr, command + ": info:     blackLP", i, (*blackLP)[i]);
             }
-            v.printStats(cerr, command + ": info: ");
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType,
-            ImagePyramidIntegerBits, ImagePyramidFractionBits>(srcImageRange(*((*blackLP)[0])),
-                                                               roiBB.apply(maskImage(*(blackPair.second))),
-                                                               roiBB.apply(destImage(*(blackPair.first))));
+                               ImagePyramidIntegerBits, ImagePyramidFractionBits>(srcImageRange(*((*blackLP)[0])),
+                                                                                  vigra_ext::apply(roiBB, maskImage(*(blackPair.second))),
+                                                                                  vigra_ext::apply(roiBB, destImage(*(blackPair.first))));
 
         // delete black pyramid
         for (unsigned int i = 0; i < blackLP->size(); i++) {
@@ -620,11 +606,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
         // Checkpoint results.
         if (Checkpoint) {
             if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
-                cerr << command << ": info: ";
+                std::cerr << command << ": info: ";
                 if (imageInfoList.empty()) {
-                    cerr << "writing final output" << endl;
+                    std::cerr << "writing final output" << std::endl;
                 } else {
-                    cerr << "checkpointing" << endl;
+                    std::cerr << "checkpointing" << std::endl;
                 }
             }
             checkpoint(blackPair, anOutputImageInfo);
@@ -632,12 +618,12 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
 #ifdef CACHE_IMAGES
         if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            CachedFileImageDirector& v = CachedFileImageDirector::v();
-            cerr << command
-                 << ": info: image cache statistics after checkpointing\n";
-            v.printStats(cerr, command + ": info:     blackImage", blackPair.first);
-            v.printStats(cerr, command + ": info:     blackAlpha", blackPair.second);
-            v.printStats(cerr, command + ": info: ");
+            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
+            std::cerr << command
+                      << ": info: image cache statistics after checkpointing\n";
+            v.printStats(std::cerr, command + ": info:     blackImage", blackPair.first);
+            v.printStats(std::cerr, command + ": info:     blackAlpha", blackPair.second);
+            v.printStats(std::cerr, command + ": info: ");
             v.resetCacheMisses();
         }
 #endif
@@ -651,7 +637,7 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
     if (!StopAfterMaskGeneration && !Checkpoint) {
         if (Verbose >= VERBOSE_CHECKPOINTING_MESSAGES) {
-            cerr << command << ": info: writing final output" << endl;
+            std::cerr << command << ": info: writing final output" << std::endl;
         }
         checkpoint(blackPair, anOutputImageInfo);
     }

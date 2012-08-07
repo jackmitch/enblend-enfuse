@@ -1,1 +1,1 @@
-SUBDIRS = vigra vigra_ext 
+SUBDIRS = vigra_ext
