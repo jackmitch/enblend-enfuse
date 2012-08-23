@@ -1,4 +1,4 @@
-* Version 4.1
+* Version 4.1  ("touble in paradise")
 
 Unreleased.  Current line of development.
 
@@ -94,6 +94,17 @@ Unreleased.  Current line of development.
   keyword "auto", which restores the default.  (The default is to
   automatically choose the maximum number of pyramid levels for each
   separate overlapping region.)
+
+
+** Deprecated Features
+
+- The option "--smooth-difference" will be eliminated in the next
+  version of Enblend; it has not helpd and moreover only put lipstick
+  on the seamline-optimizer's objective function.
+
+- The user-(re)sizable image-cache will not be available in later
+  versions of Enblend and Enfuse.  We are not sure yet whether it will
+  be replaced by an mmap-based solution or just tossed out.
 
 
 ** Developer Stuff
