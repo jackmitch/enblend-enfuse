@@ -18,11 +18,12 @@ add_custom_command(
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/signature.h" GENERATED)
 
 include_directories(${TOP_SRC_DIR}/src)
-add_subdirectory(vigra_impex)
+#add_subdirectory(vigra_impex)
 set(_COMMANDS enblend enfuse)
 
 project(enblendenfuse)
-set(en_libraries vigra_impex ${common_libs})
+#set(en_libraries vigra_impex ${common_libs})
+set(en_libraries ${common_libs})
 
 file(GLOB all_sources ${TOP_SRC_DIR}/src/*.cc)
 foreach(_cmd ${_COMMANDS})
@@ -53,7 +54,7 @@ foreach(_cmd ${_COMMANDS})
   endif(OpenMP_CXX_FLAGS AND NOT MSVC)
   target_link_libraries(${_cmd} ${en_libraries})
   install(TARGETS ${_cmd} DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
-  add_dependencies(${_cmd} vigra_impex)
+  #add_dependencies(${_cmd} vigra_impex)
   list(APPEND depends2 ${_cmd})
 endforeach(_cmd)
 add_custom_target(enblendenfuse ALL DEPENDS ${depends2})

@@ -127,7 +127,7 @@ foreach(_gp ${_enblendenfuse_gp_images})
 endforeach()
 
 #message(STATUS "_helpfiles = " ${_helpfiles})
-add_custom_target(doc0 ALL DEPENDS ${_helpfiles})
+add_custom_target(doc0 DEPENDS ${_helpfiles})
 
 project(doc1)
 
@@ -156,7 +156,7 @@ else()
   endforeach(_gp)
 endif()
 
-add_custom_target(doc1 ALL DEPENDS doc0 ${_depend_gp})
+add_custom_target(doc1 DEPENDS doc0 ${_depend_gp})
 project(doc2)
 
 # Search for fig2dev and convert some images
@@ -178,7 +178,7 @@ else()
   endforeach(_img)
   set(DOC3:BOOL ${DOC})
 endif()
-add_custom_target(doc2 ALL DEPENDS doc1 ${_depend_gp})
+add_custom_target(doc2 DEPENDS doc1 ${_depend_gp})
 
 project(doc3)
 # Search for makeinfo command and

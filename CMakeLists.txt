@@ -97,7 +97,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 SET(library_type STATIC)
 set(common_libs)
-ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
+#ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
 
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
@@ -243,6 +243,8 @@ FIND_PACKAGE(Threads)
 
 # VIGRA uses Has* pre-processor definitions for config.h
 ADD_DEFINITIONS(-DHasTIFF)
+FIND_PACKAGE(VIGRA REQUIRED)
+list(APPEND common_libs ${VIGRA_LIBRARIES})
 
 IF(ZLIB_FOUND)
   LIST(APPEND common_libs ${ZLIB_LIBRARIES})
