@@ -160,7 +160,7 @@ namespace enblend {
                                       Param(MaskPixelTraits::zero())));
 
 #ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(nfttmp), ImageExportInfo("./debug/nfttotal.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(nftTempImg), ImageExportInfo("./debug/nfttotal.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(nft), ImageExportInfo("./debug/nft.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(overlap), ImageExportInfo("./debug/overlap.tif").setPixelType("UINT8"));
 #endif
@@ -1393,7 +1393,7 @@ namespace enblend {
             srcDestPoints->bottom.insert(*i);
 
 #ifdef DEBUG_GRAPHCUT
-            std::cout << "Running graph-cut: " << tmpPoint << ":" << *i << std::endl;
+            std::cout << "Running graph-cut: " << intermediatePoint << ":" << *i << std::endl;
 #endif
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
