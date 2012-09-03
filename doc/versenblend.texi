@@ -1,0 +1,4 @@
+@set UPDATED 3 September 2012
+@set UPDATED-MONTH September 2012
+@set EDITION 4.1-c7b05e6e7758
+@set VERSION 4.1-c7b05e6e7758
