@@ -14,7 +14,7 @@ SET( VIGRA_FOUND "NO" )
 
 IF(WIN32)
   FIND_PATH(VIGRA_INCLUDE_DIR vigra/gaborfilter.hxx 
-      PATHS ${VIGRA_ROOT_PATH}/include ${SOURCE_BASE_DIR}/vigra1.6.0/include
+      PATHS ${VIGRA_ROOT_PATH}/include ${SOURCE_BASE_DIR}/vigra/include
   )
   # for dynamic build, it's vigraimpex.lib and the dll must be copied into hugin's bin folder
   #SET(VIGRA_LIBRARIES ${SOURCE_BASE_DIR}/vigra/lib/libvigraindex.dll)
@@ -24,12 +24,12 @@ IF(WIN32)
     ${VIGRA_ROOT_PATH}
     ${VIGRA_ROOT_PATH}/Release
     ${VIGRA_ROOT_PATH}/lib
-    ${SOURCE_BASE_DIR}/vigra1.6.0/lib
+    ${SOURCE_BASE_DIR}/vigra/lib
     )
-  FIND_FILE(VIGRA_DLL
-    NAMES vigraimpex.dll
-    PATHS ${SOURCE_BASE_DIR}/vigra1.6.0/lib
-  )
+  #FIND_FILE(VIGRA_DLL
+  #  NAMES vigraimpex.dll
+  #  PATHS ${SOURCE_BASE_DIR}/vigra1.6.0/lib
+  #)
 ELSE(WIN32)
   FIND_PATH(VIGRA_INCLUDE_DIR gaborfilter.hxx
     /usr/local/include/vigra

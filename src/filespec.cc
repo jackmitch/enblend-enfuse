@@ -34,6 +34,7 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <cctype>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/assign/list_of.hpp>

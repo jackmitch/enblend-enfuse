@@ -97,7 +97,10 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 SET(library_type STATIC)
 set(common_libs)
-#ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
+IF(WIN32)
+# we are using static vigra lib on Windows
+ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
+ENDIF(WIN32)
 
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
@@ -186,6 +189,7 @@ FIND_PACKAGE(Perl REQUIRED)
 # this one is needed in doc. (Especially the program "convert")
 FIND_PACKAGE(ImageMagick REQUIRED)
 FIND_PACKAGE(GSL REQUIRED)
+include_directories(${GSL_INCLUDE_DIR})
 LIST(APPEND common_libs ${LCMS2_LIBRARIES} ${LIBXMI_LIBRARIES} ${TIFF_LIBRARIES} ${GSL_LIBRARIES})
 include_directories(${TIFF_INCLUDE_DIR} ${LIBXMI_INCLUDE_DIR} ${LCMS2_INCLUDE_DIR})
 
@@ -244,6 +248,7 @@ FIND_PACKAGE(Threads)
 # VIGRA uses Has* pre-processor definitions for config.h
 ADD_DEFINITIONS(-DHasTIFF)
 FIND_PACKAGE(VIGRA REQUIRED)
+include_directories(${VIGRA_INCLUDE_DIR})
 list(APPEND common_libs ${VIGRA_LIBRARIES})
 
 IF(ZLIB_FOUND)
@@ -404,7 +409,7 @@ endif()
 IF(WIN32)
   # install into place in build-dir
   SET( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/INSTALL/FILES CACHE FILEPATH "install prefix" FORCE)
-  SET( INSTALL_WIN_FILES AUTHORS ChangeLog COPYING NEWS README VIGRA_LICENSE )
+  SET( INSTALL_WIN_FILES AUTHORS ChangeLog COPYING NEWS README )
   INSTALL(FILES ${INSTALL_WIN_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX})
   # install Eriks droplets
   SET( DROPLETS_FILES contrib/enfuse_droplet/enfuse_droplet.bat
