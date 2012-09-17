@@ -57,7 +57,6 @@ X new seam alg
         X factor out tCurrent divide 12.35
         X E integer 11.29
     X Strategy 2: Shortest Path
-    X libxmi polygon mask fill
     X code cleanup and comments
     X progress indicators
     X option to revert to old mask algorithm

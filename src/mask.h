@@ -41,9 +41,10 @@
 #include <vigra/numerictraits.hxx>
 #include <vigra/transformimage.hxx>
 
+#include "vigra_ext/fillpolygon.hxx"
+#include "vigra_ext/impexalpha.hxx"
 #include "vigra_ext/rect2d.hxx"
 #include "vigra_ext/stdcachedfileimage.hxx"
-#include "vigra_ext/impexalpha.hxx"
 #include "vigra_ext/XMIWrapper.h"
 
 #include "common.h"

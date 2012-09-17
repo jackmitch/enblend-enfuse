@@ -41,8 +41,6 @@
 #include <vigra/diff2d.hxx>
 #include <vigra/iteratoradapter.hxx>
 
-#include "vigra_ext/XMIWrapper.h"
-
 #include "masktypedefs.h"
 
 #ifdef HAVE_LIBGLEW
