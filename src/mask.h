@@ -368,15 +368,14 @@ private:
 
 
 template <typename MaskType>
-void fillContour(MaskType* mask, const Contour& contour, vigra::Diff2D offset)
+void fillContourXMI(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::Accessor MaskAccessor;
     typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
 
     const size_t totalPoints =
-        std::accumulate(contour.begin(), contour.end(),
-                        0U, ret<size_t>(_1 + bind(&Segment::size, _2)));
+        std::accumulate(contour.begin(), contour.end(), 0U, ret<size_t>(_1 + bind(&Segment::size, _2)));
 
     if (totalPoints == 0U) {
         return;
@@ -411,6 +410,136 @@ void fillContour(MaskType* mask, const Contour& contour, vigra::Diff2D offset)
 
     miDeletePaintedSet(paintedSet);
     miDeleteGC(pGC);
+}
+
+
+template <class BackInsertionIterator>
+void
+closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& contour, BackInsertionIterator result)
+{
+    for (Contour::const_iterator segment = contour.begin(); segment != contour.end(); ++segment) {
+        const Segment::iterator vertex_begin((*segment)->begin());
+        const Segment::iterator vertex_end((*segment)->end());
+
+        for (Segment::iterator vertex = vertex_begin; vertex != vertex_end; ++vertex) {
+            *result++ = vigra::Point2D(vertex->second.x, vertex->second.y);
+        }
+
+        // Contours consisting of only one segment sometimes are open.
+        // We fix them here before the polygon filler goes on the
+        // blink.
+        if (contour.size() == 1U) {
+            const vigra::Point2D first_point(vertex_begin->second.x, vertex_begin->second.y);
+            const vigra::Point2D last_point((*segment)->back().second.x, (*segment)->back().second.y);
+
+            if (first_point != last_point) {
+                *result++ = first_point;
+            }
+        }
+
+#ifdef DEBUG_POLYGON_FILL
+        {
+            std::cout << "+ closedPolygonsOfContourSegments: #segments = " << contour.size() << "\n";
+
+            const vigra::Diff2D border(10, 10);
+            vigra::BRGBImage polygon_image(mask_size + border + border);
+
+            visualizeLine(polygon_image,
+                          vigra::Point2D(0, 0) + border, vigra::Point2D(mask_size.x, 0) + border,
+                          VISUALIZE_RGB_COLOR_GREEN3);
+            visualizeLine(polygon_image,
+                          vigra::Point2D(mask_size.x, 0) + border, vigra::Point2D(mask_size.x, mask_size.y) + border,
+                          VISUALIZE_RGB_COLOR_GREEN3);
+            visualizeLine(polygon_image,
+                          vigra::Point2D(mask_size.x, mask_size.y) + border, vigra::Point2D(0, mask_size.y) + border,
+                          VISUALIZE_RGB_COLOR_GREEN3);
+            visualizeLine(polygon_image,
+                          vigra::Point2D(0, mask_size.y) + border, vigra::Point2D(0, 0) + border,
+                          VISUALIZE_RGB_COLOR_GREEN3);
+
+            Segment::iterator previous_vertex;
+            for (Segment::iterator vertex = vertex_begin; vertex != vertex_end; ++vertex) {
+                const vigra::Point2D p(vertex->second.x, vertex->second.y);
+
+                if (vertex != vertex_begin) {
+                    const vigra::Point2D q(previous_vertex->second.x, previous_vertex->second.y);
+                    visualizeLine(polygon_image,
+                                  q + border, p + border,
+                                  VISUALIZE_RGB_COLOR_MAGENTA2);
+                }
+                previous_vertex = vertex;
+
+                visualizePoint(polygon_image, p + border, VISUALIZE_RGB_COLOR_RED1);
+            }
+
+            vigra::exportImage(srcImageRange(polygon_image), vigra::ImageExportInfo(",polygon.tif"));
+        }
+#endif
+    }
+}
+
+
+template <typename MaskType>
+void fillContourScanLine(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+{
+    typedef typename MaskType::PixelType MaskPixelType;
+    typedef typename MaskType::Accessor MaskAccessor;
+
+    const vigra::Size2D mask_size(mask->lowerRight() - mask->upperLeft());
+    std::vector<vigra::Point2D> polygon;
+
+    closedPolygonsOfContourSegments(mask_size, contour, std::back_inserter(polygon));
+
+    vigra_ext::fill_polygon(mask->upperLeft() + offset, mask->lowerRight() + offset,
+                            XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
+                            polygon.begin(), polygon.end(),
+                            ~MaskPixelType());
+}
+
+
+template <typename MaskType>
+void fillContourScanLineActive(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+{
+    typedef typename MaskType::PixelType MaskPixelType;
+    typedef typename MaskType::Accessor MaskAccessor;
+
+    const vigra::Size2D mask_size(mask->lowerRight() - mask->upperLeft());
+    std::vector<vigra::Point2D> polygon;
+
+    closedPolygonsOfContourSegments(mask_size, contour, std::back_inserter(polygon));
+
+    vigra_ext::fill_polygon_active(mask->upperLeft() + offset, mask->lowerRight() + offset,
+                                   XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
+                                   polygon.begin(), polygon.end(),
+                                   ~MaskPixelType());
+}
+
+
+template <typename MaskType>
+void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+{
+    const std::string routine_name(enblend::parameter::as_string("polygon-filler", "xmi"));
+
+#ifdef DEBUG_POLYGON_FILL
+    std::cout << "+ fillContour: mask offset = " << offset << "\n";
+#endif
+
+    if (routine_name == "new") {
+#ifdef DEBUG_POLYGON_FILL
+        std::cout << "+ fillContour: use fillContourScanLine polygon filler\n";
+#endif
+        fillContourScanLine(mask, contour, offset);
+    } else if (routine_name == "new-active") {
+#ifdef DEBUG_POLYGON_FILL
+        std::cout << "+ fillContour: use fillContourScanLineActive polygon filler\n";
+#endif
+        fillContourScanLineActive(mask, contour, offset);
+    } else {
+#ifdef DEBUG_POLYGON_FILL
+        std::cout << "+ fillContour: use fillContourXMI polygon filler\n";
+#endif
+        fillContourXMI(mask, contour, offset);
+    }
 }
 
 
