@@ -58,25 +58,22 @@ template <> struct IntegralSelect<vigra::RGBValue<double> > {
 };
 
 
-template <typename ImageType, typename AlphaType, typename Accessor>
+template <typename ImageType, typename AlphaType, typename AlphaAccessor>
 void
 exportImagePreferablyWithAlpha(const ImageType* image,
                                const AlphaType* mask,
-                               const Accessor& accessor,
+                               const AlphaAccessor& mask_accessor,
                                const vigra::ImageExportInfo& outputImageInfo)
 {
     try {
-#ifdef EXPORT_WITH_ALPHA_CHANNEL
-        // ANTICIPATED CHANGE: Exporting with alpha channel does not
-        // yet work with the latest version of Vigra.
         vigra_ext::exportImageAlpha(srcImageRange(*image),
-                                    srcIter(mask->upperLeft(), accessor),
+                                    srcIter(mask->upperLeft(), mask_accessor),
                                     outputImageInfo);
-#else
-        exportImage(srcImageRange(*image), outputImageInfo);
+    } catch (std::exception& e) {
+#ifdef DEBUG
+        std::cerr << "+ exportImagePreferablyWithAlpha: fallback to export without alpha channel\n";
+        std::cerr << "+ exportImagePreferablyWithAlpha: because of " << e.what() << "\n";
 #endif
-    } catch (std::exception&) {
-        // Oh well, there is no alpha-channel.  So we export without it.
         exportImage(srcImageRange(*image), outputImageInfo);
     }
     OutputIsValid = true;
