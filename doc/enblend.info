@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1-ef7557570d5e, 31 August
+   This manual is for Enblend (version 4.1-b7fcb07816a1, 3 September
 2012), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,9 +25,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1-ef7557570d5e, 31 August 2012),
-a tool for compositing images in such a way that the seam between the
-images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.1-b7fcb07816a1, 3 September
+2012), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -968,7 +968,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1-ef7557570d5e, only mask
+     In this version of Enblend, 4.1-b7fcb07816a1, only mask
      optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1266,7 +1266,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.1-ef7557570d5e)
+     version 3.2 used 1:1.  This version of Enblend (4.1-b7fcb07816a1)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1507,7 +1507,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.1-ef7557570d5e) of Enblend supports two main algorithms
+This version (4.1-b7fcb07816a1) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2943,45 +2943,45 @@ General Index
 
 
 Tag Table:
-Node: Top902
-Node: Overview2104
-Ref: Overview-Footnote-14543
-Ref: Overview-Footnote-24724
-Node: Workflow4866
-Node: Standard Workflow5265
-Ref: Figure:photographic-workflow5525
-Node: External Mask Manipulation8199
-Ref: Figure:external-mask-workflow9516
-Node: Invocation10001
-Node: Image Requirements10705
-Node: Response Files12179
-Ref: Table:response-file-format14203
-Ref: Table:response-file-syntactic-comment16668
-Ref: Table:globbing-algorithms17569
-Node: Common Options19028
-Ref: Common Options-Footnote-128460
-Ref: Common Options-Footnote-228652
-Node: Extended Options28811
-Ref: Extended Options-Footnote-135454
-Node: Mask Generation Options35527
-Ref: Table:mask-generation38188
-Ref: Table:optimizer-strategies45540
-Ref: Table:visualization-colors51715
-Ref: Table:mask-template-characters52630
-Ref: Mask Generation Options-Footnote-154882
-Node: Primary Seam Generators55110
-Node: Color Profiles57996
-Node: Understanding Masks60446
-Node: Tuning Memory Usage64239
-Ref: Table:cache-size-settings66981
-Node: Helpful Programs67417
-Node: Bug Reports71153
-Ref: Bug Reports-Footnote-176854
-Node: Authors76924
-Node: FDL78089
-Node: Program Index99070
-Node: Syntactic-Comment Index102066
-Node: Option Index102755
-Node: General Index107120
+Node: Top904
+Node: Overview2108
+Ref: Overview-Footnote-14547
+Ref: Overview-Footnote-24728
+Node: Workflow4870
+Node: Standard Workflow5269
+Ref: Figure:photographic-workflow5529
+Node: External Mask Manipulation8203
+Ref: Figure:external-mask-workflow9520
+Node: Invocation10005
+Node: Image Requirements10709
+Node: Response Files12183
+Ref: Table:response-file-format14207
+Ref: Table:response-file-syntactic-comment16672
+Ref: Table:globbing-algorithms17573
+Node: Common Options19032
+Ref: Common Options-Footnote-128464
+Ref: Common Options-Footnote-228656
+Node: Extended Options28815
+Ref: Extended Options-Footnote-135458
+Node: Mask Generation Options35531
+Ref: Table:mask-generation38192
+Ref: Table:optimizer-strategies45544
+Ref: Table:visualization-colors51719
+Ref: Table:mask-template-characters52634
+Ref: Mask Generation Options-Footnote-154886
+Node: Primary Seam Generators55114
+Node: Color Profiles58000
+Node: Understanding Masks60450
+Node: Tuning Memory Usage64243
+Ref: Table:cache-size-settings66985
+Node: Helpful Programs67421
+Node: Bug Reports71157
+Ref: Bug Reports-Footnote-176858
+Node: Authors76928
+Node: FDL78093
+Node: Program Index99074
+Node: Syntactic-Comment Index102070
+Node: Option Index102759
+Node: General Index107124
 
 End Tag Table

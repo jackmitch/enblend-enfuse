@@ -518,7 +518,7 @@ void fillContourScanLineActive(MaskType* mask, const Contour& contour, const vig
 template <typename MaskType>
 void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
-    const std::string routine_name(enblend::parameter::as_string("polygon-filler", "xmi"));
+    const std::string routine_name(enblend::parameter::as_string("polygon-filler", "new-active"));
 
 #ifdef DEBUG_POLYGON_FILL
     std::cout << "+ fillContour: mask offset = " << offset << "\n";
@@ -529,16 +529,16 @@ void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& of
         std::cout << "+ fillContour: use fillContourScanLine polygon filler\n";
 #endif
         fillContourScanLine(mask, contour, offset);
-    } else if (routine_name == "new-active") {
-#ifdef DEBUG_POLYGON_FILL
-        std::cout << "+ fillContour: use fillContourScanLineActive polygon filler\n";
-#endif
-        fillContourScanLineActive(mask, contour, offset);
-    } else {
+    } else if (routine_name == "xmi") {
 #ifdef DEBUG_POLYGON_FILL
         std::cout << "+ fillContour: use fillContourXMI polygon filler\n";
 #endif
         fillContourXMI(mask, contour, offset);
+    } else {
+#ifdef DEBUG_POLYGON_FILL
+        std::cout << "+ fillContour: use fillContourScanLineActive polygon filler\n";
+#endif
+        fillContourScanLineActive(mask, contour, offset);
     }
 }
 
