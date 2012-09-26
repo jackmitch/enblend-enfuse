@@ -51,10 +51,11 @@ if(HAVE_DIRENT_H)
 endif(HAVE_DIRENT_H)
 
 if(VIGRA_FOUND)
+  set(CMAKE_REQUIRED_INCLUDES ${VIGRA_INCLUDE_DIR})
   set(CMAKE_REQUIRED_LIBRARIES ${VIGRA_LIBRARIES})
   check_cxx_source_compiles(
   "
-  #include <vigra/imageinfo.hxx>
+  #include <imageinfo.hxx>
   vigra::ImageImportInfo info(\"image.tif\");
   int main(){
     info.setImageIndex(99);
@@ -63,7 +64,6 @@ if(VIGRA_FOUND)
   "
   VIGRA_SETIMAGEINDEX)
 endif(VIGRA_FOUND)
-message(STATUS "VIGRA_SETIMAGEINDEX = ${VIGRA_SETIMAGEINDEX}")
 
 if (NOT CLOSEDIR_INT)
   set(CLOSEDIR_VOID 1)
