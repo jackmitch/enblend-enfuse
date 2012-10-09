@@ -48,6 +48,7 @@
 #include <vigra/transformimage.hxx>
 #include <vigra/contourcirculator.hxx>
 #include <vigra/mathutil.hxx>
+#include <vigra/combineimages.hxx>
 
 #include "vigra_ext/rect2d.hxx"
 #include "vigra_ext/stdcachedfileimage.hxx"
@@ -160,8 +161,8 @@ namespace enblend {
                                       Param(MaskPixelTraits::zero())));
 
 #ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(nftTempImg), ImageExportInfo("./debug/nfttotal.tif").setPixelType("UINT8"));
-        exportImage(srcImageRange(nft), ImageExportInfo("./debug/nft.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(nftTempImg), ImageExportInfo("./debug/nft-orig.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(nft), ImageExportInfo("./debug/nfttotal.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(overlap), ImageExportInfo("./debug/overlap.tif").setPixelType("UINT8"));
 #endif
 
@@ -353,6 +354,30 @@ namespace enblend {
         vigra::Point2D offset;
     };
 
+    template<class MaskPixelType>
+    struct CutPixelsFunctor
+    {
+    public:
+        CutPixelsFunctor(boost::unordered_set<vigra::Point2D, pointHash>* a_,
+                              boost::unordered_set<vigra::Point2D, pointHash>* b_) :
+            left(a_), right(b_){}
+
+        MaskPixelType operator()(const vigra::Diff2D& pos2, const MaskPixelType& a2) const
+        {
+	    vigra::Point2D pos(pos2);
+	    if(left->find(pos) != left->end() && right->find(pos) != right->end())
+		return 164;
+	    else if (left->find(*pos) != left->end())
+		return 64;
+	    else if (right->find(*pos) != right->end())
+		return 255;
+	    else return 0;
+        }
+
+    protected:
+        boost::unordered_set<vigra::Point2D, pointHash>* left;
+        boost::unordered_set<vigra::Point2D, pointHash>* right;
+    };
 
     template<class MaskPixelType>
     struct CountFunctor
@@ -533,7 +558,7 @@ namespace enblend {
     std::vector<vigra::Point2D>*
     A_star(vigra::Point2D srcpt, vigra::Point2D destpt, ImageType* img,
            GradientImageType* gradientX, GradientImageType* gradientY,
-           vigra::Diff2D bounds, CheckpointPixels* srcDestPoints)
+           vigra::Diff2D bounds, CheckpointPixels* srcDestPoints, boost::unordered_set<vigra::Point2D, pointHash>* visited)
     {
         MaskPixelType zeroVal = vigra::NumericTraits<MaskPixelType>::zero();
         typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>, CostComparer<ImageType> > Queue;
@@ -579,6 +604,13 @@ namespace enblend {
                     scoreIsBetter = false;
                     pushToList = false;
                     neighbour = list[i];
+		    
+		    //visited during an earlier sub-cut, ignore
+		    
+		    if(visited->find(neighbour) != visited->end()) {
+			continue;
+		    }
+		    
                     if (neighbour == vigra::Point2D(-20, -20) ||
                         (neighbour != vigra::Point2D(-1, -1) &&
                          neighbour != vigra::Point2D(-10, -10) &&
@@ -1040,6 +1072,7 @@ namespace enblend {
                 default:
 #ifdef DEBUG_GRAPHCUT
                     std::cout << "path dividing error: two-point loop" << std::endl;
+		    std::cout << current << std::endl;
 #endif
                     break;
                 }
@@ -1176,6 +1209,14 @@ namespace enblend {
         boost::unordered_set<vigra::Point2D, pointHash> pixelsRightOfCut;
 
         dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
+	
+#ifdef DEBUG_GRAPHCUT
+	combineTwoImagesMP(srcIterRange(Diff2D(), size),
+			   vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
+                           vigra::destIter(tempImg.upperLeft()),
+                           CutPixelsFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut));
+        exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/cut_pixels.tif").setPixelType("UINT8"));
+#endif	
 
         // labels areas that belong to left/right images
         // adds a 1-pixel border to catch any area that is cut off by the seam
@@ -1378,6 +1419,9 @@ namespace enblend {
         exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(graphImg), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
 #endif
+	
+	// a set of points to keep visited points for subsequent graph-cut runs
+	boost::unordered_set<vigra::Point2D, pointHash> visited;
 
         // find optimal cuts in dual graph
         for (std::vector<vigra::Point2D>::iterator i = intermediatePointList->begin();
@@ -1398,8 +1442,10 @@ namespace enblend {
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
                 (vigra::Point2D(-10, -10), vigra::Point2D(-20, -20), &intermediateGraphImg, &gradientX,
-                 &gradientY, graphsize - vigra::Diff2D(1, 1), srcDestPoints.get());
+                 &gradientY, graphsize - vigra::Diff2D(1, 1), srcDestPoints.get(), &visited);
 
+	    visited.insert(dualPath->begin(), dualPath->end());
+		
             for (std::vector<vigra::Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
                 if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin()) {
                     totalDualPath.push_back(*j);
