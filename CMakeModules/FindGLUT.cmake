@@ -12,9 +12,9 @@ IF (WIN32)
   
   FIND_PATH(GLUT_ROOT_PATH 
     NAMES include/GL/glut.h
-    PATH_SUFFIXES 
-	  glut
-	  glut-3.7.6
+    PATHS 
+	  ${SOURCE_BASE_DIR}/glut
+	  ${SOURCE_BASE_DIR}/glut-3.7.6
   )
   
   FIND_PATH(GLUT_INCLUDE_DIR

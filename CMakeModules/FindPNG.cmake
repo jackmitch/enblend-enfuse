@@ -24,13 +24,13 @@ IF (ZLIB_FOUND)
   FIND_PATH(PNG_INCLUDE_DIR png.h
     /usr/local/include
     /usr/include
-    ${SOURCE_BASE_DIR}/libpng-1.2.40
+    ${SOURCE_BASE_DIR}/libpng/include
   )
 
   find_library_with_debug(PNG_LIBRARIES
     WIN32_DEBUG_POSTFIX d
-    NAMES png libpng
-    PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/libpng-1.2.40/lib
+    NAMES png libpng libpng15 libpng15_static
+    PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/libpng/lib
   )
 
   include(FindPackageHandleStandardArgs)

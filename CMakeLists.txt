@@ -201,14 +201,22 @@ ENDIF(WIN32)
 
 # Boost headers are required, but filesystem is optional
 if(WIN32)
-    FIND_PACKAGE(WindowsBoost COMPONENTS filesystem system)
-else()
-    find_package(Boost COMPONENTS system)
-    find_package(Boost COMPONENTS filesystem)
-    set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
-    set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
-    message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+  IF( NOT Boost_root_suffix )
+    SET( Boost_root_suffix _1_51_0 CACHE STRING "suffix of boost root dir." FORCE )
+  ENDIF( NOT Boost_root_suffix )
+  SET(Boost_USE_STATIC_LIBS ON)
+  if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
+    set(BOOST_ROOT $ENV{BOOST_ROOT}) 
+  else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
+    set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost${Boost_root_suffix}) 
+  endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
 endif()
+
+find_package(Boost COMPONENTS system)
+find_package(Boost COMPONENTS filesystem)
+set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
+set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
+message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 
 IF(Boost_filesystem_FOUND)
   ADD_DEFINITIONS(-DHAVE_BOOST_FILESYSTEM)
@@ -218,20 +226,16 @@ ELSE(Boost_filesystem_FOUND)
   MESSAGE(STATUS "Disabling Boost filesystem support")
 ENDIF(Boost_filesystem_FOUND)
 
-IF(Boost_FOUND)
+LIST(APPEND common_libs ${Boost_LIBRARIES})
+link_directories(${Boost_LIBRARY_DIR})
+
+IF(NOT MSVC)
+  # MSVC supports auto-linking and will always choose the appropriate
+  # library for the config. Use explicit specifiers for the other platforms
   LIST(APPEND common_libs ${Boost_LIBRARIES})
-  link_directories(${Boost_LIBRARY_DIR})
+ENDIF(NOT MSVC)
 
-  IF(NOT MSVC)
-    # MSVC supports auto-linking and will always choose the appropriate
-	# library for the config. Use explicit specifiers for the other platforms
-    LIST(APPEND common_libs ${Boost_LIBRARIES})
-  ENDIF(NOT MSVC)
-
-  include_directories(${Boost_INCLUDE_DIR})
-ELSE(Boost_FOUND)
-  MESSAGE(STATUS "Boost was not found, but is helpfull to compile")
-ENDIF(Boost_FOUND)
+include_directories(${Boost_INCLUDE_DIR})
 
 # Optional Libraries
 FIND_PACKAGE(ZLIB)

@@ -23,15 +23,15 @@ ENDIF (ZLIB_INCLUDE_DIR)
 FIND_PATH(ZLIB_INCLUDE_DIR zlib.h
   /usr/local/include
   /usr/include
-  ${SOURCE_BASE_DIR}/zlib
+  ${SOURCE_BASE_DIR}/zlib/include
 )
 
 include(FindLibraryWithDebug)
 
 find_library_with_debug(ZLIB_LIBRARIES
   WIN32_DEBUG_POSTFIX d
-  NAMES z zlib
-  PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/zlib
+  NAMES z zlib zlibstatic
+  PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/zlib/lib
 )
 
 

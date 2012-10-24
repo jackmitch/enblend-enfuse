@@ -17,6 +17,7 @@
 FIND_PATH(JPEG_INCLUDE_DIR jpeglib.h
   /usr/local/include
   /usr/include
+  ${SOURCE_BASE_DIR}/jpeg-8d
   ${SOURCE_BASE_DIR}/jpeg-7
 )
 
@@ -25,7 +26,10 @@ include(FindLibraryForCPU)
 find_library_for_cpu(JPEG_LIBRARIES
   WIN32_DEBUG_POSTFIX d
   NAMES jpeg libjpeg
-  PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/jpeg-7/lib
+  PATHS 
+    ${SYSTEM_LIB_DIRS}
+    ${SOURCE_BASE_DIR}/jpeg-8d/Release
+    ${SOURCE_BASE_DIR}/jpeg-7/lib
 )
 
 
