@@ -45,7 +45,6 @@
 #include "vigra_ext/impexalpha.hxx"
 #include "vigra_ext/rect2d.hxx"
 #include "vigra_ext/stdcachedfileimage.hxx"
-#include "vigra_ext/XMIWrapper.h"
 
 #include "common.h"
 #include "anneal.h"
@@ -367,52 +366,6 @@ private:
 };
 
 
-template <typename MaskType>
-void fillContourXMI(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
-{
-    typedef typename MaskType::PixelType MaskPixelType;
-    typedef typename MaskType::Accessor MaskAccessor;
-    typedef vigra::NumericTraits<MaskPixelType> MaskPixelTraits;
-
-    const size_t totalPoints =
-        std::accumulate(contour.begin(), contour.end(), 0U, ret<size_t>(_1 + bind(&Segment::size, _2)));
-
-    if (totalPoints == 0U) {
-        return;
-    }
-
-    miPixel pixels[2] = {MaskPixelTraits::max(), MaskPixelTraits::max()};
-    miGC* pGC = miNewGC(2, pixels);
-    miPoint* const points = new miPoint[totalPoints];
-    miPoint* p = points;
-
-    for (Contour::const_iterator currentSegment = contour.begin();
-         currentSegment != contour.end();
-         ++currentSegment) {
-        for (Segment::iterator vertexIterator = (*currentSegment)->begin();
-             vertexIterator != (*currentSegment)->end();
-             ++vertexIterator, ++p) {
-            p->x = vertexIterator->second.x;
-            p->y = vertexIterator->second.y;
-        }
-    }
-
-    miPaintedSet* paintedSet = miNewPaintedSet();
-    miFillPolygon(paintedSet, pGC,
-                  MI_SHAPE_GENERAL, MI_COORD_MODE_ORIGIN,
-                  totalPoints, points);
-
-    delete [] points;
-
-    vigra_ext::copyPaintedSetToImage(mask->upperLeft(), mask->lowerRight(),
-                                     XorAccessor<MaskPixelType, MaskAccessor>(mask->accessor()),
-                                     paintedSet, offset);
-
-    miDeletePaintedSet(paintedSet);
-    miDeleteGC(pGC);
-}
-
-
 template <class BackInsertionIterator>
 void
 closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& contour, BackInsertionIterator result)
@@ -529,11 +482,6 @@ void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& of
         std::cout << "+ fillContour: use fillContourScanLine polygon filler\n";
 #endif
         fillContourScanLine(mask, contour, offset);
-    } else if (routine_name == "xmi") {
-#ifdef DEBUG_POLYGON_FILL
-        std::cout << "+ fillContour: use fillContourXMI polygon filler\n";
-#endif
-        fillContourXMI(mask, contour, offset);
     } else {
 #ifdef DEBUG_POLYGON_FILL
         std::cout << "+ fillContour: use fillContourScanLineActive polygon filler\n";

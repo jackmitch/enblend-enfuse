@@ -39,9 +39,6 @@ AC_CHECK_LIB(tiff, TIFFOpen,
 AC_CHECK_LIB(lcms2, cmsCreateTransform,
              [],
              AC_MSG_ERROR([liblcms2 is required to compile Enblend.]), [])
-AC_CHECK_LIB(xmi, miNewPaintedSet,
-             [],
-             AC_MSG_ERROR([libxmi is required to compile Enblend.]), [])
 
 AC_MSG_CHECKING([for Vigra import/export-library])
 LIBS="-lvigraimpex $LIBS"
@@ -306,8 +303,6 @@ AC_SUBST(EXTRA_LIBS)
 
 AC_CHECK_HEADER(lcms2.h, [],
                 AC_MSG_ERROR([lcms2 header files are required to compile Enblend.]))
-AC_CHECK_HEADER(xmi.h, [],
-                AC_MSG_ERROR([xmi header files are required to compile Enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

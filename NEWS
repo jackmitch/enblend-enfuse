@@ -1,4 +1,4 @@
-* Version 4.1  ("touble in paradise")
+* Version 4.1  "Touble In Paradise"
 
 Unreleased.  Current line of development.
 
@@ -114,12 +114,6 @@ Unreleased.  Current line of development.
 
 ** Developer Stuff
 
-- Enblend and Enfuse now use LittleCMS version 2.x.
-
-- Enblend and Enfuse no longer rely on their own versions of the Vigra
-  imaging library.  Vigra version 1.8 or later is now required to
-  build.
-
 - XHTML validation does not rely on network access anymore.  This
   means all necessary DTDs must be available locally and all catalogs
   must be set up correctly to build the XHTML documentation.
@@ -132,6 +126,18 @@ Unreleased.  Current line of development.
   For more explanations on how to use parameters in the source code,
   see the block-comment within "namespace parameter" in file
   "common.h".
+
+
+** Package Maintainer Stuff
+
+- Enblend and Enfuse now use LittleCMS version 2.x.
+
+- Enblend and Enfuse no longer rely on their own versions of the Vigra
+  imaging library.  Vigra version 1.8 or later is now required to
+  build.
+
+- Enblend no longer relies on libXMI.  (Enfuse never needed this
+  library.)
 
 
 * Version 4.0
