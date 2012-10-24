@@ -1078,7 +1078,7 @@ MaskType* createMask(const ImageType* const white,
     {
         const size_t totalSegments =
             std::accumulate(contours.begin(), contours.end(),
-                            0U, ret<size_t>(_1 + bind(&Contour::size, _2)));
+                            0U, ret<size_t>(_1 + boost::lambda::bind(&Contour::size, _2)));
 
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
             cerr << command << ": info: optimizing ";
@@ -1345,7 +1345,7 @@ MaskType* createMask(const ImageType* const white,
     // Fill contours to get final optimized mask.
     MaskType* mask = new MaskType(uBB.size());
     std::for_each(contours.begin(), contours.end(),
-                  bind(fillContour<MaskType>, mask, *_1, vigra::Diff2D(0, 0)));
+                  boost::lambda::bind(fillContour<MaskType>, mask, *_1, vigra::Diff2D(0, 0)));
 
     // Clean up contours
     std::for_each(contours.begin(), contours.end(),

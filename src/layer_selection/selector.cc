@@ -148,7 +148,7 @@ namespace selector
     {
         algorithm_list::const_iterator algorithm =
             std::find_if(algorithms.begin(), algorithms.end(),
-                         bind(&Abstract::id, boost::lambda::_1) == boost::lambda::constant(an_id));
+                         boost::lambda::bind(&Abstract::id, boost::lambda::_1) == boost::lambda::constant(an_id));
         assert(algorithm != algorithms.end());
 
         return algorithm;
@@ -160,7 +160,7 @@ namespace selector
     {
         algorithm_list::const_iterator algorithm =
             std::find_if(algorithms.begin(), algorithms.end(),
-                         bind(&Abstract::name, boost::lambda::_1) == boost::lambda::constant(a_name));
+                         boost::lambda::bind(&Abstract::name, boost::lambda::_1) == boost::lambda::constant(a_name));
 
         return algorithm;
     }

@@ -194,10 +194,6 @@ include_directories(${TIFF_INCLUDE_DIR} ${LCMS2_INCLUDE_DIR})
 
 # Platform specifics required libraries
 IF(WIN32)
-  FIND_PACKAGE(STLport REQUIRED)
-
-  include_directories(${STLport_INCLUDE_DIR})
-  link_directories(${STLport_LIBRARIES_DIR})
   SET(Boost_USE_STATIC_LIBS ON)
   # path for getopt library
   INCLUDE_DIRECTORIES(${TOP_SRC_DIR}/src/win32helpers)

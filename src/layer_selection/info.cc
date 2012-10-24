@@ -71,7 +71,7 @@ ImageListInformation::image_list::const_iterator
 ImageListInformation::find_image_by_name(const std::string& a_filename) const
 {
     return find_if(images_.begin(), images_.end(),
-                   bind(&ImageInfo::filename, boost::lambda::_1) == boost::lambda::constant(a_filename));
+                   boost::lambda::bind(&ImageInfo::filename, boost::lambda::_1) == boost::lambda::constant(a_filename));
 }
 
 
