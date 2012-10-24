@@ -31,6 +31,11 @@
 
 #include <vigra/diff2d.hxx>
 
+#ifndef HAVE_LRINT
+__inline long int lrint (double x){
+    return static_cast<long int>(x + (x < 0.0 ? -0.5 : 0.5));
+}
+#endif
 
 namespace vigra_ext
 {
