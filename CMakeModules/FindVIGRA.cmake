@@ -31,10 +31,10 @@ IF(WIN32)
   #  PATHS ${SOURCE_BASE_DIR}/vigra1.6.0/lib
   #)
 ELSE(WIN32)
-  FIND_PATH(VIGRA_INCLUDE_DIR gaborfilter.hxx
-    /usr/local/include/vigra
-    /usr/include/vigra
-    /opt/local/include/vigra
+  FIND_PATH(VIGRA_INCLUDE_DIR vigra/gaborfilter.hxx
+    /usr/local/include
+    /usr/include
+    /opt/local/include
   )
 
   FIND_LIBRARY(VIGRA_LIBRARIES
@@ -49,7 +49,33 @@ IF (VIGRA_INCLUDE_DIR AND VIGRA_LIBRARIES)
 ENDIF (VIGRA_INCLUDE_DIR AND VIGRA_LIBRARIES)
 
 IF (VIGRA_FOUND)
-	MESSAGE(STATUS "Found VIGRA: ${VIGRA_LIBRARIES}")
+  MESSAGE(STATUS "Found VIGRA: ${VIGRA_LIBRARIES}")
+  # we check the version of VIGRA library
+  FIND_FILE(VIGRA_VERSION_FILE VigraConfigVersion.cmake
+    PATH /usr/lib/vigra
+         /usr/local/lib/vigra 
+         /opt/local/lib
+         ${SOURCE_BASE_DIR}/vigra/lib/vigra
+  )
+  IF(${VIGRA_VERSION_FILE} MATCHES "-NOTFOUND")
+    SET(VIGRA_VERSION_CHECK FALSE)
+    # check is done additional in ConfigureChecks.cmake
+  ELSE()
+    # backup of variable PACKAGE_VERSION, it is overwrited in VigraConfigVersion.cmake
+    SET(BACKUP_PACKAGE_VERSION ${PACKAGE_VERSION})
+    INCLUDE(${VIGRA_VERSION_FILE} NO_POLICY_SCOPE)
+    SET(VIGRA_VERSION ${PACKAGE_VERSION})
+    SET(PACKAGE_VERSION ${BACKUP_PACKAGE_VERSION})
+    IF(${VIGRA_VERSION} VERSION_EQUAL 1.8.0 OR ${VIGRA_VERSION} VERSION_GREATER 1.8.0)
+      SET(VIGRA_VERSION_CHECK TRUE)
+      MESSAGE(STATUS "VIGRA version: ${VIGRA_VERSION}")
+    ELSE()
+      MESSAGE(FATAL_ERROR 
+        "VIGRA lib is too old.\nEnblend requires at least version 1.8.0, but found version ${VIGRA_VERSION}."
+      )
+    ENDIF()
+  ENDIF()
+
 ELSE (VIGRA_FOUND)
 	MESSAGE(FATAL_ERROR "Could not find VIGRA")
 ENDIF (VIGRA_FOUND)

@@ -79,7 +79,7 @@ foreach(_v_l ${_version_lines})
     setstripped(PACKAGE_REVISION ${CMAKE_MATCH_3})
     message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}")
     message(STATUS "Extracted revision = ${PACKAGE_REVISION}")
-    set(PACKAGE_VERSION "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-hg")
+    set(PACKAGE_VERSION "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${PACKAGE_REVISION}")
   endif()
 endforeach(_v_l)
 
@@ -228,7 +228,7 @@ ELSE(Boost_filesystem_FOUND)
 ENDIF(Boost_filesystem_FOUND)
 
 LIST(APPEND common_libs ${Boost_LIBRARIES})
-link_directories(${Boost_LIBRARY_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
 
 IF(NOT MSVC)
   # MSVC supports auto-linking and will always choose the appropriate

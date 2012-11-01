@@ -28,7 +28,7 @@ find_library_for_cpu(JPEG_LIBRARIES
   NAMES jpeg libjpeg
   PATHS 
     ${SYSTEM_LIB_DIRS}
-    ${SOURCE_BASE_DIR}/jpeg-8d/Release
+    ${SOURCE_BASE_DIR}/jpeg-8d/lib
     ${SOURCE_BASE_DIR}/jpeg-7/lib
 )
 

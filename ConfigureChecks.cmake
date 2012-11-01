@@ -50,13 +50,13 @@ if(HAVE_DIRENT_H)
     CLOSEDIR_INT)
 endif(HAVE_DIRENT_H)
 
-if(VIGRA_FOUND)
+if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   unset(VIGRA_SETIMAGEINDEX CACHE)
   set(CMAKE_REQUIRED_INCLUDES ${VIGRA_INCLUDE_DIR})
   set(CMAKE_REQUIRED_LIBRARIES ${VIGRA_LIBRARIES})
   check_cxx_source_compiles(
   "
-  #include <imageinfo.hxx>
+  #include <vigra/imageinfo.hxx>
   vigra::ImageImportInfo info(\"image.tif\");
   int main(){
     vigra::impexListFormats();
@@ -68,7 +68,7 @@ if(VIGRA_FOUND)
   if(NOT VIGRA_SETIMAGEINDEX)
     message(FATAL_ERROR "Vigra library too old")
   endif()
-endif(VIGRA_FOUND)
+endif()
 
 if (NOT CLOSEDIR_INT)
   set(CLOSEDIR_VOID 1)
