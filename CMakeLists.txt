@@ -213,8 +213,8 @@ if(WIN32)
   endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
 endif()
 
-find_package(Boost COMPONENTS system)
-find_package(Boost COMPONENTS filesystem)
+find_package(Boost COMPONENTS filesystem system)
+
 set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
 set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
 message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
