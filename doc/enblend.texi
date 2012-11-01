@@ -2476,6 +2476,9 @@ name of the associated input file (@samp{%f}) for easy recognition.
 @opindex --smooth-difference
 @cindex smooth difference image
 @cindex blur difference image
+
+@emph{This option has been deprecated.}
+
 Smooth the difference image prior to seam-line optimization to get a
 shorter and -- on the length scale of @var{RADIUS} -- also a
 straighter seam-line.  The default is not to smooth.

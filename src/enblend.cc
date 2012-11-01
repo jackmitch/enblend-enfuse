@@ -515,7 +515,7 @@ void printUsageAndExit(const bool error = true) {
         CoarsenessFactor << "\n" <<
         "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
         "                         if overlap regions are very narrow\n" <<
-        "  --smooth-difference=RADIUS\n" <<
+        "  --smooth-difference=RADIUS    (deprecated)\n" <<
         "                         smooth the difference image prior to seam-line\n" <<
         "                         optimization with a Gaussian blur of RADIUS;\n" <<
         "                         default: " << DifferenceBlurRadius << " pixels\n" <<
