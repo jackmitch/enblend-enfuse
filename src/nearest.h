@@ -86,7 +86,7 @@ quadruple_image(SrcImageIterator src_upperleft,
         break;
 
     default:
-        assert(false);
+        throw never_reached("switch control expression \"boundary\" out of range");
     }
 }
 
@@ -181,7 +181,7 @@ quater_image(SrcImageIterator src_upperleft,
         break;
 
     default:
-        assert(false);
+        throw never_reached("switch control expression \"boundary\" out of range");
     }
 }
 
@@ -238,9 +238,7 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
         break;
 
     default:
-        size_x = -1;
-        size_y = -1;
-        assert(false);
+        throw never_reached("switch control expression \"boundary\" out of range");
     }
 
     vigra::BasicImage<SrcValueType> periodic(size_x, size_y);
@@ -411,7 +409,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                 break;
 
             default:
-                assert(false);
+                throw never_reached("switch control expression \"boundary\" out of range");
             }
         } // omp section
 
@@ -448,7 +446,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
                 break;
 
             default:
-                assert(false);
+                throw never_reached("switch control expression \"boundary\" out of range");
             }
         } // omp section
     } // omp parallel sections

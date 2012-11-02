@@ -73,6 +73,20 @@ using vigra::functor::Param;
 using vigra::functor::UnaryFunctor;
 
 
+std::string
+stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
+{
+    switch (aFunctor)
+    {
+    case HueLuminanceMaxDifference: return "maximum-hue-luminance";
+    case DeltaEDifference: return "delta-e";
+    default: throw never_reached("switch control expression \"aFunctor\" out of range");
+    }
+
+    return "unknown";
+}
+
+
 namespace enblend {
 
 void
@@ -1168,7 +1182,7 @@ MaskType* createMask(const ImageType* const white,
                            (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
         break;
     default:
-        assert(false);
+        throw never_reached("switch control expression \"PixelDifferenceFunctor\" out of range");
     }
 
     if (Verbose >= VERBOSE_DIFFERENCE_STATISTICS) {

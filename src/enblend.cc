@@ -83,20 +83,6 @@ typedef enum {
 } difference_functor_t;
 
 
-std::string
-stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
-{
-    switch (aFunctor)
-    {
-    case HueLuminanceMaxDifference: return "maximum-hue-luminance";
-    case DeltaEDifference: return "delta-e";
-    default: assert(false);
-    }
-
-    return "unknown";
-}
-
-
 typedef struct {
     unsigned int kmax;          // maximum number of moves for a line segment
     double tau;                 // temperature reduction factor, "cooling factor"; 0 < tau < 1

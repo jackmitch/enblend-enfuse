@@ -412,7 +412,7 @@ namespace enblend
                 break;
 
             default:
-                assert(false);
+                throw never_reached("switch control expression \"id\" (optimizer selection) out of range");
             }
         }
 

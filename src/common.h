@@ -206,6 +206,15 @@ typedef enum {
 #define lengthof(m_array) (sizeof(m_array) / sizeof(m_array[0]))
 
 
+// Replacement for `assert(0)' and `assert(false)'.
+class never_reached : public std::runtime_error
+{
+public:
+    never_reached(const std::string& a_message) : std::runtime_error(a_message) {}
+    virtual ~never_reached() throw() {}
+};
+
+
 namespace enblend {
 
 /** The different image overlap classifications. */
@@ -382,8 +391,7 @@ stringOfWraparound(boundary_t aBoundaryMode)
     case DoubleStrip:
         return "both";
     default:
-        assert(false);
-        return "none";
+        throw never_reached("switch control expression \"aBoundaryMode\" out of range");
     }
 }
 

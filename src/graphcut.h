@@ -364,14 +364,14 @@ namespace enblend {
 
         MaskPixelType operator()(const vigra::Diff2D& pos2, const MaskPixelType& a2) const
         {
-	    vigra::Point2D pos(pos2);
-	    if(left->find(pos) != left->end() && right->find(pos) != right->end())
-		return 164;
-	    else if (left->find(*pos) != left->end())
-		return 64;
-	    else if (right->find(*pos) != right->end())
-		return 255;
-	    else return 0;
+            vigra::Point2D pos(pos2);
+            if(left->find(pos) != left->end() && right->find(pos) != right->end())
+                return 164;
+            else if (left->find(*pos) != left->end())
+                return 64;
+            else if (right->find(*pos) != right->end())
+                return 255;
+            else return 0;
         }
 
     protected:
@@ -604,13 +604,13 @@ namespace enblend {
                     scoreIsBetter = false;
                     pushToList = false;
                     neighbour = list[i];
-		    
-		    //visited during an earlier sub-cut, ignore
-		    
-		    if(visited->find(neighbour) != visited->end()) {
-			continue;
-		    }
-		    
+
+                    //visited during an earlier sub-cut, ignore
+
+                    if(visited->find(neighbour) != visited->end()) {
+                        continue;
+                    }
+
                     if (neighbour == vigra::Point2D(-20, -20) ||
                         (neighbour != vigra::Point2D(-1, -1) &&
                          neighbour != vigra::Point2D(-10, -10) &&
@@ -1072,7 +1072,7 @@ namespace enblend {
                 default:
 #ifdef DEBUG_GRAPHCUT
                     std::cout << "path dividing error: two-point loop" << std::endl;
-		    std::cout << current << std::endl;
+                    std::cout << current << std::endl;
 #endif
                     break;
                 }
@@ -1209,14 +1209,14 @@ namespace enblend {
         boost::unordered_set<vigra::Point2D, pointHash> pixelsRightOfCut;
 
         dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
-	
+
 #ifdef DEBUG_GRAPHCUT
-	combineTwoImagesMP(srcIterRange(Diff2D(), size),
-			   vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
+        combineTwoImagesMP(srcIterRange(Diff2D(), size),
+                           vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
                            vigra::destIter(tempImg.upperLeft()),
                            CutPixelsFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut));
         exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/cut_pixels.tif").setPixelType("UINT8"));
-#endif	
+#endif
 
         // labels areas that belong to left/right images
         // adds a 1-pixel border to catch any area that is cut off by the seam
@@ -1377,7 +1377,7 @@ namespace enblend {
                                (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
             break;
         default:
-            assert(false);
+            throw never_reached("switch control expression \"PixelDifferenceFunctor\" out of range");
         }
 
         // masking overlap region borders
@@ -1419,9 +1419,9 @@ namespace enblend {
         exportImage(srcImageRange(gradientY), ImageExportInfo("./debug/grady.tif").setPixelType("UINT8"));
         exportImage(srcImageRange(graphImg), ImageExportInfo("./debug/graph.tif").setPixelType("UINT8"));
 #endif
-	
-	// a set of points to keep visited points for subsequent graph-cut runs
-	boost::unordered_set<vigra::Point2D, pointHash> visited;
+
+        // a set of points to keep visited points for subsequent graph-cut runs
+        boost::unordered_set<vigra::Point2D, pointHash> visited;
 
         // find optimal cuts in dual graph
         for (std::vector<vigra::Point2D>::iterator i = intermediatePointList->begin();
@@ -1444,8 +1444,8 @@ namespace enblend {
                 (vigra::Point2D(-10, -10), vigra::Point2D(-20, -20), &intermediateGraphImg, &gradientX,
                  &gradientY, graphsize - vigra::Diff2D(1, 1), srcDestPoints.get(), &visited);
 
-	    visited.insert(dualPath->begin(), dualPath->end());
-		
+            visited.insert(dualPath->begin(), dualPath->end());
+
             for (std::vector<vigra::Point2D>::reverse_iterator j = dualPath->rbegin(); j < dualPath->rend(); j++) {
                 if ((j == dualPath->rbegin() && totalDualPath.empty()) || j != dualPath->rbegin()) {
                     totalDualPath.push_back(*j);
