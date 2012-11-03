@@ -19,7 +19,7 @@ use Sys::Hostname;
 
 our %HAVE_MODULE;
 BEGIN {
-    foreach my $module qw(Time::Zone) {
+    foreach my $module (qw(Time::Zone)) {
         eval "use $module ()"; # import, but keep module's original name space for clarity
         $HAVE_MODULE{$module} = $EVAL_ERROR eq '';
     }
