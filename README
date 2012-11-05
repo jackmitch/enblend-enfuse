@@ -497,16 +497,22 @@ build options.
 
 *** General
 
+There are 2 different archives: one with 32 bit executables,
+the other one with 64 bit executables.
 The archive contains two versions of Enblend and Enfuse.
 
 
-**** enblend.exe/enfuse.exe
+**** 32 bit versions
 
+The 32 bit archive contains 2 different versions of enblend and
+enfuse:
+
+***** enblend.exe/enfuse.exe
 These executables are the standard release.  They are using one
 processor core and the Image Cache for processing very big images.
 
 
-**** enblend_openmp.exe/enfuse_openmp.exe
+***** enblend_openmp.exe/enfuse_openmp.exe
 
 These executables can utilize several cores of modern multi-core
 processors and are therefore significantly faster on modern
@@ -514,23 +520,22 @@ processors.  But they may fail on very big images because they are
 working without the IMAGE CACHE.  In this case, please switch to the
 standard version.
 
-For running the OpenMP variants you will need "Microsoft Visual C++
-2008 Redistributable Package (x86)" found at
+**** 64 bit version
 
-        http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+The 64 bit archive contain multi-threaded versions of enblend and
+enfuse, compilied without the IMAGE CACHE.
 
-Both variants can utilize a modern graphic card to accelerate the
+All variants can utilize a modern graphic card to accelerate the
 optimizing of the seam line between two images.
-
-
 *** Compiling on Windows
 
 **** Prerequisites
 
 You will need to following tools for compiling:
 
-- MS Visual C++ 2008, Express Edition suffices
-- CMake, at least version 2.4, though version 2.6 is preferred
+- MS Visual C++ 2010, Express Edition suffices or 
+  MS Visual C++ 2012, Express for Desktop suffices
+- CMake, at least version 2.6, though version 2.8 is preferred
 - Perl, e.g. ActiveState Perl
 
 CMake expects all sources and libraries in one folder.  So, create a
@@ -541,32 +546,28 @@ You need the following libraries for reading and writing different
 image formats.  We state the version and the folder name of the
 libraries used as of December 2009 in square brackets.
 
-- libtiff  [libtiff-4.0.0beta5]
-- zlib, required by libtiff  [1.2.3 in zlib]
-- libjpeg (optional)  [jpeg-7]
-- libpng (optional)  [libpng-1.2.40]
+- libtiff  [libtiff-4.0.3]
+- zlib, required by libtiff  [1.2.7 in zlib]
+- libjpeg (optional)  [jpeg-8d]
+- libpng (optional)  [libpng-1.5.12]
 - OpenEXR and IlmBase (optional), compiled libraries are
-  expected in folder "Deploy"  [OpenEXR-1.6.1 and IlmBase-1.0.1]
+  expected in folder "Deploy"  [OpenEXR-1.7.1 and IlmBase-1.0.3]
+- vigra, required, should be compiled against same
+  libtifff, libjpeg, libpng and OpenEXR as used for enblend/enfuse
+  [1.8.0 in vigra]
 
 Enblend/Enfuse also depends on the following libraries:
 
-- Boost  [1.39 in boost_1_39_0]
+- Boost  [1.51 in boost_1_51_0]
     - Only header files are used by default.
     - Optionally, Enblend/Enfuse can use the Filesystem Library.
       However, this library needs to compiled against STLport.
-- Little-CMS  [1.18a in lcm-1.18]
-- libxmi  [libxmi-1.2]
-- STLport  [stlport-5.2.1]
+- Little-CMS2  [2.4 in lcm2-2.4]
 
 For compiling with GPU support, you need:
 
 - GLUT for Win32  [3.7.6 in glut]
-- OpenGL Extension Wrangler Library GLEW  [1.5.1 in glew]
-
-For compiling with OpenMP support you will additionally need Windows
-SDK for Windows Server 2008 and .NET Framework 3.5 found at
-
-        http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en
+- OpenGL Extension Wrangler Library GLEW  [1.9.0 in glew]
 
 
 **** Compile
@@ -576,8 +577,8 @@ SDK for Windows Server 2008 and .NET Framework 3.5 found at
 3. Enter path where to build the executable,
    e.g. "d:\src\build-enblend".  In following, it will be denoted as
    <BUILDDIR>.
-4. Select "Configure" when asked for a generator select "Visual Studio
-   9 2008" and "Use default native compiler".
+4. Select "Configure" when asked for a generator select the
+   approbiate generator.
 5. Activate the appropriate options.
 
 
