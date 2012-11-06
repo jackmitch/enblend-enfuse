@@ -1,4 +1,4 @@
-Copyright (C) 2004-2011 Andrew Mihal.
+Copyright (C) 2004-2012 Andrew Mihal.
 
 This file is part of Enblend.
 
@@ -8,6 +8,7 @@ This file is part of Enblend.
 This packages contains the programs Enblend and Enfuse.  The source
 code and further information about Enblend are available at:
         http://enblend.sf.net
+
 
 ** Enblend
 
@@ -33,6 +34,7 @@ contribute to the final image.
 Enblend does not align images for you.  Use a tool like Hugin or
 PanoTools to do this.  The files produced by these programs are
 exactly what Enblend is designed to work with.
+
 
 ** Enfuse
 
@@ -136,9 +138,8 @@ See also option "--with-apple-opengl-framework".
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
 
-Note that OpenMP support and the image cache must not be activated
-both.  The default is to configure with image cache and without
-OpenMP.
+Note that OpenMP support and the ImageCache must not be activated
+both.  The default is to configure with ImageCache and without OpenMP.
 
 If OpenMP support has been enabled, the utilization of special
 features of the actual, underlying OpenMP implementation can be
@@ -163,14 +164,14 @@ default is "no", build an optimized version without debugging symbols.
 ** --enable-image-cache=YES/no
    -DENABLE_IMAGECACHE=OFF/on    (CMake)
 
-Activate the image-cache feature, which allows for processing of large
-images.  The image cache handles swapping parts of the images to disk.
-The default is "yes", enable the image cache.
+Activate the ImageCache feature, which allows for processing of large
+images.  The ImageCache handles swapping parts of the images to disk.
+The default is "yes", enable the ImageCache.
 
-The image cache is recommended on systems where memory is scarce, but
+The ImageCache is recommended on systems where memory is scarce, but
 the images to blend or fuse are large.
 
-The image-cache feature and OpenMP support must not be activated
+The ImageCache feature and OpenMP support must not be activated
 together.
 
 
@@ -382,7 +383,7 @@ The number of available output formats vary.  (See, e.g.
 
 Note that some additional packages are required to build these
 formats:
-        convert        - ImageMagick's swiss army knive of graphics
+        convert        - ImageMagick's swiss army knife of graphics
                          format conversion found at
                          http://www.imagemagick.org/.
         makeinfo       - GNU documentation generator.
@@ -418,6 +419,7 @@ and pass
 to make(1).  The resulting binaries are pretty fast, although other
 configuration options or compiler flags might improve their
 performance even more.
+
 
 *** Xmi and Xi
 
@@ -497,19 +499,22 @@ build options.
 
 *** General
 
-There are 2 different archives: one with 32 bit executables,
-the other one with 64 bit executables.
-The archive contains two versions of Enblend and Enfuse.
+There are two different archives: one with 32-bit executables, the
+other one with 64-bit executables.  Each archive contains two versions
+of Enblend and Enfuse.
 
 
-**** 32 bit versions
+**** 32-bit versions
 
-The 32 bit archive contains 2 different versions of enblend and
-enfuse:
+The 32-bit archive contains two different versions of Enblend and
+Enfuse:
+
 
 ***** enblend.exe/enfuse.exe
+
 These executables are the standard release.  They are using one
-processor core and the Image Cache for processing very big images.
+processor core and the ImageCache (to allow for processing of very big
+images).
 
 
 ***** enblend_openmp.exe/enfuse_openmp.exe
@@ -517,23 +522,26 @@ processor core and the Image Cache for processing very big images.
 These executables can utilize several cores of modern multi-core
 processors and are therefore significantly faster on modern
 processors.  But they may fail on very big images because they are
-working without the IMAGE CACHE.  In this case, please switch to the
+working without the ImageCache.  In this case, please switch to the
 standard version.
 
-**** 64 bit version
 
-The 64 bit archive contain multi-threaded versions of enblend and
-enfuse, compilied without the IMAGE CACHE.
+**** 64-bit version
+
+The 64-bit archive contains multi-threaded versions of Enblend and
+Enfuse, both compiled without the ImageCache.
 
 All variants can utilize a modern graphic card to accelerate the
 optimizing of the seam line between two images.
+
+
 *** Compiling on Windows
 
 **** Prerequisites
 
 You will need to following tools for compiling:
 
-- MS Visual C++ 2010, Express Edition suffices or 
+- MS Visual C++ 2010, Express Edition suffices or
   MS Visual C++ 2012, Express for Desktop suffices
 - CMake, at least version 2.6, though version 2.8 is preferred
 - Perl, e.g. ActiveState Perl
@@ -553,10 +561,10 @@ libraries used as of December 2009 in square brackets.
 - OpenEXR and IlmBase (optional), compiled libraries are
   expected in folder "Deploy"  [OpenEXR-1.7.1 and IlmBase-1.0.3]
 - vigra, required, should be compiled against same
-  libtifff, libjpeg, libpng and OpenEXR as used for enblend/enfuse
+  libtifff, libjpeg, libpng and OpenEXR as used for Enblend/Enfuse
   [1.8.0 in vigra]
 
-Enblend/Enfuse also depends on the following libraries:
+Enblend/Enfuse also depend on the following libraries:
 
 - Boost  [1.51 in boost_1_51_0]
     - Only header files are used by default.
@@ -578,7 +586,7 @@ For compiling with GPU support, you need:
    e.g. "d:\src\build-enblend".  In following, it will be denoted as
    <BUILDDIR>.
 4. Select "Configure" when asked for a generator select the
-   approbiate generator.
+   appropriate generator.
 5. Activate the appropriate options.
 
 
@@ -596,14 +604,14 @@ well as the graphic card drivers have to fulfill certain requirements.
 
 ***** ENABLE_IMAGECACHE=ON/off
 
-Activate the Image-Cache feature, which allows for processing of large
-images.  The Image Cache handles swapping parts of the images to disk.
-The default is "on", i.e., enable the image cache.
+Activate the ImageCache feature, which allows for processing of large
+images.  The ImageCache handles swapping parts of the images to disk.
+The default is "on", i.e., enable the ImageCache.
 
-The image cache is recommended on systems where memory is scarce, but
+The ImageCache is recommended on systems where memory is scarce, but
 the images to blend or fuse are large.
 
-The image-cache feature and OpenMP support must not be activated
+The ImageCache feature and OpenMP support must not be activated
 together.
 
 
@@ -612,9 +620,8 @@ together.
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
 
-Note that OpenMP support and the image cache must not be activated
-both.  The default is to configure with image cache and without
-OpenMP.
+Note that OpenMP support and the ImageCache must not be activated
+both!  The default is to configure with ImageCache and without OpenMP.
 
 If OpenMP support has been enabled, the utilization of special
 features of the actual, underlying OpenMP implementation can be
