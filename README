@@ -500,8 +500,7 @@ build options.
 *** General
 
 There are two different archives: one with 32-bit executables, the
-other one with 64-bit executables.  Each archive contains two versions
-of Enblend and Enfuse.
+other one with 64-bit executables.
 
 
 **** 32-bit versions
