@@ -230,6 +230,8 @@ AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
                 AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/static_assert.hpp, [],
                 AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/system/error_code.hpp, [],
+                AC_MSG_ERROR([Boost "error_code" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/unordered_set.hpp, [],
                 AC_MSG_ERROR([Boost "unordered_set" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_errno.h, [],
@@ -240,6 +242,21 @@ AC_CHECK_HEADER(gsl/gsl_multimin.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_multimin" is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_vector.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_vector" is required to compile Enblend.]))
+
+LIBS="-lboost_system $LIBS"
+AC_MSG_CHECKING([for new Boost system library])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "boost/system/error_code.hpp"]],
+                                [[boost::system::generic_category();
+                                  boost::system::system_category()]])],
+               [AC_MSG_RESULT(yes)],
+               [AC_MSG_RESULT(no)
+                AC_MSG_CHECKING([for old Boost system library])
+                AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "boost/system/error_code.hpp"]],
+                                [[boost::system::get_generic_category();
+                                  boost::system::get_system_category()]])],
+                               [AC_MSG_RESULT(yes)],
+                               [AC_MSG_RESULT(no)
+                                AC_MSG_ERROR([Boost "system" library is required to compile Enblend.])])])
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],
@@ -252,7 +269,7 @@ AS_IF([test "$with_boost_filesystem" = no],
              [AC_MSG_NOTICE([forcing use of Boost "filesystem" library])
               AC_DEFINE(HAVE_BOOST_FILESYSTEM, 1,
                         [Define if you have boost/filesystem.hpp])
-              EXTRA_LIBS="-lboost_filesystem -lboost_system ${EXTRA_LIBS}"],
+              EXTRA_LIBS="-lboost_filesystem ${EXTRA_LIBS}"],
              [AC_CHECK_HEADER(boost/filesystem.hpp,
                               [],
                               AC_MSG_NOTICE([Boost "filesystem" header is missing.]))
@@ -267,16 +284,23 @@ AS_IF([test "$with_boost_filesystem" = no],
                   fi
                   LIBS_ORIG=$LIBS
                   for x in $candidates; do
-                      y=`echo $x | sed s/boost_filesystem/boost_system/g`
-                      LIBS="$LIBS_ORIG $x $y"
+                      LIBS="$LIBS_ORIG $x"
                       AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <string>
 #include "boost/filesystem.hpp"
 ]],
 [[
-boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> p("foo/bar/baz.oo");
+#if BOOST_FILESYSTEM_VERSION <= 2
+typedef boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> basic_path;
+basic_path p("foo/bar/baz.oo");
 p.branch_path().string();
 p.leaf();
+#else
+typedef boost::filesystem::path basic_path;
+basic_path p("foo/bar/baz.oo");
+p.parent_path();
+p.filename();
+#endif
 basename(p);
 extension(p);
 ]]
