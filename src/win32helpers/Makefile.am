@@ -1,1 +1,3 @@
-EXTRA_DIST = getopt.h getopt.c
+EXTRA_DIST = \
+        getopt.h getopt.c \
+        CMakeLists.txt

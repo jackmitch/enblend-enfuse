@@ -42,7 +42,8 @@ enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
 EXTRA_DIST = enblend.1 enfuse.1 \
-             gen_sig DefaultSig.pm Sig.pm
+             gen_sig DefaultSig.pm Sig.pm \
+             CMakeLists.txt
 
 DISTCLEANFILES = enblend.1 enfuse.1
 

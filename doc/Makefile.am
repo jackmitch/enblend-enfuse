@@ -50,7 +50,9 @@ export TEXINPUTS=$(top_builddir):$(srcdir)
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
-EXTRA_DIST = docstrings seam-line-visualization.tif makeinfo-4.13-docbook.sed
+EXTRA_DIST = \
+        docstrings seam-line-visualization.tif makeinfo-4.13-docbook.sed \
+        CMakeLists.txt
 
 RASTER_DIR = @RASTER_DIR@
 

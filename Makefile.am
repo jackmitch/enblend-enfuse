@@ -1,4 +1,6 @@
-EXTRA_DIST = README.txt VERSION
+EXTRA_DIST = \
+        README.txt VERSION \
+        CMakeLists.txt CMakeModules ConfigureChecks.cmake config.h.cmake
 
 if BUILD_DOC
   MAYBE_DOC = doc
