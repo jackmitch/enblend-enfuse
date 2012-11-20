@@ -52,7 +52,7 @@ TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
 EXTRA_DIST = \
         docstrings seam-line-visualization.tif makeinfo-4.13-docbook.sed \
-        CMakeLists.txt
+        CMakeLists.txt macros.cmake CreateVersTexi.pl fig2txt.pl
 
 RASTER_DIR = @RASTER_DIR@
 
