@@ -220,6 +220,11 @@ endif()
 set(_auxdepends)
 
 FILE(GLOB tmp_texi RELATIVE "${TOP_SRC_DIR}/doc" "${TOP_SRC_DIR}/doc/*.tex*")
+foreach(_cmd ${main_texi_list})
+  # These are already created with doc_varscreate_file()
+  list(REMOVE_ITEM tmp_texi vars${_cmd}.texi)
+endforeach()
+
 foreach(_f ${tmp_texi})
   if (NOT ${_f} MATCHES "vers.*")
     add_custom_command(
