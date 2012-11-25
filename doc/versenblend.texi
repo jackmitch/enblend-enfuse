@@ -1,4 +1,4 @@
 @set UPDATED 1 November 2012
 @set UPDATED-MONTH November 2012
-@set EDITION 4.2rc1-1c231baf22ef
-@set VERSION 4.2rc1-1c231baf22ef
+@set EDITION 4.2rc1-78edef86796f
+@set VERSION 4.2rc1-78edef86796f

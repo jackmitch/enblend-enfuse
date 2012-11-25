@@ -412,16 +412,14 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
             *result++ = vigra::Point2D(vertex->second.x, vertex->second.y);
         }
 
-        // Contours consisting of only one segment are open.  We fix
-        // them here before the polygon filler goes on the blink.
-        if (contour.size() == 1U) {
-            const vigra::Point2D first_point(vertex_begin->second.x, vertex_begin->second.y);
-            const vigra::Point2D last_point((*segment)->back().second.x, (*segment)->back().second.y);
-
-            if (first_point != last_point) {
-                *result++ = first_point;
-            }
+        // Close segment if it is not already closed.
+        const vigra::Point2D first_point(vertex_begin->second.x, vertex_begin->second.y);
+        const vigra::Point2D last_point((*segment)->back().second.x, (*segment)->back().second.y);
+        if (first_point != last_point) {
+            *result++ = first_point;
         }
+
+        *result++ = END_OF_SEGMENT_MARKER;
 
 #ifdef DEBUG_POLYGON_FILL
         std::cout << "+ closedPolygonsOfContourSegments: #vertices = " << (*segment)->size() << "\n";

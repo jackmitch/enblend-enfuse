@@ -37,6 +37,10 @@ __inline long int lrint (double x){
 }
 #endif
 
+
+#define END_OF_SEGMENT_MARKER vigra::Point2D(INT_MIN, INT_MIN)
+
+
 namespace vigra_ext
 {
     namespace detail
@@ -57,10 +61,13 @@ namespace vigra_ext
 
             for (PolygonVertexIterator v = vertex_begin; v != vertex_end; ++v)
             {
-                left = std::min(left, v->px());
-                top = std::min(top, v->py());
-                right = std::max(right, v->px());
-                bottom = std::max(bottom, v->py());
+                if (*v != END_OF_SEGMENT_MARKER)
+                {
+                    left = std::min(left, v->px());
+                    top = std::min(top, v->py());
+                    right = std::max(right, v->px());
+                    bottom = std::max(bottom, v->py());
+                }
             }
 
             return vigra::Rect2D(left, top, right, bottom);
@@ -102,22 +109,25 @@ namespace vigra_ext
             ++v;
             while (v != vertex_end)
             {
-                const int delta_y = v->py() - u->py();
-                if (delta_y != 0)
+                if (*u != END_OF_SEGMENT_MARKER && *v != END_OF_SEGMENT_MARKER)
                 {
-                    const double m = static_cast<double>(y - u->py()) / static_cast<double>(delta_y);
-                    if (0.0 <= m && m <= 1.0)
+                    const int delta_y = v->py() - u->py();
+                    if (delta_y != 0)
                     {
-                        const int x = lrint(static_cast<double>(u->px()) +
-                                            m * static_cast<double>(v->px() - u->px()));
-                        *intersections_end++ =
-                            std::make_pair(x, intersection_of_bool(is_touching_point(*u, *v, y)));
+                        const double m = static_cast<double>(y - u->py()) / static_cast<double>(delta_y);
+                        if (0.0 <= m && m <= 1.0)
+                        {
+                            const int x = lrint(static_cast<double>(u->px()) +
+                                                m * static_cast<double>(v->px() - u->px()));
+                            *intersections_end++ =
+                                std::make_pair(x, intersection_of_bool(is_touching_point(*u, *v, y)));
+                        }
                     }
-                }
-                else if (y == u->py()) // horizontal segment in _current_ scanline
-                {
-                    *intersections_end++ = std::make_pair(std::min(u->px(), v->px()), HORIZONTAL_LEFT);
-                    *intersections_end++ = std::make_pair(std::max(u->px(), v->px()), HORIZONTAL_RIGHT);
+                    else if (y == u->py()) // horizontal segment in _current_ scanline
+                    {
+                        *intersections_end++ = std::make_pair(std::min(u->px(), v->px()), HORIZONTAL_LEFT);
+                        *intersections_end++ = std::make_pair(std::max(u->px(), v->px()), HORIZONTAL_RIGHT);
+                    }
                 }
 
                 ++u;
@@ -138,29 +148,32 @@ namespace vigra_ext
 
             while (a != active_segments.end())
             {
-                const int delta_y = a->second.py() - a->first.py();
-                if (delta_y != 0)
+                if (a->first != END_OF_SEGMENT_MARKER && a->second != END_OF_SEGMENT_MARKER)
                 {
-                    const double m = static_cast<double>(y - a->first.py()) / static_cast<double>(delta_y);
-
-                    if (0.0 <= m && m <= 1.0)
+                    const int delta_y = a->second.py() - a->first.py();
+                    if (delta_y != 0)
                     {
-                        const int x = lrint(static_cast<double>(a->first.px()) +
-                                            m * static_cast<double>(a->second.px() - a->first.px()));
-                        *intersections_end++ =
-                            std::make_pair(x, intersection_of_bool(is_touching_point(a->first, a->second, y)));
+                        const double m = static_cast<double>(y - a->first.py()) / static_cast<double>(delta_y);
 
-                        if (m == 1.0)
+                        if (0.0 <= m && m <= 1.0)
                         {
-                            active_segments.erase(a++); // see: Meyers, Effective STL, Item 9
-                            continue;
+                            const int x = lrint(static_cast<double>(a->first.px()) +
+                                                m * static_cast<double>(a->second.px() - a->first.px()));
+                            *intersections_end++ =
+                                std::make_pair(x, intersection_of_bool(is_touching_point(a->first, a->second, y)));
+
+                            if (m == 1.0)
+                            {
+                                active_segments.erase(a++); // see: Meyers, Effective STL, Item 9
+                                continue;
+                            }
                         }
                     }
-                }
-                else if (y == a->first.py()) // horizontal segment in _current_ scanline
-                {
-                    *intersections_end++ = std::make_pair(std::min(a->first.px(), a->second.px()), HORIZONTAL_LEFT);
-                    *intersections_end++ = std::make_pair(std::max(a->first.px(), a->second.px()), HORIZONTAL_RIGHT);
+                    else if (y == a->first.py()) // horizontal segment in _current_ scanline
+                    {
+                        *intersections_end++ = std::make_pair(std::min(a->first.px(), a->second.px()), HORIZONTAL_LEFT);
+                        *intersections_end++ = std::make_pair(std::max(a->first.px(), a->second.px()), HORIZONTAL_RIGHT);
+                    }
                 }
 
                 ++a;
@@ -327,12 +340,22 @@ namespace vigra_ext
         {
             if (i % 5U == 0U)
             {
-                std::cout << "\n+ fill_polygon: vertices    " << *v;
+                std::cout << "\n+ fill_polygon: vertices    ";
             }
             else
             {
-                std::cout << "    " << *v;
+                std::cout << "    ";
             }
+
+            if (*v == END_OF_SEGMENT_MARKER)
+            {
+                std::cout << "<EOS>";
+            }
+            else
+            {
+                std::cout << *v;
+            }
+
             ++i;
         }
         std::cout << "\n";
