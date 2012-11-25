@@ -384,6 +384,26 @@ template <class BackInsertionIterator>
 void
 closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& contour, BackInsertionIterator result)
 {
+#ifdef DEBUG_POLYGON_FILL
+    const vigra::Diff2D border(10, 10);
+    vigra::BRGBImage polygon_image(mask_size + border + border);
+
+    visualizeLine(polygon_image,
+                  vigra::Point2D(0, 0) + border, vigra::Point2D(mask_size.x, 0) + border,
+                  VISUALIZE_RGB_COLOR_GREEN3);
+    visualizeLine(polygon_image,
+                  vigra::Point2D(mask_size.x, 0) + border, vigra::Point2D(mask_size.x, mask_size.y) + border,
+                  VISUALIZE_RGB_COLOR_GREEN3);
+    visualizeLine(polygon_image,
+                  vigra::Point2D(mask_size.x, mask_size.y) + border, vigra::Point2D(0, mask_size.y) + border,
+                  VISUALIZE_RGB_COLOR_GREEN3);
+    visualizeLine(polygon_image,
+                  vigra::Point2D(0, mask_size.y) + border, vigra::Point2D(0, 0) + border,
+                  VISUALIZE_RGB_COLOR_GREEN3);
+
+    std::cout << "+ closedPolygonsOfContourSegments: #segments = " << contour.size() << "\n";
+#endif
+
     for (Contour::const_iterator segment = contour.begin(); segment != contour.end(); ++segment) {
         const Segment::iterator vertex_begin((*segment)->begin());
         const Segment::iterator vertex_end((*segment)->end());
@@ -392,9 +412,8 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
             *result++ = vigra::Point2D(vertex->second.x, vertex->second.y);
         }
 
-        // Contours consisting of only one segment sometimes are open.
-        // We fix them here before the polygon filler goes on the
-        // blink.
+        // Contours consisting of only one segment are open.  We fix
+        // them here before the polygon filler goes on the blink.
         if (contour.size() == 1U) {
             const vigra::Point2D first_point(vertex_begin->second.x, vertex_begin->second.y);
             const vigra::Point2D last_point((*segment)->back().second.x, (*segment)->back().second.y);
@@ -405,44 +424,28 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
         }
 
 #ifdef DEBUG_POLYGON_FILL
-        {
-            std::cout << "+ closedPolygonsOfContourSegments: #segments = " << contour.size() << "\n";
+        std::cout << "+ closedPolygonsOfContourSegments: #vertices = " << (*segment)->size() << "\n";
 
-            const vigra::Diff2D border(10, 10);
-            vigra::BRGBImage polygon_image(mask_size + border + border);
+        Segment::iterator previous_vertex;
+        for (Segment::iterator vertex = vertex_begin; vertex != vertex_end; ++vertex) {
+            const vigra::Point2D p(vertex->second.x, vertex->second.y);
 
-            visualizeLine(polygon_image,
-                          vigra::Point2D(0, 0) + border, vigra::Point2D(mask_size.x, 0) + border,
-                          VISUALIZE_RGB_COLOR_GREEN3);
-            visualizeLine(polygon_image,
-                          vigra::Point2D(mask_size.x, 0) + border, vigra::Point2D(mask_size.x, mask_size.y) + border,
-                          VISUALIZE_RGB_COLOR_GREEN3);
-            visualizeLine(polygon_image,
-                          vigra::Point2D(mask_size.x, mask_size.y) + border, vigra::Point2D(0, mask_size.y) + border,
-                          VISUALIZE_RGB_COLOR_GREEN3);
-            visualizeLine(polygon_image,
-                          vigra::Point2D(0, mask_size.y) + border, vigra::Point2D(0, 0) + border,
-                          VISUALIZE_RGB_COLOR_GREEN3);
-
-            Segment::iterator previous_vertex;
-            for (Segment::iterator vertex = vertex_begin; vertex != vertex_end; ++vertex) {
-                const vigra::Point2D p(vertex->second.x, vertex->second.y);
-
-                if (vertex != vertex_begin) {
-                    const vigra::Point2D q(previous_vertex->second.x, previous_vertex->second.y);
-                    visualizeLine(polygon_image,
-                                  q + border, p + border,
-                                  VISUALIZE_RGB_COLOR_MAGENTA2);
-                }
-                previous_vertex = vertex;
-
-                visualizePoint(polygon_image, p + border, VISUALIZE_RGB_COLOR_RED1);
+            if (vertex != vertex_begin) {
+                const vigra::Point2D q(previous_vertex->second.x, previous_vertex->second.y);
+                visualizeLine(polygon_image,
+                              q + border, p + border,
+                              VISUALIZE_RGB_COLOR_MAGENTA2);
             }
+            previous_vertex = vertex;
 
-            vigra::exportImage(srcImageRange(polygon_image), vigra::ImageExportInfo(",polygon.tif"));
+            visualizePoint(polygon_image, p + border, VISUALIZE_RGB_COLOR_RED1);
         }
 #endif
     }
+
+#ifdef DEBUG_POLYGON_FILL
+    vigra::exportImage(srcImageRange(polygon_image), vigra::ImageExportInfo(",polygon.tif"));
+#endif
 }
 
 
