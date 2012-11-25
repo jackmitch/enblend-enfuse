@@ -762,7 +762,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 
     if (!CoarseMask && MainAlgorithm == GraphCut && contains(optionSet, FineMaskOption)) {
         std::cerr << command <<
-            ": warning: option \"--fine-mask\" combined with option \"--main-algorithm=graphcut\"\n" <<
+            ": warning: option \"--fine-mask\" combined with option \"--primary-seam-generator=graphcut\"\n" <<
             command <<
             ": warning:     incompatible with mask optimization,\n" <<
             command <<
