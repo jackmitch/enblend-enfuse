@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.1rc2-ab6c93c11578, 1 November
+   This manual is for Enblend (version 4.1rc2-700e60bc31b5, 3 December
 2012), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.1rc2-ab6c93c11578, 1 November
+This manual is for Enblend (version 4.1rc2-700e60bc31b5, 3 December
 2012), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -968,7 +968,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.1rc2-ab6c93c11578, only mask
+     In this version of Enblend, 4.1rc2-700e60bc31b5, only mask
      optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1267,7 +1267,7 @@ These options control the generation and the usage of masks.
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
      version 3.2 used 1:1.  This version of Enblend
-     (4.1rc2-ab6c93c11578) uses
+     (4.1rc2-700e60bc31b5) uses
      8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1287,9 +1287,9 @@ These options control the generation and the usage of masks.
 
         This is the ALGORITHM that produces an initial seam line, which
      is the basis for later, optional optimizations (see `--optimize').
-     Nearest Feature Transform (NFT) is the original algorithm up to
-     and including Enblend version 4.0.  Version 4.1 adds a Graph-Cut
-     (GC) algorithm.
+     Nearest Feature Transform (NFT) is the only algorithm up to and
+     including Enblend version 4.0.  Version 4.1 adds a Graph-Cut (GC)
+     algorithm.  In this version of Enblend NFT is the default.
 
         Valid ALGORITHM names are:
 
@@ -1510,7 +1510,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.1rc2-ab6c93c11578) of Enblend supports two main
+This version (4.1rc2-700e60bc31b5) of Enblend supports two main
 algorithms to generate seam lines.  Use
 option `--primary-seam-generator' to select one of the generators.
 
@@ -2969,22 +2969,22 @@ Ref: Extended Options-Footnote-135465
 Node: Mask Generation Options35538
 Ref: Table:mask-generation38199
 Ref: Table:optimizer-strategies45551
-Ref: Table:visualization-colors51778
-Ref: Table:mask-template-characters52693
-Ref: Mask Generation Options-Footnote-154945
-Node: Primary Seam Generators55173
-Node: Color Profiles58062
-Node: Understanding Masks60512
-Node: Tuning Memory Usage64305
-Ref: Table:cache-size-settings67047
-Node: Helpful Programs67483
-Node: Bug Reports71219
-Ref: Bug Reports-Footnote-176920
-Node: Authors76990
-Node: FDL78155
-Node: Program Index99136
-Node: Syntactic-Comment Index102132
-Node: Option Index102821
-Node: General Index107186
+Ref: Table:visualization-colors51822
+Ref: Table:mask-template-characters52737
+Ref: Mask Generation Options-Footnote-154989
+Node: Primary Seam Generators55217
+Node: Color Profiles58106
+Node: Understanding Masks60556
+Node: Tuning Memory Usage64349
+Ref: Table:cache-size-settings67091
+Node: Helpful Programs67527
+Node: Bug Reports71263
+Ref: Bug Reports-Footnote-176964
+Node: Authors77034
+Node: FDL78199
+Node: Program Index99180
+Node: Syntactic-Comment Index102176
+Node: Option Index102865
+Node: General Index107230
 
 End Tag Table

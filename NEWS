@@ -7,8 +7,9 @@ Unreleased.  Current line of development.
 - All deprecated options since version 4.0 have been removed.
 
 - A new primary seam-line generator, based on a Graph-Cut algorithm,
-  has been implemented during GSoC 2011 by Mikołaj Leszczyński.  It is
-  the default now.
+  has been implemented during GSoC 2011 by Mikołaj Leszczyński.  The
+  old Nearest-Feature Transform remains the default.  The new
+  algorithm is activated with "--primary-seam-generator=graph-cut".
 
 - The difference image on which Enblend's seam-line optimization
   relies for color images uses a perceptual model by default (option

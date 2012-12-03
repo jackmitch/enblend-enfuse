@@ -2414,8 +2414,9 @@ Select the algorithm responsible for generating the general seam route.
 This is the @var{ALGORITHM} that produces an initial seam line, which
 is the basis for later, optional optimizations (see
 @option{--optimize}).  Nearest Feature Transform (@acronym{NFT}) is
-the original algorithm up to and including Enblend version@tie{}4.0.
-Version@tie{}4.1 adds a Graph-Cut (@acronym{GC}) algorithm.
+the only algorithm up to and including Enblend version@tie{}4.0.
+Version@tie{}4.1 adds a Graph-Cut (@acronym{GC}) algorithm.  In this
+version of Enblend @acronym{NFT} is the default.
 
 Valid @var{ALGORITHM} names are:
 

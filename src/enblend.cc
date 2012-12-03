@@ -113,7 +113,7 @@ int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
 int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
-MainAlgo MainAlgorithm = GraphCut;
+MainAlgo MainAlgorithm = NFT;
 bool Checkpoint = false;
 bool UseGPU = false;
 bool OptimizeMask = true;
@@ -487,7 +487,7 @@ void printUsageAndExit(const bool error = true) {
         "  --primary-seam-generator=ALGORITHM\n" <<
         "                         use main seam finder ALGORITHM, where ALGORITHM is\n"<<
         "                         \"nearest-feature-transform\" or \"graph-cut\";\n" <<
-        "                         default: \"graph-cut\"\n" <<
+        "                         default: \"nearest-feature-transform\"\n" <<
         "  --image-difference=ALGORITHM[:LUMINANCE-WEIGHT[:CHROMINANCE-WEIGHT]]\n" <<
         "                         use ALGORITHM for calculation of the difference image,\n" <<
         "                         where ALGORITHM is \"max-hue-luminance\" or \"delta-e\";\n" <<
