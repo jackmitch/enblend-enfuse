@@ -489,10 +489,10 @@ else
 fi
 
 AC_MSG_CHECKING(whether to enable image cache)
-image_cache_default="yes"
+image_cache_default="no"
 AC_ARG_ENABLE(image_cache,
               AC_HELP_STRING([--enable-image-cache],
-                             [allow for processing of large images @<:@default=yes@:>@]),
+                             [allow for processing of large images @<:@default=no@:>@]),
               [enable_image_cache=$enableval],
               [enable_image_cache=$image_cache_default])
 if test "$enable_image_cache" = yes; then

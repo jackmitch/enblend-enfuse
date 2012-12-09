@@ -161,7 +161,7 @@ Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
 
 
-** --enable-image-cache=YES/no
+** --enable-image-cache=yes/NO
    -DENABLE_IMAGECACHE=OFF/on    (CMake)
 
 Activate the ImageCache feature, which allows for processing of large
@@ -601,11 +601,11 @@ the GPU.  Besides passing option "--gpu" to Enblend the hardware as
 well as the graphic card drivers have to fulfill certain requirements.
 
 
-***** ENABLE_IMAGECACHE=ON/off
+***** ENABLE_IMAGECACHE=on/OFF
 
 Activate the ImageCache feature, which allows for processing of large
 images.  The ImageCache handles swapping parts of the images to disk.
-The default is "on", i.e., enable the ImageCache.
+The default is "off", i.e., enable the ImageCache.
 
 The ImageCache is recommended on systems where memory is scarce, but
 the images to blend or fuse are large.

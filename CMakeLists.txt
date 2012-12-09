@@ -105,7 +105,7 @@ ENDIF(WIN32)
 
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
-OPTION(ENABLE_IMAGECACHE "Image Cache Support" ON)
+OPTION(ENABLE_IMAGECACHE "Image Cache Support" OFF)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" OFF)
 OPTION(NOSPLIT "Do not split html-documents" OFF)
