@@ -82,11 +82,6 @@ AS_IF([test "$with_openexr" = no],
           have_exr=no
        fi])
 
-if test "$GXX" = yes; then
-    # Fixes SourceForge bug id 2121647 on some systems with newer GCCs.
-    CXXFLAGS="$CXXFLAGS --param inline-unit-growth=60"
-fi
-
 AC_ARG_VAR(OPENGL_CFLAGS, [C compiler flags for OpenGL])
 AC_ARG_VAR(OPENGL_LIBS, [Linker flags and libraries for OpenGL])
 gpu_support_default="yes"
