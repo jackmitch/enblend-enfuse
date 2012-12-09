@@ -2300,10 +2300,9 @@ run the seam around high mismatch areas.
 What should @emph{never} happen though, are loops in the seam line.
 Counter loops with higher weights of @var{DISTANCE-WEIGHT} (in
 option@tie{}@option{--optimizer-weights}), larger vectorization
-@var{DISTANCE}s, @var{TAU}s (in option@tie{}@option{--anneal}) that
-are closer to one, and blurring of the difference image with
-option@tie{}@option{--smooth-difference}.  Use
-option@tie{}@option{--visualize} to check the results.
+@var{DISTANCE}s, and @var{TAU}s (in option@tie{}@option{--anneal})
+that are closer to one.  Use option@tie{}@option{--visualize} to check
+the results.
 
 Valid range: @var{DISTANCE} @geq{} @value{src::minimum-vectorize-distance}.
 
@@ -2472,31 +2471,6 @@ It puts the mask files into the same directory as the output file
 (@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
 mask files nicely sorted, and decorates the mask filename with the
 name of the associated input file (@samp{%f}) for easy recognition.
-
-@item --smooth-difference=@var{RADIUS}
-@opindex --smooth-difference
-@cindex smooth difference image
-@cindex blur difference image
-
-@emph{This option has been deprecated.}
-
-Smooth the difference image prior to seam-line optimization to get a
-shorter and -- on the length scale of @var{RADIUS} -- also a
-straighter seam-line.  The default is not to smooth.
-
-If @var{RADIUS} is larger than zero Enblend blurs the difference
-images of the overlap regions with a @sc{Gaussian} filter having a
-radius of @var{RADIUS}@dmn{pixels}.  Values of 0.5 to 1.5@dmn{pixels}
-for @var{RADIUS} are good starting points; use
-option@tie{}@option{--visualize} to directly judge the effect.
-
-When using this option in conjunction with
-option@tie{}@code{--coarse-mask}=@/@var{FACTOR}, keep in mind that the
-smoothing occurs @emph{after} the overlap regions have been shrunken.
-Thus, blurring affects a @var{FACTOR}@classictimes{}@/@var{FACTOR}
-times larger area in the original images.
-
-Valid range: @var{RADIUS} @geq{} @value{src::minimum-smooth-difference}.
 
 @item --visualize[=@var{VISUALIZE-TEMPLATE}]
 @opindex --visualize

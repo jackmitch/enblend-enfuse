@@ -122,7 +122,6 @@ unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
 difference_functor_t PixelDifferenceFunctor = DeltaEDifference; //< src::default-difference-functor Delta-E
 double LuminanceDifferenceWeight = 1.0; //< src::default-luminance-difference-weight 1.0
 double ChrominanceDifferenceWeight = 1.0; //< src::default-chrominance-difference-weight 1.0
-double DifferenceBlurRadius = 0.0;
 bool SaveMasks = false;
 bool StopAfterMaskGeneration = false;
 std::string SaveMaskTemplate("mask-%n.tif"); //< src::default-mask-template mask-%n.tif
@@ -242,7 +241,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+     LuminanceDifferenceWeight = " << LuminanceDifferenceWeight << "\n" <<
         "+     ChrominanceDifferenceWeight = " << ChrominanceDifferenceWeight <<
         ", option \"--image-difference\"\n" <<
-        "+ DifferenceBlurRadius = " << DifferenceBlurRadius << ", option \"--smooth-difference\"\n" <<
         "+ SaveMasks = " << enblend::stringOfBool(SaveMasks) << ", option \"--save-masks\"\n" <<
         "+     SaveMaskTemplate = <" << SaveMaskTemplate << ">, argument to option \"--save-masks\"\n" <<
         "+ LoadMasks = " << enblend::stringOfBool(LoadMasks) << ", option \"--load-masks\"\n" <<
@@ -501,10 +499,6 @@ void printUsageAndExit(const bool error = true) {
         CoarsenessFactor << "\n" <<
         "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
         "                         if overlap regions are very narrow\n" <<
-        "  --smooth-difference=RADIUS    (deprecated)\n" <<
-        "                         smooth the difference image prior to seam-line\n" <<
-        "                         optimization with a Gaussian blur of RADIUS;\n" <<
-        "                         default: " << DifferenceBlurRadius << " pixels\n" <<
         "  --optimize             turn on mask optimization; this is the default\n" <<
         "  --no-optimize          turn off mask optimization\n" <<
         "  --optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]\n" <<
@@ -604,7 +598,7 @@ enum AllPossibleOptions {
     OptimizeOption, NoOptimizeOption,
     SaveMasksOption, LoadMasksOption,
     ImageDifferenceOption, AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
-    SmoothDifferenceOption, OptimizerWeightsOption,
+    OptimizerWeightsOption,
     LayerSelectorOption, NearestFeatureTransformOption, GraphCutOption,
     // currently below the radar...
     SequentialBlendingOption
@@ -658,10 +652,6 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         if (contains(optionSet, MaskVectorizeDistanceOption)) {
             std::cerr << command <<
                 ": warning: option \"--mask-vectorize\" has no effect with \"--load-masks\"" << std::endl;
-        }
-        if (contains(optionSet, SmoothDifferenceOption)) {
-            std::cerr << command <<
-                ": warning: option \"--smooth-difference\" has no effect with \"--load-masks\"" << std::endl;
         }
         if (contains(optionSet, OptimizerWeightsOption)) {
             std::cerr << command <<
@@ -730,14 +720,6 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         if (contains(optionSet, DijkstraRadiusOption)) {
             std::cerr << command <<
                 ": warning: option \"--dijkstra\" without mask optimization\n" <<
-                command <<
-                ": warning:     has no effect" <<
-                std::endl;
-        }
-
-        if (contains(optionSet, SmoothDifferenceOption)) {
-            std::cerr << command <<
-                ": warning: option \"--smooth-difference\" without mask optimization\n" <<
                 command <<
                 ": warning:     has no effect" <<
                 std::endl;
@@ -813,7 +795,6 @@ int process_options(int argc, char** argv)
         DepthId,
         OutputId,
         WrapAroundId,
-        SmoothDifferenceId,
         OptimizerWeightsId,
         LevelsId,
         CiecamId,
@@ -847,7 +828,6 @@ int process_options(int argc, char** argv)
         {"depth", required_argument, 0, DepthId},
         {"output", required_argument, 0, OutputId},
         {"wrap", optional_argument, 0, WrapAroundId},
-        {"smooth-difference", required_argument, 0, SmoothDifferenceId},
         {"optimizer-weights", required_argument, 0, OptimizerWeightsId},
         {"levels", required_argument, 0, LevelsId},
         {"ciecam", no_argument, 0, CiecamId},
@@ -1263,37 +1243,6 @@ int process_options(int argc, char** argv)
             }
 
             optionSet.insert(MaskVectorizeDistanceOption);
-            break;
-        }
-
-        case SmoothDifferenceId: {
-            char* tail;
-            errno = 0;
-            const double radius = strtod(optarg, &tail);
-            if (errno != 0) {
-                std::cerr << command
-                          << ": option \"--smooth-difference\": illegal numeric format \""
-                          << optarg << "\": " << enblend::errorMessage(errno)
-                          << std::endl;
-                failed = true;
-            }
-            if (*tail != 0) {
-                std::cerr << command
-                          << ": option \"--smooth-difference\": trailing garbage \""
-                          << tail << "\" in \"" << optarg << "\"" << std::endl;
-                failed = true;
-            }
-            //< src::minimum-smooth-difference 0.0
-            if (radius < 0.0) {
-                std::cerr << command
-                          << ": option \"--smooth-difference\": negative radius; will not blur"
-                          << std::endl;
-                DifferenceBlurRadius = 0.0;
-            } else {
-                DifferenceBlurRadius = radius;
-            }
-
-            optionSet.insert(SmoothDifferenceOption);
             break;
         }
 

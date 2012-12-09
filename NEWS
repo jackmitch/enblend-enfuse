@@ -2,6 +2,12 @@
 
 Unreleased.  Current line of development.
 
+** Improvements
+
+- All deprecated options and features of version 4.1 have been
+  removed.
+
+
 ** Developer Stuff
 
 - Support for older versions of the Boost filesystem library has been
