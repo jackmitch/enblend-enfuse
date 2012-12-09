@@ -14,6 +14,11 @@ Unreleased.  Current line of development.
   dropped.
 
 
+** Package Maintainer Stuff
+
+- Vigra version 1.9 or later is now required to build.
+
+
 * Version 4.1  "Trouble In Paradise"
 
 Released on December 8, 2012.

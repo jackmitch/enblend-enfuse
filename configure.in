@@ -47,8 +47,13 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>]],
                AC_MSG_RESULT(yes),
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([libvigraimpex is required to compile Enblend.])])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>]],
-                                [[vigra::ImageImportInfo info("image.tif"); info.setImageIndex(99)]])],
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
+                                  #include <vigra/impexalpha.hxx>]],
+                                [[vigra::BRGBImage image;
+                                  vigra::BImage alpha;
+                                  vigra::ImageImportInfo info("image.tif");
+                                  info.setImageIndex(99);
+                                  vigra::importImageAlpha(info, destImage(image), destImage(alpha));]])],
                AC_MSG_RESULT(yes),
                [AC_MSG_RESULT(no)
                 AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])

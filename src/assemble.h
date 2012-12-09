@@ -34,12 +34,12 @@
 #include <vigra/copyimage.hxx>
 #include <vigra/imageinfo.hxx>
 #include <vigra/impex.hxx>
+#include <vigra/impexalpha.hxx>
 #include <vigra/inspectimage.hxx>
 #include <vigra/numerictraits.hxx>
 #include <vigra/transformimage.hxx>
 
 #include "vigra_ext/functoraccessor.hxx"
-#include "vigra_ext/impexalpha.hxx"
 
 #include "common.h"
 #include "fixmath.h"
@@ -66,9 +66,9 @@ exportImagePreferablyWithAlpha(const ImageType* image,
                                const vigra::ImageExportInfo& outputImageInfo)
 {
     try {
-        vigra_ext::exportImageAlpha(srcImageRange(*image),
-                                    srcIter(mask->upperLeft(), mask_accessor),
-                                    outputImageInfo);
+        vigra::exportImageAlpha(srcImageRange(*image),
+                                srcIter(mask->upperLeft(), mask_accessor),
+                                outputImageInfo);
     } catch (std::exception& e) {
 #ifdef DEBUG
         std::cerr << "+ exportImagePreferablyWithAlpha: fallback to export without alpha channel\n";
@@ -207,7 +207,7 @@ import(const vigra::ImageImportInfo& info,
                  AlphaTraits<AlphaPixelType>::max()),
                 alpha.second);
 
-        vigra_ext::importImageAlpha(info, image, vigra::destIter(alpha.first, ata));
+        vigra::importImageAlpha(info, image, vigra::destIter(alpha.first, ata));
     } else {
         // Import image without alpha.  Initialize the alpha image to 100%.
         importImage(info, image.first, image.second);

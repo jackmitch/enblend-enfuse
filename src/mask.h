@@ -37,12 +37,12 @@
 #include <vigra/error.hxx>
 #include <vigra/functorexpression.hxx>
 #include <vigra/impex.hxx>
+#include <vigra/impexalpha.hxx>
 #include <vigra/initimage.hxx>
 #include <vigra/numerictraits.hxx>
 #include <vigra/transformimage.hxx>
 
 #include "vigra_ext/fillpolygon.hxx"
-#include "vigra_ext/impexalpha.hxx"
 #include "vigra_ext/rect2d.hxx"
 #include "vigra_ext/stdcachedfileimage.hxx"
 
