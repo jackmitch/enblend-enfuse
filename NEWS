@@ -7,6 +7,9 @@ Unreleased.  Current line of development.
 - All deprecated options and features of version 4.1 have been
   removed.
 
+- The new Graph-Cut algorithm is the default primary seam-line
+  generator.
+
 
 ** Developer Stuff
 
