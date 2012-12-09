@@ -183,6 +183,7 @@ typedef enum {
 // Select our preferred type of image depending on what ./configure
 // tells us.
 #ifdef CACHE_IMAGES
+#error "The ImageCache feature has been withdrawn.  Reconfigure without ImageCache and re-build."
 #define IMAGETYPE vigra_ext::CachedFileImage
 #else
 #define IMAGETYPE vigra::BasicImage
