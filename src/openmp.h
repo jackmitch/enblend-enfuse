@@ -334,20 +334,17 @@ namespace detail
 
         void operator()(ValueType* d, const ValueType* f, int n) const
         {
-            // IMPLEMENTATION NOTE: Defining math_t as float instead
-            // of double would speed up the computation especially on
-            // 64bit systems, but in rare occasions causes multiple
-            // seam lines when using OpenMP.
-            typedef double math_t;
-            const math_t max = static_cast<math_t>(std::numeric_limits<ValueType>::max());
+            typedef float math_t;
+
+            const math_t infinity = std::numeric_limits<math_t>::infinity();
 
             int* v = new int[n];
             math_t* z = new math_t[n + 1];
             int k = 0;
 
             v[0] = 0;
-            z[0] = -max;
-            z[1] = max;
+            z[0] = -infinity;
+            z[1] = infinity;
 
             for (int q = 1; q < n; ++q)
             {
@@ -363,7 +360,7 @@ namespace detail
 
                 v[k] = q;
                 z[k] = s;
-                z[k + 1] = max;
+                z[k + 1] = infinity;
             }
 
             k = 0;
@@ -468,31 +465,28 @@ distanceTransformMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerri
                     DestImageIterator dest_upperleft, DestAccessor da,
                     ValueType background, int norm)
 {
-    const vigra::Diff2D size(src_lowerright - src_upperleft);
+    switch (norm)
+    {
+    case 0:
+        fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
+                                        dest_upperleft, da,
+                                        background,
+                                        fh::detail::ChessboardTransform1D<float>());
+        break;
 
-    if (norm != 0 && // We have no multi-threaded version for chessboard metric yet. - cls
-        size.x * size.y >= CROSSOVER_DISTANCE_TRANSFORM)
-    {
-        if (norm == 1)
-        {
-            fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
-                                            dest_upperleft, da,
-                                            background,
-                                            fh::detail::ManhattanTransform1D<float>());
-        }
-        else
-        {
-            fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
-                                            dest_upperleft, da,
-                                            background,
-                                            fh::detail::EuclideanTransform1D<float>());
-        }
-    }
-    else
-    {
-        distanceTransform(src_upperleft, src_lowerright, sa,
-                          dest_upperleft, da,
-                          background, norm);
+    case 1:
+        fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
+                                        dest_upperleft, da,
+                                        background,
+                                        fh::detail::ManhattanTransform1D<float>());
+        break;
+
+    case 2: // FALLTHROUGH
+    default:
+        fh::detail::fhDistanceTransform(src_upperleft, src_lowerright, sa,
+                                        dest_upperleft, da,
+                                        background,
+                                        fh::detail::EuclideanTransform1D<float>());
     }
 }
 
