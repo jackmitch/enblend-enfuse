@@ -50,13 +50,8 @@
 #ifdef HAVE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
 
-#if BOOST_FILESYSTEM_VERSION < 3
-typedef boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> basic_path;
-#define GETPATHSTRING(x) x
-#else
 typedef boost::filesystem::path basic_path;
 #define GETPATHSTRING(x) (x).string()
-#endif
 #endif
 
 

@@ -248,15 +248,9 @@ AC_MSG_CHECKING([for new Boost system library])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "boost/system/error_code.hpp"]],
                                 [[boost::system::generic_category();
                                   boost::system::system_category()]])],
-               [AC_MSG_RESULT(yes)],
-               [AC_MSG_RESULT(no)
-                AC_MSG_CHECKING([for old Boost system library])
-                AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "boost/system/error_code.hpp"]],
-                                [[boost::system::get_generic_category();
-                                  boost::system::get_system_category()]])],
-                               [AC_MSG_RESULT(yes)],
-                               [AC_MSG_RESULT(no)
-                                AC_MSG_ERROR([Boost "system" library is required to compile Enblend.])])])
+                                AC_MSG_RESULT(yes),
+                                [AC_MSG_RESULT(no)
+                                 AC_MSG_ERROR([Boost library "boost_system" is required to compile Enblend.])])
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],
@@ -290,17 +284,10 @@ AS_IF([test "$with_boost_filesystem" = no],
 #include "boost/filesystem.hpp"
 ]],
 [[
-#if BOOST_FILESYSTEM_VERSION <= 2
-typedef boost::filesystem::basic_path<std::string, boost::filesystem::path_traits> basic_path;
-basic_path p("foo/bar/baz.oo");
-p.branch_path().string();
-p.leaf();
-#else
 typedef boost::filesystem::path basic_path;
 basic_path p("foo/bar/baz.oo");
 p.parent_path();
 p.filename();
-#endif
 basename(p);
 extension(p);
 ]]
