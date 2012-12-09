@@ -103,7 +103,7 @@ blend(std::vector<MaskPyramidType*>* maskGP,
     }
 
     if (Verbose >= VERBOSE_BLEND_MESSAGES) {
-        std::cerr << endl;
+        std::cerr << std::endl;
     }
 }
 

@@ -39,7 +39,9 @@ using namespace boost::math;
 #include <vigra/numerictraits.hxx>
 #include <vigra/utilities.hxx>
 
+#ifdef CACHE_IMAGES
 #include "vigra_ext/cachedfileimage.hxx"
+#endif
 
 #include "minimizer.h"
 
@@ -746,11 +748,11 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 
     if (UseCIECAM) {
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cerr << command << ": info: CIECAM02 color conversion";
+            std::cerr << command << ": info: CIECAM02 color conversion";
             if (!enblend::profileName(InputProfile).empty()) {
-                cerr << " from/to \"" << enblend::profileName(InputProfile) << "\" profile";
+                std::cerr << " from/to \"" << enblend::profileName(InputProfile) << "\" profile";
             }
-            cerr << "\n";
+            std::cerr << "\n";
         }
         transformImageMP(src_upperleft, src_lowerright, sa,
                          dest_upperleft, da,
@@ -840,7 +842,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 
     if (UseCIECAM) {
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
-            cerr << command << ": info: CIECAM02 color conversion" << endl;
+            std::cerr << command << ": info: CIECAM02 color conversion" << std::endl;
         }
         transformImageIfMP(src_upperleft, src_lowerright, sa,
                            mask_upperleft, ma,

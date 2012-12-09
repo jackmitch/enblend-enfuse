@@ -44,7 +44,11 @@
 
 #include "vigra_ext/fillpolygon.hxx"
 #include "vigra_ext/rect2d.hxx"
+#include "vigra_ext/stride.hxx"
+
+#ifdef CACHE_IMAGES
 #include "vigra_ext/stdcachedfileimage.hxx"
+#endif
 
 #include "common.h"
 #include "anneal.h"
@@ -558,9 +562,9 @@ void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
             // If the mask is entirely black, then inspectOverlap
             // should have caught this.  It should have said that the
             // white image is redundant.
-            cerr << command
+            std::cerr << command
                  << ": mask is entirely black, but white image was not identified as redundant"
-                 << endl;
+                 << std::endl;
             exit(1);
         } else {
             // If the mask is entirely white, then the black image
@@ -569,21 +573,21 @@ void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
             // mask.
             mBB = uBB;
             // Explain why the black image disappears completely.
-            cerr << command
+            std::cerr << command
                  << ": warning: previous images are completely overlapped by the current images"
-                 << endl;
+                 << std::endl;
         }
     } else {
         // mBB is defined relative to inputUnion origin
-        //cerr << command << ": info: mBB relative to mask: " << mBB << endl;
+        //std::cerr << command << ": info: mBB relative to mask: " << mBB << std::endl;
         mBB.moveBy(uBB.upperLeft());
     }
 
     if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
-        cerr << command
+        std::cerr << command
              << ": info: mask transition line bounding box: "
              << mBB
-             << endl;
+             << std::endl;
     }
 }
 
@@ -609,7 +613,7 @@ void vectorizeSeamLine(Contour& rawSegments,
             MaskVectorizeDistance.value();
 
     if (vectorizeDistance < minimumVectorizeDistance) {
-        cerr << command
+        std::cerr << command
              << ": warning: mask vectorization distance "
              << vectorizeDistance
              << " ("
@@ -620,7 +624,7 @@ void vectorizeSeamLine(Contour& rawSegments,
              << "; will use " << minimumVectorizeDistance << " ("
              << 100.0 * minimumVectorizeDistance / diagonalLength
              << "% of diagonal)"
-             << endl;
+             << std::endl;
         vectorizeDistance = minimumVectorizeDistance;
     }
 
@@ -919,8 +923,8 @@ MaskType* createMask(const ImageType* const white,
                                             m);
         vigra::ImageImportInfo maskInfo(maskFilename.c_str());
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
-            cerr << command
-                 << ": info: loading mask \"" << maskFilename << "\"" << endl;
+            std::cerr << command
+                 << ": info: loading mask \"" << maskFilename << "\"" << std::endl;
         }
         if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
             const bool too_small = maskInfo.width() < uBB.width() || maskInfo.height() < uBB.height();
@@ -930,14 +934,14 @@ MaskType* createMask(const ImageType* const white,
                 category = "warning: ";
             }
 
-            cerr << command
+            std::cerr << command
                  << ": " << category << "mask in \"" << maskFilename << "\" has size "
                  << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
                  << command
                  << ": " << category << "    but image union has size " << uBB.size() << ";\n"
                  << command
                  << ": " << category << "    make sure this is the right mask for the given images"
-                 << endl;
+                 << std::endl;
 
             if (!too_small) {
                 // Mask is too large, loading it would cause a segmentation fault.
@@ -1036,9 +1040,9 @@ MaskType* createMask(const ImageType* const white,
                                                 OutputFileName,
                                                 m);
             if (Verbose >= VERBOSE_NFT_MESSAGES) {
-                cerr << command
+                std::cerr << command
                      << ": info: saving nearest-feature-transform image \""
-                     << nftMaskFilename << "\"" << endl;
+                     << nftMaskFilename << "\"" << std::endl;
             }
             vigra::ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
             nftMaskInfo.setCompression(MASK_COMPRESSION);
@@ -1102,16 +1106,16 @@ MaskType* createMask(const ImageType* const white,
                             0U, ret<size_t>(_1 + boost::lambda::bind(&Contour::size, _2)));
 
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
-            cerr << command << ": info: optimizing ";
+            std::cerr << command << ": info: optimizing ";
             if (totalSegments == 1U) {
-                cerr << "1 distinct seam";
+                std::cerr << "1 distinct seam";
             } else {
-                cerr << totalSegments << " distinct seams";
+                std::cerr << totalSegments << " distinct seams";
             }
-            cerr << endl;
+            std::cerr << std::endl;
         }
         if (totalSegments == 0U) {
-            cerr << command << ": warning: failed to detect any seam" << endl;
+            std::cerr << command << ": warning: failed to detect any seam" << std::endl;
         }
     }
 
@@ -1202,14 +1206,14 @@ MaskType* createMask(const ImageType* const white,
                                                  vigra::NumericTraits<MismatchImagePixelType>::min());
 
         vigra::inspectImage(srcImageRange(mismatchImage), statistics);
-        cerr << command << ": info: difference statistics: overlap size = "
+        std::cerr << command << ": info: difference statistics: overlap size = "
              << std::count_if(mismatchImage.begin(), mismatchImage.end(), non_maximum) << " pixels\n"
              << command << ": info: difference statistics: mismatch average = "
              << statistics.average() / range << " ["
              << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]\n"
              << command << ": info: difference statistics: standard deviation = "
              << sqrt(statistics.variance()) / range << " ["
-             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]" << endl;
+             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]" << std::endl;
     }
 
     if (visualizeImage) {
@@ -1325,24 +1329,24 @@ MaskType* createMask(const ImageType* const white,
                                             OutputFileName,
                                             m);
         if (visualizeFilename == *inputFileNameIterator) {
-            cerr << command
+            std::cerr << command
                  << ": will not overwrite input image \""
                  << *inputFileNameIterator
                  << "\" with seam-visualization image"
-                 << endl;
+                 << std::endl;
             exit(1);
         } else if (visualizeFilename == OutputFileName) {
-            cerr << command
+            std::cerr << command
                  << ": will not overwrite output image \""
                  << OutputFileName
                  << "\" with seam-visualization image"
-                 << endl;
+                 << std::endl;
             exit(1);
         } else {
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << command
+                std::cerr << command
                      << ": info: saving seam visualization \""
-                     << visualizeFilename << "\"" << endl;
+                     << visualizeFilename << "\"" << std::endl;
             }
             vigra::ImageExportInfo visualizeInfo(visualizeFilename.c_str());
             visualizeInfo.setCompression(MASK_COMPRESSION);

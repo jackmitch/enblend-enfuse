@@ -27,6 +27,7 @@
 #include <iostream>
 #include <iomanip>
 #include <list>
+#include <map>
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
@@ -246,7 +247,7 @@ public:
     typedef unsigned DataType;  // pixel counts are our data
     typedef vigra::NumericTraits<ResultPixelType> ResultPixelTraits;
     typedef typename ResultPixelTraits::ValueType ResultType;
-    typedef map<KeyType, DataType> MapType;
+    typedef std::map<KeyType, DataType> MapType;
     typedef std::pair<KeyType, DataType> PairType;
     typedef typename MapType::const_iterator MapConstIterator;
     typedef typename MapType::iterator MapIterator;
@@ -698,7 +699,7 @@ public:
                 " = " << 100.0 * lower_cutoff / max <<
                 "%) exceeds upper cutoff (" << upper_cutoff << "/" << max <<
                 " = " << 100.0 * upper_cutoff / max <<
-                "%)" << endl;
+                "%)" << std::endl;
             exit(1);
         }
     }
@@ -1044,7 +1045,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         {
 #ifdef DEBUG_LOG
             std::cout << "+ Laplacian Edge Detection, scale = "
-                      << FilterConfig.edgeScale << " pixels" << endl;
+                      << FilterConfig.edgeScale << " pixels" << std::endl;
 #endif
             GradImage laplacian(imageSize);
 
@@ -1053,7 +1054,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
 #ifdef DEBUG_LOG
                 std::cout << "+ Local Contrast Enhancement, (scale, amount) = "
                           << FilterConfig.lceScale << " pixels, "
-                          << (100.0 * FilterConfig.lceFactor) << "%" << endl;
+                          << (100.0 * FilterConfig.lceFactor) << "%" << std::endl;
 #endif
                 GradImage lce(imageSize);
                 vigra::gaussianSharpening(src.first, src.second, ga,
@@ -1075,7 +1076,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                 vigra::FindMinMax<LongScalarType> minmax;
                 vigra::inspectImage(srcImageRange(laplacian), minmax);
                 std::cout << "+ after Laplacian and Magnitude: min = " <<
-                    minmax.min << ", max = " << minmax.max << endl;
+                    minmax.min << ", max = " << minmax.max << std::endl;
             }
 #endif
 
@@ -1083,7 +1084,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
             if (minCurve <= 0.0)
             {
 #ifdef DEBUG_LOG
-                std::cout << "+ truncate values below " << -minCurve << endl;;
+                std::cout << "+ truncate values below " << -minCurve << std::endl;;
 #endif
                 transformImageIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
                                    mask.first, mask.second,
@@ -1095,7 +1096,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
             else
             {
 #ifdef DEBUG_LOG
-                std::cout << "+ merge local contrast and edges - switch at " << minCurve << endl;
+                std::cout << "+ merge local contrast and edges - switch at " << minCurve << std::endl;
 #endif
                 GradImage localContrast(imageSize);
                 // TODO: use localStdDev
@@ -1117,7 +1118,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         else
         {
 #ifdef DEBUG_LOG
-            std::cout << "+ Variance of Local Contrast" << endl;
+            std::cout << "+ Variance of Local Contrast" << std::endl;
 #endif
             localStdDevIf(src.first, src.second, ga,
                           mask.first, mask.second,
@@ -1129,7 +1130,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         {
             vigra::FindMinMax<LongScalarType> minmax;
             vigra::inspectImage(srcImageRange(grad), minmax);
-            std::cout << "+ final grad: min = " << minmax.min << ", max = " << minmax.max << endl;
+            std::cout << "+ final grad: min = " << minmax.min << ", max = " << minmax.max << std::endl;
         }
 #endif
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
@@ -1160,7 +1161,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                 "+ EntropyLowerCutoff.value = " << EntropyLowerCutoff.value() << ", " <<
                 "lowerCutoff = " << static_cast<double>(lowerCutoff) << "\n" <<
                 "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value() << ", " <<
-                "upperCutoff = " << static_cast<double>(upperCutoff) << endl;
+                "upperCutoff = " << static_cast<double>(upperCutoff) << std::endl;
 #endif
             if (lowerCutoff > upperCutoff)
             {
@@ -1170,7 +1171,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                     " = " << 100.0 * lowerCutoff / max <<
                     "%) exceeds upper cutoff (" << static_cast<double>(upperCutoff) << "/" << max <<
                     " = " << 100.0 * upperCutoff / max <<
-                    "%)" << endl;
+                    "%)" << std::endl;
                 exit(1);
             }
 
@@ -1269,7 +1270,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 if (Verbose >= VERBOSE_MASK_MESSAGES) {
                     std::cerr << command
                               << ": info: loading " << (UseHardMask ? "hard" : "soft")
-                              << "mask \"" << maskFilename << "\"" << endl;
+                              << "mask \"" << maskFilename << "\"" << std::endl;
                 }
                 if (maskInfo.width() != anInputUnion.width() || maskInfo.height() != anInputUnion.height()) {
                     std::cerr << command
@@ -1279,7 +1280,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                               << ": warning:     but image union has size " << anInputUnion.size() << ";\n"
                               << command
                               << ": warning:     make sure this is the right mask for the given images"
-                              << endl;
+                              << std::endl;
                 }
                 importImage(maskInfo, destImage(*mask));
             } else {
@@ -1303,19 +1304,19 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                           << ": will not overwrite input image \""
                           << *inputFileNameIterator
                           << "\" with soft mask file"
-                          << endl;
+                          << std::endl;
                 exit(1);
             } else if (maskFilename == OutputFileName) {
                 std::cerr << command
                           << ": will not overwrite output image \""
                           << OutputFileName
                           << "\" with soft mask file"
-                          << endl;
+                          << std::endl;
                 exit(1);
             } else {
                 if (Verbose >= VERBOSE_MASK_MESSAGES) {
                     std::cerr << command
-                              << ": info: saving soft mask \"" << maskFilename << "\"" << endl;
+                              << ": info: saving soft mask \"" << maskFilename << "\"" << std::endl;
                 }
                 vigra::ImageExportInfo maskInfo(maskFilename.c_str());
                 maskInfo.setXResolution(ImageResolution.x);
@@ -1369,7 +1370,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     if (UseHardMask) {
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
             std::cerr << command
-                      << ": info: creating hard blend mask" << endl;
+                      << ": info: creating hard blend mask" << std::endl;
         }
         const vigra::Size2D sz = normImage->size();
         imageListIteratorType imageIter;
@@ -1423,19 +1424,19 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                               << ": will not overwrite input image \""
                               << *inputFileNameIterator
                               << "\" with hard mask"
-                              << endl;
+                              << std::endl;
                     exit(1);
                 } else if (maskFilename == OutputFileName) {
                     std::cerr << command
                               << ": will not overwrite output image \""
                               << OutputFileName
                               << "\" with hard mask"
-                              << endl;
+                              << std::endl;
                     exit(1);
                 } else {
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
                         std::cerr << command
-                                  << ": info: saving hard mask \"" << maskFilename << "\"" << endl;
+                                  << ": info: saving hard mask \"" << maskFilename << "\"" << std::endl;
                     }
                     vigra::ImageExportInfo maskInfo(maskFilename.c_str());
                     maskInfo.setXResolution(ImageResolution.x);

@@ -29,7 +29,9 @@
 #include <vigra/numerictraits.hxx>
 #include <vigra/utilities.hxx>
 
+#ifdef CACHE_IMAGES
 #include "vigra_ext/cachedfileimage.hxx"
+#endif
 
 #include "common.h"
 

@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "vigra_ext/rect2d.hxx"
+#include "vigra_ext/stride.hxx"
 
 #include "anneal.h"
 #include "masktypedefs.h"
@@ -116,19 +117,19 @@ namespace enblend
                     Segment* snake = *currentSegment;
 
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                        cerr << command
+                        std::cerr << command
                              << ": info: Annealing Optimizer, s"
                              << segmentNumber << ":";
-                        cerr.flush();
+                        std::cerr.flush();
                     }
 
                     if (snake->empty()) {
-                        cerr << endl
+                        std::cerr << std::endl
                              << command
                              << ": warning: seam s"
                              << segmentNumber - 1
                              << " is a tiny closed contour and was removed before optimization"
-                             << endl;
+                             << std::endl;
                         continue;
                     }
 
@@ -186,19 +187,19 @@ namespace enblend
                     }
 
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                        cerr << endl;
+                        std::cerr << std::endl;
                     }
 
                     // Print an explanation if every vertex in a closed contour ended up in the
                     // max-cost region after annealing.
                     // FIXME: explain how to fix this problem in the error message!
                     if (snake->empty()) {
-                        cerr << endl
+                        std::cerr << std::endl
                              << command
                              << ": seam s"
                              << segmentNumber - 1
                              << " is a tiny closed contour and was removed after optimization"
-                             << endl;
+                             << std::endl;
                     }
                 }
             }
@@ -251,9 +252,9 @@ namespace enblend
             int segmentNumber;
 
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << command
+                std::cerr << command
                      << ": info: Dijkstra Optimizer:";
-                cerr.flush();
+                std::cerr.flush();
             }
 
             // Use Dijkstra to route between moveable snake vertices over mismatchImage.
@@ -271,8 +272,8 @@ namespace enblend
                     }
 
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                        cerr << " s" << segmentNumber;
-                        cerr.flush();
+                        std::cerr << " s" << segmentNumber;
+                        std::cerr.flush();
                     }
 
                     for (Segment::iterator currentVertex = snake->begin(); ; ) {
@@ -339,7 +340,7 @@ namespace enblend
             }
 
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                cerr << endl;
+                std::cerr << std::endl;
             }
         }
 

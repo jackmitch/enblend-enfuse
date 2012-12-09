@@ -463,8 +463,10 @@ void printUsageAndExit(const bool error = true) {
         "                         set one or more KEY-VALUE pairs\n" <<
         "\n" <<
         "Extended options:\n" <<
+#ifdef CACHE_IMAGES
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
+#endif
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
         "                         \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
@@ -478,8 +480,10 @@ void printUsageAndExit(const bool error = true) {
         "                         manually set the size and position of the output\n" <<
         "                         image; useful for cropped and shifted input\n" <<
         "                         TIFF images, such as those produced by Nona\n" <<
+#ifdef CACHE_IMAGES
         "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
         (vigra_ext::CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
+#endif
         "\n" <<
         "Mask generation options:\n" <<
         "  --primary-seam-generator=ALGORITHM\n" <<
@@ -1312,6 +1316,7 @@ int process_options(int argc, char** argv)
             optionSet.insert(PreAssembleOption);
             break;
 
+#ifdef CACHE_IMAGES
         case 'b':
             if (optarg != NULL && *optarg != 0) {
                 const int cache_block_size =
@@ -1326,6 +1331,7 @@ int process_options(int argc, char** argv)
             }
             optionSet.insert(BlockSizeOption);
             break;
+#endif
 
         case 'c': // FALLTHROUGH
         case CiecamId:
@@ -1437,6 +1443,7 @@ int process_options(int argc, char** argv)
             optionSet.insert(LevelsOption);
             break;
 
+#ifdef CACHE_IMAGES
         case 'm':
             if (optarg != NULL && *optarg != 0) {
                 const int cache_size =
@@ -1451,6 +1458,7 @@ int process_options(int argc, char** argv)
             }
             optionSet.insert(CacheSizeOption);
             break;
+#endif
 
         case 's':
             // Deprecated sequential blending flag.

@@ -157,9 +157,9 @@ public:
 
             const unsigned int localK = stateSpace->size();
             if (localK > AnnealPara.kmax) {
-                cerr << command
+                std::cerr << command
                      << ": local k = " << localK << " > k_max = " << AnnealPara.kmax
-                     << endl;
+                     << std::endl;
                 exit(1);
             }
 
@@ -208,14 +208,14 @@ public:
                                                      + 0.5)));
 
             if (Verbose >= VERBOSE_GDA_MESSAGES) {
-                const std::ios_base::fmtflags ioFlags(cerr.flags());
-                cerr << "\n"
+                const std::ios_base::fmtflags ioFlags(std::cerr.flags());
+                std::cerr << "\n"
                      << command
                      << ": info: t = " << std::scientific << std::setprecision(3) << tCurrent
                      << ", eta = " << std::setw(4) << eta
                      << ", k_max = " << std::setw(3) << kMax;
-                cerr.flush();
-                cerr.flags(ioFlags);
+                std::cerr.flush();
+                std::cerr.flags(ioFlags);
             }
 
             for (unsigned int i = 0; i < eta; i++) {
@@ -231,15 +231,15 @@ public:
                         numConvergedPoints++;
                     }
                 }
-                cerr << ", " << numConvergedPoints
+                std::cerr << ", " << numConvergedPoints
                      << " of " << convergedPoints.size()
                      << " points converged";
-                cerr.flush();
+                std::cerr.flush();
             }
             else if (Verbose >= VERBOSE_MASK_MESSAGES && iterationCount % iterationsPerTick == 0) {
-                cerr << " " << progressIndicator << "/4";
+                std::cerr << " " << progressIndicator << "/4";
                 progressIndicator++;
-                cerr.flush();
+                std::cerr.flush();
             }
 
             iterationCount++;
@@ -265,24 +265,24 @@ public:
         }
 
         if (Verbose >= VERBOSE_GDA_MESSAGES) {
-            cerr << endl;
+            std::cerr << std::endl;
             for (unsigned int i = 0; i < convergedPoints.size(); i++) {
                 if (!convergedPoints[i]) {
-                    cerr << command
+                    std::cerr << command
                          << ": info: unconverged point: "
-                         << endl;
+                         << std::endl;
                     std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[i];
                     std::vector<double>* stateProbabilities = pointStateProbabilities[i];
                     const unsigned int localK = stateSpace->size();
                     for (unsigned int state = 0; state < localK; ++state) {
-                        cerr << command
+                        std::cerr << command
                              << ": info:    state " << (*stateSpace)[state]
                              << ", weight = " << (*stateProbabilities)[state]
-                             << endl;
+                             << std::endl;
                     }
-                    cerr << command
+                    std::cerr << command
                          << ": info:    mfEstimate = " << mfEstimates[i]
-                         << endl;
+                         << std::endl;
                 }
             }
         }
@@ -550,19 +550,19 @@ protected:
 #pragma omp critical(write_to_cerr)
 #endif
                     {
-                        cerr << command
+                        std::cerr << command
                              << ": warning: new mean field estimate outside cost image"
-                             << endl;
+                             << std::endl;
                         for (unsigned int state = 0; state < localK; ++state) {
-                            cerr << command
+                            std::cerr << command
                                  << ": info:    state " << (*stateSpace)[state]
                                  << " weight = "
                                  << (*stateProbabilities)[state]
-                                 << endl;
+                                 << std::endl;
                         }
-                        cerr << command
+                        std::cerr << command
                              << ": info:    new estimate = " << newEstimate
-                             << endl;
+                             << std::endl;
                     } // omp critical
 
                     // Skip this point from now on.
