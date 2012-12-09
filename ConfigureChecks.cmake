@@ -57,10 +57,15 @@ if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   check_cxx_source_compiles(
   "
   #include <vigra/imageinfo.hxx>
+  #include <vigra/impexalpha.hxx>
+
   vigra::ImageImportInfo info(\"image.tif\");
   int main(){
+    vigra::BRGBImage image;
+    vigra::BImage alpha;
     vigra::impexListFormats();
     info.setImageIndex(99);
+    vigra::importImageAlpha(info, destImage(image), destImage(alpha));
     return(0);
   }
   "

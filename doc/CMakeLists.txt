@@ -336,7 +336,7 @@ add_custom_target(doc3 ALL DEPENDS ${_docs})
 
 if(DOC3:BOOL)
   # set make order
-  add_dependencies(doc3 doc2 doc1 doc0 enblendenfuse)
+  add_dependencies(doc3 doc2 doc1 doc0)
 endif()
 
 
