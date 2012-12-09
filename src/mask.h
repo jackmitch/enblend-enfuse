@@ -992,7 +992,12 @@ MaskType* createMask(const ImageType* const white,
     // mem usage before: 0
     // mem usage after: CoarseMask: 1/8 * uBB * MaskType
     //                  !CoarseMask: uBB * MaskType
-    MaskType* mainOutputImage = new MaskType(mainOutputSize);;
+    MaskType* mainOutputImage = new MaskType(mainOutputSize);
+
+    const unsigned default_norm_value =
+        std::min(static_cast<unsigned>(EuclideanDistance),
+                 enblend::parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(ManhattanDistance)));
+    const nearest_neighbor_metric_t norm = static_cast<nearest_neighbor_metric_t>(default_norm_value);
 
     if (MainAlgorithm == GraphCut)
         graphCut(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(iBB, srcImageRange(*white))),
@@ -1000,14 +1005,14 @@ MaskType* createMask(const ImageType* const white,
                  vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
                  vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImageRange(*whiteAlpha))),
                  vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImage(*blackAlpha))),
-                 ManhattanDistance,
+                 norm,
                  wraparound ? HorizontalStrip : OpenBoundaries,
                  mainInputBB);
     else if (MainAlgorithm == NFT)
         nearestFeatureTransform(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImageRange(*whiteAlpha))),
                                 vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImage(*blackAlpha))),
                                 vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
-                                ManhattanDistance,
+                                norm,
                                 wraparound ? HorizontalStrip : OpenBoundaries);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
