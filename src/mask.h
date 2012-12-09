@@ -48,6 +48,7 @@
 
 #include "common.h"
 #include "anneal.h"
+#include "muopt.h"
 #include "nearest.h"
 #include "path.h"
 #include "postoptimizer.h"

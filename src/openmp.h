@@ -39,6 +39,8 @@
 
 #include <omp.h>
 
+#include "muopt.h"
+
 
 #define OPENMP
 #define OPENMP_YEAR (_OPENMP / 100)
