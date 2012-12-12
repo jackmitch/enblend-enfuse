@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __OPENMP_H__
-#define __OPENMP_H__
+#ifndef OPENMP_H_INCLUDED_
+#define OPENMP_H_INCLUDED_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -47,23 +47,6 @@
 #define OPENMP_MONTH (_OPENMP % 100)
 
 
-// These are the image sizes (measured in pixels) where we switch from
-// serial (single thread) to multi processing.  The crossover points
-// can be different for scalar, i.e. black-and-white images and
-// non-scalar, i.e. RGB images.
-
-#define CROSSOVER_COMBINETWOIMAGES_SCALAR 65536
-#define CROSSOVER_COMBINETWOIMAGES_NON_SCALAR 16384
-
-#define CROSSOVER_COMBINETHREEIMAGES_SCALAR 46656
-#define CROSSOVER_COMBINETHREEIMAGES_NON_SCALAR 12544
-
-#define CROSSOVER_TRANSFORMIMAGE_SCALAR 57600
-#define CROSSOVER_TRANSFORMIMAGE_NON_SCALAR 32768
-
-#define CROSSOVER_DISTANCE_TRANSFORM 1936
-
-
 template <class SrcImageIterator1, class SrcAccessor1,
           class SrcImageIterator2, class SrcAccessor2,
           class DestImageIterator, class DestAccessor,
@@ -79,29 +62,18 @@ combineTwoImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lowe
 
     const vigra::Diff2D size(src1_lowerright - src1_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_COMBINETWOIMAGES_SCALAR : CROSSOVER_COMBINETWOIMAGES_NON_SCALAR))
-    {
 #pragma omp parallel
-        {
-            const int n = omp_get_num_threads();
-            const int i = omp_get_thread_num();
-            const vigra::Diff2D begin(0, (i * size.y) / n);
-            const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
-
-            vigra::combineTwoImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                    src2_upperleft + begin, src2_acc,
-                                    dest_upperleft + begin, dest_acc,
-                                    func);
-        } // omp parallel
-    }
-    else
     {
-        vigra::combineTwoImages(src1_upperleft, src1_lowerright, src1_acc,
-                                src2_upperleft, src2_acc,
-                                dest_upperleft, dest_acc,
+        const int n = omp_get_num_threads();
+        const int i = omp_get_thread_num();
+        const vigra::Diff2D begin(0, (i * size.y) / n);
+        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+
+        vigra::combineTwoImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                src2_upperleft + begin, src2_acc,
+                                dest_upperleft + begin, dest_acc,
                                 func);
-    }
+    } // omp parallel
 }
 
 
@@ -122,31 +94,19 @@ combineTwoImagesIfMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
 
     const vigra::Diff2D size(src1_lowerright - src1_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_COMBINETWOIMAGES_SCALAR : CROSSOVER_COMBINETWOIMAGES_NON_SCALAR))
-    {
 #pragma omp parallel
-        {
-            const int n = omp_get_num_threads();
-            const int i = omp_get_thread_num();
-            const vigra::Diff2D begin(0, (i * size.y) / n);
-            const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
-
-            vigra::combineTwoImagesIf(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                      src2_upperleft + begin, src2_acc,
-                                      mask_upperleft + begin, mask_acc,
-                                      dest_upperleft + begin, dest_acc,
-                                      func);
-        } // omp parallel
-    }
-    else
     {
-        vigra::combineTwoImagesIf(src1_upperleft, src1_lowerright, src1_acc,
-                                  src2_upperleft, src2_acc,
-                                  mask_upperleft, mask_acc,
-                                  dest_upperleft, dest_acc,
+        const int n = omp_get_num_threads();
+        const int i = omp_get_thread_num();
+        const vigra::Diff2D begin(0, (i * size.y) / n);
+        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+
+        vigra::combineTwoImagesIf(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                  src2_upperleft + begin, src2_acc,
+                                  mask_upperleft + begin, mask_acc,
+                                  dest_upperleft + begin, dest_acc,
                                   func);
-    }
+    } // omp parallel
 }
 
 
@@ -167,31 +127,19 @@ combineThreeImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
 
     const vigra::Diff2D size(src1_lowerright - src1_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_COMBINETHREEIMAGES_SCALAR : CROSSOVER_COMBINETHREEIMAGES_NON_SCALAR))
-    {
 #pragma omp parallel
-        {
-            const int n = omp_get_num_threads();
-            const int i = omp_get_thread_num();
-            const vigra::Diff2D begin(0, (i * size.y) / n);
-            const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
-
-            vigra::combineThreeImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                      src2_upperleft + begin, src2_acc,
-                                      src3_upperleft + begin, src3_acc,
-                                      dest_upperleft + begin, dest_acc,
-                                      func);
-        } // omp parallel
-    }
-    else
     {
-        vigra::combineThreeImages(src1_upperleft, src1_lowerright, src1_acc,
-                                  src2_upperleft, src2_acc,
-                                  src3_upperleft, src3_acc,
-                                  dest_upperleft, dest_acc,
+        const int n = omp_get_num_threads();
+        const int i = omp_get_thread_num();
+        const vigra::Diff2D begin(0, (i * size.y) / n);
+        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+
+        vigra::combineThreeImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                  src2_upperleft + begin, src2_acc,
+                                  src3_upperleft + begin, src3_acc,
+                                  dest_upperleft + begin, dest_acc,
                                   func);
-    }
+    } // omp parallel
 }
 
 
@@ -208,27 +156,17 @@ transformImageMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright
 
     const vigra::Diff2D size(src_lowerright - src_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_TRANSFORMIMAGE_SCALAR : CROSSOVER_TRANSFORMIMAGE_NON_SCALAR))
-    {
 #pragma omp parallel
-        {
-            const int n = omp_get_num_threads();
-            const int i = omp_get_thread_num();
-            const vigra::Diff2D begin(0, (i * size.y) / n);
-            const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
-
-            vigra::transformImage(src_upperleft + begin, src_upperleft + end, src_acc,
-                                  dest_upperleft + begin, dest_acc,
-                                  func);
-        } // omp parallel
-    }
-    else
     {
-        vigra::transformImage(src_upperleft, src_lowerright, src_acc,
-                              dest_upperleft, dest_acc,
+        const int n = omp_get_num_threads();
+        const int i = omp_get_thread_num();
+        const vigra::Diff2D begin(0, (i * size.y) / n);
+        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+
+        vigra::transformImage(src_upperleft + begin, src_upperleft + end, src_acc,
+                              dest_upperleft + begin, dest_acc,
                               func);
-    }
+    } // omp parallel
 }
 
 
@@ -247,29 +185,18 @@ transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerrig
 
     const vigra::Diff2D size(src_lowerright - src_upperleft);
 
-    if (size.x * size.y >=
-        (isScalar().asBool ? CROSSOVER_TRANSFORMIMAGE_SCALAR : CROSSOVER_TRANSFORMIMAGE_NON_SCALAR))
-    {
 #pragma omp parallel
-        {
-            const int n = omp_get_num_threads();
-            const int i = omp_get_thread_num();
-            const vigra::Diff2D begin(0, (i * size.y) / n);
-            const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
-
-            vigra::transformImageIf(src_upperleft + begin, src_upperleft + end, src_acc,
-                                    mask_upperleft + begin, mask_acc,
-                                    dest_upperleft + begin, dest_acc,
-                                    func);
-        } // omp parallel
-    }
-    else
     {
-        vigra::transformImageIf(src_upperleft, src_lowerright, src_acc,
-                                mask_upperleft, mask_acc,
-                                dest_upperleft, dest_acc,
+        const int n = omp_get_num_threads();
+        const int i = omp_get_thread_num();
+        const vigra::Diff2D begin(0, (i * size.y) / n);
+        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+
+        vigra::transformImageIf(src_upperleft + begin, src_upperleft + end, src_acc,
+                                mask_upperleft + begin, mask_acc,
+                                dest_upperleft + begin, dest_acc,
                                 func);
-    }
+    } // omp parallel
 }
 
 
@@ -749,7 +676,7 @@ distanceTransformMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccesso
 }
 
 
-#endif // __OPENMP_H__
+#endif // OPENMP_H_INCLUDED_
 
 // Local Variables:
 // mode: c++
