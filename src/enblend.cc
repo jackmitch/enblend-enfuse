@@ -366,15 +366,10 @@ void printVersionAndExit(int argc, char** argv) {
 #endif
 
 #ifdef OPENMP
-        const bool have_nested = have_openmp_nested();
         const bool have_dynamic = have_openmp_dynamic();
         std::cout <<
             "Extra feature: OpenMP: yes\n" <<
             "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
-            "  - " << (have_nested ? "" : "no ") <<
-            "support for nested parallelism;\n" <<
-            "    nested parallelism " <<
-            (have_nested && omp_get_nested() ? "enabled" : "disabled") << " by default\n" <<
             "  - " << (have_dynamic ? "" : "no ") <<
             "support for dynamic adjustment of the number of threads;\n" <<
             "    dynamic adjustment " <<

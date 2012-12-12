@@ -379,79 +379,64 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     unsigned tally12;
     unsigned tally21;
 
-#ifdef OPENMP
-#pragma omp parallel sections
-#endif
+    IMAGETYPE<SrcPixelType> diff12(size);
+    combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
+                       src2_upperleft, sa2,
+                       diff12.upperLeft(), diff12.accessor(),
+                       saturating_subtract<SrcPixelType>());
+
+    tally12 = quick_tally(diff12.begin(), diff12.end(), diff12.accessor(),
+                          overlap_threshold);
+
+    switch (boundary)
     {
-#ifdef OPENMP
-#pragma omp section
-#endif
-        {
-            IMAGETYPE<SrcPixelType> diff12(size);
-            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
-                               src2_upperleft, sa2,
-                               diff12.upperLeft(), diff12.accessor(),
-                               saturating_subtract<SrcPixelType>());
+    case OpenBoundaries:
+        distanceTransformMP(srcImageRange(diff12), destImage(dist12),
+                            background, norm);
+        break;
 
-            tally12 = quick_tally(diff12.begin(), diff12.end(), diff12.accessor(),
-                                  overlap_threshold);
+    case HorizontalStrip: // FALLTHROUGH
+    case VerticalStrip:   // FALLTHROUGH
+    case DoubleStrip:
+        periodicDistanceTransform(srcImageRange(diff12), destImage(dist12),
+                                  background, norm, boundary);
+        break;
 
-            switch (boundary)
-            {
-            case OpenBoundaries:
-                distanceTransformMP(srcImageRange(diff12), destImage(dist12),
-                                    background, norm);
-                break;
+    default:
+        throw never_reached("switch control expression \"boundary\" out of range");
+    }
 
-            case HorizontalStrip: // FALLTHROUGH
-            case VerticalStrip:   // FALLTHROUGH
-            case DoubleStrip:
-                periodicDistanceTransform(srcImageRange(diff12), destImage(dist12),
-                                          background, norm, boundary);
-                break;
+    if (Verbose >= VERBOSE_NFT_MESSAGES)
+    {
+        std::cerr << " 2/3";
+        std::cerr.flush();
+    }
+    IMAGETYPE<SrcPixelType> diff21(size);
+    combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
+                       src1_upperleft, sa1,
+                       diff21.upperLeft(), diff21.accessor(),
+                       saturating_subtract<SrcPixelType>());
 
-            default:
-                throw never_reached("switch control expression \"boundary\" out of range");
-            }
-        } // omp section
+    tally21 = quick_tally(diff21.begin(), diff21.end(), diff21.accessor(),
+                          overlap_threshold);
 
-#ifdef OPENMP
-#pragma omp section
-#endif
-        {
-            if (Verbose >= VERBOSE_NFT_MESSAGES)
-            {
-                std::cerr << " 2/3";
-                std::cerr.flush();
-            }
-            IMAGETYPE<SrcPixelType> diff21(size);
-            combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
-                               src1_upperleft, sa1,
-                               diff21.upperLeft(), diff21.accessor(),
-                               saturating_subtract<SrcPixelType>());
+    switch (boundary)
+    {
+    case OpenBoundaries:
+        distanceTransformMP(srcImageRange(diff21), destImage(dist21),
+                            background, norm);
+        break;
 
-            tally21 = quick_tally(diff21.begin(), diff21.end(), diff21.accessor(),
-                                  overlap_threshold);
+    case HorizontalStrip: // FALLTHROUGH
+    case VerticalStrip:   // FALLTHROUGH
+    case DoubleStrip:
+        periodicDistanceTransform(srcImageRange(diff21), destImage(dist21),
+                                  background, norm, boundary);
+        break;
 
-            switch (boundary)
-            {
-            case OpenBoundaries:
-                distanceTransformMP(srcImageRange(diff21), destImage(dist21),
-                                    background, norm);
-                break;
-
-            case HorizontalStrip: // FALLTHROUGH
-            case VerticalStrip:   // FALLTHROUGH
-            case DoubleStrip:
-                periodicDistanceTransform(srcImageRange(diff21), destImage(dist21),
-                                          background, norm, boundary);
-                break;
-
-            default:
-                throw never_reached("switch control expression \"boundary\" out of range");
-            }
-        } // omp section
-    } // omp parallel sections
+    default:
+        throw never_reached("switch control expression \"boundary\" out of range");
+    }
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
