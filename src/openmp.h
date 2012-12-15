@@ -45,6 +45,27 @@
 #define OPENMP_MONTH (_OPENMP % 100)
 
 
+namespace omp
+{
+    class lock
+    {
+    public:
+        lock() {omp_init_lock(&lock_);}
+        ~lock() {omp_destroy_lock(&lock_);}
+
+        void set() {omp_set_lock(&lock_);}
+        void unset() {omp_unset_lock(&lock_);}
+        bool test() {return omp_test_lock(&lock_);}
+
+    private:
+        lock(const lock&);            // not implemented
+        lock& operator=(const lock&); // not implemented
+
+        omp_lock_t lock_;
+    };
+}
+
+
 template <class SrcImageIterator1, class SrcAccessor1,
           class SrcImageIterator2, class SrcAccessor2,
           class DestImageIterator, class DestAccessor,
@@ -438,6 +459,25 @@ inline int omp_get_dynamic() {return 0;}
 inline int omp_in_parallel() {return 0;}
 inline void omp_set_nested(int) {}
 inline int omp_get_nested() {return 0;}
+
+
+namespace omp
+{
+    class lock
+    {
+    public:
+        lock() {}
+        ~lock() {}
+
+        void set() {}
+        void unset() {}
+        bool test() {return false;}
+
+    private:
+        lock(const lock&);            // not implemented
+        lock& operator=(const lock&); // not implemented
+    };
+}
 
 
 template <class SrcImageIterator1, class SrcAccessor1,
