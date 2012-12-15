@@ -506,6 +506,9 @@ protected:
 
         kMax = 1;
         size_t kmax_local = 1;
+        ::omp::lock lock_cerr;
+        ::omp::lock lock_update;
+
 #ifdef OPENMP
 #pragma omp parallel firstprivate(kmax_local)
 #endif
@@ -546,24 +549,21 @@ protected:
 
                 // Sanity check
                 if (!costImage->isInside(newEstimate)) {
-#ifdef OPENMP
-#pragma omp critical(write_to_cerr)
-#endif
-                    {
+                    lock_cerr.set();
+                    std::cerr << command
+                              << ": warning: new mean field estimate outside cost image"
+                              << std::endl;
+                    for (unsigned int state = 0; state < localK; ++state) {
                         std::cerr << command
-                             << ": warning: new mean field estimate outside cost image"
-                             << std::endl;
-                        for (unsigned int state = 0; state < localK; ++state) {
-                            std::cerr << command
-                                 << ": info:    state " << (*stateSpace)[state]
-                                 << " weight = "
-                                 << (*stateProbabilities)[state]
-                                 << std::endl;
-                        }
-                        std::cerr << command
-                             << ": info:    new estimate = " << newEstimate
-                             << std::endl;
-                    } // omp critical
+                                  << ": info:    state " << (*stateSpace)[state]
+                                  << " weight = "
+                                  << (*stateProbabilities)[state]
+                                  << std::endl;
+                    }
+                    std::cerr << command
+                              << ": info:    new estimate = " << newEstimate
+                              << std::endl;
+                    lock_cerr.unset();
 
                     // Skip this point from now on.
                     convergedPoints[index] = true;
@@ -605,10 +605,10 @@ protected:
 
                 kmax_local = std::max(kmax_local, stateProbabilities->size());
             }
-#ifdef OPENMP
-#pragma omp critical(update_kMax)
-#endif
+
+            lock_update.set();
             kMax = std::max(kMax, static_cast<unsigned int>(kmax_local));
+            lock_update.unset();
         } // omp parallel
     }
 
