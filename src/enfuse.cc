@@ -64,7 +64,6 @@ extern "C" int optind;
 #endif
 
 #include <boost/logic/tribool.hpp>
-#include <boost/random/mersenne_twister.hpp>
 #include <lcms2.h>
 
 #include "global.h"
@@ -76,9 +75,6 @@ extern "C" int optind;
 
 // Globals
 const std::string command("enfuse");
-
-// Random number generator for dithering
-boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);

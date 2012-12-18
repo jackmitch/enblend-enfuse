@@ -65,7 +65,6 @@ extern "C" int optind;
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/logic/tribool.hpp>
-#include <boost/random/mersenne_twister.hpp>
 #include <lcms2.h>
 
 #include "global.h"
@@ -96,9 +95,6 @@ const std::string command("enblend");
 const int minimumVectorizeDistance = 4; //< src::minimum-vectorize-distance 4
 const int coarseMaskVectorizeDistance = 4; //< src::coarse-mask-vectorize-distance 4
 const int fineMaskVectorizeDistance = 20; //< src::fine-mask-vectorize-distance 20
-
-// Random number generator for dithering
-boost::mt19937 Twister;
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
