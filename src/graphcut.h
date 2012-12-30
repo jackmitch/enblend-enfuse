@@ -1200,7 +1200,7 @@ namespace enblend {
                       std::vector<vigra::Point2D>& totalDualPath, const vigra::Rect2D& iBB)
     {
         const vigra::Diff2D size(iBB.lowerRight().x - iBB.upperLeft().x,
-                          iBB.lowerRight().y - iBB.upperLeft().y);
+                                 iBB.lowerRight().y - iBB.upperLeft().y);
 
         IMAGETYPE<MaskPixelType> finalmask(size + vigra::Diff2D(2, 2));
         IMAGETYPE<MaskPixelType> tempImg(size);
@@ -1234,15 +1234,19 @@ namespace enblend {
         int colorSum = 0;
         int count = 0;
         CountFunctor<MaskPixelType> c(&colorSum, &count);
+        const vigra::triple<typename IMAGETYPE<MaskPixelType>::Iterator, typename IMAGETYPE<MaskPixelType>::Iterator,
+                            typename IMAGETYPE<MaskPixelType>::Accessor> finalmaskSrcRange =
+            vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1), finalmask.lowerRight() - vigra::Diff2D(1, 1));
+        const vigra::pair<typename IMAGETYPE<MaskPixelType>::Iterator, typename IMAGETYPE<MaskPixelType>::Accessor> finalmaskDest =
+            vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1));
 
-        transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
-                                    finalmask.lowerRight() - vigra::Diff2D(1, 1)),
-                       vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
-                       ifThenElse(Arg1() == Param(1), Param(BasePixelTraits::max()),
+        transformImage(finalmaskSrcRange,
+                       finalmaskDest,
+                       ifThenElse(Arg1() == Param(1),
+                                  Param(BasePixelTraits::max()),
                                   Param(BasePixelTraits::zero())));
 
-        inspectTwoImages(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
-                                      finalmask.lowerRight() - vigra::Diff2D(1, 1)),
+        inspectTwoImages(finalmaskSrcRange,
                          vigra::srcIter(dest_upperleft + iBB.upperLeft(), da), c);
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels1.tif").setPixelType("UINT8"));
@@ -1250,16 +1254,14 @@ namespace enblend {
 
         // if colorSum < half the pixels labeled as "1" in finalmask should be black
         if (colorSum < count / 2) {
-            transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
-                                        finalmask.lowerRight() - vigra::Diff2D(1, 1)),
-                           vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
-                           ifThenElse(Arg1() == Param(0), Param(BasePixelTraits::max()),
+            transformImage(finalmaskSrcRange, finalmaskDest,
+                           ifThenElse(Arg1() == Param(0),
+                                      Param(BasePixelTraits::max()),
                                       Param(BasePixelTraits::zero())));
         } else {
-            transformImage(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
-                                        finalmask.lowerRight() - vigra::Diff2D(1, 1)),
-                           vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1)),
-                           ifThenElse(Arg1() == Param(0), Param(BasePixelTraits::zero()),
+            transformImage(finalmaskSrcRange, finalmaskDest,
+                           ifThenElse(Arg1() == Param(0),
+                                      Param(BasePixelTraits::zero()),
                                       Param(BasePixelTraits::max())));
         }
 
@@ -1273,8 +1275,7 @@ namespace enblend {
                                       Param(MaskPixelTraits::max()),
                                       Param(MaskPixelTraits::zero())));
 
-        copyImageIf(vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1),
-                                 finalmask.lowerRight() - vigra::Diff2D(1, 1)), srcImage(tempImg),
+        copyImageIf(finalmaskSrcRange, srcImage(tempImg),
                     vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
     }
 
