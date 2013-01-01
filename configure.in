@@ -324,6 +324,7 @@ if test "$ac_cv_c_inline" != no; then
    AC_DEFINE(HAVE_INLINE, 1, [Define if functions can be declared `inline'.])
    AC_SUBST(HAVE_INLINE)
 fi
+AC_C_RESTRICT
 
 AC_TYPE_OFF_T
 AC_TYPE_SIGNAL
