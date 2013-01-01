@@ -94,21 +94,25 @@ inline void
 combineTwoImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lowerright, SrcAccessor1 src1_acc,
                    SrcImageIterator2 src2_upperleft, SrcAccessor2 src2_acc,
                    DestImageIterator dest_upperleft, DestAccessor dest_acc,
-                   const Functor& func)
+                   const Functor& functor)
 {
-    const vigra::Size2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel for schedule(guided)
-    for (int y = 0; y < size.y; ++y)
+#pragma omp parallel
     {
-        const vigra::Diff2D begin(0, y);
-        const vigra::Diff2D end(size.x, y + 1);
+        const vigra::Size2D size(src1_lowerright - src1_upperleft);
+        Functor f(functor);
 
-        vigra::combineTwoImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                src2_upperleft + begin, src2_acc,
-                                dest_upperleft + begin, dest_acc,
-                                func);
-    }
+#pragma omp for schedule(guided) nowait
+        for (int y = 0; y < size.y; ++y)
+        {
+            const vigra::Diff2D begin(0, y);
+            const vigra::Diff2D end(size.x, y + 1);
+
+            vigra::combineTwoImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                    src2_upperleft + begin, src2_acc,
+                                    dest_upperleft + begin, dest_acc,
+                                    f);
+        }
+    } // omp parallel
 }
 
 
@@ -122,22 +126,26 @@ combineTwoImagesIfMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
                      SrcImageIterator2 src2_upperleft, SrcAccessor2 src2_acc,
                      MaskImageIterator mask_upperleft, MaskAccessor mask_acc,
                      DestImageIterator dest_upperleft, DestAccessor dest_acc,
-                     const Functor& func)
+                     const Functor& functor)
 {
-    const vigra::Size2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel for schedule(guided)
-    for (int y = 0; y < size.y; ++y)
+#pragma omp parallel
     {
-        const vigra::Diff2D begin(0, y);
-        const vigra::Diff2D end(size.x, y + 1);
+        const vigra::Size2D size(src1_lowerright - src1_upperleft);
+        Functor f(functor);
 
-        vigra::combineTwoImagesIf(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                  src2_upperleft + begin, src2_acc,
-                                  mask_upperleft + begin, mask_acc,
-                                  dest_upperleft + begin, dest_acc,
-                                  func);
-    }
+#pragma omp for schedule(guided) nowait
+        for (int y = 0; y < size.y; ++y)
+        {
+            const vigra::Diff2D begin(0, y);
+            const vigra::Diff2D end(size.x, y + 1);
+
+            vigra::combineTwoImagesIf(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                      src2_upperleft + begin, src2_acc,
+                                      mask_upperleft + begin, mask_acc,
+                                      dest_upperleft + begin, dest_acc,
+                                      f);
+        }
+    } // omp parallel
 }
 
 
@@ -151,22 +159,26 @@ combineThreeImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
                      SrcImageIterator2 src2_upperleft, SrcAccessor2 src2_acc,
                      SrcImageIterator3 src3_upperleft, SrcAccessor3 src3_acc,
                      DestImageIterator dest_upperleft, DestAccessor dest_acc,
-                     const Functor& func)
+                     const Functor& functor)
 {
-    const vigra::Size2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel for schedule(guided)
-    for (int y = 0; y < size.y; ++y)
+#pragma omp parallel
     {
-        const vigra::Diff2D begin(0, y);
-        const vigra::Diff2D end(size.x, y + 1);
+        const vigra::Size2D size(src1_lowerright - src1_upperleft);
+        Functor f(functor);
 
-        vigra::combineThreeImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
-                                  src2_upperleft + begin, src2_acc,
-                                  src3_upperleft + begin, src3_acc,
-                                  dest_upperleft + begin, dest_acc,
-                                  func);
-    }
+#pragma omp for schedule(guided) nowait
+        for (int y = 0; y < size.y; ++y)
+        {
+            const vigra::Diff2D begin(0, y);
+            const vigra::Diff2D end(size.x, y + 1);
+
+            vigra::combineThreeImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
+                                      src2_upperleft + begin, src2_acc,
+                                      src3_upperleft + begin, src3_acc,
+                                      dest_upperleft + begin, dest_acc,
+                                      f);
+        }
+    } // omp parallel
 }
 
 
@@ -176,20 +188,24 @@ template <class SrcImageIterator, class SrcAccessor,
 inline void
 transformImageMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
                  DestImageIterator dest_upperleft, DestAccessor dest_acc,
-                 const Functor& func)
+                 const Functor& functor)
 {
-    const vigra::Size2D size(src_lowerright - src_upperleft);
-
-#pragma omp parallel for schedule(guided)
-    for (int y = 0; y < size.y; ++y)
+#pragma omp parallel
     {
-        const vigra::Diff2D begin(0, y);
-        const vigra::Diff2D end(size.x, y + 1);
+        const vigra::Size2D size(src_lowerright - src_upperleft);
+        Functor f(functor);
 
-        vigra::transformImage(src_upperleft + begin, src_upperleft + end, src_acc,
-                              dest_upperleft + begin, dest_acc,
-                              func);
-    }
+#pragma omp for schedule(guided) nowait
+        for (int y = 0; y < size.y; ++y)
+        {
+            const vigra::Diff2D begin(0, y);
+            const vigra::Diff2D end(size.x, y + 1);
+
+            vigra::transformImage(src_upperleft + begin, src_upperleft + end, src_acc,
+                                  dest_upperleft + begin, dest_acc,
+                                  f);
+        }
+    } // omp parallel
 }
 
 
@@ -201,21 +217,25 @@ inline void
 transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
                    MaskImageIterator mask_upperleft, MaskAccessor mask_acc,
                    DestImageIterator dest_upperleft, DestAccessor dest_acc,
-                   const Functor& func)
+                   const Functor& functor)
 {
-    const vigra::Size2D size(src_lowerright - src_upperleft);
-
-#pragma omp parallel for schedule(guided)
-    for (int y = 0; y < size.y; ++y)
+#pragma omp parallel
     {
-        const vigra::Diff2D begin(0, y);
-        const vigra::Diff2D end(size.x, y + 1);
+        const vigra::Size2D size(src_lowerright - src_upperleft);
+        Functor f(functor);
 
-        vigra::transformImageIf(src_upperleft + begin, src_upperleft + end, src_acc,
-                                mask_upperleft + begin, mask_acc,
-                                dest_upperleft + begin, dest_acc,
-                                func);
-    }
+#pragma omp for schedule(guided) nowait
+        for (int y = 0; y < size.y; ++y)
+        {
+            const vigra::Diff2D begin(0, y);
+            const vigra::Diff2D end(size.x, y + 1);
+
+            vigra::transformImageIf(src_upperleft + begin, src_upperleft + end, src_acc,
+                                    mask_upperleft + begin, mask_acc,
+                                    dest_upperleft + begin, dest_acc,
+                                    f);
+        }
+    } // omp parallel
 }
 
 
@@ -636,12 +656,12 @@ inline void
 combineTwoImagesMP(vigra::triple<SrcImageIterator1, SrcImageIterator1, SrcAccessor1> src1,
                    vigra::pair<SrcImageIterator2, SrcAccessor2> src2,
                    vigra::pair<DestImageIterator, DestAccessor> dest,
-                   const Functor& func)
+                   const Functor& functor)
 {
     combineTwoImagesMP(src1.first, src1.second, src1.third,
                        src2.first, src2.second,
                        dest.first, dest.second,
-                       func);
+                       functor);
 }
 
 
@@ -655,13 +675,13 @@ combineTwoImagesIfMP(vigra::triple<SrcImageIterator1, SrcImageIterator1, SrcAcce
                      vigra::pair<SrcImageIterator2, SrcAccessor2> src2,
                      vigra::pair<MaskImageIterator, MaskAccessor> mask,
                      vigra::pair<DestImageIterator, DestAccessor> dest,
-                     const Functor& func)
+                     const Functor& functor)
 {
     combineTwoImagesIfMP(src1.first, src1.second, src1.third,
                          src2.first, src2.second,
                          mask.first, mask.second,
                          dest.first, dest.second,
-                         func);
+                         functor);
 }
 
 
@@ -675,13 +695,13 @@ combineThreeImagesMP(vigra::triple<SrcImageIterator1, SrcImageIterator1, SrcAcce
                      vigra::pair<SrcImageIterator2, SrcAccessor2> src2,
                      vigra::pair<SrcImageIterator3, SrcAccessor3> src3,
                      vigra::pair<DestImageIterator, DestAccessor> dest,
-                     const Functor& func)
+                     const Functor& functor)
 {
     combineThreeImagesMP(src1.first, src1.second, src1.third,
                          src2.first, src2.second,
                          src3.first, src3.second,
                          dest.first, dest.second,
-                         func);
+                         functor);
 }
 
 
@@ -691,11 +711,11 @@ template <class SrcImageIterator, class SrcAccessor,
 inline void
 transformImageMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
                  vigra::pair<DestImageIterator, DestAccessor> dest,
-                 const Functor& func)
+                 const Functor& functor)
 {
     transformImageMP(src.first, src.second, src.third,
                      dest.first, dest.second,
-                     func);
+                     functor);
 }
 
 
@@ -707,12 +727,12 @@ inline void
 transformImageIfMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
                    vigra::pair<MaskImageIterator, MaskAccessor> mask,
                    vigra::pair<DestImageIterator, DestAccessor> dest,
-                   const Functor& func)
+                   const Functor& functor)
 {
     transformImageIfMP(src.first, src.second, src.third,
                        mask.first, mask.second,
                        dest.first, dest.second,
-                       func);
+                       functor);
 }
 
 
