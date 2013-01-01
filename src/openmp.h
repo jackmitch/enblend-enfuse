@@ -343,7 +343,7 @@ namespace detail
 
         const vigra::Diff2D size(src_lowerright - src_upperleft);
         const int greatest_length = std::max(size.x, size.y);
-        DistanceImageType intermediate(size);
+        DistanceImageType intermediate(size, vigra::SkipInitialization);
 
 #pragma omp parallel
         {
