@@ -96,23 +96,19 @@ combineTwoImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lowe
                    DestImageIterator dest_upperleft, DestAccessor dest_acc,
                    const Functor& func)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+    const vigra::Size2D size(src1_lowerright - src1_upperleft);
 
-    const vigra::Diff2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel
+#pragma omp parallel for schedule(guided)
+    for (int y = 0; y < size.y; ++y)
     {
-        const int n = omp_get_num_threads();
-        const int i = omp_get_thread_num();
-        const vigra::Diff2D begin(0, (i * size.y) / n);
-        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+        const vigra::Diff2D begin(0, y);
+        const vigra::Diff2D end(size.x, y + 1);
 
         vigra::combineTwoImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
                                 src2_upperleft + begin, src2_acc,
                                 dest_upperleft + begin, dest_acc,
                                 func);
-    } // omp parallel
+    }
 }
 
 
@@ -128,24 +124,20 @@ combineTwoImagesIfMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
                      DestImageIterator dest_upperleft, DestAccessor dest_acc,
                      const Functor& func)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+    const vigra::Size2D size(src1_lowerright - src1_upperleft);
 
-    const vigra::Diff2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel
+#pragma omp parallel for schedule(guided)
+    for (int y = 0; y < size.y; ++y)
     {
-        const int n = omp_get_num_threads();
-        const int i = omp_get_thread_num();
-        const vigra::Diff2D begin(0, (i * size.y) / n);
-        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+        const vigra::Diff2D begin(0, y);
+        const vigra::Diff2D end(size.x, y + 1);
 
         vigra::combineTwoImagesIf(src1_upperleft + begin, src1_upperleft + end, src1_acc,
                                   src2_upperleft + begin, src2_acc,
                                   mask_upperleft + begin, mask_acc,
                                   dest_upperleft + begin, dest_acc,
                                   func);
-    } // omp parallel
+    }
 }
 
 
@@ -161,24 +153,20 @@ combineThreeImagesMP(SrcImageIterator1 src1_upperleft, SrcImageIterator1 src1_lo
                      DestImageIterator dest_upperleft, DestAccessor dest_acc,
                      const Functor& func)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+    const vigra::Size2D size(src1_lowerright - src1_upperleft);
 
-    const vigra::Diff2D size(src1_lowerright - src1_upperleft);
-
-#pragma omp parallel
+#pragma omp parallel for schedule(guided)
+    for (int y = 0; y < size.y; ++y)
     {
-        const int n = omp_get_num_threads();
-        const int i = omp_get_thread_num();
-        const vigra::Diff2D begin(0, (i * size.y) / n);
-        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+        const vigra::Diff2D begin(0, y);
+        const vigra::Diff2D end(size.x, y + 1);
 
         vigra::combineThreeImages(src1_upperleft + begin, src1_upperleft + end, src1_acc,
                                   src2_upperleft + begin, src2_acc,
                                   src3_upperleft + begin, src3_acc,
                                   dest_upperleft + begin, dest_acc,
                                   func);
-    } // omp parallel
+    }
 }
 
 
@@ -190,22 +178,18 @@ transformImageMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright
                  DestImageIterator dest_upperleft, DestAccessor dest_acc,
                  const Functor& func)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+    const vigra::Size2D size(src_lowerright - src_upperleft);
 
-    const vigra::Diff2D size(src_lowerright - src_upperleft);
-
-#pragma omp parallel
+#pragma omp parallel for schedule(guided)
+    for (int y = 0; y < size.y; ++y)
     {
-        const int n = omp_get_num_threads();
-        const int i = omp_get_thread_num();
-        const vigra::Diff2D begin(0, (i * size.y) / n);
-        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+        const vigra::Diff2D begin(0, y);
+        const vigra::Diff2D end(size.x, y + 1);
 
         vigra::transformImage(src_upperleft + begin, src_upperleft + end, src_acc,
                               dest_upperleft + begin, dest_acc,
                               func);
-    } // omp parallel
+    }
 }
 
 
@@ -219,23 +203,19 @@ transformImageIfMP(SrcImageIterator src_upperleft, SrcImageIterator src_lowerrig
                    DestImageIterator dest_upperleft, DestAccessor dest_acc,
                    const Functor& func)
 {
-    typedef typename DestAccessor::value_type value_type;
-    typedef typename vigra::NumericTraits<value_type>::isScalar isScalar;
+    const vigra::Size2D size(src_lowerright - src_upperleft);
 
-    const vigra::Diff2D size(src_lowerright - src_upperleft);
-
-#pragma omp parallel
+#pragma omp parallel for schedule(guided)
+    for (int y = 0; y < size.y; ++y)
     {
-        const int n = omp_get_num_threads();
-        const int i = omp_get_thread_num();
-        const vigra::Diff2D begin(0, (i * size.y) / n);
-        const vigra::Diff2D end(size.x, ((i + 1) * size.y) / n);
+        const vigra::Diff2D begin(0, y);
+        const vigra::Diff2D end(size.x, y + 1);
 
         vigra::transformImageIf(src_upperleft + begin, src_upperleft + end, src_acc,
                                 mask_upperleft + begin, mask_acc,
                                 dest_upperleft + begin, dest_acc,
                                 func);
-    } // omp parallel
+    }
 }
 
 
@@ -359,7 +339,7 @@ namespace detail
         typedef typename vigra::NumericTraits<DistanceType> DistanceTraits;
         typedef vigra::BasicImage<DistanceType> DistanceImageType;
 
-        const vigra::Diff2D size(src_lowerright - src_upperleft);
+        const vigra::Size2D size(src_lowerright - src_upperleft);
         const int greatest_length = std::max(size.x, size.y);
         DistanceImageType intermediate(size, vigra::SkipInitialization);
 
