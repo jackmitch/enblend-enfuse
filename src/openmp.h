@@ -65,6 +65,24 @@ namespace omp
 
         omp_lock_t lock_;
     };
+
+
+    class nestable_lock
+    {
+    public:
+        nestable_lock() {omp_init_nest_lock(&lock_);}
+        ~nestable_lock() {omp_destroy_nest_lock(&lock_);}
+
+        void set() {omp_set_nest_lock(&lock_);}
+        void unset() {omp_unset_nest_lock(&lock_);}
+        bool test() {return omp_test_nest_lock(&lock_);}
+
+    private:
+        nestable_lock(const nestable_lock&);            // not implemented
+        nestable_lock& operator=(const nestable_lock&); // not implemented
+
+        omp_nest_lock_t lock_;
+    };
 }
 
 
@@ -476,6 +494,22 @@ namespace omp
         lock(const lock&);            // not implemented
         lock& operator=(const lock&); // not implemented
     };
+
+
+    class nestable_lock
+    {
+    public:
+        nestable_lock() {}
+        ~nestable_lock() {}
+
+        void set() {}
+        void unset() {}
+        bool test() {return false;}
+
+    private:
+        nestable_lock(const nestable_lock&);            // not implemented
+        nestable_lock& operator=(const nestable_lock&); // not implemented
+    };
 }
 
 
@@ -714,6 +748,29 @@ distanceTransformMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccesso
                         dest.first, dest.second,
                         background, norm);
 }
+
+
+namespace omp
+{
+    template <class basic_lock>
+    class scoped_lock
+    {
+    public:
+        scoped_lock(basic_lock& a_lock) : lock_(&a_lock) {lock_->set();}
+        ~scoped_lock() {lock_->unset();}
+
+        void set() {lock_->set();}
+        void unset() {lock_->unset();}
+        bool test() {return lock_->test();}
+
+    private:
+        scoped_lock();                              // not implemented
+        scoped_lock(const scoped_lock&);            // not implemented
+        scoped_lock& operator=(const scoped_lock&); // not implemented
+
+        basic_lock* const lock_;
+    }; // class scoped_lock
+} // namespace omp
 
 
 #endif // OPENMP_H_INCLUDED_
