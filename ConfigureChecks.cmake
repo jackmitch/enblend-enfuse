@@ -50,6 +50,34 @@ if(HAVE_DIRENT_H)
     CLOSEDIR_INT)
 endif(HAVE_DIRENT_H)
 
+# Check for restrict keyword
+# Builds the macro A_C_RESTRICT form automake
+foreach(ac_kw __restrict __restrict__ _Restrict restrict)
+  check_cxx_source_compiles(
+  "
+  typedef int * int_ptr;
+  int foo (int_ptr ${ac_kw} ip) {
+    return ip[0];
+  }
+  int main(){
+    int s[1];
+    int * ${ac_kw} t = s;
+    t[0] = 0;
+    return foo(t);
+  }
+  "
+  RESTRICT)
+  if(RESTRICT)
+    set(ac_cv_c_restrict ${ac_kw})
+    break()
+  endif()
+endforeach()
+if(RESTRICT)
+  add_definitions("-Drestrict=${ac_cv_c_restrict}")
+else()
+  add_definitions("-Drestrict=")
+endif()
+
 if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   unset(VIGRA_SETIMAGEINDEX CACHE)
   set(CMAKE_REQUIRED_INCLUDES ${VIGRA_INCLUDE_DIR})
