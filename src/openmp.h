@@ -262,7 +262,7 @@ namespace detail
 
         int id() const {return 0;}
 
-        void operator()(ValueType* /* restrict d */, const ValueType* /* restrict f */, int /* n */) const
+        void operator()(ValueType* /* RESTRICT d */, const ValueType* /* RESTRICT f */, int /* n */) const
         {
             vigra_fail("fh::detail::ChessboardTransform1D: not implemented");
         }
@@ -276,7 +276,7 @@ namespace detail
 
         int id() const {return 1;}
 
-        void operator()(ValueType* restrict d, const ValueType* restrict f, int n) const
+        void operator()(ValueType* RESTRICT d, const ValueType* RESTRICT f, int n) const
         {
             const ValueType one = static_cast<ValueType>(1);
 
@@ -300,7 +300,7 @@ namespace detail
 
         int id() const {return 2;}
 
-        void operator()(ValueType* restrict d, const ValueType* restrict f, int n) const
+        void operator()(ValueType* RESTRICT d, const ValueType* RESTRICT f, int n) const
         {
             typedef float math_t;
 

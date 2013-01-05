@@ -325,6 +325,7 @@ if test "$ac_cv_c_inline" != no; then
    AC_SUBST(HAVE_INLINE)
 fi
 AC_C_RESTRICT
+AC_DEFINE(RESTRICT, restrict)
 
 AC_TYPE_OFF_T
 AC_TYPE_SIGNAL
