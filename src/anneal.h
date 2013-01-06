@@ -306,7 +306,7 @@ public:
     }
 
 protected:
-    void calculateStateProbabilities() {
+    void calculateStateProbabilitiesCPU() {
         const int mf_size = static_cast<int>(mfEstimates.size());
 
 #ifdef OPENMP
@@ -493,21 +493,23 @@ protected:
     }
 #endif
 
-    void iterate() {
+    void calculateStateProbabilities() {
 #ifdef HAVE_LIBGLEW
         if (UseGPU) {
             calculateStateProbabilitiesGPU();
         } else {
-            calculateStateProbabilities();
+            calculateStateProbabilitiesCPU();
         }
 #else
-        calculateStateProbabilities();
+        calculateStateProbabilitiesCPU();
 #endif
+    }
+
+   void iterate() {
+       calculateStateProbabilities();
 
         kMax = 1;
         size_t kmax_local = 1;
-        ::omp::lock lock_cerr;
-        ::omp::lock lock_update;
 
 #ifdef OPENMP
 #pragma omp parallel firstprivate(kmax_local)
@@ -549,7 +551,7 @@ protected:
 
                 // Sanity check
                 if (!costImage->isInside(newEstimate)) {
-                    lock_cerr.set();
+                    cerrLock.set();
                     std::cerr << command
                               << ": warning: new mean field estimate outside cost image"
                               << std::endl;
@@ -563,7 +565,7 @@ protected:
                     std::cerr << command
                               << ": info:    new estimate = " << newEstimate
                               << std::endl;
-                    lock_cerr.unset();
+                    cerrLock.unset();
 
                     // Skip this point from now on.
                     convergedPoints[index] = true;
@@ -606,9 +608,9 @@ protected:
                 kmax_local = std::max(kmax_local, stateProbabilities->size());
             }
 
-            lock_update.set();
+            kMaxLock.set();
             kMax = std::max(kMax, static_cast<unsigned int>(kmax_local));
-            lock_update.unset();
+            kMaxLock.unset();
         } // omp parallel
     }
 
@@ -694,12 +696,15 @@ protected:
 
     // Largest state space over all points
     unsigned int kMax;
+    omp::lock kMaxLock;
 
     // Weight factors for the distance of a point from the initial
     // seam line and the total mismatch accumulated along the seam
     // line segment.
     double distanceWeight;;
     double mismatchWeight;
+
+    omp::lock cerrLock;
 };
 
 
