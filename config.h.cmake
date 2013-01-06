@@ -143,6 +143,10 @@
 /* Define to 1 if the system has the type `_Bool'. */
 /* #undef HAVE__BOOL */
 
+/* define the correct restrict keyword, Empty or one of
+  __restrict __restrict__ _Restrict restrict */
+#define RESTRICT ${RESTRICT}
+
 /* Name of package */
 #define PACKAGE "enblend-enfuse"
 

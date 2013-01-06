@@ -52,11 +52,11 @@ endif(HAVE_DIRENT_H)
 
 # Check for restrict keyword
 # Builds the macro A_C_RESTRICT form automake
+set(RESTRICT)
 foreach(ac_kw __restrict __restrict__ _Restrict restrict)
   check_cxx_source_compiles(
   "
-  typedef int * int_ptr;
-  int foo (int_ptr ${ac_kw} ip) {
+  int foo (int * ${ac_kw} ip) {
     return ip[0];
   }
   int main(){
@@ -66,21 +66,12 @@ foreach(ac_kw __restrict __restrict__ _Restrict restrict)
     return foo(t);
   }
   "
-  RESTRICT)
-  if(RESTRICT)
-    set(ac_cv_c_restrict ${ac_kw})
+  RESTRICT_${ac_kw}_FOUND)
+  if(RESTRICT_${ac_kw}_FOUND)
+    set(RESTRICT ${ac_kw})
     break()
   endif()
 endforeach()
-if(RESTRICT)
-  if("${ac_cv_c_restrict}" EQUAL "restrict")
-    # Nothing neede, since the compiler understands this keyword
-  else()
-    add_definitions("-Drestrict=${ac_cv_c_restrict}")
-  endif()
-else()
-  add_definitions("-Drestrict=")
-endif()
 
 if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   unset(VIGRA_SETIMAGEINDEX CACHE)
