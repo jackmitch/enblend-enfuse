@@ -26,13 +26,21 @@
 
 
 #ifdef __GNUC__
-#define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint) \
+
+#define PREFETCH(m_addr) __builtin_prefetch(m_addr)
+#define HINTED_PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint) \
     __builtin_prefetch((m_addr), (m_rw_hint), (m_temporal_locality_hint))
+
 #define EXPECT_RESULT(m_condition, m_expected_result) \
     __builtin_expect((m_condition), static_cast<int>(m_expected_result))
+
 #else
-#define PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint)
+
+#define PREFETCH(m_addr)
+#define HINTED_PREFETCH(m_addr, m_rw_hint, m_temporal_locality_hint)
+
 #define EXPECT_RESULT(m_condition, m_expected_result) (m_condition)
+
 #endif
 
 

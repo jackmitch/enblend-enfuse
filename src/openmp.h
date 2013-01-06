@@ -322,6 +322,10 @@ namespace detail
                 while (s <= z[k])
                 {
                     --k;
+                    // IMPLEMENTATION NOTE
+                    //     Prefetching improves performance because we must iterate from high to
+                    //     low addresses, i.e. against the cache's look-ahead algorithm.
+                    HINTED_PREFETCH(z + k - 2U, PREPARE_FOR_READ, HIGH_TEMPORAL_LOCALITY);
                     s = (sum_q - (f[v[k]] + square(v[k]))) / (2 * (q - v[k]));
                 }
                 ++k;
@@ -362,8 +366,11 @@ namespace detail
 
 #pragma omp parallel
         {
-            DistanceType* f = new DistanceType[greatest_length];
-            DistanceType* d = new DistanceType[greatest_length];
+            DistanceType* const f = new DistanceType[greatest_length];
+            DistanceType* const d = new DistanceType[greatest_length];
+
+            DistanceType* const pf_end = f + size.y;
+            const DistanceType* const pd_end = d + size.y;
 
 // IMPLEMENTATION NOTE
 //     We need "guided" schedule to reduce the waiting time at the
@@ -373,22 +380,22 @@ namespace detail
             for (int x = 0; x < size.x; ++x)
             {
                 SrcImageIterator si(src_upperleft + vigra::Diff2D(x, 0));
-                for (DistanceType* pf = f; pf != f + size.y; ++pf, ++si.y)
+                for (DistanceType* pf = f; pf != pf_end; ++pf)
                 {
-                    *pf = sa(si) == background ? DistanceTraits::max() : DistanceTraits::zero();
+                    *pf = EXPECT_RESULT(sa(si) == background, false) ? DistanceTraits::max() : DistanceTraits::zero();
+                    ++si.y;
                 }
 
                 transform1d(d, f, size.y);
 
                 typename DistanceImageType::column_iterator ci(intermediate.columnBegin(x));
-                for (DistanceType* pd = d; pd != d + size.y; ++pd, ++ci)
+                for (const DistanceType* pd = d; pd != pd_end; ++pd)
                 {
                     *ci = *pd;
-
+                    ++ci;
                     // IMPLEMENTATION NOTE
-                    //     PREFETCH() about halves the number of stalls
-                    //     per instruction of this loop!
-                    PREFETCH((ci + 1).operator->(), PREPARE_FOR_WRITE, HIGH_TEMPORAL_LOCALITY);
+                    //     Prefetching about halves the number of stalls per instruction of this loop.
+                    HINTED_PREFETCH(ci.operator->(), PREPARE_FOR_WRITE, HIGH_TEMPORAL_LOCALITY);
                 }
             }
 
