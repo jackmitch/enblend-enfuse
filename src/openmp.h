@@ -752,6 +752,23 @@ distanceTransformMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccesso
 
 namespace omp
 {
+    class scoped_nested
+    {
+    public:
+        scoped_nested() : level_(omp_get_nested()) {}
+
+        explicit scoped_nested(bool allow_nested) : level_(omp_get_nested())
+        {
+            omp_set_nested(static_cast<int>(allow_nested));
+        }
+
+        ~scoped_nested() {omp_set_nested(level_);}
+
+    private:
+        const int level_;
+    };
+
+
     template <class basic_lock>
     class scoped_lock
     {

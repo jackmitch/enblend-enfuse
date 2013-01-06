@@ -89,18 +89,29 @@ blend(std::vector<MaskPyramidType*>* maskGP,
         std::cerr.flush();
     }
 
-    for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
-        if (Verbose >= VERBOSE_BLEND_MESSAGES) {
-            std::cerr << " l" << layer;
-            std::cerr.flush();
-        }
+#ifdef OPENMP
+    omp::scoped_nested(true);
+#pragma omp parallel
+    {
+#pragma omp single nowait
+        {
+#endif
+            for (unsigned int layer = 0; layer < maskGP->size(); layer++) {
+                if (Verbose >= VERBOSE_BLEND_MESSAGES) {
+                    std::cerr << " l" << layer;
+                    std::cerr.flush();
+                }
 
-        combineThreeImagesMP(srcImageRange(*((*maskGP)[layer])),
-                             srcImage(*((*whiteLP)[layer])),
-                             srcImage(*((*blackLP)[layer])),
-                             destImage(*((*blackLP)[layer])),
-                             CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
-    }
+                combineThreeImagesMP(srcImageRange(*((*maskGP)[layer])),
+                                     srcImage(*((*whiteLP)[layer])),
+                                     srcImage(*((*blackLP)[layer])),
+                                     destImage(*((*blackLP)[layer])),
+                                     CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
+            }
+#ifdef OPENMP
+        } // omp single
+    } // omp parallel
+#endif
 
     if (Verbose >= VERBOSE_BLEND_MESSAGES) {
         std::cerr << std::endl;
