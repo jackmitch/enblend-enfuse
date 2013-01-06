@@ -306,8 +306,8 @@ namespace detail
 
             const math_t infinity = std::numeric_limits<math_t>::infinity();
 
-            int* v = new int[n];
-            math_t* z = new math_t[n + 1];
+            int v[n];
+            math_t z[n + 1];
             int k = 0;
 
             v[0] = 0;
@@ -340,9 +340,6 @@ namespace detail
                 }
                 d[q] = square(q - v[k]) + f[v[k]];
             }
-
-            delete [] v;
-            delete [] z;
         }
     };
 
