@@ -321,9 +321,12 @@ protected:
 #endif
             for (int index = 0; index < mf_size; ++index) {
                 // Skip updating points that have already converged.
+                convergedPointsLock.set();
                 if (convergedPoints[index]) {
+                    convergedPointsLock.unset();
                     continue;
                 }
+                convergedPointsLock.unset();
 
                 const std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
                 std::vector<double>* stateProbabilities = pointStateProbabilities[index];
@@ -519,9 +522,12 @@ protected:
 #pragma omp for nowait schedule(guided)
 #endif
             for (int index = 0; index < static_cast<int>(pointStateSpaces.size()); ++index) {
+                convergedPointsLock.set();
                 if (convergedPoints[index]) {
+                    convergedPointsLock.unset();
                     continue;
                 }
+                convergedPointsLock.unset();
 
                 std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
                 std::vector<double>* stateProbabilities = pointStateProbabilities[index];
@@ -568,7 +574,9 @@ protected:
                     cerrLock.unset();
 
                     // Skip this point from now on.
+                    convergedPointsLock.set();
                     convergedPoints[index] = true;
+                    convergedPointsLock.unset();
                     continue;
                 }
 
@@ -602,7 +610,9 @@ protected:
 
                 localK = stateSpace->size();
                 if (localK < 2) {
+                    convergedPointsLock.set();
                     convergedPoints[index] = true;
+                    convergedPointsLock.unset();
                 }
 
                 kmax_local = std::max(kmax_local, stateProbabilities->size());
@@ -675,6 +685,7 @@ protected:
 
     // Flags indicate which points have converged
     std::vector<bool> convergedPoints;
+    omp::lock convergedPointsLock;
 
     // Initial Temperature
     double tInitial;
