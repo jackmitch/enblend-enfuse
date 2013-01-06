@@ -4,5 +4,6 @@ EXTRA_DIST = \
 	functoraccessor.hxx \
 	rect2d.hxx \
         stdcachedfileimage.hxx \
+        stride.hxx \
         \
         CMakeLists.txt
