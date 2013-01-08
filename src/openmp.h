@@ -47,8 +47,49 @@
 #define OPENMP_MONTH (_OPENMP % 100)
 
 
+#if defined(HAVE_ALLOCA_H)
+#include <alloca.h>
+#elif defined(__GNUC__)
+#define alloca __builtin_alloca
+#elif defined(_AIX)
+#define alloca __alloca
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define alloca _alloca
+#else
+#include <stddef.h>
+#if defined(__cplusplus)
+extern "C"
+#endif
+void* alloca(size_t);
+#endif
+
+
 namespace omp
 {
+    inline static void* malloc(size_t) __attribute__((alloc_size(1), malloc));
+
+    inline static void*
+    malloc(size_t size)
+    {
+#ifdef __ICC
+        return kmp_malloc(size);
+#else
+        return alloca(size);
+#endif
+    }
+
+    inline static void
+    free(void* __attribute__((unused)) pointer)
+    {
+#ifdef __ICC
+        return kmp_free(pointer);
+#else
+        ;                       // empty
+#endif
+    }
+
+
     class lock
     {
     public:
@@ -306,8 +347,8 @@ namespace detail
 
             const math_t infinity = std::numeric_limits<math_t>::infinity();
 
-            int v[n];
-            math_t z[n + 1];
+            int* v = static_cast<int*>(omp::malloc(n * sizeof(int)));
+            math_t* z = static_cast<math_t*>(omp::malloc((n + 1) * sizeof(math_t)));
             int k = 0;
 
             v[0] = 0;
@@ -344,6 +385,9 @@ namespace detail
                 }
                 d[q] = square(q - v[k]) + f[v[k]];
             }
+
+            omp::free(z);
+            omp::free(v);
         }
     };
 
@@ -484,6 +528,21 @@ inline int omp_get_nested() {return 0;}
 
 namespace omp
 {
+    inline static void* malloc(size_t) __attribute__((alloc_size(1), malloc));
+
+    inline static void*
+    malloc(size_t size)
+    {
+        return std::malloc(size);
+    }
+
+    inline static void
+    free(void* pointer)
+    {
+        std::free(pointer);
+    }
+
+
     class lock
     {
     public:
