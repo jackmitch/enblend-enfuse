@@ -24,7 +24,7 @@ foreach(_fl "dirent.h" "ext/slist" "fenv.h"
     "OpenGL/glu.h" "OpenGL/gl.h"
     "inttypes.h" "limits.h"
     "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
-    "sys/stat.h" "sys/types.h" "unistd.h" "windows.h")
+    "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "alloca.h")
   string(REGEX REPLACE "[/\\.]" "_" _var ${_fl})
   string(TOUPPER "${_var}" _FLN)
   check_include_file_cxx("${_fl}" "HAVE_${_FLN}" )
