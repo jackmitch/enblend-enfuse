@@ -60,28 +60,26 @@ set(EXECUTABLE_OUTPUT_PATH  ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_SUPPRESS_REGENERATION FALSE)
 set(VERSION_INFO "CMake Build")
 
-macro(setstripped _varname _value)
-  string(STRIP ${_value} _v)
-  if(USE_POSIX_PACKAGING)
-    string(TOLOWER ${_v} ${_varname})
-  else()
-    set(${_varname} ${_v})
-  endif()
-endmacro(setstripped)
-
 # Try to get the package version from file
 set(TOP_SRC_DIR ${CMAKE_SOURCE_DIR})
 file(STRINGS "${TOP_SRC_DIR}/VERSION" _version_lines)
 foreach(_v_l ${_version_lines})
-  if(_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\).*-\([0-9a-z]+\)")
-    setstripped(ENBLEND_MAJOR_VERSION ${CMAKE_MATCH_1})
-    setstripped(ENBLEND_MINOR_VERSION ${CMAKE_MATCH_2})
-    setstripped(PACKAGE_REVISION ${CMAKE_MATCH_3})
-    message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}")
-    message(STATUS "Extracted revision = ${PACKAGE_REVISION}")
-    set(PACKAGE_VERSION "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${PACKAGE_REVISION}")
+  if(_v_l MATCHES "^\([0-9]+\)\\.\([0-9]+\)\(.*\)")
+    set(ENBLEND_MAJOR_VERSION ${CMAKE_MATCH_1})
+    set(ENBLEND_MINOR_VERSION ${CMAKE_MATCH_2})
+    set(_tmp ${CMAKE_MATCH_3})
+    if(_tmp MATCHES "^\\.\([0-9]+\)\(.*\)")
+      set(ENBLEND_PATCH_VERSION ${CMAKE_MATCH_1})
+      set(_tmp ${CMAKE_MATCH_2})
+    else()
+      set(ENBLEND_PATCH_VERSION "0")
+    endif()
+    set(PACKAGE_VERSION_STRING ${_v_l})
+    break()
   endif()
 endforeach(_v_l)
+
+message(STATUS "Extracted enblend version = ${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}.${ENBLEND_PATCH_VERSION}")
 
 # For Win32 builds, assume that all of the libraries are located
 # one directory above the current CMakeLists directory
@@ -355,7 +353,7 @@ ENDIF(ENABLE_DMALLOC)
 
 
 # Try to create config.h
-set(ENBLEND_VERSION_ONLY "${ENBLEND_MAJOR_VERSION}.${ENBLEND_MINOR_VERSION}-${PACKAGE_REVISION}")
+set(ENBLEND_VERSION_ONLY "${PACKAGE_VERSION_STRING}")
 set(PACKAGE_STRING "enblend-enfuse ${ENBLEND_VERSION_ONLY}")
 set(ENBLEND_VERSION "${PACKAGE_STRING}")
 include(ConfigureChecks.cmake)
@@ -425,6 +423,7 @@ ENDIF(WIN32)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${ENBLEND_MAJOR_VERSION})
 SET(CPACK_PACKAGE_VERSION_MINOR ${ENBLEND_MINOR_VERSION})
+SET(CPACK_PACKAGE_VERSION_PATCH ${ENBLEND_PATCH_VERSION})
 
 # Use dpkg-shlibs to get the dependences
 SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
