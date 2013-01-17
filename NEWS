@@ -1,5 +1,8 @@
 * Version 4.1.x  --  Stable Branch
 
+  - [Enblend only] Fix a race condition in the seam-line optimizer
+    that can cause wrongly placed seams.
+
   - [Enblend and Enfuse] Use a per-thread storage of all OpenMP
     Vigra-functors.  This avoids data races.
 
