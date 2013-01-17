@@ -1,5 +1,8 @@
 * Version 4.1.x  --  Stable Branch
 
+  - [Enblend and Enfuse] Use a per-thread storage of all OpenMP
+    Vigra-functors.  This avoids data races.
+
   - [Enblend and Enfuse] The Boost implementation of the `Mersenne
     Twister' random number generator caused segmentation faults when
     used in the OpenMP-enabled versions of Enblend and Enfuse.  The
