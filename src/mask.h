@@ -404,22 +404,16 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
     std::cout << "+ closedPolygonsOfContourSegments: #segments = " << contour.size() << "\n";
 #endif
 
+    vigra::Point2D last_point;
+
     for (Contour::const_iterator segment = contour.begin(); segment != contour.end(); ++segment) {
         const Segment::iterator vertex_begin((*segment)->begin());
         const Segment::iterator vertex_end((*segment)->end());
 
         for (Segment::iterator vertex = vertex_begin; vertex != vertex_end; ++vertex) {
-            *result++ = vigra::Point2D(vertex->second.x, vertex->second.y);
+            last_point = vigra::Point2D(vertex->second.x, vertex->second.y);
+            *result++ = last_point;
         }
-
-        // Close segment if it is not already closed.
-        const vigra::Point2D first_point(vertex_begin->second.x, vertex_begin->second.y);
-        const vigra::Point2D last_point((*segment)->back().second.x, (*segment)->back().second.y);
-        if (first_point != last_point) {
-            *result++ = first_point;
-        }
-
-        *result++ = END_OF_SEGMENT_MARKER;
 
 #ifdef DEBUG_POLYGON_FILL
         std::cout << "+ closedPolygonsOfContourSegments: #vertices = " << (*segment)->size() << "\n";
@@ -440,6 +434,13 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
         }
 #endif
     }
+
+    const Segment::iterator firstVertex((*(contour.begin()))->begin());
+    const vigra::Point2D first_point(firstVertex->second.x, firstVertex->second.y);
+    if (first_point != last_point) {
+        *result++ = first_point;
+    }
+    *result++ = END_OF_SEGMENT_MARKER;
 
 #ifdef DEBUG_POLYGON_FILL
     vigra::exportImage(srcImageRange(polygon_image), vigra::ImageExportInfo(",polygon.tif"));
@@ -1012,7 +1013,7 @@ MaskType* createMask(const ImageType* const white,
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
-        typedef pair<const char*, const MaskType*> ImagePair;
+        typedef std::pair<const char*, const MaskType*> ImagePair;
 
         const ImagePair nft[] = {
             std::make_pair("blackmask", blackAlpha),

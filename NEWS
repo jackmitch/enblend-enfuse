@@ -1,5 +1,8 @@
 * Version 4.1.x  --  Stable Branch
 
+  - [Enblend only] Correct a mistake that causes overlapping
+    images with multiple seams to be blended incorrectly.
+
   - [Enblend only] Require the OpenGL extension
     `GL_ARB_texture_rectangle' for the `--gpu' option to work.
     This does away with a pesky warning of OpenGL drivers that
