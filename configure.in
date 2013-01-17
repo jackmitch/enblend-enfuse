@@ -220,8 +220,6 @@ AC_CHECK_HEADER(boost/optional.hpp, [],
                 AC_MSG_ERROR([Boost "optional" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/pool/pool.hpp, [],
                 AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/random/mersenne_twister.hpp, [],
-                AC_MSG_ERROR([Boost "mersenne_twister" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/random/uniform_real.hpp, [],
                 AC_MSG_ERROR([Boost "uniform_real" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/random/variate_generator.hpp, [],
@@ -240,6 +238,8 @@ AC_CHECK_HEADER(gsl/gsl_min.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_min" is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_multimin.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_multimin" is required to compile Enblend.]))
+AC_CHECK_HEADER(gsl/gsl_rng.h, [],
+                AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_rng" is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_vector.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_vector" is required to compile Enblend.]))
 

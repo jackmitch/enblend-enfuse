@@ -27,12 +27,16 @@
 
 #include <cmath>
 
+#include <time.h>
+
 #include <boost/assign/list_of.hpp>
 
 #ifdef _WIN32
 #include <boost/math/special_functions.hpp>
 using namespace boost::math;
 #endif
+
+#include <gsl/gsl_rng.h>
 
 #include <vigra/basicimage.hxx>
 #include <vigra/mathutil.hxx>
@@ -267,8 +271,52 @@ protected:
         // Shift v left to move the decimal point and set the fraction bits to zero.
         return static_cast<PyramidPixelType>(v) << PyramidFractionBits;
     }
-
 };
+
+
+class MersenneTwister
+{
+public:
+    typedef unsigned long result_type;
+
+    MersenneTwister() : generator_(gsl_rng_alloc(gsl_rng_mt19937)) {assert(generator_);}
+    MersenneTwister(const MersenneTwister& a_generator) : generator_(gsl_rng_clone(a_generator.generator_)) {assert(generator_);}
+    ~MersenneTwister() {gsl_rng_free(generator_);}
+
+    MersenneTwister& operator=(const MersenneTwister& a_generator) {
+        if (this != &a_generator) {
+            gsl_rng_free(generator_);
+            generator_ = gsl_rng_clone(a_generator.generator_);
+            assert(generator_);
+        }
+        return *this;
+    }
+
+    result_type min() const {return gsl_rng_min(generator_);}
+    result_type max() const {return gsl_rng_max(generator_);}
+
+    void seed() {gsl_rng_set(generator_, gsl_rng_default_seed);}
+    void seed(result_type a_seed) {gsl_rng_set(generator_, a_seed);}
+
+    result_type operator()() {return gsl_rng_get(generator_);}
+
+private:
+    gsl_rng* generator_;
+};
+
+
+inline static unsigned
+non_deterministic_seed()
+{
+    unsigned seed = static_cast<unsigned>(1 + omp_get_thread_num());
+
+    const clock_t now = clock();
+    if (now != static_cast<clock_t>(-1)) {
+        seed ^= static_cast<unsigned>(now);
+    }
+
+    return seed;
+}
 
 
 /** A functor for converting numbers stored in the pyramid number representation back
@@ -276,9 +324,14 @@ protected:
  */
 template <typename DestPixelType, typename PyramidPixelType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertPyramidToScalarFunctor {
-
 public:
-    ConvertPyramidToScalarFunctor() {}
+    ConvertPyramidToScalarFunctor() {
+#ifdef DEBUG
+        random_number_generator_.seed(); // apply default seed in all threads for reproducibility
+#else
+        random_number_generator_.seed(non_deterministic_seed());
+#endif
+    }
 
     inline DestPixelType operator()(const PyramidPixelType& v) const {
         return doConvert(v, DestIsIntegral(), PyramidIsIntegral());
@@ -300,20 +353,17 @@ protected:
         PyramidPixelType vFraction = v & ((1U << PyramidFractionBits) - 1);
 
         if ((vFraction >= quarter) && (vFraction < threeQuarter)) {
-            PyramidPixelType random = (PyramidPixelType(::Twister()) & (half - 1)) + quarter;
+            PyramidPixelType random = (PyramidPixelType(random_number_generator_()) & (half - 1)) + quarter;
             if (random <= vFraction) {
                 return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
             } else {
                 return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
             }
-        }
-        else if (vFraction >= quarter) {
+        } else if (vFraction >= quarter) {
             return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote((v >> PyramidFractionBits) + 1));
-        }
-        else {
+        } else {
             return DestPixelType(vigra::NumericTraits<DestPixelType>::fromPromote(v >> PyramidFractionBits));
         }
-
     }
 
     // Convert a real pyramid pixel to an integral image pixel.
@@ -344,9 +394,7 @@ protected:
         const double vFraction = v - floor(v);
         // Only dither values within a certain range of the rounding cutoff point.
         if (vFraction > 0.25 && vFraction <= 0.75) {
-            // Generate a random number between 0 and 0.5.
-            const double random = 0.5 * static_cast<double>(::Twister()) / static_cast<double>(UINT_MAX);
-            if ((vFraction - 0.25) >= random) {
+            if (vFraction - 0.25 >= 0.5 * random()) {
                 return ceil(v);
             } else {
                 return floor(v);
@@ -359,6 +407,13 @@ protected:
         return vigra::NumericTraits<PyramidPixelType>::toRealPromote(v) /
             static_cast<double>(1U << PyramidFractionBits);
     }
+
+private:
+    double random() const {
+        return static_cast<double>(random_number_generator_()) / static_cast<double>(random_number_generator_.max());
+    }
+
+    mutable MersenneTwister random_number_generator_;
 };
 
 
@@ -369,7 +424,6 @@ class ConvertVectorToPyramidFunctor {
     typedef typename PyramidVectorType::value_type PyramidComponentType;
     typedef ConvertScalarToPyramidFunctor<SrcComponentType, PyramidComponentType,
                                           PyramidIntegerBits, PyramidFractionBits> ConvertFunctorType;
-
 public:
     ConvertVectorToPyramidFunctor() : cf() {}
 
