@@ -45,27 +45,32 @@ static GLint TempParam;
 static GLint KMaxParam;
 
 
-static const char *GDAKernelSource = {
-    "uniform sampler2DRect PiTexture;"
-    "uniform sampler2DRect ETexture;"
-    "uniform float Temperature;"
-    "uniform float KMax;"
-    "void main(void)"
-    "{"
-    "   vec4 pix = texture2DRect(PiTexture, gl_TexCoord[0].st);"
-    "   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);"
-    "   vec4 An;"
-    "   vec4 pi_plus;"
-    "   vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);"
-    "   float i = 0.0;"
-    "   for (i = 0.0; i < KMax; i++) {"
-    "       vec2 coord = vec2(i, gl_TexCoord[0].t);"
-    "       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0;"
-    "       pi_plus = pix + texture2DRect(PiTexture, coord);"
-    "       sum += (pi_plus / An);"
-    "   }"
-    "   gl_FragColor = sum / KMax;"
-    "}"
+static const char* GDAKernelSource = {
+    "#extension GL_ARB_texture_rectangle : enable\n"
+    "\n"
+    "uniform sampler2DRect PiTexture;\n"
+    "uniform sampler2DRect ETexture;\n"
+    "uniform float Temperature;\n"
+    "uniform float KMax;\n"
+    "\n"
+    "void main(void)\n"
+    "{\n"
+    "   vec4 pix = texture2DRect(PiTexture, gl_TexCoord[0].st);\n"
+    "   vec4 ex = texture2DRect(ETexture, gl_TexCoord[0].st);\n"
+    "   vec4 An;\n"
+    "   vec4 pi_plus;\n"
+    "   vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);\n"
+    "   float i = 0.0;\n"
+    "\n"
+    "   for (i = 0.0; i < KMax; i++) {\n"
+    "       vec2 coord = vec2(i, gl_TexCoord[0].t);\n"
+    "       An = exp((ex - texture2DRect(ETexture, coord)) / Temperature) + 1.0;\n"
+    "       pi_plus = pix + texture2DRect(PiTexture, coord);\n"
+    "       sum += (pi_plus / An);\n"
+    "   }\n"
+    "\n"
+    "   gl_FragColor = sum / KMax;\n"
+    "}\n"
 };
 
 
@@ -215,18 +220,21 @@ bool initGPU(int* argcp, char** argv)
     const GLboolean has_arb_shader_objects = glewGetExtension("GL_ARB_shader_objects");
     const GLboolean has_arb_shading_language = glewGetExtension("GL_ARB_shading_language_100");
     const GLboolean has_arb_texture_float = glewGetExtension("GL_ARB_texture_float");
+    const GLboolean has_arb_texture_rectangle = glewGetExtension("GL_ARB_texture_rectangle");
 
     if (!(has_arb_fragment_shader &&
           has_arb_vertex_shader &&
           has_arb_shader_objects &&
           has_arb_shading_language &&
-          has_arb_texture_float)) {
+          has_arb_texture_float &&
+          has_arb_texture_rectangle)) {
         const char* msg[] = {"false", "true"};
         std::cerr << command << ": extension GL_ARB_fragment_shader = " << msg[has_arb_fragment_shader] << "\n"
              << command << ": extension GL_ARB_vertex_shader = " << msg[has_arb_vertex_shader] << "\n"
              << command << ": extension GL_ARB_shader_objects = " << msg[has_arb_shader_objects] << "\n"
              << command << ": extension GL_ARB_shading_language_100 = " << msg[has_arb_shading_language] << "\n"
              << command << ": extension GL_ARB_texture_float = " << msg[has_arb_texture_float] << "\n"
+             << command << ": extension GL_ARB_texture_rectangle = " << msg[has_arb_texture_rectangle] << "\n"
              << command << ": graphics card lacks the necessary extensions for \"--gpu\";" << "\n"
              << command << ": \"--gpu\" flag is not going to work on this machine" << std::endl;
 #ifdef HAVE_APPLE_OPENGL_FRAMEWORK

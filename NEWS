@@ -1,5 +1,19 @@
 * Version 4.1.x  --  Stable Branch
 
+  - [Enblend only] Require the OpenGL extension
+    `GL_ARB_texture_rectangle' for the `--gpu' option to work.
+    This does away with a pesky warning of OpenGL drivers that
+    do support this extension and avoids crashes with drivers
+    that don't.
+
+    The GPU performance improvement of Enblend via `--gpu' now
+    is only available with drivers that feature
+    `GL_ARB_texture_rectangle' (among many other required
+    OpenGL extensions).
+
+    The OpenGL warning about odd texture sizes is unaffected by this
+    change.
+
 
 * Version 4.1  "Trouble In Paradise"
 
