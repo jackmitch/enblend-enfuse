@@ -1962,7 +1962,7 @@ int main(int argc, char** argv)
     // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
         std::cerr << command
-                  << ": warning: input images to small for coarse mask; switching to fine mask"
+                  << ": warning: input images too small for coarse mask; switching to fine mask"
                   << std::endl;
         CoarseMask = false;
         if (MainAlgorithm == GraphCut) {
