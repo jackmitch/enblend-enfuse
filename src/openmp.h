@@ -83,7 +83,7 @@ namespace omp
     free(void* __attribute__((unused)) pointer)
     {
 #ifdef __ICC
-        return kmp_free(pointer);
+        kmp_free(pointer);
 #else
         ;                       // empty
 #endif
