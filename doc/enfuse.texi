@@ -2196,6 +2196,8 @@ See also @ref{Fusion Options, Option --contrast-weight} and
 
 Load masks from images instead of computing them.
 
+The masks have to be a grayscale images.
+
 @cindex mask, loading
 First form: Load all soft-weight masks from files that were previously
 saved with option@tie{}@option{--save-masks}.  If

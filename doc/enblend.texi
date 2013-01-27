@@ -2258,7 +2258,8 @@ quality with lower values meaning better matches.
 @cindex mask, load
 @cindex load mask
 Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
-default is @file{@value{src::default-mask-template}}.
+default is @file{@value{src::default-mask-template}}.  The mask images
+have to be a 8-bit grayscale images.
 
 See @option{--save-masks} below for details.
 

@@ -917,34 +917,60 @@ MaskType* createMask(const ImageType* const white,
                                             *inputFileNameIterator,
                                             OutputFileName,
                                             m);
-        vigra::ImageImportInfo maskInfo(maskFilename.c_str());
-        if (Verbose >= VERBOSE_MASK_MESSAGES) {
-            cerr << command
-                 << ": info: loading mask \"" << maskFilename << "\"" << endl;
-        }
-        if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
-            const bool too_small = maskInfo.width() < uBB.width() || maskInfo.height() < uBB.height();
-
-            std::string category;
-            if (too_small) {
-                category = "warning: ";
+        if (can_open_file(maskFilename)) {
+            vigra::ImageImportInfo maskInfo(maskFilename.c_str());
+            if (Verbose >= VERBOSE_MASK_MESSAGES) {
+                std::cerr << command
+                    << ": info: loading mask \"" << maskFilename << "\"" << std::endl;
             }
-
-            cerr << command
-                 << ": " << category << "mask in \"" << maskFilename << "\" has size "
-                 << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
-                 << command
-                 << ": " << category << "    but image union has size " << uBB.size() << ";\n"
-                 << command
-                 << ": " << category << "    make sure this is the right mask for the given images"
-                 << endl;
-
-            if (!too_small) {
-                // Mask is too large, loading it would cause a segmentation fault.
+            if (!maskInfo.isGrayscale()) {
+                std::cerr << command
+                            << ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
                 exit(1);
             }
+            if (maskInfo.numExtraBands() != 0) {
+                std::cerr << command
+                          << ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" << std::endl;
+                exit(1);
+            }
+            if (std::string(maskInfo.getPixelType()) != vigra::TypeAsString<MaskPixelType>::result()) {
+                std::cerr << command
+                          << ": error: mask image \"" << maskFilename << "\" has pixel type " << maskInfo.getPixelType() << ";\n"
+                          << command
+                          << ": error: expecting pixel type " << vigra::TypeAsString<MaskPixelType>::result() << std::endl;
+                exit(1);
+            }
+            if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
+                const bool too_small = maskInfo.width() < uBB.width() || maskInfo.height() < uBB.height();
+
+                std::string category;
+                if (too_small) {
+                    category = "warning: ";
+                }
+
+                std::cerr << command
+                     << ": " << category << "mask in \"" << maskFilename << "\" has size "
+                     << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
+                     << command
+                     << ": " << category << "    but image union has size " << uBB.size() << ";\n"
+                     << command
+                     << ": " << category << "    make sure this is the right mask for the given images"
+                     << std::endl;
+
+                if (!too_small) {
+                    // Mask is too large, loading it would cause a segmentation fault.
+                    exit(1);
+                }
+            }
+            importImage(maskInfo, destImage(*mask));
         }
-        importImage(maskInfo, destImage(*mask));
+        else
+        {
+            // Cannot read mask file.  We already issued an error
+            // message through can_open_file().
+            exit(1);
+        }
+
         return mask;
     }
 

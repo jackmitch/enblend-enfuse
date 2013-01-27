@@ -27,6 +27,8 @@
     The OpenGL warning about odd texture sizes is unaffected by this
     change.
 
+  - [Enblend and Enfuse] Fix a longstanding quirk, which allowed
+    to load masks that were unsuitable for processing.
 
 * Version 4.1  "Trouble In Paradise"
 
