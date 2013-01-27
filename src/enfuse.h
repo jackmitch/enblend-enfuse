@@ -1272,6 +1272,16 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                               << ": info: loading " << (UseHardMask ? "hard" : "soft")
                               << "mask \"" << maskFilename << "\"" << std::endl;
                 }
+                if (!maskInfo.isGrayscale()) {
+                    std::cerr << command
+                              << ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
+                    exit(1);
+                }
+                if (maskInfo.numExtraBands() != 0) {
+                    std::cerr << command
+                              << ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" << std::endl;
+                    exit(1);
+                }
                 if (maskInfo.width() != anInputUnion.width() || maskInfo.height() != anInputUnion.height()) {
                     std::cerr << command
                               << ": warning: mask in \"" << maskFilename << "\" has size "
@@ -1284,6 +1294,8 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 }
                 importImage(maskInfo, destImage(*mask));
             } else {
+                // Cannot read mask file.  We already issued an error
+                // message through can_open_file().
                 exit(1);
             }
         } else {

@@ -10,6 +10,9 @@ Unreleased.  Current line of development.
 - The new Graph-Cut algorithm is the default primary seam-line
   generator.
 
+- Fix a longstanding quirk, which allowed to load masks into Enblend
+  and Enfuse that were unsuitable for processing.
+
 
 ** Developer Stuff
 
