@@ -71,7 +71,7 @@ IF (VIGRA_FOUND)
       MESSAGE(STATUS "VIGRA version: ${VIGRA_VERSION}")
     ELSE()
       MESSAGE(FATAL_ERROR 
-        "VIGRA lib is too old.\nEnblend requires at least version 1.8.0, but found version ${VIGRA_VERSION}."
+        "VIGRA lib is too old.\nEnblend requires at least version 1.9.0, but found version ${VIGRA_VERSION}."
       )
     ENDIF()
   ENDIF()
