@@ -372,7 +372,8 @@ void printVersionAndExit(int argc, char** argv) {
             (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
             "  - using " <<
             omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
-            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n";
+            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n" <<
+            "  - allocating thread-local dynamic memory with " << OMP_MALLOC_FUNCTIONS << "\n";
 #else
         std::cout << "Extra feature: OpenMP: no\n";
 #endif

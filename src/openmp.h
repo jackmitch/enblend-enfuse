@@ -55,8 +55,10 @@ namespace omp
     malloc(size_t size)
     {
 #ifdef __ICC
+#define OMP_MALLOC_FUNCTIONS "kmp_malloc/kmp_delete"
         return kmp_malloc(size);
 #else
+#define OMP_MALLOC_FUNCTIONS "new[]/delete[]"
         return new char[size];
 #endif
     }
