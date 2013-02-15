@@ -1,34 +1,39 @@
 * Version 4.1.x  --  Stable Branch
 
-  - [Enblend only] Fix a race condition in the seam-line optimizer
-    that can cause wrongly placed seams.
+Released on February 15, 2013.
 
-  - [Enblend and Enfuse] Use a per-thread storage of all OpenMP
-    Vigra-functors.  This avoids data races.
+** Bug Fixes
 
-  - [Enblend and Enfuse] The Boost implementation of the `Mersenne
-    Twister' random number generator caused segmentation faults when
-    used in the OpenMP-enabled versions of Enblend and Enfuse.  The
-    new implementation is based on the GNU Scientific Library (GSL),
-    which plays nicely with concurrent accesses.
+- [Enblend only] Fix a race condition in the seam-line optimizer that
+  can cause wrongly placed seams.
 
-  - [Enblend only] Correct a mistake that causes overlapping images
-    with multiple seams to be blended incorrectly.
+- [Enblend and Enfuse] Use a per-thread storage of all OpenMP
+  Vigra-functors.  This avoids data races.
 
-  - [Enblend only] Require the OpenGL extension
-    `GL_ARB_texture_rectangle' for the `--gpu' option to work.  This
-    does away with a pesky warning of OpenGL drivers that do support
-    this extension and avoids crashes with drivers that don't.
+- [Enblend and Enfuse] The Boost implementation of the `Mersenne
+  Twister' random number generator caused segmentation faults when
+  used in the OpenMP-enabled versions of Enblend and Enfuse.  The new
+  implementation is based on the GNU Scientific Library (GSL), which
+  plays nicely with concurrent accesses.
 
-    The GPU performance improvement of Enblend via `--gpu' now is only
-    available with drivers that feature `GL_ARB_texture_rectangle'
-    (among many other required OpenGL extensions).
+- [Enblend only] Correct a mistake that causes overlapping images with
+  multiple seams to be blended incorrectly.
 
-    The OpenGL warning about odd texture sizes is unaffected by this
-    change.
+- [Enblend only] Require the OpenGL extension
+  `GL_ARB_texture_rectangle' for the `--gpu' option to work.  This
+  does away with a pesky warning of OpenGL drivers that do support
+  this extension and avoids crashes with drivers that don't.
 
-  - [Enblend and Enfuse] Fix a longstanding quirk, which allowed
-    to load masks that were unsuitable for processing.
+  The GPU performance improvement of Enblend via `--gpu' now is only
+  available with drivers that feature `GL_ARB_texture_rectangle'
+  (among many other required OpenGL extensions).
+
+  The OpenGL warning about odd texture sizes is unaffected by this
+  change.
+
+- [Enblend and Enfuse] Fix a longstanding quirk, which allowed to load
+  masks that were unsuitable for processing.
+
 
 * Version 4.1  "Trouble In Paradise"
 
