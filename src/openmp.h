@@ -47,24 +47,6 @@
 #define OPENMP_MONTH (_OPENMP % 100)
 
 
-#if defined(HAVE_ALLOCA_H)
-#include <alloca.h>
-#elif defined(__GNUC__)
-#define alloca __builtin_alloca
-#elif defined(_AIX)
-#define alloca __alloca
-#elif defined(_MSC_VER)
-#include <malloc.h>
-#define alloca _alloca
-#else
-#include <stddef.h>
-#if defined(__cplusplus)
-extern "C"
-#endif
-void* alloca(size_t);
-#endif
-
-
 namespace omp
 {
     inline static void* malloc(size_t) __attribute__((alloc_size(1), malloc));
@@ -75,17 +57,17 @@ namespace omp
 #ifdef __ICC
         return kmp_malloc(size);
 #else
-        return alloca(size);
+        return new char[size];
 #endif
     }
 
     inline static void
-    free(void* __attribute__((unused)) pointer)
+    free(void* pointer)
     {
 #ifdef __ICC
         kmp_free(pointer);
 #else
-        ;                       // empty
+        delete [] static_cast<char*>(pointer);
 #endif
     }
 
