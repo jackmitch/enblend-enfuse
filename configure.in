@@ -21,6 +21,23 @@ AC_LANG(C++)
 AC_C_BIGENDIAN
 
 # Checks for libraries.
+
+# We check for TCMalloc so early to make it the last user library on
+# the linker command line.  It will then gobble all undefined
+# references to malloc(3) and free(3) and thus relieve the O/S even
+# more.
+AC_ARG_WITH([tcmalloc],
+            [AS_HELP_STRING([--with-tcmalloc], [use Google's TCMalloc library @<:@default=check@:>@])],
+            [],
+            [with_tcmalloc=check])
+AS_IF([test "$with_tcmalloc" = check -o "$with_tcmalloc" = yes],
+      [AC_CHECK_HEADERS(tcmalloc.h)
+       if test "$ac_cv_header_tcmalloc_h" = yes -o "$with_tcmalloc" = yes; then
+           AC_SEARCH_LIBS(tc_malloc,
+                          [tcmalloc, tcmalloc_minimal],
+                          [AC_DEFINE(HAVE_TCMALLOC, 1, [Define if you have Google's TCMalloc library])])
+       fi])
+
 AC_CHECK_LIB([m], [sqrt])
 AC_CHECK_LIB([gslcblas], [cblas_dgemm])
 AC_CHECK_LIB([gsl], [gsl_blas_dgemm])

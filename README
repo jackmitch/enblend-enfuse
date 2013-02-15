@@ -193,6 +193,17 @@ multi-threaded compilation and "boost_filesystem" for single-thread
 builds.
 
 
+** --with-tcmalloc=CHECK/yes/no
+
+Compile with Google's TCMalloc.  This library generally improves
+memory allocation performance.  Enblend and Enfuse prefer TCMalloc's
+functions inside OpenMP parallel regions and therby reduce the load of
+the operating ststem's memory allocator.
+
+Find more information on TCMalloc at
+        http://goog-perftools.sourceforge.net/doc/tcmalloc.html
+
+
 ** --with-dmalloc=yes/NO
 
 Compile with the debug-malloc library.  The library is available at

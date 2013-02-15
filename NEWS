@@ -13,6 +13,9 @@ Unreleased.  Current line of development.
 - Fix a longstanding quirk, which allowed to load masks into Enblend
   and Enfuse that were unsuitable for processing.
 
+- The OpenMP enabled versions of Enblend and Enfuse benefit from
+  Google's TCMalloc library.
+
 
 ** Developer Stuff
 

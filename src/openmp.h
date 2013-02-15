@@ -26,6 +26,10 @@
 
 #include <limits>
 
+#ifdef HAVE_TCMALLOC_H
+#include <tcmalloc.h>
+#endif
+
 #include <vigra/diff2d.hxx>
 #include <vigra/initimage.hxx>
 #include <vigra/inspectimage.hxx>
@@ -54,9 +58,12 @@ namespace omp
     inline static void*
     malloc(size_t size)
     {
-#ifdef __ICC
+#if defined(__ICC)
 #define OMP_MALLOC_FUNCTIONS "kmp_malloc/kmp_delete"
         return kmp_malloc(size);
+#elif defined(HAVE_TCMALLOC)
+#define OMP_MALLOC_FUNCTIONS "tc_malloc/tc_delete"
+        return tc_malloc(size);
 #else
 #define OMP_MALLOC_FUNCTIONS "new[]/delete[]"
         return new char[size];
@@ -66,8 +73,10 @@ namespace omp
     inline static void
     free(void* pointer)
     {
-#ifdef __ICC
+#if defined(__ICC)
         kmp_free(pointer);
+#elif defined(HAVE_TCMALLOC)
+        tc_free(pointer);
 #else
         delete [] static_cast<char*>(pointer);
 #endif
