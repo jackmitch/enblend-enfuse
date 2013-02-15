@@ -1028,7 +1028,7 @@ MaskType* createMask(const ImageType* const white,
 
     const unsigned default_norm_value =
         std::min(static_cast<unsigned>(EuclideanDistance),
-                 enblend::parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(ManhattanDistance)));
+                 enblend::parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(EuclideanDistance)));
     const nearest_neighbor_metric_t norm = static_cast<nearest_neighbor_metric_t>(default_norm_value);
 
     if (MainAlgorithm == GraphCut)
