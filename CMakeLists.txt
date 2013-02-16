@@ -103,6 +103,7 @@ ENDIF(WIN32)
 
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
+OPTION(ENABLE_TCMALLOC "TCmalloc Support" OFF)
 OPTION(ENABLE_IMAGECACHE "Image Cache Support" OFF)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" OFF)
@@ -351,6 +352,13 @@ IF(ENABLE_DMALLOC)
   LIST(APPEND common_libs ${dmalloc_LIBRARIES})
 ENDIF(ENABLE_DMALLOC)
 
+if(ENABLE_TCMALLOC)
+  find_package(TCMALLOC REQUIRED)
+  add_definitions("-DHAVE_TCMALLOC")
+  add_definitions("-DHAVE_TCMALLOC_H")
+  include_directories(${TCMALLOC_INCLUDE_DIR})
+  LIST(APPEND common_libs ${TCMALLOC_LIBRARIES})
+endif()
 
 # Try to create config.h
 set(ENBLEND_VERSION_ONLY "${PACKAGE_VERSION_STRING}")
