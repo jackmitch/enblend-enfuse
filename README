@@ -197,8 +197,8 @@ builds.
 
 Compile with Google's TCMalloc.  This library generally improves
 memory allocation performance.  Enblend and Enfuse prefer TCMalloc's
-functions inside OpenMP parallel regions and therby reduce the load of
-the operating ststem's memory allocator.
+functions inside OpenMP parallel regions and thereby reduce the load
+of the operating system's memory allocator.
 
 Find more information on TCMalloc at
         http://goog-perftools.sourceforge.net/doc/tcmalloc.html
