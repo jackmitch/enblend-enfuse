@@ -4,11 +4,10 @@
 load "@srcdir@/config.gp"
 
 
-Mu = 0.5
-Sigma = 0.2
+default_optimum = 0.5
+default_width = 0.2
 
-
-Gaussian(Y) = exp(-0.5 * ((Y - Mu) / Sigma)**2)
+gaussian(y, y_opt, width) = exp(-0.5 * ((y - y_opt) / width)**2)
 
 
 set samples 1023
@@ -18,7 +17,10 @@ set ytics 0.2
 
 
 set terminal unknown
-plot [Y = 0:1] Gaussian(Y)
+plot [y = 0:1] \
+     gaussian(y, default_optimum, 0.1) title "width = 0.1", \
+     gaussian(y, default_optimum, 0.2) title "default width = 0.2", \
+     gaussian(y, default_optimum, 0.4) title "width = 0.4"
 
 set output "gaussian.txt"
 set terminal dumb Dumb_Width Dumb_Height enhanced

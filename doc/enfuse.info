@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-a1905a0f6f02, 15 February
+   This manual is for Enfuse (version 4.2-b1ac8d1a8849, 15 February
 2013), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-a1905a0f6f02, 15 February 2013),
+This manual is for Enfuse (version 4.2-b1ac8d1a8849, 15 February 2013),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -240,7 +240,7 @@ File: enfuse.info,  Node: Workflow,  Next: Invocation,  Prev: Overview,  Up: Top
 2 Workflow
 **********
 
-Enfuse is a part of a chain of tools to assemble images.  It merges
+Enfuse is part of a chain of tools to assemble images.  It merges
 photos of the same subject at the same location and same direction, but
 taken with varying exposure parameters.
 
@@ -720,7 +720,7 @@ arguments in lowercase for consistency.
     Any other format.
           Other formats do not accept a COMPRESSION setting.
 
-          However, VIGRA (http://hci.iwr.uni-heidelberg.de/vigra/)
+          However, VIGRA(1) (http://hci.iwr.uni-heidelberg.de/vigra/)
           automatically compresses `png'-files with the DEFLATE method.
 
 `--layer-selector=ALGORITHM'
@@ -754,7 +754,7 @@ arguments in lowercase for consistency.
 
 `-l LEVELS'
 `--levels=LEVELS'
-     Use at most this many LEVELS for pyramid (1) blending if LEVELS is
+     Use at most this many LEVELS for pyramid (2) blending if LEVELS is
      positive, or reduce the maximum number of levels used by -LEVELS
      if LEVELS is negative; `auto' or `automatic' restore the default,
      which is to use the maximum possible number of levels for each
@@ -798,7 +798,7 @@ arguments in lowercase for consistency.
 
 `-o'
 `--output=FILE'
-     Place output in FILE.
+     Place fused output image in FILE.
 
      If `--output' is not specified, the default is to put the
      resulting image in `a.tif'.
@@ -874,9 +874,10 @@ arguments in lowercase for consistency.
 
      Otherwise, always avoid this option!
 
-     With this option, Enfuse treats the panorama of width w and
-     height h as an infinite data structure, where each pixel P(x, y)
-     of the input images represents the set of pixels S_P(x, y) (2).
+     With this option Enfuse treats the set of input images (panorama?)
+     of width w and height h as an infinite data structure, where each
+     pixel P(x, y) of the input images represents the set of pixels
+     S_P(x, y) (3).
 
      MODE takes the following values:
 
@@ -913,12 +914,14 @@ arguments in lowercase for consistency.
 
    ---------- Footnotes ----------
 
-   (1) As Dr. Daniel Jackson correctly noted
+   (1) VIGRA is the image manipulaton library on which Enfuse is based.
+
+   (2) As Dr. Daniel Jackson correctly noted
 (http://stargate.wikia.com/wiki/The_Tomb), actually, it is not a
 pyramid: "Ziggaurat, it's a Ziggaurat
 (http://en.wikipedia.org/wiki/Ziggaurat)."
 
-   (2) Solid-state physicists will be reminded of the BORN-VON KA'RMA'N
+   (3) Solid-state physicists will be reminded of the BORN-VON KA'RMA'N
 boundary condition
 (http://en.wikipedia.org/wiki/Born-von_Karman_boundary_condition).
 
@@ -959,26 +962,26 @@ cropping of the output image.
 `-d'
 `--depth=DEPTH'
      Force the number of bits per channel and the numeric format of the
-     output image.
+     output image.(1)
 
      Enfuse always uses a smart way to change the channel depth, to
      assure highest image quality (at the expense of memory), whether
      requantization is implicit because of the output format or explicit
      with option `--depth'.
 
-        * If the output-channel width is larger than the input-channel
-          width of the input images, the input images' channels are
-          widened to the output channel width immediately after
+        * If the output-channel depth is larger than the input-channel
+          depth of the input images, the input images' channels are
+          widened to the output channel depth immediately after
           loading, that is, as soon as possible.  Enfuse then performs
-          all blending operations at the output-channel width, thereby
+          all blending operations at the output-channel depth, thereby
           preserving minute color details which can appear in the
           blending areas.
 
-        * If the output-channel width is smaller than the input-channel
-          width of the input images, the output image's channels are
-          narrowed only right before it is written to disk, that is, as
-          late as possible.  Thus the data benefits from the wider
-          input channels for the longest time.
+        * If the output-channel depth is smaller than the input-channel
+          depth of the input images, the output image's channels are
+          narrowed only right before it is written to the output FILE,
+          that is, as late as possible.  Thus the data benefits from
+          the wider input channels for the longest time.
 
      All DEPTH specifications are valid in lowercase as well as
      uppercase letters.  For integer format, use
@@ -1043,7 +1046,7 @@ cropping of the output image.
      too.
 
      This option only is useful when the input images are cropped TIFF
-     files, such as those produced by `nona'(1).
+     files, such as those produced by `nona'(2).
 
      Note that option `-f' neither rescales the output image, nor
      shrinks the canvas size below the minimum size occupied by the
@@ -1090,7 +1093,9 @@ cropping of the output image.
 
    ---------- Footnotes ----------
 
-   (1) The stitcher `nona' is part of Hugin.  *Note Helpful Programs::.
+   (1) "Channel depth" sometimes is also called "channel width".
+
+   (2) The stitcher `nona' is part of Hugin.  *Note Helpful Programs::.
 
 
 File: enfuse.info,  Node: Fusion Options,  Next: Expert Options,  Prev: Extended Options,  Up: Invocation
@@ -1121,10 +1126,23 @@ contributes to the output image.
      See *note Local Entropy Weighting:: and *note Options
      entropy-window-size and entropy-cutoff: Expert Options.
 
+`--exposure-optimum=OPTIMUM'
+`--exposure-mu=MEAN _(obsolete)_'
+     Determine at what normalized exposure value the OPTIMUM exposure
+     of the input images is.  This is, set the position of the maximum
+     of the exposure weight curve.  Use this option to fine-tune
+     exposure weighting (*note Exposure Weighting::).
+
+     Valid range: 0 <= OPTIMUM <= 1.
+
+     Default: 0.5.
+
 `--exposure-weight=WEIGHT'
-     Sets the relative WEIGHT of the well-exposedness criterion.
-     Increasing this weight relative to the others will make
-     well-exposed pixels contribute more to the final output.
+     Set the relative WEIGHT of the "well-exposedness" criterion as
+     defined by the chosen exposure weight function (see
+     voption `--exposure-weight-function' below).  Increasing this
+     weight relative to the others will make well-exposed pixels
+     contribute more to the final output.
 
      Valid range: 0 <= WEIGHT <= 1.
 
@@ -1132,39 +1150,78 @@ contributes to the output image.
 
      *Note Exposure Weighting::.
 
-`--exposure-mu=MEAN'
-     Set the MEAN (this is, the center) of the Gaussian exposure weight
-     curve.
+`--exposure-weight-function=NAME'
+     Override the default exposure weight function
+     `gaussian'.  Use one of the NAMEs in *note
+     Table:exposure-weight-functions:: to select a weight function.
 
-     Valid range: 0 <= MEAN <= 1.
+     In *note Table:exposure-weight-functions:: the variable w_exp
+     denotes the exposure weight and z represents the normalized
+     luminance Y linearly transformed by the exposure optimum Y_opt
+     (option `--exposure-optimum') and width
+     (option `--exposure-width') according to 
+          z = (Y - Y_opt) / width.
+     Internally Enfuse uses a rescaled width that gives all weight
+     functions the same full width at half of the maximum (FWHM), also
+     see *note Figure:exposure-weights::.  This means for the user that
+     changing the exposure function neither changes the optimum exposure
+     nor the width.
 
-     Default: 0.5.
+    `gauss'
+    `gaussian'
+          The original exposure weight function of Enfuse and the only
+          one up to version 4.1.
+               w_exp = exp(-z^2 / 2)
 
+    `lorentz'
+    `lorentzian'
+          Lorentz curve.
+               w_exp = 1 / (1 + z^2 / 2)
+
+    `halfsine'
+    `half-sine'
+          Upper half-wave of a sine; exactly zero outside.
+               w_exp = cos(z) if |z| <= pi/2, 0 otherwise
+
+    `fullsine'
+    `full-sine'
+          Full sine-wave shifted upwards by one to give all positive
+          weights; exactly zero outside.
+               w_exp = (1 + cos(z)) / 2 if |z| <= pi, 0 otherwise
+
+    `bisquare'
+    `bi-square'
+          Quartic function.
+               w_exp = 1 - z^4 for |z| <= 1, 0 otherwise
+
+     Table 3.4: Predefined exposure weight functions.  For a graphical
+     comparison see *note Figure:exposure-weights::.
+
+        For a detailed explanation of all the weight functions *note
+     Exposure Weighting::.
+
+  `--exposure-width=WIDTH'
+  `--exposure-sigma=STD-DEV _(obsolete)_'
+        Set the characteristic WIDTH of the exposure weight function.
+     Low numbers give less weight to pixels that are far from the
+     user-defined optimum (option `--exposure-optimum') and vice versa.
      Use this option to fine-tune exposure weighting (*note Exposure
      Weighting::).
 
-`--exposure-sigma=STD-DEV'
-     Standard deviation STD-DEV of the Gaussian exposure weight curve.
-     Low numbers give less weight to pixels that are far from `--wMu'
-     and vice versa.
+        Valid range: WIDTH > 0.
 
-     Valid range: STD-DEV >= 0.
+        Default: 0.2.
 
-     Default: 0.2.
-
-     Use this option to fine-tune exposure weighting (*note Exposure
-     Weighting::).
-
-`--saturation-weight=WEIGHT'
-     Sets the relative WEIGHT of high-saturation pixels.  Increasing
+  `--saturation-weight=WEIGHT'
+        Set the relative WEIGHT of high-saturation pixels.  Increasing
      this weight makes pixels with high saturation contribute more to
      the final output.
 
-     Valid range: 0 <= WEIGHT <= 1.
+        Valid range: 0 <= WEIGHT <= 1.
 
-     Default: 0.2.
+        Default: 0.2.
 
-     Saturation weighting is only defined for color images.  *Note
+        Saturation weighting is only defined for color images.  *Note
      Saturation Weighting::.
 
 
@@ -1332,9 +1389,9 @@ to read the manual before applying them successfully.
      `value', which are usually the best choices for effective cutoff
      operations on the respective ends.
 
-     Figure 3.2: Exposure weight, a Gaussian with MU = 0.5 and SIGMA =
-     0.2 submitted to an exposure-cutoff of LOWER-CUTOFF = 5% and
-     UPPER-CUTOFF = 97%.
+     Figure 3.2: Exposure weight, a Gaussian with the OPTIMUM = 0.5 and
+     WIDTH = 0.2 submitted to an exposure-cutoff of LOWER-CUTOFF = 5%
+     and UPPER-CUTOFF = 97%.
 
         Note that the application of the respective cutoffs is
      completely independent of the actual shape of the exposure weight
@@ -1357,7 +1414,7 @@ to read the manual before applying them successfully.
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.2-a1905a0f6f02 of Enfuse, the option is effective
+        In version 4.2-b1ac8d1a8849 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -1575,7 +1632,7 @@ to read the manual before applying them successfully.
 `%E'
      Is replaced with the extension of the output file.
 
-Table 3.4: Special characters to control the generation of mask
+Table 3.5: Special characters to control the generation of mask
 filenames.
 
 
@@ -1819,7 +1876,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.2-a1905a0f6f02.
+version 4.2-b1ac8d1a8849.
 
    To disable a particular criterion set its weight to zero as for
 example
@@ -1842,11 +1899,12 @@ File: enfuse.info,  Node: Exposure Weighting,  Next: Saturation Weighting,  Prev
 ======================
 
 Exposure weighting prefers pixels with a luminance Y close to the
-center of the normalized, real-valued luminance interval [0, 1].
+user-chosen optimum value (option `--exposure-optimum', default:
+0.5) of the normalized, real-valued luminance interval [0, 1].
 
-   RGB-pixels get converted to luminance using the grayscale projector
-given by `--gray-projector', which defaults to `average'.  Grayscale
-pixels are identified with luminance.
+   RGB-pixels are converted to luminance before using the grayscale
+projector given by `--gray-projector', which defaults to `average'.
+Grayscale pixels are identified with luminance.
 
    In the normalized luminance interval 0.0 represents pure black and
 1.0 represents pure white independently of the data type of the input
@@ -1854,40 +1912,116 @@ image.  This is, for a JPEG image the luminance 255 maps to 1.0 in the
 normalized interval and for a 32 bit TIFF picture the highest luminance
 value 4294967295 also maps to 1.0.  The middle of the luminance
 interval, 0.5, is where a neutral gray tone ends up with every camera
-that had no exposure correction dialed in, for example the image of a
+that had no exposure correction dialed in, for example the image of any
 gray- or white-card.
 
    The exposure weighting algorithm only looks at a single pixel at a
 time; the pixel's neighborhood is not taken into account.
 
-   The weighting function is the Gaussian
-     w_exp(Y) = exp(-0.5 * ((Y - Mu) / Sigma)^2),
+   Up to Enfuse version 4.1 the only weighting function is the Gaussian
+     w_exp(Y) = exp(-0.5 * ((Y - Y_opt) / width)^2),
 
-whose center Mu and width Sigma are controlled by the command line
-options `--exposure-mu' and `--exposure-sigma' respectively.  Mu
-defaults to 0.5 and Sigma defaults to 0.2.  *note Figure:gaussian::
-shows a Gaussian.
+whose maximum position Y_opt and width are controlled by the command
+line options `--exposure-optimum' and `--exposure-width' respectively,
+where Y_opt defaults to 0.5 and width defaults to
+0.2.  *note Figure:gaussian:: shows some Gaussians.
 
-Figure 5.1: Gaussian function with the parameters MU = 0.5 and SIGMA =
-0.2.
+Figure 5.1: Enblend's Gaussian function with the parameters OPTIMUM =
+0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
 
-   The options `--exposure-mu' and `--exposure-sigma' are for
+   The options `--exposure-optimum' and `--exposure-width' are for
 fine-tuning the final result without changing the set of input images.
-Option `--exposure-mu' sets the point MU of optimum exposure.
-Increasing MU makes Enfuse prefer lighter pixels, rendering the final
-image lighter, and vice versa.  Option `--exposure-sigma' defines the
-range SIGMA of acceptable exposures.  Small values of SIGMA penalize
-exposures that deviate from MU more, and vice versa.
+Option `--exposure-optimum' sets the point of optimum exposure.
+Increasing the OPTIMUM makes Enfuse prefer lighter pixels, rendering
+the final image lighter, and vice versa.  Option `--exposure-width'
+defines the WIDTH of acceptable exposures.  Small values of WIDTH
+penalize exposures that deviate from OPTIMUM more, and vice versa.
+
+   In Enfuse version 4.2 several new exposure weight functions have
+been added.  The are selected with option
+`--exposure-weight-function='NAME.
+
+Exposure Weight           NAMEs                  Function Chart
+-------------------------------------------------------------------- 
+Gaussian curve (default)  `gauss', `gaussian'    *note Figure 5.1:
+                                                 Figure:gaussian.
+Lorentz curve             `lorentz',             *note
+                          `lorentzian'           Figure:lorentzian::
+Upper half-wave of a sine `halfsine',            *note
+                          `half-sine'            Figure:halfsine::
+Full sine-wave shifted    `fullsine',            *note
+upwards by one            `full-sine'            Figure:fullsine::
+Quartic, or bi-square     `bisquare',            *note
+function                  `bi-square'            Figure:power::
+
+Table 5.2: Available exposure weight functions.
+
+   Gaussian and Lorentzian behave like 1 - z^2  around the optimum.
+However for large |z| the Gaussian weight rolls off like exp(-z^2 /2)
+and the Lorentzian only as z^-2 .
+
+Figure 5.2: Enblend's Lorentzian function with the parameters OPTIMUM =
+0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
+
+   Both, the Gaussian and the Lorentzian are easy to use, because they
+do not go exactly to zero.  Thus, Enfuse can select "better" pixels far
+away from the chosen optimum.
+
+Figure 5.3: Enblend's Half-Sine function with the parameters OPTIMUM =
+0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
+
+Figure 5.4: Enblend's Full-Sine function with the parameters OPTIMUM =
+0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
+
+   Again, Half-Sine and Full-Sine behave like 1 - z^2  around the
+optimum, like Gaussian and Lorentzian.  However for large |z| they both
+are exactly zero.  The difference is how they decrease just before they
+reach zero.  Half-Sine behaves like (z - z') and Full-Sine like (z -
+z")^2 , where z' and z" are the respective zeros.
+
+Figure 5.5: Enblend's Bi-Square function with the parameters OPTIMUM =
+0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
+
+   Bi-Square is the only predefined function that behaves like 1 - z^4
+around the optimum.
+
+   The weight functions Half-Sine, Full-Sine, and Bi-Square are more
+difficult to use, because they yield exactly zero if the normalized
+luminance of a pixel is far enough away from the optimum.  This can
+lead to pathologies if the luminances of the same pixel position in all
+N input images are assigned a weight of zero.  For all-zero weights
+Enfuse falls back to weighing equally.  This is, each pixel gets a
+weight of 1/N, which may or may not be the desired result.  However, if
+the WIDTH is chosen so large that the weight never vanishes or the
+imput images span a large enough range of luminances for each and every
+pixel, the problem is circumnavigated.
+
+   Another way of cutting off under- or overexposed pixels is to use
+option `--exposure-cutoff', which has the additional benefit of
+allowing to choose uper and lower cutoff separately.
+
+Figure 5.6: Comparison of all of Enblend's exposure weight functions for
+the default values of OPTIMUM = 0.5 and WIDTH = 0.2.  Note that all
+functions intersect at w = 1/2, this is they share the same FWHM.
+
+   Figure *note Figure 5.6: Figure:exposure-weights. shows all
+available exposure weight functions for the same parameters (the
+defaults).  They all intersect at w = 1/2 independently of OPTIMUM or
+WIDTH, making it simple to just try them out without fundamentally
+changing brightness.
 
 *Summary of influential options*
 
+`--exposure-optimum'
+     *note Fusion Options::
+
+`--exposure-width'
+     *note Fusion Options::
+
+`--exposure-weight-function'
+     *note Fusion Options::
+
 `--exposure-weight'
-     *note Fusion Options::
-
-`--exposure-mu'
-     *note Fusion Options::
-
-`--exposure-sigma'
      *note Fusion Options::
 
 `--gray-projector'
@@ -1977,7 +2111,7 @@ length.  The user sets the size with option `--contrast-window-size'.
 *note Figure:local-analysis-window:: shows two windows with different
 sizes.
 
-Figure 5.2: Examples of local analysis windows for the sizes 3 and 5.
+Figure 5.7: Examples of local analysis windows for the sizes 3 and 5.
 "C" marks the center where the pixel gets the weight.  "N" are
 neighboring pixels, which all contribute equally to the weight.
 
@@ -2078,7 +2212,7 @@ image.  The operator is radially symmetric with respect to the origin,
 which is why we can easily plot it in *note
 Figure:laplacian-of-gaussian::, setting R = sqrt(x^2 + y^2).
 
-Figure 5.3: Laplacian-of-Gaussian function for sigma = 0.5.
+Figure 5.8: Laplacian-of-Gaussian function for sigma = 0.5.
 
 See also HIPR2: Laplacian of Gaussian
 (http://homepages.inf.ed.ac.uk/rbf/HIPR2/log.htm).
@@ -2198,7 +2332,7 @@ entropy of the "impossible message" to zero according to
 
 *note Figure:entropy:: shows an entropy function.
 
-Figure 5.4: Entropy function H for an experiment with exactly two
+Figure 5.9: Entropy function H for an experiment with exactly two
 outcomes.
 
    For more on (information) entropy visit Wikipedia
@@ -3749,8 +3883,10 @@ List of Tables
 * Table 3.1: Grammar of response ...:    Table:response-file-format.
 * Table 3.2: Grammar of ...:             Table:response-file-syntactic-comment.
 * Table 3.3: Globbing algorithms:        Table:globbing-algorithms.
-* Table 3.4: Mask template ...:          Table:mask-template-characters.
+* Table 3.4: Exposure weight ...:        Table:exposure-weight-functions.
+* Table 3.5: Mask template ...:          Table:mask-template-characters.
 * Table 5.1: Default weights:            Table:default-weights.
+* Table 5.2: Exposure weight ...:        Table:weight-functions.
 * Table 7.1: Suggested ...:              Table:cache-size-settings.
 
 
@@ -3766,9 +3902,14 @@ List of Figures
 * Figure 3.1: Entropy cutoff ...:        Figure:entropy-cutoff.
 * Figure 3.2: Exposure cutoff ...:       Figure:exposure-cutoff.
 * Figure 5.1: Gaussian function:         Figure:gaussian.
-* Figure 5.2: Local analysis window:     Figure:local-analysis-window.
-* Figure 5.3: Laplacian-of-Gaussian:     Figure:laplacian-of-gaussian.
-* Figure 5.4: Entropy function:          Figure:entropy.
+* Figure 5.2: Lorentzian function:       Figure:lorentzian.
+* Figure 5.3: Half-Sine function:        Figure:halfsine.
+* Figure 5.4: Full-Sine function:        Figure:fullsine.
+* Figure 5.5: Bi-Square function:        Figure:power.
+* Figure 5.6: Comparison of ...:         Figure:exposure-weights.
+* Figure 5.7: Local analysis window:     Figure:local-analysis-window.
+* Figure 5.8: Laplacian-of-Gaussian:     Figure:laplacian-of-gaussian.
+* Figure 5.9: Entropy function:          Figure:entropy.
 * Figure 8.1: Sharp edge:                Figure:sharp-edge.
 * Figure 8.2: Smooth edge:               Figure:smooth-edge.
 * Figure 8.3: Focus stacking ...:        Figure:focus-stacking-decision-tree.
@@ -3858,9 +3999,10 @@ Option Index
 * --entropy-weight:                      Fusion Options.      (line  20)
 * --entropy-window-size:                 Expert Options.      (line  90)
 * --exposure-cutoff:                     Expert Options.      (line 107)
-* --exposure-mu:                         Fusion Options.      (line  41)
-* --exposure-sigma:                      Fusion Options.      (line  52)
-* --exposure-weight:                     Fusion Options.      (line  30)
+* --exposure-optimum:                    Fusion Options.      (line  31)
+* --exposure-weight:                     Fusion Options.      (line  41)
+* --exposure-weight-function:            Fusion Options.      (line  54)
+* --exposure-width:                      Fusion Options.      (line 105)
 * --fallback-profile:                    Extended Options.    (line 128)
 * --gray-projector:                      Expert Options.      (line 187)
 * --hard-mask <1>:                       Expert Stacking.     (line  22)
@@ -3873,7 +4015,7 @@ Option Index
 * --no-ciecam:                           Extended Options.    (line 160)
 * --no-parameter:                        Common Options.      (line 154)
 * --output:                              Common Options.      (line 144)
-* --saturation-weight:                   Fusion Options.      (line  64)
+* --saturation-weight:                   Fusion Options.      (line 116)
 * --save-masks:                          Expert Options.      (line 299)
 * --soft-mask:                           Expert Options.      (line 331)
 * --verbose:                             Common Options.      (line 163)
@@ -4004,6 +4146,35 @@ General Index
                                                               (line   6)
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
+* exposure weight function, bi-square <1>: Exposure Weighting.
+                                                              (line  59)
+* exposure weight function, bi-square:   Fusion Options.      (line  94)
+* exposure weight function, bisquare <1>: Exposure Weighting. (line  59)
+* exposure weight function, bisquare:    Fusion Options.      (line  94)
+* exposure weight function, full width half maximum: Fusion Options.
+                                                              (line  64)
+* exposure weight function, full-sine <1>: Exposure Weighting.
+                                                              (line  57)
+* exposure weight function, full-sine:   Fusion Options.      (line  88)
+* exposure weight function, fullsine <1>: Exposure Weighting. (line  57)
+* exposure weight function, fullsine:    Fusion Options.      (line  88)
+* exposure weight function, FWHM:        Fusion Options.      (line  64)
+* exposure weight function, gauss <1>:   Exposure Weighting.  (line  26)
+* exposure weight function, gauss:       Fusion Options.      (line  72)
+* exposure weight function, gaussian <1>: Exposure Weighting. (line  26)
+* exposure weight function, gaussian:    Fusion Options.      (line  72)
+* exposure weight function, half-sine <1>: Exposure Weighting.
+                                                              (line  55)
+* exposure weight function, half-sine:   Fusion Options.      (line  83)
+* exposure weight function, halfsine <1>: Exposure Weighting. (line  55)
+* exposure weight function, halfsine:    Fusion Options.      (line  83)
+* exposure weight function, lorentz <1>: Exposure Weighting.  (line  53)
+* exposure weight function, lorentz:     Fusion Options.      (line  78)
+* exposure weight function, lorentzian <1>: Exposure Weighting.
+                                                              (line  53)
+* exposure weight function, lorentzian:  Fusion Options.      (line  78)
+* exposure weight functions:             Exposure Weighting.  (line  62)
+* exposure weight, linear transform:     Fusion Options.      (line  62)
 * fallback profile:                      Extended Options.    (line 128)
 * filename template:                     Expert Options.      (line 287)
 * filename, literal:                     Invocation.          (line  10)
@@ -4023,10 +4194,12 @@ General Index
 * focus stacks, why create them:         Why Focus Stacks.    (line   6)
 * format of response file:               Response Files.      (line  56)
 * free documentation license (FDL):      FDL.                 (line   6)
+* full width half maximum:               Fusion Options.      (line  64)
 * fusing, local-contrast-based:          Local Contrast Based Fusing.
                                                               (line   6)
 * fusing, single criterion:              Single Criterion Fusing.
                                                               (line   6)
+* FWHM:                                  Fusion Options.      (line  64)
 * general index:                         General Index.       (line   6)
 * glob(7):                               Response Files.      (line 171)
 * globbing algorithm literal:            Response Files.      (line 157)
@@ -4220,7 +4393,7 @@ General Index
 * virtual reality:                       Common Options.      (line 215)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, entropy:                       Fusion Options.      (line  20)
-* weight, exposure:                      Fusion Options.      (line  30)
+* weight, exposure:                      Fusion Options.      (line  41)
 * weight, local contrast:                Fusion Options.      (line  10)
 * weighted average:                      Weighted Average.    (line   6)
 * weighting functions:                   Weighting Functions. (line   6)
@@ -4267,84 +4440,93 @@ Ref: Overview-Footnote-28900
 Ref: Overview-Footnote-39081
 Ref: Overview-Footnote-49263
 Node: Workflow9405
-Node: Standard Workflow9835
-Ref: Figure:photographic-workflow10094
-Node: External Mask Manipulation12768
-Ref: Figure:external-mask-workflow14084
-Node: Invocation14569
-Node: Image Requirements15414
-Node: Response Files16550
-Ref: Table:response-file-format18573
-Ref: Table:response-file-syntactic-comment21038
-Ref: Table:globbing-algorithms21939
-Node: Common Options23398
-Ref: Common Options-Footnote-132426
-Ref: Common Options-Footnote-232618
-Node: Extended Options32777
-Ref: Extended Options-Footnote-138767
-Node: Fusion Options38840
-Node: Expert Options40842
-Ref: Figure:entropy-cutoff43868
-Ref: Figure:exposure-cutoff47896
-Ref: Table:mask-template-characters55056
-Node: Option Delimiters57272
-Node: Color Profiles58656
-Node: Weighting Functions61092
-Node: Weighting Pixels61760
-Node: Weighted Average63349
-Node: Disabling Averaging63942
-Node: Single Criterion Fusing64930
-Ref: Table:default-weights65668
-Node: Exposure Weighting66464
-Ref: Figure:gaussian67900
-Node: Saturation Weighting68659
-Node: Local Contrast Weighting69774
-Node: Standard Deviation71136
-Ref: Figure:local-analysis-window71585
-Ref: Standard Deviation-Footnote-173653
-Node: Laplacian of Gaussian73804
-Ref: Figure:laplacian-of-gaussian75378
-Node: Blend SDev and LoG76472
-Node: Scaling and Choice of Mode78152
-Node: Local Entropy Weighting78998
-Ref: Figure:entropy79981
-Node: Understanding Masks81588
-Node: Tuning Memory Usage85385
-Ref: Table:cache-size-settings88122
-Node: Applications88558
-Node: What Images89282
-Node: Repetition92469
-Node: Exposure Series93552
-Node: Exposure Series Tips95934
-Node: Exposure Series Misconceptions97046
-Ref: Exposure Series Misconceptions-Footnote-198827
-Node: Flash Exposure Series99040
-Node: Polarization Series99282
-Node: Focus Stacks99722
-Node: Why Focus Stacks100604
-Node: Preparing Focus Stacks101939
-Node: Local Contrast Based Fusing102689
-Node: Basic Focus Stacking104024
-Node: Advanced Focus Stacking105397
-Node: Local Contrast Problem106161
-Ref: Figure:sharp-edge107345
-Ref: Figure:smooth-edge107420
-Node: Laplacian Edge Detection108167
-Node: Local Contrast Enhancement109301
-Node: Suppressing Noise or Recognizing Faint Edges110277
-Node: Focus Stacking Decision Tree112908
-Ref: Figure:focus-stacking-decision-tree113253
-Node: Expert Stacking114037
-Node: Helpful Programs115560
-Node: Bug Reports119288
-Ref: Bug Reports-Footnote-1124988
-Node: Authors125058
-Node: FDL126222
-Node: List of Tables147203
-Node: List of Figures147823
-Node: Program Index148694
-Node: Syntactic-Comment Index151628
-Node: Option Index152316
-Node: General Index155829
+Node: Standard Workflow9833
+Ref: Figure:photographic-workflow10092
+Node: External Mask Manipulation12766
+Ref: Figure:external-mask-workflow14082
+Node: Invocation14567
+Node: Image Requirements15412
+Node: Response Files16548
+Ref: Table:response-file-format18571
+Ref: Table:response-file-syntactic-comment21036
+Ref: Table:globbing-algorithms21937
+Node: Common Options23396
+Ref: Common Options-Footnote-132466
+Ref: Common Options-Footnote-232539
+Ref: Common Options-Footnote-332731
+Node: Extended Options32890
+Ref: Extended Options-Footnote-138894
+Ref: Extended Options-Footnote-238960
+Node: Fusion Options39033
+Ref: Table:exposure-weight-functions41433
+Node: Expert Options43177
+Ref: Figure:entropy-cutoff46203
+Ref: Figure:exposure-cutoff50231
+Ref: Table:mask-template-characters57400
+Node: Option Delimiters59616
+Node: Color Profiles61000
+Node: Weighting Functions63436
+Node: Weighting Pixels64104
+Node: Weighted Average65693
+Node: Disabling Averaging66286
+Node: Single Criterion Fusing67274
+Ref: Table:default-weights68012
+Node: Exposure Weighting68808
+Ref: Figure:gaussian70372
+Ref: Table:weight-functions71113
+Ref: Figure:lorentzian72090
+Ref: Figure:halfsine72388
+Ref: Figure:fullsine72511
+Ref: Figure:power72964
+Ref: Figure:exposure-weights74029
+Node: Saturation Weighting74811
+Node: Local Contrast Weighting75926
+Node: Standard Deviation77288
+Ref: Figure:local-analysis-window77737
+Ref: Standard Deviation-Footnote-179805
+Node: Laplacian of Gaussian79956
+Ref: Figure:laplacian-of-gaussian81530
+Node: Blend SDev and LoG82624
+Node: Scaling and Choice of Mode84304
+Node: Local Entropy Weighting85150
+Ref: Figure:entropy86133
+Node: Understanding Masks87740
+Node: Tuning Memory Usage91537
+Ref: Table:cache-size-settings94274
+Node: Applications94710
+Node: What Images95434
+Node: Repetition98621
+Node: Exposure Series99704
+Node: Exposure Series Tips102086
+Node: Exposure Series Misconceptions103198
+Ref: Exposure Series Misconceptions-Footnote-1104979
+Node: Flash Exposure Series105192
+Node: Polarization Series105434
+Node: Focus Stacks105874
+Node: Why Focus Stacks106756
+Node: Preparing Focus Stacks108091
+Node: Local Contrast Based Fusing108841
+Node: Basic Focus Stacking110176
+Node: Advanced Focus Stacking111549
+Node: Local Contrast Problem112313
+Ref: Figure:sharp-edge113497
+Ref: Figure:smooth-edge113572
+Node: Laplacian Edge Detection114319
+Node: Local Contrast Enhancement115453
+Node: Suppressing Noise or Recognizing Faint Edges116429
+Node: Focus Stacking Decision Tree119060
+Ref: Figure:focus-stacking-decision-tree119405
+Node: Expert Stacking120189
+Node: Helpful Programs121712
+Node: Bug Reports125440
+Ref: Bug Reports-Footnote-1131140
+Node: Authors131210
+Node: FDL132374
+Node: List of Tables153355
+Node: List of Figures154114
+Node: Program Index155282
+Node: Syntactic-Comment Index158216
+Node: Option Index158904
+Node: General Index162490
 
 End Tag Table

@@ -66,10 +66,38 @@ using vigra::functor::Param;
 
 
 namespace enblend {
-
-static inline double gaussDistribution(double x, double mu, double sigma)
+void
+dump_exposure_weight_function(const ExposureWeight* weight_function, int n = 256)
 {
-    return exp(-0.5 * square((x - mu) / sigma));
+    assert(n >= 2);
+
+    for (int i = 0; i < n; ++i)
+    {
+        const double x = static_cast<double>(i) / static_cast<double>(n - 1);
+        const double w = weight_function->weight(x);
+
+        std::cout << x << ' ' << w << '\n';
+    }
+}
+
+
+bool
+check_exposure_weight_function(const ExposureWeight* weight_function, int n = 65536)
+{
+    assert(n >= 2);
+
+    for (int i = 0; i < n; ++i)
+    {
+        const double x = static_cast<double>(i) / static_cast<double>(n - 1);
+        const double w = weight_function->weight(x);
+
+        if (!std::isfinite(w) || w < 0.0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 
@@ -644,10 +672,10 @@ class ExposureFunctor {
 public:
     typedef ResultType result_type;
 
-    ExposureFunctor(double w, double m, double s, InputAccessor a) :
-        weight(w), mu(m), sigma(s), acc(a) {}
+    ExposureFunctor(double weight, const ExposureWeight* weight_function, const InputAccessor& a) :
+        weight_(weight), weight_function_(weight_function), acc_(a) {}
 
-    inline ResultType operator()(const InputType& a) const {
+    ResultType operator()(const InputType& a) const {
         typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
@@ -655,24 +683,20 @@ public:
 protected:
     // grayscale
     template <typename T>
-    inline ResultType f(const T& a, vigra::VigraTrueType) const {
-        typedef typename vigra::NumericTraits<T>::RealPromote RealType;
-        const RealType ra = vigra::NumericTraits<T>::toRealPromote(a);
-        const double b = vigra::NumericTraits<T>::max() * mu;
-        const double c = vigra::NumericTraits<T>::max() * sigma;
-        return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+    ResultType f(const T& a, vigra::VigraTrueType) const {
+        const double y = vigra::NumericTraits<T>::toRealPromote(a) / vigra::NumericTraits<T>::max();
+        return vigra::NumericTraits<ResultType>::fromRealPromote(weight_ * weight_function_->weight(y));
     }
 
     // RGB
     template <typename T>
-    inline ResultType f(const T& a, vigra::VigraFalseType) const {
-        return f(acc.operator()(a), vigra::VigraTrueType());
+    ResultType f(const T& a, vigra::VigraFalseType) const {
+        return f(acc_.operator()(a), vigra::VigraTrueType());
     }
 
-    const double weight;
-    const double mu;
-    const double sigma;
-    InputAccessor acc;
+    const double weight_;
+    const ExposureWeight* weight_function_;
+    InputAccessor acc_;
 };
 
 
@@ -681,30 +705,30 @@ class CutoffExposureFunctor {
 public:
     typedef ResultType result_type;
 
-    CutoffExposureFunctor(double w, double m, double s, InputAccessor a,
+    CutoffExposureFunctor(double weight, const ExposureWeight* weight_function, InputAccessor a,
                           const AlternativePercentage& lc, const AlternativePercentage& uc,
                           InputAccessor lca, InputAccessor uca) :
-        weight(w), mu(m), sigma(s), acc(a),
-        lower_cutoff(lc.instantiate<typename InputAccessor::value_type>()),
-        upper_cutoff(uc.instantiate<typename InputAccessor::value_type>()),
-        lower_acc(lca), upper_acc(uca)
+        weight_(weight), weight_function_(weight_function), acc_(a),
+        lower_cutoff_(lc.instantiate<typename InputAccessor::value_type>()),
+        upper_cutoff_(uc.instantiate<typename InputAccessor::value_type>()),
+        lower_acc_(lca), upper_acc_(uca)
     {
         typedef typename InputAccessor::value_type value_type;
 
         const value_type max = vigra::NumericTraits<value_type>::max();
 
-        if (lower_cutoff > upper_cutoff) {
+        if (lower_cutoff_ > upper_cutoff_) {
             std::cerr << command <<
-                ": lower exposure cutoff (" << lower_cutoff << "/" << max <<
-                " = " << 100.0 * lower_cutoff / max <<
-                "%) exceeds upper cutoff (" << upper_cutoff << "/" << max <<
-                " = " << 100.0 * upper_cutoff / max <<
+                ": lower exposure cutoff (" << lower_cutoff_ << "/" << max <<
+                " = " << 100.0 * lower_cutoff_ / max <<
+                "%) exceeds upper cutoff (" << upper_cutoff_ << "/" << max <<
+                " = " << 100.0 * upper_cutoff_ / max <<
                 "%)" << std::endl;
             exit(1);
         }
     }
 
-    inline ResultType operator()(const InputType& a) const {
+    ResultType operator()(const InputType& a) const {
         typedef typename vigra::NumericTraits<InputType>::isScalar srcIsScalar;
         return f(a, srcIsScalar());
     }
@@ -712,13 +736,12 @@ public:
 protected:
     // grayscale
     template <typename T>
-    inline ResultType f(const T& a, vigra::VigraTrueType) const {
+    ResultType f(const T& a, vigra::VigraTrueType) const {
         typedef typename vigra::NumericTraits<T>::RealPromote RealType;
         const RealType ra = vigra::NumericTraits<T>::toRealPromote(a);
-        if (ra >= lower_cutoff && ra <= upper_cutoff) {
-            const double b = vigra::NumericTraits<T>::max() * mu;
-            const double c = vigra::NumericTraits<T>::max() * sigma;
-            return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+        if (ra >= lower_cutoff_ && ra <= upper_cutoff_) {
+            const double y = ra / vigra::NumericTraits<T>::max();
+            return vigra::NumericTraits<ResultType>::fromRealPromote(weight_ * weight_function_->weight(y));
         } else {
             return ResultType();
         }
@@ -726,29 +749,27 @@ protected:
 
     // RGB
     template <typename T>
-    inline ResultType f(const T& a, vigra::VigraFalseType) const {
+    ResultType f(const T& a, vigra::VigraFalseType) const {
         typedef typename T::value_type ValueType;
         typedef typename vigra::NumericTraits<ValueType>::RealPromote RealType;
-        const RealType ra = vigra::NumericTraits<ValueType>::toRealPromote(acc.operator()(a));
-        const RealType lower_ra = vigra::NumericTraits<ValueType>::toRealPromote(lower_acc.operator()(a));
-        const RealType upper_ra = vigra::NumericTraits<ValueType>::toRealPromote(upper_acc.operator()(a));
-        if (lower_ra >= lower_cutoff && upper_ra <= upper_cutoff) {
-            const double b = vigra::NumericTraits<ValueType>::max() * mu;
-            const double c = vigra::NumericTraits<ValueType>::max() * sigma;
-            return vigra::NumericTraits<ResultType>::fromRealPromote(weight * gaussDistribution(ra, b, c));
+        const RealType ra = vigra::NumericTraits<ValueType>::toRealPromote(acc_.operator()(a));
+        const RealType lower_ra = vigra::NumericTraits<ValueType>::toRealPromote(lower_acc_.operator()(a));
+        const RealType upper_ra = vigra::NumericTraits<ValueType>::toRealPromote(upper_acc_.operator()(a));
+        if (lower_ra >= lower_cutoff_ && upper_ra <= upper_cutoff_) {
+            const double y = ra / vigra::NumericTraits<ValueType>::max();
+            return vigra::NumericTraits<ResultType>::fromRealPromote(weight_ * weight_function_->weight(y));
         } else {
             return ResultType();
         }
     }
 
-    const double weight;
-    const double mu;
-    const double sigma;
-    InputAccessor acc;
-    const double lower_cutoff;
-    const double upper_cutoff;
-    InputAccessor lower_acc;
-    InputAccessor upper_acc;
+    const double weight_;
+    const ExposureWeight* weight_function_;
+    InputAccessor acc_;
+    const double lower_cutoff_;
+    const double upper_cutoff_;
+    InputAccessor lower_acc_;
+    InputAccessor upper_acc_;
 };
 
 
@@ -1010,7 +1031,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                              ExposureLowerCutoffGrayscaleProjector :
                              ExposureUpperCutoffGrayscaleProjector);
             CutoffExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
-                cef(WExposure, WMu, WSigma, ga,
+                cef(WExposure, ExposureWeightFunction, ga,
                     ExposureLowerCutoff, ExposureUpperCutoff, lca, uca);
 #ifdef DEBUG_EXPOSURE
             std::cout << "+ enfuseMask: cutoff - GrayscaleProjector = <" <<
@@ -1023,7 +1044,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
             transformImageIfMP(src, mask, result, cef);
         } else {
             ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
-                ef(WExposure, WMu, WSigma, ga);
+                ef(WExposure, ExposureWeightFunction, ga);
 #ifdef DEBUG_EXPOSURE
             std::cout << "+ enfuseMask: plain - GrayscaleProjector = <" <<
                 GrayscaleProjector << ">\n";

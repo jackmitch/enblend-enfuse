@@ -22,6 +22,63 @@
 @end macro
 
 
+@c Mathematical id, or variable.
+@macro mathid{id}
+@ifinfo
+@math{\id\}@c
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <mi>\id\</mi>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$\id\$%
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:ci>\id\</mml:ci>
+    </mml:math>
+</inlineequation>
+@end docbook
+@end macro
+
+
+@c Variable subscripted with some text, like e.g. Y_opt.
+@macro subscripted{base, subscript}
+@ifinfo
+@math{\base\_\subscript\}@c
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>\base\</mi>
+            <mtext>\subscript\</mtext>
+        </msubinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$\base\_{\\mathrm{\subscript\}}$%
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:selector/>
+            <mml:ci>\base\</mml:ci>
+            <mml:mtext mathvariant="sans-serif">\subscript\</mml:mtext>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+@end macro
+
+
 @c Include a raster image.
 @macro rimage{filename, width}
 @ifinfo

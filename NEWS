@@ -16,6 +16,25 @@ Unreleased.  Current line of development.
 - The OpenMP enabled versions of Enblend and Enfuse benefit from
   Google's TCMalloc library.
 
+- Several exposure weight functions were added to Enfuse.  The choice
+  is now up to the user.  The default still is the Gauss function as
+  in all Enfuse versions before.
+
+
+** New Commandline Options
+
+- Option `--exposure-weight-function' makes Enfuse's exposure weight
+  function user selectable.  Previously weight function "gauss" was
+  the only one (and hard-coded).
+
+- The old Enfuse options `--exposure-mu' and `--exposure-sigma' got
+  siblings called `--exposure-optimum' and `--exposure-width'
+  respectively.  With exposure weight functions other than Gauss the
+  restricted naming does not make sense anymore.
+
+  Options `--exposure-mu' and `--exposure-sigma' are scheduled for
+  withdrawal in a later version of Enfuse.
+
 
 ** Developer Stuff
 

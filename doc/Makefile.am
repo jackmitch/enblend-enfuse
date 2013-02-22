@@ -30,7 +30,9 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   config-edge.gp config.gp \
                   entropy-cutoff.gp.in \
                   exposure-cutoff.gp.in \
-                  entropy.gp.in gaussian.gp.in \
+                  entropy.gp.in \
+                  gaussian.gp.in lorentzian.gp.in halfsine.gp.in fullsine.gp.in power.gp.in \
+                  exposure-weights.gp.in \
                   laplacian-of-gaussian.gp.in \
                   sharp-edge.gp.in sharp-edge.data \
                   smooth-edge.gp.in smooth-edge.data \
@@ -65,7 +67,9 @@ CLEANFILES = entropy.{txt,eps,svg,pdf} \
              entropy-cutoff.{txt,eps,svg,pdf} \
              exposure-cutoff.{txt,eps,svg,pdf} \
              external-mask-workflow.{txt,eps,svg,pdf} \
-             gaussian.{txt,eps,svg,pdf} \
+             gaussian.{txt,eps,svg,pdf} lorentzian.{txt,eps,svg,pdf} \
+             halfsine.{txt,eps,svg,pdf} fullsine.{txt,eps,svg,pdf} power.{txt,eps,svg,pdf} \
+             exposure-weights.{txt,eps,svg,pdf} \
              laplacian-of-gaussian.{txt,eps,svg,pdf} \
              local-analysis-window.{txt,eps,svg,pdf} \
              photographic-workflow.{txt,eps,svg,pdf} \
@@ -305,7 +309,8 @@ enfuse.info: $(enfuse_TEXINFOS) \
              entropy.txt \
              entropy-cutoff.txt \
              exposure-cutoff.txt \
-             gaussian.txt \
+             gaussian.txt lorentzian.txt halfsine.txt fullsine.txt power.txt \
+             exposure-weights.txt \
              laplacian-of-gaussian.txt \
              local-analysis-window.txt \
              sharp-edge.txt \
@@ -319,7 +324,8 @@ enfuse.dvi: $(enfuse_TEXINFOS) \
             entropy.eps \
             entropy-cutoff.eps \
             exposure-cutoff.eps \
-            gaussian.eps \
+            gaussian.eps lorentzian.eps halfsine.eps fullsine.eps power.eps \
+            exposure-weights.eps \
             laplacian-of-gaussian.eps \
             local-analysis-window.eps \
             sharp-edge.eps \
@@ -333,7 +339,9 @@ enfuse.html: $(enfuse_TEXINFOS) \
              entropy.svg $(RASTER_DIR)/entropy.png \
              entropy-cutoff.svg $(RASTER_DIR)/entropy-cutoff.png \
              exposure-cutoff.svg $(RASTER_DIR)/exposure-cutoff.png \
-             gaussian.svg $(RASTER_DIR)/gaussian.png \
+             gaussian.svg $(RASTER_DIR)/gaussian.png lorentzian.svg $(RASTER_DIR)/lorentzian.png \
+             halfsine.svg $(RASTER_DIR)/halfsine.png fullsine.svg $(RASTER_DIR)/fullsine.png \
+             power.svg $(RASTER_DIR)/power.png exposure-weights.svg $(RASTER_DIR)/exposure-weights.png \
              laplacian-of-gaussian.svg $(RASTER_DIR)/laplacian-of-gaussian.png \
              local-analysis-window.svg $(RASTER_DIR)/local-analysis-window.png \
              sharp-edge.svg $(RASTER_DIR)/sharp-edge.png \
@@ -347,7 +355,8 @@ enfuse.pdf: $(enfuse_TEXINFOS) \
             entropy.pdf \
             entropy-cutoff.pdf \
             exposure-cutoff.pdf \
-            gaussian.pdf \
+            gaussian.pdf lorentzian.pdf halfsine.pdf fullsine.pdf power.pdf \
+            exposure-weights.pdf \
             laplacian-of-gaussian.pdf \
             local-analysis-window.pdf \
             sharp-edge.pdf \
@@ -363,7 +372,8 @@ enfuse.xml: $(enfuse_TEXINFOS) \
             entropy.svg \
             entropy-cutoff.svg \
             exposure-cutoff.svg \
-            gaussian.svg \
+            gaussian.svg lorentzian.svg halfsine.svg fullsine.svg power.svg \
+            exposure-weights.svg \
             laplacian-of-gaussian.svg \
             local-analysis-window.svg \
             sharp-edge.svg \

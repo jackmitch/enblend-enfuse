@@ -26,6 +26,7 @@ enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) $(OPENGL_CFLAGS) \
                    -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
 enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
+                 exposure_weight_base.h exposure_weight.h \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h openmp.h pyramid.h \
                  error_message.h error_message.cc \

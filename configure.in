@@ -553,7 +553,8 @@ fi
 AC_CONFIG_FILES([doc/entropy.gp
                  doc/entropy-cutoff.gp
                  doc/exposure-cutoff.gp
-                 doc/gaussian.gp
+                 doc/gaussian.gp doc/lorentzian.gp doc/halfsine.gp doc/fullsine.gp doc/power.gp
+                 doc/exposure-weights.gp
                  doc/laplacian-of-gaussian.gp
                  doc/sharp-edge.gp
                  doc/smooth-edge.gp])

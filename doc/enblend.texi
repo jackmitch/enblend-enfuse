@@ -439,8 +439,9 @@ variant of run-length compression; it is lossless.
 Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
-@acronym{VIGRA}} automatically compresses @file{png}-files with the
-@sc{Deflate} method.
+@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulaton
+library on which Enblend is based.}} automatically compresses
+@file{png}-files with the @sc{Deflate} method.
 @end table
 
 @item --layer-selector=@var{ALGORITHM}
@@ -595,7 +596,7 @@ The valid range of the absolute value of @var{LEVELS} is
 @itemx --output=@var{FILE}
 @opindex -o
 @opindex --output
-Place output in @var{FILE}.
+Place blended output image in @var{FILE}.
 
 @cindex @file{@value{src::default-output-filename}}
 @cindex default output filename
@@ -694,10 +695,38 @@ seamless environment.
 
 Otherwise, always avoid this option!
 
-With this option Enblend treats the panorama of width@tie{}@math{w}
-and height@tie{}@math{h} as an infinite data structure, where each
-pixel@tie{}@math{P(x, y)} of the input images represents the set of
-pixels
+With this option Enblend treats the set of input images (panorama) of
+width@tie{}@math{w} and height@tie{}@math{h} as an infinite data
+structure, where each pixel
+@ifinfo
+@math{P(x, y)}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <mi>P</mi>
+        <mfencedinline>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfencedinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$P(x, y)$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:ci>P</mml:ci>
+            <mml:ci>x</mml:ci>
+            <mml:ci>y</mml:ci>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+of the input images represents the set of pixels
 @ifinfo
 @math{S_P(x, y)}
 @end ifinfo
@@ -1139,7 +1168,8 @@ below.
 @cindex bits per channel
 @cindex channel width
 Force the number of bits per channel and the numeric format of the
-output image.
+output image.@footnote{``Channel depth'' sometimes is also called
+``channel width''.}
 
 Enblend always uses a smart way to change the channel depth to assure
 highest image quality (at the expense of memory), whether
@@ -1148,18 +1178,19 @@ with option@tie{}@option{--depth}.
 
 @itemize
 @item
-If the output-channel width is larger than the input-channel width of
+If the output-channel depth is larger than the input-channel depth of
 the input images, the input images' channels are widened to the output
-channel width immediately after loading, that is, as soon as possible.
+channel depth immediately after loading, that is, as soon as possible.
 Enblend then performs all blending operations at the output-channel
-width, thereby preserving minute color details which can appear in the
+depth, thereby preserving minute color details which can appear in the
 blending areas.
 
 @item
-If the output-channel width is smaller than the input-channel width of
+If the output-channel depth is smaller than the input-channel depth of
 the input images, the output image's channels are narrowed only right
-before it is written to disk, that is, as late as possible.  Thus the
-data benefits from the wider input channels for the longest time.
+before it is written to the output @var{FILE}, that is, as late as
+possible.  Thus the data benefits from the wider input channels for
+the longest time.
 @end itemize
 
 All @var{DEPTH} specifications are valid in lowercase as well as

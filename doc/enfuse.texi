@@ -354,7 +354,7 @@ SourceForge} @uref{http://@/enblend.sourceforge.net/, web page}.
 @chapter Workflow
 @cindex workflow
 
-Enfuse is a part of a chain of tools to assemble images.  It merges
+Enfuse is part of a chain of tools to assemble images.  It merges
 photos of the same subject at the same location and same direction,
 but taken with varying exposure parameters.
 
@@ -552,8 +552,9 @@ variant of run-length compression; it is lossless.
 Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
-@acronym{VIGRA}} automatically compresses @file{png}-files with the
-@sc{Deflate} method.
+@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulaton
+library on which Enfuse is based.}} automatically compresses
+@file{png}-files with the @sc{Deflate} method.
 @end table
 
 @item --layer-selector=@var{ALGORITHM}
@@ -637,7 +638,7 @@ deconstructed into a pyramid of more than
         <mrowinline>
             <msubinline>
                 <mo>log</mo>
-                <mn>2</mo>
+                <mn>2</mn>
             </msubinline>
             <mo>&ApplyFunction;</mo>
             <mo>(</mo>
@@ -645,8 +646,8 @@ deconstructed into a pyramid of more than
                 <mo>min</mo>
                 <mo>&ApplyFunction;</mo>
                 <mfencedinline>
-                    <mi mathvariant="italic">width</mi>
-                    <mi mathvariant="italic">height</mi>
+                    <mi>width</mi>
+                    <mi>height</mi>
                 </mfencedinline>
             </mrowinline>
             <mo>)</mo>
@@ -708,7 +709,7 @@ The valid range of the absolute value of @var{LEVELS} is
 @itemx --output=@var{FILE}
 @opindex -o
 @opindex --output
-Place output in @var{FILE}.
+Place fused output image in @var{FILE}.
 
 @cindex @file{@value{src::default-output-filename}}
 @cindex default output filename
@@ -806,10 +807,38 @@ seamless environment.
 
 Otherwise, always avoid this option!
 
-With this option, Enfuse treats the panorama of width@tie{}@math{w}
-and height@tie{}@math{h} as an infinite data structure, where each
-pixel@tie{}@math{P(x, y)} of the input images represents the set of
-pixels
+With this option Enfuse treats the set of input images (panorama?) of
+width@tie{}@math{w} and height@tie{}@math{h} as an infinite data
+structure, where each pixel
+@ifinfo
+@math{P(x, y)}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <mi>P</mi>
+        <mfencedinline>
+            <mi>x</mi>
+            <mi>y</mi>
+        </mfencedinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$P(x, y)$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:ci>P</mml:ci>
+            <mml:ci>x</mml:ci>
+            <mml:ci>y</mml:ci>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+of the input images represents the set of pixels
 @ifinfo
 @math{S_P(x, y)}
 @end ifinfo
@@ -1200,7 +1229,8 @@ below.
 @cindex bits per channel
 @cindex channel width
 Force the number of bits per channel and the numeric format of the
-output image.
+output image.@footnote{``Channel depth'' sometimes is also called
+``channel width''.}
 
 Enfuse always uses a smart way to change the channel depth, to assure
 highest image quality (at the expense of memory), whether
@@ -1209,18 +1239,19 @@ with option@tie{}@option{--depth}.
 
 @itemize
 @item
-If the output-channel width is larger than the input-channel width of
+If the output-channel depth is larger than the input-channel depth of
 the input images, the input images' channels are widened to the output
-channel width immediately after loading, that is, as soon as possible.
+channel depth immediately after loading, that is, as soon as possible.
 Enfuse then performs all blending operations at the output-channel
-width, thereby preserving minute color details which can appear in the
+depth, thereby preserving minute color details which can appear in the
 blending areas.
 
 @item
-If the output-channel width is smaller than the input-channel width of
+If the output-channel depth is smaller than the input-channel depth of
 the input images, the output image's channels are narrowed only right
-before it is written to disk, that is, as late as possible.  Thus the
-data benefits from the wider input channels for the longest time.
+before it is written to the output @var{FILE}, that is, as late as
+possible.  Thus the data benefits from the wider input channels for
+the longest time.
 @end itemize
 
 All @var{DEPTH} specifications are valid in lowercase as well as
@@ -1418,13 +1449,29 @@ Default: @value{src::default-weight-entropy}.
 See @ref{Local Entropy Weighting} and @ref{Expert Options, Options
 entropy-window-size and entropy-cutoff}.
 
+@item --exposure-optimum=@var{OPTIMUM}
+@itemx --exposure-mu=@var{MEAN} @emph{(obsolete)}
+@opindex --exposure-optimum
+
+Determine at what normalized exposure value the @var{OPTIMUM} exposure
+of the input images is.  This is, set the position of the maximum of
+the exposure weight curve.  Use this option to fine-tune exposure
+weighting (@pxref{Exposure Weighting}).
+
+Valid range: @value{src::minimum-exposure-optimum} @leq{} @var{OPTIMUM}
+@leq{} @value{src::maximum-exposure-optimum}.
+
+Default: @value{src::default-exposure-optimum}.
+
 @item --exposure-weight=@var{WEIGHT}
 @opindex --exposure-weight
 @cindex weight, exposure
 
-Sets the relative @var{WEIGHT} of the well-exposedness criterion.
-Increasing this weight relative to the others will make well-exposed
-pixels contribute more to the final output.
+Set the relative @var{WEIGHT} of the ``well-exposedness'' criterion as
+defined by the chosen exposure weight function (see
+voption@tie{}@option{--exposure-weight-function} below).  Increasing
+this weight relative to the others will make well-exposed pixels
+contribute more to the final output.
 
 Valid range: @value{src::minimum-weight-exposure} @leq{} @var{WEIGHT}
 @leq{} @value{src::maximum-weight-exposure}.
@@ -1433,38 +1480,587 @@ Default: @value{src::default-weight-exposure}.
 
 @xref{Exposure Weighting}.
 
-@item --exposure-mu=@var{MEAN}
-@opindex --exposure-mu
+@item --exposure-weight-function=@var{NAME}
+@opindex --exposure-weight-function
 
-Set the @var{MEAN} (this is, the center) of the Gaussian exposure
-weight curve.
+Override the default exposure weight function
+@samp{@value{src::exposure-weight-function}}.  Use one of the
+@var{NAME}s in @ref{Table:exposure-weight-functions} to select a
+weight function.
 
-Valid range: @value{src::minimum-exposure-mu} @leq{} @var{MEAN}
-@leq{} @value{src::maximum-exposure-mu}.
+In @ref{Table:exposure-weight-functions} the variable
+@ifinfo
+@math{w_exp}
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msubinline>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msubinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$w_{\mathrm{exp}}$
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:selector/>
+            <mml:ci>w</mml:ci>
+            <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+denotes the exposure weight and @mathid{z} represents the normalized
+luminance@tie{}@mathid{Y} linearly transformed by the exposure
+optimum@tie{}@subscripted{Y,opt} (option@tie{}@option{--exposure-optimum})
+and @math{width} (option@tie{}@option{--exposure-width}) according to
+@cindex exposure weight, linear transform
+@ifinfo
+@display
+@math{z = (Y - Y_opt) / width}.
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <mi>z</mi>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <mrow>
+                    <mi>Y</mi>
+                    <mo>-</mo>
+                    <msub>
+                        <mi>Y</mi>
+                        <mtext>opt</mtext>
+                    </msub>
+                </mrow>
+                <mi>width</mi>
+            </mfrac>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    z = {{Y - Y_{\mathrm{opt}}} \over \mathit{width}}.
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:ci>z</mml:ci>
+            <mml:apply>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:minus/>
+                    <mml:ci>Y</mml:ci>
+                    <mml:apply>
+                        <mml:selector/>
+                        <mml:ci>Y</mml:ci>
+                        <mml:mtext mathvariant="sans-serif">opt</mml:mtext>
+                    </mml:apply>
+                </mml:apply>
+                <mml:ci>width</mml:ci>
+            </mml:apply>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
+@cindex exposure weight function, full width half maximum
+@cindex exposure weight function, @acronym{FWHM}
+@cindex full width half maximum
+@cindex @acronym{FWHM}
+Internally Enfuse uses a rescaled @math{width} that gives all weight
+functions the same full width at half of the maximum (@acronym{FWHM}),
+also see @ref{Figure:exposure-weights}.  This means for the user that
+changing the exposure function neither changes the optimum exposure
+nor the width.
 
-Default: @value{src::default-exposure-mu}.
+@float Table,Table:exposure-weight-functions
+@table @code
+@item gauss
+@itemx gaussian
+@cindex exposure weight function, gauss
+@cindex exposure weight function, gaussian
+The original exposure weight function of Enfuse and the only one up to
+version@tie{}4.1.
+@ifinfo
+@display
+@math{w_exp = exp(-z^2 / 2)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <msub>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msub>
+        <mo>=</mo>
+        <mrow>
+            <mo>exp</mo>
+            <mo>&ApplyFunction;</mo>
+            <mrow>
+                <mo>(</mo>
+                <mrow>
+                    <mo>-</mo>
+                    <msup>
+                      <mi>z</mi>
+                      <mn>2</mn>
+                    </msup>
+                </mrow>
+                <mo>/</mo>
+                <mn>2</mn>
+                <mo>)</mo>
+            </mrow>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}} = e^{-z^2 / 2}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:selector/>
+                <mml:ci>w</mml:ci>
+                <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+            </mml:apply>
+            <mml:apply>
+                <mml:exp/>
+                <mml:apply>
+                    <mml:divide/>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:apply>
+                            <mml:power/>
+                            <mml:ci>z</mml:ci>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:cn>2</mml:cn>
+                </mml:apply>
+            </mml:apply>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
 
-Use this option to fine-tune exposure weighting (@pxref{Exposure
-Weighting}).
+@item lorentz
+@itemx lorentzian
+@cindex exposure weight function, lorentz
+@cindex exposure weight function, lorentzian
+Lorentz curve.
+@ifinfo
+@display
+@math{w_exp = 1 / (1 + z^2 / 2)}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <msub>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msub>
+        <mo>=</mo>
+        <mrow>
+            <mfrac>
+                <mn>1</mn>
+                <mrow>
+                    <mn>1</mn>
+                    <mo>+</mo>
+                    <mrow>
+                        <msupinline>
+                            <mi>z</mi>
+                            <mn>2</mn>
+                        </msupinline>
+                        <mo>/</mo>
+                        <mn>2</mn>
+                    </mrow>
+                </mrow>
+            </mfrac>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}} = {1 \over {1 + z^2 / 2}}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:selector/>
+                <mml:ci>w</mml:ci>
+                <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+            </mml:apply>
+            <mml:apply>
+                <mml:divide/>
+                <mml:apply>
+                    <mml:cn>1</mml:cn>
+                    <mml:apply>
+                        <mml:plus/>
+                        <mml:cn>1</mml:cn>
+                        <mml:apply>
+                            <mml:divide/>
+                            <mml:apply>
+                                <mml:power/>
+                                <mml:ci>z</mml:ci>
+                                <mml:cn>2</mml:cn>
+                            </mml:apply>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:apply>
+            </mml:apply>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
 
-@item --exposure-sigma=@var{STD-DEV}
-@opindex --exposure-sigma
+@item halfsine
+@itemx half-sine
+@cindex exposure weight function, halfsine
+@cindex exposure weight function, half-sine
+Upper half-wave of a sine; exactly zero outside.
+@ifinfo
+@display
+@math{w_exp = cos(z) if |z| <= pi/2, 0 otherwise}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <msub>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msub>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lbrace;</mo>
+            <mtable>
+                <mtr>
+                    <mtd>
+                        <mtext>cos</mtext>
+                        <mo>&ApplyFunction;</mo>
+                        <mrow>
+                            <mo>(</mo>
+                            <mi>z</mi>
+                            <mo>)</mo>
+                        </mrow>
+                    </mtd>
+                    <mtd>
+                        <mtext>if |z| &le; &pi;/2;</mtext>
+                    </mtd>
+                </mtr>
+                <mtr>
+                    <mtd>
+                        <mn>0</mn>
+                    </mtd>
+                    <mtd>
+                        <mtext>otherwise.</mtext>
+                    </mtd>
+                </mtr>
+            </mtable>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}} = \cases{\cos(z), & if $|z| \le \pi/2$;\cr
+                              0,       & otherwise.\cr}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:selector/>
+                <mml:ci>w</mml:ci>
+                <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+            </mml:apply>
+            <mml:piecewise>
+                <mml:piece>
+                    <mml:apply>
+                        <mml:cos/>
+                        <mml:ci>z</mml:ci>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:leq/>
+                        <mml:apply>
+                            <mml:abs/>
+                            <mml:ci>z</mml:ci>
+                        </mml:apply>
+                        <mml:apply>
+                            <mml:pi/>
+                            <mml:cn>2</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:piece>
+                <mml:piece>
+                    <mml:cn>0</mml:cn>
+                    <mml:mtext>otherwise</mml:mtext>
+                </mml:piece>
+            </mml:piecewise>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
 
-Standard deviation @var{STD-DEV} of the Gaussian exposure weight
-curve.  Low numbers give less weight to pixels that are far from
-@option{--wMu} and vice versa.
+@item fullsine
+@itemx full-sine
+@cindex exposure weight function, fullsine
+@cindex exposure weight function, full-sine
+Full sine-wave shifted upwards by one to give all positive weights;
+exactly zero outside.
+@ifinfo
+@display
+@math{w_exp = (1 + cos(z)) / 2 if |z| <= pi, 0 otherwise}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <msub>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msub>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lbrace;</mo>
+            <mtable>
+                <mtr>
+                    <mtd>
+                        <mrow>
+                            <mo>(</mo>
+                            <mn>1</mn>
+                            <mo>+</mo>
+                            <mrow>
+                                <mtext>cos</mtext>
+                                <mo>&ApplyFunction;</mo>
+                                <mrow>
+                                    <mo>(</mo>
+                                    <mi>z</mi>
+                                    <mo>)</mo>
+                                </mrow>
+                            </mrow>
+                            <mo>)</mo>
+                        </mrow>
+                        <mo>/</mo>
+                        <mn>2</mn>
+                    </mtd>
+                    <mtd>
+                        <mtext>if |z| &le; &pi;;</mtext>
+                    </mtd>
+                </mtr>
+                <mtr>
+                    <mtd>
+                        <mn>0</mn>
+                    </mtd>
+                    <mtd>
+                        <mtext>otherwise.</mtext>
+                    </mtd>
+                </mtr>
+            </mtable>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}} = \cases{(1 + \cos(z)) / 2 & for $|z| \le \pi$;\cr
+                              0                 & otherwise.\cr}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:selector/>
+                <mml:ci>w</mml:ci>
+                <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+            </mml:apply>
+            <mml:piecewise>
+                <mml:piece>
+                    <mml:apply>
+                        <mml:divide/>
+                        <mml:apply>
+                           <mml:plus/>
+                           <mml:cn>1</mml:cn>
+                            <mml:apply>
+                                <mml:cos/>
+                                <mml:ci>z</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                        <mml:cn>2</mml:cn>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:leq/>
+                        <mml:apply>
+                            <mml:abs/>
+                            <mml:ci>z</mml:ci>
+                        </mml:apply>
+                        <mml:pi/>
+                    </mml:apply>
+                </mml:piece>
+                <mml:piece>
+                    <mml:cn>0</mml:cn>
+                    <mml:mtext>otherwise</mml:mtext>
+                </mml:piece>
+            </mml:piecewise>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
 
-Valid range: @var{STD-DEV} @geq{} @value{src::minimum-exposure-sigma}.
+@item bisquare
+@itemx bi-square
+@cindex exposure weight function, bisquare
+@cindex exposure weight function, bi-square
+Quartic function.
+@ifinfo
+@display
+@math{w_exp = 1 - z^4 for |z| <= 1, 0 otherwise}
+@end display
+@end ifinfo
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="separate">
+    <mrow>
+        <msub>
+            <mi>w</mi>
+            <mtext>exp</mtext>
+        </msub>
+        <mo>=</mo>
+        <mrow>
+            <mo>&lbrace;</mo>
+            <mtable>
+                <mtr>
+                    <mtd>
+                        <mn>1</mn>
+                        <mo>-</mo>
+                        <msup>
+                            <mi>z</mi>
+                            <mn>4</mn>
+                        </msup>
+                    </mtd>
+                    <mtd>
+                        <mtext>if |z| &le; 1;</mtext>
+                    </mtd>
+                </mtr>
+                <mtr>
+                    <mtd>
+                        <mn>0</mn>
+                    </mtd>
+                    <mtd>
+                        <mtext>otherwise.</mtext>
+                    </mtd>
+                </mtr>
+            </mtable>
+        </mrow>
+    </mrow>
+</math>
+@end html
+@tex
+$$
+    w_{\mathrm{exp}} = \cases{1 - z^4 & for $|z| \le 1$;\cr
+                              0       & otherwise.\cr}
+$$
+@end tex
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:selector/>
+                <mml:ci>w</mml:ci>
+                <mml:mtext mathvariant="sans-serif">exp</mml:mtext>
+            </mml:apply>
+            <mml:piecewise>
+                <mml:piece>
+                    <mml:apply>
+                        <mml:minus/>
+                        <mml:cn>1</mml:cn>
+                        <mml:apply>
+                           <mml:power/>
+                           <mml:ci>z</mml:ci>
+                           <mml:cn>4</mml:cn>
+                        </mml:apply>
+                    </mml:apply>
+                    <mml:apply>
+                        <mml:leq/>
+                        <mml:apply>
+                            <mml:abs/>
+                            <mml:ci>z</mml:ci>
+                        </mml:apply>
+                        <mml:cn>1</mml:cn>
+                    </mml:apply>
+                </mml:piece>
+                <mml:piece>
+                    <mml:cn>0</mml:cn>
+                    <mml:mtext>otherwise</mml:mtext>
+                </mml:piece>
+            </mml:piecewise>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
+@end table
 
-Default: @value{src::default-exposure-sigma}.
+@caption{Predefined exposure weight functions.  For a graphical
+comparison see @ref{Figure:exposure-weights}.}
 
-Use this option to fine-tune exposure weighting (@pxref{Exposure
-Weighting}).
+@shortcaption{Exposure weight functions}
+@end float
+
+For a detailed explanation of all the weight functions @ref{Exposure
+Weighting}.
+
+If this option is given more than once, the last instance wins.
+
+@item --exposure-width=@var{WIDTH}
+@itemx --exposure-sigma=@var{STD-DEV} @emph{(obsolete)}
+@opindex --exposure-width
+
+Set the characteristic @var{WIDTH} of the exposure weight function.
+Low numbers give less weight to pixels that are far from the
+user-defined optimum (option@tie{}@option{--exposure-optimum}) and
+vice versa.  Use this option to fine-tune exposure weighting
+(@pxref{Exposure Weighting}).
+
+Valid range: @var{WIDTH} > @value{src::minimum-exposure-width}.
+
+Default: @value{src::default-exposure-width}.
 
 @item --saturation-weight=@var{WEIGHT}
 @opindex --saturation-weight
 
-Sets the relative @var{WEIGHT} of high-saturation pixels.  Increasing
+Set the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
 final output.
 
@@ -1674,7 +2270,7 @@ respective ends.
 @float Figure,Figure:exposure-cutoff
 @vimage{exposure-cutoff}
 
-@caption{Exposure weight, a Gaussian with @var{Mu} = 0.5 and @var{Sigma} = 0.2 submitted to an exposure-cutoff of @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
+@caption{Exposure weight, a Gaussian with the @var{optimum} = 0.5 and @var{width} = 0.2 submitted to an exposure-cutoff of @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
 
 @shortcaption{Exposure cutoff function}
 @end float
@@ -3162,8 +3758,8 @@ enfuse \
     img_[1-3].png
 @end example
 instructs Enfuse to consider only the exposure weight.  Combine this
-with option@tie{}@option{--save-masks} and it will become clearer how
-Enfuse computes the exposure weight for the set of images.
+with option@tie{}@option{--save-@/masks} and it will become clearer
+how Enfuse computes the exposure weight for the set of images.
 
 @cindex overpowering criteria
 @cindex criteria, overpowering one another
@@ -3177,12 +3773,15 @@ criterion completely overpower all others.
 @cindex weighting, exposure
 
 Exposure weighting prefers pixels with a luminance@tie{}@math{Y} close
-to the center of the normalized, real-valued luminance
-interval@tie{}@math{[0, 1]}.
+to the user-chosen optimum value
+(option@tie{}@option{--exposure-@/optimum}, default:
+@value{src::default-exposure-optimum}) of the normalized, real-valued
+luminance interval@tie{}@math{[0, 1]}.
 
-@acronym{RGB}-pixels get converted to luminance using the grayscale
-projector given by @option{--gray-@/projector}, which defaults to
-@code{average}.  Grayscale pixels are identified with luminance.
+@acronym{RGB}-pixels are converted to luminance before using the
+grayscale projector given by @option{--gray-@/projector}, which
+defaults to @code{average}.  Grayscale pixels are identified with
+luminance.
 
 In the normalized luminance interval 0.0 represents pure black and 1.0
 represents pure white independently of the data type of the input
@@ -3191,15 +3790,19 @@ maps to 1.0 in the normalized interval and for a 32@dmn{bit}
 @acronym{TIFF} picture the highest luminance value@tie{}4294967295
 also maps to 1.0.  The middle of the luminance interval, 0.5, is where
 a neutral gray tone ends up with every camera that had no exposure
-correction dialed in, for example the image of a gray- or white-card.
+correction dialed in, for example the image of any gray- or
+white-card.
 
 The exposure weighting algorithm only looks at a single pixel at a
 time; the pixel's neighborhood is not taken into account.
 
-The weighting function is the Gaussian
+@cindex exposure weight function, gauss
+@cindex exposure weight function, gaussian
+Up to Enfuse version@tie{}4.1 the only weighting function is the
+Gaussian
 @ifinfo
 @display
-@math{w_exp(Y) = exp(-0.5 * ((Y - Mu) / Sigma)^2),}
+@math{w_exp(Y) = exp(-0.5 * ((Y - Y_opt) / width)^2),}
 @end display
 @end ifinfo
 @html
@@ -3236,9 +3839,14 @@ The weighting function is the Gaussian
                             <mrow>
                                 <mi>Y</mi>
                                 <mo>-</mo>
-                                <mi mathvariant="italic">Mu</mi>
+                                <mrow>
+                                    <msub>
+                                        <mi>Y</mi>
+                                        <mtext>opt</mtext>
+                                    </msub>
+                                </mrow>
                             </mrow>
-                            <mi mathvariant="italic">Sigma</mi>
+                            <mi mathvariant="italic">width</mi>
                         </mfrac>
                         <mo>)</mo>
                     </mrow>
@@ -3254,7 +3862,7 @@ The weighting function is the Gaussian
 $$
     w_{\mathrm{exp}}(Y) =
     \exp\left(-{1 \over 2}
-              \left(Y - \mathit{Mu} \over \mathit{Sigma} \right)^2\right),
+              \left(Y - Y_{\mathrm{opt}} \over \mathit{width} \right)^2\right),
 $$
 @end tex
 @docbook
@@ -3290,9 +3898,13 @@ $$
                             <mml:apply>
                                 <mml:minus/>
                                 <mml:ci>Y</mml:ci>
-                                <mml:ci>Mu</mml:ci>
+                                <mml:apply>
+                                    <mml:selector/>
+                                    <mml:ci>Y</mml:ci>
+                                    <mml:mtext mathvariant="sans-serif">opt</mml:mtext>
+                                </mml:apply>
                             </mml:apply>
-                            <mml:ci>Sigma</mml:ci>
+                            <mml:ci>width</mml:ci>
                         </mml:apply>
                         <mml:cn>2</mml:cn>
                     </mml:apply>
@@ -3304,39 +3916,166 @@ $$
 @end docbook
 
 @noindent
-whose center@tie{}@math{Mu} and width@tie{}@math{Sigma} are controlled
-by the command line options@tie{}@option{--exposure-mu} and @option{--exposure-sigma}
-respectively.  @math{Mu} defaults to @value{src::default-exposure-mu}
-and @math{Sigma} defaults to @value{src::default-exposure-sigma}.
-@ref{Figure:gaussian} shows a Gaussian.
+whose maximum position@tie{}@subscripted{Y,opt} and @math{width} are
+controlled by the command line options @option{--exposure-@/optimum}
+and @option{--exposure-@/width} respectively, where
+@subscripted{Y,opt} defaults to @value{src::default-exposure-optimum}
+and @math{width} defaults to @value{src::default-exposure-width}.
+@ref{Figure:gaussian} shows some Gaussians.
 
 @float Figure,Figure:gaussian
 @vimage{gaussian}
 
-@caption{Gaussian function with the parameters @var{Mu} = 0.5 and @var{Sigma} = 0.2.}
+@caption{Enblend's Gaussian function with the parameters @var{optimum}
+= 0.5 and three different @var{width}s: 0.1, 0.2, and 0.4.}
 
 @shortcaption{Gaussian function}
 @end float
 
-The options@tie{}@option{--exposure-mu} and @option{--exposure-sigma} are for
-fine-tuning the final result without changing the set of input images.
-Option@tie{}@option{--exposure-mu} sets the point @var{Mu} of optimum
-exposure.  Increasing @var{Mu} makes Enfuse prefer lighter pixels,
-rendering the final image lighter, and vice versa.
-Option@tie{}@option{--exposure-sigma} defines the range @var{Sigma} of
-acceptable exposures.  Small values of @var{Sigma} penalize exposures
-that deviate from @var{Mu} more, and vice versa.
+The options@tie{}@option{--exposure-@/optimum} and
+@option{--exposure-@/width} are for fine-tuning the final result
+without changing the set of input images.
+Option@tie{}@option{--exposure-@/optimum} sets the point of optimum
+exposure.  Increasing the @var{optimum} makes Enfuse prefer lighter
+pixels, rendering the final image lighter, and vice versa.
+Option@tie{}@option{--exposure-@/width} defines the @var{width} of
+acceptable exposures.  Small values of @var{width} penalize exposures
+that deviate from @var{optimum} more, and vice versa.
+
+In Enfuse version@tie{}4.2 several new exposure weight functions have
+been added.  The are selected with
+option @code{--exposure-@/weight-@/function=}@var{NAME}.
+
+@float Table,Table:weight-functions
+@multitable @columnfractions 0.35 0.3 0.25
+@headitem Exposure Weight @tab @var{NAME}s @tab Function Chart
+@item Gaussian curve (default)
+@cindex exposure weight function, gauss
+@cindex exposure weight function, gaussian
+@tab @code{gauss}, @code{gaussian}
+@tab @ref{Figure:gaussian}
+@item Lorentz curve
+@tab @code{lorentz}, @code{lorentzian}
+@cindex exposure weight function, lorentz
+@cindex exposure weight function, lorentzian
+@tab @ref{Figure:lorentzian}
+@item Upper half-wave of a sine
+@cindex exposure weight function, halfsine
+@cindex exposure weight function, half-sine
+@tab @code{halfsine}, @code{half-sine}
+@tab @ref{Figure:halfsine}
+@item Full sine-wave shifted upwards by one
+@cindex exposure weight function, fullsine
+@cindex exposure weight function, full-sine
+@tab @code{fullsine}, @code{full-sine}
+@tab @ref{Figure:fullsine}
+@item Quartic, or bi-square function
+@cindex exposure weight function, bisquare
+@cindex exposure weight function, bi-square
+@tab @code{bisquare}, @code{bi-square}
+@tab @ref{Figure:power}
+@end multitable
+
+@caption{Available exposure weight functions.}
+
+@shortcaption{Exposure weight functions}
+
+@cindex exposure weight functions
+@end float
+
+Gaussian and Lorentzian behave like 1 - @power{z,2} around the
+optimum.  However for large @math{|z|} the Gaussian weight rolls off
+like exp(-@power{z,2}/2) and the Lorentzian only as @power{z,-2}.
+
+@float Figure,Figure:lorentzian
+@vimage{lorentzian}
+@caption{Enblend's Lorentzian function with the parameters
+@var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
+0.4.}
+@shortcaption{Lorentzian function}
+@end float
+
+Both, the Gaussian and the Lorentzian are easy to use, because they do
+not go exactly to zero.  Thus, Enfuse can select ``better'' pixels far
+away from the chosen optimum.
+
+@float Figure,Figure:halfsine
+@vimage{halfsine}
+@caption{Enblend's Half-Sine function with the parameters
+@var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
+0.4.}
+@shortcaption{Half-Sine function}
+@end float
+
+@float Figure,Figure:fullsine
+@vimage{fullsine}
+@caption{Enblend's Full-Sine function with the parameters
+@var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
+0.4.}
+@shortcaption{Full-Sine function}
+@end float
+
+Again, Half-Sine and Full-Sine behave like 1 - @power{z,2} around the
+optimum, like Gaussian and Lorentzian.  However for large @math{|z|}
+they both are exactly zero.  The difference is how they decrease just
+before they reach zero.  Half-Sine behaves like (z - @math{z'}) and
+Full-Sine like @power{(z - z''),2}, where @math{z'} and @math{z''} are
+the respective zeros.
+
+@float Figure,Figure:power
+@vimage{power}
+@caption{Enblend's Bi-Square function with the parameters
+@var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
+0.4.}
+@shortcaption{Bi-Square function}
+@end float
+
+Bi-Square is the only predefined function that behaves like 1 -
+@power{z,4} around the optimum.
+
+The weight functions Half-Sine, Full-Sine, and Bi-Square are more
+difficult to use, because they yield exactly zero if the normalized
+luminance of a pixel is far enough away from the optimum.  This can
+lead to pathologies if the luminances of the same pixel position in
+all @math{N} input images are assigned a weight of zero.  For all-zero
+weights Enfuse falls back to weighing equally.  This is, each pixel
+gets a weight of @math{1/N}, which may or may not be the desired
+result.  However, if the @var{width} is chosen so large that the
+weight never vanishes or the imput images span a large enough range of
+luminances for each and every pixel, the problem is circumnavigated.
+
+Another way of cutting off under- or overexposed pixels is to use
+option@tie{}@option{--exposure-cutoff}, which has the additional
+benefit of allowing to choose uper and lower cutoff separately.
+
+@float Figure,Figure:exposure-weights
+@vimage{exposure-weights}
+@caption{Comparison of all of Enblend's exposure weight functions for
+the default values of @var{optimum} = 0.5 and @var{width} = 0.2.  Note
+that all functions intersect at @math{w = 1/2}, this is they share the
+same @acronym{FWHM}.}
+@shortcaption{Comparison of exposure weight functions}
+@end float
+
+Figure@tie{}@ref{Figure:exposure-weights} shows all available exposure
+weight functions for the same parameters (the defaults).  They all
+intersect at @math{w = 1/2} independently of @var{optimum} or
+@var{width}, making it simple to just try them out without
+fundamentally changing brightness.
 
 @optionsummaryheading{}
 
 @table @option
+@item --exposure-optimum
+@ref{Fusion Options}
+
+@item --exposure-width
+@ref{Fusion Options}
+
+@item --exposure-weight-function
+@ref{Fusion Options}
+
 @item --exposure-weight
-@ref{Fusion Options}
-
-@item --exposure-mu
-@ref{Fusion Options}
-
-@item --exposure-sigma
 @ref{Fusion Options}
 
 @item --gray-projector

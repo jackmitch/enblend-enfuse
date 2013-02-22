@@ -66,6 +66,7 @@ extern "C" int optind;
 #include <boost/logic/tribool.hpp>
 #include <lcms2.h>
 
+#include "exposure_weight.h"
 #include "global.h"
 #include "layer_selection.h"
 #include "signature.h"
@@ -92,6 +93,10 @@ int OutputOffsetYCmdLine = 0;
 std::string OutputCompression;
 std::string OutputPixelType;
 double WExposure = 1.0;         //< src::default-weight-exposure 1.0
+double ExposureOptimum = 0.5;   //< src::default-exposure-optimum 0.5
+double ExposureWidth = 0.2;     //< src::default-exposure-width 0.2
+std::string ExposureWeightFunctionName("gaussian"); //< src::exposure-weight-function gaussian
+ExposureWeight* ExposureWeightFunction = new Gaussian(ExposureOptimum, ExposureWidth);
 AlternativePercentage ExposureLowerCutoff(0.0, true); //< src::default-exposure-lower-cutoff 0%
 AlternativePercentage ExposureUpperCutoff(100.0, true); //< src::default-exposure-upper-cutoff 100%
 std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< src::default-exposure-lower-cutoff-projector anti-value
@@ -99,8 +104,6 @@ std::string ExposureUpperCutoffGrayscaleProjector("value"); //< src::default-exp
 double WContrast = 0.0;         //< src::default-weight-contrast 0.0
 double WSaturation = 0.2;       //< src::default-weight-saturation 0.2
 double WEntropy = 0.0;          //< src::default-weight-entropy 0.0
-double WMu = 0.5;               //< src::default-exposure-mu 0.5
-double WSigma = 0.2;            //< src::default-exposure-sigma 0.2
 bool WSaturationIsDefault = true;
 int ContrastWindowSize = 5;     //< src::default-contrast-window-size 5
 std::string GrayscaleProjector;
@@ -194,8 +197,9 @@ void dump_global_variables(const char* file, unsigned line,
         "+     OutputOffsetXCmdLine = " << OutputOffsetXCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputOffsetYCmdLine = " << OutputOffsetYCmdLine << ", argument to option \"-f\"\n" <<
         "+ WExposure = " << WExposure << ", argument to option \"--exposure-weight\"\n" <<
-        "+     WMu = " << WMu  << ", argument to option \"--exposure-mu\"\n" <<
-        "+     WSigma = " << WSigma << ", argument to option \"--exposure-sigma\"\n" <<
+        "+     ExposureOptimum = " << ExposureOptimum  << ", argument to option \"--exposure-optimum\"\n" <<
+        "+     ExposureWidth = " << ExposureWidth << ", argument to option \"--exposure-width\"\n" <<
+        "+ ExposureWeightFunctionName = " << ExposureWeightFunctionName << "\n" <<
         "+ ExposureLowerCutoff = {\n"
         "+     value = " << ExposureLowerCutoff.value() << ",\n" <<
         "+     is_percentage = " << enblend::stringOfBool(ExposureLowerCutoff.is_percentage()) << "\n" <<
@@ -412,11 +416,14 @@ void printUsageAndExit(const bool error = true) {
         "  --entropy-weight=WEIGHT\n" <<
         "                         weight given to pixels in high entropy neighborhoods\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WEntropy << "\n" <<
-        "  --exposure-mu=MEAN     center also known as MEAN of Gaussian weighting\n" <<
-        "                         function (0 <= MEAN <= 1); default: " << WMu << "\n" <<
-        "  --exposure-sigma=SIGMA\n" <<
-        "                         standard deviation of Gaussian weighting\n" <<
-        "                         function (SIGMA > 0); default: " << WSigma << "\n" <<
+        "  --exposure-optimum=OPTIMUM\n" <<
+        "                         optimum exposure value, usually the maximum of the weighting\n" <<
+        "                         function (0 <= OPTIMUM <= 1); default: " << ExposureOptimum << "\n" <<
+        "  --exposure-width=WIDTH\n" <<
+        "                         characteristic width of the weighting function\n" <<
+        "                         (WIDTH > 0); default: " << ExposureWidth << "\n" <<
+        "  --exposure-weight-function=NAME\n" <<
+        "                         exposure weight function name; default: " << ExposureWeightFunctionName << "\n" <<
         "  --soft-mask            average over all masks; this is the default\n" <<
         "  --hard-mask            force hard blend masks and no averaging on finest\n" <<
         "                         scale; this is especially useful for focus\n" <<
@@ -534,7 +541,8 @@ enum AllPossibleOptions {
     SizeAndPositionOption /* -f */, CacheSizeOption,
     ExposureWeightOption, ExposureCutoffOption, SaturationWeightOption,
     ContrastWeightOption, EntropyWeightOption,
-    ExposureMuOption /* --contrast-mu */, ExposureSigmaOption /* --contrast-sigma */,
+    ExposureOptimumOption, ExposureWidthOption,
+    ExposureWeightFunctionOption,
     SoftMaskOption, HardMaskOption,
     ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
     MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
@@ -575,13 +583,13 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--entropy-weight\" has no effect with \"--load-masks\"" << std::endl;
         }
-        if (contains(optionSet, ExposureMuOption)) {
+        if (contains(optionSet, ExposureOptimumOption)) {
             std::cerr << command <<
-                ": warning: option \"--exposure-mu\" has no effect with \"--load-masks\"" << std::endl;
+                ": warning: option \"--exposure-optimum\" has no effect with \"--load-masks\"" << std::endl;
         }
-        if (contains(optionSet, ExposureSigmaOption)) {
+        if (contains(optionSet, ExposureWidthOption)) {
             std::cerr << command <<
-                ": warning: option \"--exposure-sigma\" has no effect with \"--load-masks\"" << std::endl;
+                ": warning: option \"--exposure-width\" has no effect with \"--load-masks\"" << std::endl;
         }
         if (contains(optionSet, ContrastWindowSizeOption)) {
             std::cerr << command <<
@@ -637,16 +645,16 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
     }
 
     if (WExposure == 0.0 && contains(optionSet, ExposureWeightOption)) {
-        if (contains(optionSet, ExposureMuOption)) {
+        if (contains(optionSet, ExposureOptimumOption)) {
             std::cerr << command <<
-                ": warning: option \"--exposure-mu\" has no effect as exposure weight\n" <<
+                ": warning: option \"--exposure-optimum\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
                 std::endl;
         }
-        if (contains(optionSet, ExposureSigmaOption)) {
+        if (contains(optionSet, ExposureWidthOption)) {
             std::cerr << command <<
-                ": warning: option \"--exposure-sigma\" has no effect as exposure weight\n" <<
+                ": warning: option \"--exposure-width\" has no effect as exposure weight\n" <<
                 command <<
                 ": warning:     is zero" <<
                 std::endl;
@@ -791,7 +799,30 @@ fill_mask_templates(const char* an_option_argument,
 }
 
 
-int process_options(int argc, char** argv)
+ExposureWeight*
+make_exposure_weight_function(const std::string& name, double x0, double xi)
+{
+    delete ExposureWeightFunction;
+
+    if (name == "gauss" || name == "gaussian") {
+        return new Gaussian(x0, xi);
+    } else if (name == "lorentz" || name == "lorentzian") {
+        return new Lorentzian(x0, xi);
+    } else if (name == "halfsine" || name == "half-sine") {
+        return new HalfSinusodial(x0, xi);
+    } else if (name == "fullsine" || name == "full-sine") {
+        return new FullSinusodial(x0, xi);
+    } else if (name == "bisquare" || name == "bi-square") {
+        return new Bisquare(x0, xi);
+    } else {
+        std::cerr << command << ": unknown exposure weight function \"" << name << "\""<< std::endl;
+        exit(1);
+    }
+}
+
+
+int
+process_options(int argc, char** argv)
 {
     enum OptionId {
         OPTION_ID_OFFSET = 1023,    // Ids start at 1024
@@ -799,8 +830,9 @@ int process_options(int argc, char** argv)
         WeightExposureId,
         WeightContrastId,
         WeightSaturationId,
-        WeightMuId,
-        WeightSigmaId,
+        ExposureOptimumId, ObsoleteExposureOptimumId,
+        ExposureWidthId, ObsoleteExposureWidthId,
+        ExposureWeightFunctionId,
         MinCurvatureId,
         EdgeScaleId,
         ContrastWindowSizeId,
@@ -833,8 +865,11 @@ int process_options(int argc, char** argv)
         {"exposure-weight", required_argument, 0, WeightExposureId},
         {"contrast-weight", required_argument, 0, WeightContrastId},
         {"saturation-weight", required_argument, 0, WeightSaturationId},
-        {"exposure-mu", required_argument, 0, WeightMuId},
-        {"exposure-sigma", required_argument, 0, WeightSigmaId},
+        {"exposure-mu", required_argument, 0, ObsoleteExposureOptimumId},
+        {"exposure-optimum", required_argument, 0, ExposureOptimumId},
+        {"exposure-sigma", required_argument, 0, ObsoleteExposureWidthId},
+        {"exposure-width", required_argument, 0, ExposureWidthId},
+        {"exposure-weight-function", required_argument, 0, ExposureWeightFunctionId},
         {"contrast-min-curvature", required_argument, 0, MinCurvatureId},
         {"contrast-edge-scale", required_argument, 0, EdgeScaleId},
         {"contrast-window-size", required_argument, 0, ContrastWindowSizeId},
@@ -1305,33 +1340,51 @@ int process_options(int argc, char** argv)
             optionSet.insert(SaturationWeightOption);
             break;
 
-        case WeightMuId:
+        case ObsoleteExposureOptimumId:
+            std::cerr << command << ": info: option \"--exposure-mu\" is obsolete, prefer \"--exposure-optimum\"" << std::endl;
+            // FALLTHROUGH
+        case ExposureOptimumId:
             if (optarg != NULL && *optarg != 0) {
-                WMu = enblend::numberOfString(optarg,
-                                              _1 >= 0.0, //< src::minimum-exposure-mu 0
-                                              "exposure center value (mu) less than 0; will use 0",
-                                              0.0,
-                                              _1 <= 1.0, //< src::maximum-exposure-mu 1
-                                              "exposure center value (mu) geater than 1; will use 1",
-                                              1.0);
+                ExposureOptimum = enblend::numberOfString(optarg,
+                                                          _1 >= 0.0, //< src::minimum-exposure-optimum 0
+                                                          "exposure optimum value less than 0; will use 0",
+                                                          0.0,
+                                                          _1 <= 1.0, //< src::maximum-exposure-optimum 1
+                                                          "exposure optimum value geater than 1; will use 1",
+                                                          1.0);
             } else {
-                std::cerr << command << ": option \"--exposure-mu\" requires an argument" << std::endl;
+                std::cerr << command << ": option \"--exposure-optimum\" requires an argument" << std::endl;
                 failed = true;
             }
-            optionSet.insert(ExposureMuOption);
+            optionSet.insert(ExposureOptimumOption);
             break;
 
-        case WeightSigmaId:
+
+        case ObsoleteExposureWidthId:
+            // FALLTHROUGH
+            std::cerr << command << ": info: option \"--exposure-sigma\" is obsolete, prefer \"--exposure-width\"" << std::endl;
+        case ExposureWidthId:
             if (optarg != NULL && *optarg != 0) {
-                WSigma = enblend::numberOfString(optarg,
-                                                 _1 >= 0.0, //< src::minimum-exposure-sigma 0
-                                                 "exposure standard deviation (sigma) less than 0; will use 1/1024",
-                                                 1.0 / 1024.0);
+                ExposureWidth = enblend::numberOfString(optarg,
+                                                        _1 > 0.0, //< src::minimum-exposure-width 0
+                                                        "exposure width less than 0; will use 1/1024",
+                                                        1.0 / 1024.0);
             } else {
-                std::cerr << command << ": option \"--exposure-sigma\" requires an argument" << std::endl;
+                std::cerr << command << ": option \"--exposure-width\" requires an argument" << std::endl;
                 failed = true;
             }
-            optionSet.insert(ExposureSigmaOption);
+            optionSet.insert(ExposureWidthOption);
+            break;
+
+        case ExposureWeightFunctionId:
+            if (optarg != NULL && *optarg != 0) {
+                ExposureWeightFunctionName = optarg;
+                boost::algorithm::to_lower(ExposureWeightFunctionName);
+            } else {
+                std::cerr << command << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
+                failed = true;
+            }
+            optionSet.insert(ExposureWeightFunctionOption);
             break;
 
         case WeightEntropyId:
@@ -1634,6 +1687,17 @@ int process_options(int argc, char** argv)
         failed = true;
     }
 
+    if (WExposure > 0.0)
+    {
+        ExposureWeightFunction = make_exposure_weight_function(ExposureWeightFunctionName, ExposureOptimum, ExposureWidth);
+        if (!enblend::check_exposure_weight_function(ExposureWeightFunction))
+        {
+            std::cerr << command
+                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\"" << std::endl;
+            failed = true;
+        }
+    }
+
     if (failed) {
         exit(1);
     }
@@ -1646,6 +1710,10 @@ int process_options(int argc, char** argv)
     if (justPrintVersion) {
         printVersionAndExit();
         // never reached
+    }
+
+    if (enblend::parameter::as_boolean("dump-exposure-weight-function", false)) {
+        enblend::dump_exposure_weight_function(ExposureWeightFunction);
     }
 
     StopAfterMaskGeneration = contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption);
@@ -2271,6 +2339,8 @@ int main(int argc, char** argv)
     if (XYZToInputTransform) {cmsDeleteTransform(XYZToInputTransform);}
     if (XYZProfile) {cmsCloseProfile(XYZProfile);}
     if (InputProfile) {cmsCloseProfile(InputProfile);}
+
+    delete ExposureWeightFunction;
 
     // Success.
     return 0;
