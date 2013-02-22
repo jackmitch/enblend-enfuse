@@ -66,13 +66,15 @@ extern "C" int optind;
 #include <boost/logic/tribool.hpp>
 #include <lcms2.h>
 
+#include "dynamic_loader.h"
 #include "exposure_weight.h"
 #include "global.h"
 #include "layer_selection.h"
-#include "signature.h"
 #include "selector.h"
 #include "self_test.h"
+#include "signature.h"
 #include "tiff_message.h"
+
 
 // Globals
 const std::string command("enfuse");
@@ -97,6 +99,7 @@ double ExposureOptimum = 0.5;   //< src::default-exposure-optimum 0.5
 double ExposureWidth = 0.2;     //< src::default-exposure-width 0.2
 std::string ExposureWeightFunctionName("gaussian"); //< src::exposure-weight-function gaussian
 ExposureWeight* ExposureWeightFunction = new Gaussian(ExposureOptimum, ExposureWidth);
+ExposureWeight::argument_list_t ExposureWeightFunctionArguments;
 AlternativePercentage ExposureLowerCutoff(0.0, true); //< src::default-exposure-lower-cutoff 0%
 AlternativePercentage ExposureUpperCutoff(100.0, true); //< src::default-exposure-upper-cutoff 100%
 std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< src::default-exposure-lower-cutoff-projector anti-value
@@ -258,6 +261,19 @@ void printVersionAndExit() {
     std::cout << "enfuse " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
+        std::cout << "Extra feature: dynamic linking support: ";
+        try {
+            if (DynamicLoader("").resolve0("bar") == NULL) {
+                std::cout << "no";
+            } else {
+                std::cout << "yes";
+            }
+        }
+        catch (ActualDynamicLoaderImplementation::error&) {
+            std::cout << "yes";
+        }
+        std::cout << "\n";
+
         std::cout <<
             "Extra feature: dmalloc support: " <<
 #ifdef DMALLOC
@@ -422,8 +438,17 @@ void printUsageAndExit(const bool error = true) {
         "  --exposure-width=WIDTH\n" <<
         "                         characteristic width of the weighting function\n" <<
         "                         (WIDTH > 0); default: " << ExposureWidth << "\n" <<
-        "  --exposure-weight-function=NAME\n" <<
-        "                         exposure weight function name; default: " << ExposureWeightFunctionName << "\n" <<
+#ifdef HAVE_DL
+        "  --exposure-weight-function=WEIGHT-FUNCTION\n" <<
+        "                         select built-in exposure WEIGHT-FUNCTION;\n" <<
+        "                         default: " << ExposureWeightFunctionName << " (1st form)\n" <<
+        "  --exposure-weight-function=SHARED-OBJECT:SYMBOL[:ARGUMENT[:...]]\n" <<
+        "                         load user-defined exposure weight function SYMBOL\n" <<
+        "                         from SHARED-OBJECT and optionally pass ARGUMENTs (2nd form)\n" <<
+#else
+        "  --exposure-weight-function=WEIGHT-FUNCTION\n" <<
+        "                         select exposure WEIGHT-FUNCTION; default: " << ExposureWeightFunctionName << "\n" <<
+#endif
         "  --soft-mask            average over all masks; this is the default\n" <<
         "  --hard-mask            force hard blend masks and no averaging on finest\n" <<
         "                         scale; this is especially useful for focus\n" <<
@@ -799,24 +824,90 @@ fill_mask_templates(const char* an_option_argument,
 }
 
 
+#ifdef HAVE_DL
+class DynamicExposureWeight : public ExposureWeight
+{
+public:
+    DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name) :
+        ExposureWeight(0.5, 0.25),
+        library(library_name), symbol(symbol_name),
+        dynamic_loader(DynamicLoader(library_name)),
+        function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
+    {}
+
+    DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name,
+                          double y_optimum, double width) :
+        ExposureWeight(y_optimum, width),
+        library(library_name), symbol(symbol_name),
+        dynamic_loader(DynamicLoader(library_name)),
+        function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
+    {}
+
+    virtual void initialize(double y_optimum, double width_parameter,
+                            const argument_list_t& argument_list = argument_list_t()) {
+        std::cout << "+ DynamicExposureWeight::initialize\n";
+        function->initialize(y_optimum, width_parameter, argument_list);
+    }
+
+    virtual double weight(double y) const {return function->weight(y);}
+
+private:
+    std::string library;
+    std::string symbol;
+    DynamicLoader dynamic_loader;
+    ExposureWeight* function;
+
+    DynamicExposureWeight();    // NOT IMPLEMENTED
+};
+#endif // HAVE_DL
+
+
 ExposureWeight*
-make_exposure_weight_function(const std::string& name, double x0, double xi)
+make_exposure_weight_function(const std::string& name,
+                              const ExposureWeight::argument_list_t& arguments,
+                              double y_optimum, double width)
 {
     delete ExposureWeightFunction;
 
     if (name == "gauss" || name == "gaussian") {
-        return new Gaussian(x0, xi);
+        return new Gaussian(y_optimum, width);
     } else if (name == "lorentz" || name == "lorentzian") {
-        return new Lorentzian(x0, xi);
+        return new Lorentzian(y_optimum, width);
     } else if (name == "halfsine" || name == "half-sine") {
-        return new HalfSinusodial(x0, xi);
+        return new HalfSinusodial(y_optimum, width);
     } else if (name == "fullsine" || name == "full-sine") {
-        return new FullSinusodial(x0, xi);
+        return new FullSinusodial(y_optimum, width);
     } else if (name == "bisquare" || name == "bi-square") {
-        return new Bisquare(x0, xi);
+        return new Bisquare(y_optimum, width);
     } else {
-        std::cerr << command << ": unknown exposure weight function \"" << name << "\""<< std::endl;
+#ifdef HAVE_DL
+        if (arguments.empty()) {
+            std::cerr << command << ": unknown exposure weight function \"" << name << "\"" << std::endl;
+            exit(1);
+        } else {
+            const std::string symbol_name(arguments.front());
+            ExposureWeight::argument_list_t user_arguments;
+            std::copy(boost::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
+
+            ExposureWeight* weight_object;
+            try {
+                weight_object = new DynamicExposureWeight(name, symbol_name);
+                weight_object->initialize(y_optimum, width, user_arguments);
+            }
+            catch (ExposureWeight::error& exception) {
+                std::cerr << command <<
+                    ": user-defined weight function \"" << symbol_name <<
+                    "\" defined in shared object \"" << name <<
+                    "\" raised exception: " << exception.what() << std::endl;
+                exit(1);
+            }
+
+            return weight_object;
+        }
+#else
+        std::cerr << command << ": unknown exposure weight function \"" << name << "\"" << std::endl;
         exit(1);
+#endif
     }
 }
 
@@ -1361,8 +1452,8 @@ process_options(int argc, char** argv)
 
 
         case ObsoleteExposureWidthId:
-            // FALLTHROUGH
             std::cerr << command << ": info: option \"--exposure-sigma\" is obsolete, prefer \"--exposure-width\"" << std::endl;
+            // FALLTHROUGH
         case ExposureWidthId:
             if (optarg != NULL && *optarg != 0) {
                 ExposureWidth = enblend::numberOfString(optarg,
@@ -1376,16 +1467,31 @@ process_options(int argc, char** argv)
             optionSet.insert(ExposureWidthOption);
             break;
 
-        case ExposureWeightFunctionId:
-            if (optarg != NULL && *optarg != 0) {
-                ExposureWeightFunctionName = optarg;
-                boost::algorithm::to_lower(ExposureWeightFunctionName);
-            } else {
+        case ExposureWeightFunctionId: {
+            char* s = new char[strlen(optarg) + 1];
+            strcpy(s, optarg);
+            char* save_ptr = NULL;
+            char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+
+            if (token == NULL || *token == 0) {
                 std::cerr << command << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
                 failed = true;
+            } else {
+                ExposureWeightFunctionName = token;
+                boost::algorithm::to_lower(ExposureWeightFunctionName);
+
+                while (true) {
+                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                    if (token == NULL) {
+                        break;
+                    }
+                    ExposureWeightFunctionArguments.push_back(token);
+                }
             }
+            delete [] s;
             optionSet.insert(ExposureWeightFunctionOption);
             break;
+        }
 
         case WeightEntropyId:
             if (optarg != NULL && *optarg != 0) {
@@ -1689,7 +1795,8 @@ process_options(int argc, char** argv)
 
     if (WExposure > 0.0)
     {
-        ExposureWeightFunction = make_exposure_weight_function(ExposureWeightFunctionName, ExposureOptimum, ExposureWidth);
+        ExposureWeightFunction = make_exposure_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
+                                                               ExposureOptimum, ExposureWidth);
         if (!enblend::check_exposure_weight_function(ExposureWeightFunction))
         {
             std::cerr << command

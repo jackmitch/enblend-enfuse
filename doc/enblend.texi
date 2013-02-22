@@ -44,7 +44,7 @@ This manual is for Enblend (version @value{VERSION}, @value{UPDATED}),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
-Copyright @copyright{} 2004--2012 @sc{Andrew Mihal}.
+Copyright @copyright{} 2004--2013 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -98,6 +98,10 @@ entitled ``@acronym{GNU} Free Documentation License''.
 
 @unnumbered List of Figures
 @listoffloats Figure
+
+
+@unnumbered List of Examples
+@listoffloats Example
 @end iftex
 
 
@@ -128,6 +132,9 @@ see.
 * Authors::                     Major contributors
 * FDL::                         @acronym{GNU} Free Documentation License
 @ifnotdocbook
+* List of Tables::              List of all tables
+* List of Figures::             List of all figures
+* List of Examples::            List of all examples
 * Program Index::               Names of programs referenced
 * Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
@@ -268,6 +275,7 @@ filenames on the command line.
 * Common Options::              General options
 * Extended Options::            Memory and @acronym{GPU} control
 * Mask Generation Options::     Mask generation control
+* Option Delimiters::           How to separate options' arguments
 @end menu
 
 
@@ -2646,6 +2654,15 @@ approximately 15@dmn{cm}.}
 
 @include mask-template-characters.texi
 
+
+@node Option Delimiters
+@section Option Delimiters
+@cindex option delimiters
+@cindex delimiters, option
+
+@include option-delimiters.texi
+
+
 @node Primary Seam Generators
 @chapter Primary Seam Generators
 @cindex primary seam generator
@@ -2714,7 +2731,27 @@ approximately 15@dmn{cm}.}
 @c End of Document
 @c
 
+@c The List-of-Tables and List-of-Figures go right before the indices
+@c in all formats but TeX.  For the TeX output they appear right after
+@c the Table-of-Contents.
 @ifnotdocbook
+@ifnottex
+@node List of Tables
+@unnumbered List of Tables
+@listoffloats Table
+
+
+@node List of Figures
+@unnumbered List of Figures
+@listoffloats Figure
+
+
+@node List of Examples
+@unnumbered List of Examples
+@listoffloats Example
+@end ifnottex
+
+
 @node Program Index
 @unnumbered Program Index
 @cindex program index

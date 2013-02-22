@@ -28,10 +28,7 @@
 
 struct Gaussian : public ExposureWeight
 {
-    // FWHM = 2 * sqrt(2 * log(2))
-#define FWHM_GAUSSIAN 2.3548200450309493820231386529193992755
-
-    Gaussian(double y_optimum, double width) : ExposureWeight(y_optimum, width) {}
+    Gaussian(double y_optimum, double width_parameter) : ExposureWeight(y_optimum, width_parameter) {}
 
     double weight(double y) const
     {
@@ -46,8 +43,8 @@ struct Lorentzian : public ExposureWeight
     // FWHM = 2 * sqrt(2)
 #define FWHM_LORENTZIAN 2.8284271247461900976033774484193961571
 
-    Lorentzian(double y_optimum, double width) :
-        ExposureWeight(y_optimum, width * FWHM_GAUSSIAN / FWHM_LORENTZIAN) {}
+    Lorentzian(double y_optimum, double width_parameter) :
+        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_LORENTZIAN) {}
 
     double weight(double y) const
     {
@@ -62,8 +59,8 @@ struct HalfSinusodial : public ExposureWeight
     // FWHM = 2 * arccos(1/2)
 #define FWHM_HALFSINUSODIAL 2.0943951023931954923084289221863352561
 
-    HalfSinusodial(double y_optimum, double width) :
-        ExposureWeight(y_optimum, width * FWHM_GAUSSIAN / FWHM_HALFSINUSODIAL) {}
+    HalfSinusodial(double y_optimum, double width_parameter) :
+        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_HALFSINUSODIAL) {}
 
     double weight(double y) const
     {
@@ -78,8 +75,8 @@ struct FullSinusodial : public ExposureWeight
     // FWHM = pi
 #define FWHM_FULLSINUSODIAL M_PI
 
-    FullSinusodial(double y_optimum, double width) :
-        ExposureWeight(y_optimum, width * FWHM_GAUSSIAN / FWHM_FULLSINUSODIAL) {}
+    FullSinusodial(double y_optimum, double width_parameter) :
+        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_FULLSINUSODIAL) {}
 
     double weight(double y) const
     {
@@ -94,8 +91,8 @@ struct Bisquare : public ExposureWeight
     // FWHM = 2 / sqrt(sqrt(2))
 #define FWHM_BISQUARE 1.6817928305074290860622509524664297901
 
-    Bisquare(double y_optimum, double width) :
-        ExposureWeight(y_optimum, width * FWHM_GAUSSIAN / FWHM_BISQUARE) {}
+    Bisquare(double y_optimum, double width_parameter) :
+        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_BISQUARE) {}
 
     double weight(double y) const
     {

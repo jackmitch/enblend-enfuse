@@ -86,18 +86,23 @@ check_exposure_weight_function(const ExposureWeight* weight_function, int n = 65
 {
     assert(n >= 2);
 
+    omp::atomic_t number_of_faults = omp::atomic_t();
+
+#ifdef OPENMP
+#pragma omp parallel for
+#endif
     for (int i = 0; i < n; ++i)
     {
-        const double x = static_cast<double>(i) / static_cast<double>(n - 1);
-        const double w = weight_function->weight(x);
+        const double y = static_cast<double>(i) / static_cast<double>(n - 1);
+        const double w = weight_function->weight(y);
 
-        if (!std::isfinite(w) || w < 0.0)
+        if (w < 0.0 || w >= 1.0)
         {
-            return false;
+            ++number_of_faults;
         }
     }
 
-    return true;
+    return number_of_faults == omp::atomic_t();
 }
 
 

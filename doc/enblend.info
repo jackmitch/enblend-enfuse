@@ -6,11 +6,11 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-b1ac8d1a8849, 15 February
+   This manual is for Enblend (version 4.2-a0baf2635ac8, 22 February
 2013), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
-   Copyright (C) 2004-2012 ANDREW MIHAL.
+   Copyright (C) 2004-2013 ANDREW MIHAL.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-b1ac8d1a8849, 15 February
+This manual is for Enblend (version 4.2-a0baf2635ac8, 22 February
 2013), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -43,6 +43,9 @@ between the images is invisible, or at least very difficult to see.
 * Authors::                     Major contributors
 * FDL::                         GNU Free Documentation License
 
+* List of Tables::              List of all tables
+* List of Figures::             List of all figures
+* List of Examples::            List of all examples
 * Program Index::               Names of programs referenced
 * Syntactic-Comment Index::     Keys of syntactic comments
 * Option Index::                Index of all options
@@ -270,6 +273,7 @@ filenames on the command line.
 * Common Options::              General options
 * Extended Options::            Memory and GPU control
 * Mask Generation Options::     Mask generation control
+* Option Delimiters::           How to separate options' arguments
 
 
 File: enblend.info,  Node: Image Requirements,  Next: Response Files,  Up: Invocation
@@ -431,7 +435,8 @@ _first_ line of the file.
      enblend-response-file: true
      enfuse-response-file: true
 
-Finally, here is an example of a valid response file.
+Finally, *note Example:response-file:: shows a complete response file.
+
      # 4\pi panorama!
 
      # These pictures were taken with the panorama head.
@@ -444,6 +449,8 @@ Finally, here is an example of a valid response file.
      nadir-2.tif
      nadir-5.tif
      nadir.tif
+
+Example 3.1: Complete response file
 
 3.2.2 Syntactic Comments
 ------------------------
@@ -514,7 +521,9 @@ Enblend or Enfuse team up the options `--version' and `--verbose'.
 
 Table 3.3: Globbing algorithms for the use in response files
 
-   Example:
+   *note Example:globbing-algorithm:: gives an example of how to control
+filename-globbing in a response file.
+
      # Horizontal panorama
      # 15 images
 
@@ -522,6 +531,9 @@ Table 3.3: Globbing algorithms for the use in response files
 
      image_000[0-9].tif
      image_001[0-4].tif
+
+Example 3.2: Control filename-globbing in a response file with a
+syntactic comment
 
 3.2.4 Default Layer Selection
 -----------------------------
@@ -971,7 +983,7 @@ cropping of the output image.
      - to accelerate some computations.
 
      This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.2-b1ac8d1a8849, only mask
+     In this version of Enblend, 4.2-a0baf2635ac8, only mask
      optimization by Simulated Annealing benefits from this option.
 
      Note that GPU-support must have been compiled into Enblend for
@@ -1004,7 +1016,7 @@ cropping of the output image.
    (2) The stitcher `nona' is part of Hugin.  *Note Helpful Programs::.
 
 
-File: enblend.info,  Node: Mask Generation Options,  Prev: Extended Options,  Up: Invocation
+File: enblend.info,  Node: Mask Generation Options,  Next: Option Delimiters,  Prev: Extended Options,  Up: Invocation
 
 3.5 Mask Generation Options
 ===========================
@@ -1271,7 +1283,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-b1ac8d1a8849)
+     version 3.2 used 1:1.  This version of Enblend (4.2-a0baf2635ac8)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1489,12 +1501,62 @@ Conference on Imaging Science, Systems, and Technology, June 2000,
 Vols. I and II, pages 83-86.
 
 
+File: enblend.info,  Node: Option Delimiters,  Prev: Mask Generation Options,  Up: Invocation
+
+3.6 Option Delimiters
+=====================
+
+Enblend and Enfuse allow the arguments supplied to the programs'
+options to be separated by different separators.  The online
+documentation and this manual, however, exclusively use the colon `:'
+in every syntax definition and in all examples.
+
+*Numeric Arguments*
+
+   Valid delimiters are the the semicolon `;', the colon `:', and the
+slash `/'.  All delimiters may be mixed within any option that takes
+numeric arguments.
+
+Examples:
+
+`--contrast-edge-scale=0.667:6.67:3.5'
+     Separate all arguments with colons.
+
+`--contrast-edge-scale=0.667;6.67;3.5'
+     Use semi-colons.
+
+`--contrast-edge-scale=0.667;6.67/3.5'
+     Mix semicolon and slash in weird ways.
+
+`--entropy-cutoff=3%/99%'
+     All delimiters also work in conjunction with percentages.
+
+`--gray-projector=channel-mixer:3/6/1'
+     Separate arguments with a colon and two slashes.
+
+`--gray-projector=channel-mixer/30;60:10'
+     Go wild and Enfuse will understand.
+
+*Filename Arguments*
+
+   Here, the accepted delimiters are `,', `;', and `:'.  Again, all
+delimiters may be mixed within any option that has filename arguments.
+
+Examples:
+
+`--save-masks=soft-mask-%03i.tif:hard-mask-03%i.tif'
+     Separate all arguments with colons.
+
+`--save-masks=%d/soft-%n.tif,%d/hard-%n.tif'
+     Use a comma.
+
+
 File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev: Invocation,  Up: Top
 
 4 Primary Seam Generators
 *************************
 
-This version (4.2-b1ac8d1a8849) of Enblend supports two main algorithms
+This version (4.2-a0baf2635ac8) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2062,7 +2124,7 @@ Thanks to SIMON ANDRIOT and PABLO JOUBERT for suggesting the
 MERTENS-KAUTZ-VAN REETH technique and the name "Enfuse".
 
 
-File: enblend.info,  Node: FDL,  Next: Program Index,  Prev: Authors,  Up: Top
+File: enblend.info,  Node: FDL,  Next: List of Tables,  Prev: Authors,  Up: Top
 
 Appendix C GNU Free Documentation License
 *****************************************
@@ -2463,7 +2525,46 @@ Version 1.2, November 2002
      Free Software Foundation.
 
 
-File: enblend.info,  Node: Program Index,  Next: Syntactic-Comment Index,  Prev: FDL,  Up: Top
+File: enblend.info,  Node: List of Tables,  Next: List of Figures,  Prev: FDL,  Up: Top
+
+List of Tables
+**************
+
+* Menu:
+
+* Table 3.1: Grammar of response ...:    Table:response-file-format.
+* Table 3.2: Grammar of ...:             Table:response-file-syntactic-comment.
+* Table 3.3: Globbing algorithms:        Table:globbing-algorithms.
+* Table 3.4: Mask generation ...:        Table:mask-generation.
+* Table 3.5: Optimizer strategies:       Table:optimizer-strategies.
+* Table 3.6: Visualization colors:       Table:visualization-colors.
+* Table 3.7: Mask template ...:          Table:mask-template-characters.
+* Table 7.1: Suggested ...:              Table:cache-size-settings.
+
+
+File: enblend.info,  Node: List of Figures,  Next: List of Examples,  Prev: List of Tables,  Up: Top
+
+List of Figures
+***************
+
+* Menu:
+
+* Figure 2.1: Photographic workflow:     Figure:photographic-workflow.
+* Figure 2.2: External masks ...:        Figure:external-mask-workflow.
+
+
+File: enblend.info,  Node: List of Examples,  Next: Program Index,  Prev: List of Figures,  Up: Top
+
+List of Examples
+****************
+
+* Menu:
+
+* Example 3.1: Complete response ...:    Example:response-file.
+* Example 3.2: Filename-globbing ...:    Example:globbing-algorithm.
+
+
+File: enblend.info,  Node: Program Index,  Next: Syntactic-Comment Index,  Prev: List of Examples,  Up: Top
 
 Program Index
 *************
@@ -2522,10 +2623,10 @@ Syntactic-Comment Index
 
 * enblend-response-file:                 Response Files.      (line 106)
 * enfuse-response-file:                  Response Files.      (line 107)
-* filename-globbing:                     Response Files.      (line 152)
-* glob:                                  Response Files.      (line 148)
-* globbing:                              Response Files.      (line 150)
-* layer-selector:                        Response Files.      (line 204)
+* filename-globbing:                     Response Files.      (line 155)
+* glob:                                  Response Files.      (line 151)
+* globbing:                              Response Files.      (line 153)
+* layer-selector:                        Response Files.      (line 212)
 * response-file:                         Response Files.      (line 105)
 
 
@@ -2609,7 +2710,7 @@ General Index
 * @ (response file prefix):              Response Files.      (line   6)
 * a.tif:                                 Common Options.      (line 154)
 * affine transformation:                 Standard Workflow.   (line  48)
-* algorithms, globbing:                  Response Files.      (line 146)
+* algorithms, globbing:                  Response Files.      (line 149)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  18)
 * alpha channel, associated:             Extended Options.    (line 139)
@@ -2648,9 +2749,10 @@ General Index
 * compression, packbits:                 Common Options.      (line  67)
 * conversion, raw:                       Standard Workflow.   (line  34)
 * D50 white point:                       Color Profiles.      (line  55)
-* default layer selection:               Response Files.      (line 204)
+* default layer selection:               Response Files.      (line 212)
 * default output filename:               Common Options.      (line 154)
 * deflate compression:                   Common Options.      (line  52)
+* delimiters, option:                    Option Delimiters.   (line   6)
 * delta-E:                               Mask Generation Options.
                                                               (line 140)
 * difference image:                      Mask Generation Options.
@@ -2670,17 +2772,17 @@ General Index
 * general index:                         General Index.       (line   6)
 * generator, seam:                       Mask Generation Options.
                                                               (line 283)
-* glob(7):                               Response Files.      (line 171)
-* globbing algorithm literal:            Response Files.      (line 157)
-* globbing algorithm none:               Response Files.      (line 179)
-* globbing algorithm sh:                 Response Files.      (line 188)
-* globbing algorithm shell:              Response Files.      (line 182)
-* globbing algorithm wildcard:           Response Files.      (line 157)
-* globbing algorithms:                   Response Files.      (line 146)
+* glob(7):                               Response Files.      (line 174)
+* globbing algorithm literal:            Response Files.      (line 160)
+* globbing algorithm none:               Response Files.      (line 182)
+* globbing algorithm sh:                 Response Files.      (line 191)
+* globbing algorithm shell:              Response Files.      (line 185)
+* globbing algorithm wildcard:           Response Files.      (line 160)
+* globbing algorithms:                   Response Files.      (line 149)
 * GNU free documentation license:        FDL.                 (line   6)
 * GPU (Graphics Processing Unit):        Extended Options.    (line 151)
 * grammar, response file:                Response Files.      (line  70)
-* grammar, syntactic comment:            Response Files.      (line 138)
+* grammar, syntactic comment:            Response Files.      (line 141)
 * graph-cut (GC):                        Mask Generation Options.
                                                               (line 301)
 * graphcut (GC):                         Primary Seam Generators.
@@ -2722,7 +2824,7 @@ General Index
 * KImageFuser:                           Bug Reports.         (line  96)
 * layer selection:                       Common Options.      (line  78)
 * layer selection, all layers:           Common Options.      (line  83)
-* layer selection, default:              Response Files.      (line 204)
+* layer selection, default:              Response Files.      (line 212)
 * layer selection, first layer:          Common Options.      (line  86)
 * layer selection, largest-layer:        Common Options.      (line  90)
 * layer selection, no layer:             Common Options.      (line  97)
@@ -2818,6 +2920,7 @@ General Index
 * optimizer, simulated annealing <1>:    Mask Generation Options.
                                                               (line   9)
 * optimizer, simulated annealing:        Extended Options.    (line 154)
+* option delimiters:                     Option Delimiters.   (line   6)
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
 * options, extended:                     Extended Options.    (line   6)
@@ -2856,7 +2959,7 @@ General Index
 * response file, force recognition of:   Response Files.      (line 100)
 * response file, format:                 Response Files.      (line  56)
 * response file, grammar:                Response Files.      (line  70)
-* response file, syntactic comment:      Response Files.      (line 126)
+* response file, syntactic comment:      Response Files.      (line 129)
 * results, checkpoint:                   Common Options.      (line 266)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
@@ -2885,8 +2988,8 @@ General Index
 * SourceForge, tracker:                  Bug Reports.         (line  12)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Extended Options.    (line  25)
-* syntactic comment, grammar:            Response Files.      (line 138)
-* syntactic comment, response file:      Response Files.      (line 126)
+* syntactic comment, grammar:            Response Files.      (line 141)
+* syntactic comment, response file:      Response Files.      (line 129)
 * syntactic-comment index:               Syntactic-Comment Index.
                                                               (line   6)
 * TIFF, multi-directory:                 Overview.            (line  39)
@@ -2925,46 +3028,52 @@ General Index
 
 Tag Table:
 Node: Top904
-Node: Overview2108
-Ref: Overview-Footnote-14547
-Ref: Overview-Footnote-24728
-Node: Workflow4870
-Node: Standard Workflow5269
-Ref: Figure:photographic-workflow5529
-Node: External Mask Manipulation8203
-Ref: Figure:external-mask-workflow9520
-Node: Invocation10005
-Node: Image Requirements10709
-Node: Response Files12183
-Ref: Table:response-file-format14207
-Ref: Table:response-file-syntactic-comment16672
-Ref: Table:globbing-algorithms17573
-Node: Common Options19032
-Ref: Common Options-Footnote-128508
-Ref: Common Options-Footnote-228582
-Ref: Common Options-Footnote-328774
-Node: Extended Options28933
-Ref: Extended Options-Footnote-135590
-Ref: Extended Options-Footnote-235656
-Node: Mask Generation Options35729
-Ref: Table:mask-generation38390
-Ref: Table:optimizer-strategies45728
-Ref: Table:visualization-colors51131
-Ref: Table:mask-template-characters52046
-Ref: Mask Generation Options-Footnote-154298
-Node: Primary Seam Generators54526
-Node: Color Profiles57412
-Node: Understanding Masks59862
-Node: Tuning Memory Usage63655
-Ref: Table:cache-size-settings66397
-Node: Helpful Programs66833
-Node: Bug Reports70569
-Ref: Bug Reports-Footnote-176270
-Node: Authors76340
-Node: FDL77505
-Node: Program Index98486
-Node: Syntactic-Comment Index101482
-Node: Option Index102171
-Node: General Index106397
+Node: Overview2264
+Ref: Overview-Footnote-14703
+Ref: Overview-Footnote-24884
+Node: Workflow5026
+Node: Standard Workflow5425
+Ref: Figure:photographic-workflow5685
+Node: External Mask Manipulation8359
+Ref: Figure:external-mask-workflow9676
+Node: Invocation10161
+Node: Image Requirements10932
+Node: Response Files12406
+Ref: Table:response-file-format14430
+Ref: Example:response-file16309
+Ref: Table:response-file-syntactic-comment16950
+Ref: Table:globbing-algorithms17851
+Ref: Example:globbing-algorithm18877
+Node: Common Options19494
+Ref: Common Options-Footnote-128970
+Ref: Common Options-Footnote-229044
+Ref: Common Options-Footnote-329236
+Node: Extended Options29395
+Ref: Extended Options-Footnote-136052
+Ref: Extended Options-Footnote-236118
+Node: Mask Generation Options36191
+Ref: Table:mask-generation38878
+Ref: Table:optimizer-strategies46216
+Ref: Table:visualization-colors51619
+Ref: Table:mask-template-characters52534
+Ref: Mask Generation Options-Footnote-154786
+Node: Option Delimiters55014
+Node: Primary Seam Generators56419
+Node: Color Profiles59305
+Node: Understanding Masks61755
+Node: Tuning Memory Usage65548
+Ref: Table:cache-size-settings68290
+Node: Helpful Programs68726
+Node: Bug Reports72462
+Ref: Bug Reports-Footnote-178163
+Node: Authors78233
+Node: FDL79398
+Node: List of Tables100380
+Node: List of Figures101072
+Node: List of Examples101362
+Node: Program Index101643
+Node: Syntactic-Comment Index104652
+Node: Option Index105341
+Node: General Index109567
 
 End Tag Table

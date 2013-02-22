@@ -26,6 +26,8 @@
 
 #include <limits>
 
+#include <signal.h>             // sig_atomic_t
+
 #ifdef HAVE_TCMALLOC_H
 #include <tcmalloc.h>
 #endif
@@ -808,6 +810,9 @@ distanceTransformMP(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccesso
 
 namespace omp
 {
+    typedef sig_atomic_t atomic_t;
+
+
     class scoped_nested
     {
     public:

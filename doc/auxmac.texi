@@ -79,6 +79,38 @@ $\base\_{\\mathrm{\subscript\}}$%
 @end macro
 
 
+@c Variable superscripted with some text, like e.g. x^opt.
+@macro superscripted{base, superscript}
+@ifinfo
+@math{\base\^\superscript\}@c
+@end ifinfo
+@html
+<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mrowinline>
+        <msupinline>
+            <mi>\base\</mi>
+            <mtext>\superscript\</mtext>
+        </msupinline>
+    </mrowinline>
+</mathinline>
+@end html
+@tex
+$\base\^{\\mathrm{\superscript\}}$%
+@end tex
+@docbook
+<inlineequation>
+    <mml:math>
+        <mml:apply>
+            <mml:power/>
+            <mml:ci>\base\</mml:ci>
+            <mml:mtext mathvariant="sans-serif">\superscript\</mml:mtext>
+        </mml:apply>
+    </mml:math>
+</inlineequation>
+@end docbook
+@end macro
+
+
 @c Include a raster image.
 @macro rimage{filename, width}
 @ifinfo

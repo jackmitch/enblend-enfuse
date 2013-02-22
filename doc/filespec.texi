@@ -172,7 +172,9 @@ enfuse-response-file: true
 @end example
 
 @noindent
-Finally, here is an example of a valid response file.
+Finally, @ref{Example:response-file} shows a complete response file.
+
+@float Example,Example:response-file
 @example
 @group
 # 4\pi panorama!
@@ -189,6 +191,9 @@ nadir-5.tif
 nadir.tif
 @end group
 @end example
+
+@caption{Complete response file}
+@end float
 
 
 @c @node Syntactic Comments
@@ -304,7 +309,10 @@ Alias for @code{shell}.
 @cindex algorithms, globbing
 @end float
 
-Example:
+@ref{Example:globbing-algorithm} gives an example of how to control
+filename-globbing in a response file.
+
+@float Example,Example:globbing-algorithm
 @example
 @group
 # Horizontal panorama
@@ -317,6 +325,10 @@ image_001[0-4].tif
 @end group
 @end example
 
+@caption{Control filename-globbing in a response file with a syntactic comment}
+
+@shortcaption{Filename-globbing syntactic comment}
+@end float
 
 @c @node Default Layer Selection
 @subsection Default Layer Selection

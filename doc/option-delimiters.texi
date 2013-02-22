@@ -1,0 +1,54 @@
+Enblend and Enfuse allow the arguments supplied to the programs'
+options to be separated by different separators.  The online
+documentation and this manual, however, exclusively use the colon
+@samp{:} in every syntax definition and in all examples.
+
+@need 500
+@noindent
+@strong{Numeric Arguments}
+
+Valid delimiters are the the semicolon @samp{;}, the colon @samp{:},
+and the slash @samp{/}.  All delimiters may be mixed within any
+option that takes numeric arguments.
+
+@noindent
+Examples:
+
+@table @code
+@item --contrast-edge-scale=0.667:6.67:3.5
+Separate all arguments with colons.
+
+@item --contrast-edge-scale=0.667;6.67;3.5
+Use semi-colons.
+
+@item --contrast-edge-scale=0.667;6.67/3.5
+Mix semicolon and slash in weird ways.
+
+@item --entropy-cutoff=3%/99%
+All delimiters also work in conjunction with percentages.
+
+@item --gray-projector=channel-mixer:3/6/1
+Separate arguments with a colon and two slashes.
+
+@item --gray-projector=channel-mixer/30;60:10
+Go wild and Enfuse will understand.
+@end table
+
+@need 500
+@noindent
+@strong{Filename Arguments}
+
+Here, the accepted delimiters are @samp{,}, @samp{;}, and @samp{:}.
+Again, all delimiters may be mixed within any option that has filename
+arguments.
+
+@noindent
+Examples:
+
+@table @code
+@item --save-masks=soft-mask-%03i.tif:hard-mask-03%i.tif
+Separate all arguments with colons.
+
+@item --save-masks=%d/soft-%n.tif,%d/hard-%n.tif
+Use a comma.
+@end table
