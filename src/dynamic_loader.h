@@ -181,6 +181,8 @@ typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
 class NullDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
+    typedef DynamicLoaderImplementation super;
+
 public:
     explicit NullDynamicLoaderImplementation(const std::string& a_library_name) :
         super(a_library_name)
