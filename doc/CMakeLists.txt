@@ -41,17 +41,28 @@ set(_enfuse_Bases auxmac.texi auxmac.tex
     workflow.texi filespec.texi
     external-masks.texi
     bug-reports.texi authors.texi
-    config-edge.gp config.gp
+
+    config-edge.gp
+    config.gp
+
     entropy-cutoff.gp.in
+    entropy.gp.in
     exposure-cutoff.gp.in
-    entropy.gp.in gaussian.gp.in
+    exposure-weights.gp.in
+    fullsine.gp.in
+    gaussian.gp.in
+    halfsine.gp.in
     laplacian-of-gaussian.gp.in
+    lorentzian.gp.in
+    power.gp.in
+
     sharp-edge.gp.in sharp-edge.data
     smooth-edge.gp.in smooth-edge.data
-    local-analysis-window.fig
-    photographic-workflow.fig
-    focus-stack-decision-tree.fig
+
     external-mask-workflow.fig
+    local-analysis-window.fig
+    focus-stack-decision-tree.fig
+    photographic-workflow.fig
     default.css)
 
 set(_enblend_TEXINFOS)

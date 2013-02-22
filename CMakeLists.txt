@@ -104,6 +104,7 @@ ENDIF(WIN32)
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
 OPTION(ENABLE_TCMALLOC "TCmalloc Support" OFF)
+OPTION(ENABLE_DLOPEN "Dlopen Support" ON)
 OPTION(ENABLE_IMAGECACHE "Image Cache Support" OFF)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" OFF)
@@ -358,6 +359,13 @@ if(ENABLE_TCMALLOC)
   add_definitions("-DHAVE_TCMALLOC_H")
   include_directories(${TCMALLOC_INCLUDE_DIR})
   LIST(APPEND common_libs ${TCMALLOC_LIBRARIES})
+endif()
+
+if(ENABLE_DLOPEN)
+  find_package(Dlopen)
+  if(DLOPEN_FOUND)
+    set(HAVE_DL 1)
+  endif()
 endif()
 
 # Try to create config.h
