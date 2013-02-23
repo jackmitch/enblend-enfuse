@@ -438,7 +438,7 @@ void printUsageAndExit(const bool error = true) {
         "  --exposure-width=WIDTH\n" <<
         "                         characteristic width of the weighting function\n" <<
         "                         (WIDTH > 0); default: " << ExposureWidth << "\n" <<
-#ifdef HAVE_DL
+#ifdef HAVE_DYNAMICLOADER_IMPL
         "  --exposure-weight-function=WEIGHT-FUNCTION\n" <<
         "                         select built-in exposure WEIGHT-FUNCTION;\n" <<
         "                         default: " << ExposureWeightFunctionName << " (1st form)\n" <<
@@ -824,7 +824,7 @@ fill_mask_templates(const char* an_option_argument,
 }
 
 
-#ifdef HAVE_DL
+#ifdef HAVE_DYNAMICLOADER_IMPL
 class DynamicExposureWeight : public ExposureWeight
 {
 public:
@@ -880,7 +880,7 @@ make_exposure_weight_function(const std::string& name,
     } else if (name == "bisquare" || name == "bi-square") {
         return new Bisquare(y_optimum, width);
     } else {
-#ifdef HAVE_DL
+#ifdef HAVE_DYNAMICLOADER_IMPL
         if (arguments.empty()) {
             std::cerr << command << ": unknown exposure weight function \"" << name << "\"" << std::endl;
             exit(1);
@@ -1478,6 +1478,22 @@ process_options(int argc, char** argv)
                 failed = true;
             } else {
                 ExposureWeightFunctionName = token;
+#ifdef WIN32
+                //special handling for absolute filenames under Windows
+                if(ExposureWeightFunctionName.length()==1) {
+                    char sep=strlen(optarg)>2 ? optarg[1] : 0;
+                    if(sep==':') {
+                        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
+                        if(token == NULL || *token == 0) {
+                            std::cerr << command << ": option \"--exposure-weight-function\" requires a valid filename" << std::endl;
+                            failed = true;
+                            break;
+                        }
+                        ExposureWeightFunctionName.append(":");
+                        ExposureWeightFunctionName.append(token);
+                    }
+                }
+#endif
                 boost::algorithm::to_lower(ExposureWeightFunctionName);
 
                 while (true) {

@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
+#include <iostream>
 
 // The full width at half of the maximum of the Gauss-curve we use for
 // exposure weighting is

@@ -55,6 +55,7 @@ private:
 
 #if defined(HAVE_DL)
 
+#define HAVE_DYNAMICLOADER_IMPL
 #include <dlfcn.h>
 
 class SunnyDynamicLoaderImplementation : public DynamicLoaderImplementation
@@ -127,6 +128,7 @@ typedef SunnyDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 //     EXTRALDFLAGS="-lgmodule-2.0"
 // undefine all relevant prior HAVE_* and define HAVE_GMODULE.
 
+#define HAVE_DYNAMICLOADER_IMPL
 #include <gmodule.h>
 
 class GLibDynamicLoaderImplementation : public DynamicLoaderImplementation
@@ -176,6 +178,93 @@ private:
 }; // class GLibDynamicLoaderImplementation
 
 typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+
+#elif defined WIN32
+
+#define HAVE_DYNAMICLOADER_IMPL
+#include <Windows.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
+class WinDynamicLoaderImplementation : public DynamicLoaderImplementation
+{
+    typedef DynamicLoaderImplementation super;
+
+public:
+    explicit WinDynamicLoaderImplementation(const std::string& a_library_name) :
+        super(a_library_name), handle_(NULL)
+    {}
+
+    void open()
+    {
+        if (handle_)
+        {
+            throw super::error("already open");
+        }
+        handle_ = LoadLibrary(library_name().c_str());
+        if (!handle_)
+        {
+            throw super::error(GetLastErrorString());
+        }
+    }
+
+    void close()
+    {
+        if (!handle_)
+        {
+            throw super::error("not open");
+        }
+        if (!FreeLibrary(handle_))
+        {
+            throw super::error(GetLastErrorString());
+        }
+    }
+
+    void* resolve(const std::string& symbol_name) const
+    {
+        if (!handle_)
+        {
+            throw super::error("not open");
+
+        }
+        void* symbol=GetProcAddress(handle_, symbol_name.c_str());
+        if (symbol == NULL)
+        {
+            throw super::error(GetLastErrorString());
+        }
+
+        return symbol;
+    }
+
+private:
+    static const std::string GetLastErrorString()
+    {
+        LPTSTR lpMsgBuf;
+        DWORD lastError=GetLastError();
+        std::string errorMsg;
+        if(FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  (LPTSTR) &lpMsgBuf, 0, NULL)>0)
+        {
+            errorMsg=lpMsgBuf;
+            //remove trailing white spaces
+            boost::trim(errorMsg);
+            LocalFree(lpMsgBuf);
+        }
+        else
+        {
+            errorMsg="Unknown error";
+        };
+        // add numeric error code
+        errorMsg.append(" (Code: ");
+        errorMsg.append(boost::lexical_cast<std::string>(lastError));
+        errorMsg.append(")");
+        return errorMsg;
+    };
+
+    HINSTANCE handle_;
+}; // class WinDynamicLoaderImplementation
+
+typedef WinDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
 #else
 
@@ -260,7 +349,7 @@ public:
     };
 
     // Gain access to a symbol and simultaneously register a clean-up
-    // object, which can e.g. run a clean-up functio for the symbol.
+    // object, which can e.g. run a clean-up function for the symbol.
     void* resolve0(const std::string& a_symbol_name, Teardown* a_teardown_object)
     {
         observers_.push_back(a_teardown_object);

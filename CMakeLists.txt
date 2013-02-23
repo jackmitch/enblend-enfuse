@@ -104,7 +104,10 @@ ENDIF(WIN32)
 # Configurable options
 OPTION(ENABLE_OPENMP "OpenMP Support" OFF)
 OPTION(ENABLE_TCMALLOC "TCmalloc Support" OFF)
+IF(NOT WIN32)
+# dynamic loading on windows is supported by own class
 OPTION(ENABLE_DLOPEN "Dlopen Support" ON)
+ENDIF()
 OPTION(ENABLE_IMAGECACHE "Image Cache Support" OFF)
 OPTION(ENABLE_GPU "GPU Acceleration Support" OFF)
 OPTION(DOC "Create Documentation" OFF)
@@ -362,10 +365,8 @@ if(ENABLE_TCMALLOC)
 endif()
 
 if(ENABLE_DLOPEN)
-  find_package(Dlopen)
-  if(DLOPEN_FOUND)
-    set(HAVE_DL 1)
-  endif()
+  find_package(Dlopen REQUIRED)
+  set(HAVE_DL 1)
 endif()
 
 # Try to create config.h
