@@ -366,6 +366,7 @@ endif()
 
 if(ENABLE_DLOPEN)
   find_package(Dlopen REQUIRED)
+  list(APPEND common_libs ${DLOPEN_LIBRARIES})
   set(HAVE_DL 1)
 endif()
 
