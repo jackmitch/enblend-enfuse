@@ -261,18 +261,13 @@ void printVersionAndExit() {
     std::cout << "enfuse " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
-        std::cout << "Extra feature: dynamic linking support: ";
-        try {
-            if (DynamicLoader("").resolve0("bar") == NULL) {
-                std::cout << "no";
-            } else {
-                std::cout << "yes";
-            }
-        }
-        catch (ActualDynamicLoaderImplementation::error&) {
-            std::cout << "yes";
-        }
-        std::cout << "\n";
+        std::cout << "Extra feature: dynamic linking support: " <<
+#ifdef HAVE_DYNAMICLOADER_IMPL
+            "yes" <<
+#else
+            "no" <<
+#endif
+            "\n";
 
         std::cout <<
             "Extra feature: dmalloc support: " <<
@@ -1479,10 +1474,10 @@ process_options(int argc, char** argv)
             } else {
                 ExposureWeightFunctionName = token;
 #ifdef WIN32
-                //special handling for absolute filenames under Windows
-                if(ExposureWeightFunctionName.length()==1) {
-                    char sep=strlen(optarg)>2 ? optarg[1] : 0;
-                    if(sep==':') {
+                // special handling of absolute filenames under Windows
+                if (ExposureWeightFunctionName.length() == 1U) {
+                    const char sep = strlen(optarg) > 2 ? optarg[1] : 0;
+                    if (sep == ':') {
                         token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
                         if(token == NULL || *token == 0) {
                             std::cerr << command << ": option \"--exposure-weight-function\" requires a valid filename" << std::endl;

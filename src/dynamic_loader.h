@@ -179,7 +179,7 @@ private:
 
 typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
-#elif defined WIN32
+#elif defined(WIN32)
 
 #define HAVE_DYNAMICLOADER_IMPL
 #include <Windows.h>
@@ -240,26 +240,26 @@ private:
     static const std::string GetLastErrorString()
     {
         LPTSTR lpMsgBuf;
-        DWORD lastError=GetLastError();
+        DWORD lastError = GetLastError();
         std::string errorMsg;
-        if(FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  (LPTSTR) &lpMsgBuf, 0, NULL)>0)
+        if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                          NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  (LPTSTR) &lpMsgBuf, 0, NULL) > 0)
         {
             errorMsg=lpMsgBuf;
-            //remove trailing white spaces
+            // remove leading and trailing white spaces
             boost::trim(errorMsg);
             LocalFree(lpMsgBuf);
         }
         else
         {
-            errorMsg="Unknown error";
-        };
+            errorMsg = "Unknown error";
+        }
         // add numeric error code
         errorMsg.append(" (Code: ");
         errorMsg.append(boost::lexical_cast<std::string>(lastError));
         errorMsg.append(")");
         return errorMsg;
-    };
+    }
 
     HINSTANCE handle_;
 }; // class WinDynamicLoaderImplementation

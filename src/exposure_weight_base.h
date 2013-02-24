@@ -10,12 +10,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <iostream>
+
 
 // The full width at half of the maximum of the Gauss-curve we use for
 // exposure weighting is
 //         FWHM = 2 * sqrt(2 * log(2))
-// For compatability in the sake of least surprise of the user, all
+// For compatibility in the sake of least surprise of the user, all
 // other exposure weight functions rescale their native FWHM to match
 // the Gauss-curve.
 #define FWHM_GAUSSIAN 2.3548200450309493820231386529193992755
@@ -36,7 +36,6 @@ public:
     virtual void initialize(double y_optimum, double width_parameter,
                             const argument_list_t& argument_list)
     {
-        std::cout << "+ ExposureWeight::initialize\n";
         y_optimum_ = y_optimum;
         width_ = width_parameter;
         arguments_ = argument_list;
