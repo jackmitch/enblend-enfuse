@@ -1,0 +1,46 @@
+load "@srcdir@/config.gp"
+
+
+default_optimum = 0.5
+default_width = 0.2
+fwhm_gaussian = 2.3548200450309493820231386529193992755
+fwhm_power = 1.6817928305074290860622509524664297901
+
+power(y, y_opt, width) = \
+        abs((y - y_opt) / (width * fwhm_gaussian / fwhm_power)) <= 1.0 ? \
+        1.0 - (abs(y - y_opt) / (width * fwhm_gaussian / fwhm_power))**4 : \
+        0.0
+
+
+set samples 1023
+set xlabel "Y"
+set xtics 0.2
+set ytics 0.2
+
+
+set terminal unknown
+plot [y = 0:1] \
+     power(y, default_optimum, 0.1) title "width = 0.1", \
+     power(y, default_optimum, 0.2) title "default width = 0.2", \
+     power(y, default_optimum, 0.4) title "width = 0.4"
+
+set output "power.txt"
+set terminal dumb Dumb_Width Dumb_Height enhanced
+replot
+
+set output "power.eps"
+set terminal postscript eps enhanced
+replot
+
+set output "power.svg"
+set terminal svg size Svg_Width, Svg_Height dynamic enhanced
+replot
+
+# Newer Gnuplots have a "pdf" terminal.
+set output "| ps2pdf -dEPSCrop - power.pdf"
+set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
+replot
+
+set output "@RASTER_DIR@/power.png"
+set terminal png transparent size Png_Width, Png_Height enhanced
+replot
