@@ -273,7 +273,7 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory and @acronym{GPU} control
+* Extended Options::            Memory and color-space control
 * Mask Generation Options::     Mask generation control
 * Option Delimiters::           How to separate options' arguments
 @end menu
@@ -1331,23 +1331,6 @@ unassociated alpha channels.  Use option @option{-g} to work around
 this problem.  With this flag Enblend will create the output image
 with the associated alpha tag set, even though the image is really
 unassociated alpha.
-
-@item --gpu
-@opindex --gpu
-@cindex graphics processing unit
-@cindex @acronym{GPU} (Graphics Processing Unit)
-Use the graphics card -- in fact the graphics processing unit
-(@acronym{GPU}) -- to accelerate some computations.
-
-@cindex simulated annealing optimizer
-@cindex optimizer, simulated annealing
-This is an experimental feature that may not work on all systems.  In
-this version of Enblend, @value{VERSION}, only mask optimization by
-Simulated Annealing benefits from this option.
-
-Note that @acronym{GPU}-support must have been compiled into Enblend
-for this option to be available.  Find out about this feature with
-@code{enblend --version --verbose}.
 
 @item -m @var{CACHESIZE}
 @opindex -m

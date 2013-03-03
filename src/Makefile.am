@@ -9,7 +9,7 @@ bin_PROGRAMS = enblend enfuse
 
 enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
-                  global.h gpu.cc gpu.h graphcut.h \
+                  global.h graphcut.h \
                   maskcommon.h masktypedefs.h mask.h postoptimizer.h \
                   nearest.h numerictraits.h openmp.h path.h pyramid.h \
                   error_message.h error_message.cc \
@@ -18,10 +18,10 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc \
                   minimizer.h muopt.h
-enblend_LDFLAGS = $(AM_LDFLAGS) $(OPENGL_CFLAGS)
+enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = layer_selection/liblayersel.a \
-                $(GSL_LIBS) $(OPENGL_LIBS) @EXTRA_LIBS@
-enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) $(OPENGL_CFLAGS) \
+                $(GSL_LIBS) @EXTRA_LIBS@
+enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                    -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 

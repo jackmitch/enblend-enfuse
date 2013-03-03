@@ -36,6 +36,13 @@ Unreleased.  Current line of development.
   withdrawal in a later version of Enfuse.
 
 
+** Removed Commandline Options
+
+- All functionality behind the GPU acceleration option `--gpu' was
+  removed.  The option itself is still valid, but does not do
+  anything.
+
+
 ** Developer Stuff
 
 - Support for older versions of the Boost filesystem library has been
@@ -45,6 +52,9 @@ Unreleased.  Current line of development.
 ** Package Maintainer Stuff
 
 - Vigra version 1.9 or later is now required to build.
+
+- Support for OpenGL acceleration has been dropped.  So, the
+  dependencies on the libraries GL, GLU, and Glut are no longer exist.
 
 
 * Version 4.1  "Trouble In Paradise"

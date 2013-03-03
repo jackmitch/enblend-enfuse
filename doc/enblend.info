@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-2b5cbff230f6, 1 March 2013),
+   This manual is for Enblend (version 4.2-3958ca9f5128, 3 March 2013),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-2b5cbff230f6, 1 March 2013), a
+This manual is for Enblend (version 4.2-3958ca9f5128, 3 March 2013), a
 tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -271,7 +271,7 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory and GPU control
+* Extended Options::            Memory and color-space control
 * Mask Generation Options::     Mask generation control
 * Option Delimiters::           How to separate options' arguments
 
@@ -978,18 +978,6 @@ cropping of the output image.
      associated alpha tag set, even though the image is really
      unassociated alpha.
 
-`--gpu'
-     Use the graphics card - in fact the graphics processing unit (GPU)
-     - to accelerate some computations.
-
-     This is an experimental feature that may not work on all systems.
-     In this version of Enblend, 4.2-2b5cbff230f6, only mask
-     optimization by Simulated Annealing benefits from this option.
-
-     Note that GPU-support must have been compiled into Enblend for
-     this option to be available.  Find out about this feature with
-     `enblend --version --verbose'.
-
 `-m CACHESIZE'
      Set the CACHESIZE in megabytes (MB) of Enblend's image cache.
 
@@ -1283,7 +1271,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-2b5cbff230f6)
+     version 3.2 used 1:1.  This version of Enblend (4.2-3958ca9f5128)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1556,7 +1544,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-2b5cbff230f6) of Enblend supports two main algorithms
+This version (4.2-3958ca9f5128) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2650,7 +2638,6 @@ Option Index
 * --fallback-profile:                    Extended Options.    (line 131)
 * --fine-mask:                           Mask Generation Options.
                                                               (line 108)
-* --gpu:                                 Extended Options.    (line 151)
 * --help:                                Common Options.      (line 104)
 * --image-difference:                    Mask Generation Options.
                                                               (line 115)
@@ -2660,7 +2647,7 @@ Option Index
                                                               (line 171)
 * --mask-vectorize:                      Mask Generation Options.
                                                               (line 178)
-* --no-ciecam:                           Extended Options.    (line 175)
+* --no-ciecam:                           Extended Options.    (line 163)
 * --no-optimize:                         Mask Generation Options.
                                                               (line 224)
 * --no-parameter:                        Common Options.      (line 162)
@@ -2689,7 +2676,7 @@ Option Index
 * -h:                                    Common Options.      (line 104)
 * -l:                                    Common Options.      (line 108)
 * -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line 163)
+* -m:                                    Extended Options.    (line 151)
 * -o:                                    Common Options.      (line 152)
 * -V:                                    Common Options.      (line 206)
 * -v:                                    Common Options.      (line 171)
@@ -2780,7 +2767,6 @@ General Index
 * globbing algorithm wildcard:           Response Files.      (line 160)
 * globbing algorithms:                   Response Files.      (line 149)
 * GNU free documentation license:        FDL.                 (line   6)
-* GPU (Graphics Processing Unit):        Extended Options.    (line 151)
 * grammar, response file:                Response Files.      (line  70)
 * grammar, syntactic comment:            Response Files.      (line 141)
 * graph-cut (GC):                        Mask Generation Options.
@@ -2791,7 +2777,6 @@ General Index
                                                               (line  29)
 * graphcut, limitations:                 Primary Seam Generators.
                                                               (line  59)
-* graphics processing unit:              Extended Options.    (line 151)
 * half precision float, OpenEXR:         Extended Options.    (line 108)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Mask Generation Options.
@@ -2803,7 +2788,7 @@ General Index
 * IEEE754 single precision float:        Extended Options.    (line  82)
 * image cache:                           Tuning Memory Usage. (line   9)
 * image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line 163)
+* image cache, cache size:               Extended Options.    (line 151)
 * image cache, location:                 Tuning Memory Usage. (line  20)
 * image colors, visualization:           Mask Generation Options.
                                                               (line 399)
@@ -2917,9 +2902,8 @@ General Index
                                                               (line   9)
 * optimizer weights:                     Mask Generation Options.
                                                               (line 255)
-* optimizer, simulated annealing <1>:    Mask Generation Options.
+* optimizer, simulated annealing:        Mask Generation Options.
                                                               (line   9)
-* optimizer, simulated annealing:        Extended Options.    (line 154)
 * option delimiters:                     Option Delimiters.   (line   6)
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
@@ -2978,9 +2962,8 @@ General Index
                                                               (line 283)
 * seam-line endpoint, frozen:            Mask Generation Options.
                                                               (line 391)
-* simulated annealing optimizer <1>:     Mask Generation Options.
+* simulated annealing optimizer:         Mask Generation Options.
                                                               (line   9)
-* simulated annealing optimizer:         Extended Options.    (line 154)
 * single precision float, IEEE754:       Extended Options.    (line  82)
 * size, canvas:                          Extended Options.    (line 119)
 * SourceForge <1>:                       Bug Reports.         (line  12)
@@ -3037,43 +3020,43 @@ Ref: Figure:photographic-workflow5677
 Node: External Mask Manipulation8351
 Ref: Figure:external-mask-workflow9668
 Node: Invocation10153
-Node: Image Requirements10924
-Node: Response Files12398
-Ref: Table:response-file-format14422
-Ref: Example:response-file16301
-Ref: Table:response-file-syntactic-comment16942
-Ref: Table:globbing-algorithms17843
-Ref: Example:globbing-algorithm18869
-Node: Common Options19486
-Ref: Common Options-Footnote-128962
-Ref: Common Options-Footnote-229036
-Ref: Common Options-Footnote-329228
-Node: Extended Options29387
-Ref: Extended Options-Footnote-136044
-Ref: Extended Options-Footnote-236110
-Node: Mask Generation Options36183
-Ref: Table:mask-generation38870
-Ref: Table:optimizer-strategies46208
-Ref: Table:visualization-colors51611
-Ref: Table:mask-template-characters52526
-Ref: Mask Generation Options-Footnote-154778
-Node: Option Delimiters55006
-Node: Primary Seam Generators56411
-Node: Color Profiles59297
-Node: Understanding Masks61747
-Node: Tuning Memory Usage65540
-Ref: Table:cache-size-settings68282
-Node: Helpful Programs68718
-Node: Bug Reports72454
-Ref: Bug Reports-Footnote-178155
-Node: Authors78225
-Node: FDL79390
-Node: List of Tables100372
-Node: List of Figures101064
-Node: List of Examples101354
-Node: Program Index101635
-Node: Syntactic-Comment Index104644
-Node: Option Index105333
-Node: General Index109559
+Node: Image Requirements10932
+Node: Response Files12406
+Ref: Table:response-file-format14430
+Ref: Example:response-file16309
+Ref: Table:response-file-syntactic-comment16950
+Ref: Table:globbing-algorithms17851
+Ref: Example:globbing-algorithm18877
+Node: Common Options19494
+Ref: Common Options-Footnote-128970
+Ref: Common Options-Footnote-229044
+Ref: Common Options-Footnote-329236
+Node: Extended Options29395
+Ref: Extended Options-Footnote-135557
+Ref: Extended Options-Footnote-235623
+Node: Mask Generation Options35696
+Ref: Table:mask-generation38383
+Ref: Table:optimizer-strategies45721
+Ref: Table:visualization-colors51124
+Ref: Table:mask-template-characters52039
+Ref: Mask Generation Options-Footnote-154291
+Node: Option Delimiters54519
+Node: Primary Seam Generators55924
+Node: Color Profiles58810
+Node: Understanding Masks61260
+Node: Tuning Memory Usage65053
+Ref: Table:cache-size-settings67795
+Node: Helpful Programs68231
+Node: Bug Reports71967
+Ref: Bug Reports-Footnote-177668
+Node: Authors77738
+Node: FDL78903
+Node: List of Tables99885
+Node: List of Figures100577
+Node: List of Examples100867
+Node: Program Index101148
+Node: Syntactic-Comment Index104157
+Node: Option Index104846
+Node: General Index108999
 
 End Tag Table

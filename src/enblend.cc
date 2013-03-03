@@ -111,7 +111,6 @@ int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
 MainAlgo MainAlgorithm = GraphCut;
 bool Checkpoint = false;
-bool UseGPU = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
 unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
@@ -173,9 +172,6 @@ LayerSelectionHost LayerSelection;
 #include "common.h"
 #include "filespec.h"
 #include "enblend.h"
-#ifdef HAVE_LIBGLEW
-#include "gpu.h"
-#endif
 
 #ifdef DMALLOC
 #include "dmalloc.h"            // must be last #include
@@ -227,7 +223,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+     OutputOffsetXCmdLine = " << OutputOffsetXCmdLine << ", argument to option \"-f\"\n" <<
         "+     OutputOffsetYCmdLine = " << OutputOffsetYCmdLine << ", argument to option \"-f\"\n" <<
         "+ Checkpoint = " << enblend::stringOfBool(Checkpoint) << ", option \"-x\"\n" <<
-        "+ UseGPU = " << enblend::stringOfBool(UseGPU) << ", option \"--gpu\"\n" <<
         "+ OptimizeMask = " << enblend::stringOfBool(OptimizeMask) <<
         ", options \"--optimize\" and \"--no-optimize\"\n" <<
         "+ CoarseMask = " << enblend::stringOfBool(CoarseMask) <<
@@ -262,58 +257,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
         "+ end of global variable dump\n";
 }
-
-
-#ifdef HAVE_LIBGLEW
-void inspectGPU(int argc, char** argv)
-{
-#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    CGLContextObj cgl_context = cgl_init();
-#else
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA);
-
-    const int handle = glutCreateWindow("Enblend");
-
-    if (!(handle >= 1 && glutGet(GLUT_DISPLAY_MODE_POSSIBLE))) {
-        std::cout << "    <no reliable OpenGL information available>\n";
-        return;
-    }
-#endif
-
-    std::cout <<
-        "  - " << GLGETSTRING(GL_VENDOR) << "\n" <<
-        "  - " << GLGETSTRING(GL_RENDERER) << "\n" <<
-        "  - version " << GLGETSTRING(GL_VERSION) << "\n"
-        "  - extensions\n";
-
-    const char* const extensions = GLGETSTRING(GL_EXTENSIONS);
-    const char* const extensions_end = extensions + strlen(extensions);
-    const unsigned extensions_per_line = 3U;
-    unsigned count = 1U;
-
-    std::cout << "    ";
-    for (const char* c = extensions; c != extensions_end; ++c) {
-        if (*c == ' ') {
-            if (count % extensions_per_line == 0U) {
-                std::cout << "\n    ";
-            } else {
-                std::cout << "  ";
-            }
-            ++count;
-        } else {
-            std::cout << *c;
-        }
-    }
-    std::cout << "\n\n";
-
-#ifdef HAVE_APPLE_OPENGL_FRAMEWORK
-    CGLDestroyContext(cgl_context);
-#else
-    glutDestroyWindow(handle);
-#endif
-}
-#endif // HAVE_LIBGLEW
 
 
 /** Print information on the current version and some configuration
@@ -352,13 +295,6 @@ void printVersionAndExit(int argc, char** argv) {
         }
 #else
         std::cout << "Extra feature: image cache: no\n";
-#endif
-
-#ifdef HAVE_LIBGLEW
-        std::cout << "Extra feature: GPU acceleration: yes\n";
-        inspectGPU(argc, argv);
-#else
-        std::cout << "Extra feature: GPU acceleration: no\n";
 #endif
 
 #ifdef OPENMP
@@ -467,7 +403,6 @@ void printUsageAndExit(const bool error = true) {
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
         "                         and Cinepaint\n" <<
-        "  --gpu                  use graphics card to accelerate seam-line optimization\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
         "                         manually set the size and position of the output\n" <<
         "                         image; useful for cropped and shifted input\n" <<
@@ -564,13 +499,6 @@ void sigint_handler(int sig)
 
     cleanup_output();
 
-#ifdef HAVE_LIBGLEW
-    if (UseGPU) {
-        // FIXME what if this occurs in a GL atomic section?
-        wrapupGPU();
-    }
-#endif
-
 #if !defined(__GW32C__) && !defined(_WIN32)
     struct sigaction action;
     action.sa_handler = SIG_DFL;
@@ -613,10 +541,6 @@ bool contains(const OptionSetType& optionSet,
 void warn_of_ineffective_options(const OptionSetType& optionSet)
 {
     if (contains(optionSet, LoadMasksOption)) {
-        if (contains(optionSet, GPUOption)) {
-            std::cerr << command <<
-                ": warning: option \"--gpu\" has no effect with \"--load-masks\"" << std::endl;
-        }
         if (contains(optionSet, VisualizeOption)) {
             std::cerr << command <<
                 ": warning: option \"--visualize\" has no effect with \"--load-masks\"" << std::endl;
@@ -854,8 +778,7 @@ int process_options(int argc, char** argv)
 
         switch (code) {
         case UseGpuId:
-            UseGPU = true;
-            optionSet.insert(GPUOption);
+            // no effect whatsover
             break;
 
         case FineMaskId:
@@ -1672,16 +1595,6 @@ int main(int argc, char** argv)
     DUMP_GLOBAL_VARIABLES();
 #endif
 
-    if (UseGPU) {
-#ifdef HAVE_LIBGLEW
-        initGPU(&argc, argv);
-#else
-        std::cerr << command
-                  << ": warning: no GPU support compiled in; option \"--gpu\" has no effect"
-                  << std::endl;
-#endif
-    }
-
     sig.check();
 
     for (enblend::TraceableFileNameList::iterator i = inputTraceableFileNameList.begin();
@@ -2254,12 +2167,6 @@ int main(int argc, char** argv)
     if (XYZToInputTransform) {cmsDeleteTransform(XYZToInputTransform);}
     if (XYZProfile) {cmsCloseProfile(XYZProfile);}
     if (InputProfile) {cmsCloseProfile(InputProfile);}
-
-#ifdef HAVE_LIBGLEW
-    if (UseGPU) {
-        wrapupGPU();
-    }
-#endif
 
     // Success.
     return 0;

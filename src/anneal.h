@@ -43,9 +43,6 @@
 
 #include "masktypedefs.h"
 
-#ifdef HAVE_LIBGLEW
-#include "gpu.h"
-#endif
 
 using boost::lambda::bind;
 using boost::lambda::_1;
@@ -192,12 +189,6 @@ public:
         int iterationCount = 0;
         int iterationsPerTick = (numIterations + 3) / 4;
 
-#ifdef HAVE_LIBGLEW
-        if (UseGPU) {
-            configureGPUTextures(kMax, pointStateSpaces.size());
-        }
-#endif
-
         tCurrent = tInitial;
 
         while (kMax > 1 && tCurrent > tFinal) {
@@ -244,12 +235,6 @@ public:
 
             iterationCount++;
         }
-
-#ifdef HAVE_LIBGLEW
-        if (UseGPU) {
-            clearGPUTextures();
-        }
-#endif
 
         if (visualizeStateSpaceImage) {
             // Remaining unconverged state space points
@@ -306,7 +291,7 @@ public:
     }
 
 protected:
-    void calculateStateProbabilitiesCPU() {
+    void calculateStateProbabilities() {
         const int mf_size = static_cast<int>(mfEstimates.size());
 
 #ifdef OPENMP
@@ -410,106 +395,8 @@ protected:
         } // omp parallel
     }
 
-#ifdef HAVE_LIBGLEW
-    void calculateStateProbabilitiesGPU() {
-        const unsigned int mf_size = mfEstimates.size();
-        unsigned int unconvergedPoints = 0;
-
-        float* EF = new float[kMax * mfEstimates.size()];
-        float* PiF = new float[kMax * mfEstimates.size()];
-
-        for (unsigned int index = 0; index < mf_size; ++index) {
-            // Skip updating points that have already converged.
-            if (convergedPoints[index]) {
-                continue;
-            }
-
-            const unsigned int rowIndex = unconvergedPoints / 4;
-            const unsigned int vectorIndex = unconvergedPoints % 4;
-            float* EFbase = &(EF[(rowIndex * kMax * 4) + vectorIndex]);
-            float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
-
-            const std::vector<vigra::Point2D>* stateSpace = pointStateSpaces[index];
-            std::vector<double>* stateProbabilities = pointStateProbabilities[index];
-            const std::vector<int>* stateDistances = pointStateDistances[index];
-            const unsigned int localK = stateSpace->size();
-
-            const unsigned int lastIndex = index == 0 ? mf_size - 1 : index - 1;
-            const unsigned int nextIndex = (index + 1) % mf_size;
-            const vigra::Point2D lastPointEstimate = mfEstimates[lastIndex];
-            const bool lastPointInCostImage = costImage->isInside(lastPointEstimate);
-            const vigra::Point2D nextPointEstimate = mfEstimates[nextIndex];
-            const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
-
-            // Calculate E values.
-            for (unsigned int i = 0; i < localK; ++i) {
-                const vigra::Point2D currentPoint = (*stateSpace)[i];
-                const int distanceCost = (*stateDistances)[i];
-                int mismatchCost = 0;
-                if (lastPointInCostImage) {
-                    mismatchCost += costImageCost(lastPointEstimate, currentPoint);
-                }
-                if (nextPointInCostImage) {
-                    mismatchCost += costImageCost(currentPoint, nextPointEstimate);
-                }
-                const float cost =
-                    distanceWeight * static_cast<float>(distanceCost) +
-                    mismatchWeight * static_cast<float>(mismatchCost);
-                EFbase[4 * i] = cost;
-                PiFbase[4 * i] = static_cast<float>((*stateProbabilities)[i]);
-            }
-
-            for (unsigned int i = localK; i < kMax; ++i) {
-                PiFbase[4 * i] = 0.0f;
-            }
-
-            unconvergedPoints++;
-        }
-
-        // Calculate all of the new PiF values on the GPU in parallel
-        gpuGDAKernel(kMax, unconvergedPoints, tCurrent, EF, PiF, PiF);
-
-        // Write the results back to pointStateProbabilities
-        unconvergedPoints = 0;
-        for (unsigned int index = 0; index < mf_size; ++index) {
-            // Skip updating points that have already converged.
-            if (convergedPoints[index]) {
-                continue;
-            }
-
-            const unsigned int rowIndex = unconvergedPoints / 4;
-            const unsigned int vectorIndex = unconvergedPoints % 4;
-            float* PiFbase = &(PiF[(rowIndex * kMax * 4) + vectorIndex]);
-
-            std::vector<double>* stateProbabilities = pointStateProbabilities[index];
-            const unsigned int localK = stateProbabilities->size();
-
-            for (unsigned int i = 0; i < localK; ++i) {
-                (*stateProbabilities)[i] = static_cast<double>(PiFbase[4 * i]);
-            }
-
-            unconvergedPoints++;
-        }
-
-        delete [] EF;
-        delete [] PiF;
-    }
-#endif
-
-    void calculateStateProbabilities() {
-#ifdef HAVE_LIBGLEW
-        if (UseGPU) {
-            calculateStateProbabilitiesGPU();
-        } else {
-            calculateStateProbabilitiesCPU();
-        }
-#else
-        calculateStateProbabilitiesCPU();
-#endif
-    }
-
-   void iterate() {
-       calculateStateProbabilities();
+    void iterate() {
+        calculateStateProbabilities();
 
         kMax = 1;
         size_t kmax_local = 1;

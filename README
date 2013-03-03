@@ -117,21 +117,6 @@ We write the default values of all configuration options in capital
 letters.
 
 
-** --enable-gpu-support=CHECK/yes/no
-   -DENABLE_GPU=OFF/on    (CMake)
-
-Enable code in Enblend to use the GPU for optimizing the seam line
-between two images if all necessary OpenGL libraries are found.
-Enfuse does not benefit of this code.  OpenMP (see below) and GPU work
-together.
-
-Note that enabling GPU support does not mean Enblend will actually use
-the GPU.  Besides passing option "--gpu" to Enblend the hardware as
-well as the X11 drivers have to fulfill certain requirements.
-
-See also option "--with-apple-opengl-framework".
-
-
 ** --enable-openmp=yes/NO
    -DENABLE_OPENMP=ON/off    (CMake)
 
@@ -173,14 +158,6 @@ the images to blend or fuse are large.
 
 The ImageCache feature and OpenMP support must not be activated
 together.
-
-
-** --with-apple-opengl-framework=yes/NO
-
-Sometimes AutoConf fails to detect Apple's OpenGL framework.  Use this
-option on MAC OS X to force its usage without a test.
-
-See also option "--enable-gpu-support" and the section MacOSX below.
 
 
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
@@ -253,7 +230,7 @@ Create a source package for the specified <SYSTEM>, where <SYSTEM> is
 Creating a RedHat package on OpenSuSE
 
         cmake . \
-            -DDOC=ON -DENABLE_GPU=ON \
+            -DDOC=ON \
             -DENABLE_IMAGECACHE=OFF -DENABLE_OPENMP=ON \
             -DCPACK_BINARY_RPM:BOOL=ON
         make package
@@ -482,7 +459,7 @@ Via AutoConf/AutoMake:
     make --makefile=Makefile.scm
     mkdir build
     cd build
-    CPPFLAGS=-I/opt/local/include LDFLAGS=-L/opt/local/lib ../configure --with-apple-opengl-framework
+    CPPFLAGS=-I/opt/local/include LDFLAGS=-L/opt/local/lib ../configure
     make
     sudo make install
 
@@ -582,11 +559,6 @@ Enblend/Enfuse also depend on the following libraries:
       However, this library needs to compiled against STLport.
 - Little-CMS2  [2.4 in lcm2-2.4]
 
-For compiling with GPU support, you need:
-
-- GLUT for Win32  [3.7.6 in glut]
-- OpenGL Extension Wrangler Library GLEW  [1.9.0 in glew]
-
 
 **** Compile
 
@@ -598,18 +570,6 @@ For compiling with GPU support, you need:
 4. Select "Configure" when asked for a generator select the
    appropriate generator.
 5. Activate the appropriate options.
-
-
-***** ENABLE_GPU=on/OFF
-
-Enable code in Enblend to use the GPU for optimizing the seam line
-between two images if all necessary OpenGL libraries are found.
-Enfuse does not benefit of this code.  OpenMP (see below) and GPU work
-together.
-
-Note that enabling GPU support does not mean Enblend will actually use
-the GPU.  Besides passing option "--gpu" to Enblend the hardware as
-well as the graphic card drivers have to fulfill certain requirements.
 
 
 ***** ENABLE_IMAGECACHE=on/OFF
