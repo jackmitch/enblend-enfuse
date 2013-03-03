@@ -3740,17 +3740,23 @@ criterion completely overpower all others.
 @section Exposure Weighting
 @cindex weighting, exposure
 
+@opindex --exposure-optimum
 Exposure weighting prefers pixels with a luminance@tie{}@math{Y} close
 to the user-chosen optimum value
 (option@tie{}@option{--exposure-@/optimum}, default:
 @value{src::default-exposure-optimum}) of the normalized, real-valued
 luminance interval@tie{}@math{[0, 1]}.
 
+@cindex grayscale projector
+@cindex projector, grayscale
+@opindex --gray-projector
 @acronym{RGB}-pixels are converted to luminance before using the
 grayscale projector given by @option{--gray-@/projector}, which
 defaults to @code{average}.  Grayscale pixels are identified with
 luminance.
 
+@cindex normalized luminance interval
+@cindex luminance interval, normalized
 In the normalized luminance interval 0.0 represents pure black and 1.0
 represents pure white independently of the data type of the input
 image.  This is, for a @acronym{JPEG} image the luminance@tie{}255
@@ -3909,6 +3915,8 @@ and @math{width} defaults to @value{src::default-exposure-width}.
 @shortcaption{Gaussian function}
 @end float
 
+@opindex --exposure-optimum
+@opindex --exposure-width
 The options@tie{}@option{--exposure-@/optimum} and
 @option{--exposure-@/width} are for fine-tuning the final result
 without changing the set of input images.
@@ -3919,6 +3927,7 @@ Option@tie{}@option{--exposure-@/width} defines the @var{width} of
 acceptable exposures.  Small values of @var{width} penalize exposures
 that deviate from @var{optimum} more, and vice versa.
 
+@opindex --exposure-weight-function
 In Enfuse version@tie{}4.2 several new exposure weight functions have
 been added.  The are selected with
 option @code{--exposure-@/weight-@/function=}@var{WEIGHT-FUNCTION}.
@@ -4021,9 +4030,10 @@ result.  However, if the @var{width} is chosen so large that the
 weight never vanishes or the imput images span a large enough range of
 luminances for each and every pixel, the problem is circumnavigated.
 
+@opindex --exposure-cutoff
 Another way of cutting off under- or overexposed pixels is to use
 option@tie{}@option{--exposure-cutoff}, which has the additional
-benefit of allowing to choose uper and lower cutoff separately.
+benefit of allowing to choose upper and lower cutoff separately.
 
 @float Figure,Figure:exposure-weights
 @vimage{exposure-weights}
@@ -4057,6 +4067,7 @@ option@tie{}@option{--exposure-weight-function}.  It loads the
 exposure weight function identifed by @var{SYMBOL} from a
 @var{SHARED-OBJECT}:
 
+@opindex --exposure-weight-function
 @noindent
 @w{@code{--exposure-weight-function=}@var{SHARED-OBJECT}@code{:}@var{SYMBOL}[@code{:}@var{ARGUMENT}[@code{:}@dots{}]]}
 
@@ -4071,7 +4082,7 @@ exposure weight function identifed by @var{SYMBOL} from a
 @subsubsection Prerequisites
 
 To use a home-grown exposure-weight function several prerequisites
-must be met.  On the software side:
+must be met.  On the software side
 
 @enumerate
 @item
@@ -4079,6 +4090,7 @@ The operating system allows loading additional code during the
 execution of an application.
 
 @item
+@cindex dynamic linking support
 Enfuse is compiled with the extra feature ``dynamic linking support''.
 
 @item
@@ -4091,8 +4103,8 @@ A compiler that produces compatible object code to the compiler that
 compiled Enfuse.
 @end enumerate
 The latter is called @abbr{ABI}-compatible.  An example for a pair of
-@abbr{ABI}-compatible compilers is @acronym{GNU}'s@tie{}@code{g++-4.7}
-and Intel's@tie{}@code{icpc-13.0}.
+@abbr{ABI}-compatible compilers is @acronym{GNU}'s@tie{}g++-4.7 and
+Intel's@tie{}icpc-13.0.
 
 @item
 The base-class header file @file{exposure_@/weight_@/base.h} is available.
@@ -4171,15 +4183,15 @@ atomic data-type (e.g.@: @code{sig_atomic_t} from @file{signal.h}).
 
 Remember to compile all modules that use @acronym{OpenMP} directives
 with the (compiler-specific) flags that turn on @acronym{OpenMP}.  For
-@code{g++} this is @samp{-fopenmp} and for @code{icpc} it is
-@samp{-fopenmp} or @samp{-openmp}.
+g++ this is @samp{-fopenmp} and for icpc it is @samp{-fopenmp} or
+@samp{-openmp}.
 
 @item
 To raise an exception which is associated with the derived,
 user-defined exposure-weight class, throw
 @code{ExposureWeight::error(@var{a_message})}.  Enfuse catches these
-exceptions at the minimum enclosing scope, displays @var{a_message},
-and then stops.
+exceptions at an enclosing scope, displays @var{a_message}, and then
+aborts.
 
 @item
 Define an object of the derived class.  This creates the @var{SYMBOL}
@@ -4274,7 +4286,7 @@ weight function that accesses an extra @var{ARGUMENT} passed in with
 @option{--exposure-weight-function}.  A class like
 @code{VariablePower} allows full control over the exponent at the
 command line including fractional exponents thereby generalizing both
-previous examples.
+of the previous examples.
 
 @float Example,Example:variable-dynamic-exposure-weight-function
 @example
@@ -4344,6 +4356,9 @@ candidates for optimization.
 @node Compiling Linking Loading
 @subsubsection Compiling, Linking, and Loading
 
+@noindent
+@strong{Linux}
+
 Compile and link using the @acronym{GNU} compiler for example with
 @example
 g++ -g -O2 -fpic -I<PATH-TO-BASE-CLASS-HEADER> -c dynexp.cc
@@ -4370,7 +4385,7 @@ object.
 
 Finally, the weight function can be selected by its
 @var{SYMBOL}@tie{}name in the @var{SHARED-OBJECT}.  The function has
-access to additional @var{ARGUMENT}s passed with the
+access to additional @var{ARGUMENT}s passed in with the
 option.@footnote{Build-in weight functions never take additional
 arguments.}
 
@@ -4378,16 +4393,12 @@ arguments.}
 enfuse --exposure-weight-function=dynexp.so:linear @dots{}
 @end example
 
-or on Windows
+@noindent
+@strong{Windows}
 
-@example
-enfuse --exposure-weight-function=dynexp.dll:linear @dots{}
-@end example
-
-
-On Windows the creating of shared objects - or dynamic link libraries 
-(@acronym{DLL} files) as they are called here - has been tested with the 
-@acronym{MinGW} compiler chain and with the @acronym{MS-Visual C++ 2012}.
+On Windows the creation of shared objects -- or dynamic link libraries
+(@acronym{DLL}@tie{}files) as they are called here -- has been tested
+with the @acronym{MinGW} compiler chain and with MS-Visual C++ 2012.
 
 @itemize
 @item
@@ -4396,42 +4407,50 @@ Compile and link using the @acronym{MinGW} compiler with
 g++ -g -O2 -I<PATH-TO-BASE-CLASS-HEADER> -c dynexp.cc
 g++ -g -shared -Wl,-soname,dynexp.dll -o dynexp.dll dynexp.o
 @end example
-For more details see the explanation for the @acronym{GNU} compiler above.
-On Windows the option @option{-fPIC} is not needed.
+For details see the explanation for the @acronym{GNU} compiler above.
+Windows neither requires options @option{-fpic} nor @option{-fPIC}.
 
 @item
-@acronym{MS-Visual C++ 2012}
-When using the @acronym{MS-Visual C++} compiler, you need to explicit
-export the object of the derived class with the name @var{SYMBOL}.
-There are two possiblities to achieve this (use only one variant, not
-both at the time):
+When using the MS-Visual C++ compiler, you need to explicitly export
+@var{SYMBOL}.  There are two possiblities to achieve this.  Use only
+one variant, not both at the smae time.
 
-@itemize @minus
+@enumerate
 @item
-Define the object with the @code{__declspec(dllexport)} keyword and
-@code{"C"}@tie{}linkage. For @ref{Example:simple-dynamic-exposure-weight-function} the 
-object definition has to be extended to:
-@example 
+Either define the object using the
+@code{__declspec(dllexport)}@tie{}keyword and
+@code{"C"}@tie{}linkage.  For
+@ref{Example:simple-dynamic-exposure-weight-function} the object
+definition has to be extended to
+
+@example
 extern "C"
 @{
     __declspec(dllexport) Linear linear;
-@};
+@}
 @end example
+
 @item
-Alternatively you can create a module-definition file (@code{.def}) and input
-this file to the linker. (in Project Properties, Linker, Modul definition file).
-For For @ref{Example:simple-dynamic-exposure-weight-function} this file would
+Or, alternatively, create a module-definition file (@file{.def}) and
+pass this file to the linker (in: @sc{Project Properties},
+@sc{Linker}, @sc{Module Definition File}).  For
+@ref{Example:simple-dynamic-exposure-weight-function}, this file would
 look like
+
 @example
 LIBRARY dynexp
 EXPORTS
         linear @@1
 @end example
+@end enumerate
 @end itemize
-@end itemize
 
+Finally, the weight function can be selected by its
+@var{SYMBOL}@tie{}name in the dynamic link library.
 
-
+@example
+enfuse --exposure-weight-function=dynexp.dll:linear @dots{}
+@end example
 
 @optionsummaryheading{}
 
