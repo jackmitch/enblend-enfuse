@@ -4378,6 +4378,58 @@ arguments.}
 enfuse --exposure-weight-function=dynexp.so:linear @dots{}
 @end example
 
+or on Windows
+
+@example
+enfuse --exposure-weight-function=dynexp.dll:linear @dots{}
+@end example
+
+
+On Windows the creating of shared objects - or dynamic link libraries 
+(@acronym{DLL} files) as they are called here - has been tested with the 
+@acronym{MinGW} compiler chain and with the @acronym{MS-Visual C++ 2012}.
+
+@itemize
+@item
+Compile and link using the @acronym{MinGW} compiler with
+@example
+g++ -g -O2 -I<PATH-TO-BASE-CLASS-HEADER> -c dynexp.cc
+g++ -g -shared -Wl,-soname,dynexp.dll -o dynexp.dll dynexp.o
+@end example
+For more details see the explanation for the @acronym{GNU} compiler above.
+On Windows the option @option{-fPIC} is not needed.
+
+@item
+@acronym{MS-Visual C++ 2012}
+When using the @acronym{MS-Visual C++} compiler, you need to explicit
+export the object of the derived class with the name @var{SYMBOL}.
+There are two possiblities to achieve this (use only one variant, not
+both at the time):
+
+@itemize @minus
+@item
+Define the object with the @code{__declspec(dllexport)} keyword and
+@code{"C"}@tie{}linkage. For @ref{Example:simple-dynamic-exposure-weight-function} the 
+object definition has to be extended to:
+@example 
+extern "C"
+@{
+    __declspec(dllexport) Linear linear;
+@};
+@end example
+@item
+Alternatively you can create a module-definition file (@code{.def}) and input
+this file to the linker. (in Project Properties, Linker, Modul definition file).
+For For @ref{Example:simple-dynamic-exposure-weight-function} this file would
+look like
+@example
+LIBRARY dynexp
+EXPORTS
+        linear @@1
+@end example
+@end itemize
+@end itemize
+
 
 
 
