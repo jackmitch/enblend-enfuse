@@ -318,6 +318,13 @@ void printVersionAndExit() {
         std::cout << "Extra feature: OpenMP: no\n";
 #endif
 
+#ifdef OPENCL
+        std::cout << "Extra feature: OpenCL: yes\n";
+        print_opencl_information();
+#else
+        std::cout << "Extra feature: OpenCL: no\n";
+#endif
+
         std::cout <<
             "\n" <<
             "Supported image formats: " << vigra::impexListFormats() << "\n" <<

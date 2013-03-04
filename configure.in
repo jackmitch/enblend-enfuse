@@ -502,6 +502,11 @@ else
     enable_openmp=yes
 fi
 
+AX_OPENCL([C++])
+CFLAGS="$CFLAGS $CL_CFLAGS"
+CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
+LIBS="$LIBS $CL_LIBS"
+
 AC_CONFIG_FILES([doc/entropy.gp
                  doc/entropy-cutoff.gp
                  doc/exposure-cutoff.gp
@@ -548,4 +553,5 @@ AC_MSG_RESULT([
    OpenEXR image format            ${have_exr}
    use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
+   use OpenCL:                     ${enable_opencl}
 ${warnings}])

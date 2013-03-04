@@ -133,6 +133,12 @@ OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
 on the usage of these variables.
 
 
+** --enable-opencl=YES/no
+
+Parallelize parts of Enblend and Enfuse with OpenCL.  See
+        http://www.khronos.org/opencl/
+
+
 ** --enable-split-doc=YES/no
    -DNOSPLIT=OFF/on    (CMake)
 

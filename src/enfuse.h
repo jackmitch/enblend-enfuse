@@ -45,6 +45,7 @@
 
 #include "common.h"
 #include "filespec.h"
+#include "opencl.h"
 #include "openmp.h"
 #include "numerictraits.h"
 #include "fixmath.h"

@@ -36,6 +36,7 @@
 #include "vigra_ext/rect2d.hxx"
 
 #include "common.h"
+#include "opencl.h"
 #include "openmp.h"
 #include "numerictraits.h"
 #include "fixmath.h"
