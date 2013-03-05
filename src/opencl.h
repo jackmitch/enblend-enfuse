@@ -34,7 +34,7 @@
 #endif
 
 
-#ifdef _OPENCL
+#if defined(_OPENCL) || defined(__OPENCL_CL_H)
 
 #define OPENCL
 
