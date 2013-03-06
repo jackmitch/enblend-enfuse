@@ -53,7 +53,7 @@ ELSE(WIN32)
   
   FIND_LIBRARY(OPENCL_LIBRARY 
     NAMES
-        OpenCL 
+        OpenCL CL clparser
     PATHS
         /usr/local/lib
         /usr/lib
@@ -64,3 +64,4 @@ INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenCL DEFAULT_MSG OPENCL_LIBRARY OPENCL_INCLUDE_DIR)
 
 MARK_AS_ADVANCED(OPENCL_INCLUDE_DIR OPENCL_LIBRARY)
+

@@ -143,6 +143,12 @@
 /* define to 1 if you have dlfcn.h header file and dl lib. */
 #cmakedefine HAVE_DL 1
 
+/* define to 1 if you have opencl.h header file in "CL" dir. */
+#cmakedefine HAVE_CL_OPENCL_H 1
+
+/* define to 1 if you have opencl.h header file in "OpenCL" dir. */
+#cmakedefine HAVE_OPENCL_OPENCL_H 1
+
 /* Define to 1 if the system has the type `_Bool'. */
 /* #undef HAVE__BOOL */
 
