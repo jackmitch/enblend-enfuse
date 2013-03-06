@@ -42,14 +42,20 @@ IF(WIN32)
   )
 ELSE(WIN32)
 
-  FIND_PATH(OPENCL_INCLUDE_DIR 
-    NAMES
-        CL/cl.h OpenCL/cl.h
-    PATHS
+  foreach(_inc "CL" "OpenCL")
+    FIND_PATH(OPENCL_INCLUDE_DIR 
+      NAMES
+        ${_inc}/cl.h
+      PATHS
         /usr/local/include
         /usr/include
         "/usr/local/cuda/include"
-  )
+    )
+    if(OPENCL_INCLUDE_DIR)
+      string(TOUPPER ${_inc} _I)
+      set(HAVE_${_I}_OPENCL_H 1)
+    endif()
+  endforeach()
   
   FIND_LIBRARY(OPENCL_LIBRARY 
     NAMES
