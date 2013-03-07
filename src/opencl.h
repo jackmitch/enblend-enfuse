@@ -26,6 +26,7 @@
 #endif
 
 #include <iostream>
+#include <vector>
 
 #if defined(HAVE_CL_CL_HPP)
 #include <CL/cl.hpp>
@@ -38,106 +39,54 @@
 
 #define OPENCL
 
+typedef std::vector<cl::Platform> platform_list_t;
+typedef std::vector<cl::Device> device_list_t;
+
+
 void
 print_opencl_information()
 {
-    cl_uint number_of_platforms = 0U;
+    platform_list_t platforms;
+    cl::Platform::get(&platforms);
 
-    if (clGetPlatformIDs(0U, NULL, &number_of_platforms) == CL_SUCCESS)
+    if (platforms.empty())
     {
-        cl_platform_id *platform_ids = new cl_platform_id[number_of_platforms];
-        clGetPlatformIDs(number_of_platforms, platform_ids, NULL);
-
-        const size_t maximum_info_size = 256U;
-        char* info = new char[maximum_info_size];
-        size_t size;
-
-        for (cl_uint p = 0U; p != number_of_platforms; ++p)
-        {
-            clGetPlatformInfo(platform_ids[p], CL_PLATFORM_VENDOR, maximum_info_size, info, &size);
-            std::cout << "  - " << info;
-            clGetPlatformInfo(platform_ids[p], CL_PLATFORM_NAME, maximum_info_size, info, &size);
-            std::cout << ", " << info;
-            clGetPlatformInfo(platform_ids[p], CL_PLATFORM_VERSION, maximum_info_size, info, &size);
-            std::cout << ", " << info << "\n";
-
-            cl_uint number_of_devices = 0U;
-
-            if (clGetDeviceIDs(platform_ids[p], CL_DEVICE_TYPE_GPU, 0U, NULL, &number_of_devices) == CL_SUCCESS)
-            {
-                cl_device_id *device_ids = new cl_device_id [number_of_devices];
-                clGetDeviceIDs(platform_ids[p], CL_DEVICE_TYPE_GPU, number_of_devices, device_ids, NULL);
-
-                for (cl_uint d = 0U; d != number_of_devices; ++d)
-                {
-                    cl_uint number_of_cores;
-                    std::cout << "    * ";
-                    if (clGetDeviceInfo(device_ids[d], CL_DEVICE_MAX_COMPUTE_UNITS,
-                                        sizeof(cl_uint), &number_of_cores, NULL) == CL_SUCCESS)
-                    {
-                        std::cout << number_of_cores;
-                    }
-                    else
-                    {
-                        std::cout << "???";
-                    }
-                    std::cout << " cores\n";
-
-                    cl_ulong memory_size;
-                    std::cout << "    * ";
-                    if (clGetDeviceInfo(device_ids[d], CL_DEVICE_GLOBAL_MEM_SIZE,
-                                        sizeof(cl_ulong), &memory_size, NULL) == CL_SUCCESS)
-                    {
-                        std::cout << memory_size / 1024UL;
-                    }
-                    else
-                    {
-                        std::cout << "???";
-                    }
-                    std::cout << " KB global memory\n";
-
-                    std::cout << "    * ";
-                    if (clGetDeviceInfo(device_ids[d], CL_DEVICE_LOCAL_MEM_SIZE,
-                                        sizeof(cl_ulong), &memory_size, NULL) == CL_SUCCESS)
-                    {
-                        std::cout << memory_size / 1024UL;
-                    }
-                    else
-                    {
-                        std::cout << "???";
-                    }
-                    std::cout << " KB local memory\n";
-
-                    size_t max_width;
-                    size_t max_height;
-                    if (clGetDeviceInfo(device_ids[d], CL_DEVICE_IMAGE2D_MAX_WIDTH,
-                                        sizeof(size_t), &max_width, NULL) == CL_SUCCESS &&
-                        clGetDeviceInfo(device_ids[d], CL_DEVICE_IMAGE2D_MAX_HEIGHT,
-                                        sizeof(size_t), &max_height, NULL) == CL_SUCCESS)
-                    {
-                        std::cout << "    * " << max_width << 'x' << max_height;
-                    }
-                    else
-                    {
-                        std::cout << "unknown";
-                    }
-                    std::cout << " maximum image size\n";
-                }
-
-                delete [] device_ids;
-            }
-            else
-            {
-                std::cout << "  - no GPU devices found\n";
-            }
-        }
-
-        delete [] info;
-        delete [] platform_ids;
+        std::cout << "  - no platform found\n";
     }
     else
     {
-        std::cout << "  - no platform found\n";
+        unsigned platform_index = 0U;
+        for (platform_list_t::const_iterator p = platforms.begin(); p != platforms.end(); ++p, ++platform_index)
+        {
+            std::string info;
+            p->getInfo(CL_PLATFORM_VENDOR, &info);
+            std::cout << "  - Platform #" << platform_index << ": " << info;
+            p->getInfo(CL_PLATFORM_NAME, &info);
+            std::cout << ", " << info;
+            p->getInfo(CL_PLATFORM_VERSION, &info);
+            std::cout << ", " << info << "\n";
+
+            device_list_t devices;
+            p->getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+            if (devices.empty())
+            {
+                std::cout << "  - no device found\n";
+            }
+            else
+            {
+                unsigned device_index = 0U;
+                for (device_list_t::const_iterator d = devices.begin(); d != devices.end(); ++d, ++device_index)
+                {
+                    std::cout << "    * Device #" << device_index << ": " <<
+                        d->getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << " cores\n" <<
+                        "                 " << d->getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() / 1024UL << " KB global memory\n" <<
+                        "                 " << d->getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / 1024UL << " KB local memory\n" <<
+                        "                 " << d->getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>() << 'x' <<
+                        d->getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>() << " maximum image size\n";
+                }
+            }
+        }
     }
 }
 
