@@ -52,7 +52,7 @@ if test "$enable_opencl" = yes; then
 
   ax_save_CPPFLAGS=$CPPFLAGS
   CPPFLAGS="$CL_CFLAGS $CPPFLAGS"
-  AC_CHECK_HEADERS([CL/opencl.h OpenCL/opencl.h])
+  AC_CHECK_HEADERS([CL/cl.hpp OpenCL/cl.hpp])
   CPPFLAGS=$ax_save_CPPFLAGS
 
   AC_CHECK_HEADERS([windows.h])
@@ -62,12 +62,12 @@ if test "$enable_opencl" = yes; then
   # if defined(HAVE_WINDOWS_H) && defined(_WIN32)
   #   include <windows.h>
   # endif
-  # ifdef HAVE_CL_OPENCL_H
-  #   include <CL/opencl.h>
-  # elif defined(HAVE_OPENCL_OPENCL_H)
-  #   include <OpenCL/opencl.h>
+  # ifdef HAVE_CL_CL_HPP
+  #   include <CL/cl.hpp>
+  # elif defined(HAVE_OPENCL_CL_HPP)
+  #   include <OpenCL/cl.hpp>
   # else
-  #   error no CL.h
+  #   error no cl.hpp
   # endif]],
                              [[clCreateContextFromType(0,0,0,0,0)]])])
 

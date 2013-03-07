@@ -138,6 +138,12 @@ on the usage of these variables.
 Parallelize parts of Enblend and Enfuse with OpenCL.  See
         http://www.khronos.org/opencl/
 
+As Enblend and Enfuse are written in C++ we prefer the C++-header of
+OpenCL, namely "cl.hpp".  This file does not always come
+(pre-)installed, but it can be downloaded from the canonical site,
+Khronos OpenCL API Registry
+        http://www.khronos.org/registry/cl/
+
 
 ** --enable-split-doc=YES/no
    -DNOSPLIT=OFF/on    (CMake)

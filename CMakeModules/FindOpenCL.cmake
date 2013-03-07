@@ -10,7 +10,7 @@ IF(WIN32)
 # search for AMD/nVidia/Intel SDK with OpenCL headers and lib
   FIND_PATH(OPENCL_INCLUDE_DIR
     NAMES
-        CL/cl.h OpenCL/cl.h
+        CL/cl.hpp OpenCL/cl.hpp
     PATHS
         $ENV{AMDAPPSDKROOT}/include
         $ENV{INTELOCLSDKROOT}/include
@@ -43,7 +43,7 @@ IF(WIN32)
 ELSE(WIN32)
 
   foreach(_inc "CL" "OpenCL")
-    FIND_PATH(OPENCL_INCLUDE_DIR 
+    FIND_PATH(OPENCL_INCLUDE_DIR
       NAMES
         ${_inc}/cl.h
       PATHS
@@ -56,8 +56,8 @@ ELSE(WIN32)
       set(HAVE_${_I}_OPENCL_H 1)
     endif()
   endforeach()
-  
-  FIND_LIBRARY(OPENCL_LIBRARY 
+
+  FIND_LIBRARY(OPENCL_LIBRARY
     NAMES
         OpenCL CL clparser
     PATHS

@@ -27,14 +27,14 @@
 
 #include <iostream>
 
-#if defined(HAVE_CL_OPENCL_H)
-#include <CL/opencl.h>
-#elif defined(HAVE_OPENCL_OPENCL_H)
-#include <OpenCL/opencl.h>
+#if defined(HAVE_CL_CL_HPP)
+#include <CL/cl.hpp>
+#elif defined(HAVE_OPENCL_CL_HPP)
+#include <OpenCL/cl.hpp>
 #endif
 
 
-#if defined(_OPENCL) || defined(__OPENCL_CL_H)
+#if defined(_OPENCL) || defined(__OPENCL_CL_HPP)
 
 #define OPENCL
 
