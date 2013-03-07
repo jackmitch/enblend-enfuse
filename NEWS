@@ -20,6 +20,11 @@ Unreleased.  Current line of development.
   is now up to the user.  The default still is the Gauss function as
   in all Enfuse versions before.
 
+- Enblend and Enfuse now both can make use of the tremendous computing
+  power in modern graphics cards.  To that end the binaries must be
+  compiled with OpenCL support and the necessary drivers and or
+  linraries must be installed on the host system.
+
 
 ** New Commandline Options
 
@@ -35,12 +40,13 @@ Unreleased.  Current line of development.
   Options `--exposure-mu' and `--exposure-sigma' are scheduled for
   withdrawal in a later version of Enfuse.
 
+- For a long time Enblend has had an option to run the seam-line
+  optimizer on the GPU.  Now, both Enblend and Enfuse sport `--gpu'
+  options to offload computationally intensive tasks to any
+  OpenCL-compatible GPU device.
 
-** Removed Commandline Options
-
-- All functionality behind the GPU acceleration option `--gpu' was
-  removed.  The option itself is still valid, but does not do
-  anything.
+  On systems with more than one device `--prefer-gpu' selects the
+  desired GPU.
 
 
 ** Developer Stuff

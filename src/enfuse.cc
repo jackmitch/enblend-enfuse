@@ -160,6 +160,13 @@ LayerSelectionHost LayerSelection;
 #include "common.h"
 #include "enfuse.h"
 
+bool UseGPU = false;
+#ifdef OPENCL
+cl::Platform GPUPlatform;
+cl::Device GPUDevice;
+cl::Context* GPUContext = NULL;
+#endif
+
 #ifdef DMALLOC
 #include "dmalloc.h"            // must be last #include
 #endif
@@ -187,6 +194,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ Verbose = " << Verbose << ", option \"--verbose\"\n" <<
         "+ OutputFileName = <" << OutputFileName << ">\n" <<
         "+ ExactLevels = " << ExactLevels << "\n" <<
+        "+ UseGPU = " << UseGPU << "\n" <<
         "+ OneAtATime = " << enblend::stringOfBool(OneAtATime) << ", option \"-a\"\n" <<
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
@@ -320,7 +328,7 @@ void printVersionAndExit() {
 
 #ifdef OPENCL
         std::cout << "Extra feature: OpenCL: yes\n";
-        print_opencl_information();
+        ocl::print_opencl_information();
 #else
         std::cout << "Extra feature: OpenCL: no\n";
 #endif
@@ -381,6 +389,16 @@ void printUsageAndExit(const bool error = true) {
         "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
         enblend::stringOfWraparound(WrapAround) << ";\n" <<
         "                         without argument the option selects horizontal wrapping\n" <<
+#ifdef OPENCL
+        "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
+        "                         with \"--no-gpu\"\n" <<
+        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
+        "                         start with the preferred one\n" <<
+        "  --prefer-gpu=DEVICE    select DEVICE on first platform as GPU\n" <<
+        "  --prefer-gpu=PLATFORM:DEVICE\n" <<
+        "                         select DEVICE on PLATFORM as GPU\n" <<
+#endif
+        "  -x                     checkpoint partial results\n" <<
         "  --compression=COMPRESSION\n" <<
         "                         set compression of output image to COMPRESSION,\n" <<
         "                         where COMPRESSION is:\n" <<
@@ -565,6 +583,7 @@ enum AllPossibleOptions {
     WrapAroundOption /* -w */, CompressionOption, LZWCompressionOption,
     BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
+    GPUOption, NoGPUOption, PreferredGPUOption,
     SizeAndPositionOption /* -f */, CacheSizeOption,
     ExposureWeightOption, ExposureCutoffOption, SaturationWeightOption,
     ContrastWeightOption, EntropyWeightOption,
@@ -794,7 +813,26 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             ": warning:     because it was compiled without image cache" <<
             std::endl;
     }
-#endif
+#endif // CACHE_IMAGES
+
+#ifdef OPENCL
+    if (!UseGPU && contains(optionSet, PreferredGPUOption)) {
+        std::cerr << command << ": warning: option \"--preferred-gpu\" has no effect without enabled GPU" << std::endl;
+    }
+#else
+    if (contains(optionSet, GPUOption)) {
+        std::cerr << command << ": warning: option \"--gpu\" has no effect in this " << command << " binary,\n" <<
+            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+    }
+    if (contains(optionSet, NoGPUOption)) {
+        std::cerr << command << ": warning: option \"--no-gpu\" has no effect in this " << command << " binary,\n" <<
+            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+    }
+    if (contains(optionSet, PreferredGPUOption)) {
+        std::cerr << command << ": warning: option \"--prefer-gpu\" has no effect in this " << command << " binary,\n" <<
+            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+    }
+#endif // OPENCL
 }
 
 
@@ -919,6 +957,9 @@ process_options(int argc, char** argv)
 {
     enum OptionId {
         OPTION_ID_OFFSET = 1023,    // Ids start at 1024
+        UseGpuId,
+        NoUseGpuId,
+        PreferGpuId,
         CompressionId,
         WeightExposureId,
         WeightContrastId,
@@ -954,6 +995,10 @@ process_options(int argc, char** argv)
     };
 
     static struct option long_options[] = {
+        {"gpu", no_argument, 0, UseGpuId},
+        {"no-gpu", no_argument, 0, NoUseGpuId},
+        {"prefer-gpu", required_argument, 0, PreferGpuId},
+        {"preferred-gpu", optional_argument, 0, PreferGpuId}, // gramatically close alternative form
         {"compression", required_argument, 0, CompressionId},
         {"exposure-weight", required_argument, 0, WeightExposureId},
         {"contrast-weight", required_argument, 0, WeightContrastId},
@@ -997,6 +1042,10 @@ process_options(int argc, char** argv)
     bool justPrintVersion = false;
     bool justPrintUsage = false;
     OptionSetType optionSet;
+#ifdef OPENCL
+    size_t preferredGPUPlatform = 1U; // We start enumerating platforms at 1 for user convenience.
+    size_t preferredGPUDevice = 1U;   // ditto for devices
+#endif
 
     opterr = 0;       // we have our own "unrecognized option" message
     while (true) {
@@ -1009,6 +1058,37 @@ process_options(int argc, char** argv)
         }
 
         switch (code) {
+        case UseGpuId:
+            UseGPU = true;
+            optionSet.insert(GPUOption);
+            break;
+
+        case NoUseGpuId:
+            UseGPU = false;
+            optionSet.insert(NoGPUOption);
+            break;
+
+        case PreferGpuId:
+#ifdef OPENCL
+            if (optarg != NULL && *optarg != 0) {
+                char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
+                if (delimiter == NULL) {
+                    preferredGPUDevice = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU device out of range", 1U);
+                } else {
+                    *delimiter = 0;
+                    ++delimiter;
+                    preferredGPUPlatform = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU platform out of range", 1U);
+                    preferredGPUDevice = enblend::numberOfString(delimiter, _1 >= 1U, "preferred GPU device out of range", 1U);
+                }
+            } else {
+                std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
+                ocl::print_opencl_information();
+                exit(0);
+            }
+#endif
+            optionSet.insert(PreferredGPUOption);
+            break;
+
         case HardMaskId:
             UseHardMask = true;
             optionSet.insert(HardMaskOption);
@@ -1845,6 +1925,59 @@ process_options(int argc, char** argv)
 
     warn_of_ineffective_options(optionSet);
 
+#ifdef OPENCL
+    if (UseGPU) {
+        cl_int error_code;
+
+        ocl::platform_list_t platforms;
+        error_code = cl::Platform::get(&platforms);
+
+        if (error_code != CL_SUCCESS) {
+            std::cerr << command << ": warning: query for OpenCL platforms failed, cannot enable GPU: " <<
+                       ocl::string_of_error_code(error_code) << "\n";
+        } else if (platforms.empty()) {
+            std::cerr << command << ": warning: no OpenCL platform found, cannot enable GPU\n";
+        } else {
+            if (preferredGPUPlatform <= platforms.size()) {
+                GPUPlatform = platforms[preferredGPUPlatform - 1U];
+            } else {
+                std::cerr << command << ": OpenCL platform #" << preferredGPUPlatform << " is not available\n";
+                std::cerr << command << ": info: largest OpenCL platform number is " << platforms.size() << "\n";
+                exit(1);
+            }
+
+            ocl::device_list_t devices;
+            error_code = GPUPlatform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+            if (error_code != CL_SUCCESS) {
+                std::cerr << command << ": warning: query for OpenCL devices failed, cannot enable GPU: " <<
+                    ocl::string_of_error_code(error_code) << "\n";
+            } else if (devices.empty()) {
+                std::cerr << command << ": warning: no OpenCL device found, cannot enable GPU\n";
+            } else {
+                if (preferredGPUDevice <= devices.size()) {
+                    GPUDevice = devices[preferredGPUDevice - 1U];
+                } else {
+                    std::cerr << command << ": OpenCL device #" << preferredGPUDevice << " is not available\n";
+                    std::cerr << command << ": info: largest OpenCL device number is " << devices.size() << "\n";
+                    exit(1);
+                }
+
+                cl_context_properties context_properties[] = {
+                    CL_CONTEXT_PLATFORM, (cl_context_properties) (GPUPlatform)(), 0
+                };
+                GPUContext = new cl::Context(CL_DEVICE_TYPE_GPU, context_properties, NULL, NULL, &error_code);
+                if (error_code != CL_SUCCESS) {
+                    delete GPUContext;
+                    GPUContext = NULL;
+                    std::cerr << command << ": warning: failed to create OpenCL context, cannot enable GPU: " <<
+                        ocl::string_of_error_code(error_code) << "\n";
+                }
+            }
+        }
+    }
+#endif // OPENCL
+
     return optind;
 }
 
@@ -2454,6 +2587,10 @@ int main(int argc, char** argv)
                   << std::endl;
         exit(1);
     }
+
+#ifdef OPENCL
+    delete GPUContext;
+#endif // OPENCL
 
     if (FallbackProfile) {cmsCloseProfile(FallbackProfile);}
     if (LabProfile) {cmsCloseProfile(LabProfile);}
