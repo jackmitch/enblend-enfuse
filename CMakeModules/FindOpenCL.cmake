@@ -7,10 +7,11 @@
 #
 
 IF(WIN32)
-# search for AMD/nVidia/Intel SDK with OpenCL headers and lib
+  # search for AMD/nVidia/Intel SDK with OpenCL headers and lib
+  SET(CL_INCLUDE_PREFIX "CL")
   FIND_PATH(OPENCL_INCLUDE_DIR
     NAMES
-        CL/cl.hpp OpenCL/cl.hpp
+        CL/cl.hpp 
     PATHS
         $ENV{AMDAPPSDKROOT}/include
         $ENV{INTELOCLSDKROOT}/include
@@ -42,21 +43,19 @@ IF(WIN32)
   )
 ELSE(WIN32)
 
-  foreach(_inc "CL" "OpenCL")
-    FIND_PATH(OPENCL_INCLUDE_DIR
-      NAMES
-        ${_inc}/cl.h
-      PATHS
-        /usr/local/include
-        /usr/include
-        "/usr/local/cuda/include"
-    )
-    if(OPENCL_INCLUDE_DIR)
-      string(TOUPPER ${_inc} _I)
-      set(HAVE_${_I}_OPENCL_H 1)
-    endif()
-  endforeach()
-
+  IF(APPLE)
+    SET(CL_INCLUDE_PREFIX "OpenCL")
+  ELSE()
+    SET(CL_INCLUDE_PREFIX "CL")
+  ENDIF()
+  FIND_PATH(OPENCL_INCLUDE_DIR
+    NAMES
+      ${CL_INCLUDE_PREFIX}/cl.h
+    PATHS
+      /usr/local/include
+      /usr/include
+      "/usr/local/cuda/include"
+  )
   FIND_LIBRARY(OPENCL_LIBRARY
     NAMES
         OpenCL CL clparser
@@ -68,6 +67,11 @@ ENDIF(WIN32)
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenCL DEFAULT_MSG OPENCL_LIBRARY OPENCL_INCLUDE_DIR)
+
+IF(OPENCL_FOUND)
+  STRING(TOUPPER ${CL_INCLUDE_PREFIX} _INC_PREFIX)
+  SET(HAVE_${_INC_PREFIX}_CL_HPP 1)
+ENDIF()
 
 MARK_AS_ADVANCED(OPENCL_INCLUDE_DIR OPENCL_LIBRARY)
 

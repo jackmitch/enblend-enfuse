@@ -39,7 +39,7 @@
 
 namespace ocl
 {
-#if defined(_OPENCL) || defined(__OPENCL_CL_HPP)
+#if defined(_OPENCL) || defined(CL_HPP_)
 
 #define OPENCL
 
