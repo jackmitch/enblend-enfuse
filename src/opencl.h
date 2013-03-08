@@ -114,7 +114,7 @@ namespace ocl
 
 
     void
-    print_opencl_information()
+    print_opencl_information(bool all_devices = false)
     {
         platform_list_t platforms;
         cl::Platform::get(&platforms);
@@ -137,11 +137,11 @@ namespace ocl
                 std::cout << ", " << info << "\n";
 
                 device_list_t devices;
-                p->getDevices(CL_DEVICE_TYPE_GPU, &devices);
+                p->getDevices(all_devices ? CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_GPU, &devices);
 
                 if (devices.empty())
                 {
-                    std::cout << "  - no device found\n";
+                    std::cout << "    * no " << (all_devices ? "" : "GPU ") << "devices found on this platform\n";
                 }
                 else
                 {
