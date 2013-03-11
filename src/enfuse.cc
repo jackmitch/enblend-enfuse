@@ -129,6 +129,10 @@ std::string HardMaskTemplate("hardmask-%n.tif"); //< src::default-hard-mask-temp
 TiffResolution ImageResolution;
 bool OutputIsValid = true;
 
+bool UseGPU = false;
+namespace cl {class Context;}
+cl::Context* GPUContext = NULL;
+
 parameter_map Parameter;
 
 // Globals related to catching SIGINT
@@ -159,13 +163,6 @@ LayerSelectionHost LayerSelection;
 
 #include "common.h"
 #include "enfuse.h"
-
-bool UseGPU = false;
-#ifdef OPENCL
-cl::Platform GPUPlatform;
-cl::Device GPUDevice;
-cl::Context* GPUContext = NULL;
-#endif
 
 #ifdef DMALLOC
 #include "dmalloc.h"            // must be last #include
@@ -1928,6 +1925,7 @@ process_options(int argc, char** argv)
 #ifdef OPENCL
     if (UseGPU) {
         cl_int error_code;
+        cl::Platform platform;
 
         ocl::platform_list_t platforms;
         error_code = cl::Platform::get(&platforms);
@@ -1939,7 +1937,7 @@ process_options(int argc, char** argv)
             std::cerr << command << ": warning: no OpenCL platform found, cannot enable GPU\n";
         } else {
             if (preferredGPUPlatform <= platforms.size()) {
-                GPUPlatform = platforms[preferredGPUPlatform - 1U];
+                platform = platforms[preferredGPUPlatform - 1U];
             } else {
                 std::cerr << command << ": OpenCL platform #" << preferredGPUPlatform << " is not available\n";
                 std::cerr << command << ": info: largest OpenCL platform number is " << platforms.size() << "\n";
@@ -1947,7 +1945,7 @@ process_options(int argc, char** argv)
             }
 
             ocl::device_list_t devices;
-            error_code = GPUPlatform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            error_code = platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
 
             if (error_code != CL_SUCCESS) {
                 std::cerr << command << ": warning: query for OpenCL devices failed, cannot enable GPU: " <<
@@ -1956,7 +1954,9 @@ process_options(int argc, char** argv)
                 std::cerr << command << ": warning: no OpenCL device found, cannot enable GPU\n";
             } else {
                 if (preferredGPUDevice <= devices.size()) {
-                    GPUDevice = devices[preferredGPUDevice - 1U];
+                    // move the preferred device in front
+                    devices.insert(devices.begin(), devices[preferredGPUDevice - 1U]);
+                    devices.erase(devices.begin() + preferredGPUDevice);
                 } else {
                     std::cerr << command << ": OpenCL device #" << preferredGPUDevice << " is not available\n";
                     std::cerr << command << ": info: largest OpenCL device number is " << devices.size() << "\n";
@@ -1964,9 +1964,14 @@ process_options(int argc, char** argv)
                 }
 
                 cl_context_properties context_properties[] = {
-                    CL_CONTEXT_PLATFORM, (cl_context_properties) (GPUPlatform)(), 0
+                    CL_CONTEXT_PLATFORM,
+                    (cl_context_properties) (platform)(),
+                    0
                 };
-                GPUContext = new cl::Context(CL_DEVICE_TYPE_GPU, context_properties, NULL, NULL, &error_code);
+
+                GPUContext = new cl::Context(devices, context_properties,
+                                             /* pfn_notify */ NULL, /* user_data */ NULL,
+                                             &error_code);
                 if (error_code != CL_SUCCESS) {
                     delete GPUContext;
                     GPUContext = NULL;
