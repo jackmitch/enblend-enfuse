@@ -150,8 +150,12 @@ namespace ocl
                     {
                         std::cout << "    * Device #" << device_index << ": " <<
                             d->getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << " cores\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() / 1024UL << " KB global memory\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / 1024UL << " KB local memory\n" <<
+                            "                 " << d->getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() / 1024UL <<
+                            " KB global memory\n" <<
+                            "                 " << d->getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / 1024UL << " KB " <<
+                            (d->getInfo<CL_DEVICE_LOCAL_MEM_TYPE>() == CL_LOCAL ? "dedicated " : "") << "local memory\n" <<
+                            "                 " << d->getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>() / 1024UL <<
+                            " KB maximum constant memory\n" <<
                             "                 " << d->getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>() << 'x' <<
                             d->getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>() << " maximum image size\n";
                     }
