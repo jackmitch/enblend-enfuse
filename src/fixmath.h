@@ -105,7 +105,12 @@ rgb_to_jch(const double* rgb, cmsJCh* jch)
     cmsDoTransform(InputToXYZTransform, rgb, xyz, 1U);
 
     const cmsCIEXYZ scaled_xyz = {XYZ_SCALE * xyz[0], XYZ_SCALE * xyz[1], XYZ_SCALE * xyz[2]};
-    cmsCIECAM02Forward(CIECAMTransform, &scaled_xyz, jch);
+    cmsJCh jch_unlimited;
+    cmsCIECAM02Forward(CIECAMTransform, &scaled_xyz, &jch_unlimited);
+
+    jch->J = jch_unlimited.J != jch_unlimited.J ? 0.0 : limit(jch_unlimited.J, 0.0, MAXIMUM_LIGHTNESS);
+    jch->C = jch_unlimited.C != jch_unlimited.C ? 0.0 : limit(jch_unlimited.C, 0.0, MAXIMUM_CHROMA);
+    jch->h = wrap_cyclically(jch_unlimited.h, MAXIMUM_HUE);
     // J in range [0, 100], C in range [0, 120], h in range [0, 360]
 }
 
