@@ -13,6 +13,10 @@ Unreleased.  Current line of development.
 - Fix a longstanding quirk, which allowed to load masks into Enblend
   and Enfuse that were unsuitable for processing.
 
+- Fix a bug in the highlight-recovery that caused Enfuse to bail out
+  with the uncaught exception
+      "Minimizer1D::set_bracket: minimum not bracketed".
+
 - The OpenMP enabled versions of Enblend and Enfuse benefit from
   Google's TCMalloc library.
 

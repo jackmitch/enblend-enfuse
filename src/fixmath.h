@@ -528,7 +528,7 @@ uniform_random(unsigned* seed)
 
 
 static inline void
-bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, double x_upper)
+bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, double x_upper, unsigned maximum_tries)
 {
     const double y_minimum_bound =
         std::min(cost.function(x_lower, cost.params), cost.function(x_upper, cost.params));
@@ -538,7 +538,6 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
         return;
     }
 
-    const unsigned maximum_tries = 100U;
     unsigned i = 0U;
     const double lower = std::max(0.001, 1.001 * x_lower);
     const double upper = 0.999 * x_upper;
@@ -581,6 +580,8 @@ public:
 
         maximum_highlight_iterations(limit(enblend::parameter::as_unsigned("highlight-recovery-maximum-iterations", 100U),
                                            10U, 1000U)),
+        maximum_highlight_bracket_tries(limit(enblend::parameter::as_unsigned("highlight-recovery-bracket-maximum-tries", 1000U),
+                                              10U, 1000000U)),
 
         // Parameters for shadow optimizer only
         shadow_lightness_lightness_guess_factor(enblend::parameter::as_double("shadow-recovery-lightness-lightness-guess-factor", 1.24)),
@@ -654,6 +655,11 @@ public:
         double rgb[3];
         jch_to_rgb(&jch, rgb);
 
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+        double initial_rgb[3]; // for debug print only
+        memcpy(initial_rgb, rgb, 3U * sizeof(double));
+#endif
+
         if (rgb[0] < 0.0 || rgb[1] < 0.0 || rgb[2] < 0.0) {
             extra_minimizer_parameter extra(jch);
             gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
@@ -662,11 +668,6 @@ public:
             MinimizerMultiDimensionSimplex::array_type step =
                 boost::assign::list_of(simplex_lightness_step_length)(simplex_chroma_step_length);
             MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
-
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-            double initial_rgb[3]; // for debug print only
-            memcpy(rgb, initial_rgb, 3U * sizeof(double));
-#endif
 
             optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);
             for (unsigned leg = 1U; leg <= maximum_shadow_leg; ++leg) {
@@ -686,7 +687,7 @@ public:
 
             jch.J = minimum_parameter[0];
             jch.C = minimum_parameter[1];
-            jch_to_rgb(&jch, &rgb[0]);
+            jch_to_rgb(&jch, rgb);
 #ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
@@ -702,40 +703,53 @@ public:
                 std::endl;
 #endif
         } else if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0) {
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+            const double initial_j = jch.J; // for debug print only
+#endif
             extra_minimizer_parameter extra(jch);
             gsl_function cost = {delta_e_min_cost, &extra};
             const double j_max = std::max(MAXIMUM_LIGHTNESS, jch.J);
             double j_initial = highlight_lightness_guess(jch);
 
-            bracket_minimum(cost, j_initial, 0.0, j_max);
-            GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
+            bracket_minimum(cost, j_initial, 0.0, j_max, maximum_highlight_bracket_tries);
+            try {
+                GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
 
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-            const double initial_j = jch.J; // for debug print only
-            double initial_rgb[3]; // for debug print only
-            memcpy(rgb, initial_rgb, 3U * sizeof(double));
-#endif
+                optimizer.set_absolute_error(optimizer_error)->
+                    set_goal(optimizer_goal)->
+                    set_maximum_number_of_iterations(maximum_highlight_iterations);
+                optimizer.run();
 
-            optimizer.set_absolute_error(optimizer_error)->
-                set_goal(optimizer_goal)->
-                set_maximum_number_of_iterations(maximum_highlight_iterations);
-            optimizer.run();
-
-            jch.J = optimizer.x_minimum();
-            jch_to_rgb(&jch, &rgb[0]);
+                jch.J = optimizer.x_minimum();
+                jch_to_rgb(&jch, rgb);
 #ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
-            std::cout <<
-                "+ highlight recovery: ini J = " << initial_j << ", {C = " << jch.C << "}, ini RGB = (" <<
-                initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
-                "+ highlight recovery: opt J = " << optimizer.x_minimum() <<
-                " after " << optimizer.number_of_iterations() << " iterations\n" <<
-                "+ highlight recovery: opt delta-E = " << optimizer.f_minimum() <<
-                ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
-                std::endl;
+                std::cout <<
+                    "+ highlight recovery: ini J = " << initial_j << ", {C = " << jch.C << "}, ini RGB = (" <<
+                    initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+                    "+ highlight recovery: opt J = " << optimizer.x_minimum() <<
+                    " after " << optimizer.number_of_iterations() << " iterations\n" <<
+                    "+ highlight recovery: opt delta-E = " << optimizer.f_minimum() <<
+                    ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                    std::endl;
 #endif
+            } catch (Minimizer::minimum_not_bracketed&) {
+                jch.J = std::min(j_initial, MAXIMUM_LIGHTNESS);
+                jch_to_rgb(&jch, rgb);
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef OPENMP
+#pragma omp critical
+#endif
+                std::cout <<
+                    "+ highlight recovery: minimum not bracketed!  j_initial = " << j_initial <<
+                    ", ini RGB = (" << initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+                    "+ highlight recovery: assumed J := " << jch.J <<
+                    ", final RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
+                    std::endl;
+#endif
+            }
         }
 
         limit_sequence(rgb, rgb + 3U, 0.0, 1.0);
@@ -753,6 +767,7 @@ protected:
     const double highlight_lightness_guess_factor;
     const double highlight_lightness_guess_offset;
     const unsigned maximum_highlight_iterations;
+    const unsigned maximum_highlight_bracket_tries;
 
     const double shadow_lightness_lightness_guess_factor;
     const double shadow_lightness_chroma_guess_factor;
@@ -775,11 +790,11 @@ protected:
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
 void
 copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
-        typename SrcImageType::const_traverser src_lowerright,
-        typename SrcImageType::ConstAccessor sa,
-        typename PyramidImageType::traverser dest_upperleft,
-        typename PyramidImageType::Accessor da,
-        vigra::VigraTrueType)
+                   typename SrcImageType::const_traverser src_lowerright,
+                   typename SrcImageType::ConstAccessor sa,
+                   typename PyramidImageType::traverser dest_upperleft,
+                   typename PyramidImageType::Accessor da,
+                   vigra::VigraTrueType)
 {
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
