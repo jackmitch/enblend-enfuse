@@ -23,7 +23,7 @@ Unreleased.  Current line of development.
 - Enblend and Enfuse now both can make use of the tremendous computing
   power in modern graphics cards.  To that end the binaries must be
   compiled with OpenCL support and the necessary drivers and or
-  linraries must be installed on the host system.
+  libraries must be installed on the host system.
 
 
 ** New Commandline Options
