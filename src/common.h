@@ -53,7 +53,7 @@
 // IMPLEMENTATION NOTE: For 30 or more pyramid levels, the full width
 // will just barely fit in a 32-bit integer.  When this range is added
 // to a bounding box it will certainly overflow the vigra::Diff2D.
-#define MAX_PYRAMID_LEVELS 29   //< src::maximum-pyramid-levels 29
+#define MAX_PYRAMID_LEVELS 29   //< maximum-pyramid-levels 29
 
 // Colors used in the optimizer visualization
 #define VISUALIZE_RGB_COLOR_BLUE1    vigra::RGBValue<vigra::UInt8>(  0,   0, 255)
@@ -113,29 +113,29 @@ typedef enum
 } marker_t;
 
 
-//< src::visualize-movable-point light orange
+//< visualize-movable-point light orange
 #define VISUALIZE_MOVABLE_POINT VISUALIZE_RGB_COLOR_ORANGE1
-//< src::mark-movable-point diamond
+//< mark-movable-point diamond
 #define MARK_MOVABLE_POINT HOLLOW_DIAMOND_MARKER
-//< src::visualize-frozen-point bright white
+//< visualize-frozen-point bright white
 #define VISUALIZE_FROZEN_POINT VISUALIZE_RGB_COLOR_GRAY255
-//< src::mark-frozen-point cross
+//< mark-frozen-point cross
 #define MARK_FROZEN_POINT CROSS_MARKER
-//< src::visualize-initial-path-color dark yellow
+//< visualize-initial-path-color dark yellow
 #define VISUALIZE_INITIAL_PATH       VISUALIZE_RGB_COLOR_YELLOW4
-//< src::visualize-short-path-value-color bright yellow
+//< visualize-short-path-value-color bright yellow
 #define VISUALIZE_SHORT_PATH_VALUE   VISUALIZE_RGB_COLOR_YELLOW1
-//< src::visualize-first-vertex-value-color medium green
+//< visualize-first-vertex-value-color medium green
 #define VISUALIZE_FIRST_VERTEX_VALUE VISUALIZE_RGB_COLOR_GREEN3
-//< src::visualize-next-vertex-value-color light green
+//< visualize-next-vertex-value-color light green
 #define VISUALIZE_NEXT_VERTEX_VALUE  VISUALIZE_RGB_COLOR_GREEN2
-//< src::visualize-no-overlap-value-color dark red
+//< visualize-no-overlap-value-color dark red
 #define VISUALIZE_NO_OVERLAP_VALUE   VISUALIZE_RGB_COLOR_RED4
-//< src::visualize-state-space-color dark blue
+//< visualize-state-space-color dark blue
 #define VISUALIZE_STATE_SPACE        VISUALIZE_RGB_COLOR_BLUE3
-//< src::visualize-state-space-inside-color bright cyan
+//< visualize-state-space-inside-color bright cyan
 #define VISUALIZE_STATE_SPACE_INSIDE VISUALIZE_RGB_COLOR_CYAN1
-//< src::visualize-state-space-unconverged-color bright magenta
+//< visualize-state-space-unconverged-color bright magenta
 #define VISUALIZE_STATE_SPACE_UNCONVERGED VISUALIZE_RGB_COLOR_MAGENTA1
 
 

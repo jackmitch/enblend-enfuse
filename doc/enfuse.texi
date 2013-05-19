@@ -593,7 +593,7 @@ Print information on the available options and exit.
 @cindex layer selection
 @cindex layer selection
 Override the standard layer selector algorithm, which is
-@samp{@value{src::layer-selector}}.
+@samp{@value{layer-selector}}.
 
 This version of Enfuse offers the following algorithms:
 @table @code
@@ -727,8 +727,8 @@ pyramids.  Use @samp{auto} or @samp{automatic} as @var{LEVELS} to
 restore the automatic calculation of the maximum number of levels.
 
 The valid range of the absolute value of @var{LEVELS} is
-@value{src::minimum-pyramid-levels} to
-@value{src::maximum-pyramid-levels}.
+@value{minimum-pyramid-levels} to
+@value{maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}
@@ -736,11 +736,11 @@ The valid range of the absolute value of @var{LEVELS} is
 @opindex --output
 Place fused output image in @var{FILE}.
 
-@cindex @file{@value{src::default-output-filename}}
+@cindex @file{@value{default-output-filename}}
 @cindex default output filename
 @cindex output filename, default
 If @option{--output} is not specified, the default is to put the
-resulting image in @file{@value{src::default-output-filename}}.
+resulting image in @file{@value{default-output-filename}}.
 
 @item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
 Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
@@ -829,7 +829,7 @@ estimations of required memory in selected processing steps
 @end table
 
 The default verbosity level of Enfuse is
-@value{src::default-verbosity-level}.
+@value{default-verbosity-level}.
 
 @item -V
 @itemx --version
@@ -1487,10 +1487,10 @@ contributes to the output image.
 
 Sets the relative @var{WEIGHT} of high local-contrast pixels.
 
-Valid range: @value{src::minimum-weight-contrast} @leq{} @var{WEIGHT}
-@leq{} @value{src::maximum-weight-contrast}.
+Valid range: @value{minimum-weight-contrast} @leq{} @var{WEIGHT}
+@leq{} @value{maximum-weight-contrast}.
 
-Default: @value{src::default-weight-contrast}.
+Default: @value{default-weight-contrast}.
 
 See @ref{Local Contrast Weighting} and @ref{Expert Options, Option
 contrast-window-size}.
@@ -1501,10 +1501,10 @@ contrast-window-size}.
 
 Sets the relative @var{WEIGHT} of high local entropy pixels.
 
-Valid range: @value{src::minimum-weight-entropy} @leq{} @var{WEIGHT}
-@leq{} @value{src::maximum-weight-entropy}.
+Valid range: @value{minimum-weight-entropy} @leq{} @var{WEIGHT}
+@leq{} @value{maximum-weight-entropy}.
 
-Default: @value{src::default-weight-entropy}.
+Default: @value{default-weight-entropy}.
 
 See @ref{Local Entropy Weighting} and @ref{Expert Options, Options
 entropy-window-size and entropy-cutoff}.
@@ -1518,10 +1518,10 @@ of the input images is.  This is, set the position of the maximum of
 the exposure weight curve.  Use this option to fine-tune exposure
 weighting (@pxref{Exposure Weighting}).
 
-Valid range: @value{src::minimum-exposure-optimum} @leq{} @var{OPTIMUM}
-@leq{} @value{src::maximum-exposure-optimum}.
+Valid range: @value{minimum-exposure-optimum} @leq{} @var{OPTIMUM}
+@leq{} @value{maximum-exposure-optimum}.
 
-Default: @value{src::default-exposure-optimum}.
+Default: @value{default-exposure-optimum}.
 
 @item --exposure-weight=@var{WEIGHT}
 @opindex --exposure-weight
@@ -1533,10 +1533,10 @@ option@tie{}@option{--exposure-weight-function} below).  Increasing
 this weight relative to the others will make well-exposed pixels
 contribute more to the final output.
 
-Valid range: @value{src::minimum-weight-exposure} @leq{} @var{WEIGHT}
-@leq{} @value{src::maximum-weight-exposure}.
+Valid range: @value{minimum-weight-exposure} @leq{} @var{WEIGHT}
+@leq{} @value{maximum-weight-exposure}.
 
-Default: @value{src::default-weight-exposure}.
+Default: @value{default-weight-exposure}.
 
 @xref{Exposure Weighting}.
 
@@ -1545,7 +1545,7 @@ Default: @value{src::default-weight-exposure}.
 @opindex --exposure-weight-function
 
 @superscripted{1,st}@tie{}form: override the default exposure weight
-function @samp{@value{src::exposure-weight-function}}.  Use one of the
+function @samp{@value{exposure-weight-function}}.  Use one of the
 @var{WEIGHT-FUNCTION}s in @ref{Table:exposure-weight-functions} to
 select a weight function.
 
@@ -2124,9 +2124,9 @@ user-defined optimum (option@tie{}@option{--exposure-optimum}) and
 vice versa.  Use this option to fine-tune exposure weighting
 (@pxref{Exposure Weighting}).
 
-Valid range: @var{WIDTH} > @value{src::minimum-exposure-width}.
+Valid range: @var{WIDTH} > @value{minimum-exposure-width}.
 
-Default: @value{src::default-exposure-width}.
+Default: @value{default-exposure-width}.
 
 @item --saturation-weight=@var{WEIGHT}
 @opindex --saturation-weight
@@ -2135,10 +2135,10 @@ Set the relative @var{WEIGHT} of high-saturation pixels.  Increasing
 this weight makes pixels with high saturation contribute more to the
 final output.
 
-Valid range: @value{src::minimum-weight-saturation}
-@leq{} @var{WEIGHT} @leq{} @value{src::maximum-weight-saturation}.
+Valid range: @value{minimum-weight-saturation}
+@leq{} @var{WEIGHT} @leq{} @value{maximum-weight-saturation}.
 
-Default: @value{src::default-weight-saturation}.
+Default: @value{default-weight-saturation}.
 
 Saturation weighting is only defined for color images.
 @xref{Saturation Weighting}.
@@ -2161,7 +2161,7 @@ to read the manual before applying them successfully.
 A non-zero value for @var{EDGE-SCALE} switches on the
 Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
 @var{EDGE-SCALE} is the radius of the Gaussian used in the search for
-edges.  Default: @value{src::default-edge-scale}@dmn{pixels}.
+edges.  Default: @value{default-edge-scale}@dmn{pixels}.
 
 A positive @var{LCE-SCALE} turns on local contrast enhancement
 (@acronym{LCE}) before the @acronym{LoG} edge detection.
@@ -2172,8 +2172,8 @@ step, @var{LCE-FACTOR} is the weight factor (``strength'').
 @minus{} @var{LCE-FACTOR} @classictimes{} Gaussian@/Smooth(@var{original},
 @var{LCE-SCALE}).
 
-@var{LCE-SCALE} defaults to @value{src::default-lce-scale} pixels and
-@var{LCE-FACTOR} defaults to @value{src::default-lce-factor}.  Append
+@var{LCE-SCALE} defaults to @value{default-lce-scale} pixels and
+@var{LCE-FACTOR} defaults to @value{default-lce-factor}.  Append
 @samp{%} to @var{LCE-SCALE} to specify the radius as a percentage of
 @var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR} to specify the
 weight as a percentage.
@@ -2182,7 +2182,7 @@ weight as a percentage.
 @opindex --contrast-min-curvature
 
 Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
-detection.  Default: @value{src::default-minimum-curvature}.  Append a
+detection.  Default: @value{default-minimum-curvature}.  Append a
 @samp{%} to specify the minimum curvature relative to maximum pixel
 value in the source image (for example 255 or 65535).
 
@@ -2206,9 +2206,9 @@ For contrast analysis @var{SIZE} values larger than 5 might result in
 a blurry composite image.  Values of 3 and 5 have given good results
 on focus stacks.
 
-Valid range: @var{SIZE} @geq{} @value{src::minimum-contrast-window-size}.
+Valid range: @var{SIZE} @geq{} @value{minimum-contrast-window-size}.
 
-Default: @value{src::default-contrast-window-size}@dmn{pixels}.
+Default: @value{default-contrast-window-size}@dmn{pixels}.
 
 See also @ref{Fusion Options, Option --contrast-weight} and
 @option{--hard-mask} below.
@@ -2225,8 +2225,8 @@ treated as pure white.
 For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
 separately and independently to each channel.
 
-Defaults: @value{src::default-entropy-lower-cutoff} for
-@var{LOWER-CUTOFF} and @value{src::default-entropy-upper-cutoff} for
+Defaults: @value{default-entropy-lower-cutoff} for
+@var{LOWER-CUTOFF} and @value{default-entropy-upper-cutoff} for
 @var{UPPER-CUTOFF}, that is, all pixels' values are taken into
 account.  Append a @samp{%} to specify the cutoff relative to maximum
 pixel value in the source image (for example 255 or 65535).
@@ -2258,9 +2258,9 @@ In the entropy calculation @var{SIZE} values of 3 to 7 yield an
 acceptable compromise of the locality of the information and the
 significance of the local entropy value itself.
 
-Valid range: @var{SIZE} @geq{} @value{src::minimum-entropy-window-size}.
+Valid range: @var{SIZE} @geq{} @value{minimum-entropy-window-size}.
 
-Default: @value{src::default-entropy-window-size}@dmn{pixels}.
+Default: @value{default-entropy-window-size}@dmn{pixels}.
 
 If given an even @var{SIZE} Enfuse will automatically use the next odd
 number.
@@ -2325,8 +2325,8 @@ exposure-weight curve this option changes the brightness of the
 resulting image: increasing @var{LOWER-CUTOFF} lightens the final
 image and lowering @var{UPPER-CUTOFF} darkens it.
 
-Defaults: @value{src::default-exposure-lower-cutoff} for
-@var{LOWER-CUTOFF} and @value{src::default-exposure-upper-cutoff} for
+Defaults: @value{default-exposure-lower-cutoff} for
+@var{LOWER-CUTOFF} and @value{default-exposure-upper-cutoff} for
 @var{UPPER-CUTOFF}, that is, all pixels' values are weighted according
 to the ``uncut'' exposure-weight curve.
 
@@ -2337,8 +2337,8 @@ value in the source image (for example 255 or 65535).
 
 The gray-scale projectors @var{LOWER-PROJECTOR} and
 @var{UPPER-PROJECTOR} default to
-@samp{@value{src::default-exposure-lower-cutoff-projector}} and
-@samp{@value{src::default-exposure-upper-cutoff-projector}}, which are
+@samp{@value{default-exposure-lower-cutoff-projector}} and
+@samp{@value{default-exposure-upper-cutoff-projector}}, which are
 usually the best choices for effective cutoff operations on the
 respective ends.
 
@@ -2873,8 +2873,8 @@ The masks have to be a grayscale images.
 First form: Load all soft-weight masks from files that were previously
 saved with option@tie{}@option{--save-masks}.  If
 option@tie{}@option{--hard-mask} is effective only load hard masks.
-The defaults are @file{@value{src::default-soft-mask-template}} and
-@file{@value{src::default-hard-mask-template}}.
+The defaults are @file{@value{default-soft-mask-template}} and
+@file{@value{default-hard-mask-template}}.
 @cindex filename template
 @cindex mask, filename template
 In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
@@ -2896,8 +2896,8 @@ Save the generated weight masks to image files.
 
 First form: Save all soft-weight masks in files.  If
 option@tie{}@option{--hard-mask} is effective also save the hard masks.
-The defaults are @file{@value{src::default-soft-mask-template}} and
-@file{@value{src::default-hard-mask-template}}.
+The defaults are @file{@value{default-soft-mask-template}} and
+@file{@value{default-hard-mask-template}}.
 @cindex filename template
 @cindex mask, filename template
 In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
@@ -3758,10 +3758,10 @@ means they are @emph{active}.
 @float Table,Table:default-weights
 @multitable {Local Contrast} {0.0}
 @headitem Criterion  @tab Weight
-@item Exposure       @tab @value{src::default-weight-exposure}
-@item Saturation     @tab @value{src::default-weight-saturation}
-@item Local Contrast @tab @value{src::default-weight-contrast}
-@item Local Entropy  @tab @value{src::default-weight-entropy}
+@item Exposure       @tab @value{default-weight-exposure}
+@item Saturation     @tab @value{default-weight-saturation}
+@item Local Contrast @tab @value{default-weight-contrast}
+@item Local Entropy  @tab @value{default-weight-entropy}
 @end multitable
 
 @caption{Enfuse's default weights as compiled into version@tie{}@value{VERSION}.}
@@ -3799,7 +3799,7 @@ criterion completely overpower all others.
 Exposure weighting prefers pixels with a luminance@tie{}@math{Y} close
 to the user-chosen optimum value
 (option@tie{}@option{--exposure-@/optimum}, default:
-@value{src::default-exposure-optimum}) of the normalized, real-valued
+@value{default-exposure-optimum}) of the normalized, real-valued
 luminance interval@tie{}@math{[0, 1]}.
 
 @cindex grayscale projector
@@ -3957,8 +3957,8 @@ $$
 whose maximum position@tie{}@subscripted{Y,opt} and @math{width} are
 controlled by the command line options @option{--exposure-@/optimum}
 and @option{--exposure-@/width} respectively, where
-@subscripted{Y,opt} defaults to @value{src::default-exposure-optimum}
-and @math{width} defaults to @value{src::default-exposure-width}.
+@subscripted{Y,opt} defaults to @value{default-exposure-optimum}
+and @math{width} defaults to @value{default-exposure-width}.
 @ref{Figure:gaussian} shows some Gaussians.
 
 @float Figure,Figure:gaussian
@@ -5757,7 +5757,7 @@ option@tie{}@option{--contrast-min-curvature} with a @emph{negative}
 argument@tie{}@var{CURVATURE} to suppress all edges with a curvature
 below @minus{}@var{CURVATURE} (which is a positive value).  Check the
 effects with the mask files and particularly the hard-mask files
-(@file{@value{src::default-hard-mask-template}}) if using
+(@file{@value{default-hard-mask-template}}) if using
 option@tie{}@option{--hard-mask}.
 
 To indicate the @var{CURVATURE} in relative terms, which is
@@ -6381,8 +6381,8 @@ multitude of techniques like, for example, differences.  The most
 prominent method in this class is dark-frame subtraction.
 
 The defaults set
-@samp{--exposure-weight=@value{src::default-weight-exposure}} and
-@samp{--saturation-weight=@value{src::default-weight-saturation}}.
+@samp{--exposure-weight=@value{default-weight-exposure}} and
+@samp{--saturation-weight=@value{default-weight-saturation}}.
 Eliminating the saturation component with @samp{--saturation-weight=0.0} can
 be worth an extra run.
 
@@ -6402,8 +6402,8 @@ functions to automate recording exposure series.  See the instruction
 manual of your model for details.
 
 Enfuse's defaults,
-@samp{--exposure-weight=@value{src::default-weight-exposure}} and
-@samp{--saturation-weight=@value{src::default-weight-saturation}} are
+@samp{--exposure-weight=@value{default-weight-exposure}} and
+@samp{--saturation-weight=@value{default-weight-saturation}} are
 well suited for fusion of @emph{color} images.  Remember that
 saturation weighting only works for @acronym{RGB} data.
 Option@tie{}@option{--saturation-weight} helps to control burnt-out
@@ -6645,11 +6645,11 @@ Here is what each option causes:
 @table @option
 @item --exposure-weight=0
 Switch @strong{off} exposure based pixel selection.  The default
-weight is @value{src::default-weight-exposure}.
+weight is @value{default-weight-exposure}.
 
 @item --saturation-weight=0
 Switch @strong{off} saturation based pixel selection.  The default
-weight is @value{src::default-weight-saturation}.
+weight is @value{default-weight-saturation}.
 
 @item --contrast-weight=1
 Switch @strong{on} pixel selection based on local contrast.
@@ -6809,8 +6809,8 @@ Typically, @var{SCALE} ranges between 0.1@dmn{pixels} and
 find the best value for @var{SCALE} though, usually some
 experimentation will be necessary.  Use @option{--save-masks} to get
 all soft-mask (default:
-@file{@value{src::default-soft-mask-template}}) and hard-mask files
-(default: @file{@value{src::default-hard-mask-template}}).  Check how
+@file{@value{default-soft-mask-template}}) and hard-mask files
+(default: @file{@value{default-hard-mask-template}}).  Check how
 different scales affect the artifacts.  Also @pxref{Understanding
 Masks}.
 

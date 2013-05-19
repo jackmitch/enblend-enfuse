@@ -483,7 +483,7 @@ Print information on the available options and exit.
 @cindex layer selection
 @cindex layer selection
 Override the standard layer selector algorithm, which is
-@samp{@value{src::layer-selector}}.
+@samp{@value{layer-selector}}.
 
 This version of Enblend offers the following algorithms:
 @table @code
@@ -617,8 +617,8 @@ pyramids.  Use @samp{auto} or @samp{automatic} as @var{LEVELS} to
 restore the automatic calculation of the maximum number of levels.
 
 The valid range of the absolute value of @var{LEVELS} is
-@value{src::minimum-pyramid-levels} to
-@value{src::maximum-pyramid-levels}.
+@value{minimum-pyramid-levels} to
+@value{maximum-pyramid-levels}.
 
 @item -o
 @itemx --output=@var{FILE}
@@ -626,11 +626,11 @@ The valid range of the absolute value of @var{LEVELS} is
 @opindex --output
 Place blended output image in @var{FILE}.
 
-@cindex @file{@value{src::default-output-filename}}
+@cindex @file{@value{default-output-filename}}
 @cindex default output filename
 @cindex output filename, default
 If @option{--output} is not specified, the default is to put the
-resulting image in @file{@value{src::default-output-filename}}.
+resulting image in @file{@value{default-output-filename}}.
 
 @item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
 @opindex --parameter
@@ -720,7 +720,7 @@ estimations of required memory in selected processing steps
 @end table
 
 The default verbosity level of Enblend is
-@value{src::default-verbosity-level}.
+@value{default-verbosity-level}.
 
 @item -V
 @itemx --version
@@ -1440,10 +1440,10 @@ be, and the longer it will take.
 
 Append a percent sign (@samp{%}) to specify @var{TAU} as a percentage.
 
-Valid range: @value{src::minimum-anneal-tau} < @var{TAU} <
-@value{src::maximum-anneal-tau}.
+Valid range: @value{minimum-anneal-tau} < @var{TAU} <
+@value{maximum-anneal-tau}.
 
-The default is @value{src::default-anneal-tau}; values around 0.95 are
+The default is @value{default-anneal-tau}; values around 0.95 are
 reasonable.  Usually, slower cooling results in more converged points.
 
 @item DELTA-E-MAX
@@ -1451,7 +1451,7 @@ reasonable.  Usually, slower cooling results in more converged points.
 @var{DELTA-E-MAX} and @var{DELTA-E-MIN} are the maximum and minimum
 cost change possible by any single annealing move.
 
-Valid range: @value{src::minimum-anneal-deltae-min} <
+Valid range: @value{minimum-anneal-deltae-min} <
 @var{DELTA-E-MIN} < @var{DELTA-E-MAX}.
 
 In particular they determine the initial and final annealing
@@ -1622,17 +1622,17 @@ $$\eqalign{
 @end docbook
 
 The defaults are: @var{DELTA-E-MAX}:
-@value{src::default-anneal-deltae-max} and @var{DELTA-E-MIN}:
-@value{src::default-anneal-deltae-min}.
+@value{default-anneal-deltae-max} and @var{DELTA-E-MIN}:
+@value{default-anneal-deltae-min}.
 
 @item K-MAX
 @var{K-MAX} is the maximum number of ``moves'' the optimizer will make
 for each line segment.  Higher values more accurately sample the state
 space, at the expense of a higher computation cost.
 
-Valid range: @var{K-MAX} @geq{} @value{src::minimum-anneal-kmax}.
+Valid range: @var{K-MAX} @geq{} @value{minimum-anneal-kmax}.
 
-The default is @value{src::default-anneal-kmax}.  Values around 100
+The default is @value{default-anneal-kmax}.  Values around 100
 seem reasonable.
 @end table
 
@@ -1646,10 +1646,10 @@ the seam line and the amount of memory necessary to do so.  It is the
 default.
 
 If omitted @var{FACTOR} defaults to
-@value{src::default-coarseness-factor}, this means,
+@value{default-coarseness-factor}, this means,
 option@tie{}@option{--coarse-mask} shrinks the overlapping
 @emph{areas} by a factor of
-@math{@value{src::default-coarseness-factor}@classictimes{}@/@value{src::default-coarseness-factor}}.
+@math{@value{default-coarseness-factor}@classictimes{}@/@value{default-coarseness-factor}}.
 With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
 run of Enblend shrinks approximately by 80% and the maximum amount of
 memory in use at a time is decreased to 60% (Enblend compiled with
@@ -1707,9 +1707,9 @@ A small value prefers straight line segments and thus shorter seam
 lines.  Larger values instruct the optimizer to let the seam line take
 more detours when searching for the best seam line.
 
-Valid range: @var{RADIUS} @geq{} @value{src::minimum-dijkstra-radius}.
+Valid range: @var{RADIUS} @geq{} @value{minimum-dijkstra-radius}.
 
-Default: @value{src::default-dijkstra-radius}@dmn{pixels}.
+Default: @value{default-dijkstra-radius}@dmn{pixels}.
 
 @item --fine-mask
 @opindex --fine-mask
@@ -2317,8 +2317,8 @@ normalizes the sum of @var{LUMINANCE-WEIGHT} and
 @samp{--image-difference=delta-e:0.6667:0.3333} define the same
 weighting function.
 
-The default @var{LUMINANCE-WEIGHT} is @value{src::default-luminance-difference-weight}
-and the default @var{CHROMINANCE-WEIGHT} is @value{src::default-chrominance-difference-weight}.
+The default @var{LUMINANCE-WEIGHT} is @value{default-luminance-difference-weight}
+and the default @var{CHROMINANCE-WEIGHT} is @value{default-chrominance-difference-weight}.
 
 @cindex match quality
 @cindex quality, match
@@ -2335,7 +2335,7 @@ quality with lower values meaning better matches.
 @cindex mask, load
 @cindex load mask
 Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
-default is @file{@value{src::default-mask-template}}.  The mask images
+default is @file{@value{default-mask-template}}.  The mask images
 have to be a 8-bit grayscale images.
 
 See @option{--save-masks} below for details.
@@ -2358,7 +2358,7 @@ The unit of @var{DISTANCE} is pixels unless it is a percentage as
 explained in the next paragraph.  In fine masks one mask pixel
 corresponds to one pixel in the input image, whereas in coarse masks
 one pixel represents for example
-@value{src::default-coarseness-factor}@dmn{pixels} in the input image.
+@value{default-coarseness-factor}@dmn{pixels} in the input image.
 
 Append a percentage sign (@samp{%}) to @var{DISTANCE} to specify the
 segment length as a fraction of the diagonal of the rectangle
@@ -2382,14 +2382,14 @@ option@tie{}@option{--optimizer-weights}), larger vectorization
 that are closer to one.  Use option@tie{}@option{--visualize} to check
 the results.
 
-Valid range: @var{DISTANCE} @geq{} @value{src::minimum-vectorize-distance}.
+Valid range: @var{DISTANCE} @geq{} @value{minimum-vectorize-distance}.
 
 Enblend limits @var{DISTANCE} so that it never gets below
-@value{src::minimum-vectorize-distance} even if it has been given as a
+@value{minimum-vectorize-distance} even if it has been given as a
 percentage.  The user will be warned in such cases.
 
-Default: @value{src::coarse-mask-vectorize-distance}@dmn{pixels} for
-coarse masks and @value{src::fine-mask-vectorize-distance}@dmn{pixels}
+Default: @value{coarse-mask-vectorize-distance}@dmn{pixels} for
+coarse masks and @value{fine-mask-vectorize-distance}@dmn{pixels}
 for fine masks.
 
 @item --no-optimize
@@ -2468,7 +2468,7 @@ The optimizer weights@tie{}@var{DISTANCE-WEIGHT} and
 @var{MISMATCH-WEIGHT} define how to weight these two criteria.
 Enblend up to version@tie{}3.2 used 1:1.  This version of Enblend
 (@value{VERSION}) uses
-@value{src::default-optimizer-weight-distance}:@value{src::default-optimizer-weight-mismatch}.
+@value{default-optimizer-weight-distance}:@value{default-optimizer-weight-mismatch}.
 
 A large @var{DISTANCE-WEIGHT} pulls the optimized seam line closer to
 the initial postion.  A large @var{MISMATCH-WEIGHT} makes the seam
@@ -2516,7 +2516,7 @@ See @ref{Primary Seam Generators} for details.
 @cindex mask, save
 @cindex save mask
 Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
-@file{@value{src::default-mask-template}}.  Enblend saves masks as
+@file{@value{default-mask-template}}.  Enblend saves masks as
 8@dmn{bit} grayscale (single channel) images.  For accuracy we
 recommend to choose a lossless format.
 
@@ -2556,7 +2556,7 @@ name of the associated input file (@samp{%f}) for easy recognition.
 @cindex visualization of mask
 Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
 the unoptimized mask and the applied optimizations (if any).  The default is
-@file{@value{src::default-visualize-template}}.
+@file{@value{default-visualize-template}}.
 
 The image shows Enblend's view of the overlap region and how it
 decided to route the seam line.  If you are experiencing artifacts or
@@ -2580,49 +2580,49 @@ in the rectangular region where two images overlap.  The larger the
 difference the lighter shade of gray it appears in the visualization
 image.  Enblend paints the non-overlapping parts of the image pair --
 these are the regions where @emph{no} blending occurs -- in
-@value{src::visualize-no-overlap-value-color}.
+@value{visualize-no-overlap-value-color}.
 @ref{Table:visualization-colors} shows the meanings of all the colors
 that are used in seam-line visualization images.
 
 @float Table,Table:visualization-colors
 @table @asis
 @dbtitle{Visualization Colors}
-@item @value{src::visualize-no-overlap-value-color}
+@item @value{visualize-no-overlap-value-color}
 Non-overlapping parts of image pair.
 
 @item various shades of gray
 Difference of the pixel values in the overlap region.
 
-@item @value{src::visualize-state-space-color}
+@item @value{visualize-state-space-color}
 Location of an optimizer sample.
 
-@item @value{src::visualize-first-vertex-value-color}
+@item @value{visualize-first-vertex-value-color}
 First sample of a line segment.
 
-@item @value{src::visualize-next-vertex-value-color}
+@item @value{visualize-next-vertex-value-color}
 Any other but first sample of a line segment.
 
-@item @value{src::visualize-state-space-inside-color}
+@item @value{visualize-state-space-inside-color}
 @cindex @sc{Dijkstra} radius
 @cindex radius, @sc{Dijkstra}
 State space sample inside the @sc{Dijkstra} radius.
 
-@item @value{src::visualize-state-space-unconverged-color}
+@item @value{visualize-state-space-unconverged-color}
 Non-converged point.
 
-@item @value{src::visualize-initial-path-color}
+@item @value{visualize-initial-path-color}
 @cindex nearest-feature transform (@acronym{NFT}), Graph-Cut (@acronym{GC})
 Initial seam line as generated by the primary seam generator.
 
 @cindex frozen seam-line endpoint
 @cindex seam-line endpoint, frozen
 Enblend marks a non-movable (``frozen'') endpoint of a seam-line
-segment with a @value{src::visualize-frozen-point}
-@value{src::mark-frozen-point}, whereas it uses a
-@value{src::visualize-movable-point} @value{src::mark-movable-point}
+segment with a @value{visualize-frozen-point}
+@value{mark-frozen-point}, whereas it uses a
+@value{visualize-movable-point} @value{mark-movable-point}
 to denote an endpoint that the optimizer is allowed to move around.
 
-@item @value{src::visualize-short-path-value-color}
+@item @value{visualize-short-path-value-color}
 Final seam line.
 @end table
 
@@ -2642,15 +2642,15 @@ Final seam line.
 visualization.  It was produced with an Enblend run at all defaults,
 but @option{--fine-mask} and @option{--visualize} enabled.
 
-The large @value{src::visualize-no-overlap-value-color} border is
+The large @value{visualize-no-overlap-value-color} border is
 ``off-limits'' for Enblend, for the images do not overlap there.  The
-dark wedge inside the @value{src::visualize-no-overlap-value-color}
+dark wedge inside the @value{visualize-no-overlap-value-color}
 frame is where the images share a common region.
 
-The initial seam-line (@value{src::visualize-initial-path-color}) is
+The initial seam-line (@value{visualize-initial-path-color}) is
 almost straight with the exception of a single bend on the left side
 of the image and the final seam-line
-(@value{src::visualize-short-path-value-color}) meanders around it.
+(@value{visualize-short-path-value-color}) meanders around it.
 
 @ifhtml
 @float Figure,Figure:seam-line-visualization

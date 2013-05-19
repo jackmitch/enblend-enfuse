@@ -92,13 +92,13 @@ typedef struct {
 
 // Globals
 const std::string command("enblend");
-const int minimumVectorizeDistance = 4; //< src::minimum-vectorize-distance 4
-const int coarseMaskVectorizeDistance = 4; //< src::coarse-mask-vectorize-distance 4
-const int fineMaskVectorizeDistance = 20; //< src::fine-mask-vectorize-distance 20
+const int minimumVectorizeDistance = 4; //< minimum-vectorize-distance 4
+const int coarseMaskVectorizeDistance = 4; //< coarse-mask-vectorize-distance 4
+const int fineMaskVectorizeDistance = 20; //< fine-mask-vectorize-distance 20
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-int Verbose = 1;                //< src::default-verbosity-level 1
+int Verbose = 1;                //< default-verbosity-level 1
 int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
@@ -113,27 +113,27 @@ MainAlgo MainAlgorithm = GraphCut;
 bool Checkpoint = false;
 bool OptimizeMask = true;
 bool CoarseMask = true;
-unsigned CoarsenessFactor = 8U; //< src::default-coarseness-factor 8
-difference_functor_t PixelDifferenceFunctor = DeltaEDifference; //< src::default-difference-functor Delta-E
-double LuminanceDifferenceWeight = 1.0; //< src::default-luminance-difference-weight 1.0
-double ChrominanceDifferenceWeight = 1.0; //< src::default-chrominance-difference-weight 1.0
+unsigned CoarsenessFactor = 8U; //< default-coarseness-factor 8
+difference_functor_t PixelDifferenceFunctor = DeltaEDifference; //< default-difference-functor Delta-E
+double LuminanceDifferenceWeight = 1.0; //< default-luminance-difference-weight 1.0
+double ChrominanceDifferenceWeight = 1.0; //< default-chrominance-difference-weight 1.0
 bool SaveMasks = false;
 bool StopAfterMaskGeneration = false;
-std::string SaveMaskTemplate("mask-%n.tif"); //< src::default-mask-template mask-%n.tif
+std::string SaveMaskTemplate("mask-%n.tif"); //< default-mask-template mask-%n.tif
 bool LoadMasks = false;
 std::string LoadMaskTemplate(SaveMaskTemplate);
-std::string VisualizeTemplate("vis-%n.tif"); //< src::default-visualize-template vis-%n.tif
+std::string VisualizeTemplate("vis-%n.tif"); //< default-visualize-template vis-%n.tif
 bool VisualizeSeam = false;
 std::pair<double, double> OptimizerWeights =
-    std::make_pair(8.0,      //< src::default-optimizer-weight-distance 8.0
-                   1.0);     //< src::default-optimizer-weight-mismatch 1.0
+    std::make_pair(8.0,      //< default-optimizer-weight-distance 8.0
+                   1.0);     //< default-optimizer-weight-mismatch 1.0
 anneal_para_t AnnealPara = {
-    32,                         //< src::default-anneal-kmax 32
-    0.75,                       //< src::default-anneal-tau 0.75
-    7000.0,                     //< src::default-anneal-deltae-max 7000.0
-    5.0                         //< src::default-anneal-deltae-min 5.0
+    32,                         //< default-anneal-kmax 32
+    0.75,                       //< default-anneal-tau 0.75
+    7000.0,                     //< default-anneal-deltae-max 7000.0
+    5.0                         //< default-anneal-deltae-min 5.0
 };
-unsigned int DijkstraRadius = 25U; //< src::default-dijkstra-radius 25
+unsigned int DijkstraRadius = 25U; //< default-dijkstra-radius 25
 AlternativePercentage MaskVectorizeDistance(0.0, false);
 std::string OutputCompression;
 std::string OutputPixelType;
@@ -1101,14 +1101,14 @@ int process_options(int argc, char** argv)
                         failed = true;
                     }
                 }
-                //< src::minimum-anneal-tau 0
+                //< minimum-anneal-tau 0
                 if (tau <= 0.0) {
                     std::cerr << command
                               << ": option \"--anneal\": tau must be larger than zero"
                               << std::endl;
                     failed = true;
                 }
-                //< src::maximum-anneal-tau 1
+                //< maximum-anneal-tau 1
                 if (tau >= 1.0) {
                     std::cerr << command
                               << ": option \"--anneal\": tau must be less than one"
@@ -1135,7 +1135,7 @@ int process_options(int argc, char** argv)
                               << token << "\"" << std::endl;
                     failed = true;
                 }
-                //< src::minimum-anneal-deltae-max 0
+                //< minimum-anneal-deltae-max 0
                 if (AnnealPara.deltaEMax <= 0.0) {
                     std::cerr << command
                               << ": option \"--anneal\": deltaE_max must be larger than zero"
@@ -1162,7 +1162,7 @@ int process_options(int argc, char** argv)
                               << token << "\"" << std::endl;
                     failed = true;
                 }
-                //< src::minimum-anneal-deltae-min 0
+                //< minimum-anneal-deltae-min 0
                 if (AnnealPara.deltaEMin <= 0.0) {
                     std::cerr << command
                               << ": option \"--anneal\": deltaE_min must be larger than zero"
@@ -1195,7 +1195,7 @@ int process_options(int argc, char** argv)
                               << token << "\"" << std::endl;
                     failed = true;
                 }
-                //< src::minimum-anneal-kmax 3
+                //< minimum-anneal-kmax 3
                 if (kmax < 3L) {
                     std::cerr << command
                               << ": option \"--anneal\": k_max must larger or equal to 3"
@@ -1273,7 +1273,7 @@ int process_options(int argc, char** argv)
         case VerboseId:
             if (optarg != NULL && *optarg != 0) {
                 Verbose = enblend::numberOfString(optarg,
-                                                  _1 >= 0, //< src::minimum-verbosity-level 0
+                                                  _1 >= 0, //< minimum-verbosity-level 0
                                                   "verbosity level less than 0; will use 0",
                                                   0);
             } else {
@@ -1297,7 +1297,7 @@ int process_options(int argc, char** argv)
         case DijkstraRadiusId:
             DijkstraRadius =
                 enblend::numberOfString(optarg,
-                                        _1 >= 1U, //< src::minimum-dijkstra-radius 1
+                                        _1 >= 1U, //< minimum-dijkstra-radius 1
                                         "Dijkstra radius is 0; will use 1",
                                         1U);
             optionSet.insert(DijkstraRadiusOption);
@@ -1313,7 +1313,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 const int cache_block_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< src::minimum-cache-block-size 1@dmn{KB}
+                                            _1 >= 1, //< minimum-cache-block-size 1@dmn{KB}
                                             "cache block size must be 1 KB or more; will use 1 KB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
@@ -1440,7 +1440,7 @@ int process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 const int cache_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< src::minimum-cache-size 1@dmn{MB}
+                                            _1 >= 1, //< minimum-cache-size 1@dmn{MB}
                                             "cache memory limit less than 1 MB; will use 1 MB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
@@ -1694,7 +1694,7 @@ int main(int argc, char** argv)
     TIFFSetWarningHandler(tiff_warning);
     TIFFSetErrorHandler(tiff_error);
 
-    //< src::layer-selector all-layers
+    //< layer-selector all-layers
     LayerSelection.set_selector(*selector::find_by_id(selector::AllLayersId));
 
     if (!getopt_long_works_ok())

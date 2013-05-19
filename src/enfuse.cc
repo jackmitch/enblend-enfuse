@@ -81,7 +81,7 @@ const std::string command("enfuse");
 
 // Global values from command line parameters.
 std::string OutputFileName(DEFAULT_OUTPUT_FILENAME);
-int Verbose = 1;                //< src::default-verbosity-level 1
+int Verbose = 1;                //< default-verbosity-level 1
 int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
@@ -94,37 +94,37 @@ int OutputOffsetXCmdLine = 0;
 int OutputOffsetYCmdLine = 0;
 std::string OutputCompression;
 std::string OutputPixelType;
-double WExposure = 1.0;         //< src::default-weight-exposure 1.0
-double ExposureOptimum = 0.5;   //< src::default-exposure-optimum 0.5
-double ExposureWidth = 0.2;     //< src::default-exposure-width 0.2
-std::string ExposureWeightFunctionName("gaussian"); //< src::exposure-weight-function gaussian
+double WExposure = 1.0;         //< default-weight-exposure 1.0
+double ExposureOptimum = 0.5;   //< default-exposure-optimum 0.5
+double ExposureWidth = 0.2;     //< default-exposure-width 0.2
+std::string ExposureWeightFunctionName("gaussian"); //< exposure-weight-function gaussian
 ExposureWeight* ExposureWeightFunction = new Gaussian(ExposureOptimum, ExposureWidth);
 ExposureWeight::argument_list_t ExposureWeightFunctionArguments;
-AlternativePercentage ExposureLowerCutoff(0.0, true); //< src::default-exposure-lower-cutoff 0%
-AlternativePercentage ExposureUpperCutoff(100.0, true); //< src::default-exposure-upper-cutoff 100%
-std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< src::default-exposure-lower-cutoff-projector anti-value
-std::string ExposureUpperCutoffGrayscaleProjector("value"); //< src::default-exposure-upper-cutoff-projector value
-double WContrast = 0.0;         //< src::default-weight-contrast 0.0
-double WSaturation = 0.2;       //< src::default-weight-saturation 0.2
-double WEntropy = 0.0;          //< src::default-weight-entropy 0.0
+AlternativePercentage ExposureLowerCutoff(0.0, true); //< default-exposure-lower-cutoff 0%
+AlternativePercentage ExposureUpperCutoff(100.0, true); //< default-exposure-upper-cutoff 100%
+std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< default-exposure-lower-cutoff-projector anti-value
+std::string ExposureUpperCutoffGrayscaleProjector("value"); //< default-exposure-upper-cutoff-projector value
+double WContrast = 0.0;         //< default-weight-contrast 0.0
+double WSaturation = 0.2;       //< default-weight-saturation 0.2
+double WEntropy = 0.0;          //< default-weight-entropy 0.0
 bool WSaturationIsDefault = true;
-int ContrastWindowSize = 5;     //< src::default-contrast-window-size 5
+int ContrastWindowSize = 5;     //< default-contrast-window-size 5
 std::string GrayscaleProjector;
 struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterConfig = {
-    0.0,                        //< src::default-edge-scale 0.0
-    0.0,                        //< src::default-lce-scale 0.0
-    0.0                         //< src::default-lce-factor 0.0
+    0.0,                        //< default-edge-scale 0.0
+    0.0,                        //< default-lce-scale 0.0
+    0.0                         //< default-lce-factor 0.0
 };
-AlternativePercentage MinCurvature(0.0, false); //< src::default-minimum-curvature 0
-int EntropyWindowSize = 3;      //< src::default-entropy-window-size 3
-AlternativePercentage EntropyLowerCutoff(0.0, true); //< src::default-entropy-lower-cutoff 0%
-AlternativePercentage EntropyUpperCutoff(100.0, true); //< src::default-entropy-upper-cutoff 100%
+AlternativePercentage MinCurvature(0.0, false); //< default-minimum-curvature 0
+int EntropyWindowSize = 3;      //< default-entropy-window-size 3
+AlternativePercentage EntropyLowerCutoff(0.0, true); //< default-entropy-lower-cutoff 0%
+AlternativePercentage EntropyUpperCutoff(100.0, true); //< default-entropy-upper-cutoff 100%
 bool UseHardMask = false;
 bool SaveMasks = false;
 bool StopAfterMaskGeneration = false;
 bool LoadMasks = false;
-std::string SoftMaskTemplate("softmask-%n.tif"); //< src::default-soft-mask-template softmask-%n.tif
-std::string HardMaskTemplate("hardmask-%n.tif"); //< src::default-hard-mask-template hardmask-%n.tif
+std::string SoftMaskTemplate("softmask-%n.tif"); //< default-soft-mask-template softmask-%n.tif
+std::string HardMaskTemplate("hardmask-%n.tif"); //< default-hard-mask-template hardmask-%n.tif
 
 TiffResolution ImageResolution;
 bool OutputIsValid = true;
@@ -1464,10 +1464,10 @@ process_options(int argc, char** argv)
         case WeightExposureId:
             if (optarg != NULL && *optarg != 0) {
                 WExposure = enblend::numberOfString(optarg,
-                                                    _1 >= 0.0, //< src::minimum-weight-exposure 0
+                                                    _1 >= 0.0, //< minimum-weight-exposure 0
                                                     "exposure weight less than 0; will use 0",
                                                     0.0,
-                                                    _1 <= 1.0, //< src::maximum-weight-exposure 1
+                                                    _1 <= 1.0, //< maximum-weight-exposure 1
                                                     "exposure weight greater than 1; will use 1",
                                                     1.0);
             } else {
@@ -1480,10 +1480,10 @@ process_options(int argc, char** argv)
         case WeightContrastId:
             if (optarg != NULL && *optarg != 0) {
                 WContrast = enblend::numberOfString(optarg,
-                                                    _1 >= 0.0, //< src::minimum-weight-contrast 0
+                                                    _1 >= 0.0, //< minimum-weight-contrast 0
                                                     "contrast weight less than 0; will use 0",
                                                     0.0,
-                                                    _1 <= 1.0, //< src::maximum-weight-contrast 1
+                                                    _1 <= 1.0, //< maximum-weight-contrast 1
                                                     "contrast weight greater than 1; will use 1",
                                                     0.0);
             } else {
@@ -1496,10 +1496,10 @@ process_options(int argc, char** argv)
         case WeightSaturationId:
             if (optarg != NULL && *optarg != 0) {
                 WSaturation = enblend::numberOfString(optarg,
-                                                      _1 >= 0.0, //< src::minimum-weight-saturation 0
+                                                      _1 >= 0.0, //< minimum-weight-saturation 0
                                                       "saturation weight less than 0; will use 0",
                                                       0.0,
-                                                      _1 <= 1.0, //< src::maximum-weight-saturation 1
+                                                      _1 <= 1.0, //< maximum-weight-saturation 1
                                                       "saturation weight greater than 1; will use 1",
                                                       1.0);
             } else {
@@ -1516,10 +1516,10 @@ process_options(int argc, char** argv)
         case ExposureOptimumId:
             if (optarg != NULL && *optarg != 0) {
                 ExposureOptimum = enblend::numberOfString(optarg,
-                                                          _1 >= 0.0, //< src::minimum-exposure-optimum 0
+                                                          _1 >= 0.0, //< minimum-exposure-optimum 0
                                                           "exposure optimum value less than 0; will use 0",
                                                           0.0,
-                                                          _1 <= 1.0, //< src::maximum-exposure-optimum 1
+                                                          _1 <= 1.0, //< maximum-exposure-optimum 1
                                                           "exposure optimum value geater than 1; will use 1",
                                                           1.0);
             } else {
@@ -1536,7 +1536,7 @@ process_options(int argc, char** argv)
         case ExposureWidthId:
             if (optarg != NULL && *optarg != 0) {
                 ExposureWidth = enblend::numberOfString(optarg,
-                                                        _1 > 0.0, //< src::minimum-exposure-width 0
+                                                        _1 > 0.0, //< minimum-exposure-width 0
                                                         "exposure width less than 0; will use 1/1024",
                                                         1.0 / 1024.0);
             } else {
@@ -1591,10 +1591,10 @@ process_options(int argc, char** argv)
         case WeightEntropyId:
             if (optarg != NULL && *optarg != 0) {
                 WEntropy = enblend::numberOfString(optarg,
-                                                   _1 >= 0.0, //< src::minimum-weight-entropy 0
+                                                   _1 >= 0.0, //< minimum-weight-entropy 0
                                                    "entropy weight less than 0; will use 0",
                                                    0.0,
-                                                   _1 <= 1.0, //< src::maximum-weight-entropy 1
+                                                   _1 <= 1.0, //< maximum-weight-entropy 1
                                                    "entropy weight greater than 1; will use 1",
                                                    1.0);
             } else {
@@ -1608,7 +1608,7 @@ process_options(int argc, char** argv)
         case VerboseId:
             if (optarg != NULL && *optarg != 0) {
                 Verbose = enblend::numberOfString(optarg,
-                                                  _1 >= 0, //< src::minimum-verbosity-level 0
+                                                  _1 >= 0, //< minimum-verbosity-level 0
                                                   "verbosity level less than 0; will use 0",
                                                   0);
             } else {
@@ -1621,7 +1621,7 @@ process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 ContrastWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3, //< src::minimum-contrast-window-size 3
+                                            _1 >= 3, //< minimum-contrast-window-size 3
                                             "contrast window size to small; will use size = 3",
                                             3);
                 if (ContrastWindowSize % 2 != 1) {
@@ -1641,7 +1641,7 @@ process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 EntropyWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3, //< src::minimum-entropy-window-size 3
+                                            _1 >= 3, //< minimum-entropy-window-size 3
                                             "entropy window size to small; will use size = 3",
                                             3);
                 if (EntropyWindowSize % 2 != 1) {
@@ -1662,7 +1662,7 @@ process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 const int cache_block_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< src::minimum-cache-block-size 1@dmn{KB}
+                                            _1 >= 1, //< minimum-cache-block-size 1@dmn{KB}
                                             "cache block size must be 1 KB or more; will use 1 KB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
@@ -1763,7 +1763,7 @@ process_options(int argc, char** argv)
             if (optarg != NULL && *optarg != 0) {
                 const int cache_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< src::minimum-cache-size 1@dmn{MB}
+                                            _1 >= 1, //< minimum-cache-size 1@dmn{MB}
                                             "cache memory limit less than 1 MB; will use 1 MB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
@@ -2021,7 +2021,7 @@ int main(int argc, char** argv)
     TIFFSetWarningHandler(tiff_warning);
     TIFFSetErrorHandler(tiff_error);
 
-    //< src::layer-selector all-layers
+    //< layer-selector all-layers
     LayerSelection.set_selector(*selector::find_by_id(selector::AllLayersId));
 
     if (!getopt_long_works_ok())

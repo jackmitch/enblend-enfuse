@@ -73,7 +73,7 @@
 #define VERBOSE_MEMORY_ESTIMATION_MESSAGES  6
 
 
-//< src::default-output-filename a.tif
+//< default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
 
 
@@ -141,7 +141,7 @@ enum MainAlgo {
 
 
 
-//< src::default-tiff-resolution 300@dmn{dpi}
+//< default-tiff-resolution 300@dmn{dpi}
 #define DEFAULT_TIFF_RESOLUTION 300.0f
 
 

@@ -117,7 +117,7 @@ roiBounds(const vigra::Rect2D& inputUnion,
 
     // Verify the number of levels based on the size of the ROI.
     unsigned int roiShortDimension = std::min(roiBB.width(), roiBB.height());
-    const unsigned int minimumPyramidLevels = 1U; //< src::minimum-pyramid-levels 1
+    const unsigned int minimumPyramidLevels = 1U; //< minimum-pyramid-levels 1
     unsigned int allowableLevels = minimumPyramidLevels;
     while (allowableLevels <= MAX_PYRAMID_LEVELS) {
         if (roiShortDimension <= 8U) {
