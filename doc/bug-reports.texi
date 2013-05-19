@@ -10,15 +10,14 @@ Most of this appendix was taken from the
 Bug reports play an important role in making Enblend and Enfuse
 reliable and enjoyable.
 
-@cindex SourceForge
-@cindex tracker, SourceForge
-@cindex SourceForge, tracker
+@cindex LaunchPad
+@cindex bug database, LaunchPad
+@cindex LaunchPad, bug database
 When you encounter a problem, the first thing to do is to see if it is
-already known.  On the package's SourceForge
-@uref{@value{CFG::PACKAGE_BUGREPORT}, homepage} click ``Develop'' and
-on the development page click ``Tracker''.  Search the trackers for
-your particular problem.  If it is not known, then you should report
-the problem.
+already known.  To this end visit the package's
+@uref{https://@/launchpad.net/, LaunchPad} bug
+@uref{@value{CFG::PACKAGE_BUGREPORT}, database}.  Search it for your
+particular problem.  If it is not known, please report it.
 
 In order for a bug report to serve its purpose, you must include the
 information that makes it possible to fix the bug.
