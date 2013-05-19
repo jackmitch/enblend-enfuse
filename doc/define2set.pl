@@ -5,7 +5,7 @@ use strict;
 while ( my $l = <> ) {
     next if ($l !~ /^\s*#define/);
     chomp($l);
-    if($l =~ s/^\s*#define\s+(\S+)\s+"?([^"]*)"?/\@set CFG::$1 $2/) {
+    if($l =~ s/^\s*#define\s+(\S+)\s+"?([^"]*)"?/\@set $1 $2/) {
 	print "$l\n";
     }
 }

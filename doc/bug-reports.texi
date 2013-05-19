@@ -14,9 +14,9 @@ reliable and enjoyable.
 @cindex bug database, LaunchPad
 @cindex LaunchPad, bug database
 When you encounter a problem, the first thing to do is to see if it is
-already known.  To this end visit the package's
+already known.  To this end, visit the package's
 @uref{https://@/launchpad.net/, LaunchPad} bug
-@uref{@value{CFG::PACKAGE_BUGREPORT}, database}.  Search it for your
+@uref{@value{PACKAGE_BUGREPORT}, database}.  Search it for your
 particular problem.  If it is not known, please report it.
 
 In order for a bug report to serve its purpose, you must include the

@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-227d89d02fb9, 7 March 2013),
+   This manual is for Enblend (version 4.2-53206604cc56, 7 March 2013),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-227d89d02fb9, 7 March 2013), a
+This manual is for Enblend (version 4.2-53206604cc56, 7 March 2013), a
 tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -1314,7 +1314,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-227d89d02fb9)
+     version 3.2 used 1:1.  This version of Enblend (4.2-53206604cc56)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1587,7 +1587,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-227d89d02fb9) of Enblend supports two main algorithms
+This version (4.2-53206604cc56) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -1976,11 +1976,10 @@ Bug reports play an important role in making Enblend and Enfuse
 reliable and enjoyable.
 
    When you encounter a problem, the first thing to do is to see if it
-is already known.  On the package's SourceForge homepage
-(https://bugs.launchpad.net/enblend) click "Develop" and on the
-development page click "Tracker".  Search the trackers for your
-particular problem.  If it is not known, then you should report the
-problem.
+is already known.  To this end, visit the package's LaunchPad
+(https://launchpad.net/) bug database
+(https://bugs.launchpad.net/enblend).  Search it for your particular
+problem.  If it is not known, please report it.
 
    In order for a bug report to serve its purpose, you must include the
 information that makes it possible to fix the bug.
@@ -2751,6 +2750,7 @@ General Index
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Extended Options.    (line  39)
+* bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
 * canvas size:                           Extended Options.    (line 119)
@@ -2829,7 +2829,7 @@ General Index
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Mask Generation Options.
                                                               (line 130)
-* Hugin:                                 Bug Reports.         (line  96)
+* Hugin:                                 Bug Reports.         (line  95)
 * ICC profile <1>:                       Color Profiles.      (line   6)
 * ICC profile:                           Extended Options.    (line  25)
 * IEEE754 double precision float:        Extended Options.    (line  92)
@@ -2854,7 +2854,9 @@ General Index
 * input mask:                            Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  29)
-* KImageFuser:                           Bug Reports.         (line  96)
+* KImageFuser:                           Bug Reports.         (line  95)
+* LaunchPad:                             Bug Reports.         (line  12)
+* LaunchPad, bug database:               Bug Reports.         (line  12)
 * layer selection:                       Common Options.      (line  96)
 * layer selection, all layers:           Common Options.      (line 101)
 * layer selection, default:              Response Files.      (line 212)
@@ -3017,9 +3019,7 @@ General Index
                                                               (line   9)
 * single precision float, IEEE754:       Extended Options.    (line  82)
 * size, canvas:                          Extended Options.    (line 119)
-* SourceForge <1>:                       Bug Reports.         (line  12)
 * SourceForge:                           Overview.            (line  45)
-* SourceForge, tracker:                  Bug Reports.         (line  12)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Extended Options.    (line  25)
 * syntactic comment, grammar:            Response Files.      (line 141)
@@ -3030,7 +3030,6 @@ General Index
 * tiffcopy:                              Overview.            (line  39)
 * tiffsplit:                             Overview.            (line  39)
 * TMPDIR:                                Tuning Memory Usage. (line  20)
-* tracker, SourceForge:                  Bug Reports.         (line  12)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
 * virtual reality:                       Common Options.      (line 266)
@@ -3099,15 +3098,15 @@ Node: Tuning Memory Usage66910
 Ref: Table:cache-size-settings69652
 Node: Helpful Programs70088
 Node: Bug Reports73824
-Ref: Bug Reports-Footnote-179525
-Node: Authors79595
-Node: FDL80760
-Node: List of Tables101742
-Node: List of Figures102434
-Node: List of Examples102724
-Node: Program Index103005
-Node: Syntactic-Comment Index106014
-Node: Option Index106703
-Node: General Index110929
+Ref: Bug Reports-Footnote-179480
+Node: Authors79550
+Node: FDL80715
+Node: List of Tables101697
+Node: List of Figures102389
+Node: List of Examples102679
+Node: Program Index102960
+Node: Syntactic-Comment Index105969
+Node: Option Index106658
+Node: General Index110884
 
 End Tag Table
