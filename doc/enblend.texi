@@ -539,7 +539,7 @@ original image, obviously defines the image at single-pixel scale, the
 first level works at two-pixel scale, and generally, the @math{n}-th
 level contains image data at @power{2, n}-pixel scale.  This is the
 reason why an image of
-@math{width}@classictimes{}@/@math{height}@dmn{pixels} cannot be
+@math{width}@classictimes{}@math{height}@dmn{pixels} cannot be
 deconstructed into a pyramid of more than
 @ifinfo
 @display

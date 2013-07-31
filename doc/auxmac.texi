@@ -202,40 +202,6 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @end macro
 
 
-@c Required for older versions of makeinfo.  The definition of @geq
-@c for TeX lives in auxmac.tex.
-@ifnottex
-@macro geq
-@ifinfo
->=@c
-@end ifinfo
-@html
-&ge;
-@end html
-@docbook
-&ge;
-@end docbook
-@end macro
-@end ifnottex
-
-
-@c Required for older versions of makeinfo.  The definition of @leq
-@c for TeX lives in auxmac.tex.
-@ifnottex
-@macro leq
-@ifinfo
-<=@c
-@end ifinfo
-@html
-&le;
-@end html
-@docbook
-&le;
-@end docbook
-@end macro
-@end ifnottex
-
-
 @macro plusminus
 @ifinfo
 +/-@c
