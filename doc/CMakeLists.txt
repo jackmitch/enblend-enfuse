@@ -21,7 +21,6 @@ set(_enblend_Bases auxmac.texi auxmac.tex
     helpful-programs.texi
     seam-generators.texi
     color-profiles.texi
-    tuning-memory-usage.texi
     understanding-masks.texi
     workflow.texi filespec.texi
     external-masks.texi
@@ -36,7 +35,6 @@ set(_enfuse_Bases auxmac.texi auxmac.tex
     mask-template-characters.texi
     helpful-programs.texi
     color-profiles.texi
-    tuning-memory-usage.texi
     understanding-masks.texi
     workflow.texi filespec.texi
     external-masks.texi

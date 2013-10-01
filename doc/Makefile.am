@@ -7,7 +7,6 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    helpful-programs.texi \
                    seam-generators.texi \
                    color-profiles.texi \
-                   tuning-memory-usage.texi \
                    understanding-masks.texi \
                    workflow.texi filespec.texi \
                    external-masks.texi option-delimiters.texi \
@@ -22,7 +21,6 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   mask-template-characters.texi \
                   helpful-programs.texi \
                   color-profiles.texi \
-                  tuning-memory-usage.texi \
                   understanding-masks.texi \
                   workflow.texi filespec.texi \
                   external-masks.texi option-delimiters.texi \

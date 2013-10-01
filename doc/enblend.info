@@ -6,9 +6,9 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-227d89d02fb9, 24 May 2013),
-a tool for compositing images in such a way that the seam between the
-images is invisible, or at least very difficult to see.
+   This manual is for Enblend (version 4.2-bece30be42c5, 1 October
+2013), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
    Copyright (C) 2004-2013 ANDREW MIHAL.
 
@@ -25,8 +25,8 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-227d89d02fb9, 24 May 2013), a
-tool for compositing images in such a way that the seam between the
+This manual is for Enblend (version 4.2-bece30be42c5, 1 October 2013),
+a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
 * Menu:
@@ -37,7 +37,6 @@ images is invisible, or at least very difficult to see.
 * Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles ICC color profiles
 * Understanding Masks::         How to interpret masks and mask files
-* Tuning Memory Usage::         Balancing RAM and swap
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
@@ -876,19 +875,8 @@ File: enblend.info,  Node: Extended Options,  Next: Mask Generation Options,  Pr
 3.4 Extended Options
 ====================
 
-Extended options control the image cache, the color model, and the
-cropping of the output image.
-
-`-b BLOCKSIZE'
-     Set the BLOCKSIZE in kilobytes (KB) of Enblend's image cache.
-
-     This is the amount of data that Enblend will move to and from the
-     disk at one time.  The default is 2048 KB, which should be ok for
-     most systems.  See *note Tuning Memory Usage:: for details.
-
-     Note that Enblend must have been compiled with the image-cache
-     feature for this option to be effective.  Find out about extra
-     features with `enblend --version --verbose'.
+Extended options control e.g. the color model and the cropping of the
+output image.
 
 `-c'
 `--ciecam'
@@ -1020,18 +1008,6 @@ cropping of the output image.
      associated alpha tag set, even though the image is really
      unassociated alpha.
 
-`-m CACHESIZE'
-     Set the CACHESIZE in megabytes (MB) of Enblend's image cache.
-
-     This is the amount of memory Enblend will use for storing image
-     data before swapping to disk.  The default is
-     1024 MB, which is good for systems with 3-4 gigabytes (GB) of RAM.
-     See *note Tuning Memory Usage:: for details.
-
-     Note that Enblend must have been compiled with the image-cache
-     feature for this option to be effective.  Find out about extra
-     features with `enblend --version --verbose'.
-
 `--no-ciecam'
      Disable the use of the CIECAM02 color appearance model for
      blending colors.
@@ -1109,8 +1085,7 @@ These options control the generation and the usage of masks.
      option `--coarse-mask' shrinks the overlapping _areas_ by a factor
      of 8x8.  With FACTOR = 8 the total memory allocated during a run
      of Enblend shrinks approximately by 80% and the maximum amount of
-     memory in use at a time is decreased to 60% (Enblend compiled with
-     image cache) or 40% (Enblend compiled without image cache).
+     memory in use at a time is decreased to some 40%.
 
      Valid range: FACTOR = 1, 2, 3,....
 
@@ -1312,7 +1287,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-227d89d02fb9)
+     version 3.2 used 1:1.  This version of Enblend (4.2-bece30be42c5)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1585,7 +1560,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-227d89d02fb9) of Enblend supports two main algorithms
+This version (4.2-bece30be42c5) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -1706,7 +1681,7 @@ back use
    * assume complete adaption.
 
 
-File: enblend.info,  Node: Understanding Masks,  Next: Tuning Memory Usage,  Prev: Color Profiles,  Up: Top
+File: enblend.info,  Node: Understanding Masks,  Next: Helpful Programs,  Prev: Color Profiles,  Up: Top
 
 6 Understanding Masks
 *********************
@@ -1799,85 +1774,9 @@ have a hole in that position.
 ...
 
 
-File: enblend.info,  Node: Tuning Memory Usage,  Next: Helpful Programs,  Prev: Understanding Masks,  Up: Top
+File: enblend.info,  Node: Helpful Programs,  Next: Bug Reports,  Prev: Understanding Masks,  Up: Top
 
-7 Tuning Memory Usage
-*********************
-
-The default configuration of Enblend and Enfuse assumes a system with
-3-4 GB of RAM.
-
-   If Enblend and Enfuse have been compiled with the "image-cache"
-feature, they do not rely on the operating system's memory management,
-but use their own image cache in the file system.  To find out whether
-your version uses the image cache say
-
-     enblend --verbose --version
-
-or
-
-     enfuse --verbose --version
-
-Enblend and Enfuse put the file that holds the image cache either in
-the directory pointed to by the environment variable `TMPDIR', or, if
-the variable is not set, in directory `/tmp'.  It is prudent to ensure
-write permissions and enough of free space on the volume with the cache
-file.
-
-   The size of the image cache is user configurable with the option `-m
-CACHE-SIZE' (*note Extended Options::).  Furthermore, option `-b
-BUFFER-SIZE' (*note Extended Options::) allows for fine-tuning the size
-of a single buffer inside the image cache.  Note that CACHE-SIZE is
-given in megabytes, whereas the unit of BUFFER-SIZE is kilobytes.
-
-   Usually the user lets the operating system take care of the memory
-management of all processes.  However, users of Enblend or Enfuse might
-want to control the balance between the operating systems' Virtual
-Memory (http://en.wikipedia.org/wiki/Virtual_memory) system and the
-image cache for several reasons.
-
-   * Paging in or out parts of a process' image runs at kernel level and
-     thus can make user processes appear unresponsive or "jumpy".  The
-     caching mechanism of Enblend and Enfuse of course runs as a user
-     process, which is why it has less detrimental effects on the
-     system's overall responsiveness.
-
-   * The image cache has been optimized for accesses to image data.  All
-     algorithms in Enblend and Enfuse have been carefully arranged to
-     play nice with the image cache.  An operating system's cache has no
-     knowledge of these particular memory access patterns.
-
-   * The disk access of the operating system to the swap device has been
-     highly optimized.  Enblend and Enfuse on the other hand use the
-     standard IO-layer, which is a much slower interface.
-
-   * Limiting the amount of image cache prevents Enblend and Enfuse from
-     eating up most or all RAM, thereby forcing all user applications
-     into the swap.
-
-The CACHE-SIZE should be set in such a way as to reconcile all of the
-above aspects even for the biggest data sets, that is, projects with
-many large images.
-
-   *note Table:cache-size-settings:: suggests some cache- and
-buffer-sizes for different amounts of available RAM.
-
-      RAM  | CACHE-SIZE | BUFFER-SIZE | Comment
-      MB   |     MB     |     KB      |
-     ------+------------+-------------+---------
-      4096 | 1024       | 2048        | default
-      2048 | 512--1024  | 1024        |
-      1024 | 256--512   | 256--512    |
-
-Table 7.1: Suggested cache-size settings
-
-   On systems with considerably more than 4 GB of RAM it is recommended
-to run Enblend or Enfuse versions without image cache.
-
-
-File: enblend.info,  Node: Helpful Programs,  Next: Bug Reports,  Prev: Tuning Memory Usage,  Up: Top
-
-8 Helpful Additional Programs
+7 Helpful Additional Programs
 *****************************
 
 Several programs and libraries have proven helpful when working with
@@ -2567,7 +2466,6 @@ List of Tables
 * Table 3.5: Optimizer strategies:       Table:optimizer-strategies.
 * Table 3.6: Visualization colors:       Table:visualization-colors.
 * Table 3.7: Mask template ...:          Table:mask-template-characters.
-* Table 7.1: Suggested ...:              Table:cache-size-settings.
 
 
 File: enblend.info,  Node: List of Figures,  Next: List of Examples,  Prev: List of Tables,  Up: Top
@@ -2603,7 +2501,7 @@ Program Index
 * ale:                                   Helpful Programs.    (line  20)
 * align_image_stack (Hugin):             Helpful Programs.    (line  27)
 * cinepaint <1>:                         Helpful Programs.    (line  39)
-* cinepaint:                             Extended Options.    (line 143)
+* cinepaint:                             Extended Options.    (line 132)
 * convert (ImageMagick):                 Helpful Programs.    (line  50)
 * dcraw <1>:                             Helpful Programs.    (line  10)
 * dcraw:                                 Standard Workflow.   (line   9)
@@ -2612,18 +2510,18 @@ Program Index
 * exrdisplay (OpenEXR):                  Helpful Programs.    (line  56)
 * fulla (Hugin):                         Helpful Programs.    (line  27)
 * gimp <1>:                              Helpful Programs.    (line  46)
-* gimp <2>:                              Extended Options.    (line 143)
+* gimp <2>:                              Extended Options.    (line 132)
 * gimp:                                  Standard Workflow.   (line   9)
 * gm (GraphicsMagick):                   Helpful Programs.    (line  50)
 * hugin <1>:                             Helpful Programs.    (line  24)
-* hugin <2>:                             Extended Options.    (line 123)
+* hugin <2>:                             Extended Options.    (line 112)
 * hugin <3>:                             Standard Workflow.   (line   9)
 * hugin:                                 Overview.            (line  25)
 * identify (ImageMagick) <1>:            Helpful Programs.    (line  50)
 * identify (ImageMagick):                Understanding Masks. (line  22)
 * montage (ImageMagick):                 Helpful Programs.    (line  50)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  27)
-* nona (Hugin):                          Extended Options.    (line 123)
+* nona (Hugin):                          Extended Options.    (line 112)
 * PanoTools <1>:                         Standard Workflow.   (line   9)
 * PanoTools:                             Overview.            (line  25)
 * pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  59)
@@ -2668,56 +2566,52 @@ Option Index
 
 * --anneal:                              Mask Generation Options.
                                                               (line   9)
-* --ciecam:                              Extended Options.    (line  22)
+* --ciecam:                              Extended Options.    (line  11)
 * --coarse-mask:                         Mask Generation Options.
                                                               (line  55)
 * --compression:                         Common Options.      (line  23)
-* --depth:                               Extended Options.    (line  39)
+* --depth:                               Extended Options.    (line  28)
 * --dijkstra:                            Mask Generation Options.
-                                                              (line  95)
-* --fallback-profile:                    Extended Options.    (line 131)
+                                                              (line  94)
+* --fallback-profile:                    Extended Options.    (line 120)
 * --fine-mask:                           Mask Generation Options.
-                                                              (line 108)
+                                                              (line 107)
 * --gpu:                                 Common Options.      (line  78)
 * --help:                                Common Options.      (line  93)
 * --image-difference:                    Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * --layer-selector:                      Common Options.      (line  96)
 * --levels:                              Common Options.      (line 122)
 * --load-masks:                          Mask Generation Options.
-                                                              (line 171)
+                                                              (line 170)
 * --mask-vectorize:                      Mask Generation Options.
-                                                              (line 178)
-* --no-ciecam:                           Extended Options.    (line 163)
+                                                              (line 177)
+* --no-ciecam:                           Extended Options.    (line 140)
 * --no-optimize:                         Mask Generation Options.
-                                                              (line 223)
+                                                              (line 222)
 * --no-parameter:                        Common Options.      (line 176)
 * --optimize:                            Mask Generation Options.
-                                                              (line 231)
+                                                              (line 230)
 * --optimizer-weights:                   Mask Generation Options.
-                                                              (line 254)
+                                                              (line 253)
 * --output:                              Common Options.      (line 166)
 * --parameter:                           Common Options.      (line 172)
 * --primary-seam-generator:              Mask Generation Options.
-                                                              (line 282)
+                                                              (line 281)
 * --save-masks:                          Mask Generation Options.
-                                                              (line 306)
+                                                              (line 305)
 * --verbose:                             Common Options.      (line 214)
 * --version:                             Common Options.      (line 248)
 * --visualize:                           Mask Generation Options.
-                                                              (line 340)
+                                                              (line 339)
 * --wrap:                                Common Options.      (line 255)
 * -a:                                    Common Options.      (line  15)
-* -b <1>:                                Tuning Memory Usage. (line   6)
-* -b:                                    Extended Options.    (line  10)
-* -c:                                    Extended Options.    (line  22)
-* -d:                                    Extended Options.    (line  39)
-* -f:                                    Extended Options.    (line 119)
-* -g:                                    Extended Options.    (line 139)
+* -c:                                    Extended Options.    (line  11)
+* -d:                                    Extended Options.    (line  28)
+* -f:                                    Extended Options.    (line 108)
+* -g:                                    Extended Options.    (line 128)
 * -h:                                    Common Options.      (line  93)
 * -l:                                    Common Options.      (line 122)
-* -m <1>:                                Tuning Memory Usage. (line   6)
-* -m:                                    Extended Options.    (line 151)
 * -o:                                    Common Options.      (line 166)
 * -V:                                    Common Options.      (line 248)
 * -v:                                    Common Options.      (line 214)
@@ -2741,36 +2635,36 @@ General Index
 * algorithms, globbing:                  Response Files.      (line 149)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  18)
-* alpha channel, associated:             Extended Options.    (line 139)
+* alpha channel, associated:             Extended Options.    (line 128)
 * anneal parameters:                     Mask Generation Options.
                                                               (line   9)
 * arithmetic JPEG compression:           Common Options.      (line  41)
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
-* bits per channel:                      Extended Options.    (line  39)
+* bits per channel:                      Extended Options.    (line  28)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
-* canvas size:                           Extended Options.    (line 119)
+* canvas size:                           Extended Options.    (line 108)
 * central processing unit:               Common Options.      (line  78)
-* channel width:                         Extended Options.    (line  39)
+* channel width:                         Extended Options.    (line  28)
 * channel, alpha:                        Overview.            (line  18)
 * checkpoint results:                    Common Options.      (line 308)
 * chrominance weight:                    Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
-* CIECAM02:                              Extended Options.    (line  22)
+* CIECAM02:                              Extended Options.    (line  11)
 * coarse mask:                           Mask Generation Options.
                                                               (line  55)
 * color appearance model <1>:            Color Profiles.      (line  13)
-* color appearance model:                Extended Options.    (line  22)
+* color appearance model:                Extended Options.    (line  11)
 * color cube, RGB:                       Color Profiles.      (line  13)
 * color profile <1>:                     Color Profiles.      (line   6)
-* color profile:                         Extended Options.    (line  25)
+* color profile:                         Extended Options.    (line  14)
 * color space, sRGB <1>:                 Color Profiles.      (line  24)
-* color space, sRGB:                     Extended Options.    (line  25)
+* color space, sRGB:                     Extended Options.    (line  14)
 * colors, visualization image:           Mask Generation Options.
-                                                              (line 398)
+                                                              (line 397)
 * compression:                           Common Options.      (line  23)
 * compression, arithmetic JPEG:          Common Options.      (line  41)
 * compression, deflate:                  Common Options.      (line  52)
@@ -2785,24 +2679,24 @@ General Index
 * deflate compression:                   Common Options.      (line  52)
 * delimiters, option:                    Option Delimiters.   (line   6)
 * delta-E:                               Mask Generation Options.
-                                                              (line 140)
+                                                              (line 139)
 * difference image:                      Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * DIJKSTRA radius:                       Mask Generation Options.
-                                                              (line  95)
-* double precision float, IEEE754:       Extended Options.    (line  92)
-* fallback profile:                      Extended Options.    (line 131)
+                                                              (line  94)
+* double precision float, IEEE754:       Extended Options.    (line  81)
+* fallback profile:                      Extended Options.    (line 120)
 * feathering, detrimental effect of:     Overview.            (line  25)
 * filename, literal:                     Invocation.          (line  10)
 * fine mask:                             Mask Generation Options.
-                                                              (line 108)
+                                                              (line 107)
 * format of response file:               Response Files.      (line  56)
 * free documentation license (FDL):      FDL.                 (line   6)
 * frozen seam-line endpoint:             Mask Generation Options.
-                                                              (line 390)
+                                                              (line 389)
 * general index:                         General Index.       (line   6)
 * generator, seam:                       Mask Generation Options.
-                                                              (line 282)
+                                                              (line 281)
 * glob(7):                               Response Files.      (line 174)
 * globbing algorithm literal:            Response Files.      (line 160)
 * globbing algorithm none:               Response Files.      (line 182)
@@ -2815,7 +2709,7 @@ General Index
 * grammar, response file:                Response Files.      (line  70)
 * grammar, syntactic comment:            Response Files.      (line 141)
 * graph-cut (GC):                        Mask Generation Options.
-                                                              (line 300)
+                                                              (line 299)
 * graphcut (GC):                         Primary Seam Generators.
                                                               (line  21)
 * graphcut, details:                     Primary Seam Generators.
@@ -2823,26 +2717,22 @@ General Index
 * graphcut, limitations:                 Primary Seam Generators.
                                                               (line  59)
 * graphics processing unit:              Common Options.      (line  78)
-* half precision float, OpenEXR:         Extended Options.    (line 108)
+* half precision float, OpenEXR:         Extended Options.    (line  97)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Mask Generation Options.
-                                                              (line 130)
+                                                              (line 129)
 * Hugin:                                 Bug Reports.         (line  95)
 * ICC profile <1>:                       Color Profiles.      (line   6)
-* ICC profile:                           Extended Options.    (line  25)
-* IEEE754 double precision float:        Extended Options.    (line  92)
-* IEEE754 single precision float:        Extended Options.    (line  82)
-* image cache:                           Tuning Memory Usage. (line   9)
-* image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line 151)
-* image cache, location:                 Tuning Memory Usage. (line  20)
+* ICC profile:                           Extended Options.    (line  14)
+* IEEE754 double precision float:        Extended Options.    (line  81)
+* IEEE754 single precision float:        Extended Options.    (line  71)
 * image colors, visualization:           Mask Generation Options.
-                                                              (line 398)
+                                                              (line 397)
 * image difference:                      Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
-                                                              (line 357)
+                                                              (line 356)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
 * index, program:                        Program Index.       (line   6)
@@ -2868,91 +2758,90 @@ General Index
 * LibTiff:                               Helpful Programs.    (line  70)
 * literal filename:                      Invocation.          (line  10)
 * load mask:                             Mask Generation Options.
-                                                              (line 171)
+                                                              (line 170)
 * loops in seam line:                    Mask Generation Options.
-                                                              (line 207)
+                                                              (line 206)
 * luminance weight:                      Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * luminance-hue maximum:                 Mask Generation Options.
-                                                              (line 130)
+                                                              (line 129)
 * LZW compression:                       Common Options.      (line  63)
 * mask template character, %:            Mask Generation Options.
-                                                              (line 402)
+                                                              (line 401)
 * mask template character, B:            Mask Generation Options.
-                                                              (line 453)
+                                                              (line 452)
 * mask template character, b:            Mask Generation Options.
-                                                              (line 446)
+                                                              (line 445)
 * mask template character, D:            Mask Generation Options.
-                                                              (line 443)
+                                                              (line 442)
 * mask template character, d:            Mask Generation Options.
-                                                              (line 436)
+                                                              (line 435)
 * mask template character, E:            Mask Generation Options.
-                                                              (line 472)
+                                                              (line 471)
 * mask template character, e:            Mask Generation Options.
-                                                              (line 466)
+                                                              (line 465)
 * mask template character, F:            Mask Generation Options.
-                                                              (line 462)
+                                                              (line 461)
 * mask template character, f:            Mask Generation Options.
-                                                              (line 456)
+                                                              (line 455)
 * mask template character, i:            Mask Generation Options.
-                                                              (line 405)
+                                                              (line 404)
 * mask template character, n:            Mask Generation Options.
-                                                              (line 420)
+                                                              (line 419)
 * mask template character, P:            Mask Generation Options.
-                                                              (line 433)
+                                                              (line 432)
 * mask template character, p:            Mask Generation Options.
-                                                              (line 425)
+                                                              (line 424)
 * mask template characters, table of:    Mask Generation Options.
-                                                              (line 474)
+                                                              (line 473)
 * mask, binary:                          Understanding Masks. (line   6)
 * mask, coarse:                          Mask Generation Options.
                                                               (line  55)
 * mask, fine:                            Mask Generation Options.
-                                                              (line 108)
+                                                              (line 107)
 * mask, generation:                      Mask Generation Options.
-                                                              (line  90)
+                                                              (line  89)
 * mask, input files:                     Understanding Masks. (line  18)
 * mask, load:                            Mask Generation Options.
-                                                              (line 171)
+                                                              (line 170)
 * mask, optimization visualization:      Mask Generation Options.
-                                                              (line 340)
+                                                              (line 339)
 * mask, save:                            Mask Generation Options.
-                                                              (line 306)
+                                                              (line 305)
 * mask, vectorization distance:          Mask Generation Options.
-                                                              (line 178)
+                                                              (line 177)
 * mask, weight:                          Understanding Masks. (line   6)
 * masks, understanding:                  Understanding Masks. (line   6)
 * match quality:                         Mask Generation Options.
-                                                              (line 162)
+                                                              (line 161)
 * maximum hue-luminance:                 Mask Generation Options.
-                                                              (line 130)
-* memory, tuning usage of:               Tuning Memory Usage. (line   6)
+                                                              (line 129)
 * multi-directory TIFF:                  Overview.            (line  39)
 * multi-layer image:                     Overview.            (line  39)
 * nearest feature transform (NFT) <1>:   Primary Seam Generators.
                                                               (line  11)
 * nearest feature transform (NFT):       Mask Generation Options.
-                                                              (line 296)
+                                                              (line 295)
 * nearest-feature transform (NFT):       Mask Generation Options.
-                                                              (line  90)
+                                                              (line  89)
 * nearest-feature transform (NFT), Graph-Cut (GC): Mask Generation Options.
-                                                              (line 388)
+                                                              (line 387)
 * Octave:                                Bug Reports.         (line   6)
 * only save mask:                        Mask Generation Options.
-                                                              (line 317)
+                                                              (line 316)
 * OpenCL:                                Common Options.      (line  78)
 * OpenCL, device:                        Common Options.      (line 186)
 * OpenCL, platform:                      Common Options.      (line 186)
-* OpenEXR, data format:                  Extended Options.    (line 104)
-* OpenEXR, half precision float:         Extended Options.    (line 108)
+* OpenEXR, data format:                  Extended Options.    (line  93)
+* OpenEXR, half precision float:         Extended Options.    (line  97)
 * optimize seam:                         Mask Generation Options.
-                                                              (line 223)
+                                                              (line 222)
 * optimize strategy:                     Mask Generation Options.
-                                                              (line 250)
+                                                              (line 249)
 * optimize, anneal parameters:           Mask Generation Options.
                                                               (line   9)
 * optimizer weights:                     Mask Generation Options.
-                                                              (line 254)
+                                                              (line 253)
 * optimizer, simulated annealing:        Mask Generation Options.
                                                               (line   9)
 * option delimiters:                     Option Delimiters.   (line   6)
@@ -2964,7 +2853,7 @@ General Index
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  23)
 * output filename, default:              Common Options.      (line 168)
-* output image, set size of:             Extended Options.    (line 119)
+* output image, set size of:             Extended Options.    (line 108)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  67)
 * parallax error:                        Standard Workflow.   (line  58)
@@ -2973,19 +2862,19 @@ General Index
 * primary seam generator <1>:            Primary Seam Generators.
                                                               (line   6)
 * primary seam generator:                Mask Generation Options.
-                                                              (line 282)
+                                                              (line 281)
 * problem reports:                       Bug Reports.         (line   9)
 * processing order:                      Response Files.      (line   9)
-* profile, fallback:                     Extended Options.    (line 131)
+* profile, fallback:                     Extended Options.    (line 120)
 * profile, ICC <1>:                      Color Profiles.      (line   6)
-* profile, ICC:                          Extended Options.    (line  25)
+* profile, ICC:                          Extended Options.    (line  14)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * pyramid levels:                        Common Options.      (line 122)
 * quality, match:                        Mask Generation Options.
-                                                              (line 162)
+                                                              (line 161)
 * radius, DIJKSTRA:                      Mask Generation Options.
-                                                              (line  95)
+                                                              (line  94)
 * raw conversion:                        Standard Workflow.   (line  34)
 * rendering intent, perceptual:          Color Profiles.      (line  53)
 * response file <1>:                     Response Files.      (line   6)
@@ -2998,28 +2887,28 @@ General Index
 * results, checkpoint:                   Common Options.      (line 308)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
-                                                              (line 306)
+                                                              (line 305)
 * save mask, only:                       Mask Generation Options.
-                                                              (line 317)
+                                                              (line 316)
 * seam generation:                       Primary Seam Generators.
                                                               (line   6)
 * seam generation, details:              Primary Seam Generators.
                                                               (line  29)
 * seam line, loops:                      Mask Generation Options.
-                                                              (line 207)
+                                                              (line 206)
 * seam optimization:                     Mask Generation Options.
-                                                              (line 223)
+                                                              (line 222)
 * seam, primary generator:               Mask Generation Options.
-                                                              (line 282)
+                                                              (line 281)
 * seam-line endpoint, frozen:            Mask Generation Options.
-                                                              (line 390)
+                                                              (line 389)
 * simulated annealing optimizer:         Mask Generation Options.
                                                               (line   9)
-* single precision float, IEEE754:       Extended Options.    (line  82)
-* size, canvas:                          Extended Options.    (line 119)
+* single precision float, IEEE754:       Extended Options.    (line  71)
+* size, canvas:                          Extended Options.    (line 108)
 * SourceForge:                           Overview.            (line  45)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
-* sRGB color space:                      Extended Options.    (line  25)
+* sRGB color space:                      Extended Options.    (line  14)
 * syntactic comment, grammar:            Response Files.      (line 141)
 * syntactic comment, response file:      Response Files.      (line 129)
 * syntactic-comment index:               Syntactic-Comment Index.
@@ -3027,23 +2916,22 @@ General Index
 * TIFF, multi-directory:                 Overview.            (line  39)
 * tiffcopy:                              Overview.            (line  39)
 * tiffsplit:                             Overview.            (line  39)
-* TMPDIR:                                Tuning Memory Usage. (line  20)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
 * virtual reality:                       Common Options.      (line 265)
 * visualization image:                   Mask Generation Options.
-                                                              (line 357)
+                                                              (line 356)
 * visualization image colors:            Mask Generation Options.
-                                                              (line 398)
+                                                              (line 397)
 * visualization of mask:                 Mask Generation Options.
-                                                              (line 340)
+                                                              (line 339)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, chrominance:                   Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * weight, luminance:                     Mask Generation Options.
-                                                              (line 115)
+                                                              (line 114)
 * weights, optimizer:                    Mask Generation Options.
-                                                              (line 254)
+                                                              (line 253)
 * white point, D50:                      Color Profiles.      (line  55)
 * workflow:                              Workflow.            (line   6)
 * workflow with Enblend:                 Standard Workflow.   (line   9)
@@ -3058,53 +2946,51 @@ General Index
 
 
 Tag Table:
-Node: Top899
-Node: Overview2254
-Ref: Overview-Footnote-14693
-Ref: Overview-Footnote-24874
-Node: Workflow5016
-Node: Standard Workflow5415
-Ref: Figure:photographic-workflow5675
-Node: External Mask Manipulation8349
-Ref: Figure:external-mask-workflow9666
-Node: Invocation10151
-Node: Image Requirements10930
-Node: Response Files12404
-Ref: Table:response-file-format14428
-Ref: Example:response-file16307
-Ref: Table:response-file-syntactic-comment16948
-Ref: Table:globbing-algorithms17849
-Ref: Example:globbing-algorithm18875
-Node: Common Options19492
-Ref: Common Options-Footnote-130820
-Ref: Common Options-Footnote-230894
-Ref: Common Options-Footnote-331086
-Node: Extended Options31245
-Ref: Extended Options-Footnote-137407
-Ref: Extended Options-Footnote-237473
-Node: Mask Generation Options37546
-Ref: Table:mask-generation40233
-Ref: Table:optimizer-strategies47566
-Ref: Table:visualization-colors52969
-Ref: Table:mask-template-characters53884
-Ref: Mask Generation Options-Footnote-156136
-Node: Option Delimiters56364
-Node: Primary Seam Generators57769
-Node: Color Profiles60655
-Node: Understanding Masks63105
-Node: Tuning Memory Usage66898
-Ref: Table:cache-size-settings69640
-Node: Helpful Programs70076
-Node: Bug Reports73812
-Ref: Bug Reports-Footnote-179468
-Node: Authors79538
-Node: FDL80703
-Node: List of Tables101685
-Node: List of Figures102377
-Node: List of Examples102667
-Node: Program Index102948
-Node: Syntactic-Comment Index105957
-Node: Option Index106646
-Node: General Index110872
+Node: Top902
+Node: Overview2205
+Ref: Overview-Footnote-14644
+Ref: Overview-Footnote-24825
+Node: Workflow4967
+Node: Standard Workflow5366
+Ref: Figure:photographic-workflow5626
+Node: External Mask Manipulation8300
+Ref: Figure:external-mask-workflow9617
+Node: Invocation10102
+Node: Image Requirements10881
+Node: Response Files12355
+Ref: Table:response-file-format14379
+Ref: Example:response-file16258
+Ref: Table:response-file-syntactic-comment16899
+Ref: Table:globbing-algorithms17800
+Ref: Example:globbing-algorithm18826
+Node: Common Options19443
+Ref: Common Options-Footnote-130771
+Ref: Common Options-Footnote-230845
+Ref: Common Options-Footnote-331037
+Node: Extended Options31196
+Ref: Extended Options-Footnote-136354
+Ref: Extended Options-Footnote-236420
+Node: Mask Generation Options36493
+Ref: Table:mask-generation39098
+Ref: Table:optimizer-strategies46431
+Ref: Table:visualization-colors51834
+Ref: Table:mask-template-characters52749
+Ref: Mask Generation Options-Footnote-155001
+Node: Option Delimiters55229
+Node: Primary Seam Generators56634
+Node: Color Profiles59520
+Node: Understanding Masks61970
+Node: Helpful Programs65760
+Node: Bug Reports69496
+Ref: Bug Reports-Footnote-175152
+Node: Authors75222
+Node: FDL76387
+Node: List of Tables97369
+Node: List of Figures97993
+Node: List of Examples98283
+Node: Program Index98564
+Node: Syntactic-Comment Index101573
+Node: Option Index102262
+Node: General Index106196
 
 End Tag Table

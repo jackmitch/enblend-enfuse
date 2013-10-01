@@ -14,8 +14,6 @@
 @include varsenblend.texi
 @include config-h.texi
 
-@set default-image-cache-cachesize 1024@dmn{MB}
-@set default-image-cache-blocksize 2048@dmn{KB}
 
 @c Define a new index for syntactic comments.
 @defcodeindex sc
@@ -126,7 +124,6 @@ see.
 * Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Understanding Masks::         How to interpret masks and mask files
-* Tuning Memory Usage::         Balancing @acronym{RAM} and swap
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
@@ -1177,25 +1174,10 @@ step.
 @section Extended Options
 @cindex options, extended
 
-Extended options control the image cache, the color model, and the
-cropping of the output image.
+Extended options control e.g.@: the color model and the cropping of
+the output image.
 
 @table @code
-@item -b @var{BLOCKSIZE}
-@opindex -b
-@cindex image cache, block size
-Set the @var{BLOCKSIZE} in kilobytes (@acronym{KB}) of Enblend's image
-cache.
-
-This is the amount of data that Enblend will move to and from the disk
-at one time.  The default is @value{default-image-cache-blocksize},
-which should be ok for most systems.  See @ref{Tuning Memory Usage}
-for details.
-
-Note that Enblend must have been compiled with the image-cache feature
-for this option to be effective.  Find out about extra features with
-@code{enblend --version --verbose}.
-
 @item -c
 @itemx --ciecam
 @opindex -c
@@ -1386,22 +1368,6 @@ unassociated alpha channels.  Use option @option{-g} to work around
 this problem.  With this flag Enblend will create the output image
 with the associated alpha tag set, even though the image is really
 unassociated alpha.
-
-@item -m @var{CACHESIZE}
-@opindex -m
-@cindex image cache, cache size
-Set the @var{CACHESIZE} in megabytes (@acronym{MB}) of Enblend's image
-cache.
-
-This is the amount of memory Enblend will use for storing image data
-before swapping to disk.  The default is
-@value{default-image-cache-cachesize}, which is good for systems with
-3--4@dmn{gigabytes} (@acronym{GB}) of @acronym{RAM}.  See @ref{Tuning
-Memory Usage} for details.
-
-Note that Enblend must have been compiled with the image-cache feature
-for this option to be effective.  Find out about extra features with
-@code{enblend --version --verbose}.
 
 @item --no-ciecam
 @opindex --no-ciecam
@@ -1645,15 +1611,13 @@ This option reduces the number of computations necessary to compute
 the seam line and the amount of memory necessary to do so.  It is the
 default.
 
-If omitted @var{FACTOR} defaults to
-@value{default-coarseness-factor}, this means,
-option@tie{}@option{--coarse-mask} shrinks the overlapping
+If omitted @var{FACTOR} defaults to @value{default-coarseness-factor},
+this means, option@tie{}@option{--coarse-mask} shrinks the overlapping
 @emph{areas} by a factor of
 @math{@value{default-coarseness-factor}@classictimes{}@/@value{default-coarseness-factor}}.
 With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
 run of Enblend shrinks approximately by 80% and the maximum amount of
-memory in use at a time is decreased to 60% (Enblend compiled with
-image cache) or 40% (Enblend compiled without image cache).
+memory in use at a time is decreased to some 40%.
 
 Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
 
@@ -2724,15 +2688,6 @@ approximately 15@dmn{cm}.}
 @cindex masks, understanding
 
 @include understanding-masks.texi
-
-
-@node Tuning Memory Usage
-@chapter Tuning Memory Usage
-@cindex memory, tuning usage of
-@opindex -b
-@opindex -m
-
-@include tuning-memory-usage.texi
 
 
 @node Helpful Programs

@@ -123,9 +123,6 @@ letters.
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
 
-Note that OpenMP support and the ImageCache must not be activated
-both.  The default is to configure with ImageCache and without OpenMP.
-
 If OpenMP support has been enabled, the utilization of special
 features of the actual, underlying OpenMP implementation can be
 controlled as usual with the environment variables OMP_NUM_THREADS,
@@ -156,20 +153,6 @@ pieces.  The default is "yes", split documentation.
 
 Compile without optimizations and enable all debug-checking code.  The
 default is "no", build an optimized version without debugging symbols.
-
-
-** --enable-image-cache=yes/NO
-   -DENABLE_IMAGECACHE=OFF/on    (CMake)
-
-Activate the ImageCache feature, which allows for processing of large
-images.  The ImageCache handles swapping parts of the images to disk.
-The default is "yes", enable the ImageCache.
-
-The ImageCache is recommended on systems where memory is scarce, but
-the images to blend or fuse are large.
-
-The ImageCache feature and OpenMP support must not be activated
-together.
 
 
 ** --with-boost-filesystem=CHECK/yes/no/<LIBRARY>
@@ -243,7 +226,7 @@ Creating a RedHat package on OpenSuSE
 
         cmake . \
             -DDOC=ON \
-            -DENABLE_IMAGECACHE=OFF -DENABLE_OPENMP=ON \
+            -DENABLE_OPENMP=ON \
             -DCPACK_BINARY_RPM:BOOL=ON
         make package
 
@@ -410,12 +393,10 @@ formats:
 *** High-Performance Binaries
 
 To configure and compile high-performance versions of Enblend and
-Enfuse configure single CPU systems with
-        --disable-image-cache
-SMP boxes with
-        --disable-image-cache --enable-openmp
+Enfuse configure SMP boxes with
+        --enable-openmp
 and pass
-         EXTRACXXFLAGS="-march=native -O2"
+        EXTRACXXFLAGS="-march=native -O2"
 to make(1).  The resulting binaries are pretty fast, although other
 configuration options or compiler flags might improve their
 performance even more.
@@ -584,26 +565,10 @@ Enblend/Enfuse also depend on the following libraries:
 5. Activate the appropriate options.
 
 
-***** ENABLE_IMAGECACHE=on/OFF
-
-Activate the ImageCache feature, which allows for processing of large
-images.  The ImageCache handles swapping parts of the images to disk.
-The default is "off", i.e., enable the ImageCache.
-
-The ImageCache is recommended on systems where memory is scarce, but
-the images to blend or fuse are large.
-
-The ImageCache feature and OpenMP support must not be activated
-together.
-
-
 ***** ENABLE_OPENMP=on/OFF
 
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
-
-Note that OpenMP support and the ImageCache must not be activated
-both!  The default is to configure with ImageCache and without OpenMP.
 
 If OpenMP support has been enabled, the utilization of special
 features of the actual, underlying OpenMP implementation can be
