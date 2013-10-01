@@ -32,15 +32,29 @@
 #include <config.h>
 #endif
 
+#include "global.h"
 #include "tiff_message.h"
 
 
 extern const std::string command;
+extern int Verbose;
 
-std::set<std::string> tiff_messages;
+static std::set<std::string> tiff_messages;
 
 
-void
+static std::string
+interpolate_format(const char* format, va_list arguments)
+{
+    const size_t buffer_size = 4096U;
+    boost::scoped_ptr<char> buffer(new char[buffer_size]);
+
+    vsnprintf(buffer.get(), buffer_size, format, arguments);
+
+    return buffer.get();
+}
+
+
+static void
 flush_buffers()
 {
     fflush(stdout);
@@ -56,14 +70,11 @@ flush_buffers()
  *  message and only pass on their first appearance.  The library
  *  always includes the name of the offending TIFF file, thus we get
  *  each message once for each file. */
-void
+static void
 tiff_message(const char* message_class,
              const char* /*module*/, const char* format, va_list arguments)
 {
-    const size_t buffer_size = 4096;
-    boost::scoped_ptr<char> buffer(new char[buffer_size]);
-    vsnprintf(buffer.get(), buffer_size, format, arguments);
-    const std::string message(buffer.get());
+    const std::string message(interpolate_format(format, arguments));
 
     if (tiff_messages.count(message) == 0)
     {
@@ -82,14 +93,24 @@ tiff_message(const char* message_class,
 void
 tiff_warning(const char* module, const char* format, va_list arguments)
 {
-    tiff_message("warning", module, format, arguments);
+    if (Verbose >= VERBOSE_TIFF_MESSAGES)
+    {
+        tiff_message("warning", module, format, arguments);
+    }
+}
+
+
+static bool
+is_benign(const char* format, va_list arguments)
+{
+    const std::string message(interpolate_format(format, arguments));
+
+    return message == "OJPEG encoding not supported; use new-style JPEG compression instead";
 }
 
 
 void
 tiff_error(const char* module, const char* format, va_list arguments)
 {
-    tiff_message("error", module, format, arguments);
+    tiff_message(is_benign(format, arguments) ? "warning" : "error", module, format, arguments);
 }
-
-
