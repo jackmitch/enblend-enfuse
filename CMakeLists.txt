@@ -190,7 +190,6 @@ FIND_PACKAGE(LCMS2 REQUIRED)
 FIND_PACKAGE(TIFF REQUIRED)
 FIND_PACKAGE(Perl REQUIRED)
 # this one is needed in doc. (Especially the program "convert")
-FIND_PACKAGE(ImageMagick REQUIRED)
 FIND_PACKAGE(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIR})
 LIST(APPEND common_libs ${LCMS2_LIBRARIES} ${TIFF_LIBRARIES} ${GSL_LIBRARIES})
@@ -396,7 +395,8 @@ MESSAGE(STATUS "")
 add_subdirectory(src)
 
 # you really should have perl installed, when creating doc's
-if (PERL_FOUND AND IMAGEMAGICK_FOUND AND DOC)
+if (PERL_FOUND AND DOC)
+  FIND_PACKAGE(ImageMagick REQUIRED)
   # this should be set from comman line
   # Possible values like described in README: @smallbook @afivepaper @afourpaper @afourwide @afourlatex
   # @letter is default
