@@ -6,9 +6,19 @@ Enfuse and Enblend.
 
 @itemize
 @item
+@pindex darktable
+@uref{http://@/www.darktable.org/, darktable} s an open source
+photography workflow application and @sc{RAW} developer.
+
+@item
 @pindex dcraw
 @uref{http://@/www.cybercom.net/@/~dcoffin/@/dcraw/, DCRaw} is a
 universal raw-converter written by @sc{David Coffin}.
+
+@item
+@pindex rawtherapee
+@uref{http://www.rawtherapee.com/, RawTherapee} is powerful 64-bit
+open source raw converter for Win*, Mac OS X and Linux.
 
 @item
 @pindex ufraw
@@ -24,12 +34,6 @@ wavelets, and automatic lens error correction.
 @item Image Alignment and Rendering
 
 @itemize
-@item
-@pindex ale
-@uref{http://@/auricle.dyndns.org/ALE/, ALE}, @sc{David Hilvert's}
-anti-lamenessing engine for the real die-hard command-line users
-aligns, filters, and renders images.
-
 @item
 @pindex hugin
 @uref{http://@/hugin.sourceforge.net/, Hugin} is a @acronym{GUI} that
@@ -71,6 +75,13 @@ management system.
 The @uref{http://@/www.gimp.org/, Gimp} is a general purpose image
 manipulation program.  At the time of this writing it is still limited
 to images with only 8@dmn{bits} per channel.
+
+@item
+@pindex gmic
+@uref{http://@/gmic.sourceforge.net/, G'Mic} is an open and
+full-featured framework for image processing, providing several
+different user interfaces to convert, manipulate, filter, and
+visualize generic image datasets.
 
 @item
 @pindex convert @r{(ImageMagick)}

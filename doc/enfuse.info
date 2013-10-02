@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-bece30be42c5, 1 October 2013),
+   This manual is for Enfuse (version 4.2-e09d2d785b04, 1 October 2013),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-bece30be42c5, 1 October 2013), a
+This manual is for Enfuse (version 4.2-e09d2d785b04, 1 October 2013), a
 program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
@@ -1650,7 +1650,7 @@ to read the manual before applying them successfully.
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.2-bece30be42c5 of Enfuse, the option is effective
+        In version 4.2-e09d2d785b04 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -2112,7 +2112,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.2-bece30be42c5.
+version 4.2-e09d2d785b04.
 
    To disable a particular criterion set its weight to zero as for
 example
@@ -4669,8 +4669,14 @@ Several programs and libraries have proven helpful when working with
 Enfuse and Enblend.
 
 *Raw Image Conversion*
+        * darktable (http://www.darktable.org/) s an open source
+          photography workflow application and RAW developer.
+
         * DCRaw (http://www.cybercom.net/~dcoffin/dcraw/) is a
           universal raw-converter written by DAVID COFFIN.
+
+        * RawTherapee (http://www.rawtherapee.com/) is powerful 64-bit
+          open source raw converter for Win*, Mac OS X and Linux.
 
         * UFRaw (http://ufraw.sourceforge.net/), a raw converter written
           by UDI FUCHS and based on DCRaw, adds a GUI (`ufraw'),
@@ -4679,10 +4685,6 @@ Enfuse and Enblend.
           wavelets, and automatic lens error correction.
 
 *Image Alignment and Rendering*
-        * ALE (http://auricle.dyndns.org/ALE/), DAVID HILVERT'S
-          anti-lamenessing engine for the real die-hard command-line
-          users aligns, filters, and renders images.
-
         * Hugin (http://hugin.sourceforge.net/) is a GUI that aligns
           and stitches images.
 
@@ -4708,6 +4710,11 @@ Enfuse and Enblend.
         * The Gimp (http://www.gimp.org/) is a general purpose image
           manipulation program.  At the time of this writing it is
           still limited to images with only 8 bits per channel.
+
+        * G'Mic (http://gmic.sourceforge.net/) is an open and
+          full-featured framework for image processing, providing
+          several different user interfaces to convert, manipulate,
+          filter, and visualize generic image datasets.
 
         * ImageMagick (http://www.imagemagick.org/) and its clone
           GraphicsMagick (http://www.graphicsmagick.org/) are general
@@ -5403,44 +5410,46 @@ Program Index
  [index ]
 * Menu:
 
-* ale:                                   Helpful Programs.    (line  20)
-* align_image_stack (Hugin):             Helpful Programs.    (line  27)
-* cinepaint <1>:                         Helpful Programs.    (line  39)
+* align_image_stack (Hugin):             Helpful Programs.    (line  29)
+* cinepaint <1>:                         Helpful Programs.    (line  41)
 * cinepaint:                             Extended Options.    (line 129)
-* convert (ImageMagick):                 Helpful Programs.    (line  50)
-* dcraw <1>:                             Helpful Programs.    (line  10)
+* convert (ImageMagick):                 Helpful Programs.    (line  57)
+* darktable:                             Helpful Programs.    (line  10)
+* dcraw <1>:                             Helpful Programs.    (line  13)
 * dcraw:                                 Standard Workflow.   (line   9)
-* display (ImageMagick):                 Helpful Programs.    (line  50)
-* exiftool:                              Helpful Programs.    (line  78)
-* exrdisplay (OpenEXR):                  Helpful Programs.    (line  56)
-* fulla (Hugin):                         Helpful Programs.    (line  27)
-* gimp <1>:                              Helpful Programs.    (line  46)
+* display (ImageMagick):                 Helpful Programs.    (line  57)
+* exiftool:                              Helpful Programs.    (line  85)
+* exrdisplay (OpenEXR):                  Helpful Programs.    (line  63)
+* fulla (Hugin):                         Helpful Programs.    (line  29)
+* gimp <1>:                              Helpful Programs.    (line  48)
 * gimp <2>:                              Extended Options.    (line 129)
 * gimp:                                  Standard Workflow.   (line   9)
-* gm (GraphicsMagick):                   Helpful Programs.    (line  50)
-* hugin <1>:                             Helpful Programs.    (line  24)
+* gm (GraphicsMagick):                   Helpful Programs.    (line  57)
+* gmic:                                  Helpful Programs.    (line  52)
+* hugin <1>:                             Helpful Programs.    (line  26)
 * hugin <2>:                             What Images.         (line  13)
 * hugin <3>:                             Extended Options.    (line 109)
 * hugin:                                 Standard Workflow.   (line   9)
-* identify (ImageMagick) <1>:            Helpful Programs.    (line  50)
+* identify (ImageMagick) <1>:            Helpful Programs.    (line  57)
 * identify (ImageMagick):                Understanding Masks. (line  22)
-* montage (ImageMagick):                 Helpful Programs.    (line  50)
-* nona (Hugin) <1>:                      Helpful Programs.    (line  27)
+* montage (ImageMagick):                 Helpful Programs.    (line  57)
+* nona (Hugin) <1>:                      Helpful Programs.    (line  29)
 * nona (Hugin):                          Extended Options.    (line 109)
 * PanoTools:                             Standard Workflow.   (line   9)
-* pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  59)
-* pfsin (PFSTools):                      Helpful Programs.    (line  59)
-* pfsout (PFSTools):                     Helpful Programs.    (line  59)
-* pfstmo_* (PFStmo):                     Helpful Programs.    (line  59)
-* pfsview (PFSTools):                    Helpful Programs.    (line  59)
-* PTmender (PanoTools):                  Helpful Programs.    (line  32)
-* PTOptimizer (PanoTools):               Helpful Programs.    (line  32)
-* tifficc (LittleCMS):                   Helpful Programs.    (line  82)
-* tiffinfo (libtiff) <1>:                Helpful Programs.    (line  74)
+* pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  66)
+* pfsin (PFSTools):                      Helpful Programs.    (line  66)
+* pfsout (PFSTools):                     Helpful Programs.    (line  66)
+* pfstmo_* (PFStmo):                     Helpful Programs.    (line  66)
+* pfsview (PFSTools):                    Helpful Programs.    (line  66)
+* PTmender (PanoTools):                  Helpful Programs.    (line  34)
+* PTOptimizer (PanoTools):               Helpful Programs.    (line  34)
+* rawtherapee:                           Helpful Programs.    (line  16)
+* tifficc (LittleCMS):                   Helpful Programs.    (line  89)
+* tiffinfo (libtiff) <1>:                Helpful Programs.    (line  81)
 * tiffinfo (libtiff):                    Understanding Masks. (line  22)
-* ufraw <1>:                             Helpful Programs.    (line  13)
+* ufraw <1>:                             Helpful Programs.    (line  19)
 * ufraw:                                 Standard Workflow.   (line   9)
-* ufraw-batch:                           Helpful Programs.    (line  13)
+* ufraw-batch:                           Helpful Programs.    (line  19)
 
 
 File: enfuse.info,  Node: Syntactic-Comment Index,  Next: Option Index,  Prev: Program Index,  Up: Top
@@ -5762,12 +5771,12 @@ General Index
 * layer selection, no layer:             Common Options.      (line 107)
 * lens distortion, correction of:        Standard Workflow.   (line  48)
 * levels, pyramid:                       Common Options.      (line 114)
-* LibJPEG:                               Helpful Programs.    (line  63)
-* LibPNG:                                Helpful Programs.    (line  66)
+* LibJPEG:                               Helpful Programs.    (line  70)
+* LibPNG:                                Helpful Programs.    (line  73)
 * library, dynamic <1>:                  User-Defined Exposure Weighting Functions.
                                                               (line   6)
 * library, dynamic:                      Fusion Options.      (line  59)
-* LibTiff:                               Helpful Programs.    (line  70)
+* LibTiff:                               Helpful Programs.    (line  77)
 * light probe:                           Exposure Series Misconceptions.
                                                               (line  28)
 * lightness gray projector:              Expert Options.      (line 438)
@@ -6048,16 +6057,16 @@ Node: Focus Stacking Decision Tree268322
 Ref: Figure:focus-stacking-decision-tree268667
 Node: Expert Stacking269451
 Node: Helpful Programs270974
-Node: Bug Reports274702
-Ref: Bug Reports-Footnote-1280357
-Node: Authors280427
-Node: FDL281591
-Node: List of Tables302572
-Node: List of Figures303263
-Node: List of Examples304434
-Node: Program Index305066
-Node: Syntactic-Comment Index308001
-Node: Option Index308689
-Node: General Index312971
+Node: Bug Reports275034
+Ref: Bug Reports-Footnote-1280689
+Node: Authors280759
+Node: FDL281923
+Node: List of Tables302904
+Node: List of Figures303595
+Node: List of Examples304766
+Node: Program Index305398
+Node: Syntactic-Comment Index308479
+Node: Option Index309167
+Node: General Index313449
 
 End Tag Table
