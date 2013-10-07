@@ -167,7 +167,7 @@ delta_e_of_lab_and_rgb(const cmsCIELab* lab, const double* rgb)
 inline double
 out_of_box_penalty(const double* rgb)
 {
-    const double infinite_badness = 100.0;
+    const double infinite_badness = 10000.0;
     double result = 0.0;
 
     for (const double* x = rgb; x != rgb + 3U; ++x) {
@@ -590,6 +590,8 @@ public:
         highlight_iterations_per_leg(limit(enblend::parameter::as_unsigned("highlight-recovery-iterations-per-leg", 50U),
                                            5U, 500U)),
         maximum_highlight_leg(limit(enblend::parameter::as_unsigned("highlight-recovery-maximum-legs", 10U), 1U, 100U)),
+        highlight_disguised_shadow_j(limit(enblend::parameter::as_double("highlight-disguised-as-shadow-lightness", 0.07),
+                                           0.0, 10.0)),
 
         // Parameters for shadow optimizer only
         shadow_lightness_lightness_guess_factor(enblend::parameter::as_double("shadow-recovery-lightness-lightness-guess-factor", 1.24)),
@@ -749,7 +751,7 @@ public:
             return DestVectorType(0, 0, 0);
         }
 
-        // scale back to range J: [0, 100], C: [0, 120], h: [0, 120]
+        // scale back to range J: [0, 100], C: [0, 120], h: [0, 360]
         jch.J /= shift;
         jch.C /= shift;
         jch.h /= shift;
@@ -773,18 +775,44 @@ public:
             double guessed_j = highlight_lightness_guess_1d(jch);
             extra_minimizer_parameter extra(jch);
             gsl_function cost = {delta_e_min_cost, &extra};
-            if (EXPECT_RESULT(bracket_minimum(cost, guessed_j, 0.0, std::max(MAXIMUM_LIGHTNESS, jch.J),
-                                              maximum_highlight_bracket_tries),
-                              true)) {
+            if (EXPECT_RESULT(jch.J <= highlight_disguised_shadow_j, false)) {
+                // ANTICIPATED CHANGE: Linearize transformations for J
+                // \approx 0 and compute rgb-array from linearization.
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef OPENMP
+#pragma omp critical
+#endif
+                std::cout <<
+                    "+ highlight recovery: disguised shadow: J = "  << jch.J <<
+                    " (<= " << highlight_disguised_shadow_j << "), C = " << jch.C << ", h = " << jch.h << "\n" <<
+                    std::endl;
+#endif
+                rgb[0] = 0.0;
+                rgb[1] = 0.0;
+                rgb[2] = 0.0;
+            } else if (EXPECT_RESULT(bracket_minimum(cost, guessed_j, 0.0, std::max(MAXIMUM_LIGHTNESS, jch.J),
+                                                     maximum_highlight_bracket_tries),
+                                     true)) {
                 cmsJCh initial_jch = jch;
-                if (optimize_1d(initial_jch, guessed_j, maximum_highlight_iterations, jch) > optimizer_goal) {
+                const double delta_e_1d = optimize_1d(initial_jch, guessed_j, maximum_highlight_iterations, jch);
+                if (delta_e_1d > optimizer_goal) {
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef OPENMP
+#pragma omp critical
+#endif
+                    std::cout <<
+                        "+ highlight recovery: falling back from J-optimizer to (J, C)-optimizer for ini J = " <<
+                        initial_jch.J << ", {C = " << initial_jch.C << ", h = " << initial_jch.h << "}\n" <<
+                        "+ highlight recovery: 1d opt J = " << jch.J << " and 1d delta-E = " << delta_e_1d << "\n" <<
+                        std::endl;
+#endif
                     optimize_2d(initial_jch,
                                 highlight_lightness_guess_2d(jch), highlight_chroma_guess_2d(jch),
                                 highlight_simplex_lightness_step_length, highlight_simplex_chroma_step_length,
                                 maximum_highlight_leg, highlight_iterations_per_leg,
                                 jch);
-                    jch_to_rgb(&jch, rgb);
                 }
+                jch_to_rgb(&jch, rgb);
             } else {
                 optimize_2d(jch,
                             highlight_lightness_guess_2d(jch), highlight_chroma_guess_2d(jch),
@@ -815,6 +843,7 @@ protected:
     const double highlight_simplex_chroma_step_length;
     const unsigned highlight_iterations_per_leg;
     const unsigned maximum_highlight_leg;
+    const double highlight_disguised_shadow_j;
 
     const double shadow_lightness_lightness_guess_factor;
     const double shadow_lightness_chroma_guess_factor;

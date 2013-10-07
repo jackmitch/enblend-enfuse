@@ -11,6 +11,10 @@ Unreleased.
     "Minimizer1D::set_bracket: minimum not bracketed".
   This addresses LaunchPad Bug #1214004.
 
+- [Enblend and Enfuse] Cleans up seemingly random, bright-colored
+  pixels that sometimes show up when fusing images with high contrast
+  and "large" profiles.
+
 
 Patchlevel 1
 
