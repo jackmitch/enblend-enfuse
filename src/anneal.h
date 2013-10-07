@@ -26,6 +26,7 @@
 #endif
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include <boost/lambda/lambda.hpp>
@@ -42,6 +43,7 @@
 #include <vigra/iteratoradapter.hxx>
 
 #include "masktypedefs.h"
+#include "muopt.h"
 
 #ifdef HAVE_LIBGLEW
 #include "gpu.h"
@@ -50,6 +52,48 @@
 using boost::lambda::bind;
 using boost::lambda::_1;
 using boost::lambda::delete_ptr;
+
+
+// Nicol N. Schraudolph
+// "A Fast, Compact Approximation of the Exponential Function"
+// Neural Computation, vol. 11, pages 853--862, 1999.
+#define SCHRAUDOLPH_EXPONENT_A (1048576.0 / M_LN2)
+#define SCHRAUDOLPH_EXPONENT_A_INT 1512775
+
+inline static double
+schraudolph_exp(double x)
+{
+    if (EXPECT_RESULT(x > 709.0, false)) // log(std::numeric_limits<double>::max()) = 709.783
+    {
+        return std::numeric_limits<double>::infinity();
+    }
+    else if (EXPECT_RESULT(x < -708.0, false)) // log(std::numeric_limits<double>::min()) = -708.396
+    {
+        return double();
+    }
+    else
+    {
+        union schraudolph
+        {
+            double floating_point_value;
+            struct
+            {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+                unsigned least_significant_part;
+                int most_significant_part;
+#else
+                int most_significant_part;
+                unsigned least_significant_part;
+#endif
+            } integral_decomposition;
+        } s;
+
+        s.integral_decomposition.least_significant_part = 0U;
+        s.integral_decomposition.most_significant_part = SCHRAUDOLPH_EXPONENT_A * x + (0x3ff00000 - 60801);
+
+        return s.floating_point_value;
+    }
+}
 
 
 namespace enblend {
@@ -313,7 +357,7 @@ protected:
 #pragma omp parallel
 #endif
         {
-            int* E = new int[kMax];
+            double* E = new double[kMax];
             double* Pi = new double[kMax];
 
 #ifdef OPENMP
@@ -341,10 +385,7 @@ protected:
                 const bool nextPointInCostImage = costImage->isInside(nextPointEstimate);
 
                 // Calculate E values.
-                // exp_a scaling factor is part of the Schraudolph approximation.
-                // for all e_i, e_j, in E: -700 < e_j-e_i < 700
-                const double exp_a = 1512775.0 / tCurrent; // = (1048576 / M_LN2) / tCurrent;
-                for (unsigned int i = 0; i < localK; ++i) {
+                for (unsigned i = 0U; i < localK; ++i) {
                     const vigra::Point2D currentPoint = (*stateSpace)[i];
                     const int distanceCost = (*stateDistances)[i];
                     int mismatchCost = 0;
@@ -358,36 +399,20 @@ protected:
                     const double cost =
                         distanceWeight * static_cast<double>(distanceCost) +
                         mismatchWeight * static_cast<double>(mismatchCost);
-                    E[i] = vigra::NumericTraits<int>::fromRealPromote(cost * exp_a);
+                    E[i] = cost / tCurrent;
                     Pi[i] = 0.0;
                 }
 
                 // Calculate new stateProbabilities
                 // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
-                // I am using an approximation of the exp function from:
-                // Nicol N. Schraudolph. A Fast, Compact Approximation of the Exponential Function.
-                // Neural Computation, vol. 11, pages 853--862, 1999.
-                union {
-                    double d;
-#ifdef WORDS_BIGENDIAN
-                    struct { int hi, lo; } n;
-#else
-                    struct { int lo, hi; } n;
-#endif
-                } eco;
-                eco.n.lo = 0;
-
-                // An = 1 / (1 + exp( (E[j] - E[i]) / T )
                 // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
-                for (unsigned int j = 0; j < localK; ++j) {
+                for (unsigned j = 0U; j < localK; ++j) {
                     const double piTj = (*stateProbabilities)[j];
                     Pi[j] += piTj;
-                    const int ej = E[j];
-                    for (unsigned int i = j + 1; i < localK; ++i) {
+                    const double ej = E[j];
+                    for (unsigned i = j + 1U; i < localK; ++i) {
                         const double piT = (*stateProbabilities)[i] + piTj;
-                        eco.n.hi = (ej - E[i]) + (0x3ff00000 - 60801);
-                        // FIXME eco.n.hi is overflowing into NaN range!
-                        double piTAn = piT / (1.0 + eco.d);
+                        double piTAn = piT / (1.0 + schraudolph_exp(ej - E[i]));
                         if (
 #if defined(_MSC_VER) || defined(__sun__)
                             isnan(piTAn)
