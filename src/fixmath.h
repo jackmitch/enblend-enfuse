@@ -46,6 +46,7 @@ using namespace boost::math;
 #include "vigra_ext/cachedfileimage.hxx"
 
 #include "minimizer.h"
+#include "muopt.h"
 
 
 #define MAXIMUM_LIGHTNESS 100.0 // J
@@ -525,7 +526,7 @@ uniform_random(unsigned* seed)
 }
 
 
-static inline void
+static inline bool
 bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, double x_upper, unsigned maximum_tries)
 {
     const double y_minimum_bound =
@@ -533,7 +534,7 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
     double y_initial = cost.function(x_initial, cost.params);
 
     if (y_initial < y_minimum_bound) {
-        return;
+        return true;
     }
 
     unsigned i = 0U;
@@ -554,6 +555,8 @@ bracket_minimum(const gsl_function& cost, double& x_initial, double x_lower, dou
             std::endl;
 #endif
     }
+
+    return i < maximum_tries;
 }
 
 
@@ -709,8 +712,7 @@ public:
             const double j_max = std::max(MAXIMUM_LIGHTNESS, jch.J);
             double j_initial = highlight_lightness_guess(jch);
 
-            bracket_minimum(cost, j_initial, 0.0, j_max, maximum_highlight_bracket_tries);
-            try {
+            if (EXPECT_RESULT(bracket_minimum(cost, j_initial, 0.0, j_max, maximum_highlight_bracket_tries), true)) {
                 GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
 
                 optimizer.set_absolute_error(optimizer_error)->
@@ -733,7 +735,7 @@ public:
                     ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
                     std::endl;
 #endif
-            } catch (Minimizer::minimum_not_bracketed&) {
+            } else {
                 jch.J = std::min(j_initial, MAXIMUM_LIGHTNESS);
                 jch_to_rgb(&jch, rgb);
 #ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
