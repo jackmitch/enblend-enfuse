@@ -575,14 +575,21 @@ public:
         shift(double(1U << (PyramidIntegerBits - 1 - 7))),
 
         // Parameters for highlight optimizer only
-        highlight_lightness_guess_factor(limit(enblend::parameter::as_double("highlight-recovery-lightness-guess-factor", 0.975),
-                                               0.25, 4.0)),
-        highlight_lightness_guess_offset(enblend::parameter::as_double("highlight-recovery-lightness-guess-offset", 0.0)),
+        highlight_lightness_guess_1d_factor(limit(enblend::parameter::as_double("highlight-recovery-lightness-guess-factor", 0.975),
+                                                  0.25, 4.0)),
+        highlight_lightness_guess_1d_offset(enblend::parameter::as_double("highlight-recovery-lightness-guess-offset", 0.0)),
 
         maximum_highlight_iterations(limit(enblend::parameter::as_unsigned("highlight-recovery-maximum-iterations", 100U),
                                            10U, 1000U)),
         maximum_highlight_bracket_tries(limit(enblend::parameter::as_unsigned("highlight-recovery-bracket-maximum-tries", 1000U),
                                               10U, 1000000U)),
+        highlight_simplex_lightness_step_length(limit(enblend::parameter::as_double("highlight-recovery-lightness-step-length", 12.5),
+                                                      1.0 / 65536.0, 100.0)),
+        highlight_simplex_chroma_step_length(limit(enblend::parameter::as_double("highlight-recovery-chroma-step-length", 6.25),
+                                                   1.0 / 65536.0, 120.0)),
+        highlight_iterations_per_leg(limit(enblend::parameter::as_unsigned("highlight-recovery-iterations-per-leg", 50U),
+                                           5U, 500U)),
+        maximum_highlight_leg(limit(enblend::parameter::as_unsigned("highlight-recovery-maximum-legs", 10U), 1U, 100U)),
 
         // Parameters for shadow optimizer only
         shadow_lightness_lightness_guess_factor(enblend::parameter::as_double("shadow-recovery-lightness-lightness-guess-factor", 1.24)),
@@ -592,12 +599,12 @@ public:
         shadow_chroma_chroma_guess_factor(enblend::parameter::as_double("shadow-recovery-chroma-chroma-guess-factor", 1.33)),
         shadow_chroma_guess_offset(enblend::parameter::as_double("shadow-recovery-chroma-guess-offset", 0.0)),
 
-        simplex_lightness_step_length(limit(enblend::parameter::as_double("shadow-recovery-lightness-step-length", 0.625),
-                                            1.0 / 65536.0, 100.0)),
-        simplex_chroma_step_length(limit(enblend::parameter::as_double("shadow-recovery-chroma-step-length", 1.25),
-                                         1.0 / 65536.0, 120.0)),
-        iterations_per_leg(limit(enblend::parameter::as_unsigned("shadow-recovery-iterations-per-leg", 40U),
-                                 4U, 400U)),
+        shadow_simplex_lightness_step_length(limit(enblend::parameter::as_double("shadow-recovery-lightness-step-length", 0.625),
+                                                   1.0 / 65536.0, 100.0)),
+        shadow_simplex_chroma_step_length(limit(enblend::parameter::as_double("shadow-recovery-chroma-step-length", 1.25),
+                                                1.0 / 65536.0, 120.0)),
+        shadow_iterations_per_leg(limit(enblend::parameter::as_unsigned("shadow-recovery-iterations-per-leg", 40U),
+                                        4U, 400U)),
         maximum_shadow_leg(limit(enblend::parameter::as_unsigned("shadow-recovery-maximum-legs", 5U),
                                  1U, 50U)),
 
@@ -610,30 +617,129 @@ public:
                              0.0, 10.0))
     {}
 
-    inline double highlight_lightness_guess(const cmsJCh& jch) const {
+    inline double highlight_lightness_guess_1d(const cmsJCh& jch) const {
         return std::min( // heuristic function with fitted parameter
-                        highlight_lightness_guess_factor * jch.J + highlight_lightness_guess_offset,
+                        highlight_lightness_guess_1d_factor * jch.J + highlight_lightness_guess_1d_offset,
                         0.995 * MAXIMUM_LIGHTNESS); // backstop such that our guess is less than the maximum
     }
 
-    inline double shadow_lightness_guess(const cmsJCh& jch) const {
+    inline double highlight_lightness_guess_2d(const cmsJCh& jch) const {
+        return std::min(0.99609375 * MAXIMUM_LIGHTNESS, jch.J);
+    }
+
+    inline double highlight_chroma_guess_2d(const cmsJCh& jch) const {
+        return std::min(0.99609375 * MAXIMUM_CHROMA, jch.C);
+    }
+
+    inline double shadow_lightness_guess_2d(const cmsJCh& jch) const {
         return std::max(shadow_lightness_lightness_guess_factor * jch.J +
                         shadow_lightness_chroma_guess_factor * jch.C +
                         shadow_lightness_guess_offset,
                         0.0);
     }
 
-    inline double shadow_chroma_guess(const cmsJCh& jch) const {
+    inline double shadow_chroma_guess_2d(const cmsJCh& jch) const {
         return std::max(shadow_chroma_lightness_guess_factor * jch.J +
                         shadow_chroma_chroma_guess_factor * jch.C +
                         shadow_chroma_guess_offset,
                         0.0);
     }
 
+    inline double optimize_1d(cmsJCh initial_jch,
+                              double initial_lightness,
+                              unsigned maximum_iterations,
+                              cmsJCh& final_jch) const {
+        extra_minimizer_parameter extra(initial_jch);
+        gsl_function cost = {delta_e_min_cost, &extra};
+
+        GoldenSectionMinimizer1D optimizer(cost, initial_lightness, 0.0, std::max(MAXIMUM_LIGHTNESS, initial_jch.J));
+
+        optimizer.set_absolute_error(optimizer_error)->
+            set_goal(optimizer_goal)->
+            set_maximum_number_of_iterations(maximum_iterations);
+        optimizer.run();
+
+        final_jch.J = optimizer.x_minimum();
+
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+        double initial_rgb[3];
+        jch_to_rgb(&initial_jch, initial_rgb);
+        double final_rgb[3];
+        jch_to_rgb(&final_jch, final_rgb);
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ highlight recovery: ini J = " << initial_jch.J << ", {C = " << initial_jch.C << ", h = " << initial_jch.h <<
+            "}, ini RGB = (" << initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+            "+ highlight recovery: opt J = " << optimizer.x_minimum() <<
+            " after " << optimizer.number_of_iterations() << " iterations\n" <<
+            "+ highlight recovery: delta-E = " << optimizer.f_minimum() << "\n" <<
+            "+ highlight recovery: opt RGB = (" << final_rgb[0] << ", " << final_rgb[1] << ", " << final_rgb[2] << ")\n" <<
+            std::endl;
+#endif
+
+        return optimizer.f_minimum();
+    }
+
+    inline double optimize_2d(cmsJCh initial_jch,
+                              double initial_lightness, double initial_chroma,
+                              double initial_lightness_step_length, double initial_chroma_step_length,
+                              unsigned maximum_leg, unsigned iterations_per_leg,
+                              cmsJCh& final_jch) const {
+        extra_minimizer_parameter extra(initial_jch);
+        gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
+        const MinimizerMultiDimensionSimplex::array_type initial =
+            boost::assign::list_of(initial_lightness)(initial_chroma);
+        MinimizerMultiDimensionSimplex::array_type step =
+            boost::assign::list_of(initial_lightness_step_length)(initial_chroma_step_length);
+        MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
+
+        optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);
+        for (unsigned leg = 1U; leg <= maximum_leg; ++leg) {
+            optimizer.set_maximum_number_of_iterations(leg * iterations_per_leg);
+            optimizer.run();
+            if (optimizer.has_reached_goal()) {
+                break;
+            }
+
+            step[0] = optimizer.characteristic_size();
+            step[1] = optimizer.characteristic_size();
+            optimizer.set_step_sizes(step);
+        }
+
+        MinimizerMultiDimensionSimplex::array_type minimum_parameter(2U);
+        optimizer.x_minimum(minimum_parameter.begin());
+
+        final_jch.J = minimum_parameter[0];
+        final_jch.C = minimum_parameter[1];
+
+#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+        double initial_rgb[3];
+        jch_to_rgb(&initial_jch, initial_rgb);
+        double final_rgb[3];
+        jch_to_rgb(&final_jch, final_rgb);
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ shadow/highlight recovery: ini J = " << initial_jch.J << ", C = " << initial_jch.C << ", {h = " << initial_jch.h <<
+            "}, ini RGB = (" << initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
+            "+ shadow/highlight recovery: opt J = " << final_jch.J << ", C = " << final_jch.C <<
+            " after " << optimizer.number_of_iterations() << " iterations\n" <<
+            "+ shadow/highlight recovery: delta-E = " << optimizer.f_minimum() <<
+            ", simplex size = " << optimizer.characteristic_size() << "\n" <<
+            "+ shadow/highlight recovery: opt RGB = (" << final_rgb[0] << ", " << final_rgb[1] << ", " << final_rgb[2] << ")\n" <<
+            std::endl;
+#endif
+
+        return optimizer.f_minimum();
+    }
+
     inline DestVectorType operator()(const PyramidVectorType& v) const {
         cmsJCh jch = {cf(v.red()), cf(v.green()), cf(v.blue())};
         if (jch.J <= 0.0) {
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
+#ifdef DEBUG_DARK_SHADOW_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -656,99 +762,36 @@ public:
         double rgb[3];
         jch_to_rgb(&jch, rgb);
 
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-        double initial_rgb[3]; // for debug print only
-        memcpy(initial_rgb, rgb, 3U * sizeof(double));
-#endif
-
         if (rgb[0] < 0.0 || rgb[1] < 0.0 || rgb[2] < 0.0) {
-            extra_minimizer_parameter extra(jch);
-            gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
-            const MinimizerMultiDimensionSimplex::array_type initial =
-                boost::assign::list_of(shadow_lightness_guess(jch))(shadow_chroma_guess(jch));
-            MinimizerMultiDimensionSimplex::array_type step =
-                boost::assign::list_of(simplex_lightness_step_length)(simplex_chroma_step_length);
-            MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
-
-            optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);
-            for (unsigned leg = 1U; leg <= maximum_shadow_leg; ++leg) {
-                optimizer.set_maximum_number_of_iterations(leg * iterations_per_leg);
-                optimizer.run();
-                if (optimizer.has_reached_goal()) {
-                    break;
-                }
-
-                step[0] = optimizer.characteristic_size();
-                step[1] = optimizer.characteristic_size();
-                optimizer.set_step_sizes(step);
-            }
-
-            MinimizerMultiDimensionSimplex::array_type minimum_parameter(2U);
-            optimizer.x_minimum(minimum_parameter.begin());
-
-            jch.J = minimum_parameter[0];
-            jch.C = minimum_parameter[1];
+            optimize_2d(jch,
+                        shadow_lightness_guess_2d(jch), shadow_chroma_guess_2d(jch),
+                        shadow_simplex_lightness_step_length, shadow_simplex_chroma_step_length,
+                        maximum_shadow_leg, shadow_iterations_per_leg,
+                        jch);
             jch_to_rgb(&jch, rgb);
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-#ifdef OPENMP
-#pragma omp critical
-#endif
-            std::cout <<
-                "+ shadow recovery: ini J = " << initial[0] << ", C = " << initial[1] <<  ", ini RGB = (" <<
-                initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
-                "+ shadow recovery: opt J = " << minimum_parameter[0] << ", C = " << minimum_parameter[1] <<
-                " after " << optimizer.number_of_iterations() <<
-                " iterations, simplex size = " << optimizer.characteristic_size() << "\n" <<
-                "+ shadow recovery: opt delta-E = " << optimizer.f_minimum() <<
-                ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
-                std::endl;
-#endif
         } else if (rgb[0] > 1.0 || rgb[1] > 1.0 || rgb[2] > 1.0) {
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-            const double initial_j = jch.J; // for debug print only
-#endif
+            double guessed_j = highlight_lightness_guess_1d(jch);
             extra_minimizer_parameter extra(jch);
             gsl_function cost = {delta_e_min_cost, &extra};
-            const double j_max = std::max(MAXIMUM_LIGHTNESS, jch.J);
-            double j_initial = highlight_lightness_guess(jch);
-
-            if (EXPECT_RESULT(bracket_minimum(cost, j_initial, 0.0, j_max, maximum_highlight_bracket_tries), true)) {
-                GoldenSectionMinimizer1D optimizer(cost, j_initial, 0.0, j_max);
-
-                optimizer.set_absolute_error(optimizer_error)->
-                    set_goal(optimizer_goal)->
-                    set_maximum_number_of_iterations(maximum_highlight_iterations);
-                optimizer.run();
-
-                jch.J = optimizer.x_minimum();
-                jch_to_rgb(&jch, rgb);
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-#ifdef OPENMP
-#pragma omp critical
-#endif
-                std::cout <<
-                    "+ highlight recovery: ini J = " << initial_j << ", {C = " << jch.C << "}, ini RGB = (" <<
-                    initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
-                    "+ highlight recovery: opt J = " << optimizer.x_minimum() <<
-                    " after " << optimizer.number_of_iterations() << " iterations\n" <<
-                    "+ highlight recovery: opt delta-E = " << optimizer.f_minimum() <<
-                    ", opt RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
-                    std::endl;
-#endif
+            if (EXPECT_RESULT(bracket_minimum(cost, guessed_j, 0.0, std::max(MAXIMUM_LIGHTNESS, jch.J),
+                                              maximum_highlight_bracket_tries),
+                              true)) {
+                cmsJCh initial_jch = jch;
+                if (optimize_1d(initial_jch, guessed_j, maximum_highlight_iterations, jch) > optimizer_goal) {
+                    optimize_2d(initial_jch,
+                                highlight_lightness_guess_2d(jch), highlight_chroma_guess_2d(jch),
+                                highlight_simplex_lightness_step_length, highlight_simplex_chroma_step_length,
+                                maximum_highlight_leg, highlight_iterations_per_leg,
+                                jch);
+                    jch_to_rgb(&jch, rgb);
+                }
             } else {
-                jch.J = std::min(j_initial, MAXIMUM_LIGHTNESS);
+                optimize_2d(jch,
+                            highlight_lightness_guess_2d(jch), highlight_chroma_guess_2d(jch),
+                            highlight_simplex_lightness_step_length, highlight_simplex_chroma_step_length,
+                            maximum_highlight_leg, highlight_iterations_per_leg,
+                            jch);
                 jch_to_rgb(&jch, rgb);
-#ifdef DEBUG_SHADOW_HIGHLIGHT_STATISTICS
-#ifdef OPENMP
-#pragma omp critical
-#endif
-                std::cout <<
-                    "+ highlight recovery: minimum not bracketed!  j_initial = " << j_initial <<
-                    ", ini RGB = (" << initial_rgb[0] << ", " << initial_rgb[1] << ", " << initial_rgb[2] << ")\n" <<
-                    "+ highlight recovery: assumed J := " << jch.J <<
-                    ", final RGB = (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")\n" <<
-                    std::endl;
-#endif
             }
         }
 
@@ -764,10 +807,14 @@ protected:
     const double scale;
     const double shift;
 
-    const double highlight_lightness_guess_factor;
-    const double highlight_lightness_guess_offset;
+    const double highlight_lightness_guess_1d_factor;
+    const double highlight_lightness_guess_1d_offset;
     const unsigned maximum_highlight_iterations;
     const unsigned maximum_highlight_bracket_tries;
+    const double highlight_simplex_lightness_step_length;
+    const double highlight_simplex_chroma_step_length;
+    const unsigned highlight_iterations_per_leg;
+    const unsigned maximum_highlight_leg;
 
     const double shadow_lightness_lightness_guess_factor;
     const double shadow_lightness_chroma_guess_factor;
@@ -776,9 +823,9 @@ protected:
     const double shadow_chroma_chroma_guess_factor;
     const double shadow_chroma_guess_offset;
 
-    const double simplex_lightness_step_length;
-    const double simplex_chroma_step_length;
-    const unsigned iterations_per_leg;
+    const double shadow_simplex_lightness_step_length;
+    const double shadow_simplex_chroma_step_length;
+    const unsigned shadow_iterations_per_leg;
     const unsigned maximum_shadow_leg;
 
     const double optimizer_error;
