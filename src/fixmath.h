@@ -60,14 +60,14 @@ namespace enblend {
 static inline double
 radian_of_degree(double x)
 {
-    return x * M_PI / 180.0;
+    return x * (M_PI / 180.0);
 }
 
 
 static inline double
 degree_of_radian(double x)
 {
-    return x * 180.0 / M_PI;
+    return x * (180.0 / M_PI);
 }
 
 
