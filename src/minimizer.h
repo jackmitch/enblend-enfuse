@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Dr. Christoph L. Spiel
+ * Copyright (C) 2012, 2013 Dr. Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -26,6 +26,7 @@
 #include <config.h>
 #endif
 
+#include <stdexcept>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -130,6 +131,11 @@ public:
         return maximum_iteration_ && iteration_ >= *maximum_iteration_;
     }
 
+    struct minimum_not_bracketed : public std::runtime_error
+    {
+        minimum_not_bracketed(const std::string& a_message) : std::runtime_error(a_message) {}
+    };
+
 protected:
     virtual double absolute_error() const
     {
@@ -197,7 +203,7 @@ public:
 
         if (status == GSL_EINVAL)
         {
-            throw std::runtime_error("Minimizer1D::set_bracket: minimum not bracketed");
+            throw minimum_not_bracketed("Minimizer1D::set_bracket: minimum not bracketed");
         }
         else if (status != GSL_SUCCESS)
         {
@@ -667,7 +673,7 @@ private:
 };
 
 
-#endif /* MINIMIZER_H_INCLUDED */
+#endif // MINIMIZER_H_INCLUDED
 
 // Local Variables:
 // mode: c++

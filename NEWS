@@ -1,5 +1,17 @@
 * Version 4.1.x  --  Stable Branch
 
+Patchlevel 2
+
+Unreleased.
+
+** Bug Fixes
+
+- [Enblend and Enfuse] Fix a bug in the highlight-recovery that caused
+  Enfuse to bail out with the uncaught exception
+    "Minimizer1D::set_bracket: minimum not bracketed".
+  This addresses LaunchPad Bug #1214004.
+
+
 Patchlevel 1
 
 Released on February 15, 2013.
