@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-e09d2d785b04, 1 October
+   This manual is for Enblend (version 4.2-7e2f0a62c77a, 1 October
 2013), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-e09d2d785b04, 1 October 2013),
+This manual is for Enblend (version 4.2-7e2f0a62c77a, 1 October 2013),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -1287,7 +1287,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-e09d2d785b04)
+     version 3.2 used 1:1.  This version of Enblend (4.2-7e2f0a62c77a)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1560,7 +1560,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-e09d2d785b04) of Enblend supports two main algorithms
+This version (4.2-7e2f0a62c77a) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 

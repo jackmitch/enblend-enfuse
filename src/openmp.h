@@ -67,8 +67,8 @@ namespace omp
 #define OMP_MALLOC_FUNCTIONS "tc_malloc/tc_delete"
         return tc_malloc(size);
 #else
-#define OMP_MALLOC_FUNCTIONS "new[]/delete[]"
-        return new char[size];
+#define OMP_MALLOC_FUNCTIONS "malloc/free"
+        return ::malloc(size);
 #endif
     }
 
@@ -80,7 +80,7 @@ namespace omp
 #elif defined(HAVE_TCMALLOC)
         tc_free(pointer);
 #else
-        delete [] static_cast<char*>(pointer);
+        ::free(pointer);
 #endif
     }
 
