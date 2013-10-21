@@ -91,14 +91,14 @@ namespace omp
         lock() {omp_init_lock(&lock_);}
         ~lock() {omp_destroy_lock(&lock_);}
 
+        lock(const lock&) = delete;
+        lock& operator=(const lock&) = delete;
+
         void set() {omp_set_lock(&lock_);}
         void unset() {omp_unset_lock(&lock_);}
         bool test() {return omp_test_lock(&lock_);}
 
     private:
-        lock(const lock&);            // not implemented
-        lock& operator=(const lock&); // not implemented
-
         omp_lock_t lock_;
     };
 
@@ -109,14 +109,14 @@ namespace omp
         nestable_lock() {omp_init_nest_lock(&lock_);}
         ~nestable_lock() {omp_destroy_nest_lock(&lock_);}
 
+        nestable_lock(const nestable_lock&) = delete;
+        nestable_lock& operator=(const nestable_lock&) = delete;
+
         void set() {omp_set_nest_lock(&lock_);}
         void unset() {omp_unset_nest_lock(&lock_);}
         bool test() {return omp_test_nest_lock(&lock_);}
 
     private:
-        nestable_lock(const nestable_lock&);            // not implemented
-        nestable_lock& operator=(const nestable_lock&); // not implemented
-
         omp_nest_lock_t lock_;
     };
 }
@@ -544,13 +544,12 @@ namespace omp
         lock() {}
         ~lock() {}
 
+        lock(const lock&) = delete;
+        lock& operator=(const lock&) = delete;
+
         void set() {}
         void unset() {}
         bool test() {return false;}
-
-    private:
-        lock(const lock&);            // not implemented
-        lock& operator=(const lock&); // not implemented
     };
 
 
@@ -560,13 +559,12 @@ namespace omp
         nestable_lock() {}
         ~nestable_lock() {}
 
+        nestable_lock(const nestable_lock&) = delete;
+        nestable_lock& operator=(const nestable_lock&) = delete;
+
         void set() {}
         void unset() {}
         bool test() {return false;}
-
-    private:
-        nestable_lock(const nestable_lock&);            // not implemented
-        nestable_lock& operator=(const nestable_lock&); // not implemented
     };
 }
 
@@ -834,18 +832,19 @@ namespace omp
     class scoped_lock
     {
     public:
-        scoped_lock(basic_lock& a_lock) : lock_(&a_lock) {lock_->set();}
+        scoped_lock() = delete;
+
+        explicit scoped_lock(basic_lock& a_lock) : lock_(&a_lock) {lock_->set();}
         ~scoped_lock() {lock_->unset();}
+
+        scoped_lock(const scoped_lock&) = delete;
+        scoped_lock& operator=(const scoped_lock&) = delete;
 
         void set() {lock_->set();}
         void unset() {lock_->unset();}
         bool test() {return lock_->test();}
 
     private:
-        scoped_lock();                              // not implemented
-        scoped_lock(const scoped_lock&);            // not implemented
-        scoped_lock& operator=(const scoped_lock&); // not implemented
-
         basic_lock* const lock_;
     }; // class scoped_lock
 } // namespace omp

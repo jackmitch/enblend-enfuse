@@ -37,7 +37,6 @@
 #include <cctype>
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/assign/list_of.hpp>
 
 #include <vigra/imageinfo.hxx>
 
@@ -87,7 +86,7 @@ glob_filename_win32(FileNameList& filelist, const std::string& filename)
     char ext[_MAX_EXT];
     char newFile[_MAX_PATH];
 
-    _splitpath(filename.c_str(), drive, dir, NULL, NULL);
+    _splitpath(filename.c_str(), drive, dir, nullptr, nullptr);
 
     struct _finddata_t finddata;
     intptr_t findhandle = _findfirst(filename.c_str(), &finddata);
@@ -95,7 +94,7 @@ glob_filename_win32(FileNameList& filelist, const std::string& filename)
     {
         do
         {
-            _splitpath(finddata.name, NULL, NULL, fname, ext);
+            _splitpath(finddata.name, nullptr, nullptr, fname, ext);
             _makepath(newFile, drive, dir, fname, ext);
             filelist.push_back(std::string(newFile));
         }
@@ -327,7 +326,7 @@ public:
         errno = 0;
         if (glob(a_filespec.c_str(),
                  flags,
-                 NULL, // (*errfunc)(const char* filename, int error_code)
+                 nullptr, // (*errfunc)(const char* filename, int error_code)
                  result_vector_) != 0)
         {
             std::cerr << command <<
@@ -341,7 +340,7 @@ public:
     {
         result_.clear();
 
-        for (char** path = result_vector_->gl_pathv; *path != NULL; ++path)
+        for (char** path = result_vector_->gl_pathv; *path != nullptr; ++path)
         {
             result_.push_back(*path);
         }
@@ -404,22 +403,19 @@ public:
 class Globbing
 {
     // Map from the names of the algorithms or aliases to the
-    // algorithm itself.  The boolean flag indicates whether we point
-    // to the algorithm proper or the name is just an alias to an
-    // existing algorithm.
+    // algorithms themselves.  The boolean flag indicates whether we
+    // point to the algorithm proper or the name is just an alias to
+    // an existing algorithm.
     typedef std::map<std::string, std::pair<bool, AbstractGlobbingAlgorithm*> > algorithm_map;
 
 public:
-    Globbing() : algorithm_name_("literal"), algorithm_(NULL)
+    Globbing() : algorithm_name_("literal"), algorithm_(nullptr)
     {
-        installed_algorithms_ =
-            boost::assign::map_list_of
-            ("literal", MAKE_ALGORITHM(new LiteralGlobbingAlgorithm))
-            ("wildcard", MAKE_ALGORITHM(new WildcardGlobbingAlgorithm))
+        installed_algorithms_["literal"] = MAKE_ALGORITHM(new LiteralGlobbingAlgorithm);
+        installed_algorithms_["wildcard"] = MAKE_ALGORITHM(new WildcardGlobbingAlgorithm);
 #ifndef _WIN32
-            ("shell", MAKE_ALGORITHM(new ShellGlobbingAlgorithm))
+        installed_algorithms_["shell"] = MAKE_ALGORITHM(new ShellGlobbingAlgorithm);
 #endif
-            ;
 
         setup_alias("literal", "none");
 #ifndef _WIN32
@@ -439,7 +435,7 @@ public:
             }
         }
 
-        algorithm_ = NULL;
+        algorithm_ = nullptr;
     }
 
     const std::string& get_algorithm() const
@@ -464,7 +460,7 @@ public:
 
     FileNameList expand(const std::string& a_filename, const FilePositionTrace& trace)
     {
-        if (algorithm_ == NULL)
+        if (algorithm_ == nullptr)
         {
             set_algorithm(algorithm_name_);
         }

@@ -62,7 +62,7 @@ struct test_case {
 inline static int
 int_of_string(const char* s)
 {
-    return static_cast<int>(strtol(s, NULL, 10));
+    return static_cast<int>(strtol(s, nullptr, 10));
 }
 
 
@@ -72,7 +72,7 @@ reset_getopt_globals()
     opterr = 0;                 // silence getopt_long(3)
     optopt = -1;                // reset "unknown option" character
     optind = 1;                 // reset parsing index
-    optarg = NULL;              // reset pointer to value of option argument
+    optarg = nullptr;              // reset pointer to value of option argument
 }
 
 
@@ -81,10 +81,10 @@ try_out_getopt_long(int arg_count, const char* arguments[], int* flags)
 {
     const char* short_options = "ab:c::";
     const struct option long_options[] = {
-        {"long-a", no_argument,       NULL, 1},
-        {"long-b", required_argument, NULL, 2},
-        {"long-c", optional_argument, NULL, 3},
-        {NULL, 0, NULL, 0}
+        {"long-a", no_argument,       nullptr, 1},
+        {"long-b", required_argument, nullptr, 2},
+        {"long-c", optional_argument, nullptr, 3},
+        {nullptr, 0, nullptr, 0}
     };
 
     reset_getopt_globals();
@@ -109,7 +109,7 @@ try_out_getopt_long(int arg_count, const char* arguments[], int* flags)
             flags[b_long] = int_of_string(optarg);
             break;
         case 3:
-            flags[c_long] = optarg == NULL ? 1 : int_of_string(optarg);
+            flags[c_long] = optarg == nullptr ? 1 : int_of_string(optarg);
             break;
         case 'a':
             flags[a_short] = 1;
@@ -118,7 +118,7 @@ try_out_getopt_long(int arg_count, const char* arguments[], int* flags)
             flags[b_short] = int_of_string(optarg);
             break;
         case 'c':
-            flags[c_short] = optarg == NULL ? 1 : int_of_string(optarg);
+            flags[c_short] = optarg == nullptr ? 1 : int_of_string(optarg);
             break;
         default:
             return -1;
@@ -184,12 +184,12 @@ getopt_long_works_ok()
         {{"p", "-a", "--long-b=2", ARG1},          {1, 0, 0, 0, 2, 0}},
         {{"p", "-b2", "--long-b=2", ARG1},         {0, 2, 0, 0, 2, 0}},
 
-        {{NULL, NULL, NULL}, {0, 0, 0, 0, 0, 0}}
+        {{nullptr, nullptr, nullptr}, {0, 0, 0, 0, 0, 0}}
     };
     const unsigned arg_count = lengthof(tests->arguments);
     const unsigned flag_count = lengthof(tests->flags);
 
-    for (struct test_case* t = tests; t->arguments[0] != NULL; ++t)
+    for (struct test_case* t = tests; t->arguments[0] != nullptr; ++t)
     {
         int flags[] = {0, 0, 0, 0, 0, 0};
         assert(lengthof(tests->flags) == lengthof(flags));

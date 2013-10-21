@@ -30,9 +30,9 @@
 
 
 LayerSelectionHost::LayerSelectionHost() :
-    selector_(NULL),
-    info_(NULL),
-    tally_(NULL)
+    selector_(nullptr),
+    info_(nullptr),
+    tally_(nullptr)
 {}
 
 

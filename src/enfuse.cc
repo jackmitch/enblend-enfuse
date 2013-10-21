@@ -131,7 +131,7 @@ bool OutputIsValid = true;
 
 bool UseGPU = false;
 namespace cl {class Context;}
-cl::Context* GPUContext = NULL;
+cl::Context* GPUContext = nullptr;
 
 parameter_map Parameter;
 
@@ -141,16 +141,16 @@ sigset_t SigintMask;
 #endif
 
 // Objects for ICC profiles
-cmsHPROFILE InputProfile = NULL;
-cmsHPROFILE XYZProfile = NULL;
-cmsHPROFILE LabProfile = NULL;
-cmsHTRANSFORM InputToXYZTransform = NULL;
-cmsHTRANSFORM XYZToInputTransform = NULL;
-cmsHTRANSFORM InputToLabTransform = NULL;
-cmsHTRANSFORM LabToInputTransform = NULL;
+cmsHPROFILE InputProfile = nullptr;
+cmsHPROFILE XYZProfile = nullptr;
+cmsHPROFILE LabProfile = nullptr;
+cmsHTRANSFORM InputToXYZTransform = nullptr;
+cmsHTRANSFORM XYZToInputTransform = nullptr;
+cmsHTRANSFORM InputToLabTransform = nullptr;
+cmsHTRANSFORM LabToInputTransform = nullptr;
 cmsViewingConditions ViewingConditions;
-cmsHANDLE CIECAMTransform = NULL;
-cmsHPROFILE FallbackProfile = NULL;
+cmsHANDLE CIECAMTransform = nullptr;
+cmsHPROFILE FallbackProfile = nullptr;
 
 Signature sig;
 LayerSelectionHost LayerSelection;
@@ -177,9 +177,9 @@ LayerSelectionHost LayerSelection;
 template <typename InputPixelType, typename ResultPixelType>
 size_t enblend::Histogram<InputPixelType, ResultPixelType>::precomputedSize = 0;
 template <typename InputPixelType, typename ResultPixelType>
-double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedLog = NULL;
+double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedLog = nullptr;
 template <typename InputPixelType, typename ResultPixelType>
-double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = NULL;
+double* enblend::Histogram<InputPixelType, ResultPixelType>::precomputedEntropy = nullptr;
 
 
 #define DUMP_GLOBAL_VARIABLES(...) dump_global_variables(__FILE__, __LINE__, ##__VA_ARGS__)
@@ -295,7 +295,7 @@ void printVersionAndExit() {
 #else
             const char* tmpdir = getenv("TMPDIR");
             std::cout << "  - environment variable TMPDIR ";
-            if (tmpdir == NULL) {
+            if (tmpdir == nullptr) {
                 std::cout << "not set, cache file in default directory \"/tmp\"\n";
             } else {
                 std::cout << "set, cache file located in \"" << tmpdir << "\"\n";
@@ -567,7 +567,7 @@ void sigint_handler(int sig)
     struct sigaction action;
     action.sa_handler = SIG_DFL;
     sigemptyset(&(action.sa_mask));
-    sigaction(sig, &action, NULL);
+    sigaction(sig, &action, nullptr);
 #else
     signal(sig, SIG_DFL);
 #endif
@@ -838,20 +838,20 @@ fill_mask_templates(const char* an_option_argument,
                     std::string& a_soft_mask_template, std::string& a_hard_mask_template,
                     const std::string& an_option_name)
 {
-    if (an_option_argument != NULL && *an_option_argument != 0) {
+    if (an_option_argument != nullptr && *an_option_argument != 0) {
         char* s = new char[strlen(an_option_argument) + 1];
         strcpy(s, an_option_argument);
 
-        char* save_ptr = NULL;
+        char* save_ptr = nullptr;
         char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
         a_soft_mask_template = token;
-        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-        if (token != NULL && *token != 0) {
+        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
+        if (token != nullptr && *token != 0) {
             a_hard_mask_template = token;
         }
 
-        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-        if (token != NULL && *token != 0) {
+        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
+        if (token != nullptr && *token != 0) {
             std::cerr << command
                       << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << std::endl;
         }
@@ -865,6 +865,8 @@ fill_mask_templates(const char* an_option_argument,
 class DynamicExposureWeight : public ExposureWeight
 {
 public:
+    DynamicExposureWeight() = delete;
+
     DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name) :
         ExposureWeight(0.5, 0.25),
         library(library_name), symbol(symbol_name),
@@ -893,8 +895,6 @@ private:
     std::string symbol;
     DynamicLoader dynamic_loader;
     ExposureWeight* function;
-
-    DynamicExposureWeight();    // NOT IMPLEMENTED
 };
 #endif // HAVE_DL
 
@@ -1067,9 +1067,9 @@ process_options(int argc, char** argv)
 
         case PreferGpuId:
 #ifdef OPENCL
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
-                if (delimiter == NULL) {
+                if (delimiter == nullptr) {
                     preferredGPUDevice = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU device out of range", 1U);
                 } else {
                     *delimiter = 0;
@@ -1110,7 +1110,7 @@ process_options(int argc, char** argv)
 
         case 'w': // FALLTHROUGH
         case WrapAroundId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 WrapAround = enblend::wraparoundOfString(optarg);
                 if (WrapAround == UnknownWrapAround) {
                     std::cerr << command
@@ -1150,11 +1150,11 @@ process_options(int argc, char** argv)
         case EdgeScaleId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
 
-            if (token == NULL || *token == 0) {
+            if (token == nullptr || *token == 0) {
                 std::cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
                           << "scale is required." << std::endl;
                 failed = true;
@@ -1176,8 +1176,8 @@ process_options(int argc, char** argv)
                 }
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 errno = 0;
                 FilterConfig.lceScale = strtod(token, &tail);
                 if (errno == 0) {
@@ -1197,8 +1197,8 @@ process_options(int argc, char** argv)
                 }
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 errno = 0;
                 FilterConfig.lceFactor = strtod(token, &tail);
                 if (errno == 0) {
@@ -1218,7 +1218,7 @@ process_options(int argc, char** argv)
                 }
             }
 
-            if (save_ptr != NULL && *save_ptr != 0) {
+            if (save_ptr != nullptr && *save_ptr != 0) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
                           << save_ptr << "\" in argument to \"--contrast-edge-scale\"" << std::endl;
             }
@@ -1231,11 +1231,11 @@ process_options(int argc, char** argv)
         case EntropyCutoffId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
 
-            if (token == NULL || *token == 0) {
+            if (token == nullptr || *token == 0) {
                 std::cerr << command << ": no scale given to \"--entropy-cutoff\".  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
@@ -1260,8 +1260,8 @@ process_options(int argc, char** argv)
                 }
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 errno = 0;
                 EntropyUpperCutoff.set_value(strtod(token, &tail));
                 if (errno == 0) {
@@ -1282,7 +1282,7 @@ process_options(int argc, char** argv)
                 }
             }
 
-            if (save_ptr != NULL && *save_ptr != 0) {
+            if (save_ptr != nullptr && *save_ptr != 0) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
                           << save_ptr << "\" in argument to \"--entropy-cutoff\"" << std::endl;
             }
@@ -1295,11 +1295,11 @@ process_options(int argc, char** argv)
         case ExposureCutoffId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
 
-            if (token == NULL || *token == 0) {
+            if (token == nullptr || *token == 0) {
                 std::cerr << command << ": no scale given to \"--exposure-cutoff\".  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
@@ -1324,8 +1324,8 @@ process_options(int argc, char** argv)
                 }
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 errno = 0;
                 ExposureUpperCutoff.set_value(strtod(token, &tail));
                 if (errno == 0) {
@@ -1346,17 +1346,17 @@ process_options(int argc, char** argv)
                 }
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 ExposureLowerCutoffGrayscaleProjector = token;
             }
 
-            token = enblend::strtoken_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != NULL && *token != 0) {
+            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            if (token != nullptr && *token != 0) {
                 ExposureUpperCutoffGrayscaleProjector = token;
             }
 
-            if (save_ptr != NULL && *save_ptr != 0) {
+            if (save_ptr != nullptr && *save_ptr != 0) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
                           << save_ptr << "\" in argument to \"--exposure-cutoff\"" << std::endl;
             }
@@ -1367,7 +1367,7 @@ process_options(int argc, char** argv)
         }
 
         case CompressionId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 std::string upper_opt(optarg);
                 boost::algorithm::to_upper(upper_opt);
                 if (upper_opt == "NONE") {
@@ -1413,7 +1413,7 @@ process_options(int argc, char** argv)
             break;
 
         case GrayProjectorId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 GrayscaleProjector = optarg;
             } else {
                 std::cerr << command << ": option \"--gray-projector\" requires an argument" << std::endl;
@@ -1424,7 +1424,7 @@ process_options(int argc, char** argv)
 
         case 'd': // FALLTHROUGH
         case DepthId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
             } else {
                 std::cerr << command << ": options \"-d\" or \"--depth\" require arguments" << std::endl;
@@ -1440,7 +1440,7 @@ process_options(int argc, char** argv)
                           << ": warning: more than one output file specified"
                           << std::endl;
             }
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 OutputFileName = optarg;
             } else {
                 std::cerr << command << ": options \"-o\" or \"--output\" require arguments" << std::endl;
@@ -1462,7 +1462,7 @@ process_options(int argc, char** argv)
             break;
 
         case WeightExposureId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 WExposure = enblend::numberOfString(optarg,
                                                     _1 >= 0.0, //< minimum-weight-exposure 0
                                                     "exposure weight less than 0; will use 0",
@@ -1478,7 +1478,7 @@ process_options(int argc, char** argv)
             break;
 
         case WeightContrastId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 WContrast = enblend::numberOfString(optarg,
                                                     _1 >= 0.0, //< minimum-weight-contrast 0
                                                     "contrast weight less than 0; will use 0",
@@ -1494,7 +1494,7 @@ process_options(int argc, char** argv)
             break;
 
         case WeightSaturationId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 WSaturation = enblend::numberOfString(optarg,
                                                       _1 >= 0.0, //< minimum-weight-saturation 0
                                                       "saturation weight less than 0; will use 0",
@@ -1514,7 +1514,7 @@ process_options(int argc, char** argv)
             std::cerr << command << ": info: option \"--exposure-mu\" is obsolete, prefer \"--exposure-optimum\"" << std::endl;
             // FALLTHROUGH
         case ExposureOptimumId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 ExposureOptimum = enblend::numberOfString(optarg,
                                                           _1 >= 0.0, //< minimum-exposure-optimum 0
                                                           "exposure optimum value less than 0; will use 0",
@@ -1534,7 +1534,7 @@ process_options(int argc, char** argv)
             std::cerr << command << ": info: option \"--exposure-sigma\" is obsolete, prefer \"--exposure-width\"" << std::endl;
             // FALLTHROUGH
         case ExposureWidthId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 ExposureWidth = enblend::numberOfString(optarg,
                                                         _1 > 0.0, //< minimum-exposure-width 0
                                                         "exposure width less than 0; will use 1/1024",
@@ -1549,10 +1549,10 @@ process_options(int argc, char** argv)
         case ExposureWeightFunctionId: {
             char* s = new char[strlen(optarg) + 1];
             strcpy(s, optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
 
-            if (token == NULL || *token == 0) {
+            if (token == nullptr || *token == 0) {
                 std::cerr << command << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
                 failed = true;
             } else {
@@ -1562,8 +1562,8 @@ process_options(int argc, char** argv)
                 if (ExposureWeightFunctionName.length() == 1U) {
                     const char sep = strlen(optarg) > 2 ? optarg[1] : 0;
                     if (sep == ':') {
-                        token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                        if(token == NULL || *token == 0) {
+                        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
+                        if(token == nullptr || *token == 0) {
                             std::cerr << command << ": option \"--exposure-weight-function\" requires a valid filename" << std::endl;
                             failed = true;
                             break;
@@ -1576,8 +1576,8 @@ process_options(int argc, char** argv)
                 boost::algorithm::to_lower(ExposureWeightFunctionName);
 
                 while (true) {
-                    token = enblend::strtoken_r(NULL, PATH_OPTION_DELIMITERS, &save_ptr);
-                    if (token == NULL) {
+                    token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
+                    if (token == nullptr) {
                         break;
                     }
                     ExposureWeightFunctionArguments.push_back(token);
@@ -1589,7 +1589,7 @@ process_options(int argc, char** argv)
         }
 
         case WeightEntropyId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 WEntropy = enblend::numberOfString(optarg,
                                                    _1 >= 0.0, //< minimum-weight-entropy 0
                                                    "entropy weight less than 0; will use 0",
@@ -1606,7 +1606,7 @@ process_options(int argc, char** argv)
 
         case 'v': // FALLTHROUGH
         case VerboseId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 Verbose = enblend::numberOfString(optarg,
                                                   _1 >= 0, //< minimum-verbosity-level 0
                                                   "verbosity level less than 0; will use 0",
@@ -1618,7 +1618,7 @@ process_options(int argc, char** argv)
             break;
 
         case ContrastWindowSizeId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 ContrastWindowSize =
                     enblend::numberOfString(optarg,
                                             _1 >= 3, //< minimum-contrast-window-size 3
@@ -1638,7 +1638,7 @@ process_options(int argc, char** argv)
             break;
 
         case EntropyWindowSizeId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 EntropyWindowSize =
                     enblend::numberOfString(optarg,
                                             _1 >= 3, //< minimum-entropy-window-size 3
@@ -1659,7 +1659,7 @@ process_options(int argc, char** argv)
 
 #ifdef CACHE_IMAGES
         case 'b':
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 const int cache_block_size =
                     enblend::numberOfString(optarg,
                                             _1 >= 1, //< minimum-cache-block-size 1@dmn{KB}
@@ -1688,7 +1688,7 @@ process_options(int argc, char** argv)
         case FallbackProfileId:
             if (enblend::can_open_file(optarg)) {
                 FallbackProfile = cmsOpenProfileFromFile(optarg, "r");
-                if (FallbackProfile == NULL) {
+                if (FallbackProfile == nullptr) {
                     std::cerr << command << ": failed to open fallback ICC profile file \"" << optarg << "\"\n";
                     exit(1);
                 }
@@ -1699,7 +1699,7 @@ process_options(int argc, char** argv)
             break;
 
         case 'f':
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 const int n = sscanf(optarg,
                                      "%dx%d+%d+%d",
                                      &OutputWidthCmdLine, &OutputHeightCmdLine,
@@ -1728,7 +1728,7 @@ process_options(int argc, char** argv)
 
         case 'l': // FALLTHROUGH
         case LevelsId:
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);
                 boost::algorithm::to_upper(levels);
                 if (levels == "AUTO" || levels == "AUTOMATIC") {
@@ -1760,7 +1760,7 @@ process_options(int argc, char** argv)
 
 #ifdef CACHE_IMAGES
         case 'm':
-            if (optarg != NULL && *optarg != 0) {
+            if (optarg != nullptr && *optarg != 0) {
                 const int cache_size =
                     enblend::numberOfString(optarg,
                                             _1 >= 1, //< minimum-cache-size 1@dmn{MB}
@@ -1790,15 +1790,15 @@ process_options(int argc, char** argv)
         case ParameterId: {
             boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
 
-            while (token != NULL) {
+            while (token != nullptr) {
                 std::string key;
                 std::string value;
                 char* delimiter = strpbrk(token, ASSIGNMENT_CHARACTERS);
 
-                if (delimiter == NULL) {
+                if (delimiter == nullptr) {
                     key = token;
                 } else {
                     key = std::string(token, delimiter);
@@ -1814,7 +1814,7 @@ process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             }
 
             break;
@@ -1823,10 +1823,10 @@ process_options(int argc, char** argv)
         case NoParameterId: {
             boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
-            char* save_ptr = NULL;
+            char* save_ptr = nullptr;
             char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
 
-            while (token != NULL) {
+            while (token != nullptr) {
                 std::string key(token);
                 boost::trim(key);
 
@@ -1839,7 +1839,7 @@ process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(NULL, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             }
 
             break;
@@ -1970,11 +1970,11 @@ process_options(int argc, char** argv)
                 };
 
                 GPUContext = new cl::Context(devices, context_properties,
-                                             /* pfn_notify */ NULL, /* user_data */ NULL,
+                                             /* pfn_notify */ nullptr, /* user_data */ nullptr,
                                              &error_code);
                 if (error_code != CL_SUCCESS) {
                     delete GPUContext;
-                    GPUContext = NULL;
+                    GPUContext = nullptr;
                     std::cerr << command << ": warning: failed to create OpenCL context, cannot enable GPU: " <<
                         ocl::string_of_error_code(error_code) << "\n";
                 }
@@ -2005,7 +2005,7 @@ int main(int argc, char** argv)
     struct sigaction action;
     action.sa_handler = sigint_handler;
     sigemptyset(&(action.sa_mask));
-    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGINT, &action, nullptr);
 #else
     signal(SIGINT, sigint_handler);
 #endif
@@ -2090,7 +2090,7 @@ int main(int argc, char** argv)
     enblend::FileNameList inputFileNameList;
     enblend::TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
     while (inputFileNameIterator != inputTraceableFileNameList.end()) {
-        vigra::ImageImportInfo* inputInfo = NULL;
+        vigra::ImageImportInfo* inputInfo = nullptr;
         std::string filename(inputFileNameIterator->filename());
         try {
             vigra::ImageImportInfo info(filename.c_str());
@@ -2178,7 +2178,7 @@ int main(int argc, char** argv)
                 iccProfile = inputInfo->getICCProfile();
                 if (!iccProfile.empty()) {
                     InputProfile = cmsOpenProfileFromMem(iccProfile.data(), iccProfile.size());
-                    if (InputProfile == NULL) {
+                    if (InputProfile == nullptr) {
                         std::cerr << std::endl
                                   << command << ": error parsing ICC profile data from file \""
                                   << inputFileNameIterator->filename()
@@ -2233,11 +2233,11 @@ int main(int argc, char** argv)
                     !std::equal(iccProfile.begin(), iccProfile.end(),
                                 inputInfo->getICCProfile().begin())) {
                     vigra::ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
-                    cmsHPROFILE newProfile = NULL;
+                    cmsHPROFILE newProfile = nullptr;
                     if (!mismatchProfile.empty()) {
                         newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
                                                            mismatchProfile.size());
-                        if (newProfile == NULL) {
+                        if (newProfile == nullptr) {
                             std::cerr << std::endl
                                       << command << ": error parsing ICC profile data from file \""
                                       << inputFileNameIterator->filename()
@@ -2374,16 +2374,16 @@ int main(int argc, char** argv)
 
         if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
             UseCIECAM = true;
-            if (InputProfile == NULL) {
+            if (InputProfile == nullptr) {
                 std::cerr << command << ": warning: input images do not have ICC profiles;\n";
-                if (FallbackProfile == NULL) {
+                if (FallbackProfile == nullptr) {
                     std::cerr << command << ": warning: assuming sRGB profile" << std::endl;
                     InputProfile = cmsCreate_sRGBProfile();
                 } else {
                     std::cerr << command << ": warning: using fallback profile \""
                               << enblend::profileDescription(FallbackProfile) << "\"" << std::endl;
                     InputProfile = FallbackProfile;
-                    FallbackProfile = NULL; // avoid double freeing
+                    FallbackProfile = nullptr; // avoid double freeing
                 }
             }
             XYZProfile = cmsCreateXYZProfile();
@@ -2392,7 +2392,7 @@ int main(int argc, char** argv)
                                                      XYZProfile, TYPE_XYZ_DBL,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
-            if (InputToXYZTransform == NULL) {
+            if (InputToXYZTransform == nullptr) {
                 std::cerr << command << ": error building color transform from \""
                           << enblend::profileName(InputProfile)
                           << " "
@@ -2405,7 +2405,7 @@ int main(int argc, char** argv)
                                                      InputProfile, TYPE_RGB_DBL,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
-            if (XYZToInputTransform == NULL) {
+            if (XYZToInputTransform == nullptr) {
                 std::cerr << command
                           << ": error building color transform from XYZ space to \""
                           << enblend::profileName(InputProfile)
@@ -2424,7 +2424,7 @@ int main(int argc, char** argv)
             ViewingConditions.surround = AVG_SURROUND;
             ViewingConditions.D_value = 1.0;
 
-            CIECAMTransform = cmsCIECAM02Init(NULL, &ViewingConditions);
+            CIECAMTransform = cmsCIECAM02Init(nullptr, &ViewingConditions);
             if (!CIECAMTransform) {
                 std::cerr << std::endl
                           << command
@@ -2481,7 +2481,7 @@ int main(int argc, char** argv)
                 exit(1);
             }
         } else {
-            if (FallbackProfile != NULL) {
+            if (FallbackProfile != nullptr) {
                 std::cerr << command <<
                     ": warning: fusing in RGB cube; option \"--fallback-profile\" has no effect" <<
                     std::endl;

@@ -140,7 +140,7 @@ namespace enblend {
         bool ready = false;
         std::vector<vigra::Point2D>* interPointList = new std::vector<vigra::Point2D>();
         std::vector<EntryPointContainer> entryPointList;
-        EntryPointContainer* max = NULL;
+        EntryPointContainer* max = nullptr;
         std::pair<IteratorType, IteratorType> entryPoint;
         vigra::Point2D intermediatePoint;
         unsigned int counter = 0;
@@ -199,7 +199,7 @@ namespace enblend {
         for (typename std::vector<EntryPointContainer>::iterator i = entryPointList.begin();
              i != entryPointList.end();
              ++i) {
-            if (max == NULL) {
+            if (max == nullptr) {
                 max = &(*i);
                 continue;
             }
@@ -208,7 +208,7 @@ namespace enblend {
             }
         }
 
-        if (max != NULL) {
+        if (max != nullptr) {
             delete circ;
             delete end;
             vigra::Diff2D dir = max->second - max->first;
@@ -1325,7 +1325,7 @@ namespace enblend {
         IMAGETYPE<GradientPixelType> gradientY(size);
         IMAGETYPE<GraphPixelType> graphImg(size + size + vigra::Diff2D(1, 1));
 
-        std::vector<vigra::Point2D>* dualPath = NULL;
+        std::vector<vigra::Point2D>* dualPath = nullptr;
         std::vector<vigra::Point2D> totalDualPath;
         vigra::Point2D intermediatePoint;
         boost::scoped_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());

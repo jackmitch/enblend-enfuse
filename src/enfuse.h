@@ -309,16 +309,16 @@ public:
         delete [] precomputedEntropy;
         if (size == 0)
         {
-            precomputedLog = NULL;
-            precomputedEntropy = NULL;
+            precomputedLog = nullptr;
+            precomputedEntropy = nullptr;
         }
         else
         {
             precomputedLog = new double[size + 1];
-            vigra_precondition(precomputedLog != NULL,
+            vigra_precondition(precomputedLog != nullptr,
                                "Histogram::setPrecomputedSize: failed to allocate log-preevaluate memory");
             precomputedEntropy = new double[size + 1];
-            vigra_precondition(precomputedEntropy != NULL,
+            vigra_precondition(precomputedEntropy != nullptr,
                                "Histogram::setPrecomputedSize: failed to allocate entropy-preevaluate memory");
             precomputedLog[0] = 0.0; // just to have a reliable value
             precomputedEntropy[0] = 0.0;
@@ -1267,7 +1267,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
     MaskType *normImage = new MaskType(anInputUnion.size());
 
     // Result image. Alpha will be union of all input alphas.
-    std::pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(NULL),
+    std::pair<ImageType*, AlphaType*> outputPair(static_cast<ImageType*>(nullptr),
                                                  new AlphaType(anInputUnion.size()));
     std::list<vigra::ImageImportInfo*> imageInfoList(anImageInfoList);
     const unsigned numberOfImages = imageInfoList.size();
@@ -1507,7 +1507,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                                            junkBB,
                                            WrapAround != OpenBoundaries);
 
-    std::vector<ImagePyramidType*> *resultLP = NULL;
+    std::vector<ImagePyramidType*> *resultLP = nullptr;
 
     m = 0;
     while (!imageList.empty()) {
@@ -1585,7 +1585,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         //oss3 << "multLP" << m << "_";
         //exportPyramid<ImagePyramidType>(imageLP, oss3.str().c_str());
 
-        if (resultLP != NULL) {
+        if (resultLP != nullptr) {
             // Add imageLP to resultLP.
             for (unsigned int i = 0; i < imageLP->size(); ++i) {
                 combineTwoImagesMP(srcImageRange(*((*imageLP)[i])),

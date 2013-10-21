@@ -1477,7 +1477,7 @@ gaussianPyramid(unsigned int numLevels,
 
     // Make remaining levels.
     PyramidImageType* lastGP = gp0;
-    AlphaImageType* lastA = NULL;
+    AlphaImageType* lastA = nullptr;
     for (unsigned int l = 1; l < numLevels; l++) {
         if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
             std::cerr << " g" << l;
@@ -1492,7 +1492,7 @@ gaussianPyramid(unsigned int numLevels,
         PyramidImageType* gpn = new PyramidImageType(w, h);
         AlphaImageType* nextA = new AlphaImageType(w, h);
 
-        if (lastA == NULL) {
+        if (lastA == nullptr) {
             reduce<SKIPSMImagePixelType, SKIPSMAlphaPixelType>
                 (wraparound,
                  srcImageRange(*lastGP), maskIter(alpha_upperleft, aa),

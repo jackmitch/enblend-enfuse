@@ -45,6 +45,8 @@ namespace enblend
     class PostOptimizer
     {
     public:
+        PostOptimizer() = delete;
+
         PostOptimizer(MismatchImageType* aMismatchImage, VisualizeImageType* aVisualizeImage,
                       vigra::Size2D* aMismatchImageSize, int* aMismatchImageStride,
                       vigra::Diff2D* aUVBBStrideOffset, ContourVector* someContours,
@@ -57,6 +59,9 @@ namespace enblend
             uBB(aUBB), vBB(aVBB),
             parameters(*someParameters),
             whiteAlpha(aWhiteAlpha), blackAlpha(aBlackAlpha), uvBB(aUVBB) {}
+
+        PostOptimizer(PostOptimizer* other) = delete;
+        PostOptimizer& operator=(const PostOptimizer &other) = delete;
 
         virtual void runOptimizer() {}
         virtual ~PostOptimizer() {}
@@ -76,11 +81,6 @@ namespace enblend
         const AlphaType* whiteAlpha;
         const AlphaType* blackAlpha;
         const vigra::Rect2D* uvBB;
-
-    private:
-        PostOptimizer(PostOptimizer* other); // NOT IMPLEMENTED
-        PostOptimizer& operator=(const PostOptimizer &other); // NOT IMPLEMENTED
-        PostOptimizer();        // NOT IMPLEMENTED
     };
 
 
@@ -89,6 +89,8 @@ namespace enblend
     class AnnealOptimizer : public PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> {
     public:
         typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
+
+        AnnealOptimizer() = delete;
 
         AnnealOptimizer(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                         vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
@@ -100,6 +102,9 @@ namespace enblend
                   mismatchImageSize, mismatchImageStride,
                   uvBBStrideOffset, contours,
                   uBB, vBB, parameters, whiteAlpha, blackAlpha, uvBB) {}
+
+        AnnealOptimizer(AnnealOptimizer* other) = delete;
+        AnnealOptimizer& operator=(const AnnealOptimizer &other) = delete;
 
         virtual void runOptimizer() {
 
@@ -220,10 +225,6 @@ namespace enblend
                                  destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
                                  ifThenElse(Arg1() & Arg2(), Arg3(), Param(vigra::NumericTraits<MismatchImagePixelType>::max())));
         }
-
-        AnnealOptimizer(AnnealOptimizer* other);                    // NOT IMPLEMENTED
-        AnnealOptimizer& operator=(const AnnealOptimizer &other);   // NOT IMPLEMENTED
-        AnnealOptimizer();                                          // NOT IMPLEMENTED
     };
 
 
@@ -232,6 +233,8 @@ namespace enblend
     class DijkstraOptimizer : public PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> {
     public:
         typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
+
+        DijkstraOptimizer() = delete;
 
         DijkstraOptimizer(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                           vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
@@ -243,6 +246,9 @@ namespace enblend
                   mismatchImageSize, mismatchImageStride,
                   uvBBStrideOffset, contours,
                   uBB, vBB, parameters, whiteAlpha, blackAlpha, uvBB) {}
+
+        DijkstraOptimizer(DijkstraOptimizer* other) = delete;
+        DijkstraOptimizer& operator=(const DijkstraOptimizer &other) = delete;
 
         virtual void runOptimizer() {
 
@@ -358,9 +364,6 @@ namespace enblend
                                  destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
                                  ifThenElse(!(Arg1() || Arg2()), Param(vigra::NumericTraits<MismatchImagePixelType>::one()), Arg3()));
         }
-        DijkstraOptimizer(DijkstraOptimizer* other); // NOT IMPLEMENTED
-        DijkstraOptimizer& operator=(const DijkstraOptimizer &other); // NOT IMPLEMENTED
-        DijkstraOptimizer();    // NOT IMPLEMENTED
     };
 
 
@@ -369,6 +372,8 @@ namespace enblend
     public:
         typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
         typedef std::vector<super*> optimizer_list_t;
+
+        OptimizerChain() = delete;
 
         OptimizerChain(MismatchImageType* mismatchImage, VisualizeImageType* visualizeImage,
                        vigra::Size2D* mismatchImageSize, int* mismatchImageStride,
@@ -381,6 +386,9 @@ namespace enblend
                   uvBBStrideOffset, contours,
                   uBB, vBB, parameters, whiteAlpha, blackAlpha, uvBB),
             currentOptimizer(0) {}
+
+        OptimizerChain(OptimizerChain* other) = delete;
+        OptimizerChain& operator=(const OptimizerChain &other) = delete;
 
         void addOptimizer(const std::string& anOptimizerName) {
             typedef enum {NO_OPTIMIZER, ANNEAL_OPTIMIZER, DIJKSTRA_OPTIMIZER} optimizer_id_t;
@@ -440,10 +448,6 @@ namespace enblend
         }
 
     private:
-        OptimizerChain(OptimizerChain* other);                  // NOT IMPLEMENTED
-        OptimizerChain& operator=(const OptimizerChain &other); // NOT IMPLEMENTED
-        OptimizerChain();                                       // NOT IMPLEMENTED
-
         optimizer_list_t optimizerList;
         size_t currentOptimizer;
     };

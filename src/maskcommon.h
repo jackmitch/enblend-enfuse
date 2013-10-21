@@ -111,6 +111,8 @@ namespace enblend {
     public:
         typedef typename super::PixelComponentType PixelComponentType;
 
+        MaxHueLuminanceDifferenceFunctor() = delete;
+
         MaxHueLuminanceDifferenceFunctor(double aLuminanceWeight, double aChrominanceWeight) {
             const double total = aLuminanceWeight + aChrominanceWeight;
             assert(total != 0.0);
@@ -137,8 +139,6 @@ namespace enblend {
         }
 
     private:
-        MaxHueLuminanceDifferenceFunctor(); // NOT IMPLEMENTED
-
         double luma_;
         double chroma_;
     };
@@ -151,6 +151,8 @@ namespace enblend {
 
     public:
         typedef typename super::PixelComponentType PixelComponentType;
+
+        DeltaEPixelDifferenceFunctor() = delete;
 
         DeltaEPixelDifferenceFunctor(double aLuminanceWeight, double aChrominanceWeight) :
             rgb_to_lab_(vigra::RGB2LabFunctor<double>(vigra::NumericTraits<PixelComponentType>::max())) {
@@ -183,8 +185,6 @@ namespace enblend {
         }
 
     private:
-        DeltaEPixelDifferenceFunctor(); // NOT IMPLEMENTED
-
         double luma_;
         double chroma_;
         vigra::RGB2LabFunctor<double> rgb_to_lab_;

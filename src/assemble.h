@@ -251,8 +251,8 @@ assemble(std::list<vigra::ImageImportInfo*>& imageInfoList, vigra::Rect2D& input
 
     // No more images to assemble?
     if (imageInfoList.empty()) {
-        return std::pair<ImageType*, AlphaType*>(static_cast<ImageType*>(NULL),
-                                                 static_cast<AlphaType*>(NULL));
+        return std::pair<ImageType*, AlphaType*>(static_cast<ImageType*>(nullptr),
+                                                 static_cast<AlphaType*>(nullptr));
     }
 
     // Create an image to assemble input images into.

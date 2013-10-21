@@ -55,6 +55,9 @@ Unreleased.  Current line of development.
 
 ** Developer Stuff
 
+- A C++11-compatible compiler is required to compile Enblend and
+  Enfuse.
+
 - Support for older versions of the Boost filesystem library has been
   dropped.
 

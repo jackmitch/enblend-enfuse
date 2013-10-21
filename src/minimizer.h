@@ -42,7 +42,9 @@ class Minimizer
     enum {ITERATIONS_PER_DIMENSION = 100U};
 
 public:
-    Minimizer(size_t dimension) :
+    Minimizer() = delete;
+
+    explicit Minimizer(size_t dimension) :
         dimension_(dimension),
         maximum_iteration_(ITERATIONS_PER_DIMENSION * dimension), iteration_(0U),
         f_goal_(boost::none), absolute_error_(sqrt(std::numeric_limits<double>::epsilon()))
@@ -143,8 +145,6 @@ protected:
     }
 
 private:
-    Minimizer();                // not implemented
-
     size_t dimension_;
     boost::optional<unsigned> maximum_iteration_;
     unsigned iteration_;
@@ -156,13 +156,15 @@ private:
 class Minimizer1D : public Minimizer
 {
 public:
+    Minimizer1D() = delete;
+
     Minimizer1D(const gsl_function& function, double x_minimum, double x_lower, double x_upper) :
-        Minimizer(1U), minimizer_(NULL), function_(function),
+        Minimizer(1U), minimizer_(nullptr), function_(function),
         x_minimum_(x_minimum), x_lower_(x_lower), x_upper_(x_upper),
         relative_error_(0.0) {require_ordered_x();}
 
     Minimizer1D(const Minimizer1D& minimizer) :
-        Minimizer(minimizer), minimizer_(NULL), function_(minimizer.function_),
+        Minimizer(minimizer), minimizer_(nullptr), function_(minimizer.function_),
         x_minimum_(minimizer.x_minimum_), x_lower_(minimizer.x_lower_), x_upper_(minimizer.x_upper_),
         relative_error_(minimizer.relative_error_) {}
 
@@ -179,7 +181,7 @@ public:
             relative_error_ = minimizer.relative_error_;
 
             gsl_min_fminimizer_free(minimizer_);
-            minimizer_ = NULL;
+            minimizer_ = nullptr;
             initialize();
         }
 
@@ -274,9 +276,9 @@ protected:
 
     void initialize()
     {
-        assert(minimizer_ == NULL);
+        assert(minimizer_ == nullptr);
         minimizer_ = gsl_min_fminimizer_alloc(type());
-        if (minimizer_ == NULL)
+        if (minimizer_ == nullptr)
         {
             throw std::runtime_error("Minimizer1D::initialize: no memory");
         }
@@ -292,8 +294,6 @@ protected:
     }
 
 private:
-    Minimizer1D();              // not implemented
-
     gsl_min_fminimizer* minimizer_;
 
     gsl_function function_;
@@ -309,6 +309,8 @@ private:
 class GoldenSectionMinimizer1D : public Minimizer1D
 {
 public:
+    GoldenSectionMinimizer1D() = delete;
+
     GoldenSectionMinimizer1D(const gsl_function& function, double x_minimum, double x_lower, double x_upper) :
         Minimizer1D(function, x_minimum, x_lower, x_upper) {initialize();}
 
@@ -317,15 +319,14 @@ public:
 
 protected:
     virtual const gsl_min_fminimizer_type* type() const {return gsl_min_fminimizer_goldensection;}
-
-private:
-    GoldenSectionMinimizer1D(); // not implemented
 };
 
 
 class BrentMinimizer1D : public Minimizer1D
 {
 public:
+    BrentMinimizer1D() = delete;
+
     BrentMinimizer1D(const gsl_function& function, double x_minimum, double x_lower, double x_upper) :
         Minimizer1D(function, x_minimum, x_lower, x_upper) {initialize();}
 
@@ -334,15 +335,14 @@ public:
 
 protected:
     virtual const gsl_min_fminimizer_type* type() const {return gsl_min_fminimizer_brent;}
-
-private:
-    BrentMinimizer1D();         // not implemented
 };
 
 
 class GillMurrayMinimizer1D : public Minimizer1D
 {
 public:
+    GillMurrayMinimizer1D() = delete;
+
     GillMurrayMinimizer1D(const gsl_function& function, double x_minimum, double x_lower, double x_upper) :
         Minimizer1D(function, x_minimum, x_lower, x_upper) {initialize();}
 
@@ -351,9 +351,6 @@ public:
 
 protected:
     virtual const gsl_min_fminimizer_type* type() const {return gsl_min_fminimizer_quad_golden;}
-
-private:
-    GillMurrayMinimizer1D();    // not implemented
 };
 
 
@@ -391,13 +388,15 @@ class MinimizerMultiDimensionNoDerivative : public Minimizer
 public:
     typedef std::vector<double> array_type;
 
+    MinimizerMultiDimensionNoDerivative() = delete;
+
     MinimizerMultiDimensionNoDerivative(const gsl_multimin_function& function,
                                         const array_type& start, const array_type& step_sizes) :
-        Minimizer(start.size()), minimizer_(NULL), function_(function),
+        Minimizer(start.size()), minimizer_(nullptr), function_(function),
         xs_(gsl_vector_alloc(start.size())), step_sizes_(gsl_vector_alloc(step_sizes.size())),
         characteristic_size_(std::numeric_limits<double>::max())
     {
-        if (xs_ == NULL || step_sizes_ == NULL)
+        if (xs_ == nullptr || step_sizes_ == nullptr)
         {
             throw std::runtime_error("MinimizerMultiDimensionNoDerivative::constructor: no memory");
         }
@@ -412,11 +411,11 @@ public:
 
 
     MinimizerMultiDimensionNoDerivative(const gsl_multimin_function& function, const array_type& start) :
-        Minimizer(start.size()), minimizer_(NULL), function_(function),
+        Minimizer(start.size()), minimizer_(nullptr), function_(function),
         xs_(gsl_vector_alloc(start.size())), step_sizes_(gsl_vector_alloc(start.size())),
         characteristic_size_(std::numeric_limits<double>::max())
     {
-        if (xs_ == NULL || step_sizes_ == NULL)
+        if (xs_ == nullptr || step_sizes_ == nullptr)
         {
             throw std::runtime_error("MinimizerMultiDimensionNoDerivative::constructor: no memory");
         }
@@ -426,11 +425,11 @@ public:
     }
 
     MinimizerMultiDimensionNoDerivative(const MinimizerMultiDimensionNoDerivative& minimizer) :
-        Minimizer(minimizer), minimizer_(NULL), function_(minimizer.function_),
+        Minimizer(minimizer), minimizer_(nullptr), function_(minimizer.function_),
         xs_(gsl_vector_alloc(dimension())), step_sizes_(gsl_vector_alloc(dimension())),
         characteristic_size_(minimizer.characteristic_size_)
     {
-        if (xs_ == NULL || step_sizes_ == NULL)
+        if (xs_ == nullptr || step_sizes_ == nullptr)
         {
             throw std::runtime_error("MinimizerMultiDimensionNoDerivative::constructor: no memory");
         }
@@ -457,7 +456,7 @@ public:
 
                 xs_ = gsl_vector_alloc(dimension());
                 step_sizes_ = gsl_vector_alloc(dimension());
-                if (xs_ == NULL || step_sizes_ == NULL)
+                if (xs_ == nullptr || step_sizes_ == nullptr)
                 {
                     throw std::runtime_error("MinimizerMultiDimensionNoDerivative::operator=: no memory");
                 }
@@ -467,7 +466,7 @@ public:
             gsl_vector_memcpy(step_sizes_, minimizer.step_sizes_);
 
             gsl_multimin_fminimizer_free(minimizer_);
-            minimizer_ = NULL;
+            minimizer_ = nullptr;
             initialize();
         }
 
@@ -576,7 +575,7 @@ protected:
 
     void set()
     {
-        assert(minimizer_ != NULL);
+        assert(minimizer_ != nullptr);
         const int status = gsl_multimin_fminimizer_set(minimizer_, &function_, xs_, step_sizes_);
 
         if (status != GSL_SUCCESS)
@@ -587,9 +586,9 @@ protected:
 
     void initialize()
     {
-        assert(minimizer_ == NULL);
+        assert(minimizer_ == nullptr);
         minimizer_ = gsl_multimin_fminimizer_alloc(type(), dimension());
-        if (minimizer_ == NULL)
+        if (minimizer_ == nullptr)
         {
             throw std::runtime_error("MinimizerMultiDimensionNoDerivative::initialize: no memory");
         }
@@ -598,8 +597,6 @@ protected:
     }
 
 private:
-    MinimizerMultiDimensionNoDerivative(); // not implemented
-
     gsl_multimin_fminimizer* minimizer_;
 
     gsl_multimin_function function_;
@@ -613,6 +610,8 @@ private:
 class MinimizerMultiDimensionSimplex : public MinimizerMultiDimensionNoDerivative
 {
 public:
+    MinimizerMultiDimensionSimplex() = delete;
+
     MinimizerMultiDimensionSimplex(const gsl_multimin_function& function,
                                    const array_type& start, const array_type& step_sizes) :
         MinimizerMultiDimensionNoDerivative(function, start, step_sizes) {initialize();}
@@ -625,15 +624,14 @@ public:
 
 protected:
     virtual const gsl_multimin_fminimizer_type* type() const {return gsl_multimin_fminimizer_nmsimplex;}
-
-private:
-    MinimizerMultiDimensionSimplex(); // not implemented
 };
 
 
 class MinimizerMultiDimensionSimplex2 : public MinimizerMultiDimensionNoDerivative
 {
 public:
+    MinimizerMultiDimensionSimplex2() = delete;
+
     MinimizerMultiDimensionSimplex2(const gsl_multimin_function& function,
                                     const array_type& start, const array_type& step_sizes) :
         MinimizerMultiDimensionNoDerivative(function, start, step_sizes) {initialize();}
@@ -646,15 +644,14 @@ public:
 
 protected:
     virtual const gsl_multimin_fminimizer_type* type() const {return gsl_multimin_fminimizer_nmsimplex2;}
-
-private:
-    MinimizerMultiDimensionSimplex2(); // not implemented
 };
 
 
 class MinimizerMultiDimensionSimplex2Randomized : public MinimizerMultiDimensionNoDerivative
 {
 public:
+    MinimizerMultiDimensionSimplex2Randomized() = delete;
+
     MinimizerMultiDimensionSimplex2Randomized(const gsl_multimin_function& function,
                                               const array_type& start, const array_type& step_sizes) :
         MinimizerMultiDimensionNoDerivative(function, start, step_sizes) {initialize();}
@@ -667,9 +664,6 @@ public:
 
 protected:
     virtual const gsl_multimin_fminimizer_type* type() const {return gsl_multimin_fminimizer_nmsimplex2rand;}
-
-private:
-    MinimizerMultiDimensionSimplex2Randomized(); // not implemented
 };
 
 

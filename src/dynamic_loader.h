@@ -29,6 +29,8 @@
 class DynamicLoaderImplementation
 {
 public:
+    DynamicLoaderImplementation() = delete;
+
     explicit DynamicLoaderImplementation(const std::string& a_library_name) :
         name_(a_library_name)
     {}
@@ -47,8 +49,6 @@ public:
     };
 
 private:
-    DynamicLoaderImplementation(); // NOT IMPLEMENTED
-
     const std::string name_;
 };
 
@@ -64,7 +64,7 @@ class SunnyDynamicLoaderImplementation : public DynamicLoaderImplementation
 
 public:
     explicit SunnyDynamicLoaderImplementation(const std::string& a_library_name) :
-        super(a_library_name), handle_(NULL)
+        super(a_library_name), handle_(nullptr)
     {}
 
     void open()
@@ -102,11 +102,11 @@ public:
         dlerror();
         void* symbol = dlsym(handle_, symbol_name.c_str());
         char* message = dlerror();
-        if (message != NULL)
+        if (message != nullptr)
         {
             throw super::error(message);
         }
-        if (symbol == NULL)
+        if (symbol == nullptr)
         {
             throw super::error("symbol points nowhere");
         }
@@ -137,7 +137,7 @@ class GLibDynamicLoaderImplementation : public DynamicLoaderImplementation
 
 public:
     explicit GLibDynamicLoaderImplementation(const std::string& a_library_name) :
-        super(a_library_name), module_(NULL)
+        super(a_library_name), module_(nullptr)
     {}
 
     void open()
@@ -165,7 +165,7 @@ public:
         {
             super::error(g_module_error());
         }
-        if (symbol == NULL)
+        if (symbol == nullptr)
         {
             throw super::error("symbol points nowhere");
         }
@@ -192,7 +192,7 @@ class WinDynamicLoaderImplementation : public DynamicLoaderImplementation
 
 public:
     explicit WinDynamicLoaderImplementation(const std::string& a_library_name) :
-        super(a_library_name), handle_(NULL)
+        super(a_library_name), handle_(nullptr)
     {}
 
     void open()
@@ -228,7 +228,7 @@ public:
 
         }
         void* symbol = (void*) GetProcAddress(handle_, symbol_name.c_str());
-        if (symbol == NULL)
+        if (symbol == nullptr)
         {
             throw super::error(GetLastErrorString());
         }
@@ -243,7 +243,7 @@ private:
         DWORD lastError = GetLastError();
         std::string errorMsg;
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                          NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  (LPTSTR) &lpMsgBuf, 0, NULL) > 0)
+                          nullptr, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  (LPTSTR) &lpMsgBuf, 0, nullptr) > 0)
         {
             errorMsg=lpMsgBuf;
             // remove leading and trailing white spaces
@@ -282,7 +282,7 @@ public:
 
     void* resolve(const std::string&) const
     {
-        return NULL;
+        return nullptr;
     }
 }; // class NullDynamicLoaderImplementation
 
@@ -294,6 +294,8 @@ typedef NullDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 class DynamicLoader
 {
 public:
+    DynamicLoader() = delete;
+
     explicit DynamicLoader(const std::string& a_library_name) :
         implementation_(new ActualDynamicLoaderImplementation(a_library_name))
     {
@@ -341,11 +343,10 @@ public:
     class Teardown
     {
     public:
+        Teardown() = delete;
+
         virtual void teardown(DynamicLoader*) = 0;
         virtual ~Teardown() {}
-
-    private:
-        Teardown();             // NOT IMPLEMENTED
     };
 
     // Gain access to a symbol and simultaneously register a clean-up
@@ -378,8 +379,6 @@ private:
 
     ActualDynamicLoaderImplementation* implementation_;
     observer_list observers_;
-
-    DynamicLoader();                     // NOT IMPLEMENTED
 }; // class DynamicLoader
 
 

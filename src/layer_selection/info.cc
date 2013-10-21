@@ -60,7 +60,7 @@ LayerInfo::resolution() const
 
 ImageListInformation::ImageListInformation(const ImageListInformation* an_image_list)
 {
-    if (an_image_list != NULL)
+    if (an_image_list != nullptr)
     {
         copy(an_image_list->images_.begin(), an_image_list->images_.end(), back_inserter(images_));
     }
@@ -82,7 +82,7 @@ ImageListInformation::image_info_on(const std::string& a_filename) const
 
     if (image_info == images_.end())
     {
-        return NULL;
+        return nullptr;
     }
     else
     {
@@ -98,13 +98,13 @@ ImageListInformation::layer_info_on(const std::string& a_filename, unsigned a_la
 
     if (image_info == images_.end())
     {
-        return NULL;
+        return nullptr;
     }
     else
     {
         if (a_layer_index >= image_info->number_of_layers())
         {
-            return NULL;
+            return nullptr;
         }
         else
         {

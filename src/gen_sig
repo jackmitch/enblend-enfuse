@@ -101,7 +101,7 @@ public:
     unsigned generate_checksum() const
     {
         const wchar_t* m = message();
-        return m == NULL ? 0U : std::accumulate(m, m + wcslen(m), 0U) & 037777777777U;
+        return m == nullptr ? 0U : std::accumulate(m, m + wcslen(m), 0U) & 037777777777U;
     }
 
 private:

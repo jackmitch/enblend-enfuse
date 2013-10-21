@@ -175,17 +175,17 @@ class ParameterValue
 public:
     ParameterValue() :
         value_as_string(std::string()),
-        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+        integer(nullptr), unsigned_integer(nullptr), floating_point(nullptr), boolean(nullptr)
     {initialize();}
 
     ParameterValue(const std::string& a_string) :
         value_as_string(a_string),
-        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+        integer(nullptr), unsigned_integer(nullptr), floating_point(nullptr), boolean(nullptr)
     {initialize();}
 
     ParameterValue(const ParameterValue& parameter_value) :
         value_as_string(parameter_value.value_as_string),
-        integer(NULL), unsigned_integer(NULL), floating_point(NULL), boolean(NULL)
+        integer(nullptr), unsigned_integer(nullptr), floating_point(nullptr), boolean(nullptr)
     {copy_cached_values(parameter_value);}
 
     ParameterValue& operator=(const ParameterValue& parameter_value)
@@ -207,7 +207,7 @@ public:
 
     int as_integer() const
     {
-        if (integer == NULL)
+        if (integer == nullptr)
         {
             throw conversion_error("cannot convert \"" + value_as_string + "\" to an integer");
         }
@@ -219,7 +219,7 @@ public:
 
     unsigned as_unsigned() const
     {
-        if (unsigned_integer == NULL)
+        if (unsigned_integer == nullptr)
         {
             throw conversion_error("cannot convert \"" + value_as_string + "\" to an unsigned integer");
         }
@@ -231,7 +231,7 @@ public:
 
     double as_double() const
     {
-        if (floating_point == NULL)
+        if (floating_point == nullptr)
         {
             throw conversion_error("cannot convert \"" + value_as_string + "\" to a floating-point number");
         }
@@ -243,7 +243,7 @@ public:
 
     bool as_boolean() const
     {
-        if (boolean == NULL)
+        if (boolean == nullptr)
         {
             throw conversion_error("cannot convert \"" + value_as_string + "\" to a boolean");
         }
@@ -329,25 +329,25 @@ private:
 
     void copy_cached_values(const ParameterValue& parameter_value)
     {
-        if (parameter_value.integer != NULL)
+        if (parameter_value.integer != nullptr)
         {
             integer = new int;
             *integer = *parameter_value.integer;
         }
 
-        if (parameter_value.unsigned_integer != NULL)
+        if (parameter_value.unsigned_integer != nullptr)
         {
             unsigned_integer = new unsigned;
             *unsigned_integer = *parameter_value.unsigned_integer;
         }
 
-        if (parameter_value.floating_point != NULL)
+        if (parameter_value.floating_point != nullptr)
         {
             floating_point = new double;
             *floating_point = *parameter_value.floating_point;
         }
 
-        if (parameter_value.boolean != NULL)
+        if (parameter_value.boolean != nullptr)
         {
             boolean = new bool;
             *boolean = *parameter_value.boolean;

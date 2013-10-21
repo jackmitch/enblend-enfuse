@@ -260,14 +260,14 @@ strtoken_r(char* str, const char* delim, char** save_ptr)
         {
             s++;
         }
-        *save_ptr = *s == 0 ? NULL : s + 1;
+        *save_ptr = *s == 0 ? nullptr : s + 1;
         *s = 0;
 
         return token;
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -840,7 +840,7 @@ optional_layer_name(unsigned layer_number, unsigned layer_total)
 inline std::string
 profileInfo(cmsHPROFILE profile, cmsInfoType info)
 {
-    const size_t size = cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, NULL, 0);
+    const size_t size = cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, nullptr, 0);
     std::string information(size, '\000');
     cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, &information[0], size);
     boost::trim_if(information, std::bind2nd(std::less_equal<char>(), '\040'));
@@ -1134,12 +1134,12 @@ strtok_r(char* str, const char* delim, char** save_ptr)
         }
         else
         {
-            return NULL;
+            return nullptr;
         }
     }
     else
     {
-        return NULL;
+        return nullptr;
     }
 }
 #endif

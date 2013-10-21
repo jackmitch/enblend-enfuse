@@ -787,7 +787,7 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
             }
         }
 
-        Segment* currentSegment = NULL;
+        Segment* currentSegment = nullptr;
         bool insideMoveableSegment = false;
         bool passedLastMoveableVertex = false;
         Segment::iterator lastNonmoveableVertex = snake->begin();
@@ -795,7 +795,7 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
              vertexIterator != snake->end();
              ++vertexIterator) {
             // Create a new segment if necessary.
-            if (currentSegment == NULL) {
+            if (currentSegment == nullptr) {
                 currentSegment = new Segment();
                 currentContour->push_back(currentSegment);
             }
@@ -834,12 +834,12 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
                 // Correct for the push_fronts we've been doing
                 currentSegment->reverse();
                 // Cause a new segment to be generated on next vertex.
-                currentSegment = NULL;
+                currentSegment = nullptr;
             }
         }
 
         // Reverse the final segment.
-        if (currentSegment != NULL) {
+        if (currentSegment != nullptr) {
             currentSegment->reverse();
         }
 
@@ -1192,7 +1192,7 @@ MaskType* createMask(const ImageType* const white,
                                     vigra::NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
-    VisualizeImageType* visualizeImage = NULL;
+    VisualizeImageType* visualizeImage = nullptr;
     if (VisualizeSeam) {
         visualizeImage = new VisualizeImageType(mismatchImageSize);
     }
