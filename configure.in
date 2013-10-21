@@ -8,11 +8,8 @@ AC_CONFIG_MACRO_DIR(m4)
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_HEADER([config.h])
 
-# Checks for programs/compilers.
-# avoid default CXXFLAGS, they trigger a compiler error with g++ 4.2
-CXXFLAGS_ORIG=$CXXFLAGS
 AC_PROG_CXX
-CXXFLAGS=$CXXFLAGS_ORIG
+AX_CXX_COMPILE_STDCXX_11(ext)
 AC_PROG_CC
 AC_PROG_AR
 AC_PROG_RANLIB
