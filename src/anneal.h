@@ -399,7 +399,7 @@ protected:
                         const double piT = (*stateProbabilities)[i] + piTj;
                         double piTAn = piT / (1.0 + schraudolph_exp(ej - E[i]));
                         if (
-#if defined(_MSC_VER) || defined(__sun__)
+#if defined(__sun__)
                             isnan(piTAn)
 #else
                             std::isnan(piTAn)
