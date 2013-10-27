@@ -161,6 +161,10 @@ typedef enum
 #define sleep(m_duration) Sleep(m_duration)
 #endif
 
+#if defined __MINGW32__ || defined __MINGW64__
+#undef rand_r
+#undef strtok_r
+#endif
 
 #define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name) \
     do { \
