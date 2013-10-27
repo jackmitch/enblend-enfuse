@@ -8,7 +8,7 @@ INCLUDE(FindPackageHandleStandardArgs)
 SET(CXX11_FLAG_CANDIDATES
   "--std=gnu++11"
   "--std=c++11"
-  "--std=gnu++x0"
+  "--std=gnu++0x"
 )
 
 # sample openmp source code to test
@@ -44,15 +44,18 @@ int main() {
 ")
 
 # check c compiler
+set(NUM 1)
 FOREACH(FLAG ${CXX11_FLAG_CANDIDATES})
   SET(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
   SET(CMAKE_REQUIRED_FLAGS "${FLAG}")
-  CHECK_CXX_SOURCE_COMPILES("${CXX11_TEST_SOURCE}" CXX11_FLAG_DETECTED)
+  CHECK_CXX_SOURCE_COMPILES("${CXX11_TEST_SOURCE}" CXX11_FLAG_DETECTED${NUM})
   SET(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
-  IF(CXX11_FLAG_DETECTED)
+  IF(CXX11_FLAG_DETECTED${NUM})
     SET(CXX11_FLAG "${FLAG}")
     BREAK()
-  ENDIF(CXX11_FLAG_DETECTED) 
+  ELSE()
+    MATH(EXPR NUM "${NUM}+1")
+  ENDIF(CXX11_FLAG_DETECTED${NUM})
 ENDFOREACH()
 
 # handle the standard arguments for find_package
