@@ -128,6 +128,16 @@ ELSE(NOT WIN32)
 ENDIF(NOT WIN32)
 
 # Compiler specific tweaks and optimizations
+# Microsoft Visual C++ compiler does not need any addtional switches for C++11
+# so check only other compilers
+IF (NOT MSVC)
+  FIND_PACKAGE(CXX11Compiler)
+  IF(NOT CXX11COMPILER_FOUND)
+    MESSAGE(FATAL_ERROR "A C++11 compatible compiler is required.")
+  ENDIF()
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAG}")
+ENDIF()
+
 IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -DNDEBUG -Wall")
   IF(APPLE AND CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)
@@ -138,14 +148,6 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flat_namespace -undefined suppress")
     SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flat_namespace -undefined suppress")
   ENDIF(APPLE AND CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION LESS 5)
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-  if(GCC_VERSION VERSION_GREATER 4.7)
-    add_definitions("-std=gnu++11")
-  elseif(GCC_VERSION VERSION_GREATER 4.2)
-    add_definitions("-std=gnu++0x")
-  else()
-    add_definitions("-Dnullptr=NULL")
-  endif()
 ELSEIF(WIN32)
   IF(MSVC)
     # Quiet some compiler noise
