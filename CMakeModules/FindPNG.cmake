@@ -29,7 +29,7 @@ IF (ZLIB_FOUND)
 
   find_library_with_debug(PNG_LIBRARIES
     WIN32_DEBUG_POSTFIX d
-    NAMES png libpng libpng15 libpng15_static
+    NAMES png libpng libpng16_static libpng16 libpng15 libpng15_static
     PATHS ${SYSTEM_LIB_DIRS} ${SOURCE_BASE_DIR}/libpng/lib
   )
 
