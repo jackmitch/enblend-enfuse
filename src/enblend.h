@@ -27,8 +27,6 @@
 #include <iostream>
 #include <list>
 
-#include <boost/static_assert.hpp>
-
 #include <vigra/impex.hxx>
 #include <vigra/initimage.hxx>
 #include <vigra/transformimage.hxx>

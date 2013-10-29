@@ -32,7 +32,6 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
-#include <boost/static_assert.hpp>
 
 #include <vigra/flatmorphology.hxx>
 #include <vigra/functorexpression.hxx>

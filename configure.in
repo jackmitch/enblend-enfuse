@@ -192,8 +192,6 @@ AC_CHECK_HEADER(boost/random/variate_generator.hpp, [],
                 AC_MSG_ERROR([Boost "variate_generator" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
                 AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/static_assert.hpp, [],
-                AC_MSG_ERROR([Boost "static_assert" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/system/error_code.hpp, [],
                 AC_MSG_ERROR([Boost "error_code" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/unordered_set.hpp, [],
