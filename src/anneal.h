@@ -29,10 +29,6 @@
 #include <limits>
 #include <vector>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/construct.hpp>
-
 #ifdef _WIN32
 #include <cmath>
 #else
@@ -44,11 +40,6 @@
 
 #include "masktypedefs.h"
 #include "muopt.h"
-
-
-using boost::lambda::bind;
-using boost::lambda::_1;
-using boost::lambda::delete_ptr;
 
 
 // Nicol N. Schraudolph
@@ -222,9 +213,12 @@ public:
     }
 
     ~GDAConfiguration() {
-        std::for_each(pointStateSpaces.begin(), pointStateSpaces.end(), bind(delete_ptr(), _1));
-        std::for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(), bind(delete_ptr(), _1));
-        std::for_each(pointStateDistances.begin(), pointStateDistances.end(), bind(delete_ptr(), _1));
+        std::for_each(pointStateSpaces.begin(), pointStateSpaces.end(),
+                      [](std::vector<vigra::Point2D>* x) {delete x;});
+        std::for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(),
+                      [](std::vector<double>* x) {delete x;});
+        std::for_each(pointStateDistances.begin(), pointStateDistances.end(),
+                      [](std::vector<int>* x) {delete x;});
     }
 
     void run() {

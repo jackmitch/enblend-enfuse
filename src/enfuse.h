@@ -29,10 +29,6 @@
 #include <list>
 #include <map>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/construct.hpp>
-
 #include <vigra/flatmorphology.hxx>
 #include <vigra/functorexpression.hxx>
 #include <vigra/imageiterator.hxx>
@@ -54,11 +50,6 @@
 #include "pyramid.h"
 #include "mga.h"
 
-
-using boost::lambda::_1;
-using boost::lambda::_2;
-using boost::lambda::bind;
-using boost::lambda::const_parameters;
 
 using vigra::functor::Arg1;
 using vigra::functor::Arg2;
@@ -1161,14 +1152,14 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
 #endif
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
         combineTwoImagesIfMP(srcImageRange(grad), result, mask, result,
-                             const_parameters(bind(cf, _1) + _2));
+                             [&cf](ScalarType x, const MaskValueType& y) {return cf(x) + y;});
     }
 
     // Saturation
     if (WSaturation > 0.0) {
         SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
         combineTwoImagesIfMP(src, result, mask, result,
-                             const_parameters(bind(sf, _1) + _2));
+                             [&sf](ImageValueType x, const MaskValueType& y) {return sf(x) + y;});
     }
 
     // Entropy
@@ -1225,7 +1216,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
 
         EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
         combineTwoImagesIfMP(srcImageRange(entropy), result, mask, result,
-                             const_parameters(bind(ef, _1) + _2));
+                             [&ef](PixelType x, const MaskValueType& y) {return ef(x) + y;});
     }
 };
 

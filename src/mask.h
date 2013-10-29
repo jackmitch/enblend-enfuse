@@ -28,11 +28,6 @@
 #include <functional>
 #include <numeric>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/algorithm.hpp>
-#include <boost/lambda/construct.hpp>
-#include <boost/lambda/if.hpp>
-
 #include <vigra/contourcirculator.hxx>
 #include <vigra/error.hxx>
 #include <vigra/functorexpression.hxx>
@@ -60,15 +55,6 @@
 #include "maskcommon.h"
 #include "masktypedefs.h"
 
-
-using boost::lambda::_1;
-using boost::lambda::_2;
-using boost::lambda::if_then_else_return;
-using boost::lambda::call_begin;
-using boost::lambda::call_end;
-using boost::lambda::constant;
-using boost::lambda::protect;
-using boost::lambda::ret;
 
 using vigra::functor::Arg1;
 using vigra::functor::Arg2;
@@ -1114,7 +1100,7 @@ MaskType* createMask(const ImageType* const white,
         MaskType* mask = new MaskType(uBB.size());
         fillContour(mask, rawSegments, vigra::Diff2D(0, 0));
         // delete all segments in rawSegments
-        std::for_each(rawSegments.begin(), rawSegments.end(), bind(delete_ptr(), _1));
+        std::for_each(rawSegments.begin(), rawSegments.end(), [](Segment* x) {delete x;});
         return mask;
     }
 
@@ -1129,8 +1115,10 @@ MaskType* createMask(const ImageType* const white,
 
     {
         const size_t totalSegments =
-            std::accumulate(contours.begin(), contours.end(),
-                            0U, ret<size_t>(_1 + boost::lambda::bind(&Contour::size, _2)));
+            std::accumulate(contours.begin(),
+                            contours.end(),
+                            0U,
+                            [](size_t a, const Contour* x) -> size_t {return a + x->size();});
 
         if (Verbose >= VERBOSE_MASK_MESSAGES) {
             std::cerr << command << ": info: optimizing ";
@@ -1390,15 +1378,21 @@ MaskType* createMask(const ImageType* const white,
 
     // Fill contours to get final optimized mask.
     MaskType* mask = new MaskType(uBB.size());
-    std::for_each(contours.begin(), contours.end(),
-                  boost::lambda::bind(fillContour<MaskType>, mask, *_1, vigra::Diff2D(0, 0)));
+    std::for_each(contours.begin(),
+                  contours.end(),
+                  [mask](const Contour* x) {fillContour<MaskType>(mask, *x, vigra::Diff2D(0, 0));});
 
     // Clean up contours
-    std::for_each(contours.begin(), contours.end(),
-                  bind(boost::lambda::ll::for_each(), bind(call_begin(), (*_1)), bind(call_end(), (*_1)),
-                       protect(bind(delete_ptr(), _1))));
+    std::for_each(contours.begin(),
+                  contours.end(),
+                  [](const Contour* x)
+                  {
+                      std::for_each(x->begin(),
+                                    x->end(),
+                                    [](Segment* y) {delete y;});
+                  });
 
-    std::for_each(contours.begin(), contours.end(), bind(delete_ptr(), _1));
+    std::for_each(contours.begin(), contours.end(), [](const Contour* x) {delete x;});
 
     return mask;
 }

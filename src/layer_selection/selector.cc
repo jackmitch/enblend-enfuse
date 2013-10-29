@@ -22,8 +22,6 @@
 #include <cassert>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -147,8 +145,9 @@ namespace selector
     find_by_id(id_t an_id)
     {
         algorithm_list::const_iterator algorithm =
-            std::find_if(algorithms.begin(), algorithms.end(),
-                         boost::lambda::bind(&Abstract::id, boost::lambda::_1) == boost::lambda::constant(an_id));
+            std::find_if(algorithms.begin(),
+                         algorithms.end(),
+                         [&an_id](const algorithm_list::value_type& x) {return x->id() == an_id;});
         assert(algorithm != algorithms.end());
 
         return algorithm;
@@ -159,8 +158,9 @@ namespace selector
     find_by_name(const std::string& a_name)
     {
         algorithm_list::const_iterator algorithm =
-            std::find_if(algorithms.begin(), algorithms.end(),
-                         boost::lambda::bind(&Abstract::name, boost::lambda::_1) == boost::lambda::constant(a_name));
+            std::find_if(algorithms.begin(),
+                         algorithms.end(),
+                         [&a_name](const algorithm_list::value_type& x) {return x->name() == a_name;});
 
         return algorithm;
     }

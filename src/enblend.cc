@@ -838,12 +838,18 @@ int process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
                 if (delimiter == nullptr) {
-                    preferredGPUDevice = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU device out of range", 1U);
+                    preferredGPUDevice =
+                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU device out of range", 1U);
                 } else {
                     *delimiter = 0;
                     ++delimiter;
-                    preferredGPUPlatform = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU platform out of range", 1U);
-                    preferredGPUDevice = enblend::numberOfString(delimiter, _1 >= 1U, "preferred GPU device out of range", 1U);
+                    preferredGPUPlatform =
+                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU platform out of range", 1U);
+                    preferredGPUDevice =
+                        enblend::numberOfString(delimiter, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU device out of range", 1U);
                 }
             } else {
                 std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
@@ -1245,14 +1251,14 @@ int process_options(int argc, char** argv)
             char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
             OptimizerWeights.first =
                 enblend::numberOfString(token,
-                                        _1 >= 0.0,
+                                        [](double x) {return x >= 0.0;},
                                         "negative optimizer weight; will use 0.0",
                                         0.0);
             token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             if (token != nullptr && *token != 0) {
                 OptimizerWeights.second =
                     enblend::numberOfString(token,
-                                            _1 >= 0.0,
+                                            [](double x) {return x >= 0.0;},
                                             "negative optimizer weight; will use 0.0",
                                             0.0);
             }
@@ -1269,7 +1275,7 @@ int process_options(int argc, char** argv)
         case VerboseId:
             if (optarg != nullptr && *optarg != 0) {
                 Verbose = enblend::numberOfString(optarg,
-                                                  _1 >= 0, //< minimum-verbosity-level 0
+                                                  [](int x) {return x >= 0;}, //< minimum-verbosity-level 0
                                                   "verbosity level less than 0; will use 0",
                                                   0);
             } else {
@@ -1283,7 +1289,7 @@ int process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 CoarsenessFactor =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1U,
+                                            [](unsigned x) {return x >= 1U;},
                                             "coarseness factor less or equal to 0; will use 1",
                                             1U);
             }
@@ -1293,7 +1299,7 @@ int process_options(int argc, char** argv)
         case DijkstraRadiusId:
             DijkstraRadius =
                 enblend::numberOfString(optarg,
-                                        _1 >= 1U, //< minimum-dijkstra-radius 1
+                                        [](unsigned x) {return x >= 1U;}, //< minimum-dijkstra-radius 1
                                         "Dijkstra radius is 0; will use 1",
                                         1U);
             optionSet.insert(DijkstraRadiusOption);
@@ -1309,7 +1315,7 @@ int process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 const int cache_block_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< minimum-cache-block-size 1@dmn{KB}
+                                            [](int x) {return x >= 1;}, //< minimum-cache-block-size 1@dmn{KB}
                                             "cache block size must be 1 KB or more; will use 1 KB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
@@ -1417,10 +1423,10 @@ int process_options(int argc, char** argv)
                         " pyramid levels; will use at most " << MAX_PYRAMID_LEVELS << " levels";
                     ExactLevels =
                         enblend::numberOfString(optarg,
-                                                _1 != 0,
+                                                 [](int x) {return x != 0;},
                                                 "cannot blend with zero levels; will use one level",
                                                 1,
-                                                _1 <= MAX_PYRAMID_LEVELS,
+                                                [](int x) {return x <= MAX_PYRAMID_LEVELS;},
                                                 oss.str(),
                                                 MAX_PYRAMID_LEVELS);
                 }
@@ -1436,7 +1442,7 @@ int process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 const int cache_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< minimum-cache-size 1@dmn{MB}
+                                            [](int x) {return x >= 1;}, //< minimum-cache-size 1@dmn{MB}
                                             "cache memory limit less than 1 MB; will use 1 MB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);

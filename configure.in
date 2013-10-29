@@ -168,16 +168,6 @@ AC_CHECK_HEADER(boost/assign/list_of.hpp, [],
                 AC_MSG_ERROR([Boost "list_of" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lambda/algorithm.hpp, [],
-                AC_MSG_ERROR([Boost "algorithm" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lambda/bind.hpp, [],
-                AC_MSG_ERROR([Boost "bind" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lambda/construct.hpp, [],
-                AC_MSG_ERROR([Boost "construct" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lambda/if.hpp, [],
-                AC_MSG_ERROR([Boost "if" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/lambda/lambda.hpp, [],
-                AC_MSG_ERROR([Boost "lambda" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
                 AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/math/special_functions.hpp, [],

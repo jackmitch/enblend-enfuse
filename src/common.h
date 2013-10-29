@@ -36,7 +36,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_inserter.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/lambda/lambda.hpp>
 #include <boost/scoped_ptr.hpp>
 
 #include <vigra/numerictraits.hxx>
@@ -497,7 +496,8 @@ numberOfString(const char* a_string,               // string we want to convert 
 {
     return numberOfString(a_string,
                           is_valid, invalid_message, replacement_value,
-                          boost::lambda::constant(true), "<never reached>", NumericType());
+                          [](NumericType) {return true;},
+                          "<never reached>", NumericType());
 }
 
 

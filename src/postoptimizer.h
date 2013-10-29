@@ -372,6 +372,7 @@ namespace enblend
     public:
         typedef PostOptimizer<MismatchImageType, VisualizeImageType, AlphaType> super;
         typedef std::vector<super*> optimizer_list_t;
+        typedef typename optimizer_list_t::iterator optimizer_list_iterator;
 
         OptimizerChain() = delete;
 
@@ -425,17 +426,18 @@ namespace enblend
             }
         }
 
-        //Runs every optimizer added to the list sequentially in FIFO order
+        // Run every optimizer added to the list sequentially in FIFO
+        // order.
         void runOptimizerChain() {
-            for (typename optimizer_list_t::iterator i = optimizerList.begin(); i != optimizerList.end(); ++i) {
-                (*i)->runOptimizer();
-            }
+            std::for_each(optimizerList.begin(),
+                          optimizerList.end(),
+                          [](typename optimizer_list_t::value_type x) {x->runOptimizer();});
         }
 
-        /*Runs current optimizer and increments the counter provided there are still
-         * optimizers in the chain to run. Used primarily for debugging purposes.
-         * For other uses, use the runOptimizerChain() function
-         */
+        // Run current optimizer and increment the counter provided
+        // there are still optimizers in the chain to run.  Used
+        // primarily for debugging purposes.  For other uses, use the
+        // runOptimizerChain() function.
         void runCurrentOptimizer() {
             if (currentOptimizer < optimizerList.size()) {
                 optimizerList[currentOptimizer]->runOptimizer();
@@ -444,7 +446,9 @@ namespace enblend
         }
 
         virtual ~OptimizerChain() {
-            std::for_each(optimizerList.begin(), optimizerList.end(), bind(delete_ptr(), boost::lambda::_1));
+            std::for_each(optimizerList.begin(),
+                          optimizerList.end(),
+                          [](typename optimizer_list_t::value_type x) {delete x;});
         }
 
     private:

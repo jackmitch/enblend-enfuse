@@ -21,9 +21,6 @@
 
 #include <utility>              // make_pair
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-
 #include "info.h"
 
 
@@ -62,7 +59,7 @@ ImageListInformation::ImageListInformation(const ImageListInformation* an_image_
 {
     if (an_image_list != nullptr)
     {
-        copy(an_image_list->images_.begin(), an_image_list->images_.end(), back_inserter(images_));
+        std::copy(an_image_list->images_.begin(), an_image_list->images_.end(), back_inserter(images_));
     }
 }
 
@@ -70,8 +67,10 @@ ImageListInformation::ImageListInformation(const ImageListInformation* an_image_
 ImageListInformation::image_list::const_iterator
 ImageListInformation::find_image_by_name(const std::string& a_filename) const
 {
-    return find_if(images_.begin(), images_.end(),
-                   boost::lambda::bind(&ImageInfo::filename, boost::lambda::_1) == boost::lambda::constant(a_filename));
+    return std::find_if(images_.begin(),
+                        images_.end(),
+                        [&a_filename](const ImageListInformation::image_list::value_type& x)
+                        {return x.filename() == a_filename;});
 }
 
 

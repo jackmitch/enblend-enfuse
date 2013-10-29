@@ -1066,12 +1066,18 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
                 if (delimiter == nullptr) {
-                    preferredGPUDevice = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU device out of range", 1U);
+                    preferredGPUDevice =
+                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU device out of range", 1U);
                 } else {
                     *delimiter = 0;
                     ++delimiter;
-                    preferredGPUPlatform = enblend::numberOfString(optarg, _1 >= 1U, "preferred GPU platform out of range", 1U);
-                    preferredGPUDevice = enblend::numberOfString(delimiter, _1 >= 1U, "preferred GPU device out of range", 1U);
+                    preferredGPUPlatform =
+                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU platform out of range", 1U);
+                    preferredGPUDevice =
+                        enblend::numberOfString(delimiter, [](unsigned x) {return x >= 1U;},
+                                                "preferred GPU device out of range", 1U);
                 }
             } else {
                 std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
@@ -1460,10 +1466,10 @@ process_options(int argc, char** argv)
         case WeightExposureId:
             if (optarg != nullptr && *optarg != 0) {
                 WExposure = enblend::numberOfString(optarg,
-                                                    _1 >= 0.0, //< minimum-weight-exposure 0
+                                                    [](double x) {return x >= 0.0;}, //< minimum-weight-exposure 0
                                                     "exposure weight less than 0; will use 0",
                                                     0.0,
-                                                    _1 <= 1.0, //< maximum-weight-exposure 1
+                                                    [](double x) {return x <= 1.0;}, //< maximum-weight-exposure 1
                                                     "exposure weight greater than 1; will use 1",
                                                     1.0);
             } else {
@@ -1475,13 +1481,14 @@ process_options(int argc, char** argv)
 
         case WeightContrastId:
             if (optarg != nullptr && *optarg != 0) {
-                WContrast = enblend::numberOfString(optarg,
-                                                    _1 >= 0.0, //< minimum-weight-contrast 0
-                                                    "contrast weight less than 0; will use 0",
-                                                    0.0,
-                                                    _1 <= 1.0, //< maximum-weight-contrast 1
-                                                    "contrast weight greater than 1; will use 1",
-                                                    0.0);
+                WContrast =
+                    enblend::numberOfString(optarg,
+                                            [](double x) {return x >= 0.0;}, //< minimum-weight-contrast 0
+                                            "contrast weight less than 0; will use 0",
+                                            0.0,
+                                            [](double x) {return x <= 1.0;}, //< maximum-weight-contrast 1
+                                            "contrast weight greater than 1; will use 1",
+                                            0.0);
             } else {
                 std::cerr << command << ": option \"--contrast-weight\" requires an argument" << std::endl;
                 failed = true;
@@ -1491,13 +1498,14 @@ process_options(int argc, char** argv)
 
         case WeightSaturationId:
             if (optarg != nullptr && *optarg != 0) {
-                WSaturation = enblend::numberOfString(optarg,
-                                                      _1 >= 0.0, //< minimum-weight-saturation 0
-                                                      "saturation weight less than 0; will use 0",
-                                                      0.0,
-                                                      _1 <= 1.0, //< maximum-weight-saturation 1
-                                                      "saturation weight greater than 1; will use 1",
-                                                      1.0);
+                WSaturation =
+                    enblend::numberOfString(optarg,
+                                            [](double x) {return x >= 0.0;}, //< minimum-weight-saturation 0
+                                            "saturation weight less than 0; will use 0",
+                                            0.0,
+                                            [](double x) {return x <= 1.0;}, //< maximum-weight-saturation 1
+                                            "saturation weight greater than 1; will use 1",
+                                            1.0);
             } else {
                 std::cerr << command << ": option \"--saturation-weight\" requires an argument" << std::endl;
                 failed = true;
@@ -1511,13 +1519,14 @@ process_options(int argc, char** argv)
             // FALLTHROUGH
         case ExposureOptimumId:
             if (optarg != nullptr && *optarg != 0) {
-                ExposureOptimum = enblend::numberOfString(optarg,
-                                                          _1 >= 0.0, //< minimum-exposure-optimum 0
-                                                          "exposure optimum value less than 0; will use 0",
-                                                          0.0,
-                                                          _1 <= 1.0, //< maximum-exposure-optimum 1
-                                                          "exposure optimum value geater than 1; will use 1",
-                                                          1.0);
+                ExposureOptimum =
+                    enblend::numberOfString(optarg,
+                                            [](double x) {return x >= 0.0;}, //< minimum-exposure-optimum 0
+                                            "exposure optimum value less than 0; will use 0",
+                                            0.0,
+                                            [](double x) {return x <= 1.0;}, //< maximum-exposure-optimum 1
+                                            "exposure optimum value geater than 1; will use 1",
+                                            1.0);
             } else {
                 std::cerr << command << ": option \"--exposure-optimum\" requires an argument" << std::endl;
                 failed = true;
@@ -1531,10 +1540,11 @@ process_options(int argc, char** argv)
             // FALLTHROUGH
         case ExposureWidthId:
             if (optarg != nullptr && *optarg != 0) {
-                ExposureWidth = enblend::numberOfString(optarg,
-                                                        _1 > 0.0, //< minimum-exposure-width 0
-                                                        "exposure width less than 0; will use 1/1024",
-                                                        1.0 / 1024.0);
+                ExposureWidth =
+                    enblend::numberOfString(optarg,
+                                            [](double x) {return x > 0.0;}, //< minimum-exposure-width 0
+                                            "exposure width less than 0; will use 1/1024",
+                                            1.0 / 1024.0);
             } else {
                 std::cerr << command << ": option \"--exposure-width\" requires an argument" << std::endl;
                 failed = true;
@@ -1586,13 +1596,14 @@ process_options(int argc, char** argv)
 
         case WeightEntropyId:
             if (optarg != nullptr && *optarg != 0) {
-                WEntropy = enblend::numberOfString(optarg,
-                                                   _1 >= 0.0, //< minimum-weight-entropy 0
-                                                   "entropy weight less than 0; will use 0",
-                                                   0.0,
-                                                   _1 <= 1.0, //< maximum-weight-entropy 1
-                                                   "entropy weight greater than 1; will use 1",
-                                                   1.0);
+                WEntropy =
+                    enblend::numberOfString(optarg,
+                                            [](double x) {return x >= 0.0;}, //< minimum-weight-entropy 0
+                                            "entropy weight less than 0; will use 0",
+                                            0.0,
+                                            [](double x) {return x <= 1.0;}, //< maximum-weight-entropy 1
+                                            "entropy weight greater than 1; will use 1",
+                                            1.0);
             } else {
                 std::cerr << command << ": option \"--entropy-weight\" requires an argument" << std::endl;
                 failed = true;
@@ -1603,10 +1614,11 @@ process_options(int argc, char** argv)
         case 'v': // FALLTHROUGH
         case VerboseId:
             if (optarg != nullptr && *optarg != 0) {
-                Verbose = enblend::numberOfString(optarg,
-                                                  _1 >= 0, //< minimum-verbosity-level 0
-                                                  "verbosity level less than 0; will use 0",
-                                                  0);
+                Verbose =
+                    enblend::numberOfString(optarg,
+                                            [](int x) {return x >= 0;}, //< minimum-verbosity-level 0
+                                            "verbosity level less than 0; will use 0",
+                                            0);
             } else {
                 Verbose++;
             }
@@ -1617,7 +1629,7 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 ContrastWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3, //< minimum-contrast-window-size 3
+                                            [](int x) {return x >= 3;}, //< minimum-contrast-window-size 3
                                             "contrast window size to small; will use size = 3",
                                             3);
                 if (ContrastWindowSize % 2 != 1) {
@@ -1637,7 +1649,7 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 EntropyWindowSize =
                     enblend::numberOfString(optarg,
-                                            _1 >= 3, //< minimum-entropy-window-size 3
+                                            [](int x) {return x >= 3;}, //< minimum-entropy-window-size 3
                                             "entropy window size to small; will use size = 3",
                                             3);
                 if (EntropyWindowSize % 2 != 1) {
@@ -1658,7 +1670,7 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 const int cache_block_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< minimum-cache-block-size 1@dmn{KB}
+                                            [](int x) {return x >= 1;}, //< minimum-cache-block-size 1@dmn{KB}
                                             "cache block size must be 1 KB or more; will use 1 KB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
@@ -1740,10 +1752,10 @@ process_options(int argc, char** argv)
                         " pyramid levels; will use at most " << MAX_PYRAMID_LEVELS << " levels";
                     ExactLevels =
                         enblend::numberOfString(optarg,
-                                                _1 != 0,
+                                                [](int x) {return x != 0;},
                                                 "cannot blend with zero levels; will use one level",
                                                 1,
-                                                _1 <= MAX_PYRAMID_LEVELS,
+                                                [](int x) {return x <= MAX_PYRAMID_LEVELS;},
                                                 oss.str(),
                                                 MAX_PYRAMID_LEVELS);
                 }
@@ -1759,7 +1771,7 @@ process_options(int argc, char** argv)
             if (optarg != nullptr && *optarg != 0) {
                 const int cache_size =
                     enblend::numberOfString(optarg,
-                                            _1 >= 1, //< minimum-cache-size 1@dmn{MB}
+                                            [](int x) {return x >= 1;}, //< minimum-cache-size 1@dmn{MB}
                                             "cache memory limit less than 1 MB; will use 1 MB",
                                             1);
                 vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
