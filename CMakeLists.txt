@@ -6,13 +6,7 @@
 #                  , Harry van der Wolf <hvdwolf@gmail.com>
 # Original file from lyx-project, heavily modified
 #
-cmake_minimum_required(VERSION 2.4)
-
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 OLD)
-  cmake_policy(SET CMP0005 OLD)
-  cmake_minimum_required(VERSION 2.6)
-endif(COMMAND cmake_policy)
+cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
