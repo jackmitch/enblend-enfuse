@@ -730,7 +730,8 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 }
 
 
-int process_options(int argc, char** argv)
+int
+process_options(int argc, char** argv)
 {
     enum OptionId {
         OPTION_ID_OFFSET = 1023,    // Ids start at 1024

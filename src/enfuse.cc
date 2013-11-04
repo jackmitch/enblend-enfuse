@@ -990,7 +990,7 @@ process_options(int argc, char** argv)
     static struct option long_options[] = {
         {"gpu", no_argument, 0, UseGpuId},
         {"no-gpu", no_argument, 0, NoUseGpuId},
-        {"prefer-gpu", required_argument, 0, PreferGpuId},
+        {"prefer-gpu", optional_argument, 0, PreferGpuId},
         {"preferred-gpu", optional_argument, 0, PreferGpuId}, // gramatically close alternative form
         {"compression", required_argument, 0, CompressionId},
         {"exposure-weight", required_argument, 0, WeightExposureId},
