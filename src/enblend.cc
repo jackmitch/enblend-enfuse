@@ -809,8 +809,9 @@ process_options(int argc, char** argv)
     bool justPrintUsage = false;
     OptionSetType optionSet;
 #ifdef OPENCL
-    size_t preferredGPUPlatform = 1U; // We start enumerating platforms at 1 for user convenience.
-    size_t preferredGPUDevice = 1U;   // ditto for devices
+    size_t preferredGPUPlatform = 0U; // We start enumerating platforms at 1 for user convenience.
+                                      // Zero means we choose the first platform found, i.e. auto-detect.
+    size_t preferredGPUDevice = 1U;   // We start enumerating platforms at 1 for user convenience.
 #endif
 
     opterr = 0;       // we have our own "unrecognized option" message
@@ -1600,61 +1601,27 @@ process_options(int argc, char** argv)
 
 #ifdef OPENCL
     if (UseGPU) {
-        cl_int error_code;
-        cl::Platform platform;
-
-        ocl::platform_list_t platforms;
-        error_code = cl::Platform::get(&platforms);
-
-        if (error_code != CL_SUCCESS) {
-            std::cerr << command << ": warning: query for OpenCL platforms failed, cannot enable GPU: " <<
-                       ocl::string_of_error_code(error_code) << "\n";
-        } else if (platforms.empty()) {
-            std::cerr << command << ": warning: no OpenCL platform found, cannot enable GPU\n";
-        } else {
-            if (preferredGPUPlatform <= platforms.size()) {
-                platform = platforms[preferredGPUPlatform - 1U];
-            } else {
-                std::cerr << command << ": OpenCL platform #" << preferredGPUPlatform << " is not available\n";
-                std::cerr << command << ": info: largest OpenCL platform number is " << platforms.size() << "\n";
-                exit(1);
-            }
+        try {
+            cl::Platform platform = ocl::find_platform(preferredGPUPlatform);
 
             ocl::device_list_t devices;
-            error_code = platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            ocl::prefer_device(platform, preferredGPUPlatform, preferredGPUDevice, devices);
 
-            if (error_code != CL_SUCCESS) {
-                std::cerr << command << ": warning: query for OpenCL devices failed, cannot enable GPU: " <<
-                    ocl::string_of_error_code(error_code) << "\n";
-            } else if (devices.empty()) {
-                std::cerr << command << ": warning: no OpenCL device found, cannot enable GPU\n";
-            } else {
-                if (preferredGPUDevice <= devices.size()) {
-                    // move the preferred device in front
-                    devices.insert(devices.begin(), devices[preferredGPUDevice - 1U]);
-                    devices.erase(devices.begin() + preferredGPUDevice);
-                } else {
-                    std::cerr << command << ": OpenCL device #" << preferredGPUDevice << " is not available\n";
-                    std::cerr << command << ": info: largest OpenCL device number is " << devices.size() << "\n";
-                    exit(1);
-                }
+            GPUContext = ocl::create_context(platform, devices);
 
-                cl_context_properties context_properties[] = {
-                    CL_CONTEXT_PLATFORM,
-                    (cl_context_properties) (platform)(),
-                    0
-                };
+            if (Verbose >= VERBOSE_OPENCL_MESSAGES) {
+                std::cerr << command << ": info: chose OpenCL platform #" << preferredGPUPlatform << ", ";
 
-                GPUContext = new cl::Context(devices, context_properties,
-                                             /* pfn_notify */ nullptr, /* user_data */ nullptr,
-                                             &error_code);
-                if (error_code != CL_SUCCESS) {
-                    delete GPUContext;
-                    GPUContext = nullptr;
-                    std::cerr << command << ": warning: failed to create OpenCL context, cannot enable GPU: " <<
-                        ocl::string_of_error_code(error_code) << "\n";
-                }
+                std::string info;
+                platform.getInfo(CL_PLATFORM_VENDOR, &info);
+                std::cerr << info << ", ";
+                platform.getInfo(CL_PLATFORM_NAME, &info);
+                std::cerr << info << ", device #" << preferredGPUDevice << std::endl;
             }
+        } catch (ocl::runtime_error& an_exception) {
+            std::cerr <<
+                command << ": warning: " << an_exception.what() << ";\n" <<
+                command << ": warning: " << "    cannot enable GPU" << std::endl;
         }
     }
 #endif // OPENCL

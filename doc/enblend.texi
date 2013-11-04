@@ -655,8 +655,8 @@ When told to employ the @acronym{GPU} with @option{--gpu}, by default
 Enblend uses the first device on the first platform it finds via
 queries of the @acronym{OpenCL} subsystem, where neither the device,
 nor the platform may be the ones the user wants.  Usually she will
-select the device with the highest performance, largest associated
-memory or most expansive maximum image size.
+select the device with the highest performance, maximum number of
+work-items, and largest associated memory.
 
 The first form of @option{--prefer-gpu} prints a list of all available
 devices on all accessible platforms and then exits; it is the same
@@ -664,18 +664,23 @@ enumeration that @samp{enblend --verbose --version} reveals.  The
 first entry is the default preferred device.  Example:
 @example
 Available, OpenCL-compatible platform(s) and their device(s)
-  - Platform #1: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-    * Device #1: 2 cores
-                 1047872 KB global memory
-                 48 KB local memory
-                 32768x32768 maximum image size
+  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+    * no GPU devices found on this platform
+  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+    * Device #1: max. 1024 work items
+                 1047872 KB global memory with 32 KB read/write cache
+                 48 KB dedicated local memory
+                 64 KB maximum constant memory
 @end example
 
 Use the numbers of platforms and devices found there to select the
 desired @var{DEVICE} on the first platform (second form) or
 @var{DEVICE} on the given @var{PLATFORM} (third form).
 
-Enblend's default is equivalent to @samp{--prefer-gpu=1:1}.
+Enblend's default is equivalent to choosing the first (i.e.@: lowest
+number) @acronym{GPU}-device on the first (i.e.@: lowest number)
+platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
+example.
 
 See also option@tie{}@option{--gpu}.
 

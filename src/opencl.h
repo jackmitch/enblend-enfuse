@@ -45,9 +45,28 @@ namespace ocl
     typedef std::vector<cl::Device> device_list_t;
 
 
+    class runtime_error : public std::runtime_error
+    {
+    public:
+        runtime_error() = delete;
+        explicit runtime_error(const std::string& a_message) : std::runtime_error(a_message) {};
+        virtual ~runtime_error() throw() {}
+    }; // class runtime_error
+
+
     std::string string_of_error_code(cl_int error_code);
 
     void print_opencl_information(bool all_devices = false);
+
+    cl::Platform find_platform(/* input/output */ size_t& a_preferred_platform_id);
+    void prefer_device(const cl::Platform& a_platform,
+                       size_t a_preferred_platform_id,
+                       size_t a_preferred_device_id,
+                       /* output */ device_list_t& some_devices);
+
+    // Create a new context given a_platform and some_devices.  This
+    // pointer can be deleted as usual.
+    cl::Context* create_context(const cl::Platform& a_platform, const device_list_t& some_devices);
 
 #else
 

@@ -46,6 +46,7 @@
 // of message to be produced on stdout.
 #define VERBOSE_ASSEMBLE_MESSAGES           1
 #define VERBOSE_CHECKPOINTING_MESSAGES      1
+#define VERBOSE_OPENCL_MESSAGES             1 // ANTICIPATED CHANGE: raise level when we are done with debugging
 
 #define VERBOSE_BLEND_MESSAGES              2
 #define VERBOSE_MASK_MESSAGES               2

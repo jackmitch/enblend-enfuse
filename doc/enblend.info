@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-706b947c18a0, 1 October
+   This manual is for Enblend (version 4.2-706b947c18a0, 3 November
 2013), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-706b947c18a0, 1 October 2013),
+This manual is for Enblend (version 4.2-706b947c18a0, 3 November 2013),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -735,25 +735,29 @@ arguments in lowercase for consistency.
      the first device on the first platform it finds via queries of the
      OpenCL subsystem, where neither the device, nor the platform may
      be the ones the user wants.  Usually she will select the device
-     with the highest performance, largest associated memory or most
-     expansive maximum image size.
+     with the highest performance, maximum number of work-items, and
+     largest associated memory.
 
      The first form of `--prefer-gpu' prints a list of all available
      devices on all accessible platforms and then exits; it is the same
      enumeration that `enblend --verbose --version' reveals.  The first
      entry is the default preferred device.  Example:
           Available, OpenCL-compatible platform(s) and their device(s)
-            - Platform #1: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-              * Device #1: 2 cores
-                           1047872 KB global memory
-                           48 KB local memory
-                           32768x32768 maximum image size
+            - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+              * no GPU devices found on this platform
+            - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+              * Device #1: max. 1024 work items
+                           1047872 KB global memory with 32 KB read/write cache
+                           48 KB dedicated local memory
+                           64 KB maximum constant memory
 
      Use the numbers of platforms and devices found there to select the
      desired DEVICE on the first platform (second form) or DEVICE on
      the given PLATFORM (third form).
 
-     Enblend's default is equivalent to `--prefer-gpu=1:1'.
+     Enblend's default is equivalent to choosing the first (i.e. lowest
+     number) GPU-device on the first (i.e. lowest number) platform,
+     which would be equivalent to `--prefer-gpu=2:1' in the example.
 
      See also option `--gpu'.
 
@@ -2609,11 +2613,11 @@ Option Index
                                                               (line 281)
 * --save-masks:                          Mask Generation Options.
                                                               (line 305)
-* --verbose:                             Common Options.      (line 214)
-* --version:                             Common Options.      (line 248)
+* --verbose:                             Common Options.      (line 218)
+* --version:                             Common Options.      (line 252)
 * --visualize:                           Mask Generation Options.
                                                               (line 339)
-* --wrap:                                Common Options.      (line 255)
+* --wrap:                                Common Options.      (line 259)
 * -a:                                    Common Options.      (line  15)
 * -c:                                    Extended Options.    (line  11)
 * -d:                                    Extended Options.    (line  28)
@@ -2622,10 +2626,10 @@ Option Index
 * -h:                                    Common Options.      (line  93)
 * -l:                                    Common Options.      (line 122)
 * -o:                                    Common Options.      (line 166)
-* -V:                                    Common Options.      (line 248)
-* -v:                                    Common Options.      (line 214)
-* -w:                                    Common Options.      (line 255)
-* -x:                                    Common Options.      (line 308)
+* -V:                                    Common Options.      (line 252)
+* -v:                                    Common Options.      (line 218)
+* -w:                                    Common Options.      (line 259)
+* -x:                                    Common Options.      (line 312)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2637,7 +2641,7 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 255)
+* 360o panoramas:                        Common Options.      (line 259)
 * @ (response file prefix):              Response Files.      (line   6)
 * a.tif:                                 Common Options.      (line 168)
 * affine transformation:                 Standard Workflow.   (line  48)
@@ -2658,7 +2662,7 @@ General Index
 * central processing unit:               Common Options.      (line  78)
 * channel width:                         Extended Options.    (line  28)
 * channel, alpha:                        Overview.            (line  18)
-* checkpoint results:                    Common Options.      (line 308)
+* checkpoint results:                    Common Options.      (line 312)
 * chrominance weight:                    Mask Generation Options.
                                                               (line 114)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
@@ -2893,7 +2897,7 @@ General Index
 * response file, format:                 Response Files.      (line  56)
 * response file, grammar:                Response Files.      (line  70)
 * response file, syntactic comment:      Response Files.      (line 129)
-* results, checkpoint:                   Common Options.      (line 308)
+* results, checkpoint:                   Common Options.      (line 312)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
                                                               (line 305)
@@ -2927,7 +2931,7 @@ General Index
 * tiffsplit:                             Overview.            (line  39)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* virtual reality:                       Common Options.      (line 265)
+* virtual reality:                       Common Options.      (line 269)
 * visualization image:                   Mask Generation Options.
                                                               (line 356)
 * visualization image colors:            Mask Generation Options.
@@ -2950,56 +2954,56 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 255)
+* wrap around:                           Common Options.      (line 259)
 
 
 
 Tag Table:
-Node: Top902
-Node: Overview2205
-Ref: Overview-Footnote-14644
-Ref: Overview-Footnote-24825
-Node: Workflow4967
-Node: Standard Workflow5366
-Ref: Figure:photographic-workflow5626
-Node: External Mask Manipulation8300
-Ref: Figure:external-mask-workflow9617
-Node: Invocation10102
-Node: Image Requirements10881
-Node: Response Files12355
-Ref: Table:response-file-format14379
-Ref: Example:response-file16258
-Ref: Table:response-file-syntactic-comment16899
-Ref: Table:globbing-algorithms17800
-Ref: Example:globbing-algorithm18826
-Node: Common Options19443
-Ref: Common Options-Footnote-130771
-Ref: Common Options-Footnote-230845
-Ref: Common Options-Footnote-331037
-Node: Extended Options31196
-Ref: Extended Options-Footnote-136354
-Ref: Extended Options-Footnote-236420
-Node: Mask Generation Options36493
-Ref: Table:mask-generation39098
-Ref: Table:optimizer-strategies46431
-Ref: Table:visualization-colors51834
-Ref: Table:mask-template-characters52749
-Ref: Mask Generation Options-Footnote-155001
-Node: Option Delimiters55229
-Node: Primary Seam Generators56634
-Node: Color Profiles59520
-Node: Understanding Masks61970
-Node: Helpful Programs65760
-Node: Bug Reports69828
-Ref: Bug Reports-Footnote-175484
-Node: Authors75554
-Node: FDL76719
-Node: List of Tables97701
-Node: List of Figures98325
-Node: List of Examples98615
-Node: Program Index98896
-Node: Syntactic-Comment Index102051
-Node: Option Index102740
-Node: General Index106674
+Node: Top903
+Node: Overview2207
+Ref: Overview-Footnote-14646
+Ref: Overview-Footnote-24827
+Node: Workflow4969
+Node: Standard Workflow5368
+Ref: Figure:photographic-workflow5628
+Node: External Mask Manipulation8302
+Ref: Figure:external-mask-workflow9619
+Node: Invocation10104
+Node: Image Requirements10883
+Node: Response Files12357
+Ref: Table:response-file-format14381
+Ref: Example:response-file16260
+Ref: Table:response-file-syntactic-comment16901
+Ref: Table:globbing-algorithms17802
+Ref: Example:globbing-algorithm18828
+Node: Common Options19445
+Ref: Common Options-Footnote-131144
+Ref: Common Options-Footnote-231218
+Ref: Common Options-Footnote-331410
+Node: Extended Options31569
+Ref: Extended Options-Footnote-136727
+Ref: Extended Options-Footnote-236793
+Node: Mask Generation Options36866
+Ref: Table:mask-generation39471
+Ref: Table:optimizer-strategies46804
+Ref: Table:visualization-colors52207
+Ref: Table:mask-template-characters53122
+Ref: Mask Generation Options-Footnote-155374
+Node: Option Delimiters55602
+Node: Primary Seam Generators57007
+Node: Color Profiles59893
+Node: Understanding Masks62343
+Node: Helpful Programs66133
+Node: Bug Reports70201
+Ref: Bug Reports-Footnote-175857
+Node: Authors75927
+Node: FDL77092
+Node: List of Tables98074
+Node: List of Figures98698
+Node: List of Examples98988
+Node: Program Index99269
+Node: Syntactic-Comment Index102424
+Node: Option Index103113
+Node: General Index107047
 
 End Tag Table

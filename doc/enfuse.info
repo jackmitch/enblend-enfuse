@@ -6,9 +6,9 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-706b947c18a0, 1 October 2013),
-a program to merge different exposures of the same scene to produce an
-image that looks much like a tonemapped image.
+   This manual is for Enfuse (version 4.2-706b947c18a0, 3 November
+2013), a program to merge different exposures of the same scene to
+produce an image that looks much like a tonemapped image.
 
    Copyright (C) 2004-2013 ANDREW MIHAL.
 
@@ -25,8 +25,8 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-706b947c18a0, 1 October 2013), a
-program to merge different exposures of the same scene to produce an
+This manual is for Enfuse (version 4.2-706b947c18a0, 3 November 2013),
+a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
 * Menu:
@@ -842,25 +842,29 @@ arguments in lowercase for consistency.
      the first device on the first platform it finds via queries of the
      OpenCL subsystem, where neither the device, nor the platform may
      be the ones the user wants.  Usually she will select the device
-     with the highest performance, largest associated memory or most
-     expansive maximum image size.
+     with the highest performance, maximum number of work-items, and
+     largest associated memory.
 
      The first form of `--prefer-gpu' prints a list of all available
      devices on all accessible platforms and then exits; it is the same
      enumeration that `enblend --verbose --version' reveals.  The first
      entry is the default preferred device.  Example:
           Available, OpenCL-compatible platform(s) and their device(s)
-            - Platform #1: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-              * Device #1: 2 cores
-                           1047872 KB global memory
-                           48 KB local memory
-                           32768x32768 maximum image size
+            - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+              * no GPU devices found on this platform
+            - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+              * Device #1: max. 1024 work items
+                           1047872 KB global memory with 32 KB read/write cache
+                           48 KB dedicated local memory
+                           64 KB maximum constant memory
 
      Use the numbers of platforms and devices found there to select the
      desired DEVICE on the first platform (second form) or DEVICE on
      the given PLATFORM (third form).
 
-     Enblend's default is equivalent to `--prefer-gpu=1:1'.
+     Enfuse's default is equivalent to choosing the first (i.e. lowest
+     number) GPU-device on the first (i.e. lowest number) platform,
+     which would be equivalent to `--prefer-gpu=2:1' in the example.
 
      See also option `--gpu'.
 
@@ -5520,9 +5524,9 @@ Option Index
 * --saturation-weight:                   Fusion Options.      (line 123)
 * --save-masks:                          Expert Options.      (line 498)
 * --soft-mask:                           Expert Options.      (line 530)
-* --verbose:                             Common Options.      (line 206)
-* --version:                             Common Options.      (line 240)
-* --wrap:                                Common Options.      (line 247)
+* --verbose:                             Common Options.      (line 210)
+* --version:                             Common Options.      (line 244)
+* --wrap:                                Common Options.      (line 251)
 * -c:                                    Extended Options.    (line  11)
 * -d:                                    Extended Options.    (line  25)
 * -f:                                    Extended Options.    (line 105)
@@ -5530,9 +5534,9 @@ Option Index
 * -h:                                    Common Options.      (line  85)
 * -l:                                    Common Options.      (line 114)
 * -o:                                    Common Options.      (line 158)
-* -V:                                    Common Options.      (line 240)
-* -v:                                    Common Options.      (line 206)
-* -w:                                    Common Options.      (line 247)
+* -V:                                    Common Options.      (line 244)
+* -v:                                    Common Options.      (line 210)
+* -w:                                    Common Options.      (line 251)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -5544,7 +5548,7 @@ General Index
 * Menu:
 
 * # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 247)
+* 360o panoramas:                        Common Options.      (line 251)
 * @ (response file prefix):              Response Files.      (line   6)
 * a.tif:                                 Common Options.      (line 160)
 * active criterion:                      Single Criterion Fusing.
@@ -5913,7 +5917,7 @@ General Index
 * understanding masks:                   Understanding Masks. (line   6)
 * value gray projector:                  Expert Options.      (line 460)
 * variance:                              Standard Deviation.  (line  45)
-* virtual reality:                       Common Options.      (line 257)
+* virtual reality:                       Common Options.      (line 261)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, entropy:                       Fusion Options.      (line  20)
 * weight, exposure:                      Fusion Options.      (line  41)
@@ -5954,119 +5958,119 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 247)
+* wrap around:                           Common Options.      (line 251)
 
 
 
 Tag Table:
-Node: Top890
-Node: Overview4939
-Ref: Table:weighting-criteria6132
-Ref: Overview-Footnote-18704
-Ref: Overview-Footnote-28873
-Ref: Overview-Footnote-39054
-Ref: Overview-Footnote-49236
-Node: Workflow9378
-Node: Standard Workflow9806
-Ref: Figure:photographic-workflow10065
-Node: External Mask Manipulation12739
-Ref: Figure:external-mask-workflow14055
-Node: Invocation14540
-Node: Image Requirements15385
-Node: Response Files16521
-Ref: Table:response-file-format18544
-Ref: Example:response-file20423
-Ref: Table:response-file-syntactic-comment21064
-Ref: Table:globbing-algorithms21965
-Ref: Example:globbing-algorithm22991
-Node: Common Options23608
-Ref: Common Options-Footnote-134530
-Ref: Common Options-Footnote-234603
-Ref: Common Options-Footnote-334795
-Node: Extended Options34954
-Ref: Extended Options-Footnote-139962
-Ref: Extended Options-Footnote-240028
-Node: Fusion Options40101
-Ref: Table:exposure-weight-functions42796
-Ref: Fusion Options-Footnote-144649
-Node: Expert Options44768
-Ref: Figure:entropy-cutoff47794
-Ref: Example:imagemagick-convert-cutoff62565
-Ref: Figure:exposure-cutoff64602
-Ref: Table:mask-template-characters84449
-Node: Option Delimiters86665
-Node: Color Profiles88060
-Node: Weighting Functions90496
-Node: Weighting Pixels91164
-Node: Weighted Average92753
-Node: Disabling Averaging93346
-Node: Single Criterion Fusing94334
-Ref: Table:default-weights95072
-Node: Exposure Weighting95868
-Node: Built-In Exposure Weighting Functions97191
-Ref: Figure:gaussian97750
-Ref: Table:weight-functions110700
-Ref: Figure:lorentzian111677
-Ref: Figure:halfsine124173
-Ref: Figure:fullsine136494
-Ref: Figure:power149145
-Ref: Figure:exposure-weights162409
-Node: User-Defined Exposure Weighting Functions175102
-Node: Prerequisites176059
-Node: Coding Guidelines177316
-Ref: Example:simple-dynamic-exposure-weight-function180230
-Ref: Example:templated-dynamic-exposure-weight-function181355
-Ref: Example:variable-dynamic-exposure-weight-function182962
-Node: Performance Considerations184545
-Node: Compiling Linking Loading185173
-Ref: Compiling Linking Loading-Footnote-1188287
-Node: Saturation Weighting188354
-Node: Local Contrast Weighting189469
-Node: Standard Deviation190831
-Ref: Figure:local-analysis-window191280
-Ref: Standard Deviation-Footnote-1193348
-Node: Laplacian of Gaussian193499
-Ref: Figure:laplacian-of-gaussian195073
-Node: Blend SDev and LoG208364
-Node: Scaling and Choice of Mode210044
-Node: Local Entropy Weighting210890
-Ref: Figure:entropy211873
-Node: Understanding Masks225678
-Node: Applications229468
-Node: What Images230192
-Node: Repetition233379
-Node: Exposure Series234462
-Node: Exposure Series Tips236844
-Node: Exposure Series Misconceptions237956
-Ref: Exposure Series Misconceptions-Footnote-1239737
-Node: Flash Exposure Series239950
-Node: Polarization Series240192
-Node: Focus Stacks240632
-Node: Why Focus Stacks241514
-Node: Preparing Focus Stacks242849
-Node: Local Contrast Based Fusing243599
-Node: Basic Focus Stacking244934
-Node: Advanced Focus Stacking246307
-Node: Local Contrast Problem247071
-Ref: Figure:sharp-edge248255
-Ref: Figure:smooth-edge255304
-Node: Laplacian Edge Detection263581
-Node: Local Contrast Enhancement264715
-Node: Suppressing Noise or Recognizing Faint Edges265691
-Node: Focus Stacking Decision Tree268322
-Ref: Figure:focus-stacking-decision-tree268667
-Node: Expert Stacking269451
-Node: Helpful Programs270974
-Node: Bug Reports275034
-Ref: Bug Reports-Footnote-1280689
-Node: Authors280759
-Node: FDL281923
-Node: List of Tables302904
-Node: List of Figures303595
-Node: List of Examples304766
-Node: Program Index305398
-Node: Syntactic-Comment Index308479
-Node: Option Index309167
-Node: General Index313449
+Node: Top891
+Node: Overview4941
+Ref: Table:weighting-criteria6134
+Ref: Overview-Footnote-18706
+Ref: Overview-Footnote-28875
+Ref: Overview-Footnote-39056
+Ref: Overview-Footnote-49238
+Node: Workflow9380
+Node: Standard Workflow9808
+Ref: Figure:photographic-workflow10067
+Node: External Mask Manipulation12741
+Ref: Figure:external-mask-workflow14057
+Node: Invocation14542
+Node: Image Requirements15387
+Node: Response Files16523
+Ref: Table:response-file-format18546
+Ref: Example:response-file20425
+Ref: Table:response-file-syntactic-comment21066
+Ref: Table:globbing-algorithms21967
+Ref: Example:globbing-algorithm22993
+Node: Common Options23610
+Ref: Common Options-Footnote-134902
+Ref: Common Options-Footnote-234975
+Ref: Common Options-Footnote-335167
+Node: Extended Options35326
+Ref: Extended Options-Footnote-140334
+Ref: Extended Options-Footnote-240400
+Node: Fusion Options40473
+Ref: Table:exposure-weight-functions43168
+Ref: Fusion Options-Footnote-145021
+Node: Expert Options45140
+Ref: Figure:entropy-cutoff48166
+Ref: Example:imagemagick-convert-cutoff62937
+Ref: Figure:exposure-cutoff64974
+Ref: Table:mask-template-characters84821
+Node: Option Delimiters87037
+Node: Color Profiles88432
+Node: Weighting Functions90868
+Node: Weighting Pixels91536
+Node: Weighted Average93125
+Node: Disabling Averaging93718
+Node: Single Criterion Fusing94706
+Ref: Table:default-weights95444
+Node: Exposure Weighting96240
+Node: Built-In Exposure Weighting Functions97563
+Ref: Figure:gaussian98122
+Ref: Table:weight-functions111072
+Ref: Figure:lorentzian112049
+Ref: Figure:halfsine124545
+Ref: Figure:fullsine136866
+Ref: Figure:power149517
+Ref: Figure:exposure-weights162781
+Node: User-Defined Exposure Weighting Functions175474
+Node: Prerequisites176431
+Node: Coding Guidelines177688
+Ref: Example:simple-dynamic-exposure-weight-function180602
+Ref: Example:templated-dynamic-exposure-weight-function181727
+Ref: Example:variable-dynamic-exposure-weight-function183334
+Node: Performance Considerations184917
+Node: Compiling Linking Loading185545
+Ref: Compiling Linking Loading-Footnote-1188659
+Node: Saturation Weighting188726
+Node: Local Contrast Weighting189841
+Node: Standard Deviation191203
+Ref: Figure:local-analysis-window191652
+Ref: Standard Deviation-Footnote-1193720
+Node: Laplacian of Gaussian193871
+Ref: Figure:laplacian-of-gaussian195445
+Node: Blend SDev and LoG208736
+Node: Scaling and Choice of Mode210416
+Node: Local Entropy Weighting211262
+Ref: Figure:entropy212245
+Node: Understanding Masks226050
+Node: Applications229840
+Node: What Images230564
+Node: Repetition233751
+Node: Exposure Series234834
+Node: Exposure Series Tips237216
+Node: Exposure Series Misconceptions238328
+Ref: Exposure Series Misconceptions-Footnote-1240109
+Node: Flash Exposure Series240322
+Node: Polarization Series240564
+Node: Focus Stacks241004
+Node: Why Focus Stacks241886
+Node: Preparing Focus Stacks243221
+Node: Local Contrast Based Fusing243971
+Node: Basic Focus Stacking245306
+Node: Advanced Focus Stacking246679
+Node: Local Contrast Problem247443
+Ref: Figure:sharp-edge248627
+Ref: Figure:smooth-edge255676
+Node: Laplacian Edge Detection263953
+Node: Local Contrast Enhancement265087
+Node: Suppressing Noise or Recognizing Faint Edges266063
+Node: Focus Stacking Decision Tree268694
+Ref: Figure:focus-stacking-decision-tree269039
+Node: Expert Stacking269823
+Node: Helpful Programs271346
+Node: Bug Reports275406
+Ref: Bug Reports-Footnote-1281061
+Node: Authors281131
+Node: FDL282295
+Node: List of Tables303276
+Node: List of Figures303967
+Node: List of Examples305138
+Node: Program Index305770
+Node: Syntactic-Comment Index308851
+Node: Option Index309539
+Node: General Index313821
 
 End Tag Table

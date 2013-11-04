@@ -19,8 +19,10 @@
  */
 
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 #include "opencl.h"
 
@@ -88,10 +90,60 @@ namespace ocl
         case CL_INVALID_PROPERTY: return "invalid property";
 
         default:
-            std::ostringstream oss;
-            oss << "unknown error code " << an_error_code;
-            return oss.str();
+            std::ostringstream error_code;
+
+            error_code << "unknown error code " << an_error_code;
+
+            return error_code.str();
         }
+    }
+
+
+    static void
+    print_platform_info(platform_list_t::const_iterator a_platform, unsigned a_platform_index)
+    {
+        std::string info;
+
+        a_platform->getInfo(CL_PLATFORM_VENDOR, &info);
+        std::cout << "  - Platform #" << a_platform_index << ": " << info;
+        a_platform->getInfo(CL_PLATFORM_NAME, &info);
+        std::cout << ", " << info;
+        a_platform->getInfo(CL_PLATFORM_VERSION, &info);
+        std::cout << ", " << info << "\n";
+    }
+
+
+    static void
+    print_device_info(device_list_t::const_iterator a_device, unsigned a_device_index)
+    {
+        std::cout <<
+            "    * Device #" << a_device_index << ": max. " <<
+            a_device->getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>() << " work-items\n" <<
+            "                 " << a_device->getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() / 1024UL <<
+            " KB global memory ";
+
+        switch (a_device->getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_TYPE>())
+        {
+        case CL_NONE: std::cout << "without associated cache";  break;
+        case CL_READ_ONLY_CACHE:
+            std::cout <<
+                "with " <<
+                a_device->getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>() / 1024UL <<
+                " KB read cache";
+            break;
+        case CL_READ_WRITE_CACHE:
+            std::cout <<
+                "with " <<
+                a_device->getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>() / 1024UL <<
+                " KB read/write cache";
+        }
+
+        std::cout << "\n" <<
+            "                 " << a_device->getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / 1024UL << " KB " <<
+            (a_device->getInfo<CL_DEVICE_LOCAL_MEM_TYPE>() == CL_LOCAL ? "dedicated " : "") <<
+            "local memory\n" <<
+            "                 " << a_device->getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>() / 1024UL <<
+            " KB maximum constant memory\n";
     }
 
 
@@ -108,41 +160,153 @@ namespace ocl
         else
         {
             unsigned platform_index = 1U; // We start enumerating at 1 for user convenience.
-            for (platform_list_t::const_iterator p = platforms.begin(); p != platforms.end(); ++p, ++platform_index)
+            for (platform_list_t::const_iterator p = platforms.begin(); p != platforms.end();
+                 ++p, ++platform_index)
             {
-                std::string info;
-                p->getInfo(CL_PLATFORM_VENDOR, &info);
-                std::cout << "  - Platform #" << platform_index << ": " << info;
-                p->getInfo(CL_PLATFORM_NAME, &info);
-                std::cout << ", " << info;
-                p->getInfo(CL_PLATFORM_VERSION, &info);
-                std::cout << ", " << info << "\n";
+                print_platform_info(p, platform_index);
 
                 device_list_t devices;
                 p->getDevices(all_devices ? CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_GPU, &devices);
 
                 if (devices.empty())
                 {
-                    std::cout << "    * no " << (all_devices ? "" : "GPU ") << "devices found on this platform\n";
+                    std::cout <<
+                        "    * no " << (all_devices ? "" : "GPU ") <<
+                        "devices found on this platform\n";
                 }
                 else
                 {
-                    unsigned device_index = 1U; // We start enumerating at 1 for user convenience.
-                    for (device_list_t::const_iterator d = devices.begin(); d != devices.end(); ++d, ++device_index)
+                    unsigned device_index = 1U; // Again, we start enumerating at 1 for user convenience.
+                    for (device_list_t::const_iterator d = devices.begin(); d != devices.end();
+                         ++d, ++device_index)
                     {
-                        std::cout << "    * Device #" << device_index << ": " <<
-                            d->getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << " cores\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() / 1024UL <<
-                            " KB global memory\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / 1024UL << " KB " <<
-                            (d->getInfo<CL_DEVICE_LOCAL_MEM_TYPE>() == CL_LOCAL ? "dedicated " : "") << "local memory\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>() / 1024UL <<
-                            " KB maximum constant memory\n" <<
-                            "                 " << d->getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>() << 'x' <<
-                            d->getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>() << " maximum image size\n";
+                        print_device_info(d, device_index);
                     }
                 }
             }
+        }
+    }
+
+
+    cl::Platform
+    find_platform(size_t& a_preferred_platform_id)
+    {
+        cl_int error_code;
+        std::ostringstream message;
+
+        platform_list_t platforms;
+        error_code = cl::Platform::get(&platforms);
+
+        if (error_code != CL_SUCCESS)
+        {
+            message << "query for OpenCL platforms failed: " << ocl::string_of_error_code(error_code);
+            throw runtime_error(message.str());
+        }
+        else if (platforms.empty())
+        {
+            throw runtime_error("no OpenCL platform found");
+        }
+        else
+        {
+            if (a_preferred_platform_id == 0U)
+            {
+                ocl::platform_list_t::const_iterator p =
+                    std::find_if(platforms.begin(), platforms.end(),
+                                 [](const cl::Platform& a_platform)
+                                 {
+                                     ocl::device_list_t devices;
+                                     const cl_int error_code =
+                                     a_platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+                                     return error_code == CL_SUCCESS && devices.size() >= 1U;
+                                 });
+                if (p == platforms.end())
+                {
+                    throw runtime_error("no OpenCL platform or none hosts any device");
+                }
+                else
+                {
+                    a_preferred_platform_id = p - platforms.begin() + 1U;
+                    return *p;
+                }
+            }
+            else if (a_preferred_platform_id <= platforms.size())
+            {
+                return platforms[a_preferred_platform_id - 1U];
+            }
+            else
+            {
+                message <<
+                    "OpenCL platform #" << a_preferred_platform_id <<
+                    " is not available; largest OpenCL platform number is " << platforms.size();
+                throw runtime_error(message.str());
+            }
+        }
+    }
+
+
+    void
+    prefer_device(const cl::Platform& a_platform, size_t a_preferred_platform_id,
+                  size_t a_preferred_device_id, device_list_t& some_devices)
+    {
+        cl_int error_code;
+        std::ostringstream message;
+
+        error_code = a_platform.getDevices(CL_DEVICE_TYPE_GPU, &some_devices);
+
+        if (error_code != CL_SUCCESS)
+        {
+            message <<
+                "query for OpenCL GPU devices on platform #" << a_preferred_platform_id << " failed: " <<
+                ocl::string_of_error_code(error_code);
+            throw runtime_error(message.str());
+        }
+        else if (some_devices.empty())
+        {
+            message << "no OpenCL GPU device found on platform #" << a_preferred_platform_id;
+            throw runtime_error(message.str());
+        }
+        else
+        {
+            if (a_preferred_device_id <= some_devices.size())
+            {
+                // move the preferred device in front
+                some_devices.insert(some_devices.begin(), some_devices[a_preferred_device_id - 1U]);
+                some_devices.erase(some_devices.begin() + a_preferred_device_id);
+            }
+            else
+            {
+                message <<
+                    "OpenCL device #" << a_preferred_device_id <<
+                    " is not available on platform #" << a_preferred_platform_id <<
+                    ", largest device number there is " << some_devices.size();
+                throw runtime_error(message.str());
+            }
+        }
+    }
+
+
+    cl::Context*
+    create_context(const cl::Platform& a_platform, const device_list_t& some_devices)
+    {
+        cl_context_properties context_properties[] = {
+            CL_CONTEXT_PLATFORM,
+            (cl_context_properties) (a_platform)(),
+            0
+        };
+
+        cl_int error_code;
+        cl::Context* context =
+            new cl::Context(some_devices, context_properties, nullptr, nullptr, &error_code);
+
+        if (error_code == CL_SUCCESS)
+        {
+            return context;
+        }
+        else
+        {
+            std::ostringstream message;
+            message << "failed to create OpenCL context: " << ocl::string_of_error_code(error_code);
+            throw runtime_error(message.str());
         }
     }
 
