@@ -166,7 +166,20 @@ namespace ocl
                 print_platform_info(p, platform_index);
 
                 device_list_t devices;
-                p->getDevices(all_devices ? CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_GPU, &devices);
+                try
+                {
+                    p->getDevices(all_devices ? CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_GPU, &devices);
+                }
+                catch (cl::Error& an_error)
+                {
+                    // CL_DEVICE_NOT_FOUND is a possible error that
+                    // does not hurt as the variable devices will be
+                    // empty() then, which is checked below.
+                    if (an_error.err() != CL_DEVICE_NOT_FOUND)
+                    {
+                        throw an_error;
+                    }
+                }
 
                 if (devices.empty())
                 {
@@ -191,18 +204,20 @@ namespace ocl
     cl::Platform
     find_platform(size_t& a_preferred_platform_id)
     {
-        cl_int error_code;
         std::ostringstream message;
 
         platform_list_t platforms;
-        error_code = cl::Platform::get(&platforms);
-
-        if (error_code != CL_SUCCESS)
+        try
         {
-            message << "query for OpenCL platforms failed: " << ocl::string_of_error_code(error_code);
+            cl::Platform::get(&platforms);
+        }
+        catch (cl::Error& an_error)
+        {
+            message << "query for OpenCL platforms failed: " << ocl::string_of_error_code(an_error.err());
             throw runtime_error(message.str());
         }
-        else if (platforms.empty())
+
+        if (platforms.empty())
         {
             throw runtime_error("no OpenCL platform found");
         }
@@ -215,9 +230,9 @@ namespace ocl
                                  [](const cl::Platform& a_platform)
                                  {
                                      ocl::device_list_t devices;
-                                     const cl_int error_code =
-                                     a_platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
-                                     return error_code == CL_SUCCESS && devices.size() >= 1U;
+                                     try {a_platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);}
+                                     catch (cl::Error&) {return false;}
+                                     return devices.size() >= 1U;
                                  });
                 if (p == platforms.end())
                 {
@@ -248,19 +263,21 @@ namespace ocl
     prefer_device(const cl::Platform& a_platform, size_t a_preferred_platform_id,
                   size_t a_preferred_device_id, device_list_t& some_devices)
     {
-        cl_int error_code;
         std::ostringstream message;
 
-        error_code = a_platform.getDevices(CL_DEVICE_TYPE_GPU, &some_devices);
-
-        if (error_code != CL_SUCCESS)
+        try
+        {
+            a_platform.getDevices(CL_DEVICE_TYPE_GPU, &some_devices);
+        }
+        catch (cl::Error& an_error)
         {
             message <<
                 "query for OpenCL GPU devices on platform #" << a_preferred_platform_id << " failed: " <<
-                ocl::string_of_error_code(error_code);
+                ocl::string_of_error_code(an_error.err());
             throw runtime_error(message.str());
         }
-        else if (some_devices.empty())
+
+        if (some_devices.empty())
         {
             message << "no OpenCL GPU device found on platform #" << a_preferred_platform_id;
             throw runtime_error(message.str());
@@ -285,6 +302,45 @@ namespace ocl
     }
 
 
+    static void
+    run_self_tests(cl::Context* a_context)
+    {
+        std::ostringstream message;
+
+        // a_context must be usable.
+        std::vector<cl_context_properties> context_properties;
+        try
+        {
+            a_context->getInfo(CL_CONTEXT_PROPERTIES, &context_properties);
+        }
+        catch (cl::Error& an_error)
+        {
+            message <<
+                "self test failed: cannot query properties of context: " <<
+                ocl::string_of_error_code(an_error.err());
+            throw runtime_error(message.str());
+        }
+
+        // We need at least one device.
+        std::vector<cl::Device> devices;
+        try
+        {
+            a_context->getInfo(CL_CONTEXT_DEVICES, &devices);
+        }
+        catch (cl::Error& an_error)
+        {
+            message << "self test failed: cannot query devices in context: " <<
+                ocl::string_of_error_code(an_error.err());
+            throw runtime_error(message.str());
+        }
+
+        if (devices.empty())
+        {
+            throw runtime_error("self test failed: context does not contain aany device");
+        }
+    }
+
+
     cl::Context*
     create_context(const cl::Platform& a_platform, const device_list_t& some_devices)
     {
@@ -293,21 +349,22 @@ namespace ocl
             (cl_context_properties) (a_platform)(),
             0
         };
+        cl::Context* context = nullptr;
 
-        cl_int error_code;
-        cl::Context* context =
-            new cl::Context(some_devices, context_properties, nullptr, nullptr, &error_code);
-
-        if (error_code == CL_SUCCESS)
+        try
         {
-            return context;
+            context = new cl::Context(some_devices, context_properties, nullptr, nullptr);
         }
-        else
+        catch (cl::Error& an_error)
         {
             std::ostringstream message;
-            message << "failed to create OpenCL context: " << ocl::string_of_error_code(error_code);
+            message << "failed to create OpenCL context: " << ocl::string_of_error_code(an_error.err());
             throw runtime_error(message.str());
         }
+
+        run_self_tests(context);
+
+        return context;
     }
 
 #else

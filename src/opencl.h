@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#define __CL_ENABLE_EXCEPTIONS
+
 #if defined(HAVE_CL_CL_HPP)
 #include <CL/cl.hpp>
 #elif defined(HAVE_OPENCL_CL_HPP)

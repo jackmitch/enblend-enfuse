@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-706b947c18a0, 3 November
+   This manual is for Enfuse (version 4.2-706b947c18a0, 4 November
 2013), a program to merge different exposures of the same scene to
 produce an image that looks much like a tonemapped image.
 
@@ -25,7 +25,7 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-706b947c18a0, 3 November 2013),
+This manual is for Enfuse (version 4.2-706b947c18a0, 4 November 2013),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
