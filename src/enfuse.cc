@@ -386,8 +386,8 @@ void printUsageAndExit(const bool error = true) {
         "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
         "                         with \"--no-gpu\"\n" <<
         "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
-        "                         start with the preferred one\n" <<
-        "  --prefer-gpu=DEVICE    select DEVICE on first platform as GPU\n" <<
+        "                         inform on current preferences\n" <<
+        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
         "  --prefer-gpu=PLATFORM:DEVICE\n" <<
         "                         select DEVICE on PLATFORM as GPU\n" <<
 #endif
@@ -1083,6 +1083,7 @@ process_options(int argc, char** argv)
             } else {
                 std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
                 ocl::print_opencl_information();
+                ocl::print_gpu_preference(preferredGPUPlatform, preferredGPUDevice);
                 exit(0);
             }
 #endif

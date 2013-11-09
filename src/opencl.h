@@ -59,6 +59,7 @@ namespace ocl
     std::string string_of_error_code(cl_int error_code);
 
     void print_opencl_information(bool all_devices = false);
+    void print_gpu_preference(size_t a_preferred_platform_id, size_t a_preferred_device_id);
 
     cl::Platform find_platform(/* input/output */ size_t& a_preferred_platform_id);
     void prefer_device(const cl::Platform& a_platform,

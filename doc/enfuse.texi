@@ -759,16 +759,17 @@ workings of Enfuse without the need to recompile.
 @cindex OpenCL, platform
 @cindex OpenCL, device
 When told to employ the @acronym{GPU} with @option{--gpu}, by default
-Enblend uses the first device on the first platform it finds via
-queries of the @acronym{OpenCL} subsystem, where neither the device,
-nor the platform may be the ones the user wants.  Usually she will
-select the device with the highest performance, maximum number of
-work-items, and largest associated memory.
+Enfuse uses the first device on the first autodetected platform it
+finds via queries of the @acronym{OpenCL} subsystem, where neither the
+device, nor the platform may be the ones the user wants.  Usually she
+will select the device with the highest performance, maximum possible
+number of work-items, and largest associated memory.
 
 The first form of @option{--prefer-gpu} prints a list of all available
-devices on all accessible platforms and then exits; it is the same
-enumeration that @samp{enblend --verbose --version} reveals.  The
-first entry is the default preferred device.  Example:
+@acronym{GPU}@tie{}devices on all accessible platforms, the current
+preferences, and then exits; it is the same enumeration that
+@samp{enblend --verbose --version} reveals.  Example:
+
 @example
 Available, OpenCL-compatible platform(s) and their device(s)
   - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
@@ -778,6 +779,7 @@ Available, OpenCL-compatible platform(s) and their device(s)
                  1047872 KB global memory with 32 KB read/write cache
                  48 KB dedicated local memory
                  64 KB maximum constant memory
+Currently preferred GPU is device #1 on platform #2 (autodetected).
 @end example
 
 Use the numbers of platforms and devices found there to select the

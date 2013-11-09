@@ -147,6 +147,20 @@ namespace ocl
     }
 
 
+    struct no_platform : runtime_error
+    {
+        no_platform() : runtime_error("no OpenCL platform found") {}
+        explicit no_platform(const std::string& a_message) : runtime_error(a_message) {}
+    };
+
+
+    struct no_device : runtime_error
+    {
+        no_device() : runtime_error("no OpenCL device found") {}
+        explicit no_device(const std::string& a_message) : runtime_error(a_message) {}
+    };
+
+
     void
     print_opencl_information(bool all_devices)
     {
@@ -201,6 +215,43 @@ namespace ocl
     }
 
 
+    void
+    print_gpu_preference(size_t a_preferred_platform_id, size_t a_preferred_device_id)
+    {
+        try
+        {
+            size_t platform_id = a_preferred_platform_id;
+            cl::Platform platform;
+            device_list_t some_devices;
+
+            platform = find_platform(platform_id);
+            prefer_device(platform, a_preferred_platform_id, a_preferred_device_id, some_devices);
+
+            std::cout <<
+                "Currently preferred GPU is device #" << a_preferred_device_id <<
+                " on platform #" << platform_id <<
+                (a_preferred_platform_id == 0U ? " (autodetected)" : "") << ".\n";
+        }
+        catch (no_platform&)
+        {
+            std::cout << "No OpenCL platforms found.\n";
+        }
+        catch (no_device&)
+        {
+            std::cout << "No OpenCL (GPU) devices found on any platform.\n";
+        }
+        catch (runtime_error& an_error)
+        {
+            std::cout <<
+                "Platform number #" << a_preferred_platform_id <<
+                (a_preferred_platform_id == 0U ? " (autodetected)" : "") <<
+                "/device number #" <<
+                a_preferred_device_id << " combination is invalid for this system.\n" <<
+                an_error.what() << "\n";
+        }
+    }
+
+
     cl::Platform
     find_platform(size_t& a_preferred_platform_id)
     {
@@ -219,7 +270,7 @@ namespace ocl
 
         if (platforms.empty())
         {
-            throw runtime_error("no OpenCL platform found");
+            throw no_platform();
         }
         else
         {
@@ -236,7 +287,7 @@ namespace ocl
                                  });
                 if (p == platforms.end())
                 {
-                    throw runtime_error("no OpenCL platform or none hosts any device");
+                    throw no_device();
                 }
                 else
                 {
@@ -272,7 +323,7 @@ namespace ocl
         catch (cl::Error& an_error)
         {
             message <<
-                "query for OpenCL GPU devices on platform #" << a_preferred_platform_id << " failed: " <<
+                "query for OpenCL GPU devices on platform #" << a_preferred_platform_id + 1U << " failed: " <<
                 ocl::string_of_error_code(an_error.err());
             throw runtime_error(message.str());
         }
@@ -280,7 +331,7 @@ namespace ocl
         if (some_devices.empty())
         {
             message << "no OpenCL GPU device found on platform #" << a_preferred_platform_id;
-            throw runtime_error(message.str());
+            throw no_device(message.str());
         }
         else
         {
@@ -294,7 +345,7 @@ namespace ocl
             {
                 message <<
                     "OpenCL device #" << a_preferred_device_id <<
-                    " is not available on platform #" << a_preferred_platform_id <<
+                    " is not available on platform #" << a_preferred_platform_id + 1U <<
                     ", largest device number there is " << some_devices.size();
                 throw runtime_error(message.str());
             }
@@ -336,7 +387,7 @@ namespace ocl
 
         if (devices.empty())
         {
-            throw runtime_error("self test failed: context does not contain aany device");
+            throw no_device();
         }
     }
 
