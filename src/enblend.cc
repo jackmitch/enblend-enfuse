@@ -137,7 +137,7 @@ std::string OutputPixelType;
 TiffResolution ImageResolution;
 bool OutputIsValid = true;
 
-bool UseGPU = false;
+bool UseGPU = true;
 namespace cl {class Context;}
 cl::Context* GPUContext = nullptr;
 
