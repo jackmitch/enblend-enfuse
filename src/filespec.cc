@@ -679,7 +679,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                 }
                 else
                 {
-                    selector = *new_selector;
+                    selector = new_selector->get();
 #ifdef DEBUG_FILESPEC
                     std::cout << "+ unfold_filename_iter: new layer selection algorithm = " <<
                         selector->name() << "\n";

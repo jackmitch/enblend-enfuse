@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "info.h"
@@ -111,7 +112,7 @@ namespace selector
     };
 
 
-    typedef std::list<Abstract*> algorithm_list;
+    typedef std::list<std::unique_ptr<Abstract> > algorithm_list;
 
     extern algorithm_list algorithms;
 

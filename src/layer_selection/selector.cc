@@ -130,12 +130,23 @@ namespace selector
     }
 
 
-    algorithm_list algorithms = {
-        static_cast<Abstract*>(new AllLayers),
-        static_cast<Abstract*>(new FirstLayer),
-        static_cast<Abstract*>(new LargestLayer),
-        static_cast<Abstract*>(new NoLayer)
-    };
+    // Implementation Note: We cannot use the new, unified
+    // initialization syntax with curlies here, because it employs
+    // copy-semantics.  Unique-ptr requires move-semantics, though.
+    algorithm_list algorithms;
+    namespace initialization
+    {
+        struct initialize_algorithms
+        {
+            initialize_algorithms()
+            {
+                algorithms.emplace_back(new AllLayers);
+                algorithms.emplace_back(new FirstLayer);
+                algorithms.emplace_back(new LargestLayer);
+                algorithms.emplace_back(new NoLayer);
+            }
+        } algorithms_initializer;
+    } // namespace initialization
 
 
     algorithm_list::const_iterator

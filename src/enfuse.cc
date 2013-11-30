@@ -1789,7 +1789,7 @@ process_options(int argc, char** argv)
         case LayerSelectorId: {
             selector::algorithm_list::const_iterator selector = selector::find_by_name(optarg);
             if (selector != selector::algorithms.end()) {
-                LayerSelection.set_selector(*selector);
+                LayerSelection.set_selector(selector->get());
             } else {
                 std::cerr << command << ": unknown selector algorithm \"" << optarg << "\"";
                 exit(1);
@@ -1999,7 +1999,7 @@ int main(int argc, char** argv)
     TIFFSetErrorHandler(tiff_error);
 
     //< layer-selector all-layers
-    LayerSelection.set_selector(*selector::find_by_id(selector::id_t::AllLayersId));
+    LayerSelection.set_selector(selector::find_by_id(selector::id_t::AllLayersId)->get());
 
     if (!getopt_long_works_ok())
     {
