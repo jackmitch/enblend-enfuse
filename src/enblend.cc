@@ -60,8 +60,8 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
-#include <boost/algorithm/string/erase.hpp>
 #include <boost/logic/tribool.hpp>
+
 #include <lcms2.h>
 
 #include "global.h"
@@ -188,8 +188,8 @@ differenceFunctorOfString(const char* aDifferenceFunctorName)
 {
     std::string name(aDifferenceFunctorName);
 
-    boost::algorithm::erase_all(name, "-");
-    boost::algorithm::to_lower(name);
+    name.erase(std::remove_if(name.begin(), name.end(), [](char c) {return c == '-';}), name.end());
+    enblend::to_lower(name);
 
     if (name == "maximumhueluminance" || name == "maximumhuelum" ||
         name == "maxhueluminance" || name == "maxhuelum" || name == "max") {
@@ -933,7 +933,7 @@ process_options(int argc, char** argv)
         case CompressionId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string upper_opt(optarg);
-                boost::algorithm::to_upper(upper_opt);
+                enblend::to_upper(upper_opt);
                 if (upper_opt == "NONE") {
                     ;           // stick with default
                 } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS") {
@@ -1358,7 +1358,7 @@ process_options(int argc, char** argv)
         case MainAlgoId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string algo_name(optarg);
-                boost::algorithm::to_upper(algo_name);
+                enblend::to_upper(algo_name);
                 if (algo_name == "GRAPH-CUT" ||
                     algo_name == "GRAPHCUT" ||
                     algo_name == "GC") {
@@ -1413,7 +1413,7 @@ process_options(int argc, char** argv)
         case LevelsId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);
-                boost::algorithm::to_upper(levels);
+                enblend::to_upper(levels);
                 if (levels == "AUTO" || levels == "AUTOMATIC") {
                     ExactLevels = 0;
                 } else if (levels.find_first_not_of("+-0123456789") != std::string::npos) {
@@ -1499,8 +1499,8 @@ process_options(int argc, char** argv)
                     key = std::string(token, delimiter);
                     value = delimiter + 1;
                 }
-                boost::trim(key);
-                boost::trim(value);
+                enblend::trim(key);
+                enblend::trim(value);
 
                 if (enblend::parameter::is_valid_identifier(key)) {
                     Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
@@ -1523,7 +1523,7 @@ process_options(int argc, char** argv)
 
             while (token != nullptr) {
                 std::string key(token);
-                boost::trim(key);
+                enblend::trim(key);
 
                 if (key == "*") {
                     Parameter.clear();

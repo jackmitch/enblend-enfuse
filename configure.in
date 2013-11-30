@@ -154,32 +154,21 @@ AC_CHECK_HEADER(png.h, [],
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
+
 AC_CHECK_HEADER(vigra/basicimage.hxx, [],
                 AC_MSG_ERROR([Vigra "basicimage.hxx" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/algorithm/string/case_conv.hpp, [],
-                AC_MSG_ERROR([Boost "case_conv" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/algorithm/string/trim.hpp, [],
-                AC_MSG_ERROR([Boost "trim" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/algorithm/string/erase.hpp, [],
-                AC_MSG_ERROR([Boost "erase" header file is required to compile Enblend.]))
+
 AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
+AC_CHECK_HEADER(boost/lexical_cast.hpp, [],
+                AC_MSG_ERROR([Boost "lexical_cast" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
                 AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/math/special_functions.hpp, [],
-                AC_MSG_ERROR([Boost "special_functions" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/optional.hpp, [],
                 AC_MSG_ERROR([Boost "optional" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/pool/pool.hpp, [],
-                AC_MSG_ERROR([Boost "pool" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/random/uniform_real.hpp, [],
-                AC_MSG_ERROR([Boost "uniform_real" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/random/variate_generator.hpp, [],
-                AC_MSG_ERROR([Boost "variate_generator" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/system/error_code.hpp, [],
-                AC_MSG_ERROR([Boost "error_code" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/unordered_set.hpp, [],
                 AC_MSG_ERROR([Boost "unordered_set" header file is required to compile Enblend.]))
+
 AC_CHECK_HEADER(gsl/gsl_errno.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_errno" is required to compile Enblend.]))
 AC_CHECK_HEADER(gsl/gsl_min.h, [],

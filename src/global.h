@@ -37,8 +37,6 @@
 #include <map>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 #include <vigra/numerictraits.hxx>
 
 
@@ -76,6 +74,59 @@
 
 //< default-output-filename a.tif
 #define DEFAULT_OUTPUT_FILENAME "a.tif"
+
+
+namespace enblend
+{
+    inline static void
+    to_lower(std::string& a_string)
+    {
+        for (auto& c : a_string)
+        {
+            c = std::tolower(c, std::locale());
+        }
+    }
+
+
+    inline static void
+    to_upper(std::string& a_string)
+    {
+        for (auto& c : a_string)
+        {
+            c = std::toupper(c, std::locale());
+        }
+    }
+
+
+    inline static std::string
+    to_lower_copy(const std::string& a_string)
+    {
+        std::string result;
+        std::for_each(a_string.begin(), a_string.end(),
+                      [&](char c) {result.push_back(std::tolower(c, std::locale()));});
+        return result;
+    }
+
+
+    inline static std::string
+    to_upper_copy(const std::string& a_string)
+    {
+        std::string result;
+        std::for_each(a_string.begin(), a_string.end(),
+                      [&](char c) {result.push_back(std::toupper(c, std::locale()));});
+        return result;
+    }
+
+
+    inline static void
+    trim(std::string& a_string)
+    {
+        const size_t start = a_string.find_first_not_of(" \t\n\r");
+        const size_t end = a_string.find_last_not_of(" \t\n\r");
+
+        a_string.assign(a_string, start, end - start);
+    }
+} // end namespace enblend
 
 
 class AlternativePercentage
@@ -302,7 +353,6 @@ private:
     void initialize_boolean()
     {
         std::string s(value_as_string);
-        boost::algorithm::to_lower(s);
 
         bool b;
         if (s.empty() || s == "f" || s == "false")

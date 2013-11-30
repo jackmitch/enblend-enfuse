@@ -25,15 +25,15 @@
 #endif
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/algorithm/string/trim.hpp>
 
 #include <vigra/numerictraits.hxx>
 
@@ -218,10 +218,10 @@ square(t x)
 
 
 /** Test whether s starts with p. */
-inline bool
+inline static bool
 starts_with(const std::string& s, const std::string& p)
 {
-    return s.substr(0, p.length()) == p;
+    return s.substr(0U, p.length()) == p;
 }
 
 
@@ -295,9 +295,7 @@ can_open_file(const std::string& aFilename)
 std::string
 getFileType(const std::string& aFileName)
 {
-    std::string ext = aFileName.substr(aFileName.rfind(".") + 1);
-
-    boost::algorithm::to_upper(ext);
+    const std::string ext(to_upper_copy(aFileName.substr(aFileName.rfind(".") + 1U)));
 
     if (ext == "JPG") return "JPEG";
     else if (ext == "TIF") return "TIFF";
@@ -312,9 +310,7 @@ getFileType(const std::string& aFileName)
 boundary_t
 wraparoundOfString(const char* aWraparoundMode)
 {
-    std::string mode = std::string(aWraparoundMode);
-
-    boost::algorithm::to_upper(mode);
+    const std::string mode(to_upper_copy(std::string(aWraparoundMode)));
 
     if (mode == "NONE" || mode == "OPEN") return OpenBoundaries;
     else if (mode == "HORIZONTAL") return HorizontalStrip;
@@ -506,13 +502,11 @@ outputPixelTypeOfString(const char* anOutputDepth)
         {"REAL64", "DOUBLE"}
     };
 
-    std::string output_depth(anOutputDepth);
-    boost::algorithm::to_upper(output_depth);
+    const std::string output_depth(to_upper_copy(std::string(anOutputDepth)));
     Str2StrMapType::const_iterator p = depthMap.find(output_depth);
     if (p == depthMap.end())
     {
-        throw std::invalid_argument(std::string("unknown output depth \"") +
-                                    anOutputDepth + "\"");
+        throw std::invalid_argument(std::string("unknown output depth \"") + anOutputDepth + "\"");
     }
     else
     {
@@ -527,15 +521,23 @@ std::string
 bestPixelType(const std::string& aFileType, const std::string& aPixelType)
 {
     if (aFileType == "BMP" || aFileType == "JPEG" || aFileType == "RAS")
+    {
         return "UINT8";
+    }
     else if (aFileType == "PNG" &&
              (aPixelType == "INT32" || aPixelType == "UINT32" ||
               aPixelType == "FLOAT" || aPixelType == "DOUBLE"))
+    {
         return "UINT16";
+    }
     else if (aFileType == "EXR")
+    {
         return "FLOAT";
+    }
     else
+    {
         return aPixelType;
+    }
 }
 
 
@@ -818,13 +820,35 @@ optional_layer_name(unsigned layer_number, unsigned layer_total)
 }
 
 
+template <class predicate>
+inline static void
+trim_if(std::string& a_string, predicate a_predicate)
+{
+    auto negated_predicate =
+        std::bind(std::logical_not<bool>(), std::bind(a_predicate, std::placeholders::_1));
+    std::string::iterator begin = std::find_if(a_string.begin(), a_string.end(), negated_predicate);
+
+    if (begin == a_string.end())
+    {
+        a_string.clear();
+    }
+    else
+    {
+        std::string::reverse_iterator reverse_end =
+            std::find_if(a_string.rbegin(), a_string.rend(), negated_predicate);
+
+        a_string.assign(begin, reverse_end.base());
+    }
+}
+
+
 inline std::string
 profileInfo(cmsHPROFILE profile, cmsInfoType info)
 {
     const size_t size = cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, nullptr, 0);
     std::string information(size, '\000');
     cmsGetProfileInfoASCII(profile, info, cmsNoLanguage, cmsNoCountry, &information[0], size);
-    boost::trim_if(information, std::bind2nd(std::less_equal<char>(), '\040'));
+    trim_if(information, std::bind(std::less_equal<char>(), std::placeholders::_1, '\040'));
 
     return information;
 }

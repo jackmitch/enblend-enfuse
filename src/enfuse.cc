@@ -63,9 +63,9 @@ extern "C" int optind;
 #include <boost/logic/tribool.hpp>
 #include <lcms2.h>
 
-#include "dynamic_loader.h"
 #include "exposure_weight.h"
 #include "global.h"
+#include "dynamic_loader.h"
 #include "layer_selection.h"
 #include "selector.h"
 #include "self_test.h"
@@ -1374,7 +1374,7 @@ process_options(int argc, char** argv)
         case CompressionId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string upper_opt(optarg);
-                boost::algorithm::to_upper(upper_opt);
+                enblend::to_upper(upper_opt);
                 if (upper_opt == "NONE") {
                     ;           // stick with default
                 } else if (upper_opt == "DEFLATE" || upper_opt == "LZW" || upper_opt == "PACKBITS") {
@@ -1582,7 +1582,7 @@ process_options(int argc, char** argv)
                     }
                 }
 #endif
-                boost::algorithm::to_lower(ExposureWeightFunctionName);
+                enblend::to_lower(ExposureWeightFunctionName);
 
                 while (true) {
                     token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
@@ -1741,7 +1741,7 @@ process_options(int argc, char** argv)
         case LevelsId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);
-                boost::algorithm::to_upper(levels);
+                enblend::to_upper(levels);
                 if (levels == "AUTO" || levels == "AUTOMATIC") {
                     ExactLevels = 0;
                 } else if (levels.find_first_not_of("+-0123456789") != std::string::npos) {
@@ -1815,8 +1815,8 @@ process_options(int argc, char** argv)
                     key = std::string(token, delimiter);
                     value = delimiter + 1;
                 }
-                boost::trim(key);
-                boost::trim(value);
+                enblend::trim(key);
+                enblend::trim(value);
 
                 if (enblend::parameter::is_valid_identifier(key)) {
                     Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
@@ -1839,7 +1839,7 @@ process_options(int argc, char** argv)
 
             while (token != nullptr) {
                 std::string key(token);
-                boost::trim(key);
+                enblend::trim(key);
 
                 if (key == "*") {
                     Parameter.clear();

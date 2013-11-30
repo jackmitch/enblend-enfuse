@@ -184,7 +184,6 @@ typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 #define HAVE_DYNAMICLOADER_IMPL
 #include <Windows.h>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
 class WinDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
@@ -247,7 +246,7 @@ private:
         {
             errorMsg=lpMsgBuf;
             // remove leading and trailing white spaces
-            boost::trim(errorMsg);
+            enblend::trim(errorMsg);
             LocalFree(lpMsgBuf);
         }
         else

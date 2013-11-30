@@ -133,8 +133,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
 #endif
             exportImagePreferablyWithAlpha(image, mask, ata, outputImageInfo);
         } else {
-            std::string pixel_type(outputImageInfo.getPixelType());
-            boost::algorithm::to_lower(pixel_type);
+            const std::string pixel_type(enblend::to_lower_copy(std::string(outputImageInfo.getPixelType())));
             std::cerr << command
                       << ": info: narrowing channel width for output as \""
                       << pixel_type << "\"" << std::endl;
@@ -149,8 +148,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
-        std::string pixel_type(outputImageInfo.getPixelType());
-        boost::algorithm::to_lower(pixel_type);
+        const std::string pixel_type(enblend::to_lower_copy(std::string(outputImageInfo.getPixelType())));
         std::cerr << command
                   << ": info: rescaling floating-point data for output as \""
                   << pixel_type << "\"" << std::endl;

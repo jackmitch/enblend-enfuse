@@ -36,8 +36,6 @@
 #include <map>
 #include <cctype>
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 #include <vigra/imageinfo.hxx>
 
 #ifdef HAVE_CONFIG_H
@@ -635,8 +633,8 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             ++line_number;
 
             key_value_pair comment = get_syntactic_comment(buffer);
-            boost::algorithm::to_lower(comment.first);
-            boost::algorithm::to_lower(comment.second);
+            enblend::to_lower(comment.first);
+            enblend::to_lower(comment.second);
             if ((comment.first == "glob" ||
                  comment.first == "globbing" ||
                  comment.first == "filename-globbing") &&
@@ -806,9 +804,7 @@ bool
 is_known_extension_to_vigra(const std::string& filename)
 {
     const std::string known_extensions = vigra::impexListExtensions();
-    std::string extension = filename.substr(filename.rfind(".") + 1);
-
-    boost::algorithm::to_lower(extension);
+    const std::string extension(enblend::to_lower_copy(filename.substr(filename.rfind(".") + 1U)));
 
     return known_extensions.find(extension) != std::string::npos;
 }
