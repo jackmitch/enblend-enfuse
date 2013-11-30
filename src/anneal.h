@@ -40,6 +40,7 @@
 
 #include "masktypedefs.h"
 #include "muopt.h"
+#include "openmp_lock.h"
 
 
 // Nicol N. Schraudolph

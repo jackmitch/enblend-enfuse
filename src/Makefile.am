@@ -12,7 +12,8 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   global.h graphcut.h \
                   maskcommon.h masktypedefs.h mask.h postoptimizer.h \
                   nearest.h numerictraits.h opencl.h opencl.cc \
-                  openmp.h path.h pyramid.h \
+                  openmp_def.h openmp_lock.h openmp_vigra.h \
+                  path.h pyramid.h \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \
                   filespec.h filespec.cc \
@@ -30,7 +31,8 @@ enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  exposure_weight_base.h exposure_weight.h dynamic_loader.h \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h opencl.h opencl.cc \
-                 openmp.h pyramid.h \
+                 openmp_def.h openmp_lock.h openmp_vigra.h \
+                 pyramid.h \
                  error_message.h error_message.cc \
                  filenameparse.h filenameparse.cc \
                  filespec.h filespec.cc \

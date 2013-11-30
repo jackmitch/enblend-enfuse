@@ -35,7 +35,8 @@
 
 #include "common.h"
 #include "opencl.h"
-#include "openmp.h"
+#include "openmp_def.h"
+#include "openmp_vigra.h"
 #include "numerictraits.h"
 #include "fixmath.h"
 #include "assemble.h"
