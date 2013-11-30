@@ -39,6 +39,7 @@
 #include <algorithm>
 #include <iostream>
 #include <list>
+#include <memory>               // std::unique_ptr
 #include <set>
 #include <vector>
 
@@ -1798,7 +1799,7 @@ process_options(int argc, char** argv)
         }
 
         case ParameterId: {
-            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
             char* save_ptr = nullptr;
             char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
@@ -1831,7 +1832,7 @@ process_options(int argc, char** argv)
         }
 
         case NoParameterId: {
-            boost::scoped_ptr<char> s(new char[strlen(optarg) + 1]);
+            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
             strcpy(s.get(), optarg);
             char* save_ptr = nullptr;
             char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
@@ -1998,7 +1999,7 @@ int main(int argc, char** argv)
     TIFFSetErrorHandler(tiff_error);
 
     //< layer-selector all-layers
-    LayerSelection.set_selector(*selector::find_by_id(selector::AllLayersId));
+    LayerSelection.set_selector(*selector::find_by_id(selector::id_t::AllLayersId));
 
     if (!getopt_long_works_ok())
     {

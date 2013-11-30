@@ -21,8 +21,6 @@
 
 #include <cassert>
 
-#include <boost/assign/list_of.hpp>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -132,13 +130,12 @@ namespace selector
     }
 
 
-    algorithm_list algorithms =
-        boost::assign::list_of
-        (static_cast<Abstract*>(new AllLayers))
-        (static_cast<Abstract*>(new FirstLayer))
-        (static_cast<Abstract*>(new LargestLayer))
-        (static_cast<Abstract*>(new NoLayer))
-        ;
+    algorithm_list algorithms = {
+        static_cast<Abstract*>(new AllLayers),
+        static_cast<Abstract*>(new FirstLayer),
+        static_cast<Abstract*>(new LargestLayer),
+        static_cast<Abstract*>(new NoLayer)
+    };
 
 
     algorithm_list::const_iterator

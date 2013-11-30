@@ -23,10 +23,9 @@
 
 #include <cstring>
 #include <iostream>
+#include <memory>               // std::unique_ptr
 #include <set>
 #include <string>
-
-#include <boost/scoped_ptr.hpp>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -46,11 +45,11 @@ static std::string
 interpolate_format(const char* format, va_list arguments)
 {
     const size_t buffer_size = 4096U;
-    boost::scoped_ptr<char> buffer(new char[buffer_size]);
+    std::unique_ptr<char> buffer(new char[buffer_size]);
 
     vsnprintf(buffer.get(), buffer_size, format, arguments);
 
-    return buffer.get();
+    return buffer.release();
 }
 
 

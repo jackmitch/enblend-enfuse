@@ -20,9 +20,8 @@
 
 
 #include <cstring>
+#include <memory>               // std::unique_ptr
 #include <sstream>
-
-#include <boost/scoped_ptr.hpp>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -52,7 +51,7 @@ errorMessage(int anErrorNumber)
     int return_code;
 #if defined(HAVE_STRERROR_R)
     const size_t buffer_size = 65536;
-    boost::scoped_ptr<char> message_buffer(new char[buffer_size]);
+    std::unique_ptr<char> message_buffer(new char[buffer_size]);
 #if defined(STRERROR_R_CHAR_P)
     message = strerror_r(anErrorNumber, message_buffer.get(), buffer_size);
     return_code = 0;

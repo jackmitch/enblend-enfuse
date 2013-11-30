@@ -31,13 +31,13 @@
 
 namespace selector
 {
-    typedef enum
+    enum class id_t
     {
         AllLayersId,
         FirstLayerId,
         LargestLayerId,
         NoLayerId
-    } id_t;
+    };
 
     struct Abstract
     {
@@ -56,7 +56,7 @@ namespace selector
     class AllLayers : public Abstract
     {
     public:
-        id_t id() const {return AllLayersId;}
+        id_t id() const {return id_t::AllLayersId;}
         std::string name() const;
         std::string description() const;
 
@@ -70,7 +70,7 @@ namespace selector
     class FirstLayer : public Abstract
     {
     public:
-        id_t id() const {return FirstLayerId;}
+        id_t id() const {return id_t::FirstLayerId;}
         std::string name() const;
         std::string description() const;
 
@@ -84,7 +84,7 @@ namespace selector
     class LargestLayer : public Abstract
     {
     public:
-        id_t id() const {return LargestLayerId;}
+        id_t id() const {return id_t::LargestLayerId;}
         std::string name() const;
         std::string description() const;
 
@@ -100,7 +100,7 @@ namespace selector
     class NoLayer : public Abstract
     {
     public:
-        id_t id() const {return NoLayerId;}
+        id_t id() const {return id_t::NoLayerId;}
         std::string name() const;
         std::string description() const;
 

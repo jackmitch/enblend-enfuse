@@ -34,7 +34,6 @@
 #include <queue>
 
 #include <boost/functional/hash.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/unordered_set.hpp>
 
 #include <vigra/functorexpression.hxx>
@@ -1328,7 +1327,7 @@ namespace enblend {
         std::vector<vigra::Point2D>* dualPath = nullptr;
         std::vector<vigra::Point2D> totalDualPath;
         vigra::Point2D intermediatePoint;
-        boost::scoped_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());
+        std::unique_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());
 
         const vigra::Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
                                graphImg.lowerRight().y - graphImg.upperLeft().y);

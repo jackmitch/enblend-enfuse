@@ -162,10 +162,6 @@ AC_CHECK_HEADER(boost/algorithm/string/trim.hpp, [],
                 AC_MSG_ERROR([Boost "trim" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/algorithm/string/erase.hpp, [],
                 AC_MSG_ERROR([Boost "erase" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/assign/list_inserter.hpp, [],
-                AC_MSG_ERROR([Boost "list_inserter" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/assign/list_of.hpp, [],
-                AC_MSG_ERROR([Boost "list_of" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
@@ -180,8 +176,6 @@ AC_CHECK_HEADER(boost/random/uniform_real.hpp, [],
                 AC_MSG_ERROR([Boost "uniform_real" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/random/variate_generator.hpp, [],
                 AC_MSG_ERROR([Boost "variate_generator" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/scoped_ptr.hpp, [],
-                AC_MSG_ERROR([Boost "scoped_ptr" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/system/error_code.hpp, [],
                 AC_MSG_ERROR([Boost "error_code" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/unordered_set.hpp, [],

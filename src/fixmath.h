@@ -29,8 +29,6 @@
 
 #include <time.h>
 
-#include <boost/assign/list_of.hpp>
-
 #ifdef _WIN32
 #include <boost/math/special_functions.hpp>
 using namespace boost::math;
@@ -693,10 +691,13 @@ public:
                               cmsJCh& final_jch) const {
         extra_minimizer_parameter extra(initial_jch);
         gsl_multimin_function cost = {delta_e_multimin_cost, 2U, &extra};
-        const MinimizerMultiDimensionSimplex::array_type initial =
-            boost::assign::list_of(initial_lightness)(initial_chroma);
-        MinimizerMultiDimensionSimplex::array_type step =
-            boost::assign::list_of(initial_lightness_step_length)(initial_chroma_step_length);
+        const MinimizerMultiDimensionSimplex::array_type initial = {
+            initial_lightness, initial_chroma
+        };
+        MinimizerMultiDimensionSimplex::array_type step = {
+            initial_lightness_step_length,
+            initial_chroma_step_length
+        };
         MinimizerMultiDimensionSimplex2Randomized optimizer(cost, initial, step);
 
         optimizer.set_absolute_error(optimizer_error)->set_goal(optimizer_goal);

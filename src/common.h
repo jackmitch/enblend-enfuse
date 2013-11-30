@@ -34,9 +34,6 @@
 #include <vector>
 
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/assign/list_inserter.hpp>
-#include <boost/assign/list_of.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <vigra/numerictraits.hxx>
 
@@ -507,25 +504,25 @@ std::string
 outputPixelTypeOfString(const char* anOutputDepth)
 {
     typedef std::map<std::string, std::string> Str2StrMapType;
-    Str2StrMapType depthMap;
 
-    boost::assign::insert(depthMap)
-        ("INT16", "INT16")
-        ("INT32", "INT32")
+    Str2StrMapType depthMap = {
+        {"INT16", "INT16"},
+        {"INT32", "INT32"},
 
-        ("8", "UINT8")
-        ("16", "UINT16")
-        ("32", "UINT32")
-        ("UINT8", "UINT8")
-        ("UINT16", "UINT16")
-        ("UINT32", "UINT32")
+        {"8", "UINT8"},
+        {"16", "UINT16"},
+        {"32", "UINT32"},
+        {"UINT8", "UINT8"},
+        {"UINT16", "UINT16"},
+        {"UINT32", "UINT32"},
 
-        ("DOUBLE", "DOUBLE")
-        ("FLOAT", "FLOAT")
-        ("R32", "FLOAT")
-        ("R64", "DOUBLE")
-        ("REAL32", "FLOAT")
-        ("REAL64", "DOUBLE");
+        {"DOUBLE", "DOUBLE"},
+        {"FLOAT", "FLOAT"},
+        {"R32", "FLOAT"},
+        {"R64", "DOUBLE"},
+        {"REAL32", "FLOAT"},
+        {"REAL64", "DOUBLE"}
+    };
 
     std::string output_depth(anOutputDepth);
     boost::algorithm::to_upper(output_depth);
@@ -568,22 +565,22 @@ range_t
 rangeOfPixelType(const std::string& aPixelType)
 {
     typedef std::map<std::string, range_t> Str2PairMapType;
-    Str2PairMapType rangeMap;
 
-    boost::assign::insert(rangeMap)
-        ("INT8", std::make_pair(vigra::NumericTraits<vigra::Int8>::min(),
-                                vigra::NumericTraits<vigra::Int8>::max()))
-        ("INT16", std::make_pair(vigra::NumericTraits<vigra::Int16>::min(),
-                                 vigra::NumericTraits<vigra::Int16>::max()))
-        ("INT32", std::make_pair(vigra::NumericTraits<vigra::Int32>::min(),
-                                 vigra::NumericTraits<vigra::Int32>::max()))
+    Str2PairMapType rangeMap = {
+        {"INT8", std::make_pair(vigra::NumericTraits<vigra::Int8>::min(),
+                                vigra::NumericTraits<vigra::Int8>::max())},
+        {"INT16", std::make_pair(vigra::NumericTraits<vigra::Int16>::min(),
+                                 vigra::NumericTraits<vigra::Int16>::max())},
+        {"INT32", std::make_pair(vigra::NumericTraits<vigra::Int32>::min(),
+                                 vigra::NumericTraits<vigra::Int32>::max())},
 
-        ("UINT8", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt8>::max()))
-        ("UINT16", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt16>::max()))
-        ("UINT32", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt32>::max()))
+        {"UINT8", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt8>::max())},
+        {"UINT16", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt16>::max())},
+        {"UINT32", std::make_pair(0.0, vigra::NumericTraits<vigra::UInt32>::max())},
 
-        ("FLOAT", std::make_pair(0.0, 1.0))
-        ("DOUBLE", std::make_pair(0.0, 1.0));
+        {"FLOAT", std::make_pair(0.0, 1.0)},
+        {"DOUBLE", std::make_pair(0.0, 1.0)}
+    };
 
     assert(!aPixelType.empty());
     Str2PairMapType::const_iterator r = rangeMap.find(aPixelType);
@@ -630,13 +627,11 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
         return anotherPixelType; // second includes first
     } else {
         // Types are different: look for the smallest containing type
-        using namespace boost::assign;
-
         typedef std::vector<std::string> string_array;
         typedef string_array::const_iterator string_array_ci;
 
         if (range1.first < 0 || range2.first < 0) {
-            const string_array types = list_of("INT8")("INT16")("INT32");
+            const string_array types = {"INT8", "INT16", "INT32"};
             for (string_array_ci i = types.begin(); i != types.end(); ++i) {
                 if (includesBothRanges(*i, range1, range2)) {
                     return *i;
@@ -644,7 +639,7 @@ maxPixelType(const std::string& aPixelType, const std::string& anotherPixelType)
             }
             return "INT32";
         } else {
-            const string_array types = list_of("UINT8")("UINT16")("UINT32");
+            const string_array types = {"UINT8", "UINT16", "UINT32"};
             for (string_array_ci i = types.begin(); i != types.end(); ++i) {
                 if (includesBothRanges(*i, range1, range2)) {
                     return *i;
