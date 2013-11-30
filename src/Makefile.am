@@ -19,6 +19,7 @@ enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
                   filespec.h filespec.cc \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc \
+                  timer.h timer.cc \
                   minimizer.h muopt.h
 enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = layer_selection/liblayersel.a \
@@ -38,6 +39,7 @@ enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
                  filespec.h filespec.cc \
                  self_test.h self_test.cc \
                  tiff_message.h tiff_message.cc \
+                 timer.h timer.cc \
                  minimizer.h muopt.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
 enfuse_LDADD = layer_selection/liblayersel.a \

@@ -264,7 +264,7 @@ AC_CHECK_HEADER(lcms2.h, [],
                 AC_MSG_ERROR([lcms2 header files are required to compile Enblend.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
+AC_CHECK_HEADER_STDBOOL
 AC_C_CONST
 AC_C_INLINE
 if test "$ac_cv_c_inline" != no; then
@@ -283,16 +283,19 @@ AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
 AC_FUNC_CLOSEDIR_VOID
+AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FSEEKO
-# AC_FUNC_MALLOC         dnl unused and harmful when cross compiling
+AC_FUNC_MALLOC
+#AC_FUNC_MALLOC         dnl unused and harmful when cross compiling
 AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_STRERROR_R
 AC_FUNC_STRTOD
 
-AC_CHECK_FUNCS([fesetround floor \
-                memset mkstemp \
-                pow \
-                sqrt strchr strcspn strdup strerror strrchr strtok_r strtol strtoul])
+AC_CHECK_FUNCS([atexit clock_gettime \
+                fesetround floor \
+                memset mkstemp select \
+                pow sqrt \
+                sqrt strchr strcspn strdup strerror strpbrk strrchr strtok_r strtol strtoul])
 
 # lrint and lrintf
 AC_C99_FUNC_LRINT
