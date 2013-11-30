@@ -1151,15 +1151,23 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         }
 #endif
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
+        // Anticipated Change: Replace unintuitive bind expression (again) with
+        // [&cf](ScalarType x, const MaskValueType& y) {return cf(x) + y;}
         combineTwoImagesIfMP(srcImageRange(grad), result, mask, result,
-                             [&cf](ScalarType x, const MaskValueType& y) {return cf(x) + y;});
+                             std::bind(std::plus<MaskValueType>(),
+                                       std::bind(cf, std::placeholders::_1),
+                                       std::placeholders::_2));
     }
 
     // Saturation
     if (WSaturation > 0.0) {
         SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
+        // Anticipated Change:  Replace unintuitive bind expression (again) with
+        // [&sf](ImageValueType x, const MaskValueType& y) {return sf(x) + y;}
         combineTwoImagesIfMP(src, result, mask, result,
-                             [&sf](ImageValueType x, const MaskValueType& y) {return sf(x) + y;});
+                             std::bind(std::plus<MaskValueType>(),
+                                       std::bind(sf, std::placeholders::_1),
+                                       std::placeholders::_2));
     }
 
     // Entropy
@@ -1215,8 +1223,12 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         }
 
         EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
+        // Anticipated Change:  Replace unintuitive bind expression (again) with
+        // [&ef](PixelType x, const MaskValueType& y) {return ef(x) + y;}
         combineTwoImagesIfMP(srcImageRange(entropy), result, mask, result,
-                             [&ef](PixelType x, const MaskValueType& y) {return ef(x) + y;});
+                             std::bind(std::plus<MaskValueType>(),
+                                       std::bind(ef, std::placeholders::_1),
+                                       std::placeholders::_2));
     }
 };
 
