@@ -21,14 +21,17 @@
 #define TIMER_H_INCLUDED
 
 
-#include <cstdint>
-
-#include <sys/times.h>          // times()
-#include <time.h>               // clock_t, clock(); timespec, clock_gettime()
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <cstdint>
+
+#ifdef HAVE_SYS_TIMES_H
+#include <sys/times.h>   // times()
+#endif
+
+#include <time.h>        // clock_t, clock(); timespec, clock_gettime()
 
 
 namespace timer
