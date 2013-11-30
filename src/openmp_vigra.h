@@ -137,6 +137,29 @@ namespace vigra
 
 
         template <class SrcImageIterator, class SrcAccessor,
+                  class DestImageIterator, class DestAccessor>
+        inline void
+        copyImage(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
+                  DestImageIterator dest_upperleft, DestAccessor dest_acc)
+        {
+#pragma omp parallel
+            {
+                const vigra::Size2D size(src_lowerright - src_upperleft);
+
+#pragma omp for schedule(guided) nowait
+                for (int y = 0; y < size.y; ++y)
+                {
+                    const vigra::Diff2D begin(0, y);
+                    const vigra::Diff2D end(size.x, y + 1);
+
+                    vigra::copyImage(src_upperleft + begin, src_upperleft + end, src_acc,
+                                     dest_upperleft + begin, dest_acc);
+                }
+            } // omp parallel
+        }
+
+
+        template <class SrcImageIterator, class SrcAccessor,
                   class DestImageIterator, class DestAccessor,
                   class Functor>
         inline void
@@ -482,6 +505,16 @@ namespace vigra
 
 
         template <class SrcImageIterator, class SrcAccessor,
+                  class DestImageIterator, class DestAccessor>
+        inline void
+        copyImage(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
+                  DestImageIterator dest_upperleft, DestAccessor dest_acc)
+        {
+            vigra::copyImage(src_upperleft, src_lowerright, src_acc, dest_upperleft, dest_acc);
+        }
+
+
+        template <class SrcImageIterator, class SrcAccessor,
                   class DestImageIterator, class DestAccessor,
                   class Functor>
         inline void
@@ -600,6 +633,17 @@ namespace vigra
             vigra::omp::transformImage(src.first, src.second, src.third,
                                        dest.first, dest.second,
                                        functor);
+        }
+
+
+        template <class SrcImageIterator, class SrcAccessor,
+                  class DestImageIterator, class DestAccessor>
+        inline void
+        copyImage(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                  vigra::pair<DestImageIterator, DestAccessor> dest)
+        {
+            vigra::omp::copyImage(src.first, src.second, src.third,
+                                  dest.first, dest.second);
         }
 
 
