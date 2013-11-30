@@ -1212,11 +1212,11 @@ MaskType* createMask(const ImageType* const white,
     }
 
     if (Verbose >= VERBOSE_DIFFERENCE_STATISTICS) {
-        typedef std::binder2nd<std::not_equal_to<MismatchImagePixelType> > predicate;
-
-        predicate non_maximum(std::bind2nd(std::not_equal_to<MismatchImagePixelType>(),
-                                           vigra::NumericTraits<MismatchImagePixelType>::max()));
-        enblend::FindAverageAndVarianceIf<MismatchImagePixelType, predicate> statistics(non_maximum);
+        auto non_maximum(std::bind(std::not_equal_to<MismatchImagePixelType>(),
+                                   std::placeholders::_1,
+                                   vigra::NumericTraits<MismatchImagePixelType>::max()));
+        enblend::FindAverageAndVarianceIf<MismatchImagePixelType, decltype(non_maximum)>
+            statistics(non_maximum);
         const double range = static_cast<double>(vigra::NumericTraits<MismatchImagePixelType>::max() -
                                                  vigra::NumericTraits<MismatchImagePixelType>::min());
 
