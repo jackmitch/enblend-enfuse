@@ -1038,7 +1038,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                 "+ enfuseMask:          ExposureUpperCutoffGrayscaleProjector = <" <<
                 ExposureUpperCutoffGrayscaleProjector << ">\n";
 #endif
-            transformImageIfMP(src, mask, result, cef);
+            vigra::omp::transformImageIf(src, mask, result, cef);
         } else {
             ExposureFunctor<ImageValueType, MultiGrayAcc, MaskValueType>
                 ef(WExposure, ExposureWeightFunction, ga);
@@ -1046,7 +1046,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
             std::cout << "+ enfuseMask: plain - GrayscaleProjector = <" <<
                 GrayscaleProjector << ">\n";
 #endif
-            transformImageIfMP(src, mask, result, ef);
+            vigra::omp::transformImageIf(src, mask, result, ef);
         }
     }
 
@@ -1104,12 +1104,12 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
 #ifdef DEBUG_LOG
                 std::cout << "+ truncate values below " << -minCurve << std::endl;;
 #endif
-                transformImageIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
-                                   mask.first, mask.second,
-                                   grad.upperLeft(), grad.accessor(),
-                                   ClampingFunctor<LongScalarType, LongScalarType>
-                                   (static_cast<LongScalarType>(-minCurve), LongScalarType(),
-                                    vigra::NumericTraits<LongScalarType>::max(), vigra::NumericTraits<LongScalarType>::max()));
+                vigra::omp::transformImageIf(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
+                                             mask.first, mask.second,
+                                             grad.upperLeft(), grad.accessor(),
+                                             ClampingFunctor<LongScalarType, LongScalarType>
+                                             (static_cast<LongScalarType>(-minCurve), LongScalarType(),
+                                              vigra::NumericTraits<LongScalarType>::max(), vigra::NumericTraits<LongScalarType>::max()));
             }
             else
             {
@@ -1123,14 +1123,14 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                               localContrast.upperLeft(), localContrast.accessor(),
                               vigra::Size2D(ContrastWindowSize, ContrastWindowSize));
 
-                combineTwoImagesIfMP(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
-                                     localContrast.upperLeft(), localContrast.accessor(),
-                                     mask.first, mask.second,
-                                     grad.upperLeft(), grad.accessor(),
-                                     FillInFunctor<LongScalarType, LongScalarType>
-                                     (static_cast<LongScalarType>(minCurve), // threshold
-                                      1.0, // scale factor for "laplacian"
-                                      minCurve / vigra::NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
+                vigra::omp::combineTwoImagesIf(laplacian.upperLeft(), laplacian.lowerRight(), laplacian.accessor(),
+                                               localContrast.upperLeft(), localContrast.accessor(),
+                                               mask.first, mask.second,
+                                               grad.upperLeft(), grad.accessor(),
+                                               FillInFunctor<LongScalarType, LongScalarType>
+                                               (static_cast<LongScalarType>(minCurve), // threshold
+                                                1.0, // scale factor for "laplacian"
+                                                minCurve / vigra::NumericTraits<ScalarType>::max())); // scale factor for "localContrast"
             }
         }
         else
@@ -1154,10 +1154,10 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         ContrastFunctor<LongScalarType, ScalarType, MaskValueType> cf(WContrast);
         // Anticipated Change: Replace unintuitive bind expression (again) with
         // [&cf](ScalarType x, const MaskValueType& y) {return cf(x) + y;}
-        combineTwoImagesIfMP(srcImageRange(grad), result, mask, result,
-                             std::bind(std::plus<MaskValueType>(),
-                                       std::bind(cf, std::placeholders::_1),
-                                       std::placeholders::_2));
+        vigra::omp::combineTwoImagesIf(srcImageRange(grad), result, mask, result,
+                                       std::bind(std::plus<MaskValueType>(),
+                                                 std::bind(cf, std::placeholders::_1),
+                                                 std::placeholders::_2));
     }
 
     // Saturation
@@ -1165,10 +1165,10 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         SaturationFunctor<ImageValueType, MaskValueType> sf(WSaturation);
         // Anticipated Change:  Replace unintuitive bind expression (again) with
         // [&sf](ImageValueType x, const MaskValueType& y) {return sf(x) + y;}
-        combineTwoImagesIfMP(src, result, mask, result,
-                             std::bind(std::plus<MaskValueType>(),
-                                       std::bind(sf, std::placeholders::_1),
-                                       std::placeholders::_2));
+        vigra::omp::combineTwoImagesIf(src, result, mask, result,
+                                       std::bind(std::plus<MaskValueType>(),
+                                                 std::bind(sf, std::placeholders::_1),
+                                                 std::placeholders::_2));
     }
 
     // Entropy
@@ -1207,9 +1207,9 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                    (PixelType(ScalarType())), //     The extra parenthesis avoid a bug in the VC9 compiler.
                    (PixelType(upperCutoff)),
                    (PixelType(vigra::NumericTraits<ScalarType>::max())));
-            transformImageMP(src.first, src.second, src.third,
-                             trunc.upperLeft(), trunc.accessor(),
-                             cf);
+            vigra::omp::transformImage(src.first, src.second, src.third,
+                                       trunc.upperLeft(), trunc.accessor(),
+                                       cf);
             localEntropyIf(trunc.upperLeft(), trunc.lowerRight(), trunc.accessor(),
                            mask.first, mask.second,
                            entropy.upperLeft(), entropy.accessor(),
@@ -1226,10 +1226,10 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         EntropyFunctor<PixelType, MaskValueType> ef(WEntropy);
         // Anticipated Change:  Replace unintuitive bind expression (again) with
         // [&ef](PixelType x, const MaskValueType& y) {return ef(x) + y;}
-        combineTwoImagesIfMP(srcImageRange(entropy), result, mask, result,
-                             std::bind(std::plus<MaskValueType>(),
-                                       std::bind(ef, std::placeholders::_1),
-                                       std::placeholders::_2));
+        vigra::omp::combineTwoImagesIf(srcImageRange(entropy), result, mask, result,
+                                       std::bind(std::plus<MaskValueType>(),
+                                                 std::bind(ef, std::placeholders::_1),
+                                                 std::placeholders::_2));
     }
 };
 
@@ -1374,7 +1374,7 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                     destImage(*(outputPair.second)));
 
         // Add the mask to the norm image.
-        combineTwoImagesMP(srcImageRange(*mask),
+        vigra::omp::combineTwoImages(srcImageRange(*mask),
                            srcImage(*normImage),
                            destImage(*normImage),
                            Arg1() + Arg2());
@@ -1541,12 +1541,12 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         if (!UseHardMask) {
             // Normalize the mask coefficients.
             // Scale to the range expected by the MaskPyramidPixelType.
-            combineTwoImagesMP(srcImageRange(*(imageTriple.third)),
-                               srcImage(*normImage),
-                               destImage(*(imageTriple.third)),
-                               ifThenElse(Arg2() > Param(0.0),
-                                          Param(maxMaskPixelType) * Arg1() / Arg2(),
-                                          Param(maxMaskPixelType / totalImages)));
+            vigra::omp::combineTwoImages(srcImageRange(*(imageTriple.third)),
+                                         srcImage(*normImage),
+                                         destImage(*(imageTriple.third)),
+                                         ifThenElse(Arg2() > Param(0.0),
+                                                    Param(maxMaskPixelType) * Arg1() / Arg2(),
+                                                    Param(maxMaskPixelType / totalImages)));
         }
 
         // maskGP is constructed using the union of the input alpha channels
@@ -1574,10 +1574,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         for (unsigned int i = 0; i < maskGP->size(); ++i) {
             // Multiply image lp with the mask gp.
-            combineTwoImagesMP(srcImageRange(*((*imageLP)[i])),
-                               srcImage(*((*maskGP)[i])),
-                               destImage(*((*imageLP)[i])),
-                               ImageMaskMultiplyFunctor<MaskPyramidPixelType>(maxMaskPyramidPixelValue));
+            vigra::omp::combineTwoImages(srcImageRange(*((*imageLP)[i])),
+                                         srcImage(*((*maskGP)[i])),
+                                         destImage(*((*imageLP)[i])),
+                                         ImageMaskMultiplyFunctor<MaskPyramidPixelType>(maxMaskPyramidPixelValue));
 
             // Done with maskGP.
             delete (*maskGP)[i];
@@ -1591,10 +1591,10 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         if (resultLP != nullptr) {
             // Add imageLP to resultLP.
             for (unsigned int i = 0; i < imageLP->size(); ++i) {
-                combineTwoImagesMP(srcImageRange(*((*imageLP)[i])),
-                                   srcImage(*((*resultLP)[i])),
-                                   destImage(*((*resultLP)[i])),
-                                   Arg1() + Arg2());
+                vigra::omp::combineTwoImages(srcImageRange(*((*imageLP)[i])),
+                                             srcImage(*((*resultLP)[i])),
+                                             destImage(*((*resultLP)[i])),
+                                             Arg1() + Arg2());
                 delete (*imageLP)[i];
             }
             delete imageLP;

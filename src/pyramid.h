@@ -1765,11 +1765,11 @@ exportPyramid(std::vector<PyramidImageType*>* v, const char* prefix, vigra::Vigr
 
         // Rescale the pyramid values to fit in UINT16.
         vigra::UInt16Image usPyramid((*v)[i]->width(), (*v)[i]->height());
-        transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                         vigra::linearRangeMapping(vigra::NumericTraits<PyramidValueType>::min(),
-                                            vigra::NumericTraits<PyramidValueType>::max(),
-                                            vigra::NumericTraits<vigra::UInt16>::min(),
-                                            vigra::NumericTraits<vigra::UInt16>::max()));
+        vigra::omp::transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                                   vigra::linearRangeMapping(vigra::NumericTraits<PyramidValueType>::min(),
+                                                             vigra::NumericTraits<PyramidValueType>::max(),
+                                                             vigra::NumericTraits<vigra::UInt16>::min(),
+                                                             vigra::NumericTraits<vigra::UInt16>::max()));
 
         vigra::ImageExportInfo info(filenameBuf);
         vigra::exportImage(srcImageRange(usPyramid), info);
@@ -1797,11 +1797,11 @@ exportPyramid(std::vector<PyramidImageType*> *v, const char *prefix, vigra::Vigr
 
         // Rescale the pyramid values to fit in UINT16.
         vigra::UInt16RGBImage usPyramid((*v)[i]->width(), (*v)[i]->height());
-        transformImageMP(srcImageRange(*((*v)[i])), destImage(usPyramid),
-                         vigra::linearRangeMapping(PyramidVectorType(vigra::NumericTraits<PyramidValueType>::min()),
-                                            PyramidVectorType(vigra::NumericTraits<PyramidValueType>::max()),
-                                            typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::min()),
-                                            typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::max())));
+        vigra::omp::transformImage(srcImageRange(*((*v)[i])), destImage(usPyramid),
+                                   vigra::linearRangeMapping(PyramidVectorType(vigra::NumericTraits<PyramidValueType>::min()),
+                                                             PyramidVectorType(vigra::NumericTraits<PyramidValueType>::max()),
+                                                             typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::min()),
+                                                             typename vigra::UInt16RGBImage::value_type(vigra::NumericTraits<vigra::UInt16>::max())));
 
         vigra::ImageExportInfo info(filenameBuf);
         vigra::exportImage(srcImageRange(usPyramid), info);

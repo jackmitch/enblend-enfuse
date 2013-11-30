@@ -1194,18 +1194,18 @@ MaskType* createMask(const ImageType* const white,
     switch (PixelDifferenceFunctor)
     {
     case HueLuminanceMaxDifference:
-        combineTwoImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
-                           vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
-                           vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                           MaxHueLuminanceDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
-                           (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+        vigra::omp::combineTwoImages(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
+                                     vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
+                                     vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                                     MaxHueLuminanceDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
+                                     (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
         break;
     case DeltaEDifference:
-        combineTwoImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
-                           vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
-                           vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
-                           DeltaEPixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
-                           (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+        vigra::omp::combineTwoImages(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*white))),
+                                     vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*black))),
+                                     vigra::destIter(mismatchImage.upperLeft() + uvBBStrideOffset),
+                                     DeltaEPixelDifferenceFunctor<ImagePixelType, MismatchImagePixelType>
+                                     (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
         break;
     default:
         throw never_reached("switch control expression \"PixelDifferenceFunctor\" out of range");
@@ -1237,13 +1237,13 @@ MaskType* createMask(const ImageType* const white,
 
         // Color the parts of the visualize image where the two images
         // to be blended do not overlap.
-        combineThreeImagesMP(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*whiteAlpha))),
-                             vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*blackAlpha))),
-                             vigra::srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                             vigra::destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
-                             ifThenElse(Arg1() & Arg2(),
-                                        Arg3(),
-                                        Param(VISUALIZE_NO_OVERLAP_VALUE)));
+        vigra::omp::combineThreeImages(vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImageRange(*whiteAlpha))),
+                                       vigra_ext::stride(mismatchImageStride, mismatchImageStride, vigra_ext::apply(uvBB, srcImage(*blackAlpha))),
+                                       vigra::srcIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                                       vigra::destIter(visualizeImage->upperLeft() + uvBBStrideOffset),
+                                       ifThenElse(Arg1() & Arg2(),
+                                                  Arg3(),
+                                                  Param(VISUALIZE_NO_OVERLAP_VALUE)));
 
         const vigra::Diff2D offset = vigra::Diff2D(vBB.upperLeft()) - vigra::Diff2D(uBB.upperLeft());
         // Draw the initial seam line as a reference.

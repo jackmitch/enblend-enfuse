@@ -215,15 +215,15 @@ namespace enblend
     private:
         void configureOptimizer() {
             // Areas other than intersection region have maximum cost.
-            combineThreeImagesMP(vigra_ext::stride(*this->mismatchImageStride,
-                                                   *this->mismatchImageStride,
-                                                   vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
-                                 vigra_ext::stride(*this->mismatchImageStride,
-                                                   *this->mismatchImageStride,
-                                                   vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
-                                 srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 ifThenElse(Arg1() & Arg2(), Arg3(), Param(vigra::NumericTraits<MismatchImagePixelType>::max())));
+            vigra::omp::combineThreeImages(vigra_ext::stride(*this->mismatchImageStride,
+                                                             *this->mismatchImageStride,
+                                                             vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
+                                           vigra_ext::stride(*this->mismatchImageStride,
+                                                             *this->mismatchImageStride,
+                                                             vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
+                                           srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+                                           destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+                                           ifThenElse(Arg1() & Arg2(), Arg3(), Param(vigra::NumericTraits<MismatchImagePixelType>::max())));
         }
     };
 
@@ -354,15 +354,15 @@ namespace enblend
 
     private:
         void configureOptimizer() {
-            combineThreeImagesMP(vigra_ext::stride(*this->mismatchImageStride,
-                                                   *this->mismatchImageStride,
-                                                   vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
-                                 vigra_ext::stride(*this->mismatchImageStride,
-                                                   *this->mismatchImageStride,
-                                                   vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
-                                 srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
-                                 ifThenElse(!(Arg1() || Arg2()), Param(vigra::NumericTraits<MismatchImagePixelType>::one()), Arg3()));
+            vigra::omp::combineThreeImages(vigra_ext::stride(*this->mismatchImageStride,
+                                                             *this->mismatchImageStride,
+                                                             vigra_ext::apply(*this->uvBB, srcImageRange(*this->whiteAlpha))),
+                                           vigra_ext::stride(*this->mismatchImageStride,
+                                                             *this->mismatchImageStride,
+                                                             vigra_ext::apply(*this->uvBB, srcImage(*this->blackAlpha))),
+                                           srcIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+                                           destIter((this->mismatchImage)->upperLeft() + *this->uvBBStrideOffset),
+                                           ifThenElse(!(Arg1() || Arg2()), Param(vigra::NumericTraits<MismatchImagePixelType>::one()), Arg3()));
         }
     };
 

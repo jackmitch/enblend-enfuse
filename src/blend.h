@@ -102,11 +102,11 @@ blend(std::vector<MaskPyramidType*>* maskGP,
                     std::cerr.flush();
                 }
 
-                combineThreeImagesMP(srcImageRange(*((*maskGP)[layer])),
-                                     srcImage(*((*whiteLP)[layer])),
-                                     srcImage(*((*blackLP)[layer])),
-                                     destImage(*((*blackLP)[layer])),
-                                     CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
+                vigra::omp::combineThreeImages(srcImageRange(*((*maskGP)[layer])),
+                                               srcImage(*((*whiteLP)[layer])),
+                                               srcImage(*((*blackLP)[layer])),
+                                               destImage(*((*blackLP)[layer])),
+                                               CartesianBlendFunctor<typename MaskPyramidType::value_type>(maskPyramidWhiteValue));
             }
 #ifdef OPENMP
         } // omp single

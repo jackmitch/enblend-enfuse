@@ -140,12 +140,12 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
                       << pixel_type << "\"" << std::endl;
 
             ImageType lowDepthImage(image->width(), image->height());
-            transformImageMP(srcImageRange(*image),
-                             destImage(lowDepthImage),
-                             vigra::linearRangeMapping(ImagePixelType(inputMin),
-                                                       ImagePixelType(inputMax),
-                                                       ImagePixelType(outputRange.first),
-                                                       ImagePixelType(outputRange.second)));
+            vigra::omp::transformImage(srcImageRange(*image),
+                                       destImage(lowDepthImage),
+                                       vigra::linearRangeMapping(ImagePixelType(inputMin),
+                                                                 ImagePixelType(inputMax),
+                                                                 ImagePixelType(outputRange.first),
+                                                                 ImagePixelType(outputRange.second)));
             exportImagePreferablyWithAlpha(&lowDepthImage, mask, ata, outputImageInfo);
         }
     } else {
@@ -169,12 +169,12 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
                  AlphaTraits<IntegralPixelComponentType>::zero()),
                 mask->accessor());
 
-        transformImageMP(srcImageRange(*image),
-                         destImage(integralImage),
-                         vigra::linearRangeMapping(ImagePixelType(inputMin),
-                                                   ImagePixelType(inputMax),
-                                                   IntegralPixelType(outputRange.first),
-                                                   IntegralPixelType(outputRange.second)));
+        vigra::omp::transformImage(srcImageRange(*image),
+                                   destImage(integralImage),
+                                   vigra::linearRangeMapping(ImagePixelType(inputMin),
+                                                             ImagePixelType(inputMax),
+                                                             IntegralPixelType(outputRange.first),
+                                                             IntegralPixelType(outputRange.second)));
         exportImagePreferablyWithAlpha(&integralImage, mask, ata, outputImageInfo);
     }
 }
@@ -226,12 +226,12 @@ import(const vigra::ImageImportInfo& info,
         static_cast<double>(vigra::NumericTraits<ImagePixelComponentType>::max()) :
         1.0;
     if (inputRange.first != min || inputRange.second != max) {
-        transformImageMP(srcIterRange(image.first, image.first + extent, image.second),
-                         vigra::destIter(image.first, image.second),
-                         vigra::linearRangeMapping(ImagePixelType(inputRange.first),
-                                                   ImagePixelType(inputRange.second),
-                                                   ImagePixelType(min),
-                                                   ImagePixelType(max)));
+        vigra::omp::transformImage(srcIterRange(image.first, image.first + extent, image.second),
+                                   vigra::destIter(image.first, image.second),
+                                   vigra::linearRangeMapping(ImagePixelType(inputRange.first),
+                                                             ImagePixelType(inputRange.second),
+                                                             ImagePixelType(min),
+                                                             ImagePixelType(max)));
     }
 }
 

@@ -156,12 +156,12 @@ namespace enblend {
                                                      nftTempImg.lowerRight() - vigra::Diff2D(1, 1))),
                   vigra::destIter(nft.upperLeft() + vigra::Diff2D(1, 1)));
 
-        combineTwoImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                           vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
-                           vigra::destIter(overlap.upperLeft() + vigra::Diff2D(1, 1)),
-                           ifThenElse(Arg1() && Arg2(),
-                                      Param(MaskPixelTraits::max()),
-                                      Param(MaskPixelTraits::zero())));
+        vigra::omp::combineTwoImages(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                                     vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
+                                     vigra::destIter(overlap.upperLeft() + vigra::Diff2D(1, 1)),
+                                     ifThenElse(Arg1() && Arg2(),
+                                                Param(MaskPixelTraits::max()),
+                                                Param(MaskPixelTraits::zero())));
 
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(nftTempImg), ImageExportInfo("./debug/nft-orig.tif").setPixelType("UINT8"));
@@ -1214,10 +1214,10 @@ namespace enblend {
         dividePath(&totalDualPath, &pixelsLeftOfCut, &pixelsRightOfCut, iBB);
 
 #ifdef DEBUG_GRAPHCUT
-        combineTwoImagesMP(srcIterRange(Diff2D(), size),
-                           vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
-                           vigra::destIter(tempImg.upperLeft()),
-                           CutPixelsFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut));
+        vigra::omp::combineTwoImages(srcIterRange(Diff2D(), size),
+                                     vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
+                                     vigra::destIter(tempImg.upperLeft()),
+                                     CutPixelsFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut));
         exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/cut_pixels.tif").setPixelType("UINT8"));
 #endif
 
@@ -1268,11 +1268,11 @@ namespace enblend {
         exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels2.tif").setPixelType("UINT8"));
 #endif
 
-        combineTwoImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                           vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)), destImage(tempImg),
-                           ifThenElse(Arg1() && Arg2(),
-                                      Param(MaskPixelTraits::max()),
-                                      Param(MaskPixelTraits::zero())));
+        vigra::omp::combineTwoImages(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                                     vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)), destImage(tempImg),
+                                     ifThenElse(Arg1() && Arg2(),
+                                                Param(MaskPixelTraits::max()),
+                                                Param(MaskPixelTraits::zero())));
 
         copyImageIf(finalmaskSrcRange, srcImage(tempImg),
                     vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
@@ -1350,10 +1350,10 @@ namespace enblend {
         transformImage(src2_upperleft, src2_upperleft + size, sa2,
                        intermediateImg.upperLeft(), intermediateImg.accessor(),
                        MapFunctor<SrcPixelType, BasePixelType>());
-        combineTwoImagesMP(srcImageRange(gradientPreConvolve),
-                           srcImage(intermediateImg),
-                           destImage(gradientPreConvolve),
-                           Arg1() + Arg2());
+        vigra::omp::combineTwoImages(srcImageRange(gradientPreConvolve),
+                                     srcImage(intermediateImg),
+                                     destImage(gradientPreConvolve),
+                                     Arg1() + Arg2());
 
         // computing image gradient for a better cost function
         vigra::separableConvolveX(srcImageRange(gradientPreConvolve),
@@ -1367,29 +1367,29 @@ namespace enblend {
         switch (PixelDifferenceFunctor)
         {
         case HueLuminanceMaxDifference:
-            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
-                               src2_upperleft, sa2,
-                               intermediateImg.upperLeft(), intermediateImg.accessor(),
-                               MaxHueLuminanceDifferenceFunctor<SrcPixelType, BasePixelType>
-                               (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+            vigra::omp::combineTwoImages(src1_upperleft, src1_lowerright, sa1,
+                                         src2_upperleft, sa2,
+                                         intermediateImg.upperLeft(), intermediateImg.accessor(),
+                                         MaxHueLuminanceDifferenceFunctor<SrcPixelType, BasePixelType>
+                                         (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
             break;
         case DeltaEDifference:
-            combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
-                               src2_upperleft, sa2,
-                               intermediateImg.upperLeft(), intermediateImg.accessor(),
-                               DeltaEPixelDifferenceFunctor<SrcPixelType, BasePixelType>
-                               (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
+            vigra::omp::combineTwoImages(src1_upperleft, src1_lowerright, sa1,
+                                         src2_upperleft, sa2,
+                                         intermediateImg.upperLeft(), intermediateImg.accessor(),
+                                         DeltaEPixelDifferenceFunctor<SrcPixelType, BasePixelType>
+                                         (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
             break;
         default:
             throw never_reached("switch control expression \"PixelDifferenceFunctor\" out of range");
         }
 
         // masking overlap region borders
-        combineThreeImagesMP(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
-                             vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
-                             vigra::srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
-                             vigra::destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
-                             ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
+        vigra::omp::combineThreeImages(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
+                                       vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
+                                       vigra::srcIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                                       vigra::destIter(intermediateImg.upperLeft(), intermediateImg.accessor()),
+                                       ifThenElse(!(Arg1() & Arg2()), Param(BasePixelTraits::max()), Arg3()));
 
         // look for possible start and end points
         std::vector<vigra::Point2D>* intermediatePointList =

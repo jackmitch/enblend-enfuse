@@ -249,8 +249,8 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
     quadruple_image(src_upperleft, src_lowerright, sa,
                     periodic.upperLeft(), periodic.accessor(),
                     boundary);
-    distanceTransformMP(srcImageRange(periodic), destImage(distance),
-                        background, norm);
+    vigra::omp::distanceTransform(srcImageRange(periodic), destImage(distance),
+                                  background, norm);
     quater_image(srcImageRange(distance), destIter(dest_upperleft, da), boundary);
 }
 
@@ -380,10 +380,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     unsigned tally21;
 
     IMAGETYPE<SrcPixelType> diff12(size);
-    combineTwoImagesMP(src1_upperleft, src1_lowerright, sa1,
-                       src2_upperleft, sa2,
-                       diff12.upperLeft(), diff12.accessor(),
-                       saturating_subtract<SrcPixelType>());
+    vigra::omp::combineTwoImages(src1_upperleft, src1_lowerright, sa1,
+                                 src2_upperleft, sa2,
+                                 diff12.upperLeft(), diff12.accessor(),
+                                 saturating_subtract<SrcPixelType>());
 
     tally12 = quick_tally(diff12.begin(), diff12.end(), diff12.accessor(),
                           overlap_threshold);
@@ -391,8 +391,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     switch (boundary)
     {
     case OpenBoundaries:
-        distanceTransformMP(srcImageRange(diff12), destImage(dist12),
-                            background, norm);
+        vigra::omp::distanceTransform(srcImageRange(diff12), destImage(dist12),
+                                      background, norm);
         break;
 
     case HorizontalStrip: // FALLTHROUGH
@@ -412,10 +412,10 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         std::cerr.flush();
     }
     IMAGETYPE<SrcPixelType> diff21(size);
-    combineTwoImagesMP(src2_upperleft, src2_upperleft + size, sa2,
-                       src1_upperleft, sa1,
-                       diff21.upperLeft(), diff21.accessor(),
-                       saturating_subtract<SrcPixelType>());
+    vigra::omp::combineTwoImages(src2_upperleft, src2_upperleft + size, sa2,
+                                 src1_upperleft, sa1,
+                                 diff21.upperLeft(), diff21.accessor(),
+                                 saturating_subtract<SrcPixelType>());
 
     tally21 = quick_tally(diff21.begin(), diff21.end(), diff21.accessor(),
                           overlap_threshold);
@@ -423,8 +423,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     switch (boundary)
     {
     case OpenBoundaries:
-        distanceTransformMP(srcImageRange(diff21), destImage(dist21),
-                            background, norm);
+        vigra::omp::distanceTransform(srcImageRange(diff21), destImage(dist21),
+                                      background, norm);
         break;
 
     case HorizontalStrip: // FALLTHROUGH
@@ -460,12 +460,12 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         exit(1);
     }
 
-    combineTwoImagesMP(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
-                       dist21.upperLeft(), dist21.accessor(),
-                       dest_upperleft, da,
-                       ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
-                                  vigra::functor::Param(DestPixelTraits::max()),
-                                  vigra::functor::Param(DestPixelTraits::zero())));
+    vigra::omp::combineTwoImages(dist12.upperLeft(), dist12.lowerRight(), dist12.accessor(),
+                                 dist21.upperLeft(), dist21.accessor(),
+                                 dest_upperleft, da,
+                                 ifThenElse(vigra::functor::Arg1() < vigra::functor::Arg2(),
+                                            vigra::functor::Param(DestPixelTraits::max()),
+                                            vigra::functor::Param(DestPixelTraits::zero())));
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {

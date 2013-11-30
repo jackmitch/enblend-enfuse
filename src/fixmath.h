@@ -878,9 +878,9 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
 
-    transformImageMP(src_upperleft, src_lowerright, sa,
-                     dest_upperleft, da,
-                     ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
+    vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
+                               dest_upperleft, da,
+                               ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
 }
 
 
@@ -907,13 +907,13 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
             }
             std::cerr << "\n";
         }
-        transformImageMP(src_upperleft, src_lowerright, sa,
-                         dest_upperleft, da,
-                         ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
+                                   dest_upperleft, da,
+                                   ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
-        transformImageMP(src_upperleft, src_lowerright, sa,
-                         dest_upperleft, da,
-                         ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
+                                   dest_upperleft, da,
+                                   ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
 }
 
@@ -969,10 +969,10 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
     typedef typename DestImageType::value_type DestPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
 
-    transformImageIfMP(src_upperleft, src_lowerright, sa,
-                       mask_upperleft, ma,
-                       dest_upperleft, da,
-                       ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
+    vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
+                                 mask_upperleft, ma,
+                                 dest_upperleft, da,
+                                 ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, PyramidIntegerBits, PyramidFractionBits>());
 }
 
 
@@ -997,17 +997,17 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             std::cerr << command << ": info: CIECAM02 color conversion" << std::endl;
         }
-        transformImageIfMP(src_upperleft, src_lowerright, sa,
-                           mask_upperleft, ma,
-                           dest_upperleft, da,
-                           ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
+                                     mask_upperleft, ma,
+                                     dest_upperleft, da,
+                                     ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     } else {
         // OpenMP changes the result here!  The maximum absolute
         // difference is 1 of 255 for 8-bit images.  -- cls
-        transformImageIfMP(src_upperleft, src_lowerright, sa,
-                           mask_upperleft, ma,
-                           dest_upperleft, da,
-                           ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
+                                     mask_upperleft, ma,
+                                     dest_upperleft, da,
+                                     ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
 }
 
