@@ -142,7 +142,7 @@ namespace enblend
                                 snake, this->visualizeImage);
 
                     // Post-process annealed vertices
-                    Segment::iterator lastVertex = enblend::prev(snake->end());
+                    Segment::iterator lastVertex = std::prev(snake->end());
                     for (Segment::iterator vertexIterator = snake->begin();
                          vertexIterator != snake->end();) {
                         if (vertexIterator->first &&
@@ -152,7 +152,7 @@ namespace enblend
                                 snake->pop_front();
                                 vertexIterator = snake->begin();
                             } else {
-                                vertexIterator = snake->erase(enblend::next(lastVertex));
+                                vertexIterator = snake->erase(std::next(lastVertex));
                             }
 
                             bool needsBreak = false;
@@ -176,7 +176,7 @@ namespace enblend
                                     snake->push_front(std::make_pair(true, vertexIterator->second));
                                     lastVertex = snake->begin();
                                 } else {
-                                    lastVertex = snake->insert(enblend::next(lastVertex),
+                                    lastVertex = snake->insert(std::next(lastVertex),
                                                                std::make_pair(true, vertexIterator->second));
                                 }
                             }
@@ -313,7 +313,7 @@ namespace enblend
                             for (std::vector<vigra::Point2D>::iterator shortPathPoint = shortPath->begin();
                                  shortPathPoint != shortPath->end();
                                  ++shortPathPoint) {
-                                snake->insert(enblend::next(currentVertex),
+                                snake->insert(std::next(currentVertex),
                                               std::make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
 
                                 if (this->visualizeImage) {

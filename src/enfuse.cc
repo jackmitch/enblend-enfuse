@@ -921,7 +921,7 @@ make_exposure_weight_function(const std::string& name,
         } else {
             const std::string symbol_name(arguments.front());
             ExposureWeight::argument_list_t user_arguments;
-            std::copy(boost::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
+            std::copy(std::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
 
             ExposureWeight* weight_object;
             try {

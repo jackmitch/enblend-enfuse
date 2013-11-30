@@ -217,24 +217,6 @@ square(t x)
 }
 
 
-/** Answer the previous iterator of i. */
-template <class iterator>
-inline iterator
-prev(iterator i)
-{
-    return --i;
-}
-
-
-/** Answer the following iterator of i. */
-template <class iterator>
-inline iterator
-next(iterator i)
-{
-    return ++i;
-}
-
-
 /** Test whether s starts with p. */
 inline bool
 starts_with(const std::string& s, const std::string& p)

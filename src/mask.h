@@ -753,7 +753,7 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
             Segment::iterator firstNonmoveableSuccessor = firstNonmoveableVertex;
             ++firstNonmoveableSuccessor;
             if (EXPECT_RESULT(firstNonmoveableSuccessor == snake->end(), false)) {
-                snake->insert(enblend::next(firstNonmoveableVertex), snake->begin(), firstNonmoveableVertex);
+                snake->insert(std::next(firstNonmoveableVertex), snake->begin(), firstNonmoveableVertex);
             } else {
                 snake->insert(snake->end(), // append at the end
                               snake->begin(), firstNonmoveableSuccessor);
