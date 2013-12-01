@@ -30,6 +30,7 @@
 #include <cerrno>
 #include <sstream>
 #include <stdexcept>
+#include <locale>
 
 #ifdef HAVE_UNORDERED_MAP
 #include <unordered_map>
