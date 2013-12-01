@@ -24,7 +24,7 @@ foreach(_fl "dirent.h" "ext/slist" "fenv.h"
     "OpenGL/glu.h" "OpenGL/gl.h"
     "inttypes.h" "limits.h"
     "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
-    "sys/stat.h" "sys/types.h" "unistd.h" "windows.h")
+    "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "sys/times.h")
   string(REGEX REPLACE "[/\\.]" "_" _var ${_fl})
   string(TOUPPER "${_var}" _FLN)
   check_include_file_cxx("${_fl}" "HAVE_${_FLN}" )
@@ -49,6 +49,8 @@ if(HAVE_DIRENT_H)
     "
     CLOSEDIR_INT)
 endif(HAVE_DIRENT_H)
+
+CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 
 # Check for restrict keyword
 # Builds the macro A_C_RESTRICT form automake
