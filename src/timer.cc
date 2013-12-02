@@ -121,6 +121,88 @@ namespace timer
 #endif // HAVE_CLOCK_GETTIME
 
 
+#ifdef WIN32
+    inline static ULONGLONG
+    filetime_in_100nanoseconds(const _FILETIME& a_filetime)
+    {
+        return
+            (static_cast<ULONGLONG>(a_filetime.dwHighDateTime) << 32) +
+             static_cast<ULONGLONG>(a_filetime.dwLowDateTime);
+    }
+
+
+    ProcessorTime::ProcessorTime()
+    {
+        start();
+    }
+
+
+    void
+    ProcessorTime::start()
+    {
+        _FILETIME idle;
+        _FILETIME kernel;
+        _FILETIME user;
+
+        user_value_ = ULONGLONG();
+        system_value_ = ULONGLONG();
+
+        GetSystemTimes(&idle, &kernel, &user);
+        start_idle_value_ = filetime_in_100nanoseconds(idle);
+        start_system_value_ = filetime_in_100nanoseconds(kernel);
+        start_user_value_ = filetime_in_100nanoseconds(user);
+    }
+
+
+    void
+    ProcessorTime::stop()
+    {
+        _FILETIME idle;
+        _FILETIME kernel;
+        _FILETIME user;
+
+        GetSystemTimes(&idle, &kernel, &user);
+        const ULONGLONG stop_idle_value = filetime_in_100nanoseconds(idle);
+        const ULONGLONG stop_system_value = filetime_in_100nanoseconds(kernel);
+        const ULONGLONG stop_user_value = filetime_in_100nanoseconds(user);
+
+        system_value_ = stop_system_value - start_system_value_ - (stop_idle_value - start_idle_value_);
+        user_value_ = stop_user_value - start_user_value_;
+        start_idle_value_ = stop_idle_value;
+        start_system_value_ = stop_system_value;
+        start_user_value_ = stop_user_value;
+    }
+
+
+    void
+    ProcessorTime::restart()
+    {
+        _FILETIME idle;
+        _FILETIME kernel;
+        _FILETIME user;
+
+        GetSystemTimes(&idle, &kernel, &user);
+        start_idle_value_ = filetime_in_100nanoseconds(idle);
+        start_system_value_ = filetime_in_100nanoseconds(kernel);
+        start_user_value_ = filetime_in_100nanoseconds(user);
+    }
+
+
+    double
+    UserTime::value() const
+    {
+        return user_value_ / 1.0E7;
+    }
+
+
+    double
+    SystemTime::value() const
+    {
+        return system_value_ / 1.0E7;
+    }
+
+#elif defined(HAVE_SYS_TIMES_H)
+
     ProcessorTime::ProcessorTime()
     {
         start();
@@ -170,4 +252,20 @@ namespace timer
     {
         return clock_in_seconds(system_value_);
     }
+
+#else
+
+    double
+    UserTime::value() const
+    {
+        return 0.0;
+    }
+
+
+    double
+    SystemTime::value() const
+    {
+        return 0.0;
+    }
+#endif
 } // namespace timer

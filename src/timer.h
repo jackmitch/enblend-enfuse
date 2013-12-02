@@ -33,6 +33,10 @@
 
 #include <time.h>        // clock_t, clock(); timespec, clock_gettime()
 
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
 
 namespace timer
 {
@@ -106,7 +110,27 @@ namespace timer
 #endif // HAVE_CLOCK_GETTIME
 
 
-    class ProcessorTime
+#ifdef WIN32
+    class ProcessorTime : public Interface
+    {
+    public:
+        ProcessorTime();
+
+        void start();
+        void stop();
+        void restart();
+
+    protected:
+        ULONGLONG user_value_;
+        ULONGLONG system_value_;
+        ULONGLONG start_user_value_;
+        ULONGLONG start_system_value_;
+        ULONGLONG start_idle_value_;
+    }; // class ProcessorTime
+
+#elif defined(HAVE_SYS_TIMES_H)
+
+    class ProcessorTime : public Interface
     {
     public:
         ProcessorTime();
@@ -122,15 +146,26 @@ namespace timer
         tms stop_;
     }; // class ProcessorTime
 
+#else
 
-    class UserTime : public Interface, public ProcessorTime
+    // Null class -- does nothing
+    class ProcessorTime : public Interface
+    {
+    public:
+        void start() {}
+        void stop() {}
+        void restart() {}
+    }; // class ProcessorTime
+#endif
+
+    class UserTime : public ProcessorTime
     {
     public:
         double value() const;
     }; // class UserTime
 
 
-    class SystemTime : public Interface, public ProcessorTime
+    class SystemTime : public ProcessorTime
     {
     public:
         double value() const;
