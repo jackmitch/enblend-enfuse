@@ -17,9 +17,9 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
 #ifndef GRAPHCUT_H
 #define GRAPHCUT_H
+
 
 #include <iostream>
 
@@ -74,13 +74,12 @@ using namespace vigra::functor;
 #define LABEL_LEFT 1
 #define LABEL_RIGHT 2
 
+
 //#define DEBUG_GRAPHCUT
-#ifdef DEBUG_GRAPHCUT
-using namespace vigra;
-#endif
 
-namespace enblend {
 
+namespace enblend
+{
     struct pointHash
     {
         std::size_t operator()(const vigra::Point2D& p) const
@@ -348,10 +347,10 @@ namespace enblend {
                               vigra::Point2D offset_) :
             left(a_), right(b_), offset(offset_) {}
 
-        MaskPixelType operator()(vigra::Diff2D point_) const
+        MaskPixelType operator()(const vigra::Diff2D& a_point) const
         {
-            vigra::Point2D point(point_);
-            //add border to detect seams close to border
+            vigra::Point2D point(a_point);
+            // add border to detect seams close to border
             point -= vigra::Point2D(1,1);
 
             if(left->find(point) != left->end())
@@ -373,7 +372,7 @@ namespace enblend {
     {
     public:
         CutPixelsFunctor(boost::unordered_set<vigra::Point2D, pointHash>* a_,
-                              boost::unordered_set<vigra::Point2D, pointHash>* b_) :
+                         boost::unordered_set<vigra::Point2D, pointHash>* b_) :
             left(a_), right(b_){}
 
         MaskPixelType operator()(const vigra::Diff2D& pos2, const MaskPixelType& a2) const
@@ -1232,7 +1231,7 @@ namespace enblend {
         exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/process_cut_1_seam_pixels.tif").setPixelType("UINT8"));
 #endif
 
-        vigra::transformImage(srcIterRange(Diff2D(), size), vigra::destIter(tempImg.upperLeft()),
+        vigra::transformImage(srcIterRange(vigra::Diff2D(), size), vigra::destIter(tempImg.upperLeft()),
                                 OutputLabelingFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
 
         // labels areas that belong to left/right images
@@ -1480,9 +1479,11 @@ namespace enblend {
         delete intermediatePointList;
         delete dualPath;
     }
-
 } /* namespace enblend */
+
+
 #endif  /* GRAPHCUT_H */
+
 
 // Local Variables:
 // mode: c++
