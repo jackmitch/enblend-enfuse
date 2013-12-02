@@ -43,7 +43,7 @@
 #include <vigra/imageiterator.hxx>
 #include <vigra/stdconvolution.hxx>
 #include <vigra/bordertreatment.hxx>
-#include <vigra/labelimage.hxx>
+#include <vigra/seededregiongrowing.hxx>
 #include <vigra/transformimage.hxx>
 #include <vigra/contourcirculator.hxx>
 #include <vigra/mathutil.hxx>
@@ -70,6 +70,14 @@ using namespace vigra::functor;
 #define BIT_MASK_OPEN 0x04
 #define BIT_MASK_DIVIDE 0x0F
 
+#define LABEL_NONE 0
+#define LABEL_LEFT 1
+#define LABEL_RIGHT 2
+
+//#define DEBUG_GRAPHCUT
+#ifdef DEBUG_GRAPHCUT
+using namespace vigra;
+#endif
 
 namespace enblend {
 
@@ -331,6 +339,7 @@ namespace enblend {
     };
 
 
+    template<class MaskPixelType>
     struct OutputLabelingFunctor
     {
     public:
@@ -339,16 +348,18 @@ namespace enblend {
                               vigra::Point2D offset_) :
             left(a_), right(b_), offset(offset_) {}
 
-        bool operator()(vigra::Diff2D a2, vigra::Diff2D b2)
+        MaskPixelType operator()(vigra::Diff2D point_) const
         {
-            vigra::Point2D a(a2);
-            vigra::Point2D b(b2);
+            vigra::Point2D point(point_);
             //add border to detect seams close to border
-            a -= vigra::Point2D(1,1);
-            b -= vigra::Point2D(1,1);
-            //a-= offset; b-= offset;
-            return !((left->find(a) != left->end() && right->find(b) != right->end()) ||
-                     (right->find(a) != right->end() && left->find(b) != left->end()));
+            point -= vigra::Point2D(1,1);
+
+            if(left->find(point) != left->end())
+                return LABEL_LEFT;
+            else if (right->find(point) != right->end())
+                return LABEL_RIGHT;
+            else
+                return LABEL_NONE;
         }
 
     protected:
@@ -386,21 +397,21 @@ namespace enblend {
     struct CountFunctor
     {
     public:
-        CountFunctor(int* c, int* c2) : color(c), count(c2) {}
+        CountFunctor(long* c, long* c2) : color(c), count(c2) {}
 
         MaskPixelType operator()(const MaskPixelType& arg1, const MaskPixelType& arg2) const
         {
-            if (arg1 > 0 && arg1 == arg2) {
+            if (arg1 == LABEL_LEFT && arg2 == 255) {
                 (*color)++;
             }
-            if (arg1 == 255) {
+            if (arg1 == LABEL_LEFT) {
                 (*count)++;
             }
             return arg1;
         }
 
-        int* color;
-        int* count;
+        long* color;
+        long* count;
     };
 
 
@@ -1201,7 +1212,7 @@ namespace enblend {
         const vigra::Diff2D size(iBB.lowerRight().x - iBB.upperLeft().x,
                                  iBB.lowerRight().y - iBB.upperLeft().y);
 
-        IMAGETYPE<MaskPixelType> finalmask(size + vigra::Diff2D(2, 2));
+        IMAGETYPE<MaskPixelType> finalmask(size);
         IMAGETYPE<MaskPixelType> tempImg(size);
 
         typedef vigra::UInt8 BasePixelType;
@@ -1215,57 +1226,54 @@ namespace enblend {
 
 #ifdef DEBUG_GRAPHCUT
         vigra::omp::combineTwoImages(srcIterRange(Diff2D(), size),
-                                     vigra::srcIter(finalmask.upperLeft() + Diff2D(1, 1)),
+                                     vigra::srcIter(finalmask.upperLeft()),
                                      vigra::destIter(tempImg.upperLeft()),
                                      CutPixelsFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut));
-        exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/cut_pixels.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/process_cut_1_seam_pixels.tif").setPixelType("UINT8"));
 #endif
+
+        vigra::transformImage(srcIterRange(Diff2D(), size), vigra::destIter(tempImg.upperLeft()),
+                                OutputLabelingFunctor<MaskPixelType>(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
 
         // labels areas that belong to left/right images
         // adds a 1-pixel border to catch any area that is cut off by the seam
-        vigra::labelImage(vigra::srcIterRange(vigra::Diff2D(), vigra::Diff2D() + size + vigra::Diff2D(2, 2)), destImage(finalmask),
-                          false, OutputLabelingFunctor(&pixelsLeftOfCut, &pixelsRightOfCut, iBB.upperLeft()));
+        vigra::ArrayOfRegionStatistics<vigra::SeedRgDirectValueFunctor<float> > stats(3);
 
-#ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels.tif").setPixelType("UINT8"));
-#endif
+        vigra::seededRegionGrowing(srcImageRange(tempImg), srcImage(tempImg), destImage(finalmask), stats);
 
-        int colorSum = 0;
-        int count = 0;
-        CountFunctor<MaskPixelType> c(&colorSum, &count);
         const vigra::triple<typename IMAGETYPE<MaskPixelType>::Iterator, typename IMAGETYPE<MaskPixelType>::Iterator,
                             typename IMAGETYPE<MaskPixelType>::Accessor> finalmaskSrcRange =
             vigra::srcIterRange(finalmask.upperLeft() + vigra::Diff2D(1, 1), finalmask.lowerRight() - vigra::Diff2D(1, 1));
         const vigra::pair<typename IMAGETYPE<MaskPixelType>::Iterator, typename IMAGETYPE<MaskPixelType>::Accessor> finalmaskDest =
             vigra::destIter(finalmask.upperLeft() + vigra::Diff2D(1, 1));
 
-        transformImage(finalmaskSrcRange,
-                       finalmaskDest,
-                       ifThenElse(Arg1() == Param(1),
-                                  Param(BasePixelTraits::max()),
-                                  Param(BasePixelTraits::zero())));
-
-        inspectTwoImages(finalmaskSrcRange,
-                         vigra::srcIter(dest_upperleft + iBB.upperLeft(), da), c);
 #ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels1.tif").setPixelType("UINT8"));
+        exportImage(srcImageRange(tempImg), ImageExportInfo("./debug/process_cut_2_seam_labels.tif").setPixelType("UINT8"));
+        exportImage(finalmaskSrcRange, ImageExportInfo("./debug/process_cut_3_segments.tif").setPixelType("UINT8"));
 #endif
 
-        // if colorSum < half the pixels labeled as "1" in finalmask should be black
+        long colorSum = 0;
+        long count = 0;
+        CountFunctor<MaskPixelType> countFunctor(&colorSum, &count);
+
+        inspectTwoImages(finalmaskSrcRange,
+                         vigra::srcIter(dest_upperleft + iBB.upperLeft(), da), countFunctor);
+
+        // if colorSum < half the pixels labeled as LABEL_LEFT in finalmask should be white
         if (colorSum < count / 2) {
             transformImage(finalmaskSrcRange, finalmaskDest,
-                           ifThenElse(Arg1() == Param(0),
-                                      Param(BasePixelTraits::max()),
-                                      Param(BasePixelTraits::zero())));
-        } else {
-            transformImage(finalmaskSrcRange, finalmaskDest,
-                           ifThenElse(Arg1() == Param(0),
+                           ifThenElse(Arg1() == Param(LABEL_LEFT),
                                       Param(BasePixelTraits::zero()),
                                       Param(BasePixelTraits::max())));
+        } else {
+            transformImage(finalmaskSrcRange, finalmaskDest,
+                           ifThenElse(Arg1() == Param(LABEL_LEFT),
+                                      Param(BasePixelTraits::max()),
+                                      Param(BasePixelTraits::zero())));
         }
 
 #ifdef DEBUG_GRAPHCUT
-        exportImage(srcImageRange(finalmask), ImageExportInfo("./debug/labels2.tif").setPixelType("UINT8"));
+        exportImage(finalmaskSrcRange, ImageExportInfo("./debug/process_cut_4_final_precopy.tif").setPixelType("UINT8"));
 #endif
 
         vigra::omp::combineTwoImages(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
@@ -1276,6 +1284,11 @@ namespace enblend {
 
         copyImageIf(finalmaskSrcRange, srcImage(tempImg),
                     vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
+
+#ifdef DEBUG_GRAPHCUT
+        exportImage(srcIterRange(dest_upperleft + iBB.upperLeft(), dest_upperleft + iBB.upperLeft() + size), ImageExportInfo("./debug/process_cut_5_final_postcopy.tif").setPixelType("UINT8"));
+#endif
+
     }
 
 
