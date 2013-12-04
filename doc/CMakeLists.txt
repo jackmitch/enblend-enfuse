@@ -299,7 +299,7 @@ foreach (_cmd ${main_texi_list})
       DEPENDS "${_created}.texi"
       ${_${_cmd}_TEXINFOS} ${_depend_gp}
       "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi" ${_auxdepends}
-      COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi, cmdline="${TEXI2DVIFLAGS}
+      COMMENT "texi2dvi: Creating ${_created}.pdf from ${TOP_SRC_DIR}/doc/${_cmd}.texi, cmdline=" ${TEXI2DVIFLAGS}
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     #message(STATUS "create ${_created}.html")
