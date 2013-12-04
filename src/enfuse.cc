@@ -1750,8 +1750,8 @@ int main(int argc, char** argv)
     vigra::Rect2D inputUnion;
 
     // Check that all input images have the same parameters.
-    unsigned layer = 0;
-    unsigned layers = 0;
+    unsigned layer = 0;        // layer number starting at 1
+    unsigned layers = 0;       // total number of layers in image file
     enblend::FileNameList inputFileNameList;
     enblend::TraceableFileNameList::iterator inputFileNameIterator = inputTraceableFileNameList.begin();
     while (inputFileNameIterator != inputTraceableFileNameList.end()) {
