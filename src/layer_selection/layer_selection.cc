@@ -104,7 +104,7 @@ LayerSelectionHost::accept(const std::string& a_filename, unsigned a_layer_index
 
     if (result)
     {
-        ++(tally_->operator[](a_filename)[a_layer_index]);
+        ++(tally_->operator[](a_filename)[a_layer_index - 1U]);
     }
 
     return result;
