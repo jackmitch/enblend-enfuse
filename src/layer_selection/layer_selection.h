@@ -22,6 +22,7 @@
 
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -66,15 +67,13 @@ public:
 
             for (int layer = 0; layer < file_info.numImages(); ++layer)
             {
-                vigra::ImageImportInfo* layer_info(new vigra::ImageImportInfo(file_info));
+                std::unique_ptr<vigra::ImageImportInfo> layer_info(new vigra::ImageImportInfo(file_info));
                 layer_info->setImageIndex(layer);
 
                 image_info.append(LayerInfo(layer_info->width(), layer_info->height(),
                                             layer_info->isColor(), layer_info->pixelType(),
                                             layer_info->getPosition(),
                                             layer_info->getXResolution(), layer_info->getYResolution()));
-
-                delete layer_info;
             }
 
             info_->append(image_info);
