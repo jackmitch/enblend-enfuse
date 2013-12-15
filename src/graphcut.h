@@ -132,10 +132,8 @@ namespace enblend
         typedef typename IMAGETYPE<MaskPixelType>::traverser IteratorType;
         typedef vigra::CrackContourCirculator<IteratorType> Circulator;
         typedef vigra::triple<IteratorType, IteratorType, unsigned int> EntryPointContainer;
-        IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + vigra::Diff2D(2, 2),
-                                            MaskPixelTraits::max() / 2);
-        IMAGETYPE<MaskPixelType> nft(iBB.lowerRight() - iBB.upperLeft() + vigra::Diff2D(2, 2),
-                                     MaskPixelTraits::max() / 2);
+        IMAGETYPE<MaskPixelType> nftTempImg(mask1_lowerright - mask1_upperleft + vigra::Diff2D(2, 2));
+        IMAGETYPE<MaskPixelType> nft(iBB.lowerRight() - iBB.upperLeft() + vigra::Diff2D(2, 2));
         IMAGETYPE<MaskPixelType> overlap(iBB.lowerRight() - iBB.upperLeft() + vigra::Diff2D(2, 2));
         IteratorType nftIter = nft.upperLeft();
         IteratorType previous;
@@ -150,6 +148,9 @@ namespace enblend
         std::pair<IteratorType, IteratorType> entryPoint;
         vigra::Point2D intermediatePoint;
         unsigned int counter = 0;
+
+        vigra::initImage(vigra::destImageRange(nftTempImg), MaskPixelTraits::max() / 2);
+        vigra::initImage(vigra::destImageRange(nft), MaskPixelTraits::max() / 2);
 
         nearestFeatureTransform(vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1),
                                 vigra::srcIter(mask2_upperleft, ma2),
