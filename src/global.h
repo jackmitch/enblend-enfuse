@@ -125,7 +125,7 @@ namespace enblend
         const size_t start = a_string.find_first_not_of(" \t\n\r");
         const size_t end = a_string.find_last_not_of(" \t\n\r");
 
-        a_string.assign(a_string, start, end - start);
+        a_string.assign(a_string, start, 1U + end - start);
     }
 } // end namespace enblend
 
