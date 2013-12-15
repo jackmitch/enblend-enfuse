@@ -2,6 +2,33 @@
 # and which compiler switches are necessary
 # CXX11_FLAG : contains the necessary compiler flag
 
+#
+# Copyright (c) 2013 Thomas Modes <tmodes@@users.sourceforge.net>
+#
+# This file is part of Enblend.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#
+#  1. Redistributions of source code must retain the copyright
+#         notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the copyright
+#         notice, this list of conditions and the following disclaimer in the
+#         documentation and/or other materials provided with the distribution.
+#  3. The name of the author may not be used to endorse or promote products
+#         derived from this software without specific prior written permission.
+#
+# This file is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Enblend; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(FindPackageHandleStandardArgs)
 
