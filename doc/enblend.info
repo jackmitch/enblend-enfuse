@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-1cf559fa84b4, 9 November
+   This manual is for Enblend (version 4.2-cd5350289601+, 14 December
 2013), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,9 +25,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-1cf559fa84b4, 9 November 2013),
-a tool for compositing images in such a way that the seam between the
-images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.2-cd5350289601+, 14 December
+2013), a tool for compositing images in such a way that the seam
+between the images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -1293,7 +1293,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-1cf559fa84b4)
+     version 3.2 used 1:1.  This version of Enblend (4.2-cd5350289601+)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1566,7 +1566,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-1cf559fa84b4) of Enblend supports two main algorithms
+This version (4.2-cd5350289601+) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2961,51 +2961,51 @@ General Index
 
 
 Tag Table:
-Node: Top903
-Node: Overview2207
-Ref: Overview-Footnote-14646
-Ref: Overview-Footnote-24827
-Node: Workflow4969
-Node: Standard Workflow5368
-Ref: Figure:photographic-workflow5628
-Node: External Mask Manipulation8302
-Ref: Figure:external-mask-workflow9619
-Node: Invocation10104
-Node: Image Requirements10883
-Node: Response Files12357
-Ref: Table:response-file-format14381
-Ref: Example:response-file16260
-Ref: Table:response-file-syntactic-comment16901
-Ref: Table:globbing-algorithms17802
-Ref: Example:globbing-algorithm18828
-Node: Common Options19445
-Ref: Common Options-Footnote-131225
-Ref: Common Options-Footnote-231299
-Ref: Common Options-Footnote-331491
-Node: Extended Options31650
-Ref: Extended Options-Footnote-136808
-Ref: Extended Options-Footnote-236874
-Node: Mask Generation Options36947
-Ref: Table:mask-generation39552
-Ref: Table:optimizer-strategies46885
-Ref: Table:visualization-colors52288
-Ref: Table:mask-template-characters53203
-Ref: Mask Generation Options-Footnote-155455
-Node: Option Delimiters55683
-Node: Primary Seam Generators57088
-Node: Color Profiles59974
-Node: Understanding Masks62424
-Node: Helpful Programs66214
-Node: Bug Reports70282
-Ref: Bug Reports-Footnote-175938
-Node: Authors76008
-Node: FDL77173
-Node: List of Tables98155
-Node: List of Figures98779
-Node: List of Examples99069
-Node: Program Index99350
-Node: Syntactic-Comment Index102505
-Node: Option Index103194
-Node: General Index107128
+Node: Top905
+Node: Overview2211
+Ref: Overview-Footnote-14650
+Ref: Overview-Footnote-24831
+Node: Workflow4973
+Node: Standard Workflow5372
+Ref: Figure:photographic-workflow5632
+Node: External Mask Manipulation8306
+Ref: Figure:external-mask-workflow9623
+Node: Invocation10108
+Node: Image Requirements10887
+Node: Response Files12361
+Ref: Table:response-file-format14385
+Ref: Example:response-file16264
+Ref: Table:response-file-syntactic-comment16905
+Ref: Table:globbing-algorithms17806
+Ref: Example:globbing-algorithm18832
+Node: Common Options19449
+Ref: Common Options-Footnote-131229
+Ref: Common Options-Footnote-231303
+Ref: Common Options-Footnote-331495
+Node: Extended Options31654
+Ref: Extended Options-Footnote-136812
+Ref: Extended Options-Footnote-236878
+Node: Mask Generation Options36951
+Ref: Table:mask-generation39556
+Ref: Table:optimizer-strategies46889
+Ref: Table:visualization-colors52293
+Ref: Table:mask-template-characters53208
+Ref: Mask Generation Options-Footnote-155460
+Node: Option Delimiters55688
+Node: Primary Seam Generators57093
+Node: Color Profiles59980
+Node: Understanding Masks62430
+Node: Helpful Programs66220
+Node: Bug Reports70288
+Ref: Bug Reports-Footnote-175944
+Node: Authors76014
+Node: FDL77179
+Node: List of Tables98161
+Node: List of Figures98785
+Node: List of Examples99075
+Node: Program Index99356
+Node: Syntactic-Comment Index102511
+Node: Option Index103200
+Node: General Index107134
 
 End Tag Table

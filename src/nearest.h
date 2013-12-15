@@ -450,7 +450,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         std::cerr << "\n" <<
             command << ": excessive overlap detected; remove one of the images\n";
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
-        cout <<
+        std::cout <<
             "+ nearestFeatureTransform: overlap area size = " << size << "\n" <<
             "+ nearestFeatureTransform: threshold is " << overlap_threshold <<
             " pixels for this pair of images\n" <<
