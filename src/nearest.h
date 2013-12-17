@@ -345,7 +345,6 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
 {
     typedef typename SrcAccessor::value_type SrcPixelType;
     typedef vigra::NumericTraits<SrcPixelType> SrcPixelTraits;
-    typedef typename SrcPixelTraits::Promote SrcPromoteType;
 
     typedef typename DestAccessor::value_type DestPixelType;
     typedef vigra::NumericTraits<DestPixelType> DestPixelTraits;
@@ -354,8 +353,8 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     const vigra::Diff2D size(src1_lowerright.x - src1_upperleft.x,
                              src1_lowerright.y - src1_upperleft.y);
 
-    IMAGETYPE<SrcPromoteType> dist12(size);
-    IMAGETYPE<SrcPromoteType> dist21(size);
+    IMAGETYPE<float> dist12(size);
+    IMAGETYPE<float> dist21(size);
     if (Verbose >= VERBOSE_NFT_MESSAGES)
     {
         std::cerr << command << ": info: creating ";
