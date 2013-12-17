@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __MASK_H__
-#define __MASK_H__
+#ifndef MASK_H_INCLUDED_
+#define MASK_H_INCLUDED_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -79,7 +79,6 @@ stringOfPixelDifferenceFunctor(difference_functor_t aFunctor)
 
 
 namespace enblend {
-
 void
 dump_segment(const Segment& segment,
              const std::string& prefix = std::string(), std::ostream& out = std::cout)
@@ -303,7 +302,7 @@ public:
     typedef typename vigra::NumericTraits<value>::RealPromote result_type;
     typedef typename vigra::NumericTraits<value>::RealPromote value_type;
 
-    FindAverageAndVarianceIf(predicate aPredicate) :
+    explicit FindAverageAndVarianceIf(predicate aPredicate) :
         sum_(0.0), sum_of_squares_(0.0), count_(0.0), pred_(aPredicate) {}
 
     void reset() {
@@ -347,7 +346,7 @@ public:
     typedef ValueType value_type;
     typedef AccessorType accessor_type;
 
-    XorAccessor(AccessorType a) : acc(a) {}
+    explicit XorAccessor(AccessorType a) : acc(a) {}
 
     template <class Iterator>
     ValueType operator()(const Iterator& i) const {return acc(i);}
@@ -373,7 +372,8 @@ private:
 
 template <class BackInsertionIterator>
 void
-closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& contour, BackInsertionIterator result)
+closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& contour,
+                                BackInsertionIterator result)
 {
 #ifdef DEBUG_POLYGON_FILL
     const vigra::Diff2D border(10, 10);
@@ -440,7 +440,8 @@ closedPolygonsOfContourSegments(const vigra::Size2D& mask_size, const Contour& c
 
 
 template <typename MaskType>
-void fillContourScanLine(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+void
+fillContourScanLine(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::Accessor MaskAccessor;
@@ -458,7 +459,8 @@ void fillContourScanLine(MaskType* mask, const Contour& contour, const vigra::Di
 
 
 template <typename MaskType>
-void fillContourScanLineActive(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+void
+fillContourScanLineActive(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::Accessor MaskAccessor;
@@ -476,7 +478,8 @@ void fillContourScanLineActive(MaskType* mask, const Contour& contour, const vig
 
 
 template <typename MaskType>
-void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
+void
+fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
     const std::string routine_name(enblend::parameter::as_string("polygon-filler", "new-active"));
 
@@ -499,7 +502,8 @@ void fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& of
 
 
 template <typename MaskType>
-void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
+void
+maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
@@ -549,9 +553,9 @@ void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
             // If the mask is entirely black, then inspectOverlap
             // should have caught this.  It should have said that the
             // white image is redundant.
-            std::cerr << command
-                 << ": mask is entirely black, but white image was not identified as redundant"
-                 << std::endl;
+            std::cerr << command <<
+                ": mask is entirely black, but white image was not identified as redundant" <<
+                std::endl;
             exit(1);
         } else {
             // If the mask is entirely white, then the black image
@@ -560,9 +564,9 @@ void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
             // mask.
             mBB = uBB;
             // Explain why the black image disappears completely.
-            std::cerr << command
-                 << ": warning: previous images are completely overlapped by the current images"
-                 << std::endl;
+            std::cerr << command <<
+                ": warning: previous images are completely overlapped by the current images" <<
+                std::endl;
         }
     } else {
         // mBB is defined relative to inputUnion origin
@@ -571,94 +575,105 @@ void maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
     }
 
     if (Verbose >= VERBOSE_ROIBB_SIZE_MESSAGES) {
-        std::cerr << command
-             << ": info: mask transition line bounding box: "
-             << mBB
-             << std::endl;
+        std::cerr << command << ": info: mask transition line bounding box: " << mBB << std::endl;
     }
 }
 
 
-/** Vectorize the seam line defined in nftOutputImage into the contour
- *  rawSegments. */
+// Answer whether a_point sits on the boundary of a_rectangle.
+inline static
+bool
+is_on_boundary(const vigra::Point2D& a_point, const vigra::Rect2D& a_rectangle)
+{
+    return
+        a_point.px() == a_rectangle.left() || a_point.px() == a_rectangle.right() ||
+        a_point.py() == a_rectangle.top() || a_point.py() == a_rectangle.bottom();
+}
+
+
+// Answer whether a_point sits in one of the corners of a_rectangle.
+inline static
+bool
+is_in_corner(const vigra::Point2D& a_point, const vigra::Rect2D& a_rectangle)
+{
+    return
+        (a_point.px() == a_rectangle.left() || a_point.px() == a_rectangle.right()) &&
+        (a_point.py() == a_rectangle.top() || a_point.py() == a_rectangle.bottom());
+}
+
+
+// Vectorize the seam line defined in nftOutputImage into the contour rawSegments.
 template <typename MaskType, typename AlphaType>
-void vectorizeSeamLine(Contour& rawSegments,
-                       const AlphaType* const whiteAlpha, const AlphaType* const blackAlpha,
-                       const vigra::Rect2D& uBB,
-                       int nftStride, MaskType* nftOutputImage, int vectorizeDistance = 0)
+void
+vectorizeSeamLine(Contour& rawSegments,
+                  const AlphaType* const whiteAlpha, const AlphaType* const blackAlpha,
+                  const vigra::Rect2D& uBB,
+                  int nftStride, MaskType* nftOutputImage, int vectorizeDistance = 0)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
 
-    const double diagonalLength =
-        hypot(static_cast<double>(nftOutputImage->width()),
-              static_cast<double>(nftOutputImage->height()));
-    if(vectorizeDistance == 0)
+    const double diagonalLength = hypot(static_cast<double>(nftOutputImage->width()),
+                                        static_cast<double>(nftOutputImage->height()));
+    if (vectorizeDistance == 0) {
         vectorizeDistance =
             MaskVectorizeDistance.is_percentage() ?
             static_cast<int>(ceil(MaskVectorizeDistance.value() / 100.0 * diagonalLength)) :
             MaskVectorizeDistance.value();
+    }
 
     if (vectorizeDistance < minimumVectorizeDistance) {
-        std::cerr << command
-             << ": warning: mask vectorization distance "
-             << vectorizeDistance
-             << " ("
-             << 100.0 * vectorizeDistance / diagonalLength
-             << "% of diagonal) is smaller\n"
-             << command
-             << ": warning:   than minimum of " << minimumVectorizeDistance
-             << "; will use " << minimumVectorizeDistance << " ("
-             << 100.0 * minimumVectorizeDistance / diagonalLength
-             << "% of diagonal)"
-             << std::endl;
+        std::cerr << command <<
+            ": warning: mask vectorization distance " <<
+            vectorizeDistance <<
+            " (" <<
+            100.0 * vectorizeDistance / diagonalLength <<
+            "% of diagonal) is smaller\n" <<
+            command <<
+            ": warning:   than minimum of " << minimumVectorizeDistance <<
+            "; will use " << minimumVectorizeDistance << " (" <<
+            100.0 * minimumVectorizeDistance / diagonalLength <<
+            "% of diagonal)" <<
+            std::endl;
         vectorizeDistance = minimumVectorizeDistance;
     }
 
-    const vigra::Rect2D border(1, 1, nftOutputImage->width() - 1, nftOutputImage->height() - 1);
+    const MaskPixelType zero(vigra::NumericTraits<MaskPixelType>::zero());
+    const MaskPixelType one(vigra::NumericTraits<MaskPixelType>::one());
 
+    const vigra::Rect2D border(1, 1, nftOutputImage->width() - 1, nftOutputImage->height() - 1);
     MaskIteratorType my = nftOutputImage->upperLeft() + vigra::Diff2D(1, 1);
     MaskIteratorType mend = nftOutputImage->lowerRight() + vigra::Diff2D(-1, -1);
+
     for (int y = 1; my.y < mend.y; ++y, ++my.y) {
         MaskIteratorType mx = my;
-        MaskPixelType lastColor = vigra::NumericTraits<MaskPixelType>::zero();
-
+        MaskPixelType lastColor = zero;
         for (int x = 1; mx.x < mend.x; ++x, ++mx.x) {
-            if (*mx == vigra::NumericTraits<MaskPixelType>::max()
-                && lastColor == vigra::NumericTraits<MaskPixelType>::zero()) {
+            if (*mx == vigra::NumericTraits<MaskPixelType>::max() && lastColor == zero) {
                 // Found the corner of a previously unvisited white region.
                 // Create a Segment to hold the border of this region.
-                std::vector<vigra::Point2D> excessPoints;
                 Segment* snake = new Segment();
                 rawSegments.push_back(snake);
 
+                std::vector<vigra::Point2D> excessPoints;
+
                 // Walk around border of white region.
                 vigra::CrackContourCirculator<MaskIteratorType> crack(mx);
-                vigra::CrackContourCirculator<MaskIteratorType> crackEnd(crack);
+                const vigra::CrackContourCirculator<MaskIteratorType> crackEnd(crack);
                 bool lastPointFrozen = false;
                 int distanceLastPoint = 0;
                 do {
-                    vigra::Point2D currentPoint = *crack + vigra::Diff2D(x, y);
+                    const vigra::Point2D currentPoint = *crack + vigra::Diff2D(x, y);
                     crack++;
-                    vigra::Point2D nextPoint = *crack + vigra::Diff2D(x, y);
+                    const vigra::Point2D nextPoint = *crack + vigra::Diff2D(x, y);
 
                     // See if currentPoint lies on border.
-                    if (currentPoint.x == border.left()
-                        || currentPoint.x == border.right()
-                        || currentPoint.y == border.top()
-                        || currentPoint.y == border.bottom()) {
+                    if (is_on_boundary(currentPoint, border)) {
                         // See if currentPoint is in a corner.
-                        if ((currentPoint.x == border.left() && currentPoint.y == border.top())
-                            || (currentPoint.x == border.left() && currentPoint.y == border.bottom())
-                            || (currentPoint.x == border.right() && currentPoint.y == border.top())
-                            || (currentPoint.x == border.right() && currentPoint.y == border.bottom())) {
+                        if (is_in_corner(currentPoint, border)) {
                             snake->push_front(std::make_pair(false, currentPoint));
                             distanceLastPoint = 0;
-                        } else if (!lastPointFrozen
-                                   || (nextPoint.x != border.left()
-                                       && nextPoint.x != border.right()
-                                       && nextPoint.y != border.top()
-                                       && nextPoint.y != border.bottom())) {
+                        } else if (!lastPointFrozen || !is_on_boundary(nextPoint, border)) {
                             snake->push_front(std::make_pair(false, currentPoint));
                             distanceLastPoint = 0;
                         } else {
@@ -678,29 +693,34 @@ void vectorizeSeamLine(Contour& rawSegments,
                     distanceLastPoint++;
                 } while (crack != crackEnd);
 
-                // Paint the border so this region will not be found again
+                // Paint the border so this region will not be found again.
                 for (Segment::iterator vertexIterator = snake->begin();
                      vertexIterator != snake->end(); ++vertexIterator) {
-                    (*nftOutputImage)[vertexIterator->second] = vigra::NumericTraits<MaskPixelType>::one();
+                    (*nftOutputImage)[vertexIterator->second] = one;
 
                     // While we're at it, convert vertices to uBB-relative coordinates.
-                    vertexIterator->second =
-                        nftStride * (vertexIterator->second + vigra::Diff2D(-1, -1));
+                    vertexIterator->second = nftStride * (vertexIterator->second + vigra::Diff2D(-1, -1));
 
                     // While we're at it, mark vertices outside the union region as not moveable.
-                    if (vertexIterator->first
-                        && (*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == vigra::NumericTraits<MaskPixelType>::zero()
-                        && (*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == vigra::NumericTraits<MaskPixelType>::zero()) {
+                    if (vertexIterator->first &&
+                        (*whiteAlpha)[vertexIterator->second + uBB.upperLeft()] == zero &&
+                        (*blackAlpha)[vertexIterator->second + uBB.upperLeft()] == zero) {
                         vertexIterator->first = false;
                     }
                 }
+
+                // These are points on the border of the white region
+                // that are not in the snake.  Recolor them so that
+                // this (white) region will not be found again.
                 for (std::vector<vigra::Point2D>::iterator vertexIterator = excessPoints.begin();
                      vertexIterator != excessPoints.end(); ++vertexIterator) {
-                    // These are points on the border of the white
-                    // region that are not in the snake.  Recolor them
-                    // so that this white region will not be found
-                    // again.
-                    (*nftOutputImage)[*vertexIterator] = vigra::NumericTraits<MaskPixelType>::one();
+                    (*nftOutputImage)[*vertexIterator] = one;
+                }
+
+                // Kill empty or single-point snakes right away.
+                if (snake->size() <= 1U) {
+                    rawSegments.pop_back();
+                    delete snake;
                 }
             }
 
@@ -712,7 +732,8 @@ void vectorizeSeamLine(Contour& rawSegments,
 
 /** Convert rawContours snakes into segments with unbroken runs of
  *  moveable vertices. */
-void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegments)
+void
+reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegments)
 {
     for (Contour::const_iterator segments = rawSegments.begin();
          segments != rawSegments.end();
@@ -812,9 +833,7 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
             if (!insideMoveableSegment && vertexIterator->first) {
                 // Beginning a new moveable segment.
                 insideMoveableSegment = true;
-            } else if (insideMoveableSegment
-                       && !vertexIterator->first
-                       && !passedLastMoveableVertex) {
+            } else if (insideMoveableSegment && !vertexIterator->first && !passedLastMoveableVertex) {
                 // End of currentSegment.
                 insideMoveableSegment = false;
                 // Correct for the push_fronts we've been doing
@@ -836,7 +855,8 @@ void reorderSnakesToMovableRuns(ContourVector& contours, const Contour& rawSegme
 
 /** Find extent of moveable snake vertices, and vertices bordering
  *  moveable vertices vertex bounding box. */
-vigra::Rect2D vertexBoundingBox(ContourVector& contours)
+vigra::Rect2D
+vertexBoundingBox(ContourVector& contours)
 {
     vigra::Rect2D box;
     bool initializedVBB = false;
@@ -883,16 +903,17 @@ vigra::Rect2D vertexBoundingBox(ContourVector& contours)
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
-MaskType* createMask(const ImageType* const white,
-                     const ImageType* const black,
-                     const AlphaType* const whiteAlpha,
-                     const AlphaType* const blackAlpha,
-                     const vigra::Rect2D& uBB,
-                     const vigra::Rect2D& iBB,
-                     bool wraparound,
-                     unsigned numberOfImages,
-                     FileNameList::const_iterator inputFileNameIterator,
-                     unsigned m)
+MaskType*
+createMask(const ImageType* const white,
+           const ImageType* const black,
+           const AlphaType* const whiteAlpha,
+           const AlphaType* const blackAlpha,
+           const vigra::Rect2D& uBB,
+           const vigra::Rect2D& iBB,
+           bool wraparound,
+           unsigned numberOfImages,
+           FileNameList::const_iterator inputFileNameIterator,
+           unsigned m)
 {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename MaskType::PixelType MaskPixelType;
@@ -911,24 +932,25 @@ MaskType* createMask(const ImageType* const white,
         if (can_open_file(maskFilename)) {
             vigra::ImageImportInfo maskInfo(maskFilename.c_str());
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                std::cerr << command
-                    << ": info: loading mask \"" << maskFilename << "\"" << std::endl;
+                std::cerr << command << ": info: loading mask \"" << maskFilename << "\"" << std::endl;
             }
             if (!maskInfo.isGrayscale()) {
-                std::cerr << command
-                            << ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
+                std::cerr << command <<
+                    ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
                 exit(1);
             }
             if (maskInfo.numExtraBands() != 0) {
-                std::cerr << command
-                          << ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" << std::endl;
+                std::cerr << command <<
+                    ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" <<
+                    std::endl;
                 exit(1);
             }
             if (std::string(maskInfo.getPixelType()) != vigra::TypeAsString<MaskPixelType>::result()) {
-                std::cerr << command
-                          << ": error: mask image \"" << maskFilename << "\" has pixel type " << maskInfo.getPixelType() << ";\n"
-                          << command
-                          << ": error: expecting pixel type " << vigra::TypeAsString<MaskPixelType>::result() << std::endl;
+                std::cerr << command <<
+                    ": error: mask image \"" << maskFilename << "\" has pixel type " << maskInfo.getPixelType() << ";\n" <<
+                    command <<
+                    ": error: expecting pixel type " << vigra::TypeAsString<MaskPixelType>::result() <<
+                    std::endl;
                 exit(1);
             }
             if (maskInfo.width() != uBB.width() || maskInfo.height() != uBB.height()) {
@@ -939,14 +961,14 @@ MaskType* createMask(const ImageType* const white,
                     category = "warning: ";
                 }
 
-                std::cerr << command
-                     << ": " << category << "mask in \"" << maskFilename << "\" has size "
-                     << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
-                     << command
-                     << ": " << category << "    but image union has size " << uBB.size() << ";\n"
-                     << command
-                     << ": " << category << "    make sure this is the right mask for the given images"
-                     << std::endl;
+                std::cerr << command <<
+                    ": " << category << "mask in \"" << maskFilename << "\" has size " <<
+                    "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n" <<
+                    command <<
+                    ": " << category << "    but image union has size " << uBB.size() << ";\n" <<
+                    command <<
+                    ": " << category << "    make sure this is the right mask for the given images" <<
+                    std::endl;
 
                 if (!too_small) {
                     // Mask is too large, loading it would cause a segmentation fault.
@@ -954,9 +976,7 @@ MaskType* createMask(const ImageType* const white,
                 }
             }
             importImage(maskInfo, destImage(*mask));
-        }
-        else
-        {
+        } else {
             // Cannot read mask file.  We already issued an error
             // message through can_open_file().
             exit(1);
@@ -974,9 +994,9 @@ MaskType* createMask(const ImageType* const white,
         // Do MainAlgorithm at 1/CoarsenessFactor scale.
         // uBB rounded up to multiple of CoarsenessFactor pixels in each direction
         mainInputSize = vigra::Size2D((uBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
-                               (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+                                      (uBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
         mainInputBBSize = vigra::Size2D((iBB.width() + CoarsenessFactor - 1) / CoarsenessFactor,
-                                 (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
+                                        (iBB.height() + CoarsenessFactor - 1) / CoarsenessFactor);
 
         mainInputBB = vigra::Rect2D(vigra::Point2D(std::floor(double(iBB.upperLeft().x - uBB.upperLeft().x) / CoarsenessFactor),
                              std::floor(double(iBB.upperLeft().y - uBB.upperLeft().y) / CoarsenessFactor)),
@@ -987,9 +1007,11 @@ MaskType* createMask(const ImageType* const white,
         // Do MainAlgorithm at 1/1 scale.
         mainInputSize = uBB.size();
         mainInputBB = vigra::Rect2D(iBB);
-        if(mainInputBB.upperLeft().x >= uBB.upperLeft().x)
-                mainInputBB.moveBy(-uBB.upperLeft());
-        else mainInputBB.moveBy(uBB.upperLeft());
+        if (mainInputBB.upperLeft().x >= uBB.upperLeft().x) {
+            mainInputBB.moveBy(-uBB.upperLeft());
+        } else {
+            mainInputBB.moveBy(uBB.upperLeft());
+        }
         mainStride = 1;
     }
 
@@ -1017,7 +1039,7 @@ MaskType* createMask(const ImageType* const white,
                  enblend::parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(EuclideanDistance)));
     const nearest_neighbor_metric_t norm = static_cast<nearest_neighbor_metric_t>(default_norm_value);
 
-    if (MainAlgorithm == GraphCut)
+    if (MainAlgorithm == GraphCut) {
         graphCut(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(iBB, srcImageRange(*white))),
                  vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(iBB, srcImage(*black))),
                  vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
@@ -1026,12 +1048,13 @@ MaskType* createMask(const ImageType* const white,
                  norm,
                  wraparound ? HorizontalStrip : OpenBoundaries,
                  mainInputBB);
-    else if (MainAlgorithm == NFT)
+    } else if (MainAlgorithm == NFT) {
         nearestFeatureTransform(vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImageRange(*whiteAlpha))),
                                 vigra_ext::stride(mainStride, mainStride, vigra_ext::apply(uBB, srcImage(*blackAlpha))),
                                 vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
                                 norm,
                                 wraparound ? HorizontalStrip : OpenBoundaries);
+    }
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
@@ -1053,9 +1076,9 @@ MaskType* createMask(const ImageType* const white,
                                                 OutputFileName,
                                                 m);
             if (Verbose >= VERBOSE_NFT_MESSAGES) {
-                std::cerr << command
-                     << ": info: saving nearest-feature-transform image \""
-                     << nftMaskFilename << "\"" << std::endl;
+                std::cerr << command <<
+                    ": info: saving nearest-feature-transform image \"" <<
+                    nftMaskFilename << "\"" << std::endl;
             }
             vigra::ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
             nftMaskInfo.setCompression(MASK_COMPRESSION);
@@ -1076,16 +1099,17 @@ MaskType* createMask(const ImageType* const white,
 
     // Vectorize the seam lines found in nftOutputImage.
     Contour rawSegments;
-    if (MainAlgorithm == GraphCut)
+    if (MainAlgorithm == GraphCut) {
         vectorizeSeamLine(rawSegments,
-                        whiteAlpha, blackAlpha,
-                        uBB,
-                        mainStride, mainOutputImage, 4);
-    else
+                          whiteAlpha, blackAlpha,
+                          uBB,
+                          mainStride, mainOutputImage, 4);
+    } else {
         vectorizeSeamLine(rawSegments,
-                      whiteAlpha, blackAlpha,
-                      uBB,
-                      mainStride, mainOutputImage);
+                          whiteAlpha, blackAlpha,
+                          uBB,
+                          mainStride, mainOutputImage);
+    }
     delete mainOutputImage;
 
 #ifdef DEBUG_SEAM_LINE
@@ -1176,8 +1200,7 @@ MaskType* createMask(const ImageType* const white,
     typedef vigra::UInt8 MismatchImagePixelType;
     typedef vigra::BasicImage<MismatchImagePixelType> MismatchImageType;
     typedef vigra::BasicImage<vigra::RGBValue<MismatchImagePixelType> > VisualizeImageType;
-    MismatchImageType mismatchImage(mismatchImageSize,
-                                    vigra::NumericTraits<MismatchImagePixelType>::max());
+    MismatchImageType mismatchImage(mismatchImageSize, vigra::NumericTraits<MismatchImagePixelType>::max());
 
     // Visualization of optimization output
     VisualizeImageType* visualizeImage = nullptr;
@@ -1221,14 +1244,14 @@ MaskType* createMask(const ImageType* const white,
                                                  vigra::NumericTraits<MismatchImagePixelType>::min());
 
         vigra::inspectImage(srcImageRange(mismatchImage), statistics);
-        std::cerr << command << ": info: difference statistics: overlap size = "
-             << std::count_if(mismatchImage.begin(), mismatchImage.end(), non_maximum) << " pixels\n"
-             << command << ": info: difference statistics: mismatch average = "
-             << statistics.average() / range << " ["
-             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]\n"
-             << command << ": info: difference statistics: standard deviation = "
-             << sqrt(statistics.variance()) / range << " ["
-             << stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]" << std::endl;
+        std::cerr << command << ": info: difference statistics: overlap size = " <<
+            std::count_if(mismatchImage.begin(), mismatchImage.end(), non_maximum) << " pixels\n" <<
+            command << ": info: difference statistics: mismatch average = " <<
+            statistics.average() / range << " [" <<
+            stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]\n" <<
+            command << ": info: difference statistics: standard deviation = " <<
+            sqrt(statistics.variance()) / range << " [" <<
+            stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << "]" << std::endl;
     }
 
     if (visualizeImage) {
@@ -1287,8 +1310,7 @@ MaskType* createMask(const ImageType* const white,
                         vertexIterator != snake->end();
                         ++vertexIterator) {
                         vertexIterator->second =
-                            (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
-                            mismatchImageStride;
+                            (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
                     }
                 }
         }
@@ -1296,7 +1318,8 @@ MaskType* createMask(const ImageType* const white,
         std::vector<double> *params = new(std::vector<double>);
 
         OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-            *defaultOptimizerChain = new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
+            *defaultOptimizerChain =
+            new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
                                 (&mismatchImage, visualizeImage,
                                 &mismatchImageSize, &mismatchImageStride,
                                 &uvBBStrideOffset, &contours, &uBB, &vBB, params,
@@ -1344,24 +1367,24 @@ MaskType* createMask(const ImageType* const white,
                                             OutputFileName,
                                             m);
         if (visualizeFilename == *inputFileNameIterator) {
-            std::cerr << command
-                 << ": will not overwrite input image \""
-                 << *inputFileNameIterator
-                 << "\" with seam-visualization image"
-                 << std::endl;
+            std::cerr << command <<
+                ": will not overwrite input image \"" <<
+                *inputFileNameIterator <<
+                "\" with seam-visualization image" <<
+                std::endl;
             exit(1);
         } else if (visualizeFilename == OutputFileName) {
-            std::cerr << command
-                 << ": will not overwrite output image \""
-                 << OutputFileName
-                 << "\" with seam-visualization image"
-                 << std::endl;
+            std::cerr << command <<
+                ": will not overwrite output image \"" <<
+                OutputFileName <<
+                "\" with seam-visualization image" <<
+                std::endl;
             exit(1);
         } else {
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
-                std::cerr << command
-                     << ": info: saving seam visualization \""
-                     << visualizeFilename << "\"" << std::endl;
+                std::cerr << command <<
+                    ": info: saving seam visualization \"" <<
+                    visualizeFilename << "\"" << std::endl;
             }
             vigra::ImageExportInfo visualizeInfo(visualizeFilename.c_str());
             visualizeInfo.setCompression(MASK_COMPRESSION);
@@ -1396,10 +1419,9 @@ MaskType* createMask(const ImageType* const white,
 
     return mask;
 }
-
 } // namespace enblend
 
-#endif /* __MASK_H__ */
+#endif // MASK_H_INCLUDED_
 
 // Local Variables:
 // mode: c++
