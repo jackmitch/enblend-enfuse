@@ -61,7 +61,11 @@ extern "C" int optind;
 #endif
 
 #include <boost/logic/tribool.hpp>
+
 #include <lcms2.h>
+#if !defined(LCMS_VERSION) || LCMS_VERSION < 2050
+#error "Little CMS version 2.5 or later is required"
+#endif
 
 #include "exposure_weight.h"
 #include "global.h"

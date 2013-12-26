@@ -66,6 +66,8 @@ Unreleased.  Current line of development.
 
 - Vigra version 1.9 or later is now required to build.
 
+- Little CMS version 2.5 or later is now required to build.
+
 - Support for OpenGL acceleration has been dropped.  So, the
   dependencies on the libraries GL, GLU, and Glut are no longer exist.
 
