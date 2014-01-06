@@ -1,6 +1,5 @@
-
 IF(NOT WIN32)
-    FIND_LIBRARY(LCMS2_LIBRARIES lcms2 HINTS /usr/lib/x86_64-linux-gnu /usr/lib32)
+    FIND_LIBRARY(LCMS2_LIBRARIES lcms2 HINTS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib32)
 ELSE(NOT WIN32)
     FIND_PATH(LCMS2_ROOT_DIR
       NAMES include/lcms2.h
