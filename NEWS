@@ -1,5 +1,11 @@
 * Version 4.1.x  --  Stable Branch
 
+** Bug Fixes
+
+- [Enblend only] Fix problem of multiple, almost-identical seamlines
+  that produce inexplicable black areas in the output panorama.
+
+
 Patchlevel 2
 
 Released on October 7, 2013.
