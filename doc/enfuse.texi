@@ -42,7 +42,7 @@ This manual is for Enfuse (version @value{VERSION}, @value{UPDATED}),
 a program to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
-Copyright @copyright{} 2004--2013 @sc{Andrew Mihal}.
+Copyright @copyright{} 2004--2014 @sc{Andrew Mihal}.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document

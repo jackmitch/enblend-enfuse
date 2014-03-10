@@ -6,11 +6,11 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-6d6c88dcdc63, 14 December
-2013), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
+   This manual is for Enblend (version 4.2-54a651764c25, 10 March 2014),
+a tool for compositing images in such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
-   Copyright (C) 2004-2013 ANDREW MIHAL.
+   Copyright (C) 2004-2014 ANDREW MIHAL.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,9 +25,9 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-6d6c88dcdc63, 14 December
-2013), a tool for compositing images in such a way that the seam
-between the images is invisible, or at least very difficult to see.
+This manual is for Enblend (version 4.2-54a651764c25, 10 March 2014), a
+tool for compositing images in such a way that the seam between the
+images is invisible, or at least very difficult to see.
 
 * Menu:
 
@@ -1293,7 +1293,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-6d6c88dcdc63)
+     version 3.2 used 1:1.  This version of Enblend (4.2-54a651764c25)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1566,7 +1566,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-6d6c88dcdc63) of Enblend supports two main algorithms
+This version (4.2-54a651764c25) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2961,51 +2961,51 @@ General Index
 
 
 Tag Table:
-Node: Top904
-Node: Overview2209
-Ref: Overview-Footnote-14648
-Ref: Overview-Footnote-24829
-Node: Workflow4971
-Node: Standard Workflow5370
-Ref: Figure:photographic-workflow5630
-Node: External Mask Manipulation8304
-Ref: Figure:external-mask-workflow9621
-Node: Invocation10106
-Node: Image Requirements10885
-Node: Response Files12359
-Ref: Table:response-file-format14383
-Ref: Example:response-file16262
-Ref: Table:response-file-syntactic-comment16903
-Ref: Table:globbing-algorithms17804
-Ref: Example:globbing-algorithm18830
-Node: Common Options19447
-Ref: Common Options-Footnote-131227
-Ref: Common Options-Footnote-231301
-Ref: Common Options-Footnote-331493
-Node: Extended Options31652
-Ref: Extended Options-Footnote-136810
-Ref: Extended Options-Footnote-236876
-Node: Mask Generation Options36949
-Ref: Table:mask-generation39554
-Ref: Table:optimizer-strategies46887
-Ref: Table:visualization-colors52290
-Ref: Table:mask-template-characters53205
-Ref: Mask Generation Options-Footnote-155457
-Node: Option Delimiters55685
-Node: Primary Seam Generators57090
-Node: Color Profiles59976
-Node: Understanding Masks62426
-Node: Helpful Programs66216
-Node: Bug Reports70284
-Ref: Bug Reports-Footnote-175940
-Node: Authors76010
-Node: FDL77175
-Node: List of Tables98157
-Node: List of Figures98781
-Node: List of Examples99071
-Node: Program Index99352
-Node: Syntactic-Comment Index102507
-Node: Option Index103196
-Node: General Index107130
+Node: Top901
+Node: Overview2203
+Ref: Overview-Footnote-14642
+Ref: Overview-Footnote-24823
+Node: Workflow4965
+Node: Standard Workflow5364
+Ref: Figure:photographic-workflow5624
+Node: External Mask Manipulation8298
+Ref: Figure:external-mask-workflow9615
+Node: Invocation10100
+Node: Image Requirements10879
+Node: Response Files12353
+Ref: Table:response-file-format14377
+Ref: Example:response-file16256
+Ref: Table:response-file-syntactic-comment16897
+Ref: Table:globbing-algorithms17798
+Ref: Example:globbing-algorithm18824
+Node: Common Options19441
+Ref: Common Options-Footnote-131221
+Ref: Common Options-Footnote-231295
+Ref: Common Options-Footnote-331487
+Node: Extended Options31646
+Ref: Extended Options-Footnote-136804
+Ref: Extended Options-Footnote-236870
+Node: Mask Generation Options36943
+Ref: Table:mask-generation39548
+Ref: Table:optimizer-strategies46881
+Ref: Table:visualization-colors52284
+Ref: Table:mask-template-characters53199
+Ref: Mask Generation Options-Footnote-155451
+Node: Option Delimiters55679
+Node: Primary Seam Generators57084
+Node: Color Profiles59970
+Node: Understanding Masks62420
+Node: Helpful Programs66210
+Node: Bug Reports70278
+Ref: Bug Reports-Footnote-175934
+Node: Authors76004
+Node: FDL77169
+Node: List of Tables98151
+Node: List of Figures98775
+Node: List of Examples99065
+Node: Program Index99346
+Node: Syntactic-Comment Index102501
+Node: Option Index103190
+Node: General Index107124
 
 End Tag Table
