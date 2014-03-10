@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2012 Andrew Mihal
+ * Copyright (C) 2004-2014 Andrew Mihal
  *
  * This file is part of Enblend.
  *
@@ -329,7 +329,7 @@ void printVersionAndExit() {
     }
 
     std::cout <<
-        "Copyright (C) 2004-2012 Andrew Mihal.\n" <<
+        "Copyright (C) 2004-2014 Andrew Mihal.\n" <<
         "License GPLv2+: GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html>\n" <<
         "This is free software: you are free to change and redistribute it.\n" <<
         "There is NO WARRANTY, to the extent permitted by law.\n" <<
