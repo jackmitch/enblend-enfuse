@@ -6,6 +6,13 @@
   that produce inexplicable black areas in the output panorama.
 
 
+** Package Maintainer Stuff
+
+- Little CMS version 2.5 or later is now required to build.  Prior
+  versions of LCMS sometimes produced output images that were lighter
+  or darker than the input images.
+
+
 Patchlevel 2
 
 Released on October 7, 2013.
