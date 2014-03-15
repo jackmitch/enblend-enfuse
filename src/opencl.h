@@ -27,10 +27,12 @@
 
 #include <condition_variable>
 #include <cstdint>              // std::uint8_t
+#include <deque>
 #include <memory>               // std::unique_ptr
 #include <mutex>
 #include <stdexcept>            // std::runtime_error
 #include <string>
+#include <thread>
 #include <vector>
 
 #define __CL_ENABLE_EXCEPTIONS
@@ -219,6 +221,16 @@ namespace ocl
     ////////////////////////////////////////////////////////////////////////////
 
 
+    class BuildableFunction
+    {
+    public:
+        virtual ~BuildableFunction() {}
+
+        virtual void build(const std::string& a_build_option) = 0;
+        virtual void wait() = 0;
+    }; // class BuildableFunction
+
+
     // Class "Function" is the main helper for constructing
     // OpenCL-based Vigra extensions.
     //     * It supplies access to cl::Context, one or more
@@ -230,7 +242,7 @@ namespace ocl
 
     template <class actual_code_policy,
               int default_queue_flags = CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE>
-    class Function : public actual_code_policy
+    class Function : public BuildableFunction, public actual_code_policy
     {
     public:
         typedef actual_code_policy code_policy;
@@ -414,6 +426,66 @@ namespace ocl
             return std::unique_ptr<ocl_function>(nullptr);
         }
     }
+
+
+    class BatchBuilder
+    {
+    public:
+        virtual void finalize() {}
+        virtual ~BatchBuilder() {}
+
+        typedef BuildableFunction* value_t;
+        virtual void submit(value_t a_function, const std::string& a_build_option = std::string()) = 0;
+        virtual void submit(value_t a_function, const char *a_format_string, ...);
+    }; // class BatchBuilder
+
+
+    // This is the most basic implementation of an BatchBuilder.
+    // It does not perform any parallelization or implements a
+    // sophisticated signal/wait logic.  Still the class may be
+    // valuable
+    //     (1) for debugging -- in particular the BatchBuilder
+    //         itself or
+    //     (2) for systems that cannot reliably implement any of the
+    //         more complicated schemes.
+    class SerialBatchBuilder : public BatchBuilder
+    {
+    public:
+        void submit(value_t a_function, const std::string& a_build_option = std::string());
+    }; // class SerialBatchBuilder
+
+
+    class ThreadedBatchBuilder : public BatchBuilder
+    {
+    public:
+        ThreadedBatchBuilder();
+        ~ThreadedBatchBuilder();
+
+        void submit(value_t a_function, const std::string& a_build_option = std::string());
+
+        void finalize();
+
+    private:
+        static void build_all_trampoline(ThreadedBatchBuilder* self);
+
+        void build();
+        void build_all();
+
+        struct BuildCommand
+        {
+            BuildCommand() = delete;
+            BuildCommand(value_t a_function, const std::string& a_build_option) :
+                function(a_function), option(a_build_option) {}
+
+            value_t function;
+            std::string option;
+        }; // class BuildCommand
+
+        bool run_;
+        std::deque<BuildCommand> compile_queue_;
+        std::mutex queue_mutex_;
+        std::condition_variable queue_not_empty_;
+    }; // class ThreadedBatchBuilder
 
 #else
 

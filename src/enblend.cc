@@ -144,6 +144,8 @@ bool OutputIsValid = true;
 bool UseGPU = true;
 namespace cl {class Context;}
 cl::Context* GPUContext = nullptr;
+namespace ocl {class BatchBuilder;}
+ocl::BatchBuilder* BatchCompiler = nullptr;
 
 parameter_map Parameter;
 
@@ -1623,6 +1625,12 @@ process_options(int argc, char** argv)
                 platform.getInfo(CL_PLATFORM_NAME, &info);
                 std::cerr << info << ", device #" << preferredGPUDevice << std::endl;
             }
+
+#ifdef OPENMP
+            BatchCompiler = new ocl::ThreadedBatchBuilder;
+#else
+            BatchCompiler = new ocl::SerialBatchBuilder;
+#endif
         } catch (ocl::runtime_error& an_exception) {
             std::cerr <<
                 command << ": warning: " << an_exception.what() << ";\n" <<

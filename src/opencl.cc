@@ -1145,6 +1145,110 @@ namespace ocl
     template class LazyFunctionCXX<SourceStringPolicy>;
     template class LazyFunctionCXX<SourceFilePolicy>;
 
+
+    void
+    BatchBuilder::submit(value_t a_function, const char *a_format_string, ...)
+    {
+        va_list argument_pointer;
+
+        va_start(argument_pointer, a_format_string);
+        submit(a_function, string_of_variable_arguments(a_format_string, argument_pointer));
+        va_end(argument_pointer);
+    }
+
+
+    void
+    SerialBatchBuilder::submit(value_t a_function, const std::string& a_build_option)
+    {
+        if (a_function)
+        {
+            a_function->build(a_build_option);
+            a_function->wait();
+        }
+#ifdef DEBUG
+        else
+        {
+            std::cerr << "+ SerialBatchBuilder::submit: silently ignoring null-function\n";
+        }
+#endif
+    }
+
+
+    ThreadedBatchBuilder::ThreadedBatchBuilder() : run_(true)
+    {
+        std::thread builder(build_all_trampoline, this);
+    }
+
+
+    ThreadedBatchBuilder::~ThreadedBatchBuilder()
+    {
+        finalize();
+    }
+
+
+    void
+    ThreadedBatchBuilder::submit(value_t a_function, const std::string& a_build_option)
+    {
+        if (a_function)
+        {
+            assert(run_);
+
+            queue_mutex_.lock();
+            compile_queue_.push_front(BuildCommand(a_function, a_build_option));
+            queue_mutex_.unlock();
+            queue_not_empty_.notify_one();
+        }
+#ifdef DEBUG
+        else
+        {
+            std::cerr << "+ ThreadedBatchBuilder::submit: silently ignoring null-function\n";
+        }
+#endif
+    }
+
+
+    void
+    ThreadedBatchBuilder::finalize()
+    {
+        run_ = false;
+    }
+
+
+    void
+    ThreadedBatchBuilder::build_all_trampoline(ThreadedBatchBuilder* self)
+    {
+        self->build_all();
+    }
+
+
+    void
+    ThreadedBatchBuilder::build()
+    {
+        queue_mutex_.lock();
+        BuildCommand build_command(compile_queue_.back());
+        compile_queue_.pop_back();
+        queue_mutex_.unlock();
+
+        build_command.function->build(build_command.option);
+        build_command.function->wait();
+    }
+
+
+    void
+    ThreadedBatchBuilder::build_all()
+    {
+        while (run_)
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex_);
+
+            while (!compile_queue_.empty())
+            {
+                build();
+                queue_not_empty_.wait(lock);
+            }
+        }
+    }
+
 #else
 
 #endif // OPENCL
