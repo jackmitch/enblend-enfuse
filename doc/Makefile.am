@@ -259,7 +259,8 @@ $(RASTER_DIR)/%.png: %.fig
 varsenblend.texi: $(srcdir)/../src/enblend.cc \
                   $(srcdir)/../src/bounds.h \
                   $(srcdir)/../src/common.h \
-                  $(srcdir)/../src/global.h
+                  $(srcdir)/../src/global.h \
+                  $(srcdir)/../src/opencl.cc
 	$(PERL) $(srcdir)/docstrings $^ > $@
 
 enblend.info: $(enblend_TEXINFOS) \
@@ -296,7 +297,8 @@ enblend.xml: $(enblend_TEXINFOS) \
 varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
                  $(srcdir)/../src/bounds.h \
                  $(srcdir)/../src/common.h \
-                 $(srcdir)/../src/global.h
+                 $(srcdir)/../src/global.h \
+                 $(srcdir)/../src/opencl.cc
 	$(PERL) $(srcdir)/docstrings $^ > $@
 
 enfuse.info: $(enfuse_TEXINFOS) \

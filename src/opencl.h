@@ -25,6 +25,11 @@
 #include <config.h>
 #endif
 
+#include <condition_variable>
+#include <cstdint>              // std::uint8_t
+#include <memory>               // std::unique_ptr
+#include <mutex>
+#include <stdexcept>            // std::runtime_error
 #include <string>
 #include <vector>
 
@@ -51,8 +56,18 @@ namespace ocl
     {
     public:
         runtime_error() = delete;
-        explicit runtime_error(const std::string& a_message) : std::runtime_error(a_message) {};
+        runtime_error(const std::string& a_message);
+        runtime_error(const cl::Error& an_opencl_error,
+                      const std::string& an_additional_message);
+
         virtual ~runtime_error() throw() {}
+
+        const cl::Error& error() const;
+        const std::string& additional_message() const;
+
+    private:
+        cl::Error opencl_error_;
+        std::string additional_message_;
     }; // class runtime_error
 
 
@@ -70,6 +85,335 @@ namespace ocl
     // Create a new context given a_platform and some_devices.  This
     // pointer can be deleted as usual.
     cl::Context* create_context(const cl::Platform& a_platform, const device_list_t& some_devices);
+
+
+    template <typename t>
+    inline static t
+    round_to_next_multiple(t a_number, t a_multiple)
+    {
+        if (a_multiple == t())
+        {
+            return a_number;
+        }
+        else
+        {
+            const t remainder = a_number % a_multiple;
+
+            if (remainder == t())
+            {
+                return a_number;
+            }
+            else
+            {
+                return a_number + a_multiple - remainder;
+            }
+        }
+    }
+
+
+    double event_latency(cl::Event& an_event); // latency in seconds
+
+
+    // Macro CHECK_OPENCL_EVENT is useful to debug out-of-bound
+    // read/write operations of OpenCL kernels.  To debug add
+    // invocations of the macro right after each OpenCL
+    // function-call that has a "task-completed event" argument,
+    // m_event being the "task-completed event".
+    //
+    // With CHECK_OPENCL_EVENT out-of-bound reads/writes often
+    // show up as exception cl::Error/"resource exhausted" and
+    // usually the offending kernel is the one to which m_event is
+    // attached.
+    void check_opencl_event(cl::Event& an_event, const char* a_filename, int a_linenumber);
+#define CHECK_OPENCL_EVENT(m_event) ::ocl::check_opencl_event(m_event, __FILE__, __LINE__)
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    class CodePolicy
+    {
+    public:
+        virtual ~CodePolicy() {}
+    }; // class CodePolicy
+
+
+    class SourcePolicy : public CodePolicy
+    {
+    public:
+        virtual std::string text() = 0;
+        std::pair<const char*, size_t> source();
+    }; // class SourcePolicy
+
+
+    class BinaryPolicy : public CodePolicy
+    {
+    public:
+        typedef std::vector<std::uint8_t> code_t;
+
+        virtual code_t code() = 0;
+        std::pair<const void*, size_t> binary();
+    }; // class BinaryPolicy
+
+
+    class SourceStringPolicy : public SourcePolicy
+    {
+    public:
+        SourceStringPolicy() = delete;
+        explicit SourceStringPolicy(const std::string& a_source_text);
+
+        std::string text() override;
+
+    private:
+        std::string text_;
+    }; // class SourceStringPolicy
+
+
+    class SourceFilePolicy : public SourcePolicy
+    {
+    public:
+        SourceFilePolicy() = delete;
+        explicit SourceFilePolicy(const std::string& a_source_filename);
+
+        std::string filename() const {return filename_;}
+        std::string text() override;
+
+    private:
+        void consult() __attribute__((noinline));
+
+        std::string filename_;
+        std::string text_;
+    }; // class SourceFilePolicy
+
+
+    class BinaryCodePolicy : public BinaryPolicy
+    {
+    public:
+        BinaryCodePolicy() = delete;
+        explicit BinaryCodePolicy(const code_t& a_binary_code);
+
+        code_t code() override {return code_;}
+
+    private:
+        code_t code_;
+    }; // class BinaryCodePolicy
+
+
+    class BinaryFilePolicy : public BinaryPolicy
+    {
+    public:
+        BinaryFilePolicy() = delete;
+        explicit BinaryFilePolicy(const std::string& a_binary_filename);
+
+        std::string filename() const {return filename_;}
+        code_t code() override;
+
+    private:
+        void consult() __attribute__((noinline));
+
+        std::string filename_;
+        code_t code_;
+    }; // class BinaryFilePolicy
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    // Class "Function" is the main helper for constructing
+    // OpenCL-based Vigra extensions.
+    //     * It supplies access to cl::Context, one or more
+    //     * cl::Device objects, as well as one or more associated
+    //       cl::CommandQueue objects.
+    //     * It frees the developer from caring about the origin
+    //       of the source or binary code.
+    //     * It assists in getting OpenCL source code compiled.
+
+    template <class actual_code_policy,
+              int default_queue_flags = CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE>
+    class Function : public actual_code_policy
+    {
+    public:
+        typedef actual_code_policy code_policy;
+
+        Function() = delete;
+        Function(const cl::Context& a_context, const std::string& a_string);
+        virtual ~Function() {finalize();}
+
+        void clear_build_options();
+
+        Function& add_build_option(const std::string& an_option);
+        Function& add_build_option(const char* a_format_string, ...);
+
+        virtual void build(const std::string& an_extra_build_option = std::string());
+        virtual void build(const char* a_format_string, ...);
+
+        std::vector<std::string> build_logs() const;
+        std::string build_log() const;
+
+        std::vector<BinaryPolicy::code_t> binaries() const;
+        BinaryPolicy::code_t binary() const;
+
+        const cl::Context& context() const;
+
+        const std::vector<cl::Device>& devices() const;
+        const cl::Device& device() const;
+
+        virtual void wait() {}  // Wait for device until source has been compiled.
+
+        virtual const cl::Program& program();
+
+        cl::Kernel create_kernel(const std::string& an_entry_point);
+
+        std::string build_options(const std::string& an_extra_build_option) const;
+
+        const std::vector<cl::CommandQueue>& queues() const {return queues_;}
+        const cl::CommandQueue& queue() const {return queues_.front();}
+
+    protected:
+        virtual void update_program_from_source(const cl::Program::Sources& a_source);
+
+    private:
+        void initialize();
+        void finalize();
+
+        cl::Program program_;
+        cl::Context context_;
+        std::vector<cl::Device> devices_;
+        std::vector<cl::CommandQueue> queues_;
+        std::vector<std::string> build_options_;
+    }; // class Function
+
+
+    class FunctionOfString : public Function<SourceStringPolicy>
+    {
+    public:
+        FunctionOfString() = delete;
+        FunctionOfString(const cl::Context& a_context, const std::string& a_string) :
+            Function<SourceStringPolicy>(a_context, a_string) {}
+    }; // class FunctionOfString
+
+
+    class FunctionOfFile : public Function<SourceFilePolicy>
+    {
+    public:
+        FunctionOfFile() = delete;
+        FunctionOfFile(const cl::Context& a_context, const std::string& a_source_filename) :
+            Function<SourceFilePolicy>(a_context, a_source_filename) {}
+    }; // class FunctionOfFile
+
+
+    template <class actual_code_policy>
+    class LazyFunction : public Function<actual_code_policy>
+    {
+        typedef Function<actual_code_policy> super;
+
+    public:
+        typedef actual_code_policy code_policy;
+
+        LazyFunction(const cl::Context& a_context, const std::string& a_string);
+
+        void build(const std::string& an_extra_build_option = std::string()) override;
+
+        const cl::Program& program() override
+        {
+            wait();
+            return super::program();
+        }
+
+        virtual void notify(cl_program a_program) = 0;
+
+    protected:
+        // IMPLEMENTATION NOTE: This method could be 'const' in this
+        // class, but derived classes may want to change the instance
+        // (*not* the bool itself, of course), e.g. to lock the access
+        // in a multi-threaded environment.
+        virtual bool build_completed() {return build_completed_;}
+
+        void set_build_completed(bool has_completed) {build_completed_ = has_completed;}
+
+    private:
+        static void notify_trampoline(cl_program a_program, void* an_instance);
+
+        void update_hashes(const std::string& an_extra_build_option);
+        bool needs_building(const std::string& an_extra_build_option);
+
+        bool build_completed_;
+        size_t text_hash_;
+        size_t build_option_hash_;
+    }; // class LazyFunction
+
+
+    template <class actual_code_policy>
+    class LazyFunctionCXX : public LazyFunction<actual_code_policy>
+    {
+        typedef LazyFunction<actual_code_policy> super;
+
+    public:
+        typedef actual_code_policy code_policy;
+
+        LazyFunctionCXX() = delete;
+        LazyFunctionCXX(const cl::Context& a_context, const std::string& a_string);
+        LazyFunctionCXX(const LazyFunctionCXX&) = delete;
+        LazyFunctionCXX& operator=(const LazyFunctionCXX&) = delete;
+
+        void wait() override;
+
+        bool build_completed() override;
+
+        void notify(cl_program a_program);
+
+    private:
+        std::mutex build_completed_mutex_;
+        std::condition_variable build_completed_condition_;
+    }; //  class LazyFunctionCXX
+
+
+    class LazyFunctionCXXOfString : public LazyFunctionCXX<SourceStringPolicy>
+    {
+    public:
+        LazyFunctionCXXOfString() = delete;
+        LazyFunctionCXXOfString(const cl::Context& a_context, const std::string& a_string) :
+            LazyFunctionCXX<SourceStringPolicy>(a_context, a_string) {}
+    }; // class LazyFunctionCXXOfString
+
+
+    class LazyFunctionCXXOfFile : public LazyFunctionCXX<SourceFilePolicy>
+    {
+    public:
+        LazyFunctionCXXOfFile() = delete;
+        LazyFunctionCXXOfFile(const cl::Context& a_context, const std::string& a_source_filename) :
+            LazyFunctionCXX<SourceFilePolicy>(a_context, a_source_filename) {}
+    }; // class LazyFunctionCXXOfFile
+
+
+    template <class ocl_function>
+    std::unique_ptr<ocl_function>
+    create_function(cl::Context* a_context)
+    {
+        try
+        {
+            return std::unique_ptr<ocl_function>(new ocl_function(*a_context));
+        }
+        catch (ocl::runtime_error& a_runtime_error)
+        {
+#ifdef DEBUG
+            std::cerr <<
+                "+ ocl::create_function: function creation failed with ocl::runtime_error\n" <<
+                "+ ocl::create_function: message \"" << a_runtime_error.what() << "\"\n" <<
+                "+ ocl::create_function:     and \"" << a_runtime_error.additional_message() << "\"\n";
+#endif
+            return std::unique_ptr<ocl_function>(nullptr);
+        }
+        catch (cl::Error& an_error)
+        {
+#ifdef DEBUG
+            std::cerr <<
+                "+ ocl::create_function: function creation failed with cl::Error\n" <<
+                "+ ocl::create_function: message \"" << an_error.what() << "\"\n";
+#endif
+            return std::unique_ptr<ocl_function>(nullptr);
+        }
+    }
 
 #else
 

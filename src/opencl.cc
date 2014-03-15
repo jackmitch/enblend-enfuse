@@ -20,7 +20,11 @@
 
 
 #include <algorithm>
+#include <cassert>
+#include <cstdarg>              // va_list
+#include <fstream>              // std::ifstream
 #include <iostream>
+#include <iterator>             // std::istream_iterator
 #include <sstream>
 #include <stdexcept>
 
@@ -30,6 +34,34 @@
 namespace ocl
 {
 #if defined(OPENCL)
+
+    runtime_error::runtime_error(const std::string& a_message) :
+        std::runtime_error(a_message),
+        opencl_error_(CL_SUCCESS)
+    {}
+
+
+    runtime_error::runtime_error(const cl::Error& an_opencl_error,
+                                 const std::string& an_additional_message) :
+        std::runtime_error(string_of_error_code(an_opencl_error.err())),
+        opencl_error_(an_opencl_error),
+        additional_message_(an_additional_message)
+    {}
+
+
+    const cl::Error&
+    runtime_error::error() const
+    {
+        return opencl_error_;
+    }
+
+
+    const std::string&
+    runtime_error::additional_message() const
+    {
+        return additional_message_;
+    }
+
 
     std::string
     string_of_error_code(cl_int an_error_code)
@@ -174,8 +206,7 @@ namespace ocl
         else
         {
             unsigned platform_index = 1U; // We start enumerating at 1 for user convenience.
-            for (platform_list_t::const_iterator p = platforms.begin(); p != platforms.end();
-                 ++p, ++platform_index)
+            for (auto p = platforms.begin(); p != platforms.end(); ++p, ++platform_index)
             {
                 print_platform_info(p, platform_index);
 
@@ -204,8 +235,7 @@ namespace ocl
                 else
                 {
                     unsigned device_index = 1U; // Again, we start enumerating at 1 for user convenience.
-                    for (device_list_t::const_iterator d = devices.begin(); d != devices.end();
-                         ++d, ++device_index)
+                    for (auto d = devices.begin(); d != devices.end(); ++d, ++device_index)
                     {
                         print_device_info(d, device_index);
                     }
@@ -265,7 +295,7 @@ namespace ocl
         catch (cl::Error& an_error)
         {
             message << "query for OpenCL platforms failed: " << ocl::string_of_error_code(an_error.err());
-            throw runtime_error(message.str());
+            throw ocl::runtime_error(message.str());
         }
 
         if (platforms.empty())
@@ -304,7 +334,7 @@ namespace ocl
                 message <<
                     "OpenCL platform #" << a_preferred_platform_id <<
                     " is not available; largest OpenCL platform number is " << platforms.size();
-                throw runtime_error(message.str());
+                throw ocl::runtime_error(message.str());
             }
         }
     }
@@ -325,7 +355,7 @@ namespace ocl
             message <<
                 "query for OpenCL GPU devices on platform #" << a_preferred_platform_id + 1U << " failed: " <<
                 ocl::string_of_error_code(an_error.err());
-            throw runtime_error(message.str());
+            throw ocl::runtime_error(message.str());
         }
 
         if (some_devices.empty())
@@ -347,7 +377,7 @@ namespace ocl
                     "OpenCL device #" << a_preferred_device_id <<
                     " is not available on platform #" << a_preferred_platform_id + 1U <<
                     ", largest device number there is " << some_devices.size();
-                throw runtime_error(message.str());
+                throw ocl::runtime_error(message.str());
             }
         }
     }
@@ -369,7 +399,7 @@ namespace ocl
             message <<
                 "self test failed: cannot query properties of context: " <<
                 ocl::string_of_error_code(an_error.err());
-            throw runtime_error(message.str());
+            throw ocl::runtime_error(message.str());
         }
 
         // We need at least one device.
@@ -382,7 +412,7 @@ namespace ocl
         {
             message << "self test failed: cannot query devices in context: " <<
                 ocl::string_of_error_code(an_error.err());
-            throw runtime_error(message.str());
+            throw ocl::runtime_error(message.str());
         }
 
         if (devices.empty())
@@ -410,13 +440,710 @@ namespace ocl
         {
             std::ostringstream message;
             message << "failed to create OpenCL context: " << ocl::string_of_error_code(an_error.err());
-            throw runtime_error(message.str());
+            throw ocl::runtime_error(message.str());
         }
 
         run_self_tests(context);
 
         return context;
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    template <class iterator>
+    static std::string
+    concatenate(const std::string& a_separator, iterator a_begin, iterator an_end)
+    {
+        if (a_begin == an_end)
+        {
+            return std::string();
+        }
+        else
+        {
+            std::string result(*a_begin);
+
+            while (++a_begin != an_end)
+            {
+                result.append(a_separator).append(*a_begin);
+            }
+
+            return result;
+        }
+    }
+
+
+    template <class t, class allocator>
+    inline static t*
+    data(std::vector<t, allocator>& a_vector)
+    {
+        return a_vector.empty() ? nullptr : &a_vector[0];
+    }
+
+
+    template <class t, class allocator>
+    inline static const t*
+    data(const std::vector<t, allocator>& a_vector)
+    {
+        return a_vector.empty() ? nullptr : &a_vector[0];
+    }
+
+
+    template <typename Enumeration>
+    inline static typename std::underlying_type<Enumeration>::type
+    as_int(Enumeration a_value)
+    {
+        return static_cast<typename std::underlying_type<Enumeration>::type>(a_value);
+    }
+
+
+    static std::string
+    expand_twiddle(const std::string& a_path)
+    {
+        std::string result(a_path);
+        const char* home = getenv("HOME");
+
+        if (home)
+        {
+            while (true)
+            {
+                const std::string::size_type twiddle(result.find('~'));
+                if (twiddle == std::string::npos)
+                {
+                    break;
+                }
+                result.replace(twiddle, 1U, home);
+            }
+        }
+
+        return result;
+    }
+
+
+    static std::vector<std::string>
+    split_string(const std::string& a_string, char a_delimiter, bool keep_empty_tokens = false)
+    {
+        std::stringstream s(a_string);
+        std::vector<std::string> tokens;
+        std::string t;
+
+        while (std::getline(s, t, a_delimiter))
+        {
+            if (keep_empty_tokens || !t.empty())
+            {
+                tokens.push_back(t);
+            }
+        }
+
+        return tokens;
+    }
+
+
+    static std::string
+    find_file_in_path(const std::string& a_source_filename, const std::string& a_path,
+                      char a_directory_separator = '/', char a_path_separator = ':')
+    {
+        const std::vector<std::string> directories = split_string(a_path, a_path_separator);
+
+        auto directory =
+            std::find_if(directories.begin(), directories.end(),
+                         [&a_directory_separator, &a_source_filename](const std::string& a_directory)
+                         {
+                             const std::string filename(expand_twiddle(a_directory) +
+                                                        a_directory_separator + a_source_filename);
+                             std::ifstream file(filename.c_str());
+                             return file.is_open();
+                         });
+
+        if (directory == directories.end())
+        {
+            return std::string();
+        }
+        else
+        {
+            return *directory + a_directory_separator + a_source_filename;
+        }
+    }
+
+
+#define OPENCL_PATH "ENBLEND_OPENCL_PATH" //< opencl-path ENBLEND_OPENCL_PATH
+
+// Anticipated Change: Define DEFAULT_OPENCL_PATH via "config.h" which
+// in turn gets its input from "configure.in" analogously to RASTER_DIR.
+#define DEFAULT_OPENCL_PATH "~/share/enblend/kernels:/usr/share/enblend/kernels"
+
+
+    static std::string
+    find_file(const std::string& a_filename)
+    {
+        const char a_directory_separator = '/';
+
+        if (a_filename.size() >= 1U && a_filename[0U] == a_directory_separator)
+        {
+            return a_filename;            // honor absolute path
+        }
+        else
+        {
+            // We _always_ search a_filename anlong of some explicit,
+            // given path, never implicitly through CWD or the
+            // direcory of the binary.
+            const std::vector<std::string> paths = {getenv(OPENCL_PATH), DEFAULT_OPENCL_PATH};
+
+            for (auto p : paths)
+            {
+                const std::string f = find_file_in_path(a_filename, p, a_directory_separator);
+                if (!f.empty())
+                {
+                    return f;
+                }
+            }
+
+            return std::string();
+        }
+    }
+
+
+    static std::string
+    string_of_variable_arguments(const char *a_format_string, va_list a_variable_argument_list)
+    {
+        enum struct Limits : size_t {initial_size = 4096, maximum_size = 256 * 4096};
+
+        size_t buffer_size(as_int(Limits::initial_size));
+        char* buffer;
+
+        while (true)
+        {
+            buffer = new char[buffer_size];
+            size_t actual_size = vsnprintf(buffer, buffer_size, a_format_string, a_variable_argument_list);
+
+            if (actual_size < buffer_size)
+            {
+                break;
+            }
+
+            delete [] buffer;
+            buffer_size *= 2U;
+
+            if (buffer_size > as_int(Limits::maximum_size))
+            {
+                throw ocl::runtime_error("excessively large vnsprintf buffer");
+            }
+        }
+
+        std::string result(buffer);
+        delete [] buffer;
+
+        return result;
+    }
+
+
+    double
+    event_latency(cl::Event& an_event)
+    {
+        an_event.wait();
+
+        const double start_time = static_cast<double>(an_event.getProfilingInfo<CL_PROFILING_COMMAND_START>());
+        const double end_time = static_cast<double>(an_event.getProfilingInfo<CL_PROFILING_COMMAND_END>());
+
+        return 1e-9 * (end_time - start_time);
+    }
+
+
+    void
+    check_opencl_event(cl::Event& an_event, const char* a_filename, int a_linenumber)
+    {
+        try
+        {
+            const cl_int return_code = an_event.wait();
+            if (return_code != CL_SUCCESS)
+            {
+                std::cerr <<
+                    "\n*** CHECK_OPENCL_EVENT failed at " << a_filename << ":" << a_linenumber <<
+                    " with code " << return_code <<
+                    std::endl;
+                exit(1);
+            }
+        }
+        catch (cl::Error& an_error)
+        {
+            std::cerr <<
+                "\n*** CHECK_OPENCL_EVENT raised `" << an_error.what() << "', code `" <<
+                string_of_error_code(an_error.err()) << "' at " << a_filename << ":" << a_linenumber <<
+                std::endl;
+            exit(1);
+        }
+        catch (...)
+        {
+            std::cerr <<
+                "\n*** CHECK_OPENCL_EVENT threw at " << a_filename << ":" << a_linenumber <<
+                std::endl;
+            exit(1);
+        }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    std::pair<const char*, size_t>
+    SourcePolicy::source()
+    {
+        return std::make_pair(text().c_str(), text().length() + 1U);
+    }
+
+
+    std::pair<const void*, size_t>
+    BinaryPolicy::binary()
+    {
+        return std::make_pair(static_cast<const void*>(data(code())), code().size());
+    }
+
+
+    SourceStringPolicy::SourceStringPolicy(const std::string& a_source_text) :
+        text_(a_source_text)
+    {}
+
+
+    std::string
+    SourceStringPolicy::text()
+    {
+        assert(!text_.empty());
+        return text_;
+    }
+
+
+    SourceFilePolicy::SourceFilePolicy(const std::string& a_source_filename) :
+        filename_(a_source_filename)
+    {}
+
+
+    std::string
+    SourceFilePolicy::text()
+    {
+        if (text_.empty())
+        {
+            consult();
+            assert(!text_.empty());
+        }
+
+        return text_;
+    }
+
+
+    void
+    SourceFilePolicy::consult()
+    {
+        typedef std::istreambuf_iterator<char> file_iterator;
+
+        std::ifstream file(find_file(filename_).c_str());
+
+        if (!file)
+        {
+            std::ostringstream message;
+            message << "OpenCL source-code file not found; missing \"" << filename_ << "\"";
+            throw ocl::runtime_error(message.str());
+        }
+        text_.assign(file_iterator(file), (file_iterator()));
+
+        file.close();
+    }
+
+
+    BinaryCodePolicy::BinaryCodePolicy(const BinaryPolicy::code_t& a_binary_code) :
+        code_(a_binary_code)
+    {}
+
+
+    BinaryFilePolicy::BinaryFilePolicy(const std::string& a_binary_filename) :
+        filename_(a_binary_filename)
+    {}
+
+
+    BinaryPolicy::code_t
+    BinaryFilePolicy::code()
+    {
+        if (code_.size() == 0U)
+        {
+            consult();
+            assert(code_.size() != 0U);
+        }
+
+        return code_;
+    }
+
+
+    void
+    BinaryFilePolicy::consult()
+    {
+        typedef std::istream_iterator<BinaryPolicy::code_t::value_type> file_iterator;
+
+        std::ifstream file(find_file(filename_).c_str());
+
+        if (!file)
+        {
+            std::ostringstream message;
+            message << "OpenCL binary file not found; missing \"" << filename_ << "\"";
+            throw ocl::runtime_error(message.str());
+        }
+
+        file_iterator iter(file);
+        std::copy(iter, file_iterator(), std::back_inserter(code_));
+
+        file.close();
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    Function<actual_code_policy, default_queue_flags>::Function(const cl::Context& a_context,
+                                                                const std::string& a_string) :
+        code_policy(a_string),
+        context_(a_context),
+        devices_(a_context.getInfo<CL_CONTEXT_DEVICES>())
+    {
+        initialize();
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::clear_build_options()
+    {
+        build_options_.clear();
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    Function<actual_code_policy, default_queue_flags>&
+    Function<actual_code_policy, default_queue_flags>::add_build_option(const std::string& an_option)
+    {
+        build_options_.push_back(an_option);
+        return *this;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    Function<actual_code_policy, default_queue_flags>&
+    Function<actual_code_policy, default_queue_flags>::add_build_option(const char *a_format_string, ...)
+    {
+        va_list argument_pointer;
+
+        va_start(argument_pointer, a_format_string);
+        build_options_.push_back(string_of_variable_arguments(a_format_string, argument_pointer));
+        va_end(argument_pointer);
+
+        return *this;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::build(const std::string& an_extra_build_option)
+    {
+        program_ = cl::Program(context_, cl::Program::Sources(1U, code_policy::source()));
+
+        try
+        {
+            const cl_int error_code __attribute__((unused)) =
+                program_.build(devices_, build_options(an_extra_build_option).c_str());
+#ifndef __CL_ENABLE_EXCEPTIONS
+            if (error_code != CL_SUCCESS)
+            {
+                throw cl::Error(error_code);
+            }
+#endif
+        }
+        catch (cl::Error& an_error)
+        {
+            throw ocl::runtime_error(an_error, build_log());
+        }
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::build(const char *a_format_string, ...)
+    {
+        va_list argument_pointer;
+        va_start(argument_pointer, a_format_string);
+
+        build(string_of_variable_arguments(a_format_string, argument_pointer));
+
+        va_end(argument_pointer);
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    std::vector<std::string>
+    Function<actual_code_policy, default_queue_flags>::build_logs() const
+    {
+        std::vector<std::string> logs;
+
+        std::transform(devices_.begin(), devices_.end(),
+                       std::back_inserter(logs),
+                       [this] (cl::Device d) {return program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(d);});
+
+        return logs;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    std::string
+    Function<actual_code_policy, default_queue_flags>::build_log() const
+    {
+        return program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices_.front());
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    std::vector<BinaryPolicy::code_t>
+    Function<actual_code_policy, default_queue_flags>::binaries() const
+    {
+        std::vector<size_t> sizes(program_.getInfo<CL_PROGRAM_BINARY_SIZES>());
+        std::vector<char*> binaries(program_.getInfo<CL_PROGRAM_BINARIES>());
+        std::vector<BinaryPolicy::code_t> results;
+
+        results.resize(binaries.size());
+
+        auto s(sizes.begin());
+        auto r(results.begin());
+        for (auto b = binaries.begin(); b != binaries.end(); ++b, ++s, ++r)
+        {
+            r->reserve(*s);
+            memcpy(&(*r)[0], *b, *s);
+        }
+
+        return results;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    BinaryPolicy::code_t
+    Function<actual_code_policy, default_queue_flags>::binary() const
+    {
+        return binaries().front();
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    const cl::Context&
+    Function<actual_code_policy, default_queue_flags>::context() const
+    {
+        return context_;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    const std::vector<cl::Device>&
+    Function<actual_code_policy, default_queue_flags>::devices() const
+    {
+        return devices_;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    const cl::Device&
+    Function<actual_code_policy, default_queue_flags>::device() const
+    {
+        return devices_.front();
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    const cl::Program&
+    Function<actual_code_policy, default_queue_flags>::program()
+    {
+        return program_;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    cl::Kernel
+    Function<actual_code_policy, default_queue_flags>::create_kernel(const std::string& an_entry_point)
+    {
+        return cl::Kernel(program(), an_entry_point.c_str());
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    std::string
+    Function<actual_code_policy, default_queue_flags>::build_options(const std::string& an_extra_build_option) const
+    {
+        std::string options(concatenate(std::string(" "), build_options_.begin(), build_options_.end()));
+        if (!an_extra_build_option.empty())
+        {
+            options.append(" ").append(an_extra_build_option);
+        }
+
+        return options;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::update_program_from_source(const cl::Program::Sources& a_source)
+    {
+        program_ = cl::Program(context(), a_source);
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::initialize()
+    {
+        for (auto d : devices_)
+        {
+            queues_.push_back(cl::CommandQueue(context_, d, default_queue_flags));
+        }
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::finalize()
+    {
+        for (auto q : queues_)
+        {
+            q.finish();
+        }
+    }
+
+
+    template class Function<SourceStringPolicy>;
+    template class Function<SourceFilePolicy>;
+
+
+    namespace hash
+    {
+        static std::hash<const char*> function;
+
+        inline static size_t
+        of_string(const std::string& a_string)
+        {
+            return function(a_string.c_str());
+        }
+    } // namespace hash
+
+
+    template <class actual_code_policy>
+    LazyFunction<actual_code_policy>::LazyFunction(const cl::Context& a_context, const std::string& a_string) :
+        super(a_context, a_string),
+        build_completed_(false),
+        text_hash_(size_t()), build_option_hash_(size_t())
+    {}
+
+
+    template <class actual_code_policy>
+    void
+    LazyFunction<actual_code_policy>::build(const std::string& an_extra_build_option)
+    {
+        if (!needs_building(an_extra_build_option))
+        {
+            return;
+        }
+
+        cl::Program::Sources source(1U, code_policy::source());
+        super::update_program_from_source(source);
+
+        try
+        {
+            // Implementation Note: Pass `this' to recover the
+            // actual instance when class-static function
+            // notify_trampoline() gets called.  The trampoline
+            // just invokes method notify().
+            super::program().build(std::vector<cl::Device>(1U, super::device()),
+                                   super::build_options(an_extra_build_option).c_str(),
+                                   notify_trampoline,
+                                   this);
+            update_hashes(an_extra_build_option);
+        }
+        catch (cl::Error& an_error)
+        {
+            cl::Program program(program());
+            throw ocl::runtime_error(an_error, program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(super::device()));
+        }
+    }
+
+
+    template <class actual_code_policy>
+    void
+    LazyFunction<actual_code_policy>::notify_trampoline(cl_program a_program, void* an_instance)
+    {
+        typedef LazyFunction self_t;
+
+        self_t* self = static_cast<self_t*>(an_instance); // Recover pointer to instance.
+        self->notify(a_program);
+    }
+
+
+    template <class actual_code_policy>
+    void
+    LazyFunction<actual_code_policy>::update_hashes(const std::string& an_extra_build_option)
+    {
+        text_hash_ = hash::of_string(code_policy::text());
+        build_option_hash_ = hash::of_string(super::build_options(an_extra_build_option));
+    }
+
+
+    template <class actual_code_policy>
+    bool
+    LazyFunction<actual_code_policy>::needs_building(const std::string& an_extra_build_option)
+    {
+        return
+            text_hash_ != hash::of_string(code_policy::text()) ||
+            build_option_hash_ != hash::of_string(super::build_options(an_extra_build_option));
+    }
+
+
+    template <class actual_code_policy>
+    LazyFunctionCXX<actual_code_policy>::LazyFunctionCXX(const cl::Context& a_context,
+                                                         const std::string& a_string) :
+        super(a_context, a_string)
+    {}
+
+
+    template <class actual_code_policy>
+    void
+    LazyFunctionCXX<actual_code_policy>::wait()
+    {
+        std::unique_lock<std::mutex> lock(build_completed_mutex_);
+
+        // Anticipated Change: Replace the following lines with
+        //     build_completed_condition_.wait(lock, super::build_completed())
+        // when g++ does not fail with an ICE anymore.
+        while (!super::build_completed())
+        {
+            build_completed_condition_.wait(lock);
+        }
+    }
+
+
+    template <class actual_code_policy>
+    bool
+    LazyFunctionCXX<actual_code_policy>::build_completed()
+    {
+        std::lock_guard<std::mutex> lock(build_completed_mutex_);
+
+        return super::build_completed();
+    }
+
+
+    template <class actual_code_policy>
+    void
+    LazyFunctionCXX<actual_code_policy>::notify(cl_program a_program __attribute__((unused)))
+    {
+        build_completed_mutex_.lock();
+        super::set_build_completed(true);
+        build_completed_mutex_.unlock();
+        build_completed_condition_.notify_all();
+    }
+
+
+    template class LazyFunctionCXX<SourceStringPolicy>;
+    template class LazyFunctionCXX<SourceFilePolicy>;
 
 #else
 
