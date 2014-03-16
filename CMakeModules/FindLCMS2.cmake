@@ -8,8 +8,6 @@ ELSE(NOT WIN32)
         ${SOURCE_BASE_DIR}
       PATH_SUFFIXES
         lcms2-2.5
-        lcms2-2.4
-        lcms2-2.3
     )
     
     FIND_PATH(LCMS2_INCLUDE_DIR 

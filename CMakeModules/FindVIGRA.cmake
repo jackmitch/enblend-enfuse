@@ -18,7 +18,8 @@ IF(WIN32)
   )
   # for dynamic build, it's vigraimpex.lib and the dll must be copied into hugin's bin folder
   #SET(VIGRA_LIBRARIES ${SOURCE_BASE_DIR}/vigra/lib/libvigraindex.dll)
-  FIND_LIBRARY( VIGRA_LIBRARIES 
+  FIND_LIBRARY_WITH_DEBUG(VIGRA_LIBRARIES
+    WIN32_DEBUG_POSTFIX d
     NAMES vigraimpex libvigraimpex 
     PATHS
     ${VIGRA_ROOT_PATH}
