@@ -847,7 +847,7 @@ namespace ocl
 
         try
         {
-            const cl_int error_code __attribute__((unused)) =
+            const cl_int error_code UNUSEDVAR =
                 program_.build(devices_, build_options(an_extra_build_option).c_str());
 #ifndef __CL_ENABLE_EXCEPTIONS
             if (error_code != CL_SUCCESS)
@@ -1133,7 +1133,7 @@ namespace ocl
 
     template <class actual_code_policy>
     void
-    LazyFunctionCXX<actual_code_policy>::notify(cl_program a_program __attribute__((unused)))
+    LazyFunctionCXX<actual_code_policy>::notify(cl_program a_program UNUSEDVAR)
     {
         build_completed_mutex_.lock();
         super::set_build_completed(true);

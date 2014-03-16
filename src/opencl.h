@@ -43,6 +43,13 @@
 #include <OpenCL/cl.hpp>
 #endif
 
+#ifdef _MSC_VER
+#define NOINLINE __declspec(noinline)
+#define UNUSEDVAR
+#else
+#define NOINLINE __attribute__((noinline))
+#define UNUSEDVAR __attribute__((unused))
+#endif
 
 namespace ocl
 {
@@ -181,7 +188,7 @@ namespace ocl
         std::string text() override;
 
     private:
-        void consult() __attribute__((noinline));
+        NOINLINE void consult();
 
         std::string filename_;
         std::string text_;
@@ -211,7 +218,7 @@ namespace ocl
         code_t code() override;
 
     private:
-        void consult() __attribute__((noinline));
+        NOINLINE void consult();
 
         std::string filename_;
         code_t code_;
