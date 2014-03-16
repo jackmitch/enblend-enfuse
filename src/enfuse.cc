@@ -2214,18 +2214,11 @@ int main(int argc, char** argv)
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
                 }
-                // IMPLEMENTATION NOTE: Newer Vigra libraries have
-                // ICCProfile::operator==.  We substitute STL's equal
-                // function plus some extra checks for the case of empty
-                // profiles.  -- cls @ Thu May 27 14:21:57 UTC 2010
-                if (iccProfile.empty() != inputInfo->getICCProfile().empty() ||
-                    !std::equal(iccProfile.begin(), iccProfile.end(),
-                                inputInfo->getICCProfile().begin())) {
-                    vigra::ImageImportInfo::ICCProfile mismatchProfile = inputInfo->getICCProfile();
+                if (iccProfile != inputInfo->getICCProfile()) {
+                    vigra::ImageImportInfo::ICCProfile mismatchProfile(inputInfo->getICCProfile());
                     cmsHPROFILE newProfile = nullptr;
                     if (!mismatchProfile.empty()) {
-                        newProfile = cmsOpenProfileFromMem(mismatchProfile.data(),
-                                                           mismatchProfile.size());
+                        newProfile = cmsOpenProfileFromMem(mismatchProfile.data(), mismatchProfile.size());
                         if (newProfile == nullptr) {
                             std::cerr << std::endl
                                       << command << ": error parsing ICC profile data from file \""
