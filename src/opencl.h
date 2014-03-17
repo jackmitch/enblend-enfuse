@@ -490,8 +490,8 @@ namespace ocl
 
         bool run_;
         std::deque<BuildCommand> compile_queue_;
-        std::mutex queue_mutex_;
-        std::condition_variable queue_not_empty_;
+        std::recursive_mutex queue_mutex_;
+        std::condition_variable_any queue_not_empty_;
     }; // class ThreadedBatchBuilder
 
 #else

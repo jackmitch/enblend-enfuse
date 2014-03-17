@@ -1177,6 +1177,7 @@ namespace ocl
     ThreadedBatchBuilder::ThreadedBatchBuilder() : run_(true)
     {
         std::thread builder(build_all_trampoline, this);
+        builder.detach();
     }
 
 
@@ -1189,13 +1190,12 @@ namespace ocl
     void
     ThreadedBatchBuilder::submit(value_t a_function, const std::string& a_build_option)
     {
+        assert(run_);
+
         if (a_function)
         {
-            assert(run_);
-
-            queue_mutex_.lock();
+            std::unique_lock<std::recursive_mutex> lock(queue_mutex_);
             compile_queue_.push_front(BuildCommand(a_function, a_build_option));
-            queue_mutex_.unlock();
             queue_not_empty_.notify_one();
         }
 #ifdef DEBUG
@@ -1225,6 +1225,15 @@ namespace ocl
     ThreadedBatchBuilder::build()
     {
         queue_mutex_.lock();
+        if (compile_queue_.empty())
+        {
+#ifdef DEBUG
+            std::cerr << "+ ThreadedBatchBuilder::build -- spurious wake-up?\n";
+#endif
+            queue_mutex_.unlock();
+            return;
+        }
+
         BuildCommand build_command(compile_queue_.back());
         compile_queue_.pop_back();
         queue_mutex_.unlock();
@@ -1239,13 +1248,14 @@ namespace ocl
     {
         while (run_)
         {
-            std::unique_lock<std::mutex> lock(queue_mutex_);
-
-            while (!compile_queue_.empty())
+            std::unique_lock<std::recursive_mutex> lock(queue_mutex_);
+            while (compile_queue_.empty())
             {
-                build();
                 queue_not_empty_.wait(lock);
             }
+
+            build();
+            queue_mutex_.unlock();
         }
     }
 
