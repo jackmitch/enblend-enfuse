@@ -585,10 +585,16 @@ namespace ocl
         }
         else
         {
-            // We _always_ search a_filename anlong of some explicit,
+            // We _always_ search a_filename along of some explicit,
             // given path, never implicitly through CWD or the
             // direcory of the binary.
-            const std::vector<std::string> paths = {getenv(OPENCL_PATH), DEFAULT_OPENCL_PATH};
+            std::vector<std::string> paths;
+
+            if (getenv(OPENCL_PATH))
+            {
+                paths.push_back(getenv(OPENCL_PATH));
+            }
+            paths.push_back(DEFAULT_OPENCL_PATH);
 
             for (auto p : paths)
             {
