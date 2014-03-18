@@ -33,6 +33,28 @@
 
 namespace ocl
 {
+    template <class iterator>
+    static std::string
+    concatenate(const std::string& a_separator, iterator a_begin, iterator an_end)
+    {
+        if (a_begin == an_end)
+        {
+            return std::string();
+        }
+        else
+        {
+            std::string result(*a_begin);
+
+            while (++a_begin != an_end)
+            {
+                result.append(a_separator).append(*a_begin);
+            }
+
+            return result;
+        }
+    }
+
+
 #if defined(OPENCL)
 
     runtime_error::runtime_error(const std::string& a_message) :
@@ -193,6 +215,31 @@ namespace ocl
     };
 
 
+#define OPENCL_PATH "ENBLEND_OPENCL_PATH" //< opencl-path ENBLEND_OPENCL_PATH
+
+// Anticipated Change: Define DEFAULT_OPENCL_PATH via "config.h" which
+// in turn gets its input from "configure.in" analogously to RASTER_DIR.
+#define DEFAULT_OPENCL_PATH "~/share/enblend/kernels:/usr/share/enblend/kernels"
+
+
+    static std::vector<std::string>
+    construct_search_path()
+    {
+        // We _always_ search a_filename along of some explicit, given
+        // path, never implicitly through CWD or the direcory of the
+        // binary.
+        std::vector<std::string> paths;
+
+        if (getenv(OPENCL_PATH))
+        {
+            paths.push_back(getenv(OPENCL_PATH));
+        }
+        paths.push_back(DEFAULT_OPENCL_PATH);
+
+        return paths;
+    }
+
+
     void
     print_opencl_information(bool all_devices)
     {
@@ -241,6 +288,21 @@ namespace ocl
                     }
                 }
             }
+        }
+
+        {
+            const std::vector<std::string> paths(construct_search_path());
+
+            std::cout << "  Search path (expanding " OPENCL_PATH " and appending built-in path)\n    ";
+            if (paths.empty())
+            {
+                std::cout << "<empty>";
+            }
+            else
+            {
+                std::cout << concatenate(":", paths.begin(), paths.end());
+            }
+            std::cout << "\n";
         }
     }
 
@@ -452,28 +514,6 @@ namespace ocl
     ////////////////////////////////////////////////////////////////////////////
 
 
-    template <class iterator>
-    static std::string
-    concatenate(const std::string& a_separator, iterator a_begin, iterator an_end)
-    {
-        if (a_begin == an_end)
-        {
-            return std::string();
-        }
-        else
-        {
-            std::string result(*a_begin);
-
-            while (++a_begin != an_end)
-            {
-                result.append(a_separator).append(*a_begin);
-            }
-
-            return result;
-        }
-    }
-
-
     template <class t, class allocator>
     inline static t*
     data(std::vector<t, allocator>& a_vector)
@@ -567,13 +607,6 @@ namespace ocl
     }
 
 
-#define OPENCL_PATH "ENBLEND_OPENCL_PATH" //< opencl-path ENBLEND_OPENCL_PATH
-
-// Anticipated Change: Define DEFAULT_OPENCL_PATH via "config.h" which
-// in turn gets its input from "configure.in" analogously to RASTER_DIR.
-#define DEFAULT_OPENCL_PATH "~/share/enblend/kernels:/usr/share/enblend/kernels"
-
-
     static std::string
     find_file(const std::string& a_filename)
     {
@@ -585,16 +618,7 @@ namespace ocl
         }
         else
         {
-            // We _always_ search a_filename along of some explicit,
-            // given path, never implicitly through CWD or the
-            // direcory of the binary.
-            std::vector<std::string> paths;
-
-            if (getenv(OPENCL_PATH))
-            {
-                paths.push_back(getenv(OPENCL_PATH));
-            }
-            paths.push_back(DEFAULT_OPENCL_PATH);
+            const std::vector<std::string> paths(construct_search_path());
 
             for (auto p : paths)
             {
