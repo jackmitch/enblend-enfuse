@@ -217,10 +217,6 @@ namespace ocl
 
 #define OPENCL_PATH "ENBLEND_OPENCL_PATH" //< opencl-path ENBLEND_OPENCL_PATH
 
-// Anticipated Change: Define DEFAULT_OPENCL_PATH via "config.h" which
-// in turn gets its input from "configure.in" analogously to RASTER_DIR.
-#define DEFAULT_OPENCL_PATH "~/share/enblend/kernels:/usr/share/enblend/kernels"
-
 
     static std::vector<std::string>
     construct_search_path()
