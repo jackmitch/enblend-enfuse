@@ -1,5 +1,10 @@
 * Version 4.1.x  --  Stable Branch
 
+Patchlevel 3
+
+Released on March 19, 2014.
+
+
 ** Bug Fixes
 
 - [Enblend only] Fix problem of multiple, almost-identical seamlines
