@@ -230,3 +230,6 @@
   #define size_t unsigned int
 #endif
 #endif
+
+/* Define to the implicit search path for OpenCL kernels. */
+#define DEFAULT_OPENCL_PATH "${DEFAULT_OPENCL_PATH}"
