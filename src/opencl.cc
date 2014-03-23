@@ -230,7 +230,29 @@ namespace ocl
         {
             paths.push_back(getenv(OPENCL_PATH));
         }
+#ifdef _WIN32
+        // on Windows fixed paths would be too restricting
+        // construct the search path relative to the binary path
+        char buffer[MAX_PATH]; //always use MAX_PATH for filepaths
+        GetModuleFileName(NULL, buffer, sizeof(buffer));
+        std::string working_path(buffer);
+        //remove filename
+        std::string::size_type pos = working_path.rfind("\\");
+        if (pos != std::string::npos)
+        {
+            working_path.erase(pos);
+            //remove last dir: should be bin
+            pos = working_path.rfind("\\");
+            if (pos != std::string::npos)
+            {
+                working_path.erase(pos);
+                working_path.append("\\share\\enblend\\kernels");
+                paths.push_back(working_path);
+            }
+        }
+#else
         paths.push_back(DEFAULT_OPENCL_PATH);
+#endif
 
         return paths;
     }
@@ -296,7 +318,11 @@ namespace ocl
             }
             else
             {
+#ifdef _WIN32
+                std::cout << concatenate(";", paths.begin(), paths.end());
+#else
                 std::cout << concatenate(":", paths.begin(), paths.end());
+#endif
             }
             std::cout << "\n";
         }
@@ -538,6 +564,8 @@ namespace ocl
     expand_twiddle(const std::string& a_path)
     {
         std::string result(a_path);
+#ifndef _WIN32
+        // on Windows this replacement would break with short filenames with always contains a tilde
         const char* home = getenv("HOME");
 
         if (home)
@@ -552,6 +580,7 @@ namespace ocl
                 result.replace(twiddle, 1U, home);
             }
         }
+#endif
 
         return result;
     }
@@ -607,8 +636,22 @@ namespace ocl
     find_file(const std::string& a_filename)
     {
         const char a_directory_separator = '/';
+#ifdef _WIN32
+        const char a_path_separator = ';';
 
-        if (a_filename.size() >= 1U && a_filename[0U] == a_directory_separator)
+        bool abs_path = false;
+        if (a_filename.size() >= 3U)
+        {
+            abs_path = ((a_filename[1U] == ':' && a_filename[2U] == '\\') || 
+                (a_filename[1U] == ':' && a_filename[2U] == '/') || 
+                (a_filename[0U] == '\\' && a_filename[1U] == '\\'));
+        };
+#else
+        const char a_path_separator = ':';
+
+        bool abs_path = a_filename.size() >= 1U && a_filename[0U] == a_directory_separator;
+#endif
+        if (abs_path)
         {
             return a_filename;            // honor absolute path
         }
@@ -618,7 +661,7 @@ namespace ocl
 
             for (auto p : paths)
             {
-                const std::string f = find_file_in_path(a_filename, p, a_directory_separator);
+                const std::string f = find_file_in_path(a_filename, p, a_directory_separator, a_path_separator);
                 if (!f.empty())
                 {
                     return f;
