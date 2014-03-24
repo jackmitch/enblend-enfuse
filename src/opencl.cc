@@ -642,9 +642,9 @@ namespace ocl
         bool abs_path = false;
         if (a_filename.size() >= 3U)
         {
-            abs_path = ((a_filename[1U] == ':' && a_filename[2U] == '\\') || 
-                (a_filename[1U] == ':' && a_filename[2U] == '/') || 
-                (a_filename[0U] == '\\' && a_filename[1U] == '\\'));
+            abs_path = ((a_filename[1U] == ':' && a_filename[2U] == '\\') ||
+                        (a_filename[1U] == ':' && a_filename[2U] == '/') ||
+                        (a_filename[0U] == '\\' && a_filename[1U] == '\\'));
         };
 #else
         const char a_path_separator = ':';
