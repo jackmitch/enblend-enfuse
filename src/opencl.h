@@ -286,7 +286,7 @@ namespace ocl
         std::string build_options(const std::string& an_extra_build_option) const;
 
         const std::vector<cl::CommandQueue>& queues() const {return queues_;}
-        const cl::CommandQueue& queue() const {return queues_.front();}
+        cl::CommandQueue queue() const {return queues_.front();}
 
     protected:
         virtual void update_program_from_source(const cl::Program::Sources& a_source);
