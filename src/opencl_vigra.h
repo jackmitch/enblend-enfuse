@@ -36,13 +36,21 @@ namespace vigra
     {
 #ifdef OPENCL
 
+#ifndef PREFER_SEPARATE_OPENCL_SOURCE
+#include "distance_transform_fh.icl"
+#endif
+
         class DistanceTransformFH : public ::ocl::BuildableFunction
         {
         public:
             DistanceTransformFH() = delete;
 
             DistanceTransformFH(const cl::Context& a_context) :
+#ifdef PREFER_SEPARATE_OPENCL_SOURCE
                 f_(a_context, std::string("distance_transform_fh.cl")),
+#else
+                f_(a_context, distance_transform_fh_source_code),
+#endif
                 f_scratch_buffer_(nullptr), d_scratch_buffer_(nullptr),
                 v_scratch_buffer_(nullptr), z_scratch_buffer_(nullptr),
                 write_buffer_prereq_(1U), column_kernel_prereq_(1U), row_kernel_prereq_(1U),
@@ -317,8 +325,11 @@ namespace vigra
                                                      preferred_work_group_size_multiple_);
             }
 
-            //::ocl::FunctionOfFile f_;
+#ifdef PREFER_SEPARATE_OPENCL_SOURCE
             ::ocl::LazyFunctionCXXOfFile f_;
+#else
+            ::ocl::LazyFunctionCXXOfString f_;
+#endif
 
             cl::Kernel manhattan_row_kernel_;
             cl::Kernel manhattan_column_kernel_;

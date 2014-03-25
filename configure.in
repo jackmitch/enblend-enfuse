@@ -482,6 +482,9 @@ AC_ARG_WITH([opencl-path],
             [opencl_path="$withval"],
             [opencl_path="$built_in_opencl_path"])
 AC_DEFINE_UNQUOTED(DEFAULT_OPENCL_PATH, ["$opencl_path"], [Default search path for OpenCL files])
+AC_DEFINE(PREFER_SEPARATE_OPENCL_SOURCE, 1,
+          [Define if you want to access OpenCL files, not compile-in their string equivalents])
+
 
 AX_OPENCL([C++])
 CFLAGS="$CFLAGS $CL_CFLAGS"

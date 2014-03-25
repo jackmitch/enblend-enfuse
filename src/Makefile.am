@@ -50,7 +50,8 @@ enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                   -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
 
-EXTRA_DIST = enblend.1 enfuse.1 \
+EXTRA_DIST = embrace distance_transform_fh.cl \
+             enblend.1 enfuse.1 \
              gen_sig DefaultSig.pm Sig.pm \
              CMakeLists.txt
 
@@ -59,11 +60,14 @@ DISTCLEANFILES = enblend.1 enfuse.1
 
 # Generated sources
 
-BUILT_SOURCES = signature.h
-CLEANFILES = signature.h
+BUILT_SOURCES = signature.h distance_transform_fh.icl
+CLEANFILES = signature.h distance_transform_fh.icl
 
 signature.h: $(srcdir)/gen_sig $(srcdir)/DefaultSig.pm $(srcdir)/Sig.pm
 	@ $(PERL) -I$(srcdir) $< --extra=$(VERSION) > $@
+
+distance_transform_fh.icl: distance_transform_fh.cl
+	$(srcdir)/embrace --format=c++ --label=distance_transform_fh_source_code $< > $@
 
 
 # Documentation
