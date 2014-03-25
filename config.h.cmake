@@ -233,3 +233,6 @@
 
 /* Define to the implicit search path for OpenCL kernels. */
 #define DEFAULT_OPENCL_PATH "${DEFAULT_OPENCL_PATH}"
+
+/* Prefer separate OpenCL kernels or use build-in strings. */
+#cmakedefine PREFER_SEPARATE_OPENCL_SOURCE 1

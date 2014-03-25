@@ -17,6 +17,37 @@ add_custom_command(
   )
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/signature.h" GENERATED)
 
+# prepare all OpenCL sources
+SET(OPENCL_SOURCES)
+FILE(GLOB opencl_sources ${TOP_SRC_DIR}/src/*.cl)
+FOREACH(_cl_source ${opencl_sources})
+  GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
+  
+  STRING(REGEX REPLACE ".cl$" ".icl" _icl_source "${_cl_filename}")
+  SET(_icl_source "${CMAKE_CURRENT_BINARY_DIR}/kernels/${_icl_source}")
+  STRING(REGEX REPLACE ".cl$" "_source_code" _cl_label "${_cl_filename}")
+
+  # if you want separate OpenCL source files install them now  
+  IF(PREFER_SEPARATE_OPENCL_SOURCE)
+    INSTALL(FILES ${_cl_source} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/enblend/kernels)
+  ELSE()
+    ADD_CUSTOM_COMMAND(
+      OUTPUT "${_icl_source}"
+      COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/src/embrace"
+        "--format=c++" "--label=${_cl_label}" "${_cl_source}" ">" "${_icl_source}"
+      DEPENDS "${_cl_source}"
+      COMMENT "Generating ${_icl_source}"
+    )
+    SET_SOURCE_FILES_PROPERTIES("${_icl_source}" GENERATED)
+    LIST(APPEND OPENCL_SOURCES "${_icl_source}")
+  ENDIF()
+ENDFOREACH()
+
+IF(NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
+  ADD_CUSTOM_TARGET(cl_sources ALL DEPENDS "${OPENCL_SOURCES}")
+  INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/kernels")
+ENDIF()
+
 include_directories(${TOP_SRC_DIR}/src)
 #add_subdirectory(vigra_impex)
 set(_COMMANDS enblend enfuse)
@@ -38,6 +69,8 @@ endif(WIN32)
 file(GLOB layer_selection ${TOP_SRC_DIR}/src/layer_selection/*.cc ${TOP_SRC_DIR}/src/layer_selection/*.h)
 list(APPEND all_sources ${layer_selection})
 include_directories(${TOP_SRC_DIR}/src/layer_selection)
+file(GLOB headers ${TOP_SRC_DIR}/src/*.h)
+list(APPEND all_sources ${headers})
 list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -55,6 +88,9 @@ foreach(_cmd ${_COMMANDS})
   target_link_libraries(${_cmd} ${en_libraries})
   install(TARGETS ${_cmd} DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
   #add_dependencies(${_cmd} vigra_impex)
+  IF(NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
+    add_dependencies(${_cmd} cl_sources)
+  ENDIF()
   list(APPEND depends2 ${_cmd})
 endforeach(_cmd)
 add_custom_target(enblendenfuse ALL DEPENDS ${depends2})
