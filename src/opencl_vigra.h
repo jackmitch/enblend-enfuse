@@ -28,7 +28,7 @@
 #include "opencl.h"
 
 #include "openmp_vigra.h"
-
+#include "vigra/basicimageview.hxx"
 
 namespace vigra
 {
