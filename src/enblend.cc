@@ -188,6 +188,13 @@ LayerSelectionHost LayerSelection;
 #endif
 
 
+#ifdef OPENCL
+namespace GPU {
+    std::unique_ptr<vigra::ocl::DistanceTransformFH> DistanceTransform = nullptr;
+}
+#endif
+
+
 difference_functor_t
 differenceFunctorOfString(const char* aDifferenceFunctorName)
 {
@@ -1695,6 +1702,15 @@ int main(int argc, char** argv)
                   << std::endl;
         exit(1);
     }
+
+#ifdef OPENCL
+    if (GPUContext && UseGPU) {
+        GPU::DistanceTransform = ocl::create_function<vigra::ocl::DistanceTransformFH>(GPUContext);
+        if (BatchCompiler) {
+            BatchCompiler->submit(GPU::DistanceTransform.get());
+        }
+    }
+#endif
 
     enblend::TraceableFileNameList inputTraceableFileNameList;
 

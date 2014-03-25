@@ -41,6 +41,87 @@
 #include "vigra_ext/stdcachedfileimage.hxx"
 #endif
 
+#include "timer.h"
+#include "opencl_vigra.h"
+
+
+#ifdef OPENCL
+namespace GPU
+{
+    extern std::unique_ptr<vigra::ocl::DistanceTransformFH> DistanceTransform;
+}
+#endif
+
+
+namespace vigra
+{
+    namespace ocl
+    {
+        template <class SrcImageIterator, class SrcAccessor,
+                  class DestImageIterator, class DestAccessor,
+                  class ValueType>
+        inline void
+        distanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_lowerright, SrcAccessor src_acc,
+                          DestImageIterator dest_upperleft, DestAccessor dest_acc,
+                          ValueType background, int norm)
+        {
+            timer::WallClock wall_clock;
+
+#ifdef OPENCL
+            if (GPUContext && GPU::DistanceTransform)
+            {
+                std::cerr <<
+                    command << ": info: choose OpenCL accelaration for Distance Transform" << std::endl;
+
+                wall_clock.start();
+                GPU::DistanceTransform->run(src_upperleft, src_lowerright, src_acc,
+                                            dest_upperleft, dest_acc,
+                                            background, norm);
+                wall_clock.stop();
+            }
+            else
+            {
+                std::cerr << command << ": info: missing GPUContext or OpenCL DistanceTransform" << std::endl;
+
+                wall_clock.start();
+                vigra::omp::distanceTransform(src_upperleft, src_lowerright, src_acc,
+                                              dest_upperleft, dest_acc,
+                                              background, norm);
+                wall_clock.stop();
+            }
+#else
+            std::cerr << command << ": info: no OpenCL support compiled into Enblend" << std::endl;
+
+            wall_clock.start();
+            vigra::omp::distanceTransform(src_upperleft, src_lowerright, src_acc,
+                                          dest_upperleft, dest_acc,
+                                          background, norm);
+            wall_clock.stop();
+#endif // OPENCL
+
+            const std::ios::fmtflags flags(std::cerr.flags());
+            std::cerr <<
+                command << ": timing: wall-clock runtime of `Distance Transform': " <<
+                std::setprecision(3) << 1000.0 * wall_clock.value() << " ms\n" << std::endl;
+            std::cerr.flags(flags);
+        }
+
+
+        template <class SrcImageIterator, class SrcAccessor,
+                  class DestImageIterator, class DestAccessor,
+                  class ValueType>
+        inline static void
+        distanceTransform(vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
+                          vigra::pair<DestImageIterator, DestAccessor> dest,
+                          ValueType background, int norm)
+        {
+            vigra::ocl::distanceTransform(src.first, src.second, src.third,
+                                          dest.first, dest.second,
+                                          background, norm);
+        }
+    } // namespace ocl
+} // namespace vigra
+
 
 namespace enblend {
 
@@ -246,11 +327,8 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
     vigra::BasicImage<SrcValueType> periodic(size_x, size_y);
     vigra::BasicImage<DestValueType> distance(periodic.size());
 
-    quadruple_image(src_upperleft, src_lowerright, sa,
-                    periodic.upperLeft(), periodic.accessor(),
-                    boundary);
-    vigra::omp::distanceTransform(srcImageRange(periodic), destImage(distance),
-                                  background, norm);
+    quadruple_image(src_upperleft, src_lowerright, sa, periodic.upperLeft(), periodic.accessor(), boundary);
+    vigra::ocl::distanceTransform(srcImageRange(periodic), destImage(distance), background, norm);
     quater_image(srcImageRange(distance), destIter(dest_upperleft, da), boundary);
 }
 
@@ -390,8 +468,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     switch (boundary)
     {
     case OpenBoundaries:
-        vigra::omp::distanceTransform(srcImageRange(diff12), destImage(dist12),
-                                      background, norm);
+        vigra::ocl::distanceTransform(srcImageRange(diff12), destImage(dist12), background, norm);
         break;
 
     case HorizontalStrip: // FALLTHROUGH
@@ -422,8 +499,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     switch (boundary)
     {
     case OpenBoundaries:
-        vigra::omp::distanceTransform(srcImageRange(diff21), destImage(dist21),
-                                      background, norm);
+        vigra::ocl::distanceTransform(srcImageRange(diff21), destImage(dist21), background, norm);
         break;
 
     case HorizontalStrip: // FALLTHROUGH
