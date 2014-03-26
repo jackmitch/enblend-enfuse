@@ -136,6 +136,12 @@ namespace ocl
     void check_opencl_event(cl::Event& an_event, const char* a_filename, int a_linenumber);
 #define CHECK_OPENCL_EVENT(m_event) ::ocl::check_opencl_event(m_event, __FILE__, __LINE__)
 
+#ifdef DEBUG
+#define DEBUG_CHECK_OPENCL_EVENT(m_event) CHECK_OPENCL_EVENT(m_event)
+#else
+#define DEBUG_CHECK_OPENCL_EVENT(m_event)
+#endif
+
 
     ////////////////////////////////////////////////////////////////////////////
 

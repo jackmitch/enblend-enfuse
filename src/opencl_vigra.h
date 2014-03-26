@@ -25,10 +25,11 @@
 #include <config.h>
 #endif
 
-#include "opencl.h"
+#include <vigra/basicimageview.hxx>
 
+#include "opencl.h"
 #include "openmp_vigra.h"
-#include "vigra/basicimageview.hxx"
+
 
 namespace vigra
 {
@@ -179,11 +180,13 @@ namespace vigra
                                                 cl::NullRange,
                                                 column_global_size, local_size,
                                                 &column_kernel_prereq_, &row_kernel_prereq_[0]);
+                DEBUG_CHECK_OPENCL_EVENT(row_kernel_prereq_[0]);
                 f_.queue().enqueueNDRangeKernel(a_distance_norm >= 2 ?
                                                 euclidean_row_kernel_ : manhattan_row_kernel_,
                                                 cl::NullRange,
                                                 row_global_size, local_size,
                                                 &row_kernel_prereq_, &read_buffer_prereq_[0]);
+                DEBUG_CHECK_OPENCL_EVENT(read_buffer_prereq_[0]);
                 f_.queue().enqueueReadBuffer(output_buffer_, CL_TRUE, 0U, buffer_size,
                                              buffer_begin,
                                              &read_buffer_prereq_, &unmap_buffer_prereq_[0]);
