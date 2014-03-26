@@ -17,35 +17,34 @@ add_custom_command(
   )
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/signature.h" GENERATED)
 
-# prepare all OpenCL sources
-SET(OPENCL_SOURCES)
-FILE(GLOB opencl_sources ${TOP_SRC_DIR}/src/*.cl)
-FOREACH(_cl_source ${opencl_sources})
-  GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
-  
-  STRING(REGEX REPLACE ".cl$" ".icl" _icl_source "${_cl_filename}")
-  SET(_icl_source "${CMAKE_CURRENT_BINARY_DIR}/kernels/${_icl_source}")
-  STRING(REGEX REPLACE ".cl$" "_source_code" _cl_label "${_cl_filename}")
-
-  # if you want separate OpenCL source files install them now  
+IF(ENABLE_OPENCL)
+  # prepare all OpenCL sources
+  SET(OPENCL_SOURCES)
+  FILE(GLOB opencl_sources ${TOP_SRC_DIR}/src/*.cl)
   IF(PREFER_SEPARATE_OPENCL_SOURCE)
-    INSTALL(FILES ${_cl_source} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/enblend/kernels)
+    INSTALL(FILES ${opencl_sources} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/enblend/kernels)
   ELSE()
-    ADD_CUSTOM_COMMAND(
-      OUTPUT "${_icl_source}"
-      COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/src/embrace"
-        "--format=c++" "--label=${_cl_label}" "${_cl_source}" ">" "${_icl_source}"
-      DEPENDS "${_cl_source}"
-      COMMENT "Generating ${_icl_source}"
-    )
-    SET_SOURCE_FILES_PROPERTIES("${_icl_source}" GENERATED)
-    LIST(APPEND OPENCL_SOURCES "${_icl_source}")
-  ENDIF()
-ENDFOREACH()
+    FOREACH(_cl_source ${opencl_sources})
+      GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
+  
+      STRING(REGEX REPLACE "[.]cl$" ".icl" _icl_source "${_cl_filename}")
+      SET(_icl_source "${CMAKE_CURRENT_BINARY_DIR}/kernels/${_icl_source}")
+      STRING(REGEX REPLACE "[.]cl$" "_source_code" _cl_label "${_cl_filename}")
 
-IF(NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
-  ADD_CUSTOM_TARGET(cl_sources ALL DEPENDS "${OPENCL_SOURCES}")
-  INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/kernels")
+      ADD_CUSTOM_COMMAND(
+        OUTPUT "${_icl_source}"
+        COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/src/embrace"
+          "--format=c++" "--label=${_cl_label}" "${_cl_source}" ">" "${_icl_source}"
+        DEPENDS "${_cl_source}"
+        COMMENT "Generating ${_icl_source}"
+      )
+      SET_SOURCE_FILES_PROPERTIES("${_icl_source}" GENERATED)
+      LIST(APPEND OPENCL_SOURCES "${_icl_source}")
+    ENDFOREACH()
+    
+    ADD_CUSTOM_TARGET(cl_sources ALL DEPENDS "${OPENCL_SOURCES}")
+    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/kernels")
+  ENDIF()
 ENDIF()
 
 include_directories(${TOP_SRC_DIR}/src)
@@ -88,7 +87,7 @@ foreach(_cmd ${_COMMANDS})
   target_link_libraries(${_cmd} ${en_libraries})
   install(TARGETS ${_cmd} DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
   #add_dependencies(${_cmd} vigra_impex)
-  IF(NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
+  IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
     add_dependencies(${_cmd} cl_sources)
   ENDIF()
   list(APPEND depends2 ${_cmd})
