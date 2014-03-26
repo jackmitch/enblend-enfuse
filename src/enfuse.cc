@@ -541,7 +541,7 @@ void printUsageAndExit(const bool error = true) {
 
 void cleanup_output(void)
 {
-#if DEBUG
+#ifdef DEBUG
     std::cout << "+ cleanup_output\n";
 #endif
 
