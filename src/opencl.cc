@@ -308,6 +308,7 @@ namespace ocl
             }
         }
 
+#ifdef PREFER_SEPARATE_OPENCL_SOURCE
         {
             const std::vector<std::string> paths(construct_search_path());
 
@@ -326,6 +327,7 @@ namespace ocl
             }
             std::cout << "\n";
         }
+#endif // PREFER_SEPARATE_OPENCL_SOURCE
     }
 
 
