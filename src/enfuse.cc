@@ -422,8 +422,7 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
 #endif
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
-        "                         \"--no-ciecam\"\n" <<
+        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
         "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<

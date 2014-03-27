@@ -425,8 +425,7 @@ void printUsageAndExit(const bool error = true) {
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
 #endif
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
-        "                         \"--no-ciecam\"\n" <<
+        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
         "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
@@ -460,8 +459,8 @@ void printUsageAndExit(const bool error = true) {
         CoarsenessFactor << "\n" <<
         "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
         "                         if overlap regions are very narrow\n" <<
-        "  --optimize             turn on mask optimization; this is the default\n" <<
-        "  --no-optimize          turn off mask optimization\n" <<
+        "  --optimize             turn on mask optimization; this is the default;\n" <<
+        "                         disable with \"--no-optimize\"\n" <<
         "  --optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]\n" <<
         "                         set the optimizer's weigths for distance and mismatch;\n" <<
         "                         default: " << OptimizerWeights.first << ':' <<

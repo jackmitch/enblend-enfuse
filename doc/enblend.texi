@@ -466,6 +466,7 @@ relative performance of the @acronym{CPU}s to the @acronym{GPU}s this
 option may or may not increase performance.
 
 Negate this option with @option{--no-gpu}.
+@opindex --no-gpu
 
 See also option@tie{}@option{--prefer-gpu}.
 
@@ -1210,8 +1211,20 @@ only change the colors in the output image, but Enblend may choose
 different seam line routes as some seam-line optimizers are guided by
 image differences.
 
-This option can be negated; see option@tie{}@option{--no-ciecam}
-below.
+The inverse of this option is @option{--no-ciecam},
+@opindex --no-ciecam
+which disables the use of the @acronym{CIECAM02} color appearance
+model for blending colors.
+
+The defaults are chosen differently depending on the input images:
+@itemize
+@item
+For input images @emph{with} @acronym{ICC} profiles the default is to
+use @acronym{CIECAM02} blending.
+@item
+Images @emph{without} color profiles are blended in the @acronym{RGB}
+color cube by default.
+@end itemize
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -1375,16 +1388,6 @@ unassociated alpha channels.  Use option @option{-g} to work around
 this problem.  With this flag Enblend will create the output image
 with the associated alpha tag set, even though the image is really
 unassociated alpha.
-
-@item --no-ciecam
-@opindex --no-ciecam
-@cindex color appearance model
-@cindex @acronym{CIECAM02}
-Disable the use of the @acronym{CIECAM02} color appearance model for
-blending colors.
-
-See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
-Profiles}.
 @end table
 
 
@@ -2363,22 +2366,6 @@ Default: @value{coarse-mask-vectorize-distance}@dmn{pixels} for
 coarse masks and @value{fine-mask-vectorize-distance}@dmn{pixels}
 for fine masks.
 
-@item --no-optimize
-@opindex --no-optimize
-@cindex optimize seam
-@cindex seam optimization
-Turn off seam line optimization.  Combined with
-option@tie{}@option{--fine-mask} this will produce the same type of
-mask as Enblend version@tie{}2.5, namely the result of a
-@cindex nearest-feature transform (@acronym{NFT})
-Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
-H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
-of Binary Images'', Proceedings of the International Conference on
-Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
-and II, pages 83--86.}
-
-Also see @ref{Table:mask-generation}.
-
 @item --optimize
 @opindex --optimize
 @cindex optimize seam
@@ -2407,12 +2394,26 @@ Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
 
 @end table
 
-@caption{Enblend's strategies to optimize the seam lines between images.}
+@caption{Enblend's strategies to optimize the seam lines between overlapping images.}
 
 @shortcaption{Optimizer strategies}
 
 @cindex optimize strategy
 @end float
+
+Option@tie{}@option{--no-optimize} negates @option{--optimize} and
+@opindex --no-optimize
+@cindex optimize seam
+@cindex seam optimization
+turns off seam line optimization.  Combined with
+option@tie{}@option{--fine-mask} this will produce the same type of
+mask as Enblend version@tie{}2.5, namely the result of a
+@cindex nearest-feature transform (@acronym{NFT})
+Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
+H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
+of Binary Images'', Proceedings of the International Conference on
+Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
+and II, pages 83--86.}
 
 @item --optimizer-weights=@var{DISTANCE-WEIGHT}[:@var{MISMATCH-WEIGHT}]
 @opindex --optimizer-weights

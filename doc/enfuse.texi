@@ -574,6 +574,7 @@ relative performance of the @acronym{CPU}s to the @acronym{GPU}s this
 option may or may not increase performance.
 
 Negate this option with @option{--no-gpu}.
+@opindex --no-gpu
 
 See also option@tie{}@option{--prefer-gpu}.
 
@@ -1266,8 +1267,20 @@ assumes that all images use the @acronym{sRGB} color space.
 Please keep in mind that using @acronym{CIECAM02} blending may change
 the colors in the output image.
 
-This option can be negated; see option@tie{}@option{--no-ciecam}
-below.
+The inverse of this option is @option{--no-ciecam},
+@opindex --no-ciecam
+which disables the use of the @acronym{CIECAM02} color appearance
+model for blending colors.
+
+The defaults are chosen differently depending on the input images:
+@itemize
+@item
+For input images @emph{with} @acronym{ICC} profiles the default is to
+use @acronym{CIECAM02} blending.
+@item
+Images @emph{without} color profiles are blended in the @acronym{RGB}
+color cube by default.
+@end itemize
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -1431,16 +1444,6 @@ unassociated alpha channels.  Use option @option{-g} to work around
 this problem.  With this flag Enfuse will create the output image
 with the associated alpha tag set, even though the image is really
 unassociated alpha.
-
-@item --no-ciecam
-@opindex --no-ciecam
-@cindex color appearance model
-@cindex @acronym{CIECAM02}
-Disable the use of the @acronym{CIECAM02} color appearance model for
-blending colors.
-
-See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
-Profiles}.
 @end table
 
 
@@ -4065,16 +4068,16 @@ benefit of allowing to choose upper and lower cutoff separately.
 @vimage{exposure-weights}
 @caption{Comparison of all of Enblend's exposure weight functions for
 the default values of @var{optimum} = 0.5 and @var{width} = 0.2.  Note
-that all functions intersect at @math{w = 1/2}, this is they share the
+that all functions intersect at @math{w = 1/2}, this is, they share the
 same @acronym{FWHM}.}
 @shortcaption{Comparison of exposure weight functions}
 @end float
 
-Figure@tie{}@ref{Figure:exposure-weights} shows all available exposure
-weight functions for the same parameters (the defaults).  They all
-intersect at @math{w = 1/2} independently of @var{optimum} or
-@var{width}, making it simple to just try them out without
-fundamentally changing brightness.
+@ref{Figure:exposure-weights} shows all available exposure weight
+functions for the same parameters (the defaults).  They all intersect
+at @math{w = 1/2} independently of @var{optimum} or @var{width},
+making it simple to just try them out without fundamentally changing
+brightness.
 
 @node User-Defined Exposure Weighting Functions
 @subsection User-Defined Functions
@@ -4439,7 +4442,7 @@ Windows neither requires options @option{-fpic} nor @option{-fPIC}.
 @item
 When using the MS-Visual C++ compiler, you need to explicitly export
 @var{SYMBOL}.  There are two possiblities to achieve this.  Use only
-one variant, not both at the smae time.
+one variant, not both at the same time.
 
 @enumerate
 @item
