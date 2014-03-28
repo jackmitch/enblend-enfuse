@@ -99,7 +99,7 @@ manhattan_2d_rows(global float *restrict output,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-inline static float
+float
 square(const int n)
 {
     const float x = (float) n;
