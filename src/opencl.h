@@ -96,6 +96,21 @@ namespace ocl
     cl::Context* create_context(const cl::Platform& a_platform, const device_list_t& some_devices);
 
 
+    namespace vendor
+    {
+        typedef enum
+        {
+            amd,
+            nvidia,
+            unknown
+        } id_t;
+    } // namespace vendor
+
+
+    // Recover the platform vendor's ID from a_context.
+    vendor::id_t derive_vendor_id_from_context(const cl::Context* a_context);
+
+
     template <typename t>
     inline static t
     round_to_next_multiple(t a_number, t a_multiple)
@@ -280,6 +295,8 @@ namespace ocl
 
         const cl::Context& context() const;
 
+        vendor::id_t vendor_id() const;
+
         const std::vector<cl::Device>& devices() const;
         const cl::Device& device() const;
 
@@ -303,6 +320,7 @@ namespace ocl
 
         cl::Program program_;
         cl::Context context_;
+        vendor::id_t vendor_id_;
         std::vector<cl::Device> devices_;
         std::vector<cl::CommandQueue> queues_;
         std::vector<std::string> build_options_;

@@ -512,9 +512,8 @@ namespace ocl
     create_context(const cl::Platform& a_platform, const device_list_t& some_devices)
     {
         cl_context_properties context_properties[] = {
-            CL_CONTEXT_PLATFORM,
-            (cl_context_properties) (a_platform)(),
-            0
+            CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(a_platform()),
+            cl_context_properties()
         };
         cl::Context* context = nullptr;
 
@@ -532,6 +531,67 @@ namespace ocl
         run_self_tests(context);
 
         return context;
+    }
+
+
+    // Answer the iterator pointing to a property in a context
+    // property list defined by a_begin and an_end that is associated
+    // with a_key or an_end, if not found.
+    template <class iterator>
+    inline static iterator
+    find_property(const iterator a_begin, const iterator an_end,
+                  const typename iterator::value_type& a_key)
+    {
+        iterator x(std::find(a_begin, an_end, a_key));
+        return x == an_end ? an_end : ++x;
+    }
+
+
+    static std::string
+    derive_vendor_name_from_context(const cl::Context* a_context)
+    {
+        typedef std::vector<cl_context_properties> property_list;
+        typedef property_list::const_iterator iterator;
+
+        const property_list properties(a_context->getInfo<CL_CONTEXT_PROPERTIES>());
+        const iterator platform_property(find_property(properties.begin(), properties.end(),
+                                                       CL_CONTEXT_PLATFORM));
+
+        if (platform_property != properties.end())
+        {
+            cl::Platform platform(reinterpret_cast<cl_platform_id>(*platform_property));
+            return platform.getInfo<CL_PLATFORM_VENDOR>();
+        }
+        else
+        {
+            return std::string();
+        }
+    }
+
+
+    vendor::id_t
+    derive_vendor_id_from_context(const cl::Context* a_context)
+    {
+        const std::string name(derive_vendor_name_from_context(a_context));
+        auto is_prefix_of_name =
+            [&](const char* a_prefix)
+            {return strncasecmp(a_prefix, name.c_str(), strlen(a_prefix)) == 0;};
+
+        if (is_prefix_of_name("Advanced Micro Devices"))
+        {
+            return vendor::amd;
+        }
+        else if (is_prefix_of_name("NVIDIA"))
+        {
+            return vendor::nvidia;
+        }
+        else
+        {
+            std::cout <<
+                "+ ocl::derive_vendor_id_from_context: unknown vendor name <" << name << ">\n" <<
+                "+ ocl::derive_vendor_id_from_context:     Please add vendor name to file \"opencl.cc\"!\n";
+            return vendor::unknown;
+        }
     }
 
 
@@ -873,6 +933,7 @@ namespace ocl
                                                                 const std::string& a_string) :
         code_policy(a_string),
         context_(a_context),
+        vendor_id_(derive_vendor_id_from_context(&a_context)),
         devices_(a_context.getInfo<CL_CONTEXT_DEVICES>())
     {
         initialize();
@@ -1004,6 +1065,14 @@ namespace ocl
     Function<actual_code_policy, default_queue_flags>::context() const
     {
         return context_;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    vendor::id_t
+    Function<actual_code_policy, default_queue_flags>::vendor_id() const
+    {
+        return vendor_id_;
     }
 
 

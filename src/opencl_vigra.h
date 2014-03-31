@@ -58,7 +58,18 @@ namespace vigra
                 read_buffer_prereq_(1U), unmap_buffer_prereq_(1U)
             {
                 f_.add_build_option("-cl-fast-relaxed-math");
-                f_.add_build_option("-cl-nv-verbose");
+
+                switch (f_.vendor_id())
+                {
+                case ::ocl::vendor::amd:
+                    // f_.add_build_option("...");
+                    break;
+                case ::ocl::vendor::nvidia:
+                    f_.add_build_option("-cl-nv-verbose");
+                    break;
+                case ::ocl::vendor::unknown:
+                    break;
+                }
 
 #ifdef BUILD_EAGERLY
                 f_.build();
