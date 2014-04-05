@@ -58,6 +58,7 @@ namespace vigra
                 read_buffer_prereq_(1U), unmap_buffer_prereq_(1U)
             {
                 f_.add_build_option("-cl-fast-relaxed-math");
+                f_.add_build_option("-cl-strict-aliasing");
 
                 switch (f_.vendor_id())
                 {
@@ -301,14 +302,14 @@ namespace vigra
                 }
 
                 row_kernel.setArg(0U, output_buffer_);
-                row_kernel.setArg(1U, a_size.width());
-                row_kernel.setArg(2U, a_size.height());
+                row_kernel.setArg(1U, static_cast<cl_int>(a_size.width()));
+                row_kernel.setArg(2U, static_cast<cl_int>(a_size.height()));
                 row_kernel.setArg(3U, *f_scratch_buffer_);
                 row_kernel.setArg(4U, *d_scratch_buffer_);
 
                 column_kernel.setArg(0U, output_buffer_);
-                column_kernel.setArg(1U, a_size.width());
-                column_kernel.setArg(2U, a_size.height());
+                column_kernel.setArg(1U, static_cast<cl_int>(a_size.width()));
+                column_kernel.setArg(2U, static_cast<cl_int>(a_size.height()));
                 column_kernel.setArg(3U, *f_scratch_buffer_);
                 column_kernel.setArg(4U, *d_scratch_buffer_);
 
