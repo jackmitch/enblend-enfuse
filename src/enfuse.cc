@@ -1968,6 +1968,17 @@ process_options(int argc, char** argv)
                 command << ": warning: " << an_exception.what() << ";\n" <<
                 command << ": warning: " << "    cannot enable GPU" << std::endl;
         }
+
+        if (!gpu_is_ok(GPUContext)) {
+            std::cerr <<
+                command << ": warning: at least one of Enfuse's GPU tests has failed\n" <<
+                command << ": note: refusing to activate GPU support" << std::endl;
+
+            delete GPUContext;
+            delete BatchCompiler;
+            GPUContext = nullptr;
+            BatchCompiler = nullptr;
+        }
     }
 #endif // OPENCL
 

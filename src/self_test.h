@@ -17,12 +17,20 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __SELF_TEST_H__
-#define __SELF_TEST_H__
+
+#ifndef SELF_TEST_H
+#define SELF_TEST_H
+
+#include "opencl.h"
+
+#ifdef OPENCL
+extern bool gpu_is_ok(cl::Context* a_context);
+#endif
 
 extern bool getopt_long_works_ok();
 
-#endif /* __SELF_TEST_H__ */
+#endif /* SELF_TEST_H */
+
 
 // Local Variables:
 // mode: c++

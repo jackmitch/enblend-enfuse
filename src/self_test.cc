@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <cassert>
+#include <cmath>                // fabsf
 #include <iostream>
 #include <string>
 
@@ -234,3 +235,192 @@ getopt_long_works_ok()
 
     return has_passed_test;
 }
+
+
+// Run a kernel, if we have OpenCL support.
+#ifdef OPENCL
+
+typedef std::vector<float> float_vector;
+
+
+static const std::string
+axpy_source("kernel void\n"
+            "axpy(const float alpha,\n"
+            "     global const float *restrict x,\n"
+            "     global const float *restrict y,\n"
+            "     const int n,\n"
+            "     global float *restrict z)\n"
+            "{\n"
+            "    const int i = get_global_id(0);\n"
+            "\n"
+            "    if (i >= n)\n"
+            "    {\n"
+            "        return;\n"
+            "    }\n"
+            "\n"
+            "    z[i] = alpha * x[i] + y[i];\n"
+            "}\n");
+
+
+class Alpha_times_x_plus_y : public ocl::BuildableFunction
+{
+public:
+    Alpha_times_x_plus_y() = delete;
+    explicit Alpha_times_x_plus_y(const cl::Context& a_context) : f_(a_context, axpy_source) {}
+
+    void build(const std::string& a_build_option)
+    {
+        std::cerr << "\n+ Alpha_times_x_plus_y::build: by request\n\n";
+        f_.build(a_build_option);
+        std::cerr <<
+            "+ Alpha_times_x_plus_y::build: log begin ================\n" <<
+            f_.build_log() <<
+            "\n+ Alpha_times_x_plus_y::build: log end   ================\n";
+    }
+
+    void wait()
+    {
+        f_.wait();
+        std::cerr << "\n+ Alpha_times_x_plus_y::wait: carry on...\n\n";
+        initialize();
+    }
+
+    void run(float alpha, const float_vector& x, const float_vector& y, float_vector& z)
+    {
+        const size_t n = x.size();
+        assert(n == y.size());
+        assert(n <= z.size());
+
+        const size_t buffer_size = n * sizeof(float);
+
+        cl::Buffer x_buffer(f_.context(), CL_MEM_READ_ONLY, buffer_size);
+        cl::Buffer y_buffer(f_.context(), CL_MEM_READ_ONLY, buffer_size);
+        cl::Buffer z_buffer(f_.context(), CL_MEM_WRITE_ONLY, buffer_size);
+
+        kernel_.setArg(0U, static_cast<cl_float>(alpha));
+        kernel_.setArg(1U, x_buffer);
+        kernel_.setArg(2U, y_buffer);
+        kernel_.setArg(3U, static_cast<cl_int>(n));
+        kernel_.setArg(4U, z_buffer);
+
+        f_.queue().enqueueWriteBuffer(x_buffer, CL_TRUE, 0U, buffer_size, &x[0]);
+        f_.queue().enqueueWriteBuffer(y_buffer, CL_TRUE, 0U, buffer_size, &y[0]);
+        f_.queue().enqueueNDRangeKernel(kernel_, cl::NullRange, cl::NDRange(n), cl::NullRange);
+        f_.queue().enqueueReadBuffer(z_buffer, CL_TRUE, 0U, buffer_size, &z[0]);
+    }
+
+private:
+    void initialize()
+    {
+        kernel_ = f_.create_kernel("axpy");
+    }
+
+    ocl::LazyFunctionCXXOfString f_;
+    cl::Kernel kernel_;
+}; // Alpha_times_x_plus_y
+
+
+static void
+alpha_times_x_plus_y(float alpha, const float_vector& x, const float_vector& y, float_vector& z)
+{
+    const size_t n = x.size();
+
+    assert(n == y.size());
+    assert(n <= z.size());
+
+    for (size_t i = 0U; i != n; ++i)
+    {
+        z[i] = alpha * x[i] + y[i];
+    }
+}
+
+
+template <class forward_iterator, class t>
+inline static void
+iota(forward_iterator first, forward_iterator last, t a_value)
+{
+    while (first != last)
+    {
+        *first++ = a_value++;
+    }
+}
+
+
+static bool
+test_axpy_on_gpu(cl::Context* a_context)
+{
+    const float alpha = 2.5F;
+    const size_t n = 20U;
+
+    float_vector x(n);
+    float_vector y(n);
+    float_vector z0(n);
+    float_vector z(n);
+
+    iota(x.begin(), x.end(), 1.0F);
+    iota(y.begin(), y.end(), 1.0F);
+
+    alpha_times_x_plus_y(alpha, x, y, z0);
+
+    try
+    {
+        Alpha_times_x_plus_y axpy(*a_context);
+
+        axpy.build("-Werror");
+        axpy.wait();
+        axpy.run(alpha, x, y, z);
+    }
+    catch (cl::Error& a_cl_error)
+    {
+        std::cerr <<
+            command << ": warning: plain cl error: " << a_cl_error.what() << "\n" <<
+            command << ": warning:     reason: " << ocl::string_of_error_code(a_cl_error.err()) <<
+            std::endl;
+        return false;
+    }
+    catch (ocl::runtime_error& an_opencl_runtime_error)
+    {
+        std::cerr <<
+            command << ": warning: ocl error: " << an_opencl_runtime_error.what() << "\n" <<
+            command << ": warning:     reason: " <<
+            ocl::string_of_error_code(an_opencl_runtime_error.error().err()) << "\n" <<
+            command << ": warning:     message: " << an_opencl_runtime_error.additional_message() <<
+            std::endl;
+        return false;
+    }
+    catch (...)
+    {
+        std::cerr <<
+            command << ": warning: unknown exception thrown during self test \"test_axpy_on_gpu\"" <<
+            std::endl;
+        return false;
+    }
+
+    for (size_t i = 0U; i != n; ++i)
+    {
+#ifdef DEBUG
+        std::cout <<
+            "+ test_axpy_on_gpu: [" << i << "]  " <<
+            alpha << " * " << x[i] << " + " << y[i] << " = " << z[i] << " (reference: " << z0[i] << "), " <<
+            "delta: " << std::scientific << fabsf(z[i] - z0[i]) << std::fixed << "\n";
+#endif // DEBUG
+        if (fabsf(z[i] - z0[i]) > std::numeric_limits<float>::epsilon())
+        {
+            std::cerr <<
+                "+ test_axpy_on_gpu: failure at index " << i <<
+                ", expected " << z0[i] << ", but got " << z[i] << "\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool
+gpu_is_ok(cl::Context* a_context)
+{
+    return test_axpy_on_gpu(a_context);
+}
+
+#endif // OPENCL
