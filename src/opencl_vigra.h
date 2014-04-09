@@ -52,7 +52,7 @@ namespace vigra
 #else
                 f_(a_context, distance_transform_fh_source_code),
 #endif
-                preferred_work_group_size_multiple_(0), work_group_size_(0),
+                preferred_work_group_size_multiple_(0U), work_group_size_(0U),
                 f_scratch_buffer_(nullptr), d_scratch_buffer_(nullptr),
                 v_scratch_buffer_(nullptr), z_scratch_buffer_(nullptr),
                 write_buffer_prereq_(1U), column_kernel_prereq_(1U), row_kernel_prereq_(1U),
@@ -188,7 +188,7 @@ namespace vigra
 
                 const cl::NDRange column_global_size(work_group_size(size.width()));
                 const cl::NDRange row_global_size(work_group_size(size.height()));
-                const cl::NDRange local_size(16);
+                const cl::NDRange local_size(16U);
 
                 setup(a_distance_norm, size);
 
@@ -276,20 +276,20 @@ namespace vigra
                 euclidean_column_kernel_ = f_.create_kernel("euclidean_2d_columns");
 
                 cl::Kernel& k = euclidean_row_kernel_;
-                size_t size_multiple;
-                k.getWorkGroupInfo(f_.device(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &size_multiple);
-                preferred_work_group_size_multiple_ = static_cast<int>(size_multiple);
+                k.getWorkGroupInfo(f_.device(),
+                                   CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
+                                   &preferred_work_group_size_multiple_);
 
                 size_t device_max_group_size;
                 f_.device().getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &device_max_group_size);
                 size_t kernel_group_size;
                 k.getWorkGroupInfo(f_.device(), CL_KERNEL_WORK_GROUP_SIZE, &kernel_group_size);
-                work_group_size_ = static_cast<int>(std::min(device_max_group_size, kernel_group_size));
+                work_group_size_ = std::min(device_max_group_size, kernel_group_size);
             }
 
             void setup(int a_distance_norm, const vigra::Size2D& a_size)
             {
-                const int max_length = std::max(a_size.width(), a_size.height());
+                const size_t max_length = static_cast<size_t>(std::max(a_size.width(), a_size.height()));
                 const size_t float_size = max_length * max_length * sizeof(cl_float);
                 const size_t int_size = max_length * max_length * sizeof(cl_int);
 
@@ -342,7 +342,7 @@ namespace vigra
                 delete f_scratch_buffer_;
             }
 
-            int work_group_size(int a_suggested_work_group_size) const
+            size_t work_group_size(size_t a_suggested_work_group_size) const
             {
                 return ::ocl::round_to_next_multiple(a_suggested_work_group_size,
                                                      preferred_work_group_size_multiple_);
@@ -359,8 +359,8 @@ namespace vigra
             cl::Kernel euclidean_row_kernel_;
             cl::Kernel euclidean_column_kernel_;
 
-            int preferred_work_group_size_multiple_;
-            int work_group_size_;
+            size_t preferred_work_group_size_multiple_;
+            size_t work_group_size_;
 
             cl::Buffer output_buffer_;
             cl::Buffer* f_scratch_buffer_;
