@@ -172,7 +172,7 @@ namespace ocl
     class SourcePolicy : public CodePolicy
     {
     public:
-        virtual std::string text() = 0;
+        virtual const std::string& text() = 0;
         std::pair<const char*, size_t> source();
     }; // class SourcePolicy
 
@@ -193,7 +193,7 @@ namespace ocl
         SourceStringPolicy() = delete;
         explicit SourceStringPolicy(const std::string& a_source_text);
 
-        std::string text() override;
+        const std::string& text() override;
 
     private:
         std::string text_;
@@ -207,7 +207,7 @@ namespace ocl
         explicit SourceFilePolicy(const std::string& a_source_filename);
 
         std::string filename() const {return filename_;}
-        std::string text() override;
+        const std::string& text() override;
 
     private:
         NOINLINE void consult();

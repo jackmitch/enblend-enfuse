@@ -820,7 +820,7 @@ namespace ocl
     std::pair<const char*, size_t>
     SourcePolicy::source()
     {
-        return std::make_pair(text().c_str(), text().length() + 1U);
+        return std::make_pair(text().c_str(), text().length());
     }
 
 
@@ -836,7 +836,7 @@ namespace ocl
     {}
 
 
-    std::string
+    const std::string&
     SourceStringPolicy::text()
     {
         assert(!text_.empty());
@@ -849,7 +849,7 @@ namespace ocl
     {}
 
 
-    std::string
+    const std::string&
     SourceFilePolicy::text()
     {
         if (text_.empty())
