@@ -178,8 +178,9 @@ typedef enum
 class never_reached : public std::runtime_error
 {
 public:
-    never_reached(const std::string& a_message) : std::runtime_error(a_message) {}
-    virtual ~never_reached() throw() {}
+    never_reached() = delete;
+    explicit never_reached(const std::string& a_message) : std::runtime_error(a_message) {}
+    virtual ~never_reached() noexcept {}
 };
 
 
@@ -238,7 +239,7 @@ strtoken_r(char* str, const char* delim, char** save_ptr)
     {
         char *token = s;
 
-        while (*s != 0 && !strchr(delim, (int) *s))
+        while (*s != 0 && !strchr(delim, static_cast<int>(*s)))
         {
             s++;
         }
@@ -728,12 +729,12 @@ expandFilenameTemplate(const std::string& aTemplate,
                     case 'n':
                         ++aNumber;
                         ++aNumberOfImages;
-                        // FALLTHROUGH
+                        BOOST_FALLTHROUGH;
                     case 'i':
                     {
                         std::ostringstream oss;
                         oss <<
-                            std::setw(width.empty() ? 1 + ilog10(aNumberOfImages - 1) : atoi(width.c_str())) <<
+                            std::setw(width.empty() ? 1U + ilog10(aNumberOfImages - 1U) : atoi(width.c_str())) <<
                             std::setfill(pad == 0 ? '0' : pad) <<
                             aNumber;
                         result.append(oss.str());

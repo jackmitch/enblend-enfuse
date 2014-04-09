@@ -252,7 +252,7 @@ namespace vigra_ext
                 {
                 case TOUCHING:
                     *result++ = i->first;
-                    // FALLTHROUGH
+                    BOOST_FALLTHROUGH;
 
                 case CROSSING:
                     *result++ = i->first;

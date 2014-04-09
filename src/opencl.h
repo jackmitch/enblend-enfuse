@@ -70,7 +70,7 @@ namespace ocl
         runtime_error(const cl::Error& an_opencl_error,
                       const std::string& an_additional_message);
 
-        virtual ~runtime_error() throw() {}
+        virtual ~runtime_error() noexcept {}
 
         const cl::Error& error() const;
         const std::string& additional_message() const;

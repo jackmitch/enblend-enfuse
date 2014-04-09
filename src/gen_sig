@@ -70,7 +70,7 @@ public:
 
     void check() const
     {
-#if DEBUG_SIGNATURE_CHECK
+#ifdef DEBUG_SIGNATURE_CHECK
         if (checksum_ != ~neg_checksum_)
         {
             std::cerr <<

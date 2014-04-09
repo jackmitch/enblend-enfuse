@@ -1524,7 +1524,7 @@ process_options(int argc, char** argv)
 
         case ObsoleteExposureOptimumId:
             std::cerr << command << ": info: option \"--exposure-mu\" is obsolete, prefer \"--exposure-optimum\"" << std::endl;
-            // FALLTHROUGH
+            BOOST_FALLTHROUGH;
         case ExposureOptimumId:
             if (optarg != nullptr && *optarg != 0) {
                 ExposureOptimum =
@@ -1545,7 +1545,7 @@ process_options(int argc, char** argv)
 
         case ObsoleteExposureWidthId:
             std::cerr << command << ": info: option \"--exposure-sigma\" is obsolete, prefer \"--exposure-width\"" << std::endl;
-            // FALLTHROUGH
+            BOOST_FALLTHROUGH;
         case ExposureWidthId:
             if (optarg != nullptr && *optarg != 0) {
                 ExposureWidth =
@@ -1619,7 +1619,7 @@ process_options(int argc, char** argv)
             optionSet.insert(EntropyWeightOption);
             break;
 
-        case 'v': // FALLTHROUGH
+        case 'v': BOOST_FALLTHROUGH;
         case VerboseId:
             if (optarg != nullptr && *optarg != 0) {
                 Verbose =
@@ -1690,7 +1690,7 @@ process_options(int argc, char** argv)
             break;
 #endif
 
-        case 'c': // FALLTHROUGH
+        case 'c': BOOST_FALLTHROUGH;
         case CiecamId:
             UseCIECAM = true;
             optionSet.insert(CIECAM02Option);
@@ -1742,7 +1742,7 @@ process_options(int argc, char** argv)
             optionSet.insert(AssociatedAlphaOption);
             break;
 
-        case 'l': // FALLTHROUGH
+        case 'l': BOOST_FALLTHROUGH;
         case LevelsId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);
@@ -1866,11 +1866,11 @@ process_options(int argc, char** argv)
             case 0: // unknown long option
                 std::cerr << command << ": unknown option \"" << argv[optind - 1] << "\"\n";
                 break;
-            case 'b':           // FALLTHROUGH
-            case 'd':           // FALLTHROUGH
-            case 'f':           // FALLTHROUGH
-            case 'l':           // FALLTHROUGH
-            case 'm':           // FALLTHROUGH
+            case 'b':           BOOST_FALLTHROUGH;
+            case 'd':           BOOST_FALLTHROUGH;
+            case 'f':           BOOST_FALLTHROUGH;
+            case 'l':           BOOST_FALLTHROUGH;
+            case 'm':           BOOST_FALLTHROUGH;
             case 'o':
                 std::cerr << command
                           << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
