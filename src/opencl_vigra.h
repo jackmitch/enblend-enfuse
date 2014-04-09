@@ -52,6 +52,7 @@ namespace vigra
 #else
                 f_(a_context, distance_transform_fh_source_code),
 #endif
+                preferred_work_group_size_multiple_(0), work_group_size_(0),
                 f_scratch_buffer_(nullptr), d_scratch_buffer_(nullptr),
                 v_scratch_buffer_(nullptr), z_scratch_buffer_(nullptr),
                 write_buffer_prereq_(1U), column_kernel_prereq_(1U), row_kernel_prereq_(1U),
@@ -165,8 +166,10 @@ namespace vigra
                       value_type a_background_value,
                       int a_distance_norm)
             {
+                f_.wait();      // Ensure that all kernels were built.
+
                 const vigra::Size2D size(a_source_lowerright - a_source_upperleft);
-                const size_t buffer_size = size.area() * sizeof(float);
+                const size_t buffer_size = static_cast<size_t>(size.area()) * sizeof(float);
 
                 output_buffer_ = cl::Buffer(f_.context(), CL_MEM_ALLOC_HOST_PTR, buffer_size);
                 float* const buffer_begin =
