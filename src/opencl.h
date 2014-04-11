@@ -47,6 +47,9 @@
 #define NOINLINE __declspec(noinline)
 #define UNUSEDVAR
 #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+#if _MSC_VER<1900
+#define noexcept throw()
+#endif
 #else
 #define NOINLINE __attribute__((noinline))
 #define UNUSEDVAR __attribute__((unused))
