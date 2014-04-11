@@ -236,7 +236,3 @@
 
 /* Prefer separate OpenCL kernels or use build-in strings. */
 #cmakedefine PREFER_SEPARATE_OPENCL_SOURCE 1
-#cmakedefine HAVE_BOOST_FALLTHROUGH
-#ifndef HAVE_BOOST_FALLTHROUGH
-  #define BOOST_FALLTHROUGH
-#endif
