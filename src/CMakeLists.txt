@@ -24,6 +24,7 @@ IF(ENABLE_OPENCL)
   IF(PREFER_SEPARATE_OPENCL_SOURCE)
     INSTALL(FILES ${opencl_sources} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/enblend/kernels)
   ELSE()
+    FILE(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/kernels")
     FOREACH(_cl_source ${opencl_sources})
       GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
   
