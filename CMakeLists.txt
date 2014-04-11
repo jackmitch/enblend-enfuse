@@ -223,6 +223,11 @@ endif()
 
 find_package(Boost COMPONENTS filesystem system)
 
+IF(${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION} VERSION_LESS 1.54)
+  # fake BOOST_FALLTHROUGH for Boost versions before 1.54
+  ADD_DEFINITIONS(-DBOOST_FALLTHROUGH)
+ENDIF()
+
 set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
 set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
 message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
