@@ -27,6 +27,7 @@
 
 #include <vigra/basicimageview.hxx>
 
+#include "muopt.h"
 #include "opencl.h"
 #include "openmp_vigra.h"
 
@@ -166,7 +167,7 @@ namespace vigra
                       value_type a_background_value,
                       int a_distance_norm)
             {
-                f_.wait();      // Ensure that all kernels were built.
+                wait();         // Ensure that all kernels were built.
 
                 const vigra::Size2D size(a_source_lowerright - a_source_upperleft);
                 const size_t buffer_size = static_cast<size_t>(size.area()) * sizeof(float);
@@ -265,7 +266,7 @@ namespace vigra
 
             void initialize()
             {
-                if (work_group_size_)
+                if (EXPECT_RESULT(work_group_size_ > 0U, true))
                 {
                     return;
                 }
