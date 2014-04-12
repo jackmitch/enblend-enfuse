@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-1ef797dcc601, 27 March 2014),
+   This manual is for Enblend (version 4.2-2511ec591ef7, 12 April 2014),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-1ef797dcc601, 27 March 2014), a
+This manual is for Enblend (version 4.2-2511ec591ef7, 12 April 2014), a
 tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -272,6 +272,7 @@ filenames on the command line.
 * Common Options::              General options
 * Extended Options::            Memory and color-space control
 * Mask Generation Options::     Mask generation control
+* Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
 
 
@@ -312,9 +313,7 @@ All input images must comply with the following requirements.
      their file formats.
 
      You can check the supported extensions and formats by calling
-     Enblend with the option pair `--version --verbose' and scan the
-     output for `Supported image formats' or `Supported file
-     extensions'.
+     Enblend with option `--show-image-formats'.
 
    Moreover, there are some "good practices", which are not enforced by
 the application, but almost certainly deliver superior results.
@@ -377,6 +376,16 @@ Mixed literal names and response files.
      Ultimate order: `image-01.png', `image-02.png', `image-03.png',
      `image-04.png', `image-05.png', `image-06.png', `image-07.png',
      `image-08.png', `image-09.png', `image-10.png',
+
+* Menu:
+
+* Response File Format::        Definition of the files' format
+* Syntactic Comments::          Control interpretation of response files
+* Globbing Algorithms::         Various ways to glob filenames
+* Default Layer Selection::     How the default layer gets selected
+
+
+File: enblend.info,  Node: Response File Format,  Next: Syntactic Comments,  Up: Response Files
 
 3.2.1 Response File Format
 --------------------------
@@ -451,6 +460,9 @@ Finally, *note Example:response-file:: shows a complete response file.
 
 Example 3.1: Complete response file
 
+
+File: enblend.info,  Node: Syntactic Comments,  Next: Globbing Algorithms,  Prev: Response File Format,  Up: Response Files
+
 3.2.2 Syntactic Comments
 ------------------------
 
@@ -470,6 +482,9 @@ Table 3.2: EBNF definition of the grammar of syntactic comments in
 response files.
 
    Unknown syntactic comments are silently ignored.
+
+
+File: enblend.info,  Node: Globbing Algorithms,  Next: Default Layer Selection,  Prev: Syntactic Comments,  Up: Response Files
 
 3.2.3 Globbing Algorithms
 -------------------------
@@ -533,6 +548,9 @@ filename-globbing in a response file.
 
 Example 3.2: Control filename-globbing in a response file with a
 syntactic comment
+
+
+File: enblend.info,  Node: Default Layer Selection,  Prev: Globbing Algorithms,  Up: Response Files
 
 3.2.4 Default Layer Selection
 -----------------------------
@@ -635,10 +653,6 @@ arguments in lowercase for consistency.
      Negate this option with `--no-gpu'.  
 
      See also option `--prefer-gpu'.
-
-`-h'
-`--help'
-     Print information on the available options and exit.
 
 `--layer-selector=ALGORITHM'
      Override the standard layer selector algorithm, which is
@@ -796,13 +810,6 @@ arguments in lowercase for consistency.
           estimations of required memory in selected processing steps
 
      The default verbosity level of Enblend is 1.
-
-`-V'
-`--version'
-     Output information on the Enblend version.
-
-     Team this option with `--verbose' to show configuration details,
-     like the extra features that have been compiled in.
 
 `-w'
 `--wrap=MODE'
@@ -1029,7 +1036,7 @@ output image.
    (2) The stitcher `nona' is part of Hugin.  *Note Helpful Programs::.
 
 
-File: enblend.info,  Node: Mask Generation Options,  Next: Option Delimiters,  Prev: Extended Options,  Up: Invocation
+File: enblend.info,  Node: Mask Generation Options,  Next: Information Options,  Prev: Extended Options,  Up: Invocation
 
 3.5 Mask Generation Options
 ===========================
@@ -1291,7 +1298,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-1ef797dcc601)
+     version 3.2 used 1:1.  This version of Enblend (4.2-2511ec591ef7)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1509,9 +1516,78 @@ Conference on Imaging Science, Systems, and Technology, June 2000,
 Vols. I and II, pages 83-86.
 
 
-File: enblend.info,  Node: Option Delimiters,  Prev: Mask Generation Options,  Up: Invocation
+File: enblend.info,  Node: Information Options,  Next: Option Delimiters,  Prev: Mask Generation Options,  Up: Invocation
 
-3.6 Option Delimiters
+3.6 Information Options
+=======================
+
+`-h'
+`--help'
+     Print information on the command-line syntax and all available
+     options, giving an extremely boiled-down version of this manual.
+
+`--show-globbing-algorithms'
+     Show all globbing algorithms.
+
+     Depending on the build-time configuration and the operating system,
+     the binary may support different globbing algorithms.  *Note
+     Globbing Algorithms::.
+
+`--show-image-formats'
+     Show all recognized image formats and their filename extensions.
+
+     Depending on the build-time configuration and the operating system,
+     the binary may support different image formats (typical: BMP, EXR,
+     GIF, HDR, JPEG, PNG, PNM, SUN, TIFF, and VIFF) and recognize
+     different image-filename extensions (typical: `bmp', `exr', `gif',
+     `hdr', `jpeg', `jpg', `pbm', `pgm', `png', `pnm', `ppm', `ras',
+     `tif', `tiff', and `xv').
+
+`--show-signature'
+     Show the user name of the person who compiled the binary, when the
+     binary was compiled, and on which machine this was done.
+
+     This information can be helpful to ensure the binary was created
+     by a trustworthy builder.
+
+`-V'
+`--version'
+     Output information on the binary's version.
+
+     Team this option with `--verbose' to show configuration details,
+     like the extra features that may have been compiled in.
+
+     The version indicator consist of a two (major and minor version) or
+     three (major and minor version plus patch-level) numbers separated
+     by dots and an optional hexadecimal identifier.  Binaries from the
+     "Development Branch" are assigned two part version numbers, whereas
+     a threep part version number is reserved for the "Stable Branch" of
+     development.  Officially released versions lack the hexadecimal
+     identifier.  Examples:
+
+    `4.1.3-0a816672d475'
+          Some un-released version from the "Stable Branch", which
+          finally will lead to version 4.1.3.
+
+    `4.1.3'
+          Officially released version 4.1.3 in the "Stable Branch".
+
+    `4.2-1e4d237daabf'
+          Some un-released version from the "Development Branch", which
+          finally will lead to version 4.2.
+
+    `4.2'
+          Officially released version 4.2 in the "Development Branch".
+
+     Matching the version codes is the only reliably way to match a
+     given binary with its manual page ("manual page for
+     enblend 4.2-1e4d237daabf") and its documentation.  This document
+     at least mentions the version code on its title page and on page 2.
+
+
+File: enblend.info,  Node: Option Delimiters,  Prev: Information Options,  Up: Invocation
+
+3.7 Option Delimiters
 =====================
 
 Enblend and Enfuse allow the arguments supplied to the programs'
@@ -1564,7 +1640,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-1ef797dcc601) of Enblend supports two main algorithms
+This version (4.2-2511ec591ef7) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2560,13 +2636,14 @@ Syntactic-Comment Index
  [index ]
 * Menu:
 
-* enblend-response-file:                 Response Files.      (line 106)
-* enfuse-response-file:                  Response Files.      (line 107)
-* filename-globbing:                     Response Files.      (line 155)
-* glob:                                  Response Files.      (line 151)
-* globbing:                              Response Files.      (line 153)
-* layer-selector:                        Response Files.      (line 212)
-* response-file:                         Response Files.      (line 105)
+* enblend-response-file:                 Response File Format. (line 56)
+* enfuse-response-file:                  Response File Format. (line 57)
+* filename-globbing:                     Globbing Algorithms.  (line 12)
+* glob:                                  Globbing Algorithms.  (line  8)
+* globbing:                              Globbing Algorithms.  (line 10)
+* layer-selector:                        Default Layer Selection.
+                                                               (line  6)
+* response-file:                         Response File Format. (line 55)
 
 
 File: enblend.info,  Node: Option Index,  Next: General Index,  Prev: Syntactic-Comment Index,  Up: Top
@@ -2590,11 +2667,11 @@ Option Index
 * --fine-mask:                           Mask Generation Options.
                                                               (line 107)
 * --gpu:                                 Common Options.      (line  78)
-* --help:                                Common Options.      (line  93)
+* --help:                                Information Options. (line   8)
 * --image-difference:                    Mask Generation Options.
                                                               (line 114)
-* --layer-selector:                      Common Options.      (line  96)
-* --levels:                              Common Options.      (line 122)
+* --layer-selector:                      Common Options.      (line  92)
+* --levels:                              Common Options.      (line 118)
 * --load-masks:                          Mask Generation Options.
                                                               (line 170)
 * --mask-vectorize:                      Mask Generation Options.
@@ -2603,34 +2680,37 @@ Option Index
 * --no-gpu:                              Common Options.      (line  87)
 * --no-optimize:                         Mask Generation Options.
                                                               (line 244)
-* --no-parameter:                        Common Options.      (line 176)
+* --no-parameter:                        Common Options.      (line 172)
 * --optimize:                            Mask Generation Options.
                                                               (line 222)
 * --optimizer-weights:                   Mask Generation Options.
                                                               (line 250)
-* --output:                              Common Options.      (line 166)
-* --parameter:                           Common Options.      (line 172)
+* --output:                              Common Options.      (line 162)
+* --parameter:                           Common Options.      (line 168)
 * --primary-seam-generator:              Mask Generation Options.
                                                               (line 278)
 * --save-masks:                          Mask Generation Options.
                                                               (line 302)
-* --verbose:                             Common Options.      (line 220)
-* --version:                             Common Options.      (line 254)
+* --show-globbing-algorithms:            Information Options. (line  12)
+* --show-image-formats:                  Information Options. (line  19)
+* --show-signature:                      Information Options. (line  29)
+* --verbose:                             Common Options.      (line 216)
+* --version:                             Information Options. (line  37)
 * --visualize:                           Mask Generation Options.
                                                               (line 336)
-* --wrap:                                Common Options.      (line 261)
+* --wrap:                                Common Options.      (line 250)
 * -a:                                    Common Options.      (line  15)
 * -c:                                    Extended Options.    (line  11)
 * -d:                                    Extended Options.    (line  36)
 * -f:                                    Extended Options.    (line 116)
 * -g:                                    Extended Options.    (line 136)
-* -h:                                    Common Options.      (line  93)
-* -l:                                    Common Options.      (line 122)
-* -o:                                    Common Options.      (line 166)
-* -V:                                    Common Options.      (line 254)
-* -v:                                    Common Options.      (line 220)
-* -w:                                    Common Options.      (line 261)
-* -x:                                    Common Options.      (line 314)
+* -h:                                    Information Options. (line   8)
+* -l:                                    Common Options.      (line 118)
+* -o:                                    Common Options.      (line 162)
+* -V:                                    Information Options. (line  37)
+* -v:                                    Common Options.      (line 216)
+* -w:                                    Common Options.      (line 250)
+* -x:                                    Common Options.      (line 303)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2641,12 +2721,13 @@ General Index
  [index ]
 * Menu:
 
-* # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 261)
+* # (response file comment):             Response File Format.
+                                                              (line   6)
+* 360o panoramas:                        Common Options.      (line 250)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 168)
+* a.tif:                                 Common Options.      (line 164)
 * affine transformation:                 Standard Workflow.   (line  48)
-* algorithms, globbing:                  Response Files.      (line 149)
+* algorithms, globbing:                  Globbing Algorithms. (line   6)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  18)
 * alpha channel, associated:             Extended Options.    (line 136)
@@ -2656,6 +2737,8 @@ General Index
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Extended Options.    (line  36)
+* branch, development:                   Information Options. (line  42)
+* branch, stable:                        Information Options. (line  42)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
@@ -2663,7 +2746,7 @@ General Index
 * central processing unit:               Common Options.      (line  78)
 * channel width:                         Extended Options.    (line  36)
 * channel, alpha:                        Overview.            (line  18)
-* checkpoint results:                    Common Options.      (line 314)
+* checkpoint results:                    Common Options.      (line 303)
 * chrominance weight:                    Mask Generation Options.
                                                               (line 114)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
@@ -2688,12 +2771,14 @@ General Index
 * conversion, raw:                       Standard Workflow.   (line  34)
 * CPU:                                   Common Options.      (line  78)
 * D50 white point:                       Color Profiles.      (line  55)
-* default layer selection:               Response Files.      (line 212)
-* default output filename:               Common Options.      (line 168)
+* default layer selection:               Default Layer Selection.
+                                                              (line   6)
+* default output filename:               Common Options.      (line 164)
 * deflate compression:                   Common Options.      (line  52)
 * delimiters, option:                    Option Delimiters.   (line   6)
 * delta-E:                               Mask Generation Options.
                                                               (line 139)
+* development branch:                    Information Options. (line  42)
 * difference image:                      Mask Generation Options.
                                                               (line 114)
 * DIJKSTRA radius:                       Mask Generation Options.
@@ -2704,24 +2789,28 @@ General Index
 * filename, literal:                     Invocation.          (line  10)
 * fine mask:                             Mask Generation Options.
                                                               (line 107)
-* format of response file:               Response Files.      (line  56)
+* format of response file:               Response File Format.
+                                                              (line   6)
+* format, image:                         Information Options. (line  19)
 * free documentation license (FDL):      FDL.                 (line   6)
 * frozen seam-line endpoint:             Mask Generation Options.
                                                               (line 386)
 * general index:                         General Index.       (line   6)
 * generator, seam:                       Mask Generation Options.
                                                               (line 278)
-* glob(7):                               Response Files.      (line 174)
-* globbing algorithm literal:            Response Files.      (line 160)
-* globbing algorithm none:               Response Files.      (line 182)
-* globbing algorithm sh:                 Response Files.      (line 191)
-* globbing algorithm shell:              Response Files.      (line 185)
-* globbing algorithm wildcard:           Response Files.      (line 160)
-* globbing algorithms:                   Response Files.      (line 149)
+* glob(7):                               Globbing Algorithms. (line  31)
+* globbing algorithm literal:            Globbing Algorithms. (line  17)
+* globbing algorithm none:               Globbing Algorithms. (line  39)
+* globbing algorithm sh:                 Globbing Algorithms. (line  48)
+* globbing algorithm shell:              Globbing Algorithms. (line  42)
+* globbing algorithm wildcard:           Globbing Algorithms. (line  17)
+* globbing algorithms <1>:               Information Options. (line  12)
+* globbing algorithms:                   Globbing Algorithms. (line   6)
 * GNU free documentation license:        FDL.                 (line   6)
 * GPU:                                   Common Options.      (line  78)
-* grammar, response file:                Response Files.      (line  70)
-* grammar, syntactic comment:            Response Files.      (line 141)
+* grammar, response file:                Response File Format.
+                                                              (line  20)
+* grammar, syntactic comment:            Syntactic Comments.  (line  18)
 * graph-cut (GC):                        Mask Generation Options.
                                                               (line 296)
 * graphcut (GC):                         Primary Seam Generators.
@@ -2732,6 +2821,7 @@ General Index
                                                               (line  59)
 * graphics processing unit:              Common Options.      (line  78)
 * half precision float, OpenEXR:         Extended Options.    (line 105)
+* help:                                  Information Options. (line   8)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Mask Generation Options.
                                                               (line 129)
@@ -2744,6 +2834,7 @@ General Index
                                                               (line 394)
 * image difference:                      Mask Generation Options.
                                                               (line 114)
+* image formats:                         Information Options. (line  19)
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
                                                               (line 353)
@@ -2759,14 +2850,15 @@ General Index
 * KImageFuser:                           Bug Reports.         (line  95)
 * LaunchPad:                             Bug Reports.         (line  12)
 * LaunchPad, bug database:               Bug Reports.         (line  12)
-* layer selection:                       Common Options.      (line  96)
-* layer selection, all layers:           Common Options.      (line 101)
-* layer selection, default:              Response Files.      (line 212)
-* layer selection, first layer:          Common Options.      (line 104)
-* layer selection, largest-layer:        Common Options.      (line 108)
-* layer selection, no layer:             Common Options.      (line 115)
+* layer selection:                       Common Options.      (line  92)
+* layer selection, all layers:           Common Options.      (line  97)
+* layer selection, default:              Default Layer Selection.
+                                                              (line   6)
+* layer selection, first layer:          Common Options.      (line 100)
+* layer selection, largest-layer:        Common Options.      (line 104)
+* layer selection, no layer:             Common Options.      (line 111)
 * lens distortion, correction of:        Standard Workflow.   (line  48)
-* levels, pyramid:                       Common Options.      (line 122)
+* levels, pyramid:                       Common Options.      (line 118)
 * LibJPEG:                               Helpful Programs.    (line  70)
 * LibPNG:                                Helpful Programs.    (line  73)
 * LibTiff:                               Helpful Programs.    (line  77)
@@ -2844,8 +2936,8 @@ General Index
 * only save mask:                        Mask Generation Options.
                                                               (line 313)
 * OpenCL:                                Common Options.      (line  78)
-* OpenCL, device:                        Common Options.      (line 186)
-* OpenCL, platform:                      Common Options.      (line 186)
+* OpenCL, device:                        Common Options.      (line 182)
+* OpenCL, platform:                      Common Options.      (line 182)
 * OpenEXR, data format:                  Extended Options.    (line 101)
 * OpenEXR, half precision float:         Extended Options.    (line 105)
 * optimize seam:                         Mask Generation Options.
@@ -2862,11 +2954,12 @@ General Index
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
 * options, extended:                     Extended Options.    (line   6)
+* options, information:                  Information Options. (line   6)
 * options, mask generation:              Mask Generation Options.
                                                               (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  23)
-* output filename, default:              Common Options.      (line 168)
+* output filename, default:              Common Options.      (line 164)
 * output image, set size of:             Extended Options.    (line 116)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  67)
@@ -2884,7 +2977,7 @@ General Index
 * profile, ICC:                          Extended Options.    (line  14)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
-* pyramid levels:                        Common Options.      (line 122)
+* pyramid levels:                        Common Options.      (line 118)
 * quality, match:                        Mask Generation Options.
                                                               (line 161)
 * radius, DIJKSTRA:                      Mask Generation Options.
@@ -2893,12 +2986,16 @@ General Index
 * rendering intent, perceptual:          Color Profiles.      (line  53)
 * response file <1>:                     Response Files.      (line   6)
 * response file:                         Invocation.          (line  10)
-* response file, comment (#):            Response Files.      (line  56)
-* response file, force recognition of:   Response Files.      (line 100)
-* response file, format:                 Response Files.      (line  56)
-* response file, grammar:                Response Files.      (line  70)
-* response file, syntactic comment:      Response Files.      (line 129)
-* results, checkpoint:                   Common Options.      (line 314)
+* response file, comment (#):            Response File Format.
+                                                              (line   6)
+* response file, force recognition of:   Response File Format.
+                                                              (line  50)
+* response file, format:                 Response File Format.
+                                                              (line   6)
+* response file, grammar:                Response File Format.
+                                                              (line  20)
+* response file, syntactic comment:      Syntactic Comments.  (line   6)
+* results, checkpoint:                   Common Options.      (line 303)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
                                                               (line 302)
@@ -2916,6 +3013,7 @@ General Index
                                                               (line 278)
 * seam-line endpoint, frozen:            Mask Generation Options.
                                                               (line 386)
+* signature:                             Information Options. (line  29)
 * simulated annealing optimizer:         Mask Generation Options.
                                                               (line   9)
 * single precision float, IEEE754:       Extended Options.    (line  79)
@@ -2923,8 +3021,9 @@ General Index
 * SourceForge:                           Overview.            (line  45)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Extended Options.    (line  14)
-* syntactic comment, grammar:            Response Files.      (line 141)
-* syntactic comment, response file:      Response Files.      (line 129)
+* stable branch:                         Information Options. (line  42)
+* syntactic comment, grammar:            Syntactic Comments.  (line  18)
+* syntactic comment, response file:      Syntactic Comments.  (line   6)
 * syntactic-comment index:               Syntactic-Comment Index.
                                                               (line   6)
 * TIFF, multi-directory:                 Overview.            (line  39)
@@ -2932,7 +3031,8 @@ General Index
 * tiffsplit:                             Overview.            (line  39)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* virtual reality:                       Common Options.      (line 271)
+* version:                               Information Options. (line  37)
+* virtual reality:                       Common Options.      (line 260)
 * visualization image:                   Mask Generation Options.
                                                               (line 353)
 * visualization image colors:            Mask Generation Options.
@@ -2955,7 +3055,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 261)
+* wrap around:                           Common Options.      (line 250)
 
 
 
@@ -2970,41 +3070,46 @@ Ref: Figure:photographic-workflow5624
 Node: External Mask Manipulation8298
 Ref: Figure:external-mask-workflow9615
 Node: Invocation10100
-Node: Image Requirements10879
-Node: Response Files12353
-Ref: Table:response-file-format14377
-Ref: Example:response-file16256
-Ref: Table:response-file-syntactic-comment16897
-Ref: Table:globbing-algorithms17798
-Ref: Example:globbing-algorithm18824
-Node: Common Options19441
-Ref: Common Options-Footnote-131223
-Ref: Common Options-Footnote-231297
-Ref: Common Options-Footnote-331489
-Node: Extended Options31648
-Ref: Extended Options-Footnote-136968
-Ref: Extended Options-Footnote-237034
-Node: Mask Generation Options37107
-Ref: Table:mask-generation39712
-Ref: Table:optimizer-strategies46753
-Ref: Table:visualization-colors52433
-Ref: Table:mask-template-characters53348
-Ref: Mask Generation Options-Footnote-155600
-Node: Option Delimiters55828
-Node: Primary Seam Generators57233
-Node: Color Profiles60119
-Node: Understanding Masks62569
-Node: Helpful Programs66359
-Node: Bug Reports70427
-Ref: Bug Reports-Footnote-176083
-Node: Authors76153
-Node: FDL77318
-Node: List of Tables98300
-Node: List of Figures98924
-Node: List of Examples99214
-Node: Program Index99495
-Node: Syntactic-Comment Index102650
-Node: Option Index103339
-Node: General Index107346
+Node: Image Requirements10944
+Node: Response Files12319
+Node: Response File Format14215
+Ref: Table:response-file-format14720
+Ref: Example:response-file16599
+Node: Syntactic Comments16874
+Ref: Table:response-file-syntactic-comment17367
+Node: Globbing Algorithms17699
+Ref: Table:globbing-algorithms18398
+Ref: Example:globbing-algorithm19424
+Node: Default Layer Selection19638
+Node: Common Options20144
+Ref: Common Options-Footnote-131659
+Ref: Common Options-Footnote-231733
+Ref: Common Options-Footnote-331925
+Node: Extended Options32084
+Ref: Extended Options-Footnote-137404
+Ref: Extended Options-Footnote-237470
+Node: Mask Generation Options37543
+Ref: Table:mask-generation40150
+Ref: Table:optimizer-strategies47191
+Ref: Table:visualization-colors52871
+Ref: Table:mask-template-characters53786
+Ref: Mask Generation Options-Footnote-156038
+Node: Information Options56266
+Node: Option Delimiters58931
+Node: Primary Seam Generators60332
+Node: Color Profiles63218
+Node: Understanding Masks65668
+Node: Helpful Programs69458
+Node: Bug Reports73526
+Ref: Bug Reports-Footnote-179182
+Node: Authors79252
+Node: FDL80417
+Node: List of Tables101399
+Node: List of Figures102023
+Node: List of Examples102313
+Node: Program Index102594
+Node: Syntactic-Comment Index105749
+Node: Option Index106504
+Node: General Index110730
 
 End Tag Table

@@ -60,6 +60,7 @@ extern "C" int optind;
 #include <io.h>
 #endif
 
+#include <boost/algorithm/string.hpp>
 #include <boost/logic/tribool.hpp>
 
 #include <lcms2.h>
@@ -67,9 +68,9 @@ extern "C" int optind;
 #error "Little CMS version 2.5 or later is required"
 #endif
 
+#include "dynamic_loader.h"
 #include "exposure_weight.h"
 #include "global.h"
-#include "dynamic_loader.h"
 #include "layer_selection.h"
 #include "selector.h"
 #include "self_test.h"
@@ -165,6 +166,7 @@ LayerSelectionHost LayerSelection;
 #include <tiffio.h>
 
 #include "common.h"
+#include "filespec.h"
 #include "enfuse.h"
 
 #ifdef DMALLOC
@@ -263,9 +265,9 @@ void dump_global_variables(const char* file, unsigned line,
 }
 
 
-/** Print information on the current version and some configuration
- * details. */
-void printVersionAndExit() {
+void
+printVersion()
+{
     std::cout << "enfuse " << VERSION << "\n\n";
 
     if (Verbose >= VERBOSE_VERSION_REPORTING) {
@@ -332,26 +334,7 @@ void printVersionAndExit() {
 #else
         std::cout << "Extra feature: OpenCL: no\n";
 #endif
-
-        std::cout <<
-            "\n" <<
-            "Supported image formats: " << vigra::impexListFormats() << "\n" <<
-            "Supported file extensions: " << vigra::impexListExtensions() << "\n\n";
-
-        std::cout << "Supported following globbing algorithms:\n";
-        const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
-        for (enblend::algorithm_list::const_iterator i = algos.begin(); i != algos.end(); ++i) {
-            std::cout <<
-                "  " << i->first << "\n" <<
-                "    " << i->second << "\n";
-        }
         std::cout << "\n";
-    }
-
-    if (Verbose >= VERBOSE_SIGNATURE_REPORTING) {
-        std::cout.flush();
-        std::wcout << sig.message() << L"\n\n";
-        std::wcout.flush();
     }
 
     std::cout <<
@@ -367,8 +350,56 @@ void printVersionAndExit() {
 }
 
 
-/** Print the usage information and quit. */
-void printUsageAndExit(const bool error = true) {
+void
+printImageFormats()
+{
+    std::string formats(vigra::impexListFormats());
+    std::string extensions(vigra::impexListExtensions());
+
+    boost::replace_all(formats, " ", "\n  ");
+    boost::replace_all(extensions, " ", "\n  ");
+
+    std::cout <<
+        "Enfuse supports the following image formats:\n" <<
+        "  " << formats << "\n" <<
+        "and automatically recognizes the image file extensions:\n" <<
+        "  " << extensions << "\n\n";
+
+    exit(0);
+}
+
+
+void
+printSignature()
+{
+    std::cout.flush();
+    std::wcout << sig.message() << L"\n\n";
+    std::wcout.flush();
+
+    exit(0);
+}
+
+
+void
+printGlobbingAlgos()
+{
+    const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
+
+    std::cout << "Enfuse supports the following globbing algorithms:\n";
+    for (auto i = algos.begin(); i != algos.end(); ++i) {
+        std::cout <<
+            "  " << i->first << "\n" <<
+            "    " << i->second << "\n";
+    }
+    std::cout << "\n";
+
+    exit(0);
+}
+
+
+void
+printUsage(const bool error = true)
+{
     std::cout <<
         "Usage: enfuse [options] [--output=IMAGE] INPUT...\n" <<
         "Fuse INPUT images into a single IMAGE.\n" <<
@@ -377,8 +408,6 @@ void printUsageAndExit(const bool error = true) {
         "filenames start with an \"" << RESPONSE_FILE_PREFIX_CHAR << "\" character.\n"
         "\n" <<
         "Common options:\n" <<
-        "  -V, --version          output version information and exit\n" <<
-        "  -h, --help             print this help message and exit\n" <<
         "  -l, --levels=LEVELS    limit number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ");\n" <<
         "                         negative number of LEVELS decreases maximum;\n" <<
         "                         \"auto\" restores the default automatic maximization\n" <<
@@ -528,6 +557,15 @@ void printUsageAndExit(const bool error = true) {
         "                         syntax see \"--save-masks\";\n" <<
         "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
         "\n" <<
+        "Information options:\n" <<
+        "  -h, --help             print this help message and exit\n" <<
+        "  -V, --version          output version information and exit\n" <<
+        "  --show-globbing-algorithms\n" <<
+        "                         show all globbing algorithms\n"
+        "  --show-image-formats   show all recognized image formats and their filename\n" <<
+        "                         extensions\n" <<
+        "  --show-signature       show who compiled the binary when and on which machine\n" <<
+        "\n" <<
         "Enfuse accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
         "\n" <<
@@ -592,7 +630,8 @@ enum AllPossibleOptions {
     ContrastWindowSizeOption, GrayProjectorOption, EdgeScaleOption,
     MinCurvatureOption, EntropyWindowSizeOption, EntropyCutoffOption,
     DebugOption, SaveMasksOption, LoadMasksOption,
-    LayerSelectorOption
+    LayerSelectorOption,
+    ShowImageFormatsOption, ShowSignatureOption, ShowGlobbingAlgoInfoOption
 };
 
 typedef std::set<enum AllPossibleOptions> OptionSetType;
@@ -990,7 +1029,10 @@ process_options(int argc, char** argv)
         LoadMasksId,
         LayerSelectorId,
         ParameterId,
-        NoParameterId
+        NoParameterId,
+        ImageFormatsInfoId,
+        SignatureInfoId,
+        GlobbingAlgoInfoId
     };
 
     static struct option long_options[] = {
@@ -1034,12 +1076,21 @@ process_options(int argc, char** argv)
         {"layer-selector", required_argument, 0, LayerSelectorId},
         {"parameter", required_argument, 0, ParameterId},
         {"no-parameter", required_argument, 0, NoParameterId},
+        {"show-image-formats", no_argument, 0, ImageFormatsInfoId},
+        {"show-signature", no_argument, 0, SignatureInfoId},
+        {"show-globbing-algorithms", no_argument, 0, GlobbingAlgoInfoId},
         {0, 0, 0, 0}
     };
 
     bool failed = false;
-    bool justPrintVersion = false;
-    bool justPrintUsage = false;
+
+    typedef enum {
+        PROCESS_COMPLETELY,
+        VERSION_ONLY, USAGE_ONLY,
+        IMAGE_FORMATS_ONLY, SIGNATURE_ONLY, GLOBBING_ALGOS_ONLY
+    } print_only_task_id_t;
+    print_only_task_id_t print_only_task = PROCESS_COMPLETELY;
+
     OptionSetType optionSet;
 #ifdef OPENCL
     size_t preferredGPUPlatform = 0U; // We start enumerating platforms at 1 for user convenience.
@@ -1108,14 +1159,29 @@ process_options(int argc, char** argv)
 
         case 'h': // FALLTHROUGH
         case HelpId:
-            justPrintUsage = true;
+            print_only_task = USAGE_ONLY;
             optionSet.insert(HelpOption);
             break;
 
         case 'V': // FALLTHROUGH
         case VersionId:
-            justPrintVersion = true;
+            print_only_task = VERSION_ONLY;
             optionSet.insert(VersionOption);
+            break;
+
+        case ImageFormatsInfoId:
+            print_only_task = IMAGE_FORMATS_ONLY;
+            optionSet.insert(ShowImageFormatsOption);
+            break;
+
+        case SignatureInfoId:
+            print_only_task = SIGNATURE_ONLY;
+            optionSet.insert(ShowSignatureOption);
+            break;
+
+        case GlobbingAlgoInfoId:
+            print_only_task = GLOBBING_ALGOS_ONLY;
+            optionSet.insert(ShowGlobbingAlgoInfoOption);
             break;
 
         case 'w': // FALLTHROUGH
@@ -1920,18 +1986,33 @@ process_options(int argc, char** argv)
         exit(1);
     }
 
-    if (justPrintUsage) {
-        printUsageAndExit(false);
-        // never reached
-    }
-
-    if (justPrintVersion) {
-        printVersionAndExit();
-        // never reached
-    }
-
     if (enblend::parameter::as_boolean("dump-exposure-weight-function", false)) {
         enblend::dump_exposure_weight_function(ExposureWeightFunction);
+    }
+
+    switch (print_only_task)
+    {
+    case VERSION_ONLY:
+        printVersion();
+        break;                  // never reached
+    case USAGE_ONLY:
+        printUsage(false);
+        break;                  // never reached
+    case IMAGE_FORMATS_ONLY:
+        printImageFormats();
+        break;                  // never reached
+    case SIGNATURE_ONLY:
+        printSignature();
+        break;                  // never reached
+    case GLOBBING_ALGOS_ONLY:
+        printGlobbingAlgos();
+        break;                  // never reached
+
+    case PROCESS_COMPLETELY:
+        break;
+
+    default:
+        throw never_reached("switch control expression \"print_only_task\" out of range");
     }
 
     StopAfterMaskGeneration = contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption);

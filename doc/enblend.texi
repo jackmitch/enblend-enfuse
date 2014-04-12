@@ -272,6 +272,7 @@ filenames on the command line.
 * Common Options::              General options
 * Extended Options::            Memory and color-space control
 * Mask Generation Options::     Mask generation control
+* Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
 @end menu
 
@@ -324,9 +325,7 @@ Enblend understands the images' filename extensions as well as their
 file formats.
 
 You can check the supported extensions and formats by calling Enblend
-with the option pair @option{--version@tie{}--verbose} and scan the
-output for @samp{Supported image formats} or @samp{Supported file
-extensions}.
+with option@tie{}@option{--show-image-formats}.
 @end itemize
 
 Moreover, there are some ``good practices'', which are not enforced by
@@ -469,12 +468,6 @@ Negate this option with @option{--no-gpu}.
 @opindex --no-gpu
 
 See also option@tie{}@option{--prefer-gpu}.
-
-@item -h
-@itemx --help
-@opindex -h
-@opindex --help
-Print information on the available options and exit.
 
 @item --layer-selector=@var{ALGORITHM}
 @opindex --layer-selector
@@ -726,15 +719,6 @@ estimations of required memory in selected processing steps
 
 The default verbosity level of Enblend is
 @value{default-verbosity-level}.
-
-@item -V
-@itemx --version
-@opindex -V
-@opindex --version
-Output information on the Enblend version.
-
-Team this option with @option{--verbose} to show configuration
-details, like the extra features that have been compiled in.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -2663,6 +2647,106 @@ approximately 15@dmn{cm}.}
 @page
 
 @include mask-template-characters.texi
+
+
+@node Information Options
+@section Information Options
+@cindex options, information
+
+@table @code
+@item -h
+@itemx --help
+@opindex -h
+@opindex --help
+@cindex help
+Print information on the command-line syntax and all available
+options, giving an extremely boiled-down version of this manual.
+
+@item --show-globbing-algorithms
+@opindex --show-globbing-algorithms
+@cindex globbing algorithms
+Show all globbing algorithms.
+
+Depending on the build-time configuration and the operating system,
+the binary may support different globbing algorithms.
+@xref{Globbing Algorithms}.
+
+@item --show-image-formats
+@opindex --show-image-formats
+@cindex image formats
+@cindex format, image
+Show all recognized image formats and their filename extensions.
+
+Depending on the build-time configuration and the operating system,
+the binary may support different image formats (typical: @sc{BMP},
+@sc{EXR}, @sc{GIF}, @sc{HDR}, @sc{JPEG}, @sc{PNG}, @sc{PNM}, @sc{SUN},
+@sc{TIFF}, and @sc{VIFF}) and recognize different image-filename
+extensions (typical: @file{bmp}, @file{exr}, @file{gif}, @file{hdr},
+@file{jpeg}, @file{jpg}, @file{pbm}, @file{pgm}, @file{png},
+@file{pnm}, @file{ppm}, @file{ras}, @file{tif}, @file{tiff}, and
+@file{xv}).
+
+@item --show-signature
+@opindex --show-signature
+@cindex signature
+Show the user name of the person who compiled the binary, when the
+binary was compiled, and on which machine this was done.
+
+This information can be helpful to ensure the binary was created by a
+trustworthy builder.
+
+@item -V
+@itemx --version
+@opindex -V
+@opindex --version
+@cindex version
+Output information on the binary's version.
+
+Team this option with @option{--verbose} to show configuration
+details, like the extra features that may have been compiled in.
+
+@cindex stable branch
+@cindex branch, stable
+@cindex development branch
+@cindex branch, development
+The version indicator consist of a two (major and minor version) or
+three (major and minor version plus patch-level) numbers separated by
+dots and an optional hexadecimal identifier.  Binaries from the
+``Development Branch'' are assigned two part version numbers, whereas
+a threep part version number is reserved for the ``Stable Branch'' of
+development.  Officially released versions lack the hexadecimal
+identifier.  Examples:
+
+@table @code
+@item 4.1.3-0a816672d475
+@cindex stable branch
+@cindex branch, stable
+Some un-released version from the ``Stable Branch'', which finally
+will lead to version@tie{}4.1.3.
+
+@item 4.1.3
+@cindex stable branch
+@cindex branch, stable
+Officially released version@tie{}4.1.3 in the ``Stable Branch''.
+
+@item 4.2-1e4d237daabf
+@cindex development branch
+@cindex branch, development
+Some un-released version from the ``Development Branch'', which finally
+will lead to version@tie{}4.2.
+
+@item 4.2
+@cindex development branch
+@cindex branch, development
+Officially released version@tie{}4.2 in the ``Development Branch''.
+@end table
+
+Matching the version codes is the only reliably way to match a given
+binary with its manual page (``manual page for
+enblend@tie{}4.2-1e4d237daabf'') and its documentation.  This document
+at least mentions the version code on its title page and on
+page@tie{}2.
+@end table
 
 
 @node Option Delimiters

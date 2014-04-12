@@ -68,13 +68,14 @@ Ultimate order: @file{image-@/01.png}, @file{image-@/02.png},
 @end table
 
 
-@c @menu
-@c * Response File Format::        Definition of the files' format
-@c * Syntactic Comments::          Control interpretation of response files
-@c * Globbing Algorithms::         Various ways to glob filenames
-@c @end menu
+@menu
+* Response File Format::        Definition of the files' format
+* Syntactic Comments::          Control interpretation of response files
+* Globbing Algorithms::         Various ways to glob filenames
+* Default Layer Selection::     How the default layer gets selected
+@end menu
 
-@c @node Response File Format
+@node Response File Format
 @subsection Response File Format
 @cindex response file, format
 @cindex format of response file
@@ -196,7 +197,7 @@ nadir.tif
 @end float
 
 
-@c @node Syntactic Comments
+@node Syntactic Comments
 @subsection Syntactic Comments
 @cindex response file, syntactic comment
 @cindex syntactic comment, response file
@@ -232,7 +233,7 @@ comments in response files.}
 Unknown syntactic comments are silently ignored.
 
 
-@c @node Globbing Algorithms
+@node Globbing Algorithms
 @subsection Globbing Algorithms
 @cindex globbing algorithms
 @cindex algorithms, globbing
@@ -330,7 +331,7 @@ image_001[0-4].tif
 @shortcaption{Filename-globbing syntactic comment}
 @end float
 
-@c @node Default Layer Selection
+@node Default Layer Selection
 @subsection Default Layer Selection
 @cindex default layer selection
 @cindex layer selection, default

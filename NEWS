@@ -32,6 +32,12 @@ Unreleased.  Current line of development.
 
 ** New Commandline Options
 
+- The new options `--show-globbing-algorithms',
+  `--show-image-formats', and `--show-signature' now display the
+  information that previously was requested with `--version
+  --verbose'.  The output of `--help' has been regrouped to account
+  for the new diversity of information options.
+
 - Option `--exposure-weight-function' makes Enfuse's exposure weight
   function user selectable.  Previously weight function "gauss" was
   the only one (and hard-coded).

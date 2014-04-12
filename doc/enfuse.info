@@ -6,8 +6,8 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-1ef797dcc601, 27 March 2014),
-a program to merge different exposures of the same scene to produce an
+   This manual is for Enfuse (version 4.2-2511ec591ef7, 12 April 2014),
+a tool to merge different exposures of the same scene to produce an
 image that looks much like a tonemapped image.
 
    Copyright (C) 2004-2014 ANDREW MIHAL.
@@ -25,9 +25,9 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-1ef797dcc601, 27 March 2014), a
-program to merge different exposures of the same scene to produce an
-image that looks much like a tonemapped image.
+This manual is for Enfuse (version 4.2-2511ec591ef7, 12 April 2014), a
+tool to merge different exposures of the same scene to produce an image
+that looks much like a tonemapped image.
 
 * Menu:
 
@@ -398,6 +398,7 @@ filenames on the command line.
 * Extended Options::            Memory control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
+* Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
 
 
@@ -427,9 +428,7 @@ All input images must comply with the following requirements.
      file formats.
 
      You can check the supported extensions and formats by calling
-     Enfuse with the option pair `--version --verbose' and scan the
-     output for `Supported image formats' or `Supported file
-     extensions'.
+     Enfuse with option `--show-image-formats'.
 
    Moreover, there are some "good practices", which are not enforced by
 the application, but almost certainly deliver superior results.
@@ -492,6 +491,16 @@ Mixed literal names and response files.
      Ultimate order: `image-01.png', `image-02.png', `image-03.png',
      `image-04.png', `image-05.png', `image-06.png', `image-07.png',
      `image-08.png', `image-09.png', `image-10.png',
+
+* Menu:
+
+* Response File Format::        Definition of the files' format
+* Syntactic Comments::          Control interpretation of response files
+* Globbing Algorithms::         Various ways to glob filenames
+* Default Layer Selection::     How the default layer gets selected
+
+
+File: enfuse.info,  Node: Response File Format,  Next: Syntactic Comments,  Up: Response Files
 
 3.2.1 Response File Format
 --------------------------
@@ -566,6 +575,9 @@ Finally, *note Example:response-file:: shows a complete response file.
 
 Example 3.1: Complete response file
 
+
+File: enfuse.info,  Node: Syntactic Comments,  Next: Globbing Algorithms,  Prev: Response File Format,  Up: Response Files
+
 3.2.2 Syntactic Comments
 ------------------------
 
@@ -585,6 +597,9 @@ Table 3.2: EBNF definition of the grammar of syntactic comments in
 response files.
 
    Unknown syntactic comments are silently ignored.
+
+
+File: enfuse.info,  Node: Globbing Algorithms,  Next: Default Layer Selection,  Prev: Syntactic Comments,  Up: Response Files
 
 3.2.3 Globbing Algorithms
 -------------------------
@@ -648,6 +663,9 @@ filename-globbing in a response file.
 
 Example 3.2: Control filename-globbing in a response file with a
 syntactic comment
+
+
+File: enfuse.info,  Node: Default Layer Selection,  Prev: Globbing Algorithms,  Up: Response Files
 
 3.2.4 Default Layer Selection
 -----------------------------
@@ -742,10 +760,6 @@ arguments in lowercase for consistency.
      Negate this option with `--no-gpu'.  
 
      See also option `--prefer-gpu'.
-
-`-h'
-`--help'
-     Print information on the available options and exit.
 
 `--layer-selector=ALGORITHM'
      Override the standard layer selector algorithm, which is
@@ -903,13 +917,6 @@ arguments in lowercase for consistency.
           estimations of required memory in selected processing steps
 
      The default verbosity level of Enfuse is 1.
-
-`-V'
-`--version'
-     Output information on the Enfuse version.
-
-     Team this option with `--verbose' to show configuration details,
-     like the extra features that have been compiled in.
 
 `-w'
 `--wrap=MODE'
@@ -1269,7 +1276,7 @@ contributes to the output image.
 is sometimes also called a "dynamic library".
 
 
-File: enfuse.info,  Node: Expert Options,  Next: Option Delimiters,  Prev: Fusion Options,  Up: Invocation
+File: enfuse.info,  Node: Expert Options,  Next: Information Options,  Prev: Fusion Options,  Up: Invocation
 
 3.6 Expert Options
 ==================
@@ -1341,6 +1348,104 @@ to read the manual before applying them successfully.
      specify the cutoff relative to maximum pixel value in the source
      image (for example 255 or 65535).  *note Figure:entropy-cutoff::
      shows an example.
+
+     
+
+           +-----------------------+-----------------------+------------------------+-----------------------+-----------------------+
+           +                       +                       +                        +                       +                       +
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       *
+         1 ++...........................................................................................................##########***
+           |                       :                       :                        :                       :                    ** |
+           |                       :                       :                        :                       :                  **   |
+           |                       :                       :                        :                       :                ***    |
+           |                       :                       :                        :                       :               **      |
+           |                       :                       :                        :                       :             ***       |
+           |                       :                       :                        :                       :            **         |
+           |                       :                       :                        :                       :          ***          |
+           |                       :                       :                        :                       :         **#           |
+           |                       :                       :                        :                       :       **##            |
+           |                       :                       :                        :                       :     ***#              |
+           |                       :                       :                        :                       :    **#                |
+           |                       :                       :                        :                       :  ***#                 |
+           |                       :                       :                        :                       : **#                   |
+           |                       :                       :                        :                       ***#                    |
+       0.8 ++.............................................................................................***#.....................++
+           |                       :                       :                        :                    **##                       |
+           |                       :                       :                        :                  ***# :                       |
+           |                       :                       :                        :                 **#   :                       |
+           |                       :                       :                        :               ***#    :                       |
+           |                       :                       :                        :              **#      :                       |
+           |                       :                       :                        :            **##       :                       |
+           |                       :                       :                        :          ***#         :                       |
+           |                       :                       :                        :         **#           :                       |
+           |                       :                       :                        :       ***#            :                       |
+           |                       :                       :                        :      **#              :                       |
+           |                       :                       :                        :    ***#               :                       |
+           |                       :                       :                        :  ***#                 :                       |
+           |                       :                       :                        : **##                  :                       |
+           |                       :                       :                        ***#                    :                       |
+       0.6 ++......................................................................**#.............................................++
+           |                       :                       :                     ***#                       :                       |
+           |                       :                       :                    **# :                       :                       |
+           |                       :                       :                  ***#  :                       :                       |
+           |                       :                       :                ***#    :                       :                       |
+           |                       :                       :               **##     :                       :                       |
+           |                       :                       :             ***#       :                       :                       |
+           |                       :                       :            **#         :                       :                       |
+           |                       :                       :          ***#          :                       :                       |
+           |                       :                       :         **#            :                       :                       |
+           |                       :                       :       **##             :                       :                       |
+           |                       :                       :     ***#               :                       :                       |
+           |                       :                       :    **##                :                       :                       |
+           |                       :                       :  ***#                  :                       :                       |
+           |                       :                       : **#                    :                       :                       |
+           |                       :                       ***#                     :                       :                       |
+       0.4 ++.............................................**#......................................................................++
+           |                       :                    **##                        :                       :                       |
+           |                       :                  ***# :                        :                       :                       |
+           |                       :                 **##  :                        :                       :                       |
+           |                       :               ***#    :                        :                       :                       |
+           |                       :              **#      :                        :                       :                       |
+           |                       :            **##       :                        :                       :                       |
+           |                       :           **#         :                        :                       :                       |
+           |                       :         **##          :                        :                       :                       |
+           |                       :       ***#            :                        :                       :                       |
+           |                       :      **#              :                        :                       :                       |
+           |                       :    ***#               :                        :                       :                       |
+           |                       :   **#                 :                        :                       :                       |
+           |                       : **##                  :                        :                       :                       |
+           |                       ***#                    :                        :                       :                       |
+       0.2 ++.....................**##.............................................................................................++
+           |                    ***#                       :                        :                       :                       |
+           |                   **# :                       :                        :                       :                       |
+           |                 ***#  :                       :                        :                       :                       |
+           |                **#    :                       :                        :                       :                       |
+           |              **##     :                       :                        :                       :                       |
+           |            ***#       :                       :                        :                       :                       |
+           |           **#         :                       :                        :                       :                       |
+           |         ***#          :                       :                        :                       :                       |
+           |        **#            :                       :                        :                       :                       |
+           |      ***#             :                       :                        :                       :                       |
+           |    ***#               :                       :                        :                       :                       |
+           |   **##                :                       :                        :                       :                       |
+           | ***                   :                       :                        :                       :                       |
+           |**                     :                       :                        :                       :                       |
+         0 **......................................................................................................................++
+           #######                 :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       +     Y + Offset ****** |
+           |                       :                       :                        :EntropyCutoff(Y, Lower, Upper) - Offset ###### |
+           +                       +                       +                        +                       +                       +
+           +-----------------------+-----------------------+------------------------+-----------------------+-----------------------+
+           0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                       Y
 
      Figure 3.1: Linear lightness Y in comparison with an
      entropy-cutoff function for LOWER-CUTOFF = 5% and UPPER-CUTOFF =
@@ -1436,6 +1541,104 @@ to read the manual before applying them successfully.
      `value', which are usually the best choices for effective cutoff
      operations on the respective ends.
 
+     
+
+           +-----------------------+-----------------------+------------------------+-----------------------+-----------------------+
+           +                       +                       +                        +                       +                       +
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+         1 ++.......................................................********.......................................................++
+           |                       :                       :      ***      ***      :                       :                       |
+           |                       :                       :     **          **     :                       :                       |
+           |                       :                       :    **            **    :                       :                       |
+           |                       :                       :   **              **   :                       :                       |
+           |                       :                       :  **                **  :                       :                       |
+           |                       :                       : **                  ** :                       :                       |
+           |                       :                       :**                    **:                       :                       |
+           |                       :                       :*                      *:                       :                       |
+           |                       :                       *                        *                       :                       |
+           |                       :                      **                        **                      :                       |
+           |                       :                      *:                        :*                      :                       |
+           |                       :                     * :                        : *                     :                       |
+           |                       :                    ** :                        : **                    :                       |
+           |                       :                    *  :                        :  *                    :                       |
+       0.8 ++..........................................**..............................**..........................................++
+           |                       :                   *   :                        :   *                   :                       |
+           |                       :                  *    :                        :    *                  :                       |
+           |                       :                 **    :                        :    **                 :                       |
+           |                       :                 *     :                        :     *                 :                       |
+           |                       :                **     :                        :     **                :                       |
+           |                       :                *      :                        :      *                :                       |
+           |                       :               **      :                        :      **               :                       |
+           |                       :               *       :                        :       *               :                       |
+           |                       :              **       :                        :       **              :                       |
+           |                       :              *        :                        :        *              :                       |
+           |                       :             *         :                        :         *             :                       |
+           |                       :             *         :                        :         *             :                       |
+           |                       :            *          :                        :          *            :                       |
+           |                       :            *          :                        :          *            :                       |
+       0.6 ++..................................*................................................*..................................++
+           |                       :           *           :                        :           *           :                       |
+           |                       :          *            :                        :            *          :                       |
+           |                       :         **            :                        :            **         :                       |
+           |                       :         *             :                        :             *         :                       |
+           |                       :        **             :                        :             **        :                       |
+           |                       :        *              :                        :              *        :                       |
+           |                       :       **              :                        :              **       :                       |
+           |                       :       *               :                        :               *       :                       |
+           |                       :      **               :                        :               **      :                       |
+           |                       :      *                :                        :                *      :                       |
+           |                       :     **                :                        :                **     :                       |
+           |                       :     *                 :                        :                 *     :                       |
+           |                       :    *                  :                        :                  *    :                       |
+           |                       :   **                  :                        :                  **   :                       |
+           |                       :   *                   :                        :                   *   :                       |
+       0.4 ++.........................**................................................................**.........................++
+           |                       :  *                    :                        :                    *  :                       |
+           |                       : **                    :                        :                    ** :                       |
+           |                       :**                     :                        :                     **:                       |
+           |                       :*                      :                        :                      *:                       |
+           |                       **                      :                        :                      **                       |
+           |                       *                       :                        :                       *                       |
+           |                      *:                       :                        :                       :*                      |
+           |                     **:                       :                        :                       :**                     |
+           |                     * :                       :                        :                       : *                     |
+           |                    *  :                       :                        :                       :  *                    |
+           |                   **  :                       :                        :                       :  **                   |
+           |                  **   :                       :                        :                       :   **                  |
+           |                 **    :                       :                        :                       :    **                 |
+           |                 *     :                       :                        :                       :     *                 |
+       0.2 ++...............*......................................................................................*...............++
+           |               **      :                       :                        :                       :      **               |
+           |              **       :                       :                        :                       :       **              |
+           |             **        :                       :                        :                       :        **             |
+           |            **         :                       :                        :                       :         **            |
+           |          ***          :                       :                        :                       :          ***          |
+           |         **            :                       :                        :                       :            **         |
+           |        **             :                       :                        :                       :             **        |
+           |      ***              :                       :                        :                       :              ***      |
+           |     **                :                       :                        :                       :                **     |
+           |                       :                       :                        :                       :                 ***   |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+         0 *******..............................................................................................................*****
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :                       :                       |
+           |                       :                       :                        :        ExposureCutoff(Y, Lower, Upper) ****** |
+           +                       +                       +                        +                       +                       +
+           +-----------------------+-----------------------+------------------------+-----------------------+-----------------------+
+           0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                       Y
+
      Figure 3.2: Exposure weight, a Gaussian with the OPTIMUM = 0.5 and
      WIDTH = 0.2 submitted to an exposure-cutoff of LOWER-CUTOFF = 5%
      and UPPER-CUTOFF = 97%.
@@ -1461,7 +1664,7 @@ to read the manual before applying them successfully.
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.2-1ef797dcc601 of Enfuse, the option is effective
+        In version 4.2-2511ec591ef7 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -1683,9 +1886,78 @@ Table 3.5: Special characters to control the generation of mask
 filenames.
 
 
-File: enfuse.info,  Node: Option Delimiters,  Prev: Expert Options,  Up: Invocation
+File: enfuse.info,  Node: Information Options,  Next: Option Delimiters,  Prev: Expert Options,  Up: Invocation
 
-3.7 Option Delimiters
+3.7 Information Options
+=======================
+
+`-h'
+`--help'
+     Print information on the command-line syntax and all available
+     options, giving an extremely boiled-down version of this manual.
+
+`--show-globbing-algorithms'
+     Show all globbing algorithms.
+
+     Depending on the build-time configuration and the operating system,
+     the binary may support different globbing algorithms.  *Note
+     Globbing Algorithms::.
+
+`--show-image-formats'
+     Show all recognized image formats and their filename extensions.
+
+     Depending on the build-time configuration and the operating system,
+     the binary may support different image formats (typical: BMP, EXR,
+     GIF, HDR, JPEG, PNG, PNM, SUN, TIFF, and VIFF) and recognize
+     different image-filename extensions (typical: `bmp', `exr', `gif',
+     `hdr', `jpeg', `jpg', `pbm', `pgm', `png', `pnm', `ppm', `ras',
+     `tif', `tiff', and `xv').
+
+`--show-signature'
+     Show the user name of the person who compiled the binary, when the
+     binary was compiled, and on which machine this was done.
+
+     This information can be helpful to ensure the binary was created
+     by a trustworthy builder.
+
+`-V'
+`--version'
+     Output information on the binary's version.
+
+     Team this option with `--verbose' to show configuration details,
+     like the extra features that may have been compiled in.
+
+     The version indicator consist of a two (major and minor version) or
+     three (major and minor version plus patch-level) numbers separated
+     by dots and an optional hexadecimal identifier.  Binaries from the
+     "Development Branch" are assigned two part version numbers, whereas
+     a threep part version number is reserved for the "Stable Branch" of
+     development.  Officially released versions lack the hexadecimal
+     identifier.  Examples:
+
+    `4.1.3-0a816672d475'
+          Some un-released version from the "Stable Branch", which
+          finally will lead to version 4.1.3.
+
+    `4.1.3'
+          Officially released version 4.1.3 in the "Stable Branch".
+
+    `4.2-1e4d237daabf'
+          Some un-released version from the "Development Branch", which
+          finally will lead to version 4.2.
+
+    `4.2'
+          Officially released version 4.2 in the "Development Branch".
+
+     Matching the version codes is the only reliably way to match a
+     given binary with its manual page ("manual page for
+     enfuse 4.2-1e4d237daabf") and its documentation.  This document at
+     least mentions the version code on its title page and on page 2.
+
+
+File: enfuse.info,  Node: Option Delimiters,  Prev: Information Options,  Up: Invocation
+
+3.8 Option Delimiters
 =====================
 
 Enblend and Enfuse allow the arguments supplied to the programs'
@@ -1923,7 +2195,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.2-1ef797dcc601.
+version 4.2-2511ec591ef7.
 
    To disable a particular criterion set its weight to zero as for
 example
@@ -1984,6 +2256,104 @@ line options `--exposure-optimum' and `--exposure-width' respectively,
 where Y_opt defaults to 0.5 and width defaults to 0.2.  *note
 Figure:gaussian:: shows some Gaussians.
 
+
+
+    1 ++----------------------+-----------------------+-------$$#****#$$-------+-----------------------+----------------------++
+      +                       +                       +   $$$$##**  **##$$$$   +                       +    width = 0.1 ****** +
+      |                                                $$$$  ## *    * ##  $$$$                     default width = 0.2 ###### |
+      |                                              $$$    ## **    ** ##    $$$                           width = 0.4 $$$$$$ |
+      |                                            $$$     ##  *      *  ##     $$$                                            |
+      |                                           $$      ##  **      **  ##      $$                                           |
+      |                                         $$       ##   *        *   ##       $$                                         |
+      |                                        $$        #    *        *    #        $$                                        |
+      |                                      $$         #    *          *    #         $$                                      |
+      |                                     $$         ##    *          *    ##         $$                                     |
+      |                                    $$          #     *          *     #          $$                                    |
+      |                                   $$          ##    *            *    ##          $$                                   |
+      |                                 $$           ##     *            *     ##           $$                                 |
+      |                                $$            #      *            *      #            $$                                |
+      |                               $$            ##      *            *      ##            $$                               |
+      |                              $$             #      *              *      #             $$                              |
+      |                             $$             ##      *              *      ##             $$                             |
+      |                            $$              #       *              *       #              $$                            |
+  0.8 ++                          $$              ##      **              **      ##              $$                          ++
+      |                          $$               #       *                *       #               $$                          |
+      |                         $$               ##       *                *       ##               $$                         |
+      |                        $$                #        *                *        #                $$                        |
+      |                       $$                ##        *                *        ##                $$                       |
+      |                      $$                 #        *                  *        #                 $$                      |
+      |                     $$                  #        *                  *        #                  $$                     |
+      |                     $                  #         *                  *         #                  $                     |
+      |                    $                   #         *                  *         #                   $                    |
+      |                   $$                  #         *                    *         #                  $$                   |
+      |                  $$                   #         *                    *         #                   $$                  |
+      |                 $$                   ##         *                    *         ##                   $$                 |
+      |                $$                    #          *                    *          #                    $$                |
+      |               $$                    ##         **                    **         ##                    $$               |
+      |              $$                     #          *                      *          #                     $$              |
+      |             $$                      #          *                      *          #                      $$             |
+      |             $                      #           *                      *           #                      $             |
+      |            $                       #           *                      *           #                       $            |
+      |           $$                      ##          **                      **          ##                      $$           |
+  0.6 ++         $$                       #           *                        *           #                       $$         ++
+      |         $$                       ##           *                        *           ##                       $$         |
+      |        $$                        #            *                        *            #                        $$        |
+      |       $$                        ##           **                        **           ##                        $$       |
+      |       $                         #            *                          *            #                         $       |
+      |      $                          #            *                          *            #                          $      |
+      |     $$                         ##            *                          *            ##                         $$     |
+      |    $$                          #             *                          *             #                          $$    |
+      |   $$                          ##            **                          **            ##                          $$   |
+      |  $$                           #             *                            *             #                           $$  |
+      | $$                           ##             *                            *             ##                           $$ |
+      |$$                            #              *                            *              #                            $$|
+      $$                            ##             **                            **             ##                            $$
+      $                             #              *                              *              #                             $
+      |                             #              *                              *              #                             |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                           ##              **                              **              ##                           |
+  0.4 ++                          #               *                                *               #                          ++
+      |                          ##               *                                *               ##                          |
+      |                          #                *                                *                #                          |
+      |                         ##               *                                  *               ##                         |
+      |                         #                *                                  *                #                         |
+      |                        ##                *                                  *                ##                        |
+      |                        #                 *                                  *                 #                        |
+      |                       ##                **                                  **                ##                       |
+      |                       #                 *                                    *                 #                       |
+      |                      #                  *                                    *                  #                      |
+      |                     ##                 **                                    **                 ##                     |
+      |                     #                  *                                      *                  #                     |
+      |                    ##                  *                                      *                  ##                    |
+      |                    #                   *                                      *                   #                    |
+      |                   #                   *                                        *                   #                   |
+      |                  ##                   *                                        *                   ##                  |
+      |                  #                    *                                        *                    #                  |
+      |                 #                    *                                          *                    #                 |
+      |                ##                    *                                          *                    ##                |
+  0.2 ++              ##                    **                                          **                    ##              ++
+      |               #                     *                                            *                     #               |
+      |              ##                     *                                            *                     ##              |
+      |             ##                     **                                            **                     ##             |
+      |            ##                      *                                              *                      ##            |
+      |           ##                      **                                              **                      ##           |
+      |          ##                       *                                                *                       ##          |
+      |         ##                       **                                                **                       ##         |
+      |        ##                        *                                                  *                        ##        |
+      |       ##                        **                                                  **                        ##       |
+      |     ###                         *                                                    *                         ###     |
+      |    ##                          *                                                      *                          ##    |
+      |  ###                          **                                                      **                          ###  |
+      |###                           **                                                        **                           ###|
+      ##                            **                                                          **                            ##
+      |                           **                                                              **                           |
+      |                         ***                                                                ***                         |
+      +                    ******                     +                        +                     ******                    +
+    0 **********************--+-----------------------+------------------------+-----------------------+--**********************
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
+
 Figure 5.1: Enblend's Gaussian function with the parameters OPTIMUM =
 0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
 
@@ -2018,6 +2388,104 @@ Table 5.2: Available exposure weight functions.
 However for large |z| the Gaussian weight rolls off like exp(-z^2 /2)
 and the Lorentzian only as z^-2 .
 
+
+
+    1 ++----------------------+-----------------------+-------$$##**##$$-------+-----------------------+----------------------++
+      +                       +                       +    $$$$##*  *##$$$$    +                       +    width = 0.1 ****** +
+      |                                                  $$$  ##**  **##  $$$                       default width = 0.2 ###### |
+      |                                                $$$   ## *    * ##   $$$                             width = 0.4 $$$$$$ |
+      |                                               $$    ## **    ** ##    $$                                               |
+      |                                             $$     ##  *      *  ##     $$                                             |
+      |                                            $$      #   *      *   #      $$                                            |
+      |                                           $$      ##  *        *  ##      $$                                           |
+      |                                         $$        #   *        *   #        $$                                         |
+      |                                        $$        #    *        *    #        $$                                        |
+      |                                       $$        ##   **        **   ##        $$                                       |
+      |                                      $$         #    *          *    #         $$                                      |
+      |                                     $$         ##    *          *    ##         $$                                     |
+      |                                    $$          #     *          *     #          $$                                    |
+      |                                   $$          ##    **          **    ##          $$                                   |
+      |                                  $$           #     *            *     #           $$                                  |
+      |                                 $$           ##     *            *     ##           $$                                 |
+      |                                $$            #      *            *      #            $$                                |
+  0.8 ++                              $$            ##     **            **     ##            $$                              ++
+      |                              $$             #      *              *      #             $$                              |
+      |                             $$             ##      *              *      ##             $$                             |
+      |                            $$              #       *              *       #              $$                            |
+      |                           $$              ##      **              **      ##              $$                           |
+      |                          $$               #       *                *       #               $$                          |
+      |                         $$               ##       *                *       ##               $$                         |
+      |                        $$                #        *                *        #                $$                        |
+      |                       $$                ##        *                *        ##                $$                       |
+      |                      $$                 #        *                  *        #                 $$                      |
+      |                     $$                 ##        *                  *        ##                 $$                     |
+      |                    $$                  #         *                  *         #                  $$                    |
+      |                   $$                  ##         *                  *         ##                  $$                   |
+      |                  $$                   #         *                    *         #                   $$                  |
+      |                 $$                    #         *                    *         #                    $$                 |
+      |                $$                    #          *                    *          #                    $$                |
+      |               $$                    ##         **                    **         ##                    $$               |
+      |              $$                     #          *                      *          #                     $$              |
+      |             $$                     ##          *                      *          ##                     $$             |
+  0.6 ++           $$                      #           *                      *           #                      $$           ++
+      |           $$                      ##          **                      **          ##                      $$           |
+      |          $$                       #           *                        *           #                       $$          |
+      |         $$                       ##           *                        *           ##                       $$         |
+      |        $$                        #            *                        *            #                        $$        |
+      |       $$                        ##           *                          *           ##                        $$       |
+      |      $$                         #            *                          *            #                         $$      |
+      |    $$$                         ##            *                          *            ##                         $$$    |
+      |   $$                          ##            **                          **            ##                          $$   |
+      |  $$                           #             *                            *             #                           $$  |
+      | $$                           ##             *                            *             ##                           $$ |
+      $$$                           ##             **                            **             ##                           $$$
+      $                             #              *                              *              #                             $
+      |                            ##              *                              *              ##                            |
+      |                           ##               *                              *               ##                           |
+      |                           #               *                                *               #                           |
+      |                          ##               *                                *               ##                          |
+      |                         ##               **                                **               ##                         |
+  0.4 ++                       ##                *                                  *                ##                       ++
+      |                        #                 *                                  *                 #                        |
+      |                       ##                **                                  **                ##                       |
+      |                      ##                 *                                    *                 ##                      |
+      |                     ##                 **                                    **                 ##                     |
+      |                    ##                  *                                      *                  ##                    |
+      |                   ##                  **                                      **                  ##                   |
+      |                  ##                   *                                        *                   ##                  |
+      |                 ##                   **                                        **                   ##                 |
+      |                ##                    *                                          *                    ##                |
+      |               ##                    **                                          **                    ##               |
+      |              ##                     *                                            *                     ##              |
+      |            ##                      *                                              *                      ##            |
+      |           ##                      **                                              **                      ##           |
+      |          ##                       *                                                *                       ##          |
+      |        ##                        *                                                  *                        ##        |
+      |      ###                        **                                                  **                        ###      |
+      |     ##                         **                                                    **                         ##     |
+      |   ##                          **                                                      **                          ##   |
+  0.2 ++###                          **                                                        **                          ###++
+      ###                           **                                                          **                           ###
+      |                            **                                                            **                            |
+      |                           **                                                              **                           |
+      |                         **                                                                  **                         |
+      |                        **                                                                    **                        |
+      |                      ***                                                                      ***                      |
+      |                    ***                                                                          ***                    |
+      |                  ***                                                                              ***                  |
+      |               ***                                                                                    ***               |
+      |            ****                                                                                        ****            |
+      |        *****                                                                                              *****        |
+      |   ******                                                                                                      ******   |
+      *****                                                                                                                *****
+      |                                                                                                                        |
+      |                                                                                                                        |
+      |                                                                                                                        |
+      +                       +                       +                        +                       +                       +
+    0 ++----------------------+-----------------------+------------------------+-----------------------+----------------------++
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
+
 Figure 5.2: Enblend's Lorentzian function with the parameters OPTIMUM =
 0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
 
@@ -2025,8 +2493,204 @@ Figure 5.2: Enblend's Lorentzian function with the parameters OPTIMUM =
 do not go exactly to zero.  Thus, Enfuse can select "better" pixels far
 away from the chosen optimum.
 
+
+
+    1 ++----------------------+-----------------------+------$$$#****#$$$------+-----------------------+----------------------++
+      +                       +                       +  $$$$$##**  **##$$$$$  +                       +    width = 0.1 ****** +
+      |                                               $$$$  ###**    **###  $$$$                    default width = 0.2 ###### |
+      |                                            $$$$    ##  *      *  ##    $$$$                         width = 0.4 $$$$$$ |
+      |                                          $$$      ##  **      **  ##      $$$                                          |
+      |                                         $$       ##   *        *   ##       $$                                         |
+      |                                       $$$       ##   **        **   ##       $$$                                       |
+      |                                     $$$        ##    *          *    ##        $$$                                     |
+      |                                    $$          #     *          *     #          $$                                    |
+      |                                   $$          ##    **          **    ##          $$                                   |
+      |                                 $$$          ##     *            *     ##          $$$                                 |
+      |                                $$            #      *            *      #            $$                                |
+      |                               $$            ##     **            **     ##            $$                               |
+      |                              $$             #      *              *      #             $$                              |
+      |                             $$             #       *              *       #             $$                             |
+      |                            $               #       *              *       #               $                            |
+      |                          $$               #       *                *       #               $$                          |
+      |                         $$               ##       *                *       ##               $$                         |
+  0.8 ++                       $$                #        *                *        #                $$                       ++
+      |                        $                 #        *                *        #                 $                        |
+      |                       $                 #        *                  *        #                 $                       |
+      |                      $                  #        *                  *        #                  $                      |
+      |                     $                  #         *                  *         #                  $                     |
+      |                    $$                  #         *                  *         #                  $$                    |
+      |                   $$                  ##        **                  **        ##                  $$                   |
+      |                  $$                   #         *                    *         #                   $$                  |
+      |                 $$                   ##         *                    *         ##                   $$                 |
+      |                $$                    #          *                    *          #                    $$                |
+      |                $                     #          *                    *          #                     $                |
+      |               $                     #          *                      *          #                     $               |
+      |              $$                     #          *                      *          #                     $$              |
+      |             $$                     ##          *                      *          ##                     $$             |
+      |            $$                      #           *                      *           #                      $$            |
+      |            $                       #           *                      *           #                       $            |
+      |           $                       #           *                        *           #                       $           |
+      |          $$                       #           *                        *           #                       $$          |
+      |         $$                       ##           *                        *           ##                       $$         |
+  0.6 ++        $                        #            *                        *            #                        $        ++
+      |        $                         #            *                        *            #                         $        |
+      |       $$                        ##           *                          *           ##                        $$       |
+      |      $$                         #            *                          *            #                         $$      |
+      |      $                          #            *                          *            #                          $      |
+      |     $$                         ##            *                          *            ##                         $$     |
+      |    $$                          #             *                          *             #                          $$    |
+      |    $                           #             *                          *             #                           $    |
+      |   $                           #             *                            *             #                           $   |
+      |  $$                           #             *                            *             #                           $$  |
+      |  $                            #             *                            *             #                            $  |
+      | $                            #              *                            *              #                            $ |
+      |$$                            #              *                            *              #                            $$|
+      |$                             #              *                            *              #                             $|
+      $                             #              *                              *              #                             $
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                            #               *                              *               #                            |
+  0.4 ++                           #               *                              *               #                           ++
+      |                            #               *                              *               #                            |
+      |                           ##              **                              **              ##                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                         ##               **                                **               ##                         |
+      |                         #                *                                  *                #                         |
+      |                         #                *                                  *                #                         |
+      |                        ##                *                                  *                ##                        |
+      |                        #                 *                                  *                 #                        |
+      |                        #                 *                                  *                 #                        |
+      |                        #                 *                                  *                 #                        |
+      |                       #                 *                                    *                 #                       |
+      |                       #                 *                                    *                 #                       |
+      |                       #                 *                                    *                 #                       |
+      |                      ##                 *                                    *                 ##                      |
+  0.2 ++                     #                  *                                    *                  #                     ++
+      |                      #                  *                                    *                  #                      |
+      |                     ##                 **                                    **                 ##                     |
+      |                     #                  *                                      *                  #                     |
+      |                     #                  *                                      *                  #                     |
+      |                     #                  *                                      *                  #                     |
+      |                    #                   *                                      *                   #                    |
+      |                    #                   *                                      *                   #                    |
+      |                    #                   *                                      *                   #                    |
+      |                   #                   *                                        *                   #                   |
+      |                   #                   *                                        *                   #                   |
+      |                   #                   *                                        *                   #                   |
+      |                  ##                   *                                        *                   ##                  |
+      |                  #                    *                                        *                    #                  |
+      |                  #                    *                                        *                    #                  |
+      |                  #                    *                                        *                    #                  |
+      |                 #                    *                                          *                    #                 |
+      +                 #     +              *        +                        +        *              +     #                 +
+    0 ****************************************--------+------------------------+--------****************************************
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
+
 Figure 5.3: Enblend's Half-Sine function with the parameters OPTIMUM =
 0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
+
+
+
+    1 ++----------------------+-----------------------+------$$$#****#$$$------+-----------------------+----------------------++
+      +                       +                       +  $$$$$##**  **##$$$$$  +                       +    width = 0.1 ****** +
+      |                                                $$$   ## *    * ##   $$$                     default width = 0.2 ###### |
+      |                                             $$$    ##  *      *  ##    $$$                          width = 0.4 $$$$$$ |
+      |                                           $$$     ##  **      **  ##     $$$                                           |
+      |                                          $$       #   *        *   #       $$                                          |
+      |                                        $$$       ##   *        *   ##       $$$                                        |
+      |                                       $$        ##   **        **   ##        $$                                       |
+      |                                     $$         ##    *          *    ##         $$                                     |
+      |                                    $$          #     *          *     #          $$                                    |
+      |                                   $$          ##    *            *    ##          $$                                   |
+      |                                 $$           ##     *            *     ##           $$                                 |
+      |                                $$            #      *            *      #            $$                                |
+      |                               $$            ##     **            **     ##            $$                               |
+      |                              $$             #      *              *      #             $$                              |
+      |                             $$             ##      *              *      ##             $$                             |
+      |                            $$              #       *              *       #              $$                            |
+      |                           $$              ##      **              **      ##              $$                           |
+  0.8 ++                         $$               #       *                *       #               $$                         ++
+      |                         $$               ##       *                *       ##               $$                         |
+      |                        $$                #        *                *        #                $$                        |
+      |                       $$                ##       **                **       ##                $$                       |
+      |                      $$                 #        *                  *        #                 $$                      |
+      |                     $$                 ##        *                  *        ##                 $$                     |
+      |                    $$                  #         *                  *         #                  $$                    |
+      |                   $$                  ##         *                  *         ##                  $$                   |
+      |                  $$                   #         *                    *         #                   $$                  |
+      |                  $                    #         *                    *         #                    $                  |
+      |                 $                    #          *                    *          #                    $                 |
+      |                $$                    #          *                    *          #                    $$                |
+      |               $$                    ##         *                      *         ##                    $$               |
+      |              $$                     #          *                      *          #                     $$              |
+      |             $$                     ##          *                      *          ##                     $$             |
+      |             $                      #           *                      *           #                      $             |
+      |            $                       #           *                      *           #                       $            |
+      |           $$                      ##          **                      **          ##                      $$           |
+      |          $$                       #           *                        *           #                       $$          |
+  0.6 ++        $$                       ##           *                        *           ##                       $$        ++
+      |        $$                        #            *                        *            #                        $$        |
+      |        $                         #            *                        *            #                         $        |
+      |       $$                        ##           *                          *           ##                        $$       |
+      |      $$                         #            *                          *            #                         $$      |
+      |     $$                          #            *                          *            #                          $$     |
+      |     $                          #             *                          *             #                          $     |
+      |    $                           #             *                          *             #                           $    |
+      |   $$                          ##            **                          **            ##                          $$   |
+      |  $$                           #             *                            *             #                           $$  |
+      | $$                           ##             *                            *             ##                           $$ |
+      | $                            #              *                            *              #                            $ |
+      |$$                            #              *                            *              #                            $$|
+      $$                            ##             *                              *             ##                            $$
+      |                             #              *                              *              #                             |
+      |                            ##              *                              *              ##                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+  0.4 ++                          ##              **                              **              ##                          ++
+      |                           #               *                                *               #                           |
+      |                          ##               *                                *               ##                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                         ##               *                                  *               ##                         |
+      |                         #                *                                  *                #                         |
+      |                        ##                *                                  *                ##                        |
+      |                        #                 *                                  *                 #                        |
+      |                        #                 *                                  *                 #                        |
+      |                       #                 *                                    *                 #                       |
+      |                       #                 *                                    *                 #                       |
+      |                      ##                 *                                    *                 ##                      |
+      |                      #                  *                                    *                  #                      |
+      |                     ##                 **                                    **                 ##                     |
+      |                     #                  *                                      *                  #                     |
+      |                    ##                  *                                      *                  ##                    |
+      |                    #                   *                                      *                   #                    |
+      |                   ##                  **                                      **                  ##                   |
+  0.2 ++                  #                   *                                        *                   #                  ++
+      |                  ##                   *                                        *                   ##                  |
+      |                  #                    *                                        *                    #                  |
+      |                 ##                   **                                        **                   ##                 |
+      |                 #                    *                                          *                    #                 |
+      |                ##                    *                                          *                    ##                |
+      |                #                     *                                          *                     #                |
+      |               ##                    *                                            *                    ##               |
+      |              ##                     *                                            *                     ##              |
+      |              #                      *                                            *                      #              |
+      |             ##                     **                                            **                     ##             |
+      |            ##                      *                                              *                      ##            |
+      |            #                       *                                              *                       #            |
+      |           #                       *                                                *                       #           |
+      |          ##                       *                                                *                       ##          |
+      |         ##                       **                                                **                       ##         |
+      |       ##                        **                                                  **                        ##       |
+      +     ###               +        **             +                        +             **        +               ###     +
+    0 **********************************--------------+------------------------+--------------**********************************
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
 
 Figure 5.4: Enblend's Full-Sine function with the parameters OPTIMUM =
 0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
@@ -2036,6 +2700,104 @@ optimum, like Gaussian and Lorentzian.  However for large |z| they both
 are exactly zero.  The difference is how they decrease just before they
 reach zero.  Half-Sine behaves like (z - z') and Full-Sine like (z -
 z")^2 , where z' and z" are the respective zeros.
+
+
+
+    1 ++----------------------+-----------------$$$$$$$$$#####**********#####$$$$$$$$$-----------------+----------------------++
+      +                       +           $$$$$$$     ####  ***        ***  ####     $$$$$$$           +    width = 0.1 ****** +
+      |                                $$$$          ##     *            *     ##          $$$$     default width = 0.2 ###### |
+      |                              $$$            ##     **            **     ##            $$$           width = 0.4 $$$$$$ |
+      |                            $$$             #       *              *       #             $$$                            |
+      |                          $$$              ##      *                *      ##              $$$                          |
+      |                         $$               ##       *                *       ##               $$                         |
+      |                       $$                 #        *                *        #                 $$                       |
+      |                      $$                 #        *                  *        #                 $$                      |
+      |                     $$                 ##        *                  *        ##                 $$                     |
+      |                    $$                  #         *                  *         #                  $$                    |
+      |                   $$                  ##        **                  **        ##                  $$                   |
+      |                  $$                   #         *                    *         #                   $$                  |
+      |                  $                    #         *                    *         #                    $                  |
+      |                 $                    #          *                    *          #                    $                 |
+      |                $$                    #          *                    *          #                    $$                |
+      |               $$                    ##         **                    **         ##                    $$               |
+      |               $                     #          *                      *          #                     $               |
+  0.8 ++             $$                     #          *                      *          #                     $$             ++
+      |              $                      #          *                      *          #                      $              |
+      |             $                      #           *                      *           #                      $             |
+      |            $$                      #           *                      *           #                      $$            |
+      |            $                       #           *                      *           #                       $            |
+      |           $$                      ##           *                      *           ##                      $$           |
+      |           $                       #           *                        *           #                       $           |
+      |          $$                       #           *                        *           #                       $$          |
+      |          $                        #           *                        *           #                        $          |
+      |         $$                        #           *                        *           #                        $$         |
+      |         $                        #            *                        *            #                        $         |
+      |         $                        #            *                        *            #                        $         |
+      |        $                         #            *                        *            #                         $        |
+      |        $                         #            *                        *            #                         $        |
+      |       $$                        ##           *                          *           ##                        $$       |
+      |       $                         #            *                          *            #                         $       |
+      |       $                         #            *                          *            #                         $       |
+      |      $                          #            *                          *            #                          $      |
+      |      $                          #            *                          *            #                          $      |
+  0.6 ++    $$                          #            *                          *            #                          $$    ++
+      |     $                          #             *                          *             #                          $     |
+      |     $                          #             *                          *             #                          $     |
+      |    $$                          #             *                          *             #                          $$    |
+      |    $                           #             *                          *             #                           $    |
+      |    $                           #             *                          *             #                           $    |
+      |   $$                          ##             *                          *             ##                          $$   |
+      |   $                           #             *                            *             #                           $   |
+      |   $                           #             *                            *             #                           $   |
+      |  $$                           #             *                            *             #                           $$  |
+      |  $                            #             *                            *             #                            $  |
+      |  $                            #             *                            *             #                            $  |
+      | $$                           ##             *                            *             ##                           $$ |
+      | $                            #              *                            *              #                            $ |
+      | $                            #              *                            *              #                            $ |
+      | $                            #              *                            *              #                            $ |
+      |$$                            #              *                            *              #                            $$|
+      |$                             #              *                            *              #                             $|
+  0.4 +$                             #              *                            *              #                             $+
+      |$                             #              *                             *             #                             $|
+      $                             #              *                              *              #                             $
+      $                             #              *                              *              #                             $
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                             #              *                              *              #                             |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+      |                            #               *                              *               #                            |
+  0.2 ++                          #                *                               *               #                          ++
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                           #               *                                *               #                           |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      |                          #                *                                *                #                          |
+      +                       +  #                *   +                        +   *                #  +                       +
+    0 *********************************************---+------------------------+---*********************************************
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
 
 Figure 5.5: Enblend's Bi-Square function with the parameters OPTIMUM =
 0.5 and three different WIDTHs: 0.1, 0.2, and 0.4.
@@ -2057,6 +2819,104 @@ pixel, the problem is circumnavigated.
    Another way of cutting off under- or overexposed pixels is to use
 option `--exposure-cutoff', which has the additional benefit of
 allowing to choose upper and lower cutoff separately.
+
+
+
+    1 ++----------------------+-----------------------+--@@@@@@@******@@@@@@@--+-----------------------+----------------------++
+      +                       +                       @@@@    ***    ***    @@@@                       +       Gaussian ****** +
+      |                                              @@     $**#      #**$     @@                            Lorentzian ###### |
+      |                                             @@     $**#        #**$     @@                            Half-Sine $$$$$$ |
+      |                                            @      $**#          #**$      @                           Full-Sine %%%%%% |
+      |                                           @@     $**#            #**$     @@                          Bi-Square @@@@@@ |
+      |                                          @@     $**#              #**$     @@                                          |
+      |                                          @     $$*##              ##*$$     @                                          |
+      |                                         @      $* #                # *$      @                                         |
+      |                                        @@     $**#                  #**$     @@                                        |
+      |                                        @     $$*##                  ##*$$     @                                        |
+      |                                       @@     $**#                    #**$     @@                                       |
+      |                                       @     $**##                    ##**$     @                                       |
+      |                                       @     $* #                      # *$     @                                       |
+      |                                      @     $**##                      ##**$     @                                      |
+      |                                      @     $* #                        # *$     @                                      |
+      |                                     @@    $**##                        ##**$    @@                                     |
+      |                                     @    $$* #                          # *$$    @                                     |
+      |                                     @    $**##                          ##**$    @                                     |
+      |                                     @    $* #                            # *$    @                                     |
+      |                                    @    $**##                            ##**$    @                                    |
+      |                                    @    $* #                              # *$    @                                    |
+      |                                    @   $**##                              ##**$   @                                    |
+      |                                   @@   $* #                                # *$   @@                                   |
+      |                                   @   $$*##                                ##*$$   @                                   |
+      |                                   @   $* #                                  # *$   @                                   |
+      |                                   @  $$*##                                  ##*$$  @                                   |
+      |                                   @  $* #                                    # *$  @                                   |
+      |                                  @   $*##                                    ##*$   @                                  |
+      |                                  @  $**#                                      #**$  @                                  |
+      |                                  @  $*##                                      ##*$  @                                  |
+      |                                  @ $**#                                        #**$ @                                  |
+      |                                 @@ $* #                                        # *$ @@                                 |
+      |                                 @  $*#                                          #*$  @                                 |
+      |                                 @ $*##                                          ##*$ @                                 |
+      |                                 @ $*#                                            #*$ @                                 |
+      |                                 @$**#                                            #**$@                                 |
+      |                                 @$*#                                              #*$@                                 |
+      |                                @ **#                                              #** @                                |
+      |                                @$*#                                                #*$@                                |
+      |                                @**#                                                #**@                                |
+      |                                @*#                                                  #*@                                |
+      |                                $*#                                                  #*$                                |
+      |                               @**                                                    **@                               |
+      |                               @*#                                                    #*@                               |
+      |                               **                                                      **                               |
+  0.5 ++..............................*........................................................*..............................++
+      |                              **                                                        **                              |
+      |                             #*@                                                        @*#                             |
+      |                             **@                                                        @**                             |
+      |                            #*$                                                          $*#                            |
+      |                           ##*@                                                          @*##                           |
+      |                           #*$@                                                          @$*#                           |
+      |                          ##*$@                                                          @$*##                          |
+      |                         ##** @                                                          @ **##                         |
+      |                        ## *$ @                                                          @ $* ##                        |
+      |                        # **$ @                                                          @ $** #                        |
+      |                       ## *$$@                                                            @$$* ##                       |
+      |                      ## **$ @                                                            @ $** ##                      |
+      |                     ##  *%$ @                                                            @ $%*  ##                     |
+      |                    ##  **$  @                                                            @  $**  ##                    |
+      |                   ##   *%$  @                                                            @  $%*   ##                   |
+      |                  ##   **%$  @                                                            @  $%**   ##                  |
+      |                 ##    *%$$  @                                                            @  $$%*    ##                 |
+      |                ##    * %$   @                                                            @   $% *    ##                |
+      |               ##    **% $  @                                                              @  $ %**    ##               |
+      |              ##     * %$$  @                                                              @  $$% *     ##              |
+      |            ##      **%%$   @                                                              @   $%%**      ##            |
+      |           ##       * % $   @                                                              @   $ % *       ##           |
+      |          ##       * %% $   @                                                              @   $ %% *       ##          |
+      |        ##        ** % $    @                                                              @    $ % **        ##        |
+      |      ###         * %% $    @                                                              @    $ %% *         ###      |
+      |     ##          *  %  $    @                                                              @    $  %  *          ##     |
+      |   ##           ** %% $$    @                                                              @    $$ %% **           ##   |
+      | ###           **  %  $    @                                                                @    $  %  **           ### |
+      ###             *  %%  $    @                                                                @    $  %%  *             ###
+      |              **  %  $$    @                                                                @    $$  %  **              |
+      |             **  %%  $     @                                                                @     $  %%  **             |
+      |            **   %   $     @                                                                @     $   %   **            |
+      |           **   %%   $     @                                                                @     $   %%   **           |
+      |          **    %   $      @                                                                @      $   %    **          |
+      |         **    %%   $      @                                                                @      $   %%    **         |
+      |        **    %%    $      @                                                                @      $    %%    **        |
+      |       **     %    $      @                                                                  @      $    %     **       |
+      |     ***     %%    $      @                                                                  @      $    %%     ***     |
+      |    **      %%     $      @                                                                  @      $     %%      **    |
+      |  ***       %     $$      @                                                                  @      $$     %       ***  |
+      |***        %      $       @                                                                  @       $      %        ***|
+      **         %%      $       @                                                                  @       $      %%         **
+      |         %%       $       @                                                                  @       $       %%         |
+      |       %%        $        @                                                                  @        $        %%       |
+      +     %%%         $     +  @                    +                        +                    @  +     $         %%%     +
+    0 $$$$$$$$$$$$$$$$$$$@@@@@@@@@--------------------+------------------------+--------------------@@@@@@@@@$$$$$$$$$$$$$$$$$$$
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  Y
 
 Figure 5.6: Comparison of all of Enblend's exposure weight functions for
 the default values of OPTIMUM = 0.5 and WIDTH = 0.2.  Note that all
@@ -2601,6 +3461,104 @@ image.  The operator is radially symmetric with respect to the origin,
 which is why we can easily plot it in *note
 Figure:laplacian-of-gaussian::, setting R = sqrt(x^2 + y^2).
 
+
+
+  1 ++-----------------------------+------------------------------+-----------------------------+-----------------------------++
+    +                              +                              +                             +                              +
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                         **********                         :                              |
+    |                              :                      ****    :    *****                    :                              |
+    |                              :                    ***       :        *****                :                              |
+    |                              :                  ***         :            *****            :                              |
+    |                              :                 **           :                *****        :                              |
+    |                              :               **             :                    *****    :                              |
+    |                              :              **              :                        ******                              |
+    |                              :             **               :                             *******                        |
+    |                              :            **                :                             :     ************             |
+  0 ++.........................................**................................................................***************
+    |                              :          **                  :                             :                              |
+    |                              :          *                   :                             :                              |
+    |                              :         **                   :                             :                              |
+    |                              :        **                    :                             :                              |
+    |                              :       **                     :                             :                              |
+    |                              :       *                      :                             :                              |
+    |                              :      **                      :                             :                              |
+    |                              :     **                       :                             :                              |
+    |                              :     *                        :                             :                              |
+    |                              :    **                        :                             :                              |
+    |                              :    *                         :                             :                              |
+    |                              :   **                         :                             :                              |
+ -1 ++.................................*......................................................................................++
+    |                              :  *                           :                             :                              |
+    |                              : **                           :                             :                              |
+    |                              : *                            :                             :                              |
+    |                              :**                            :                             :                              |
+    |                              :*                             :                             :                              |
+    |                              **                             :                             :                              |
+    |                              *                              :                             :                              |
+    |                             **                              :                             :                              |
+    |                             *:                              :                             :                              |
+    |                            **:                              :                             :                              |
+    |                            * :                              :                             :                              |
+    |                           ** :                              :                             :                              |
+ -2 ++..........................*.............................................................................................++
+    |                          **  :                              :                             :                              |
+    |                          *   :                              :                             :                              |
+    |                         **   :                              :                             :                              |
+    |                         *    :                              :                             :                              |
+    |                         *    :                              :                             :                              |
+    |                        *     :                              :                             :                              |
+    |                        *     :                              :                             :                              |
+    |                       *      :                              :                             :                              |
+    |                       *      :                              :                             :                              |
+    |                      *       :                              :                             :                              |
+    |                      *       :                              :                             :                              |
+    |                     **       :                              :                             :                              |
+    |                     *        :                              :                             :                              |
+ -3 ++...................**...................................................................................................++
+    |                    *         :                              :                             :                              |
+    |                   **         :                              :                             :                              |
+    |                   *          :                              :                             :                              |
+    |                  **          :                              :                             :                              |
+    |                  *           :                              :                             :                              |
+    |                 **           :                              :                             :                              |
+    |                 *            :                              :                             :                              |
+    |                **            :                              :                             :                              |
+    |                *             :                              :                             :                              |
+    |               **             :                              :                             :                              |
+    |               *              :                              :                             :                              |
+    |              **              :                              :                             :                              |
+ -4 ++............**..........................................................................................................++
+    |             *                :                              :                             :                              |
+    |            **                :                              :                             :                              |
+    |            *                 :                              :                             :                              |
+    |           **                 :                              :                             :                              |
+    |          **                  :                              :                             :                              |
+    |          *                   :                              :                             :                              |
+    |         *                    :                              :                             :                              |
+    |        **                    :                              :                             :                              |
+    |       **                     :                              :                             :                              |
+    |      **                      :                              :                             :                              |
+    |     **                       :                              :                             :                              |
+    |    **                        :                              :                             :                              |
+ -5 ++.***....................................................................................................................++
+    ****                           :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                             :                              |
+    |                              :                              :                       LaplacianOfGaussian(R, Sigma) ****** |
+    +                              +                              +                             +                              +
+ -6 ++-----------------------------+------------------------------+-----------------------------+-----------------------------++
+    0                             0.5                             1                            1.5                             2
+                                                                 R
+
 Figure 5.8: Laplacian-of-Gaussian function for sigma = 0.5.
 
 See also HIPR2: Laplacian of Gaussian
@@ -2720,6 +3678,104 @@ entropy of the "impossible message" to zero according to
      lim(p * log_a(1 / p), p -> 0) = 0.
 
 *note Figure:entropy:: shows an entropy function.
+
+
+
+    1 ++----------------------+-----------------------+------************------+-----------------------+----------------------++
+      +                       +                       +   ****          ****   +                       +     Entropy(p) ****** +
+      |                                                ***                  ***                                                |
+      |                                              ***                      ***                                              |
+      |                                            ***                          ***                                            |
+      |                                          ***                              ***                                          |
+      |                                         **                                  **                                         |
+      |                                       ***                                    ***                                       |
+      |                                      **                                        **                                      |
+      |                                     **                                          **                                     |
+      |                                    **                                            **                                    |
+      |                                   **                                              **                                   |
+      |                                  **                                                **                                  |
+      |                                 **                                                  **                                 |
+      |                                **                                                    **                                |
+      |                               **                                                      **                               |
+      |                              **                                                        **                              |
+      |                             **                                                          **                             |
+  0.8 ++                           **                                                            **                           ++
+      |                            *                                                              *                            |
+      |                           **                                                              **                           |
+      |                          **                                                                **                          |
+      |                         **                                                                  **                         |
+      |                         *                                                                    *                         |
+      |                        **                                                                    **                        |
+      |                       **                                                                      **                       |
+      |                       *                                                                        *                       |
+      |                      **                                                                        **                      |
+      |                     **                                                                          **                     |
+      |                     *                                                                            *                     |
+      |                    **                                                                            **                    |
+      |                    *                                                                              *                    |
+      |                   *                                                                                *                   |
+      |                   *                                                                                *                   |
+      |                  *                                                                                  *                  |
+      |                 **                                                                                  **                 |
+      |                 *                                                                                    *                 |
+  0.6 ++               **                                                                                    **               ++
+      |                *                                                                                      *                |
+      |               **                                                                                      **               |
+      |               *                                                                                        *               |
+      |              **                                                                                        **              |
+      |              *                                                                                          *              |
+      |             **                                                                                          **             |
+      |             *                                                                                            *             |
+      |             *                                                                                            *             |
+      |            *                                                                                              *            |
+      |            *                                                                                              *            |
+      |           **                                                                                              **           |
+      |           *                                                                                                *           |
+      |          **                                                                                                **          |
+      |          *                                                                                                  *          |
+      |          *                                                                                                  *          |
+      |         **                                                                                                  **         |
+      |         *                                                                                                    *         |
+  0.4 ++        *                                                                                                    *        ++
+      |        *                                                                                                      *        |
+      |        *                                                                                                      *        |
+      |        *                                                                                                      *        |
+      |       *                                                                                                        *       |
+      |       *                                                                                                        *       |
+      |      **                                                                                                        **      |
+      |      *                                                                                                          *      |
+      |      *                                                                                                          *      |
+      |      *                                                                                                          *      |
+      |     *                                                                                                            *     |
+      |     *                                                                                                            *     |
+      |     *                                                                                                            *     |
+      |    *                                                                                                              *    |
+      |    *                                                                                                              *    |
+      |    *                                                                                                              *    |
+      |   *                                                                                                                *   |
+      |   *                                                                                                                *   |
+      |   *                                                                                                                *   |
+  0.2 ++  *                                                                                                                *  ++
+      |  *                                                                                                                  *  |
+      |  *                                                                                                                  *  |
+      |  *                                                                                                                  *  |
+      |  *                                                                                                                  *  |
+      | *                                                                                                                    * |
+      | *                                                                                                                    * |
+      | *                                                                                                                    * |
+      | *                                                                                                                    * |
+      | *                                                                                                                    * |
+      |*                                                                                                                      *|
+      |*                                                                                                                      *|
+      |*                                                                                                                      *|
+      |*                                                                                                                      *|
+      |*                                                                                                                      *|
+      *                                                                                                                        *
+      *                                                                                                                        *
+      *                       +                       +                        +                       +                       *
+    0 ++----------------------+-----------------------+------------------------+-----------------------+----------------------++
+      0                      0.2                     0.4                      0.6                     0.8                      1
+                                                                  p
 
 Figure 5.9: Entropy function H for an experiment with exactly two
 outcomes.
@@ -3316,8 +4372,188 @@ in fact Octave (http://www.gnu.org/software/octave/) syntax.
    *note Figure:sharp-edge:: and *note Figure:smooth-edge:: show plots
 of the matrices `sharp_edge' and `smooth_edge'.
 
+
+
+
+
+                                                                                                sharp_edge ******
+                                                                                                       250 $$$$$$
+                                                                                                       200 %%%%%%
+                                                                                                       150 @@@@@@
+                                                                                                       100 &&&&&&
+                                                                                                        50 ======
+
+
+
+
+
+
+
+
+                                                    **
+                                                  **  *
+                                                **    *
+                                              **       *
+                                            **         *
+                                            **          *
+                                            * **         *
+                                            *   *        *
+                                            *    *        *
+                                           *      *       *
+                                           *     * *       *
+                                           *    *  *        *
+                                          *    *    *       *
+            300  ++                       *   *     *        *
+                 |                        *  *       *        *
+                 |                       *  *        *        *
+                 |                       * *          *        *
+                 |                       **           *        *
+            250  |+                     **             *        *
+                 |                      ***            *         *
+                 |                      ***             *        *
+                 |                     * * *            *         *
+                 |                    ** *  *            *        *
+            200  |+                   * *   *             *        **
+                 |                   *  *    *            *      **  ****
+                 |                  *   *     *            *    *        ****
+                 |                 *   *      *            *   *             ****
+                 |                *    *       *            ***                  ****
+            150  |+               *    *        *           *                  **    ******
+                 |               *    *         *            *               **            *****
+                 |              *     *        * *           *******       **                   ******
+                 |             *      *       *  **           *     ********                    **    ********
+            100  |+           *      *       *    *           *        **   ****              **              ****
+                 |           *       *      *      *           *      *         ****        **                 **|
+                 |           *       *     *       *           *     *              ****  **                  *  |
+                 |          *       *     *         *           *  **                   ****                **   |
+                 |        *         *    *        %% *          * *                    **   *****          *     |
+             50  |+     **          *   *        %   *           ***                 **          *****   **      |
+                 |     *           *   *       -%   @ *        **   *****          **                 ***        |
+                 |   **            *  *      -%%  @@  **     **          *****   **                   **         |
+                 |  *              * *     %%%.  @     *    *                 ****                   *           |
+                 |**              * *     -- @@@@..  && * **                  **  ****             **            |
+              0  ***              **     @@@@ &&&&&&&===**                   *        ****        *              |
+                 |  *****         *    &&&&&&&=====    ..***               **             ****  **               |
+                 |       *****   *   =====           =====*******         *                   **---              |
+                 |            ***   -      ==========&&&&.**     ****   **                   ** .. ------        |
+                 |                --+.=====  &&&&@@@@@@. & **        *****                 **  .         ------  |
+                 |               -  ==...&&&@@@@@    . @  & **       **   *****          **  ..                -- 4
+                 |             --  =   && @@...%%%%%%   @ & **      *          *****   **   .                  --
+                 |           --  ==   &  @    %...$. %  @  & **    *                ***.. ..                  -
+                 |          -   =    &  @    %  .$ %%..@@  &  ** **                 **   ....               --
+                 |        --. ==   && @@   %% .. %%  @@  ..&. ***                  *   ..    .....        --
+                 |       -   =... &  @    %  .  %  @@    && ==.***               **   .           ....   -
+                 |     --      = &..@.   % .. %% @@    &&  =   .. *****         *   ..                .- 3
+                 |   --        =   &  @.%.. %% @@    &&  ==   .        ****   **   .                  -
+                 |  -           =  &  @ %%%%@@@    &&   =   ..             ***.. ..                 --
+                 |--             =  & @@@@     &&&&.  ==   .                 | .....               -
+                0+--              = &.  &&&&&&&  =====.....                  |.     .....        --
+                    ----          =.&&&&=========      ......               .|           .... +--
+                        -----    .=====           =====      .....         . |               .- 2
+                             -- 1-       ========&&&&.  =         ....   ..  |              --
+                                  --=====  &&&&&&  .  & =             .....  |             -
+                                      --&&& @@@@@@@   &  =            ..   ..|..         --
+                                           -----+  @   &  =          .       |  ....    -
+                                               2----@  &   =       ..        |      .. 1
+                                                    ---&-  =      .          |       -
+                                                         --=-   +.           |     --
+                                                              3---           |   --
+                                                                  -----      |  -
+                                                                       ----  |--
+                                                                           - 40
+
 Figure 7.1: 3D plot augmented by contour plot of the
 matrix `sharp_edge'.
+
+
+
+
+
+                                                                                               smooth_edge ******
+                                                                                                       250 $$$$$$
+                                                                                                       200 %%%%%%
+                                                                                                       150 @@@@@@
+                                                                                                       100 &&&&&&
+                                                                                                        50 ======
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                                          ********
+                                                                                                     *****     **|
+                                                                                                   **         *  |
+                                                                                           ********         **   |
+                                                                                     ******     **         *     |
+            300  ++                                                                **          *         **      |
+                 |                                                         ********          **  ********        |
+                 |                                                    *****     **          *****     **         |
+                 |                                                  **         *          **        **           |
+                 |                                           *******         **   ********        **             |
+            250  |+                                     *****    **         ******     **       **               |
+                 |                                    **        *         **         ** ********                 |
+                 |                                   *         *   *******         *****     **                  |
+                 |                                 **        ******    **        **         *                    |
+                 |                                *         **       **  ********         **                     |
+            200  |+                             **  ********        *****     **         *                       |
+                 |                             *****     **       **         *         **                        |
+                 |                           **        ** ********         **  ********                          |
+                 |                         **        *****     **         *****     **                           |
+                 |                       **        **        **         **        **                             |
+            150  |+                    ************         ************        **                               |
+                 |                  ***         **        ***        **       **                                 |
+                 |                 **         **  ********         **  *******                                   |
+                 |               **         ******     **         *****      |                                   |
+            100  |+             *         **          *         **           |                                   |
+                 |            **  ********          **  ********             |                                   |
+                 |           *****     **          *****                     |                                   |
+                 |         **         *          **+  +--                    |                                   |
+                 |        *         **   ********--      -----               |                                   |
+             50  |+     **         ******       -             --=--          |                                   |
+                 |     *         **           --              ==  +-----     |                                   |
+                 |   **  ********            -              ==   ..     ---&-|                                   |
+                 |  *****                  --..           ==    .        &&  -----                               |
+                 |**                     --    ....     ==    ..        &    |    ----                           |
+              0  *+                     -          ....=    ..        &&     |  ..    -@---                      |
+                 |                    --             == .....        &       | .     @@    -----                 |
+                 |                   -              =    ..  ....  &&        |.     @           ----%            |
+                 |                 --             ==    .        .&...      .|     @            ..%% -----       |
+                 |                -++.           =    ..         &    ...... |   @@            . %        -----  |
+                 |              --    ....     ==   ..          &       .. ..|. @            ..%%              -$ 4
+                 |             -          ....=    .          &&       .     | @....        . %               $$-
+                 |           --             == .....         &       ..      @@     ....  ..%%               $-
+                 |          -              =    .   ....    &       .      @@|          ...%.              $$-
+                 |        --.             =   ..        ...&.     ..     @@  |         ..%%  .....        $-
+                 |      --   ....       ==  ..           &&  .....     @@    |        . %         ....  $$
+                 |     -         ..... =   .           &&      .. ....@      |      ..%%              .$ 3
+                 |   --               =....          &&       .      @.....  |     . %               $$
+                 |  -               ==  .  ....    &&       ..      @      ..|.  ..%%              $$-
+                 |--              ==  ..       ...&.       .      @@         | ...%.              $-
+                0+--            ==  ..          &&  .......      @           |. %%  .....       $$-
+                    ----      ==   .           &       ......   @           .| %         .... +$-
+                        -----=   ..           &       .      ..@..         . |%              $$ 2
+                             -- 1-          &&      ..       @@   ....   .. %%              $-
+                                  ----     &       .        @         .....% |            $$
+                                      ----&      ..       @@          ..  %..|..         $-
+                                           -----+        @           .  %%   |  ....   $$
+                                               2----   @@          .. %%     |      .. 1
+                                                    --@--         . %%       |      $$
+                                                         ----   +.%%         |     $-
+                                                              3--%           |   $$
+                                                                  -----      |  $
+                                                                       ----  |$$
+                                                                           - 40
 
 Figure 7.2: 3D plot augmented by contour plot of the
 matrix `smooth_edge'.
@@ -4306,13 +5542,14 @@ Syntactic-Comment Index
  [index ]
 * Menu:
 
-* enblend-response-file:                 Response Files.      (line 106)
-* enfuse-response-file:                  Response Files.      (line 107)
-* filename-globbing:                     Response Files.      (line 155)
-* glob:                                  Response Files.      (line 151)
-* globbing:                              Response Files.      (line 153)
-* layer-selector:                        Response Files.      (line 212)
-* response-file:                         Response Files.      (line 105)
+* enblend-response-file:                 Response File Format. (line 56)
+* enfuse-response-file:                  Response File Format. (line 57)
+* filename-globbing:                     Globbing Algorithms.  (line 12)
+* glob:                                  Globbing Algorithms.  (line  8)
+* globbing:                              Globbing Algorithms.  (line 10)
+* layer-selector:                        Default Layer Selection.
+                                                               (line  6)
+* response-file:                         Response File Format. (line 55)
 
 
 File: enfuse.info,  Node: Option Index,  Next: General Index,  Prev: Syntactic-Comment Index,  Up: Top
@@ -4332,54 +5569,57 @@ Option Index
 * --depth:                               Extended Options.    (line  33)
 * --entropy-cutoff:                      Expert Options.      (line  60)
 * --entropy-weight:                      Fusion Options.      (line  20)
-* --entropy-window-size:                 Expert Options.      (line  90)
+* --entropy-window-size:                 Expert Options.      (line 188)
 * --exposure-cutoff <1>:                 Built-In Exposure Weighting Functions.
-                                                              (line  84)
-* --exposure-cutoff:                     Expert Options.      (line 107)
+                                                              (line 574)
+* --exposure-cutoff:                     Expert Options.      (line 205)
 * --exposure-optimum <1>:                Built-In Exposure Weighting Functions.
-                                                              (line  17)
+                                                              (line 115)
 * --exposure-optimum <2>:                Exposure Weighting.  (line   6)
 * --exposure-optimum:                    Fusion Options.      (line  31)
 * --exposure-weight:                     Fusion Options.      (line  41)
 * --exposure-weight-function <1>:        User-Defined Exposure Weighting Functions.
                                                               (line  14)
 * --exposure-weight-function <2>:        Built-In Exposure Weighting Functions.
-                                                              (line  25)
+                                                              (line 123)
 * --exposure-weight-function:            Fusion Options.      (line  55)
 * --exposure-width <1>:                  Built-In Exposure Weighting Functions.
-                                                              (line  17)
+                                                              (line 115)
 * --exposure-width:                      Fusion Options.      (line 112)
 * --fallback-profile:                    Extended Options.    (line 125)
 * --gpu:                                 Common Options.      (line  70)
 * --gray-projector <1>:                  Exposure Weighting.  (line  10)
-* --gray-projector:                      Expert Options.      (line 190)
+* --gray-projector:                      Expert Options.      (line 386)
 * --hard-mask <1>:                       Expert Stacking.     (line  22)
 * --hard-mask <2>:                       Disabling Averaging. (line   6)
-* --hard-mask:                           Expert Options.      (line 269)
-* --help:                                Common Options.      (line  85)
-* --layer-selector:                      Common Options.      (line  88)
-* --levels:                              Common Options.      (line 114)
-* --load-masks:                          Expert Options.      (line 283)
+* --hard-mask:                           Expert Options.      (line 465)
+* --help:                                Information Options. (line   8)
+* --layer-selector:                      Common Options.      (line  84)
+* --levels:                              Common Options.      (line 110)
+* --load-masks:                          Expert Options.      (line 479)
 * --no-ciecam:                           Extended Options.    (line  21)
 * --no-gpu:                              Common Options.      (line  79)
-* --no-parameter:                        Common Options.      (line 168)
-* --output:                              Common Options.      (line 158)
+* --no-parameter:                        Common Options.      (line 164)
+* --output:                              Common Options.      (line 154)
 * --saturation-weight:                   Fusion Options.      (line 123)
-* --save-masks:                          Expert Options.      (line 302)
-* --soft-mask:                           Expert Options.      (line 334)
-* --verbose:                             Common Options.      (line 212)
-* --version:                             Common Options.      (line 246)
-* --wrap:                                Common Options.      (line 253)
+* --save-masks:                          Expert Options.      (line 498)
+* --show-globbing-algorithms:            Information Options. (line  12)
+* --show-image-formats:                  Information Options. (line  19)
+* --show-signature:                      Information Options. (line  29)
+* --soft-mask:                           Expert Options.      (line 530)
+* --verbose:                             Common Options.      (line 208)
+* --version:                             Information Options. (line  37)
+* --wrap:                                Common Options.      (line 242)
 * -c:                                    Extended Options.    (line  11)
 * -d:                                    Extended Options.    (line  33)
 * -f:                                    Extended Options.    (line 113)
 * -g:                                    Extended Options.    (line 133)
-* -h:                                    Common Options.      (line  85)
-* -l:                                    Common Options.      (line 114)
-* -o:                                    Common Options.      (line 158)
-* -V:                                    Common Options.      (line 246)
-* -v:                                    Common Options.      (line 212)
-* -w:                                    Common Options.      (line 253)
+* -h:                                    Information Options. (line   8)
+* -l:                                    Common Options.      (line 110)
+* -o:                                    Common Options.      (line 154)
+* -V:                                    Information Options. (line  37)
+* -v:                                    Common Options.      (line 208)
+* -w:                                    Common Options.      (line 242)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -4390,10 +5630,11 @@ General Index
  [index ]
 * Menu:
 
-* # (response file comment):             Response Files.      (line  56)
-* 360o panoramas:                        Common Options.      (line 253)
+* # (response file comment):             Response File Format.
+                                                              (line   6)
+* 360o panoramas:                        Common Options.      (line 242)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 160)
+* a.tif:                                 Common Options.      (line 156)
 * active criterion:                      Single Criterion Fusing.
                                                               (line  12)
 * advanced focus stacking:               Advanced Focus Stacking.
@@ -4403,16 +5644,16 @@ General Index
 * advanced focus stacking, suppressing noise: Suppressing Noise or Recognizing Faint Edges.
                                                               (line   6)
 * affine transformation:                 Standard Workflow.   (line  48)
-* algorithms, globbing:                  Response Files.      (line 149)
+* algorithms, globbing:                  Globbing Algorithms. (line   6)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  65)
 * alpha channel, associated:             Extended Options.    (line 133)
-* anti-value gray projector:             Expert Options.      (line 200)
+* anti-value gray projector:             Expert Options.      (line 396)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
 * arithmetic JPEG compression:           Common Options.      (line  33)
 * authors, list of:                      Authors.             (line   6)
-* average gray projector:                Expert Options.      (line 209)
+* average gray projector:                Expert Options.      (line 405)
 * average, disabling:                    Disabling Averaging. (line   6)
 * average, weighted:                     Weighted Average.    (line   6)
 * basic focus stacking:                  Basic Focus Stacking.
@@ -4421,6 +5662,8 @@ General Index
 * bits per channel:                      Extended Options.    (line  33)
 * blending exposures:                    Exposure Series Misconceptions.
                                                               (line   9)
+* branch, development:                   Information Options. (line  42)
+* branch, stable:                        Information Options. (line  42)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line  21)
@@ -4428,7 +5671,7 @@ General Index
 * central processing unit:               Common Options.      (line  70)
 * channel width:                         Extended Options.    (line  33)
 * channel, alpha:                        Overview.            (line  65)
-* channel-mixer gray projector:          Expert Options.      (line 215)
+* channel-mixer gray projector:          Expert Options.      (line 411)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
 * CIECAM02:                              Extended Options.    (line  11)
 * circle-of-confusion:                   Why Focus Stacks.    (line  12)
@@ -4454,8 +5697,8 @@ General Index
 * contrast weighting using standard deviation: Standard Deviation.
                                                               (line   6)
 * conversion, raw:                       Standard Workflow.   (line  34)
-* conversion, RGB'-L*a*b*:               Expert Options.      (line 253)
-* conversion, RGB-L*a*b*:                Expert Options.      (line 231)
+* conversion, RGB'-L*a*b*:               Expert Options.      (line 449)
+* conversion, RGB-L*a*b*:                Expert Options.      (line 427)
 * CPU:                                   Common Options.      (line  70)
 * criteria, overpowering one another:    Single Criterion Fusing.
                                                               (line  37)
@@ -4465,14 +5708,16 @@ General Index
 * dark frame:                            Expert Stacking.     (line  18)
 * decision tree, focus stacking:         Focus Stacking Decision Tree.
                                                               (line   6)
-* default layer selection:               Response Files.      (line 212)
-* default output filename:               Common Options.      (line 160)
+* default layer selection:               Default Layer Selection.
+                                                              (line   6)
+* default output filename:               Common Options.      (line 156)
 * default weights:                       Single Criterion Fusing.
                                                               (line  24)
 * deflate compression:                   Common Options.      (line  44)
 * delimiters, option:                    Option Delimiters.   (line   6)
 * depth-of-field:                        Why Focus Stacks.    (line  15)
 * depth-of-focus increase:               Focus Stacks.        (line   6)
+* development branch:                    Information Options. (line  42)
 * digital blending:                      Exposure Series Misconceptions.
                                                               (line   9)
 * disabling average:                     Disabling Averaging. (line   6)
@@ -4499,18 +5744,18 @@ General Index
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
 * exposure weight function, bi-square <1>: Built-In Exposure Weighting Functions.
-                                                              (line  39)
+                                                              (line 137)
 * exposure weight function, bi-square:   Fusion Options.      (line  99)
 * exposure weight function, bisquare <1>: Built-In Exposure Weighting Functions.
-                                                              (line  39)
+                                                              (line 137)
 * exposure weight function, bisquare:    Fusion Options.      (line  99)
 * exposure weight function, full width half maximum: Fusion Options.
                                                               (line  69)
 * exposure weight function, full-sine <1>: Built-In Exposure Weighting Functions.
-                                                              (line  37)
+                                                              (line 135)
 * exposure weight function, full-sine:   Fusion Options.      (line  93)
 * exposure weight function, fullsine <1>: Built-In Exposure Weighting Functions.
-                                                              (line  37)
+                                                              (line 135)
 * exposure weight function, fullsine:    Fusion Options.      (line  93)
 * exposure weight function, FWHM:        Fusion Options.      (line  69)
 * exposure weight function, gauss <1>:   Built-In Exposure Weighting Functions.
@@ -4520,22 +5765,22 @@ General Index
                                                               (line   6)
 * exposure weight function, gaussian:    Fusion Options.      (line  77)
 * exposure weight function, half-sine <1>: Built-In Exposure Weighting Functions.
-                                                              (line  35)
+                                                              (line 133)
 * exposure weight function, half-sine:   Fusion Options.      (line  88)
 * exposure weight function, halfsine <1>: Built-In Exposure Weighting Functions.
-                                                              (line  35)
+                                                              (line 133)
 * exposure weight function, halfsine:    Fusion Options.      (line  88)
 * exposure weight function, lorentz <1>: Built-In Exposure Weighting Functions.
-                                                              (line  33)
+                                                              (line 131)
 * exposure weight function, lorentz:     Fusion Options.      (line  83)
 * exposure weight function, lorentzian <1>: Built-In Exposure Weighting Functions.
-                                                              (line  33)
+                                                              (line 131)
 * exposure weight function, lorentzian:  Fusion Options.      (line  83)
 * exposure weight functions:             Built-In Exposure Weighting Functions.
-                                                              (line  42)
+                                                              (line 140)
 * exposure weight, linear transform:     Fusion Options.      (line  67)
 * fallback profile:                      Extended Options.    (line 125)
-* filename template:                     Expert Options.      (line 290)
+* filename template:                     Expert Options.      (line 486)
 * filename, literal:                     Invocation.          (line  10)
 * flash exposure series:                 Flash Exposure Series.
                                                               (line   6)
@@ -4551,7 +5796,9 @@ General Index
 * focus stacks, preparation:             Preparing Focus Stacks.
                                                               (line   6)
 * focus stacks, why create them:         Why Focus Stacks.    (line   6)
-* format of response file:               Response Files.      (line  56)
+* format of response file:               Response File Format.
+                                                              (line   6)
+* format, image:                         Information Options. (line  19)
 * free documentation license (FDL):      FDL.                 (line   6)
 * full width half maximum:               Fusion Options.      (line  69)
 * fusing, local-contrast-based:          Local Contrast Based Fusing.
@@ -4560,29 +5807,32 @@ General Index
                                                               (line   6)
 * FWHM:                                  Fusion Options.      (line  69)
 * general index:                         General Index.       (line   6)
-* glob(7):                               Response Files.      (line 174)
-* globbing algorithm literal:            Response Files.      (line 160)
-* globbing algorithm none:               Response Files.      (line 182)
-* globbing algorithm sh:                 Response Files.      (line 191)
-* globbing algorithm shell:              Response Files.      (line 185)
-* globbing algorithm wildcard:           Response Files.      (line 160)
-* globbing algorithms:                   Response Files.      (line 149)
+* glob(7):                               Globbing Algorithms. (line  31)
+* globbing algorithm literal:            Globbing Algorithms. (line  17)
+* globbing algorithm none:               Globbing Algorithms. (line  39)
+* globbing algorithm sh:                 Globbing Algorithms. (line  48)
+* globbing algorithm shell:              Globbing Algorithms. (line  42)
+* globbing algorithm wildcard:           Globbing Algorithms. (line  17)
+* globbing algorithms <1>:               Information Options. (line  12)
+* globbing algorithms:                   Globbing Algorithms. (line   6)
 * GNU free documentation license:        FDL.                 (line   6)
 * GPU:                                   Common Options.      (line  70)
-* grammar, response file:                Response Files.      (line  70)
-* grammar, syntactic comment:            Response Files.      (line 141)
+* grammar, response file:                Response File Format.
+                                                              (line  20)
+* grammar, syntactic comment:            Syntactic Comments.  (line  18)
 * graphics processing unit:              Common Options.      (line  70)
-* gray projector:                        Expert Options.      (line 190)
-* gray projector, anti-value:            Expert Options.      (line 200)
-* gray projector, average:               Expert Options.      (line 209)
-* gray projector, channel-mixer:         Expert Options.      (line 215)
-* gray projector, l-star:                Expert Options.      (line 231)
-* gray projector, lightness:             Expert Options.      (line 242)
-* gray projector, luminance:             Expert Options.      (line 247)
-* gray projector, pl-star:               Expert Options.      (line 253)
-* gray projector, value:                 Expert Options.      (line 264)
+* gray projector:                        Expert Options.      (line 386)
+* gray projector, anti-value:            Expert Options.      (line 396)
+* gray projector, average:               Expert Options.      (line 405)
+* gray projector, channel-mixer:         Expert Options.      (line 411)
+* gray projector, l-star:                Expert Options.      (line 427)
+* gray projector, lightness:             Expert Options.      (line 438)
+* gray projector, luminance:             Expert Options.      (line 443)
+* gray projector, pl-star:               Expert Options.      (line 449)
+* gray projector, value:                 Expert Options.      (line 460)
 * grayscale projector:                   Exposure Weighting.  (line  10)
 * half precision float, OpenEXR:         Extended Options.    (line 102)
+* help:                                  Information Options. (line   8)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
 * Hugin:                                 Bug Reports.         (line  95)
@@ -4590,6 +5840,7 @@ General Index
 * ICC profile:                           Extended Options.    (line  14)
 * IEEE754 double precision float:        Extended Options.    (line  86)
 * IEEE754 single precision float:        Extended Options.    (line  76)
+* image formats:                         Information Options. (line  19)
 * image, multi-layer:                    Overview.            (line  73)
 * images, fusable:                       What Images.         (line   6)
 * index, general:                        General Index.       (line   6)
@@ -4602,7 +5853,7 @@ General Index
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  21)
 * KImageFuser:                           Bug Reports.         (line  95)
-* l-star gray projector:                 Expert Options.      (line 231)
+* l-star gray projector:                 Expert Options.      (line 427)
 * laplacian edge detection:              Laplacian Edge Detection.
                                                               (line   6)
 * Laplacian of Gaussian (LoG):           Laplacian of Gaussian.
@@ -4610,14 +5861,15 @@ General Index
 * Laplacian-of-Gaussian:                 Expert Options.      (line  11)
 * LaunchPad:                             Bug Reports.         (line  12)
 * LaunchPad, bug database:               Bug Reports.         (line  12)
-* layer selection:                       Common Options.      (line  88)
-* layer selection, all-layers:           Common Options.      (line  93)
-* layer selection, default:              Response Files.      (line 212)
-* layer selection, first-layer:          Common Options.      (line  96)
-* layer selection, largest-layer:        Common Options.      (line 100)
-* layer selection, no layer:             Common Options.      (line 107)
+* layer selection:                       Common Options.      (line  84)
+* layer selection, all-layers:           Common Options.      (line  89)
+* layer selection, default:              Default Layer Selection.
+                                                              (line   6)
+* layer selection, first-layer:          Common Options.      (line  92)
+* layer selection, largest-layer:        Common Options.      (line  96)
+* layer selection, no layer:             Common Options.      (line 103)
 * lens distortion, correction of:        Standard Workflow.   (line  48)
-* levels, pyramid:                       Common Options.      (line 114)
+* levels, pyramid:                       Common Options.      (line 110)
 * LibJPEG:                               Helpful Programs.    (line  70)
 * LibPNG:                                Helpful Programs.    (line  73)
 * library, dynamic <1>:                  User-Defined Exposure Weighting Functions.
@@ -4626,7 +5878,7 @@ General Index
 * LibTiff:                               Helpful Programs.    (line  77)
 * light probe:                           Exposure Series Misconceptions.
                                                               (line  28)
-* lightness gray projector:              Expert Options.      (line 242)
+* lightness gray projector:              Expert Options.      (line 438)
 * literal filename:                      Invocation.          (line  10)
 * local analysis window:                 Standard Deviation.  (line   6)
 * local contrast enhancement:            Local Contrast Enhancement.
@@ -4635,28 +5887,28 @@ General Index
                                                               (line   6)
 * local-contrast-based fusing:           Local Contrast Based Fusing.
                                                               (line   6)
-* luminance gray projector:              Expert Options.      (line 247)
+* luminance gray projector:              Expert Options.      (line 443)
 * luminance interval, normalized:        Exposure Weighting.  (line  14)
 * LZW compression:                       Common Options.      (line  55)
-* mask template character, %:            Expert Options.      (line 339)
-* mask template character, B:            Expert Options.      (line 390)
-* mask template character, b:            Expert Options.      (line 383)
-* mask template character, D:            Expert Options.      (line 380)
-* mask template character, d:            Expert Options.      (line 373)
-* mask template character, E:            Expert Options.      (line 409)
-* mask template character, e:            Expert Options.      (line 403)
-* mask template character, F:            Expert Options.      (line 399)
-* mask template character, f:            Expert Options.      (line 393)
-* mask template character, i:            Expert Options.      (line 342)
-* mask template character, n:            Expert Options.      (line 357)
-* mask template character, P:            Expert Options.      (line 370)
-* mask template character, p:            Expert Options.      (line 362)
-* mask template characters, table of:    Expert Options.      (line 411)
+* mask template character, %:            Expert Options.      (line 535)
+* mask template character, B:            Expert Options.      (line 586)
+* mask template character, b:            Expert Options.      (line 579)
+* mask template character, D:            Expert Options.      (line 576)
+* mask template character, d:            Expert Options.      (line 569)
+* mask template character, E:            Expert Options.      (line 605)
+* mask template character, e:            Expert Options.      (line 599)
+* mask template character, F:            Expert Options.      (line 595)
+* mask template character, f:            Expert Options.      (line 589)
+* mask template character, i:            Expert Options.      (line 538)
+* mask template character, n:            Expert Options.      (line 553)
+* mask template character, P:            Expert Options.      (line 566)
+* mask template character, p:            Expert Options.      (line 558)
+* mask template characters, table of:    Expert Options.      (line 607)
 * mask, binary:                          Understanding Masks. (line   6)
-* mask, filename template:               Expert Options.      (line 290)
+* mask, filename template:               Expert Options.      (line 486)
 * mask, input files:                     Understanding Masks. (line  18)
-* mask, loading:                         Expert Options.      (line 287)
-* mask, save:                            Expert Options.      (line 302)
+* mask, loading:                         Expert Options.      (line 483)
+* mask, save:                            Expert Options.      (line 498)
 * mask, weight:                          Understanding Masks. (line   6)
 * masks, understanding:                  Understanding Masks. (line   6)
 * Mertens-Kautz-Van Reeth exposure fusion: Overview.          (line   6)
@@ -4671,10 +5923,10 @@ General Index
                                                               (line   6)
 * object, shared:                        Fusion Options.      (line  59)
 * Octave:                                Bug Reports.         (line   6)
-* only save mask:                        Expert Options.      (line 311)
+* only save mask:                        Expert Options.      (line 507)
 * OpenCL:                                Common Options.      (line  70)
-* OpenCL, device:                        Common Options.      (line 178)
-* OpenCL, platform:                      Common Options.      (line 178)
+* OpenCL, device:                        Common Options.      (line 174)
+* OpenCL, platform:                      Common Options.      (line 174)
 * OpenEXR, data format:                  Extended Options.    (line  98)
 * OpenEXR, half precision float:         Extended Options.    (line 102)
 * option delimiters:                     Option Delimiters.   (line   6)
@@ -4683,9 +5935,10 @@ General Index
 * options, expert:                       Expert Options.      (line   6)
 * options, extended:                     Extended Options.    (line   6)
 * options, fusion:                       Fusion Options.      (line   6)
+* options, information:                  Information Options. (line   6)
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  15)
-* output filename, default:              Common Options.      (line 160)
+* output filename, default:              Common Options.      (line 156)
 * output image, set size of:             Extended Options.    (line 113)
 * overpowering criteria:                 Single Criterion Fusing.
                                                               (line  37)
@@ -4695,7 +5948,7 @@ General Index
 * perceptual rendering intent:           Color Profiles.      (line  53)
 * photometric alignment:                 Standard Workflow.   (line  50)
 * pixels, hot:                           Expert Stacking.     (line  18)
-* pl-star gray projector:                Expert Options.      (line 253)
+* pl-star gray projector:                Expert Options.      (line 449)
 * polarization series:                   Polarization Series. (line   6)
 * probability function:                  Standard Deviation.  (line  37)
 * problem reports:                       Bug Reports.         (line   9)
@@ -4708,22 +5961,26 @@ General Index
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * projector, grayscale:                  Exposure Weighting.  (line  10)
-* pyramid levels:                        Common Options.      (line 114)
+* pyramid levels:                        Common Options.      (line 110)
 * raw conversion:                        Standard Workflow.   (line  34)
 * rendering intent, perceptual:          Color Profiles.      (line  53)
 * response file <1>:                     Response Files.      (line   6)
 * response file:                         Invocation.          (line  10)
-* response file, comment (#):            Response Files.      (line  56)
-* response file, force recognition of:   Response Files.      (line 100)
-* response file, format:                 Response Files.      (line  56)
-* response file, grammar:                Response Files.      (line  70)
-* response file, syntactic comment:      Response Files.      (line 129)
+* response file, comment (#):            Response File Format.
+                                                              (line   6)
+* response file, force recognition of:   Response File Format.
+                                                              (line  50)
+* response file, format:                 Response File Format.
+                                                              (line   6)
+* response file, grammar:                Response File Format.
+                                                              (line  20)
+* response file, syntactic comment:      Syntactic Comments.  (line   6)
 * RGB color cube:                        Color Profiles.      (line  13)
-* RGB'-L*a*b* conversion:                Expert Options.      (line 253)
-* RGB-L*a*b* conversion:                 Expert Options.      (line 231)
+* RGB'-L*a*b* conversion:                Expert Options.      (line 449)
+* RGB-L*a*b* conversion:                 Expert Options.      (line 427)
 * saturation enhancement:                Polarization Series. (line   6)
-* save mask:                             Expert Options.      (line 302)
-* save mask, only:                       Expert Options.      (line 311)
+* save mask:                             Expert Options.      (line 498)
+* save mask, only:                       Expert Options.      (line 507)
 * scaling of parameters:                 Scaling and Choice of Mode.
                                                               (line   6)
 * sensor, use of clean:                  Expert Stacking.     (line   9)
@@ -4735,6 +5992,7 @@ General Index
 * shared object <1>:                     User-Defined Exposure Weighting Functions.
                                                               (line   6)
 * shared object:                         Fusion Options.      (line  59)
+* signature:                             Information Options. (line  29)
 * simple series:                         Repetition.          (line   6)
 * single criterion fusing:               Single Criterion Fusing.
                                                               (line   6)
@@ -4743,12 +6001,13 @@ General Index
 * SourceForge:                           Overview.            (line  79)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Extended Options.    (line  14)
+* stable branch:                         Information Options. (line  42)
 * standard deviation:                    Standard Deviation.  (line  49)
 * statistical moments:                   Standard Deviation.  (line  37)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
 * sweet spot aperture:                   Why Focus Stacks.    (line  24)
-* syntactic comment, grammar:            Response Files.      (line 141)
-* syntactic comment, response file:      Response Files.      (line 129)
+* syntactic comment, grammar:            Syntactic Comments.  (line  18)
+* syntactic comment, response file:      Syntactic Comments.  (line   6)
 * syntactic-comment index:               Syntactic-Comment Index.
                                                               (line   6)
 * TIFF, multi-directory:                 Overview.            (line  73)
@@ -4758,9 +6017,10 @@ General Index
 * transformation, affine:                Standard Workflow.   (line  48)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * understanding masks:                   Understanding Masks. (line   6)
-* value gray projector:                  Expert Options.      (line 264)
+* value gray projector:                  Expert Options.      (line 460)
 * variance:                              Standard Deviation.  (line  45)
-* virtual reality:                       Common Options.      (line 263)
+* version:                               Information Options. (line  37)
+* virtual reality:                       Common Options.      (line 252)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, entropy:                       Fusion Options.      (line  20)
 * weight, exposure:                      Fusion Options.      (line  41)
@@ -4801,119 +6061,124 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 253)
+* wrap around:                           Common Options.      (line 242)
 
 
 
 Tag Table:
-Node: Top889
-Node: Overview4937
-Ref: Table:weighting-criteria6130
-Ref: Overview-Footnote-18702
-Ref: Overview-Footnote-28871
-Ref: Overview-Footnote-39052
-Ref: Overview-Footnote-49234
-Node: Workflow9376
-Node: Standard Workflow9804
-Ref: Figure:photographic-workflow10063
-Node: External Mask Manipulation12737
-Ref: Figure:external-mask-workflow14053
-Node: Invocation14538
-Node: Image Requirements15383
-Node: Response Files16519
-Ref: Table:response-file-format18542
-Ref: Example:response-file20421
-Ref: Table:response-file-syntactic-comment21062
-Ref: Table:globbing-algorithms21963
-Ref: Example:globbing-algorithm22989
-Node: Common Options23606
-Ref: Common Options-Footnote-134980
-Ref: Common Options-Footnote-235053
-Ref: Common Options-Footnote-335245
-Node: Extended Options35404
-Ref: Extended Options-Footnote-140574
-Ref: Extended Options-Footnote-240640
-Node: Fusion Options40713
-Ref: Table:exposure-weight-functions43408
-Ref: Fusion Options-Footnote-145261
-Node: Expert Options45380
-Ref: Figure:entropy-cutoff48406
-Ref: Example:imagemagick-convert-cutoff50499
-Ref: Figure:exposure-cutoff52536
-Ref: Table:mask-template-characters59705
-Node: Option Delimiters61921
-Node: Color Profiles63316
-Node: Weighting Functions65752
-Node: Weighting Pixels66420
-Node: Weighted Average68009
-Node: Disabling Averaging68602
-Node: Single Criterion Fusing69590
-Ref: Table:default-weights70328
-Node: Exposure Weighting71124
-Node: Built-In Exposure Weighting Functions72447
-Ref: Figure:gaussian73006
-Ref: Table:weight-functions73758
-Ref: Figure:lorentzian74735
-Ref: Figure:halfsine75033
-Ref: Figure:fullsine75156
-Ref: Figure:power75609
-Ref: Figure:exposure-weights76675
-Node: User-Defined Exposure Weighting Functions77164
-Node: Prerequisites78121
-Node: Coding Guidelines79378
-Ref: Example:simple-dynamic-exposure-weight-function82292
-Ref: Example:templated-dynamic-exposure-weight-function83417
-Ref: Example:variable-dynamic-exposure-weight-function85024
-Node: Performance Considerations86607
-Node: Compiling Linking Loading87235
-Ref: Compiling Linking Loading-Footnote-190349
-Node: Saturation Weighting90416
-Node: Local Contrast Weighting91531
-Node: Standard Deviation92893
-Ref: Figure:local-analysis-window93342
-Ref: Standard Deviation-Footnote-195410
-Node: Laplacian of Gaussian95561
-Ref: Figure:laplacian-of-gaussian97135
-Node: Blend SDev and LoG98229
-Node: Scaling and Choice of Mode99909
-Node: Local Entropy Weighting100755
-Ref: Figure:entropy101738
-Node: Understanding Masks103345
-Node: Applications107135
-Node: What Images107859
-Node: Repetition111046
-Node: Exposure Series112129
-Node: Exposure Series Tips114511
-Node: Exposure Series Misconceptions115623
-Ref: Exposure Series Misconceptions-Footnote-1117404
-Node: Flash Exposure Series117617
-Node: Polarization Series117859
-Node: Focus Stacks118299
-Node: Why Focus Stacks119181
-Node: Preparing Focus Stacks120516
-Node: Local Contrast Based Fusing121266
-Node: Basic Focus Stacking122601
-Node: Advanced Focus Stacking123974
-Node: Local Contrast Problem124738
-Ref: Figure:sharp-edge125922
-Ref: Figure:smooth-edge125997
-Node: Laplacian Edge Detection126744
-Node: Local Contrast Enhancement127878
-Node: Suppressing Noise or Recognizing Faint Edges128854
-Node: Focus Stacking Decision Tree131485
-Ref: Figure:focus-stacking-decision-tree131830
-Node: Expert Stacking132614
-Node: Helpful Programs134137
-Node: Bug Reports138197
-Ref: Bug Reports-Footnote-1143852
-Node: Authors143922
-Node: FDL145086
-Node: List of Tables166067
-Node: List of Figures166758
-Node: List of Examples167929
-Node: Program Index168561
-Node: Syntactic-Comment Index171642
-Node: Option Index172330
-Node: General Index176685
+Node: Top886
+Node: Overview4931
+Ref: Table:weighting-criteria6124
+Ref: Overview-Footnote-18696
+Ref: Overview-Footnote-28865
+Ref: Overview-Footnote-39046
+Ref: Overview-Footnote-49228
+Node: Workflow9370
+Node: Standard Workflow9798
+Ref: Figure:photographic-workflow10057
+Node: External Mask Manipulation12731
+Ref: Figure:external-mask-workflow14047
+Node: Invocation14532
+Node: Image Requirements15442
+Node: Response Files16479
+Node: Response File Format18374
+Ref: Table:response-file-format18878
+Ref: Example:response-file20757
+Node: Syntactic Comments21032
+Ref: Table:response-file-syntactic-comment21524
+Node: Globbing Algorithms21856
+Ref: Table:globbing-algorithms22554
+Ref: Example:globbing-algorithm23580
+Node: Default Layer Selection23794
+Node: Common Options24299
+Ref: Common Options-Footnote-135407
+Ref: Common Options-Footnote-235480
+Ref: Common Options-Footnote-335672
+Node: Extended Options35831
+Ref: Extended Options-Footnote-141001
+Ref: Extended Options-Footnote-241067
+Node: Fusion Options41140
+Ref: Table:exposure-weight-functions43835
+Ref: Fusion Options-Footnote-145688
+Node: Expert Options45807
+Ref: Figure:entropy-cutoff48835
+Ref: Example:imagemagick-convert-cutoff63606
+Ref: Figure:exposure-cutoff65643
+Ref: Table:mask-template-characters85490
+Node: Information Options87706
+Node: Option Delimiters90360
+Node: Color Profiles91760
+Node: Weighting Functions94196
+Node: Weighting Pixels94864
+Node: Weighted Average96453
+Node: Disabling Averaging97046
+Node: Single Criterion Fusing98034
+Ref: Table:default-weights98772
+Node: Exposure Weighting99568
+Node: Built-In Exposure Weighting Functions100891
+Ref: Figure:gaussian101450
+Ref: Table:weight-functions114400
+Ref: Figure:lorentzian115377
+Ref: Figure:halfsine127873
+Ref: Figure:fullsine140194
+Ref: Figure:power152845
+Ref: Figure:exposure-weights166109
+Node: User-Defined Exposure Weighting Functions178796
+Node: Prerequisites179753
+Node: Coding Guidelines181010
+Ref: Example:simple-dynamic-exposure-weight-function183924
+Ref: Example:templated-dynamic-exposure-weight-function185049
+Ref: Example:variable-dynamic-exposure-weight-function186656
+Node: Performance Considerations188239
+Node: Compiling Linking Loading188867
+Ref: Compiling Linking Loading-Footnote-1191981
+Node: Saturation Weighting192048
+Node: Local Contrast Weighting193163
+Node: Standard Deviation194525
+Ref: Figure:local-analysis-window194974
+Ref: Standard Deviation-Footnote-1197042
+Node: Laplacian of Gaussian197193
+Ref: Figure:laplacian-of-gaussian198767
+Node: Blend SDev and LoG212058
+Node: Scaling and Choice of Mode213738
+Node: Local Entropy Weighting214584
+Ref: Figure:entropy215567
+Node: Understanding Masks229372
+Node: Applications233162
+Node: What Images233886
+Node: Repetition237073
+Node: Exposure Series238156
+Node: Exposure Series Tips240538
+Node: Exposure Series Misconceptions241650
+Ref: Exposure Series Misconceptions-Footnote-1243431
+Node: Flash Exposure Series243644
+Node: Polarization Series243886
+Node: Focus Stacks244326
+Node: Why Focus Stacks245208
+Node: Preparing Focus Stacks246543
+Node: Local Contrast Based Fusing247293
+Node: Basic Focus Stacking248628
+Node: Advanced Focus Stacking250001
+Node: Local Contrast Problem250765
+Ref: Figure:sharp-edge251949
+Ref: Figure:smooth-edge258998
+Node: Laplacian Edge Detection267275
+Node: Local Contrast Enhancement268409
+Node: Suppressing Noise or Recognizing Faint Edges269385
+Node: Focus Stacking Decision Tree272016
+Ref: Figure:focus-stacking-decision-tree272361
+Node: Expert Stacking273145
+Node: Helpful Programs274668
+Node: Bug Reports278728
+Ref: Bug Reports-Footnote-1284383
+Node: Authors284453
+Node: FDL285617
+Node: List of Tables306598
+Node: List of Figures307289
+Node: List of Examples308460
+Node: Program Index309092
+Node: Syntactic-Comment Index312173
+Node: Option Index312927
+Node: General Index317501
 
 End Tag Table
