@@ -70,6 +70,8 @@ Unreleased.  Current line of development.
 
 ** Package Maintainer Stuff
 
+- Boost version 1.55 or later is now required to build.
+
 - Vigra version 1.9 or later is now required to build.
 
 - Little CMS version 2.5 or later is now required to build.

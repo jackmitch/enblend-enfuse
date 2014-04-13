@@ -160,6 +160,8 @@ AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER(vigra/basicimage.hxx, [],
                 AC_MSG_ERROR([Vigra "basicimage.hxx" header file is required to compile Enblend.]))
 
+AX_BOOST_BASE([1.55], [],
+              AC_MSG_ERROR([Boost version 1.55 or later is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/lexical_cast.hpp, [],
