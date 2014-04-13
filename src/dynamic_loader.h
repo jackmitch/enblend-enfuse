@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
+#include "global.h"  // for enblend::trim
 
 class DynamicLoaderImplementation
 {
