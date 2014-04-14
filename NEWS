@@ -32,6 +32,10 @@ Unreleased.  Current line of development.
 
 ** New Commandline Options
 
+- Calling Enblend or Enfuse with `--show-software-components' will
+  show the compiler name and version along will the versions of all
+  important libraries against which the binaries were compiled.
+
 - The new options `--show-globbing-algorithms',
   `--show-image-formats', and `--show-signature' now display the
   information that previously was requested with `--version

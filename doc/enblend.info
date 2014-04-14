@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-2511ec591ef7, 12 April 2014),
+   This manual is for Enblend (version 4.2-71d42086623e, 13 April 2014),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-2511ec591ef7, 12 April 2014), a
+This manual is for Enblend (version 4.2-71d42086623e, 13 April 2014), a
 tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -1298,7 +1298,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-2511ec591ef7)
+     version 3.2 used 1:1.  This version of Enblend (4.2-71d42086623e)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1550,6 +1550,17 @@ File: enblend.info,  Node: Information Options,  Next: Option Delimiters,  Prev:
      This information can be helpful to ensure the binary was created
      by a trustworthy builder.
 
+`--show-software-components'
+     Show the name and version of the compiler that built Enblend
+     followed by the versions of all important libraries against which
+     Enblend was compiled.
+
+     Technically, the version information is taken from header files,
+     thus it is independent of the dynamic library environment the
+     binary runs within.  The library versions printed here can help to
+     reveal version mismatches with respect to the actual dynamic
+     libraries available to the binary.
+
 `-V'
 `--version'
      Output information on the binary's version.
@@ -1640,7 +1651,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-2511ec591ef7) of Enblend supports two main algorithms
+This version (4.2-71d42086623e) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2694,8 +2705,9 @@ Option Index
 * --show-globbing-algorithms:            Information Options. (line  12)
 * --show-image-formats:                  Information Options. (line  19)
 * --show-signature:                      Information Options. (line  29)
+* --show-software-components:            Information Options. (line  36)
 * --verbose:                             Common Options.      (line 216)
-* --version:                             Information Options. (line  37)
+* --version:                             Information Options. (line  48)
 * --visualize:                           Mask Generation Options.
                                                               (line 336)
 * --wrap:                                Common Options.      (line 250)
@@ -2707,7 +2719,7 @@ Option Index
 * -h:                                    Information Options. (line   8)
 * -l:                                    Common Options.      (line 118)
 * -o:                                    Common Options.      (line 162)
-* -V:                                    Information Options. (line  37)
+* -V:                                    Information Options. (line  48)
 * -v:                                    Common Options.      (line 216)
 * -w:                                    Common Options.      (line 250)
 * -x:                                    Common Options.      (line 303)
@@ -2737,8 +2749,8 @@ General Index
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Extended Options.    (line  36)
-* branch, development:                   Information Options. (line  42)
-* branch, stable:                        Information Options. (line  42)
+* branch, development:                   Information Options. (line  53)
+* branch, stable:                        Information Options. (line  53)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
@@ -2778,7 +2790,7 @@ General Index
 * delimiters, option:                    Option Delimiters.   (line   6)
 * delta-E:                               Mask Generation Options.
                                                               (line 139)
-* development branch:                    Information Options. (line  42)
+* development branch:                    Information Options. (line  53)
 * difference image:                      Mask Generation Options.
                                                               (line 114)
 * DIJKSTRA radius:                       Mask Generation Options.
@@ -3018,10 +3030,11 @@ General Index
                                                               (line   9)
 * single precision float, IEEE754:       Extended Options.    (line  79)
 * size, canvas:                          Extended Options.    (line 116)
+* software components:                   Information Options. (line  36)
 * SourceForge:                           Overview.            (line  45)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Extended Options.    (line  14)
-* stable branch:                         Information Options. (line  42)
+* stable branch:                         Information Options. (line  53)
 * syntactic comment, grammar:            Syntactic Comments.  (line  18)
 * syntactic comment, response file:      Syntactic Comments.  (line   6)
 * syntactic-comment index:               Syntactic-Comment Index.
@@ -3031,7 +3044,7 @@ General Index
 * tiffsplit:                             Overview.            (line  39)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* version:                               Information Options. (line  37)
+* version:                               Information Options. (line  48)
 * virtual reality:                       Common Options.      (line 260)
 * visualization image:                   Mask Generation Options.
                                                               (line 353)
@@ -3095,21 +3108,21 @@ Ref: Table:visualization-colors52871
 Ref: Table:mask-template-characters53786
 Ref: Mask Generation Options-Footnote-156038
 Node: Information Options56266
-Node: Option Delimiters58931
-Node: Primary Seam Generators60332
-Node: Color Profiles63218
-Node: Understanding Masks65668
-Node: Helpful Programs69458
-Node: Bug Reports73526
-Ref: Bug Reports-Footnote-179182
-Node: Authors79252
-Node: FDL80417
-Node: List of Tables101399
-Node: List of Figures102023
-Node: List of Examples102313
-Node: Program Index102594
-Node: Syntactic-Comment Index105749
-Node: Option Index106504
-Node: General Index110730
+Node: Option Delimiters59441
+Node: Primary Seam Generators60842
+Node: Color Profiles63728
+Node: Understanding Masks66178
+Node: Helpful Programs69968
+Node: Bug Reports74036
+Ref: Bug Reports-Footnote-179692
+Node: Authors79762
+Node: FDL80927
+Node: List of Tables101909
+Node: List of Figures102533
+Node: List of Examples102823
+Node: Program Index103104
+Node: Syntactic-Comment Index106259
+Node: Option Index107014
+Node: General Index111313
 
 End Tag Table

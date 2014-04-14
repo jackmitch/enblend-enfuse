@@ -62,6 +62,9 @@ extern "C" int optind;
 
 #include <boost/algorithm/string.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/version.hpp>    // BOOST_VERSION
+
+#include <gsl/gsl_version.h>    // GSL_VERSION
 
 #include <lcms2.h>
 #if !defined(LCMS_VERSION) || LCMS_VERSION < 2050
@@ -364,7 +367,8 @@ printImageFormats()
         "Enblend supports the following image formats:\n" <<
         "  " << formats << "\n" <<
         "and automatically recognizes the image file extensions:\n" <<
-        "  " << extensions << "\n\n";
+        "  " << extensions << "\n" <<
+        std::endl;
 
     exit(0);
 }
@@ -392,7 +396,72 @@ printGlobbingAlgos()
             "  " << i->first << "\n" <<
             "    " << i->second << "\n";
     }
-    std::cout << "\n";
+    std::cout << std::endl;
+
+    exit(0);
+}
+
+
+void
+printSoftwareComponents()
+{
+    std::cout << "Compiler\n  " <<
+        // IMPLEMENTATION NOTE: Order matters as both CLang and ICC
+        // identify themselves as GCC, too.
+#if defined(__clang__)
+        "clang++ " << __clang_major__ << '.' << __clang_minor__ << '.' << __clang_patchlevel__ <<
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+        "icpc " << __GNUC__ << '.' << __GNUC_MINOR__ << '.' << __GNUC_PATCHLEVEL__ <<
+#elif defined(__GNUG__)
+        "g++ " << __GNUC__ << '.' << __GNUC_MINOR__ << '.' << __GNUC_PATCHLEVEL__ <<
+#elif defined(__IBMC__) || defined(__IBMCPP__)
+        "xlc++ " << __IBMCPP__ <<
+#elif defined(_MSC_VER)
+        "MS Visual Studio " << _MSC_FULL_VER <<
+#elif defined(__PGI)
+        "pgcpp " << __PGIC__ << '.' << __PGIC_MINOR__ << '.' << __PGIC_PATCHLEVEL__ <<
+#else
+        "unknown" <<
+#endif
+        "\n" <<
+#ifdef OPENMP
+        "  implementing OpenMP standard of " << _OPENMP / 100 << '-' << _OPENMP % 100 << "\n" <<
+#endif
+        "\n";
+
+#ifdef OPENCL
+    std::cout << "OpenCL APIs\n" <<
+#ifdef CL_VERSION_1_0
+        "  1.0\n" <<
+#endif
+#ifdef CL_VERSION_1_1
+        "  1.1\n" <<
+#endif
+#ifdef CL_VERSION_1_2
+        "  1.2\n" <<
+#endif
+#ifdef CL_VERSION_1_3
+        "  1.3\n" <<
+#endif
+#ifdef CL_VERSION_2_0
+        "  2.0\n" <<
+#endif
+#ifdef CL_VERSION_2_1
+        "  2.1\n" <<
+#endif
+        "\n";
+#endif // OPENCL
+
+    std::cout << "Libraries\n" <<
+        "  Boost:      " << BOOST_VERSION / 100000 << '.' << (BOOST_VERSION / 100) % 1000 << '.' << BOOST_VERSION % 100 << "\n" <<
+        "  GSL:        " << GSL_VERSION << "\n" <<
+        //"  JPEG:       " << "\n" <<
+        "  Little CMS: " << LCMS_VERSION / 1000 << '.' << (LCMS_VERSION / 10) % 100 << '.' << LCMS_VERSION % 10 << "\n" <<
+        //"  PNG:        " << "\n" <<
+        //"  OpenEXR:    " << "\n" <<
+        //"  TIFF:       " << "\n" <<
+        "  Vigra:      " << VIGRA_VERSION << "\n" <<
+        std::endl;
 
     exit(0);
 }
@@ -528,6 +597,8 @@ printUsage(const bool error = true)
         "  --show-image-formats   show all recognized image formats and their filename\n" <<
         "                         extensions\n" <<
         "  --show-signature       show who compiled the binary when and on which machine\n" <<
+        "  --show-software-components\n" <<
+        "                         show the software components with which Enblend was compiled\n" <<
         "\n" <<
         "Enblend accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
@@ -592,7 +663,7 @@ enum AllPossibleOptions {
     ImageDifferenceOption, AnnealOption, DijkstraRadiusOption, MaskVectorizeDistanceOption,
     OptimizerWeightsOption,
     LayerSelectorOption, NearestFeatureTransformOption, GraphCutOption,
-    ShowImageFormatsOption, ShowSignatureOption, ShowGlobbingAlgoInfoOption,
+    ShowImageFormatsOption, ShowSignatureOption, ShowGlobbingAlgoInfoOption, ShowSoftwareComponentsInfoOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -818,7 +889,8 @@ process_options(int argc, char** argv)
         NoParameterId,
         ImageFormatsInfoId,
         SignatureInfoId,
-        GlobbingAlgoInfoId
+        GlobbingAlgoInfoId,
+        SoftwareComponentsInfoId
     };
 
     static struct option long_options[] = {
@@ -858,6 +930,7 @@ process_options(int argc, char** argv)
         {"show-image-formats", no_argument, 0, ImageFormatsInfoId},
         {"show-signature", no_argument, 0, SignatureInfoId},
         {"show-globbing-algorithms", no_argument, 0, GlobbingAlgoInfoId},
+        {"show-software-components", no_argument, 0, SoftwareComponentsInfoId},
         {0, 0, 0, 0}
     };
 
@@ -866,7 +939,7 @@ process_options(int argc, char** argv)
     typedef enum {
         PROCESS_COMPLETELY,
         VERSION_ONLY, USAGE_ONLY,
-        IMAGE_FORMATS_ONLY, SIGNATURE_ONLY, GLOBBING_ALGOS_ONLY
+        IMAGE_FORMATS_ONLY, SIGNATURE_ONLY, GLOBBING_ALGOS_ONLY, SOFTWARE_COMPONENTS_ONLY
     } print_only_task_id_t;
     print_only_task_id_t print_only_task = PROCESS_COMPLETELY;
 
@@ -966,6 +1039,11 @@ process_options(int argc, char** argv)
         case GlobbingAlgoInfoId:
             print_only_task = GLOBBING_ALGOS_ONLY;
             optionSet.insert(ShowGlobbingAlgoInfoOption);
+            break;
+
+        case SoftwareComponentsInfoId:
+            print_only_task = SOFTWARE_COMPONENTS_ONLY;
+            optionSet.insert(ShowSoftwareComponentsInfoOption);
             break;
 
         case 'w': // FALLTHROUGH
@@ -1680,6 +1758,9 @@ process_options(int argc, char** argv)
         break;                  // never reached
     case GLOBBING_ALGOS_ONLY:
         printGlobbingAlgos();
+        break;                  // never reached
+    case SOFTWARE_COMPONENTS_ONLY:
+        printSoftwareComponents();
         break;                  // never reached
 
     case PROCESS_COMPLETELY:

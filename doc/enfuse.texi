@@ -2955,6 +2955,19 @@ binary was compiled, and on which machine this was done.
 This information can be helpful to ensure the binary was created by a
 trustworthy builder.
 
+@item --show-software-components
+@opindex --show-software-components
+@cindex software components
+Show the name and version of the compiler that built Enfuse followed
+by the versions of all important libraries against which Enfuse was
+compiled.
+
+Technically, the version information is taken from header files, thus
+it is independent of the dynamic library environment the binary runs
+within.  The library versions printed here can help to reveal version
+mismatches with respect to the actual dynamic libraries available to
+the binary.
+
 @item -V
 @itemx --version
 @opindex -V
