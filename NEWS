@@ -81,7 +81,10 @@ Unreleased.  Current line of development.
 - Little CMS version 2.5 or later is now required to build.
 
 - Support for OpenGL acceleration has been dropped.  So, the
-  dependencies on the libraries GL, GLU, and Glut are no longer exist.
+  dependencies on the libraries GL, GLU, and Glut do not exist any
+  longer.
+
+- Support for images with 8-bit signed channels has been dropped.
 
 
 * Version 4.1  "Trouble In Paradise"

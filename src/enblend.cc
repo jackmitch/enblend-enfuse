@@ -2405,7 +2405,6 @@ int main(int argc, char** argv)
         if (isColor) {
             if      (pixelType == "UINT8")  enblend::enblendMain<vigra::RGBValue<vigra::UInt8 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enblend::enblendMain<vigra::RGBValue<vigra::Int8  > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT16") enblend::enblendMain<vigra::RGBValue<vigra::UInt16> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT16")  enblend::enblendMain<vigra::RGBValue<vigra::Int16 > >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enblend::enblendMain<vigra::RGBValue<vigra::UInt32> >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
@@ -2423,7 +2422,6 @@ int main(int argc, char** argv)
         } else {
             if      (pixelType == "UINT8")  enblend::enblendMain<vigra::UInt8 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
 #ifndef DEBUG_8BIT_ONLY
-            else if (pixelType == "INT8")   enblend::enblendMain<vigra::Int8  >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT16") enblend::enblendMain<vigra::UInt16>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "INT16")  enblend::enblendMain<vigra::Int16 >(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
             else if (pixelType == "UINT32") enblend::enblendMain<vigra::UInt32>(inputFileNameList, imageInfoList, outputImageInfo, inputUnion);
