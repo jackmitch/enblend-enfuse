@@ -94,6 +94,16 @@ inline int omp_in_parallel() {return 0;}
 inline void omp_set_nested(int) {}
 inline int omp_get_nested() {return 0;}
 
+typedef enum omp_sched_t
+{
+    omp_sched_static = 1,
+    omp_sched_dynamic = 2,
+    omp_sched_guided = 3,
+    omp_sched_auto = 4
+} omp_sched_t;
+
+inline void omp_get_schedule(omp_sched_t*, int*) {}
+inline void omp_set_schedule(omp_sched_t, int) {}
 
 namespace omp
 {
@@ -158,8 +168,40 @@ namespace omp
 
         ~scoped_nested() {omp_set_nested(level_);}
 
+        int level() const {return level_;}
+
     private:
         const int level_;
+    };
+
+
+    class scoped_schedule
+    {
+    public:
+        scoped_schedule() {initialize();}
+
+        explicit scoped_schedule(omp_sched_t a_schedule)
+        {
+            initialize();
+            omp_set_schedule(a_schedule, chunk_size_);
+        }
+
+        scoped_schedule(omp_sched_t a_schedule, int a_chunk_size)
+        {
+            initialize();
+            omp_set_schedule(a_schedule, a_chunk_size);
+        }
+
+        ~scoped_schedule() {omp_set_schedule(schedule_, chunk_size_);}
+
+        omp_sched_t schedule() const {return schedule_;}
+        int chunk_size() const {return chunk_size_;}
+
+    private:
+        void initialize() {omp_get_schedule(&schedule_, &chunk_size_);}
+
+        omp_sched_t schedule_;
+        int chunk_size_;
     };
 } // namespace omp
 
