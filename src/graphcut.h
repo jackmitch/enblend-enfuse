@@ -49,12 +49,8 @@
 #include <vigra/mathutil.hxx>
 #include <vigra/combineimages.hxx>
 
-#include "vigra_ext/rect2d.hxx"
-#include "vigra_ext/stride.hxx"
-
-#ifdef CACHE_IMAGES
-#include "vigra_ext/stdcachedfileimage.hxx"
-#endif
+#include "rect2d.hxx"
+#include "stride.hxx"
 
 #include "common.h"
 #include "maskcommon.h"

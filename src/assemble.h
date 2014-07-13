@@ -39,7 +39,7 @@
 #include <vigra/numerictraits.hxx>
 #include <vigra/transformimage.hxx>
 
-#include "vigra_ext/functoraccessor.hxx"
+#include "functoraccessor.hxx"
 
 #include "common.h"
 #include "fixmath.h"

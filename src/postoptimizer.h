@@ -22,8 +22,8 @@
 
 #include <vector>
 
-#include "vigra_ext/rect2d.hxx"
-#include "vigra_ext/stride.hxx"
+#include "rect2d.hxx"
+#include "stride.hxx"
 
 #include "anneal.h"
 #include "masktypedefs.h"

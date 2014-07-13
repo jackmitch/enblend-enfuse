@@ -503,8 +503,6 @@ AC_CONFIG_FILES([doc/entropy.gp
                  doc/smooth-edge.gp])
 
 AC_CONFIG_FILES([Makefile
-                 include/Makefile
-                 include/vigra_ext/Makefile
                  src/Makefile
                  src/layer_selection/Makefile
                  src/win32helpers/Makefile

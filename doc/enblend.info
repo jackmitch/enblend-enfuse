@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-cdfe519e4d2e, 14 April 2014),
+   This manual is for Enblend (version 4.2-fb4af4fbdf65, 14 April 2014),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-cdfe519e4d2e, 14 April 2014), a
+This manual is for Enblend (version 4.2-fb4af4fbdf65, 14 April 2014), a
 tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -1298,7 +1298,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-cdfe519e4d2e)
+     version 3.2 used 1:1.  This version of Enblend (4.2-fb4af4fbdf65)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1651,7 +1651,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-cdfe519e4d2e) of Enblend supports two main algorithms
+This version (4.2-fb4af4fbdf65) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -1957,6 +1957,18 @@ Enfuse and Enblend.
           library used by Hugin, DCRaw, UFRaw, Enblend, and Enfuse.  It
           supplies some binaries, too.  `tifficc', an ICC color profile
           applier, is of particular interest.
+
+*Camera Firmware Extension*
+        * Magic Lantern (http://www.magiclantern.fm/index.html) is a
+          software add-on that runs from the SD or CF card and adds new
+          features to cameras of a certain Japanese brand as for example
+             - Dual-ISO (more precisely: simultaneous dual sensor
+               speed); this operation mode may in fact obviate the need
+               for Enfuse.
+
+             - Focus stacking
+
+             - HDR-bracketing
 
 
 File: enblend.info,  Node: Bug Reports,  Next: Authors,  Prev: Helpful Programs,  Up: Top
@@ -2618,6 +2630,7 @@ Program Index
 * hugin:                                 Overview.            (line  25)
 * identify (ImageMagick) <1>:            Helpful Programs.    (line  57)
 * identify (ImageMagick):                Understanding Masks. (line  22)
+* Magic Lantern:                         Helpful Programs.    (line  95)
 * montage (ImageMagick):                 Helpful Programs.    (line  57)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  29)
 * nona (Hugin):                          Extended Options.    (line 120)
@@ -3113,16 +3126,16 @@ Node: Primary Seam Generators60842
 Node: Color Profiles63728
 Node: Understanding Masks66178
 Node: Helpful Programs69968
-Node: Bug Reports74036
-Ref: Bug Reports-Footnote-179692
-Node: Authors79762
-Node: FDL80927
-Node: List of Tables101909
-Node: List of Figures102533
-Node: List of Examples102823
-Node: Program Index103104
-Node: Syntactic-Comment Index106259
-Node: Option Index107014
-Node: General Index111313
+Node: Bug Reports74506
+Ref: Bug Reports-Footnote-180162
+Node: Authors80232
+Node: FDL81397
+Node: List of Tables102379
+Node: List of Figures103003
+Node: List of Examples103293
+Node: Program Index103574
+Node: Syntactic-Comment Index106802
+Node: Option Index107557
+Node: General Index111856
 
 End Tag Table

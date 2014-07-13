@@ -6,8 +6,8 @@ if BUILD_DOC
   MAYBE_DOC = doc
 endif
 
-SUBDIRS = include src $(MAYBE_DOC)
-DIST_SUBDIRS = include src doc
+SUBDIRS = src $(MAYBE_DOC)
+DIST_SUBDIRS = src doc
 
 ACLOCAL_AMFLAGS = -I m4
 

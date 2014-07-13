@@ -37,13 +37,9 @@
 #include <vigra/numerictraits.hxx>
 #include <vigra/transformimage.hxx>
 
-#include "vigra_ext/fillpolygon.hxx"
-#include "vigra_ext/rect2d.hxx"
-#include "vigra_ext/stride.hxx"
-
-#ifdef CACHE_IMAGES
-#include "vigra_ext/stdcachedfileimage.hxx"
-#endif
+#include "fillpolygon.hxx"
+#include "rect2d.hxx"
+#include "stride.hxx"
 
 #include "common.h"
 #include "anneal.h"

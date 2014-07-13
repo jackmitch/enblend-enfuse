@@ -37,10 +37,6 @@
 #include <vigra/inspectimage.hxx>
 #include <vigra/numerictraits.hxx>
 
-#ifdef CACHE_IMAGES
-#include "vigra_ext/stdcachedfileimage.hxx"
-#endif
-
 #include "timer.h"
 #include "opencl_vigra.h"
 

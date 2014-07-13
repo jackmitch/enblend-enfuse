@@ -31,7 +31,7 @@
 #include <vigra/initimage.hxx>
 #include <vigra/transformimage.hxx>
 
-#include "vigra_ext/rect2d.hxx"
+#include "rect2d.hxx"
 
 #include "common.h"
 #include "opencl.h"

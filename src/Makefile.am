@@ -7,7 +7,9 @@ SUBDIRS = layer_selection win32helpers
 
 bin_PROGRAMS = enblend enfuse
 
-enblend_SOURCES = anneal.h assemble.h blend.h bounds.h \
+enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
+                  \
+                  anneal.h assemble.h blend.h bounds.h \
                   common.h enblend.h enblend.cc fixmath.h \
                   global.h graphcut.h \
                   maskcommon.h masktypedefs.h mask.h postoptimizer.h \
@@ -27,9 +29,11 @@ enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) @EXTRA_LIBS@
 enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                   -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
+                   -I${top_srcdir}/src/layer_selection
 
-enfuse_SOURCES = assemble.h blend.h bounds.h common.h \
+enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
+                 \
+                 assemble.h blend.h bounds.h common.h \
                  exposure_weight_base.h exposure_weight.h dynamic_loader.h \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h \
@@ -48,7 +52,7 @@ enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                  -I${top_srcdir}/include -I${top_srcdir}/src/layer_selection
+                  -I${top_srcdir}/src/layer_selection
 
 EXTRA_DIST = embrace distance_transform_fh.cl \
              enblend.1 enfuse.1 \
