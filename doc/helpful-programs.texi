@@ -158,4 +158,25 @@ library used by Hugin, DCRaw, UFRaw, Enblend, and Enfuse.  It supplies
 some binaries, too.  @command{tifficc}, an @acronym{ICC} color profile
 applier, is of particular interest.
 @end itemize
+
+
+@item Camera Firmware Extension
+
+@itemize
+@item
+@pindex Magic Lantern
+@uref{http://@/www.magiclantern.fm/@/index.html, Magic Lantern} is a
+software add-on that runs from the @acronym{SD} or @acronym{CF} card
+and adds new features to cameras of a certain Japanese brand as for
+example
+@itemize @minus
+@item
+Dual-@acronym{ISO} (more precisely: simultaneous dual sensor speed);
+this operation mode may in fact obviate the need for Enfuse.
+@item
+Focus stacking
+@item
+@acronym{HDR}-bracketing
+@end itemize
+@end itemize
 @end table

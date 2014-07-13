@@ -6461,7 +6461,10 @@ be worth an extra run.
 An exposure series is a set of images taken with identical parameters
 except for the exposure time.  Some cameras even provide special
 functions to automate recording exposure series.  See the instruction
-manual of your model for details.
+manual of your model for details.  Also check out the features that
+Magic Lantern (@pxref{Helpful Programs}) offers to shoot
+@acronym{HDR}-series and to extend the dynamic range right in the
+camera.
 
 Enfuse's defaults,
 @samp{--exposure-weight=@value{default-weight-exposure}} and
@@ -6529,6 +6532,16 @@ You can take a larger series of images and only use part of it.
 As has been pointed out in the previous item, a wide
 @acronym{EV}-spacing makes pre-visualization harder.  So start out
 with a spacing of 2/3@dmn{EV} to 1+1/3@dmn{EV}.
+
+@item Use Magic Lantern's dual-@acronym{ISO} mode.  (And avoid Enfuse@tie{};-)
+Magic Lantern can reprogram a camara to take a @emph{single} short
+with @emph{two different} sensor speeds.  They call it
+``dual-@acronym{ISO}'' mode.  The non-standard @sc{RAW}@tie{}image
+created that way must be processed with
+@command{cr2hdr}@footnote{@command{cr2hdr} is part of Magic Lantern's
+source distribution.}, which produces a @acronym{DNG}@tie{}file
+readable with the usual @sc{RAW}@tie{}converters.  @xref{Helpful
+Programs}.
 @end table
 
 
@@ -7057,6 +7070,10 @@ small aperture (large aperture number).
 The small aperture will give the fused image a more natural in-focus
 to out-of-focus transition and the working-aperture shots supply the
 detail in the in-focus regions.
+
+@item
+Consider the use Magic Lantern (@pxref{Helpful Programs}) to automate
+the creation of focus stacks.
 @end itemize
 
 
