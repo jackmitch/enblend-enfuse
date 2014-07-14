@@ -612,10 +612,6 @@ printUsage(const bool error = true)
 
 void cleanup_output(void)
 {
-#ifdef DEBUG
-    std::cout << "+ cleanup_output\n";
-#endif
-
     if (!OutputIsValid) {
         std::cerr << command << ": info: remove invalid output image \"" << OutputFileName << "\"\n";
         errno = 0;
