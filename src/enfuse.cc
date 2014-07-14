@@ -516,10 +516,6 @@ printUsage(const bool error = true)
         "                         set one or more KEY-VALUE pairs\n" <<
         "\n" <<
         "Extended options:\n" <<
-#ifdef CACHE_IMAGES
-        "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
-        (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
-#endif
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
         "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
@@ -531,10 +527,6 @@ printUsage(const bool error = true)
         "                         manually set the size and position of the output\n" <<
         "                         image; useful for cropped and shifted input\n" <<
         "                         TIFF images, such as those produced by Nona\n" <<
-#ifdef CACHE_IMAGES
-        "  -m CACHESIZE           set image CACHESIZE in megabytes; default: " <<
-        (vigra_ext::CachedFileImageDirector::v().getAllocation() / 1048576LL) << "MB\n" <<
-#endif
         "\n" <<
         "Fusion options:\n" <<
         "  --exposure-weight=WEIGHT\n" <<
@@ -901,24 +893,6 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             enblend::getFileType(OutputFileName) << "\"" <<
             std::endl;
     }
-
-#ifndef CACHE_IMAGES
-    if (contains(optionSet, CacheSizeOption)) {
-        std::cerr << command <<
-            ": warning: option \"-m\" has no effect in this " << command << " binary,\n" <<
-            command <<
-            ": warning:     because it was compiled without image cache" <<
-            std::endl;
-    }
-
-    if (contains(optionSet, BlockSizeOption)) {
-        std::cerr << command <<
-            ": warning: option \"-b\" has no effect in this " << command << " binary,\n" <<
-            command <<
-            ": warning:     because it was compiled without image cache" <<
-            std::endl;
-    }
-#endif // CACHE_IMAGES
 
 #ifdef OPENCL
     if (!UseGPU && contains(optionSet, PreferredGPUOption)) {
@@ -1813,23 +1787,6 @@ process_options(int argc, char** argv)
             optionSet.insert(EntropyWindowSizeOption);
             break;
 
-#ifdef CACHE_IMAGES
-        case 'b':
-            if (optarg != nullptr && *optarg != 0) {
-                const int cache_block_size =
-                    enblend::numberOfString(optarg,
-                                            [](int x) {return x >= 1;}, //< minimum-cache-block-size 1@dmn{KB}
-                                            "cache block size must be 1 KB or more; will use 1 KB",
-                                            1);
-                vigra_ext::CachedFileImageDirector::v().setBlockSize(static_cast<long long>(cache_block_size) << 10);
-            } else {
-                std::cerr << command << ": option \"-b\" requires an argument" << std::endl;
-                failed = true;
-            }
-            optionSet.insert(BlockSizeOption);
-            break;
-#endif
-
         case 'c': BOOST_FALLTHROUGH;
         case CiecamId:
             UseCIECAM = true;
@@ -1913,23 +1870,6 @@ process_options(int argc, char** argv)
             }
             optionSet.insert(LevelsOption);
             break;
-
-#ifdef CACHE_IMAGES
-        case 'm':
-            if (optarg != nullptr && *optarg != 0) {
-                const int cache_size =
-                    enblend::numberOfString(optarg,
-                                            [](int x) {return x >= 1;}, //< minimum-cache-size 1@dmn{MB}
-                                            "cache memory limit less than 1 MB; will use 1 MB",
-                                            1);
-                vigra_ext::CachedFileImageDirector::v().setAllocation(static_cast<long long>(cache_size) << 20);
-            } else {
-                std::cerr << command << ": option \"-m\" requires an argument" << std::endl;
-                failed = true;
-            }
-            optionSet.insert(CacheSizeOption);
-            break;
-#endif
 
         case LayerSelectorId: {
             selector::algorithm_list::const_iterator selector = selector::find_by_name(optarg);

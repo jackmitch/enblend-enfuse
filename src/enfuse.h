@@ -1382,21 +1382,6 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 
         imageList.push_back(vigra::make_triple(imagePair.first, imagePair.second, mask));
 
-#ifdef CACHE_IMAGES
-        if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
-            std::cerr << command
-                      << ": info: image cache statistics after loading image "
-                      << m << "\n";
-            v.printStats(std::cerr, command + ": info:     image", imagePair.first);
-            v.printStats(std::cerr, command + ": info:     alpha", imagePair.second);
-            v.printStats(std::cerr, command + ": info:     weight", mask);
-            v.printStats(std::cerr, command + ": info:     normImage", normImage);
-            v.printStats(std::cerr, command + ": info: ");
-            v.resetCacheMisses();
-        }
-#endif
-
         ++m;
         ++inputFileNameIterator;
     }
@@ -1490,15 +1475,6 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 i++;
             }
         }
-#ifdef CACHE_IMAGES
-        if (Verbose >= VERBOSE_CFI_MESSAGES) {
-            vigra_ext::CachedFileImageDirector& v = vigra_ext::CachedFileImageDirector::v();
-            std::cerr << command
-                      << ": info: image cache statistics after creating hard mask\n";
-            v.printStats(std::cerr, command + ": info: ");
-            v.resetCacheMisses();
-        }
-#endif
     }
 
     if (StopAfterMaskGeneration) {
