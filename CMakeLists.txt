@@ -369,7 +369,7 @@ include(ConfigureChecks.cmake)
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 
-include_directories(${CMAKE_BINARY_DIR} ${TOP_SRC_DIR}/include)
+include_directories(${CMAKE_BINARY_DIR})
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "")
