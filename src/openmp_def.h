@@ -94,6 +94,7 @@ inline int omp_in_parallel() {return 0;}
 inline void omp_set_nested(int) {}
 inline int omp_get_nested() {return 0;}
 
+#if 0
 typedef enum omp_sched_t
 {
     omp_sched_static = 1,
@@ -104,6 +105,7 @@ typedef enum omp_sched_t
 
 inline void omp_get_schedule(omp_sched_t*, int*) {}
 inline void omp_set_schedule(omp_sched_t, int) {}
+#endif
 
 namespace omp
 {
@@ -175,6 +177,7 @@ namespace omp
     };
 
 
+#if 0
     class scoped_schedule
     {
     public:
@@ -203,6 +206,7 @@ namespace omp
         omp_sched_t schedule_;
         int chunk_size_;
     };
+#endif
 } // namespace omp
 
 
