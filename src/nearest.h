@@ -63,37 +63,38 @@ namespace vigra
         {
             timer::WallClock wall_clock;
 
+            wall_clock.start();
 #ifdef OPENCL
             if (GPUContext && GPU::DistanceTransform)
             {
+#ifdef DEBUG
                 std::cerr <<
                     command << ": info: choose OpenCL accelaration for Distance Transform" << std::endl;
+#endif // DEBUG
 
-                wall_clock.start();
                 GPU::DistanceTransform->run(src_upperleft, src_lowerright, src_acc,
                                             dest_upperleft, dest_acc,
                                             background, norm);
-                wall_clock.stop();
             }
             else
             {
-                std::cerr << command << ": info: missing GPUContext or OpenCL DistanceTransform" << std::endl;
+                if (UseGPU)
+                {
+                    std::cerr <<
+                        command << ": warning: missing GPUContext or OpenCL DistanceTransform\n" <<
+                        command << ": warning:     falling back to CPU path" << std::endl;
+                }
 
-                wall_clock.start();
                 vigra::omp::distanceTransform(src_upperleft, src_lowerright, src_acc,
                                               dest_upperleft, dest_acc,
                                               background, norm);
-                wall_clock.stop();
             }
 #else
-            std::cerr << command << ": info: no OpenCL support compiled into Enblend" << std::endl;
-
-            wall_clock.start();
             vigra::omp::distanceTransform(src_upperleft, src_lowerright, src_acc,
                                           dest_upperleft, dest_acc,
                                           background, norm);
-            wall_clock.stop();
 #endif // OPENCL
+            wall_clock.stop();
 
             const std::ios::fmtflags flags(std::cerr.flags());
             vigra::Size2D size(src_lowerright - src_upperleft);
