@@ -75,6 +75,7 @@ extern "C" int optind;
 #include "exposure_weight.h"
 #include "global.h"
 #include "layer_selection.h"
+#include "parameter.h"
 #include "selector.h"
 #include "self_test.h"
 #include "signature.h"
@@ -139,8 +140,6 @@ namespace cl {class Context;}
 cl::Context* GPUContext = nullptr;
 namespace ocl {class BatchBuilder;}
 ocl::BatchBuilder* BatchCompiler = nullptr;
-
-parameter_map Parameter;
 
 // Globals related to catching SIGINT
 #ifndef _WIN32
@@ -1903,8 +1902,8 @@ process_options(int argc, char** argv)
                 enblend::trim(key);
                 enblend::trim(value);
 
-                if (enblend::parameter::is_valid_identifier(key)) {
-                    Parameter.insert(parameter_map::value_type(key, ParameterValue(value)));
+                if (parameter::is_valid_identifier(key)) {
+                    parameter::insert(key, value);
                 } else {
                     std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
                         "\" is not a valid identifier; ignoring\n";
@@ -1927,9 +1926,9 @@ process_options(int argc, char** argv)
                 enblend::trim(key);
 
                 if (key == "*") {
-                    Parameter.clear();
-                } else if (enblend::parameter::is_valid_identifier(key)) {
-                    Parameter.erase(key);
+                    parameter::erase_all();
+                } else if (parameter::is_valid_identifier(key)) {
+                    parameter::erase(key);
                 } else {
                     std::cerr << command << ": warning: key \"" << key <<
                         "\" is not a valid identifier; ignoring\n";
@@ -2000,7 +1999,7 @@ process_options(int argc, char** argv)
         exit(1);
     }
 
-    if (enblend::parameter::as_boolean("dump-exposure-weight-function", false)) {
+    if (parameter::as_boolean("dump-exposure-weight-function", false)) {
         enblend::dump_exposure_weight_function(ExposureWeightFunction);
     }
 

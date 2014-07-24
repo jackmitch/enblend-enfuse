@@ -45,6 +45,7 @@
 #include "anneal.h"
 #include "muopt.h"
 #include "nearest.h"
+#include "parameter.h"
 #include "path.h"
 #include "postoptimizer.h"
 #include "graphcut.h"
@@ -477,7 +478,7 @@ template <typename MaskType>
 void
 fillContour(MaskType* mask, const Contour& contour, const vigra::Diff2D& offset)
 {
-    const std::string routine_name(enblend::parameter::as_string("polygon-filler", "new-active"));
+    const std::string routine_name(parameter::as_string("polygon-filler", "new-active"));
 
 #ifdef DEBUG_POLYGON_FILL
     std::cout << "+ fillContour: mask offset = " << offset << "\n";
@@ -1032,7 +1033,7 @@ createMask(const ImageType* const white,
 
     const unsigned default_norm_value =
         std::min(static_cast<unsigned>(EuclideanDistance),
-                 enblend::parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(EuclideanDistance)));
+                 parameter::as_unsigned("distance-transform-norm", static_cast<unsigned>(EuclideanDistance)));
     const nearest_neighbor_metric_t norm = static_cast<nearest_neighbor_metric_t>(default_norm_value);
 
     if (MainAlgorithm == GraphCut) {
