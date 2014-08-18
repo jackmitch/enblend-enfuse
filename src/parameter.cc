@@ -2,7 +2,9 @@
 #include <config.h>
 #endif
 
-#include <cctype>
+#include <cctype>       // isalnum(), isalpha()
+#include <cerrno>       // errno
+#include <cstdlib>      // strtod(), strtol(), strtoul()
 
 #ifdef HAVE_UNORDERED_MAP
 #include <unordered_map>
@@ -11,7 +13,6 @@
 #endif
 
 #include "parameter.h"
-
 
 namespace parameter
 {
