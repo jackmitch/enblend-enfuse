@@ -16,64 +16,20 @@
   Enblend and Enfuse report progress in detail. */
 #define DEFAULT_VERBOSITY 1
 
-/* Define if you want to compile Enblend and Enfuse with image cache */
-#cmakedefine CACHE_IMAGES 1
+/* Define if you want to compile Enblend and Enfuse with mmaped images */
+#cmakedefine MMAP_IMAGES 1
+
+#include <configHaveHeader.h>
+#include <configHaveFunction.h>
 
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #cmakedefine CLOSEDIR_VOID 1
 
-/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
-   */
-#cmakedefine HAVE_DIRENT_H 1
-
-/* Define if you have the <ext/slist> header file */
-#cmakedefine HAVE_EXT_SLIST 1
-
-/* Define to 1 if you have the <fenv.h> header file. */
-#cmakedefine HAVE_FENV_H 1
-
-/* Define to 1 if you have the `fesetround' function. */
-#cmakedefine HAVE_FESETROUND 1
-
-/* Define to 1 if you have the `floor' function. */
-#cmakedefine HAVE_FLOOR 1
-
-/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
-#cmakedefine HAVE_FSEEKO 1
-
-/* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the <limits.h> header file. */
-#cmakedefine HAVE_LIMITS_H 1
-
-/* Define if you have C99's lrint function. */
-#cmakedefine HAVE_LRINT 1
-
-/* Define if you have C99's lrintf function. */
-#cmakedefine HAVE_LRINTF 1
-
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
-   to 0 otherwise. */
-#cmakedefine HAVE_MALLOC 1
-
 /* Define to 1 if you have the 'clock_gettime' function. */
 #cmakedefine HAVE_CLOCK_GETTIME 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine HAVE_MEMORY_H 1
-
-/* Define to 1 if you have the `memset' function. */
-#cmakedefine HAVE_MEMSET 1
-
-/* Define to 1 if you have the `mkstemp' function. */
-#cmakedefine HAVE_MKSTEMP 1
-
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #cmakedefine HAVE_NDIR_H 1
-
-/* Define to 1 if you have the `pow' function. */
-#cmakedefine HAVE_POW 1
 
 /* Define if you have POSIX threads libraries and header files. */
 #cmakedefine HAVE_PTHREAD 1
@@ -81,47 +37,8 @@
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #cmakedefine HAVE_PTRDIFF_T 1
 
-/* Define to 1 if you have the `sqrt' function. */
-#cmakedefine HAVE_SQRT 1
-
-/* Define to 1 if stdbool.h conforms to C99. */
-#cmakedefine HAVE_STDBOOL_H 1
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine HAVE_STDINT_H 1
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H 1
-
-/* Define to 1 if you have the `strchr' function. */
-#cmakedefine HAVE_STRCHR 1
-
-/* Define to 1 if you have the `strcspn' function. */
-#cmakedefine HAVE_STRCSPN 1
-
-/* Define to 1 if you have the `strdup' function. */
-#cmakedefine HAVE_STRDUP 1
-
-/* Define to 1 if you have the `strerror_r' function. */
-#cmakedefine HAVE_STRERROR_R 1
-
 /* Define to 1 if you have the `strerror' function. */
 #cmakedefine HAVE_STRERROR 1
-
-/* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine HAVE_STRINGS_H 1
-
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine HAVE_STRING_H 1
-
-/* Define to 1 if you have the `strrchr' function. */
-#cmakedefine HAVE_STRRCHR 1
-
-/* Define to 1 if you have the `strtol' function. */
-#cmakedefine HAVE_STRTOL 1
-
-/* Define to 1 if you have the `strtok_r' function. */
-#cmakedefine HAVE_STRTOK_R 1
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
@@ -130,21 +47,6 @@
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
 #cmakedefine HAVE_SYS_NDIR_H 1
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine HAVE_SYS_STAT_H 1
-
-/* Define to 1 if you have the <sys/times.h> header file. */
-#cmakedefine HAVE_SYS_TIMES_H 1
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H 1
-
-/* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine HAVE_UNISTD_H 1
-
-/* Define to 1 if you have the <windows.h> header file. */
-#cmakedefine HAVE_WINDOWS_H 1
 
 /* define to 1 if you have dlfcn.h header file and dl lib. */
 #cmakedefine HAVE_DL 1
@@ -190,8 +92,10 @@
 /* Define to 1 if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS 1
 
+#cmakedefine HAVE_DECL_STRERROR_R 1
+
 /* Define to 1 if strerror_r returns char *. */
-#define STRERROR_R_CHAR_P 1
+#cmakedefine STRERROR_R_CHAR_P 1
 
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"
@@ -229,10 +133,11 @@
 #if ! defined(HAVE_SIZE_T)
   #define size_t unsigned int
 #endif
-#endif
 
 /* Define to the implicit search path for OpenCL kernels. */
 #define DEFAULT_OPENCL_PATH "${DEFAULT_OPENCL_PATH}"
 
 /* Prefer separate OpenCL kernels or use build-in strings. */
 #cmakedefine PREFER_SEPARATE_OPENCL_SOURCE 1
+
+#endif /* _CONFIG_COMPILER_H */
