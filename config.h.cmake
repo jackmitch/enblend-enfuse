@@ -60,7 +60,7 @@ ${CMAKE_FUNCTION_EXISTS}
 #define PACKAGE_TARNAME "enblend-enfuse"
 
 /* Define to the version of this package. */
-#cmakedefine PACKAGE_VERSION "${PACKAGE_VERSION}"
+#define PACKAGE_VERSION "${PACKAGE_VERSION_STRING}"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -73,7 +73,7 @@ ${CMAKE_FUNCTION_EXISTS}
 #cmakedefine STDC_HEADERS 1
 
 /* Define to 1 if strerror_r returns char *. */
-#define STRERROR_R_CHAR_P 1
+#cmakedefine STRERROR_R_CHAR_P 1
 
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"

@@ -343,7 +343,7 @@ IF(ENABLE_DMALLOC)
 ENDIF(ENABLE_DMALLOC)
 
 if(ENABLE_TCMALLOC)
-  find_package(TCMALLOC REQUIRED)
+  find_package(TCmalloc REQUIRED)
   add_definitions("-DHAVE_TCMALLOC")
   add_definitions("-DHAVE_TCMALLOC_H")
   include_directories(${TCMALLOC_INCLUDE_DIR})
