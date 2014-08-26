@@ -17,6 +17,19 @@ include(CheckCXXSourceCompiles)
 include(CheckFunctionExists)
 include(TestBigEndian)
 
+MACRO(AddHeaderTestToConfig header var)
+STRING(CONFIGURE "/* Define if you have the <${header}> header file. */\n#cmakedefine ${var} 1\n" _str)
+SET(CMAKE_HEADER_EXISTS "${CMAKE_HEADER_EXISTS}${_str}\n")
+UNSET(_str)
+ENDMACRO()
+
+MACRO(AddFunctionTestToConfig function var)
+STRING(CONFIGURE "/* Define if you have the '${function}' function. */\n#cmakedefine ${var} 1\n" _str)
+SET(CMAKE_FUNCTION_EXISTS "${CMAKE_FUNCTION_EXISTS}${_str}\n")
+UNSET(_str)
+ENDMACRO()
+
+
 #Check for some include files and set appropriate variables
 # e.g. "sys/dir.h" found => "HAVE_SYS_DIR_H" set to 1
 foreach(_fl "dirent.h" "ext/slist" "fenv.h"
@@ -26,6 +39,7 @@ foreach(_fl "dirent.h" "ext/slist" "fenv.h"
   string(REGEX REPLACE "[/\\.]" "_" _var ${_fl})
   string(TOUPPER "${_var}" _FLN)
   check_include_file_cxx("${_fl}" "HAVE_${_FLN}" )
+  AddHeaderTestToConfig("${_fl}" "HAVE_${_FLN}")
 endforeach()
 
 #Check for functions
@@ -35,6 +49,7 @@ foreach(_fc fesetround floor fseeko lrint lrintf
     strchr strcspn strdup strerror strerror_r strrchr strtol strtok_r)
   string(TOUPPER "${_fc}" _FC)
   check_function_exists(${_fc} "HAVE_${_FC}")
+  AddFunctionTestToConfig("${_fc}" "HAVE_${_FC}")
 endforeach()
 
 if(HAVE_DIRENT_H)
@@ -49,6 +64,7 @@ if(HAVE_DIRENT_H)
 endif(HAVE_DIRENT_H)
 
 CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+AddFunctionTestToConfig("clock_gettime" "HAVE_CLOCK_GETTIME")
 
 # Check for restrict keyword
 # Builds the macro A_C_RESTRICT form automake
@@ -122,6 +138,7 @@ check_cxx_source_compiles(
     int main(){return(0);}
     "
     HAVE_SYS_NDIR_H)
+AddHeaderTestToConfig("sys/ndir.h" "HAVE_SYS_NDIR_H")
 
 check_include_files("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
 check_cxx_source_compiles(
