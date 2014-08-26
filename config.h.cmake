@@ -82,24 +82,6 @@ ${CMAKE_FUNCTION_EXISTS}
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #cmakedefine WORDS_BIGENDIAN 1
 
-/* Define to 1 if the X Window System is missing or not being used. */
-/* #undef X_DISPLAY_MISSING */
-
-/* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
-/* #undef _LARGEFILE_SOURCE */
-
-/* Define to empty if `const' does not conform to ANSI C. */
-/* #undef const */
-
-/* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
-#ifndef __cplusplus
-/* #undef inline */
-#endif
-
-/* Define to rpl_malloc if the replacement function should be used. */
-/* #undef malloc */
-
 /* Define to `long int' if <sys/types.h> does not define. */
 #cmakedefine HAVE_OFF_T 1
 #if ! defined(HAVE_OFF_T)
