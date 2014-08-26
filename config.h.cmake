@@ -1,5 +1,5 @@
 /*
- * \file configCompiler.h
+ * \file config.h
  * This file is part of enblend.
  * Licence details can be found in the file COPYING.
  *
@@ -8,8 +8,8 @@
  * during the compilation.
  */
 
-#ifndef _CONFIG_COMPILER_H
-#define _CONFIG_COMPILER_H
+#ifndef _CONFIG_H
+#define _CONFIG_H
 
 /* Default verbosity level of Enblend and Enfuse. A value of zero reduces the
    message output to only warnings and errors. Values of one and more make
