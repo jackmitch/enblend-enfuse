@@ -19,34 +19,25 @@ include(TestBigEndian)
 
 #Check for some include files and set appropriate variables
 # e.g. "sys/dir.h" found => "HAVE_SYS_DIR_H" set to 1
-# and create ${CMAKE_BINARY_DIR}/configHaveHeader.h for inclusion in config.h
-set(listHaveHeaders)
 foreach(_fl "dirent.h" "ext/slist" "fenv.h"
     "GLUT/glut.h" "GL/glut.h" "GL/glu.h" "GL/gl.h"
+    "OpenGL/glu.h" "OpenGL/gl.h"
     "inttypes.h" "limits.h"
-    "memory.h" "sys/mman.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
+    "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
     "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "sys/times.h")
   string(REGEX REPLACE "[/\\.]" "_" _var ${_fl})
   string(TOUPPER "${_var}" _FLN)
   check_include_file_cxx("${_fl}" "HAVE_${_FLN}" )
-  set(listHaveHeaders "${listHaveHeaders}\n/* Define to 1 if you have the <${_fl}> header file */\n#cmakedefine HAVE_${_FLN} 1\n")
 endforeach()
-configure_file(configHaveHeader.cmake "${CMAKE_BINARY_DIR}/configHaveHeader.h.cmake")
-configure_file("${CMAKE_BINARY_DIR}/configHaveHeader.h.cmake" "${CMAKE_BINARY_DIR}/configHaveHeader.h")
 
 #Check for functions
-# and create ${CMAKE_BINARY_DIR}/configHaveFunction.h for inclusion in config.h
-set(listHaveFunctions)
 set(CMAKE_REQUIRED_LIBRARIES -lm)
 foreach(_fc fesetround floor fseeko lrint lrintf
     memset mkstemp pow rint sqrt malloc
     strchr strcspn strdup strerror strerror_r strrchr strtol strtok_r)
   string(TOUPPER "${_fc}" _FC)
   check_function_exists(${_fc} "HAVE_${_FC}")
-  set(listHaveFunctions "${listHaveFunctions}\n/* Define to 1 if you have the `${_fc}' function. */\n#cmakedefine HAVE_${_FC} 1\n")
 endforeach()
-configure_file(configHaveFunction.cmake "${CMAKE_BINARY_DIR}/configHaveFunction.h.cmake")
-configure_file("${CMAKE_BINARY_DIR}/configHaveFunction.h.cmake" "${CMAKE_BINARY_DIR}/configHaveFunction.h")
 
 if(HAVE_DIRENT_H)
   check_cxx_source_compiles(
@@ -166,18 +157,9 @@ check_cxx_source_compiles(
     int main(){return(0);}
     "
   HAVE_SIZE_T)
-
-check_cxx_source_compiles(
-  "
-  #include <string.h>
-  int main(){int i = sizeof(&strerror_r); return(0);}
-  "
-  HAVE_DECL_STRERROR_R)
-
 check_cxx_source_compiles(
   "
   #include <string.h>
   int main(){char b;char *a = strerror_r(0, &b, 0); return(0);}
   "
   STRERROR_R_CHAR_P)
-
