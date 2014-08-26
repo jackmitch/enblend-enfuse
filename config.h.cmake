@@ -62,6 +62,8 @@ ${CMAKE_FUNCTION_EXISTS}
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "${PACKAGE_VERSION_STRING}"
 
+#define PACKAGE_URL "${PACKAGE_URL}"
+
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
 /* #undef PTHREAD_CREATE_JOINABLE */
