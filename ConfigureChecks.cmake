@@ -32,7 +32,7 @@ ENDMACRO()
 
 #Check for some include files and set appropriate variables
 # e.g. "sys/dir.h" found => "HAVE_SYS_DIR_H" set to 1
-foreach(_fl "dirent.h" "ext/slist" "fenv.h"
+foreach(_fl "dirent.h" "fenv.h"
     "inttypes.h" "limits.h"
     "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
     "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "sys/times.h")
@@ -44,9 +44,9 @@ endforeach()
 
 #Check for functions
 set(CMAKE_REQUIRED_LIBRARIES -lm)
-foreach(_fc fesetround floor fseeko lrint lrintf
-    memset mkstemp pow rint sqrt malloc
-    strchr strcspn strdup strerror strerror_r strrchr strtol strtok_r)
+foreach(_fc atexit fesetround floor fseeko lrint lrintf
+    memset mkstemp pow select sqrt malloc
+    strchr strcspn strdup strerror strerror_r strpbrk strrchr strtol strtok_r strerror_r strtoul)
   string(TOUPPER "${_fc}" _FC)
   check_function_exists(${_fc} "HAVE_${_FC}")
   AddFunctionTestToConfig("${_fc}" "HAVE_${_FC}")
@@ -62,6 +62,9 @@ if(HAVE_DIRENT_H)
     "
     CLOSEDIR_INT)
 endif(HAVE_DIRENT_H)
+if (NOT CLOSEDIR_INT)
+  set(CLOSEDIR_VOID 1)
+endif()
 
 CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 AddFunctionTestToConfig("clock_gettime" "HAVE_CLOCK_GETTIME")
@@ -114,10 +117,6 @@ if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   endif()
 endif()
 
-if (NOT CLOSEDIR_INT)
-  set(CLOSEDIR_VOID 1)
-endif()
-
 message(STATUS "CMAKE_ERRFILE = ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log")
 message(STATUS "CMAKE_LOGFILE = ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log")
 
@@ -131,6 +130,15 @@ check_cxx_source_compiles(
     int main(){return(0);}
     "
     HAVE_SYS_DIR_H)
+AddHeaderTestToConfig("sys/dir.h" "HAVE_SYS_DIR_H")
+check_cxx_source_compiles(
+    "
+    #include <ndir.h>
+    DIR *a = 0;
+    int main(){return(0);}
+    "
+    HAVE_NDIR_H)
+AddHeaderTestToConfig("ndir.h" "HAVE_NDIR_H")
 check_cxx_source_compiles(
     "
     #include <sys/ndir.h>
