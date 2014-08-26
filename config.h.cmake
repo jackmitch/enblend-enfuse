@@ -16,9 +16,6 @@
   Enblend and Enfuse report progress in detail. */
 #define DEFAULT_VERBOSITY 1
 
-/* Define if you want to compile Enblend and Enfuse with image cache */
-#cmakedefine CACHE_IMAGES 1
-
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #cmakedefine CLOSEDIR_VOID 1
 

@@ -20,8 +20,6 @@ include(TestBigEndian)
 #Check for some include files and set appropriate variables
 # e.g. "sys/dir.h" found => "HAVE_SYS_DIR_H" set to 1
 foreach(_fl "dirent.h" "ext/slist" "fenv.h"
-    "GLUT/glut.h" "GL/glut.h" "GL/glu.h" "GL/gl.h"
-    "OpenGL/glu.h" "OpenGL/gl.h"
     "inttypes.h" "limits.h"
     "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
     "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "sys/times.h")
