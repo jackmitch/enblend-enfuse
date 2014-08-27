@@ -664,6 +664,7 @@ void sigint_handler(int sig)
 #if !defined(__GW32C__) && !defined(_WIN32)
     struct sigaction action;
     action.sa_handler = SIG_DFL;
+    action.sa_flags   = 0;
     sigemptyset(&(action.sa_mask));
     sigaction(sig, &action, nullptr);
 #else
@@ -2100,6 +2101,7 @@ int main(int argc, char** argv)
 
     struct sigaction action;
     action.sa_handler = sigint_handler;
+    action.sa_flags   = 0;
     sigemptyset(&(action.sa_mask));
     sigaction(SIGINT, &action, nullptr);
 #else
