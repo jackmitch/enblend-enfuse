@@ -47,7 +47,7 @@
 
 namespace omp
 {
-    inline static void* malloc(size_t) __attribute__((alloc_size(1), malloc));
+    inline static void* __attribute__((malloc, alloc_size(1))) malloc(size_t);
 
     inline static void*
     malloc(size_t size)
@@ -109,7 +109,7 @@ inline void omp_set_schedule(omp_sched_t, int) {}
 
 namespace omp
 {
-    inline static void* malloc(size_t) __attribute__((alloc_size(1), malloc));
+    inline static void* __attribute__((malloc, alloc_size(1))) malloc(size_t);
 
     inline static void*
     malloc(size_t size)
