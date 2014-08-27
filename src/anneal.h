@@ -393,13 +393,7 @@ protected:
                     for (unsigned i = j + 1U; i < localK; ++i) {
                         const double piT = (*stateProbabilities)[i] + piTj;
                         double piTAn = piT / (1.0 + schraudolph_exp(ej - E[i]));
-                        if (
-#if defined(__sun__)
-                            isnan(piTAn)
-#else
-                            std::isnan(piTAn)
-#endif
-                            ) {
+                        if (EXPECT_RESULT(std::isnan(piTAn), false)) {
                             // exp term is infinity or zero.
                             piTAn = ej > E[i] ? 0.0 : piT;
                         }
