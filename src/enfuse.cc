@@ -645,7 +645,7 @@ printUsage(const bool error = true)
         "                         adjustment of the number of threads to use in executing\n" <<
         "                         OpenMP parallel regions.\n" <<
 #endif
-#ifdef OPENCL
+#if defined(OPENCL) && defined(PREFER_SEPARATE_OPENCL_SOURCE)
         "  ENBLEND_OPENCL_PATH    The ENBLEND_OPENCL_PATH environment variable sets the search\n" <<
         "                         path for OpenCL source files.  Note that the variable name is\n" <<
         "                         ENBLEND_OPENCL_PATH for Enfuse, too." <<
