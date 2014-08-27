@@ -33,7 +33,7 @@
 #endif
 
 
-#if _OPENMP >= 200203 // at least OpenMP version 2.0
+#if defined(_OPENMP) && _OPENMP >= 200203 // at least OpenMP version 2.0
 
 #include <omp.h>
 
@@ -43,6 +43,8 @@
 #define OPENMP
 #define OPENMP_YEAR (_OPENMP / 100)
 #define OPENMP_MONTH (_OPENMP % 100)
+
+#define OPENMP_PRAGMA(m_token_sequence) _Pragma(#m_token_sequence)
 
 
 namespace omp
@@ -82,6 +84,8 @@ namespace omp
 #undef OPENMP
 #define OPENMP_YEAR 0
 #define OPENMP_MONTH 0
+
+#define OPENMP_PRAGMA(m_token_sequence)
 
 inline void omp_set_num_threads(int) {}
 inline int omp_get_num_threads() {return 1;}
