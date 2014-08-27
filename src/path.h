@@ -61,7 +61,6 @@ std::vector<vigra::Point2D>* minCostPath(CostImageIterator cost_upperleft,
     typedef typename CostAccessor::value_type CostPixelType;
     typedef typename vigra::NumericTraits<CostPixelType>::Promote WorkingPixelType;
     typedef vigra::BasicImage<WorkingPixelType> WorkingImageType;
-    typedef typename WorkingImageType::traverser WorkingImageIterator;
     typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>, PathCompareFunctor<vigra::Point2D, WorkingImageType> > PQ;
 
     const int w = cost_lowerright.x - cost_upperleft.x;

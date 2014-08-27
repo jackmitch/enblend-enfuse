@@ -504,7 +504,6 @@ maskBounds(MaskType* mask, const vigra::Rect2D& uBB, vigra::Rect2D& mBB)
 {
     typedef typename MaskType::PixelType MaskPixelType;
     typedef typename MaskType::traverser MaskIteratorType;
-    typedef typename MaskType::Accessor MaskAccessor;
 
     // Find the bounding box of the mask transition line and put it in mBB.
     // mBB starts out as empty rectangle.
@@ -914,8 +913,6 @@ createMask(const ImageType* const white,
 {
     typedef typename ImageType::PixelType ImagePixelType;
     typedef typename MaskType::PixelType MaskPixelType;
-    typedef typename MaskType::traverser MaskIteratorType;
-    typedef typename MaskType::Accessor MaskAccessor;
 
     if (LoadMasks) {
         // Read mask from a file instead of calculating it.
