@@ -901,15 +901,15 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 #else
     if (contains(optionSet, GPUOption)) {
         std::cerr << command << ": warning: option \"--gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, NoGPUOption)) {
         std::cerr << command << ": warning: option \"--no-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, PreferredGPUOption)) {
         std::cerr << command << ": warning: option \"--prefer-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because it was compiled without support for OpenGL" << std::endl;
+            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
     }
 #endif // OPENCL
 }
