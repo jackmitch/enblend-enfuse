@@ -42,7 +42,7 @@ ${CMAKE_FUNCTION_EXISTS}
 
 /* define the correct restrict keyword, Empty or one of
   __restrict __restrict__ _Restrict restrict */
-#define RESTRICT ${RESTRICT}
+#cmakedefine restrict ${RESTRICT_KEYWORD}
 
 /* Name of package */
 #define PACKAGE "enblend-enfuse"

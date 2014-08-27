@@ -71,26 +71,45 @@ AddFunctionTestToConfig("clock_gettime" "HAVE_CLOCK_GETTIME")
 
 # Check for restrict keyword
 # Builds the macro A_C_RESTRICT form automake
-set(RESTRICT)
-foreach(ac_kw __restrict __restrict__ _Restrict restrict)
-  check_cxx_source_compiles(
+check_cxx_source_compiles(
   "
-  int foo (int * ${ac_kw} ip) {
-    return ip[0];
-  }
-  int main(){
-    int s[1];
-    int * ${ac_kw} t = s;
-    t[0] = 0;
-    return foo(t);
-  }
+    int foo (int * restrict ip) {
+      return ip[0];
+    }
+    int main(){
+      int s[1];
+      int * restrict t = s;
+      t[0] = 0;
+      return foo(t);
+    }
   "
-  RESTRICT_${ac_kw}_FOUND)
-  if(RESTRICT_${ac_kw}_FOUND)
-    set(RESTRICT ${ac_kw})
-    break()
-  endif()
-endforeach()
+  HAVE_RESTRICT)
+IF(HAVE_RESTRICT)
+  set(restrict FALSE)
+  set(RESTRICT_KEYWORD "")
+ELSE()
+  set(restrict TRUE)
+  set(RESTRICT_KEYWORD "")
+  foreach(ac_kw __restrict __restrict__ _Restrict)
+    check_cxx_source_compiles(
+    "
+      int foo (int * ${ac_kw} ip) {
+        return ip[0];
+      }
+      int main(){
+        int s[1];
+        int * ${ac_kw} t = s;
+        t[0] = 0;
+        return foo(t);
+      }
+    "
+    RESTRICT_${ac_kw}_FOUND)
+    if(RESTRICT_${ac_kw}_FOUND)
+      set(RESTRICT_KEYWORD ${ac_kw})
+      break()
+    endif()
+  endforeach()
+ENDIF()
 
 if(VIGRA_FOUND AND NOT VIGRA_VERSION_CHECK)
   unset(VIGRA_SETIMAGEINDEX CACHE)
