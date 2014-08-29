@@ -77,6 +77,12 @@ ${CMAKE_FUNCTION_EXISTS}
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
 
+/* workaround for older boost versions <1.55 */
+#cmakedefine HAVE_BOOST_FALLTHROUGH 1
+#ifndef HAVE_BOOST_FALLTHROUGH
+#define BOOST_FALLTHROUGH ((void) 0)
+#endif
+
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"
 

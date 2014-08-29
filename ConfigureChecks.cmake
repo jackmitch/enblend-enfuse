@@ -205,3 +205,16 @@ check_cxx_source_compiles(
   int main(){char b;char *a = strerror_r(0, &b, 0); return(0);}
   "
   STRERROR_R_CHAR_P)
+
+# workaround for older boost versions (<1.55)
+set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIR})
+check_cxx_source_compiles(
+  "
+    #include <boost/config/suffix.hpp>
+    #ifndef BOOST_FALLTHROUGH
+      #error \"BOOST_FALLTHROUGH not defined\"
+    #endif
+    int main(){return(0);}
+    "
+    HAVE_BOOST_FALLTHROUGH
+)

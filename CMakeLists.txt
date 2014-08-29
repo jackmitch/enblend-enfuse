@@ -225,9 +225,9 @@ if(WIN32)
 endif()
 
 # Boost headers are required
-FIND_PACKAGE(Boost 1.55 REQUIRED)
+FIND_PACKAGE(Boost REQUIRED)
 # Boost Filesystem is optional
-FIND_PACKAGE(Boost 1.55 COMPONENTS filesystem system)
+FIND_PACKAGE(Boost COMPONENTS filesystem system)
 
 set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
 set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
