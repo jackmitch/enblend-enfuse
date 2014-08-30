@@ -1,0 +1,47 @@
+load "@srcdir@/config.gp"
+
+
+default_optimum = 0.5
+default_width = 0.2
+fwhm_gaussian = 2.3548200450309493820231386529193992755
+fwhm_fullsinusodial = pi
+
+
+fullsine(y, y_opt, width) = \
+        abs((y - y_opt) / (width * fwhm_gaussian / fwhm_fullsinusodial)) <= pi ? \
+        (1.0 + cos((y - y_opt) / (width * fwhm_gaussian / fwhm_fullsinusodial))) / 2.0 : \
+        0
+
+
+set samples 1023
+set xlabel "Y"
+set xtics 0.2
+set ytics 0.2
+
+
+set terminal unknown
+plot [y = 0:1] \
+     fullsine(y, default_optimum, 0.1) title "width = 0.1", \
+     fullsine(y, default_optimum, 0.2) title "default width = 0.2", \
+     fullsine(y, default_optimum, 0.4) title "width = 0.4"
+
+set output "fullsine.txt"
+set terminal dumb Dumb_Width Dumb_Height enhanced
+replot
+
+set output "fullsine.eps"
+set terminal postscript eps enhanced
+replot
+
+set output "fullsine.svg"
+set terminal svg size Svg_Width, Svg_Height dynamic enhanced
+replot
+
+# Newer Gnuplots have a "pdf" terminal.
+set output "| ps2pdf -dEPSCrop - fullsine.pdf"
+set terminal postscript eps size Pdf_Width, Pdf_Height enhanced
+replot
+
+set output "@RASTER_DIR@/fullsine.png"
+set terminal png transparent size Png_Width, Png_Height enhanced
+replot
