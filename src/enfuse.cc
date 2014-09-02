@@ -62,6 +62,7 @@ extern "C" int optind;
 
 #include <boost/algorithm/string.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/tokenizer.hpp>
 #include <boost/version.hpp>    // BOOST_VERSION
 
 #include <gsl/gsl_version.h>    // GSL_VERSION
@@ -941,24 +942,21 @@ fill_mask_templates(const char* an_option_argument,
                     const std::string& an_option_name)
 {
     if (an_option_argument != nullptr && *an_option_argument != 0) {
-        char* s = new char[strlen(an_option_argument) + 1];
-        strcpy(s, an_option_argument);
+        boost::char_separator<char> separator(PATH_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+        boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(an_option_argument), separator);
+        boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-        char* save_ptr = nullptr;
-        char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
-        a_soft_mask_template = token;
-        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
-        if (token != nullptr && *token != 0) {
-            a_hard_mask_template = token;
+        a_soft_mask_template = *token;
+        ++token;
+        if (token != tokenizer.end()) {
+            a_hard_mask_template = *token;
         }
 
-        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
-        if (token != nullptr && *token != 0) {
+        ++token;
+        if (token != tokenizer.end()) {
             std::cerr << command
                       << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << std::endl;
         }
-
-        delete [] s;
     }
 }
 
@@ -1292,100 +1290,98 @@ process_options(int argc, char** argv)
         }
 
         case EdgeScaleId: {
-            char* s = new char[strlen(optarg) + 1];
-            strcpy(s, optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token == nullptr || *token == 0) {
+            if (token == tokenizer.end()) {
                 std::cerr << command << ": no scale given to \"--contrast-edge-scale\".  "
                           << "scale is required." << std::endl;
                 failed = true;
             } else {
                 errno = 0;
-                FilterConfig.edgeScale = strtod(token, &tail);
+                FilterConfig.edgeScale = strtod(token->c_str(), &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
                         std::cerr << command << ": could not decode \"" << tail
                                   << "\" in edge scale specification \""
-                                  << token << "\" for edge scale." << std::endl;
+                                  << *token << "\" for edge scale." << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" for edge scale: "
+                              << *token << "\" for edge scale: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+		++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                FilterConfig.lceScale = strtod(token, &tail);
+                FilterConfig.lceScale = strtod(token->c_str(), &tail);
                 if (errno == 0) {
                     if (strcmp(tail, "%") == 0) {
                         FilterConfig.lceScale *= FilterConfig.edgeScale / 100.0;
                     } else if (*tail != 0) {
                         std::cerr << command << ": could not decode \"" << tail
-                                  << "\" in specification \"" << token
+                                  << "\" in specification \"" << *token
                                   << "\" for LCE-scale." << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" for LCE-Scale: "
+                              << *token << "\" for LCE-Scale: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                FilterConfig.lceFactor = strtod(token, &tail);
+                FilterConfig.lceFactor = strtod(token->c_str(), &tail);
                 if (errno == 0) {
                     if (strcmp(tail, "%") == 0) {
                         FilterConfig.lceFactor /= 100.0;
                     } else if (*tail != 0) {
                         std::cerr << command << ": could not decode \"" << tail
-                                  << "\" in specification \"" << token
+                                  << "\" in specification \"" << *token
                                   << "\" for LCE-factor." << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" for LCE-factor: "
+                              << *token << "\" for LCE-factor: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            if (save_ptr != nullptr && *save_ptr != 0) {
+            if (token != tokenizer.end()) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << save_ptr << "\" in argument to \"--contrast-edge-scale\"" << std::endl;
+                          << *token << "\" in argument to \"--contrast-edge-scale\"" << std::endl;
             }
 
-            delete [] s;
             optionSet.insert(EdgeScaleOption);
             break;
         }
 
         case EntropyCutoffId: {
-            char* s = new char[strlen(optarg) + 1];
-            strcpy(s, optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token == nullptr || *token == 0) {
+            if (token == tokenizer.end()) {
                 std::cerr << command << ": no scale given to \"--entropy-cutoff\".  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
             } else {
                 errno = 0;
-                EntropyLowerCutoff.set_value(strtod(token, &tail));
+                EntropyLowerCutoff.set_value(strtod(token->c_str(), &tail));
                 if (errno == 0) {
                     if (*tail == 0) {
                         EntropyLowerCutoff.set_percentage(false);
@@ -1393,21 +1389,21 @@ process_options(int argc, char** argv)
                         EntropyLowerCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized entropy's lower cutoff \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of entropy's lower cutoff: "
+                              << *token << "\" of entropy's lower cutoff: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                EntropyUpperCutoff.set_value(strtod(token, &tail));
+                EntropyUpperCutoff.set_value(strtod(token->c_str(), &tail));
                 if (errno == 0) {
                     if (*tail == 0) {
                         EntropyUpperCutoff.set_percentage(false);
@@ -1415,41 +1411,39 @@ process_options(int argc, char** argv)
                         EntropyUpperCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized entropy's upper cutoff \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of entropy's upper cutoff: "
+                              << *token << "\" of entropy's upper cutoff: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
             }
 
-            if (save_ptr != nullptr && *save_ptr != 0) {
+            if (token != tokenizer.end()) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << save_ptr << "\" in argument to \"--entropy-cutoff\"" << std::endl;
+                          << *token << "\" in argument to \"--entropy-cutoff\"" << std::endl;
             }
 
-            delete [] s;
             optionSet.insert(EntropyCutoffOption);
             break;
         }
 
         case ExposureCutoffId: {
-            char* s = new char[strlen(optarg) + 1];
-            strcpy(s, optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s, NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token == nullptr || *token == 0) {
+            if (token == tokenizer.end()) {
                 std::cerr << command << ": no scale given to \"--exposure-cutoff\".  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
             } else {
                 errno = 0;
-                ExposureLowerCutoff.set_value(strtod(token, &tail));
+                ExposureLowerCutoff.set_value(strtod(token->c_str(), &tail));
                 if (errno == 0) {
                     if (*tail == 0) {
                         ExposureLowerCutoff.set_percentage(false);
@@ -1457,21 +1451,21 @@ process_options(int argc, char** argv)
                         ExposureLowerCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized exposure's lower cutoff \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of exposure's lower cutoff: "
+                              << *token << "\" of exposure's lower cutoff: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                ExposureUpperCutoff.set_value(strtod(token, &tail));
+                ExposureUpperCutoff.set_value(strtod(token->c_str(), &tail));
                 if (errno == 0) {
                     if (*tail == 0) {
                         ExposureUpperCutoff.set_percentage(false);
@@ -1479,33 +1473,33 @@ process_options(int argc, char** argv)
                         ExposureUpperCutoff.set_percentage(true);
                     } else {
                         std::cerr << command << ": unrecognized exposure's upper cutoff \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of exposure's upper cutoff: "
+                              << *token << "\" of exposure's upper cutoff: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
-                ExposureLowerCutoffGrayscaleProjector = token;
+            if (token != tokenizer.end()) {
+                ExposureLowerCutoffGrayscaleProjector = *token;
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
-                ExposureUpperCutoffGrayscaleProjector = token;
+            if (token != tokenizer.end()) {
+                ExposureUpperCutoffGrayscaleProjector = *token;
+                ++token;
             }
 
-            if (save_ptr != nullptr && *save_ptr != 0) {
+            if (token != tokenizer.end()) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << save_ptr << "\" in argument to \"--exposure-cutoff\"" << std::endl;
+                          << *token << "\" in argument to \"--exposure-cutoff\"" << std::endl;
             }
 
-            delete [] s;
             optionSet.insert(ExposureCutoffOption);
             break;
         }
@@ -1904,21 +1898,20 @@ process_options(int argc, char** argv)
         }
 
         case ParameterId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != nullptr) {
+            while (token != tokenizer.end()) {
                 std::string key;
                 std::string value;
-                char* delimiter = strpbrk(token, ASSIGNMENT_CHARACTERS);
+                size_t delimiter = token->find_first_of(ASSIGNMENT_CHARACTERS);
 
-                if (delimiter == nullptr) {
-                    key = token;
+                if (delimiter == std::string::npos) {
+                    key = *token;
                 } else {
-                    key = std::string(token, delimiter);
-                    value = delimiter + 1;
+                    key = token->substr(0, delimiter);
+                    value = token->substr(delimiter + 1);
                 }
                 enblend::trim(key);
                 enblend::trim(value);
@@ -1926,25 +1919,24 @@ process_options(int argc, char** argv)
                 if (parameter::is_valid_identifier(key)) {
                     parameter::insert(key, value);
                 } else {
-                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
+                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << *token <<
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                ++token;
             }
 
             break;
         }
 
         case NoParameterId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != nullptr) {
-                std::string key(token);
-                enblend::trim(key);
+            while (token != tokenizer.end()) {
+                std::string key(*token);
+                boost::trim(key);
 
                 if (key == "*") {
                     parameter::erase_all();
@@ -1955,7 +1947,7 @@ process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                ++token;
             }
 
             break;

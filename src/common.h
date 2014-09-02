@@ -461,6 +461,23 @@ numberOfString(const char* a_string,                // string we want to convert
 }
 
 
+template <class NumericType, class Validator1, class Validator2>
+NumericType
+numberOfString(const std::string& a_string,         // string we want to convert into a number
+               Validator1 is_valid1,                // 1st validator function
+               const std::string& invalid_message1, // error message for failed 1st validation
+               NumericType replacement_value1,      // replacement return value on 1st failure
+               Validator2 is_valid2,                // 2nd validator function
+               const std::string& invalid_message2, // error message for failed 2nd validation
+               NumericType replacement_value2)      // replacement return value on 2nd failure
+{
+    numberOfString(&a_string[0],
+                   is_valid1,
+                   invalid_message1, replacement_value1,
+                   is_valid2, invalid_message2, replacement_value2);
+}
+
+
 /**  Convert a_string into a number.
  */
 template <class NumericType, class Validator>
@@ -474,6 +491,17 @@ numberOfString(const char* a_string,               // string we want to convert 
                           is_valid, invalid_message, replacement_value,
                           [](NumericType) {return true;},
                           "<never reached>", NumericType());
+}
+
+
+template <class NumericType, class Validator>
+NumericType
+numberOfString(const std::string& a_string,        // string we want to convert into a number
+               Validator is_valid,                 // validator function
+               const std::string& invalid_message, // error message for failed validation
+               NumericType replacement_value)      // replacement return value on failure
+{
+    return numberOfString(&a_string[0], is_valid, invalid_message, replacement_value);
 }
 
 

@@ -62,6 +62,7 @@ extern "C" int optind;
 
 #include <boost/algorithm/string.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/tokenizer.hpp>
 #include <boost/version.hpp>    // BOOST_VERSION
 
 #include <gsl/gsl_version.h>    // GSL_VERSION
@@ -1148,31 +1149,30 @@ process_options(int argc, char** argv)
             break;
 
         case ImageDifferenceId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token == nullptr || *token == 0) {
+            if (token == tokenizer.end()) {
                 std::cerr << command << ": option \"--image-difference\" requires an argument" << std::endl;
                 failed = true;
             } else {
-                PixelDifferenceFunctor = differenceFunctorOfString(token);
+                PixelDifferenceFunctor = differenceFunctorOfString(token->c_str());
                 if (PixelDifferenceFunctor == UnknownDifference) {
-                    std::cerr << command << ": unknown image difference algorithm \"" << token << "\"" << std::endl;
+                    std::cerr << command << ": unknown image difference algorithm \"" << *token << "\"" << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                LuminanceDifferenceWeight = strtod(token, &tail);
+                LuminanceDifferenceWeight = strtod(token->c_str(), &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
                         std::cerr << command << ": unrecognized luminance weight \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                     if (LuminanceDifferenceWeight < 0.0) {
@@ -1181,20 +1181,20 @@ process_options(int argc, char** argv)
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of luminance weight: "
+                              << *token << "\" of luminance weight: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                ChrominanceDifferenceWeight = strtod(token, &tail);
+                ChrominanceDifferenceWeight = strtod(token->c_str(), &tail);
                 if (errno == 0) {
                     if (*tail != 0) {
                         std::cerr << command << ": unrecognized chrominance weight \""
-                                  << tail << "\" in \"" << token << "\"" << std::endl;
+                                  << tail << "\" in \"" << *token << "\"" << std::endl;
                         failed = true;
                     }
                     if (ChrominanceDifferenceWeight < 0.0) {
@@ -1203,15 +1203,16 @@ process_options(int argc, char** argv)
                     }
                 } else {
                     std::cerr << command << ": illegal numeric format \""
-                              << token << "\" of chrominance weight: "
+                              << *token << "\" of chrominance weight: "
                               << enblend::errorMessage(errno) << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            if (save_ptr != nullptr && *save_ptr != 0) {
+            if (token != tokenizer.end()) {
                 std::cerr << command << ": warning: ignoring trailing garbage \""
-                          << save_ptr << "\" in argument to \"--image-difference\"" << std::endl;
+                          << *token << "\" in argument to \"--image-difference\"" << std::endl;
             }
 
             if (LuminanceDifferenceWeight + ChrominanceDifferenceWeight == 0.0) {
@@ -1224,19 +1225,18 @@ process_options(int argc, char** argv)
         }
 
         case AnnealId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
             char* tail;
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                double tau = strtod(token, &tail);
+                double tau = strtod(token->c_str(), &tail);
                 if (errno != 0) {
                     std::cerr << command
                               << ": option \"--anneal\": illegal numeric format \""
-                              << token << "\" of tau: " << enblend::errorMessage(errno)
+                              << *token << "\" of tau: " << enblend::errorMessage(errno)
                               << std::endl;
                     failed = true;
                 }
@@ -1246,7 +1246,7 @@ process_options(int argc, char** argv)
                     } else {
                         std::cerr << command
                                   << ": --anneal: trailing garbage \""
-                                  << tail << "\" in tau: \"" << token << "\""
+                                  << tail << "\" in tau: \"" << *token << "\""
                                   << std::endl;
                         failed = true;
                     }
@@ -1266,15 +1266,15 @@ process_options(int argc, char** argv)
                     failed = true;
                 }
                 AnnealPara.tau = tau;
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                AnnealPara.deltaEMax = strtod(token, &tail);
+                AnnealPara.deltaEMax = strtod(token->c_str(), &tail);
                 if (errno != 0) {
                     std::cerr << command << ": option \"--anneal\": illegal numeric format \""
-                              << token << "\" of deltaE_max: " << enblend::errorMessage(errno)
+                              << *token << "\" of deltaE_max: " << enblend::errorMessage(errno)
                               << std::endl;
                     failed = true;
                 }
@@ -1282,7 +1282,7 @@ process_options(int argc, char** argv)
                     std::cerr << command
                               << ": option \"--anneal\": trailing garbage \""
                               << tail << "\" in deltaE_max: \""
-                              << token << "\"" << std::endl;
+                              << *token << "\"" << std::endl;
                     failed = true;
                 }
                 //< minimum-anneal-deltae-max 0
@@ -1292,16 +1292,16 @@ process_options(int argc, char** argv)
                               << std::endl;
                     failed = true;
                 }
+                ++token;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                AnnealPara.deltaEMin = strtod(token, &tail);
+                AnnealPara.deltaEMin = strtod(token->c_str(), &tail);
                 if (errno != 0) {
                     std::cerr << command
                               << ": option \"--anneal\": illegal numeric format \""
-                              << token << "\" of deltaE_min: " << enblend::errorMessage(errno)
+                              << *token << "\" of deltaE_min: " << enblend::errorMessage(errno)
                               << std::endl;
                     failed = true;
                 }
@@ -1309,7 +1309,7 @@ process_options(int argc, char** argv)
                     std::cerr << command
                               << ": option \"--anneal\": trailing garbage \""
                               << tail << "\" in deltaE_min: \""
-                              << token << "\"" << std::endl;
+                              << *token << "\"" << std::endl;
                     failed = true;
                 }
                 //< minimum-anneal-deltae-min 0
@@ -1319,6 +1319,7 @@ process_options(int argc, char** argv)
                               << std::endl;
                     failed = true;
                 }
+                ++token;
             }
             if (AnnealPara.deltaEMin >= AnnealPara.deltaEMax) {
                 std::cerr << command
@@ -1327,14 +1328,13 @@ process_options(int argc, char** argv)
                 failed = true;
             }
 
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            if (token != tokenizer.end()) {
                 errno = 0;
-                const long int kmax = strtol(token, &tail, 10);
+                const long int kmax = strtol(token->c_str(), &tail, 10);
                 if (errno != 0) {
                     std::cerr << command
                               << ": option \"--anneal\": illegal numeric format \""
-                              << token << "\" of k_max: " << enblend::errorMessage(errno)
+                              << *token << "\" of k_max: " << enblend::errorMessage(errno)
                               << std::endl;
                     failed = true;
                 }
@@ -1342,7 +1342,7 @@ process_options(int argc, char** argv)
                     std::cerr << command
                               << ": option \"--anneal\": trailing garbage \""
                               << tail << "\" in k_max: \""
-                              << token << "\"" << std::endl;
+                              << *token << "\"" << std::endl;
                     failed = true;
                 }
                 //< minimum-anneal-kmax 3
@@ -1393,19 +1393,19 @@ process_options(int argc, char** argv)
         }
 
         case OptimizerWeightsId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
+
             OptimizerWeights.first =
-                enblend::numberOfString(token,
+                enblend::numberOfString(*token,
                                         [](double x) {return x >= 0.0;},
                                         "negative optimizer weight; will use 0.0",
                                         0.0);
-            token = enblend::strtoken_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
-            if (token != nullptr && *token != 0) {
+            ++token;
+            if (token != tokenizer.end()) {
                 OptimizerWeights.second =
-                    enblend::numberOfString(token,
+                    enblend::numberOfString(*token,
                                             [](double x) {return x >= 0.0;},
                                             "negative optimizer weight; will use 0.0",
                                             0.0);
@@ -1593,21 +1593,20 @@ process_options(int argc, char** argv)
         }
 
         case ParameterId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != nullptr) {
+            while (token != tokenizer.end()) {
                 std::string key;
                 std::string value;
-                char* delimiter = strpbrk(token, ASSIGNMENT_CHARACTERS);
+                size_t delimiter = token->find_first_of(ASSIGNMENT_CHARACTERS);
 
-                if (delimiter == nullptr) {
-                    key = token;
+                if (delimiter == std::string::npos) {
+                    key = *token;
                 } else {
-                    key = std::string(token, delimiter);
-                    value = delimiter + 1;
+                    key = token->substr(0, delimiter);
+                    value = token->substr(delimiter + 1);
                 }
                 enblend::trim(key);
                 enblend::trim(value);
@@ -1615,25 +1614,24 @@ process_options(int argc, char** argv)
                 if (parameter::is_valid_identifier(key)) {
                     parameter::insert(key, value);
                 } else {
-                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << token <<
+                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << *token <<
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                ++token;
             }
 
             break;
         }
 
         case NoParameterId: {
-            std::unique_ptr<char> s(new char[strlen(optarg) + 1]);
-            strcpy(s.get(), optarg);
-            char* save_ptr = nullptr;
-            char* token = strtok_r(s.get(), NUMERIC_OPTION_DELIMITERS, &save_ptr);
+            boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != nullptr) {
-                std::string key(token);
-                enblend::trim(key);
+            while (token != tokenizer.end()) {
+                std::string key(*token);
+                boost::trim(key);
 
                 if (key == "*") {
                     parameter::erase_all();
@@ -1644,7 +1642,7 @@ process_options(int argc, char** argv)
                         "\" is not a valid identifier; ignoring\n";
                 }
 
-                token = strtok_r(nullptr, NUMERIC_OPTION_DELIMITERS, &save_ptr);
+                ++token;
             }
 
             break;
