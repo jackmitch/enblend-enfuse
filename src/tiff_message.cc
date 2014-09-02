@@ -45,11 +45,11 @@ static std::string
 interpolate_format(const char* format, va_list arguments)
 {
     const size_t buffer_size = 4096U;
-    std::unique_ptr<char> buffer(new char[buffer_size]);
+    std::string message(buffer_size, '\0');
 
-    vsnprintf(buffer.get(), buffer_size, format, arguments);
+    vsnprintf(&message[0], buffer_size, format, arguments);
 
-    return buffer.release();
+    return message;
 }
 
 
@@ -71,7 +71,7 @@ flush_buffers()
  *  each message once for each file. */
 static void
 tiff_message(const char* message_class,
-             const char* /*module*/, const char* format, va_list arguments)
+             const char* /* module */, const char* format, va_list arguments)
 {
     const std::string message(interpolate_format(format, arguments));
 

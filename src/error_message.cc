@@ -20,7 +20,7 @@
 
 
 #include <cstring>
-#include <memory>               // std::unique_ptr
+#include <string>
 #include <sstream>
 
 #ifdef HAVE_CONFIG_H
@@ -29,60 +29,53 @@
 
 #include "error_message.h"
 
+
 namespace enblend
 {
-namespace detail
-{
-    std::string
+    static std::string
     noErrorMessageAvailable(int anErrorNumber)
     {
         std::ostringstream oss;
         oss << "No detailed error message available; decimal error #" << anErrorNumber;
         return oss.str();
     }
-}
 
 
-std::string
-errorMessage(int anErrorNumber)
-{
-#if defined(HAVE_STRERROR) || defined(HAVE_STRERROR_R)
-    char* message;
-    int return_code;
-#if defined(HAVE_STRERROR_R)
-    const size_t buffer_size = 65536;
-    std::unique_ptr<char> message_buffer(new char[buffer_size]);
+    std::string
+    errorMessage(int anErrorNumber)
+    {
+#if !defined(HAVE_STRERROR) && !defined(HAVE_STRERROR_R)
+        return noErrorMessageAvailable(anErrorNumber);
+#endif
+
+#if !defined(HAVE_STRERROR_R)
+        std::string message(strerror(anErrorNumber));
+#else
+        const size_t buffer_size = 65536U;
+        std::string message(buffer_size, '\0');
 #if defined(STRERROR_R_CHAR_P)
-    message = strerror_r(anErrorNumber, message_buffer.get(), buffer_size);
-    return_code = 0;
+        char* const message_begin = strerror_r(anErrorNumber, &message[0], buffer_size);
+        if (message_begin != &message[0])
+        {
+            message = std::string(message_begin);
+        }
+        else
+        {
+            message.resize(message.find('\0'));
+        }
 #else
-    message = message_buffer.get();
-    return_code = strerror_r(anErrorNumber, message, buffer_size);
+        const int return_code = strerror_r(anErrorNumber, &message[0], buffer_size);
+        if (return_code != 0)
+        {
+            std::ostringstream oss;
+            oss <<
+                "Conversion of decimal error #" << anErrorNumber <<
+                " to an error message failed with decimal return code " << return_code;
+            return oss.str();
+        }
 #endif // STRERROR_R_CHAR_P
-#elif defined(HAVE_STRERROR)
-    message = strerror(anErrorNumber);
-    return_code = 0;
-#endif // HAVE_STRERROR_R, HAVE_STRERROR
+#endif // HAVE_STRERROR_R
 
-    if (return_code != 0)
-    {
-        std::ostringstream oss;
-        oss <<
-            "Conversion of decimal error #" << anErrorNumber <<
-            " to an error message failed with decimal return code " << return_code;
-        return oss.str();
+        return message.empty() ? noErrorMessageAvailable(anErrorNumber) : message;
     }
-    else if (strlen(message) == 0)
-    {
-        return detail::noErrorMessageAvailable(anErrorNumber);
-    }
-    else
-    {
-        return std::string(message);
-    }
-#else
-    return detail::noErrorMessageAvailable(anErrorNumber);
-#endif // HAVE_STRERROR || HAVE_STRERROR_R
-}
-
-}
+} // namespace enblend
