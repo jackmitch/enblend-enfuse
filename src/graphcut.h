@@ -1335,7 +1335,7 @@ namespace enblend
         std::vector<vigra::Point2D>* dualPath = nullptr;
         std::vector<vigra::Point2D> totalDualPath;
         vigra::Point2D intermediatePoint;
-        std::unique_ptr<CheckpointPixels> srcDestPoints(new CheckpointPixels());
+        CheckpointPixels srcDestPoints;
 
         const vigra::Diff2D graphsize(graphImg.lowerRight().x - graphImg.upperLeft().x,
                                graphImg.lowerRight().y - graphImg.upperLeft().y);
@@ -1444,9 +1444,9 @@ namespace enblend
                 continue;
             }
 
-            srcDestPoints->clear();
-            srcDestPoints->top.insert(intermediatePoint);
-            srcDestPoints->bottom.insert(*i);
+            srcDestPoints.clear();
+            srcDestPoints.top.insert(intermediatePoint);
+            srcDestPoints.bottom.insert(*i);
 
 #ifdef DEBUG_GRAPHCUT
             std::cout << "Running graph-cut: " << intermediatePoint << ":" << *i << std::endl;
@@ -1454,7 +1454,7 @@ namespace enblend
 
             dualPath = A_star<IMAGETYPE<GraphPixelType>, IMAGETYPE<GradientPixelType>, BasePixelType>
                 (vigra::Point2D(-10, -10), vigra::Point2D(-20, -20), &intermediateGraphImg, &gradientX,
-                 &gradientY, graphsize - vigra::Diff2D(1, 1), srcDestPoints.get(), &visited);
+                 &gradientY, graphsize - vigra::Diff2D(1, 1), &srcDestPoints, &visited);
 
             visited.insert(dualPath->begin(), dualPath->end());
 
