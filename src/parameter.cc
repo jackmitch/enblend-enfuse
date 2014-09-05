@@ -230,11 +230,11 @@ namespace parameter
         std::string s(value_as_string_);
 
         bool b;
-        if (s.empty() || s == "f" || s == "false")
+        if (s.empty() || s == "0" || s == "f" || s == "false")
         {
             b = false;
         }
-        else if (s == "t" || s == "true")
+        else if (s == "1" || s == "t" || s == "true")
         {
             b = true;
         }

@@ -71,6 +71,11 @@ Unreleased.  Current line of development.
 - Support for older versions of the Boost filesystem library has been
   dropped.
 
+- Empty `--parameter' options default to "1".  This behavior in
+  conjunction with boolean parameter expansion taking "0" and "1" as
+  aliases for "false" and "true" allows to shorten setting boolean
+  parameters.
+
 
 ** Package Maintainer Stuff
 

@@ -1909,9 +1909,16 @@ process_options(int argc, char** argv)
 
                 if (delimiter == std::string::npos) {
                     key = *token;
+                    value.assign("1");
                 } else {
                     key = token->substr(0, delimiter);
                     value = token->substr(delimiter + 1);
+                    if (value.empty()) {
+                        std::cerr <<
+                            command << ": parameter key \"" << key << "\" lacks a value;\n" <<
+                            command << ": info:     dangling assignment operator\n";
+                        exit(1);
+                    }
                 }
                 enblend::trim(key);
                 enblend::trim(value);
@@ -1919,8 +1926,8 @@ process_options(int argc, char** argv)
                 if (parameter::is_valid_identifier(key)) {
                     parameter::insert(key, value);
                 } else {
-                    std::cerr << command << ": warning: key \"" << key << "\" of pair \"" << *token <<
-                        "\" is not a valid identifier; ignoring\n";
+                    std::cerr << command << ": parameter key \"" << key << "\" is not a valid identifier\n";
+                    exit(1);
                 }
 
                 ++token;
