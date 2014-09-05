@@ -25,6 +25,7 @@ AC_C_BIGENDIAN
 # the linker command line.  It will then gobble all undefined
 # references to malloc(3) and free(3) and thus relieve the O/S even
 # more.
+use_tcmalloc=no
 AC_ARG_WITH([tcmalloc],
             [AS_HELP_STRING([--with-tcmalloc], [use Google's TCMalloc library @<:@default=check@:>@])],
             [],
@@ -34,7 +35,8 @@ AS_IF([test "$with_tcmalloc" = check -o "$with_tcmalloc" = yes],
        if test "$ac_cv_header_tcmalloc_h" = yes -o "$with_tcmalloc" = yes; then
            AC_SEARCH_LIBS(tc_malloc,
                           [tcmalloc, tcmalloc_minimal],
-                          [AC_DEFINE(HAVE_TCMALLOC, 1, [Define if you have Google's TCMalloc library])])
+                          [use_tcmalloc=yes
+                           AC_DEFINE(HAVE_TCMALLOC, 1, [Define if you have Google's TCMalloc library])])
        fi])
 
 AC_CHECK_LIB([m], [sqrt])
@@ -549,4 +551,5 @@ AC_MSG_RESULT([
    use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
    use OpenCL:                     ${enable_opencl} (search path: $opencl_path)
+   use TCMalloc:                   ${use_tcmalloc}
 ${warnings}])

@@ -163,14 +163,14 @@ ELSEIF(WIN32)
     FOREACH(TYPE C CXX)
       # makefiles use blank configuration
       FOREACH(CFG "_DEBUG" "_MINSIZEREL" "_RELEASE" "_RELWITHDEBINFO")
-	#MESSAGE("Replacing CMAKE_${TYPE}_FLAGS${CFG}: ${CMAKE_${TYPE}_FLAGS${CFG}}")
-	SET(NEW_FLAGS "${CMAKE_${TYPE}_FLAGS${CFG}}")
-	# fix up static libc flags
-	STRING(REPLACE "/MD" "/MT" NEW_FLAGS "${NEW_FLAGS}")
-	# *FORCE* to override whats already placed into the cache
-	SET(CMAKE_${TYPE}_FLAGS${CFG} "${NEW_FLAGS}" CACHE STRING
-	  "CMAKE_${TYPE}_FLAGS${CFG} (overwritten to ensure static build)" FORCE)
-	#MESSAGE("New       CMAKE_${TYPE}_FLAGS${CFG}: ${CMAKE_${TYPE}_FLAGS${CFG}}")
+        #MESSAGE("Replacing CMAKE_${TYPE}_FLAGS${CFG}: ${CMAKE_${TYPE}_FLAGS${CFG}}")
+        SET(NEW_FLAGS "${CMAKE_${TYPE}_FLAGS${CFG}}")
+        # fix up static libc flags
+        STRING(REPLACE "/MD" "/MT" NEW_FLAGS "${NEW_FLAGS}")
+        # *FORCE* to override whats already placed into the cache
+        SET(CMAKE_${TYPE}_FLAGS${CFG} "${NEW_FLAGS}" CACHE STRING
+          "CMAKE_${TYPE}_FLAGS${CFG} (overwritten to ensure static build)" FORCE)
+        #MESSAGE("New       CMAKE_${TYPE}_FLAGS${CFG}: ${CMAKE_${TYPE}_FLAGS${CFG}}")
       ENDFOREACH(CFG)
     ENDFOREACH(TYPE)
     # link only with the static C runtime !! THIS IS A MUST !!
@@ -217,11 +217,11 @@ if(WIN32)
     SET( Boost_root_suffix _1_51_0 CACHE STRING "suffix of boost root dir." FORCE )
   ENDIF( NOT Boost_root_suffix )
   SET(Boost_USE_STATIC_LIBS ON)
-  if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
-    set(BOOST_ROOT $ENV{BOOST_ROOT}) 
-  else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
-    set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost${Boost_root_suffix}) 
-  endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "") 
+  if (NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
+    set(BOOST_ROOT $ENV{BOOST_ROOT})
+  else(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
+    set(BOOST_ROOT ${SOURCE_BASE_DIR}/boost${Boost_root_suffix})
+  endif(NOT BOOST_ROOT AND NOT $ENV{BOOST_ROOT} STREQUAL "")
 endif()
 
 # Boost headers are required
@@ -442,16 +442,16 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${ENBLEND_PATCH_VERSION})
 FIND_PROGRAM(ENBLEND_HG hg)
 if(ENBLEND_HG)
   execute_process(COMMAND ${ENBLEND_HG} summary
-		  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-		  OUTPUT_VARIABLE ENBLEND_TIP_OUT
-		  ERROR_VARIABLE ENBLEND_TIP_ERROR
-		  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(NOT ENBLEND_TIP_ERROR) 
+                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                  OUTPUT_VARIABLE ENBLEND_TIP_OUT
+                  ERROR_VARIABLE ENBLEND_TIP_ERROR
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(NOT ENBLEND_TIP_ERROR)
     STRING(REGEX REPLACE "\n" ";" ENBLEND_TIP_LINES ${ENBLEND_TIP_OUT})
     foreach(_v_l ${ENBLEND_TIP_LINES})
       if(_v_l MATCHES ".*:[ ]+\([0-9]+\):[0-9a-f]+")
-	set(CPACK_PACKAGE_VERSION_PATCH "${ENBLEND_PATCH_VERSION}-${CMAKE_MATCH_1}hg")
-	break()
+        set(CPACK_PACKAGE_VERSION_PATCH "${ENBLEND_PATCH_VERSION}-${CMAKE_MATCH_1}hg")
+        break()
       endif()
     endforeach()
   endif()

@@ -176,6 +176,7 @@ builds.
 
 
 ** --with-tcmalloc=CHECK/yes/no
+   -DENABLE_TCMALLOC=OFF/on    (CMake)
 
 Compile with Google's TCMalloc.  This library generally improves
 memory allocation performance.  Enblend and Enfuse prefer TCMalloc's
