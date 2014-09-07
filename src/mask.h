@@ -1287,15 +1287,13 @@ createMask(const ImageType* const white,
     }
 
     if (OptimizeMask && !parameter::as_boolean("skip-optimizer", false)) {
-        int segmentNumber;
         // Move snake points to mismatchImage-relative coordinates
         for (ContourVector::iterator currentContour = contours.begin();
              currentContour != contours.end();
              ++currentContour) {
-            segmentNumber = 0;
             for (Contour::iterator currentSegment = (*currentContour)->begin();
                  currentSegment != (*currentContour)->end();
-                 ++currentSegment, ++segmentNumber) {
+                 ++currentSegment) {
                 Segment* snake = *currentSegment;
                 for (Segment::iterator vertexIterator = snake->begin();
                      vertexIterator != snake->end();
@@ -1306,15 +1304,15 @@ createMask(const ImageType* const white,
             }
         }
 
-        std::vector<double> *params = new(std::vector<double>);
-
-        OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-            *defaultOptimizerChain =
-            new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-            (&mismatchImage, visualizeImage,
-             &mismatchImageSize, &mismatchImageStride,
-             &uvBBStrideOffset, &contours, &uBB, &vBB, params,
-             whiteAlpha, blackAlpha, &uvBB);
+        std::unique_ptr<std::vector<double> > params(new std::vector<double>);
+        std::unique_ptr<OptimizerChain<MismatchImagePixelType, MismatchImageType,
+                                       VisualizeImageType, AlphaType> >
+            defaultOptimizerChain(new OptimizerChain<MismatchImagePixelType, MismatchImageType,
+                                                     VisualizeImageType, AlphaType>
+                                  (&mismatchImage, visualizeImage,
+                                   &mismatchImageSize, &mismatchImageStride,
+                                   &uvBBStrideOffset, &contours, &uBB, &vBB, params.get(),
+                                   whiteAlpha, blackAlpha, &uvBB));
 
         // Add Strategy 1: Use GDA to optimize placement of snake vertices
         defaultOptimizerChain->addOptimizer("anneal");
@@ -1332,10 +1330,9 @@ createMask(const ImageType* const white,
         for (ContourVector::iterator currentContour = contours.begin();
              currentContour != contours.end();
              ++currentContour) {
-            segmentNumber = 0;
             for (Contour::iterator currentSegment = (*currentContour)->begin();
                  currentSegment != (*currentContour)->end();
-                 ++currentSegment, ++segmentNumber) {
+                 ++currentSegment) {
                 Segment* snake = *currentSegment;
                 for (Segment::iterator currentVertex = snake->begin();
                      currentVertex != snake->end();
@@ -1346,9 +1343,6 @@ createMask(const ImageType* const white,
                 }
             }
         }
-
-        delete params;
-        delete defaultOptimizerChain;
     }
 
     if (visualizeImage) {
