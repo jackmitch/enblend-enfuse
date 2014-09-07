@@ -289,6 +289,23 @@ visualizeLine(ImageType& image,
 }
 
 
+template <typename vertex_function>
+vertex_function
+for_each_vertex(ContourVector::iterator first, ContourVector::iterator last, vertex_function f)
+{
+    for (ContourVector::iterator contour = first; contour != last; ++contour) {
+        for (Contour::iterator segment = (*contour)->begin(); segment != (*contour)->end(); ++segment) {
+            Segment* const snake = *segment;
+            for (Segment::iterator vertex = snake->begin(); vertex != snake->end(); ++vertex) {
+                f(vertex);
+            }
+        }
+    }
+
+    return f;
+}
+
+
 template <typename value, typename predicate>
 class FindAverageAndVarianceIf
 {
@@ -1288,21 +1305,10 @@ createMask(const ImageType* const white,
 
     if (OptimizeMask && !parameter::as_boolean("skip-optimizer", false)) {
         // Move snake points to mismatchImage-relative coordinates
-        for (ContourVector::iterator currentContour = contours.begin();
-             currentContour != contours.end();
-             ++currentContour) {
-            for (Contour::iterator currentSegment = (*currentContour)->begin();
-                 currentSegment != (*currentContour)->end();
-                 ++currentSegment) {
-                Segment* snake = *currentSegment;
-                for (Segment::iterator vertexIterator = snake->begin();
-                     vertexIterator != snake->end();
-                     ++vertexIterator) {
-                    vertexIterator->second =
-                        (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
-                }
-            }
-        }
+        for_each_vertex(contours.begin(), contours.end(),
+                        [&](Segment::iterator vertex)
+                        {vertex->second =
+                                (vertex->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;});
 
         std::unique_ptr<std::vector<double> > params(new std::vector<double>);
         std::unique_ptr<OptimizerChain<MismatchImagePixelType, MismatchImageType,
@@ -1327,22 +1333,10 @@ createMask(const ImageType* const white,
 
         // Move snake vertices from mismatchImage-relative
         // coordinates to uBB-relative coordinates.
-        for (ContourVector::iterator currentContour = contours.begin();
-             currentContour != contours.end();
-             ++currentContour) {
-            for (Contour::iterator currentSegment = (*currentContour)->begin();
-                 currentSegment != (*currentContour)->end();
-                 ++currentSegment) {
-                Segment* snake = *currentSegment;
-                for (Segment::iterator currentVertex = snake->begin();
-                     currentVertex != snake->end();
-                     ++currentVertex) {
-                    currentVertex->second =
-                        currentVertex->second * mismatchImageStride +
-                        vBB.upperLeft() - uBB.upperLeft();
-                }
-            }
-        }
+        for_each_vertex(contours.begin(), contours.end(),
+                        [&](Segment::iterator vertex)
+                        {vertex->second =
+                                vertex->second * mismatchImageStride + vBB.upperLeft() - uBB.upperLeft();});
     }
 
     if (visualizeImage) {
