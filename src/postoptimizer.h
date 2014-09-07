@@ -107,7 +107,6 @@ namespace enblend
         AnnealOptimizer& operator=(const AnnealOptimizer &other) = delete;
 
         virtual void runOptimizer() {
-
             configureOptimizer();
 
             int segmentNumber;
@@ -123,18 +122,18 @@ namespace enblend
 
                     if (Verbose >= VERBOSE_MASK_MESSAGES) {
                         std::cerr << command
-                             << ": info: Annealing Optimizer, s"
-                             << segmentNumber << ":";
+                                  << ": info: Annealing Optimizer, s"
+                                  << segmentNumber << ":";
                         std::cerr.flush();
                     }
 
                     if (snake->empty()) {
                         std::cerr << std::endl
-                             << command
-                             << ": warning: seam s"
-                             << segmentNumber - 1
-                             << " is a tiny closed contour and was removed before optimization"
-                             << std::endl;
+                                  << command
+                                  << ": warning: seam s"
+                                  << segmentNumber - 1
+                                  << " is a tiny closed contour and was removed before optimization"
+                                  << std::endl;
                         continue;
                     }
 
@@ -200,11 +199,11 @@ namespace enblend
                     // FIXME: explain how to fix this problem in the error message!
                     if (snake->empty()) {
                         std::cerr << std::endl
-                             << command
-                             << ": seam s"
-                             << segmentNumber - 1
-                             << " is a tiny closed contour and was removed after optimization"
-                             << std::endl;
+                                  << command
+                                  << ": seam s"
+                                  << segmentNumber - 1
+                                  << " is a tiny closed contour and was removed after optimization"
+                                  << std::endl;
                     }
                 }
             }
@@ -251,7 +250,6 @@ namespace enblend
         DijkstraOptimizer& operator=(const DijkstraOptimizer &other) = delete;
 
         virtual void runOptimizer() {
-
             configureOptimizer();
 
             vigra::Rect2D withinMismatchImage(*this->mismatchImageSize);
@@ -259,7 +257,7 @@ namespace enblend
 
             if (Verbose >= VERBOSE_MASK_MESSAGES) {
                 std::cerr << command
-                     << ": info: Dijkstra Optimizer:";
+                          << ": info: Dijkstra Optimizer:";
                 std::cerr.flush();
             }
 

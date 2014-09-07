@@ -1106,10 +1106,10 @@ createMask(const ImageType* const white,
     }
     delete mainOutputImage;
 
-#ifdef DEBUG_SEAM_LINE
-    std::cout << "+ createMask: rawSegments\n";
-    dump_contour(rawSegments, "+ createMask: ");
-#endif
+    if (parameter::as_boolean("debug-seam-line", false)) {
+        std::cout << "+ createMask: rawSegments\n";
+        dump_contour(rawSegments, "+ createMask: ");
+    }
 
     // mem usage after: 0
 
@@ -1126,10 +1126,10 @@ createMask(const ImageType* const white,
     reorderSnakesToMovableRuns(contours, rawSegments);
     rawSegments.clear();
 
-#ifdef DEBUG_SEAM_LINE
-    std::cout << "+ createMask: contours\n";
-    dump_contourvector(contours, "+ createMask: ");
-#endif
+    if (parameter::as_boolean("debug-seam-line", false)) {
+        std::cout << "+ createMask: contours\n";
+        dump_contourvector(contours, "+ createMask: ");
+    }
 
     {
         const size_t totalSegments =
@@ -1286,27 +1286,24 @@ createMask(const ImageType* const white,
         }
     }
 
-#ifndef SKIP_OPTIMIZER
-
-    if (OptimizeMask) {
-
+    if (OptimizeMask && !parameter::as_boolean("skip-optimizer", false)) {
         int segmentNumber;
         // Move snake points to mismatchImage-relative coordinates
         for (ContourVector::iterator currentContour = contours.begin();
-                currentContour != contours.end();
-                ++currentContour) {
-                segmentNumber = 0;
-                for (Contour::iterator currentSegment = (*currentContour)->begin();
-                    currentSegment != (*currentContour)->end();
-                    ++currentSegment, ++segmentNumber) {
-                    Segment* snake = *currentSegment;
-                    for (Segment::iterator vertexIterator = snake->begin();
-                        vertexIterator != snake->end();
-                        ++vertexIterator) {
-                        vertexIterator->second =
-                            (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
-                    }
+             currentContour != contours.end();
+             ++currentContour) {
+            segmentNumber = 0;
+            for (Contour::iterator currentSegment = (*currentContour)->begin();
+                 currentSegment != (*currentContour)->end();
+                 ++currentSegment, ++segmentNumber) {
+                Segment* snake = *currentSegment;
+                for (Segment::iterator vertexIterator = snake->begin();
+                     vertexIterator != snake->end();
+                     ++vertexIterator) {
+                    vertexIterator->second =
+                        (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
                 }
+            }
         }
 
         std::vector<double> *params = new(std::vector<double>);
@@ -1314,44 +1311,45 @@ createMask(const ImageType* const white,
         OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
             *defaultOptimizerChain =
             new OptimizerChain<MismatchImagePixelType, MismatchImageType, VisualizeImageType, AlphaType>
-                                (&mismatchImage, visualizeImage,
-                                &mismatchImageSize, &mismatchImageStride,
-                                &uvBBStrideOffset, &contours, &uBB, &vBB, params,
-                                whiteAlpha, blackAlpha, &uvBB);
+            (&mismatchImage, visualizeImage,
+             &mismatchImageSize, &mismatchImageStride,
+             &uvBBStrideOffset, &contours, &uBB, &vBB, params,
+             whiteAlpha, blackAlpha, &uvBB);
 
-            // Add Strategy 1: Use GDA to optimize placement of snake vertices
+        // Add Strategy 1: Use GDA to optimize placement of snake vertices
         defaultOptimizerChain->addOptimizer("anneal");
 
-            // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
+        // Add Strategy 2: Use Dijkstra shortest path algorithm between snake vertices
         defaultOptimizerChain->addOptimizer("dijkstra");
 
-            // Fire optimizer chain (runs every optimizer on the list in sequence)
-        defaultOptimizerChain->runOptimizerChain();
+        // Fire optimizer chain (runs every optimizer on the list in sequence)
+        if (!parameter::as_boolean("skip-optimizer-chain", false)) {
+            defaultOptimizerChain->runOptimizerChain();
+        }
 
         // Move snake vertices from mismatchImage-relative
         // coordinates to uBB-relative coordinates.
         for (ContourVector::iterator currentContour = contours.begin();
-                currentContour != contours.end();
-                ++currentContour) {
-                segmentNumber = 0;
-                for (Contour::iterator currentSegment = (*currentContour)->begin();
-                    currentSegment != (*currentContour)->end();
-                    ++currentSegment, ++segmentNumber) {
-                    Segment* snake = *currentSegment;
-                    for (Segment::iterator currentVertex = snake->begin();
-                        currentVertex != snake->end();
-                        ++currentVertex) {
-                        currentVertex->second =
-                            currentVertex->second * mismatchImageStride +
-                            vBB.upperLeft() - uBB.upperLeft();
-                    }
+             currentContour != contours.end();
+             ++currentContour) {
+            segmentNumber = 0;
+            for (Contour::iterator currentSegment = (*currentContour)->begin();
+                 currentSegment != (*currentContour)->end();
+                 ++currentSegment, ++segmentNumber) {
+                Segment* snake = *currentSegment;
+                for (Segment::iterator currentVertex = snake->begin();
+                     currentVertex != snake->end();
+                     ++currentVertex) {
+                    currentVertex->second =
+                        currentVertex->second * mismatchImageStride +
+                        vBB.upperLeft() - uBB.upperLeft();
                 }
+            }
         }
 
         delete params;
         delete defaultOptimizerChain;
     }
-#endif // !SKIP_OPTIMIZER
 
     if (visualizeImage) {
         const std::string visualizeFilename =
@@ -1388,10 +1386,10 @@ createMask(const ImageType* const white,
         delete visualizeImage;
     }
 
-#ifdef DEBUG_SEAM_LINE
-    std::cout << "+ createMask: contours of final optimized mask\n";
-    dump_contourvector(contours, "+ createMask: ");
-#endif
+    if (parameter::as_boolean("debug-seam-line", false)) {
+        std::cout << "+ createMask: contours of final optimized mask\n";
+        dump_contourvector(contours, "+ createMask: ");
+    }
 
     // Fill contours to get final optimized mask.
     MaskType* mask = new MaskType(uBB.size());
