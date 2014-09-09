@@ -738,7 +738,10 @@ namespace enblend
              ++currentDual) {
 
             current = convertFromDual(*currentDual);
-            next = convertFromDual(*nextDual);
+            
+            if (nextDual != cut->end()) {
+                next = convertFromDual(*nextDual);
+            }
 
             if (currentDual == cut->begin()) {
                 ++nextDual;
