@@ -943,7 +943,8 @@ fill_mask_templates(const char* an_option_argument,
 {
     if (an_option_argument != nullptr && *an_option_argument != 0) {
         boost::char_separator<char> separator(PATH_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-        boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(an_option_argument), separator);
+        const std::string arg(an_option_argument);
+        boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
         boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
         a_soft_mask_template = *token;
@@ -1292,7 +1293,8 @@ process_options(int argc, char** argv)
         case EdgeScaleId: {
             char* tail;
             boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            const std::string arg(optarg);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             if (token == tokenizer.end()) {
@@ -1372,7 +1374,8 @@ process_options(int argc, char** argv)
         case EntropyCutoffId: {
             char* tail;
             boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            const std::string arg(optarg);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             if (token == tokenizer.end()) {
@@ -1434,7 +1437,8 @@ process_options(int argc, char** argv)
         case ExposureCutoffId: {
             char* tail;
             boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            const std::string arg(optarg);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             if (token == tokenizer.end()) {
@@ -1899,7 +1903,8 @@ process_options(int argc, char** argv)
 
         case ParameterId: {
             boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            const std::string arg(optarg);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             while (token != tokenizer.end()) {
@@ -1938,7 +1943,8 @@ process_options(int argc, char** argv)
 
         case NoParameterId: {
             boost::char_separator<char> separator(NUMERIC_OPTION_DELIMITERS, "", boost::keep_empty_tokens);
-            boost::tokenizer<boost::char_separator<char> > tokenizer(std::string(optarg), separator);
+            const std::string arg(optarg);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             while (token != tokenizer.end()) {
