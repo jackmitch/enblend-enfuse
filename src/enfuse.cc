@@ -2179,9 +2179,9 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-#ifdef DEBUG_DUMP_GLOBAL_VARIABLES
-    DUMP_GLOBAL_VARIABLES();
-#endif
+    if (parameter::as_boolean("dump-global-variables", false)) {
+        DUMP_GLOBAL_VARIABLES();
+    }
 
     sig.check();
 
