@@ -1011,15 +1011,18 @@ make_exposure_weight_function(const std::string& name,
 {
     delete ExposureWeightFunction;
 
-    if (name == "gauss" || name == "gaussian") {
+    std::string possible_built_in(name);
+    enblend::to_lower(possible_built_in);
+
+    if (possible_built_in == "gauss" || possible_built_in == "gaussian") {
         return new Gaussian(y_optimum, width);
-    } else if (name == "lorentz" || name == "lorentzian") {
+    } else if (possible_built_in == "lorentz" || possible_built_in == "lorentzian") {
         return new Lorentzian(y_optimum, width);
-    } else if (name == "halfsine" || name == "half-sine") {
+    } else if (possible_built_in == "halfsine" || possible_built_in == "half-sine") {
         return new HalfSinusodial(y_optimum, width);
-    } else if (name == "fullsine" || name == "full-sine") {
+    } else if (possible_built_in == "fullsine" || possible_built_in == "full-sine") {
         return new FullSinusodial(y_optimum, width);
-    } else if (name == "bisquare" || name == "bi-square") {
+    } else if (possible_built_in == "bisquare" || possible_built_in == "bi-square") {
         return new Bisquare(y_optimum, width);
     } else {
 #ifdef HAVE_DYNAMICLOADER_IMPL
@@ -1711,7 +1714,6 @@ process_options(int argc, char** argv)
                 failed = true;
             } else {
                 ExposureWeightFunctionName = *token;
-                enblend::to_lower(ExposureWeightFunctionName);
                 ++token;
             }
 
