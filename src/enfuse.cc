@@ -1442,7 +1442,7 @@ process_options(int argc, char** argv)
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
             if (token == tokenizer.end()) {
-                std::cerr << command << ": no scale given to \"--exposure-cutoff\".  "
+                std::cerr << command << ": no value given to \"--exposure-cutoff\";  "
                           << "lower cutoff is required." << std::endl;
                 failed = true;
             } else {
@@ -1907,7 +1907,7 @@ process_options(int argc, char** argv)
             boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != tokenizer.end()) {
+            for (auto token = tokenizer.begin(); token != tokenizer.end(); ++token) {
                 std::string key;
                 std::string value;
                 size_t delimiter = token->find_first_of(ASSIGNMENT_CHARACTERS);
@@ -1934,8 +1934,6 @@ process_options(int argc, char** argv)
                     std::cerr << command << ": parameter key \"" << key << "\" is not a valid identifier\n";
                     exit(1);
                 }
-
-                ++token;
             }
 
             break;
@@ -1947,7 +1945,7 @@ process_options(int argc, char** argv)
             boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
             boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            while (token != tokenizer.end()) {
+            for (auto token = tokenizer.begin(); token != tokenizer.end(); ++token) {
                 std::string key(*token);
                 boost::trim(key);
 
@@ -1959,8 +1957,6 @@ process_options(int argc, char** argv)
                     std::cerr << command << ": warning: key \"" << key <<
                         "\" is not a valid identifier; ignoring\n";
                 }
-
-                ++token;
             }
 
             break;
