@@ -233,35 +233,6 @@ starts_with(const std::string& s, const std::string& p)
 }
 
 
-/** String tokenizer similar to strtok_r().
- *  In contrast to strtok_r this function returns an empty string for
- *  each pair of successive delimiters.  Function strtok_r skips them.
- */
-char*
-strtoken_r(char* str, const char* delim, char** save_ptr)
-{
-    char *s = str ? str : *save_ptr;
-
-    if (s)
-    {
-        char *token = s;
-
-        while (*s != 0 && !strchr(delim, static_cast<int>(*s)))
-        {
-            s++;
-        }
-        *save_ptr = *s == 0 ? nullptr : s + 1;
-        *s = 0;
-
-        return token;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-
 /** Answer the string representation of the boolean b. */
 std::string
 stringOfBool(bool b)

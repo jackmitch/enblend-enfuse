@@ -216,6 +216,10 @@ void dump_global_variables(const char* file, unsigned line,
         "+     ExposureOptimum = " << ExposureOptimum  << ", argument to option \"--exposure-optimum\"\n" <<
         "+     ExposureWidth = " << ExposureWidth << ", argument to option \"--exposure-width\"\n" <<
         "+ ExposureWeightFunctionName = " << ExposureWeightFunctionName << "\n" <<
+        "+ ExposureWeightFunctionArguments = {\n";
+    for (auto& a : ExposureWeightFunctionArguments) {out << "+    \"" << a << "\"\n";}
+    out <<
+        "+ }\n" <<
         "+ ExposureLowerCutoff = {\n"
         "+     value = " << ExposureLowerCutoff.value() << ",\n" <<
         "+     is_percentage = " << enblend::stringOfBool(ExposureLowerCutoff.is_percentage()) << "\n" <<
@@ -1020,7 +1024,8 @@ make_exposure_weight_function(const std::string& name,
     } else {
 #ifdef HAVE_DYNAMICLOADER_IMPL
         if (arguments.empty()) {
-            std::cerr << command << ": unknown exposure weight function \"" << name << "\"" << std::endl;
+            std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\""
+                      << std::endl;
             exit(1);
         } else {
             const std::string symbol_name(arguments.front());
@@ -1043,7 +1048,9 @@ make_exposure_weight_function(const std::string& name,
             return weight_object;
         }
 #else
-        std::cerr << command << ": unknown exposure weight function \"" << name << "\"" << std::endl;
+        std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\"\n"
+                  << command << ": info: this binary has no support for dynamic loading of\n"
+                  << command << ": info: exposure weight functions" << std::endl;
         exit(1);
 #endif
     }
@@ -1693,43 +1700,25 @@ process_options(int argc, char** argv)
             break;
 
         case ExposureWeightFunctionId: {
-            char* s = new char[strlen(optarg) + 1];
-            strcpy(s, optarg);
-            char* save_ptr = nullptr;
-            char* token = enblend::strtoken_r(s, PATH_OPTION_DELIMITERS, &save_ptr);
+            const std::string arg(optarg);
+            boost::char_separator<char> separator(PATH_OPTION_DELIMITERS);
+            boost::tokenizer<boost::char_separator<char> > tokenizer(arg, separator);
+            boost::tokenizer<boost::char_separator<char> >::iterator token = tokenizer.begin();
 
-            if (token == nullptr || *token == 0) {
-                std::cerr << command << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
+            if (token == tokenizer.end()) {
+                std::cerr << command
+                          << ": option \"--exposure-weight-function\" requires an argument" << std::endl;
                 failed = true;
             } else {
-                ExposureWeightFunctionName = token;
-#ifdef WIN32
-                // special handling of absolute filenames under Windows
-                if (ExposureWeightFunctionName.length() == 1U) {
-                    const char sep = strlen(optarg) > 2 ? optarg[1] : 0;
-                    if (sep == ':') {
-                        token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
-                        if(token == nullptr || *token == 0) {
-                            std::cerr << command << ": option \"--exposure-weight-function\" requires a valid filename" << std::endl;
-                            failed = true;
-                            break;
-                        }
-                        ExposureWeightFunctionName.append(":");
-                        ExposureWeightFunctionName.append(token);
-                    }
-                }
-#endif
+                ExposureWeightFunctionName = *token;
                 enblend::to_lower(ExposureWeightFunctionName);
-
-                while (true) {
-                    token = enblend::strtoken_r(nullptr, PATH_OPTION_DELIMITERS, &save_ptr);
-                    if (token == nullptr) {
-                        break;
-                    }
-                    ExposureWeightFunctionArguments.push_back(token);
-                }
+                ++token;
             }
-            delete [] s;
+
+            for (; token != tokenizer.end(); ++token) {
+                ExposureWeightFunctionArguments.push_back(*token);
+            }
+
             optionSet.insert(ExposureWeightFunctionOption);
             break;
         }
@@ -2007,12 +1996,14 @@ process_options(int argc, char** argv)
 
     if (WExposure > 0.0)
     {
-        ExposureWeightFunction = make_exposure_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
-                                                               ExposureOptimum, ExposureWidth);
+        ExposureWeightFunction =
+            make_exposure_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
+                                          ExposureOptimum, ExposureWidth);
         if (!enblend::check_exposure_weight_function(ExposureWeightFunction))
         {
             std::cerr << command
-                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\"" << std::endl;
+                      << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\""
+                      << std::endl;
             failed = true;
         }
     }
