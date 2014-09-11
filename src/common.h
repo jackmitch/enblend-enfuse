@@ -164,9 +164,9 @@ typedef enum
 
 #define PENALIZE_DEPRECATED_OPTION(m_old_name, m_new_name) \
     do { \
-        cerr << command << \
+        std::cerr << command <<                                         \
             ": info: option \"" m_old_name "\" is deprecated; use \"" m_new_name "\" instead" << \
-            endl; \
+            std::endl;                                                  \
         sleep(1); \
     } while (false)
 
@@ -182,6 +182,13 @@ public:
     explicit never_reached(const std::string& a_message) : std::runtime_error(a_message) {}
     virtual ~never_reached() noexcept {}
 };
+
+#ifdef __GNUC__
+#define NEVER_REACHED(m_message) \
+    do {__builtin_unreachable();  throw ::never_reached(m_message);} while (false)
+#else
+#define NEVER_REACHED(m_message) throw ::never_reached(m_message)
+#endif
 
 
 namespace enblend {
@@ -338,7 +345,7 @@ stringOfWraparound(boundary_t aBoundaryMode)
     case DoubleStrip:
         return "both";
     default:
-        throw never_reached("switch control expression \"aBoundaryMode\" out of range");
+        NEVER_REACHED("switch control expression \"aBoundaryMode\" out of range");
     }
 }
 

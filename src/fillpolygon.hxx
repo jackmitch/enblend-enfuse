@@ -267,7 +267,7 @@ namespace vigra_ext
                     break;
 
                 default:
-                    assert(false);
+                    NEVER_REACHED("unknown intersection_t");
                 }
             }
 

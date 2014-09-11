@@ -1392,7 +1392,7 @@ namespace enblend
                                          (LuminanceDifferenceWeight, ChrominanceDifferenceWeight));
             break;
         default:
-            throw never_reached("switch control expression \"PixelDifferenceFunctor\" out of range");
+            NEVER_REACHED("switch control expression \"PixelDifferenceFunctor\" out of range");
         }
 
         // masking overlap region borders

@@ -2050,7 +2050,7 @@ process_options(int argc, char** argv)
         break;
 
     default:
-        throw never_reached("switch control expression \"print_only_task\" out of range");
+        NEVER_REACHED("switch control expression \"print_only_task\" out of range");
     }
 
     StopAfterMaskGeneration = contains(optionSet, SaveMasksOption) && !contains(optionSet, OutputOption);

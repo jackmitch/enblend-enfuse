@@ -170,7 +170,7 @@ quadruple_image(SrcImageIterator src_upperleft,
         break;
 
     default:
-        throw never_reached("switch control expression \"boundary\" out of range");
+        NEVER_REACHED("switch control expression \"boundary\" out of range");
     }
 }
 
@@ -265,7 +265,7 @@ quater_image(SrcImageIterator src_upperleft,
         break;
 
     default:
-        throw never_reached("switch control expression \"boundary\" out of range");
+        NEVER_REACHED("switch control expression \"boundary\" out of range");
     }
 }
 
@@ -322,7 +322,7 @@ periodicDistanceTransform(SrcImageIterator src_upperleft, SrcImageIterator src_l
         break;
 
     default:
-        throw never_reached("switch control expression \"boundary\" out of range");
+        NEVER_REACHED("switch control expression \"boundary\" out of range");
     }
 
     vigra::BasicImage<SrcValueType> periodic(size_x, size_y);
@@ -480,7 +480,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         break;
 
     default:
-        throw never_reached("switch control expression \"boundary\" out of range");
+        NEVER_REACHED("switch control expression \"boundary\" out of range");
     }
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
@@ -511,7 +511,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         break;
 
     default:
-        throw never_reached("switch control expression \"boundary\" out of range");
+        NEVER_REACHED("switch control expression \"boundary\" out of range");
     }
 
     if (Verbose >= VERBOSE_NFT_MESSAGES)
