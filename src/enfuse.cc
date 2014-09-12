@@ -1715,6 +1715,15 @@ process_options(int argc, char** argv)
             } else {
                 ExposureWeightFunctionName = *token;
                 ++token;
+#ifdef _WIN32
+                // special handling of absolute filenames on Windows
+                if (ExposureWeightFunctionName.length() == 1U && arg.length() > 2U && arg[1] == ':' && token != tokenizer.end())
+                {
+                    ExposureWeightFunctionName.append(":");
+                    ExposureWeightFunctionName.append(*token);
+                    ++token;
+                }
+#endif
             }
 
             for (; token != tokenizer.end(); ++token) {
