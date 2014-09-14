@@ -289,8 +289,8 @@ namespace enblend
 
                         if (currentVertex->first || nextVertex->first) {
                             // Find shortest path between these points
-                            vigra::Point2D currentPoint = currentVertex->second;
-                            vigra::Point2D nextPoint = nextVertex->second;
+                            const vigra::Point2D currentPoint = currentVertex->second;
+                            const vigra::Point2D nextPoint = nextVertex->second;
 
                             vigra::Rect2D pointSurround(currentPoint, vigra::Size2D(1, 1));
                             pointSurround |= vigra::Rect2D(nextPoint, vigra::Size2D(1, 1));
@@ -308,11 +308,27 @@ namespace enblend
                                             vigra::Point2D(nextPoint - pointSurround.upperLeft()),
                                             vigra::Point2D(currentPoint - pointSurround.upperLeft()));
 
+                            if (shortPath->empty()) {
+                                std::cerr << command << ": warning: unable to run Dijkstra optimizer\n"
+                                          << command << ": info: seam-line end point outside of cost-image\n"
+                                          << command << ": info: contour #"
+                                          << (currentContour - (*this->contours).begin()) + 1U
+                                          << " of " << (*this->contours).size()
+                                          << ", segment #"
+                                          << (currentSegment - (*currentContour)->begin()) + 1U
+                                          << " of " << (*currentContour)->size()
+                                          << ", vertex #"
+                                          << std::accumulate(snake->begin(), currentVertex, 1U,
+                                                             [](unsigned a, SegmentPoint) {return a + 1U;})
+                                          << " of " << snake->size() << std::endl;
+                            }
+
                             for (std::vector<vigra::Point2D>::iterator shortPathPoint = shortPath->begin();
                                  shortPathPoint != shortPath->end();
                                  ++shortPathPoint) {
                                 snake->insert(std::next(currentVertex),
-                                              std::make_pair(false, *shortPathPoint + pointSurround.upperLeft()));
+                                              std::make_pair(false,
+                                                             *shortPathPoint + pointSurround.upperLeft()));
 
                                 if (this->visualizeImage) {
                                     (*this->visualizeImage)[*shortPathPoint + pointSurround.upperLeft()] =
@@ -323,14 +339,21 @@ namespace enblend
                             delete shortPath;
 
                             if (this->visualizeImage) {
-                                (*this->visualizeImage)[currentPoint] =
-                                    currentVertex->first ?
-                                    VISUALIZE_FIRST_VERTEX_VALUE :
-                                    VISUALIZE_NEXT_VERTEX_VALUE;
-                                (*this->visualizeImage)[nextPoint] =
-                                    nextVertex->first ?
-                                    VISUALIZE_FIRST_VERTEX_VALUE :
-                                    VISUALIZE_NEXT_VERTEX_VALUE;
+                                const vigra::Size2D size(*this->visualizeImage->size());
+                                const vigra::Rect2D valid_region(size);
+
+                                if (valid_region.contains(currentPoint)) {
+                                    (*this->visualizeImage)[currentPoint] =
+                                        currentVertex->first ?
+                                        VISUALIZE_FIRST_VERTEX_VALUE :
+                                        VISUALIZE_NEXT_VERTEX_VALUE;
+                                }
+                                if (valid_region.contains(nextPoint)) {
+                                    (*this->visualizeImage)[nextPoint] =
+                                        nextVertex->first ?
+                                        VISUALIZE_FIRST_VERTEX_VALUE :
+                                        VISUALIZE_NEXT_VERTEX_VALUE;
+                                }
                             }
                         }
 

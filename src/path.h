@@ -66,9 +66,6 @@ namespace enblend
         typedef std::priority_queue<vigra::Point2D, std::vector<vigra::Point2D>,
                                     PathCompareFunctor<vigra::Point2D, WorkingImageType> > PriorityQueue;
 
-        const int width = cost_lowerright.x - cost_upperleft.x;
-        const int height = cost_lowerright.y - cost_upperleft.y;
-
         // 4-bit direction encoding {up, down, left, right}
         // A  8  9
         // 2  0  1
@@ -80,22 +77,30 @@ namespace enblend
         const std::array<vigra::UInt8, 8> neighborArray = {0xA, 1, 6, 8, 5, 2, 9, 4};
         const std::array<vigra::UInt8, 8> neighborArrayInverse = {5, 2, 9, 4, 0xA, 1, 6, 8};
 
-        vigra::UInt8Image pathNextHop(width, height);
-        WorkingImageType costSoFar(width, height, vigra::NumericTraits<WorkingPixelType>::max());
+        const vigra::Size2D size(cost_lowerright - cost_upperleft);
+        const vigra::Rect2D valid_region(size);
+
+        vigra::UInt8Image pathNextHop(size);
+        WorkingImageType costSoFar(size, vigra::NumericTraits<WorkingPixelType>::max());
         // The doubled parentheses in the definition of `pq' avoid "C++'s most-vexing parse", gosh!
         PriorityQueue pq((PathCompareFunctor<vigra::Point2D, WorkingImageType>(&costSoFar)));
         std::vector<vigra::Point2D>* result = new std::vector<vigra::Point2D>;
 
         if (parameter::as_boolean("debug-path", false)) {
-            std::cout << "+ minCostPath: width = " << width << ", height = " << height << "\n"
+            std::cout << "+ minCostPath: size = " << size << "\n"
                       << "+ minCostPath: startingPoint = " << startingPoint
-                      << ", endingPoint = " << endingPoint << std::endl;
+                      << (valid_region.contains(startingPoint) ? "" : " (invalid)")
+                      << ", endingPoint = " << endingPoint
+                      << (valid_region.contains(endingPoint) ? "" : " (invalid)")
+                      << std::endl;
         }
 
-        costSoFar[endingPoint] =
-            std::max(vigra::NumericTraits<WorkingPixelType>::one(),
-                     vigra::NumericTraits<WorkingPixelType>::toPromote(cost_accessor(cost_upperleft + endingPoint)));
-        pq.push(endingPoint);
+        if (valid_region.contains(endingPoint)) {
+            costSoFar[endingPoint] =
+                std::max(vigra::NumericTraits<WorkingPixelType>::one(),
+                         vigra::NumericTraits<WorkingPixelType>::toPromote(cost_accessor(cost_upperleft + endingPoint)));
+            pq.push(endingPoint);
+        }
 
         while (!pq.empty()) {
             vigra::Point2D top = pq.top();
@@ -121,8 +126,7 @@ namespace enblend
                     if (neighborDirection & 0x1) {++neighborPoint.x;}
 
                     // Make sure neighbor is in valid region
-                    if (neighborPoint.y < 0 || neighborPoint.y >= height
-                        || neighborPoint.x < 0 || neighborPoint.x >= width) {
+                    if (!valid_region.contains(neighborPoint)) {
                         continue;
                     }
                     if (parameter::as_boolean("debug-path", false)) {
