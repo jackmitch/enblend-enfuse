@@ -12,6 +12,10 @@ Unreleased.  Current line of development.
 
 - Avoid a division-by-zero in the Annealing Optimizer.
 
+- Fix a bug (#1356551) in the seam-line vectorization code that was
+  there since 2004.  The fix changes the position of almost any
+  coarse-mask seam line vertex by one pixel.
+
 - Fix a longstanding quirk, which allowed to load masks into Enblend
   and Enfuse that were unsuitable for processing.
 

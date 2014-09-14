@@ -913,6 +913,16 @@ vertexBoundingBox(ContourVector& contours)
 }
 
 
+inline static int
+round_to_nearest_div(int a_numerator, int a_denominator)
+{
+    const std::div_t result(std::div(a_numerator, a_denominator));
+    const int rem2 = 2 * result.rem;
+
+    return rem2 >= a_denominator ? result.quot + 1 : (-rem2 >= a_denominator ? result.quot - 1 : result.quot);
+}
+
+
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
@@ -1305,10 +1315,24 @@ createMask(const ImageType* const white,
 
     if (OptimizeMask && !parameter::as_boolean("skip-optimizer", false)) {
         // Move snake points to mismatchImage-relative coordinates
-        for_each_vertex(contours.begin(), contours.end(),
-                        [&](Segment::iterator vertex)
-                        {vertex->second =
-                                (vertex->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;});
+        if (parameter::as_boolean("adya-snake-points", false)) {
+            for_each_vertex(contours.begin(), contours.end(),
+                            [&](Segment::iterator vertex)
+                            {
+                                vertex->second =
+                                    (vertex->second + uBB.upperLeft() - vBB.upperLeft()) / mismatchImageStride;
+                            });
+        } else {
+            for_each_vertex(contours.begin(), contours.end(),
+                            [&](Segment::iterator vertex)
+                            {
+                                const vigra::Point2D
+                                    shifted(vertex->second + uBB.upperLeft() - vBB.upperLeft());
+                                vertex->second =
+                                    vigra::Point2D(round_to_nearest_div(shifted.px(), mismatchImageStride),
+                                                   round_to_nearest_div(shifted.py(), mismatchImageStride));
+                            });
+        }
 
         std::unique_ptr<std::vector<double> > params(new std::vector<double>);
         std::unique_ptr<OptimizerChain<MismatchImagePixelType, MismatchImageType,
