@@ -22,6 +22,9 @@
 #include <cstring>
 #include <string>
 #include <sstream>
+#ifdef _WIN32
+#include <windows.h>
+#endif  // _WIN32
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -76,6 +79,36 @@ namespace enblend
 #endif // STRERROR_R_CHAR_P
 #endif // HAVE_STRERROR_R
 
+#if defined(_WIN32)
+        // strerror translates only errors in C runtime library
+        // now translate errors in Windows API
+        if (message.compare("Unknown error") == 0)
+        {
+            message.clear();
+        }
+        if (anErrorNumber && message.empty())
+        {
+            // first check for errors in Windows API
+            LPSTR messageBuffer = nullptr;
+            DWORD size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL, anErrorNumber, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+            if (size)
+            {
+                // convert codepage to get correct display of all characters, e.g. umlaute
+                LPSTR OEMmessageBuffer = (LPSTR)LocalAlloc(LPTR, (size + 1)*sizeof(char));
+                if (OEMmessageBuffer)
+                {
+                    if (CharToOemBuff(messageBuffer, OEMmessageBuffer, size))
+                    {
+                        message = std::string(OEMmessageBuffer, size);
+                    }
+                }
+                LocalFree(OEMmessageBuffer);
+            }
+            LocalFree(messageBuffer);
+        }
+#endif // _WIN32    
+        
         return message.empty() ? noErrorMessageAvailable(anErrorNumber) : message;
     }
 } // namespace enblend
