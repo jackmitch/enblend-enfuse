@@ -42,7 +42,7 @@ ENDIF (NOT WIN32 OR MINGW)
   )
 
   find_library_for_cpu(OPENEXR_IEX_LIBRARY
-    NAMES Iex
+    NAMES Iex-2_2 Iex
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -50,7 +50,7 @@ ENDIF (NOT WIN32 OR MINGW)
     ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
 
-  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY NAMES IlmThread
+  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY NAMES IlmThread-2_2 IlmThread
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -58,7 +58,7 @@ ENDIF (NOT WIN32 OR MINGW)
     ${SOURCE_BASE_DIR}/Deploy/lib/Release
   )
   
-  find_library_for_cpu(OPENEXR_IMATH_LIBRARY NAMES Imath
+  find_library_for_cpu(OPENEXR_IMATH_LIBRARY NAMES Imath-2_2 Imath
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -67,7 +67,7 @@ ENDIF (NOT WIN32 OR MINGW)
   )
   
   
-  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY NAMES IlmImf 
+  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY NAMES IlmImf-2_2 IlmImf 
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -84,7 +84,7 @@ ENDIF (NOT WIN32 OR MINGW)
   )
 
   find_library_for_cpu(OPENEXR_IEX_LIBRARY_DEBUG
-    NAMES Iex
+    NAMES Iex-2_2 Iex
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -92,7 +92,7 @@ ENDIF (NOT WIN32 OR MINGW)
     ${SOURCE_BASE_DIR}/Deploy/lib/Debug
   )
 
-  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY_DEBUG NAMES IlmThread
+  find_library_for_cpu(OPENEXR_ILMTHREAD_LIBRARY_DEBUG NAMES IlmThread-2_2 IlmThread
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -100,7 +100,7 @@ ENDIF (NOT WIN32 OR MINGW)
     ${SOURCE_BASE_DIR}/Deploy/lib/Debug
   )
   
-  find_library_for_cpu(OPENEXR_IMATH_LIBRARY_DEBUG NAMES Imath
+  find_library_for_cpu(OPENEXR_IMATH_LIBRARY_DEBUG NAMES Imath-2_2 Imath
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
@@ -108,7 +108,7 @@ ENDIF (NOT WIN32 OR MINGW)
     ${SOURCE_BASE_DIR}/Deploy/lib/Debug
   )
   
-  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY_DEBUG NAMES IlmImf 
+  find_library_for_cpu(OPENEXR_ILMIMF_LIBRARY_DEBUG NAMES IlmImf-2_2 IlmImf 
     PATHS
     ${_OPENEXRLinkDir}
     ${SYSTEM_LIB_DIRS}
