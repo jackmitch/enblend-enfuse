@@ -91,6 +91,7 @@ blend(std::vector<MaskPyramidType*>* maskGP,
 
 #ifdef OPENMP
     omp::scoped_nested(true);
+    omp::scoped_dynamic(true);
 #pragma omp parallel
     {
 #pragma omp single nowait

@@ -181,6 +181,25 @@ namespace omp
     };
 
 
+    class scoped_dynamic
+    {
+    public:
+        scoped_dynamic() : dynamic_(omp_get_dynamic()) {}
+
+        explicit scoped_dynamic(bool allow_dynamic) : dynamic_(omp_get_dynamic())
+        {
+            omp_set_dynamic(static_cast<int>(allow_dynamic));
+        }
+
+        ~scoped_dynamic() {omp_set_dynamic(dynamic_);}
+
+        bool is_dynamic() const {return dynamic_;}
+
+    private:
+        const bool dynamic_;
+    };
+
+
 #if 0
     class scoped_schedule
     {
