@@ -7085,6 +7085,13 @@ the creation of focus stacks.
 @include helpful-programs.texi
 
 
+@sp 5
+@quotation
+You have your answer, Daniel Jackson.  I suggest you act on it.  --
+@sc{Morgan le Fay (Ganos Lal)}
+@end quotation
+
+
 @node Bug Reports
 @appendix Bug Reports
 @cindex bug reports
