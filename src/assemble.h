@@ -70,9 +70,9 @@ exportImagePreferablyWithAlpha(const ImageType* image,
                                 srcIter(mask->upperLeft(), mask_accessor),
                                 outputImageInfo);
     } catch (std::exception& e) {
+        std::cerr << command << ": warning: must fall back to export image without alpha channel" << std::endl;
 #ifdef DEBUG
-        std::cerr << "+ exportImagePreferablyWithAlpha: fallback to export without alpha channel\n";
-        std::cerr << "+ exportImagePreferablyWithAlpha: because of " << e.what() << "\n";
+        std::cerr << "+ exportImagePreferablyWithAlpha: exception description follows..." << e.what();
 #endif
         exportImage(srcImageRange(*image), outputImageInfo);
     }
