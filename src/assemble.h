@@ -290,19 +290,19 @@ assemble(std::list<vigra::ImageImportInfo*>& imageInfoList, vigra::Rect2D& input
             vigra::ImageImportInfo* info = *i;
 
             // Load the next image.
-            ImageType* src = new ImageType(info->size());
-            AlphaType* srcA = new AlphaType(info->size());
+            std::unique_ptr<ImageType> src {new ImageType(info->size())};
+            std::unique_ptr<AlphaType> srcA {new AlphaType(info->size())};
 
             import(*info, destImage(*src), destImage(*srcA));
 
             // Check for overlap.
             bool overlapFound = false;
-            AlphaIteratorType dy =
-                imageA->upperLeft() - inputUnion.upperLeft() + info->getPosition();
+            AlphaIteratorType dy = imageA->upperLeft() - inputUnion.upperLeft() + info->getPosition();
             AlphaAccessor da = imageA->accessor();
             AlphaIteratorType sy = srcA->upperLeft();
             AlphaIteratorType send = srcA->lowerRight();
             AlphaAccessor sa = srcA->accessor();
+
             for(; sy.y < send.y; ++sy.y, ++dy.y) {
                 AlphaIteratorType sx = sy;
                 AlphaIteratorType dx = dy;
@@ -326,19 +326,28 @@ assemble(std::list<vigra::ImageImportInfo*>& imageInfoList, vigra::Rect2D& input
                 }
 
                 const vigra::Diff2D srcPos = info->getPosition();
-                vigra::copyImageIf(srcImageRange(*src),
-                                   maskImage(*srcA),
-                                   vigra::destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
-                vigra::copyImageIf(srcImageRange(*srcA),
-                                   maskImage(*srcA),
-                                   vigra::destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
+#ifdef OPENMP
+                omp::scoped_nested(true);
+                omp::scoped_dynamic(true);
+#pragma omp parallel
+                {
+#pragma omp single nowait
+                    {
+#endif
+                        vigra::omp::copyImageIf(srcImageRange(*src),
+                                                maskImage(*srcA),
+                                                vigra::destIter(image->upperLeft() - inputUnion.upperLeft() + srcPos));
+                        vigra::omp::copyImageIf(srcImageRange(*srcA),
+                                                maskImage(*srcA),
+                                                vigra::destIter(imageA->upperLeft() - inputUnion.upperLeft() + srcPos));
+#ifdef OPENMP
+                    } // omp single
+                } // omp parallel
+#endif
 
                 // Remove info from list later.
                 toBeRemoved.push_back(i);
             }
-
-            delete src;
-            delete srcA;
         }
 
         // Erase the ImageImportInfos we used.

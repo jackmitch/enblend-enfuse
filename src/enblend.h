@@ -151,12 +151,24 @@ void enblendMain(const FileNameList& anInputFileNameList,
                       << std::endl;
 
             // Copy white image into black image verbatim.
-            vigra::copyImageIf(srcImageRange(*(whitePair.first)),
-                               maskImage(*(whitePair.second)),
-                               destImage(*(blackPair.first)));
-            vigra::copyImageIf(srcImageRange(*(whitePair.second)),
-                               maskImage(*(whitePair.second)),
-                               destImage(*(blackPair.second)));
+#ifdef OPENMP
+            omp::scoped_nested(true);
+            omp::scoped_dynamic(true);
+#pragma omp parallel
+            {
+#pragma omp single nowait
+                {
+#endif
+                    vigra::omp::copyImageIf(srcImageRange(*(whitePair.first)),
+                                            maskImage(*(whitePair.second)),
+                                            destImage(*(blackPair.first)));
+                    vigra::omp::copyImageIf(srcImageRange(*(whitePair.second)),
+                                            maskImage(*(whitePair.second)),
+                                            destImage(*(blackPair.second)));
+#ifdef OPENMP
+                } // omp single
+            } // omp parallel
+#endif
 
             delete whitePair.first;
             delete whitePair.second;
