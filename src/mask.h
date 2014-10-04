@@ -1075,6 +1075,8 @@ createMask(const ImageType* const white,
                                 vigra::destIter(mainOutputImage->upperLeft() + mainOutputOffset),
                                 norm,
                                 wraparound ? HorizontalStrip : OpenBoundaries);
+    } else {
+        NEVER_REACHED("unexpected value of \"MainAlgorithm\"");
     }
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
