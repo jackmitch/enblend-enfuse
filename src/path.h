@@ -160,7 +160,10 @@ namespace enblend
                         neighborCost = WorkingPixelType(static_cast<double>(neighborCost) * 1.4);
                     }
 
-                    const WorkingPixelType newNeighborCost = neighborCost + costToTop;
+                    const WorkingPixelType newNeighborCost
+                    {vigra::NumericTraits<WorkingPixelType>::fromRealPromote(static_cast<double>(neighborCost) +
+                                                                             static_cast<double>(costToTop))};
+
                     if (newNeighborCost < neighborPreviousCost) {
                         // We have found the shortest path to neighbor.
                         costSoFar[neighborPoint] = newNeighborCost;
