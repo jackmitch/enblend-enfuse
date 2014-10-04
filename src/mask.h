@@ -1083,15 +1083,14 @@ createMask(const ImageType* const white,
     {
         typedef std::pair<const char*, const MaskType*> ImagePair;
 
-        const ImagePair nft[] = {
+        const std::array<ImagePair, 3> nft {
             std::make_pair("blackmask", blackAlpha),
             std::make_pair("whitemask", whiteAlpha),
-            //std::make_pair("nft-input", nftInputImage),
             std::make_pair("nft-output", mainOutputImage)
         };
 
-        for (size_t i = 0; i < sizeof(nft) / sizeof(ImagePair); ++i) {
-            const std::string nftMaskTemplate(command + "-" + nft[i].first + "-%n.tif");
+        for (const auto& x : nft) {
+            const std::string nftMaskTemplate(command + "-" + x.first + "-%n.tif");
             const std::string nftMaskFilename =
                 enblend::expandFilenameTemplate(nftMaskTemplate,
                                                 numberOfImages,
@@ -1105,7 +1104,7 @@ createMask(const ImageType* const white,
             }
             vigra::ImageExportInfo nftMaskInfo(nftMaskFilename.c_str());
             nftMaskInfo.setCompression(MASK_COMPRESSION);
-            vigra::exportImage(srcImageRange(*nft[i].second), nftMaskInfo);
+            vigra::exportImage(srcImageRange(*x.second), nftMaskInfo);
         }
     }
 #endif
