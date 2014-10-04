@@ -30,7 +30,7 @@ struct Gaussian : public ExposureWeight
 {
     Gaussian(double y_optimum, double width_parameter) : ExposureWeight(y_optimum, width_parameter) {}
 
-    double weight(double y) const
+    double weight(double y) override
     {
         const double z = normalize(y);
         return exp(-0.5 * z * z);
@@ -46,7 +46,7 @@ struct Lorentzian : public ExposureWeight
     Lorentzian(double y_optimum, double width_parameter) :
         ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_LORENTZIAN) {}
 
-    double weight(double y) const
+    double weight(double y) override
     {
         const double z = normalize(y);
         return 1.0 / (1.0 + 0.5 * z * z);
@@ -62,7 +62,7 @@ struct HalfSinusodial : public ExposureWeight
     HalfSinusodial(double y_optimum, double width_parameter) :
         ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_HALFSINUSODIAL) {}
 
-    double weight(double y) const
+    double weight(double y) override
     {
         const double z = normalize(y);
         return fabs(z) <= M_PI_2 ? cos(z) : 0.0;
@@ -78,7 +78,7 @@ struct FullSinusodial : public ExposureWeight
     FullSinusodial(double y_optimum, double width_parameter) :
         ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_FULLSINUSODIAL) {}
 
-    double weight(double y) const
+    double weight(double y) override
     {
         const double z = normalize(y);
         return fabs(z) <= M_PI ? 0.5 + cos(z) / 2.0 : 0.0;
@@ -94,7 +94,7 @@ struct Bisquare : public ExposureWeight
     Bisquare(double y_optimum, double width_parameter) :
         ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_BISQUARE) {}
 
-    double weight(double y) const
+    double weight(double y) override
     {
         const double z = normalize(y);
 

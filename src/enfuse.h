@@ -59,7 +59,7 @@ using vigra::functor::Param;
 
 namespace enblend {
 void
-dump_exposure_weight_function(const ExposureWeight* weight_function, int n = 256)
+dump_exposure_weight_function(ExposureWeight* weight_function, int n = 256)
 {
     assert(n >= 2);
 
@@ -74,7 +74,7 @@ dump_exposure_weight_function(const ExposureWeight* weight_function, int n = 256
 
 
 bool
-check_exposure_weight_function(const ExposureWeight* weight_function, int n = 65536)
+check_exposure_weight_function(ExposureWeight* weight_function, int n = 65536)
 {
     assert(n >= 2);
 
@@ -660,7 +660,7 @@ protected:
 template <typename InputType, typename InputAccessor, typename ResultType>
 class ExposureFunctor : public std::unary_function<InputType, ResultType> {
 public:
-    ExposureFunctor(double weight, const ExposureWeight* weight_function, const InputAccessor& a) :
+    ExposureFunctor(double weight, ExposureWeight* weight_function, const InputAccessor& a) :
         weight_(weight), weight_function_(weight_function), acc_(a) {}
 
     ResultType operator()(const InputType& a) const {
@@ -683,7 +683,7 @@ protected:
     }
 
     const double weight_;
-    const ExposureWeight* weight_function_;
+    ExposureWeight* weight_function_;
     InputAccessor acc_;
 };
 
@@ -691,7 +691,7 @@ protected:
 template <typename InputType, typename InputAccessor, typename ResultType>
 class CutoffExposureFunctor : public std::unary_function<InputType, ResultType> {
 public:
-    CutoffExposureFunctor(double weight, const ExposureWeight* weight_function, InputAccessor a,
+    CutoffExposureFunctor(double weight, ExposureWeight* weight_function, InputAccessor a,
                           const AlternativePercentage& lc, const AlternativePercentage& uc,
                           InputAccessor lca, InputAccessor uca) :
         weight_(weight), weight_function_(weight_function), acc_(a),
@@ -750,7 +750,7 @@ protected:
     }
 
     const double weight_;
-    const ExposureWeight* weight_function_;
+    ExposureWeight* weight_function_;
     InputAccessor acc_;
     const double lower_cutoff_;
     const double upper_cutoff_;

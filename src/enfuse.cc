@@ -987,13 +987,13 @@ public:
         function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
     {}
 
-    virtual void initialize(double y_optimum, double width_parameter,
-                            const argument_list_t& argument_list = argument_list_t()) {
+    void initialize(double y_optimum, double width_parameter,
+                    const argument_list_t& argument_list = argument_list_t()) override {
         std::cout << "+ DynamicExposureWeight::initialize\n";
         function->initialize(y_optimum, width_parameter, argument_list);
     }
 
-    virtual double weight(double y) const {return function->weight(y);}
+    double weight(double y) override {return function->weight(y);}
 
 private:
     std::string library;
@@ -1001,7 +1001,7 @@ private:
     DynamicLoader dynamic_loader;
     ExposureWeight* function;
 };
-#endif // HAVE_DL
+#endif // HAVE_DYNAMICLOADER_IMPL
 
 
 ExposureWeight*
@@ -1055,7 +1055,7 @@ make_exposure_weight_function(const std::string& name,
                   << command << ": info: this binary has no support for dynamic loading of\n"
                   << command << ": info: exposure weight functions" << std::endl;
         exit(1);
-#endif
+#endif // HAVE_DYNAMICLOADER_IMPL
     }
 }
 

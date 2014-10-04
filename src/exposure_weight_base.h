@@ -52,7 +52,7 @@ public:
         return (y - optimum()) / width();
     }
 
-    virtual double weight(double) const = 0;
+    virtual double weight(double) = 0;
 
     virtual ~ExposureWeight() {}
 
