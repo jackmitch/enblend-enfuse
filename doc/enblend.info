@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-29dfb25f97a6, 26 October
+   This manual is for Enblend (version 4.2-d3a7966801dd, 26 October
 2014), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-29dfb25f97a6, 26 October 2014),
+This manual is for Enblend (version 4.2-d3a7966801dd, 26 October 2014),
 a tool for compositing images in such a way that the seam between the
 images is invisible, or at least very difficult to see.
 
@@ -37,6 +37,7 @@ images is invisible, or at least very difficult to see.
 * Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles ICC color profiles
 * Understanding Masks::         How to interpret masks and mask files
+* Memory Management::           Enblend's way to manage memory
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
@@ -270,7 +271,7 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory and color-space control
+* Extended Options::            Output format and color-space control
 * Mask Generation Options::     Mask generation control
 * Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
@@ -875,7 +876,8 @@ arguments in lowercase for consistency.
 
    ---------- Footnotes ----------
 
-   (1) VIGRA is the image manipulaton library on which Enblend is based.
+   (1) VIGRA is the image manipulation library on which Enblend is
+based.
 
    (2) As Dr. Daniel Jackson correctly noted
 (http://stargate.wikia.com/wiki/The_Tomb), actually, it is not a
@@ -1302,7 +1304,7 @@ These options control the generation and the usage of masks.
 
         The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT
      define how to weight these two criteria.  Enblend up to
-     version 3.2 used 1:1.  This version of Enblend (4.2-29dfb25f97a6)
+     version 3.2 used 1:1.  This version of Enblend (4.2-d3a7966801dd)
      uses 8.0:1.0.
 
         A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1655,7 +1657,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-29dfb25f97a6) of Enblend supports two main algorithms
+This version (4.2-d3a7966801dd) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -1776,7 +1778,7 @@ back use
    * assume complete adaption.
 
 
-File: enblend.info,  Node: Understanding Masks,  Next: Helpful Programs,  Prev: Color Profiles,  Up: Top
+File: enblend.info,  Node: Understanding Masks,  Next: Memory Management,  Prev: Color Profiles,  Up: Top
 
 6 Understanding Masks
 *********************
@@ -1869,9 +1871,120 @@ have a hole in that position.
 ...
 
 
-File: enblend.info,  Node: Helpful Programs,  Next: Bug Reports,  Prev: Understanding Masks,  Up: Top
+File: enblend.info,  Node: Memory Management,  Next: Helpful Programs,  Prev: Understanding Masks,  Up: Top
 
-7 Helpful Additional Programs
+7 Memory Management
+*******************
+
+* Menu:
+
+* History::         History of Enblend's memory management
+* Problems::        Problems of the pre-version 4.2 approach
+* New Approach::    New approach utilizing virtual memory
+
+
+File: enblend.info,  Node: History,  Next: Problems,  Up: Memory Management
+
+7.1 History
+===========
+
+In 2004 Andrew Mihal started the Enblend project, a time at which
+computers available at a reasonable price to the public often did not
+have enough RAM ("core") to allow for constructing large panoramic
+images.  Therefore he coded an extension to the VIGRA
+(http://hci.iwr.uni-heidelberg.de/vigra/) library(1) termed the
+"ImageCache".
+
+   The concept of the ImageCache is to reserve a _fixed_ amount of RAM
+- typically 1024 KB - and to perform all image processing only inside
+this region of memory.  Of course the size of the ImageCache almost
+always is too small to hold all image data.  So an algorithm similar to
+the caching algorithm
+(https://en.wikipedia.org/wiki/Cache_%28computing%29) used in modern
+CPUs takes care to transfer unneeded image parts from the ImageCache to
+the filesystem and fetch data from there when it is needed again.
+
+   The price for having almost arbitrary amounts of memory at Enblend's
+disposal was greatly reduced speed, for the coupling to the filesystem
+is slow.  This led to two variants(2) of Enblend:
+
+_Without ImageCache_
+     For systems with large cores in comparison to the panorama sizes
+     this was the by far faster choice, in particular if it had
+     multi-processor support compiled in.
+
+_With ImageCache_
+     For systems with small cores or large panoramas this was the only
+     way to get results.
+
+   Both Enblend and Enfuse endow the users with a very easy way to find
+out what the variants or their binaries are.  Just call the application
+with options `--verbose --version' (or tersely: `-Vv') and look for
+`Extra feature: image cache', which either says `yes' or `no'.
+
+   Over the following decade the average RAM of commodity computers
+drastically increased (Moore's Law
+(https://en.wikipedia.org/wiki/Moore%27s_law)).  So did the average
+panorama size, but the shortage of memory available to the CPUs has
+been overcome.
+
+   ---------- Footnotes ----------
+
+   (1) VIGRA is the image manipulation library on which both Enblend
+and Enfuse are based.
+
+   (2) The variant is chosen at configuration time right before
+compiling and cannot be changed later.
+
+
+File: enblend.info,  Node: Problems,  Next: New Approach,  Prev: History,  Up: Memory Management
+
+7.2 ImageCache Problems
+=======================
+
+Though the ImageCache solved the problem of a panorama being to large
+for the available core, but new challenges emerged.
+
+   * Almost all modern computers feature multiple cores, this is, they
+     run several CPUs in parallel.  New versions of Enblend and Enfuse
+     exploit their capabilities, thereby considerably speeding up
+     blending or fusing.  However, the multi-core aware versions of
+     Enblend and Enfuse are incompatible with the ImageCache.
+
+   * The ImageCache prefers algorithms which work on adjacent rows in
+     the images.  This restricts the choice of algorithms to the
+     developers and puts a heavy speed penalty on implementations which
+     work on columns.
+
+   * Under obscure circumstances the cache algorithm fails and the
+     resulting panoramas contain one pixel wide horizontal black lines.
+     See for example Artefacts [sic] due to Enblend memory bug
+     (https://bugs.launchpad.net/enblend/+bug/807439).
+
+
+File: enblend.info,  Node: New Approach,  Prev: Problems,  Up: Memory Management
+
+7.3 New, mmap-based Approach
+============================
+
+These problems led the Enblend/Enfuse developers to withdraw the
+ImageCache in version 4.2 and offer a new approach, which is based on a
+feature some modern operating systems (O/Ss) offer.  It is called
+"Virtual Memory".  The idea behind it is that the O/S always can
+simulate core with a file.  Whenever an application requests a certain
+address in core the O/S blocks the application, supplies the data at
+the address and finally unblocks the application, a process called
+"memory mapping".  The fundamental function is called `mmap', which is
+why the new approach is called mmap-based.
+
+   The benefits of memory mapping are a complete transparency for
+Enblend and Enfuse as well as its compatibility with the multi-core
+versions.
+
+
+File: enblend.info,  Node: Helpful Programs,  Next: Bug Reports,  Prev: Memory Management,  Up: Top
+
+8 Helpful Additional Programs
 *****************************
 
 Several programs and libraries have proven helpful when working with
@@ -2876,6 +2989,7 @@ General Index
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
                                                               (line 353)
+* ImageCache:                            History.             (line   6)
 * index, general:                        General Index.       (line   6)
 * index, option:                         Option Index.        (line   6)
 * index, program:                        Program Index.       (line   6)
@@ -2960,6 +3074,10 @@ General Index
                                                               (line 161)
 * maximum hue-luminance:                 Mask Generation Options.
                                                               (line 129)
+* memory management:                     Memory Management.   (line   6)
+* memory mapping:                        New Approach.        (line   6)
+* memory, virtual:                       New Approach.        (line   6)
+* mmap:                                  New Approach.        (line   6)
 * multi-directory TIFF:                  Overview.            (line  39)
 * multi-layer image:                     Overview.            (line  39)
 * nearest feature transform (NFT) <1>:   Primary Seam Generators.
@@ -3071,6 +3189,7 @@ General Index
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
 * version:                               Information Options. (line  48)
+* virtual memory:                        New Approach.        (line   6)
 * virtual reality:                       Common Options.      (line 264)
 * visualization image:                   Mask Generation Options.
                                                               (line 353)
@@ -3100,55 +3219,61 @@ General Index
 
 Tag Table:
 Node: Top903
-Node: Overview2207
-Ref: Overview-Footnote-14646
-Ref: Overview-Footnote-24827
-Node: Workflow4969
-Node: Standard Workflow5368
-Ref: Figure:photographic-workflow5628
-Node: External Mask Manipulation8302
-Ref: Figure:external-mask-workflow9619
-Node: Invocation10104
-Node: Image Requirements10948
-Node: Response Files12323
-Node: Response File Format14219
-Ref: Table:response-file-format14724
-Ref: Example:response-file16603
-Node: Syntactic Comments16878
-Ref: Table:response-file-syntactic-comment17371
-Node: Globbing Algorithms17703
-Ref: Table:globbing-algorithms18402
-Ref: Example:globbing-algorithm19428
-Node: Default Layer Selection19642
-Node: Common Options20148
-Ref: Common Options-Footnote-131773
-Ref: Common Options-Footnote-231847
-Ref: Common Options-Footnote-332039
-Node: Extended Options32198
-Ref: Extended Options-Footnote-137518
-Ref: Extended Options-Footnote-237584
-Node: Mask Generation Options37657
-Ref: Table:mask-generation40264
-Ref: Table:optimizer-strategies47305
-Ref: Table:visualization-colors52985
-Ref: Table:mask-template-characters53900
-Ref: Mask Generation Options-Footnote-156152
-Node: Information Options56380
-Node: Option Delimiters59555
-Node: Primary Seam Generators60956
-Node: Color Profiles63842
-Node: Understanding Masks66292
-Node: Helpful Programs70082
-Node: Bug Reports74729
-Ref: Bug Reports-Footnote-180385
-Node: Authors80455
-Node: FDL81620
-Node: List of Tables102602
-Node: List of Figures103226
-Node: List of Examples103516
-Node: Program Index103797
-Node: Syntactic-Comment Index107025
-Node: Option Index107780
-Node: General Index112152
+Node: Overview2270
+Ref: Overview-Footnote-14709
+Ref: Overview-Footnote-24890
+Node: Workflow5032
+Node: Standard Workflow5431
+Ref: Figure:photographic-workflow5691
+Node: External Mask Manipulation8365
+Ref: Figure:external-mask-workflow9682
+Node: Invocation10167
+Node: Image Requirements11018
+Node: Response Files12393
+Node: Response File Format14289
+Ref: Table:response-file-format14794
+Ref: Example:response-file16673
+Node: Syntactic Comments16948
+Ref: Table:response-file-syntactic-comment17441
+Node: Globbing Algorithms17773
+Ref: Table:globbing-algorithms18472
+Ref: Example:globbing-algorithm19498
+Node: Default Layer Selection19712
+Node: Common Options20218
+Ref: Common Options-Footnote-131843
+Ref: Common Options-Footnote-231918
+Ref: Common Options-Footnote-332110
+Node: Extended Options32269
+Ref: Extended Options-Footnote-137589
+Ref: Extended Options-Footnote-237655
+Node: Mask Generation Options37728
+Ref: Table:mask-generation40335
+Ref: Table:optimizer-strategies47376
+Ref: Table:visualization-colors53056
+Ref: Table:mask-template-characters53971
+Ref: Mask Generation Options-Footnote-156223
+Node: Information Options56451
+Node: Option Delimiters59626
+Node: Primary Seam Generators61027
+Node: Color Profiles63913
+Node: Understanding Masks66363
+Node: Memory Management70154
+Node: History70494
+Ref: History-Footnote-172519
+Ref: History-Footnote-272611
+Node: Problems72715
+Node: New Approach73814
+Node: Helpful Programs74692
+Node: Bug Reports79337
+Ref: Bug Reports-Footnote-184993
+Node: Authors85063
+Node: FDL86228
+Node: List of Tables107210
+Node: List of Figures107834
+Node: List of Examples108124
+Node: Program Index108405
+Node: Syntactic-Comment Index111633
+Node: Option Index112388
+Node: General Index116760
 
 End Tag Table

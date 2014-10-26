@@ -117,6 +117,14 @@ We write the default values of all configuration options in capital
 letters.
 
 
+** --enable-mmapped-images=yes/NO
+   -DENABLE_MMAPPED_IMAGES=OFF/on    (CMake)
+
+Place images in virtual memory, which is backed by the filesystem
+thereby allowing for very large panoramas in comparison to the amount
+of RAM.
+
+
 ** --enable-openmp=yes/NO
    -DENABLE_OPENMP=ON/off    (CMake)
 

@@ -292,27 +292,13 @@ printVersion(int argc, char** argv)
 #endif
             "\n";
 
-#ifdef CACHE_IMAGES
-        std::cout << "Extra feature: image cache: yes\n";
+#ifdef MMAP_IMAGES
+        std::cout << "Extra feature: memory-mapped images: yes\n";
         {
-#ifdef WIN32
-            char lpPathBuffer[MAX_PATH];
-            const DWORD dwRetVal = GetTempPath(MAX_PATH, lpPathBuffer);
-            if (dwRetVal <= MAX_PATH && dwRetVal != 0) {
-                std::cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
-            }
-#else
-            const char* tmpdir = getenv("TMPDIR");
-            std::cout << "  - environment variable TMPDIR ";
-            if (tmpdir == nullptr) {
-                std::cout << "not set, cache file in default directory \"/tmp\"\n";
-            } else {
-                std::cout << "set, cache file located in \"" << tmpdir << "\"\n";
-            }
-#endif
+            std::cout << "  - map files located in \"" << mmap_image::sys::get_tmpdir() << "\"\n";
         }
 #else
-        std::cout << "Extra feature: image cache: no\n";
+        std::cout << "Extra feature: memory-mapped images: no\n";
 #endif
 
 #ifdef OPENMP
@@ -597,9 +583,10 @@ printUsage(const bool error = true)
         "well as in lowercase letters.\n" <<
         "\n" <<
         "Environment:\n" <<
-#ifdef CACHE_IMAGES
-        "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
-        "                         where to store ImageCache files.  If unset Enblend uses \"/tmp\".\n" <<
+#ifdef MMAP_IMAGES
+        "  TMPDIR                 The TMPDIR environment variable points to the directory that\n" <<
+        "                         gets used as backing store for large images.  If unset Enblend\n" <<
+        "                         uses \"/tmp\".\n" <<
 #endif
 #ifdef OPENMP
         "  OMP_NUM_THREADS        The OMP_NUM_THREADS environment variable sets the number\n" <<
@@ -619,6 +606,21 @@ printUsage(const bool error = true)
 
     exit(error ? 1 : 0);
 }
+
+
+#ifdef MMAP_IMAGES
+void cleanup_map_files(void)
+{
+    for (auto x : mmap_image::MemoryMapFile::open_map_files()) {
+        errno = 0;
+        if (unlink(x.c_str()) != 0) {
+            std::cerr << command <<
+                ": warning: could not remove stale map file \"" << x << "\": " <<
+                enblend::errorMessage(errno) << "\n";
+        }
+    }
+}
+#endif
 
 
 void cleanup_output(void)
@@ -642,6 +644,9 @@ void sigint_handler(int sig)
 {
     std::cerr << std::endl << command << ": interrupted" << std::endl;
 
+#ifdef MMAP_IMAGES
+    cleanup_map_files();
+#endif
     cleanup_output();
 
 #if !defined(__GW32C__) && !defined(_WIN32)
@@ -2422,6 +2427,21 @@ int main(int argc, char** argv)
              ++i) {
             delete *i;
         }
+
+#ifdef MMAP_IMAGES
+        if (parameter::as_boolean("dump-mmap-allocations", true)) {
+            mmap_image::MemoryDirectorWithStatistics::dump_allocations();
+        }
+        if (parameter::as_boolean("dump-mmap-statistics", true)) {
+            mmap_image::MemoryDirectorWithStatistics::dump_statistics();
+        }
+    } catch (mmap_image::sys::error& e) {
+        std::cerr << std::endl
+                  << command << ": mmap signaled error\n"
+                  << command << ": " << e.what() << "\n"
+                  << command << ": " << enblend::errorMessage(e.number())  << "\n"
+                  << std::endl;
+#endif
     } catch (std::bad_alloc& e) {
         std::cerr << std::endl
                   << command << ": out of memory\n"

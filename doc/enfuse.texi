@@ -123,6 +123,7 @@ scene to produce an image that looks much like a tonemapped image.
 * Weighting Functions::         Description of all weighting functions
 * Understanding Masks::         How to interpret masks and mask files
 * Applications::                Possible applications of Enfuse
+* Memory Management::           Enblend's way to manage memory
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
@@ -152,7 +153,7 @@ Workflow
 Invocation
 
 * Common Options::              General options
-* Extended Options::            Memory control and others
+* Extended Options::            Output format control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
@@ -211,6 +212,8 @@ Advanced Focus Stacking
 * Local Contrast Enhancement::    Boosting local contrast before weighting
 * Suppressing Noise or Recognizing Faint Edges::  The best of both worlds
 * Focus Stacking Decision Tree::  What to do and how to fuse
+
+Memory Management
 
 Helpful Programs
 
@@ -401,7 +404,7 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory control and others
+* Extended Options::            Output format control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
 * Information Options::         Information about Enblend itself
@@ -551,7 +554,7 @@ variant of run-length compression; it is lossless.
 Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
-@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulaton
+@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulation
 library on which Enfuse is based.}} automatically compresses
 @file{png}-files with the @sc{Deflate} method.
 @end table
@@ -7075,6 +7078,13 @@ detail in the in-focus regions.
 Consider the use Magic Lantern (@pxref{Helpful Programs}) to automate
 the creation of focus stacks.
 @end itemize
+
+
+@node Memory Management
+@chapter Memory Management
+@cindex memory management
+
+@include memory-management.texi
 
 
 @node Helpful Programs

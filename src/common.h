@@ -40,6 +40,10 @@
 #include "error_message.h"
 #include "filenameparse.h"
 
+#ifdef MMAP_IMAGES
+#include "mmap_image.h"
+#endif
+
 #define NUMERIC_OPTION_DELIMITERS ";:/"
 #define PATH_OPTION_DELIMITERS ",;:"
 #define ASSIGNMENT_CHARACTERS "="
@@ -143,11 +147,10 @@ typedef enum
 #define TRANSFORMATION_FLAGS_FOR_BLENDING cmsFLAGS_NOCACHE
 
 
-// Select our preferred type of image depending on what ./configure
+// Select our preferred type of image depending on what configure(1)
 // tells us.
-#ifdef CACHE_IMAGES
-#error "The ImageCache feature has been withdrawn.  Reconfigure without ImageCache and re-build."
-#define IMAGETYPE vigra_ext::CachedFileImage
+#ifdef MMAP_IMAGES
+#define IMAGETYPE mmap_image::MemoryMappedImage
 #else
 #define IMAGETYPE vigra::BasicImage
 #endif

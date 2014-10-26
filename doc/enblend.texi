@@ -124,6 +124,7 @@ see.
 * Primary Seam Generators::     Differences between available seam generators
 * Color Profiles::              How Enblend handles @acronym{ICC} color profiles
 * Understanding Masks::         How to interpret masks and mask files
+* Memory Management::           Enblend's way to manage memory
 * Helpful Programs::            Useful other programs
 * Bug Reports::                 How to write bug reports
 * Authors::                     Major contributors
@@ -270,7 +271,7 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory and color-space control
+* Extended Options::            Output format and color-space control
 * Mask Generation Options::     Mask generation control
 * Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
@@ -435,7 +436,7 @@ variant of run-length compression; it is lossless.
 Other formats do not accept a @var{COMPRESSION} setting.
 
 However, @uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/,
-@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulaton
+@acronym{VIGRA}@footnote{@acronym{VIGRA} is the image manipulation
 library on which Enblend is based.}} automatically compresses
 @file{png}-files with the @sc{Deflate} method.
 @end table
@@ -2798,6 +2799,13 @@ page@tie{}2.
 @cindex masks, understanding
 
 @include understanding-masks.texi
+
+
+@node Memory Management
+@chapter Memory Management
+@cindex memory management
+
+@include memory-management.texi
 
 
 @node Helpful Programs

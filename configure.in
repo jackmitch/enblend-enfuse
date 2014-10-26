@@ -448,21 +448,29 @@ else
     enable_debug=no
 fi
 
-AC_MSG_CHECKING(whether to enable image cache)
-image_cache_default="no"
-AC_ARG_ENABLE(image_cache,
-              AC_HELP_STRING([--enable-image-cache],
+AC_CHECK_HEADERS([fcntl.h stdlib.h sys/mman.h sys/stat.h unistd.h])
+AC_MSG_CHECKING(whether to enable mmapped images)
+mmaped_images_default="no"
+AC_ARG_ENABLE(mmapped_images,
+              AC_HELP_STRING([--enable-mmapped-images],
                              [allow for processing of large images @<:@default=no@:>@]),
-              [enable_image_cache=$enableval],
-              [enable_image_cache=$image_cache_default])
-if test "$enable_image_cache" = yes; then
-    AC_DEFINE(CACHE_IMAGES, 1,
-              [Define if you want to compile Enblend and Enfuse with image cache])
-    AC_MSG_RESULT(yes)
-    enable_image_cache=yes
+              [enable_mmapped_images=$enableval],
+              [enable_mmapped_images=$mmaped_images_default])
+if test "$enable_mmapped_images" = yes; then
+   if test $ac_cv_header_fcntl_h = yes -a $ac_cv_header_stdlib_h = yes -a \
+      $ac_cv_header_sys_mman_h = yes -a $ac_cv_header_sys_stat_h = yes -a \
+      $ac_cv_header_unistd_h = yes; then
+       AC_DEFINE(MMAP_IMAGES, 1, [Define if you want to compile Enblend and Enfuse with mmap(2)])
+       AC_MSG_RESULT(yes)
+       enable_mmapped_images=yes
+   else
+       AC_MSG_RESULT(no)
+       AC_MSG_WARN([Cannot enable mmap support because of missing header files])
+       enable_mmapped_images=no
+   fi
 else
     AC_MSG_RESULT(no)
-    enable_image_cache=no
+    enable_mmapped_images=no
 fi
 
 AC_MSG_CHECKING(whether to compile with OpenMP)
@@ -482,11 +490,6 @@ if test -z "$OPENMP_CXXFLAGS"; then
     AC_MSG_RESULT(no)
     enable_openmp=no
 else
-    if test "$enable_image_cache" = yes; then
-        AC_MSG_WARN([[image cache and OpenMP support are mutually exclusive]])
-        AC_MSG_WARN([[only configure like this if you want to develop a reentrant image cache]])
-        warnings=`echo -e "$warnings\n WARNING: Image cache and OpenMP are both enabled!  You are a developer, aren't you?"`
-    fi
     enable_openmp=yes
 fi
 
@@ -548,7 +551,7 @@ AC_MSG_RESULT([
    enable malloc debugging:        ${enable_dmalloc}
    enable dynamic loading          ${enable_dynload}
    OpenEXR image format            ${have_exr}
-   use image cache:                ${enable_image_cache}
+   use mmap(2) for images:         ${enable_mmapped_images}
    use OpenMP:                     ${enable_openmp}
    use OpenCL:                     ${enable_opencl} (search path: $opencl_path)
    use TCMalloc:                   ${use_tcmalloc}

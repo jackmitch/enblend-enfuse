@@ -1,0 +1,107 @@
+@menu
+* History::         History of Enblend's memory management
+* Problems::        Problems of the pre-version 4.2 approach
+* New Approach::    New approach utilizing virtual memory
+@end menu
+
+
+@node History
+@section History
+
+@cindex ImageCache
+In 2004 Andrew Mihal started the Enblend project, a time at which
+computers available at a reasonable price to the public often did not
+have enough @acronym{RAM} (``core'') to allow for constructing large
+panoramic images.  Therefore he coded an extension to the
+@uref{http://@/hci.iwr.uni-@/heidelberg.de/@/vigra/, @acronym{VIGRA}}
+library@footnote{@acronym{VIGRA} is the image manipulation library on
+which both Enblend and Enfuse are based.} termed the @dfn{ImageCache}.
+
+The concept of the ImageCache is to reserve a @emph{fixed} amount of
+@acronym{RAM} -- typically 1024@dmn{KB} -- and to perform all image
+processing only inside this region of memory.  Of course the size of
+the ImageCache almost always is too small to hold all image data.  So
+an algorithm similar to the
+@uref{https://@/en.wikipedia.org/@/wiki/@/Cache_%28computing%29,
+caching algorithm} used in modern @acronym{CPU}s takes care to
+transfer unneeded image parts from the ImageCache to the filesystem
+and fetch data from there when it is needed again.
+
+The price for having almost arbitrary amounts of memory at Enblend's
+disposal was greatly reduced speed, for the coupling to the filesystem
+is slow.  This led to two variants@footnote{The variant is chosen at
+configuration time right before compiling and cannot be changed
+later.} of Enblend:
+
+@table @emph
+@item Without ImageCache
+For systems with large cores in comparison to the panorama sizes this
+was the by far faster choice, in particular if it had multi-processor
+support compiled in.
+
+@item With ImageCache
+For systems with small cores or large panoramas this was the only way
+to get results.
+@end table
+
+Both Enblend and Enfuse endow the users with a very easy way to find
+out what the variants or their binaries are.  Just call the
+application with options@tie{}@code{--verbose --version} (or tersely:
+@code{-Vv}) and look for @samp{Extra feature: image cache}, which
+either says @samp{yes} or @samp{no}.
+
+Over the following decade the average @acronym{RAM} of commodity
+computers drastically increased
+(@uref{https://@/en.wikipedia.org/@/wiki/@/Moore%27s_law, Moore's
+Law}).  So did the average panorama size, but the shortage of memory
+available to the @acronym{CPU}s has been overcome.
+
+
+@node Problems
+@section ImageCache Problems
+
+Though the ImageCache solved the problem of a panorama being to large
+for the available core, but new challenges emerged.
+
+@itemize
+@item
+Almost all modern computers feature multiple cores, this is, they run
+several @acronym{CPU}s in parallel.  New versions of Enblend and
+Enfuse exploit their capabilities, thereby considerably speeding up
+blending or fusing.  However, the multi-core aware versions of Enblend
+and Enfuse are incompatible with the ImageCache.
+
+@item
+The ImageCache prefers algorithms which work on adjacent rows in the
+images.  This restricts the choice of algorithms to the developers and
+puts a heavy speed penalty on implementations which work on columns.
+
+@item
+Under obscure circumstances the cache algorithm fails and the
+resulting panoramas contain one pixel wide horizontal black lines.
+See for example
+@uref{https://@/bugs.launchpad.net/@/enblend/@/+bug/@/807439,
+Artefacts [sic] due to Enblend memory bug}.
+@end itemize
+
+
+@node New Approach
+@section New, mmap-based Approach
+
+@cindex virtual memory
+@cindex memory, virtual
+@cindex memory mapping
+@cindex mmap
+These problems led the Enblend/Enfuse developers to withdraw the
+ImageCache in version@tie{}4.2 and offer a new approach, which is
+based on a feature some modern operating systems (@acronym{O/S}s)
+offer.  It is called @dfn{Virtual Memory}.  The idea behind it is that
+the @acronym{O/S} always can simulate core with a file.  Whenever an
+application requests a certain address in core the @acronym{O/S}
+blocks the application, supplies the data at the address and finally
+unblocks the application, a process called @dfn{memory mapping}.  The
+fundamental function is called @code{mmap}, which is why the new
+approach is called mmap-based.
+
+The benefits of memory mapping are a complete transparency for Enblend
+and Enfuse as well as its compatibility with the multi-core versions.

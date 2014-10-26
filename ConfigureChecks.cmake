@@ -32,10 +32,10 @@ ENDMACRO()
 
 #Check for some include files and set appropriate variables
 # e.g. "sys/dir.h" found => "HAVE_SYS_DIR_H" set to 1
-foreach(_fl "dirent.h" "fenv.h"
+foreach(_fl "dirent.h" "fenv.h" "fcntl.h"
     "inttypes.h" "limits.h"
     "memory.h" "stdint.h" "stdlib.h" "stdbool.h" "strings.h" "string.h"
-    "sys/stat.h" "sys/types.h" "unistd.h" "windows.h" "sys/times.h")
+    "sys/stat.h" "sys/types.h" "sys/mman.h" "unistd.h" "windows.h" "sys/times.h")
   string(REGEX REPLACE "[/\\.]" "_" _var ${_fl})
   string(TOUPPER "${_var}" _FLN)
   check_include_file_cxx("${_fl}" "HAVE_${_FLN}" )

@@ -1,4 +1,4 @@
 @set UPDATED 26 October 2014
 @set UPDATED-MONTH October 2014
-@set EDITION 4.2-29dfb25f97a6
-@set VERSION 4.2-29dfb25f97a6
+@set EDITION 4.2-d3a7966801dd
+@set VERSION 4.2-d3a7966801dd
