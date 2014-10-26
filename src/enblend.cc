@@ -479,11 +479,11 @@ printUsage(const bool error = true)
         "\n" <<
         "Options:\n" <<
         "Common options:\n" <<
-        "  -a                     pre-assemble non-overlapping images\n" <<
         "  -l, --levels=LEVELS    limit number of blending LEVELS to use (1 to " << MAX_PYRAMID_LEVELS << ");\n" <<
         "                         negative number of LEVELS decreases maximum;\n" <<
         "                         \"auto\" restores the default automatic maximization\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
+        "  -a, --pre-assemble     pre-assemble non-overlapping images; negate with \"--no-pre-assemble\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
         "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
@@ -658,7 +658,7 @@ void sigint_handler(int sig)
 
 
 enum AllPossibleOptions {
-    VersionOption, PreAssembleOption /* -a */, HelpOption, LevelsOption,
+    VersionOption, PreAssembleOption /* -a */, NoPreAssembleOption, HelpOption, LevelsOption,
     OutputOption, VerboseOption, WrapAroundOption /* -w */,
     CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
     BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
@@ -850,6 +850,8 @@ process_options(int argc, char** argv)
         UseGpuId,
         NoUseGpuId,
         PreferGpuId,
+        PreAssembleId,
+        NoPreAssembleId,
         CoarseMaskId,
         FineMaskId,
         OptimizeMaskId,
@@ -888,6 +890,10 @@ process_options(int argc, char** argv)
         {"no-gpu", no_argument, 0, NoUseGpuId},
         {"prefer-gpu", optional_argument, 0, PreferGpuId},
         {"preferred-gpu", optional_argument, 0, PreferGpuId}, // gramatically close alternative form
+        {"pre-assemble", no_argument, 0, PreAssembleId},
+        {"preassemble", no_argument, 0, PreAssembleId}, // dash-less form: not documented, not deprecated
+        {"no-pre-assemble", no_argument, 0, NoPreAssembleId},
+        {"no-preassemble", no_argument, 0, NoPreAssembleId}, // dash-less form: not documented, not deprecated
         {"coarse-mask", optional_argument, 0, CoarseMaskId},
         {"fine-mask", no_argument, 0, FineMaskId},
         {"optimize", no_argument, 0, OptimizeMaskId},
@@ -1457,9 +1463,15 @@ process_options(int argc, char** argv)
             optionSet.insert(DijkstraRadiusOption);
             break;
 
-        case 'a':
+        case 'a': // FALLTHROUGH
+        case PreAssembleId:
             OneAtATime = false;
             optionSet.insert(PreAssembleOption);
+            break;
+
+        case NoPreAssembleId:
+            OneAtATime = true;
+            optionSet.insert(NoPreAssembleOption);
             break;
 
         case 'c': // FALLTHROUGH

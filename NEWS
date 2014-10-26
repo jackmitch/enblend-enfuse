@@ -68,6 +68,10 @@ Unreleased.  Current line of development.
   On systems with more than one device `--prefer-gpu' selects the
   desired GPU.
 
+- Long-time option `-a' got a long-form sibling called
+  `--pre-assemble'.  The long form can be negated as
+  `--no-pre-assemble', which is the default.
+
 
 ** Developer Stuff
 

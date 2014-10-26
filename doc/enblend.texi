@@ -363,14 +363,6 @@ compression scheme.  This manual denotes all arguments in lowercase
 for consistency.
 
 @table @code
-@item -a
-@opindex -a
-Pre-assemble non-overlapping images before each blending iteration.
-
-This overrides the default behavior which is to blend the images
-sequentially in the order given on the command line.  Enblend will use
-fewer blending iterations, but it will do more work in each iteration.
-
 @item --compression=@var{COMPRESSION}
 @opindex --compression
 @cindex output file compression
@@ -637,6 +629,19 @@ parameters at once.
 
 Parameters allow the developers to change the internal workings of
 Enblend without the need to recompile.
+
+@item -a
+@itemx --pre-assemble
+@opindex -a
+@opindex --pre-assemble
+Pre-assemble non-overlapping images before each blending iteration.
+
+This overrides the default behavior which is to blend the images
+sequentially in the order given on the command line.  Enblend will use
+fewer blending iterations, but it will do more work in each iteration.
+
+This option has the negated form @option{--no-pre-assemble}, which
+restores the default.
 
 @item --prefer-gpu
 @itemx --prefer-gpu=DEVICE
