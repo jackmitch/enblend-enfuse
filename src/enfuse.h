@@ -1360,15 +1360,15 @@ void enfuseMain(const FileNameList& anInputFileNameList,
         }
 
         // Make output alpha the union of all input alphas.
-        copyImageIf(srcImageRange(*(imagePair.second)),
-                    maskImage(*(imagePair.second)),
-                    destImage(*(outputPair.second)));
+        vigra::omp::copyImageIf(srcImageRange(*(imagePair.second)),
+                                maskImage(*(imagePair.second)),
+                                destImage(*(outputPair.second)));
 
         // Add the mask to the norm image.
         vigra::omp::combineTwoImages(srcImageRange(*mask),
-                           srcImage(*normImage),
-                           destImage(*normImage),
-                           Arg1() + Arg2());
+                                     srcImage(*normImage),
+                                     destImage(*normImage),
+                                     Arg1() + Arg2());
 
         imageList.push_back(vigra::make_triple(imagePair.first, imagePair.second, mask));
 

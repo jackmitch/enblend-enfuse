@@ -140,32 +140,32 @@ quadruple_image(SrcImageIterator src_upperleft,
     switch (boundary)
     {
     case OpenBoundaries:
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft, da);
         break;
 
     case HorizontalStrip:
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft, da); // 11
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft + size_x, da); // 12
         break;
 
     case VerticalStrip:
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft, da); // 11
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft + size_y, da); // 21
         break;
 
     case DoubleStrip:
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft, da); // 11
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft + size_x, da); // 12
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft + size_y, da); // 21
-        copyImage(src_upperleft, src_lowerright, sa,
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
                   dest_upperleft + size_x + size_y, da); // 22
         break;
 
@@ -211,57 +211,57 @@ quater_image(SrcImageIterator src_upperleft,
     switch (boundary)
     {
     case OpenBoundaries:
-        copyImage(src_upperleft, src_lowerright, sa,
-                  dest_upperleft, da);
+        vigra::copyImage(src_upperleft, src_lowerright, sa,
+                         dest_upperleft, da);
         break;
 
     case HorizontalStrip:
-        copyImage(src_upperleft + size_x2,
-                  src_upperleft + size_x2 + size_x4 + size_y,
-                  sa,
-                  dest_upperleft,
-                  da); // 11
-        copyImage(src_upperleft + size_x4,
-                  src_upperleft + size_x2 + size_y,
-                  sa,
-                  dest_upperleft + size_x4,
-                  da); // 12
+        vigra::copyImage(src_upperleft + size_x2,
+                         src_upperleft + size_x2 + size_x4 + size_y,
+                         sa,
+                         dest_upperleft,
+                         da); // 11
+        vigra::copyImage(src_upperleft + size_x4,
+                         src_upperleft + size_x2 + size_y,
+                         sa,
+                         dest_upperleft + size_x4,
+                         da); // 12
         break;
 
     case VerticalStrip:
-        copyImage(src_upperleft + size_y2,
-                  src_upperleft + size_y2 + size_y4 + size_x,
-                  sa,
-                  dest_upperleft,
-                  da); // 21
-        copyImage(src_upperleft + size_y4,
-                  src_upperleft + size_y2 + size_x,
-                  sa,
-                  dest_upperleft + size_y4,
-                  da); // 22
+        vigra::copyImage(src_upperleft + size_y2,
+                         src_upperleft + size_y2 + size_y4 + size_x,
+                         sa,
+                         dest_upperleft,
+                         da); // 21
+        vigra::copyImage(src_upperleft + size_y4,
+                         src_upperleft + size_y2 + size_x,
+                         sa,
+                         dest_upperleft + size_y4,
+                         da); // 22
         break;
 
     case DoubleStrip:
-        copyImage(src_upperleft + size_x2 + size_y2,
-                  src_upperleft + size_x2 + size_y2 + size_x4 + size_y4,
-                  sa,
-                  dest_upperleft,
-                  da); // 11
-        copyImage(src_upperleft + size_x4 + size_y2,
-                  src_upperleft + size_x2 + size_y2 + size_y4,
-                  sa,
-                  dest_upperleft + size_x4,
-                  da); // 12
-        copyImage(src_upperleft + size_x2 + size_y4,
-                  src_upperleft + size_x2 + size_x4 + size_y2,
-                  sa,
-                  dest_upperleft + size_y4,
-                  da); // 21
-        copyImage(src_upperleft + size_x4 + size_y4,
-                  src_upperleft + size_x2 + size_y2,
-                  sa,
-                  dest_upperleft + size_x4 + size_y4,
-                  da); // 22
+        vigra::copyImage(src_upperleft + size_x2 + size_y2,
+                         src_upperleft + size_x2 + size_y2 + size_x4 + size_y4,
+                         sa,
+                         dest_upperleft,
+                         da); // 11
+        vigra::copyImage(src_upperleft + size_x4 + size_y2,
+                         src_upperleft + size_x2 + size_y2 + size_y4,
+                         sa,
+                         dest_upperleft + size_x4,
+                         da); // 12
+        vigra::copyImage(src_upperleft + size_x2 + size_y4,
+                         src_upperleft + size_x2 + size_x4 + size_y2,
+                         sa,
+                         dest_upperleft + size_y4,
+                         da); // 21
+        vigra::copyImage(src_upperleft + size_x4 + size_y4,
+                         src_upperleft + size_x2 + size_y2,
+                         sa,
+                         dest_upperleft + size_x4 + size_y4,
+                         da); // 22
         break;
 
     default:

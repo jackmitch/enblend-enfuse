@@ -300,8 +300,8 @@ namespace enblend
                             // Make BasicImage to hold pointSurround portion of mismatchImage.
                             // min cost path needs inexpensive random access to cost image.
                             vigra::BasicImage<MismatchImagePixelType> mismatchROIImage(pointSurround.size());
-                            copyImage(vigra_ext::apply(pointSurround, srcImageRange(*this->mismatchImage)),
-                                      destImage(mismatchROIImage));
+                            vigra::copyImage(vigra_ext::apply(pointSurround, srcImageRange(*this->mismatchImage)),
+                                             destImage(mismatchROIImage));
 
                             std::vector<vigra::Point2D>* shortPath =
                                 minCostPath(srcImageRange(mismatchROIImage),

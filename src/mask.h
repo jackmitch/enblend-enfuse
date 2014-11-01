@@ -1337,7 +1337,7 @@ createMask(const ImageType* const white,
 
     if (visualizeImage) {
         // Dump cost image into visualize image.
-        copyImage(srcImageRange(mismatchImage), destImage(*visualizeImage));
+        vigra::omp::copyImage(srcImageRange(mismatchImage), destImage(*visualizeImage));
 
         // Color the parts of the visualize image where the two images
         // to be blended do not overlap.

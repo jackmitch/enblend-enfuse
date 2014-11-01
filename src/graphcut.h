@@ -153,12 +153,12 @@ namespace enblend
                                 vigra::destIter(nftTempImg.upperLeft() + vigra::Diff2D(1, 1)),
                                 norm, boundary);
 
-        copyImage(vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1), nftTempImg.lowerRight() - vigra::Diff2D(1, 1)),
-                  vigra::destIter(dest_upperleft, da));
+        vigra::copyImage(vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1), nftTempImg.lowerRight() - vigra::Diff2D(1, 1)),
+                         vigra::destIter(dest_upperleft, da));
 
-        copyImage(vigra_ext::apply(iBB, vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1),
-                                                     nftTempImg.lowerRight() - vigra::Diff2D(1, 1))),
-                  vigra::destIter(nft.upperLeft() + vigra::Diff2D(1, 1)));
+        vigra::copyImage(vigra_ext::apply(iBB, vigra::srcIterRange(nftTempImg.upperLeft() + vigra::Diff2D(1, 1),
+                                                                   nftTempImg.lowerRight() - vigra::Diff2D(1, 1))),
+                         vigra::destIter(nft.upperLeft() + vigra::Diff2D(1, 1)));
 
         vigra::omp::combineTwoImages(vigra_ext::apply(iBB, vigra::srcIterRange(mask1_upperleft, mask1_lowerright, ma1)),
                                      vigra_ext::apply(iBB, vigra::srcIter(mask2_upperleft, ma2)),
@@ -1281,8 +1281,8 @@ namespace enblend
                                                 Param(MaskPixelTraits::max()),
                                                 Param(MaskPixelTraits::zero())));
 
-        copyImageIf(finalmaskSrcRange, srcImage(tempImg),
-                    vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
+        vigra::copyImageIf(finalmaskSrcRange, srcImage(tempImg),
+                           vigra::destIter(dest_upperleft + iBB.upperLeft(), da));
 
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcIterRange(dest_upperleft + iBB.upperLeft(), dest_upperleft + iBB.upperLeft() + size), ImageExportInfo("./debug/process_cut_5_final_postcopy.tif").setPixelType("UINT8"));
@@ -1416,12 +1416,12 @@ namespace enblend
         }
 
         // copying to a grid
-        copyImage(srcImageRange(intermediateImg),
-                  vigra_ext::stride(2, 2, vigra_ext::apply(gBB, destImage(intermediateGraphImg))));
+        vigra::copyImage(srcImageRange(intermediateImg),
+                         vigra_ext::stride(2, 2, vigra_ext::apply(gBB, destImage(intermediateGraphImg))));
 
         // calculating differences between pixels that are adjacent in the original image
         convolveImage(srcImageRange(intermediateGraphImg), destImage(graphImg), vigra::kernel2d(edgeWeightKernel));
-        copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
+        vigra::copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
 
 #ifdef DEBUG_GRAPHCUT
         exportImage(srcImageRange(intermediateImg), ImageExportInfo("./debug/diff.tif").setPixelType("UINT8"));
@@ -1467,7 +1467,7 @@ namespace enblend
                 }
             }
 
-            copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
+            vigra::copyImage(srcImageRange(graphImg), destImage(intermediateGraphImg));
             intermediatePoint = *i;
         }
 
