@@ -35,6 +35,7 @@
 #include <vigra/impexalpha.hxx>
 #include <vigra/initimage.hxx>
 #include <vigra/numerictraits.hxx>
+#include <vigra/pixelneighborhood.hxx>
 #include <vigra/transformimage.hxx>
 
 #include "fillpolygon.hxx"
@@ -923,6 +924,62 @@ round_to_nearest_div(int a_numerator, int a_denominator)
 }
 
 
+template <typename AlphaType>
+void
+search_for_isolated_points(const AlphaType* const alpha)
+{
+    // ANTICIPATED CHANGE: We only take care of the inner part of the
+    // image `alpha' because `vigra::NeighborhoodCirculator' does not
+    // work on along the edges.  If necessary the test can be extended
+    // to the edges using `vigra::RestrictedNeighborhoodCirculator'.
+
+    typedef typename AlphaType::const_traverser alpha_traverser;
+    typedef vigra::NeighborhoodCirculator<alpha_traverser, vigra::EightNeighborCode> circulator;
+
+    const alpha_traverser t_end(alpha->lowerRight() - vigra::Diff2D(1, 1));
+    const vigra::Size2D size(alpha->size());
+
+    unsigned number_of_isolated_points(0U);
+
+#ifdef OPENMP
+#pragma omp parallel for reduction(+: number_of_isolated_points) schedule(guided)
+#endif
+    for (int row = 1; row < size.y - 1; ++row) {
+        alpha_traverser t(alpha->upperLeft() + vigra::Diff2D(1, row));
+        for (t.x = 1; t.x != t_end.x; ++t.x) {
+            if (*t == 0) {
+                circulator c(t);
+                const circulator c_end(c);
+
+                while (true) {
+                    if (*c == 0) {
+                        break;
+                    }
+                    ++c;
+                    if (c == c_end) {
+                        ++number_of_isolated_points;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (number_of_isolated_points >=
+        std::max(1U, parameter::as_unsigned("black-alpha-mask-check-isolated-points-threshold", 2U))) {
+        std::cerr <<
+            command << ": encountered degenerate image/mask geometry; too high risk of defective seam line" <<
+            std::endl;
+#ifdef DEBUG
+        std::cerr <<
+            command << ": info: found " << number_of_isolated_points <<
+            " isolated points in black alpha mask" << std::endl;
+#endif
+        exit(1);
+    }
+}
+
+
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
@@ -1078,6 +1135,8 @@ createMask(const ImageType* const white,
     } else {
         NEVER_REACHED("unexpected value of \"MainAlgorithm\"");
     }
+
+    search_for_isolated_points(blackAlpha);
 
 #ifdef DEBUG_NEAREST_FEATURE_TRANSFORM
     {
