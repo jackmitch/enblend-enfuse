@@ -299,7 +299,8 @@ varsenfuse.texi: $(srcdir)/../src/enfuse.cc \
                  $(srcdir)/../src/common.h \
                  $(srcdir)/../src/global.h \
                  $(srcdir)/../src/opencl.cc
-	$(PERL) $(srcdir)/docstrings $^ > $@
+	echo -e "@c Makefile\n@set DATAROOTDIR $(datarootdir)\n" > $@
+	$(PERL) $(srcdir)/docstrings $^ >> $@
 
 enfuse.info: $(enfuse_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \

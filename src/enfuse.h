@@ -59,7 +59,7 @@ using vigra::functor::Param;
 
 namespace enblend {
 void
-dump_exposure_weight_function(ExposureWeight* weight_function, int n = 256)
+dump_exposure_weight_function(ExposureWeight* weight_function, int n)
 {
     assert(n >= 2);
 
@@ -68,7 +68,7 @@ dump_exposure_weight_function(ExposureWeight* weight_function, int n = 256)
         const double x = static_cast<double>(i) / static_cast<double>(n - 1);
         const double w = weight_function->weight(x);
 
-        std::cout << x << ' ' << w << '\n';
+        std::cout << i << ' ' << x << ' ' << w << '\n';
     }
 }
 

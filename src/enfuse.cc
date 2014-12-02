@@ -2024,7 +2024,9 @@ process_options(int argc, char** argv)
     }
 
     if (parameter::as_boolean("dump-exposure-weight-function", false)) {
-        enblend::dump_exposure_weight_function(ExposureWeightFunction);
+        const int n = parameter::as_integer("exposure-weight-function-points", 21);
+        enblend::dump_exposure_weight_function(ExposureWeightFunction, std::min(std::max(n, 10), 10000));
+        exit(0);
     }
 
     switch (print_only_task)

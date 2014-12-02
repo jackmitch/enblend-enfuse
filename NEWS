@@ -52,6 +52,10 @@ Unreleased.  Current line of development.
   function user selectable.  Previously weight function "gauss" was
   the only one (and hard-coded).
 
+  Some examples of user-defined weight functions and a rudimentary
+  GNUmakefile to build them get installed in
+          DATAROOTDIR/share/enfuse/user-weight.
+
 - The old Enfuse options `--exposure-mu' and `--exposure-sigma' got
   siblings called `--exposure-optimum' and `--exposure-width'
   respectively.  With exposure weight functions other than Gauss the

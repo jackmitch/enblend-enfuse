@@ -4194,8 +4194,25 @@ exposure weight function identifed by @var{SYMBOL} from a
 @var{SHARED-OBJECT}:
 
 @opindex --exposure-weight-function
+@display
+@code{--exposure-weight-function=}@var{SHARED-OBJECT}@code{:}@var{SYMBOL}[@code{:}@var{ARGUMENT}[@code{:}@dots{}]]
+@end display
+
 @noindent
-@w{@code{--exposure-weight-function=}@var{SHARED-OBJECT}@code{:}@var{SYMBOL}[@code{:}@var{ARGUMENT}[@code{:}@dots{}]]}
+Notes on the required arguments of the option:
+@itemize
+@item
+@var{SHARED-OBJECT} is a file and as such requires a path, unless it
+resides in the same directory as the Enfuse binary.  Neither any
+system-wide search paths as, for example, @env{LD_LIBRARY_PATH}, nor
+any Enfuse-specific one are effective in the search for
+@var{SHARED-OBJECT}.
+@item
+There is no way knowing which of the symbols inside of
+@var{SHARED-OBJECT} are suitable for @var{SYMBOL} without knowledge of
+source code of @var{SHARED-OBJECT}.
+@end itemize
+
 
 @menu
 * Prerequisites::                    Necessary assets
@@ -4232,6 +4249,9 @@ The latter is called @abbr{ABI}-compatible.  An example for a pair of
 @abbr{ABI}-compatible compilers is @acronym{GNU}'s@tie{}g++-4.7 and
 Intel's@tie{}icpc-13.0.
 
+To find out which compiler built @emph{your} version of Enfuse use
+option@tie{}@code{--show-software-components}.
+
 @item
 The base-class header file @file{exposure_@/weight_@/base.h} is available.
 @end enumerate
@@ -4261,7 +4281,10 @@ functions.
 @item
 Derive the weight function from the C++
 base-@/class@tie{}@code{ExposureWeight} in the header
-file@tie{}@file{exposure_@/weight_@/base.h}.
+file@tie{}@file{exposure_@/weight_@/base.h}.  It resides in the
+@file{src}@tie{}sub-directory of the source distribution and in
+directory@tie{}@file{@value{DATAROOTDIR}/enfuse/xweight} for a
+correctly installed package.
 
 @item
 At least override method@tie{}@code{weight}.
@@ -4294,7 +4317,7 @@ Technically, the functors which the user-defined weight functions are
 part of are copy-constructed for each @acronym{OpenMP} worker thread.
 Thus, there is no contention within the @code{ExposureWeight}
 sub-classes.  Although, if @code{normalize} or @code{weight} access a
-shared resource these accesses must be protected by serialisation
+shared resource these accesses must be protected by serialization
 instructions.  One solution is to use @acronym{OpenMP} directives,
 like for example,
 @example
@@ -4332,7 +4355,10 @@ within the required parameter range.
 @end enumerate
 
 @ref{Example:simple-dynamic-exposure-weight-function} shows the
-C++-code of a suitable extension.
+C++-code of a suitable extension@footnote{If Enfuse was compiled with
+support for user-defined weight functions, the examples presented here
+should be duplicated in
+directory@tie{}@file{@value{DATAROOTDIR}/enfuse/xweight}.}.
 
 @float Example,Example:simple-dynamic-exposure-weight-function
 @example
@@ -4340,14 +4366,14 @@ C++-code of a suitable extension.
 #include "exposure_weight_base.h"    // FWHM_GAUSSIAN, ExposureWeight
 
 struct Linear : public ExposureWeight @{
-    virtual void initialize(double y_optimum, double width_parameter,
-                            const argument_list_t& argument_list) @{
+    void initialize(double y_optimum, double width_parameter,
+                    const argument_list_t& argument_list) override @{
         ExposureWeight::initialize(y_optimum,
                                    width_parameter * FWHM_GAUSSIAN,
                                    argument_list);
     @}
 
-    virtual double weight(double y) const @{
+    double weight(double y) const override @{
         const double z = fabs(normalize(y));
         return z <= 1.0 ? 1.0 - z : 0.0;
     @}
@@ -4380,15 +4406,15 @@ template <int n> double ipower(double x) @{return x * ipower<n - 1>(x);@}
 template <> double ipower<0>(double) @{return 1.0;@}
 
 template <int n> struct TemplatedPower : public ExposureWeight @{
-    virtual void initialize(double y_optimum, double width,
-                            const argument_list_t& argument_list) @{
+    void initialize(double y_optimum, double width,
+                    const argument_list_t& argument_list) override @{
         const double fwhm = 2.0 / exp(M_LN2 / static_cast<double>(n));
         ExposureWeight::initialize(y_optimum,
                                    width * FWHM_GAUSSIAN / fwhm,
                                    argument_list);
     @}
 
-    virtual double weight(double y) const @{
+    double weight(double y) const override @{
         return std::max(1.0 - ipower<n>(fabs(normalize(y))), 0.0);
     @}
 @};
@@ -4427,8 +4453,8 @@ class VariablePower : public ExposureWeight @{
     typedef ExposureWeight super;
 
 public:
-    virtual void initialize(double y_optimum, double width,
-                            const argument_list_t& argument_list) @{
+    void initialize(double y_optimum, double width,
+                    const argument_list_t& argument_list) override @{
         if (argument_list.empty()) @{
             exponent = 2.0;
         @} else @{
@@ -4448,7 +4474,7 @@ public:
                           argument_list);
     @}
 
-    virtual double weight(double y) const @{
+    double weight(double y) const override @{
         return std::max(1.0 - pow(fabs(normalize(y)), exponent), 0.0);
     @}
 
@@ -4487,8 +4513,11 @@ candidates for optimization.
 
 Compile and link using the @acronym{GNU} compiler for example with
 @example
-g++ -g -O2 -fpic -I<PATH-TO-BASE-CLASS-HEADER> -c dynexp.cc
-g++ -g -shared -Wl,-soname,dynexp.so -o dynexp.so dynexp.o
+g++ -std=c++11 \
+    -O2 -fpic -I<PATH-TO-BASE-CLASS-HEADER> \
+    -shared -Wl,-soname,dynexp.so \
+    -o dynexp.so \
+    dynexp.cc
 @end example
 
 @noindent

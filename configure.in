@@ -142,6 +142,7 @@ AS_IF([test "$with_dl" = check -o "$with_dl" = yes],
                           [AC_DEFINE(HAVE_DL, 1, [Define if you have support for dynamic loading])
                            enable_dynload=yes])
        fi])
+AM_CONDITIONAL([DYNAMIC_EXPOSURE_WEIGHTS], [test "$with_dl" = yes])
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -506,7 +507,8 @@ CFLAGS="$CFLAGS $CL_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
 LIBS="$LIBS $CL_LIBS"
 
-AC_CONFIG_FILES([doc/entropy.gp
+AC_CONFIG_FILES([doc/Makefile
+                 doc/entropy.gp
                  doc/entropy-cutoff.gp
                  doc/exposure-cutoff.gp
                  doc/gaussian.gp doc/lorentzian.gp doc/halfsine.gp doc/fullsine.gp doc/power.gp
@@ -515,11 +517,13 @@ AC_CONFIG_FILES([doc/entropy.gp
                  doc/sharp-edge.gp
                  doc/smooth-edge.gp])
 
+AC_CONFIG_FILES([share/Makefile
+                 share/enfuse/Makefile])
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/layer_selection/Makefile
-                 src/win32helpers/Makefile
-                 doc/Makefile])
+                 src/win32helpers/Makefile])
 AC_OUTPUT
 
 # AC_OUTPUT has created "config.h"
