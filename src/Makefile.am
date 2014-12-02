@@ -17,6 +17,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   opencl.h opencl.cc opencl_vigra.h \
                   openmp_def.h openmp_lock.h openmp_vigra.h \
                   path.h pyramid.h \
+                  alternativepercentage.h alternativepercentage.cc \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \
                   filespec.h filespec.cc \
@@ -41,6 +42,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  opencl.h opencl.cc opencl_vigra.h \
                  openmp_def.h openmp_lock.h openmp_vigra.h \
                  pyramid.h \
+                 alternativepercentage.h alternativepercentage.cc \
                  error_message.h error_message.cc \
                  filenameparse.h filenameparse.cc \
                  filespec.h filespec.cc \

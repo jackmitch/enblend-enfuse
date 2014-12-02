@@ -2183,11 +2183,15 @@ treated as pure white.
 For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
 separately and independently to each channel.
 
-Defaults: @value{default-entropy-lower-cutoff} for
-@var{LOWER-CUTOFF} and @value{default-entropy-upper-cutoff} for
-@var{UPPER-CUTOFF}, that is, all pixels' values are taken into
-account.  Append a @samp{%} to specify the cutoff relative to maximum
-pixel value in the source image (for example 255 or 65535).
+Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
+value in the source image (for example 255 or 65535).  Negative
+@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
+@var{UPPER-CUTOFF} value; the same holds for negative percentages.
+
+Defaults: @value{default-entropy-lower-cutoff} for @var{LOWER-CUTOFF}
+and @value{default-entropy-upper-cutoff} for @var{UPPER-CUTOFF}, that
+is, all pixels' values are taken into account.
+
 @ref{Figure:entropy-cutoff} shows an example.
 
 @float Figure,Figure:entropy-cutoff
@@ -2199,7 +2203,7 @@ pixel value in the source image (for example 255 or 65535).
 @end float
 
 Note that a high @var{LOWER-CUTOFF} value lightens the resulting
-image, as dark (and presumably noisy) pixels are averaged with
+image, as dark and presumably noisy pixels are averaged with
 @emph{equal} weights.  With @samp{--entropy-cutoff=0}, the default, on
 the other hand, ``noise'' might be interpreted as high entropy and the
 noisy pixels get a high weight, which in turn renders the resulting
@@ -2228,11 +2232,19 @@ number.
 @itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}:@var{LOWER-PROJECTOR}:@var{UPPER-PROJECTOR}
 @opindex --exposure-cutoff
 
-The first form sets the weight for all pixels below the lower cutoff
-to zero.  The second form sets the lower cutoff and the upper cutoff
-at the same time.  For color images the values of @var{LOWER-CUTOFF}
-and @var{UPPER-CUTOFF} refer to the gray-scale projection as selected
-with the option @option{--gray-projector}.
+The first form sets the lower cutoff value; the second form sets the
+lower cutoff and the upper cutoff at the same time.  Pixels below the
+lower or above the upper cutoff get a weight of exactly zero
+irrespective of the active exposure-weight function.
+
+For color images the values of @var{LOWER-CUTOFF} and
+@var{UPPER-CUTOFF} refer to the gray-scale projection as selected with
+option@tie{}@option{--gray-projector}.
+
+Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
+value in the source image (for example 255 or 65535).  Negative
+@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
+@var{UPPER-CUTOFF} value; the same holds for negative percentages.
 
 The impact of this option is similar, but not identical to
 transforming @emph{all} input images with
@@ -2288,9 +2300,6 @@ Defaults: @value{default-exposure-lower-cutoff} for
 @var{UPPER-CUTOFF}, that is, all pixels' values are weighted according
 to the ``uncut'' exposure-weight curve.
 
-Append a @samp{%} to specify the cutoff relative to the maximum pixel
-value in the source image (for example 255 or 65535).
-
 @ref{Figure:exposure-cutoff} shows an example.
 
 The gray-scale projectors @var{LOWER-PROJECTOR} and
@@ -2327,6 +2336,27 @@ convert -define histogram:unique-colors=false \
     display
 @end group
 @end example
+
+The syntax of this option is flexible enough to combine ease of use
+and precision.
+
+@table @asis
+@item Suppress some noise: @samp{--exposure-cutoff=5%}
+The percentage makes the cutoff specification channel-width agnostic.
+
+@item Shave off pure white pixels: @samp{--exposure-cutoff=0:-1}
+This cutoff specification only works for integral pixels, but it will
+set the weight of the very brightest pixels to zero.
+
+@item Shave off bright white pixels: @samp{--exposure-cutoff=0:-1%}
+Here we exclude the brightest 1% of pixels form the exposure fusion no
+matter whether the image is encoded with integers or floating-point
+numbers.
+
+@item Suppress some noise and shave off pure white pixels: @samp{--exposure-cutoff=5%:-1}
+Combine the effects of lower and upper cutoff, while mixing relative
+and absolute specifications.
+@end table
 
 @item --gray-projector=@var{PROJECTOR}
 @opindex --gray-projector

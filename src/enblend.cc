@@ -72,6 +72,7 @@ extern "C" int optind;
 #error "Little CMS version 2.5 or later is required"
 #endif
 
+#include "alternativepercentage.h"
 #include "global.h"
 #include "layer_selection.h"
 #include "parameter.h"

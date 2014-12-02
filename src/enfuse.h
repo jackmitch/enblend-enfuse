@@ -703,6 +703,14 @@ public:
 
         const value_type max = vigra::NumericTraits<value_type>::max();
 
+        if (lower_cutoff_ < value_type()) {
+            std::cerr << command << ": negative lower exposure cutoff" << std::endl;
+            exit(1);
+        }
+        if (upper_cutoff_ < value_type()) {
+            std::cerr << command << ": negative upper exposure cutoff" << std::endl;
+            exit(1);
+        }
         if (lower_cutoff_ > upper_cutoff_) {
             std::cerr << command <<
                 ": lower exposure cutoff (" << lower_cutoff_ << "/" << max <<
@@ -1018,10 +1026,13 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
 #ifdef DEBUG_EXPOSURE
             std::cout << "+ enfuseMask: cutoff - GrayscaleProjector = <" <<
                 GrayscaleProjector << ">\n" <<
-                "+ enfuseMask:          ExposureLowerCutoffGrayscaleProjector = <" <<
-                ExposureLowerCutoffGrayscaleProjector << ">\n" <<
-                "+ enfuseMask:          ExposureUpperCutoffGrayscaleProjector = <" <<
-                ExposureUpperCutoffGrayscaleProjector << ">\n";
+                "+ enfuseMask: ExposureLowerCutoffGrayscaleProjector = <" <<
+                ExposureLowerCutoffGrayscaleProjector << ">, cutoff spec = " << ExposureLowerCutoff.str() <<
+                ", actual cutoff = " << static_cast<double>(ExposureLowerCutoff.instantiate<ScalarType>()) <<
+                "\n+ enfuseMask: ExposureUpperCutoffGrayscaleProjector = <" <<
+                ExposureUpperCutoffGrayscaleProjector << ">, cutoff spec = " << ExposureUpperCutoff.str() <<
+                ", actual cutoff = " << static_cast<double>(ExposureUpperCutoff.instantiate<ScalarType>()) <<
+                "\n";
 #endif
             vigra::omp::transformImageIf(src, mask, result, cef);
         } else {
@@ -1168,7 +1179,7 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
         typedef IMAGETYPE<PixelType> Image;
         Image entropy(imageSize);
 
-        if (EntropyLowerCutoff.is_effective<ScalarType>())
+        if (EntropyLowerCutoff.is_effective<ScalarType>() || EntropyUpperCutoff.is_effective<ScalarType>())
         {
             const ScalarType lowerCutoff = EntropyLowerCutoff.instantiate<ScalarType>();
             const ScalarType upperCutoff = EntropyUpperCutoff.instantiate<ScalarType>();
@@ -1179,6 +1190,17 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
                 "+ EntropyUpperCutoff.value = " << EntropyUpperCutoff.value() << ", " <<
                 "upperCutoff = " << static_cast<double>(upperCutoff) << std::endl;
 #endif
+
+            if (lowerCutoff < ScalarType())
+            {
+                std::cerr << command << ": negative lower entropy cutoff" << std::endl;
+                exit(1);
+            }
+            if (upperCutoff < ScalarType())
+            {
+                std::cerr << command << ": negative upper entropy cutoff" << std::endl;
+                exit(1);
+            }
             if (lowerCutoff > upperCutoff)
             {
                 const double max = static_cast<double>(vigra::NumericTraits<ScalarType>::max());

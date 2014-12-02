@@ -72,6 +72,7 @@ extern "C" int optind;
 #error "Little CMS version 2.5 or later is required"
 #endif
 
+#include "alternativepercentage.h"
 #include "dynamic_loader.h"
 #include "exposure_weight.h"
 #include "global.h"
@@ -108,7 +109,7 @@ std::string ExposureWeightFunctionName("gaussian"); //< exposure-weight-function
 ExposureWeight* ExposureWeightFunction = new Gaussian(ExposureOptimum, ExposureWidth);
 ExposureWeight::argument_list_t ExposureWeightFunctionArguments;
 AlternativePercentage ExposureLowerCutoff(0.0, true); //< default-exposure-lower-cutoff 0%
-AlternativePercentage ExposureUpperCutoff(100.0, true); //< default-exposure-upper-cutoff 100%
+CompactifiedAlternativePercentage ExposureUpperCutoff(100.0, true); //< default-exposure-upper-cutoff 100%
 std::string ExposureLowerCutoffGrayscaleProjector("anti-value"); //< default-exposure-lower-cutoff-projector anti-value
 std::string ExposureUpperCutoffGrayscaleProjector("value"); //< default-exposure-upper-cutoff-projector value
 double WContrast = 0.0;         //< default-weight-contrast 0.0
@@ -125,7 +126,7 @@ struct EdgeFilterConfiguration {double edgeScale, lceScale, lceFactor;} FilterCo
 AlternativePercentage MinCurvature(0.0, false); //< default-minimum-curvature 0
 int EntropyWindowSize = 3;      //< default-entropy-window-size 3
 AlternativePercentage EntropyLowerCutoff(0.0, true); //< default-entropy-lower-cutoff 0%
-AlternativePercentage EntropyUpperCutoff(100.0, true); //< default-entropy-upper-cutoff 100%
+CompactifiedAlternativePercentage EntropyUpperCutoff(100.0, true); //< default-entropy-upper-cutoff 100%
 bool UseHardMask = false;
 bool SaveMasks = false;
 bool StopAfterMaskGeneration = false;
