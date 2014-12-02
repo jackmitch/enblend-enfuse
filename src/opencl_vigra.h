@@ -121,19 +121,19 @@ namespace vigra
                 {
                     std::cerr <<
                         command << ": warning: falling back from OpenCL to CPU path because of\n" <<
-                        command << ": warning:     plain cl error in function: " << a_cl_error.what() << "\n" <<
-                        command << ": warning:     reason: " << ::ocl::string_of_error_code(a_cl_error.err()) <<
+                        command << ": warning: plain cl error in function: " << a_cl_error.what() << "\n" <<
+                        command << ": note: " << ::ocl::string_of_error_code(a_cl_error.err()) <<
                         std::endl;
                 }
                 catch (::ocl::runtime_error& an_opencl_runtime_error)
                 {
                     std::cerr <<
                         command << ": warning: falling back from OpenCL to CPU path because of\n" <<
-                        command << ": warning:     ocl error in function: " <<
+                        command << ": warning: ocl error in function: " <<
                         an_opencl_runtime_error.what() << "\n" <<
-                        command << ": warning:     reason: " <<
+                        command << ": note: " <<
                         ::ocl::string_of_error_code(an_opencl_runtime_error.error().err()) << "\n" <<
-                        command << ": warning:     message: " << an_opencl_runtime_error.additional_message() <<
+                        command << ": note: " << an_opencl_runtime_error.additional_message() <<
                         std::endl;
                 }
 

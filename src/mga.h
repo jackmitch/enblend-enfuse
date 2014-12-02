@@ -131,7 +131,7 @@ private:
                     std::cerr << command
                          << ": \"" CHANNEL_MIXER "\" is a grayscale projector requiring\n"
                          << command
-                         << ":      arguments like e.g. \"channel-mixer:0.30:0.59:0.11\""
+                         << ": arguments like e.g. \"channel-mixer:0.30:0.59:0.11\""
                          << std::endl;
                     exit(1);
                 }

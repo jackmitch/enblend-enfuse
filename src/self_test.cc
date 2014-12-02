@@ -220,7 +220,7 @@ getopt_long_works_ok()
 
                 std::cerr <<
                     command <<
-                    ": failed self test:     expected {";
+                    ": failed self test: expected {";
                 write_list(std::cerr, flag_count, t->flags);
                 std::cerr << "}, but got {";
                 write_list(std::cerr, flag_count, flags);
@@ -374,7 +374,7 @@ test_axpy_on_gpu(cl::Context* a_context)
     {
         std::cerr <<
             command << ": warning: plain cl error: " << a_cl_error.what() << "\n" <<
-            command << ": warning:     reason: " << ocl::string_of_error_code(a_cl_error.err()) <<
+            command << ": note: " << ocl::string_of_error_code(a_cl_error.err()) <<
             std::endl;
         return false;
     }
@@ -382,9 +382,9 @@ test_axpy_on_gpu(cl::Context* a_context)
     {
         std::cerr <<
             command << ": warning: ocl error: " << an_opencl_runtime_error.what() << "\n" <<
-            command << ": warning:     reason: " <<
+            command << ": note: " <<
             ocl::string_of_error_code(an_opencl_runtime_error.error().err()) << "\n" <<
-            command << ": warning:     message: " << an_opencl_runtime_error.additional_message() <<
+            command << ": note: " << an_opencl_runtime_error.additional_message() <<
             std::endl;
         return false;
     }

@@ -446,8 +446,8 @@ namespace ocl
 #ifdef DEBUG
             std::cerr <<
                 "+ ocl::create_function: function creation failed with ocl::runtime_error\n" <<
-                "+ ocl::create_function:     reason: " << a_runtime_error.what() << "\n" <<
-                "+ ocl::create_function:     message: " << a_runtime_error.additional_message() << "\n";
+                "+ ocl::create_function: reason: " << a_runtime_error.what() << "\n" <<
+                "+ ocl::create_function: message: " << a_runtime_error.additional_message() << "\n";
 #endif
             return std::unique_ptr<ocl_function>(nullptr);
         }
@@ -456,8 +456,8 @@ namespace ocl
 #ifdef DEBUG
             std::cerr <<
                 "+ ocl::create_function: function creation failed with cl::Error\n" <<
-                "+ ocl::create_function:     in function " << an_error.what() << "\n" <<
-                "+ ocl::create_function:     because of " << string_of_error_code(an_error.err()) << "\n";
+                "+ ocl::create_function: in function " << an_error.what() << "\n" <<
+                "+ ocl::create_function: because of " << string_of_error_code(an_error.err()) << "\n";
 #endif
             return std::unique_ptr<ocl_function>(nullptr);
         }

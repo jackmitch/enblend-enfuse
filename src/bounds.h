@@ -137,7 +137,7 @@ roiBounds(const vigra::Rect2D& inputUnion,
         if (ExactLevels >= 1) {
             if (ExactLevels > static_cast<int>(allowableLevels)) {
                 std::cerr << command << ": warning: cannot blend with " << ExactLevels << " pyramid level(s) as\n"
-                          << command << ": warning:     image geometry precludes using more than "
+                          << command << ": warning: image geometry precludes using more than "
                           << allowableLevels << " pyramid level(s)" << std::endl;
             }
             allowableLevels = std::min(allowableLevels, static_cast<unsigned int>(ExactLevels));
@@ -147,7 +147,7 @@ roiBounds(const vigra::Rect2D& inputUnion,
             } else {
                 std::cerr << ": warning: cannot sensibly blend with " << allowableLevels << ExactLevels
                           << " levels\n"
-                          << command << ": warning:     will not use less than " << minimumPyramidLevels
+                          << command << ": warning: will not use less than " << minimumPyramidLevels
                           << " pyramid level(s)" << std::endl;
                 allowableLevels = minimumPyramidLevels;
             }

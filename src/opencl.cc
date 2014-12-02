@@ -589,7 +589,7 @@ namespace ocl
         {
             std::cout <<
                 "+ ocl::derive_vendor_id_from_context: unknown vendor name <" << name << ">\n" <<
-                "+ ocl::derive_vendor_id_from_context:     Please add vendor name to file \"opencl.cc\"!\n";
+                "+ ocl::derive_vendor_id_from_context: please add vendor name to file \"opencl.cc\"!\n";
             return vendor::unknown;
         }
     }

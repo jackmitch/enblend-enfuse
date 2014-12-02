@@ -256,7 +256,7 @@ unroll_trace(const FilePositionTrace& trace)
     for (FilePositionTrace::const_iterator t = trace.begin(); t != trace.end(); ++t)
     {
         std::cerr << command <<
-            ": info:    included from \"" << t->first << "\" line " << t->second << '\n';
+            ": info: included from \"" << t->first << "\" line " << t->second << '\n';
     }
 }
 
@@ -533,7 +533,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
         std::cerr <<
             command << ": warning: excessive nesting of " << trace_info.nesting_level <<
             " levels of response files;\n" <<
-            command << ": warning:     possible infinite recursion in \"" <<
+            command << ": warning: possible infinite recursion in \"" <<
             printable_string(filename) << "\"\n";
         unroll_trace(trace_info.file_position);
         return;
@@ -625,7 +625,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                     std::cerr <<
                         command << ": warning: ignoring last line of response file \"" <<
                         printable_string(response_filepath) << "\" line " << line_number + 1U << ",\n" <<
-                        command << ": warning:     because it does not end with a newline\n";
+                        command << ": warning: because it does not end with a newline\n";
                     unroll_trace(trace_info.file_position);
                 }
                 break;
@@ -649,7 +649,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                         "\" in response file \"" << printable_string(response_filepath) <<
                         "\" line " << line_number << "\n" <<
                         command <<
-                        ": warning:     will stick with algorithm \"" <<
+                        ": note: will stick with algorithm \"" <<
                         glob.get_algorithm() << "\"\n";
                     unroll_trace(trace_info.file_position);
                 }
@@ -671,7 +671,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                         "\" in response file \"" << printable_string(response_filepath) <<
                         "\" line " << line_number << "\n" <<
                         command <<
-                        ": warning:     will stick with selector \"" <<
+                        ": note: will stick with selector \"" <<
                         LayerSelection.name() << "\"\n";
                     unroll_trace(trace_info.file_position);
                 }
@@ -718,8 +718,8 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
 #ifdef DEBUG_FILESPEC
                         std::cout <<
                             "+ unfold_filename_iter: relative path\n" <<
-                            "+ unfold_filename_iter:     q = " << *q << "\n" <<
-                            "+ unfold_filename_iter:     path = <" << path << ">\n";
+                            "+ unfold_filename_iter: q = " << *q << "\n" <<
+                            "+ unfold_filename_iter: path = <" << path << ">\n";
 #endif
                         result.insert(result.end(),
                                       enblend::TraceableFileName(path, p->trace(), p->selector()));
@@ -729,7 +729,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
 #ifdef DEBUG_FILESPEC
                         std::cout <<
                             "+ unfold_filename_iter: absolute path\n" <<
-                            "+ unfold_filename_iter:     q = " << *q << "\n";
+                            "+ unfold_filename_iter: q = " << *q << "\n";
 #endif
                         result.insert(result.end(),
                                       enblend::TraceableFileName(*q, p->trace(), p->selector()));
@@ -793,7 +793,7 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
             "\", selector \"" << i->selector()->name() << "\"\n";
         for (FilePositionTrace::const_iterator j = i->trace().begin(); j != i->trace().end(); ++j)
         {
-            std::cout << "+ unfold_filename:     pos = (" << j->first << ", " << j->second << ")\n";
+            std::cout << "+ unfold_filename: pos = (" << j->first << ", " << j->second << ")\n";
         }
     }
 #endif

@@ -761,7 +761,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: compression is not supported with output\n" <<
             command <<
-            ": warning:     file type \"" <<
+            ": warning: file type \"" <<
             enblend::getFileType(OutputFileName) << "\"" <<
             std::endl;
     }
@@ -771,7 +771,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"-g\" has no effect with output\n" <<
             command <<
-            ": warning:     file type \"" <<
+            ": warning: file type \"" <<
             enblend::getFileType(OutputFileName) << "\"" <<
             std::endl;
     }
@@ -782,7 +782,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--anneal\" without mask optimization has\n" <<
                 command <<
-                ": warning:     no effect" <<
+                ": warning: no effect" <<
                 std::endl;
         }
 
@@ -790,7 +790,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--dijkstra\" without mask optimization\n" <<
                 command <<
-                ": warning:     has no effect" <<
+                ": warning: has no effect" <<
                 std::endl;
         }
 
@@ -798,7 +798,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--optimizer-weights\" without mask optimization\n" <<
                 command <<
-                ": warning:     has no effect" <<
+                ": warning: has no effect" <<
                 std::endl;
         }
     }
@@ -807,7 +807,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"--mask-vectorize\" without mask optimization\n" <<
             command <<
-            ": warning:     or coarse mask has no effect" <<
+            ": warning: or coarse mask has no effect" <<
             std::endl;
     }
 
@@ -815,9 +815,9 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"--fine-mask\" combined with option \"--primary-seam-generator=graphcut\"\n" <<
             command <<
-            ": warning:     incompatible with mask optimization,\n" <<
+            ": warning: incompatible with mask optimization,\n" <<
             command <<
-            ": warning:     defaulting to no optimization" <<
+            ": note: defaulting to no optimization" <<
             std::endl;
         OptimizeMask = false;
     }
@@ -829,15 +829,15 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 #else
     if (contains(optionSet, GPUOption)) {
         std::cerr << command << ": warning: option \"--gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, NoGPUOption)) {
         std::cerr << command << ": warning: option \"--no-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, PreferredGPUOption)) {
         std::cerr << command << ": warning: option \"--prefer-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
 #endif // OPENCL
 }
@@ -1630,7 +1630,7 @@ process_options(int argc, char** argv)
                     if (value.empty()) {
                         std::cerr <<
                             command << ": parameter key \"" << key << "\" lacks a value;\n" <<
-                            command << ": info:     dangling assignment operator\n";
+                            command << ": note: dangling assignment operator\n";
                         exit(1);
                     }
                 }
@@ -1847,7 +1847,7 @@ int main(int argc, char** argv)
         optind = process_options(argc, argv);
     } catch (vigra::StdException& e) {
         std::cerr << command << ": error while processing command line options\n"
-                  << command << ":     " << e.what()
+                  << command << ": " << e.what()
                   << std::endl;
         exit(1);
     }
@@ -1933,10 +1933,10 @@ int main(int argc, char** argv)
         } catch (vigra::ContractViolation& exception) {
             std::cerr <<
                 command << ": cannot load image \"" << filename << "\"\n" <<
-                command << ":     " << exception.what() << "\n";
+                command << ": " << exception.what() << "\n";
             if (enblend::maybe_response_file(filename)) {
                 std::cerr <<
-                    command << ": info: Maybe you meant a response file and forgot the initial '" <<
+                    command << ": note: maybe you meant a response file and forgot the initial '" <<
                     RESPONSE_FILE_PREFIX_CHAR << "'?\n";
             }
             exit(1);
@@ -1946,7 +1946,7 @@ int main(int argc, char** argv)
         if (LayerSelection.accept(filename, layer)) {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
                 std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" accepts\n"
-                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << command << ": info: layer " << layer << " of " << layers << " in image \""
                           << filename << "\"\n";
             }
 
@@ -2025,7 +2025,7 @@ int main(int argc, char** argv)
                               << inputFileNameIterator->filename() << "\""
                               << enblend::optional_layer_name(layer, layers) << " is "
                               << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                              << command << ":   but previous images are "
+                              << command << ": but previous images are "
                               << (isColor ? "color" : "grayscale")
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2036,7 +2036,7 @@ int main(int argc, char** argv)
                               << inputFileNameIterator->filename() << "\""
                               << enblend::optional_layer_name(layer, layers) << " has pixel type "
                               << inputInfo->getPixelType() << ",\n"
-                              << command << ":   but previous images have pixel type "
+                              << command << ": but previous images have pixel type "
                               << pixelType
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2049,7 +2049,7 @@ int main(int argc, char** argv)
                               << enblend::optional_layer_name(layer, layers) << " has resolution "
                               << inputInfo->getXResolution() << " dpi x "
                               << inputInfo->getYResolution() << " dpi,\n"
-                              << command << ": info:   but first image has resolution "
+                              << command << ": info: but first image has resolution "
                               << resolution.x << " dpi x " << resolution.y << " dpi"
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2103,7 +2103,7 @@ int main(int argc, char** argv)
         } else {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
                 std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" rejects\n"
-                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << command << ": info: layer " << layer << " of " << layers << " in image \""
                           << filename << "\"\n";
             }
         }
@@ -2136,8 +2136,8 @@ int main(int argc, char** argv)
             break;
         case 1:
             std::cerr << command << ": warning: only one input image given;\n"
-                      << command << ": warning: Enblend needs two or more overlapping input images in order to do\n"
-                      << command << ": warning: blending calculations.  The output will be the same as the input.\n";
+                      << command << ": note: Enblend needs two or more overlapping input images in order to do\n"
+                      << command << ": note: blending calculations.  The output will be the same as the input.\n";
             break;
         }
     }
@@ -2155,14 +2155,14 @@ int main(int argc, char** argv)
     // than 64 pixels wide or high.
     if (minDim / 8 < 64 && CoarseMask) {
         std::cerr << command
-                  << ": warning: input images too small for coarse mask; switching to fine mask"
+                  << ": warning: input images too small for coarse mask\n"
+                  << command << ": note: switching to fine mask"
                   << std::endl;
         CoarseMask = false;
         if (MainAlgorithm == GraphCut) {
             std::cerr << command
-                      << ": warning: fine mask combined with graphcut incompatible with mask optimization;\n"
-                      << command
-                      <<": warning:     defaulting to no optimization."
+                      << ": warning: fine mask combined with graphcut incompatible with mask optimization\n"
+                      << command << ": note: defaulting to no optimization"
                       << std::endl;
 
             OptimizeMask = false;
@@ -2210,7 +2210,7 @@ int main(int argc, char** argv)
                           << "\", but image type \""
                           << outputFileType
                           << "\"\n"
-                          << command << ": warning:   supports \""
+                          << command << ": warning: supports \""
                           << bestPixelType
                           << "\" at best;  will use \""
                           << bestPixelType

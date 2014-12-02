@@ -316,12 +316,12 @@ public:
                     const unsigned int localK = stateSpace->size();
                     for (unsigned int state = 0; state < localK; ++state) {
                         std::cerr << command
-                             << ": info:    state " << (*stateSpace)[state]
+                             << ": info: state " << (*stateSpace)[state]
                              << ", weight = " << (*stateProbabilities)[state]
                              << std::endl;
                     }
                     std::cerr << command
-                         << ": info:    mfEstimate = " << mfEstimates[i]
+                         << ": info: mfEstimate = " << mfEstimates[i]
                          << std::endl;
                 }
             }
@@ -480,13 +480,13 @@ protected:
                               << std::endl;
                     for (unsigned int state = 0; state < localK; ++state) {
                         std::cerr << command
-                                  << ": info:    state " << (*stateSpace)[state]
+                                  << ": note: state " << (*stateSpace)[state]
                                   << " weight = "
                                   << (*stateProbabilities)[state]
                                   << std::endl;
                     }
                     std::cerr << command
-                              << ": info:    new estimate = " << newEstimate
+                              << ": note: new estimate = " << newEstimate
                               << std::endl;
                     cerrLock.unset();
 

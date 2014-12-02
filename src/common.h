@@ -790,7 +790,7 @@ expandFilenameTemplate(const std::string& aTemplate,
                         }
                         std::cerr << " in\n"
                                   << command
-                                  << ": warning:     filename template \""
+                                  << ": warning: filename template \""
                                   << aTemplate
                                   << "\""
                                   << std::endl;

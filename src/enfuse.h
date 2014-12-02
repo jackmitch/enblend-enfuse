@@ -1317,12 +1317,12 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                 }
                 if (!maskInfo.isGrayscale()) {
                     std::cerr << command
-                              << ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
+                              << ": mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
                     exit(1);
                 }
                 if (maskInfo.numExtraBands() != 0) {
                     std::cerr << command
-                              << ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" << std::endl;
+                              << ": mask image \"" << maskFilename << "\" must not have an alpha channel" << std::endl;
                     exit(1);
                 }
                 if (maskInfo.width() != anInputUnion.width() || maskInfo.height() != anInputUnion.height()) {
@@ -1330,9 +1330,9 @@ void enfuseMain(const FileNameList& anInputFileNameList,
                               << ": warning: mask in \"" << maskFilename << "\" has size "
                               << "(" << maskInfo.width() << "x" << maskInfo.height() << "),\n"
                               << command
-                              << ": warning:     but image union has size " << anInputUnion.size() << ";\n"
+                              << ": warning: but image union has size " << anInputUnion.size() << ";\n"
                               << command
-                              << ": warning:     make sure this is the right mask for the given images"
+                              << ": note: make sure this is the right mask for the given images"
                               << std::endl;
                 }
                 importImage(maskInfo, destImage(*mask));

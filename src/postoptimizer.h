@@ -310,8 +310,8 @@ namespace enblend
 
                             if (shortPath->empty()) {
                                 std::cerr << command << ": warning: unable to run Dijkstra optimizer\n"
-                                          << command << ": info: seam-line end point outside of cost-image\n"
-                                          << command << ": info: contour #"
+                                          << command << ": note: seam-line end point outside of cost-image\n"
+                                          << command << ": note: contour #"
                                           << (currentContour - (*this->contours).begin()) + 1U
                                           << " of " << (*this->contours).size()
                                           << ", segment #"

@@ -818,14 +818,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--exposure-optimum\" has no effect as exposure weight\n" <<
                 command <<
-                ": warning:     is zero" <<
+                ": warning: is zero" <<
                 std::endl;
         }
         if (contains(optionSet, ExposureWidthOption)) {
             std::cerr << command <<
                 ": warning: option \"--exposure-width\" has no effect as exposure weight\n" <<
                 command <<
-                ": warning:     is zero" <<
+                ": warning: is zero" <<
                 std::endl;
         }
     }
@@ -834,7 +834,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"--exposure-cutoff\" has no effect as exposure weight\n" <<
             command <<
-            ": warning:     is zero" <<
+            ": warning: is zero" <<
             std::endl;
     }
 
@@ -842,7 +842,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"--contrast-window-size\" has no effect as contrast\n" <<
             command <<
-            ": warning:     weight is zero" <<
+            ": warning: weight is zero" <<
             std::endl;
     }
 
@@ -850,7 +850,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"--gray-projector\" has no effect as exposure\n" <<
             command <<
-            ": warning:     and contrast weight both are zero" <<
+            ": warning: and contrast weight both are zero" <<
             std::endl;
     }
 
@@ -859,14 +859,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--contrast-edge-scale\" has no effect as contrast\n" <<
                 command <<
-                ": warning:     weight is zero" <<
+                ": warning: weight is zero" <<
                 std::endl;
         }
         if (contains(optionSet, MinCurvatureOption)) {
             std::cerr << command <<
                 ": warning: option \"--contrast-min-curvature\" has no effect as contrast\n" <<
                 command <<
-                ": warning:     weight is zero" <<
+                ": warning: weight is zero" <<
                 std::endl;
         }
     } else {
@@ -875,9 +875,9 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--contrast-window-size\" has no effect as\n" <<
                 command <<
-                ": warning:     EDGESCALE in \"--contrast-edge-scale\" is positive and" <<
+                ": warning: EDGESCALE in \"--contrast-edge-scale\" is positive and" <<
                 command <<
-                ": warning:     \"--contrast-min-curvature\" is non-positive" <<
+                ": warning: \"--contrast-min-curvature\" is non-positive" <<
                 std::endl;
         }
     }
@@ -887,14 +887,14 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
             std::cerr << command <<
                 ": warning: option \"--entropy-window-size\" has no effect as\n" <<
                 command <<
-                ": warning:     entropy weight is zero" <<
+                ": warning: entropy weight is zero" <<
                 std::endl;
         }
         if (contains(optionSet, EntropyCutoffOption)) {
             std::cerr << command <<
                 ": warning: option \"--entropy-cutoff\" has no effect as entropy\n" <<
                 command <<
-                ": warning:     weight is zero" <<
+                ": warning: weight is zero" <<
                 std::endl;
         }
     }
@@ -905,7 +905,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: compression is not supported with output\n" <<
             command <<
-            ": warning:     file type \"" <<
+            ": warning: file type \"" <<
             enblend::getFileType(OutputFileName) << "\"" <<
             std::endl;
     }
@@ -915,7 +915,7 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
         std::cerr << command <<
             ": warning: option \"-g\" has no effect with output\n" <<
             command <<
-            ": warning:     file type \"" <<
+            ": warning: file type \"" <<
             enblend::getFileType(OutputFileName) << "\"" <<
             std::endl;
     }
@@ -927,15 +927,15 @@ void warn_of_ineffective_options(const OptionSetType& optionSet)
 #else
     if (contains(optionSet, GPUOption)) {
         std::cerr << command << ": warning: option \"--gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, NoGPUOption)) {
         std::cerr << command << ": warning: option \"--no-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
     if (contains(optionSet, PreferredGPUOption)) {
         std::cerr << command << ": warning: option \"--prefer-gpu\" has no effect in this " << command << " binary,\n" <<
-            command << ": warning:     because " << command << " was compiled without support for OpenCL" << std::endl;
+            command << ": warning: because " << command << " was compiled without support for OpenCL" << std::endl;
     }
 #endif // OPENCL
 }
@@ -1053,8 +1053,8 @@ make_exposure_weight_function(const std::string& name,
         }
 #else
         std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\"\n"
-                  << command << ": info: this binary has no support for dynamic loading of\n"
-                  << command << ": info: exposure weight functions" << std::endl;
+                  << command << ": note: this binary has no support for dynamic loading of\n"
+                  << command << ": note: exposure weight functions" << std::endl;
         exit(1);
 #endif // HAVE_DYNAMICLOADER_IMPL
     }
@@ -1922,7 +1922,7 @@ process_options(int argc, char** argv)
                     if (value.empty()) {
                         std::cerr <<
                             command << ": parameter key \"" << key << "\" lacks a value;\n" <<
-                            command << ": info:     dangling assignment operator\n";
+                            command << ": note: dangling assignment operator\n";
                         exit(1);
                     }
                 }
@@ -2159,7 +2159,7 @@ int main(int argc, char** argv)
         optind = process_options(argc, argv);
     } catch (vigra::StdException& e) {
         std::cerr << command << ": error while processing command line options\n"
-                  << command << ":     " << e.what()
+                  << command << ": " << e.what()
                   << std::endl;
         exit(1);
     }
@@ -2227,10 +2227,10 @@ int main(int argc, char** argv)
         } catch (vigra::ContractViolation& exception) {
             std::cerr <<
                 command << ": cannot load image \"" << filename << "\"\n" <<
-                command << ":     " << exception.what() << "\n";
+                command << ": " << exception.what() << "\n";
             if (enblend::maybe_response_file(filename)) {
                 std::cerr <<
-                    command << ": info: Maybe you meant a response file and forgot the initial '" <<
+                    command << ": note: maybe you meant a response file and forgot the initial '" <<
                     RESPONSE_FILE_PREFIX_CHAR << "'?\n";
             }
             exit(1);
@@ -2240,7 +2240,7 @@ int main(int argc, char** argv)
         if (LayerSelection.accept(filename, layer)) {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
                 std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" accepts\n"
-                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << command << ": info: layer " << layer << " of " << layers << " in image \""
                           << filename << "\"\n";
             }
 
@@ -2284,7 +2284,7 @@ int main(int argc, char** argv)
                           << " does not have an alpha channel;\n";
                 inputFileNameIterator->unroll_trace();
                 std::cerr << command
-                          << ": info: assuming all pixels should contribute to the final image"
+                          << ": note: assuming all pixels should contribute to the final image"
                           << std::endl;
             }
 
@@ -2320,7 +2320,7 @@ int main(int argc, char** argv)
                               << inputFileNameIterator->filename() << "\""
                               << enblend::optional_layer_name(layer, layers) << " is "
                               << (inputInfo->isColor() ? "color" : "grayscale") << "\n"
-                              << command << ":   but previous images are "
+                              << command << ": but previous images are "
                               << (isColor ? "color" : "grayscale")
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2331,7 +2331,7 @@ int main(int argc, char** argv)
                               << inputFileNameIterator->filename() << "\""
                               << enblend::optional_layer_name(layer, layers) << " has pixel type "
                               << inputInfo->getPixelType() << ",\n"
-                              << command << ":   but previous images have pixel type "
+                              << command << ": but previous images have pixel type "
                               << pixelType
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2344,7 +2344,7 @@ int main(int argc, char** argv)
                               << enblend::optional_layer_name(layer, layers) << " has resolution "
                               << inputInfo->getXResolution() << " dpi x "
                               << inputInfo->getYResolution() << " dpi,\n"
-                              << command << ": info:   but first image has resolution "
+                              << command << ": info: but first image has resolution "
                               << resolution.x << " dpi x " << resolution.y << " dpi"
                               << std::endl;
                     inputFileNameIterator->unroll_trace();
@@ -2391,7 +2391,7 @@ int main(int argc, char** argv)
         } else {
             if (Verbose >= VERBOSE_LAYER_SELECTION) {
                 std::cerr << command << ": info: layer selector \"" << LayerSelection.name() << "\" rejects\n"
-                          << command << ": info:     layer " << layer << " of " << layers << " in image \""
+                          << command << ": info: layer " << layer << " of " << layers << " in image \""
                           << filename << "\"\n";
             }
         }
@@ -2424,8 +2424,8 @@ int main(int argc, char** argv)
             break;
         case 1:
             std::cerr << command << ": warning: only one input image given;\n"
-                      << command << ": warning: Enfuse needs two or more overlapping input images in order to do\n"
-                      << command << ": warning: blending calculations.  The output will be the same as the input.\n";
+                      << command << ": note: Enfuse needs two or more overlapping input images in order to do\n"
+                      << command << ": note: blending calculations.  The output will be the same as the input.\n";
             break;
         }
     }
@@ -2476,7 +2476,7 @@ int main(int argc, char** argv)
                           << "\", but image type \""
                           << outputFileType
                           << "\"\n"
-                          << command << ": warning:   supports \""
+                          << command << ": warning: supports \""
                           << bestPixelType
                           << "\" at best;  will use \""
                           << bestPixelType
@@ -2667,7 +2667,7 @@ int main(int argc, char** argv)
                 std::cerr << command
                           << ": warning: \"--WSaturation\" is not applicable to grayscale images;\n"
                           << command
-                          << ": warning:   this parameter will have no effect"
+                          << ": warning: this parameter will have no effect"
                           << std::endl;
                 WSaturation = 0.0;
             }

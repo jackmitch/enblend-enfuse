@@ -790,8 +790,8 @@ public:
                 "\n" <<
                 "+ multistart_optimize_2d: recovery failure: deltaE = " << best_deltae <<
                 " after " << n + 1U << " iteration[s]\n";
-            show_jch_rgb("+ multistart_optimize_2d:     initial", initial_jch);
-            show_jch_rgb("+ multistart_optimize_2d:     final", &best_jch);
+            show_jch_rgb("+ multistart_optimize_2d: initial", initial_jch);
+            show_jch_rgb("+ multistart_optimize_2d: final", &best_jch);
         }
 #endif
     }
@@ -848,8 +848,8 @@ public:
                     "+ flexible_optimize_1d_2d: failed to reach optimizer goal " <<
                     optimizer_goal << " -- only achived deltaE{1d} = " << delta_e_1d <<
                     ", deltaE{2d} = " << delta_e_2d << "\n";
-                show_jch_rgb("+ flexible_optimize_1d_2d:     initial", jch);
-                show_jch_rgb("+ flexible_optimize_1d_2d:     final", &opt_jch);
+                show_jch_rgb("+ flexible_optimize_1d_2d: initial", jch);
+                show_jch_rgb("+ flexible_optimize_1d_2d: final", &opt_jch);
             }
         }
 #endif

@@ -115,7 +115,7 @@ checkpoint(const std::pair<ImageType*, AlphaType*>& p,
         vigra::NumericTraits<ImagePixelComponentType>::max() :
         1.0;
 #ifdef DEBUG
-    std::cerr << "+ checkpoint: input range:  ("
+    std::cerr << "+ checkpoint: input range: ("
               << static_cast<double>(inputMin) << ", "
               << static_cast<double>(inputMax) << ")\n"
               << "+ checkpoint: output range: ("

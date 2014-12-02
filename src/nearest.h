@@ -82,7 +82,7 @@ namespace vigra
                 {
                     std::cerr <<
                         command << ": warning: missing GPUContext or OpenCL DistanceTransform\n" <<
-                        command << ": warning:     falling back to CPU path" << std::endl;
+                        command << ": warning: falling back to CPU path" << std::endl;
                 }
 
                 vigra::omp::distanceTransform(src_upperleft, src_lowerright, src_acc,
@@ -520,11 +520,11 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
     {
         std::cerr << "\n" <<
             command << ": excessive image overlap detected; too high risk of defective seam line\n" <<
-            command << ": info:     remove one of the images" << std::endl;
+            command << ": note: remove at least one of the images" << std::endl;
 #ifdef DEBUG
         std::cerr <<
-            command << ": info: overlap area size is " << size << " > " << overlap_threshold << ", but only\n" <<
-            command << ": info: " << overlap_tally << " of " << size.x * size.y << " pixels do not overlap" <<
+            command << ": note: overlap area size is " << size << " > " << overlap_threshold << ", but only\n" <<
+            command << ": note: " << overlap_tally << " of " << size.x * size.y << " pixels do not overlap" <<
             std::endl;
 #endif
         exit(1);

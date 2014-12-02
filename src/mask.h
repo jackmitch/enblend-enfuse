@@ -644,7 +644,7 @@ vectorizeSeamLine(Contour& rawSegments,
             100.0 * vectorizeDistance / diagonalLength <<
             "% of diagonal) is smaller\n" <<
             command <<
-            ": warning:   than minimum of " << minimumVectorizeDistance <<
+            ": warning: than minimum of " << minimumVectorizeDistance <<
             "; will use " << minimumVectorizeDistance << " (" <<
             100.0 * minimumVectorizeDistance / diagonalLength <<
             "% of diagonal)" <<
@@ -972,7 +972,7 @@ search_for_isolated_points(const AlphaType* const alpha)
             std::endl;
 #ifdef DEBUG
         std::cerr <<
-            command << ": info: found " << number_of_isolated_points <<
+            command << ": note: found " << number_of_isolated_points <<
             " isolated points in black alpha mask" << std::endl;
 #endif
         exit(1);
@@ -1014,20 +1014,20 @@ createMask(const ImageType* const white,
             }
             if (!maskInfo.isGrayscale()) {
                 std::cerr << command <<
-                    ": error: mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
+                    ": mask image \"" << maskFilename << "\" is not grayscale" << std::endl;
                 exit(1);
             }
             if (maskInfo.numExtraBands() != 0) {
                 std::cerr << command <<
-                    ": error: mask image \"" << maskFilename << "\" must not have an alpha channel" <<
+                    ": mask image \"" << maskFilename << "\" must not have an alpha channel" <<
                     std::endl;
                 exit(1);
             }
             if (std::string(maskInfo.getPixelType()) != vigra::TypeAsString<MaskPixelType>::result()) {
                 std::cerr << command <<
-                    ": error: mask image \"" << maskFilename << "\" has pixel type " << maskInfo.getPixelType() << ";\n" <<
+                    ": mask image \"" << maskFilename << "\" has pixel type " << maskInfo.getPixelType() << ";\n" <<
                     command <<
-                    ": error: expecting pixel type " << vigra::TypeAsString<MaskPixelType>::result() <<
+                    ": note: expecting pixel type " << vigra::TypeAsString<MaskPixelType>::result() <<
                     std::endl;
                 exit(1);
             }
