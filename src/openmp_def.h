@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#include <cstdlib>              // std::malloc, std::free
 #include <limits>
 
 #include <signal.h>             // sig_atomic_t
