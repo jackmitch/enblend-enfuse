@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __PYRAMID_H__
-#define __PYRAMID_H__
+#ifndef PYRAMID_H_INCLUDED_
+#define PYRAMID_H_INCLUDED_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -38,13 +38,13 @@
 #include "fixmath.h"
 
 
-namespace enblend {
-
-#define IMUL6(A) (A * SKIPSMImagePixelType(6))
-#define IMUL5(A) (A * SKIPSMImagePixelType(5))
-#define IMUL4(A) (A * SKIPSMImagePixelType(4))
-#define IMUL11(A) (A * SKIPSMImagePixelType(11))
-#define AMUL6(A) (A * SKIPSMAlphaPixelType(6))
+namespace enblend
+{
+template <typename t> inline static t imul6(t a_value) {return 6 * a_value;}
+template <typename t> inline static t imul5(t a_value) {return 5 * a_value;}
+template <typename t> inline static t imul4(t a_value) {return 4 * a_value;}
+template <typename t> inline static t imul11(t a_value) {return 11 * a_value;}
+template <typename t> inline static t amul6(t an_alpha) {return 6 * an_alpha;}
 
 
 /** Calculate the half-width of a n-level filter.
@@ -63,8 +63,14 @@ filterHalfWidth(const unsigned int levels)
 }
 
 
-/** The Burt & Adelson Reduce operation.
- *  This version is for images with alpha channels.
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Burt & Adelson Reduce operation
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/** This version is for images with alpha channels.
  *  Gaussian blur, downsampling, and extrapolation in one pass over
  *  the input image using SKIPSM-based algorithm.
  *  Uses only integer math, visits each pixel only once.
@@ -250,11 +256,11 @@ reduce(bool wraparound,
             SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
             if (evenX) {
                 asc1[dstx] = SKIPSMAlphaZero;
-                asc0[dstx] = asr1 + AMUL6(asr0) + asrp + mcurrent;
+                asc0[dstx] = asr1 + amul6(asr0) + asrp + mcurrent;
                 asr1 = asr0 + asrp;
                 asr0 = mcurrent;
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
+                isc0[dstx] = isr1 + imul6(isr0) + isrp + icurrent;
                 isr1 = isr0 + isrp;
                 isr0 = icurrent;
             } else {
@@ -272,12 +278,12 @@ reduce(bool wraparound,
             if (wraparound) {
                 asc1[dstx] = SKIPSMAlphaZero;
                 asc0[dstx] =
-                    asr1 + AMUL6(asr0) +
+                    asr1 + amul6(asr0) +
                     (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) +
                     (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                 isc1[dstx] = SKIPSMImageZero;
                 isc0[dstx] =
-                    isr1 + IMUL6(isr0) +
+                    isr1 + imul6(isr0) +
                     (aa(ay) ?
                      vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
                      SKIPSMImageZero) +
@@ -286,22 +292,22 @@ reduce(bool wraparound,
                      SKIPSMImageZero);
             } else {
                 asc1[dstx] = SKIPSMAlphaZero;
-                asc0[dstx] = asr1 + AMUL6(asr0);
+                asc0[dstx] = asr1 + amul6(asr0);
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0);
+                isc0[dstx] = isr1 + imul6(isr0);
             }
         } else {
             // previous srcx was odd
             if (wraparound) {
                 asc1[dstx] = SKIPSMAlphaZero;
-                asc0[dstx] = asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                asc0[dstx] = asr1 + amul6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
+                isc0[dstx] = isr1 + imul6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
             } else {
                 asc1[dstx] = SKIPSMAlphaZero;
-                asc0[dstx] = asr1 + AMUL6(asr0) + asrp;
+                asc0[dstx] = asr1 + amul6(asr0) + asrp;
                 isc1[dstx] = SKIPSMImageZero;
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+                isc0[dstx] = isr1 + imul6(isr0) + isrp;
             }
         }
     }
@@ -353,20 +359,20 @@ reduce(bool wraparound,
                     SKIPSMAlphaPixelType mcurrent(aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
                     if (evenX) {
-                        SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                        SKIPSMAlphaPixelType ap = asc1[dstx] + amul6(asc0[dstx]) + ascp[dstx];
                         asc1[dstx] = asc0[dstx] + ascp[dstx];
-                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp + mcurrent;
+                        asc0[dstx] = asr1 + amul6(asr0) + asrp + mcurrent;
                         asr1 = asr0 + asrp;
                         asr0 = mcurrent;
                         ap += asc0[dstx];
 
-                        SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                        SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                         isc1[dstx] = isc0[dstx] + iscp[dstx];
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp + icurrent;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
                         if (ap) {
-                            ip += isc0[dstx];
+                            ip += isc0[dstx]; // OVERFLOW!!!
                             ip /= SKIPSMImagePixelType(ap);
                             da.set(DestPixelType(ip), dx);
                             daa.set(DestAlphaMax, dax);
@@ -390,26 +396,26 @@ reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
 
-                    SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                    SKIPSMAlphaPixelType ap = asc1[dstx] + amul6(asc0[dstx]) + ascp[dstx];
                     asc1[dstx] = asc0[dstx] + ascp[dstx];
                     if (wraparound) {
-                        asc0[dstx] = asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) + (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                        asc0[dstx] = asr1 + amul6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero) + (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     } else {
-                        asc0[dstx] = asr1 + AMUL6(asr0);
+                        asc0[dstx] = asr1 + amul6(asr0);
                     }
                     ap += asc0[dstx];
 
-                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
                         isc0[dstx] =
-                            isr1 + IMUL6(isr0) +
+                            isr1 + imul6(isr0) +
                             (aa(ay) ?
                              vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
                              SKIPSMImageZero) +
                             (aa(ay, vigra::Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0))) : SKIPSMImageZero);
                     } else {
-                        isc0[dstx] = isr1 + IMUL6(isr0);
+                        isc0[dstx] = isr1 + imul6(isr0);
                     }
                     if (ap) {
                         ip += isc0[dstx];
@@ -422,21 +428,21 @@ reduce(bool wraparound,
                     }
                 } else {
                     // Previous srcx was odd
-                    SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                    SKIPSMAlphaPixelType ap = asc1[dstx] + amul6(asc0[dstx]) + ascp[dstx];
                     asc1[dstx] = asc0[dstx] + ascp[dstx];
                     if (wraparound) {
-                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
+                        asc0[dstx] = asr1 + amul6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     } else {
-                        asc0[dstx] = asr1 + AMUL6(asr0) + asrp;
+                        asc0[dstx] = asr1 + amul6(asr0) + asrp;
                     }
                     ap += asc0[dstx];
 
-                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero);
                     } else {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp;
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp;
                     }
                     if (ap) {
                         ip += isc0[dstx];
@@ -470,10 +476,10 @@ reduce(bool wraparound,
                     SKIPSMAlphaPixelType mcurrent(aa(ax) ? SKIPSMAlphaOne : SKIPSMAlphaZero);
                     SKIPSMImagePixelType icurrent(aa(ax) ? SKIPSMImagePixelType(sa(sx)) : SKIPSMImageZero);
                     if (evenX) {
-                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp + mcurrent) * 4;
+                        ascp[dstx] = (asr1 + amul6(asr0) + asrp + mcurrent) * 4;
                         asr1 = asr0 + asrp;
                         asr0 = mcurrent;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + icurrent) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp + icurrent) * 4;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
                     } else {
@@ -489,26 +495,26 @@ reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
                     if (wraparound) {
-                        ascp[dstx] = (asr1 + AMUL6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero)
+                        ascp[dstx] = (asr1 + amul6(asr0) + (aa(ay) ? (SKIPSMAlphaOne * 4) : SKIPSMAlphaZero)
                                       + (aa(ay, vigra::Diff2D(1,0)) ? SKIPSMAlphaOne : SKIPSMAlphaZero)) * 4;
                         iscp[dstx] =
-                            (isr1 + IMUL6(isr0) +
+                            (isr1 + imul6(isr0) +
                              (aa(ay) ?
                               vigra::NumericTraits<SKIPSMImagePixelType>::fromRealPromote(SKIPSMImagePixelType(sa(sy)) * 4) :
                               SKIPSMImageZero) +
                              (aa(ay, vigra::Diff2D(1, 0)) ? SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0))) : SKIPSMImageZero)) * 4;
                     } else {
-                        ascp[dstx] = (asr1 + AMUL6(asr0)) * 4;
-                        iscp[dstx] = (isr1 + IMUL6(isr0)) * 4;
+                        ascp[dstx] = (asr1 + amul6(asr0)) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0)) * 4;
                     }
                 } else {
                     // previous srcx was odd
                     if (wraparound) {
-                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero)) * 4;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero)) * 4;
+                        ascp[dstx] = (asr1 + amul6(asr0) + asrp + (aa(ay) ? SKIPSMAlphaOne : SKIPSMAlphaZero)) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp + (aa(ay) ? SKIPSMImagePixelType(sa(sy)) : SKIPSMImageZero)) * 4;
                     } else {
-                        ascp[dstx] = (asr1 + AMUL6(asr0) + asrp) * 4;
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp) * 4;
+                        ascp[dstx] = (asr1 + amul6(asr0) + asrp) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp) * 4;
                     }
                 }
             }
@@ -526,9 +532,9 @@ reduce(bool wraparound,
             //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy, dax = day; dstx < dst_w + 1; ++dstx, ++dx.x, ++dax.x) {
-                SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]);
+                SKIPSMAlphaPixelType ap = asc1[dstx] + amul6(asc0[dstx]);
                 if (ap) {
-                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx])) / SKIPSMImagePixelType(ap);
+                    SKIPSMImagePixelType ip = (isc1[dstx] + imul6(isc0[dstx])) / SKIPSMImagePixelType(ap);
                     da.set(DestPixelType(ip), dx);
                     daa.set(DestAlphaMax, dax);
                 } else {
@@ -543,9 +549,9 @@ reduce(bool wraparound,
             // isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy, dax = day; dstx < dst_w + 1; ++dstx, ++dx.x, ++dax.x) {
-                SKIPSMAlphaPixelType ap = asc1[dstx] + AMUL6(asc0[dstx]) + ascp[dstx];
+                SKIPSMAlphaPixelType ap = asc1[dstx] + amul6(asc0[dstx]) + ascp[dstx];
                 if (ap) {
-                    SKIPSMImagePixelType ip = (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx]) / SKIPSMImagePixelType(ap);
+                    SKIPSMImagePixelType ip = (isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx]) / SKIPSMImagePixelType(ap);
                     da.set(DestPixelType(ip), dx);
                     daa.set(DestAlphaMax, dax);
                 } else {
@@ -652,8 +658,8 @@ reduce(bool wraparound,
              ++srcx, ++sx.x) {
             SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
             if (evenX) {
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
-                isc1[dstx] = IMUL5(isc0[dstx]);
+                isc0[dstx] = isr1 + imul6(isr0) + isrp + icurrent;
+                isc1[dstx] = imul5(isc0[dstx]);
                 isr1 = isr0 + isrp;
                 isr0 = icurrent;
             } else {
@@ -668,21 +674,21 @@ reduce(bool wraparound,
             // previous srcx was even
             ++dstx;
             if (wraparound) {
-                isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
+                isc0[dstx] = isr1 + imul6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
                     + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)));
-                isc1[dstx] = IMUL5(isc0[dstx]);
+                isc1[dstx] = imul5(isc0[dstx]);
             } else {
-                isc0[dstx] = isr1 + IMUL11(isr0);
-                isc1[dstx] = IMUL5(isc0[dstx]);
+                isc0[dstx] = isr1 + imul11(isr0);
+                isc1[dstx] = imul5(isc0[dstx]);
             }
         } else {
             // previous srcx was odd
             if (wraparound) {
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
-                isc1[dstx] = IMUL5(isc0[dstx]);
+                isc0[dstx] = isr1 + imul6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+                isc1[dstx] = imul5(isc0[dstx]);
             } else {
-                isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (isrp / 4);
-                isc1[dstx] = IMUL5(isc0[dstx]);
+                isc0[dstx] = isr1 + imul6(isr0) + isrp + (isrp / 4);
+                isc1[dstx] = imul5(isc0[dstx]);
             }
         }
     }
@@ -716,9 +722,9 @@ reduce(bool wraparound,
                 for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
                     SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
                     if (evenX) {
-                        SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                        SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                         isc1[dstx] = isc0[dstx] + iscp[dstx];
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + icurrent;
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp + icurrent;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
                         ip += isc0[dstx];
@@ -737,25 +743,25 @@ reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
 
-                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
+                        isc0[dstx] = isr1 + imul6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
                             + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)));
                     } else {
-                        isc0[dstx] = isr1 + IMUL11(isr0);
+                        isc0[dstx] = isr1 + imul11(isr0);
                     }
                     ip += isc0[dstx];
                     ip /= 256;
                     da.set(DestPixelType(ip), dx);
                 } else {
                     // Previous srcx was odd
-                    SKIPSMImagePixelType ip = isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx];
+                    SKIPSMImagePixelType ip = isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx];
                     isc1[dstx] = isc0[dstx] + iscp[dstx];
                     if (wraparound) {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp + SKIPSMImagePixelType(sa(sy));
                     } else {
-                        isc0[dstx] = isr1 + IMUL6(isr0) + isrp + (isrp / 4);
+                        isc0[dstx] = isr1 + imul6(isr0) + isrp + (isrp / 4);
                     }
                     ip += isc0[dstx];
                     ip /= 256;
@@ -775,7 +781,7 @@ reduce(bool wraparound,
                 for (evenX = false, srcx = 1, dstx = 0; srcx < src_w; ++srcx, ++sx.x) {
                     SKIPSMImagePixelType icurrent(SKIPSMImagePixelType(sa(sx)));
                     if (evenX) {
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + icurrent) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp + icurrent) * 4;
                         isr1 = isr0 + isrp;
                         isr0 = icurrent;
                     } else {
@@ -789,18 +795,18 @@ reduce(bool wraparound,
                     // previous srcx was even
                     ++dstx;
                     if (wraparound) {
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
+                        iscp[dstx] = (isr1 + imul6(isr0) + (SKIPSMImagePixelType(sa(sy)) * 4)
                                       + SKIPSMImagePixelType(sa(sy, vigra::Diff2D(1, 0)))
                                       ) * 4;
                     } else {
-                        iscp[dstx] = (isr1 + IMUL11(isr0)) * 4;
+                        iscp[dstx] = (isr1 + imul11(isr0)) * 4;
                     }
                 } else {
                     // previous srcx was odd
                     if (wraparound) {
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + SKIPSMImagePixelType(sa(sy))) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp + SKIPSMImagePixelType(sa(sy))) * 4;
                     } else {
-                        iscp[dstx] = (isr1 + IMUL6(isr0) + isrp + (isrp / 4)) * 4;
+                        iscp[dstx] = (isr1 + imul6(isr0) + isrp + (isrp / 4)) * 4;
                     }
                 }
             }
@@ -818,7 +824,7 @@ reduce(bool wraparound,
             //isc1[dstx] = isc0[dstx] + 4*iscp[dstx]
             //out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy; dstx < dst_w + 1; ++dstx, ++dx.x) {
-                SKIPSMImagePixelType ip = (isc1[dstx] + IMUL11(isc0[dstx])) / 256;
+                SKIPSMImagePixelType ip = (isc1[dstx] + imul11(isc0[dstx])) / 256;
                 da.set(DestPixelType(ip), dx);
             }
         } else {
@@ -829,7 +835,7 @@ reduce(bool wraparound,
             // out = isc1[dstx] + 6*isc0[dstx] + 4*iscp[dstx] + newisc0[dstx]
             for (dstx = 1, dx = dy; dstx < dst_w + 1; ++dstx, ++dx.x) {
                 SKIPSMImagePixelType ip =
-                    (isc1[dstx] + IMUL6(isc0[dstx]) + iscp[dstx] + (iscp[dstx] / 4)) / 256;
+                    (isc1[dstx] + imul6(isc0[dstx]) + iscp[dstx] + (iscp[dstx] / 4)) / 256;
                 da.set(DestPixelType(ip), dx);
             }
         }
@@ -845,7 +851,7 @@ reduce(bool wraparound,
 template <typename SKIPSMImagePixelType,
           typename SrcImageIterator, typename SrcAccessor,
           typename DestImageIterator, typename DestAccessor>
-inline void
+inline static void
 reduce(bool wraparound,
        vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
        vigra::triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
@@ -856,18 +862,25 @@ reduce(bool wraparound,
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Burt & Adelson Expand operation
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // SKIPSM update routine used when visiting a pixel in the top two rows
 // and the left two rows.
 #define SKIPSM_EXPAND(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     do {                                                            \
         current = SKIPSMImagePixelType(sa(sx));                     \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
-        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
+        out10 = sc1b[srcx] + imul6(sc0b[srcx]);                     \
         out01 = sc0a[srcx];                                         \
         out11 = sc0b[srcx];                                         \
         sc1a[srcx] = sc0a[srcx];                                    \
         sc1b[srcx] = sc0b[srcx];                                    \
-        sc0a[srcx] = sr1 + IMUL6(sr0) + current;                    \
+        sc0a[srcx] = sr1 + imul6(sr0) + current;                    \
         sc0b[srcx] = (sr0 + current) * 4;                           \
         sr1 = sr0;                                                  \
         sr0 = current;                                              \
@@ -893,8 +906,8 @@ reduce(bool wraparound,
 // SKIPSM update routine used for the extra row under the main image body.
 #define SKIPSM_EXPAND_ROW_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     do {                                                            \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
-        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
+        out10 = sc1b[srcx] + imul6(sc0b[srcx]);                     \
         out00 /= SKIPSMImagePixelType(SCALE_OUT00);                 \
         out10 /= SKIPSMImagePixelType(SCALE_OUT10);                 \
         da.set(cf(da(dx), out00), dx);                              \
@@ -918,13 +931,13 @@ reduce(bool wraparound,
 // of the main image body.
 #define SKIPSM_EXPAND_COLUMN_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     do {                                                            \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
         out01 = sc0a[srcx];                                         \
-        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out10 = sc1b[srcx] + imul6(sc0b[srcx]);                     \
         out11 = sc0b[srcx];                                         \
         sc1a[srcx] = sc0a[srcx];                                    \
         sc1b[srcx] = sc0b[srcx];                                    \
-        sc0a[srcx] = sr1 + IMUL6(sr0);                              \
+        sc0a[srcx] = sr1 + imul6(sr0);                              \
         sc0b[srcx] = sr0 * 4;                                       \
         out00 += sc0a[srcx];                                        \
         out01 += sc0a[srcx];                                        \
@@ -950,13 +963,13 @@ reduce(bool wraparound,
 // This version is for the case where the dst image has even width.
 #define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_EVEN(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     do {                                                            \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
         out01 = sc0a[srcx];                                         \
-        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out10 = sc1b[srcx] + imul6(sc0b[srcx]);                     \
         out11 = sc0b[srcx];                                         \
         sc1a[srcx] = sc0a[srcx];                                    \
         sc1b[srcx] = sc0b[srcx];                                    \
-        sc0a[srcx] = sr1 + IMUL6(sr0) + SKIPSMImagePixelType(sa(sy)); \
+        sc0a[srcx] = sr1 + imul6(sr0) + SKIPSMImagePixelType(sa(sy)); \
         sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) * 4;      \
         out00 += sc0a[srcx];                                        \
         out01 += sc0a[srcx];                                        \
@@ -980,13 +993,13 @@ reduce(bool wraparound,
 // This version is for the case where the dst image has odd width.
 #define SKIPSM_EXPAND_COLUMN_END_WRAPAROUND_ODD(SCALE_OUT00, SCALE_OUT01) \
     do {                                                            \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
         out01 = sc0a[srcx];                                         \
-        out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                     \
+        out10 = sc1b[srcx] + imul6(sc0b[srcx]);                     \
         out11 = sc0b[srcx];                                         \
         sc1a[srcx] = sc0a[srcx];                                    \
         sc1b[srcx] = sc0b[srcx];                                    \
-        sc0a[srcx] = sr1 + IMUL6(sr0) + IMUL4(SKIPSMImagePixelType(sa(sy))); \
+        sc0a[srcx] = sr1 + imul6(sr0) + imul4(SKIPSMImagePixelType(sa(sy))); \
         sc0b[srcx] = (sr0 + SKIPSMImagePixelType(sa(sy))) * 4;      \
         out00 += sc0a[srcx];                                        \
         out01 += sc0a[srcx];                                        \
@@ -1001,11 +1014,11 @@ reduce(bool wraparound,
 // of the extra row under the main image body.
 #define SKIPSM_EXPAND_ROW_COLUMN_END(SCALE_OUT00, SCALE_OUT10, SCALE_OUT01, SCALE_OUT11) \
     do {                                                            \
-        out00 = sc1a[srcx] + IMUL6(sc0a[srcx]);                     \
+        out00 = sc1a[srcx] + imul6(sc0a[srcx]);                     \
         out00 /= SKIPSMImagePixelType(SCALE_OUT00);                 \
         da.set(cf(da(dx), out00), dx);                              \
         if (dst_w_even) {                                           \
-            out10 = sc1b[srcx] + IMUL6(sc0b[srcx]);                 \
+            out10 = sc1b[srcx] + imul6(sc0b[srcx]);                 \
             out10 /= SKIPSMImagePixelType(SCALE_OUT10);             \
             ++dx.x;                                                 \
             da.set(cf(da(dx), out10), dx);                          \
@@ -1140,7 +1153,7 @@ expand(bool add, bool wraparound,
         if (wraparound) {
             sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0)));
             if (!dst_w_even) {
-                sr1 = IMUL4(sr1);
+                sr1 = imul4(sr1);
             }
         } else {
             sr1 = SKIPSMImageZero;
@@ -1152,7 +1165,7 @@ expand(bool add, bool wraparound,
 
         for (; srcx < src_w; ++srcx, ++sx.x) {
             current = SKIPSMImagePixelType(sa(sx));
-            sc0a[srcx] = sr1 + IMUL6(sr0) + current;
+            sc0a[srcx] = sr1 + imul6(sr0) + current;
             sc0b[srcx] = (sr0 + current) * 4;
             sc1a[srcx] = SKIPSMImageZero;
             sc1b[srcx] = SKIPSMImageZero;
@@ -1164,14 +1177,14 @@ expand(bool add, bool wraparound,
         if (wraparound) {
             current = SKIPSMImagePixelType(sa(sy));
             if (dst_w_even) {
-                sc0a[srcx] = sr1 + IMUL6(sr0) + current;
+                sc0a[srcx] = sr1 + imul6(sr0) + current;
                 sc0b[srcx] = (sr0 + current) * 4;
             } else {
-                sc0a[srcx] = sr1 + IMUL6(sr0) + IMUL4(current);
+                sc0a[srcx] = sr1 + imul6(sr0) + imul4(current);
                 // sc*b[srcx] are irrelevant for odd-sized dst images in wraparound mode.
             }
         } else {
-            sc0a[srcx] = sr1 + IMUL6(sr0);
+            sc0a[srcx] = sr1 + imul6(sr0);
             sc0b[srcx] = sr0 * 4;
         }
         sc1a[srcx] = SKIPSMImageZero;
@@ -1194,7 +1207,7 @@ expand(bool add, bool wraparound,
         if (wraparound) {
             sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w - 1, 0)));
             if (!dst_w_even) {
-                sr1 = IMUL4(sr1);
+                sr1 = imul4(sr1);
             }
         } else {
             sr1 = SKIPSMImageZero;
@@ -1306,7 +1319,7 @@ expand(bool add, bool wraparound,
         if (wraparound) {
             sr1 = SKIPSMImagePixelType(sa(sy, vigra::Diff2D(src_w-1,0)));
             if (!dst_w_even) {
-                sr1 = IMUL4(sr1);
+                sr1 = imul4(sr1);
             }
         } else {
             sr1 = SKIPSMImageZero;
@@ -1422,7 +1435,7 @@ struct FromPromotePlusFunctorWrapper :
 template <typename SKIPSMImagePixelType,
           typename SrcImageIterator, typename SrcAccessor,
           typename DestImageIterator, typename DestAccessor>
-inline void
+inline static void
 expand(bool add, bool wraparound,
        vigra::triple<SrcImageIterator, SrcImageIterator, SrcAccessor> src,
        vigra::triple<DestImageIterator, DestImageIterator, DestAccessor> dest)
@@ -1441,6 +1454,13 @@ expand(bool add, bool wraparound,
                                      std::minus<SKIPSMImagePixelType>());
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Gaussian Pyramid
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /** Calculate the Gaussian pyramid for the given SrcImage/AlphaImage pair. */
@@ -1530,10 +1550,11 @@ gaussianPyramid(unsigned int numLevels,
                 vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
                 vigra::pair<typename AlphaImageType::const_traverser, typename AlphaImageType::ConstAccessor> alpha)
 {
-    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMAlphaPixelType>
-        (numLevels, wraparound,
-         src.first, src.second, src.third,
-         alpha.first, alpha.second);
+    return gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType,
+                           PyramidIntegerBits, PyramidFractionBits,
+                           SKIPSMImagePixelType, SKIPSMAlphaPixelType>(numLevels, wraparound,
+                                                                       src.first, src.second, src.third,
+                                                                       alpha.first, alpha.second);
 }
 
 
@@ -1601,16 +1622,24 @@ gaussianPyramid(unsigned int numLevels,
 template <typename SrcImageType, typename PyramidImageType,
           int PyramidIntegerBits, int PyramidFractionBits,
           typename SKIPSMImagePixelType>
-inline std::vector<PyramidImageType*>*
+inline static std::vector<PyramidImageType*>*
 gaussianPyramid(unsigned int numLevels,
                 bool wraparound,
                 vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src)
 {
-    return gaussianPyramid<SrcImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType>
-        (numLevels,
-         wraparound,
-         src.first, src.second, src.third);
+    return gaussianPyramid<SrcImageType, PyramidImageType,
+                           PyramidIntegerBits, PyramidFractionBits,
+                           SKIPSMImagePixelType>(numLevels,
+                                                 wraparound,
+                                                 src.first, src.second, src.third);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Laplacian Pyramid
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /** Calculate the Laplacian pyramid of the given SrcImage/AlphaImage pair. */
@@ -1628,10 +1657,11 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
 {
     // First create a Gaussian pyramid.
     std::vector <PyramidImageType*>* gp =
-        gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType, PyramidIntegerBits, PyramidFractionBits, SKIPSMImagePixelType, SKIPSMAlphaPixelType>
-        (numLevels, wraparound,
-         src_upperleft, src_lowerright, sa,
-         alpha_upperleft, aa);
+        gaussianPyramid<SrcImageType, AlphaImageType, PyramidImageType,
+                        PyramidIntegerBits, PyramidFractionBits,
+                        SKIPSMImagePixelType, SKIPSMAlphaPixelType>(numLevels, wraparound,
+                                                                    src_upperleft, src_lowerright, sa,
+                                                                    alpha_upperleft, aa);
 
     //exportPyramid(gp, exportName);
 
@@ -1714,6 +1744,13 @@ laplacianPyramid(const char* exportName, unsigned int numLevels,
          src.first, src.second, src.third,
          alpha.first, alpha.second);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Export pyramids to (TIFF) file
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 /** Collapse the given Laplacian pyramid. */
@@ -1820,7 +1857,9 @@ exportPyramid(std::vector<PyramidImageType*>* v, const char* prefix)
 
 } // namespace enblend
 
-#endif /* __PYRAMID_H__ */
+
+#endif // PYRAMID_H_INCLUDED_
+
 
 // Local Variables:
 // mode: c++
