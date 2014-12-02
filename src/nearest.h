@@ -96,15 +96,19 @@ namespace vigra
 #endif // OPENCL
             wall_clock.stop();
 
-            const std::ios::fmtflags flags(std::cerr.flags());
-            vigra::Size2D size(src_lowerright - src_upperleft);
-            std::cerr <<
-                command << ": timing: wall-clock runtime of `Distance Transform': " <<
-                std::setprecision(3) << 1000.0 * wall_clock.value() << " ms\n" <<
-                command << ": timing: speed according to wall-clock: " <<
-                size.area() / (1048576.0 * wall_clock.value()) << " MPixel/s\n" <<
-                std::endl;
-            std::cerr.flags(flags);
+            if (parameter::as_boolean("time-distance-transform", false))
+            {
+                const std::ios::fmtflags flags(std::cerr.flags());
+                vigra::Size2D size(src_lowerright - src_upperleft);
+                std::cerr <<
+                    "\n" <<
+                    command << ": timing: wall-clock runtime of `Distance Transform': " <<
+                    std::setprecision(3) << 1000.0 * wall_clock.value() << " ms\n" <<
+                    command << ": timing: speed according to wall-clock: " <<
+                    size.area() / (1048576.0 * wall_clock.value()) << " MPixel/s\n" <<
+                    std::endl;
+                std::cerr.flags(flags);
+            }
         }
 
 

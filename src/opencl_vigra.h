@@ -217,7 +217,11 @@ namespace vigra
                                       a_destination_upperleft, a_destination_accessor);
 
                 f_.queue().enqueueUnmapMemObject(output_buffer_, buffer_begin, &unmap_buffer_prereq_, &done_);
-                show_profile_data(size);
+
+                if (parameter::as_boolean("time-distance-transform", false))
+                {
+                    show_profile_data(size);
+                }
 
                 teardown(a_distance_norm);
             }
@@ -244,6 +248,7 @@ namespace vigra
 
                     const std::ios::fmtflags flags(std::cerr.flags());
                     std::cerr <<
+                        "\n" <<
                         command << ": timing: OpenCL latencies of `Distance Transform' for " <<
                         a_size << " = " << a_size.area() << " pixel image\n";
                     for (auto& r : results)

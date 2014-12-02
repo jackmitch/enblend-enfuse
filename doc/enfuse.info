@@ -6,9 +6,9 @@ START-INFO-DIR-ENTRY
 * enfuse: (enfuse).                     Fuse images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enfuse (version 4.2-73a3ca1699d6, 4 October 2014),
-a tool to merge different exposures of the same scene to produce an
-image that looks much like a tonemapped image.
+   This manual is for Enfuse (version 4.2-3270515e2517, 2 December
+2014), a tool to merge different exposures of the same scene to produce
+an image that looks much like a tonemapped image.
 
    Copyright (C) 2004-2014 ANDREW MIHAL.
 
@@ -25,9 +25,9 @@ File: enfuse.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enfuse
 ******
 
-This manual is for Enfuse (version 4.2-73a3ca1699d6, 4 October 2014), a
-tool to merge different exposures of the same scene to produce an image
-that looks much like a tonemapped image.
+This manual is for Enfuse (version 4.2-3270515e2517, 2 December 2014),
+a tool to merge different exposures of the same scene to produce an
+image that looks much like a tonemapped image.
 
 * Menu:
 
@@ -683,6 +683,11 @@ File: enfuse.info,  Node: Common Options,  Next: Extended Options,  Prev: Respon
 
 3.3 Common Options
 ==================
+
+     In this chapter the options are grouped as in the command-line help
+     (`enblend --help') and sorted alphabetically within their groups.
+     For an alphabetic list of all options consult the *note Option
+     Index::.
 
 Common options control some overall features of Enfuse.
 
@@ -1343,11 +1348,15 @@ to read the manual before applying them successfully.
      For color images LOWER-CUTOFF and UPPER-CUTOFF are applied
      separately and independently to each channel.
 
+     Append a `%'-sign to specify the cutoff relative to maximum pixel
+     value in the source image (for example 255 or 65535).  Negative
+     UPPER-CUTOFF values indicate the maximum minus the absolute
+     UPPER-CUTOFF value; the same holds for negative percentages.
+
      Defaults: 0% for LOWER-CUTOFF and 100% for UPPER-CUTOFF, that is,
-     all pixels' values are taken into account.  Append a `%' to
-     specify the cutoff relative to maximum pixel value in the source
-     image (for example 255 or 65535).  *note Figure:entropy-cutoff::
-     shows an example.
+     all pixels' values are taken into account.
+
+     *note Figure:entropy-cutoff:: shows an example.
 
      Figure 3.1: Linear lightness Y in comparison with an
      entropy-cutoff function for LOWER-CUTOFF = 5% and UPPER-CUTOFF =
@@ -1357,7 +1366,7 @@ to read the manual before applying them successfully.
      Y remains unaltered under the cut-off operation.
 
         Note that a high LOWER-CUTOFF value lightens the resulting
-     image, as dark (and presumably noisy) pixels are averaged with
+     image, as dark and presumably noisy pixels are averaged with
      _equal_ weights.  With `--entropy-cutoff=0', the default, on the
      other hand, "noise" might be interpreted as high entropy and the
      noisy pixels get a high weight, which in turn renders the resulting
@@ -1382,11 +1391,20 @@ to read the manual before applying them successfully.
   `--exposure-cutoff=LOWER-CUTOFF'
   `--exposure-cutoff=LOWER-CUTOFF:UPPER-CUTOFF'
   `--exposure-cutoff=LOWER-CUTOFF:UPPER-CUTOFF:LOWER-PROJECTOR:UPPER-PROJECTOR'
-        The first form sets the weight for all pixels below the lower
-     cutoff to zero.  The second form sets the lower cutoff and the
-     upper cutoff at the same time.  For color images the values of
-     LOWER-CUTOFF and UPPER-CUTOFF refer to the gray-scale projection
-     as selected with the option `--gray-projector'.
+        The first form sets the lower cutoff value; the second form
+     sets the lower cutoff and the upper cutoff at the same time.
+     Pixels below the lower or above the upper cutoff get a weight of
+     exactly zero irrespective of the active exposure-weight function.
+
+        For color images the values of LOWER-CUTOFF and UPPER-CUTOFF
+     refer to the gray-scale projection as selected with
+     option `--gray-projector'.
+
+        Append a `%'-sign to specify the cutoff relative to maximum
+     pixel value in the source image (for example 255 or 65535).
+     Negative UPPER-CUTOFF values indicate the maximum minus the
+     absolute UPPER-CUTOFF value; the same holds for negative
+     percentages.
 
         The impact of this option is similar, but not identical to
      transforming _all_ input images with ImageMagick's
@@ -1433,9 +1451,6 @@ to read the manual before applying them successfully.
      is, all pixels' values are weighted according to the "uncut"
      exposure-weight curve.
 
-        Append a `%' to specify the cutoff relative to the maximum pixel
-     value in the source image (for example 255 or 65535).
-
         *note Figure:exposure-cutoff:: shows an example.
 
         The gray-scale projectors LOWER-PROJECTOR and UPPER-PROJECTOR
@@ -1464,11 +1479,31 @@ to read the manual before applying them successfully.
                   IMAGE histogram:- | \
               display
 
+        The syntax of this option is flexible enough to combine ease of
+     use and precision.
+
+    Suppress some noise: `--exposure-cutoff=5%'
+          The percentage makes the cutoff specification channel-width
+          agnostic.
+
+    Shave off pure white pixels: `--exposure-cutoff=0:-1'
+          This cutoff specification only works for integral pixels, but
+          it will set the weight of the very brightest pixels to zero.
+
+    Shave off bright white pixels: `--exposure-cutoff=0:-1%'
+          Here we exclude the brightest 1% of pixels form the exposure
+          fusion no matter whether the image is encoded with integers
+          or floating-point numbers.
+
+    Suppress some noise and shave off pure white pixels: `--exposure-cutoff=5%:-1'
+          Combine the effects of lower and upper cutoff, while mixing
+          relative and absolute specifications.
+
   `--gray-projector=PROJECTOR'
         Use gray projector PROJECTOR for conversion of RGB images to
      grayscale: (R, G, B) -> Y.
 
-        In version 4.2-73a3ca1699d6 of Enfuse, the option is effective
+        In version 4.2-3270515e2517 of Enfuse, the option is effective
      for exposure weighting and local contrast weighting.  Default:
      `average'.
 
@@ -2010,7 +2045,7 @@ Local Contrast   0.0
 Local Entropy    0.0
 
 Table 5.1: Enfuse's default weights as compiled into
-version 4.2-73a3ca1699d6.
+version 4.2-3270515e2517.
 
    To disable a particular criterion set its weight to zero as for
 example
@@ -2238,8 +2273,8 @@ File: enfuse.info,  Node: Coding Guidelines,  Next: Performance Considerations, 
      base-class `ExposureWeight' in the header
      file `exposure_weight_base.h'.  It resides in the
      `src' sub-directory of the source distribution and in
-     directory `/home/cspiel/tmp/enblend.usr/share/enfuse/xweight' for a
-     correctly installed package.
+     directory `/usr/local/share/enfuse/xweight' for a correctly
+     installed package.
 
   2. At least override method `weight'.
 
@@ -2416,7 +2451,7 @@ option `--exposure-weight-function'.
 
    (1) If Enfuse was compiled with support for user-defined weight
 functions, the examples presented here should be duplicated in
-directory `/home/cspiel/tmp/enblend.usr/share/enfuse/xweight'.
+directory `/usr/local/share/enfuse/xweight'.
 
 
 File: enfuse.info,  Node: Performance Considerations,  Next: Compiling Linking Loading,  Prev: Coding Guidelines,  Up: User-Defined Exposure Weighting Functions
@@ -4475,7 +4510,7 @@ Option Index
 * Menu:
 
 * --ciecam:                              Extended Options.    (line  11)
-* --compression:                         Common Options.      (line  15)
+* --compression:                         Common Options.      (line  20)
 * --contrast-edge-scale:                 Expert Options.      (line  11)
 * --contrast-min-curvature:              Expert Options.      (line  30)
 * --contrast-weight:                     Fusion Options.      (line  10)
@@ -4483,10 +4518,10 @@ Option Index
 * --depth:                               Extended Options.    (line  33)
 * --entropy-cutoff:                      Expert Options.      (line  60)
 * --entropy-weight:                      Fusion Options.      (line  20)
-* --entropy-window-size:                 Expert Options.      (line  90)
+* --entropy-window-size:                 Expert Options.      (line  94)
 * --exposure-cutoff <1>:                 Built-In Exposure Weighting Functions.
                                                               (line  84)
-* --exposure-cutoff:                     Expert Options.      (line 107)
+* --exposure-cutoff:                     Expert Options.      (line 111)
 * --exposure-optimum <1>:                Built-In Exposure Weighting Functions.
                                                               (line  17)
 * --exposure-optimum <2>:                Exposure Weighting.  (line   6)
@@ -4501,40 +4536,40 @@ Option Index
                                                               (line  17)
 * --exposure-width:                      Fusion Options.      (line 112)
 * --fallback-profile:                    Extended Options.    (line 125)
-* --gpu:                                 Common Options.      (line  70)
+* --gpu:                                 Common Options.      (line  75)
 * --gray-projector <1>:                  Exposure Weighting.  (line  10)
-* --gray-projector:                      Expert Options.      (line 190)
+* --gray-projector:                      Expert Options.      (line 220)
 * --hard-mask <1>:                       Expert Stacking.     (line  22)
 * --hard-mask <2>:                       Disabling Averaging. (line   6)
-* --hard-mask:                           Expert Options.      (line 269)
+* --hard-mask:                           Expert Options.      (line 299)
 * --help:                                Information Options. (line   8)
-* --layer-selector:                      Common Options.      (line  84)
-* --levels:                              Common Options.      (line 110)
-* --load-masks:                          Expert Options.      (line 283)
+* --layer-selector:                      Common Options.      (line  89)
+* --levels:                              Common Options.      (line 115)
+* --load-masks:                          Expert Options.      (line 313)
 * --no-ciecam:                           Extended Options.    (line  21)
-* --no-gpu:                              Common Options.      (line  79)
-* --no-parameter:                        Common Options.      (line 164)
-* --output:                              Common Options.      (line 154)
+* --no-gpu:                              Common Options.      (line  84)
+* --no-parameter:                        Common Options.      (line 169)
+* --output:                              Common Options.      (line 159)
 * --saturation-weight:                   Fusion Options.      (line 123)
-* --save-masks:                          Expert Options.      (line 302)
+* --save-masks:                          Expert Options.      (line 332)
 * --show-globbing-algorithms:            Information Options. (line  12)
 * --show-image-formats:                  Information Options. (line  19)
 * --show-signature:                      Information Options. (line  29)
 * --show-software-components:            Information Options. (line  36)
-* --soft-mask:                           Expert Options.      (line 334)
-* --verbose:                             Common Options.      (line 208)
+* --soft-mask:                           Expert Options.      (line 364)
+* --verbose:                             Common Options.      (line 213)
 * --version:                             Information Options. (line  48)
-* --wrap:                                Common Options.      (line 242)
+* --wrap:                                Common Options.      (line 247)
 * -c:                                    Extended Options.    (line  11)
 * -d:                                    Extended Options.    (line  33)
 * -f:                                    Extended Options.    (line 113)
 * -g:                                    Extended Options.    (line 133)
 * -h:                                    Information Options. (line   8)
-* -l:                                    Common Options.      (line 110)
-* -o:                                    Common Options.      (line 154)
+* -l:                                    Common Options.      (line 115)
+* -o:                                    Common Options.      (line 159)
 * -V:                                    Information Options. (line  48)
-* -v:                                    Common Options.      (line 208)
-* -w:                                    Common Options.      (line 242)
+* -v:                                    Common Options.      (line 213)
+* -w:                                    Common Options.      (line 247)
 
 
 File: enfuse.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -4547,9 +4582,9 @@ General Index
 
 * # (response file comment):             Response File Format.
                                                               (line   6)
-* 360o panoramas:                        Common Options.      (line 242)
+* 360o panoramas:                        Common Options.      (line 247)
 * @ (response file prefix):              Response Files.      (line   6)
-* a.tif:                                 Common Options.      (line 156)
+* a.tif:                                 Common Options.      (line 161)
 * active criterion:                      Single Criterion Fusing.
                                                               (line  12)
 * advanced focus stacking:               Advanced Focus Stacking.
@@ -4563,12 +4598,12 @@ General Index
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  65)
 * alpha channel, associated:             Extended Options.    (line 133)
-* anti-value gray projector:             Expert Options.      (line 200)
+* anti-value gray projector:             Expert Options.      (line 230)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  24)
 * applications of enfuse:                Applications.        (line   6)
-* arithmetic JPEG compression:           Common Options.      (line  33)
+* arithmetic JPEG compression:           Common Options.      (line  38)
 * authors, list of:                      Authors.             (line   6)
-* average gray projector:                Expert Options.      (line 209)
+* average gray projector:                Expert Options.      (line 239)
 * average, disabling:                    Disabling Averaging. (line   6)
 * average, weighted:                     Weighted Average.    (line   6)
 * basic focus stacking:                  Basic Focus Stacking.
@@ -4583,10 +4618,10 @@ General Index
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line  21)
 * canvas size:                           Extended Options.    (line 113)
-* central processing unit:               Common Options.      (line  70)
+* central processing unit:               Common Options.      (line  75)
 * channel width:                         Extended Options.    (line  33)
 * channel, alpha:                        Overview.            (line  65)
-* channel-mixer gray projector:          Expert Options.      (line 215)
+* channel-mixer gray projector:          Expert Options.      (line 245)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
 * CIECAM02:                              Extended Options.    (line  11)
 * circle-of-confusion:                   Why Focus Stacks.    (line  12)
@@ -4597,12 +4632,12 @@ General Index
 * color profile:                         Extended Options.    (line  14)
 * color space, sRGB <1>:                 Color Profiles.      (line  24)
 * color space, sRGB:                     Extended Options.    (line  14)
-* compression:                           Common Options.      (line  15)
-* compression, arithmetic JPEG:          Common Options.      (line  33)
-* compression, deflate:                  Common Options.      (line  44)
-* compression, JPEG:                     Common Options.      (line  21)
-* compression, LZW:                      Common Options.      (line  55)
-* compression, packbits:                 Common Options.      (line  59)
+* compression:                           Common Options.      (line  20)
+* compression, arithmetic JPEG:          Common Options.      (line  38)
+* compression, deflate:                  Common Options.      (line  49)
+* compression, JPEG:                     Common Options.      (line  26)
+* compression, LZW:                      Common Options.      (line  60)
+* compression, packbits:                 Common Options.      (line  64)
 * contrast enhancement, local:           Local Contrast Enhancement.
                                                               (line   6)
 * contrast weighting using a blend of methods: Blend SDev and LoG.
@@ -4612,9 +4647,9 @@ General Index
 * contrast weighting using standard deviation: Standard Deviation.
                                                               (line   6)
 * conversion, raw:                       Standard Workflow.   (line  34)
-* conversion, RGB'-L*a*b*:               Expert Options.      (line 253)
-* conversion, RGB-L*a*b*:                Expert Options.      (line 231)
-* CPU:                                   Common Options.      (line  70)
+* conversion, RGB'-L*a*b*:               Expert Options.      (line 283)
+* conversion, RGB-L*a*b*:                Expert Options.      (line 261)
+* CPU:                                   Common Options.      (line  75)
 * criteria, overpowering one another:    Single Criterion Fusing.
                                                               (line  37)
 * criterion, active:                     Single Criterion Fusing.
@@ -4625,10 +4660,10 @@ General Index
                                                               (line   6)
 * default layer selection:               Default Layer Selection.
                                                               (line   6)
-* default output filename:               Common Options.      (line 156)
+* default output filename:               Common Options.      (line 161)
 * default weights:                       Single Criterion Fusing.
                                                               (line  24)
-* deflate compression:                   Common Options.      (line  44)
+* deflate compression:                   Common Options.      (line  49)
 * delimiters, option:                    Option Delimiters.   (line   6)
 * depth-of-field:                        Why Focus Stacks.    (line  15)
 * depth-of-focus increase:               Focus Stacks.        (line   6)
@@ -4695,7 +4730,7 @@ General Index
                                                               (line  42)
 * exposure weight, linear transform:     Fusion Options.      (line  67)
 * fallback profile:                      Extended Options.    (line 125)
-* filename template:                     Expert Options.      (line 290)
+* filename template:                     Expert Options.      (line 320)
 * filename, literal:                     Invocation.          (line  10)
 * flash exposure series:                 Flash Exposure Series.
                                                               (line   6)
@@ -4731,20 +4766,20 @@ General Index
 * globbing algorithms <1>:               Information Options. (line  12)
 * globbing algorithms:                   Globbing Algorithms. (line   6)
 * GNU free documentation license:        FDL.                 (line   6)
-* GPU:                                   Common Options.      (line  70)
+* GPU:                                   Common Options.      (line  75)
 * grammar, response file:                Response File Format.
                                                               (line  20)
 * grammar, syntactic comment:            Syntactic Comments.  (line  18)
-* graphics processing unit:              Common Options.      (line  70)
-* gray projector:                        Expert Options.      (line 190)
-* gray projector, anti-value:            Expert Options.      (line 200)
-* gray projector, average:               Expert Options.      (line 209)
-* gray projector, channel-mixer:         Expert Options.      (line 215)
-* gray projector, l-star:                Expert Options.      (line 231)
-* gray projector, lightness:             Expert Options.      (line 242)
-* gray projector, luminance:             Expert Options.      (line 247)
-* gray projector, pl-star:               Expert Options.      (line 253)
-* gray projector, value:                 Expert Options.      (line 264)
+* graphics processing unit:              Common Options.      (line  75)
+* gray projector:                        Expert Options.      (line 220)
+* gray projector, anti-value:            Expert Options.      (line 230)
+* gray projector, average:               Expert Options.      (line 239)
+* gray projector, channel-mixer:         Expert Options.      (line 245)
+* gray projector, l-star:                Expert Options.      (line 261)
+* gray projector, lightness:             Expert Options.      (line 272)
+* gray projector, luminance:             Expert Options.      (line 277)
+* gray projector, pl-star:               Expert Options.      (line 283)
+* gray projector, value:                 Expert Options.      (line 294)
 * grayscale projector:                   Exposure Weighting.  (line  10)
 * half precision float, OpenEXR:         Extended Options.    (line 102)
 * help:                                  Information Options. (line   8)
@@ -4766,9 +4801,9 @@ General Index
 * input image requirements:              Image Requirements.  (line   6)
 * input mask:                            Understanding Masks. (line  18)
 * invocation:                            Invocation.          (line   6)
-* JPEG compression:                      Common Options.      (line  21)
+* JPEG compression:                      Common Options.      (line  26)
 * KImageFuser:                           Bug Reports.         (line  95)
-* l-star gray projector:                 Expert Options.      (line 231)
+* l-star gray projector:                 Expert Options.      (line 261)
 * laplacian edge detection:              Laplacian Edge Detection.
                                                               (line   6)
 * Laplacian of Gaussian (LoG):           Laplacian of Gaussian.
@@ -4776,15 +4811,15 @@ General Index
 * Laplacian-of-Gaussian:                 Expert Options.      (line  11)
 * LaunchPad:                             Bug Reports.         (line  12)
 * LaunchPad, bug database:               Bug Reports.         (line  12)
-* layer selection:                       Common Options.      (line  84)
-* layer selection, all-layers:           Common Options.      (line  89)
+* layer selection:                       Common Options.      (line  89)
+* layer selection, all-layers:           Common Options.      (line  94)
 * layer selection, default:              Default Layer Selection.
                                                               (line   6)
-* layer selection, first-layer:          Common Options.      (line  92)
-* layer selection, largest-layer:        Common Options.      (line  96)
-* layer selection, no layer:             Common Options.      (line 103)
+* layer selection, first-layer:          Common Options.      (line  97)
+* layer selection, largest-layer:        Common Options.      (line 101)
+* layer selection, no layer:             Common Options.      (line 108)
 * lens distortion, correction of:        Standard Workflow.   (line  48)
-* levels, pyramid:                       Common Options.      (line 110)
+* levels, pyramid:                       Common Options.      (line 115)
 * LibJPEG:                               Helpful Programs.    (line  70)
 * LibPNG:                                Helpful Programs.    (line  73)
 * library, dynamic <1>:                  User-Defined Exposure Weighting Functions.
@@ -4793,7 +4828,7 @@ General Index
 * LibTiff:                               Helpful Programs.    (line  77)
 * light probe:                           Exposure Series Misconceptions.
                                                               (line  28)
-* lightness gray projector:              Expert Options.      (line 242)
+* lightness gray projector:              Expert Options.      (line 272)
 * literal filename:                      Invocation.          (line  10)
 * local analysis window:                 Standard Deviation.  (line   6)
 * local contrast enhancement:            Local Contrast Enhancement.
@@ -4802,28 +4837,28 @@ General Index
                                                               (line   6)
 * local-contrast-based fusing:           Local Contrast Based Fusing.
                                                               (line   6)
-* luminance gray projector:              Expert Options.      (line 247)
+* luminance gray projector:              Expert Options.      (line 277)
 * luminance interval, normalized:        Exposure Weighting.  (line  14)
-* LZW compression:                       Common Options.      (line  55)
-* mask template character, %:            Expert Options.      (line 339)
-* mask template character, B:            Expert Options.      (line 390)
-* mask template character, b:            Expert Options.      (line 383)
-* mask template character, D:            Expert Options.      (line 380)
-* mask template character, d:            Expert Options.      (line 373)
-* mask template character, E:            Expert Options.      (line 409)
-* mask template character, e:            Expert Options.      (line 403)
-* mask template character, F:            Expert Options.      (line 399)
-* mask template character, f:            Expert Options.      (line 393)
-* mask template character, i:            Expert Options.      (line 342)
-* mask template character, n:            Expert Options.      (line 357)
-* mask template character, P:            Expert Options.      (line 370)
-* mask template character, p:            Expert Options.      (line 362)
-* mask template characters, table of:    Expert Options.      (line 411)
+* LZW compression:                       Common Options.      (line  60)
+* mask template character, %:            Expert Options.      (line 369)
+* mask template character, B:            Expert Options.      (line 420)
+* mask template character, b:            Expert Options.      (line 413)
+* mask template character, D:            Expert Options.      (line 410)
+* mask template character, d:            Expert Options.      (line 403)
+* mask template character, E:            Expert Options.      (line 439)
+* mask template character, e:            Expert Options.      (line 433)
+* mask template character, F:            Expert Options.      (line 429)
+* mask template character, f:            Expert Options.      (line 423)
+* mask template character, i:            Expert Options.      (line 372)
+* mask template character, n:            Expert Options.      (line 387)
+* mask template character, P:            Expert Options.      (line 400)
+* mask template character, p:            Expert Options.      (line 392)
+* mask template characters, table of:    Expert Options.      (line 441)
 * mask, binary:                          Understanding Masks. (line   6)
-* mask, filename template:               Expert Options.      (line 290)
+* mask, filename template:               Expert Options.      (line 320)
 * mask, input files:                     Understanding Masks. (line  18)
-* mask, loading:                         Expert Options.      (line 287)
-* mask, save:                            Expert Options.      (line 302)
+* mask, loading:                         Expert Options.      (line 317)
+* mask, save:                            Expert Options.      (line 332)
 * mask, weight:                          Understanding Masks. (line   6)
 * masks, understanding:                  Understanding Masks. (line   6)
 * Mertens-Kautz-Van Reeth exposure fusion: Overview.          (line   6)
@@ -4838,10 +4873,10 @@ General Index
                                                               (line   6)
 * object, shared:                        Fusion Options.      (line  59)
 * Octave:                                Bug Reports.         (line   6)
-* only save mask:                        Expert Options.      (line 311)
-* OpenCL:                                Common Options.      (line  70)
-* OpenCL, device:                        Common Options.      (line 174)
-* OpenCL, platform:                      Common Options.      (line 174)
+* only save mask:                        Expert Options.      (line 341)
+* OpenCL:                                Common Options.      (line  75)
+* OpenCL, device:                        Common Options.      (line 179)
+* OpenCL, platform:                      Common Options.      (line 179)
 * OpenEXR, data format:                  Extended Options.    (line  98)
 * OpenEXR, half precision float:         Extended Options.    (line 102)
 * option delimiters:                     Option Delimiters.   (line   6)
@@ -4852,18 +4887,18 @@ General Index
 * options, fusion:                       Fusion Options.      (line   6)
 * options, information:                  Information Options. (line   6)
 * order, of processing:                  Response Files.      (line   9)
-* output file compression:               Common Options.      (line  15)
-* output filename, default:              Common Options.      (line 156)
+* output file compression:               Common Options.      (line  20)
+* output filename, default:              Common Options.      (line 161)
 * output image, set size of:             Extended Options.    (line 113)
 * overpowering criteria:                 Single Criterion Fusing.
                                                               (line  37)
 * overview:                              Overview.            (line   6)
-* packbits compression:                  Common Options.      (line  59)
+* packbits compression:                  Common Options.      (line  64)
 * parallax error:                        Standard Workflow.   (line  58)
 * perceptual rendering intent:           Color Profiles.      (line  53)
 * photometric alignment:                 Standard Workflow.   (line  50)
 * pixels, hot:                           Expert Stacking.     (line  18)
-* pl-star gray projector:                Expert Options.      (line 253)
+* pl-star gray projector:                Expert Options.      (line 283)
 * polarization series:                   Polarization Series. (line   6)
 * probability function:                  Standard Deviation.  (line  37)
 * problem reports:                       Bug Reports.         (line   9)
@@ -4876,7 +4911,7 @@ General Index
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * projector, grayscale:                  Exposure Weighting.  (line  10)
-* pyramid levels:                        Common Options.      (line 110)
+* pyramid levels:                        Common Options.      (line 115)
 * raw conversion:                        Standard Workflow.   (line  34)
 * rendering intent, perceptual:          Color Profiles.      (line  53)
 * response file <1>:                     Response Files.      (line   6)
@@ -4891,11 +4926,11 @@ General Index
                                                               (line  20)
 * response file, syntactic comment:      Syntactic Comments.  (line   6)
 * RGB color cube:                        Color Profiles.      (line  13)
-* RGB'-L*a*b* conversion:                Expert Options.      (line 253)
-* RGB-L*a*b* conversion:                 Expert Options.      (line 231)
+* RGB'-L*a*b* conversion:                Expert Options.      (line 283)
+* RGB-L*a*b* conversion:                 Expert Options.      (line 261)
 * saturation enhancement:                Polarization Series. (line   6)
-* save mask:                             Expert Options.      (line 302)
-* save mask, only:                       Expert Options.      (line 311)
+* save mask:                             Expert Options.      (line 332)
+* save mask, only:                       Expert Options.      (line 341)
 * scaling of parameters:                 Scaling and Choice of Mode.
                                                               (line   6)
 * sensor, use of clean:                  Expert Stacking.     (line   9)
@@ -4933,10 +4968,10 @@ General Index
 * transformation, affine:                Standard Workflow.   (line  48)
 * transition, natural sharp-unsharp:     Expert Stacking.     (line  33)
 * understanding masks:                   Understanding Masks. (line   6)
-* value gray projector:                  Expert Options.      (line 264)
+* value gray projector:                  Expert Options.      (line 294)
 * variance:                              Standard Deviation.  (line  45)
 * version:                               Information Options. (line  48)
-* virtual reality:                       Common Options.      (line 252)
+* virtual reality:                       Common Options.      (line 257)
 * weight mask:                           Understanding Masks. (line   6)
 * weight, entropy:                       Fusion Options.      (line  20)
 * weight, exposure:                      Fusion Options.      (line  41)
@@ -4977,126 +5012,126 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Common Options.      (line 242)
+* wrap around:                           Common Options.      (line 247)
 
 
 
 Tag Table:
-Node: Top887
-Node: Overview4933
-Ref: Table:weighting-criteria6126
-Ref: Overview-Footnote-18698
-Ref: Overview-Footnote-28867
-Ref: Overview-Footnote-39048
-Ref: Overview-Footnote-49230
-Node: Workflow9372
-Node: Standard Workflow9800
-Ref: Figure:photographic-workflow10059
-Node: External Mask Manipulation12733
-Ref: Figure:external-mask-workflow14049
-Node: Invocation14534
-Node: Image Requirements15444
-Node: Response Files16481
-Node: Response File Format18376
-Ref: Table:response-file-format18880
-Ref: Example:response-file20759
-Node: Syntactic Comments21034
-Ref: Table:response-file-syntactic-comment21526
-Node: Globbing Algorithms21858
-Ref: Table:globbing-algorithms22556
-Ref: Example:globbing-algorithm23582
-Node: Default Layer Selection23796
-Node: Common Options24301
-Ref: Common Options-Footnote-135409
-Ref: Common Options-Footnote-235482
-Ref: Common Options-Footnote-335674
-Node: Extended Options35833
-Ref: Extended Options-Footnote-141003
-Ref: Extended Options-Footnote-241069
-Node: Fusion Options41142
-Ref: Table:exposure-weight-functions43837
-Ref: Fusion Options-Footnote-145690
-Node: Expert Options45809
-Ref: Figure:entropy-cutoff48837
-Ref: Example:imagemagick-convert-cutoff50930
-Ref: Figure:exposure-cutoff52967
-Ref: Table:mask-template-characters60136
-Node: Information Options62352
-Node: Option Delimiters65514
-Node: Color Profiles66914
-Node: Weighting Functions69350
-Node: Weighting Pixels70018
-Node: Weighted Average71607
-Node: Disabling Averaging72200
-Node: Single Criterion Fusing73188
-Ref: Table:default-weights73926
-Node: Exposure Weighting74722
-Node: Built-In Exposure Weighting Functions76045
-Ref: Figure:gaussian76604
-Ref: Table:weight-functions77356
-Ref: Figure:lorentzian78333
-Ref: Figure:halfsine78631
-Ref: Figure:fullsine78754
-Ref: Figure:power79207
-Ref: Figure:exposure-weights80273
-Node: User-Defined Exposure Weighting Functions80762
-Node: Prerequisites82221
-Node: Coding Guidelines83588
-Ref: Example:simple-dynamic-exposure-weight-function86690
-Ref: Example:templated-dynamic-exposure-weight-function87809
-Ref: Example:variable-dynamic-exposure-weight-function89410
-Ref: Coding Guidelines-Footnote-191023
-Node: Performance Considerations91217
-Node: Compiling Linking Loading91845
-Ref: Compiling Linking Loading-Footnote-194987
-Node: Saturation Weighting95054
-Node: Local Contrast Weighting96169
-Node: Standard Deviation97531
-Ref: Figure:local-analysis-window97980
-Ref: Standard Deviation-Footnote-1100048
-Node: Laplacian of Gaussian100199
-Ref: Figure:laplacian-of-gaussian101773
-Node: Blend SDev and LoG102867
-Node: Scaling and Choice of Mode104547
-Node: Local Entropy Weighting105393
-Ref: Figure:entropy106376
-Node: Understanding Masks107983
-Node: Applications111773
-Node: What Images112497
-Node: Repetition115684
-Node: Exposure Series116767
-Node: Exposure Series Tips119304
-Ref: Exposure Series Tips-Footnote-1120841
-Node: Exposure Series Misconceptions120906
-Ref: Exposure Series Misconceptions-Footnote-1122687
-Node: Flash Exposure Series122900
-Node: Polarization Series123142
-Node: Focus Stacks123582
-Node: Why Focus Stacks124464
-Node: Preparing Focus Stacks125799
-Node: Local Contrast Based Fusing126549
-Node: Basic Focus Stacking127884
-Node: Advanced Focus Stacking129257
-Node: Local Contrast Problem130021
-Ref: Figure:sharp-edge131205
-Ref: Figure:smooth-edge131280
-Node: Laplacian Edge Detection132027
-Node: Local Contrast Enhancement133161
-Node: Suppressing Noise or Recognizing Faint Edges134137
-Node: Focus Stacking Decision Tree136768
-Ref: Figure:focus-stacking-decision-tree137113
-Node: Expert Stacking137897
-Node: Helpful Programs139531
-Node: Bug Reports144170
-Ref: Bug Reports-Footnote-1149825
-Node: Authors149895
-Node: FDL151059
-Node: List of Tables172040
-Node: List of Figures172731
-Node: List of Examples173902
-Node: Program Index174534
-Node: Syntactic-Comment Index177688
-Node: Option Index178442
-Node: General Index183089
+Node: Top888
+Node: Overview4935
+Ref: Table:weighting-criteria6128
+Ref: Overview-Footnote-18700
+Ref: Overview-Footnote-28869
+Ref: Overview-Footnote-39050
+Ref: Overview-Footnote-49232
+Node: Workflow9374
+Node: Standard Workflow9802
+Ref: Figure:photographic-workflow10061
+Node: External Mask Manipulation12735
+Ref: Figure:external-mask-workflow14051
+Node: Invocation14536
+Node: Image Requirements15446
+Node: Response Files16483
+Node: Response File Format18378
+Ref: Table:response-file-format18882
+Ref: Example:response-file20761
+Node: Syntactic Comments21036
+Ref: Table:response-file-syntactic-comment21528
+Node: Globbing Algorithms21860
+Ref: Table:globbing-algorithms22558
+Ref: Example:globbing-algorithm23584
+Node: Default Layer Selection23798
+Node: Common Options24303
+Ref: Common Options-Footnote-135638
+Ref: Common Options-Footnote-235711
+Ref: Common Options-Footnote-335903
+Node: Extended Options36062
+Ref: Extended Options-Footnote-141232
+Ref: Extended Options-Footnote-241298
+Node: Fusion Options41371
+Ref: Table:exposure-weight-functions44066
+Ref: Fusion Options-Footnote-145919
+Node: Expert Options46038
+Ref: Figure:entropy-cutoff49212
+Ref: Example:imagemagick-convert-cutoff51687
+Ref: Figure:exposure-cutoff53591
+Ref: Table:mask-template-characters61640
+Node: Information Options63856
+Node: Option Delimiters67018
+Node: Color Profiles68418
+Node: Weighting Functions70854
+Node: Weighting Pixels71522
+Node: Weighted Average73111
+Node: Disabling Averaging73704
+Node: Single Criterion Fusing74692
+Ref: Table:default-weights75430
+Node: Exposure Weighting76226
+Node: Built-In Exposure Weighting Functions77549
+Ref: Figure:gaussian78108
+Ref: Table:weight-functions78860
+Ref: Figure:lorentzian79837
+Ref: Figure:halfsine80135
+Ref: Figure:fullsine80258
+Ref: Figure:power80711
+Ref: Figure:exposure-weights81777
+Node: User-Defined Exposure Weighting Functions82266
+Node: Prerequisites83725
+Node: Coding Guidelines85092
+Ref: Example:simple-dynamic-exposure-weight-function88176
+Ref: Example:templated-dynamic-exposure-weight-function89295
+Ref: Example:variable-dynamic-exposure-weight-function90896
+Ref: Coding Guidelines-Footnote-192509
+Node: Performance Considerations92685
+Node: Compiling Linking Loading93313
+Ref: Compiling Linking Loading-Footnote-196455
+Node: Saturation Weighting96522
+Node: Local Contrast Weighting97637
+Node: Standard Deviation98999
+Ref: Figure:local-analysis-window99448
+Ref: Standard Deviation-Footnote-1101516
+Node: Laplacian of Gaussian101667
+Ref: Figure:laplacian-of-gaussian103241
+Node: Blend SDev and LoG104335
+Node: Scaling and Choice of Mode106015
+Node: Local Entropy Weighting106861
+Ref: Figure:entropy107844
+Node: Understanding Masks109451
+Node: Applications113241
+Node: What Images113965
+Node: Repetition117152
+Node: Exposure Series118235
+Node: Exposure Series Tips120772
+Ref: Exposure Series Tips-Footnote-1122309
+Node: Exposure Series Misconceptions122374
+Ref: Exposure Series Misconceptions-Footnote-1124155
+Node: Flash Exposure Series124368
+Node: Polarization Series124610
+Node: Focus Stacks125050
+Node: Why Focus Stacks125932
+Node: Preparing Focus Stacks127267
+Node: Local Contrast Based Fusing128017
+Node: Basic Focus Stacking129352
+Node: Advanced Focus Stacking130725
+Node: Local Contrast Problem131489
+Ref: Figure:sharp-edge132673
+Ref: Figure:smooth-edge132748
+Node: Laplacian Edge Detection133495
+Node: Local Contrast Enhancement134629
+Node: Suppressing Noise or Recognizing Faint Edges135605
+Node: Focus Stacking Decision Tree138236
+Ref: Figure:focus-stacking-decision-tree138581
+Node: Expert Stacking139365
+Node: Helpful Programs140999
+Node: Bug Reports145638
+Ref: Bug Reports-Footnote-1151293
+Node: Authors151363
+Node: FDL152527
+Node: List of Tables173508
+Node: List of Figures174199
+Node: List of Examples175370
+Node: Program Index176002
+Node: Syntactic-Comment Index179156
+Node: Option Index179910
+Node: General Index184557
 
 End Tag Table
