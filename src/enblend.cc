@@ -1514,13 +1514,14 @@ process_options(int argc, char** argv)
                     MainAlgorithm = NFT;
                     optionSet.insert(NearestFeatureTransformOption);
                 } else {
-                    std::cerr << command << ": warning: option \"--primary-seam-generator\": " <<
-                        "unrecognized argument \"" << optarg << "\", defaulting to NFT" << std::endl;
-                    MainAlgorithm = NFT;
-                    optionSet.insert(NearestFeatureTransformOption);
+                    std::cerr << command <<
+                        "unrecognized argument \"" << optarg << "\" of option \"--primary-seam-generator\"" <<
+                        std::endl;
+                    failed = true;
                 }
             } else {
-                std::cerr << command << ": option \"--primary-seam-generator\" requires an argument" << std::endl;
+                std::cerr << command << ": option \"--primary-seam-generator\" requires an argument" <<
+                    std::endl;
                 failed = true;
             }
             break;
