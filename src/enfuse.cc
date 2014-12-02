@@ -2434,10 +2434,8 @@ int main(int argc, char** argv)
         std::cerr << command
                   << ": warning: no usable resolution found in first image \""
                   << inputTraceableFileNameList.begin()->filename() << "\";\n"
-                  << command
-                  << ": warning:   will use " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
-        ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION,
-                                         DEFAULT_TIFF_RESOLUTION);
+                  << command << ": note: Enfuse will assume " << DEFAULT_TIFF_RESOLUTION << " dpi\n";
+        ImageResolution = TiffResolution(DEFAULT_TIFF_RESOLUTION, DEFAULT_TIFF_RESOLUTION);
     } else {
         ImageResolution = resolution;
     }
