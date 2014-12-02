@@ -469,6 +469,13 @@ If the images' meta-data contains resolution information
 @section Common Options
 @cindex options, common
 
+@quotation
+In this chapter the options are grouped as in the command-line help
+(@samp{enblend --help}) and sorted alphabetically within their groups.
+For an alphabetic list of all options consult the @ref{Option Index}.
+@end quotation
+
+@noindent
 Common options control some overall features of Enfuse.
 
 Enfuse accepts arguments to any option in uppercase as well as in
