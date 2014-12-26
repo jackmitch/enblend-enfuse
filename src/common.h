@@ -135,10 +135,10 @@ typedef enum
 #define VISUALIZE_STATE_SPACE_UNCONVERGED VISUALIZE_RGB_COLOR_MAGENTA1
 
 
-// For CIECAM blending, Enblend and Enfuse transform the input images
-// from their respective RGB color spaces to XYZ space (and then on to
-// JCh).  The following two #defines control the color transformation
-// from and to XYZ space.
+// For CIELAB, CIELUV, and CIECAM blending, Enblend and Enfuse
+// transform the input images from their respective RGB color spaces
+// to XYZ space (and for CIECAM then on to JCh).  The following two
+// #defines control the color transformation from and to XYZ space.
 #define RENDERING_INTENT_FOR_BLENDING INTENT_PERCEPTUAL
 #define TRANSFORMATION_FLAGS_FOR_BLENDING cmsFLAGS_NOCACHE
 
@@ -480,6 +480,13 @@ numberOfString(const std::string& a_string,        // string we want to convert 
                NumericType replacement_value)      // replacement return value on failure
 {
     return numberOfString(&a_string[0], is_valid, invalid_message, replacement_value);
+}
+
+
+inline bool
+isFloatingPoint(const std::string& aPixelType)
+{
+    return  aPixelType == "FLOAT" || aPixelType == "DOUBLE";
 }
 
 

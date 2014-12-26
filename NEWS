@@ -7,6 +7,16 @@ Unreleased.  Current line of development.
 - All deprecated options and features of version 4.1 have been
   removed.
 
+- Both Enblend and Enfuse can now perform all their pyramidal blending
+  operations in CIELAB (aka L*a*b*, aka L-star) and CIELUV (aka
+  L*u*v*) color spaces, too.  See section "New Commandline Options",
+  option `--blend-colorspace'.
+
+  The previous defaults, i.e., CIECAM for input images with
+  ICC-profile and RGB for those without ICC-profile remain.  However,
+  the new default for floating-point image data is to use the
+  RGB-cube, no matter whether the images come with profiles or not.
+
 - The new Graph-Cut algorithm is the default primary seam-line
   generator.
 
@@ -37,6 +47,17 @@ Unreleased.  Current line of development.
 
 
 ** New Commandline Options
+
+- The introduction of additional blend color spaces requires a new
+  option to select them.  The new option `--blend-colorspace' takes
+  over the functionality of `--ciecam' and `--no-ciecam' (which both
+  will be withdrawn in a future version) and is flexible enough for
+  the new CIELAB and CIELUV blend color spaces.
+
+      --ciecam     =>  --blend-colorspace=CIECAM
+      --no-ciecam  =>  --blend-colorspace=RGBCUBE
+      new:             --blend-colorspace=CIELAB
+      new:             --blend-colorspace=CIELUV
 
 - Calling Enblend or Enfuse with `--show-software-components' will
   show the compiler name and version along will the versions of all

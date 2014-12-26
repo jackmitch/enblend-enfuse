@@ -61,7 +61,6 @@ extern "C" int optind;
 #endif
 
 #include <boost/algorithm/string.hpp>
-#include <boost/logic/tribool.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/version.hpp>    // BOOST_VERSION
 
@@ -110,7 +109,7 @@ int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
-boost::tribool UseCIECAM = boost::indeterminate;
+blend_colorspace_t BlendColorspace = UndeterminedColorspace;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
@@ -233,7 +232,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
-        "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
+        "+ BlendColorspace = " << BlendColorspace << ", option \"--blend-colorspace\"\n" <<
         "+ FallbackProfile = " << (FallbackProfile ? enblend::profileDescription(FallbackProfile) : "[none]") <<
         ", option \"--fallback-profile\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
@@ -512,7 +511,15 @@ printUsage(const bool error = true)
 #endif
         "\n" <<
         "Advanced options:\n" <<
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
+        "  --blend-colorspace=COLORSPACE\n" <<
+        "                         force COLORSPACE for blending operations; Enfuse uses\n" <<
+        "                         \"CIECAM\" for images with ICC-profile and \"IDENTITY\" for\n" <<
+        "                         those without and also for all floating-point images;\n" <<
+        "                         other available blend color spaces are \"CIELAB\" and\n" <<
+        "                         \"CIELUV\"\n" <<
+        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\";\n" <<
+        "                         note that this option will be withdrawn in favor of\n" <<
+        "                         \"--blend-colorspace\"\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
@@ -577,10 +584,10 @@ printUsage(const bool error = true)
         "  --image-difference=ALGORITHM[:LUMINANCE-WEIGHT[:CHROMINANCE-WEIGHT]]\n" <<
         "                         use ALGORITHM for calculation of the difference image,\n" <<
         "                         where ALGORITHM is \"max-hue-luminance\" or \"delta-e\";\n" <<
-        "                         LUMINANCE-WEIGHT and CHROMINANCE-WEIGHT define the weights\n" <<
-        "                         of lightness and color; default: " <<
+        "                         LUMINANCE-WEIGHT and CHROMINANCE-WEIGHT define the\n" <<
+        "                         weights of lightness and color; default: " <<
         stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << ":" << LuminanceDifferenceWeight <<
-        ": " << ChrominanceDifferenceWeight << "\n" <<
+        ":" << ChrominanceDifferenceWeight << "\n" <<
         "  --optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]\n" <<
         "                         set the optimizer's weigths for distance and mismatch;\n" <<
         "                         default: " << OptimizerWeights.first << ':' <<
@@ -681,10 +688,10 @@ enum AllPossibleOptions {
     VersionOption, PreAssembleOption /* -a */, NoPreAssembleOption, HelpOption, LevelsOption,
     OutputOption, VerboseOption, WrapAroundOption /* -w */,
     CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
-    BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
+    BlendColorspaceOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */,
     GPUOption, NoGPUOption, PreferredGPUOption,
-    SizeAndPositionOption /* -f */, CacheSizeOption,
+    SizeAndPositionOption /* -f */,
     VisualizeOption, CoarseMaskOption, FineMaskOption,
     OptimizeOption, NoOptimizeOption,
     SaveMasksOption, LoadMasksOption,
@@ -925,6 +932,7 @@ process_options(int argc, char** argv)
         WrapAroundId,
         OptimizerWeightsId,
         LevelsId,
+        BlendColorspaceId,
         CiecamId,
         NoCiecamId,
         FallbackProfileId,
@@ -970,6 +978,8 @@ process_options(int argc, char** argv)
         {"wrap", optional_argument, 0, WrapAroundId},
         {"optimizer-weights", required_argument, 0, OptimizerWeightsId},
         {"levels", required_argument, 0, LevelsId},
+        {"blend-colorspace", required_argument, 0, BlendColorspaceId},
+        {"blend-color-space", required_argument, 0, BlendColorspaceId}, // dash form: not documented, not deprecated
         {"ciecam", no_argument, 0, CiecamId},
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
@@ -1063,13 +1073,13 @@ process_options(int argc, char** argv)
             optionSet.insert(NoOptimizeOption);
             break;
 
-        case 'h': // FALLTHROUGH
+        case 'h': BOOST_FALLTHROUGH;
         case HelpId:
             print_only_task = USAGE_ONLY;
             optionSet.insert(HelpOption);
             break;
 
-        case 'V': // FALLTHROUGH
+        case 'V': BOOST_FALLTHROUGH;
         case VersionId:
             print_only_task = VERSION_ONLY;
             optionSet.insert(VersionOption);
@@ -1100,7 +1110,7 @@ process_options(int argc, char** argv)
             optionSet.insert(ShowGPUInfoOption);
             break;
 
-        case 'w': // FALLTHROUGH
+        case 'w': BOOST_FALLTHROUGH;
         case WrapAroundId:
             if (optarg != nullptr && *optarg != 0) {
                 WrapAround = enblend::wraparoundOfString(optarg);
@@ -1185,7 +1195,7 @@ process_options(int argc, char** argv)
             optionSet.insert(CompressionOption);
             break;
 
-        case 'd': // FALLTHROUGH
+        case 'd': BOOST_FALLTHROUGH;
         case DepthId:
             if (optarg != nullptr && *optarg != 0) {
                 OutputPixelType = enblend::outputPixelTypeOfString(optarg);
@@ -1196,7 +1206,7 @@ process_options(int argc, char** argv)
             optionSet.insert(DepthOption);
             break;
 
-        case 'o': // FALLTHROUGH
+        case 'o': BOOST_FALLTHROUGH;
         case OutputId:
             if (contains(optionSet, OutputOption)) {
                 std::cerr << command
@@ -1487,7 +1497,7 @@ process_options(int argc, char** argv)
             break;
         }
 
-        case 'v': // FALLTHROUGH
+        case 'v': BOOST_FALLTHROUGH;
         case VerboseId:
             if (optarg != nullptr && *optarg != 0) {
                 Verbose = enblend::numberOfString(optarg,
@@ -1521,7 +1531,7 @@ process_options(int argc, char** argv)
             optionSet.insert(DijkstraRadiusOption);
             break;
 
-        case 'a': // FALLTHROUGH
+        case 'a': BOOST_FALLTHROUGH;
         case PreAssembleId:
             OneAtATime = false;
             optionSet.insert(PreAssembleOption);
@@ -1532,14 +1542,45 @@ process_options(int argc, char** argv)
             optionSet.insert(NoPreAssembleOption);
             break;
 
-        case 'c': // FALLTHROUGH
+        case BlendColorspaceId:
+            if (optarg != nullptr && *optarg != 0) {
+                std::string name(optarg);
+                enblend::to_upper(name);
+                if (name == "IDENTITY" || name == "ID" || name == "UNIT") {
+                    BlendColorspace = IdentitySpace;
+                } else if (name == "LAB" || name == "CIELAB" || name == "LSTAR" || name == "L-STAR") {
+                    BlendColorspace = CIELAB;
+                } else if (name == "LUV" || name == "CIELUV") {
+                    BlendColorspace = CIELUV;
+                } else if (name == "CIECAM" || name == "CIECAM02" || name == "JCH") {
+                    BlendColorspace = CIECAM;
+                } else {
+                    std::cerr << command <<
+                        ": unrecognized argument \"" << optarg << "\" of option \"--blend-colorspace\"" <<
+                        std::endl;
+                    failed = true;
+                }
+            } else {
+                std::cerr << command << ": option \"--blend-colorspace\" requires an argument" << std::endl;
+                failed = true;
+            }
+            optionSet.insert(BlendColorspaceOption);
+            break;
+
+        case 'c': BOOST_FALLTHROUGH;
         case CiecamId:
-            UseCIECAM = true;
+            std::cerr <<
+                command << ": info: option \"--ciecam\" will be withdrawn in the next release\n" <<
+                command << ": note: prefer option \"--blend-colorspace\" to \"--ciecam\"" << std::endl;
+            BlendColorspace = CIECAM;
             optionSet.insert(CIECAM02Option);
             break;
 
         case NoCiecamId:
-            UseCIECAM = false;
+            std::cerr <<
+                command << ": info: option \"--no-ciecam\" will be withdrawn in the next release\n" <<
+                command << ": note: prefer option \"--blend-colorspace\" to \"--no-ciecam\"" << std::endl;
+            BlendColorspace = IdentitySpace;
             optionSet.insert(NoCIECAM02Option);
             break;
 
@@ -1611,7 +1652,7 @@ process_options(int argc, char** argv)
             optionSet.insert(AssociatedAlphaOption);
             break;
 
-        case 'l': // FALLTHROUGH
+        case 'l': BOOST_FALLTHROUGH;
         case LevelsId:
             if (optarg != nullptr && *optarg != 0) {
                 std::string levels(optarg);
@@ -2292,8 +2333,17 @@ int main(int argc, char** argv)
         // Set the output image ICC profile
         outputImageInfo.setICCProfile(iccProfile);
 
-        if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
-            UseCIECAM = true;
+        if (BlendColorspace == UndeterminedColorspace &&
+            !(iccProfile.empty() || enblend::isFloatingPoint(pixelType))) {
+            BlendColorspace = CIECAM;
+        }
+
+        if (BlendColorspace == CIECAM || BlendColorspace == CIELAB || BlendColorspace == CIELUV) {
+            if (enblend::isFloatingPoint(pixelType)) {
+                std::cerr << command <<
+                    ": warning: blend color space for floating-point images is not \"identity\"" << std::endl;
+            }
+
             if (InputProfile == nullptr) {
                 std::cerr << command << ": warning: input images do not have ICC profiles;\n";
                 if (FallbackProfile == nullptr) {
@@ -2406,7 +2456,7 @@ int main(int argc, char** argv)
         } else {
             if (FallbackProfile != nullptr) {
                 std::cerr << command <<
-                    ": warning: blending in RGB cube; option \"--fallback-profile\" has no effect" <<
+                    ": warning: blending in identity space; option \"--fallback-profile\" has no effect" <<
                     std::endl;
             }
         }

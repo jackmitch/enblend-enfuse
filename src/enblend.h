@@ -392,10 +392,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
         std::vector<ImagePyramidType*>* whiteLP =
             laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
                              ImagePyramidIntegerBits, ImagePyramidFractionBits,
-                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>("whiteGP",
-                                                                         numLevels, wraparoundForBlend,
-                                                                         vigra_ext::apply(roiBB, srcImageRange(*(whitePair.first))),
-                                                                         vigra_ext::apply(roiBB, maskImage(*(whitePair.second))));
+                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>
+            ("whiteGP",
+             numLevels, wraparoundForBlend,
+             vigra_ext::apply(roiBB, srcImageRange(*(whitePair.first))),
+             vigra_ext::apply(roiBB, maskImage(*(whitePair.second))));
 
         // mem usage after = 2*anInputUnion*ImageValueType + 2*anInputUnion*AlphaValueType
         //                   + (4/3)*roiBB*MaskPyramidType + (4/3)*roiBB*ImagePyramidType
@@ -411,10 +412,11 @@ void enblendMain(const FileNameList& anInputFileNameList,
         std::vector<ImagePyramidType*>* blackLP =
             laplacianPyramid<ImageType, AlphaType, ImagePyramidType,
                              ImagePyramidIntegerBits, ImagePyramidFractionBits,
-                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>("blackGP",
-                                                                         numLevels, wraparoundForBlend,
-                                                                         vigra_ext::apply(roiBB, srcImageRange(*(blackPair.first))),
-                                                                         vigra_ext::apply(roiBB, maskImage(*(blackPair.second))));
+                             SKIPSMImagePixelType, SKIPSMAlphaPixelType>
+            ("blackGP",
+             numLevels, wraparoundForBlend,
+             vigra_ext::apply(roiBB, srcImageRange(*(blackPair.first))),
+             vigra_ext::apply(roiBB, maskImage(*(blackPair.second))));
 
 #ifdef DEBUG_EXPORT_PYRAMID
         exportPyramid<SKIPSMImagePixelType, ImagePyramidType>(blackLP, "enblend_black_lp");
@@ -440,7 +442,8 @@ void enblendMain(const FileNameList& anInputFileNameList,
         //      + (4/3)*roiBB*MaskPyramidType + 2*(4/3)*roiBB*ImagePyramidType
 
         // Blend pyramids
-        ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType, MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
+        ConvertScalarToPyramidFunctor<MaskPixelType, MaskPyramidPixelType,
+                                      MaskPyramidIntegerBits, MaskPyramidFractionBits> whiteMask;
         blend(maskGP, whiteLP, blackLP, whiteMask(vigra::NumericTraits<MaskPixelType>::max()));
 
         // delete mask pyramid
@@ -474,9 +477,10 @@ void enblendMain(const FileNameList& anInputFileNameList,
 
         // copy collapsed black pyramid into black image ROI, using black alpha mask.
         copyFromPyramidImageIf<ImagePyramidType, MaskType, ImageType,
-                               ImagePyramidIntegerBits, ImagePyramidFractionBits>(srcImageRange(*((*blackLP)[0])),
-                                                                                  vigra_ext::apply(roiBB, maskImage(*(blackPair.second))),
-                                                                                  vigra_ext::apply(roiBB, destImage(*(blackPair.first))));
+                               ImagePyramidIntegerBits, ImagePyramidFractionBits>
+            (srcImageRange(*((*blackLP)[0])),
+             vigra_ext::apply(roiBB, maskImage(*(blackPair.second))),
+             vigra_ext::apply(roiBB, destImage(*(blackPair.first))));
 
         // delete black pyramid
         for (unsigned int i = 0; i < blackLP->size(); i++) {

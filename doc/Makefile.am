@@ -14,6 +14,7 @@ enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    photographic-workflow.fig \
                    external-mask-workflow.fig \
                    seam-line-visualization.tif \
+                   log-transform.gp.in \
                    default.css
 
 enfuse_TEXINFOS = auxmac.texi auxmac.tex \
@@ -34,6 +35,7 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   laplacian-of-gaussian.gp.in \
                   sharp-edge.gp.in sharp-edge.data \
                   smooth-edge.gp.in smooth-edge.data \
+                  log-transform.gp.in \
                   local-analysis-window.fig \
                   photographic-workflow.fig \
                   focus-stack-decision-tree.fig \
@@ -65,6 +67,7 @@ CLEANFILES = entropy.{txt,eps,svg,pdf} \
              entropy-cutoff.{txt,eps,svg,pdf} \
              exposure-cutoff.{txt,eps,svg,pdf} \
              external-mask-workflow.{txt,eps,svg,pdf} \
+             log-transform.{txt,eps,svg,pdf} \
              gaussian.{txt,eps,svg,pdf} lorentzian.{txt,eps,svg,pdf} \
              halfsine.{txt,eps,svg,pdf} fullsine.{txt,eps,svg,pdf} power.{txt,eps,svg,pdf} \
              exposure-weights.{txt,eps,svg,pdf} \
@@ -266,23 +269,27 @@ varsenblend.texi: $(srcdir)/../src/enblend.cc \
 enblend.info: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
               photographic-workflow.txt \
-              external-mask-workflow.txt
+              external-mask-workflow.txt \
+              log-transform.txt
 
 enblend.dvi: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
              photographic-workflow.eps \
              external-mask-workflow.eps \
+             log-transform.eps \
              seam-line-visualization.eps
 
 enblend.html: $(enblend_TEXINFOS) \
               $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
               photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
               external-mask-workflow.svg $(RASTER_DIR)/external-mask-workflow.png \
+              log-transform.svg $(RASTER_DIR)/log-transform.png \
               seam-line-visualization.png
 
 enblend.pdf: $(enblend_TEXINFOS) \
              photographic-workflow.pdf \
              external-mask-workflow.pdf \
+             log-transform.png \
              seam-line-visualization.png
 
 enblend.xhtml: enblend.html
@@ -291,6 +298,7 @@ enblend.xml: $(enblend_TEXINFOS) \
              $(srcdir)/versenblend.texi $(top_builddir)/config-h.texi \
              photographic-workflow.svg \
              external-mask-workflow.svg \
+             log-transform.svg \
              seam-line-visualization.png
 
 
@@ -307,6 +315,7 @@ enfuse.info: $(enfuse_TEXINFOS) \
              photographic-workflow.txt \
              external-mask-workflow.txt \
              focus-stack-decision-tree.txt \
+             log-transform.txt \
              entropy.txt \
              entropy-cutoff.txt \
              exposure-cutoff.txt \
@@ -322,6 +331,7 @@ enfuse.dvi: $(enfuse_TEXINFOS) \
             photographic-workflow.eps \
             external-mask-workflow.eps \
             focus-stack-decision-tree.eps \
+            log-transform.eps \
             entropy.eps \
             entropy-cutoff.eps \
             exposure-cutoff.eps \
@@ -337,6 +347,7 @@ enfuse.html: $(enfuse_TEXINFOS) \
              photographic-workflow.svg $(RASTER_DIR)/photographic-workflow.png \
              external-mask-workflow.svg $(RASTER_DIR)/external-mask-workflow.png \
              focus-stack-decision-tree.svg $(RASTER_DIR)/ \
+             log-transform.svg $(RASTER_DIR)/log-transform.png \
              entropy.svg $(RASTER_DIR)/entropy.png \
              entropy-cutoff.svg $(RASTER_DIR)/entropy-cutoff.png \
              exposure-cutoff.svg $(RASTER_DIR)/exposure-cutoff.png \
@@ -353,6 +364,7 @@ enfuse.pdf: $(enfuse_TEXINFOS) \
             photographic-workflow.pdf \
             external-mask-workflow.pdf \
             focus-stack-decision-tree.pdf \
+            log-transform.png \
             entropy.pdf \
             entropy-cutoff.pdf \
             exposure-cutoff.pdf \
@@ -370,6 +382,7 @@ enfuse.xml: $(enfuse_TEXINFOS) \
             photographic-workflow.svg \
             external-mask-workflow.svg \
             focus-stack-decision-tree.svg \
+            log-transform.svg \
             entropy.svg \
             entropy-cutoff.svg \
             exposure-cutoff.svg \

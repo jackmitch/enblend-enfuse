@@ -1,83 +1,310 @@
-Enblend and Enfuse expect that either
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+@cindex color profile
+This chapter explains the connection of pixel data types,
+@uref{http://@/en.wikipedia.org/@/wiki/@/ICC_@/profile,@acronym{ICC}}-color
+profiles, blend color spaces in Enblend or Enfuse.
 
+@cindex blending pixels
+@cindex pixels, blending
+@cindex fusing pixels
+@cindex pixels, fusing
+Here, we collectively speak of @dfn{blending} and do not distinguish
+fusing, for the basic operations are the same.  Furthermore, we assume
+the multiresolution spline algorithm has calculated a set of
+weights@tie{}@math{w_i} for @math{i = 1, 2, \dots} and @math{\sum w_i
+= 1} for each pixel that must be blended from the participating input
+pixels@tie{}@math{P_i, i = 1, 2, \dots}.
+
+@cindex luminance @math{L}
+@cindex weight @math{w}
+In the simplest, non-trivial case we have to blend a pair of
+black-and-white input pixels.  Given two luminances@tie{}@math{L_1,
+L_2} and weighting factor@tie{}@math{0 \le w \le 1}, what
+luminance@tie{}@math{L} is their ``weighted average''?  This is the
+heart of Enblend's and Enfuse's pyramidal blending operations.  We are
+in particular interested in a weighted average that appears
+@emph{visually} correct, this is, our eyes and brains consider
+@math{L} convincing or at the very least credible.
+
+@quotation
+Note that Enblend and Enfuse face completely different obstacles in
+their respective domains of use.
+
+@table @asis
+@item Enblend
+The overlapping areas usually are @emph{well matched} both
+geometrically and photometrically.  The differences in the pixels that
+must be blended are small.
+
+@item Enfuse (using a Soft Mask@footnote{Fusing with a Hard Mask is different, because exactly one weight factor is unity and all the others are zero.  There is nothing to blend -- just to copy.})
+The input images greatly @emph{differ} in exposure, saturation, or
+contrast.  This is exactly why we want to fuse them.  Thus, the
+luminance, saturation and hue differences to be handled by Enfuse are
+generally quite high.
+@end table
+@end quotation
+
+
+@section Color Profiles
+
+For a linear representation of luminances, we just have
+@display
+@math{L = t L_1 + (1 - t) L_2} with @math{0 \le t \le 1}
+@end display
+@cindex gamma exponent
+@noindent
+However, often images are gamma@footnote{Typical gamma values are 2.2
+for sRGB and AdobeRGB, 1.8 for AppleRGB and ProPhotoRGB, 1.0 for
+Linear Rec709 RGB and any others with ``linear'' in their names.  For
+an extensive overview check out @sc{Bruce Lindbloom's}
+@uref{http://@:www.brucelindbloom.com/@:index.html?@:WorkingSpaceInfo.html},
+Information on Working Color Spaces.} encoded with
+exponent@tie{}@math{\gamma} and the blended luminance becomes
+@display
+@math{L' = (t L_1^{1/\gamma} + (1 - t) L_2^{1/\gamma})^\gamma},
+@end display
+@noindent which couples @math{t} and @math{L'} in a non-linear
+way.@footnote{See also @sc{Eric Brasseur's} explanation of the
+@uref{http://@/www.4p8.com/@/eric.brasseur/@/gamma.html,gamma error in picture scaling}.}
+
+@acronym{ICC}-color profiles completely absorb these gamma encodings
+and @acronym{ICC}@tie{}profile aware software like Enblend and Enfuse
+decode and encode images automatically respecting the gamma curves.
+
+By default, Enblend and Enfuse expect that either
 @enumerate
 @item
 no input image has a color profile or
 @item
-@cindex color profile
-@cindex @acronym{ICC} profile
-@cindex profile, @acronym{ICC}
-all come with the @emph{same}
-@uref{http://@/en.wikipedia.org/@/wiki/@/ICC_profile, @acronym{ICC}}
-profile.
+all images come with the @emph{same} @acronym{ICC} profile.
 @end enumerate
 
-@cindex color appearance model
-@cindex @acronym{CIECAM02}
+@cindex black-and-white image
+@cindex image, black-and-white
+Even black-and-white images should therefore have
+@acronym{ICC}@tie{}profiles attached!
+
 @cindex @acronym{RGB} color cube
 @cindex color cube, @acronym{RGB}
-@noindent
-In case@tie{}1 the applications blend or fuse in the
-@acronym{RGB}-cube, whereas in case@tie{}2 the images first are
-transformed to @uref{http://@/en.wikipedia.org/@/wiki/@/CIECAM02,
-@acronym{CIECAM02}} color space -- respecting the input color profile
--- then they are blended or fused, and finally the data transformed
-back to @acronym{RGB} color space.  Moreover, in case@tie{}2, Enblend
-and Enfuse assign the input color profile to the output image.
+@cindex @acronym{sRGB} color cube
+@cindex color cube, @acronym{sRGB}
+@noindent In case@tie{}1.@: the applications blend inside the
+@acronym{sRGB}-cube.  To override the default @acronym{sRGB}-profile
+select the desired profile with
+option@tie{}@option{--fallback-profile} (@pxref{Advanced Options}).
+
+@cindex color appearance model
+@cindex @acronym{CIECAM02} color appearance model
+In case@tie{}2.@: the images first are transformed to
+@uref{http://@/en.wikipedia.org/@/wiki/@/CIECAM02, @acronym{CIECAM02}}
+color space -- respecting the input color profile -- then they are
+blended or fused, and finally the data get transformed back to
+@acronym{RGB} color space defined by the profile of the input images.
+Consequently, the input profile is assigned to the output image.
+
+Enforce a different blending color space with
+option@tie{}@option{--blend-colorspace}.  @xref{Advanced Options}, and
+the section after next.
 
 Mixing different @acronym{ICC} profiles or alternating between images
 with profiles and without them generates warnings as it generally
 leads to unpredictable results.
 
-@cindex @acronym{sRGB} color space
-@cindex color space, @acronym{sRGB}
-The options@tie{}@option{--ciecam} (@pxref{Advanced Options}) and its
-opposite @option{--no-ciecam} (@pxref{Advanced Options}) overrule the
-default profile selection procedure described above.  Use
-option@tie{}@option{--ciecam} on a set of input images @emph{without}
-color profiles to assign a profile to them and perform the blending or
-fusing process in @acronym{CIECAM02} color space.
+Floating-Point images are an exception to the above rule.  They are
+@emph{always} blended in the @acronym{RGB} cube by default.  The next
+section describes the treatment in detail.
 
-The default profile is @uref{http://@/en.wikipedia.org/@/wiki/@/SRGB,
-@acronym{sRGB}}.  Override this setting with
-option@tie{}@option{--fallback-profile} (@pxref{Advanced Options}).
 
-On the other hand, suppress the utilization of @acronym{CIECAM02}
-blending or fusing of a set of input images @emph{with} color profiles
-with option@tie{}@option{--no-ciecam}.  The only reason for the latter
-is to shorten the blending- or fusing-time, because transforming to
-and back from the @acronym{CIECAM02} color space are computationally
-expensive operations.
+@section Floating-Point Images
 
-Option@tie{}@option{--ciecam} as well as @option{--fallback-profile}
-have no effect on images with attached color profiles, just as
-option@tie{}@option{--no-ciecam} has no effect on images without
-profiles.
+@cindex floating-point image
+@cindex image, floating-point
+@cindex @acronym{EXR} image
+@cindex image, @acronym{EXR}
+@cindex floating-point @acronym{TIFF} image
+@cindex image, floating-point @acronym{TIFF}
+@cindex floating-point @acronym{VIFF} image
+@cindex image, floating-point @acronym{VIFF}
+@cindex log-transform
+@cindex transform, floating-point images
+Floating-point images (@acronym{EXR}, floating-point @acronym{TIFF} or
+@acronym{VIFF}) get a special treatment.  Their pixel
+values@tie{}@math{x} are first converted by a @dfn{Log-transform},
+@tex
+$$
+    {\cal L}(x) :=
+    \left\{\eqalign{
+        1 + \log(1 + x) & \quad \hbox{for} \quad x \ge 0 \cr
+        1 / (1 - x)     & \quad \hbox{otherwise} \cr
+    }\right.
+$$
+@end tex
+which is undone by the inverse transform after blending.
 
-The impact of blending in @acronym{CIECAM02} color space as opposed to
-the @acronym{RGB} cube vary with the contents of the input images.
-Generally colors lying close together in @acronym{RGB} space
-experience less change when switching the blending spaces.  However,
-colors close the border of any color space can see marked changes.
+@float Figure,Figure:logtransform
+@vimage{log-transform}
+@caption{Forward Log-transform@tie{}@math{x' = {\cal L}(x)} shown for
+the range of -20 to 100.  The domain of @math{\cal L} is of course the
+whole real axis.}
+@shortcaption{Log-transform}
+@end float
 
-For color geeks: The transformations to @acronym{CIECAM02} color space
-and back use
+This transform achieves two purposes:
 
+@enumerate
+@item
+During blending, even completely non-negative images can result in
+negative pixels.  A Log-transform followed by the inverse
+guarantees all-positive output.
+
+@item
+For @acronym{HDR}@tie{}data, the Log-transform puts the samples closer
+to a perceptual space making the blending a little more pleasing.
+@end enumerate
+
+In the current version of Enblend and Enfuse it is @emph{strongly
+recommended} to use blending inside the @acronym{RGB}-cube whenever
+the input data is in floating-point format.  This is the default, too.
+
+
+@section Blending Color Spaces
+
+@cindex blending color space
+@cindex color space, for blending and fusing
+Blending the pixels of color images heightens the problems.  Although
+we can write down the naive blending equation again for
+@acronym{RGB}-coded pixels@tie{}@math{P_1 := (r_1, g_1, b_1)},
+@math{P_2 := (r_2, g_2, b_2)} and trivially arrive at
+@display
+@math{P := (r, g, b) = t (r_1, g_1, b_1) + (1 - t) (r_2, g_2, b_2)},
+@end display
+@noindent with @math{0 \le t \le 1}, but this means
 @itemize
 @item
+we implicitly treat the color components @math{r_i, g_i, b_i} as
+@emph{separate} luminances, which they are not and moreover
+@item
+we neglect the visual aspects, namely luminance, saturation, and hue
+of the blended color pixel@tie{}@math{P}.
+@end itemize
+
+@noindent Surprisingly, sometimes blending this way -- called
+``inside the @acronym{RGB}-cube'' -- even works!  More often,
+perceptually uniform color spaces, which represent luminance,
+saturation, and hue are preferable for blending.  Enblend and Enfuse
+offer to work inside the @acronym{RGB}-cube or in several perceptually
+uniform color spaces.  Select a particular blending color space with
+option@tie{}@option{--blend-colorspace} (@pxref{Advanced Options}).
+
+@table @asis
+@item @acronym{RGB}-Color Cube
+@cindex @acronym{RGB} color cube
+@cindex color cube, @acronym{RGB}
+Calculate the blended pixel@tie{}@math{P} as given in the above
+equation.
+
+This is the fastest color space to do computations within, i.e.@: it
+consumes by far the least computing power.
+
+@item @uref{https://@/en.wikipedia.org/@/wiki/@/Lab_@/color_@/space,@acronym{L*a*b*}}
+@cindex @acronym{L*a*b*} colorspace
+Represent each pixel as lightness@tie{}@math{L^{*}}, red-green
+difference@tie{}@math{a^{*}}, and yellow-blue
+difference@tie{}@math{b^{*}}.  The @acronym{L*a*b*} color space
+encompasses all perceivable colors.  It is completely independent of
+any device characteristics, approximates human vision, and is
+perceptually uniform.
+
+@cindex @acronym{D50} white-point
+@cindex white-point, @acronym{D50}
+The applications use perceptual rendering intent and either the input
+profile's white-point or, if the @acronym{ICC}-profile lacks the
+@code{cmsSigMediaWhitePointTag}, fall back to the @acronym{D50}
+white-point (see, e.g.@:
+@uref{https://@/en.wikipedia.org/@/wiki/@/Standard_@/illuminant,
+Standard illuminant}).
+
+The conversions from and to @acronym{L*a*b*} are moderately fast to
+compute; @acronym{L*a*b*} mode is two to three times slower than
+working within the @acronym{RGB} color cube.
+
+@item @uref{https://@/en.wikipedia.org/@/wiki/@/CIELUV_@/color_@/space,@acronym{CIEL*u*v*}}
+@cindex @acronym{CIEL*u*v*} colorspace
+Represent each pixel as lightness@tie{}@math{L^{*}} and two color
+differences@tie{}@math{u^{*}}, and @math{v^{*}}.  Formulas of each are
+too complicated to show them here.
+
+The @acronym{L*u*v*} tries to be percepually uniforn in lightness as
+well as in color.
+
+The applications use the same rendering intent and white-point as with
+@acronym{L*a*b*}.
+
+The conversions from and to @acronym{L*u*v*} are almost as fast to
+compute as @acronym{L*a*b*}.
+
+@item @uref{https://@/en.wikipedia.org/@/wiki/@/CIECAM02,@acronym{CIECAM02}}
+@cindex @acronym{CIECAM02} colorspace
+Represent each pixel as lightness@tie{}@math{J}, chroma@tie{}@math{C}
+(``colorfulness''), and hue angle@tie{}@math{h}@footnote{Internally,
+the polar coordinates @math{(C, h)} are translated to Cartesian
+coordinates for the pyramids.}.
+
+The transformations to @acronym{CIECAM02} color space and back use
 @cindex rendering intent, perceptual
 @cindex perceptual rendering intent
 perceptual rendering intent,
-
-@item
 @cindex @acronym{D50} white point
 @cindex white point, @acronym{D50}
-the @acronym{D50} white point,
-
-@item
-500@tie{}lumen surrounding light (``average'' in @acronym{CIECAM02}
+the @acronym{D50} white point (see, e.g.@:
+@uref{https://@/en.wikipedia.org/@/wiki/@/Standard_@/illuminant,
+Standard illuminant}),
+500@tie{}@dmn{lumen} surrounding light (``average'' in @acronym{CIECAM02}
 parlance), and
+assume complete adaption.
+
+Both @acronym{CIELUV} and @acronym{CIELAB} only model the color
+information generated for small and isolated color samples.  They
+cannot model the contextual effects of color perception.  However,
+@acronym{CIECAM02} can represent luminance adaptation, chromatic
+contrast and chromatic assimilation that arise in real world viewing
+conditions with heterogeneous, strongly contrasted, or three
+dimensional color sources.
+
+Computationally, @acronym{CIECAM02} is the most expensive blend color
+space.  If an appreciable number of pixels need additional refinement
+steps the speed of the transformation further drops.  Expect
+@acronym{CIECAM02} mode to be 8--800 times slower than blending within
+the @acronym{RGB} color cube.
+@end table
+
+
+@section Practical Considerations
+
+@itemize
+@item
+For small projects stick with the defaults.
 
 @item
-assume complete adaption.
+For large projects switch on blending in the @acronym{RGB} color cube
+to speed up the assembly of the images.  When satisfied with all other
+parameters use one of the computationally more expensive, but
+perceptually uniform color spaces.
+
+@item
+Banding is best fought by input images with a high bit depth
+(@math{\ge 16} bits per channel).  A cheap and mostly vain trick is to
+force a large output bit depth with option@tie{}@option{--depth}.  No
+blend color space can avoid banding if parts of the input images are
+almost ``monochrome''.
+
+@item
+[Enblend only] No color space can fix a seam-line gone haywire;
+reorder the input images and use @option{--visualize} to inspect the
+seam-lines.
+
+@item
+[Enfuse only] No color space can fix blown highlights when fusing by
+exposure-weight; use @option{--exposure-cutoff} for this purpose.
 @end itemize

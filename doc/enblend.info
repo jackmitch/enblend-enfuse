@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-896455fc3adb, 26 December
+   This manual is for Enblend (version 4.2-12b596d6fb50, 26 December
 2014), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-896455fc3adb, 26 December
+This manual is for Enblend (version 4.2-12b596d6fb50, 26 December
 2014), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -756,30 +756,48 @@ File: enblend.info,  Node: Advanced Options,  Next: Mask Generation Options,  Pr
 Advanced options control e.g. the color model and the cropping of the
 output image.
 
+`--blend-colorspace=COLORSPACE'
+     Force blending in selected COLORSPACE.  For well matched images
+     this options should not change the output image much.  However, if
+     Enblend must blend vastly different colors (as e.g. anti-colors)
+     the result image heavily depends on the COLORSPACE.
+
+     Usually, Enblend chooses defaults depending on the input images:
+        *         For input images _with_ ICC profiles the default is
+          to use CIECAM colorspace.
+
+        *         Images _without_ color profiles and floating-point
+          images are blended in the RGB-color cube by default.
+
+     On the order of fast to slow computation, Enblend supports the
+     following blend colorspaces.
+
+    `IDENTITY', `ID', `UNIT'
+          Naively compute blended colors in the luminance interval
+          (grayscale images) or RGB-cube (RGB images) spanned by the
+          input ICC profile or sRGB if no profiles are present.
+          Consider option `--fallback-profile' to force a different
+          profile than sRGB on all input images.
+
+    `LAB', `CIELAB', `LSTAR', `L-STAR'
+          Blend pixels in the CIEL*a*b* colorspace.
+
+    `LUV', `CIELUV'
+          Blend pixels in the CIEL*u*v* colorspace.
+
+    `CIECAM', `CIECAM02', `JCH'
+          Blend pixels in the CIECAM02 colorspace.
+
+     Please keep in mind that by using different blend colorspaces,
+     blending may not only change the colors in the output image, but
+     Enblend may choose different seam line routes as some seam-line
+     optimizers are guided by image differences, which may be different
+     when viewed in different colorspaces.
+
 `-c'
 `--ciecam'
-     Force the use of the CIECAM02 color appearance model for blending
-     colors instead of blending inside the RGB color cube.
-
-     All input files should have identical ICC profiles when this
-     option is specified.  If no ICC profile is present, Enblend
-     assumes that all images use the sRGB color space.  *Note Color
-     Profiles::.
-
-     Please keep in mind that using CIECAM02 blending may not only
-     change the colors in the output image, but Enblend may choose
-     different seam line routes as some seam-line optimizers are guided
-     by image differences.
-
-     The inverse of this option is `--no-ciecam', which disables the
-     use of the CIECAM02 color appearance model for blending colors.
-
-     The defaults are chosen differently depending on the input images:
-        * For input images _with_ ICC profiles the default is to use
-          CIECAM02 blending.
-
-        * Images _without_ color profiles are blended in the RGB color
-          cube by default.
+     Deprecated.  Use `--blend-colorspace=CIECAM' instead.  To mimic
+     the negated option `--no-ciecam' use `--blend-colorspace=IDENTITY'.
 
 `-d'
 `--depth=DEPTH'
@@ -1227,7 +1245,7 @@ File: enblend.info,  Node: Expert Options,  Next: Expert Mask Generation Options
 
 `--fallback-profile=PROFILE-FILENAME'
      Use the ICC profile in PROFILE-FILENAME instead of the default
-     sRGB.  See option `--ciecam' and *note Color Profiles::.
+     sRGB.  See option `--blend-colorspace' and *note Color Profiles::.
 
      This option only is effective if the input images come without
      color profiles and blending is performed in CIECAM02 color
@@ -1480,7 +1498,7 @@ File: enblend.info,  Node: Expert Mask Generation Options,  Next: Information Op
 
      The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT define
      how to weight these two criteria.  Enblend up to version 3.2 used
-     1:1.  This version of Enblend (4.2-896455fc3adb) uses
+     1:1.  This version of Enblend (4.2-12b596d6fb50) uses
      8.0:1.0.
 
      A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1676,7 +1694,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-896455fc3adb) of Enblend supports two main algorithms
+This version (4.2-12b596d6fb50) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -1738,63 +1756,236 @@ NFT-generated seam, making its application transparent to the user.
 
 File: enblend.info,  Node: Color Profiles,  Next: Understanding Masks,  Prev: Primary Seam Generators,  Up: Top
 
-5 Color Profiles
-****************
+5 Color, Profiles, and Blending Color Spaces
+********************************************
 
-Enblend and Enfuse expect that either
+This chapter explains the connection of pixel data types, ICC
+(http://en.wikipedia.org/wiki/ICC_profile)-color profiles, blend color
+spaces in Enblend or Enfuse.
 
+   Here, we collectively speak of "blending" and do not distinguish
+fusing, for the basic operations are the same.  Furthermore, we assume
+the multiresolution spline algorithm has calculated a set of
+weights w_i for i = 1, 2, \dots and \sum w_i = 1 for each pixel that
+must be blended from the participating input pixels P_i, i = 1, 2,
+\dots.
+
+   In the simplest, non-trivial case we have to blend a pair of
+black-and-white input pixels.  Given two luminances L_1, L_2 and
+weighting factor 0 \le w \le 1, what luminance L is their "weighted
+average"?  This is the heart of Enblend's and Enfuse's pyramidal
+blending operations.  We are in particular interested in a weighted
+average that appears _visually_ correct, this is, our eyes and brains
+consider L convincing or at the very least credible.
+
+     Note that Enblend and Enfuse face completely different obstacles in
+     their respective domains of use.
+
+    Enblend
+          The overlapping areas usually are _well matched_ both
+          geometrically and photometrically.  The differences in the
+          pixels that must be blended are small.
+
+    Enfuse (using a Soft Mask(1))
+          The input images greatly _differ_ in exposure, saturation, or
+          contrast.  This is exactly why we want to fuse them.  Thus,
+          the luminance, saturation and hue differences to be handled
+          by Enfuse are generally quite high.
+
+5.1 Color Profiles
+==================
+
+For a linear representation of luminances, we just have
+     L = t L_1 + (1 - t) L_2 with 0 \le t \le 1
+   However, often images are gamma(2) encoded with exponent \gamma and
+the blended luminance becomes
+     L' = (t L_1^1/\gamma + (1 - t) L_2^1/\gamma)^\gamma,
+   which couples t and L' in a non-linear way.(3)
+
+   ICC-color profiles completely absorb these gamma encodings and
+ICC profile aware software like Enblend and Enfuse decode and encode
+images automatically respecting the gamma curves.
+
+   By default, Enblend and Enfuse expect that either
   1. no input image has a color profile or
 
-  2. all come with the _same_ ICC
-     (http://en.wikipedia.org/wiki/ICC_profile) profile.
+  2. all images come with the _same_ ICC profile.
 
-In case 1 the applications blend or fuse in the RGB-cube, whereas in
-case 2 the images first are transformed to CIECAM02
+   Even black-and-white images should therefore have ICC profiles
+attached!
+
+In case 1. the applications blend inside the sRGB-cube.  To override
+the default sRGB-profile select the desired profile with
+option `--fallback-profile' (*note Advanced Options::).
+
+   In case 2. the images first are transformed to CIECAM02
 (http://en.wikipedia.org/wiki/CIECAM02) color space - respecting the
 input color profile - then they are blended or fused, and finally the
-data transformed back to RGB color space.  Moreover, in case 2, Enblend
-and Enfuse assign the input color profile to the output image.
+data get transformed back to RGB color space defined by the profile of
+the input images.  Consequently, the input profile is assigned to the
+output image.
+
+   Enforce a different blending color space with
+option `--blend-colorspace'.  *Note Advanced Options::, and the section
+after next.
 
    Mixing different ICC profiles or alternating between images with
 profiles and without them generates warnings as it generally leads to
 unpredictable results.
 
-   The options `--ciecam' (*note Advanced Options::) and its opposite
-`--no-ciecam' (*note Advanced Options::) overrule the default profile
-selection procedure described above.  Use option `--ciecam' on a set of
-input images _without_ color profiles to assign a profile to them and
-perform the blending or fusing process in CIECAM02 color space.
+   Floating-Point images are an exception to the above rule.  They are
+_always_ blended in the RGB cube by default.  The next section
+describes the treatment in detail.
 
-   The default profile is sRGB (http://en.wikipedia.org/wiki/SRGB).
-Override this setting with option `--fallback-profile' (*note Advanced
+5.2 Floating-Point Images
+=========================
+
+Floating-point images (EXR, floating-point TIFF or VIFF) get a special
+treatment.  Their pixel values x are first converted by a
+"Log-transform", which is undone by the inverse transform after
+blending.
+
+Figure 5.1: Forward Log-transform x' = \cal L(x) shown for the range of
+-20 to 100.  The domain of \cal L is of course the whole real axis.
+
+   This transform achieves two purposes:
+
+  1. During blending, even completely non-negative images can result in
+     negative pixels.  A Log-transform followed by the inverse
+     guarantees all-positive output.
+
+  2. For HDR data, the Log-transform puts the samples closer to a
+     perceptual space making the blending a little more pleasing.
+
+   In the current version of Enblend and Enfuse it is _strongly
+recommended_ to use blending inside the RGB-cube whenever the input
+data is in floating-point format.  This is the default, too.
+
+5.3 Blending Color Spaces
+=========================
+
+Blending the pixels of color images heightens the problems.  Although
+we can write down the naive blending equation again for RGB-coded
+pixels P_1 := (r_1, g_1, b_1), P_2 := (r_2, g_2, b_2) and trivially
+arrive at
+     P := (r, g, b) = t (r_1, g_1, b_1) + (1 - t) (r_2, g_2, b_2),
+   with 0 \le t \le 1, but this means
+   * we implicitly treat the color components r_i, g_i, b_i as
+     _separate_ luminances, which they are not and moreover
+
+   * we neglect the visual aspects, namely luminance, saturation, and
+     hue of the blended color pixel P.
+
+Surprisingly, sometimes blending this way - called "inside the
+RGB-cube" - even works!  More often, perceptually uniform color spaces,
+which represent luminance, saturation, and hue are preferable for
+blending.  Enblend and Enfuse offer to work inside the RGB-cube or in
+several perceptually uniform color spaces.  Select a particular
+blending color space with option `--blend-colorspace' (*note Advanced
 Options::).
 
-   On the other hand, suppress the utilization of CIECAM02 blending or
-fusing of a set of input images _with_ color profiles with
-option `--no-ciecam'.  The only reason for the latter is to shorten the
-blending- or fusing-time, because transforming to and back from the
-CIECAM02 color space are computationally expensive operations.
+RGB-Color Cube
+     Calculate the blended pixel P as given in the above equation.
 
-   Option `--ciecam' as well as `--fallback-profile' have no effect on
-images with attached color profiles, just as option `--no-ciecam' has
-no effect on images without profiles.
+     This is the fastest color space to do computations within, i.e. it
+     consumes by far the least computing power.
 
-   The impact of blending in CIECAM02 color space as opposed to the RGB
-cube vary with the contents of the input images.  Generally colors
-lying close together in RGB space experience less change when switching
-the blending spaces.  However, colors close the border of any color
-space can see marked changes.
+L*a*b* (https://en.wikipedia.org/wiki/Lab_color_space)
+     Represent each pixel as lightness L^*, red-green difference a^*,
+     and yellow-blue difference b^*.  The L*a*b* color space
+     encompasses all perceivable colors.  It is completely independent
+     of any device characteristics, approximates human vision, and is
+     perceptually uniform.
 
-   For color geeks: The transformations to CIECAM02 color space and
-back use
+     The applications use perceptual rendering intent and either the
+     input profile's white-point or, if the ICC-profile lacks the
+     `cmsSigMediaWhitePointTag', fall back to the D50 white-point (see,
+     e.g.  Standard illuminant
+     (https://en.wikipedia.org/wiki/Standard_illuminant)).
 
-   * perceptual rendering intent,
+     The conversions from and to L*a*b* are moderately fast to compute;
+     L*a*b* mode is two to three times slower than working within the
+     RGB color cube.
 
-   * the D50 white point,
+CIEL*u*v* (https://en.wikipedia.org/wiki/CIELUV_color_space)
+     Represent each pixel as lightness L^* and two color
+     differences u^*, and v^*.  Formulas of each are too complicated to
+     show them here.
 
-   * 500 lumen surrounding light ("average" in CIECAM02 parlance), and
+     The L*u*v* tries to be percepually uniforn in lightness as well as
+     in color.
 
-   * assume complete adaption.
+     The applications use the same rendering intent and white-point as
+     with L*a*b*.
+
+     The conversions from and to L*u*v* are almost as fast to compute
+     as L*a*b*.
+
+CIECAM02 (https://en.wikipedia.org/wiki/CIECAM02)
+     Represent each pixel as lightness J, chroma C ("colorfulness"),
+     and hue angle h(4).
+
+     The transformations to CIECAM02 color space and back use perceptual
+     rendering intent, the D50 white point (see, e.g.  Standard
+     illuminant (https://en.wikipedia.org/wiki/Standard_illuminant)),
+     500  lumen surrounding light ("average" in CIECAM02 parlance), and
+     assume complete adaption.
+
+     Both CIELUV and CIELAB only model the color information generated
+     for small and isolated color samples.  They cannot model the
+     contextual effects of color perception.  However, CIECAM02 can
+     represent luminance adaptation, chromatic contrast and chromatic
+     assimilation that arise in real world viewing conditions with
+     heterogeneous, strongly contrasted, or three dimensional color
+     sources.
+
+     Computationally, CIECAM02 is the most expensive blend color space.
+     If an appreciable number of pixels need additional refinement
+     steps the speed of the transformation further drops.  Expect
+     CIECAM02 mode to be 8-800 times slower than blending within the
+     RGB color cube.
+
+5.4 Practical Considerations
+============================
+
+   * For small projects stick with the defaults.
+
+   * For large projects switch on blending in the RGB color cube to
+     speed up the assembly of the images.  When satisfied with all other
+     parameters use one of the computationally more expensive, but
+     perceptually uniform color spaces.
+
+   * Banding is best fought by input images with a high bit depth (\ge
+     16 bits per channel).  A cheap and mostly vain trick is to force a
+     large output bit depth with option `--depth'.  No blend color
+     space can avoid banding if parts of the input images are almost
+     "monochrome".
+
+   * [Enblend only] No color space can fix a seam-line gone haywire;
+     reorder the input images and use `--visualize' to inspect the
+     seam-lines.
+
+   * [Enfuse only] No color space can fix blown highlights when fusing
+     by exposure-weight; use `--exposure-cutoff' for this purpose.
+
+   ---------- Footnotes ----------
+
+   (1) Fusing with a Hard Mask is different, because exactly one weight
+factor is unity and all the others are zero.  There is nothing to blend
+- just to copy.
+
+   (2) Typical gamma values are 2.2 for sRGB and AdobeRGB, 1.8 for
+AppleRGB and ProPhotoRGB, 1.0 for Linear Rec709 RGB and any others with
+"linear" in their names.  For an extensive overview check out BRUCE
+LINDBLOOM'S
+`http://www.brucelindbloom.com/index.html?WorkingSpaceInfo.html',
+Information on Working Color Spaces.
+
+   (3) See also ERIC BRASSEUR'S explanation of the gamma error in
+picture scaling (http://www.4p8.com/eric.brasseur/gamma.html).
+
+   (4) Internally, the polar coordinates (C, h) are translated to
+Cartesian coordinates for the pyramids.
 
 
 File: enblend.info,  Node: Understanding Masks,  Next: Helpful Programs,  Prev: Color Profiles,  Up: Top
@@ -2620,6 +2811,7 @@ List of Figures
 
 * Figure 2.1: Photographic workflow:     Figure:photographic-workflow.
 * Figure 2.2: External masks ...:        Figure:external-mask-workflow.
+* Figure 5.1: Log-transform:             Figure:logtransform.
 
 
 File: enblend.info,  Node: List of Examples,  Next: Program Index,  Prev: List of Figures,  Up: Top
@@ -2643,7 +2835,7 @@ Program Index
 
 * align_image_stack (Hugin):             Helpful Programs.    (line  29)
 * cinepaint <1>:                         Helpful Programs.    (line  41)
-* cinepaint:                             Advanced Options.    (line 132)
+* cinepaint:                             Advanced Options.    (line 150)
 * convert (ImageMagick):                 Helpful Programs.    (line  57)
 * darktable:                             Helpful Programs.    (line  10)
 * dcraw <1>:                             Helpful Programs.    (line  13)
@@ -2653,12 +2845,12 @@ Program Index
 * exrdisplay (OpenEXR):                  Helpful Programs.    (line  63)
 * fulla (Hugin):                         Helpful Programs.    (line  29)
 * gimp <1>:                              Helpful Programs.    (line  48)
-* gimp <2>:                              Advanced Options.    (line 132)
+* gimp <2>:                              Advanced Options.    (line 150)
 * gimp:                                  Standard Workflow.   (line   9)
 * gm (GraphicsMagick):                   Helpful Programs.    (line  57)
 * gmic:                                  Helpful Programs.    (line  52)
 * hugin <1>:                             Helpful Programs.    (line  26)
-* hugin <2>:                             Advanced Options.    (line 120)
+* hugin <2>:                             Advanced Options.    (line 138)
 * hugin <3>:                             Standard Workflow.   (line   9)
 * hugin:                                 Overview.            (line  25)
 * identify (ImageMagick) <1>:            Helpful Programs.    (line  57)
@@ -2666,7 +2858,7 @@ Program Index
 * Magic Lantern:                         Helpful Programs.    (line  95)
 * montage (ImageMagick):                 Helpful Programs.    (line  57)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  29)
-* nona (Hugin):                          Advanced Options.    (line 120)
+* nona (Hugin):                          Advanced Options.    (line 138)
 * PanoTools <1>:                         Standard Workflow.   (line   9)
 * PanoTools:                             Overview.            (line  25)
 * pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  66)
@@ -2713,11 +2905,12 @@ Option Index
 
 * --anneal:                              Expert Mask Generation Options.
                                                               (line   7)
-* --ciecam:                              Advanced Options.    (line  11)
+* --blend-colorspace:                    Advanced Options.    (line  10)
+* --ciecam:                              Advanced Options.    (line  49)
 * --coarse-mask:                         Mask Generation Options.
                                                               (line   9)
 * --compression:                         Common Options.      (line  20)
-* --depth:                               Advanced Options.    (line  36)
+* --depth:                               Advanced Options.    (line  54)
 * --dijkstra:                            Expert Mask Generation Options.
                                                               (line  53)
 * --fallback-profile:                    Expert Options.      (line   7)
@@ -2733,7 +2926,6 @@ Option Index
                                                               (line  55)
 * --mask-vectorize:                      Expert Mask Generation Options.
                                                               (line 121)
-* --no-ciecam:                           Advanced Options.    (line  24)
 * --no-gpu:                              Common Options.      (line  84)
 * --no-optimize:                         Mask Generation Options.
                                                               (line  84)
@@ -2758,18 +2950,18 @@ Option Index
 * --version:                             Information Options. (line  71)
 * --visualize:                           Mask Generation Options.
                                                               (line 125)
-* --wrap:                                Advanced Options.    (line 141)
+* --wrap:                                Advanced Options.    (line 159)
 * -a:                                    Expert Options.      (line  53)
-* -c:                                    Advanced Options.    (line  11)
-* -d:                                    Advanced Options.    (line  36)
-* -f:                                    Advanced Options.    (line 116)
-* -g:                                    Advanced Options.    (line 128)
+* -c:                                    Advanced Options.    (line  49)
+* -d:                                    Advanced Options.    (line  54)
+* -f:                                    Advanced Options.    (line 134)
+* -g:                                    Advanced Options.    (line 146)
 * -h:                                    Information Options. (line   8)
 * -l:                                    Common Options.      (line  90)
 * -o:                                    Common Options.      (line 134)
 * -V:                                    Information Options. (line  71)
 * -v:                                    Common Options.      (line 141)
-* -w:                                    Advanced Options.    (line 141)
+* -w:                                    Advanced Options.    (line 159)
 * -x:                                    Expert Options.      (line  81)
 
 
@@ -2783,46 +2975,55 @@ General Index
 
 * # (response file comment):             Response File Format.
                                                               (line   6)
-* 360o panoramas:                        Advanced Options.    (line 141)
+* 360o panoramas:                        Advanced Options.    (line 159)
 * @ (response file prefix):              Response Files.      (line   6)
 * a.tif:                                 Common Options.      (line 136)
 * affine transformation:                 Standard Workflow.   (line  48)
 * algorithms, globbing:                  Globbing Algorithms. (line   6)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  18)
-* alpha channel, associated:             Advanced Options.    (line 128)
+* alpha channel, associated:             Advanced Options.    (line 146)
 * anneal parameters:                     Expert Mask Generation Options.
                                                               (line   7)
 * arithmetic JPEG compression:           Common Options.      (line  38)
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
-* bits per channel:                      Advanced Options.    (line  36)
+* bits per channel:                      Advanced Options.    (line  54)
+* black-and-white image:                 Color Profiles.      (line  58)
+* blend colorspace:                      Advanced Options.    (line  10)
+* blending color space:                  Color Profiles.      (line 111)
+* blending pixels:                       Color Profiles.      (line  10)
 * branch, development:                   Information Options. (line  76)
 * branch, stable:                        Information Options. (line  76)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
-* canvas size:                           Advanced Options.    (line 116)
+* canvas size:                           Advanced Options.    (line 134)
 * central processing unit:               Common Options.      (line  75)
-* channel width:                         Advanced Options.    (line  36)
+* channel width:                         Advanced Options.    (line  54)
 * channel, alpha:                        Overview.            (line  18)
 * checkpoint results:                    Expert Options.      (line  81)
 * chrominance weight:                    Expert Mask Generation Options.
                                                               (line  66)
-* CIECAM02 <1>:                          Color Profiles.      (line  13)
-* CIECAM02 <2>:                          Expert Options.      (line   7)
-* CIECAM02:                              Advanced Options.    (line  11)
+* CIECAM02 <1>:                          Expert Options.      (line   7)
+* CIECAM02:                              Advanced Options.    (line  49)
+* CIECAM02 color appearance model:       Color Profiles.      (line  65)
+* CIECAM02 colorspace <1>:               Color Profiles.      (line 169)
+* CIECAM02 colorspace:                   Advanced Options.    (line  39)
+* CIEL*a*b* colorspace:                  Advanced Options.    (line  33)
+* CIEL*u*v* colorspace <1>:              Color Profiles.      (line 155)
+* CIEL*u*v* colorspace:                  Advanced Options.    (line  36)
 * coarse mask:                           Mask Generation Options.
                                                               (line   9)
-* color appearance model <1>:            Color Profiles.      (line  13)
-* color appearance model:                Advanced Options.    (line  11)
-* color cube, RGB:                       Color Profiles.      (line  13)
-* color profile <1>:                     Color Profiles.      (line   6)
-* color profile:                         Advanced Options.    (line  14)
-* color space, sRGB <1>:                 Color Profiles.      (line  24)
-* color space, sRGB:                     Advanced Options.    (line  14)
+* color appearance model <1>:            Color Profiles.      (line  65)
+* color appearance model:                Advanced Options.    (line  10)
+* color cube, RGB:                       Color Profiles.      (line  61)
+* color cube, sRGB:                      Color Profiles.      (line  61)
+* color profile:                         Color Profiles.      (line   6)
+* color space, for blending and fusing:  Color Profiles.      (line 111)
 * colors, visualization image:           Mask Generation Options.
                                                               (line 183)
+* colorspace, blend:                     Advanced Options.    (line  10)
 * compression:                           Common Options.      (line  20)
 * compression, arithmetic JPEG:          Common Options.      (line  38)
 * compression, deflate:                  Common Options.      (line  49)
@@ -2831,7 +3032,8 @@ General Index
 * compression, packbits:                 Common Options.      (line  64)
 * conversion, raw:                       Standard Workflow.   (line  34)
 * CPU:                                   Common Options.      (line  75)
-* D50 white point:                       Color Profiles.      (line  55)
+* D50 white point:                       Color Profiles.      (line 173)
+* D50 white-point:                       Color Profiles.      (line 144)
 * default layer selection:               Default Layer Selection.
                                                               (line   6)
 * default output filename:               Common Options.      (line 136)
@@ -2846,18 +3048,24 @@ General Index
                                                               (line  53)
 * DIJKSTRA radius:                       Mask Generation Options.
                                                               (line 167)
-* double precision float, IEEE754:       Advanced Options.    (line  89)
+* double precision float, IEEE754:       Advanced Options.    (line 107)
+* EXR image:                             Color Profiles.      (line  87)
 * fallback profile:                      Expert Options.      (line   7)
 * feathering, detrimental effect of:     Overview.            (line  25)
 * filename, literal:                     Invocation.          (line  10)
 * fine mask:                             Mask Generation Options.
                                                               (line  48)
+* floating-point image:                  Color Profiles.      (line  87)
+* floating-point TIFF image:             Color Profiles.      (line  87)
+* floating-point VIFF image:             Color Profiles.      (line  87)
 * format of response file:               Response File Format.
                                                               (line   6)
 * format, image:                         Information Options. (line  42)
 * free documentation license (FDL):      FDL.                 (line   6)
 * frozen seam-line endpoint:             Mask Generation Options.
                                                               (line 175)
+* fusing pixels:                         Color Profiles.      (line  10)
+* gamma exponent:                        Color Profiles.      (line  44)
 * general index:                         General Index.       (line   6)
 * generator, seam:                       Expert Mask Generation Options.
                                                               (line 192)
@@ -2885,21 +3093,26 @@ General Index
 * graphcut, limitations:                 Primary Seam Generators.
                                                               (line  59)
 * graphics processing unit:              Common Options.      (line  75)
-* half precision float, OpenEXR:         Advanced Options.    (line 105)
+* half precision float, OpenEXR:         Advanced Options.    (line 123)
 * help:                                  Information Options. (line   8)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Expert Mask Generation Options.
                                                               (line  81)
 * Hugin:                                 Bug Reports.         (line  95)
 * ICC profile <1>:                       Color Profiles.      (line   6)
-* ICC profile:                           Advanced Options.    (line  14)
-* IEEE754 double precision float:        Advanced Options.    (line  89)
-* IEEE754 single precision float:        Advanced Options.    (line  79)
+* ICC profile:                           Advanced Options.    (line  16)
+* IEEE754 double precision float:        Advanced Options.    (line 107)
+* IEEE754 single precision float:        Advanced Options.    (line  97)
 * image colors, visualization:           Mask Generation Options.
                                                               (line 183)
 * image difference:                      Expert Mask Generation Options.
                                                               (line  66)
 * image formats:                         Information Options. (line  42)
+* image, black-and-white:                Color Profiles.      (line  58)
+* image, EXR:                            Color Profiles.      (line  87)
+* image, floating-point:                 Color Profiles.      (line  87)
+* image, floating-point TIFF:            Color Profiles.      (line  87)
+* image, floating-point VIFF:            Color Profiles.      (line  87)
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
                                                               (line 142)
@@ -2913,6 +3126,7 @@ General Index
 * invocation:                            Invocation.          (line   6)
 * JPEG compression:                      Common Options.      (line  26)
 * KImageFuser:                           Bug Reports.         (line  95)
+* L*a*b* colorspace:                     Color Profiles.      (line 138)
 * LaunchPad:                             Bug Reports.         (line  12)
 * LaunchPad, bug database:               Bug Reports.         (line  12)
 * layer selection:                       Expert Options.      (line  15)
@@ -2930,8 +3144,10 @@ General Index
 * literal filename:                      Invocation.          (line  10)
 * load mask:                             Mask Generation Options.
                                                               (line  55)
+* log-transform:                         Color Profiles.      (line  87)
 * loops in seam line:                    Expert Mask Generation Options.
                                                               (line 150)
+* luminance L:                           Color Profiles.      (line  17)
 * luminance weight:                      Expert Mask Generation Options.
                                                               (line  66)
 * luminance-hue maximum:                 Expert Mask Generation Options.
@@ -3007,8 +3223,8 @@ General Index
 * OpenCL, device:                        Expert Options.      (line  65)
 * OpenCL, platform <1>:                  Information Options. (line  19)
 * OpenCL, platform:                      Expert Options.      (line  65)
-* OpenEXR, data format:                  Advanced Options.    (line 101)
-* OpenEXR, half precision float:         Advanced Options.    (line 105)
+* OpenEXR, data format:                  Advanced Options.    (line 119)
+* OpenEXR, half precision float:         Advanced Options.    (line 123)
 * optimize seam:                         Mask Generation Options.
                                                               (line  62)
 * optimize strategy:                     Mask Generation Options.
@@ -3032,12 +3248,14 @@ General Index
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  20)
 * output filename, default:              Common Options.      (line 136)
-* output image, set size of:             Advanced Options.    (line 116)
+* output image, set size of:             Advanced Options.    (line 134)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  64)
 * parallax error:                        Standard Workflow.   (line  58)
-* perceptual rendering intent:           Color Profiles.      (line  53)
+* perceptual rendering intent:           Color Profiles.      (line 172)
 * photometric alignment:                 Standard Workflow.   (line  50)
+* pixels, blending:                      Color Profiles.      (line  10)
+* pixels, fusing:                        Color Profiles.      (line  10)
 * primary seam generator <1>:            Primary Seam Generators.
                                                               (line   6)
 * primary seam generator:                Expert Mask Generation Options.
@@ -3046,7 +3264,7 @@ General Index
 * processing order:                      Response Files.      (line   9)
 * profile, fallback:                     Expert Options.      (line   7)
 * profile, ICC <1>:                      Color Profiles.      (line   6)
-* profile, ICC:                          Advanced Options.    (line  14)
+* profile, ICC:                          Advanced Options.    (line  16)
 * program index:                         Program Index.       (line   6)
 * programs, helpful additional:          Helpful Programs.    (line   6)
 * pyramid levels:                        Common Options.      (line  90)
@@ -3057,7 +3275,7 @@ General Index
 * radius, DIJKSTRA:                      Mask Generation Options.
                                                               (line 167)
 * raw conversion:                        Standard Workflow.   (line  34)
-* rendering intent, perceptual:          Color Profiles.      (line  53)
+* rendering intent, perceptual:          Color Profiles.      (line 172)
 * response file <1>:                     Response Files.      (line   6)
 * response file:                         Invocation.          (line  10)
 * response file, comment (#):            Response File Format.
@@ -3070,7 +3288,8 @@ General Index
                                                               (line  20)
 * response file, syntactic comment:      Syntactic Comments.  (line   6)
 * results, checkpoint:                   Expert Options.      (line  81)
-* RGB color cube:                        Color Profiles.      (line  13)
+* RGB color cube:                        Color Profiles.      (line  61)
+* RGB-cube:                              Advanced Options.    (line  26)
 * save mask:                             Mask Generation Options.
                                                               (line  91)
 * save mask, only:                       Mask Generation Options.
@@ -3092,12 +3311,12 @@ General Index
 * signature:                             Information Options. (line  52)
 * simulated annealing optimizer:         Expert Mask Generation Options.
                                                               (line   7)
-* single precision float, IEEE754:       Advanced Options.    (line  79)
-* size, canvas:                          Advanced Options.    (line 116)
+* single precision float, IEEE754:       Advanced Options.    (line  97)
+* size, canvas:                          Advanced Options.    (line 134)
 * software components:                   Information Options. (line  59)
 * SourceForge:                           Overview.            (line  45)
-* sRGB color space <1>:                  Color Profiles.      (line  24)
-* sRGB color space:                      Advanced Options.    (line  14)
+* sRGB:                                  Advanced Options.    (line  26)
+* sRGB color cube:                       Color Profiles.      (line  61)
 * stable branch:                         Information Options. (line  76)
 * syntactic comment, grammar:            Syntactic Comments.  (line  18)
 * syntactic comment, response file:      Syntactic Comments.  (line   6)
@@ -3106,10 +3325,11 @@ General Index
 * TIFF, multi-directory:                 Overview.            (line  39)
 * tiffcopy:                              Overview.            (line  39)
 * tiffsplit:                             Overview.            (line  39)
+* transform, floating-point images:      Color Profiles.      (line  87)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
 * version:                               Information Options. (line  71)
-* virtual reality:                       Advanced Options.    (line 151)
+* virtual reality:                       Advanced Options.    (line 169)
 * visualization image:                   Mask Generation Options.
                                                               (line 142)
 * visualization image colors:            Mask Generation Options.
@@ -3117,13 +3337,15 @@ General Index
 * visualization of mask:                 Mask Generation Options.
                                                               (line 125)
 * weight mask:                           Understanding Masks. (line   6)
+* weight w:                              Color Profiles.      (line  17)
 * weight, chrominance:                   Expert Mask Generation Options.
                                                               (line  66)
 * weight, luminance:                     Expert Mask Generation Options.
                                                               (line  66)
 * weights, optimizer:                    Expert Mask Generation Options.
                                                               (line 165)
-* white point, D50:                      Color Profiles.      (line  55)
+* white point, D50:                      Color Profiles.      (line 173)
+* white-point, D50:                      Color Profiles.      (line 144)
 * workflow:                              Workflow.            (line   6)
 * workflow with Enblend:                 Standard Workflow.   (line   9)
 * workflow with Enfuse:                  Standard Workflow.   (line   9)
@@ -3132,7 +3354,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Advanced Options.    (line 141)
+* wrap around:                           Advanced Options.    (line 159)
 
 
 
@@ -3162,33 +3384,38 @@ Node: Common Options20332
 Ref: Common Options-Footnote-126740
 Ref: Common Options-Footnote-226814
 Node: Advanced Options27006
-Ref: Advanced Options-Footnote-133779
-Ref: Advanced Options-Footnote-233845
-Ref: Advanced Options-Footnote-333918
-Node: Mask Generation Options34077
-Ref: Table:mask-generation34985
-Ref: Table:optimizer-strategies37024
-Ref: Table:visualization-colors40793
-Ref: Table:mask-template-characters41708
-Ref: Mask Generation Options-Footnote-143960
-Node: Expert Options44188
-Node: Expert Mask Generation Options47307
-Node: Information Options56028
-Node: Option Delimiters60456
-Node: Primary Seam Generators61857
-Node: Color Profiles64743
-Node: Understanding Masks67193
-Node: Helpful Programs70983
-Node: Bug Reports75630
-Ref: Bug Reports-Footnote-181286
-Node: Authors81356
-Node: FDL82521
-Node: List of Tables103503
-Node: List of Figures104127
-Node: List of Examples104417
-Node: Program Index104698
-Node: Syntactic-Comment Index107926
-Node: Option Index108681
-Node: General Index113168
+Ref: Advanced Options-Footnote-134564
+Ref: Advanced Options-Footnote-234630
+Ref: Advanced Options-Footnote-334703
+Node: Mask Generation Options34862
+Ref: Table:mask-generation35770
+Ref: Table:optimizer-strategies37809
+Ref: Table:visualization-colors41578
+Ref: Table:mask-template-characters42493
+Ref: Mask Generation Options-Footnote-144745
+Node: Expert Options44973
+Node: Expert Mask Generation Options48102
+Node: Information Options56823
+Node: Option Delimiters61251
+Node: Primary Seam Generators62652
+Node: Color Profiles65538
+Ref: Figure:logtransform69329
+Ref: Color Profiles-Footnote-174697
+Ref: Color Profiles-Footnote-274858
+Ref: Color Profiles-Footnote-375181
+Ref: Color Profiles-Footnote-475311
+Node: Understanding Masks75418
+Node: Helpful Programs79208
+Node: Bug Reports83855
+Ref: Bug Reports-Footnote-189511
+Node: Authors89581
+Node: FDL90746
+Node: List of Tables111728
+Node: List of Figures112352
+Node: List of Examples112704
+Node: Program Index112985
+Node: Syntactic-Comment Index116213
+Node: Option Index116968
+Node: General Index121455
 
 End Tag Table

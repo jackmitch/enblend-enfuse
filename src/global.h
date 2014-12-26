@@ -146,6 +146,16 @@ enum MainAlgo {
 };
 
 
+// Colorspaces available for pyramidal blending operations
+typedef enum
+{
+    UndeterminedColorspace,    // explicit `not-a-colorspace' value
+    IdentitySpace,             // (1d) luminance interval for grayscale images and (3d) RGB-cube for RGB-images
+    CIELAB,
+    CIELUV,
+    CIECAM
+} blend_colorspace_t;
+
 
 //< default-tiff-resolution 300@dmn{dpi}
 #define DEFAULT_TIFF_RESOLUTION 300.0f

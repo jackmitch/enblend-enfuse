@@ -171,8 +171,6 @@ AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/lexical_cast.hpp, [],
                 AC_MSG_ERROR([Boost "lexical_cast" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
-                AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/optional.hpp, [],
                 AC_MSG_ERROR([Boost "optional" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/unordered_set.hpp, [],
@@ -514,6 +512,7 @@ AC_CONFIG_FILES([doc/Makefile
                  doc/gaussian.gp doc/lorentzian.gp doc/halfsine.gp doc/fullsine.gp doc/power.gp
                  doc/exposure-weights.gp
                  doc/laplacian-of-gaussian.gp
+                 doc/log-transform.gp
                  doc/sharp-edge.gp
                  doc/smooth-edge.gp])
 

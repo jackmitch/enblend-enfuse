@@ -641,45 +641,71 @@ Advanced options control e.g.@: the color model and the cropping of
 the output image.
 
 @table @code
+@item --blend-colorspace=@var{COLORSPACE}
+@opindex --blend-colorspace
+@cindex blend colorspace
+@cindex colorspace, blend
+@cindex color appearance model
+
+Force blending in selected @var{COLORSPACE}.  For well matched images
+this options should not change the output image much.  However, if
+Enblend must blend vastly different colors (as e.g. anti-colors) the
+result image heavily depends on the @var{COLORSPACE}.
+
+Usually, Enblend chooses defaults depending on the input images:
+@itemize
+@item
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+        For input images @emph{with} @acronym{ICC} profiles the
+default is to use @acronym{CIECAM} colorspace.
+
+@item
+        Images @emph{without} color profiles and floating-point images
+are blended in the @acronym{RGB}-color cube by default.
+@end itemize
+
+On the order of fast to slow computation, Enblend supports the
+following blend colorspaces.
+
+@table @asis
+@item @samp{IDENTITY}, @samp{ID}, @samp{UNIT}
+@cindex @acronym{sRGB}
+@cindex @acronym{RGB}-cube
+Naively compute blended colors in the luminance interval (grayscale
+images) or @acronym{RGB}-cube (@acronym{RGB} images) spanned by the
+input @acronym{ICC} profile or @acronym{sRGB} if no profiles are
+present.  Consider option@tie{}@option{--fallback-profile} to force a
+different profile than @acronym{sRGB} on all input images.
+
+@item @samp{LAB}, @samp{CIELAB}, @samp{LSTAR}, @samp{L-STAR}
+@cindex @acronym{CIEL*a*b*} colorspace
+Blend pixels in the @acronym{CIEL*a*b*} colorspace.
+
+@item @samp{LUV}, @samp{CIELUV}
+@cindex @acronym{CIEL*u*v*} colorspace
+Blend pixels in the @acronym{CIEL*u*v*} colorspace.
+
+@item @samp{CIECAM}, @samp{CIECAM02}, @samp{JCH}
+@cindex @acronym{CIECAM02} colorspace
+Blend pixels in the @acronym{CIECAM02} colorspace.
+@end table
+
+Please keep in mind that by using different blend colorspaces,
+blending may not only change the colors in the output image, but
+Enblend may choose different seam line routes as some seam-line
+optimizers are guided by image differences, which may be different
+when viewed in different colorspaces.
+
 @item -c
 @itemx --ciecam
 @opindex -c
 @opindex --ciecam
-@cindex color appearance model
 @cindex @acronym{CIECAM02}
-Force the use of the @acronym{CIECAM02} color appearance model for
-blending colors instead of blending inside the @acronym{RGB} color
-cube.
 
-@cindex color profile
-@cindex @acronym{ICC} profile
-@cindex profile, @acronym{ICC}
-@cindex @acronym{sRGB} color space
-@cindex color space, @acronym{sRGB}
-All input files should have identical @acronym{ICC} profiles when this
-option is specified.  If no @acronym{ICC} profile is present, Enblend
-assumes that all images use the @acronym{sRGB} color space.
-@xref{Color Profiles}.
-
-Please keep in mind that using @acronym{CIECAM02} blending may not
-only change the colors in the output image, but Enblend may choose
-different seam line routes as some seam-line optimizers are guided by
-image differences.
-
-The inverse of this option is @option{--no-ciecam},
-@opindex --no-ciecam
-which disables the use of the @acronym{CIECAM02} color appearance
-model for blending colors.
-
-The defaults are chosen differently depending on the input images:
-@itemize
-@item
-For input images @emph{with} @acronym{ICC} profiles the default is to
-use @acronym{CIECAM02} blending.
-@item
-Images @emph{without} color profiles are blended in the @acronym{RGB}
-color cube by default.
-@end itemize
+Deprecated.  Use @samp{--blend-colorspace=CIECAM} instead.  To mimic
+the negated option @option{--no-ciecam} use
+@samp{--blend-colorspace=IDENTITY}.
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -1593,7 +1619,7 @@ approximately 15@dmn{cm}.}
 @cindex fallback profile
 @cindex @acronym{CIECAM02}
 Use the @acronym{ICC} profile in @var{PROFILE-FILENAME} instead of the
-default @acronym{sRGB}.  See option@tie{}@option{--ciecam} and
+default @acronym{sRGB}.  See option@tie{}@option{--blend-colorspace} and
 @ref{Color Profiles}.
 
 This option only is effective if the input images come without color
@@ -2817,10 +2843,7 @@ page@tie{}2.
 
 
 @node Color Profiles
-@chapter Color Profiles
-@cindex profile, @acronym{ICC}
-@cindex @acronym{ICC} profile
-@cindex color profile
+@chapter Color, Profiles, and Blending Color Spaces
 
 @include color-profiles.texi
 
