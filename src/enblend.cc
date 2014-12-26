@@ -484,29 +484,60 @@ printUsage(const bool error = true)
         "                         negative number of LEVELS decreases maximum;\n" <<
         "                         \"auto\" restores the default automatic maximization\n" <<
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
-        "  -a, --pre-assemble     pre-assemble non-overlapping images; negate with \"--no-pre-assemble\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
-        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
-        "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
-        enblend::stringOfWraparound(WrapAround) << ";\n" <<
-        "                         without argument the option selects horizontal wrapping\n" <<
-#ifdef OPENCL
-        "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
-        "                         with \"--no-gpu\"\n" <<
-        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
-        "                         inform on current preferences\n" <<
-        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
-        "  --prefer-gpu=PLATFORM:DEVICE\n" <<
-        "                         select DEVICE on PLATFORM as GPU\n" <<
-#endif
-        "  -x                     checkpoint partial results\n" <<
         "  --compression=COMPRESSION\n" <<
         "                         set compression of output image to COMPRESSION,\n" <<
         "                         where COMPRESSION is:\n" <<
         "                         \"deflate\", \"jpeg\", \"lzw\", \"none\", \"packbits\", for TIFF files and\n" <<
         "                         0 to 100, or \"jpeg\", \"jpeg-arith\" for JPEG files,\n" <<
         "                         where \"jpeg\" and \"jpeg-arith\" accept a compression level\n" <<
+#ifdef OPENCL
+        "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
+        "                         with \"--no-gpu\"\n" <<
+#endif
+        "\n" <<
+        "Advanced options:\n" <<
+        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
+        "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
+        "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
+        "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
+        "                         manually set the size and position of the output\n" <<
+        "                         image; useful for cropped and shifted input\n" <<
+        "                         TIFF images, such as those produced by Nona\n" <<
+        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
+        "                         and Cinepaint\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
+        "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
+        enblend::stringOfWraparound(WrapAround) << ";\n" <<
+        "                         without argument the option selects horizontal wrapping\n" <<
+        "\n" <<
+        "Mask generation options:\n" <<
+        "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
+        "                         generation; this is the default; if omitted FACTOR\n" <<
+        "                         defaults to " << CoarsenessFactor << "\n" <<
+        "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
+        "                         if overlap regions are very narrow\n" <<
+        "  --optimize             turn on mask optimization; this is the default;\n" <<
+        "                         disable with \"--no-optimize\"\n" <<
+        "  --save-masks[=TEMPLATE]\n" <<
+        "                         save generated masks in TEMPLATE; default: \"" << SaveMaskTemplate << "\";\n" <<
+        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
+        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
+        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to the output image\n" <<
+        "  --load-masks[=TEMPLATE]\n" <<
+        "                         use existing masks in TEMPLATE instead of generating\n" <<
+        "                         them; same template characters as \"--save-masks\";\n" <<
+        "                         default: \"" << LoadMaskTemplate << "\"\n" <<
+        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
+        "                         characters as \"--save-masks\"; default: \"" << VisualizeTemplate << "\"\n" <<
+        "\n" <<
+        "Expert options:\n" <<
+        "  -a, --pre-assemble     pre-assemble non-overlapping images; negate with \"--no-pre-assemble\"\n" <<
+        "  -x                     checkpoint partial results\n" <<
+        "  --fallback-profile=PROFILE-FILE\n" <<
+        "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
         "  --layer-selector=ALGORITHM\n" <<
         "                         set the layer selector ALGORITHM;\n" <<
         "                         default: \"" << LayerSelection.name() << "\"; available algorithms are:\n";
@@ -516,23 +547,17 @@ printUsage(const bool error = true)
         std::cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
     }
     std::cout <<
+#ifdef OPENCL
+        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
+        "                         inform on current preferences\n" <<
+        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
+        "  --prefer-gpu=PLATFORM:DEVICE\n" <<
+        "                         select DEVICE on PLATFORM as GPU\n" <<
+#endif
         "  --parameter=KEY1[=VALUE1][:KEY2[=VALUE2][:...]]\n" <<
         "                         set one or more KEY-VALUE pairs\n" <<
         "\n" <<
-        "Extended options:\n" <<
-        "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
-        "  --fallback-profile=PROFILE-FILE\n" <<
-        "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
-        "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
-        "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
-        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
-        "                         and Cinepaint\n" <<
-        "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
-        "                         manually set the size and position of the output\n" <<
-        "                         image; useful for cropped and shifted input\n" <<
-        "                         TIFF images, such as those produced by Nona\n" <<
-        "\n" <<
-        "Mask generation options:\n" <<
+        "Expert mask generation options:\n" <<
         "  --primary-seam-generator=ALGORITHM\n" <<
         "                         use main seam finder ALGORITHM, where ALGORITHM is\n"<<
         "                         \"nearest-feature-transform\" or \"graph-cut\";\n" <<
@@ -544,14 +569,6 @@ printUsage(const bool error = true)
         "                         of lightness and color; default: " <<
         stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << ":" << LuminanceDifferenceWeight <<
         ": " << ChrominanceDifferenceWeight << "\n" <<
-        "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
-        "                         generation; this is the default; if omitted FACTOR\n" <<
-        "                         defaults to " <<
-        CoarsenessFactor << "\n" <<
-        "  --fine-mask            generate mask at full image resolution; use e.g.\n" <<
-        "                         if overlap regions are very narrow\n" <<
-        "  --optimize             turn on mask optimization; this is the default;\n" <<
-        "                         disable with \"--no-optimize\"\n" <<
         "  --optimizer-weights=DISTANCE-WEIGHT[:MISMATCH-WEIGHT]\n" <<
         "                         set the optimizer's weigths for distance and mismatch;\n" <<
         "                         default: " << OptimizerWeights.first << ':' <<
@@ -568,20 +585,6 @@ printUsage(const bool error = true)
         AnnealPara.deltaEMax << ':' << AnnealPara.deltaEMin << ':' << AnnealPara.kmax << "\n" <<
         "  --dijkstra=RADIUS      set search RADIUS of optimizer strategy 2; default:\n" <<
         "                         " << DijkstraRadius << " pixels\n" <<
-        "  --save-masks[=TEMPLATE]\n" <<
-        "                         save generated masks in TEMPLATE; default: \"" <<
-        SaveMaskTemplate << "\";\n" <<
-        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
-        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
-        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
-        "                         refer to input images uppercase to the output image\n" <<
-        "  --load-masks[=TEMPLATE]\n" <<
-        "                         use existing masks in TEMPLATE instead of generating\n" <<
-        "                         them; same template characters as \"--save-masks\";\n" <<
-        "                         default: \"" << LoadMaskTemplate << "\"\n" <<
-        "  --visualize[=TEMPLATE] save results of optimizer in TEMPLATE; same template\n" <<
-        "                         characters as \"--save-masks\"; default: \"" <<
-        VisualizeTemplate << "\"\n" <<
         "\n" <<
         "Information options:\n" <<
         "  -h, --help             print this help message and exit\n" <<

@@ -152,7 +152,7 @@ Workflow
 Invocation
 
 * Common Options::              General options
-* Extended Options::            Memory control and others
+* Advanced Options::            Memory control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
 * Option Delimiters::           How to separate options' arguments
@@ -401,9 +401,10 @@ filenames on the command line.
 * Image Requirements::          Input image requirements
 * Response Files::              Files listing the images' names
 * Common Options::              General options
-* Extended Options::            Memory control and others
+* Advanced Options::            Memory control and others
 * Fusion Options::              Image fusion control
 * Expert Options::              Local contrast and local entropy selection configuration
+* Expert Fusion Options::       .
 * Information Options::         Information about Enblend itself
 * Option Delimiters::           How to separate options' arguments
 @end menu
@@ -572,10 +573,10 @@ library on which Enfuse is based.}} automatically compresses
 @cindex OpenCL
 Employ one of the graphics processing units (@acronym{GPU}s) to
 perform selected operations instead of the central processing units
-(@acronym{CPU}s) alone.  Enblend must have been compiled with support
+(@acronym{CPU}s) alone.  Enfuse must have been compiled with support
 for @acronym{OpenCL} access to the @acronym{GPU} for this feature.
 
-Depending on the input images, the options passed to Enblend, and the
+Depending on the input images, the options passed to Enfuse, and the
 relative performance of the @acronym{CPU}s to the @acronym{GPU}s this
 option may or may not increase performance.
 
@@ -583,39 +584,6 @@ Negate this option with @option{--no-gpu}.
 @opindex --no-gpu
 
 See also option@tie{}@option{--prefer-gpu}.
-
-@item --layer-selector=@var{ALGORITHM}
-@opindex --layer-selector
-@cindex layer selection
-@cindex layer selection
-Override the standard layer selector algorithm, which is
-@samp{@value{layer-selector}}.
-
-This version of Enfuse offers the following algorithms:
-@table @code
-@item all-layers
-@cindex layer selection, all-layers
-Select all layers in all images.
-
-@item first-layer
-@cindex layer selection, first-layer
-Select only first layer in each multi-layer image.  For single-layer
-images this is the same as @samp{all-layers}.
-
-@item largest-layer
-@cindex layer selection, largest-layer
-Select largest layer in each multi-layer image, where the
-``largeness'', this is the size is defined by the product of the layer
-width and its height.  The channel width of the layer is ignored.  For
-single-layer images this is the same as @samp{all-layers}.
-
-@item no-layer
-@cindex layer selection, no layer
-Do not select any layer in any image.
-
-This algorithm is useful to temporarily exclude some images in
-response files.
-@end table
 
 @item -l @var{LEVELS}
 @itemx --levels=@var{LEVELS}
@@ -645,7 +613,7 @@ original image, obviously defines the image at single-pixel scale, the
 first level works at two-pixel scale, and generally, the @math{n}-th
 level contains image data at @power{2, n}-pixel scale.  This is the
 reason why an image of
-@math{width}@classictimes{}@/@math{height}@dmn{pixels} cannot be
+@math{width}@classictimes{}@math{height}@dmn{pixels} cannot be
 deconstructed into a pyramid of more than
 @ifinfo
 @display
@@ -659,7 +627,7 @@ deconstructed into a pyramid of more than
         <mrowinline>
             <msubinline>
                 <mo>log</mo>
-                <mn>2</mn>
+                <mn>2</mo>
             </msubinline>
             <mo>&ApplyFunction;</mo>
             <mo>(</mo>
@@ -667,8 +635,8 @@ deconstructed into a pyramid of more than
                 <mo>min</mo>
                 <mo>&ApplyFunction;</mo>
                 <mfencedinline>
-                    <mi>width</mi>
-                    <mi>height</mi>
+                    <mi mathvariant="italic">width</mi>
+                    <mi mathvariant="italic">height</mi>
                 </mfencedinline>
             </mrowinline>
             <mo>)</mo>
@@ -730,69 +698,13 @@ The valid range of the absolute value of @var{LEVELS} is
 @itemx --output=@var{FILE}
 @opindex -o
 @opindex --output
-Place fused output image in @var{FILE}.
+Place blended output image in @var{FILE}.
 
 @cindex @file{@value{default-output-filename}}
 @cindex default output filename
 @cindex output filename, default
 If @option{--output} is not specified, the default is to put the
 resulting image in @file{@value{default-output-filename}}.
-
-@item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
-Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
-option is cumulative.  Separate multiple pairs with the usual numeric
-delimiters.
-
-This option has the negated form @option{--no-parameter},
-@opindex --no-parameter
-which takes one or more @var{KEY}s and removes them from the list of
-defined parameters.  The special key@tie{}@samp{*} deletes all
-parameters at once.
-
-Parameters allow the developers to change the internal
-workings of Enfuse without the need to recompile.
-
-@item --prefer-gpu
-@itemx --prefer-gpu=DEVICE
-@itemx --prefer-gpu=PLATFORM:DEVICE
-@cindex GPU
-@cindex OpenCL
-@cindex OpenCL, platform
-@cindex OpenCL, device
-When told to employ the @acronym{GPU} with @option{--gpu}, by default
-Enfuse uses the first device on the first autodetected platform it
-finds via queries of the @acronym{OpenCL} subsystem, where neither the
-device, nor the platform may be the ones the user wants.  Usually she
-will select the device with the highest performance, maximum possible
-number of work-items, and largest associated memory.
-
-The first form of @option{--prefer-gpu} prints a list of all available
-@acronym{GPU}@tie{}devices on all accessible platforms, the current
-preferences, and then exits; it is the same enumeration that
-@samp{enblend --verbose --version} reveals.  Example:
-
-@example
-Available, OpenCL-compatible platform(s) and their device(s)
-  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
-    * no GPU devices found on this platform
-  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-    * Device #1: max. 1024 work items
-                 1047872 KB global memory with 32 KB read/write cache
-                 48 KB dedicated local memory
-                 64 KB maximum constant memory
-Currently preferred GPU is device #1 on platform #2 (autodetected).
-@end example
-
-Use the numbers of platforms and devices found there to select the
-desired @var{DEVICE} on the first platform (second form) or
-@var{DEVICE} on the given @var{PLATFORM} (third form).
-
-Enfuse's default is equivalent to choosing the first (i.e.@: lowest
-number) @acronym{GPU}-device on the first (i.e.@: lowest number)
-platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
-example.
-
-See also option@tie{}@option{--gpu}.
 
 @item -v
 @itemx --verbose[=@var{LEVEL}]
@@ -833,6 +745,201 @@ estimations of required memory in selected processing steps
 
 The default verbosity level of Enfuse is
 @value{default-verbosity-level}.
+@end table
+
+
+@node Advanced Options
+@section Advanced Options
+@cindex options, extended
+
+Extended options control e.g.@: the color model and the cropping of
+the output image.
+
+@table @code
+@item -c
+@itemx --ciecam
+@opindex -c
+@opindex --ciecam
+@cindex color appearance model
+@cindex @acronym{CIECAM02}
+Force the use of the @acronym{CIECAM02} color appearance model for
+blending colors instead of blending inside the @acronym{RGB} color
+cube.
+
+@cindex color profile
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+@cindex @acronym{sRGB} color space
+@cindex color space, @acronym{sRGB}
+All input files should have identical @acronym{ICC} profiles when this
+option is specified.  If no @acronym{ICC} profile is present, Enfuse
+assumes that all images use the @acronym{sRGB} color space.
+@xref{Color Profiles}.
+
+The inverse of this option is @option{--no-ciecam},
+@opindex --no-ciecam
+which disables the use of the @acronym{CIECAM02} color appearance
+model for blending colors.
+
+The defaults are chosen differently depending on the input images:
+@itemize
+@item
+For input images @emph{with} @acronym{ICC} profiles the default is to
+use @acronym{CIECAM02} blending.
+@item
+Images @emph{without} color profiles are blended in the @acronym{RGB}
+color cube by default.
+@end itemize
+
+@item -d
+@itemx --depth=@var{DEPTH}
+@opindex -d
+@opindex --depth
+@cindex bits per channel
+@cindex channel width
+Force the number of bits per channel and the numeric format of the
+output image.@footnote{``Channel depth'' sometimes is also called
+``channel width''.}
+
+Enfuse always uses a smart way to change the channel depth to assure
+highest image quality (at the expense of memory), whether
+requantization is implicit because of the output format or explicit
+with option@tie{}@option{--depth}.
+
+@itemize
+@item
+If the output-channel depth is larger than the input-channel depth of
+the input images, the input images' channels are widened to the output
+channel depth immediately after loading, that is, as soon as possible.
+Enfuse then performs all blending operations at the output-channel
+depth, thereby preserving minute color details which can appear in the
+blending areas.
+
+@item
+If the output-channel depth is smaller than the input-channel depth of
+the input images, the output image's channels are narrowed only right
+before it is written to the output @var{FILE}, that is, as late as
+possible.  Thus the data benefits from the wider input channels for
+the longest time.
+@end itemize
+
+All @var{DEPTH} specifications are valid in lowercase as well as
+uppercase letters.  For integer format, use
+
+@table @asis
+@item @code{8}, @code{uint8}
+Unsigned 8@dmn{bit}; range: 0..255
+@item @code{int16}
+Signed 16@dmn{bit}; range: @minus{}32768..32767
+@item @code{16}, @code{uint16}
+Unsigned 16@dmn{bit}; range: 0..65535
+@item @code{int32}
+Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
+@item @code{32}, @code{uint32}
+Unsigned 32@dmn{bit}; range: 0..4294967295
+@end table
+
+For floating-point format, use
+
+@c Minimum positive normalized value: 2^(2 - 2^k)
+@c Epsilon: 2^(1 - n)
+@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+
+@table @asis
+@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
+@item @code{r32}, @code{real32}, @code{float}
+@cindex @acronym{IEEE754} single precision float
+@cindex single precision float, @acronym{IEEE754}
+@acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
+24@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{1.2, -38}
+@item
+Epsilon: @semilog{1.2, -7}
+@item
+Maximum finite value: @semilog{3.4, 38}
+@end itemize
+
+@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
+@item @code{r64}, @code{real64}, @code{double}
+@cindex @acronym{IEEE754} double precision float
+@cindex double precision float, @acronym{IEEE754}
+@acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
+53@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{2.2, -308}
+@item
+Epsilon: @semilog{2.2, -16}
+@item
+Maximum finite value: @semilog{1.8, 308}
+@end itemize
+@end table
+
+If the requested @var{DEPTH} is not supported by the output file
+format, Enfuse warns and chooses the @var{DEPTH} that matches best.
+
+@cindex @acronym{OpenEXR}, data format
+The @acronym{OpenEXR} data format is treated as
+@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
+@acronym{OpenEXR} data is represented by ``half'' precision
+floating-point numbers.
+
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@cindex @acronym{OpenEXR}, half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#@/features,
+@acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
+10@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+
+@item -f @var{WIDTH}x@var{HEIGHT}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
+@opindex -f
+@cindex output image, set size of
+@cindex canvas size
+@cindex size, canvas
+Ensure that the minimum ``canvas'' size of the output image is at
+least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
+the @var{XOFFSET} and @var{YOFFSET}, too.
+
+@pindex nona @r{(Hugin)}
+@pindex hugin
+This option only is useful when the input images are cropped
+@acronym{TIFF} files, such as those produced by
+@command{nona}@footnote{The stitcher @command{nona} is part of Hugin.
+@xref{Helpful Programs}.}.
+
+Note that option@tie{}@option{-f} neither rescales the output image,
+nor shrinks the canvas size below the minimum size occupied by the
+union of all input images.
+
+@item -g
+@opindex -g
+@cindex alpha channel, associated
+Save alpha channel as ``associated''.  See the
+@uref{http://@/www.awaresystems.be/@/imaging/@/tiff/@/tifftags/@/extrasamples.html,
+@acronym{TIFF} documentation} for an explanation.
+
+@pindex gimp
+@pindex cinepaint
+Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
+Programs}) exhibit unusual behavior when loading images with
+unassociated alpha channels.  Use option @option{-g} to work around
+this problem.  With this flag Enfuse will create the output image
+with the associated alpha tag set, even though the image is really
+unassociated alpha.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -861,7 +968,7 @@ seamless environment.
 
 Otherwise, always avoid this option!
 
-With this option Enfuse treats the set of input images (panorama?) of
+With this option Enfuse treats the set of input images (panorama) of
 width@tie{}@math{w} and height@tie{}@math{h} as an infinite data
 structure, where each pixel
 @ifinfo
@@ -1091,8 +1198,50 @@ $$
     S_P(x, y) = \{P(x, y + n h): n \in Z\}.
 $$
 @end tex
-
-This is useful for 360@textdegree{} vertical panoramas, as it
+@docbook
+<informalequation>
+    <mml:math>
+        <mml:reln>
+            <mml:eq/>
+            <mml:apply>
+                <mml:csymbol>
+                    <mml:msub>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>P</mml:mi>
+                    </mml:msub>
+                </mml:csymbol>
+                <mml:ci>x</mml:ci>
+                <mml:ci>y</mml:ci>
+            </mml:apply>
+            <mml:set>
+                <mml:bvar>
+                    <mml:apply>
+                        <mml:ci>P</mml:ci>
+                        <mml:ci>x</mml:ci>
+                        <mml:apply>
+                            <mml:plus/>
+                            <mml:ci>y</mml:ci>
+                            <mml:apply>
+                                <mml:times/>
+                                <mml:ci>n</mml:ci>
+                                <mml:ci>h</mml:ci>
+                            </mml:apply>
+                        </mml:apply>
+                    </mml:apply>
+                </mml:bvar>
+                <mml:condition>
+                    <mml:apply>
+                        <mml:in/>
+                        <mml:ci>n</mml:ci>
+                        <mml:ci>Z</mml:ci>
+                    </mml:apply>
+                </mml:condition>
+            </mml:set>
+        </mml:reln>
+    </mml:math>
+</informalequation>
+@end docbook
+This is useful for 360@textdegree{} vertical panoramas as it
 eliminates the top and bottom borders.
 
 @item both
@@ -1227,217 +1376,6 @@ wrapping.
 @end table
 
 
-@node Extended Options
-@section Extended Options
-@cindex options, extended
-
-Extended options control e.g.@: the color model and the cropping of
-the output image.
-
-@table @code
-@item -c
-@itemx --ciecam
-@opindex -c
-@opindex --ciecam
-@cindex color appearance model
-@cindex @acronym{CIECAM02}
-Force the use of the @acronym{CIECAM02} color appearance model for
-blending colors instead of blending inside the @acronym{RGB} color
-cube.
-
-@cindex color profile
-@cindex @acronym{ICC} profile
-@cindex profile, @acronym{ICC}
-@cindex @acronym{sRGB} color space
-@cindex color space, @acronym{sRGB}
-All input files should have identical @acronym{ICC} profiles when this
-option is specified.  If no @acronym{ICC} profile is present, Enfuse
-assumes that all images use the @acronym{sRGB} color space.
-@xref{Color Profiles}.
-
-Please keep in mind that using @acronym{CIECAM02} blending may change
-the colors in the output image.
-
-The inverse of this option is @option{--no-ciecam},
-@opindex --no-ciecam
-which disables the use of the @acronym{CIECAM02} color appearance
-model for blending colors.
-
-The defaults are chosen differently depending on the input images:
-@itemize
-@item
-For input images @emph{with} @acronym{ICC} profiles the default is to
-use @acronym{CIECAM02} blending.
-@item
-Images @emph{without} color profiles are blended in the @acronym{RGB}
-color cube by default.
-@end itemize
-
-@item -d
-@itemx --depth=@var{DEPTH}
-@opindex -d
-@opindex --depth
-@cindex bits per channel
-@cindex channel width
-Force the number of bits per channel and the numeric format of the
-output image.@footnote{``Channel depth'' sometimes is also called
-``channel width''.}
-
-Enfuse always uses a smart way to change the channel depth, to assure
-highest image quality (at the expense of memory), whether
-requantization is implicit because of the output format or explicit
-with option@tie{}@option{--depth}.
-
-@itemize
-@item
-If the output-channel depth is larger than the input-channel depth of
-the input images, the input images' channels are widened to the output
-channel depth immediately after loading, that is, as soon as possible.
-Enfuse then performs all blending operations at the output-channel
-depth, thereby preserving minute color details which can appear in the
-blending areas.
-
-@item
-If the output-channel depth is smaller than the input-channel depth of
-the input images, the output image's channels are narrowed only right
-before it is written to the output @var{FILE}, that is, as late as
-possible.  Thus the data benefits from the wider input channels for
-the longest time.
-@end itemize
-
-All @var{DEPTH} specifications are valid in lowercase as well as
-uppercase letters.  For integer format, use
-
-@table @asis
-@item @code{8}, @code{uint8}
-Unsigned 8@dmn{bit}; range: 0..255
-@item @code{int16}
-Signed 16@dmn{bit}; range: @minus{}32768..32767
-@item @code{16}, @code{uint16}
-Unsigned 16@dmn{bit}; range: 0..65535
-@item @code{int32}
-Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
-@item @code{32}, @code{uint32}
-Unsigned 32@dmn{bit}; range: 0..4294967295
-@end table
-
-For floating-point format, use
-
-@c Minimum positive normalized value: 2^(2 - 2^k)
-@c Epsilon: 2^(1 - n)
-@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
-
-@table @asis
-@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
-@item @code{r32}, @code{real32}, @code{float}
-@cindex @acronym{IEEE754} single precision float
-@cindex single precision float, @acronym{IEEE754}
-@acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
-24@dmn{bit} significant
-
-@itemize
-@item
-Minimum normalized value: @semilog{1.2, -38}
-@item
-Epsilon: @semilog{1.2, -7}
-@item
-Maximum finite value: @semilog{3.4, 38}
-@end itemize
-
-@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
-@item @code{r64}, @code{real64}, @code{double}
-@cindex @acronym{IEEE754} double precision float
-@cindex double precision float, @acronym{IEEE754}
-@acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
-53@dmn{bit} significant
-
-@itemize
-@item
-Minimum normalized value: @semilog{2.2, -308}
-@item
-Epsilon: @semilog{2.2, -16}
-@item
-Maximum finite value: @semilog{1.8, 308}
-@end itemize
-@end table
-
-If the requested @var{DEPTH} is not supported by the output file
-format, Enfuse warns and chooses the @var{DEPTH} that matches best.
-
-@cindex @acronym{OpenEXR}, data format
-The @acronym{OpenEXR} data format is treated as
-@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
-@acronym{OpenEXR} data is represented by ``half'' precision
-floating-point numbers.
-
-@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-@cindex @acronym{OpenEXR}, half precision float
-@cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#@/features,
-@acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
-10@dmn{bit} significant
-
-@itemize
-@item
-Minimum normalized value: @semilog{9.3, -10}
-@item
-Epsilon: @semilog{2.0, -3}
-@item
-Maximum finite value: @semilog{4.3, 9}
-@end itemize
-
-@item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
-@opindex -f
-@cindex output image, set size of
-@cindex canvas size
-@cindex size, canvas
-Ensure that the minimum ``canvas'' size of the output image is at
-least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
-the @var{XOFFSET} and @var{YOFFSET}, too.
-
-@pindex nona @r{(Hugin)}
-@pindex hugin
-This option only is useful when the input images are cropped
-@acronym{TIFF} files, such as those produced by
-@command{nona}@footnote{The stitcher @command{nona} is part of Hugin.
-@xref{Helpful Programs}.}.
-
-Note that option@tie{}@option{-f} neither rescales the output image,
-nor shrinks the canvas size below the minimum size occupied by the
-union of all input images.
-
-@item --fallback-profile=@var{PROFILE-FILENAME}
-@opindex --fallback-profile
-@cindex profile, fallback
-@cindex fallback profile
-@cindex @acronym{CIECAM02}
-Use the @acronym{ICC} profile in @var{PROFILE-FILENAME} instead of the
-default @acronym{sRGB}.  See option@tie{}@option{--ciecam} and
-@ref{Color Profiles}.
-
-This option only is effective if the input images come without color
-profiles and blending is performed in @acronym{CIECAM02} color
-appearance model.
-
-@item -g
-@opindex -g
-@cindex alpha channel, associated
-Save alpha channel as ``associated''.  See the
-@uref{http://@/www.awaresystems.be/@/imaging/@/tiff/@/tifftags/@/extrasamples.html,
-@acronym{TIFF} documentation} for an explanation.
-
-@pindex gimp
-@pindex cinepaint
-Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
-Programs}) exhibit unusual behavior when loading images with
-unassociated alpha channels.  Use option @option{-g} to work around
-this problem.  With this flag Enfuse will create the output image
-with the associated alpha tag set, even though the image is really
-unassociated alpha.
-@end table
-
-
 @node Fusion Options
 @section Fusion Options
 @cindex options, fusion
@@ -1504,6 +1442,505 @@ Valid range: @value{minimum-weight-exposure} @leq{} @var{WEIGHT}
 Default: @value{default-weight-exposure}.
 
 @xref{Exposure Weighting}.
+
+@item --exposure-width=@var{WIDTH}
+@itemx --exposure-sigma=@var{STD-DEV} @emph{(obsolete)}
+@opindex --exposure-width
+
+Set the characteristic @var{WIDTH} of the exposure weight function.
+Low numbers give less weight to pixels that are far from the
+user-defined optimum (option@tie{}@option{--exposure-optimum}) and
+vice versa.  Use this option to fine-tune exposure weighting
+(@pxref{Exposure Weighting}).
+
+Valid range: @var{WIDTH} > @value{minimum-exposure-width}.
+
+Default: @value{default-exposure-width}.
+
+@item --hard-mask
+@opindex --hard-mask
+
+Force hard blend masks on the finest scale.  This is the opposite flag
+of @option{--soft-mask}.
+
+This blending mode avoids averaging of fine details (only) at the
+expense of increasing the noise.  However it considerably improves the
+sharpness of focus stacks.  Blending with hard masks has only proven
+useful with focus stacks.
+
+See also @ref{Fusion Options, Option --contrast-weight} and
+@option{--contrast-window-size} above.
+
+@item --saturation-weight=@var{WEIGHT}
+@opindex --saturation-weight
+
+Set the relative @var{WEIGHT} of high-saturation pixels.  Increasing
+this weight makes pixels with high saturation contribute more to the
+final output.
+
+Valid range: @value{minimum-weight-saturation}
+@leq{} @var{WEIGHT} @leq{} @value{maximum-weight-saturation}.
+
+Default: @value{default-weight-saturation}.
+
+Saturation weighting is only defined for color images.
+@xref{Saturation Weighting}.
+
+@item --soft-mask
+@opindex --soft-mask
+
+Consider all masks when fusing.  This is the default.
+@end table
+
+
+@node Expert Options
+@section Expert Options
+@cindex options, expert
+
+Expert options influence the workings of Enfuse that require the user
+to read the manual before applying them successfully.
+
+@table @code
+@item --fallback-profile=@var{PROFILE-FILENAME}
+@opindex --fallback-profile
+@cindex profile, fallback
+@cindex fallback profile
+@cindex @acronym{CIECAM02}
+Use the @acronym{ICC} profile in @var{PROFILE-FILENAME} instead of the
+default @acronym{sRGB}.  See option@tie{}@option{--ciecam} and
+@ref{Color Profiles}.
+
+This option only is effective if the input images come without color
+profiles and blending is performed in @acronym{CIECAM02} color
+appearance model.
+
+@item --layer-selector=@var{ALGORITHM}
+@opindex --layer-selector
+@cindex layer selection
+@cindex layer selection
+Override the standard layer selector algorithm, which is
+@samp{@value{layer-selector}}.
+
+This version of Enblend offers the following algorithms:
+@table @code
+@item all-layers
+@cindex layer selection, all layers
+Select all layers in all images.
+
+@item first-layer
+@cindex layer selection, first layer
+Select only first layer in each multi-layer image.  For single-layer
+images this is the same as @samp{all-layers}.
+
+@item largest-layer
+@cindex layer selection, largest-layer
+Select largest layer in each multi-layer image, where the
+``largeness'', this is the size is defined by the product of the layer
+width and its height.  The channel width of the layer is ignored.  For
+single-layer images this is the same as @samp{all-layers}.
+
+@item no-layer
+@cindex layer selection, no layer
+Do not select any layer in any image.
+
+This algorithm is useful to temporarily exclude some images in
+response files.
+@end table
+
+@item --load-masks
+@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}
+@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
+@opindex --load-masks
+
+Load masks from images instead of computing them.
+
+The masks have to be a grayscale images.
+
+@cindex mask, loading
+First form: Load all soft-weight masks from files that were previously
+saved with option@tie{}@option{--save-masks}.  If
+option@tie{}@option{--hard-mask} is effective only load hard masks.
+The defaults are @file{@value{default-soft-mask-template}} and
+@file{@value{default-hard-mask-template}}.
+@cindex filename template
+@cindex mask, filename template
+In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
+soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
+additionally defines the names of the hard-mask files.  See
+option@tie{}@option{--save-masks} below for the description of mask
+templates.
+
+Options@tie{}@option{--load-masks} and @option{--save-masks} are
+mutually exclusive.
+
+@item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
+@opindex --parameter
+Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
+option is cumulative.  Separate multiple pairs with the usual numeric
+delimiters.
+
+This option has the negated form @option{--no-parameter},
+@opindex --no-parameter
+which takes one or more @var{KEY}s and removes them from the list of
+defined parameters.  The special key@tie{}@samp{*} deletes all
+parameters at once.
+
+Parameters allow the developers to change the internal workings of
+Enblend without the need to recompile.
+
+@item --prefer-gpu
+@itemx --prefer-gpu=DEVICE
+@itemx --prefer-gpu=PLATFORM:DEVICE
+@cindex GPU
+@cindex OpenCL
+@cindex OpenCL, platform
+@cindex OpenCL, device
+When told to employ the @acronym{GPU} with @option{--gpu}, by default
+Enblend uses the first device on the first autodetected platform it
+finds via queries of the @acronym{OpenCL} subsystem, where neither the
+device, nor the platform may be the ones the user wants.  Usually she
+will select the device with the highest performance, maximum possible
+number of work-items, and largest associated memory.
+
+The first form of @option{--prefer-gpu} prints a list of all available
+@acronym{GPU}@tie{}devices on all accessible platforms, the current
+preferences, and then exits; it is the same enumeration that
+@samp{enblend --verbose --version} reveals.  Example:
+
+@example
+Available, OpenCL-compatible platform(s) and their device(s)
+  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+    * no GPU devices found on this platform
+  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+    * Device #1: max. 1024 work items
+                 1047872 KB global memory with 32 KB read/write cache
+                 48 KB dedicated local memory
+                 64 KB maximum constant memory
+Currently preferred GPU is device #1 on platform #2 (autodetected).
+@end example
+
+Use the numbers of platforms and devices found there to select the
+desired @var{DEVICE} on the first platform (second form) or
+@var{DEVICE} on the given @var{PLATFORM} (third form).
+
+Enblend's default is equivalent to choosing the first (i.e.@: lowest
+number) @acronym{GPU}-device on the first (i.e.@: lowest number)
+platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
+example.
+
+See also option@tie{}@option{--gpu}.
+
+@item --save-masks
+@itemx --save-masks=@var{SOFT-MASK-TEMPLATE}
+@itemx --save-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
+@opindex --save-masks
+@cindex mask, save
+@cindex save mask
+Save the generated weight masks to image files.
+
+First form: Save all soft-weight masks in files.  If
+option@tie{}@option{--hard-mask} is effective also save the hard masks.
+The defaults are @file{@value{default-soft-mask-template}} and
+@file{@value{default-hard-mask-template}}.
+@cindex filename template
+@cindex mask, filename template
+In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
+soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
+additionally defines the names of the hard-mask files.
+
+@cindex save mask, only
+@cindex only save mask
+Enfuse will stop after saving all masks unless
+option@tie{}@option{--output} is given, too.  With both options given,
+this is, @option{--save-masks} and @option{--output}, Enfuse saves all
+masks and then proceeds to fuse the output image.
+
+Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
+templates that are expanded for each mask file.  In a template a
+percent sign (@samp{%}) introduces a variable part.  All other
+characters are copied literally.  Lowercase letters refer to the name
+of the respective input file, whereas uppercase ones refer to the name
+of the output file (@pxref{Common Options}).
+@ref{Table:mask-template-characters} lists all variables.
+
+A fancy mask filename template could look like this:
+
+@example
+%D/soft-mask-%02n-%f.viff
+@end example
+
+It puts the mask files into the same directory as the output file
+(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
+mask files nicely sorted, and decorates the mask filename with the
+name of the associated input file (@samp{%f}) for easy recognition.
+@end table
+
+@c The extra <para>s fix another stupid Texinfo problem with DocBook.
+@docbook
+<para>
+@end docbook
+Options@tie{}@option{--save-masks} and @option{--load-masks} are
+mutually exclusive.
+@docbook
+</para>
+@end docbook
+
+@page
+
+@include mask-template-characters.texi
+
+
+@node Expert Fusion Options
+@section Expert Fusion Options
+@cindex options, expert fusion
+
+@table @code
+@item --contrast-edge-scale=@var{EDGE-SCALE}
+@itemx --contrast-edge-scale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
+@opindex --contrast-edge-scale
+
+@cindex Laplacian-of-Gaussian
+A non-zero value for @var{EDGE-SCALE} switches on the
+Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
+@var{EDGE-SCALE} is the radius of the Gaussian used in the search for
+edges.  Default: @value{default-edge-scale}@dmn{pixels}.
+
+A positive @var{LCE-SCALE} turns on local contrast enhancement
+(@acronym{LCE}) before the @acronym{LoG} edge detection.
+@var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
+step, @var{LCE-FACTOR} is the weight factor (``strength'').
+
+@var{enhanced} = (1 + @var{LCE-FACTOR}) @classictimes{} @var{original}
+@minus{} @var{LCE-FACTOR} @classictimes{} Gaussian@/Smooth(@var{original},
+@var{LCE-SCALE}).
+
+@var{LCE-SCALE} defaults to @value{default-lce-scale} pixels and
+@var{LCE-FACTOR} defaults to @value{default-lce-factor}.  Append
+@samp{%} to @var{LCE-SCALE} to specify the radius as a percentage of
+@var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR} to specify the
+weight as a percentage.
+
+@item --contrast-min-curvature=@var{CURVATURE}
+@opindex --contrast-min-curvature
+
+Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
+detection.  Default: @value{default-minimum-curvature}.  Append a
+@samp{%} to specify the minimum curvature relative to maximum pixel
+value in the source image (for example 255 or 65535).
+
+A positive value makes Enfuse use the local contrast data (controlled
+with @option{--contrast-window-size}) for curvatures less than
+@var{CURVATURE} and @acronym{LoG} data for values above it.
+
+A negative value truncates all curvatures less than
+@minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
+left unchanged.  This effectively suppresses weak edges.
+
+@item --contrast-window-size=@var{SIZE}
+@opindex --contrast-window-size
+
+Set the window @var{SIZE} for local contrast analysis.  The window
+will be a square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.  If
+given an even @var{SIZE}, Enfuse will automatically use the next odd
+number.
+
+For contrast analysis @var{SIZE} values larger than 5 might result in
+a blurry composite image.  Values of 3 and 5 have given good results
+on focus stacks.
+
+Valid range: @var{SIZE} @geq{} @value{minimum-contrast-window-size}.
+
+Default: @value{default-contrast-window-size}@dmn{pixels}.
+
+See also @ref{Fusion Options, Option --contrast-weight} and
+@option{--hard-mask} below.
+
+@item --entropy-cutoff=@var{LOWER-CUTOFF}
+@itemx --entropy-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
+@opindex --entropy-cutoff
+
+The first form defines the lower cutoff value below which pixels are
+treated as pure black when calculating the local entropy.  The second
+form also defines the upper cutoff value above which pixels are
+treated as pure white.
+
+For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
+separately and independently to each channel.
+
+Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
+value in the source image (for example 255 or 65535).  Negative
+@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
+@var{UPPER-CUTOFF} value; the same holds for negative percentages.
+
+Defaults: @value{default-entropy-lower-cutoff} for @var{LOWER-CUTOFF}
+and @value{default-entropy-upper-cutoff} for @var{UPPER-CUTOFF}, that
+is, all pixels' values are taken into account.
+
+@ref{Figure:entropy-cutoff} shows an example.
+
+@float Figure,Figure:entropy-cutoff
+@vimage{entropy-cutoff}
+
+@caption{Linear lightness@tie{}@var{Y} in comparison with an entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 90%, which are rather extreme values.  Please note that we have shifted the original lightness curve up and the cut-off curve down by a very small @var{Offset} to emphasize that the proportional part of @var{Y} remains unaltered under the cut-off operation.}
+
+@shortcaption{Entropy cutoff function}
+@end float
+
+Note that a high @var{LOWER-CUTOFF} value lightens the resulting
+image, as dark and presumably noisy pixels are averaged with
+@emph{equal} weights.  With @samp{--entropy-cutoff=0}, the default, on
+the other hand, ``noise'' might be interpreted as high entropy and the
+noisy pixels get a high weight, which in turn renders the resulting
+image darker.  Analogously, a low @var{UPPER-CUTOFF} darkens the
+output image.
+
+@item --entropy-window-size=@var{SIZE}
+@opindex --entropy-window-size
+
+Window @var{SIZE} for local entropy analysis.  The window will be a
+square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.
+
+In the entropy calculation @var{SIZE} values of 3 to 7 yield an
+acceptable compromise of the locality of the information and the
+significance of the local entropy value itself.
+
+Valid range: @var{SIZE} @geq{} @value{minimum-entropy-window-size}.
+
+Default: @value{default-entropy-window-size}@dmn{pixels}.
+
+If given an even @var{SIZE} Enfuse will automatically use the next odd
+number.
+
+@item --exposure-cutoff=@var{LOWER-CUTOFF}
+@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
+@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}:@var{LOWER-PROJECTOR}:@var{UPPER-PROJECTOR}
+@opindex --exposure-cutoff
+
+The first form sets the lower cutoff value; the second form sets the
+lower cutoff and the upper cutoff at the same time.  Pixels below the
+lower or above the upper cutoff get a weight of exactly zero
+irrespective of the active exposure-weight function.
+
+For color images the values of @var{LOWER-CUTOFF} and
+@var{UPPER-CUTOFF} refer to the gray-scale projection as selected with
+option@tie{}@option{--gray-projector}.
+
+Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
+value in the source image (for example 255 or 65535).  Negative
+@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
+@var{UPPER-CUTOFF} value; the same holds for negative percentages.
+
+The impact of this option is similar, but not identical to
+transforming @emph{all} input images with
+@uref{http://@/www.imagemagick.org/, ImageMagick's} @command{convert}
+(@pxref{Helpful Programs}) prior to fusing with the commands
+demonstrated in @ref{Example:imagemagick-convert-cutoff}.
+
+@float Example,Example:imagemagick-convert-cutoff
+@example
+@group
+# First form
+convert IMAGE \
+        \( +clone -threshold LOWER-CUTOFF \) \
+        -compose copy_opacity -composite \
+        MASKED-IMAGE
+@end group
+
+@group
+# Second form
+convert IMAGE \
+        \( \
+            \( IMAGE -threshold LOWER-CUTOFF \) \
+            \( IMAGE -threshold UPPER-CUTOFF -negate \) \
+            -compose multiply -composite \
+        \) \
+        -compose copy_opacity -composite \
+        MASKED-IMAGE
+@end group
+@end example
+
+@caption{Using ImageMagick for exposure cutoff}
+@end float
+
+Transforming some or all input images as shown in the example gives
+the user more flexibility because the thresholds can be chosen for
+each image individually.
+
+The third form specifies projection operators as in
+option@tie{}@option{--gray-projector} for the @var{LOWER-CUTOFF} and
+@var{UPPER-CUTOFF} thresholds.
+
+This option can be helpful if the user wants to exclude underexposed
+or overexposed pixels from the fusing process in @emph{all} of the
+input images.  The values of @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF}
+as well as the gray-scale projector determine which pixels are
+considered ``underexposed'' or ``overexposed''.  As any change of the
+exposure-weight curve this option changes the brightness of the
+resulting image: increasing @var{LOWER-CUTOFF} lightens the final
+image and lowering @var{UPPER-CUTOFF} darkens it.
+
+Defaults: @value{default-exposure-lower-cutoff} for
+@var{LOWER-CUTOFF} and @value{default-exposure-upper-cutoff} for
+@var{UPPER-CUTOFF}, that is, all pixels' values are weighted according
+to the ``uncut'' exposure-weight curve.
+
+@ref{Figure:exposure-cutoff} shows an example.
+
+The gray-scale projectors @var{LOWER-PROJECTOR} and
+@var{UPPER-PROJECTOR} default to
+@samp{@value{default-exposure-lower-cutoff-projector}} and
+@samp{@value{default-exposure-upper-cutoff-projector}}, which are
+usually the best choices for effective cutoff operations on the
+respective ends.
+
+@float Figure,Figure:exposure-cutoff
+@vimage{exposure-cutoff}
+
+@caption{Exposure weight, a Gaussian with the @var{optimum} = 0.5 and @var{width} = 0.2 submitted to an exposure-cutoff of @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
+
+@shortcaption{Exposure cutoff function}
+@end float
+
+Note that the application of the respective cutoffs is completely
+independent of the actual shape of the exposure weight function.
+
+If a set of images stubbornly refuses to ``react'' to this option,
+look at their histograms to verify the cutoff actually falls into
+populated ranges of the histograms.  In the absence of an image
+manipulation program like @uref{http://@/www.gimp.org/, The Gimp},
+@uref{http://@/www.imagemagick.org/, ImageMagick} (@pxref{Helpful
+Programs}) can be used to generate
+@uref{http://@/www.imagemagick.org/@/Usage/@/files/@/#histogram,
+histograms}, like, for example,
+
+@example
+@group
+convert -define histogram:unique-colors=false \
+        IMAGE histogram:- | \
+    display
+@end group
+@end example
+
+The syntax of this option is flexible enough to combine ease of use
+and precision.
+
+@table @asis
+@item Suppress some noise: @samp{--exposure-cutoff=5%}
+The percentage makes the cutoff specification channel-width agnostic.
+
+@item Shave off pure white pixels: @samp{--exposure-cutoff=0:-1}
+This cutoff specification only works for integral pixels, but it will
+set the weight of the very brightest pixels to zero.
+
+@item Shave off bright white pixels: @samp{--exposure-cutoff=0:-1%}
+Here we exclude the brightest 1% of pixels form the exposure fusion no
+matter whether the image is encoded with integers or floating-point
+numbers.
+
+@item Suppress some noise and shave off pure white pixels: @samp{--exposure-cutoff=5%:-1}
+Combine the effects of lower and upper cutoff, while mixing relative
+and absolute specifications.
+@end table
 
 @item --exposure-weight-function=@var{WEIGHT-FUNCTION} (@superscripted{1,st}@tie{}form)
 @itemx --exposure-weight-function=@var{SHARED-OBJECT}:@var{SYMBOL}[:@var{ARGUMENT}[:@dots{}]] (@superscripted{2,nd}@tie{}form)
@@ -2079,292 +2516,6 @@ Weighting}.
 
 If this option is given more than once, the last instance wins.
 
-@item --exposure-width=@var{WIDTH}
-@itemx --exposure-sigma=@var{STD-DEV} @emph{(obsolete)}
-@opindex --exposure-width
-
-Set the characteristic @var{WIDTH} of the exposure weight function.
-Low numbers give less weight to pixels that are far from the
-user-defined optimum (option@tie{}@option{--exposure-optimum}) and
-vice versa.  Use this option to fine-tune exposure weighting
-(@pxref{Exposure Weighting}).
-
-Valid range: @var{WIDTH} > @value{minimum-exposure-width}.
-
-Default: @value{default-exposure-width}.
-
-@item --saturation-weight=@var{WEIGHT}
-@opindex --saturation-weight
-
-Set the relative @var{WEIGHT} of high-saturation pixels.  Increasing
-this weight makes pixels with high saturation contribute more to the
-final output.
-
-Valid range: @value{minimum-weight-saturation}
-@leq{} @var{WEIGHT} @leq{} @value{maximum-weight-saturation}.
-
-Default: @value{default-weight-saturation}.
-
-Saturation weighting is only defined for color images.
-@xref{Saturation Weighting}.
-@end table
-
-
-@node Expert Options
-@section Expert Options
-@cindex options, expert
-
-Expert options influence the workings of Enfuse that require the user
-to read the manual before applying them successfully.
-
-@table @code
-@item --contrast-edge-scale=@var{EDGE-SCALE}
-@itemx --contrast-edge-scale=@var{EDGE-SCALE}:@var{LCE-SCALE}:@var{LCE-FACTOR}
-@opindex --contrast-edge-scale
-
-@cindex Laplacian-of-Gaussian
-A non-zero value for @var{EDGE-SCALE} switches on the
-Laplacian-of-Gaussian (@acronym{LoG}) edge detection algorithm.
-@var{EDGE-SCALE} is the radius of the Gaussian used in the search for
-edges.  Default: @value{default-edge-scale}@dmn{pixels}.
-
-A positive @var{LCE-SCALE} turns on local contrast enhancement
-(@acronym{LCE}) before the @acronym{LoG} edge detection.
-@var{LCE-SCALE} is the radius of the Gaussian used in the enhancement
-step, @var{LCE-FACTOR} is the weight factor (``strength'').
-
-@var{enhanced} = (1 + @var{LCE-FACTOR}) @classictimes{} @var{original}
-@minus{} @var{LCE-FACTOR} @classictimes{} Gaussian@/Smooth(@var{original},
-@var{LCE-SCALE}).
-
-@var{LCE-SCALE} defaults to @value{default-lce-scale} pixels and
-@var{LCE-FACTOR} defaults to @value{default-lce-factor}.  Append
-@samp{%} to @var{LCE-SCALE} to specify the radius as a percentage of
-@var{EDGE-SCALE}.  Append @samp{%} to @var{LCE-FACTOR} to specify the
-weight as a percentage.
-
-@item --contrast-min-curvature=@var{CURVATURE}
-@opindex --contrast-min-curvature
-
-Define the minimum @var{CURVATURE} for the @acronym{LoG} edge
-detection.  Default: @value{default-minimum-curvature}.  Append a
-@samp{%} to specify the minimum curvature relative to maximum pixel
-value in the source image (for example 255 or 65535).
-
-A positive value makes Enfuse use the local contrast data (controlled
-with @option{--contrast-window-size}) for curvatures less than
-@var{CURVATURE} and @acronym{LoG} data for values above it.
-
-A negative value truncates all curvatures less than
-@minus{}@var{CURVATURE} to zero.  Values above @var{CURVATURE} are
-left unchanged.  This effectively suppresses weak edges.
-
-@item --contrast-window-size=@var{SIZE}
-@opindex --contrast-window-size
-
-Set the window @var{SIZE} for local contrast analysis.  The window
-will be a square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.  If
-given an even @var{SIZE}, Enfuse will automatically use the next odd
-number.
-
-For contrast analysis @var{SIZE} values larger than 5 might result in
-a blurry composite image.  Values of 3 and 5 have given good results
-on focus stacks.
-
-Valid range: @var{SIZE} @geq{} @value{minimum-contrast-window-size}.
-
-Default: @value{default-contrast-window-size}@dmn{pixels}.
-
-See also @ref{Fusion Options, Option --contrast-weight} and
-@option{--hard-mask} below.
-
-@item --entropy-cutoff=@var{LOWER-CUTOFF}
-@itemx --entropy-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
-@opindex --entropy-cutoff
-
-The first form defines the lower cutoff value below which pixels are
-treated as pure black when calculating the local entropy.  The second
-form also defines the upper cutoff value above which pixels are
-treated as pure white.
-
-For color images @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF} are applied
-separately and independently to each channel.
-
-Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
-value in the source image (for example 255 or 65535).  Negative
-@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
-@var{UPPER-CUTOFF} value; the same holds for negative percentages.
-
-Defaults: @value{default-entropy-lower-cutoff} for @var{LOWER-CUTOFF}
-and @value{default-entropy-upper-cutoff} for @var{UPPER-CUTOFF}, that
-is, all pixels' values are taken into account.
-
-@ref{Figure:entropy-cutoff} shows an example.
-
-@float Figure,Figure:entropy-cutoff
-@vimage{entropy-cutoff}
-
-@caption{Linear lightness@tie{}@var{Y} in comparison with an entropy-cutoff function for @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 90%, which are rather extreme values.  Please note that we have shifted the original lightness curve up and the cut-off curve down by a very small @var{Offset} to emphasize that the proportional part of @var{Y} remains unaltered under the cut-off operation.}
-
-@shortcaption{Entropy cutoff function}
-@end float
-
-Note that a high @var{LOWER-CUTOFF} value lightens the resulting
-image, as dark and presumably noisy pixels are averaged with
-@emph{equal} weights.  With @samp{--entropy-cutoff=0}, the default, on
-the other hand, ``noise'' might be interpreted as high entropy and the
-noisy pixels get a high weight, which in turn renders the resulting
-image darker.  Analogously, a low @var{UPPER-CUTOFF} darkens the
-output image.
-
-@item --entropy-window-size=@var{SIZE}
-@opindex --entropy-window-size
-
-Window @var{SIZE} for local entropy analysis.  The window will be a
-square of @var{SIZE}@classictimes{}@/@var{SIZE} pixels.
-
-In the entropy calculation @var{SIZE} values of 3 to 7 yield an
-acceptable compromise of the locality of the information and the
-significance of the local entropy value itself.
-
-Valid range: @var{SIZE} @geq{} @value{minimum-entropy-window-size}.
-
-Default: @value{default-entropy-window-size}@dmn{pixels}.
-
-If given an even @var{SIZE} Enfuse will automatically use the next odd
-number.
-
-@item --exposure-cutoff=@var{LOWER-CUTOFF}
-@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}
-@itemx --exposure-cutoff=@var{LOWER-CUTOFF}:@var{UPPER-CUTOFF}:@var{LOWER-PROJECTOR}:@var{UPPER-PROJECTOR}
-@opindex --exposure-cutoff
-
-The first form sets the lower cutoff value; the second form sets the
-lower cutoff and the upper cutoff at the same time.  Pixels below the
-lower or above the upper cutoff get a weight of exactly zero
-irrespective of the active exposure-weight function.
-
-For color images the values of @var{LOWER-CUTOFF} and
-@var{UPPER-CUTOFF} refer to the gray-scale projection as selected with
-option@tie{}@option{--gray-projector}.
-
-Append a @samp{%}-sign to specify the cutoff relative to maximum pixel
-value in the source image (for example 255 or 65535).  Negative
-@var{UPPER-CUTOFF} values indicate the maximum minus the absolute
-@var{UPPER-CUTOFF} value; the same holds for negative percentages.
-
-The impact of this option is similar, but not identical to
-transforming @emph{all} input images with
-@uref{http://@/www.imagemagick.org/, ImageMagick's} @command{convert}
-(@pxref{Helpful Programs}) prior to fusing with the commands
-demonstrated in @ref{Example:imagemagick-convert-cutoff}.
-
-@float Example,Example:imagemagick-convert-cutoff
-@example
-@group
-# First form
-convert IMAGE \
-        \( +clone -threshold LOWER-CUTOFF \) \
-        -compose copy_opacity -composite \
-        MASKED-IMAGE
-@end group
-
-@group
-# Second form
-convert IMAGE \
-        \( \
-            \( IMAGE -threshold LOWER-CUTOFF \) \
-            \( IMAGE -threshold UPPER-CUTOFF -negate \) \
-            -compose multiply -composite \
-        \) \
-        -compose copy_opacity -composite \
-        MASKED-IMAGE
-@end group
-@end example
-
-@caption{Using ImageMagick for exposure cutoff}
-@end float
-
-Transforming some or all input images as shown in the example gives
-the user more flexibility because the thresholds can be chosen for
-each image individually.
-
-The third form specifies projection operators as in
-option@tie{}@option{--gray-projector} for the @var{LOWER-CUTOFF} and
-@var{UPPER-CUTOFF} thresholds.
-
-This option can be helpful if the user wants to exclude underexposed
-or overexposed pixels from the fusing process in @emph{all} of the
-input images.  The values of @var{LOWER-CUTOFF} and @var{UPPER-CUTOFF}
-as well as the gray-scale projector determine which pixels are
-considered ``underexposed'' or ``overexposed''.  As any change of the
-exposure-weight curve this option changes the brightness of the
-resulting image: increasing @var{LOWER-CUTOFF} lightens the final
-image and lowering @var{UPPER-CUTOFF} darkens it.
-
-Defaults: @value{default-exposure-lower-cutoff} for
-@var{LOWER-CUTOFF} and @value{default-exposure-upper-cutoff} for
-@var{UPPER-CUTOFF}, that is, all pixels' values are weighted according
-to the ``uncut'' exposure-weight curve.
-
-@ref{Figure:exposure-cutoff} shows an example.
-
-The gray-scale projectors @var{LOWER-PROJECTOR} and
-@var{UPPER-PROJECTOR} default to
-@samp{@value{default-exposure-lower-cutoff-projector}} and
-@samp{@value{default-exposure-upper-cutoff-projector}}, which are
-usually the best choices for effective cutoff operations on the
-respective ends.
-
-@float Figure,Figure:exposure-cutoff
-@vimage{exposure-cutoff}
-
-@caption{Exposure weight, a Gaussian with the @var{optimum} = 0.5 and @var{width} = 0.2 submitted to an exposure-cutoff of @var{LOWER-CUTOFF} = 5% and @var{UPPER-CUTOFF} = 97%.}
-
-@shortcaption{Exposure cutoff function}
-@end float
-
-Note that the application of the respective cutoffs is completely
-independent of the actual shape of the exposure weight function.
-
-If a set of images stubbornly refuses to ``react'' to this option,
-look at their histograms to verify the cutoff actually falls into
-populated ranges of the histograms.  In the absence of an image
-manipulation program like @uref{http://@/www.gimp.org/, The Gimp},
-@uref{http://@/www.imagemagick.org/, ImageMagick} (@pxref{Helpful
-Programs}) can be used to generate
-@uref{http://@/www.imagemagick.org/@/Usage/@/files/@/#histogram,
-histograms}, like, for example,
-
-@example
-@group
-convert -define histogram:unique-colors=false \
-        IMAGE histogram:- | \
-    display
-@end group
-@end example
-
-The syntax of this option is flexible enough to combine ease of use
-and precision.
-
-@table @asis
-@item Suppress some noise: @samp{--exposure-cutoff=5%}
-The percentage makes the cutoff specification channel-width agnostic.
-
-@item Shave off pure white pixels: @samp{--exposure-cutoff=0:-1}
-This cutoff specification only works for integral pixels, but it will
-set the weight of the very brightest pixels to zero.
-
-@item Shave off bright white pixels: @samp{--exposure-cutoff=0:-1%}
-Here we exclude the brightest 1% of pixels form the exposure fusion no
-matter whether the image is encoded with integers or floating-point
-numbers.
-
-@item Suppress some noise and shave off pure white pixels: @samp{--exposure-cutoff=5%:-1}
-Combine the effects of lower and upper cutoff, while mixing relative
-and absolute specifications.
-@end table
-
 @item --gray-projector=@var{PROJECTOR}
 @opindex --gray-projector
 @cindex gray projector
@@ -2841,109 +2992,7 @@ $$
 @end docbook
 @end table
 
-@item --hard-mask
-@opindex --hard-mask
-
-Force hard blend masks on the finest scale.  This is the opposite flag
-of @option{--soft-mask}.
-
-This blending mode avoids averaging of fine details (only) at the
-expense of increasing the noise.  However it considerably improves the
-sharpness of focus stacks.  Blending with hard masks has only proven
-useful with focus stacks.
-
-See also @ref{Fusion Options, Option --contrast-weight} and
-@option{--contrast-window-size} above.
-
-@item --load-masks
-@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}
-@itemx --load-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
-@opindex --load-masks
-
-Load masks from images instead of computing them.
-
-The masks have to be a grayscale images.
-
-@cindex mask, loading
-First form: Load all soft-weight masks from files that were previously
-saved with option@tie{}@option{--save-masks}.  If
-option@tie{}@option{--hard-mask} is effective only load hard masks.
-The defaults are @file{@value{default-soft-mask-template}} and
-@file{@value{default-hard-mask-template}}.
-@cindex filename template
-@cindex mask, filename template
-In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
-soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
-additionally defines the names of the hard-mask files.  See
-option@tie{}@option{--save-masks} below for the description of mask
-templates.
-
-Options@tie{}@option{--load-masks} and @option{--save-masks} are
-mutually exclusive.
-
-@item --save-masks
-@itemx --save-masks=@var{SOFT-MASK-TEMPLATE}
-@itemx --save-masks=@var{SOFT-MASK-TEMPLATE}:@var{HARD-MASK-TEMPLATE}
-@opindex --save-masks
-@cindex mask, save
-@cindex save mask
-Save the generated weight masks to image files.
-
-First form: Save all soft-weight masks in files.  If
-option@tie{}@option{--hard-mask} is effective also save the hard masks.
-The defaults are @file{@value{default-soft-mask-template}} and
-@file{@value{default-hard-mask-template}}.
-@cindex filename template
-@cindex mask, filename template
-In the second form, @var{SOFT-MASK-TEMPLATE} defines the names of the
-soft-mask files.  In the third form, @var{HARD-MASK-TEMPLATE}
-additionally defines the names of the hard-mask files.
-
-@cindex save mask, only
-@cindex only save mask
-Enfuse will stop after saving all masks unless
-option@tie{}@option{--output} is given, too.  With both options given,
-this is, @option{--save-masks} and @option{--output}, Enfuse saves all
-masks and then proceeds to fuse the output image.
-
-Both @var{SOFT-MASK-TEMPLATE} and @var{HARD-MASK-TEMPLATE} define
-templates that are expanded for each mask file.  In a template a
-percent sign (@samp{%}) introduces a variable part.  All other
-characters are copied literally.  Lowercase letters refer to the name
-of the respective input file, whereas uppercase ones refer to the name
-of the output file (@pxref{Common Options}).
-@ref{Table:mask-template-characters} lists all variables.
-
-A fancy mask filename template could look like this:
-
-@example
-%D/soft-mask-%02n-%f.viff
-@end example
-
-It puts the mask files into the same directory as the output file
-(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
-mask files nicely sorted, and decorates the mask filename with the
-name of the associated input file (@samp{%f}) for easy recognition.
-
-@item --soft-mask
-@opindex --soft-mask
-
-Consider all masks when fusing.  This is the default.
 @end table
-
-@c The extra <para>s fix another stupid Texinfo problem with DocBook.
-@docbook
-<para>
-@end docbook
-Options@tie{}@option{--save-masks} and @option{--load-masks} are
-mutually exclusive.
-@docbook
-</para>
-@end docbook
-
-@page
-
-@include mask-template-characters.texi
 
 
 @node Information Options
@@ -4072,7 +4121,7 @@ and @math{width} defaults to @value{default-exposure-width}.
 @float Figure,Figure:gaussian
 @vimage{gaussian}
 
-@caption{Enblend's Gaussian function with the parameters @var{optimum}
+@caption{Enfuse's Gaussian function with the parameters @var{optimum}
 = 0.5 and three different @var{width}s: 0.1, 0.2, and 0.4.}
 
 @shortcaption{Gaussian function}
@@ -4138,7 +4187,7 @@ like exp(-@power{z,2}/2) and the Lorentzian only as @power{z,-2}.
 
 @float Figure,Figure:lorentzian
 @vimage{lorentzian}
-@caption{Enblend's Lorentzian function with the parameters
+@caption{Enfuse's Lorentzian function with the parameters
 @var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
 0.4.}
 @shortcaption{Lorentzian function}
@@ -4150,7 +4199,7 @@ away from the chosen optimum.
 
 @float Figure,Figure:halfsine
 @vimage{halfsine}
-@caption{Enblend's Half-Sine function with the parameters
+@caption{Enfuse's Half-Sine function with the parameters
 @var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
 0.4.}
 @shortcaption{Half-Sine function}
@@ -4158,7 +4207,7 @@ away from the chosen optimum.
 
 @float Figure,Figure:fullsine
 @vimage{fullsine}
-@caption{Enblend's Full-Sine function with the parameters
+@caption{Enfuse's Full-Sine function with the parameters
 @var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
 0.4.}
 @shortcaption{Full-Sine function}
@@ -4173,7 +4222,7 @@ the respective zeros.
 
 @float Figure,Figure:power
 @vimage{power}
-@caption{Enblend's Bi-Square function with the parameters
+@caption{Enfuse's Bi-Square function with the parameters
 @var{optimum} = 0.5 and three different @var{width}s: 0.1, 0.2, and
 0.4.}
 @shortcaption{Bi-Square function}
@@ -4200,7 +4249,7 @@ benefit of allowing to choose upper and lower cutoff separately.
 
 @float Figure,Figure:exposure-weights
 @vimage{exposure-weights}
-@caption{Comparison of all of Enblend's exposure weight functions for
+@caption{Comparison of all of Enfuse's exposure weight functions for
 the default values of @var{optimum} = 0.5 and @var{width} = 0.2.  Note
 that all functions intersect at @math{w = 1/2}, this is, they share the
 same @acronym{FWHM}.}
@@ -4337,7 +4386,7 @@ Enfuse checks this property and refuses to continue if the weight is
 outside the required range.
 @item
 (Optionally) Rescale the @var{WIDTH} of the function to match the
-@acronym{FWHM} of Enblend's original Gauss curve.  The
+@acronym{FWHM} of Enfuse's original Gauss curve.  The
 macro@tie{}@code{FWHM_GAUSSIAN} is defined exactly to this end.
 @end itemize
 
@@ -4381,7 +4430,7 @@ aborts.
 
 @item
 Define an object of the derived class.  This creates the @var{SYMBOL}
-to refer to at the Enblend command line.
+to refer to at the Enfuse command line.
 
 The actual signature of the constructor (default, two-argument,
 @dots{}) does not matter, because Enfuse @emph{always} invokes

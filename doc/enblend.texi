@@ -267,13 +267,15 @@ filenames on the command line.
 
 
 @menu
-* Image Requirements::          Input image requirements
-* Response Files::              Files listing the images' names
-* Common Options::              General options
-* Extended Options::            Memory and color-space control
-* Mask Generation Options::     Mask generation control
-* Information Options::         Information about Enblend itself
-* Option Delimiters::           How to separate options' arguments
+* Image Requirements::                Input image requirements
+* Response Files::                    Files listing the images' names
+* Common Options::                    General options
+* Advanced Options::                  Memory and color-space control
+* Mask Generation Options::           Mask generation control
+* Expert Options::                    Special control of output image
+* Expert Mask Generation Options::    Deep control of mask generation
+* Information Options::               Information about Enblend itself
+* Option Delimiters::                 How to separate options' arguments
 @end menu
 
 
@@ -468,39 +470,6 @@ Negate this option with @option{--no-gpu}.
 
 See also option@tie{}@option{--prefer-gpu}.
 
-@item --layer-selector=@var{ALGORITHM}
-@opindex --layer-selector
-@cindex layer selection
-@cindex layer selection
-Override the standard layer selector algorithm, which is
-@samp{@value{layer-selector}}.
-
-This version of Enblend offers the following algorithms:
-@table @code
-@item all-layers
-@cindex layer selection, all layers
-Select all layers in all images.
-
-@item first-layer
-@cindex layer selection, first layer
-Select only first layer in each multi-layer image.  For single-layer
-images this is the same as @samp{all-layers}.
-
-@item largest-layer
-@cindex layer selection, largest-layer
-Select largest layer in each multi-layer image, where the
-``largeness'', this is the size is defined by the product of the layer
-width and its height.  The channel width of the layer is ignored.  For
-single-layer images this is the same as @samp{all-layers}.
-
-@item no-layer
-@cindex layer selection, no layer
-Do not select any layer in any image.
-
-This algorithm is useful to temporarily exclude some images in
-response files.
-@end table
-
 @item -l @var{LEVELS}
 @itemx --levels=@var{LEVELS}
 @opindex -l
@@ -622,76 +591,6 @@ Place blended output image in @var{FILE}.
 If @option{--output} is not specified, the default is to put the
 resulting image in @file{@value{default-output-filename}}.
 
-@item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
-@opindex --parameter
-Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
-option is cumulative.  Separate multiple pairs with the usual numeric
-delimiters.
-
-This option has the negated form @option{--no-parameter},
-@opindex --no-parameter
-which takes one or more @var{KEY}s and removes them from the list of
-defined parameters.  The special key@tie{}@samp{*} deletes all
-parameters at once.
-
-Parameters allow the developers to change the internal workings of
-Enblend without the need to recompile.
-
-@item -a
-@itemx --pre-assemble
-@opindex -a
-@opindex --pre-assemble
-Pre-assemble non-overlapping images before each blending iteration.
-
-This overrides the default behavior which is to blend the images
-sequentially in the order given on the command line.  Enblend will use
-fewer blending iterations, but it will do more work in each iteration.
-
-This option has the negated form @option{--no-pre-assemble}, which
-restores the default.
-
-@item --prefer-gpu
-@itemx --prefer-gpu=DEVICE
-@itemx --prefer-gpu=PLATFORM:DEVICE
-@cindex GPU
-@cindex OpenCL
-@cindex OpenCL, platform
-@cindex OpenCL, device
-When told to employ the @acronym{GPU} with @option{--gpu}, by default
-Enblend uses the first device on the first autodetected platform it
-finds via queries of the @acronym{OpenCL} subsystem, where neither the
-device, nor the platform may be the ones the user wants.  Usually she
-will select the device with the highest performance, maximum possible
-number of work-items, and largest associated memory.
-
-The first form of @option{--prefer-gpu} prints a list of all available
-@acronym{GPU}@tie{}devices on all accessible platforms, the current
-preferences, and then exits; it is the same enumeration that
-@samp{enblend --verbose --version} reveals.  Example:
-
-@example
-Available, OpenCL-compatible platform(s) and their device(s)
-  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
-    * no GPU devices found on this platform
-  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-    * Device #1: max. 1024 work items
-                 1047872 KB global memory with 32 KB read/write cache
-                 48 KB dedicated local memory
-                 64 KB maximum constant memory
-Currently preferred GPU is device #1 on platform #2 (autodetected).
-@end example
-
-Use the numbers of platforms and devices found there to select the
-desired @var{DEVICE} on the first platform (second form) or
-@var{DEVICE} on the given @var{PLATFORM} (third form).
-
-Enblend's default is equivalent to choosing the first (i.e.@: lowest
-number) @acronym{GPU}-device on the first (i.e.@: lowest number)
-platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
-example.
-
-See also option@tie{}@option{--gpu}.
-
 @item -v
 @itemx --verbose[=@var{LEVEL}]
 @opindex -v
@@ -731,6 +630,206 @@ estimations of required memory in selected processing steps
 
 The default verbosity level of Enblend is
 @value{default-verbosity-level}.
+@end table
+
+
+@node Advanced Options
+@section Advanced Options
+@cindex options, extended
+
+Advanced options control e.g.@: the color model and the cropping of
+the output image.
+
+@table @code
+@item -c
+@itemx --ciecam
+@opindex -c
+@opindex --ciecam
+@cindex color appearance model
+@cindex @acronym{CIECAM02}
+Force the use of the @acronym{CIECAM02} color appearance model for
+blending colors instead of blending inside the @acronym{RGB} color
+cube.
+
+@cindex color profile
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+@cindex @acronym{sRGB} color space
+@cindex color space, @acronym{sRGB}
+All input files should have identical @acronym{ICC} profiles when this
+option is specified.  If no @acronym{ICC} profile is present, Enblend
+assumes that all images use the @acronym{sRGB} color space.
+@xref{Color Profiles}.
+
+Please keep in mind that using @acronym{CIECAM02} blending may not
+only change the colors in the output image, but Enblend may choose
+different seam line routes as some seam-line optimizers are guided by
+image differences.
+
+The inverse of this option is @option{--no-ciecam},
+@opindex --no-ciecam
+which disables the use of the @acronym{CIECAM02} color appearance
+model for blending colors.
+
+The defaults are chosen differently depending on the input images:
+@itemize
+@item
+For input images @emph{with} @acronym{ICC} profiles the default is to
+use @acronym{CIECAM02} blending.
+@item
+Images @emph{without} color profiles are blended in the @acronym{RGB}
+color cube by default.
+@end itemize
+
+@item -d
+@itemx --depth=@var{DEPTH}
+@opindex -d
+@opindex --depth
+@cindex bits per channel
+@cindex channel width
+Force the number of bits per channel and the numeric format of the
+output image.@footnote{``Channel depth'' sometimes is also called
+``channel width''.}
+
+Enblend always uses a smart way to change the channel depth to assure
+highest image quality (at the expense of memory), whether
+requantization is implicit because of the output format or explicit
+with option@tie{}@option{--depth}.
+
+@itemize
+@item
+If the output-channel depth is larger than the input-channel depth of
+the input images, the input images' channels are widened to the output
+channel depth immediately after loading, that is, as soon as possible.
+Enblend then performs all blending operations at the output-channel
+depth, thereby preserving minute color details which can appear in the
+blending areas.
+
+@item
+If the output-channel depth is smaller than the input-channel depth of
+the input images, the output image's channels are narrowed only right
+before it is written to the output @var{FILE}, that is, as late as
+possible.  Thus the data benefits from the wider input channels for
+the longest time.
+@end itemize
+
+All @var{DEPTH} specifications are valid in lowercase as well as
+uppercase letters.  For integer format, use
+
+@table @asis
+@item @code{8}, @code{uint8}
+Unsigned 8@dmn{bit}; range: 0..255
+@item @code{int16}
+Signed 16@dmn{bit}; range: @minus{}32768..32767
+@item @code{16}, @code{uint16}
+Unsigned 16@dmn{bit}; range: 0..65535
+@item @code{int32}
+Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
+@item @code{32}, @code{uint32}
+Unsigned 32@dmn{bit}; range: 0..4294967295
+@end table
+
+For floating-point format, use
+
+@c Minimum positive normalized value: 2^(2 - 2^k)
+@c Epsilon: 2^(1 - n)
+@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+
+@table @asis
+@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
+@item @code{r32}, @code{real32}, @code{float}
+@cindex @acronym{IEEE754} single precision float
+@cindex single precision float, @acronym{IEEE754}
+@acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
+24@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{1.2, -38}
+@item
+Epsilon: @semilog{1.2, -7}
+@item
+Maximum finite value: @semilog{3.4, 38}
+@end itemize
+
+@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
+@item @code{r64}, @code{real64}, @code{double}
+@cindex @acronym{IEEE754} double precision float
+@cindex double precision float, @acronym{IEEE754}
+@acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
+53@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{2.2, -308}
+@item
+Epsilon: @semilog{2.2, -16}
+@item
+Maximum finite value: @semilog{1.8, 308}
+@end itemize
+@end table
+
+If the requested @var{DEPTH} is not supported by the output file
+format, Enblend warns and chooses the @var{DEPTH} that matches best.
+
+@cindex @acronym{OpenEXR}, data format
+The @acronym{OpenEXR} data format is treated as
+@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
+@acronym{OpenEXR} data is represented by ``half'' precision
+floating-point numbers.
+
+@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+@cindex @acronym{OpenEXR}, half precision float
+@cindex half precision float, @acronym{OpenEXR}
+@uref{http://@/www.openexr.com/@/about.html#@/features,
+@acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
+10@dmn{bit} significant
+
+@itemize
+@item
+Minimum normalized value: @semilog{9.3, -10}
+@item
+Epsilon: @semilog{2.0, -3}
+@item
+Maximum finite value: @semilog{4.3, 9}
+@end itemize
+
+@item -f @var{WIDTH}x@var{HEIGHT}
+@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
+@opindex -f
+@cindex output image, set size of
+@cindex canvas size
+@cindex size, canvas
+Ensure that the minimum ``canvas'' size of the output image is at
+least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
+the @var{XOFFSET} and @var{YOFFSET}, too.
+
+@pindex nona @r{(Hugin)}
+@pindex hugin
+This option only is useful when the input images are cropped
+@acronym{TIFF} files, such as those produced by
+@command{nona}@footnote{The stitcher @command{nona} is part of Hugin.
+@xref{Helpful Programs}.}.
+
+Note that option@tie{}@option{-f} neither rescales the output image,
+nor shrinks the canvas size below the minimum size occupied by the
+union of all input images.
+
+@item -g
+@opindex -g
+@cindex alpha channel, associated
+Save alpha channel as ``associated''.  See the
+@uref{http://@/www.awaresystems.be/@/imaging/@/tiff/@/tifftags/@/extrasamples.html,
+@acronym{TIFF} documentation} for an explanation.
+
+@pindex gimp
+@pindex cinepaint
+Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
+Programs}) exhibit unusual behavior when loading images with
+unassociated alpha channels.  Use option @option{-g} to work around
+this problem.  With this flag Enblend will create the output image
+with the associated alpha tag set, even though the image is really
+unassociated alpha.
 
 @item -w
 @itemx --wrap=@var{MODE}
@@ -1164,198 +1263,330 @@ borders, are eliminated.
 
 Specifying @option{--wrap} without @var{MODE} selects horizontal
 wrapping.
-
-@item -x
-@opindex -x
-@cindex checkpoint results
-@cindex results, checkpoint
-Checkpoint partial results to the output file after each blending
-step.
 @end table
 
 
-@node Extended Options
-@section Extended Options
-@cindex options, extended
+@node Mask Generation Options
+@section Mask Generation Options
+@cindex options, mask generation
 
-Extended options control e.g.@: the color model and the cropping of
-the output image.
+These options control the generation and the usage of masks.
 
 @table @code
-@item -c
-@itemx --ciecam
-@opindex -c
-@opindex --ciecam
-@cindex color appearance model
-@cindex @acronym{CIECAM02}
-Force the use of the @acronym{CIECAM02} color appearance model for
-blending colors instead of blending inside the @acronym{RGB} color
-cube.
+@item --coarse-mask[=@var{FACTOR}]
+@opindex --coarse-mask
+@cindex mask, coarse
+@cindex coarse mask
+Use a scaled-down version of the input images to create the seam line.
+This option reduces the number of computations necessary to compute
+the seam line and the amount of memory necessary to do so.  It is the
+default.
 
-@cindex color profile
-@cindex @acronym{ICC} profile
-@cindex profile, @acronym{ICC}
-@cindex @acronym{sRGB} color space
-@cindex color space, @acronym{sRGB}
-All input files should have identical @acronym{ICC} profiles when this
-option is specified.  If no @acronym{ICC} profile is present, Enblend
-assumes that all images use the @acronym{sRGB} color space.
-@xref{Color Profiles}.
+If omitted @var{FACTOR} defaults to @value{default-coarseness-factor},
+this means, option@tie{}@option{--coarse-mask} shrinks the overlapping
+@emph{areas} by a factor of
+@math{@value{default-coarseness-factor}@classictimes{}@/@value{default-coarseness-factor}}.
+With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
+run of Enblend shrinks approximately by 80% and the maximum amount of
+memory in use at a time is decreased to some 40%.
 
-Please keep in mind that using @acronym{CIECAM02} blending may not
-only change the colors in the output image, but Enblend may choose
-different seam line routes as some seam-line optimizers are guided by
-image differences.
+Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
 
-The inverse of this option is @option{--no-ciecam},
-@opindex --no-ciecam
-which disables the use of the @acronym{CIECAM02} color appearance
-model for blending colors.
+Also see @ref{Table:mask-generation}.
 
-The defaults are chosen differently depending on the input images:
-@itemize
-@item
-For input images @emph{with} @acronym{ICC} profiles the default is to
-use @acronym{CIECAM02} blending.
-@item
-Images @emph{without} color profiles are blended in the @acronym{RGB}
-color cube by default.
-@end itemize
+@float Table,Table:mask-generation
+@multitable @columnfractions 0.2 0.35 0.35
+@headitem @tab @code{--no-optimize} @tab @code{--optimize}
 
-@item -d
-@itemx --depth=@var{DEPTH}
-@opindex -d
-@opindex --depth
-@cindex bits per channel
-@cindex channel width
-Force the number of bits per channel and the numeric format of the
-output image.@footnote{``Channel depth'' sometimes is also called
-``channel width''.}
+@item @code{--fine-mask}
+@c no opt
+@tab
+Use @acronym{NFT} mask.
 
-Enblend always uses a smart way to change the channel depth to assure
-highest image quality (at the expense of memory), whether
-requantization is implicit because of the output format or explicit
-with option@tie{}@option{--depth}.
+@c opt
+@tab
+Vectorize @acronym{NFT} mask, optimize vertices with simulated
+annealing and @sc{Dijkstra's} shortest path algorithm, fill vector
+contours.
 
-@itemize
-@item
-If the output-channel depth is larger than the input-channel depth of
-the input images, the input images' channels are widened to the output
-channel depth immediately after loading, that is, as soon as possible.
-Enblend then performs all blending operations at the output-channel
-depth, thereby preserving minute color details which can appear in the
-blending areas.
+@item @code{--coarse-mask}
+@c no opt
+@tab
+Scale down overlap region, compute @acronym{NFT} mask and vectorize
+it, fill vector contours.
 
-@item
-If the output-channel depth is smaller than the input-channel depth of
-the input images, the output image's channels are narrowed only right
-before it is written to the output @var{FILE}, that is, as late as
-possible.  Thus the data benefits from the wider input channels for
-the longest time.
-@end itemize
+@c opt
+@tab
+Scale down overlap region, vectorize @acronym{NFT} mask, optimize
+vertices with simulated annealing and @sc{Dijkstra's} shortest path
+algorithm, fill vector contours.
+@end multitable
 
-All @var{DEPTH} specifications are valid in lowercase as well as
-uppercase letters.  For integer format, use
+@caption{Various options that control the generation of masks.  All mask computations are based on the Nearest-Feature Transformation (@acronym{NFT}) of the overlap region.}
 
+@shortcaption{Mask generation options}
+
+@cindex nearest-feature transform (@acronym{NFT})
+@cindex mask, generation
+@end float
+
+@item --fine-mask
+@opindex --fine-mask
+@cindex mask, fine
+@cindex fine mask
+Instruct Enblend to employ the full-size images to create the seam
+line, which can be slow.  Use this option, for example, if you have
+very narrow overlap regions.
+
+Also see @ref{Table:mask-generation}.
+
+@item --load-masks[=@var{IMAGE-TEMPLATE}]
+@opindex --load-masks
+@cindex mask, load
+@cindex load mask
+Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
+default is @file{@value{default-mask-template}}.  The mask images
+have to be a 8-bit grayscale images.
+
+See @option{--save-masks} below for details.
+
+@item --optimize
+@opindex --optimize
+@cindex optimize seam
+@cindex seam optimization
+Use a multi-strategy approach to route the seam line around mismatches
+in the overlap region.  This is the default.
+@ref{Table:optimizer-strategies} explains these strategies; also see
+@ref{Table:mask-generation}.
+
+@float Table,Table:optimizer-strategies
 @table @asis
-@item @code{8}, @code{uint8}
-Unsigned 8@dmn{bit}; range: 0..255
-@item @code{int16}
-Signed 16@dmn{bit}; range: @minus{}32768..32767
-@item @code{16}, @code{uint16}
-Unsigned 16@dmn{bit}; range: 0..65535
-@item @code{int32}
-Signed 32@dmn{bit}; range: @minus{}2147483648..2147483647
-@item @code{32}, @code{uint32}
-Unsigned 32@dmn{bit}; range: 0..4294967295
+@dbtitle{Optimizer Strategies}
+@item Simulated Annealing
+Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
+: @var{DELTA-E-MIN} : @var{K-MAX}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_@/annealing,
+Simulated-Annealing}
+
+
+@item @sc{Dijkstra} Shortest Path
+Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
+
+@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_@/algorithm,
+@sc{Dijkstra} algorithm}
+
 @end table
 
-For floating-point format, use
+@caption{Enblend's strategies to optimize the seam lines between overlapping images.}
 
-@c Minimum positive normalized value: 2^(2 - 2^k)
-@c Epsilon: 2^(1 - n)
-@c Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+@shortcaption{Optimizer strategies}
 
+@cindex optimize strategy
+@end float
+
+Option@tie{}@option{--no-optimize} negates @option{--optimize} and
+@opindex --no-optimize
+@cindex optimize seam
+@cindex seam optimization
+turns off seam line optimization.  Combined with
+option@tie{}@option{--fine-mask} this will produce the same type of
+mask as Enblend version@tie{}2.5, namely the result of a
+@cindex nearest-feature transform (@acronym{NFT})
+Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
+H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
+of Binary Images'', Proceedings of the International Conference on
+Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
+and II, pages 83--86.}
+
+@item --save-masks
+@itemx --save-masks=@var{IMAGE-TEMPLATE}
+@opindex --save-masks
+@cindex mask, save
+@cindex save mask
+Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
+@file{@value{default-mask-template}}.  Enblend saves masks as
+8@dmn{bit} grayscale (single channel) images.  For accuracy we
+recommend to choose a lossless format.
+
+Use this option if you wish to edit the location of the seam line by
+hand.  This will give you images of the right sizes that you can edit
+to make your changes.  Later, use option@tie{}@option{--load-masks} to
+blend the project with your custom seam lines.
+
+@cindex save mask, only
+@cindex only save mask
+Enblend will stop after saving all masks unless
+option@tie{}@option{--output} is given, too.  With both options given,
+this is, @option{--save-masks} and @option{--output}, Enblend saves
+all masks and then proceeds to blend the output image.
+
+@var{IMAGE-TEMPLATE} defines a template that is expanded for each
+input file.  In a template a percent sign (@samp{%}) introduces a
+variable part.  All other characters are copied literally.  Lowercase
+letters refer to the name of the respective input file, whereas
+uppercase ones refer to the name of the output file (@pxref{Common
+Options}).  @ref{Table:mask-template-characters} lists all variables.
+
+A fancy mask filename template could look like this:
+
+@example
+%D/mask-%02n-%f.tif
+@end example
+
+It puts the mask files into the same directory as the output file
+(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
+mask files nicely sorted, and decorates the mask filename with the
+name of the associated input file (@samp{%f}) for easy recognition.
+
+@item --visualize[=@var{VISUALIZE-TEMPLATE}]
+@opindex --visualize
+@cindex mask, optimization visualization
+@cindex visualization of mask
+Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
+the unoptimized mask and the applied optimizations (if any).  The default is
+@file{@value{default-visualize-template}}.
+
+The image shows Enblend's view of the overlap region and how it
+decided to route the seam line.  If you are experiencing artifacts or
+unexpected output, it may be useful to include this visualization
+image in your bug report.  @xref{Bug Reports}.
+
+@var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
+input file.  In a template, a percent sign (@samp{%}) introduces a
+variable part; all other characters are copied literally.  Lowercase
+letters refer to the name of the respective input file, whereas
+uppercase ones refer to the name of the output file (@pxref{Common
+Options}).  @ref{Table:mask-template-characters} lists all variables.
+
+@noindent
+@strong{Visualization Image.}
+@cindex visualization image
+@cindex image, visualization
+@need 150
+The visualization image shows the symmetric difference of the pixels
+in the rectangular region where two images overlap.  The larger the
+difference the lighter shade of gray it appears in the visualization
+image.  Enblend paints the non-overlapping parts of the image pair --
+these are the regions where @emph{no} blending occurs -- in
+@value{visualize-no-overlap-value-color}.
+@ref{Table:visualization-colors} shows the meanings of all the colors
+that are used in seam-line visualization images.
+
+@float Table,Table:visualization-colors
 @table @asis
-@c IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
-@item @code{r32}, @code{real32}, @code{float}
-@cindex @acronym{IEEE754} single precision float
-@cindex single precision float, @acronym{IEEE754}
-@acronym{IEEE754} single precision floating-point, 32@dmn{bit} wide,
-24@dmn{bit} significant
+@dbtitle{Visualization Colors}
+@item @value{visualize-no-overlap-value-color}
+Non-overlapping parts of image pair.
 
-@itemize
-@item
-Minimum normalized value: @semilog{1.2, -38}
-@item
-Epsilon: @semilog{1.2, -7}
-@item
-Maximum finite value: @semilog{3.4, 38}
-@end itemize
+@item various shades of gray
+Difference of the pixel values in the overlap region.
 
-@c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
-@item @code{r64}, @code{real64}, @code{double}
-@cindex @acronym{IEEE754} double precision float
-@cindex double precision float, @acronym{IEEE754}
-@acronym{IEEE754} double precision floating-point, 64@dmn{bit} wide,
-53@dmn{bit} significant
+@item @value{visualize-state-space-color}
+Location of an optimizer sample.
 
-@itemize
-@item
-Minimum normalized value: @semilog{2.2, -308}
-@item
-Epsilon: @semilog{2.2, -16}
-@item
-Maximum finite value: @semilog{1.8, 308}
-@end itemize
+@item @value{visualize-first-vertex-value-color}
+First sample of a line segment.
+
+@item @value{visualize-next-vertex-value-color}
+Any other but first sample of a line segment.
+
+@item @value{visualize-state-space-inside-color}
+@cindex @sc{Dijkstra} radius
+@cindex radius, @sc{Dijkstra}
+State space sample inside the @sc{Dijkstra} radius.
+
+@item @value{visualize-state-space-unconverged-color}
+Non-converged point.
+
+@item @value{visualize-initial-path-color}
+@cindex nearest-feature transform (@acronym{NFT}), Graph-Cut (@acronym{GC})
+Initial seam line as generated by the primary seam generator.
+
+@cindex frozen seam-line endpoint
+@cindex seam-line endpoint, frozen
+Enblend marks a non-movable (``frozen'') endpoint of a seam-line
+segment with a @value{visualize-frozen-point}
+@value{mark-frozen-point}, whereas it uses a
+@value{visualize-movable-point} @value{mark-movable-point}
+to denote an endpoint that the optimizer is allowed to move around.
+
+@item @value{visualize-short-path-value-color}
+Final seam line.
 @end table
 
-If the requested @var{DEPTH} is not supported by the output file
-format, Enblend warns and chooses the @var{DEPTH} that matches best.
+@caption{Colors used in seam-line visualization images.}
 
-@cindex @acronym{OpenEXR}, data format
-The @acronym{OpenEXR} data format is treated as
-@acronym{IEEE754}@tie{}float internally.  Externally, on disk,
-@acronym{OpenEXR} data is represented by ``half'' precision
-floating-point numbers.
+@shortcaption{Visualization colors}
 
-@c ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
-@cindex @acronym{OpenEXR}, half precision float
-@cindex half precision float, @acronym{OpenEXR}
-@uref{http://@/www.openexr.com/@/about.html#@/features,
-@acronym{OpenEXR}} half precision floating-point, 16@dmn{bit} wide,
-10@dmn{bit} significant
+@cindex visualization image colors
+@cindex image colors, visualization
+@cindex colors, visualization image
+@end float
 
-@itemize
-@item
-Minimum normalized value: @semilog{9.3, -10}
-@item
-Epsilon: @semilog{2.0, -3}
-@item
-Maximum finite value: @semilog{4.3, 9}
-@end itemize
+@ifnotinfo
+@cindex seam-line visualization example
+@cindex visualization example
+@ref{Figure:seam-line-visualization} shows an example of a seam-line
+visualization.  It was produced with an Enblend run at all defaults,
+but @option{--fine-mask} and @option{--visualize} enabled.
 
-@item -f @var{WIDTH}x@var{HEIGHT}
-@itemx -f @var{WIDTH}x@var{HEIGHT}+x@var{XOFFSET}+y@var{YOFFSET}
-@opindex -f
-@cindex output image, set size of
-@cindex canvas size
-@cindex size, canvas
-Ensure that the minimum ``canvas'' size of the output image is at
-least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
-the @var{XOFFSET} and @var{YOFFSET}, too.
+The large @value{visualize-no-overlap-value-color} border is
+``off-limits'' for Enblend, for the images do not overlap there.  The
+dark wedge inside the @value{visualize-no-overlap-value-color}
+frame is where the images share a common region.
 
-@pindex nona @r{(Hugin)}
-@pindex hugin
-This option only is useful when the input images are cropped
-@acronym{TIFF} files, such as those produced by
-@command{nona}@footnote{The stitcher @command{nona} is part of Hugin.
-@xref{Helpful Programs}.}.
+The initial seam-line (@value{visualize-initial-path-color}) is
+almost straight with the exception of a single bend on the left side
+of the image and the final seam-line
+(@value{visualize-short-path-value-color}) meanders around it.
 
-Note that option@tie{}@option{-f} neither rescales the output image,
-nor shrinks the canvas size below the minimum size occupied by the
-union of all input images.
+@ifhtml
+@float Figure,Figure:seam-line-visualization
+@rimage{seam-line-visualization}
 
+@caption{Seam-line visualization of a simple overlap.  The
+853@classictimes{}238@dmn{pixel} image is shown at a magification of
+100%.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end ifhtml
+
+@iftex
+@float Figure,Figure:seam-line-visualization
+@rimage{seam-line-visualization, 15cm}
+
+@caption{Seam-line visualization of a simple overlap.  The
+853@classictimes{}238@dmn{pixel} image has been rescaled to a width of
+approximately 15@dmn{cm}.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end iftex
+
+@ifdocbook
+@float Figure,Figure:seam-line-visualization
+@rimage{seam-line-visualization, 15cm}
+
+@caption{Seam-line visualization of a simple overlap.  The 853@classictimes{}238@dmn{pixel} image has been rescaled to a width of approximately 15@dmn{cm}.}
+
+@shortcaption{Seam-line visualization}
+@end float
+@end ifdocbook
+@end ifnotinfo
+@end table
+
+@page
+
+@include mask-template-characters.texi
+
+
+@node Expert Options
+@section Expert Options
+@cindex options, expert
+
+@table @code
 @item --fallback-profile=@var{PROFILE-FILENAME}
 @opindex --fallback-profile
 @cindex profile, fallback
@@ -1369,29 +1600,121 @@ This option only is effective if the input images come without color
 profiles and blending is performed in @acronym{CIECAM02} color
 appearance model.
 
-@item -g
-@opindex -g
-@cindex alpha channel, associated
-Save alpha channel as ``associated''.  See the
-@uref{http://@/www.awaresystems.be/@/imaging/@/tiff/@/tifftags/@/extrasamples.html,
-@acronym{TIFF} documentation} for an explanation.
+@item --layer-selector=@var{ALGORITHM}
+@opindex --layer-selector
+@cindex layer selection
+@cindex layer selection
+Override the standard layer selector algorithm, which is
+@samp{@value{layer-selector}}.
 
-@pindex gimp
-@pindex cinepaint
-Gimp (before version@tie{}2.0) and CinePaint (@pxref{Helpful
-Programs}) exhibit unusual behavior when loading images with
-unassociated alpha channels.  Use option @option{-g} to work around
-this problem.  With this flag Enblend will create the output image
-with the associated alpha tag set, even though the image is really
-unassociated alpha.
+This version of Enblend offers the following algorithms:
+@table @code
+@item all-layers
+@cindex layer selection, all layers
+Select all layers in all images.
+
+@item first-layer
+@cindex layer selection, first layer
+Select only first layer in each multi-layer image.  For single-layer
+images this is the same as @samp{all-layers}.
+
+@item largest-layer
+@cindex layer selection, largest-layer
+Select largest layer in each multi-layer image, where the
+``largeness'', this is the size is defined by the product of the layer
+width and its height.  The channel width of the layer is ignored.  For
+single-layer images this is the same as @samp{all-layers}.
+
+@item no-layer
+@cindex layer selection, no layer
+Do not select any layer in any image.
+
+This algorithm is useful to temporarily exclude some images in
+response files.
+@end table
+
+@item --parameter=@var{KEY}[=@var{VALUE}]:@dots{}
+@opindex --parameter
+Set a @var{KEY}-@var{VALUE} pair, where @var{VALUE} is optional.  This
+option is cumulative.  Separate multiple pairs with the usual numeric
+delimiters.
+
+This option has the negated form @option{--no-parameter},
+@opindex --no-parameter
+which takes one or more @var{KEY}s and removes them from the list of
+defined parameters.  The special key@tie{}@samp{*} deletes all
+parameters at once.
+
+Parameters allow the developers to change the internal workings of
+Enblend without the need to recompile.
+
+@item -a
+@itemx --pre-assemble
+@opindex -a
+@opindex --pre-assemble
+Pre-assemble non-overlapping images before each blending iteration.
+
+This overrides the default behavior which is to blend the images
+sequentially in the order given on the command line.  Enblend will use
+fewer blending iterations, but it will do more work in each iteration.
+
+This option has the negated form @option{--no-pre-assemble}, which
+restores the default.
+
+@item --prefer-gpu
+@itemx --prefer-gpu=DEVICE
+@itemx --prefer-gpu=PLATFORM:DEVICE
+@cindex GPU
+@cindex OpenCL
+@cindex OpenCL, platform
+@cindex OpenCL, device
+When told to employ the @acronym{GPU} with @option{--gpu}, by default
+Enblend uses the first device on the first autodetected platform it
+finds via queries of the @acronym{OpenCL} subsystem, where neither the
+device, nor the platform may be the ones the user wants.  Usually she
+will select the device with the highest performance, maximum possible
+number of work-items, and largest associated memory.
+
+The first form of @option{--prefer-gpu} prints a list of all available
+@acronym{GPU}@tie{}devices on all accessible platforms, the current
+preferences, and then exits; it is the same enumeration that
+@samp{enblend --verbose --version} reveals.  Example:
+
+@example
+Available, OpenCL-compatible platform(s) and their device(s)
+  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+    * no GPU devices found on this platform
+  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+    * Device #1: max. 1024 work items
+                 1047872 KB global memory with 32 KB read/write cache
+                 48 KB dedicated local memory
+                 64 KB maximum constant memory
+Currently preferred GPU is device #1 on platform #2 (autodetected).
+@end example
+
+Use the numbers of platforms and devices found there to select the
+desired @var{DEVICE} on the first platform (second form) or
+@var{DEVICE} on the given @var{PLATFORM} (third form).
+
+Enblend's default is equivalent to choosing the first (i.e.@: lowest
+number) @acronym{GPU}-device on the first (i.e.@: lowest number)
+platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
+example.
+
+See also option@tie{}@option{--gpu}.
+
+@item -x
+@opindex -x
+@cindex checkpoint results
+@cindex results, checkpoint
+Checkpoint partial results to the output file after each blending
+step.
 @end table
 
 
-@node Mask Generation Options
-@section Mask Generation Options
-@cindex options, mask generation
-
-These options control the generation and the usage of masks.
+@node Expert Mask Generation Options
+@section Expert Mask Generation Options
+@cindex options, expert mask generation
 
 @table @code
 @item --anneal=@var{TAU}[:@var{DELTA-E-MAX}[:@var{DELTA-E-MIN}[:@var{K-MAX}]]]
@@ -1608,63 +1931,6 @@ The default is @value{default-anneal-kmax}.  Values around 100
 seem reasonable.
 @end table
 
-@item --coarse-mask[=@var{FACTOR}]
-@opindex --coarse-mask
-@cindex mask, coarse
-@cindex coarse mask
-Use a scaled-down version of the input images to create the seam line.
-This option reduces the number of computations necessary to compute
-the seam line and the amount of memory necessary to do so.  It is the
-default.
-
-If omitted @var{FACTOR} defaults to @value{default-coarseness-factor},
-this means, option@tie{}@option{--coarse-mask} shrinks the overlapping
-@emph{areas} by a factor of
-@math{@value{default-coarseness-factor}@classictimes{}@/@value{default-coarseness-factor}}.
-With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
-run of Enblend shrinks approximately by 80% and the maximum amount of
-memory in use at a time is decreased to some 40%.
-
-Valid range: @var{FACTOR} = 1, 2, 3,@dots{}.
-
-Also see @ref{Table:mask-generation}.
-
-@float Table,Table:mask-generation
-@multitable @columnfractions 0.2 0.35 0.35
-@headitem @tab @code{--no-optimize} @tab @code{--optimize}
-
-@item @code{--fine-mask}
-@c no opt
-@tab
-Use @acronym{NFT} mask.
-
-@c opt
-@tab
-Vectorize @acronym{NFT} mask, optimize vertices with simulated
-annealing and @sc{Dijkstra's} shortest path algorithm, fill vector
-contours.
-
-@item @code{--coarse-mask}
-@c no opt
-@tab
-Scale down overlap region, compute @acronym{NFT} mask and vectorize
-it, fill vector contours.
-
-@c opt
-@tab
-Scale down overlap region, vectorize @acronym{NFT} mask, optimize
-vertices with simulated annealing and @sc{Dijkstra's} shortest path
-algorithm, fill vector contours.
-@end multitable
-
-@caption{Various options that control the generation of masks.  All mask computations are based on the Nearest-Feature Transformation (@acronym{NFT}) of the overlap region.}
-
-@shortcaption{Mask generation options}
-
-@cindex nearest-feature transform (@acronym{NFT})
-@cindex mask, generation
-@end float
-
 @item --dijkstra=@var{RADIUS}
 @opindex --dijkstra
 @cindex @sc{Dijkstra} radius
@@ -1680,16 +1946,6 @@ more detours when searching for the best seam line.
 Valid range: @var{RADIUS} @geq{} @value{minimum-dijkstra-radius}.
 
 Default: @value{default-dijkstra-radius}@dmn{pixels}.
-
-@item --fine-mask
-@opindex --fine-mask
-@cindex mask, fine
-@cindex fine mask
-Instruct Enblend to employ the full-size images to create the seam
-line, which can be slow.  Use this option, for example, if you have
-very narrow overlap regions.
-
-Also see @ref{Table:mask-generation}.
 
 @item --image-difference=@var{ALGORITHM}[:@var{LUMINANCE-WEIGHT}[:@var{CHROMINANCE-WEIGHT}]]
 @opindex --image-difference
@@ -2300,16 +2556,6 @@ interval@tie{}[0@dots{}1].  These statistical measures are based on
 @var{ALGORITHM}s.  The average difference is a rough measure of
 quality with lower values meaning better matches.
 
-@item --load-masks[=@var{IMAGE-TEMPLATE}]
-@opindex --load-masks
-@cindex mask, load
-@cindex load mask
-Instead of generating masks, use those in @var{IMAGE-TEMPLATE}.  The
-default is @file{@value{default-mask-template}}.  The mask images
-have to be a 8-bit grayscale images.
-
-See @option{--save-masks} below for details.
-
 @item --mask-vectorize=@var{DISTANCE}
 @opindex --mask-vectorize
 @cindex mask, vectorization distance
@@ -2361,55 +2607,6 @@ percentage.  The user will be warned in such cases.
 Default: @value{coarse-mask-vectorize-distance}@dmn{pixels} for
 coarse masks and @value{fine-mask-vectorize-distance}@dmn{pixels}
 for fine masks.
-
-@item --optimize
-@opindex --optimize
-@cindex optimize seam
-@cindex seam optimization
-Use a multi-strategy approach to route the seam line around mismatches
-in the overlap region.  This is the default.
-@ref{Table:optimizer-strategies} explains these strategies; also see
-@ref{Table:mask-generation}.
-
-@float Table,Table:optimizer-strategies
-@table @asis
-@dbtitle{Optimizer Strategies}
-@item Simulated Annealing
-Tune with option@tie{}@code{--anneal} = @var{TAU} : @var{DELTA-E-MAX}
-: @var{DELTA-E-MIN} : @var{K-MAX}.
-
-@uref{http://@/en.wikipedia.org/@/wiki/@/Simulated_@/annealing,
-Simulated-Annealing}
-
-
-@item @sc{Dijkstra} Shortest Path
-Tune with option@tie{}@code{--dijkstra} = @var{RADIUS}.
-
-@uref{http://@/en.wikipedia.org/@/wiki/@/Dijkstra_@/algorithm,
-@sc{Dijkstra} algorithm}
-
-@end table
-
-@caption{Enblend's strategies to optimize the seam lines between overlapping images.}
-
-@shortcaption{Optimizer strategies}
-
-@cindex optimize strategy
-@end float
-
-Option@tie{}@option{--no-optimize} negates @option{--optimize} and
-@opindex --no-optimize
-@cindex optimize seam
-@cindex seam optimization
-turns off seam line optimization.  Combined with
-option@tie{}@option{--fine-mask} this will produce the same type of
-mask as Enblend version@tie{}2.5, namely the result of a
-@cindex nearest-feature transform (@acronym{NFT})
-Nearest-Feature Transform (@acronym{NFT}).@footnote{@sc{Muhammad
-H. Alsuwaiyel} and @sc{Marina Gavrilova}, ``On the Distance Transform
-of Binary Images'', Proceedings of the International Conference on
-Imaging Science, Systems, and Technology, June 2000, @abbr{Vols@.} I
-and II, pages 83--86.}
 
 @item --optimizer-weights=@var{DISTANCE-WEIGHT}[:@var{MISMATCH-WEIGHT}]
 @opindex --optimizer-weights
@@ -2477,188 +2674,7 @@ Graph-Cut
 @end table
 
 See @ref{Primary Seam Generators} for details.
-
-@item --save-masks
-@itemx --save-masks=@var{IMAGE-TEMPLATE}
-@opindex --save-masks
-@cindex mask, save
-@cindex save mask
-Save the generated masks to @var{IMAGE-TEMPLATE}.  The default is
-@file{@value{default-mask-template}}.  Enblend saves masks as
-8@dmn{bit} grayscale (single channel) images.  For accuracy we
-recommend to choose a lossless format.
-
-Use this option if you wish to edit the location of the seam line by
-hand.  This will give you images of the right sizes that you can edit
-to make your changes.  Later, use option@tie{}@option{--load-masks} to
-blend the project with your custom seam lines.
-
-@cindex save mask, only
-@cindex only save mask
-Enblend will stop after saving all masks unless
-option@tie{}@option{--output} is given, too.  With both options given,
-this is, @option{--save-masks} and @option{--output}, Enblend saves
-all masks and then proceeds to blend the output image.
-
-@var{IMAGE-TEMPLATE} defines a template that is expanded for each
-input file.  In a template a percent sign (@samp{%}) introduces a
-variable part.  All other characters are copied literally.  Lowercase
-letters refer to the name of the respective input file, whereas
-uppercase ones refer to the name of the output file (@pxref{Common
-Options}).  @ref{Table:mask-template-characters} lists all variables.
-
-A fancy mask filename template could look like this:
-
-@example
-%D/mask-%02n-%f.tif
-@end example
-
-It puts the mask files into the same directory as the output file
-(@samp{%D}), generates a two-digit index (@samp{%02n}) to keep the
-mask files nicely sorted, and decorates the mask filename with the
-name of the associated input file (@samp{%f}) for easy recognition.
-
-@item --visualize[=@var{VISUALIZE-TEMPLATE}]
-@opindex --visualize
-@cindex mask, optimization visualization
-@cindex visualization of mask
-Create an image according to @var{VISUALIZE-TEMPLATE} that visualizes
-the unoptimized mask and the applied optimizations (if any).  The default is
-@file{@value{default-visualize-template}}.
-
-The image shows Enblend's view of the overlap region and how it
-decided to route the seam line.  If you are experiencing artifacts or
-unexpected output, it may be useful to include this visualization
-image in your bug report.  @xref{Bug Reports}.
-
-@var{VISUALIZE-TEMPLATE} defines a template that is expanded for each
-input file.  In a template, a percent sign (@samp{%}) introduces a
-variable part; all other characters are copied literally.  Lowercase
-letters refer to the name of the respective input file, whereas
-uppercase ones refer to the name of the output file (@pxref{Common
-Options}).  @ref{Table:mask-template-characters} lists all variables.
-
-@noindent
-@strong{Visualization Image.}
-@cindex visualization image
-@cindex image, visualization
-@need 150
-The visualization image shows the symmetric difference of the pixels
-in the rectangular region where two images overlap.  The larger the
-difference the lighter shade of gray it appears in the visualization
-image.  Enblend paints the non-overlapping parts of the image pair --
-these are the regions where @emph{no} blending occurs -- in
-@value{visualize-no-overlap-value-color}.
-@ref{Table:visualization-colors} shows the meanings of all the colors
-that are used in seam-line visualization images.
-
-@float Table,Table:visualization-colors
-@table @asis
-@dbtitle{Visualization Colors}
-@item @value{visualize-no-overlap-value-color}
-Non-overlapping parts of image pair.
-
-@item various shades of gray
-Difference of the pixel values in the overlap region.
-
-@item @value{visualize-state-space-color}
-Location of an optimizer sample.
-
-@item @value{visualize-first-vertex-value-color}
-First sample of a line segment.
-
-@item @value{visualize-next-vertex-value-color}
-Any other but first sample of a line segment.
-
-@item @value{visualize-state-space-inside-color}
-@cindex @sc{Dijkstra} radius
-@cindex radius, @sc{Dijkstra}
-State space sample inside the @sc{Dijkstra} radius.
-
-@item @value{visualize-state-space-unconverged-color}
-Non-converged point.
-
-@item @value{visualize-initial-path-color}
-@cindex nearest-feature transform (@acronym{NFT}), Graph-Cut (@acronym{GC})
-Initial seam line as generated by the primary seam generator.
-
-@cindex frozen seam-line endpoint
-@cindex seam-line endpoint, frozen
-Enblend marks a non-movable (``frozen'') endpoint of a seam-line
-segment with a @value{visualize-frozen-point}
-@value{mark-frozen-point}, whereas it uses a
-@value{visualize-movable-point} @value{mark-movable-point}
-to denote an endpoint that the optimizer is allowed to move around.
-
-@item @value{visualize-short-path-value-color}
-Final seam line.
 @end table
-
-@caption{Colors used in seam-line visualization images.}
-
-@shortcaption{Visualization colors}
-
-@cindex visualization image colors
-@cindex image colors, visualization
-@cindex colors, visualization image
-@end float
-
-@ifnotinfo
-@cindex seam-line visualization example
-@cindex visualization example
-@ref{Figure:seam-line-visualization} shows an example of a seam-line
-visualization.  It was produced with an Enblend run at all defaults,
-but @option{--fine-mask} and @option{--visualize} enabled.
-
-The large @value{visualize-no-overlap-value-color} border is
-``off-limits'' for Enblend, for the images do not overlap there.  The
-dark wedge inside the @value{visualize-no-overlap-value-color}
-frame is where the images share a common region.
-
-The initial seam-line (@value{visualize-initial-path-color}) is
-almost straight with the exception of a single bend on the left side
-of the image and the final seam-line
-(@value{visualize-short-path-value-color}) meanders around it.
-
-@ifhtml
-@float Figure,Figure:seam-line-visualization
-@rimage{seam-line-visualization}
-
-@caption{Seam-line visualization of a simple overlap.  The
-853@classictimes{}238@dmn{pixel} image is shown at a magification of
-100%.}
-
-@shortcaption{Seam-line visualization}
-@end float
-@end ifhtml
-
-@iftex
-@float Figure,Figure:seam-line-visualization
-@rimage{seam-line-visualization, 15cm}
-
-@caption{Seam-line visualization of a simple overlap.  The
-853@classictimes{}238@dmn{pixel} image has been rescaled to a width of
-approximately 15@dmn{cm}.}
-
-@shortcaption{Seam-line visualization}
-@end float
-@end iftex
-
-@ifdocbook
-@float Figure,Figure:seam-line-visualization
-@rimage{seam-line-visualization, 15cm}
-
-@caption{Seam-line visualization of a simple overlap.  The 853@classictimes{}238@dmn{pixel} image has been rescaled to a width of approximately 15@dmn{cm}.}
-
-@shortcaption{Seam-line visualization}
-@end float
-@end ifdocbook
-@end ifnotinfo
-@end table
-
-@page
-
-@include mask-template-characters.texi
 
 
 @node Information Options

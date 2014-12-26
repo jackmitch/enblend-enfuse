@@ -489,50 +489,31 @@ printUsage(const bool error = true)
         "  -o, --output=FILE      write output to FILE; default: \"" << OutputFileName << "\"\n" <<
         "  -v, --verbose[=LEVEL]  verbosely report progress; repeat to\n" <<
         "                         increase verbosity or directly set to LEVEL\n" <<
-        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
-        "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
-        enblend::stringOfWraparound(WrapAround) << ";\n" <<
-        "                         without argument the option selects horizontal wrapping\n" <<
-#ifdef OPENCL
-        "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
-        "                         with \"--no-gpu\"\n" <<
-        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
-        "                         inform on current preferences\n" <<
-        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
-        "  --prefer-gpu=PLATFORM:DEVICE\n" <<
-        "                         select DEVICE on PLATFORM as GPU\n" <<
-#endif
-        "  -x                     checkpoint partial results\n" <<
         "  --compression=COMPRESSION\n" <<
         "                         set compression of output image to COMPRESSION,\n" <<
         "                         where COMPRESSION is:\n" <<
         "                         \"deflate\", \"jpeg\", \"lzw\", \"none\", \"packbits\", for TIFF files and\n" <<
         "                         0 to 100, or \"jpeg\", \"jpeg-arith\" for JPEG files,\n" <<
         "                         where \"jpeg\" and \"jpeg-arith\" accept a compression level\n" <<
-        "  --layer-selector=ALGORITHM\n" <<
-        "                         set the layer selector ALGORITHM;\n" <<
-        "                         default: \"" << LayerSelection.name() << "\"; available algorithms are:\n";
-    for (selector::algorithm_list::const_iterator i = selector::algorithms.begin();
-         i != selector::algorithms.end();
-         ++i) {
-        std::cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
-    }
-    std::cout <<
-        "  --parameter=KEY1[=VALUE1][:KEY2[=VALUE2][:...]]\n" <<
-        "                         set one or more KEY-VALUE pairs\n" <<
+#ifdef OPENCL
+        "  --gpu                  employ GPU in addition to CPU for selected computations; negate\n" <<
+        "                         with \"--no-gpu\"\n" <<
+#endif
         "\n" <<
-        "Extended options:\n" <<
+        "Advanced options:\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\"\n" <<
-        "  --fallback-profile=PROFILE-FILE\n" <<
-        "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
         "  -d, --depth=DEPTH      set the number of bits per channel of the output\n" <<
         "                         image, where DEPTH is \"8\", \"16\", \"32\", \"r32\", or \"r64\"\n" <<
-        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
-        "                         and Cinepaint\n" <<
         "  -f WIDTHxHEIGHT[+xXOFFSET+yYOFFSET]\n" <<
         "                         manually set the size and position of the output\n" <<
         "                         image; useful for cropped and shifted input\n" <<
         "                         TIFF images, such as those produced by Nona\n" <<
+        "  -g                     associated-alpha hack for Gimp (before version 2)\n" <<
+        "                         and Cinepaint\n" <<
+        "  -w, --wrap[=MODE]      wrap around image boundary, where MODE is \"none\",\n" <<
+        "                         \"horizontal\", \"vertical\", or \"both\"; default: " <<
+        enblend::stringOfWraparound(WrapAround) << ";\n" <<
+        "                         without argument the option selects horizontal wrapping\n" <<
         "\n" <<
         "Fusion options:\n" <<
         "  --exposure-weight=WEIGHT\n" <<
@@ -542,7 +523,7 @@ printUsage(const bool error = true)
         "                         weight given to highly-saturated pixels\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WSaturation << "\n" <<
         "  --contrast-weight=WEIGHT\n" <<
-        "                         weight given to pixels in high-contrast neighborhoods \n" <<
+        "                         weight given to pixels in high-contrast neighborhoods\n" <<
         "                         (0 <= WEIGHT <= 1); default: " << WContrast << "\n" <<
         "  --entropy-weight=WEIGHT\n" <<
         "                         weight given to pixels in high entropy neighborhoods\n" <<
@@ -553,17 +534,6 @@ printUsage(const bool error = true)
         "  --exposure-width=WIDTH\n" <<
         "                         characteristic width of the weighting function\n" <<
         "                         (WIDTH > 0); default: " << ExposureWidth << "\n" <<
-#ifdef HAVE_DYNAMICLOADER_IMPL
-        "  --exposure-weight-function=WEIGHT-FUNCTION\n" <<
-        "                         select built-in exposure WEIGHT-FUNCTION;\n" <<
-        "                         default: " << ExposureWeightFunctionName << " (1st form)\n" <<
-        "  --exposure-weight-function=SHARED-OBJECT:SYMBOL[:ARGUMENT[:...]]\n" <<
-        "                         load user-defined exposure weight function SYMBOL\n" <<
-        "                         from SHARED-OBJECT and optionally pass ARGUMENTs (2nd form)\n" <<
-#else
-        "  --exposure-weight-function=WEIGHT-FUNCTION\n" <<
-        "                         select exposure WEIGHT-FUNCTION; default: " << ExposureWeightFunctionName << "\n" <<
-#endif
         "  --soft-mask            average over all masks; this is the default\n" <<
         "  --hard-mask            force hard blend masks and no averaging on finest\n" <<
         "                         scale; this is especially useful for focus\n" <<
@@ -571,6 +541,54 @@ printUsage(const bool error = true)
         "                         but leads to increased noise\n" <<
         "\n" <<
         "Expert options:\n" <<
+        "  --save-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
+        "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
+        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
+        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
+        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
+        "                         refer to input images uppercase to the output image\n" <<
+        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
+        "  --load-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
+        "                         skip calculation of weight maps and use the ones\n" <<
+        "                         in the files matching the templates instead.  These\n" <<
+        "                         can be either hard or soft masks.  For template\n" <<
+        "                         syntax see \"--save-masks\";\n" <<
+        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
+        "  --fallback-profile=PROFILE-FILE\n" <<
+        "                         use the ICC profile from PROFILE-FILE instead of sRGB\n" <<
+        "  --layer-selector=ALGORITHM\n" <<
+        "                         set the layer selector ALGORITHM;\n" <<
+        "                         default: \"" << LayerSelection.name() << "\"; available algorithms are:\n";
+    for (selector::algorithm_list::const_iterator i = selector::algorithms.begin();
+         i != selector::algorithms.end();
+         ++i) {
+        std::cout << "                         \"" << (*i)->name() << "\": " << (*i)->description() << "\n";
+    }
+    std::cout <<
+#ifdef OPENCL
+        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
+        "                         inform on current preferences\n" <<
+        "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
+        "  --prefer-gpu=PLATFORM:DEVICE\n" <<
+        "                         select DEVICE on PLATFORM as GPU\n" <<
+#endif
+        "  --parameter=KEY1[=VALUE1][:KEY2[=VALUE2][:...]]\n" <<
+        "                         set one or more KEY-VALUE pairs\n" <<
+        "\n" <<
+        "Expert fusion options:\n" <<
+        "  --exposure-weight-function=WEIGHT-FUNCTION" <<
+#ifdef HAVE_DYNAMICLOADER_IMPL
+        "    (1st form)" <<
+#endif
+        "\n" <<
+        "                         select one of the built-in exposure WEIGHT-FUNCTIONs:\n" <<
+        "                         \"gaussian\", \"lorentzian\", \"half-sine\", \"full-sine\",\n" <<
+        "                         or \"bi-square\"; default: \"" << ExposureWeightFunctionName << "\"\n" <<
+#ifdef HAVE_DYNAMICLOADER_IMPL
+        "  --exposure-weight-function=SHARED-OBJECT:SYMBOL[:ARGUMENT[:...]]    (2nd form)\n" <<
+        "                         load user-defined exposure weight function SYMBOL\n" <<
+        "                         from SHARED-OBJECT and optionally pass ARGUMENTs\n" <<
+#endif
         "  --exposure-cutoff=LOWERCUTOFF[:UPPERCUTOFF[:LOWERPROJECTOR[:UPPERPROJECTOR]]]\n" <<
         "                         LOWERCUTOFF and UPPERCUTOFF are the values below\n" <<
         "                         or above of which pixels are weighted with zero\n" <<
@@ -581,14 +599,6 @@ printUsage(const bool error = true)
         "  --contrast-window-size=SIZE\n" <<
         "                         set window SIZE for local-contrast analysis\n" <<
         "                         (SIZE >= 3); default: " << ContrastWindowSize  << "\n" <<
-        "  --gray-projector=PROJECTOR\n" <<
-        "                         apply gray-scale PROJECTOR in exposure or contrast\n" <<
-        "                         weighing, where PROJECTOR is one of \"anti-value\",\n" <<
-        "                         \"average\", \"l-star\", \"lightness\", \"luminance\",\n" <<
-        "                         \"pl-star\", \"value\", or\n" <<
-        "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
-        "                         default: \"" <<
-        enblend::MultiGrayscaleAccessor<vigra::UInt8, vigra::NumericTraits<vigra::UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
         "  --contrast-edge-scale=EDGESCALE[:LCESCALE[:LCEFACTOR]]\n" <<
         "                         set scale on which to look for edges; positive\n" <<
         "                         LCESCALE switches on local contrast enhancement\n" <<
@@ -600,6 +610,14 @@ printUsage(const bool error = true)
         "  --contrast-min-curvature=CURVATURE\n" <<
         "                         minimum CURVATURE for an edge to qualify; append\n" <<
         "                         \"%\" for relative values; default: " << MinCurvature.str() << "\n" <<
+        "  --gray-projector=PROJECTOR\n" <<
+        "                         apply gray-scale PROJECTOR in exposure or contrast\n" <<
+        "                         weighing, where PROJECTOR is one of \"anti-value\",\n" <<
+        "                         \"average\", \"l-star\", \"lightness\", \"luminance\",\n" <<
+        "                         \"pl-star\", \"value\", or\n" <<
+        "                         \"channel-mixer:RED-WEIGHT:GREEN-WEIGHT:BLUE-WEIGHT\";\n" <<
+        "                         default: \"" <<
+        enblend::MultiGrayscaleAccessor<vigra::UInt8, vigra::NumericTraits<vigra::UInt8>::Promote>::defaultGrayscaleAccessorName() << "\"\n" <<
         "  --entropy-window-size=SIZE\n" <<
         "                         set window SIZE for local entropy analysis\n" <<
         "                         (SIZE >= 3); default: " << EntropyWindowSize  << "\n" <<
@@ -610,19 +628,6 @@ printUsage(const bool error = true)
         "                         weighting; append \"%\" signs for relative values;\n" <<
         "                         default: " <<
         EntropyLowerCutoff.str() << ":" << EntropyUpperCutoff.str() << "\n" <<
-        "  --save-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
-        "                         save weight masks in SOFT-TEMPLATE and HARD-TEMPLATE;\n" <<
-        "                         conversion chars: \"%i\": mask index, \"%n\": mask number,\n" <<
-        "                         \"%p\": full path, \"%d\": dirname, \"%b\": basename,\n" <<
-        "                         \"%f\": filename, \"%e\": extension; lowercase characters\n" <<
-        "                         refer to input images uppercase to the output image\n" <<
-        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
-        "  --load-masks[=SOFT-TEMPLATE[:HARD-TEMPLATE]]\n" <<
-        "                         skip calculation of weight maps and use the ones \n" <<
-        "                         in the files matching the templates instead.  These\n" <<
-        "                         can be either hard or soft masks.  For template\n" <<
-        "                         syntax see \"--save-masks\";\n" <<
-        "                         default: \"" << SoftMaskTemplate << "\":\"" << HardMaskTemplate << "\"\n" <<
         "\n" <<
         "Information options:\n" <<
         "  -h, --help             print this help message and exit\n" <<

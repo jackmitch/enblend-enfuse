@@ -31,8 +31,8 @@ leads to unpredictable results.
 
 @cindex @acronym{sRGB} color space
 @cindex color space, @acronym{sRGB}
-The options@tie{}@option{--ciecam} (@pxref{Extended Options}) and its
-opposite @option{--no-ciecam} (@pxref{Extended Options}) overrule the
+The options@tie{}@option{--ciecam} (@pxref{Advanced Options}) and its
+opposite @option{--no-ciecam} (@pxref{Advanced Options}) overrule the
 default profile selection procedure described above.  Use
 option@tie{}@option{--ciecam} on a set of input images @emph{without}
 color profiles to assign a profile to them and perform the blending or
@@ -40,7 +40,7 @@ fusing process in @acronym{CIECAM02} color space.
 
 The default profile is @uref{http://@/en.wikipedia.org/@/wiki/@/SRGB,
 @acronym{sRGB}}.  Override this setting with
-option@tie{}@option{--fallback-profile} (@pxref{Extended Options}).
+option@tie{}@option{--fallback-profile} (@pxref{Advanced Options}).
 
 On the other hand, suppress the utilization of @acronym{CIECAM02}
 blending or fusing of a set of input images @emph{with} color profiles
