@@ -119,10 +119,6 @@ default: "all\-layers"; available algorithms are:
 "largest\-layer": select largest layer in each multi\-layer image;
 "no\-layer": do not select any layer from any image;
 .TP
-\fB\-\-prefer\-gpu\fR
-list all available GPUs according to their platform and device;
-inform on current preferences
-.TP
 \fB\-\-prefer\-gpu\fR=\fIDEVICE\fR
 select DEVICE on autodetected platform as GPU
 .TP
@@ -194,6 +190,10 @@ output version information and exit
 .TP
 \fB\-\-show\-globbing\-algorithms\fR
 show all globbing algorithms
+.TP
+\fB\-\-show\-gpu\-info\fR
+list all available GPUs according to their platform and device;
+inform on current preferences
 .TP
 \fB\-\-show\-image\-formats\fR
 show all recognized image formats and their filename

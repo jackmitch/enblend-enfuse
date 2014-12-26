@@ -1282,40 +1282,22 @@ File: enblend.info,  Node: Expert Options,  Next: Expert Mask Generation Options
      This option has the negated form `--no-pre-assemble', which
      restores the default.
 
-`--prefer-gpu'
 `--prefer-gpu=DEVICE'
 `--prefer-gpu=PLATFORM:DEVICE'
      When told to employ the GPU with `--gpu', by default Enblend uses
      the first device on the first autodetected platform it finds via
-     queries of the OpenCL subsystem, where neither the device, nor the
-     platform may be the ones the user wants.  Usually she will select
-     the device with the highest performance, maximum possible number
-     of work-items, and largest associated memory.
+     queries of the OpenCL subsystem.
 
-     The first form of `--prefer-gpu' prints a list of all available
-     GPU devices on all accessible platforms, the current preferences,
-     and then exits; it is the same enumeration that `enblend --verbose
-     --version' reveals.  Example:
+     This option allows to override the default choice and select a
+     particular DEVICE on the first autodetected platform (first form)
+     or a particular DEVICE on a given PLATFORM (second form).  Usually
+     the user will want select the device with the highest performance,
+     maximum possible number of work-items, and largest associated
+     memory.
 
-          Available, OpenCL-compatible platform(s) and their device(s)
-            - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
-              * no GPU devices found on this platform
-            - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-              * Device #1: max. 1024 work items
-                           1047872 KB global memory with 32 KB read/write cache
-                           48 KB dedicated local memory
-                           64 KB maximum constant memory
-          Currently preferred GPU is device #1 on platform #2 (autodetected).
-
-     Use the numbers of platforms and devices found there to select the
-     desired DEVICE on the first platform (second form) or DEVICE on
-     the given PLATFORM (third form).
-
-     Enblend's default is equivalent to choosing the first (i.e. lowest
-     number) GPU-device on the first (i.e. lowest number) platform,
-     which would be equivalent to `--prefer-gpu=2:1' in the example.
-
-     See also option `--gpu'.
+     To get the platforms and device numbers use either
+     options `--version --verbose' in concert or the tailored
+     option `--show-gpu-info'.
 
 `-x'
      Checkpoint partial results to the output file after each blending
@@ -1552,6 +1534,29 @@ File: enblend.info,  Node: Information Options,  Next: Option Delimiters,  Prev:
      Depending on the build-time configuration and the operating system,
      the binary may support different globbing algorithms.  *Note
      Globbing Algorithms::.
+
+`--show-gpu-info'
+     Prints a list of all available GPU devices on all accessible
+     platforms, the current preferences, and then exit; it is the same
+     enumeration that `enblend --verbose --version' reveals.  Example:
+
+          Available, OpenCL-compatible platform(s) and their device(s)
+            - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+              * no GPU devices found on this platform
+            - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+              * Device #1: max. 1024 work items
+                           1047872 KB global memory with 32 KB read/write cache
+                           48 KB dedicated local memory
+                           64 KB maximum constant memory
+          Currently preferred GPU is device #1 on platform #2 (autodetected).
+
+     Use the numbers of platforms and devices found here to select the
+     desired DEVICE on the first platform or DEVICE on the given
+     PLATFORM with option `--prefer-gpu'.
+
+     Enblend's default chooses the first (i.e. lowest number)
+     GPU-device on the first (i.e. lowest number) platform, which would
+     be equivalent to `--prefer-gpu=2:1' in the example.
 
 `--show-image-formats'
      Show all recognized image formats and their filename extensions.
@@ -2745,11 +2750,12 @@ Option Index
 * --save-masks:                          Mask Generation Options.
                                                               (line  91)
 * --show-globbing-algorithms:            Information Options. (line  12)
-* --show-image-formats:                  Information Options. (line  19)
-* --show-signature:                      Information Options. (line  29)
-* --show-software-components:            Information Options. (line  36)
+* --show-gpu-info:                       Information Options. (line  19)
+* --show-image-formats:                  Information Options. (line  42)
+* --show-signature:                      Information Options. (line  52)
+* --show-software-components:            Information Options. (line  59)
 * --verbose:                             Common Options.      (line 141)
-* --version:                             Information Options. (line  48)
+* --version:                             Information Options. (line  71)
 * --visualize:                           Mask Generation Options.
                                                               (line 125)
 * --wrap:                                Advanced Options.    (line 141)
@@ -2761,10 +2767,10 @@ Option Index
 * -h:                                    Information Options. (line   8)
 * -l:                                    Common Options.      (line  90)
 * -o:                                    Common Options.      (line 134)
-* -V:                                    Information Options. (line  48)
+* -V:                                    Information Options. (line  71)
 * -v:                                    Common Options.      (line 141)
 * -w:                                    Advanced Options.    (line 141)
-* -x:                                    Expert Options.      (line  99)
+* -x:                                    Expert Options.      (line  81)
 
 
 File: enblend.info,  Node: General Index,  Prev: Option Index,  Up: Top
@@ -2791,8 +2797,8 @@ General Index
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
 * bits per channel:                      Advanced Options.    (line  36)
-* branch, development:                   Information Options. (line  53)
-* branch, stable:                        Information Options. (line  53)
+* branch, development:                   Information Options. (line  76)
+* branch, stable:                        Information Options. (line  76)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
@@ -2800,7 +2806,7 @@ General Index
 * central processing unit:               Common Options.      (line  75)
 * channel width:                         Advanced Options.    (line  36)
 * channel, alpha:                        Overview.            (line  18)
-* checkpoint results:                    Expert Options.      (line  99)
+* checkpoint results:                    Expert Options.      (line  81)
 * chrominance weight:                    Expert Mask Generation Options.
                                                               (line  66)
 * CIECAM02 <1>:                          Color Profiles.      (line  13)
@@ -2833,7 +2839,7 @@ General Index
 * delimiters, option:                    Option Delimiters.   (line   6)
 * delta-E:                               Expert Mask Generation Options.
                                                               (line  91)
-* development branch:                    Information Options. (line  53)
+* development branch:                    Information Options. (line  76)
 * difference image:                      Expert Mask Generation Options.
                                                               (line  66)
 * DIJKSTRA radius <1>:                   Expert Mask Generation Options.
@@ -2848,7 +2854,7 @@ General Index
                                                               (line  48)
 * format of response file:               Response File Format.
                                                               (line   6)
-* format, image:                         Information Options. (line  19)
+* format, image:                         Information Options. (line  42)
 * free documentation license (FDL):      FDL.                 (line   6)
 * frozen seam-line endpoint:             Mask Generation Options.
                                                               (line 175)
@@ -2864,7 +2870,8 @@ General Index
 * globbing algorithms <1>:               Information Options. (line  12)
 * globbing algorithms:                   Globbing Algorithms. (line   6)
 * GNU free documentation license:        FDL.                 (line   6)
-* GPU <1>:                               Expert Options.      (line  66)
+* GPU <1>:                               Information Options. (line  19)
+* GPU <2>:                               Expert Options.      (line  65)
 * GPU:                                   Common Options.      (line  75)
 * grammar, response file:                Response File Format.
                                                               (line  20)
@@ -2892,7 +2899,7 @@ General Index
                                                               (line 183)
 * image difference:                      Expert Mask Generation Options.
                                                               (line  66)
-* image formats:                         Information Options. (line  19)
+* image formats:                         Information Options. (line  42)
 * image, multi-layer:                    Overview.            (line  39)
 * image, visualization:                  Mask Generation Options.
                                                               (line 142)
@@ -2993,10 +3000,13 @@ General Index
 * Octave:                                Bug Reports.         (line   6)
 * only save mask:                        Mask Generation Options.
                                                               (line 102)
-* OpenCL <1>:                            Expert Options.      (line  66)
+* OpenCL <1>:                            Information Options. (line  19)
+* OpenCL <2>:                            Expert Options.      (line  65)
 * OpenCL:                                Common Options.      (line  75)
-* OpenCL, device:                        Expert Options.      (line  66)
-* OpenCL, platform:                      Expert Options.      (line  66)
+* OpenCL, device <1>:                    Information Options. (line  19)
+* OpenCL, device:                        Expert Options.      (line  65)
+* OpenCL, platform <1>:                  Information Options. (line  19)
+* OpenCL, platform:                      Expert Options.      (line  65)
 * OpenEXR, data format:                  Advanced Options.    (line 101)
 * OpenEXR, half precision float:         Advanced Options.    (line 105)
 * optimize seam:                         Mask Generation Options.
@@ -3059,7 +3069,7 @@ General Index
 * response file, grammar:                Response File Format.
                                                               (line  20)
 * response file, syntactic comment:      Syntactic Comments.  (line   6)
-* results, checkpoint:                   Expert Options.      (line  99)
+* results, checkpoint:                   Expert Options.      (line  81)
 * RGB color cube:                        Color Profiles.      (line  13)
 * save mask:                             Mask Generation Options.
                                                               (line  91)
@@ -3079,16 +3089,16 @@ General Index
                                                               (line 192)
 * seam-line endpoint, frozen:            Mask Generation Options.
                                                               (line 175)
-* signature:                             Information Options. (line  29)
+* signature:                             Information Options. (line  52)
 * simulated annealing optimizer:         Expert Mask Generation Options.
                                                               (line   7)
 * single precision float, IEEE754:       Advanced Options.    (line  79)
 * size, canvas:                          Advanced Options.    (line 116)
-* software components:                   Information Options. (line  36)
+* software components:                   Information Options. (line  59)
 * SourceForge:                           Overview.            (line  45)
 * sRGB color space <1>:                  Color Profiles.      (line  24)
 * sRGB color space:                      Advanced Options.    (line  14)
-* stable branch:                         Information Options. (line  53)
+* stable branch:                         Information Options. (line  76)
 * syntactic comment, grammar:            Syntactic Comments.  (line  18)
 * syntactic comment, response file:      Syntactic Comments.  (line   6)
 * syntactic-comment index:               Syntactic-Comment Index.
@@ -3098,7 +3108,7 @@ General Index
 * tiffsplit:                             Overview.            (line  39)
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
-* version:                               Information Options. (line  48)
+* version:                               Information Options. (line  71)
 * virtual reality:                       Advanced Options.    (line 151)
 * visualization image:                   Mask Generation Options.
                                                               (line 142)
@@ -3162,23 +3172,23 @@ Ref: Table:visualization-colors40793
 Ref: Table:mask-template-characters41708
 Ref: Mask Generation Options-Footnote-143960
 Node: Expert Options44188
-Node: Expert Mask Generation Options48351
-Node: Information Options57072
-Node: Option Delimiters60254
-Node: Primary Seam Generators61655
-Node: Color Profiles64541
-Node: Understanding Masks66991
-Node: Helpful Programs70781
-Node: Bug Reports75428
-Ref: Bug Reports-Footnote-181084
-Node: Authors81154
-Node: FDL82319
-Node: List of Tables103301
-Node: List of Figures103925
-Node: List of Examples104215
-Node: Program Index104496
-Node: Syntactic-Comment Index107724
-Node: Option Index108479
-Node: General Index112893
+Node: Expert Mask Generation Options47307
+Node: Information Options56028
+Node: Option Delimiters60456
+Node: Primary Seam Generators61857
+Node: Color Profiles64743
+Node: Understanding Masks67193
+Node: Helpful Programs70983
+Node: Bug Reports75630
+Ref: Bug Reports-Footnote-181286
+Node: Authors81356
+Node: FDL82521
+Node: List of Tables103503
+Node: List of Figures104127
+Node: List of Examples104417
+Node: Program Index104698
+Node: Syntactic-Comment Index107926
+Node: Option Index108681
+Node: General Index113168
 
 End Tag Table

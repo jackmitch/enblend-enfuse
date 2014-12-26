@@ -468,6 +468,20 @@ printSoftwareComponents()
 }
 
 
+#ifdef OPENCL
+void
+printGPUPreference(size_t a_preferred_platform_id, size_t a_preferred_device_id)
+{
+    std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
+
+    ocl::print_opencl_information();
+    ocl::print_gpu_preference(a_preferred_platform_id, a_preferred_device_id);
+
+    exit(0);
+}
+#endif
+
+
 void
 printUsage(const bool error = true)
 {
@@ -548,8 +562,6 @@ printUsage(const bool error = true)
     }
     std::cout <<
 #ifdef OPENCL
-        "  --prefer-gpu           list all available GPUs according to their platform and device;\n" <<
-        "                         inform on current preferences\n" <<
         "  --prefer-gpu=DEVICE    select DEVICE on autodetected platform as GPU\n" <<
         "  --prefer-gpu=PLATFORM:DEVICE\n" <<
         "                         select DEVICE on PLATFORM as GPU\n" <<
@@ -590,7 +602,11 @@ printUsage(const bool error = true)
         "  -h, --help             print this help message and exit\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  --show-globbing-algorithms\n" <<
-        "                         show all globbing algorithms\n"
+        "                         show all globbing algorithms\n" <<
+#ifdef OPENCL
+        "  --show-gpu-info        list all available GPUs according to their platform and device;\n" <<
+        "                         inform on current preferences\n" <<
+#endif
         "  --show-image-formats   show all recognized image formats and their filename\n" <<
         "                         extensions\n" <<
         "  --show-signature       show who compiled the binary when and on which machine\n" <<
@@ -676,6 +692,7 @@ enum AllPossibleOptions {
     OptimizerWeightsOption,
     LayerSelectorOption, NearestFeatureTransformOption, GraphCutOption,
     ShowImageFormatsOption, ShowSignatureOption, ShowGlobbingAlgoInfoOption, ShowSoftwareComponentsInfoOption,
+    ShowGPUInfoOption,
     // currently below the radar...
     SequentialBlendingOption
 };
@@ -919,14 +936,15 @@ process_options(int argc, char** argv)
         ImageFormatsInfoId,
         SignatureInfoId,
         GlobbingAlgoInfoId,
-        SoftwareComponentsInfoId
+        SoftwareComponentsInfoId,
+        GPUInfoId
     };
 
     static struct option long_options[] = {
         {"gpu", no_argument, 0, UseGpuId},
         {"no-gpu", no_argument, 0, NoUseGpuId},
-        {"prefer-gpu", optional_argument, 0, PreferGpuId},
-        {"preferred-gpu", optional_argument, 0, PreferGpuId}, // gramatically close alternative form
+        {"prefer-gpu", required_argument, 0, PreferGpuId},
+        {"preferred-gpu", required_argument, 0, PreferGpuId}, // gramatically close alternative form
         {"pre-assemble", no_argument, 0, PreAssembleId},
         {"preassemble", no_argument, 0, PreAssembleId}, // dash-less form: not documented, not deprecated
         {"no-pre-assemble", no_argument, 0, NoPreAssembleId},
@@ -964,6 +982,7 @@ process_options(int argc, char** argv)
         {"show-signature", no_argument, 0, SignatureInfoId},
         {"show-globbing-algorithms", no_argument, 0, GlobbingAlgoInfoId},
         {"show-software-components", no_argument, 0, SoftwareComponentsInfoId},
+        {"show-gpu-info", no_argument, 0, GPUInfoId},
         {0, 0, 0, 0}
     };
 
@@ -972,7 +991,8 @@ process_options(int argc, char** argv)
     typedef enum {
         PROCESS_COMPLETELY,
         VERSION_ONLY, USAGE_ONLY,
-        IMAGE_FORMATS_ONLY, SIGNATURE_ONLY, GLOBBING_ALGOS_ONLY, SOFTWARE_COMPONENTS_ONLY
+        IMAGE_FORMATS_ONLY, SIGNATURE_ONLY, GLOBBING_ALGOS_ONLY, SOFTWARE_COMPONENTS_ONLY,
+        GPU_INFO_COMPONENTS_ONLY
     } print_only_task_id_t;
     print_only_task_id_t print_only_task = PROCESS_COMPLETELY;
 
@@ -1007,28 +1027,23 @@ process_options(int argc, char** argv)
 
         case PreferGpuId:
 #ifdef OPENCL
-            if (optarg != nullptr && *optarg != 0) {
-                char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
-                if (delimiter == nullptr) {
-                    preferredGPUDevice =
-                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
-                                                "preferred GPU device out of range", 1U);
-                } else {
-                    *delimiter = 0;
-                    ++delimiter;
-                    preferredGPUPlatform =
-                        enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
-                                                "preferred GPU platform out of range", 1U);
-                    preferredGPUDevice =
-                        enblend::numberOfString(delimiter, [](unsigned x) {return x >= 1U;},
-                                                "preferred GPU device out of range", 1U);
-                }
+        {
+            char* delimiter = strpbrk(optarg, NUMERIC_OPTION_DELIMITERS);
+            if (delimiter == nullptr) {
+                preferredGPUDevice =
+                    enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                            "preferred GPU device out of range", 1U);
             } else {
-                std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
-                ocl::print_opencl_information();
-                ocl::print_gpu_preference(preferredGPUPlatform, preferredGPUDevice);
-                exit(0);
+                *delimiter = 0;
+                ++delimiter;
+                preferredGPUPlatform =
+                    enblend::numberOfString(optarg, [](unsigned x) {return x >= 1U;},
+                                            "preferred GPU platform out of range", 1U);
+                preferredGPUDevice =
+                    enblend::numberOfString(delimiter, [](unsigned x) {return x >= 1U;},
+                                            "preferred GPU device out of range", 1U);
             }
+        }
 #endif
             optionSet.insert(PreferredGPUOption);
             break;
@@ -1078,6 +1093,11 @@ process_options(int argc, char** argv)
         case SoftwareComponentsInfoId:
             print_only_task = SOFTWARE_COMPONENTS_ONLY;
             optionSet.insert(ShowSoftwareComponentsInfoOption);
+            break;
+
+        case GPUInfoId:
+            print_only_task = GPU_INFO_COMPONENTS_ONLY;
+            optionSet.insert(ShowGPUInfoOption);
             break;
 
         case 'w': // FALLTHROUGH
@@ -1775,6 +1795,16 @@ process_options(int argc, char** argv)
         break;                  // never reached
     case SOFTWARE_COMPONENTS_ONLY:
         printSoftwareComponents();
+        break;                  // never reached
+    case GPU_INFO_COMPONENTS_ONLY:
+#ifdef OPENCL
+        printGPUPreference(preferredGPUPlatform, preferredGPUDevice);
+#else
+        std::cerr <<
+            command << ": option \"--show-gpu-info\" is not implemented in this binary,\n" <<
+            command << ": because it was compiled without support for OpenCL" << std::endl;
+        exit(1);
+#endif
         break;                  // never reached
 
     case PROCESS_COMPLETELY:

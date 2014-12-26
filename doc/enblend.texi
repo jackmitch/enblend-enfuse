@@ -1661,8 +1661,7 @@ fewer blending iterations, but it will do more work in each iteration.
 This option has the negated form @option{--no-pre-assemble}, which
 restores the default.
 
-@item --prefer-gpu
-@itemx --prefer-gpu=DEVICE
+@item --prefer-gpu=DEVICE
 @itemx --prefer-gpu=PLATFORM:DEVICE
 @cindex GPU
 @cindex OpenCL
@@ -1670,38 +1669,18 @@ restores the default.
 @cindex OpenCL, device
 When told to employ the @acronym{GPU} with @option{--gpu}, by default
 Enblend uses the first device on the first autodetected platform it
-finds via queries of the @acronym{OpenCL} subsystem, where neither the
-device, nor the platform may be the ones the user wants.  Usually she
-will select the device with the highest performance, maximum possible
-number of work-items, and largest associated memory.
+finds via queries of the @acronym{OpenCL} subsystem.
 
-The first form of @option{--prefer-gpu} prints a list of all available
-@acronym{GPU}@tie{}devices on all accessible platforms, the current
-preferences, and then exits; it is the same enumeration that
-@samp{enblend --verbose --version} reveals.  Example:
+This option allows to override the default choice and select a
+particular @var{DEVICE} on the first autodetected platform (first
+form) or a particular @var{DEVICE} on a given @var{PLATFORM} (second
+form).  Usually the user will want select the device with the highest
+performance, maximum possible number of work-items, and largest
+associated memory.
 
-@example
-Available, OpenCL-compatible platform(s) and their device(s)
-  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
-    * no GPU devices found on this platform
-  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
-    * Device #1: max. 1024 work items
-                 1047872 KB global memory with 32 KB read/write cache
-                 48 KB dedicated local memory
-                 64 KB maximum constant memory
-Currently preferred GPU is device #1 on platform #2 (autodetected).
-@end example
-
-Use the numbers of platforms and devices found there to select the
-desired @var{DEVICE} on the first platform (second form) or
-@var{DEVICE} on the given @var{PLATFORM} (third form).
-
-Enblend's default is equivalent to choosing the first (i.e.@: lowest
-number) @acronym{GPU}-device on the first (i.e.@: lowest number)
-platform, which would be equivalent to @samp{--prefer-gpu=2:1} in the
-example.
-
-See also option@tie{}@option{--gpu}.
+To get the platforms and device numbers use either
+options@tie{}@option{--version --verbose} in concert or the tailored
+option@tie{}@option{--show-gpu-info}.
 
 @item -x
 @opindex -x
@@ -2698,6 +2677,37 @@ Show all globbing algorithms.
 Depending on the build-time configuration and the operating system,
 the binary may support different globbing algorithms.
 @xref{Globbing Algorithms}.
+
+@item --show-gpu-info
+@opindex --show-gpu-info
+@cindex GPU
+@cindex OpenCL
+@cindex OpenCL, platform
+@cindex OpenCL, device
+Prints a list of all available @acronym{GPU}@tie{}devices on all
+accessible platforms, the current preferences, and then exit; it is
+the same enumeration that @samp{enblend --verbose --version} reveals.
+Example:
+
+@example
+Available, OpenCL-compatible platform(s) and their device(s)
+  - Platform #1: Advanced Micro Devices, Inc., AMD Accelerated Parallel Processing, OpenCL 1.2 AMD-APP (938.2)
+    * no GPU devices found on this platform
+  - Platform #2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1
+    * Device #1: max. 1024 work items
+                 1047872 KB global memory with 32 KB read/write cache
+                 48 KB dedicated local memory
+                 64 KB maximum constant memory
+Currently preferred GPU is device #1 on platform #2 (autodetected).
+@end example
+
+Use the numbers of platforms and devices found here to select the
+desired @var{DEVICE} on the first platform or @var{DEVICE} on the
+given @var{PLATFORM} with option@tie{}@option{--prefer-gpu}.
+
+Enblend's default chooses the first (i.e.@: lowest number)
+@acronym{GPU}-device on the first (i.e.@: lowest number) platform,
+which would be equivalent to @samp{--prefer-gpu=2:1} in the example.
 
 @item --show-image-formats
 @opindex --show-image-formats
