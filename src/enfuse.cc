@@ -2577,7 +2577,10 @@ int main(int argc, char** argv)
             }
             XYZProfile = cmsCreateXYZProfile();
 
-            InputToXYZTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
+            const unsigned input_profile_type =
+                enblend::profileChannels(InputProfile) > 1 ? TYPE_RGB_DBL : TYPE_GRAY_DBL;
+
+            InputToXYZTransform = cmsCreateTransform(InputProfile, input_profile_type,
                                                      XYZProfile, TYPE_XYZ_DBL,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
@@ -2591,7 +2594,7 @@ int main(int argc, char** argv)
             }
 
             XYZToInputTransform = cmsCreateTransform(XYZProfile, TYPE_XYZ_DBL,
-                                                     InputProfile, TYPE_RGB_DBL,
+                                                     InputProfile, input_profile_type,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (XYZToInputTransform == nullptr) {
@@ -2643,8 +2646,8 @@ int main(int argc, char** argv)
                               << std::endl;
                 }
             }
-            LabProfile = cmsCreateLab2Profile(cmsD50_xyY());
-            InputToLabTransform = cmsCreateTransform(InputProfile, TYPE_RGB_DBL,
+            LabProfile = cmsCreateLab2Profile(&white_point);
+            InputToLabTransform = cmsCreateTransform(InputProfile, input_profile_type,
                                                      LabProfile, TYPE_Lab_DBL,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
@@ -2657,7 +2660,7 @@ int main(int argc, char** argv)
                 exit(1);
             }
             LabToInputTransform = cmsCreateTransform(LabProfile, TYPE_Lab_DBL,
-                                                     InputProfile, TYPE_RGB_DBL,
+                                                     InputProfile, input_profile_type,
                                                      RENDERING_INTENT_FOR_BLENDING,
                                                      TRANSFORMATION_FLAGS_FOR_BLENDING);
             if (!LabToInputTransform) {

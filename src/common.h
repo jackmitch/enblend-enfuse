@@ -873,6 +873,16 @@ profileName(cmsHPROFILE profile)
 {
     return profileInfo(profile, cmsInfoModel);
 }
+
+
+inline unsigned
+profileChannels(cmsHPROFILE profile)
+{
+    const cmsColorSpaceSignature signature = cmsGetColorSpace(profile);
+    const unsigned number_of_channels = cmsChannelsOf(signature);
+    assert(number_of_channels == 1U || number_of_channels == 3U);
+    return number_of_channels;
+}
 } // namespace enblend
 
 
