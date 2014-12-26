@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = foreign no-installinfo
+
 EXTRA_DIST = \
         README.txt VERSION \
         CMakeLists.txt CMakeModules ConfigureChecks.cmake config.h.cmake

@@ -40,11 +40,7 @@ exactly what Enblend is designed to work with.
 
 Enfuse is a tool for automatic exposure blending, contrast blending
 and much more.  It can be used to fuse an exposure bracketed step
-automatically into a nicely looking image.  See
-        doc/enfuse.info
-and on Windows also
-        contrib/enfuse_droplet/enfuse_droplet_readme.txt
-for more information.
+automatically into a nicely looking image.
 
 
 * Installation
@@ -150,13 +146,6 @@ C++-header file.  On systems with multiple header hierarchies
 (e.g. /usr/include and /usr/local/include) particular care must be
 taken that the correct headers are used at configuration time and at
 compile time.
-
-
-** --enable-split-doc=YES/no
-   -DNOSPLIT=OFF/on    (CMake)
-
-Split the documentation files in INFO or HTML format into small
-pieces.  The default is "yes", split documentation.
 
 
 ** --enable-debug=yes/NO
@@ -334,20 +323,10 @@ Another useful Texinfo-command at this level is
     @finalout
 which suppresses the black rectangles marking overfull hboxes.
 
-Use the standard variable MAKEINFOFLAGS to control makeinfo(1), for
-example, to set the maximum length of lines in Info and plain text
-output with
-    make MAKEINFOFLAGS="--fill-column=95" info
-The variable MAKEINFOHTMLFLAGS controls the formatting of XHTML; if
-set, it adds to MAKEINFOFLAGS.
-
 
 * Documentation
 
-The distribution includes some basic documentation in
-        doc/enblend.info
-        doc/enfuse.info
-and the manual pages in
+The distribution includes the manual pages in
         src/enblend.1
         src/enfuse.1
 

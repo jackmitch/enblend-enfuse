@@ -1,5 +1,6 @@
 info_TEXINFOS = enblend.texi \
                 enfuse.texi
+INFO_DEPS =
 
 enblend_TEXINFOS = auxmac.texi auxmac.tex \
                    varsenblend.texi fdl.texi \
@@ -42,10 +43,8 @@ enfuse_TEXINFOS = auxmac.texi auxmac.tex \
                   external-mask-workflow.fig \
                   default.css
 
-AM_MAKEINFOFLAGS = @AM_MAKEINFOFLAGS@ \
-                   -I $(top_builddir) -I $(srcdir)
-AM_MAKEINFOHTMLFLAGS = @AM_MAKEINFOHTMLFLAGS@ \
-                   -I $(top_builddir) -I $(srcdir) \
+AM_MAKEINFOFLAGS = -I $(top_builddir) -I $(srcdir)
+AM_MAKEINFOHTMLFLAGS = -I $(top_builddir) -I $(srcdir) \
                    --css-include=@srcdir@/default.css \
                    $(MAKEINFOHTMLFLAGS)
 export TEXINPUTS=$(top_builddir):$(srcdir)
@@ -86,8 +85,6 @@ CLEANFILES = entropy.{txt,eps,svg,pdf} \
 DISTCLEANFILES = texinfo.tex \
                  enblend.sc enblend.scs \
                  enfuse.sc enfuse.scs
-
-MAINTAINERCLEANFILES = enblend.info enfuse.info
 
 
 # Phony Targets

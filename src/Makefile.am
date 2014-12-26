@@ -90,7 +90,7 @@ man: enblend.1 enfuse.1
 
 
 enblend.1: enblend
-	$(HELP2MAN) --output=$@ ./enblend
+	$(HELP2MAN) --no-info --output=$@ ./enblend
 
 enfuse.1: enfuse
-	$(HELP2MAN) --output=$@ ./enfuse
+	$(HELP2MAN) --no-info --output=$@ ./enfuse
