@@ -34,14 +34,13 @@
 using namespace boost::math;
 #endif
 
-#include <gsl/gsl_rng.h>
-
 #include <vigra/basicimage.hxx>
 #include <vigra/colorconversions.hxx>
 #include <vigra/mathutil.hxx>
 #include <vigra/numerictraits.hxx>
 #include <vigra/utilities.hxx>
 
+#include "mersenne.h"
 #include "minimizer.h"
 #include "muopt.h"
 #include "parameter.h"
@@ -95,9 +94,9 @@ jch_to_rgb(const cmsJCh* jch, double* rgb)
 }
 
 
-/** A functor for converting scalar pixel values to the number representation used
- *  for pyramids.  These are either fixed-point integers or floating-point numbers.
- */
+// A functor for converting scalar pixel values to the number
+// representation used for pyramids.  These are either fixed-point
+// integers or floating-point numbers.
 template <typename SrcPixelType, typename PyramidPixelType, int PyramidIntegerBits, int PyramidFractionBits>
 class ConvertScalarToPyramidFunctor
 {
@@ -191,60 +190,20 @@ private:
 };
 
 
-class MersenneTwister
+template <typename DestPixelType, typename PyramidPixelType, bool IsIntegralPyramid,
+          int PyramidIntegerBits, int PyramidFractionBits>
+class SpecializedConvertPyramidToScalarFunctor
 {
-public:
-    typedef unsigned long result_type;
-
-    MersenneTwister() : generator_(gsl_rng_alloc(gsl_rng_mt19937)) {assert(generator_);}
-    MersenneTwister(const MersenneTwister& another_generator) :
-        generator_(gsl_rng_clone(another_generator.generator_)) {assert(generator_);}
-    ~MersenneTwister() {gsl_rng_free(generator_);}
-
-    MersenneTwister& operator=(const MersenneTwister& another_generator)
+    SpecializedConvertPyramidToScalarFunctor()
     {
-        if (this != &another_generator)
-        {
-            gsl_rng_free(generator_);
-            generator_ = gsl_rng_clone(another_generator.generator_);
-            assert(generator_);
-        }
-        return *this;
+        NEVER_REACHED("generic class SpecializedConvertPyramidToScalarFunctor must not be used");
     }
+}; // SpecializedConvertPyramidToScalarFunctor
 
-    result_type min() const {return gsl_rng_min(generator_);}
-    result_type max() const {return gsl_rng_max(generator_);}
-
-    void seed() {gsl_rng_set(generator_, gsl_rng_default_seed);}
-    void seed(result_type a_seed) {gsl_rng_set(generator_, a_seed);}
-
-    result_type operator()() {return gsl_rng_get(generator_);}
-
-private:
-    gsl_rng* generator_;
-};
-
-
-inline static unsigned
-non_deterministic_seed()
-{
-    unsigned seed = static_cast<unsigned>(1 + omp_get_thread_num());
-
-    const clock_t now = clock();
-    if (now != static_cast<clock_t>(-1))
-    {
-        seed ^= static_cast<unsigned>(now);
-    }
-
-    return seed;
-}
-
-
-// A functor for converting numbers stored in the pyramid number
-// representation back into normal pixel values.
 
 template <typename DestPixelType, typename PyramidPixelType, int PyramidIntegerBits, int PyramidFractionBits>
-class ConvertPyramidToScalarFunctor
+class SpecializedConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, /* IsIntegralPyramid: */ true,
+                                               PyramidIntegerBits, PyramidFractionBits>
 {
     typedef vigra::NumericTraits<DestPixelType> DestTraits;
     typedef typename DestTraits::isIntegral DestIsIntegral;
@@ -253,38 +212,34 @@ class ConvertPyramidToScalarFunctor
     typedef typename PyramidTraits::isIntegral PyramidIsIntegral;
 
 public:
-    ConvertPyramidToScalarFunctor()
+    SpecializedConvertPyramidToScalarFunctor() :
+        half_m1((1U << (PyramidFractionBits - 1)) - 1U),
+        quarter(1U << (PyramidFractionBits - 2)),
+        three_quarter(3U << (PyramidFractionBits - 2)),
+        unit(double(1U << PyramidFractionBits))
     {
-#ifdef DEBUG
-        random_number_generator_.seed(); // apply default seed in all threads for reproducibility
-#else
-        random_number_generator_.seed(non_deterministic_seed());
-#endif
+        static_assert(PyramidFractionBits >= 2, "not enough PyramidFractionBits to calculate shifts");
+        random_number_generator_.non_deterministic_seed();
     }
 
     DestPixelType operator()(const PyramidPixelType& v) const
     {
-        return doConvert(v, DestIsIntegral(), PyramidIsIntegral());
+        return doConvert(v, DestIsIntegral());
     }
 
 protected:
-    // test time with floating-point dithering: 100.01 sec
-    // test time with integer dithering: 94.89 sec
+    // Test time with floating-point dithering: 100.01 sec
+    // Test time with integer dithering: 94.89 sec
+    //
     // Convert an integral pyramid pixel to an integral image pixel.
-    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType, vigra::VigraTrueType) const
+    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType) const
     {
-        // Integer Dithering
-        constexpr PyramidPixelType half_m1 = (1U << (PyramidFractionBits - 1)) - 1;
-        constexpr PyramidPixelType quarter = 1U << (PyramidFractionBits - 2);
-        constexpr PyramidPixelType three_quarter = 3U << (PyramidFractionBits - 2);
-
         const PyramidPixelType vShifted = v >> PyramidFractionBits;
         const PyramidPixelType vFraction = v & ((1U << PyramidFractionBits) - 1U);
 
         if (vFraction >= quarter && vFraction < three_quarter)
         {
-            const PyramidPixelType random =
-                (PyramidPixelType(random_number_generator_()) & half_m1) + quarter;
+            const PyramidPixelType random = (PyramidPixelType(random_number_generator_()) & half_m1) + quarter;
 
             if (random <= vFraction)
             {
@@ -305,20 +260,51 @@ protected:
         }
     }
 
+    // Convert an integral pyramid pixel to a real image pixel.
+    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType) const
+    {
+        return PyramidTraits::toRealPromote(v) / unit;
+    }
+
+private:
+    const PyramidPixelType half_m1;
+    const PyramidPixelType quarter;
+    const PyramidPixelType three_quarter;
+    const double unit;
+
+    mutable UniformMersenneTwister random_number_generator_;
+}; // SpecializedConvertPyramidToScalarFunctor
+
+
+template <typename DestPixelType, typename PyramidPixelType, int PyramidIntegerBits, int PyramidFractionBits>
+class SpecializedConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType, /* IsIntegralPyramid: */ false,
+                                               PyramidIntegerBits, PyramidFractionBits>
+{
+    typedef vigra::NumericTraits<DestPixelType> DestTraits;
+    typedef typename DestTraits::isIntegral DestIsIntegral;
+
+    typedef vigra::NumericTraits<PyramidPixelType> PyramidTraits;
+
+public:
+    SpecializedConvertPyramidToScalarFunctor()
+    {
+        random_number_generator_.non_deterministic_seed();
+    }
+
+    DestPixelType operator()(const PyramidPixelType& v) const
+    {
+        return doConvert(v, DestIsIntegral());
+    }
+
+protected:
     // Convert a real pyramid pixel to an integral image pixel.
-    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType, vigra::VigraFalseType) const
+    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraTrueType) const
     {
         return DestTraits::fromRealPromote(dither(v));
     }
 
-    // Convert an integral pyramid pixel to a real image pixel.
-    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType, vigra::VigraTrueType) const
-    {
-        return convertFixedPointToDouble(v);
-    }
-
     // Convert a real pyramid pixel to a real image pixel.
-    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType, vigra::VigraFalseType) const
+    DestPixelType doConvert(const PyramidPixelType& v, vigra::VigraFalseType) const
     {
         // Undo logarithmic/rational mapping that was done in building
         // the pyramid.  See ConvertScalarToPyramidFunctor::doConvert
@@ -338,7 +324,7 @@ protected:
         // Only dither values within a certain range of the rounding cutoff point.
         if (vFraction > 0.25 && vFraction <= 0.75)
         {
-            if (vFraction - 0.25 >= 0.5 * random())
+            if (vFraction - 0.25 >= 0.5 * random_number_generator_.get_uniform())
             {
                 return ceil(v);
             }
@@ -351,19 +337,24 @@ protected:
         return v;
     }
 
-    double convertFixedPointToDouble(const PyramidPixelType& v) const
-    {
-        return PyramidTraits::toRealPromote(v) / static_cast<double>(1U << PyramidFractionBits);
-    }
-
 private:
-    double random() const
-    {
-        return static_cast<double>(random_number_generator_()) / static_cast<double>(random_number_generator_.max());
-    }
+    mutable UniformMersenneTwister random_number_generator_;
+}; // SpecializedConvertPyramidToScalarFunctor
 
-    mutable MersenneTwister random_number_generator_;
-};
+
+template <typename DestPixelType, typename PyramidPixelType, int PyramidIntegerBits, int PyramidFractionBits>
+using ConvertPyramidToScalarFunctor =
+class SpecializedConvertPyramidToScalarFunctor
+                      <DestPixelType, PyramidPixelType,
+                       std::numeric_limits<typename vigra::NumericTraits<PyramidPixelType>::ValueType>::is_integer,
+                       PyramidIntegerBits, PyramidFractionBits>;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Converters for color  (three component aka "vector") pixels
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //
@@ -462,6 +453,9 @@ public:
         color_limit(parameter::as_double("lab-color-limit", 127.0)),
         pyramid_scale(double(1U << (PyramidIntegerBits - PYRAMID_HEADROOM_BITS)))
     {
+        static_assert(PyramidIntegerBits >= PYRAMID_HEADROOM_BITS,
+                      "not enough PyramidIntegerBits to calculate `pyramid_scale' from shift");
+
 #ifdef DEBUG_COLORSPACE_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
@@ -902,6 +896,9 @@ public:
     PyramidScaleJCh() :
         pyramid_scale(double(1U << (PyramidIntegerBits - 1 - 7)))
     {
+        static_assert(PyramidIntegerBits >= 8,
+                      "not enough PyramidIntegerBits to get `pyramid_scale' from shift");
+
 #ifdef DEBUG_COLORSPACE_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
@@ -1619,6 +1616,13 @@ protected:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copy TO pyramid
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // Copy a scalar image into a scalar pyramid image.
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
 inline void
@@ -1631,11 +1635,12 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 {
     typedef typename SrcImageType::value_type SrcPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
+    typedef ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType,
+                                          PyramidIntegerBits, PyramidFractionBits> Converter;
 
     vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
                                dest_upperleft, da,
-                               ConvertScalarToPyramidFunctor<SrcPixelType, PyramidPixelType,
-                                                             PyramidIntegerBits, PyramidFractionBits>());
+                               Converter());
 }
 
 
@@ -1651,6 +1656,14 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 {
     typedef typename SrcImageType::value_type SrcVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
+    typedef ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType,
+                                          PyramidIntegerBits, PyramidFractionBits> ConverterRGB;
+    typedef ConvertVectorToLabPyramidFunctor<SrcVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterLab;
+    typedef ConvertVectorToLuvPyramidFunctor<SrcVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterLuv;
+    typedef ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterJCH;
 
     switch (BlendColorspace)
     {
@@ -1658,8 +1671,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
     case IdentitySpace:
         vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
                                    dest_upperleft, da,
-                                   ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType,
-                                                                 PyramidIntegerBits, PyramidFractionBits>());
+                                   ConverterRGB());
         break;
 
     case CIELAB:
@@ -1674,8 +1686,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         }
         vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
                                    dest_upperleft, da,
-                                   ConvertVectorToLabPyramidFunctor<SrcVectorType, PyramidVectorType,
-                                                                    PyramidIntegerBits, PyramidFractionBits>());
+                                   ConverterLab());
         break;
 
     case CIELUV:
@@ -1690,8 +1701,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         }
         vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
                                    dest_upperleft, da,
-                                   ConvertVectorToLuvPyramidFunctor<SrcVectorType, PyramidVectorType,
-                                                                    PyramidIntegerBits, PyramidFractionBits>());
+                                   ConverterLuv());
         break;
 
     case CIECAM:
@@ -1706,8 +1716,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         }
         vigra::omp::transformImage(src_upperleft, src_lowerright, sa,
                                    dest_upperleft, da,
-                                   ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType,
-                                                                    PyramidIntegerBits, PyramidFractionBits>());
+                                   ConverterJCH());
         break;
 
     default:
@@ -1718,7 +1727,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 
 // Compile-time switch based on scalar or vector image type.
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
-inline void
+inline static void
 copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
                    typename SrcImageType::const_traverser src_lowerright,
                    typename SrcImageType::ConstAccessor sa,
@@ -1736,7 +1745,7 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
 
 // Version using argument object factories.
 template <typename SrcImageType, typename PyramidImageType, int PyramidIntegerBits, int PyramidFractionBits>
-inline void
+inline static void
 copyToPyramidImage(vigra::triple<typename SrcImageType::const_traverser, typename SrcImageType::const_traverser, typename SrcImageType::ConstAccessor> src,
                    vigra::pair<typename PyramidImageType::traverser, typename PyramidImageType::Accessor> dest)
 {
@@ -1746,10 +1755,17 @@ copyToPyramidImage(vigra::triple<typename SrcImageType::const_traverser, typenam
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Conditionally copy FROM pyramid
+//
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // Copy a scalar pyramid image into a scalar image.
 template <typename PyramidImageType, typename MaskImageType, typename DestImageType,
           int PyramidIntegerBits, int PyramidFractionBits>
-inline void
+inline static void
 copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename PyramidImageType::const_traverser src_lowerright,
                        typename PyramidImageType::ConstAccessor sa,
@@ -1761,12 +1777,13 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 {
     typedef typename DestImageType::value_type DestPixelType;
     typedef typename PyramidImageType::value_type PyramidPixelType;
+    typedef ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType,
+                                          PyramidIntegerBits, PyramidFractionBits> Converter;
 
     vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
                                  mask_upperleft, ma,
                                  dest_upperleft, da,
-                                 ConvertPyramidToScalarFunctor<DestPixelType, PyramidPixelType,
-                                                               PyramidIntegerBits, PyramidFractionBits>());
+                                 Converter());
 }
 
 
@@ -1774,7 +1791,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 // color space conversion.
 template <typename PyramidImageType, typename MaskImageType, typename DestImageType,
           int PyramidIntegerBits, int PyramidFractionBits>
-void
+inline static void
 copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename PyramidImageType::const_traverser src_lowerright,
                        typename PyramidImageType::ConstAccessor sa,
@@ -1786,6 +1803,14 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 {
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
+    typedef ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
+                                          PyramidIntegerBits, PyramidFractionBits> ConverterRGB;
+    typedef ConvertLabPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterLab;
+    typedef ConvertLuvPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterLuv;
+    typedef ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
+                                             PyramidIntegerBits, PyramidFractionBits> ConverterJCH;
 
     switch (BlendColorspace)
     {
@@ -1796,8 +1821,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
         vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
                                      mask_upperleft, ma,
                                      dest_upperleft, da,
-                                     ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
-                                                                   PyramidIntegerBits, PyramidFractionBits>());
+                                     ConverterRGB());
         break;
 
     case CIELAB:
@@ -1808,8 +1832,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
         vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
                                      mask_upperleft, ma,
                                      dest_upperleft, da,
-                                     ConvertLabPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
-                                                                      PyramidIntegerBits, PyramidFractionBits>());
+                                     ConverterLab());
         break;
 
     case CIELUV:
@@ -1820,8 +1843,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
         vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
                                      mask_upperleft, ma,
                                      dest_upperleft, da,
-                                     ConvertLuvPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
-                                                                      PyramidIntegerBits, PyramidFractionBits>());
+                                     ConverterLuv());
         break;
 
     case CIECAM:
@@ -1832,8 +1854,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
         vigra::omp::transformImageIf(src_upperleft, src_lowerright, sa,
                                      mask_upperleft, ma,
                                      dest_upperleft, da,
-                                     ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType,
-                                                                      PyramidIntegerBits, PyramidFractionBits>());
+                                     ConverterJCH());
         break;
 
     default:
@@ -1845,7 +1866,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 // Compile-time switch based on scalar or vector image type.
 template <typename PyramidImageType, typename MaskImageType, typename DestImageType,
           int PyramidIntegerBits, int PyramidFractionBits>
-inline void
+inline static void
 copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                        typename PyramidImageType::const_traverser src_lowerright,
                        typename PyramidImageType::ConstAccessor sa,
@@ -1868,7 +1889,7 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
 // Version using argument object factories.
 template <typename PyramidImageType, typename MaskImageType, typename DestImageType,
           int PyramidIntegerBits, int PyramidFractionBits>
-inline void
+inline static void
 copyFromPyramidImageIf(vigra::triple<typename PyramidImageType::const_traverser, typename PyramidImageType::const_traverser, typename PyramidImageType::ConstAccessor> src,
                        vigra::pair<typename MaskImageType::const_traverser, typename MaskImageType::ConstAccessor> mask,
                        vigra::pair<typename DestImageType::traverser, typename DestImageType::Accessor> dest)

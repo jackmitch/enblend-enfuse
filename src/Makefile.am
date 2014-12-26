@@ -21,6 +21,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \
                   filespec.h filespec.cc \
+                  mersenne.h mersenne.cc \
                   parameter.h parameter.cc \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc \
@@ -46,6 +47,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  error_message.h error_message.cc \
                  filenameparse.h filenameparse.cc \
                  filespec.h filespec.cc \
+                 mersenne.h mersenne.cc \
                  parameter.h parameter.cc \
                  self_test.h self_test.cc \
                  tiff_message.h tiff_message.cc \
