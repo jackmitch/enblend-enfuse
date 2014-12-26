@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 * enblend: (enblend).                   Blend images using a multiresolution spline.
 END-INFO-DIR-ENTRY
 
-   This manual is for Enblend (version 4.2-12b596d6fb50, 26 December
+   This manual is for Enblend (version 4.2-33ea2066d783, 17 December
 2014), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -25,7 +25,7 @@ File: enblend.info,  Node: Top,  Next: Overview,  Up: (dir)
 Enblend
 *******
 
-This manual is for Enblend (version 4.2-12b596d6fb50, 26 December
+This manual is for Enblend (version 4.2-33ea2066d783, 17 December
 2014), a tool for compositing images in such a way that the seam
 between the images is invisible, or at least very difficult to see.
 
@@ -772,9 +772,8 @@ output image.
      On the order of fast to slow computation, Enblend supports the
      following blend colorspaces.
 
-    `IDENTITY', `ID', `UNIT'
-          Naively compute blended colors in the luminance interval
-          (grayscale images) or RGB-cube (RGB images) spanned by the
+    `RGB', `RGBCUBE', `RGB-CUBE'
+          Naively compute blended colors in the RGB-cube spanned by the
           input ICC profile or sRGB if no profiles are present.
           Consider option `--fallback-profile' to force a different
           profile than sRGB on all input images.
@@ -797,7 +796,7 @@ output image.
 `-c'
 `--ciecam'
      Deprecated.  Use `--blend-colorspace=CIECAM' instead.  To mimic
-     the negated option `--no-ciecam' use `--blend-colorspace=IDENTITY'.
+     the negated option `--no-ciecam' use `--blend-colorspace=RGBCUBE'.
 
 `-d'
 `--depth=DEPTH'
@@ -1498,7 +1497,7 @@ File: enblend.info,  Node: Expert Mask Generation Options,  Next: Information Op
 
      The optimizer weights DISTANCE-WEIGHT and MISMATCH-WEIGHT define
      how to weight these two criteria.  Enblend up to version 3.2 used
-     1:1.  This version of Enblend (4.2-12b596d6fb50) uses
+     1:1.  This version of Enblend (4.2-33ea2066d783) uses
      8.0:1.0.
 
      A large DISTANCE-WEIGHT pulls the optimized seam line closer to
@@ -1694,7 +1693,7 @@ File: enblend.info,  Node: Primary Seam Generators,  Next: Color Profiles,  Prev
 4 Primary Seam Generators
 *************************
 
-This version (4.2-12b596d6fb50) of Enblend supports two main algorithms
+This version (4.2-33ea2066d783) of Enblend supports two main algorithms
 to generate seam lines.  Use option `--primary-seam-generator' to
 select one of the generators.
 
@@ -2835,7 +2834,7 @@ Program Index
 
 * align_image_stack (Hugin):             Helpful Programs.    (line  29)
 * cinepaint <1>:                         Helpful Programs.    (line  41)
-* cinepaint:                             Advanced Options.    (line 150)
+* cinepaint:                             Advanced Options.    (line 149)
 * convert (ImageMagick):                 Helpful Programs.    (line  57)
 * darktable:                             Helpful Programs.    (line  10)
 * dcraw <1>:                             Helpful Programs.    (line  13)
@@ -2845,12 +2844,12 @@ Program Index
 * exrdisplay (OpenEXR):                  Helpful Programs.    (line  63)
 * fulla (Hugin):                         Helpful Programs.    (line  29)
 * gimp <1>:                              Helpful Programs.    (line  48)
-* gimp <2>:                              Advanced Options.    (line 150)
+* gimp <2>:                              Advanced Options.    (line 149)
 * gimp:                                  Standard Workflow.   (line   9)
 * gm (GraphicsMagick):                   Helpful Programs.    (line  57)
 * gmic:                                  Helpful Programs.    (line  52)
 * hugin <1>:                             Helpful Programs.    (line  26)
-* hugin <2>:                             Advanced Options.    (line 138)
+* hugin <2>:                             Advanced Options.    (line 137)
 * hugin <3>:                             Standard Workflow.   (line   9)
 * hugin:                                 Overview.            (line  25)
 * identify (ImageMagick) <1>:            Helpful Programs.    (line  57)
@@ -2858,7 +2857,7 @@ Program Index
 * Magic Lantern:                         Helpful Programs.    (line  95)
 * montage (ImageMagick):                 Helpful Programs.    (line  57)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  29)
-* nona (Hugin):                          Advanced Options.    (line 138)
+* nona (Hugin):                          Advanced Options.    (line 137)
 * PanoTools <1>:                         Standard Workflow.   (line   9)
 * PanoTools:                             Overview.            (line  25)
 * pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  66)
@@ -2906,11 +2905,11 @@ Option Index
 * --anneal:                              Expert Mask Generation Options.
                                                               (line   7)
 * --blend-colorspace:                    Advanced Options.    (line  10)
-* --ciecam:                              Advanced Options.    (line  49)
+* --ciecam:                              Advanced Options.    (line  48)
 * --coarse-mask:                         Mask Generation Options.
                                                               (line   9)
 * --compression:                         Common Options.      (line  20)
-* --depth:                               Advanced Options.    (line  54)
+* --depth:                               Advanced Options.    (line  53)
 * --dijkstra:                            Expert Mask Generation Options.
                                                               (line  53)
 * --fallback-profile:                    Expert Options.      (line   7)
@@ -2950,18 +2949,18 @@ Option Index
 * --version:                             Information Options. (line  71)
 * --visualize:                           Mask Generation Options.
                                                               (line 125)
-* --wrap:                                Advanced Options.    (line 159)
+* --wrap:                                Advanced Options.    (line 158)
 * -a:                                    Expert Options.      (line  53)
-* -c:                                    Advanced Options.    (line  49)
-* -d:                                    Advanced Options.    (line  54)
-* -f:                                    Advanced Options.    (line 134)
-* -g:                                    Advanced Options.    (line 146)
+* -c:                                    Advanced Options.    (line  48)
+* -d:                                    Advanced Options.    (line  53)
+* -f:                                    Advanced Options.    (line 133)
+* -g:                                    Advanced Options.    (line 145)
 * -h:                                    Information Options. (line   8)
 * -l:                                    Common Options.      (line  90)
 * -o:                                    Common Options.      (line 134)
 * -V:                                    Information Options. (line  71)
 * -v:                                    Common Options.      (line 141)
-* -w:                                    Advanced Options.    (line 159)
+* -w:                                    Advanced Options.    (line 158)
 * -x:                                    Expert Options.      (line  81)
 
 
@@ -2975,20 +2974,20 @@ General Index
 
 * # (response file comment):             Response File Format.
                                                               (line   6)
-* 360o panoramas:                        Advanced Options.    (line 159)
+* 360o panoramas:                        Advanced Options.    (line 158)
 * @ (response file prefix):              Response Files.      (line   6)
 * a.tif:                                 Common Options.      (line 136)
 * affine transformation:                 Standard Workflow.   (line  48)
 * algorithms, globbing:                  Globbing Algorithms. (line   6)
 * alpha channel <1>:                     Standard Workflow.   (line  69)
 * alpha channel:                         Overview.            (line  18)
-* alpha channel, associated:             Advanced Options.    (line 146)
+* alpha channel, associated:             Advanced Options.    (line 145)
 * anneal parameters:                     Expert Mask Generation Options.
                                                               (line   7)
 * arithmetic JPEG compression:           Common Options.      (line  38)
 * authors, list of:                      Authors.             (line   6)
 * binary mask:                           Understanding Masks. (line   6)
-* bits per channel:                      Advanced Options.    (line  54)
+* bits per channel:                      Advanced Options.    (line  53)
 * black-and-white image:                 Color Profiles.      (line  58)
 * blend colorspace:                      Advanced Options.    (line  10)
 * blending color space:                  Color Profiles.      (line 111)
@@ -2998,21 +2997,21 @@ General Index
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * Burt-Adelson multiresolution spline:   Overview.            (line   6)
-* canvas size:                           Advanced Options.    (line 134)
+* canvas size:                           Advanced Options.    (line 133)
 * central processing unit:               Common Options.      (line  75)
-* channel width:                         Advanced Options.    (line  54)
+* channel width:                         Advanced Options.    (line  53)
 * channel, alpha:                        Overview.            (line  18)
 * checkpoint results:                    Expert Options.      (line  81)
 * chrominance weight:                    Expert Mask Generation Options.
                                                               (line  66)
 * CIECAM02 <1>:                          Expert Options.      (line   7)
-* CIECAM02:                              Advanced Options.    (line  49)
+* CIECAM02:                              Advanced Options.    (line  48)
 * CIECAM02 color appearance model:       Color Profiles.      (line  65)
 * CIECAM02 colorspace <1>:               Color Profiles.      (line 169)
-* CIECAM02 colorspace:                   Advanced Options.    (line  39)
-* CIEL*a*b* colorspace:                  Advanced Options.    (line  33)
+* CIECAM02 colorspace:                   Advanced Options.    (line  38)
+* CIEL*a*b* colorspace:                  Advanced Options.    (line  32)
 * CIEL*u*v* colorspace <1>:              Color Profiles.      (line 155)
-* CIEL*u*v* colorspace:                  Advanced Options.    (line  36)
+* CIEL*u*v* colorspace:                  Advanced Options.    (line  35)
 * coarse mask:                           Mask Generation Options.
                                                               (line   9)
 * color appearance model <1>:            Color Profiles.      (line  65)
@@ -3048,7 +3047,7 @@ General Index
                                                               (line  53)
 * DIJKSTRA radius:                       Mask Generation Options.
                                                               (line 167)
-* double precision float, IEEE754:       Advanced Options.    (line 107)
+* double precision float, IEEE754:       Advanced Options.    (line 106)
 * EXR image:                             Color Profiles.      (line  87)
 * fallback profile:                      Expert Options.      (line   7)
 * feathering, detrimental effect of:     Overview.            (line  25)
@@ -3093,7 +3092,7 @@ General Index
 * graphcut, limitations:                 Primary Seam Generators.
                                                               (line  59)
 * graphics processing unit:              Common Options.      (line  75)
-* half precision float, OpenEXR:         Advanced Options.    (line 123)
+* half precision float, OpenEXR:         Advanced Options.    (line 122)
 * help:                                  Information Options. (line   8)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hue-luminance maximum:                 Expert Mask Generation Options.
@@ -3101,8 +3100,8 @@ General Index
 * Hugin:                                 Bug Reports.         (line  95)
 * ICC profile <1>:                       Color Profiles.      (line   6)
 * ICC profile:                           Advanced Options.    (line  16)
-* IEEE754 double precision float:        Advanced Options.    (line 107)
-* IEEE754 single precision float:        Advanced Options.    (line  97)
+* IEEE754 double precision float:        Advanced Options.    (line 106)
+* IEEE754 single precision float:        Advanced Options.    (line  96)
 * image colors, visualization:           Mask Generation Options.
                                                               (line 183)
 * image difference:                      Expert Mask Generation Options.
@@ -3223,8 +3222,8 @@ General Index
 * OpenCL, device:                        Expert Options.      (line  65)
 * OpenCL, platform <1>:                  Information Options. (line  19)
 * OpenCL, platform:                      Expert Options.      (line  65)
-* OpenEXR, data format:                  Advanced Options.    (line 119)
-* OpenEXR, half precision float:         Advanced Options.    (line 123)
+* OpenEXR, data format:                  Advanced Options.    (line 118)
+* OpenEXR, half precision float:         Advanced Options.    (line 122)
 * optimize seam:                         Mask Generation Options.
                                                               (line  62)
 * optimize strategy:                     Mask Generation Options.
@@ -3248,7 +3247,7 @@ General Index
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  20)
 * output filename, default:              Common Options.      (line 136)
-* output image, set size of:             Advanced Options.    (line 134)
+* output image, set size of:             Advanced Options.    (line 133)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  64)
 * parallax error:                        Standard Workflow.   (line  58)
@@ -3311,8 +3310,8 @@ General Index
 * signature:                             Information Options. (line  52)
 * simulated annealing optimizer:         Expert Mask Generation Options.
                                                               (line   7)
-* single precision float, IEEE754:       Advanced Options.    (line  97)
-* size, canvas:                          Advanced Options.    (line 134)
+* single precision float, IEEE754:       Advanced Options.    (line  96)
+* size, canvas:                          Advanced Options.    (line 133)
 * software components:                   Information Options. (line  59)
 * SourceForge:                           Overview.            (line  45)
 * sRGB:                                  Advanced Options.    (line  26)
@@ -3329,7 +3328,7 @@ General Index
 * transformation, affine:                Standard Workflow.   (line  48)
 * understanding masks:                   Understanding Masks. (line   6)
 * version:                               Information Options. (line  71)
-* virtual reality:                       Advanced Options.    (line 169)
+* virtual reality:                       Advanced Options.    (line 168)
 * visualization image:                   Mask Generation Options.
                                                               (line 142)
 * visualization image colors:            Mask Generation Options.
@@ -3354,7 +3353,7 @@ General Index
 * workflow, external masks:              External Mask Manipulation.
                                                               (line  33)
 * workflow, standard:                    Standard Workflow.   (line   6)
-* wrap around:                           Advanced Options.    (line 159)
+* wrap around:                           Advanced Options.    (line 158)
 
 
 
@@ -3384,38 +3383,38 @@ Node: Common Options20332
 Ref: Common Options-Footnote-126740
 Ref: Common Options-Footnote-226814
 Node: Advanced Options27006
-Ref: Advanced Options-Footnote-134564
-Ref: Advanced Options-Footnote-234630
-Ref: Advanced Options-Footnote-334703
-Node: Mask Generation Options34862
-Ref: Table:mask-generation35770
-Ref: Table:optimizer-strategies37809
-Ref: Table:visualization-colors41578
-Ref: Table:mask-template-characters42493
-Ref: Mask Generation Options-Footnote-144745
-Node: Expert Options44973
-Node: Expert Mask Generation Options48102
-Node: Information Options56823
-Node: Option Delimiters61251
-Node: Primary Seam Generators62652
-Node: Color Profiles65538
-Ref: Figure:logtransform69329
-Ref: Color Profiles-Footnote-174697
-Ref: Color Profiles-Footnote-274858
-Ref: Color Profiles-Footnote-375181
-Ref: Color Profiles-Footnote-475311
-Node: Understanding Masks75418
-Node: Helpful Programs79208
-Node: Bug Reports83855
-Ref: Bug Reports-Footnote-189511
-Node: Authors89581
-Node: FDL90746
-Node: List of Tables111728
-Node: List of Figures112352
-Node: List of Examples112704
-Node: Program Index112985
-Node: Syntactic-Comment Index116213
-Node: Option Index116968
-Node: General Index121455
+Ref: Advanced Options-Footnote-134503
+Ref: Advanced Options-Footnote-234569
+Ref: Advanced Options-Footnote-334642
+Node: Mask Generation Options34801
+Ref: Table:mask-generation35709
+Ref: Table:optimizer-strategies37748
+Ref: Table:visualization-colors41517
+Ref: Table:mask-template-characters42432
+Ref: Mask Generation Options-Footnote-144684
+Node: Expert Options44912
+Node: Expert Mask Generation Options48041
+Node: Information Options56762
+Node: Option Delimiters61190
+Node: Primary Seam Generators62591
+Node: Color Profiles65477
+Ref: Figure:logtransform69268
+Ref: Color Profiles-Footnote-174636
+Ref: Color Profiles-Footnote-274797
+Ref: Color Profiles-Footnote-375120
+Ref: Color Profiles-Footnote-475250
+Node: Understanding Masks75357
+Node: Helpful Programs79147
+Node: Bug Reports83794
+Ref: Bug Reports-Footnote-189450
+Node: Authors89520
+Node: FDL90685
+Node: List of Tables111667
+Node: List of Figures112291
+Node: List of Examples112643
+Node: Program Index112924
+Node: Syntactic-Comment Index116152
+Node: Option Index116907
+Node: General Index121394
 
 End Tag Table
