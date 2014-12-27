@@ -28,6 +28,7 @@ set(_enblend_Bases auxmac.texi auxmac.tex
     photographic-workflow.fig
     external-mask-workflow.fig
     seam-line-visualization.tif
+    log-transform.gp.in
     default.css)
 
 set(_enfuse_Bases auxmac.texi auxmac.tex
@@ -37,30 +38,24 @@ set(_enfuse_Bases auxmac.texi auxmac.tex
     color-profiles.texi
     understanding-masks.texi
     workflow.texi filespec.texi
-    external-masks.texi
+    external-masks.texi option-delimiters.texi
     bug-reports.texi authors.texi
 
-    config-edge.gp
-    config.gp
+    config-edge.gp config.gp
 
     entropy-cutoff.gp.in
-    entropy.gp.in
     exposure-cutoff.gp.in
+    entropy.gp.in
+    gaussian.gp.in lorentzian.gp.in halfsine.gp.in fullsine.gp.in power.gp.in
     exposure-weights.gp.in
-    fullsine.gp.in
-    gaussian.gp.in
-    halfsine.gp.in
     laplacian-of-gaussian.gp.in
-    lorentzian.gp.in
-    power.gp.in
-
     sharp-edge.gp.in sharp-edge.data
     smooth-edge.gp.in smooth-edge.data
-
-    external-mask-workflow.fig
+    log-transform.gp.in
     local-analysis-window.fig
-    focus-stack-decision-tree.fig
     photographic-workflow.fig
+    focus-stack-decision-tree.fig
+    external-mask-workflow.fig
     default.css)
 
 set(_enblend_TEXINFOS)
@@ -251,10 +246,10 @@ foreach (_cmd ${main_texi_list})
     # there is no makeinfo or no texi2dvi command,
     # this implies insufficient latex installation.
     # Therefore simply copy the data from source tree.
-    foreach(_ext "info")
-      doc_copybin(_depend_gp "${_cmd}.${_ext}")
-      list(APPEND _docs "${_cmd}.${_ext}" "${_created}.${_ext}")
-    endforeach()
+    #foreach(_ext "info")
+    #  doc_copybin(_depend_gp "${_cmd}.${_ext}")
+    #  list(APPEND _docs "${_cmd}.${_ext}" "${_created}.${_ext}")
+    #endforeach()
     #
     # Disabled, because not part of repo.
     # They would have only been created with "make pdf" or "make html" in source doc directory
@@ -274,18 +269,18 @@ foreach (_cmd ${main_texi_list})
   else()
     # here fig2dev, makeinfo and texi2dvi exist, option DOC set to ON
     #message(STATUS "create ${_created}.info")
-    add_custom_command(
-      OUTPUT "${_created}.info"
-      COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
-      "-I" "${TOP_SRC_DIR}/doc"
-      -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      ${_${_cmd}_TEXINFOS}
-      ${_depend_gp}
-      "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
-      COMMENT "makeinfo: Creating ${_created}.info from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      )
-    install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
+    #add_custom_command(
+    #  OUTPUT "${_created}.info"
+    #  COMMAND ${MAKEINFO_EXE} "--css-include=${TOP_SRC_DIR}/doc/default.css"
+    #  "-I" "${TOP_SRC_DIR}/doc"
+    #  -o "${_created}.info" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    #  DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    #  ${_${_cmd}_TEXINFOS}
+    #  ${_depend_gp}
+    #  "${CMAKE_CURRENT_BINARY_DIR}/config-h.texi"
+    #  COMMENT "makeinfo: Creating ${_created}.info from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    #  )
+    #install(FILES "${_created}.info" DESTINATION ${DocumentsDirectory})
     add_custom_command(
       OUTPUT "${_created}.texi"
       COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/doc/${_cmd}.texi" "${_created}.texi"
@@ -303,41 +298,42 @@ foreach (_cmd ${main_texi_list})
       )
     install(FILES "${_created}.pdf" DESTINATION ${DocumentsDirectory})
     #message(STATUS "create ${_created}.html")
-    if(NOSPLIT)
-      set(_created_output "${_created}_file.html")
-      set(_output_param "${_created}_file.html")
-      set(_html_param "--no-split")
-    else()
-      set(_created_output "${_created}.html/index.html")
-      set(_output_param "${_created}.html")
-      set(_html_param)
-    endif(NOSPLIT)
-    add_custom_command(
-      OUTPUT "${_created_output}"
-      COMMAND ${MAKEINFO_EXE} "--html" ${_html_param} "--css-include=${TOP_SRC_DIR}/doc/default.css"
-      "-I" "${TOP_SRC_DIR}/doc"
-      -o "${_output_param}" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
-      COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
-      )
-    if(NOSPLIT)
-      install(FILES "${_created}_file.html" DESTINATION ${DocumentsDirectory} RENAME "${_cmd}.html")
-    else(NOSPLIT)
-      foreach(_img ${_${_cmd}_images})
-	set(_needed_image "${_created}.html/${_img}.png")
-	set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
-	#message(STATUS "_needed_image = ${_needed_image}")
-	add_custom_command(
-	  OUTPUT "${_needed_image}"
-	  COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
-	  DEPENDS "${_created}.html/index.html" "${_parent_image}"
-	  COMMENT "Copying ${_parent_image} to ${_needed_image}"
-	  )
-	list(APPEND _docs "${_needed_image}")
-      endforeach(_img)
-      install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
-    endif(NOSPLIT)
-    list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created_output}")
+    #if(NOSPLIT)
+    #  set(_created_output "${_created}_file.html")
+    #  set(_output_param "${_created}_file.html")
+    #  set(_html_param "--no-split")
+    #else()
+    #  set(_created_output "${_created}.html/index.html")
+    #  set(_output_param "${_created}.html")
+    #  set(_html_param)
+    #endif(NOSPLIT)
+    #add_custom_command(
+    #  OUTPUT "${_created_output}"
+    #  COMMAND ${MAKEINFO_EXE} "--html" ${_html_param} "--css-include=${TOP_SRC_DIR}/doc/default.css"
+    #  "-I" "${TOP_SRC_DIR}/doc"
+    #  -o "${_output_param}" "${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    #  DEPENDS "${TOP_SRC_DIR}/doc/${_cmd}.texi" ${_${_cmd}_TEXINFOS} ${_depend_gp}
+    #  COMMENT "makeinfo: Creating ${_created}.html from ${TOP_SRC_DIR}/doc/${_cmd}.texi"
+    #  )
+    #if(NOSPLIT)
+    #  install(FILES "${_created}_file.html" DESTINATION ${DocumentsDirectory} RENAME "${_cmd}.html")
+    #else(NOSPLIT)
+    #  foreach(_img ${_${_cmd}_images})
+    #    set(_needed_image "${_created}.html/${_img}.png")
+    #    set(_parent_image "${CMAKE_CURRENT_BINARY_DIR}/${_img}.png")
+    #    #message(STATUS "_needed_image = ${_needed_image}")
+    #    add_custom_command(
+    #      OUTPUT "${_needed_image}"
+    #      COMMAND ${CMAKE_COMMAND} -E copy "${_parent_image}" "${_needed_image}"
+    #      DEPENDS "${_created}.html/index.html" "${_parent_image}"
+    #      COMMENT "Copying ${_parent_image} to ${_needed_image}"
+    #      )
+    #    list(APPEND _docs "${_needed_image}")
+    #  endforeach(_img)
+    #  install(DIRECTORY "${_created}.html" DESTINATION ${DocumentsDirectory})
+    #endif(NOSPLIT)
+    #list(APPEND _docs "${_created}.info" "${_created}.pdf" "${_created_output}")
+    list(APPEND _docs "${_created}.pdf" "${_created_output}")
   endif()
 endforeach(_cmd)
 
