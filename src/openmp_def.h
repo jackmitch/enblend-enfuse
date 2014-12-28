@@ -139,7 +139,7 @@ namespace omp
 inline static bool
 have_openmp_nested()
 {
-    const bool openmp_nested = omp_get_nested();
+    const int openmp_nested = omp_get_nested();
     omp_set_nested(true);
     const bool result = omp_get_nested() != 0;
     omp_set_nested(openmp_nested);
@@ -152,7 +152,7 @@ have_openmp_nested()
 inline static bool
 have_openmp_dynamic()
 {
-    const bool openmp_dynamic = omp_get_dynamic();
+    const int openmp_dynamic = omp_get_dynamic();
     omp_set_dynamic(true);
     const bool result = omp_get_dynamic() != 0;
     omp_set_dynamic(openmp_dynamic);
