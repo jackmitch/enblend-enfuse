@@ -50,7 +50,9 @@
 
 namespace omp
 {
+#ifndef _MSC_VER
     inline static void* __attribute__((malloc, alloc_size(1))) malloc(size_t);
+#endif
 
     inline static void*
     malloc(size_t size)
