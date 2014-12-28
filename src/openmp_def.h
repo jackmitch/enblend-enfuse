@@ -187,9 +187,9 @@ namespace omp
     class scoped_dynamic
     {
     public:
-        scoped_dynamic() : dynamic_(omp_get_dynamic()) {}
+        scoped_dynamic() : dynamic_(omp_get_dynamic() != 0) {}
 
-        explicit scoped_dynamic(bool allow_dynamic) : dynamic_(omp_get_dynamic())
+        explicit scoped_dynamic(bool allow_dynamic) : dynamic_(omp_get_dynamic() != 0)
         {
             omp_set_dynamic(static_cast<int>(allow_dynamic));
         }

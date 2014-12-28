@@ -242,7 +242,7 @@ namespace parameter
         {
             char* end;
             errno = 0;
-            b = strtol(value_as_string_.c_str(), &end, 10);
+            b = strtol(value_as_string_.c_str(), &end, 10) != 0;
             if (errno != 0 || *end != 0)
             {
                 return;

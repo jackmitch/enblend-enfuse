@@ -42,7 +42,7 @@ namespace omp
 
         void set() {omp_set_lock(&lock_);}
         void unset() {omp_unset_lock(&lock_);}
-        bool test() {return omp_test_lock(&lock_);}
+        bool test() {return omp_test_lock(&lock_) != 0;}
 
     private:
         omp_lock_t lock_;
@@ -60,7 +60,7 @@ namespace omp
 
         void set() {omp_set_nest_lock(&lock_);}
         void unset() {omp_unset_nest_lock(&lock_);}
-        bool test() {return omp_test_nest_lock(&lock_);}
+        bool test() {return omp_test_nest_lock(&lock_) != 0;}
 
     private:
         omp_nest_lock_t lock_;
