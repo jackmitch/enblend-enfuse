@@ -59,5 +59,5 @@ AlternativePercentage::str() const
 
 
 CompactifiedAlternativePercentage::CompactifiedAlternativePercentage(double a_value, bool is_percentage) :
-    AlternativePercentage::AlternativePercentage(a_value, is_percentage)
+    AlternativePercentage(a_value, is_percentage)
 {}
