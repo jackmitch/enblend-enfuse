@@ -136,7 +136,7 @@ std::string HardMaskTemplate("hardmask-%n.tif"); //< default-hard-mask-template 
 TiffResolution ImageResolution;
 bool OutputIsValid = true;
 
-bool UseGPU = true;
+bool UseGPU = false;
 namespace cl {class Context;}
 cl::Context* GPUContext = nullptr;
 namespace ocl {class BatchBuilder;}
