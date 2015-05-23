@@ -14,6 +14,7 @@ AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX_11(ext)
 AC_PROG_CC
 AC_PROG_AR
+AM_PROG_AR
 AC_PROG_RANLIB
 AC_LANG(C++)
 
@@ -167,6 +168,7 @@ AC_CHECK_HEADER(vigra/basicimage.hxx, [],
 
 AX_BOOST_BASE([1.55], [],
               AC_MSG_ERROR([Boost version 1.55 or later is required to compile Enblend.]))
+
 AC_CHECK_HEADER(boost/functional/hash.hpp, [],
                 AC_MSG_ERROR([Boost "hash" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/lexical_cast.hpp, [],
@@ -187,14 +189,8 @@ AC_CHECK_HEADER(gsl/gsl_rng.h, [],
 AC_CHECK_HEADER(gsl/gsl_vector.h, [],
                 AC_MSG_ERROR([GNU Scientific Library (GSL) header file "gsl_vector" is required to compile Enblend.]))
 
-LIBS="-lboost_system $LIBS"
-AC_MSG_CHECKING([for new Boost system library])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "boost/system/error_code.hpp"]],
-                                [[boost::system::generic_category();
-                                  boost::system::system_category()]])],
-                                AC_MSG_RESULT(yes),
-                                [AC_MSG_RESULT(no)
-                                 AC_MSG_ERROR([Boost library "boost_system" is required to compile Enblend.])])
+AX_BOOST_SYSTEM
+LIBS="$BOOST_SYSTEM_LIB $LIBS"
 
 AC_ARG_WITH([boost-filesystem],
             [AS_HELP_STRING([--with-boost-filesystem],
