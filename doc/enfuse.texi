@@ -773,7 +773,7 @@ Usually, Enfuse chooses defaults depending on the input images:
 @cindex @acronym{ICC} profile
 @cindex profile, @acronym{ICC}
 For input images @emph{with} @acronym{ICC} profiles the
-default is to use @acronym{CIECAM} colorspace.
+default is to use @acronym{CIELUV} colorspace.
 
 @item
 Images @emph{without} color profiles and floating-point images
@@ -1535,8 +1535,7 @@ default @acronym{sRGB}.  See option@tie{}@option{--blend-colorspace} and
 @ref{Color Profiles}.
 
 This option only is effective if the input images come without color
-profiles and blending is performed in @acronym{CIECAM02} color
-appearance model.
+profiles and blending is performed in @acronym{CIELUV} color space.
 
 @item --layer-selector=@var{ALGORITHM}
 @opindex --layer-selector

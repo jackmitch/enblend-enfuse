@@ -12,10 +12,11 @@ Unreleased.  Current line of development.
   L*u*v*) color spaces, too.  See section "New Commandline Options",
   option `--blend-colorspace'.
 
-  The previous defaults, i.e., CIECAM for input images with
-  ICC-profile and RGB for those without ICC-profile remain.  However,
-  the new default for floating-point image data is to use the
-  RGB-cube, no matter whether the images come with profiles or not.
+  The previous default, CIECAM for input images with ICC-profile has
+  been changed to CIELUV.  The default for RGB images without
+  ICC-profile remains.  However, the new default for floating-point
+  image data is to use the RGB-cube, no matter whether the images come
+  with profiles or not.
 
 - The new Graph-Cut algorithm is the default primary seam-line
   generator.

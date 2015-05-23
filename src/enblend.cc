@@ -534,11 +534,11 @@ printUsage(const bool error = true)
         "\n" <<
         "Advanced options:\n" <<
         "  --blend-colorspace=COLORSPACE\n" <<
-        "                         force COLORSPACE for blending operations; Enfuse uses\n" <<
-        "                         \"CIECAM\" for images with ICC-profile and \"IDENTITY\" for\n" <<
+        "                         force COLORSPACE for blending operations; Enblend uses\n" <<
+        "                         \"CIELUV\" for images with ICC-profile and \"IDENTITY\" for\n" <<
         "                         those without and also for all floating-point images;\n" <<
         "                         other available blend color spaces are \"CIELAB\" and\n" <<
-        "                         \"CIELUV\"\n" <<
+        "                         \"CIECAM\"\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with \"--no-ciecam\";\n" <<
         "                         note that this option will be withdrawn in favor of\n" <<
         "                         \"--blend-colorspace\"\n" <<
@@ -2357,7 +2357,7 @@ int main(int argc, char** argv)
 
         if (BlendColorspace == UndeterminedColorspace &&
             !(iccProfile.empty() || enblend::isFloatingPoint(pixelType))) {
-            BlendColorspace = CIECAM;
+            BlendColorspace = CIELUV;
         }
 
         if (BlendColorspace == CIECAM || BlendColorspace == CIELAB || BlendColorspace == CIELUV) {
