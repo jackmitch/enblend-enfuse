@@ -354,6 +354,20 @@ printVersion(int argc, char** argv)
 }
 
 
+// With the exception of TIFF, VIFF, PNG, and PNM all file types
+// store only 1 byte (gray scale and mapped RGB) or 3 bytes (RGB)
+// per pixel.
+//
+// PNG can store UInt8 and UInt16 values, and supports 1 and 3
+// channel images. One additional alpha channel is also supported.
+//
+// PNM can store 1 and 3 channel images with UInt8, UInt16 and
+// UInt32 values in each channel.
+//
+// TIFF and VIFF are additionally able to store short and long
+// integers (2 or 4 bytes) and real values (32 bit float and 64 bit
+// double) without conversion.
+
 void
 printImageFormats()
 {
@@ -366,8 +380,16 @@ printImageFormats()
     std::cout <<
         "Enblend supports the following image formats:\n" <<
         "  " << formats << "\n" <<
-        "and automatically recognizes the image file extensions:\n" <<
+        "It automatically recognizes the image file extensions:\n" <<
         "  " << extensions << "\n" <<
+        "and -- where supported by the image format -- accepts per-channel depths:\n" <<
+#ifndef DEBUG_8BIT_ONLY
+        "  " << "8 bits unsigned integral\n" <<
+#endif
+        "  " << "16 bits unsigned or signed integral\n" <<
+        "  " << "32 bits unsigned or signed integral\n" <<
+        "  " << "32 bits floating-point\n" <<
+        "  " << "64 bits floating-point\n" <<
         std::endl;
 
     exit(0);
