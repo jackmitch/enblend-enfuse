@@ -1,7 +1,7 @@
 # This file is part of enblend/enfuse.
 # Licence details can be found in the file COPYING.
 #
-# Copyright(c) 2009-2013, Kornel Benko <Kornel.Benko@berlin.de>
+# Copyright(c) 2009-2015, Kornel Benko <Kornel.Benko@berlin.de>
 #                  , Ryan Sleevi <ryan+hugin@sleevi.com>
 #                  , Harry van der Wolf <hvdwolf@gmail.com>
 # Original file from lyx-project, heavily modified
@@ -464,4 +464,3 @@ SET(CPACK_SET_DESTDIR "ON")
 SET(CPACK_PACKAGE_CONTACT "hugin-ptx@googlegroups.com")
 
 include(CPack)
-

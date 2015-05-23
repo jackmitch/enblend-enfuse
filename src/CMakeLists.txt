@@ -1,7 +1,7 @@
 # This file is part of enblend/enfuse.
 # Licence details can be found in the file COPYING.
 #
-# Copyright (c) 2009-2013, Kornel Benko <Kornel.Benko@berlin.de>
+# Copyright (c) 2009-2015, Kornel Benko <Kornel.Benko@berlin.de>
 #                   , Ryan Sleevi <ryan+hugin@sleevi.com>
 #                   , Harry van der Wolf <hvdwolf@gmail.com>
 #
@@ -27,7 +27,7 @@ IF(ENABLE_OPENCL)
     FILE(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/kernels")
     FOREACH(_cl_source ${opencl_sources})
       GET_FILENAME_COMPONENT(_cl_filename "${_cl_source}" NAME)
-  
+
       STRING(REGEX REPLACE "[.]cl$" ".icl" _icl_source "${_cl_filename}")
       SET(_icl_source "${CMAKE_CURRENT_BINARY_DIR}/kernels/${_icl_source}")
       STRING(REGEX REPLACE "[.]cl$" "_source_code" _cl_label "${_cl_filename}")
@@ -42,7 +42,7 @@ IF(ENABLE_OPENCL)
       SET_SOURCE_FILES_PROPERTIES("${_icl_source}" GENERATED)
       LIST(APPEND OPENCL_SOURCES "${_icl_source}")
     ENDFOREACH()
-    
+
     ADD_CUSTOM_TARGET(cl_sources ALL DEPENDS "${OPENCL_SOURCES}")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/kernels")
   ENDIF()

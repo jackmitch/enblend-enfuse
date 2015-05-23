@@ -1,7 +1,7 @@
 # This file is part of enblend.
 # Licence details can be found in the file COPYING.
 #
-# Copyright (c) 2009-2013, Kornel Benko <Kornel.Benko@berlin.de>
+# Copyright (c) 2009-2015, Kornel Benko <Kornel.Benko@berlin.de>
 #                   , Ryan Sleevi <ryan+hugin@sleevi.com>
 #                   , Harry van der Wolf <hvdwolf@gmail.com>
 #
