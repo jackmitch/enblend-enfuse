@@ -450,7 +450,7 @@ class PyramidScale
 
 public:
     PyramidScale() :
-        color_limit(parameter::as_double("lab-color-limit", 127.0)),
+        color_limit(parameter::as_double("lab-color-limit", 200.0)),
         pyramid_scale(double(1U << (PyramidIntegerBits - PYRAMID_HEADROOM_BITS)))
     {
         static_assert(PyramidIntegerBits >= PYRAMID_HEADROOM_BITS,
