@@ -2500,25 +2500,27 @@ int main(int argc, char** argv)
 
                     if (InputProfile == nullptr || newProfile == nullptr ||
                         enblend::profileDescription(InputProfile) != enblend::profileDescription(newProfile)) {
-                        std::cerr << std::endl << command << ": warning: input image \""
+                        const std::string category(BlendColorspace <= IdentitySpace ? "warning" : "info");
+                        std::cerr << std::endl << command << ": " << category << ": input image \""
                                   << inputFileNameIterator->filename()
                                   << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
                         inputFileNameIterator->unroll_trace();
-                        std::cerr << command << ": warning: has ";
+                        std::cerr << command << ": " << category << ": has ";
                         if (newProfile) {
                             std::cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
                         } else {
                             std::cerr << "no ICC profile,\n";
                         }
-                        std::cerr << command << ": warning: but first image has ";
+                        std::cerr << command << ": " << category << ": but first image has ";
                         if (InputProfile) {
                             std::cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
                         } else {
                             std::cerr << "no ICC profile;\n";
                         }
-                        std::cerr << command << ": warning: blending images with different color spaces\n"
-                                  << command << ": warning: may have unexpected results"
-                                  << std::endl;
+                        if (BlendColorspace <= IdentitySpace) {
+                            std::cerr << command << ": " << category << ": blending images with different color spaces\n"
+                                      << command << ": " << category << ": may have unexpected results\n";
+                        }
                     }
                 }
             }
