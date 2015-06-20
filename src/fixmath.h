@@ -352,7 +352,7 @@ class SpecializedConvertPyramidToScalarFunctor
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Converters for color  (three component aka "vector") pixels
+// Converters for color (three component aka "vector") pixels
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -621,6 +621,7 @@ public:
         , range("L", "a", "b")
 #endif // DEBUG_COLORSPACE_STATISTICS
     {
+#ifdef DEBUG_COLORSPACE_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -631,6 +632,7 @@ public:
             "+ ConvertVectorToLabPyramidFunctor::ConvertVectorToLabPyramidFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
+#endif // DEBUG_COLORSPACE_STATISTICS
     }
 
 #ifdef DEBUG_COLORSPACE_STATISTICS
@@ -696,6 +698,7 @@ public:
         , range("L", "a", "b")
 #endif // DEBUG_COLORSPACE_STATISTICS
     {
+#ifdef DEBUG_COLORSPACE_STATISTICS
 #ifdef OPENMP
 #pragma omp critical
 #endif
@@ -706,6 +709,7 @@ public:
             "+ ConvertLabPyramidToVectorFunctor::ConvertLabPyramidToVectorFunctor: pyramid range [" <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
             static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
+#endif // DEBUG_COLORSPACE_STATISTICS
     }
 
 #ifdef DEBUG_COLORSPACE_STATISTICS
@@ -771,7 +775,20 @@ public:
 #ifdef DEBUG_COLORSPACE_STATISTICS
         , range("L", "u", "v")
 #endif // DEBUG_COLORSPACE_STATISTICS
-    {}
+    {
+#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ ConvertVectorToLuvPyramidFunctor::ConvertVectorToLuvPyramidFunctor source range [" <<
+            static_cast<double>(SrcTraits::min()) << ", " <<
+            static_cast<double>(SrcTraits::max()) << "]\n" <<
+            "+ ConvertVectorToLuvPyramidFunctor::ConvertVectorToLuvPyramidFunctor: pyramid range [" <<
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
+#endif // DEBUG_COLORSPACE_STATISTICS
+    }
 
 #ifdef DEBUG_COLORSPACE_STATISTICS
     ~ConvertVectorToLuvPyramidFunctor()
@@ -838,7 +855,20 @@ public:
 #ifdef DEBUG_COLORSPACE_STATISTICS
         , range("L", "u", "v")
 #endif // DEBUG_COLORSPACE_STATISTICS
-    {}
+    {
+#ifdef DEBUG_COLORSPACE_STATISTICS
+#ifdef OPENMP
+#pragma omp critical
+#endif
+        std::cout <<
+            "+ ConvertLuvPyramidToVectorFunctor::ConvertLuvPyramidToVectorFunctor: dest range [" <<
+            static_cast<double>(DestTraits::min()) << ", " <<
+            static_cast<double>(DestTraits::max()) << "]\n" <<
+            "+ ConvertLuvPyramidToVectorFunctor::ConvertLuvPyramidToVectorFunctor: pyramid range [" <<
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::min()) << ", " <<
+            static_cast<double>(vigra::NumericTraits<PyramidComponentType>::max()) << "]\n";
+#endif // DEBUG_COLORSPACE_STATISTICS
+    }
 
 #ifdef DEBUG_COLORSPACE_STATISTICS
     ~ConvertLuvPyramidToVectorFunctor()
