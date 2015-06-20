@@ -1,5 +1,5 @@
-AC_PREREQ(2.59)
-AC_INIT(enblend-enfuse,
+AC_PREREQ([2.69])
+AC_INIT([enblend-enfuse],
         [m4_esyscmd([tr -d '\n' < VERSION])],
         [https://bugs.launchpad.net/enblend],
         [],
@@ -160,8 +160,7 @@ AC_CHECK_HEADER(jpeglib.h, [],
 AC_CHECK_HEADER(png.h, [],
                 AC_MSG_ERROR([libpng-devel header files are required to compile Enblend.]))
 
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+AC_LANG_PUSH([C++])
 
 AC_CHECK_HEADER(vigra/basicimage.hxx, [],
                 AC_MSG_ERROR([Vigra "basicimage.hxx" header file is required to compile Enblend.]))
@@ -249,7 +248,7 @@ extension(p);
              ] ) dnl AS_IF($with_boost_filesystem = yes)
       ] ) dnl  AS_IF($with_boost_filesystem = no)
 
-AC_LANG_RESTORE
+AC_LANG_POP([])
 AC_SUBST(EXTRA_LIBS)
 
 AC_CHECK_HEADER(lcms2.h, [],
@@ -267,7 +266,7 @@ AC_C_RESTRICT
 AC_DEFINE([RESTRICT], [restrict], [Map RESTRICT onto C99 restrict keyword])
 
 AC_TYPE_OFF_T
-AC_TYPE_SIGNAL
+
 AC_TYPE_SIG_ATOMIC_T
 AC_TYPE_SIZE_T
 
@@ -277,7 +276,6 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FSEEKO
-#AC_FUNC_MALLOC         dnl unused and harmful when cross compiling
 AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_STRERROR_R
 AC_FUNC_STRTOD
@@ -340,7 +338,7 @@ if test "$GNUPLOT" = false; then
 fi
 
 AC_ARG_WITH([raster-dir],
-            AC_HELP_STRING([--with-raster-dir=<DIR>],
+            AS_HELP_STRING([--with-raster-dir=<DIR>],
                            [set raster image subdirectory @<:@default=raster@:>@]),
             [RASTER_DIR="$withval"],
             [RASTER_DIR=raster])
@@ -408,7 +406,7 @@ fi
 AC_MSG_CHECKING(whether to enable debugging)
 debug_default="no"
 AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([--enable-debug],
+              AS_HELP_STRING([--enable-debug],
                              [turn on debugging @<:@default=no@:>@]),
               [enable_debug=$enableval],
               [enable_debug=$debug_default])
@@ -425,7 +423,7 @@ fi
 AC_MSG_CHECKING(whether to enable image cache)
 image_cache_default="no"
 AC_ARG_ENABLE(image_cache,
-              AC_HELP_STRING([--enable-image-cache],
+              AS_HELP_STRING([--enable-image-cache],
                              [allow for processing of large images @<:@default=no@:>@]),
               [enable_image_cache=$enableval],
               [enable_image_cache=$image_cache_default])
@@ -442,7 +440,7 @@ fi
 AC_MSG_CHECKING(whether to compile with OpenMP)
 openmp_default="no"
 AC_ARG_ENABLE(openmp,
-              AC_HELP_STRING([--enable-openmp],
+              AS_HELP_STRING([--enable-openmp],
                              [compile with OpenMP @<:@default=no@:>@]),
               [enable_openmp=$enableval],
               [enable_openmp=$openmp_default])
