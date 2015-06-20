@@ -26,7 +26,8 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   self_test.h self_test.cc \
                   tiff_message.h tiff_message.cc \
                   timer.h timer.cc \
-                  minimizer.h muopt.h
+                  minimizer.h minimizer.cc \
+                  muopt.h
 enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) @EXTRA_LIBS@
@@ -52,7 +53,8 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  self_test.h self_test.cc \
                  tiff_message.h tiff_message.cc \
                  timer.h timer.cc \
-                 minimizer.h muopt.h
+                 minimizer.h minimizer.cc \
+                 muopt.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
 enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
