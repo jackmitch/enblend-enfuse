@@ -1,0 +1,342 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Advanced Options\commonpart]{Advanced Options\commonpart
+  \label{sec:advanced-options}
+  \genidx[\rangebeginlocation]{advanced options}
+  \genidx{options!advanced}}
+
+Advanced options control e.g.\ the channel depth, color model, and the
+cropping of the output image.
+
+\begin{codelist}
+  \label{opt:blend-colorspace}%
+  \optidx[\defininglocation]{--blend-colorspace}%
+  \genidx{colorspace!blend}%
+  \gensee{blend colorspace}{colorspace, blend}%
+  \genidx{color appearance model}%
+\item[--blend-colorspace=\metavar{COLORSPACE}]\itemend Force blending
+  in selected \metavar{COLORSPACE}.  Given well matched images this
+  option should not change the output image much.  However, if \App{}
+  must blend vastly different colors (as e.g.\ anti-colors) the
+  resulting image heavily depends on the \metavar{COLORSPACE}.
+
+  Usually, \App{} chooses defaults depending on the input images:
+
+  \begin{itemize}
+  \item
+    For grayscale or color input images \emph{with}
+    \acronym{ICC}~profiles\genidx{profile!\acronym{ICC}}%
+    \gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}} the
+    default is to use
+    \acronym{CIELUV}~colorspace.\genidx{colorspace!\acronym{CIELUV}}
+  \item
+    Images \emph{without} color profiles and floating-point images are
+    blended in the trivial luminance interval (grayscale) or
+    \acronym{RGB}-color cube\genidx{color cube!\acronym{RGB}}%
+    \gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}}
+    by default.
+  \end{itemize}
+
+  On the order of fast to slow computation, \App{} supports the
+  following blend colorspaces.
+  \begin{description}
+  \item[\itempar{\code{identity} \\ \code{id} \\ \code{unit}}]
+    \itemend Compute blended colors in a na\"ive way sidestepping any
+    dedicated colorspace.
+    \begin{itemize}
+    \item
+      Use trivial, 1-dimensional luminance interval\genidx{luminance
+        interval!trivial} (see
+      Eq.~\fullref{equ:trivial-luminance-blend}) for grayscale images
+      and for
+    \item
+      color images utilize 3-dimensional
+      \acronym{RGB}-cube\genidx{color cube!\acronym{RGB}} (see
+      Eq.~\fullref{equ:trivial-rgb-blend}) spanned by the input
+      \acronym{ICC}~profile or
+      \acronym{sRGB}\genidx{sRGB@\acronym{sRGB}} if no profiles are
+      present.  In the latter case, consider passing
+      option~\flexipageref{\option{--fallback-profile}}{opt:fallback-profile}
+      to force a different profile than \acronym{sRGB} upon all input
+      images.
+    \end{itemize}
+
+  \item[\itempar{\code{lab} \\ \code{cielab} \\ \code{lstar}
+      \\ \code{l-star}}] \itemend Blend pixels in the
+    \acronym{CIEL*a*b*}\genidx{colorspace!\acronym{CIEL*a*b*}}%
+    \gensee{CIEL*a*b*@\acronym{CIEL*a*b*} colorspace}{colorspace, \acronym{CIEL*a*b*}}
+    colorspace.
+
+  \item[\itempar{\code{luv} \\ \code{cieluv}}] \itemend Blend pixels
+    in the \acronym{CIEL*u*v*}\genidx{colorspace!\acronym{CIEL*u*v*}}%
+    \gensee{CIEL*u*v*@\acronym{CIEL*u*v*} colorspace}{colorspace, \acronym{CIEL*u*v*}}
+    colorspace.
+
+  \item[\itempar{\code{ciecam} \\ \code{ciecam02} \\ \code{jch}}]
+    \itemend Blend pixels in the
+    \acronym{CIECAM02}\genidx{colorspace!\acronym{CIECAM02}}%
+    \gensee{CIECAM02@\acronym{CIECAM02} colorspace}{colorspace, \acronym{CIECAM02}}
+    colorspace.
+  \end{description}
+
+  \ifenblend
+    \begin{restrictedmaterial}{\application{Enblend} only.}
+      Please keep in mind that by using different blend colorspaces,
+      blending may not only change the colors of the output image, but
+      \application{Enblend} may choose different seam line routes as
+      some seam-line optimizers\genidx{optimizer!seam-line} are guided
+      by image differences, which are different when viewed in
+      different colorspaces.
+    \end{restrictedmaterial}
+  \fi
+
+
+  \label{opt-ciecam}%
+  \optidx{--ciecam}%
+  \shoptidx{-c}{--ciecam}%
+\item[\itempar{-c \\ --ciecam}]\itemend Deprecated.  Use
+  \sample{--blend-colorspace=ciecam} instead.  To emulate the negated
+  option~\option{--no-ciecam}\optidx{--no-ciecam} use
+  \begin{literal}
+    --blend-colorspace=identity
+  \end{literal}
+
+  \label{opt:depth}%
+  \optidx[\defininglocation]{--depth}%
+  \shoptidx{-d}{--depth}%
+\item[\itempar{-d \metavar{DEPTH} \\ --depth=\metavar{DEPTH}}]\itemend
+  Force the number of bits per channel\genidx{bits per channel} and
+  the numeric format of the output image, this is, the
+  \metavar{DEPTH}.  The number of bits per channel is also known as
+  ``channel width''\gensee{channel!width}{channel, depth} or ``channel
+  depth''.\genidx{channel!depth}
+
+  \App{} always uses a smart way to change the channel depth to assure
+  highest image quality at the expense of memory, whether
+  requantization\genidx{requantization} is implicit because of the
+  output format or explicit through option~\option{--depth}.
+
+  \begin{itemize}
+  \item
+    If the output-channel depth is larger than the input-channel depth
+    of the input images, the input images' channels are widened to the
+    output channel depth immediately after loading, that is, as soon
+    as possible.  \App{} then performs all blending operations at the
+    output-channel depth, thereby preserving minute color details
+    which can appear in the blending areas.
+
+  \item
+    If the output-channel depth is smaller than the input-channel
+    depth of the input images, the output image's channels are
+    narrowed only right before it is written to the output
+    \metavar{FILE}, that is, as late as possible.  Thus the data
+    benefits from the wider input channels for the longest time.
+  \end{itemize}
+
+  All \metavar{DEPTH} specifications are valid in lowercase as well as
+  uppercase letters.  For integer format, use
+
+  \begin{description}
+  \item[\itempar{\code{8} \\ \code{uint8}}]\itemend
+    Unsigned 8~bit; range: $0\dots255$
+
+  \item[\code{int16}]\itemend
+    Signed 16~bit; range: $-32768\dots32767$
+
+  \item[\itempar{\code{16} \\ \code{uint16}}]\itemend
+    Unsigned 16~bit; range: $0\dots65535$
+
+  \item[\code{int32}]\itemend
+    Signed 32~bit; range: $-2147483648\dots2147483647$
+
+  \item[\itempar{\code{32} \\ \code{uint32}}]\itemend
+    Unsigned 32~bit; range: $0\dots4294967295$
+  \end{description}
+
+  %% Minimum positive normalized value: 2^(2 - 2^k)
+  %% Epsilon: 2^(1 - n)
+  %% Maximum finite value: (1 - 2^(-n)) * 2^(2^k)
+  For floating-point format, use
+
+  \begin{description}
+  \item[\itempar{\code{r32} \\ \code{real32} \\ \code{float}}]\itemend
+    %% IEEE single: 32 bits, n = 24, k = 32 - n - 1 = 7
+    \acronym{IEEE754}\genidx{IEEE754@\acronym{IEEE754}!single precision float}
+    single\gensee{single precision float (\acronym{IEEE754})}{\acronym{IEEE754}, single precision float}
+    precision floating-point, 32~bit wide, 24~bit
+    significant;
+
+    \begin{itemize}
+    \item
+      Minimum normalized value: \semilog{1.2}{-38}
+    \item
+      Epsilon: \semilog{1.2}{-7}
+    \item
+      Maximum finite value: \semilog{3.4}{38}
+    \end{itemize}
+
+  \item[\itempar{\code{r64} \\ \code{real64} \\ \code{double}}]\itemend
+    %% IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
+    \acronym{IEEE754}\genidx{IEEE754@\acronym{IEEE754}!double precision float}
+    double\gensee{double precision float (\acronym{IEEE754})}{\acronym{IEEE754}, double precision float}
+    precision floating-point, 64~bit wide, 53~bit
+    significant;
+
+    \begin{itemize}
+    \item
+      Minimum normalized value: \semilog{2.2}{-308}
+    \item
+      Epsilon: \semilog{2.2}{-16}
+    \item
+      Maximum finite value: \semilog{1.8}{308}
+    \end{itemize}
+  \end{description}
+
+  If the requested \metavar{DEPTH} is not supported by the output file
+  format, \App{} warns and chooses the \metavar{DEPTH} that matches
+  best.
+
+  \restrictednote{Versions with \acronym{OpenEXR} read\slash write
+    support only.\footnotemark}\footnotetext{Check with \code{\app{}
+      --show-image-formats} and look for \sample{EXR}.}
+
+  \noindent The \acronym{OpenEXR} data
+  format\genidx{OpenEXR@\acronym{OpenEXR}!data format} is treated as
+  \acronym{IEEE754}~float internally.  Externally, on disk,
+  \acronym{OpenEXR} data is represented by ``half'' precision
+  floating-point numbers.
+
+  %% ILM half: 16 bits, n = 10, k = 16 - n - 1 = 5
+  \uref{\openexrcomfeatures}{\acronym{OpenEXR}}%
+  \genidx{OpenEXR@\acronym{OpenEXR}!half precision float}
+  half\gensee{half precision float (\acronym{OpenEXR})}{\acronym{OpenEXR}, half precision float}
+  precision floating-point, 16~bit wide, 10~bit significant;
+
+  \begin{itemize}
+  \item
+    Minimum normalized value: \semilog{9.3}{-10}
+  \item
+    Epsilon: \semilog{2.0}{-3}
+  \item
+    Maximum finite value: \semilog{4.3}{9}
+  \end{itemize}
+
+
+  \label{opt:f}%
+  \optidx[\defininglocation]{-f}%
+\item[-f \metavar{WIDTH}x\metavar{HEIGHT}%
+  \optional{+x\metavar{XOFFSET}+y\metavar{YOFFSET}}]\itemend Ensure
+  that the minimum ``canvas''\genidx{size!canvas}%
+  \gensee{canvas size}{size, canvas}
+  size of the output\genidx{output image!set size} image is at least
+  \metavar{WIDTH}\classictimes\metavar{HEIGHT}.  Optionally specify
+  the \metavar{XOFFSET} and \metavar{YOFFSET} of the canvas, too.
+
+  This option only is useful when the input images are cropped
+  \acronym{TIFF} files, such as those produced by
+  \command{nona}\prgidx{nona \textrm{(Hugin)}}\footnote{The
+    stitcher \command{nona} is part of
+    \application{Hugin\appidx{hugin}}.}.
+
+  Note that option~\option{-f} neither rescales the output image, nor
+  shrinks the canvas size below the minimum size occupied by the union
+  of all input images.
+
+
+  \label{opt:g}%
+  \optidx[\defininglocation]{-g}%
+\item[-g] Save alpha channel as ``associated''.\genidx{alpha
+  channel!associated}\gensee{associated alpha channel}{alpha channel, associated}
+  See the \uref{\awaresystemsbeextrasamples}{\acronym{TIFF}
+    documentation} for an explanation.
+
+  \application{The Gimp}\appidx{Gimp} before version~2.0 and
+  \application{CinePaint}\appidx{Cinepaint} (see
+  Appendix~\fullref{sec:helpful-programs}) exhibit unusual behavior
+  when loading images with unassociated\gensee{unassociated alpha
+    channel}{alpha channel, associated} alpha channels.  Use
+  option~\option{-g} to work around this problem.  With this flag
+  \App{} will create the output image with the ``associated alpha
+  tag'' set, even though the image is really unassociated alpha.
+
+
+  \label{opt:wrap}%
+  \optidx[\defininglocation]{--wrap}%
+  \shoptidx{-w}{--wrap}%
+\item[\itempar{-w \optional{\metavar{MODE}} \\ --wrap\optional{=\metavar{MODE}}}]\itemend
+  Blend around the boundaries of the panorama, or ``wrap
+  around''.\genidx{wrap around}
+
+  As this option significantly increases memory usage and computation
+  time only use it, if the panorama will be
+
+  \begin{itemize}
+  \item
+    consulted for any kind measurement, this is, all boundaries must match
+    as accurately as possible, or
+
+  \item
+    printed out and the boundaries glued together, or
+
+  \item
+    fed into a virtual reality~(\acronym{VR})\genidx{virtual reality}%
+    \gensee{VR@\acronym{VR}}{virtual reality} generator, which creates
+    a seamless environment.
+  \end{itemize}
+
+  \noindent Otherwise, always avoid this option!
+
+  With this option \App{} treats the set of input images (panorama) of
+  width~$w$ and height~$h$ as an infinite data structure, where each
+  pixel~$P(x, y)$ of the input images represents the set of
+  pixels~$S_P(x, y)$.\footnotemark
+
+  \footnotetext{Solid-state physicists will be reminded of the
+    \ahref{\wikipediabornvonkarman}{\propername{Born}\genidx{Born@\propername{Born, Max}}-%
+      \propername{von~K\'arm\'an}\genidx{Karman@\propername{von~K\'arm\'an, Theodore}}
+      boundary condition}.}% FIXME
+
+  \metavar{MODE} takes the following values:
+
+  \begin{codelist}
+  \item[\itempar{none \\ open}]\itemend This is a ``no-op''; it has
+    the same effect as not giving \option{--wrap} at all.  The set of
+    input images is considered open at its boundaries.
+
+  \item[horizontal]\itemend
+    Wrap around horizontally:
+    \[
+    S_P(x, y) = \{P(x + m w, y): m \in Z\}.
+    \]
+
+    This is useful for 360\angulardegree\genidx{panorama!360\angulardegree!horizontal}%
+    \gensee{360@360\angulardegree{}!horizontal panorama}{panorama, 360\angulardegree}
+    horizontal panoramas as it eliminates the left and right borders.
+
+  \item[vertical]\itemend Wrap around vertically:
+    \[
+    S_P(x, y) = \{P(x, y + n h): n \in Z\}.
+    \]
+
+    This is useful for 360\angulardegree\genidx{panorama!360\angulardegree!vertical}%
+    \gensee{360@360\angulardegree{}!vertical panorama}{panorama, 360\angulardegree}
+    vertical panoramas as it eliminates the top and bottom borders.
+
+  \item[\itempar{both \\ horizontal+vertical
+      \\ vertical+horizontal}]\itemend Wrap around both horizontally
+    and vertically:
+    \[
+    S_P(x, y) = \{P(x + m w, y + n h): m, n \in Z\}.
+    \]
+
+    In this mode, both left and right borders, as well as top and
+    bottom borders, are eliminated.
+  \end{codelist}
+
+  Specifying \sample{--wrap} without \metavar{MODE} selects horizontal
+  wrapping.
+\end{codelist}
+
+\genidx[\rangeendlocation]{advanced options}

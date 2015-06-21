@@ -1,0 +1,167 @@
+#! /usr/bin/env perl
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:         config2tex
+# synopsis:     convert "config.h" to a series of LaTeX commands
+# author:       Dr. Christoph L. Spiel
+# perl version: 5.20.2
+
+
+use strict;
+use warnings;
+
+use English;
+use File::Basename ();
+use FindBin qw($Bin);
+use Getopt::Long ();
+
+use lib $Bin;
+
+use OpenFile;
+use Quote ();
+use TexAux ();
+
+
+use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+
+
+my $directive = qr{
+    ^                           # at the beginning of the line
+    (?:
+        \s*                         # skip optional whitespace
+        \#(define)                  # (#1) match C-preprocessor keyword
+        \s+                         # skip whitespace
+        (\S+)                       # (#2) capture macro name
+        \s+                         # skip whitespace
+        "?([^"]*)"?                 # (#3) capture possibly empty macro expansion
+    |                           # or
+        (?:/\*)                     # undefs are usually commented out in C-style
+        \s*                         # skip optional whitespace
+        \#(undef)                   # (#4) match C-preprocessor keyword
+        \s+                         # skip whitespace
+        (\S+)                       # (#5) capture macro name
+    )
+}x;
+
+
+sub convert {
+    my ($options, $input_filename, $output_filename) = @_;
+    print STDERR "+ convert: $input_filename -> $output_filename\n";
+
+    my @exclude_patterns = map {qr/$_/} @{$options->{EXCLUDE_PATTERNS}};
+
+    my $input_file = OpenFile::open_file($input_filename, 'r');
+    my $output_file = OpenFile::open_file($output_filename, 'w');
+    my $linenumber = 0;
+
+    $output_file->print("% This file was automatically generated with @{[COMMAND_NAME]}\n");
+    $output_file->print("% from file ", Quote::gnu_style($input_filename), ".\n\n");
+
+  LINE: while (my $line = readline $input_file) {
+        chomp ($line);
+        ++$linenumber;
+
+        if ($line =~ m/$directive/) {
+            my $macro_name;
+            my $expansion;
+            if (defined($1)) {
+                $macro_name = $2;
+                if (defined($3)) {
+                    if ($options->{FORCE_ONE_TO_DEFINED} and ($3 eq '1')) {
+                         $expansion = $options->{EMPTY_VALUE};
+                     } else {
+                         $expansion = $3;
+                     }
+                } else {
+                    $expansion = $options->{EMPTY_VALUE};
+                }
+            } else {
+                die(COMMAND_NAME, ": $input_filename:$linenumber: expecting ", Quote::gnu_style('undef'), "\n")
+                  unless $4 eq 'undef';
+                $macro_name = $5;
+                $expansion = $options->{UNDEF_VALUE};
+            }
+            foreach my $regexp (@exclude_patterns) {next LINE if $macro_name =~ m/$regexp/;}
+
+            my $key = $options->{KEY_PREFIX} . $macro_name;
+            my $value = TexAux::lift(TexAux::escape($expansion));
+
+            $output_file->print("%% $input_filename:$linenumber\n");
+            $output_file->print("$options->{MACRO_NAME}\{$key\}\{$value\}\n\n");
+        }
+    }
+
+    $input_file->close or
+      warn(COMMAND_NAME, ": cannot close input file ", Quote::gnu_style($input_filename), ": $OS_ERROR\n");
+    $output_file->close or
+      die(COMMAND_NAME, ": cannot close output file ", Quote::gnu_style($output_filename), ": $OS_ERROR\n");
+}
+
+
+sub show_help {
+    my $options = shift;
+
+    my $all_predefined_patterns = join(', ', map {Quote::gnu_style($_)} @{$options->{EXCLUDE_PATTERNS}});
+
+    print <<EOF;
+Usage: @{[COMMAND_NAME]} [OPTION] HEADER-FILE [TEX-FILE]
+
+Convert the @{[Quote::gnu_style("#define")]} and @{[Quote::gnu_style("#undef")]} directives the C HEADER-FILE
+to TeX.  If TEX-FILE is omitted or @{[Quote::gnu_style("-")]} the output goes to stdout.
+
+Translation Rules:
+  #define FOO      ->  $options->{MACRO_NAME}\{FOO\}\{$options->{EMPTY_VALUE}\}
+  #define FOO bar  ->  $options->{MACRO_NAME}\{FOO\}\{bar\}
+  #undef FOO       ->  $options->{MACRO_NAME}\{FOO\}\{$options->{UNDEF_VALUE}\}
+where *only* the preprocessor expansions are mangled for TeX.
+
+Options:
+  -f, --force              force expansions of a literal one to
+                           become [@{[Quote::gnu_style($options->{EMPTY_VALUE})]}]; negatable
+  -p, --prefix=LABEL       prefix each key with PREFIX [@{[Quote::gnu_style($options->{KEY_PREFIX})]}]
+  -x, --exclude=PATTERN    exclude all keys matching PATTERN [$all_predefined_patterns];
+                           option can be given multiple times
+  -h, --help               show this help screen
+
+Examples:
+    @{[COMMAND_NAME]} config.h config-h.tex
+    @{[COMMAND_NAME]} ../enblend/BUILD-GCC-O0/config.h
+EOF
+
+    exit 0;
+}
+
+
+sub get_options {
+    my $options = shift;
+
+    Getopt::Long::Configure('no_ignore_case');
+
+    Getopt::Long::GetOptions('f|force!' => \$options->{FORCE_ONE_TO_DEFINED},
+                             'p|prefix=s' => \$options->{KEY_PREFIX},
+                             'x|exclude=s' => sub {push @{$options->{EXCLUDE_PATTERNS}}, $_[1]},
+                             'h|help' => sub {show_help($options)}) or
+        warn(COMMAND_NAME, ": problems while parsing options\n");
+}
+
+
+sub main {
+    my $options = {FORCE_ONE_TO_DEFINED => 0,
+                   EMPTY_VALUE => '\\definedbypreprocessor',
+                   UNDEF_VALUE => '\\undefinedbypreprocessor',
+                   KEY_PREFIX => 'val:',
+                   EXCLUDE_PATTERNS => [],
+                   MACRO_NAME => '\\hashinsert'};
+
+    get_options($options);
+
+    push(@ARGV, "-") unless @ARGV == 2;
+    die(COMMAND_NAME, qq(: expecting one or two filename arguments\n)) unless @ARGV == 2;
+
+    convert($options, @ARGV[0..1]);
+}
+
+
+main();

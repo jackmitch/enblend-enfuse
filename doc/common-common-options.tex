@@ -1,0 +1,231 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Common Options\commonpart]{Common Options\commonpart
+  \label{sec:common-options}
+  \genidx[\rangebeginlocation]{common options}
+  \genidx{options!common}}
+
+Common options control some overall features of \App.  They are called
+``common'' because they are used most often.  However, in fact, \App{}
+and \OtherApp{} do have these options in common.
+
+\begin{codelist}
+  \label{opt:compression}%
+  \optidx[\defininglocation]{--compression}%
+  \genidx{output!file compression}%
+  \genidx{compression}%
+\item[--compression=\metavar{COMPRESSION}]\itemend Write a compressed
+  output file.  The default is not to compress the output image.
+
+  Depending on the output file format, \App{} accepts different values
+  for \metavar{COMPRESSION}.
+
+  \begin{description}
+    \genidx{compression!\acronym{JPEG}}%
+    \gensee{JPEG@\acronym{JPEG} compression}{compression}%
+  \item[\acronym{JPEG} format.]\itemend The compression either is a
+    literal integer or a keyword\hyp{}option combination.
+
+    \begin{codelist}
+      \gensee{JPEG@\acronym{JPEG} quality level}{compression}%
+    \item[\metavar{LEVEL}]\itemend Set \acronym{JPEG}
+      quality~\metavar{LEVEL}, where \metavar{LEVEL} is an integer
+      that ranges from 0--100.
+
+    \item[jpeg\optional{:\metavar{LEVEL}}]\itemend Same as above;
+      without the optional argument just switch on (standard)
+      \acronym{JPEG} compression.
+
+      \genidx{compression!arithmetic \acronym{JPEG}}%
+      \gensee{arithmetic \acronym{JPEG} compression}{compression}%
+    \item[jpeg-arith\optional{:\metavar{LEVEL}}]\itemend Switch on
+      arithmetic \acronym{JPEG} compression.  With optional argument
+      set the arithmetic compression~\metavar{LEVEL}, where
+      \metavar{LEVEL} is an integer that ranges from 0--100.
+    \end{codelist}
+
+  \item[\acronym{TIF} format.]\itemend Here, \metavar{COMPRESSION} is
+    one of the keywords:
+
+    \begin{codelist}
+    \item[none]\itemend Do not compress.  This is the default.
+
+      \genidx{compression!deflate}%
+      \gensee{deflate compression}{compression}%
+    \item[deflate]\itemend Use the \propername{Deflate} compression
+      scheme also called \acronym{ZIP}-in-\acronym{TIFF}.
+      \propername{Deflate} is a lossless data compression algorithm
+      that uses a combination of the \acronym{LZ77} algorithm and
+      \propername{Huffman} coding.
+
+      \genidx{compression!\acronym{JPEG} of \acronym{TIFF}}%
+    \item[jpeg\optional{:\metavar{LEVEL}}]\itemend Use \acronym{JPEG}
+      compression.  With optional argument set the
+      compression~\metavar{LEVEL}, where \metavar{LEVEL} is an integer
+      that ranges from 0--100.
+
+      \genidx{compression!\acronym{LZW}}%
+      \gensee{LZW@\acronym{LZW} compression}{compression}%
+    \item[lzw]\itemend Use
+      \propername{Lempel}-\propername{Ziv}-\propername{Welch}
+      (\acronym{LZW}) adaptive compression scheme.  \acronym{LZW}
+      compression is lossless.
+
+      \genidx{compression!packbits}%
+      \gensee{packbits compression}{compression}%
+    \item[packbits]\itemend Use \propername{PackBits} compression
+      scheme.  \propername{PackBits} is a particular variant of
+      run-length compression; it is lossless.
+    \end{codelist}
+
+  \item[Any other format.]\itemend Other formats do not accept a
+    \metavar{COMPRESSION} setting.  However, the underlying
+    \uref{\hciiwrvigra}{\acronym{VIGRA}}\footnote{\acronym{VIGRA} is
+      the image manipulaton library on which \App{} is based.} library
+    automatically compresses \filename{png}-files with the
+    \propername{Deflate} method.
+  \end{description}
+
+
+  \label{opt:gpu}%
+  \optidx[\defininglocation]{--gpu}%
+  \genidx{graphics processing unit}%
+  \gensee{GPU@\acronym{GPU}}{graphics processing unit}%
+  \genidx{central processing unit}%
+  \gensee{CPU@\acronym{CPU}}{central processing unit}%
+  \genidx{OpenCL@\acronym{OpenCL}}%
+\item[--gpu \restrictednote{\acronym{OpenCL}-enabled versions
+    only.}]\itemend Employ one of the graphics processing units
+  (\acronym{GPU}s) to perform computing instead of the central
+  processing units (\acronym{CPU}s) alone.  \App{} must have been
+  compiled with support for \acronym{OpenCL} access to the
+  \acronym{GPU} for this feature.
+
+  Depending on the input images, the options passed to \App{}, and the
+  relative performance of the \acronym{CPU}s to the \acronym{GPU}s
+  this option may or may not increase performance.
+
+  This option enables \acronym{GPU} processing on the selected
+  \acronym{GPU}s.  To choose a particular \acronym{GPU} or override
+  \App's default choice use
+  \flexipageref{\sample{--prefer-gpu}}{opt:prefer-gpu}.
+
+  Negate this option with
+  \sample{--no-gpu}\optidx[\defininglocation]{--no-gpu}.
+
+
+  \label{opt:levels}%
+  \optidx[\defininglocation]{--levels}%
+  \shoptidx{-l}{--levels}%
+\item[\itempar{-l \metavar{LEVELS} \\ --levels=\metavar{LEVELS}}]\itemend
+  Use at most this many \metavar{LEVELS}%
+  \genidx{levels!pyramid}%
+  \gensee{pyramid levels}{levels, pyramid}
+  for pyramid\footnotemark{} blending if \metavar{LEVELS} is positive,
+  or reduce the maximum number of levels used by $-\metavar{LEVELS}$
+  if \metavar{LEVELS} is negative; \sample{auto} or \sample{automatic}
+  restore the default, which is to use the maximum possible number of
+  levels for each overlapping region.
+
+  \footnotetext{As \propername{Dr.~Daniel Jackson}%
+    \genidx{Jackson, Daniel@\propername{Jackson, Daniel}} correctly
+    \ahref{\stargatewikiathetomb}{noted}, actually, it is not a
+    pyramid: ``Ziggaurat, it's a
+    \ahref{\wikipediaziggaurat}{Ziggaurat}.''}% FIXME
+
+  The number of levels used in a pyramid controls the balance between
+  local and global image features (contrast, saturation,~\dots) in the
+  blended region.  Fewer levels emphasize local features and suppress
+  global ones.  The more levels a pyramid has, the more global
+  features will be taken into account.
+
+  \begin{geeknote}
+    As a guideline, remember that each new level works on a linear
+    scale twice as large as the previous one.  So, the zeroth layer,
+    the original image, obviously defines the image at single-pixel
+    scale, the first level works at two-pixel scale, and generally,
+    the $n$-th level contains image data at $2^n$-pixel scale.  This
+    is the reason why an image of $\mbox{width} \times
+    \mbox{height}$~pixels cannot be deconstructed into a pyramid of
+    more than $\lfloor \log_2(\min(\mbox{width}, \mbox{height}))
+    \rfloor$ levels.
+
+    If too few levels are used, ``halos'' around regions of strong
+    local feature variation can show up.  On the other hand, if too
+    many levels are used, the image might contain too much global
+    features.  Usually, the latter is not a problem, but is highly
+    desired.  This is the reason, why the default is to use as many
+    levels as is possible given the size of the overlap regions.
+    \App{} may still use a smaller number of levels if the geometry of
+    the overlap region demands.
+  \end{geeknote}
+
+  Positive values of \metavar{LEVELS} limit the maximum number of
+  pyramid levels.  Depending on the size and geometry of the overlap
+  regions this may or may not influence any pyramid.  Negative values
+  of \metavar{LEVELS} reduce the number of pyramid levels below the
+  maximum no matter what the actual maximum is and thus always
+  influence all pyramids.  Use \sample{auto} or \sample{automatic} as
+  \metavar{LEVELS} to restore the automatic calculation of the maximum
+  number of levels.
+
+  The valid range of the absolute value of \metavar{LEVELS} is
+  \val{val:minimum-pyramid-levels} to
+  \val{val:maximum-pyramid-levels}.
+
+  \label{opt:output}%
+  \optidx[\defininglocation]{--output}%
+  \shoptidx{-o}{--output}%
+  \genidx{filename!output}%
+  \gensee{output filename}{filename, output}%
+  \gensee{output filename!default}{filename, output, default}%
+\item[\itempar{-o \metavar{FILE} \\ --output=\metavar{FILE}}]\itemend
+  Place \appdoes{}ed output image in \metavar{FILE}.  If
+  \sample{--output} is omitted, \App{} writes the resulting image to
+  \filename{\val{val:default-output-filename}}.%
+  \genidx{filename!output!default}%
+  \gensee{default output filename}{filename, output, default}
+
+
+  \label{opt:verbose}%
+  \optidx[\defininglocation]{--verbose}%
+  \shoptidx{-v}{--verbose}%
+  \genidx{level!verbosity}
+  \gensee{verbosity level}{level, verbosity}
+\item[\itempar{-v \optional{\metavar{LEVEL}} \\ --verbose\optional{=\metavar{LEVEL}}}]\itemend
+  Without an argument, increase the verbosity of progress reporting.
+  Giving more \option{--verbose}~options will make \App{} more
+  verbose; see Section~\fullref{sec:finding-out-details} for an
+  examplary output.  Directly set a verbosity level with a
+  non-negative integral~\metavar{LEVEL}.
+  Table~\ref{tab:verbosity-levels} shows the messages available at a
+  particular \metavar{LEVEL}.
+
+  \begin{table}[htbp]
+    \centering
+    \begin{tabular}{cp{.75\linewidth}}
+      \hline
+      \multicolumn{1}{c|}{Level} & \multicolumn{1}{c}{Messages} \\
+      \hline\extraheadingsep
+      0 & only warnings and errors \\
+      1 & reading and writing of images \\
+      2 & mask generation, pyramid, and blending \\
+      3 & reading of response files, color conversions \\
+      4 & image sizes, bounding boxes and intersection sizes \\
+      5 & \restrictednote{\application{Enblend} only.} detailed
+      information on the optimizer runs \\
+      6 & estimations of required memory in selected processing steps \\
+    \end{tabular}
+
+    \caption[Verbosity levels]{Verbosity levels of \app{}; each level
+      includes all messages of the lower
+      levels.\label{tab:verbosity-levels}}
+  \end{table}
+
+  The default verbosity level of \App{} is
+  \val{val:default-verbosity-level}.
+\end{codelist}
+
+\genidx[\rangeendlocation]{common options}

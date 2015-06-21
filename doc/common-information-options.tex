@@ -1,0 +1,140 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Information Options\commonpart]{Information Options\commonpart
+  \label{sec:information-options}
+  \genidx[\rangebeginlocation]{information options}
+  \genidx{options!information}}
+
+\begin{codelist}
+  \label{opt:help}%
+  \optidx[\defininglocation]{--help}%
+  \shoptidx{-h}{--help}%
+\item[\itempar{-h \\ --help}]\itemend Print information on the
+  command-line syntax\genidx{help} and all available options, giving a
+  boiled-down version of this manual.
+
+
+  \label{opt:show-globbing-algorithms}%
+  \optidx[\defininglocation]{--show-globbing-algorithms}%
+\item[--show-globbing-algorithms]\itemend Show all globbing
+  algorithms.\genidx{algorithm!globbing}%
+  \gensee{globbing algorithms}{algorithm, globbing}
+
+  Depending on the build-time configuration and the operating system,
+  the binary may support different globbing algorithms.  See
+  Section~\fullref{sec:globbing-algorithms}.
+
+
+  \label{opt:show-gpu-info}%
+  \optidx[\defininglocation]{--show-gpu-info}%
+\item[--show-gpu-info \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
+
+  Print a list of all available \acronym{GPU}~devices under
+  \acronym{OpenCL}~control\genidx{OpenCL@\acronym{OpenCL}} on all
+  accessible platforms, the current preferences, and then exit; it is
+  the same enumeration that
+  \begin{literal}
+    \app{} --verbose --version
+  \end{literal}
+  reveals.%
+  \genidx{GPU@\acronym{GPU}!information on}%
+  \gensee{information!on \acronym{GPU}}{\acronym{GPU}, information}%
+  \genidx{OpenCL@\acronym{OpenCL}!information on configuration}%
+  \gensee{information!on \acronym{OpenCL} configuration}{\acronym{OpenCL}, information}
+  Example~\ref{ex:opencl-config} shows a complete, examplary output.
+
+  \begin{exemplar}[htbp]
+    \begin{maxipage}
+      \centering
+      \begin{terminal}
+        \$ \app{} --show-gpu-info \\
+        Available, OpenCL-compatible platform(s) and their device(s) \\
+        ~~- Platform \#1:~Advanced Micro Devices, Inc., AMD, OpenCL 1.2 AMD-APP (938.2) \\
+        ~~~~* no GPU devices found on this platform \\
+        ~~- Platform \#2:~NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1 \\
+        ~~~~* Device \#1:~max.~1024 work-items \\
+        ~~~~~~~~~~~~~~~~~1047872 KB global memory with 32 KB read/write cache \\
+        ~~~~~~~~~~~~~~~~~48 KB dedicated local memory \\
+        ~~~~~~~~~~~~~~~~~64 KB maximum constant memory \\
+        ~~Search path (expanding ENBLEND\_OPENCL\_PATH and appending built-in path) \\
+        ~~~~/usr/local/share/enblend/kernels:/usr/share/enblend/kernels \\
+        Currently preferred GPU is device \#1 on platform \#2 (autodetected).
+      \end{terminal}
+    \end{maxipage}
+
+    \caption[Sample \acronym{OpenCL} configuration.]{A sample
+      \acronym{OpenCL} configuration as detected by
+      \App.\label{ex:opencl-config}}
+  \end{exemplar}
+
+
+  \label{opt:show-image-formats}%
+  \optidx[\defininglocation]{--show-image-formats}%
+\item[--show-image-formats]\itemend Show all recognized image
+  formats,\genidx{format!image}\gensee{image formats}{format, image}
+  their filename extensions and the supported per-channel depths.
+
+  Depending on the build-time configuration and the operating system,
+  the binary supports different image formats, typically:
+  \acronym{BMP}, \acronym{EXR}, \acronym{GIF}, \acronym{HDR},
+  \acronym{JPEG}, \acronym{PNG}, \acronym{PNM}, SUN, \acronym{TIFF},
+  and~\acronym{VIFF} and recognizes different image-filename
+  extensions, again typically: \filename{bmp}, \filename{exr},
+  \filename{gif}, \filename{hdr}, \filename{jpeg}, \filename{jpg},
+  \filename{pbm}, \filename{pgm}, \filename{png}, \filename{pnm},
+  \filename{ppm}, \filename{ras}, \filename{tif}, \filename{tiff},
+  and~\filename{xv}.
+
+  The maximum number of different per-channel depths any \appcmd{}
+  provides is seven:
+  \begin{itemize}
+  \item 8~bits unsigned integral -- \sample{uint8}
+  \item 16~bits unsigned or signed integral -- \sample{uint16} or \sample{int16}
+  \item 32~bits unsigned or signed integral -- \sample{uint32} or \sample{int32}
+  \item 32~bits floating-point -- \sample{float}
+  \item 64~bits floating-point -- \sample{double}
+  \end{itemize}
+
+
+  \label{opt:show-signature}%
+  \optidx[\defininglocation]{--show-signature}%
+  \genidx{signature}%
+\item[--show-signature]\itemend Show the user name of the person who
+  compiled the binary, when the binary was compiled, and on which
+  machine this was done.
+
+  This information can be helpful to ensure the binary was created by a
+  trustworthy builder.
+
+
+  \label{opt:show-software-components}%
+  \optidx[\defininglocation]{--show-software-components}%
+\item[--show-software-components]\itemend Show the name and version of
+  the compiler that built \App{} followed by the versions of all
+  important libraries against which \App{} was
+  compiled.\genidx{information!on software components}%
+  \gensee{software!components}{information, on software components}
+
+  Technically, the version information is taken from header files, thus
+  it is independent of the dynamic-library environment the binary runs
+  within.  The library versions printed here can help to reveal version
+  mismatches with respect to the actual dynamic libraries available to
+  the binary.
+
+
+  \label{opt:version}%
+  \optidx[\defininglocation]{--version}%
+  \shoptidx{-V}{--version}%
+\item[\itempar{-V \\ --version}]\itemend Output information on the
+  binary's version.\genidx{software!version}%
+  \gensee{version}{software, version}
+
+  Team this option with \option{--verbose} to show configuration
+  details, like the extra features that may have been compiled in.
+
+  For details consult Section~\fullref{sec:exact-version}.
+\end{codelist}
+
+\genidx[\rangeendlocation]{information options}

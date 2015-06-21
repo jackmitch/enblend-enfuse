@@ -1,0 +1,53 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Image Requirements]{Input Image Requirements
+  \label{sec:image-requirements}
+  \genidx{image requirements}
+  \genidx{requirements!image}}
+
+All input images for \App{} must comply with the following
+requirements.
+
+\begin{itemize}
+\item
+  The images overlap.
+
+\item
+  The images agree on their number of bits-per-channel, i.e., their
+  ``depth'':
+  \begin{itemize}
+  \item
+    \code{uint8},
+  \item
+    \code{uint16},
+  \item
+    \code{float},
+  \item
+    etc.
+  \end{itemize}
+
+  See option~\option{--depth} below for an explanation of different
+  (output) depths.
+
+\item
+  \App{} understands the images' filename extensions as well as their
+  file formats.
+
+  You can check the supported extensions and formats by calling \App{}
+  with option~\option{--show-image-formats}.
+\end{itemize}
+
+Moreover, there are some good practices, which are not enforced by the
+application, but almost certainly deliver superior results.
+
+\begin{itemize}
+\item
+  Either all files lack an \acronym{ICC} profile, or all images are
+  supplied with the \emph{same} \acronym{ICC} profile.
+
+\item
+  If the images' meta-data contains resolution information
+  (``\acronym{DPI}''), it is the same for all pictures.
+\end{itemize}

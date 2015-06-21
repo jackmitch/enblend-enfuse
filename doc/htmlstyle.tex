@@ -1,0 +1,173 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+%% Open ``Color Schemer Online''
+%%     http://www.colorschemer.com/online.html
+%% enter '66FF33' in the field `#' and click `Set HEX'.  The first
+%% column ``Color Suggestions''.  The color names are our own; they
+%% are neither related to X11 or dvi2ps color names.
+%%
+%%   Suggestions     Color Name        CSS Usage      Print Replacement
+%%   ===========    =============    =============    =================
+%%     #66ff33      limegreen        chapter
+%%     #33ff66      grassgreen       section
+%%     #33ffcc      seagreen         subsection
+%%     #33ccff      skyblue          subsubsection
+%%     #3366ff      navyblue
+%%     #6633ff      violetblue
+%%     #cc33ff      purple
+%%     #ff33cc      rhodamine        fix-me           lightgray
+%%     #ff3366      orangered
+%%     #ff6633      brickred
+%%     #ffcc33      dandelion        restrictednote
+%%     #ccff33      springgreen      geeknote         lightlightgray
+%%     #3df500      green            terminal
+%%     #2eb800      forestgreen
+%%     #b800f5      orchid
+%%     #8a00b8      fuchsia
+%%
+%%   Supplements
+%%   -----------    -------------    -------------    -----------------
+%%     #cccccc      gray             literal
+
+
+%% Physical Color Definitions
+\definecolor{limegreen}{rgb}{.4, 1, .2}        % #66ff33
+\definecolor{grassgreen}{rgb}{.2, 1, .4}       % #33ff66
+\definecolor{seagreen}{rgb}{.2, 1, .8}         % #33ffcc
+\definecolor{skyblue}{rgb}{.2, .8, 1}          % #33ccff
+\definecolor{navyblue}{rgb}{.2, .4, 1}         % #3366ff
+\definecolor{violetblue}{rgb}{.4, .2, 1}       % #6633ff
+\definecolor{purple}{rgb}{.8, .2, 1}           % #cc33ff
+\definecolor{rhodamine}{rgb}{1, .2, .8}        % #ff33cc
+\definecolor{orangered}{rgb}{1, .2, .4}        % #ff3366
+\definecolor{brickred}{rgb}{1, .4, .2}         % #ff6633
+\definecolor{dandelion}{rgb}{1, .8, .2}        % #ffcc33
+\definecolor{springgreen}{rgb}{.8, 1, .2}      % #ccff33
+\definecolor{green}{rgb}{.24, .96, 0}          % #3df500
+\definecolor{forestgreen}{rgb}{.18, .72, 0}    % #2eb800
+\definecolor{orchid}{rgb}{.72, 0, .96}         % #b800f5
+\definecolor{fuchsia}{rgb}{.54, 0, .72}        % #8a00b8
+
+\definecolor{black}{rgb}{0, 0, 0}
+\definecolor{gray}{rgb}{.8, .8, .8}
+\definecolor{lightgray}{rgb}{.9, .9, .9}
+\definecolor{lightlightgray}{rgb}{.95, .95, .95}
+\definecolor{white}{rgb}{1, 1, 1}
+
+
+%% Logical Color Definitions
+\newcommand*{\chapterbackgroundcolor}{limegreen}
+\newcommand*{\sectionbackgroundcolor}{grassgreen}
+\newcommand*{\subsectionbackgroundcolor}{seagreen}
+\newcommand*{\subsubsectionbackgroundcolor}{skyblue}
+\newcommand*{\fixmebackgroundcolor}{\ifhevea rhodamine\else lightgray\fi}
+\newcommand*{\restrictedmaterialbordercolor}{dandelion}
+\newcommand*{\geeknotebackgroundcolor}{\ifhevea springgreen\else lightlightgray\fi}
+\newcommand*{\terminalcolor}{green}
+\newcommand*{\terminalbackgroundcolor}{black}
+\newcommand*{\terminalbordercolor}{gray}
+\newcommand*{\literalbackgroundcolor}{gray}
+\newcommand*{\bodybackgroundcolor}{white}
+
+
+\newstyle{.adalisting}%
+{
+  font-family: monospace;
+  white-space: pre;
+}
+
+
+\newstyle{body}%
+{
+  background: \@getcolor{\bodybackgroundcolor};
+  color: black;
+  margin-left: 10\%;
+  margin-right: 10\%;
+}
+
+
+\newstyle{.chapter}%
+{
+  background: \@getcolor{\chapterbackgroundcolor};
+  padding: 0.75em;
+}
+
+
+\newstyle{.cxxlisting}%
+{
+  font-family: monospace;
+  white-space: pre;
+}
+
+
+\newstyle{.dt-list}%
+{
+  font-weight: bold;
+}
+
+
+\newstyle{.literal}%
+{
+  background: \@getcolor{\literalbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.maxipage}%
+{
+  border-bottom: thin;
+  border-top: thin;
+}
+
+
+\newstyle{.restrictedmaterial}%
+{
+  border-color: \@getcolor{\restrictedmaterialbordercolor};
+  border-style: solid;
+  border-width: thick;
+  padding: 0.5em;
+}
+
+
+\newstyle{.geeknote}%
+{
+  background: \@getcolor{\geeknotebackgroundcolor};
+  padding-bottom: .25em;
+  padding-left: 0.333em;
+  padding-right: 0.333em;
+  padding-top: .25em;
+}
+
+
+\newstyle{.section}%
+{
+  background: \@getcolor{\sectionbackgroundcolor};
+  padding: 0.75em;
+}
+
+
+\newstyle{.subsection}%
+{
+  background: \@getcolor{\subsectionbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.subsubsection}%
+{
+  background: \@getcolor{\subsubsectionbackgroundcolor};
+  padding: 0.5em;
+}
+
+
+\newstyle{.terminal}%
+{
+  background: \@getcolor{\terminalbackgroundcolor};
+  border-color: \@getcolor{\terminalbordercolor};
+  border-style: solid;
+  border-width: thick;
+  color: \@getcolor{\terminalcolor};
+  padding: 0.25em;
+}

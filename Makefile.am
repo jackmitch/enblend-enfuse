@@ -4,12 +4,12 @@ EXTRA_DIST = \
         README.txt VERSION \
         CMakeLists.txt CMakeModules ConfigureChecks.cmake config.h.cmake
 
-#--if BUILD_DOC
-#--  MAYBE_DOC = doc
-#--endif
+if BUILD_DOC
+  MAYBE_DOC = doc
+endif
 
 SUBDIRS = share src $(MAYBE_DOC)
-DIST_SUBDIRS = share src
+DIST_SUBDIRS = share src doc
 
 ACLOCAL_AMFLAGS = -I m4
 

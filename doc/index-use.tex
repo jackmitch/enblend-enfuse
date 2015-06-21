@@ -1,0 +1,45 @@
+%%%  -*- latex -*-
+
+
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\cleardoublepage{}
+
+
+\addcontentsline{toc}{chapter}{Indices}
+
+
+\addcontentsline{toc}{section}{\ahrefloc{sec:syncomm-index}{Syntactic Comment Index}}
+\label{sec:syncomm-index}%
+\printindex[syncomm]
+
+
+\gensea{helpful programs}{Program/Application Index}
+\addcontentsline{toc}{section}{\ahrefloc{sec:program-index}{Program/Application Index}}
+\label{sec:program-index}%
+\printindex[program][If a program belongs to a larger package, it has
+  its association mentioned in parenthesis.]
+
+
+\addcontentsline{toc}{section}{\ahrefloc{sec:option-index}{Option Index}}
+\label{sec:option-index}%
+\ifhevea
+  \printindex[option]
+\else
+  \printindex[option][Locations marked like \underline{12} indicate
+    the place of the option's genuine description.]
+\fi
+
+
+\addcontentsline{toc}{section}{\ahrefloc{sec:general-index}{General Index}}
+\label{sec:general-index}%
+\ifhevea
+  \printindex[general]
+\else
+  \printindex[general][Locations marked like \underline{12} indicate
+    the location where a term gets introduced or defined.  Tables,
+    lists, etc.\ that summarize material are indicated like
+    \textsl{34}.]
+\fi

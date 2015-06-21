@@ -30,4 +30,9 @@
 ^src/enblend$
 ^src/enfuse$
 
+^doc/*.\.(aux|dvi|eps|ilg|lo.|pdf|png|ps|pstex|toc|.dx|.nd)$
+^doc/(config-h|dynamic-preamble)\.tex$
+^doc/(enblend|enfuse)-(variables|version)\.tex$
+^doc/(enblend|enfuse)\.h...$
+
 ^[^A-Za-z0-9]?BUILD([-_].*)?/

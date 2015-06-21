@@ -1,0 +1,440 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Color Spaces\commonpart]{Color Spaces And Color Profiles\commonpart
+  \label{sec:color-spaces}
+  \genidx[\rangebeginlocation]{colorspace}
+  \genidx{color profile}}
+
+This chapter explains the connection of pixel data types,
+\uref{\wikipediaiccprofile}{\acronym{ICC}}-color
+profiles,\genidx{profile!\acronym{ICC}}%
+\gensee{ICC@\acronym{ICC} profile}{profile, \acronym{ICC}} blend color
+spaces in \application{Enblend} or \application{Enfuse}.
+
+Here, we collectively speak of blending\genidx{pixels!blending}%
+\gensee{blending pixels}{pixels, blending} and do not distinguish
+fusing,\genidx{pixels!fusing}\gensee{fusing pixels}{pixels, fusing}
+for the basic operations are the same.  Furthermore, we assume the
+multiresolution spline algorithm has calculated a set of weights~$w_i$
+for $i = 1, 2, \dots$ and $\sum w_i = 1$ for each pixel that must be
+blended from the participating input pixels~$P_i, i = 1, 2, \dots$.
+
+In the simplest, non-trivial case we have to blend a pair of grayscale
+input pixels.  Given their luminances~$L_1$, $L_2$ and their weighting
+factor~$0 \leq w \leq 1$,\genidx{weighting factor} what
+luminance~$L$\genidx{luminance} is their ``weighted average''?  This
+is the heart of \application{Enblend's} and \application{Enfuse's}
+pyramidal blending operations!  We are in particular interested in a
+weighted average that appears \emph{visually} correct, this is, our
+eyes and brains consider $L$ convincing or at the very least credible.
+
+\begin{geeknote}
+  \noindent Note that \application{Enblend} and \application{Enfuse}
+  face different obstacles in their respective domains of use.
+
+  \begin{description}
+  \item[\application{Enblend}]\itemend The overlapping areas usually
+    are \emph{well matched} both geometrically and photometrically.
+    The differences of the pixels that must be blended are small.
+
+  \item[\application{Enfuse} (using a Soft Mask\footnote{Fusing with a
+      Hard Mask is different, because exactly one weight factor is
+      unity and all the others are zero.  There is nothing to blend --
+      just to copy.})]\itemend The input images \emph{greatly differ}
+    in exposure, saturation, or contrast.  This is exactly why we want
+    to fuse them.  Thus, the luminance, saturation, and hue
+    differences to be handled by \application{Enfuse} are generally
+    quite high.
+  \end{description}
+\end{geeknote}
+
+The details of blending pixels and in particular color pixels is quite
+intricate, which is why we start this chapter with a mathematical
+introduction.
+
+
+\section[Mathematical Preliminaries]{Mathematical Preliminaries
+  \label{sec:mathematical-preliminaries}
+  \label{color profiles!math}}
+
+Let us first address grayscale images, because they only require us to
+talk about luminances.  For a linear representation of luminances, we
+just blend for a given $t$ with
+\begin{equation}\label{equ:trivial-luminance-blend}
+  L = t L_1 + (1 - t) L_2 \quad \mbox{with} \quad 0 \leq t \leq 1,
+\end{equation}
+where the luminances~$L_i, i = 1, 2,$ range from zero to their
+data-type dependent maximum value~$L_{\mathrm{max}}$ thereby defining
+a ``luminance interval''.\genidx{luminance interval} We can always map
+this interval to $(0, 1)$ by dividing the luminances by the maximum,
+which is why we call the latter \emph{``normalized luminance
+  interval''}:\genidx{luminance interval!normalized}
+\begin{equation}\label{equ:luminance-normalization}
+  (0, L_{\mathrm{max}}) \rightarrow (0, 1)
+\end{equation}
+Obviously,
+\begin{equation}\label{equ:normalized-luminance}
+  0 \leq \bar{L} \leq 1
+\end{equation}
+holds for all values~$\bar{L} := L / L_{\mathrm{max}}$ in the
+normalized luminance interval.
+
+Sometimes images are gamma-encoded with exponent~$\gamma$\genidx{gamma
+  exponent}\gensee{exponent, gamma}{gamma exponent} and the blended
+luminance becomes
+
+\begin{equation}\label{equ:gamma-luminance-blend}
+L' = \left(t L_1^{1/\gamma} + (1 - t) L_2^{1/\gamma}\right)^\gamma,
+\end{equation}
+
+which couples $t$ and $L'$ in a non-linear way.\footnote{See also
+  \propername{Eric Brasseur's} explanation of the
+  \uref{\ericbrasseurgamma}{gamma error in picture scaling}.}
+
+\begin{geeknote}
+  Typical gamma values are $\gamma = 2.2$ for \acronym{sRGB} and
+  \acronym{AdobeRGB}, 1.8 for \acronym{AppleRGB}, and
+  \acronym{ProPhotoRGB}, 1.0 for Linear Rec709 \acronym{RGB} and any
+  others with ``linear'' in their names.  For an extensive overview
+  check out \propername{Bruce Lindbloom's}
+  \uref{\brucelindbloomworkingspaceinfo}{Information on Working Color
+    Spaces.}
+\end{geeknote}
+
+The usual color-input images fed into \App{} are
+\acronym{RGB}-encoded, which means each pixel comes as a triple of
+values~$\transpose{(r, g, b)}$ that represent the red, green, and~blue
+parts.  We apply the
+normalization~\eqnref{equ:luminance-normalization} to each of the
+three primary colors and arrive at an \emph{``\acronym{RGB}-cube''}
+with unit edge length.  The vectors of primary colors span the cube
+\[
+  \vec{r} = \left(\begin{array}{c}1\\ 0\\ 0\end{array}\right),\quad
+  \vec{g} = \left(\begin{array}{c}0\\ 1\\ 0\end{array}\right)\quad \mbox{and}\quad
+  \vec{b} = \left(\begin{array}{c}0\\ 0\\ 1\end{array}\right).
+\]
+For each point inside -- familiarly called
+pixel -- the generalization of \eqnref{equ:normalized-luminance} holds
+\begin{equation}\label{equ:rgb-cube}
+  \left(\begin{array}{c}0\\ 0\\ 0\end{array}\right) \leq
+  \left(\begin{array}{c}r\\ g\\ b\end{array}\right) \leq
+  \left(\begin{array}{c}1\\ 1\\ 1\end{array}\right).
+\end{equation}
+
+Blending the pixels of \emph{color} images is more complicated than
+blending plain luminances.  Although we can write down the na\"ive
+blending equation, \eqnref{equ:trivial-luminance-blend}, again for
+\acronym{RGB}-coded pixels
+\[
+  P_1 := \left(\begin{array}{c}r_1\\ g_1\\ b_1\end{array}\right)
+  \quad \mbox{and}\quad
+  P_2 := \left(\begin{array}{c}r_2\\ g_2\\ b_2\end{array}\right)
+\]
+and trivially arrive at
+\begin{equation}\label{equ:trivial-rgb-blend}
+  P :=
+  \left(\begin{array}{c}r\\ g\\ b\end{array}\right) =
+    t \left(\begin{array}{c}r_1\\ g_1\\ b_1\end{array}\right) +
+    (1 - t) \left(\begin{array}{c}r_2\\ g_2\\ b_2\end{array}\right)
+    \quad \mbox{with} \quad 0 \leq t \leq 1,
+\end{equation}
+but this means
+\begin{itemize}
+\item
+  we implicitly treat the color components $r_i, g_i, b_i$ as
+  \emph{separate} luminances, which they are not and moreover
+
+\item
+  we neglect the visual aspects, namely luminance, saturation, and~hue
+  of the blended color pixel~$P$.
+\end{itemize}
+
+
+\section[Floating-Point Images]{Floating-Point Images
+  \label{sec:floating-point-images}
+  \genidx{image!floating-point}
+  \gensee{floating-point image}{image, floating-point}}
+
+Floating-point images\genidx{transform!floating-point images}
+(\acronym{EXR},\genidx{image!\acronym{EXR}}%
+\gensee{EXR@\acronym{EXR} image}{image, \acronym{EXR}}
+floating-point \acronym{TIFF},\genidx{image!floating-point \acronym{TIFF}}%
+\gensee{floating-point \acronym{TIFF} image}{image, floating-point \acronym{TIFF}}%
+\gensee{TIFF@\acronym{TIFF} floating-point image}{image, floating-point \acronym{TIFF}}
+or \acronym{VIFF}\genidx{image!floating-point \acronym{VIFF}}%
+\gensee{floating-point \acronym{VIFF} image}{image, floating-point \acronym{VIFF}}%
+\gensee{VIFF@\acronym{VIFF} floating-point image}{image, floating-point \acronym{VIFF}})
+get a special treatment.  Their values~$L$ are first converted by the
+Log-transform\genidx{transform!log}\gensee{log-transform}{transform, log}
+
+\begin{equation}\label{equ:log-transform}
+  \mbox{Log}(L) :=
+  \left\{
+  \begin{array}{ll}
+    1 + \log(1 + L) & \quad \mbox{for } L \geq 0 \mbox{ and} \\
+    1 / (1 - L)     & \quad \mbox{otherwise,}
+  \end{array}
+  \right.
+\end{equation}
+
+\noindent which is undone by the inverse transform after blending.
+Here, $\log(x)$ with a lower-case initial denotes the natural
+logarithmic function (i.e.\ to base~$e$).
+Figure~\ref{fig:log-transform} shows the forward transform in the
+range from $-20$ to~100.
+
+\begin{figure}[htbp]
+  \centering
+  \includeimage{log-transform}
+
+  \caption[Log-transform]{Forward Log-transform shown for the range of
+    $-20 \leq L \leq 100$.  The domain of $\mbox{Log}(L)$ is the whole
+    real axis.\label{fig:log-transform}}
+
+  \genidx{transform!log}
+\end{figure}
+
+This transform serves two purposes:
+\begin{itemize}
+\item
+  During blending, even completely non-negative images can result in
+  negative pixels.  A Log-transform followed by the inverse guarantees
+  all-positive output.
+
+\item
+  For \acronym{HDR}~data, the Log-transform puts the samples closer to
+  a perceptual space making the blending a little more pleasing.
+\end{itemize}
+
+In the current version of \application{Enblend} and
+\application{Enfuse} it is \emph{strongly recommended} to use blending
+inside the \acronym{RGB}-cube whenever the input data is in
+floating-point format; this is the default, too.
+
+
+\section[Color Profiles]{Color Profiles
+  \label{sec:color-profiles}
+  \genidx{color profile}}
+
+\acronym{ICC}-color profiles completely absorb gamma
+encodings~\eqnref{equ:gamma-luminance-blend} and \acronym{ICC}~profile
+aware software like \application{Enblend} and \application{Enfuse}
+decode and encode images automatically respecting the gamma curves.
+Moreover color profiles define what is the darkest representable
+black, so called black-point\genidx{black-point}
+\[
+  L = 0
+  \quad \mbox{and}\quad
+  \transpose{(r, g, b)} = \transpose{(0, 0, 0)}
+\]
+and analogously what
+is the purest and brightest white, the white-point\genidx{white-point}
+\[
+  L = 1
+  \quad \mbox{and}\quad
+  \transpose{(r, g, b)} = \transpose{(1, 1, 1)}.
+\]
+
+
+By default, \application{Enblend} and \application{Enfuse} expect that
+either
+\begin{enumerate}
+\item\label{enum:no-profile}
+  no input image has a color profile or
+\item\label{enum:same-profile}
+  all images come with the \emph{same} \acronym{ICC}~profile.
+\end{enumerate}
+
+Even black-and-white\genidx{image!black-and-white}%
+\gensee{black-and-white image}{image, black-and-white} images benefit
+from having attached appropriate profiles!
+
+In Case~\ref{enum:no-profile}.\ the applications blend grayscale
+images in the normalized luminance interval and color images inside
+the \acronym{sRGB}-cube.%
+\genidx{color cube!\acronym{RGB}}%
+\gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}}%
+\genidx{color cube!\acronym{sRGB}}%
+\gensee{sRGB@\acronym{sRGB} color cube}{color cube, \acronym{sRGB}}%
+To override the default \acronym{sRGB}-profile select the desired
+profile with
+option~\flexipageref{\option{--fallback-profile}}{opt:fallback-profile}.
+
+In Case~\ref{enum:same-profile}.\ the images first are by default
+transformed to \uref{\wikipediaciecam}{\acronym{CIELUV}} color space
+-- respecting the input color profile -- then they are blended or
+fused, and finally the data get transformed back to \acronym{RGB}
+color space defined by the profile of the input images.  Consequently,
+the input profile is assigned to the output image.  Enforce a
+different blending color space than \acronym{CIELUV} with
+option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.
+
+Mixing different \acronym{ICC}~profiles or alternating between images
+with profiles and without them generates warnings as it generally
+leads to unpredictable results.
+
+Floating-Point images are an exception to the above rules.  They are
+\emph{always} blended in the \acronym{RGB} cube by default.  The next
+section describes their treatment in detail.
+
+
+\section[Blending Color Spaces]{Blending Color Spaces
+  \label{sec:blending-color-spaces}
+  \genidx{colorspace!for blending and fusing}
+  \gensee{blending color space}{colorspace, for blending and fusing}}
+
+\application{Enblend} and \application{Enfuse} offer to work inside
+the \acronym{RGB}-cube~\eqnref{equ:rgb-cube} or in several
+perceptually uniform color spaces.  To override the default select a
+particular blending color space with
+option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}.
+Here are the four available color spaces.
+
+\begin{description}
+\item[Identity Space / \acronym{RGB}-Color Cube]\itemend Calculate
+  the blended pixel inside the luminance interval
+  \eqnref{equ:trivial-luminance-blend} for grayscale images and inside
+  the \acronym{RGB}-color cube\genidx{color cube!\acronym{RGB}}%
+  \gensee{RGB@\acronym{RGB} color cube}{color cube, \acronym{RGB}} as
+  given in \eqnref{equ:trivial-rgb-blend}.
+
+  This is the fastest color space to do computations within, i.e.\ it
+  consumes by far the least computing power, because no transform to
+  or from any of the perceptually uniform color spaces is done.
+
+\item[\urlmark{\wikipedialabcolorspace}{\acronym{L*a*b*}}]\itemend\urltext
+  Represent each pixel as lightness~$L\raisedasterisk$, red-green
+  difference~$a\raisedasterisk$, and yellow-blue
+  difference~$b\raisedasterisk$.  The \acronym{L*a*b*} color
+  space\genidx{colorspace!\acronym{L*a*b*}}%
+  \gensee{L*a*b*@\acronym{L*a*b*} colorspace}{colorspace, \acronym{L*a*b*}}
+  encompasses all perceivable colors.  It is completely independent of
+  any device characteristics, approximates human vision, and is
+  perceptually uniform.
+
+  \App{} uses perceptual rendering intent and either the input
+  profile's white-point or, if the \acronym{ICC}-profile lacks the
+  \code{cms\-Sig\-Media\-White\-Point\-Tag}, fall back to the
+  \acronym{D50}\genidx{white-point!\acronym{D50}}%
+  \gensee{D50@\acronym{D50} white-point}{white-point, \acronym{D50}}
+  white-point (see, e.g.\ \uref{\wikipediastandardilluminant}{Standard
+    illuminant}).
+
+  The conversions from and to \acronym{L*a*b*} are moderately fast to
+  compute; \acronym{L*a*b*} mode is two to three times slower than
+  working within the \acronym{RGB}-color cube.
+
+\item[\urlmark{\wikipediacieluvcolorspace}{\acronym{CIEL*u*v*}}]\itemend\urltext
+  Represent each pixel as lightness~$L\raisedasterisk$ and two color
+  differences~$u\raisedasterisk$ and $v\raisedasterisk$.  Formulas of
+  each are too complicated to show them here.
+
+  The \acronym{L*u*v*}\genidx{colorspace!\acronym{CIEL*u*v*}}%
+  \gensee{CIEL*u*v*@\acronym{CIEL*u*v*} colorspace}{colorspace, \acronym{CIEL*u*v*}}
+  tries to be percepually uniform in lightness as well as in color.
+
+  The applications use the same rendering intent and white-point as
+  with \acronym{L*a*b*}.
+
+  The conversions from and to \acronym{L*u*v*} are almost as fast to
+  compute as \acronym{L*a*b*}.
+
+\item[\urlmark{\wikipediaciecam}{\acronym{CIECAM02}}]\itemend\urltext
+  Represent each pixel as lightness~$J$, chroma~$C$
+  (``colorfulness''), and hue angle~$h$\footnote{Internally, the polar
+    coordinates $(C, h)$ are translated to Cartesian coordinates for
+    the pyramids.}.
+
+  The transformations to \acronym{CIECAM02} color
+  space\genidx{colorspace!\acronym{CIECAM02}}%
+  \gensee{CIECAM02@\acronym{CIECAM02} colorspace}{colorspace, \acronym{CIECAM02}}
+  and back use perceptual rendering intent,\genidx{rendering intent!perceptual}%
+  \gensee{perceptual rendering intent}{rendering intent} the
+  \acronym{D50}\genidx{white-point!\acronym{D50}}%
+  \gensee{D50@\acronym{D50} white point}{white point, \acronym{D50}}
+  white point (see, e.g.\ \uref{\wikipediastandardilluminant}{Standard
+    illuminant}), 500\dmn{lumen} surrounding light (``average'' in
+  \acronym{CIECAM02} parlance), and assume complete adaption.
+
+  Both \acronym{CIELUV} and \acronym{CIELAB} only model the color
+  information generated for small and isolated color samples.  They
+  cannot model the contextual effects of color perception.  However,
+  \acronym{CIECAM02} can represent luminance adaptation, chromatic
+  contrast and chromatic assimilation that arise in real world viewing
+  conditions with heterogeneous, strongly contrasted, or three
+  dimensional color sources.
+
+  Computationally, \acronym{CIECAM02} is the most expensive blend
+  color space.  If an appreciable number of pixels need additional
+  refinement steps the speed of the transformation further drops.
+  Expect \acronym{CIECAM02} mode to be 8--800 times slower than
+  blending within the \acronym{RGB}-color cube.
+\end{description}
+
+\noindent Surprisingly often blending ``inside the
+\acronym{RGB}-cube'' works, although perceptually uniform color
+spaces, which represent luminance, saturation, and hue are preferable
+for blending and fusing operations.
+
+
+\section[Practical Considerations]{Practical Considerations
+  \label{sec:practical-considerations}
+  \genidx{colorspace!practical considerations}}
+
+\begin{itemize}
+\item
+  For small projects stick with the default blend colorspaces.
+
+\item
+  For large projects switch on blending in the \acronym{RGB} color cube
+  to speed up the assembly of the images.  When satisfied with all other
+  parameters use one of the computationally more expensive, but
+  perceptually uniform color spaces.
+
+\item
+  Banding is best fought by input images with a high bit depth
+  (\mbox{$\geq 16$ bits} per channel).  A cheap and mostly vain trick
+  is to force a large output bit depth with
+  option~\flexipageref{\option{--depth}}{opt:depth}.  No blend color
+  space can avoid banding if parts of the input images are almost
+  ``monochrome''.
+
+\ifenblend
+  \item
+    \restrictednote{\application{Enblend} only.} No color space can
+    fix a seam-line gone haywire!  First re-run \application{Enblend}
+    with \flexipageref{\sample{--visualize}}{opt:visualize} to inspect
+    the seam-lines, then try one or more of the following
+    \begin{itemize}
+    \item
+      Reorder the input images.
+
+    \item
+      Force blending with the full-resolution masks, using
+      \flexipageref{\sample{--fine-mask}}{opt:fine-mask}.
+
+    \item
+      Generate the initial seam with the simpler and more robust
+      nearest-feature transform (\acronym{NFT}) by employing
+      option~\flexipageref{\option{--primary\hyp seam\hyp
+          generator=nearest\hyp feature\hyp
+          transform}}{opt:primary-seam-generator}.  See also
+      Chapter~\fullref{sec:seam-generators}.
+
+    \item
+      Disable the seam-line optimizer with \flexipageref{\sample{--no-optimize}}{opt:optimize}.
+    \end{itemize}
+\fi
+
+\ifenfuse
+  \item
+    \restrictednote{\application{Enfuse} only.} No color space can fix
+    blown highlights when fusing by exposure-weight; use
+    \flexipageref{\sample{--exposure-cutoff}}{opt:exposure-cutoff} for
+    this purpose and check whether saturation weight is zero.
+\fi
+\end{itemize}
+
+\genidx[\rangeendlocation]{colorspace}

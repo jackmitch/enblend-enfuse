@@ -288,6 +288,99 @@ analogously for profiling analysis
 
 ** Documentation Generation
 
+We have introduced the variable
+        DYNAMIC_TEX_PREAMBLE
+to give the maintainers and packagers better control over the
+generation of the documentation.  The contents of the variable goes
+between `\documentclass{}' and `\begin{document}'.  Some possibilities
+for `DYNAMIC_TEX_PREAMBLE' are
+        \hyperreftrue,
+        \referencemanualtrue, or
+        \usepackage[showframe]{geometry}.
+`DYNAMIC_TEX_PREAMBLE' defaults to `\relax'.
+
+
+* Documentation
+
+The distribution includes the manual pages in
+        src/enblend.1
+        src/enfuse.1
+
+After the configuration you can build documentation in PostScript,
+HTML, and possibly PDF formats.
+        make ps
+        make pdf
+        make html
+
+The default paper size for all non-HTML formats is DIN A4.  Override
+make(1) variable `PAPERSIZE' to get e.g. Letter format.  The default
+resolution is 600 dpi; override it with `PRINT_RESOLUTION'.  The
+_printed_ versions can be formatted in two different styles: the usual
+LaTeX `report' and `refman' style that borrows from old reference
+manuals.  Pass
+        DYNAMIC_TEX_PREAMBLE=\referencemanualtrue
+to make(1) when generating a non-HTML format to get the `refman'
+style.  The reference manual style does _not_ work with HTML, in other
+words, hevea(1) will barf.  By default only PDFLaTeX turns on
+HyperRef, for all other translators (in particular if PDF is
+indirectly generated) it must be enabled with
+        DYNAMIC_TEX_PREAMBLE=\hyperreftrue
+
+
+** PDF Generation
+
+The canonical way to reach at PDF files i.e.
+        make pdf
+is directly, via PDFLaTeX: LaTeX -> PDF.  If for some reason this path
+does not work, we provide two alternatives.
+
+
+*** Alternative 1: LaTeX -> DVI -> PDF
+
+Use dvipdfmx(1) to convert the final DVI files to PDF.  It is
+recommended to issue a
+        make clean
+before starting to construct the PDF files this way!  Add the
+following commands to DYNAMIC_TEX_PREAMBLE:
+    - To get correctly positioned graphics
+        \PassOptionsToPackage{dvipdfmx}{graphicx}
+    - For all the hyperref goodies (e.g. clickable cross refferences)
+        \PassOptionsToPackage{dvipdfmx}{hyperref}\hyperreftrue
+    - To get the right color associations
+        \PassOptionsToPackage{dvipdfmx}{color}
+Sometimes
+        EXTRA_LATEX_FLAGS='-shell-escape'
+may be required.  The targets are called "enblend.dvi.pdf" and
+"enfuse.dvi.pdf", rename the products if necessary.  See
+doc/Makefile.am for details.
+
+
+*** Alternative 2: LaTeX -> DVI -> PostScript -> PDF
+
+Use GhostScript (gs(1)) in the incarnation of ps2pdf(1) to convert the
+final PostScript files to PDF.  None of the hyperref goodies makes it
+through dvips(1).  The targets are called "enblend.ps.pdf" and
+"enfuse.ps.pdf"; rename if necessary; see doc/Makefile.am for details.
+
+
+** Required Tools For Building the Documentation
+
+Note that some additional packages are required to build these
+formats:
+        convert            - ImageMagick's swiss army knife of graphics
+                             format conversion found at
+                             http://www.imagemagick.org/.
+        dvips              - Convert TeX's DVI format to PostScript.
+        gnuplot            - Render plots (.gp) in text, PNG, EPS, and PDF
+                             formats.  Check out http://www.gnuplot.info/.
+        hevea              - Convert LaTeX to HTML.  Find more information
+                             at http://hevea.inria.fr/.
+        latex, pdflatex    - Typeset the LaTeX documents in DVI or PDF.
+        makeindex          - Index generation for several typesetters.
+        tiff2ps            - Convert TIFF images to PostScript.
+        transfig           - Render XFig drawings in PNG, EPS, and PDF.
+                             Check out http://www.xfig.org/ for Transfig.
+
 
 * Operating System Specific Instructions and Hints
 

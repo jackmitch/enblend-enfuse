@@ -1,0 +1,185 @@
+#! /usr/bin/env perl
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:         docstrings
+# synopsis:     extract documentation strings from text files
+# author:       Dr. Christoph L. Spiel
+# perl version: 5.20.2
+
+
+use strict;
+use warnings;
+
+use English;
+use File::Basename ();
+use FindBin qw($Bin);
+use Getopt::Long;
+
+use lib $Bin;
+
+use OpenFile;
+use Quote ();
+use TexAux ();
+
+
+use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+
+
+my $regexp = qr{
+        //                      # C++-style comment
+        \s*                     # optional whitespace
+        <                       # docstring-indicator character
+        \s*                     # optional whitespace
+        (\S+)                   # key: anything but whitespace
+        \s+                     # whitespace
+        (.*)                    # value: capture rest of string
+    |                       # or
+        /\*                     # C-style comment begin
+        \s*                     # optional whitespace
+        <                       # docstring-begin indicator character
+        \s*                     # optional whitespace
+        (\S+)                   # key: anything but whitespace
+        \s+                     # whitespace
+        (.*?)                   # non-greedy capture
+        \s*                     # optional whitespace
+        >                       # docstring-end indicator character
+        \s*                     # optional whitespace
+        \*/                     # C-style comment end
+}x;
+
+
+sub insert_docstring {
+    my ($docstrings, $data) = @_;
+
+    my $key = $data->{KEY};
+    my $value = $data->{VALUE};
+
+    unless ($key) {
+        die(COMMAND_NAME, ": empty key at $data->{FILENAME}:$data->{LINENUMBER};\n");
+    }
+
+    if (exists $docstrings->{$key}) {
+        my $previous_file = $docstrings->{$key}{FILENAME};
+        my $previous_line = $docstrings->{$key}{LINENUMBER};
+        my $quoted_key = Quote::gnu_style($key);
+
+        warn(COMMAND_NAME,
+             qq(: warning: duplicate key $quoted_key at $data->{FILENAME}:$data->{LINENUMBER};\n),
+             COMMAND_NAME,
+             qq(: warning:     previous definition at $previous_file:$previous_line\n));
+    }
+
+    $docstrings->{$key} = $data;
+}
+
+
+sub collect_docstrings {
+    my ($docstrings, $filename, $file) = @_;
+
+    my $basename = File::Basename::basename($filename);
+    my $linenumber = 1;
+
+    while (my $line = readline $file) {
+        while ($line =~ m{$regexp}g) {
+            insert_docstring($docstrings,
+                             {FILENAME => $basename,
+                              LINENUMBER => $linenumber,
+                              KEY => $1,
+                              VALUE => $2})
+        }
+        ++$linenumber;
+    }
+
+    return $docstrings;
+}
+
+
+sub print_docstrings {
+    my ($options, $docstrings) = @_;
+
+    print "% This file was automatically generated with @{[COMMAND_NAME]}.\n\n";
+
+    foreach my $key (sort keys %$docstrings) {
+        my $filename = $docstrings->{$key}{FILENAME};
+        my $linenumber = $docstrings->{$key}{LINENUMBER};
+        my $raw_value = $docstrings->{$key}{VALUE};
+        my $value = TexAux::escape(defined($raw_value) ? $raw_value : $options->{EMPTY_VALUE_SUBSTITUTE});
+
+        print("%% $filename:$linenumber\n",
+              "$options->{MACRO_NAME}\{$options->{KEY_PREFIX}$key\}\{$value\}\n",
+              "\n");
+    }
+}
+
+
+sub scan_file {
+    my ($docstrings, $input_filename) = @_;
+
+    my $input_file = OpenFile::open_file($input_filename);
+
+    collect_docstrings($docstrings, $input_filename, $input_file);
+
+    $input_file->close or
+      warn(COMMAND_NAME, ": cannot close input file ", Quote::gnu_style($input_filename), ": $OS_ERROR\n");
+}
+
+
+sub show_help {
+    my $options = shift;
+
+    print <<END_OF_HELP;
+Usage: @{[COMMAND_NAME]} [OPTION] FILE...
+
+Extract documentation string from FILE and print them on standard output.
+
+Grammar:
+    '//' '<' key value
+  |
+    '/*' '<' key value '>' '*/'
+where key is any non-whitespace string and value is an arbitrary string.
+
+Options:
+  -m, --macro=NAME      macro name [@{[Quote::gnu_style($options->{MACRO_NAME})]}]; argument \#1
+                        is the key and argument \#2 is the value
+  -p, --prefix=LABEL    prefix each key with PREFIX [@{[Quote::gnu_style($options->{KEY_PREFIX})]}]
+
+  -h, --help            show this help screen
+
+Examples:
+  @{[COMMAND_NAME]} ../enblend/src/{bounds.h,common.h,global.h,enblend.cc,filespec.cc,opencl.cc}
+END_OF_HELP
+
+    exit 0;
+}
+
+
+sub get_options {
+    my $options = shift;
+
+    Getopt::Long::Configure('no_ignore_case');
+
+    Getopt::Long::GetOptions('m|macro=s' => \$options->{MACRO_NAME},
+                             'p|prefix=s' => \$options->{KEY_PREFIX},
+                             'h|help' => sub {show_help($options)}) or
+        warn(COMMAND_NAME, ": problems while parsing options\n");
+}
+
+
+sub main {
+    my $options = {EMPTY_VALUE_SUBSTITUTE => 'N/A',
+                   KEY_PREFIX => 'val:',
+                   MACRO_NAME => '\\hashinsert'};
+    my $docstrings = {};
+
+    get_options($options);
+
+    push(@ARGV, "-") unless @ARGV;
+
+    scan_file($docstrings, $_) foreach @ARGV;
+    print_docstrings($options, $docstrings);
+}
+
+
+main();

@@ -63,7 +63,9 @@ public:
         return f(i, d, srcIsScalar());
     }
 
-    static const std::string defaultGrayscaleAccessorName() {return "average";}
+    static const std::string defaultGrayscaleAccessorName() {
+        return "average";       //< default-grayscale-accessor average
+    }
 
 private:
     typedef enum AccessorKind {

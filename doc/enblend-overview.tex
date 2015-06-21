@@ -1,0 +1,76 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Overview]{Overview
+  \label{sec:overview}
+  \genidx[\rangebeginlocation]{overview}}
+
+\begin{sloppypar}
+  \App{} overlays multiple images using the
+  \propername{Burt}\genidx{Burt@\propername{Burt, Peter J.}}-%
+  \propername{Adelson}\genidx{Adelson@\propername{Adelson, Edward H.}}
+  multiresolution spline\genidx{multiresolution spline}%
+  \genidx{Burt-Adelson@\propername{Burt-Adelson} multiresolution
+    spline} algorithm.\footnotemark{} This technique tries to make the
+  seams between the input images invisible.  The basic idea is that
+  image features should be blended across a transition zone
+  proportional in size to the spatial frequency of the features.  For
+  example, objects like trees and windowpanes have rapid changes in
+  color.  By blending these features in a narrow zone, you will not be
+  able to see the seam because the eye already expects to see color
+  changes at the edge of these features.  Clouds and sky are the
+  opposite.  These features have to be blended across a wide
+  transition zone because any sudden change in color will be
+  immediately noticeable.
+\end{sloppypar}
+\footnotetext{\propername{Peter J.~Burt} and \propername{Edward
+    H.~Adelson}, ``A Multiresolution Spline With Application to Image
+  Mosaics'', \acronym{ACM} Transactions on Graphics,
+  \abbreviation{Vol}.~2, \abbreviation{No}.~4, October 1983,
+  pages~217--236.}
+
+\App{} expects each input file to have an
+alpha\genidx{channel!alpha}\gensee{alpha channel}{channel, alpha}
+channel.  The alpha channel should indicate the region of the file
+that has valid image data.  \App{} compares the alpha regions in the
+input files to find the areas where images overlap.  Alpha channels
+can be used to indicate to \App{} that certain portions of an input
+image should not contribute to the final image.
+
+\App{} does \emph{not} align images.  Use a tool such as
+\application{Hugin}\appidx{Hugin} or PanoTools\appidx{PanoTools}
+to do this.  The \acronym{TIFF}~files produced by these programs are
+exactly what \App{} is designed to work with.  Sometimes these
+\acronym{GUI}s allow you to select feathering\genidx{feathering} for
+the edges of your images.  This treatment is detrimental to \App{}.
+Turn off feathering by deselecting it or setting the ``feather width''
+to zero.
+
+\App{} blends the images in the order they are specified on the
+command line.  You should order your images according to the way that
+they overlap, for example from left-to-right across the panorama.  If
+you are making a multi-row panorama, we recommend blending each
+horizontal row individually, and then running \App{} a last time to
+blend all of the rows together vertically.
+
+\App{} reads all layers of multi-layer images%
+\gensee{multi-layer image}{image, multi-layer}%
+\genidx{image!multi-layer},
+like, for example, multi\hyp{}directory%
+\gensee{multi-directory \acronym{TIFF}}{\acronym{TIFF}, multi-directory}%
+\genidx{TIFF@\acronym{TIFF}!multi-directory}
+\acronym{TIFF} images\footnote{Use utilities like, e.g.,
+  \command{tiffcopy}\prgidx{tiffcopy} and
+  \command{tiffsplit}\prgidx{tiffsplit} of LibTIFF to manipulate
+  multi-directory \acronym{TIFF} images.  See
+  Appendix~\fullref{sec:helpful-programs}.}.  The input images are
+processed in the order they appear on the command line.  Multi-layer
+images are processed from the first layer to the last before \App{}
+considers the next image on the command line.
+
+Find out more about \App{} on its
+\uref{\sourceforgenet}{SourceForge}\genidx{SourceForge}
+\uref{\enblendsourceforgenet}{web page}.
+
+\genidx[\rangeendlocation]{overview}

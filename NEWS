@@ -127,6 +127,9 @@ Unreleased.  Current line of development.
 
 - Support for images with 8-bit signed channels has been dropped.
 
+- The documentation no longer uses Texinfo, but LaTeX for PostScript
+  generation and Hevea for HTML.
+
 
 * Version 4.1  "Trouble In Paradise"
 

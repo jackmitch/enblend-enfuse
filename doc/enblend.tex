@@ -1,0 +1,52 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\RequirePackage{fixltx2e}
+
+
+\input{dynamic-preamble}
+
+
+\ifreferencemanual
+  \documentclass{refrep}
+\else
+  \documentclass{report}
+\fi
+
+
+\input{static-preamble}
+
+\input{enblend-variables}
+\input{enblend-version}
+
+
+\newif\ifenblend\enblendtrue
+\newif\ifenfuse\enfusefalse
+
+
+\newcommand*{\App}{\application{Enblend}}
+\newcommand*{\app}{enblend}
+\newcommand*{\appcmd}{\command{enblend}}
+\newcommand*{\appdoes}{blend}
+
+\newcommand*{\OtherApp}{\application{Enfuse}}
+\newcommand*{\otherapp}{enfuse}
+\newcommand*{\otherappcmd}{\command{enfuse}}
+
+
+\begin{document}
+  \input{enblend-title}
+  \input{lead-in}
+
+  \include{enblend-overview}
+  \include{common-known-limitations}
+  \include{common-workflow}
+  \include{enblend-invocation}
+  \include{enblend-seam-generators}
+  \include{enblend-visualization-image}
+  \include{common-color-spaces}
+  \include{common-understanding-masks}
+
+  \input{lead-out}
+\end{document}

@@ -1,0 +1,34 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\chapter[Invocation]{Invocation
+  \label{sec:invocation}
+  \genidx[\rangebeginlocation]{invocation}
+  \genidx{command-line}}
+
+
+\noindent Fuse the sequence of images \metavar{INPUT}\dots{} into a
+single \metavar{IMAGE}.
+
+\smallskip
+
+\code{\app} \optional{\metavar{OPTIONS}}
+\optional{\option{--output=}\metavar{IMAGE}} \metavar{INPUT}\dots
+
+\smallskip
+
+\noindent \metavar{INPUT} images are either specified
+literally\genidx{literal filename} \genidx{filename!literal} or via
+so-called response files\genidx{response file} (see
+Section~\ref{sec:response-files}).  The latter are an alternative to
+specifying image filenames on the command line.  If omitted, the name
+of the output \metavar{IMAGE} defaults to
+\filename{\val{val:default-output-filename}}.
+
+\input{enfuse-image-requirements}
+\input{enfuse-options}
+\input{common-option-delimiters}
+\input{common-response-files}
+
+\genidx[\rangeendlocation]{invocation}

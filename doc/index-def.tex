@@ -1,0 +1,101 @@
+%% -*- latex -*-
+
+
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\usepackage{index}
+
+
+\makeindex
+
+\newindex{general}{gdx}{gnd}{General Index}
+\newindex{option}{odx}{ond}{Option Index}                  % command-line options
+\newindex{program}{pdx}{pnd}{Program/\hspace{-.167em}Application Index}
+\newindex{syncomm}{adx}{and}{Syntactic Comment Index}      % syntactic comments in response files
+
+
+%%
+%% Level 1 Index Generation
+%%
+
+
+\newcommand*{\normallocation}{normal location}
+\newcommand*{\defininglocation}{defining location}
+\newcommand*{\summarylocation}{summary location}
+\newcommand*{\rangebeginlocation}{range-begin location}
+\newcommand*{\rangeendlocation}{range-end location}
+
+
+%% \makefancyindex
+%%     #1: name of index (program, option, general, ...)
+%%     #2: location macro (\normallocation, \defininglocation, ...)
+%%     #3: (possibly decorated) index item
+\newcommand*{\makefancyindex}[3]{%
+  \ifx\normallocation#2%
+    \index[#1]{#3}%
+  \else
+    \ifx\defininglocation#2%
+      \index[#1]{#3|underline}%
+    \else
+      \ifx\summarylocation#2%
+        \index[#1]{#3|textsl}%
+      \else
+        \ifx\rangebeginlocation#2%
+          % Downgrade range-begin to a normal index entry for Hevea/HTML
+          \ifhevea \index[#1]{#3}\else \index[#1]{#3|(}\fi
+        \else
+          \ifx\rangeendlocation#2%
+            % Range-ends make little sense for Hevea/HTML
+            \ifhevea \relax \else \index[#1]{#3|)}\fi
+          \else
+            \index[#1]{???: #3}%
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+\newcommand*{\appidx}[2][\normallocation]% program/application name index: application name
+            {\makefancyindex{program}{#1}{\application{#2}}}
+\newcommand*{\genidx}[2][\normallocation]{\makefancyindex{general}{#1}{#2}}
+\newcommand*{\optidx}[2][\normallocation]% command-line option index
+            {\makefancyindex{option}{#1}{\option{#2}}}
+\newcommand*{\prgidx}[2][\normallocation]% program/application name index: command name
+            {\makefancyindex{program}{#1}{\code{#2}}}
+\newcommand*{\shoptidx}[2]{\index[option]{\option{#1} (long: \option{#2})}}
+\newcommand*{\synidx}[1]{\index[syncomm]{\code{#1}}}% syntactic comment index
+
+
+%%
+%% Level 2 Index Generation  --  Cross-References
+%%
+
+
+%% \seexref
+%%     #1: final index term
+%%     #2: page number, which we want to drop
+\newcommand*{\seexref}[2]{\textit{see\/} #1}
+
+
+%% \seealsoxref
+%%     #1: final index term
+%%     #2: page number
+\newcommand*{\seealsoxref}[2]{\newline\textit{see also\/} #1, #2}
+
+
+%% \makefancyreference
+%%     #1: name of index (program, option, general, ...)
+%%     #2: one-argument cross-reference macro, e.g. \seexref or \seealsoxref
+%%     #3: indirecting index item
+%%     #4: final index term
+\newcommand*{\makefancyreference}[4]{\index[#1]{#3|#2{#4}}}
+
+
+\newcommand*{\gensee}[2]{\makefancyreference{general}{seexref}{#1}{#2}}
+\newcommand*{\gensea}[2]{\makefancyreference{general}{seealsoxref}{#1}{#2}}
+
+
+%--\proofmodetrue

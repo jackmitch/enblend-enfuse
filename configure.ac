@@ -16,6 +16,7 @@ AC_PROG_CC
 AC_PROG_AR
 AM_PROG_AR
 AC_PROG_RANLIB
+AC_PROG_SED
 AC_LANG(C++)
 
 AC_C_BIGENDIAN
@@ -321,6 +322,14 @@ AX_PROG_PERL_MODULES(File::Basename, [],
                      [AC_MSG_WARN(missing Perl module File::Basename)
                       can_build_doc=no
                       missing_for_doc="$missing_for_doc File::Basename"])
+AX_PROG_PERL_MODULES(FindBin, [],
+                     [AC_MSG_WARN(missing Perl module FindBin)
+                      can_build_doc=no
+                      missing_for_doc="$missing_for_doc FindBin"])
+AX_PROG_PERL_MODULES(Getopt::Long, [],
+                     [AC_MSG_WARN(missing Perl module Getopt::Long)
+                      can_build_doc=no
+                      missing_for_doc="$missing_for_doc Getopt::Long"])
 AX_PROG_PERL_MODULES(IO::File, [],
                      [AC_MSG_WARN(missing Perl module IO::File)
                       can_build_doc=no
@@ -330,6 +339,59 @@ AX_PROG_PERL_MODULES(IO::Handle, [],
                       can_build_doc=no
                       missing_for_doc="$missing_for_doc IO::Handle"])
 
+AX_WITH_PROG(MAKEINDEX, makeindex, false, [])
+if test "$MAKEINDEX" = false; then
+    AC_MSG_WARN(cannot find makeindex; will not be able to build documentation with index)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc makeindex"
+fi
+
+AX_WITH_PROG(DVIPS, dvips, false, [])
+if test "$DVIPS" = false; then
+    AC_MSG_WARN(cannot find dvips; will not be able to build PostScript documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc dvips"
+fi
+
+AX_WITH_PROG(CONVERT, convert, false, [])
+if test "$CONVERT" = false; then
+    AC_MSG_WARN(cannot find convert; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc convert"
+fi
+
+AX_WITH_PROG(TIFF2PS, tiff2ps, false, [])
+if test "$TIFF2PS" = false; then
+    if test "$CONVERT" != false; then
+        AC_MSG_WARN(cannot find tiff2ps; will substitute convert)
+        TIFF2PS="$CONVERT"
+        TIFF2PS_FLAGS=""
+    else
+        AC_MSG_WARN(cannot find tiff2ps; will not be able to build PostScript documentation)
+        can_build_doc=no
+        missing_for_doc="$missing_for_doc tiff2ps"
+    fi
+fi
+
+AX_WITH_PROG(LATEX2HTML, hevea, false, [])
+if test "$LATEX2HTML" = false; then
+    AC_MSG_WARN(cannot find LaTeX to HTML translator; will not be able to build HTML documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc hevea"
+else
+    AC_MSG_CHECKING([$LATEX2HTML library directory])
+    AC_ARG_VAR(LATEX2HTML_LIBDIR,
+               [Directory where LaTeX to HTML translator's additional files reside])
+    LATEX2HTML_LIBDIR=$($LATEX2HTML -version | sed -n 's/^library directory: \(.*\)/\1/p')
+    if test -z "$LATEX2HTML_LIBDIR"; then
+        AC_MSG_RESULT(none)
+    elif test -d "$LATEX2HTML_LIBDIR"; then
+        AC_MSG_RESULT($LATEX2HTML_LIBDIR)
+    else
+        AC_MSG_RESULT(missing)
+    fi
+fi
+
 AX_WITH_PROG(GNUPLOT, gnuplot, false, [])
 if test "$GNUPLOT" = false; then
     AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
@@ -337,32 +399,22 @@ if test "$GNUPLOT" = false; then
     missing_for_doc="$missing_for_doc gnuplot"
 fi
 
-AC_CHECK_PROG(FIG2DEV,
-              fig2dev,
-              fig2dev,
-              false)
+AX_WITH_PROG(FIG2DEV, fig2dev, false, [])
 if test "$FIG2DEV" = false; then
     AC_MSG_WARN(cannot find fig2dev; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc fig2dev"
 fi
 
-AC_CHECK_PROG(CONVERT,
-              convert,
-              convert,
-              false)
-if test "$CONVERT" = false; then
-    AC_MSG_WARN(cannot find convert; will not be able to build documentation)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc convert"
-fi
-
-AC_PROG_SED
-
 AM_CONDITIONAL([BUILD_DOC], [test "$can_build_doc" = yes])
 if test "$can_build_doc" = no; then
     no_doc_reason=", because of missing$missing_for_doc"
 fi
+
+
+AC_ARG_VAR(DYNAMIC_TEX_PREAMBLE, [LaTeX commands to add to preamble])
+DYNAMIC_TEX_PREAMBLE=\\relax
+
 
 AC_MSG_CHECKING(whether to enable debugging)
 debug_default="no"
@@ -441,6 +493,8 @@ LIBS="$LIBS $CL_LIBS"
 
 AC_CONFIG_FILES([share/Makefile
                  share/enfuse/Makefile])
+
+AC_CONFIG_FILES([doc/Makefile])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
