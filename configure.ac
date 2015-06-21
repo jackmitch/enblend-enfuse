@@ -337,13 +337,6 @@ if test "$GNUPLOT" = false; then
     missing_for_doc="$missing_for_doc gnuplot"
 fi
 
-AC_ARG_WITH([raster-dir],
-            AS_HELP_STRING([--with-raster-dir=<DIR>],
-                           [set raster image subdirectory @<:@default=raster@:>@]),
-            [RASTER_DIR="$withval"],
-            [RASTER_DIR=raster])
-AC_SUBST(RASTER_DIR)
-
 AC_CHECK_PROG(FIG2DEV,
               fig2dev,
               fig2dev,
@@ -365,38 +358,6 @@ if test "$CONVERT" = false; then
 fi
 
 AC_PROG_SED
-
-# These variables are mentioned in the AutoMake documentation as being
-# influential to the documentation build process.
-AC_CHECK_PROG(MAKEINFO,
-              makeinfo,
-              makeinfo,
-              false)
-if test "$MAKEINFO" = false; then
-    AC_MSG_WARN(cannot find makeinfo; will not be able to build documentation)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc makeinfo"
-fi
-
-AC_CHECK_PROG(TIDY,
-              tidy,
-              tidy,
-              false)
-if test "$TIDY" = false; then
-    AC_MSG_WARN(cannot find tidy; will not be able to build XHTML documentation)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc tidy"
-fi
-
-AC_CHECK_PROG(XMLLINT,
-              xmllint,
-              xmllint,
-              false)
-if test "$XMLLINT" = false; then
-    AC_MSG_WARN(cannot find xmllint; will not be able to build XHTML documentation)
-    can_build_doc=no
-    missing_for_doc="$missing_for_doc xmllint"
-fi
 
 AM_CONDITIONAL([BUILD_DOC], [test "$can_build_doc" = yes])
 if test "$can_build_doc" = no; then
@@ -478,17 +439,6 @@ CFLAGS="$CFLAGS $CL_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
 LIBS="$LIBS $CL_LIBS"
 
-AC_CONFIG_FILES([doc/Makefile
-                 doc/entropy.gp
-                 doc/entropy-cutoff.gp
-                 doc/exposure-cutoff.gp
-                 doc/gaussian.gp doc/lorentzian.gp doc/halfsine.gp doc/fullsine.gp doc/power.gp
-                 doc/exposure-weights.gp
-                 doc/laplacian-of-gaussian.gp
-                 doc/log-transform.gp
-                 doc/sharp-edge.gp
-                 doc/smooth-edge.gp])
-
 AC_CONFIG_FILES([share/Makefile
                  share/enfuse/Makefile])
 
@@ -515,7 +465,6 @@ AC_MSG_RESULT([
    LIBS:                           ${LIBS:-<none required>}
    EXTRA_LIBS (optional):          ${EXTRA_LIBS:-<none selected>}
 
- raster subdirectory:              ${RASTER_DIR}
  can build all documentation:      ${can_build_doc}${no_doc_reason}
 
  feature selection:

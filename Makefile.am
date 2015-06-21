@@ -4,31 +4,14 @@ EXTRA_DIST = \
         README.txt VERSION \
         CMakeLists.txt CMakeModules ConfigureChecks.cmake config.h.cmake
 
-if BUILD_DOC
-  MAYBE_DOC = doc
-endif
+#--if BUILD_DOC
+#--  MAYBE_DOC = doc
+#--endif
 
 SUBDIRS = share src $(MAYBE_DOC)
-DIST_SUBDIRS = share src doc
+DIST_SUBDIRS = share src
 
 ACLOCAL_AMFLAGS = -I m4
 
 # created by configure(1)
 DISTCLEANFILES = config-h.texi
-
-
-.PHONY: xhtml
-xhtml:
-	$(MAKE) --directory=doc $@
-
-.PHONY: install-xhtml
-install-xhtml:
-	$(MAKE) --directory=doc $@
-
-.PHONY: uninstall-xhtml
-uninstall-xhtml:
-	$(MAKE) --directory=doc $@
-
-.PHONY: validate-xhtml
-validate-xhtml:
-	$(MAKE) --directory=doc $@

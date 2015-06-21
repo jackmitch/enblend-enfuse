@@ -30,11 +30,4 @@
 ^src/enblend$
 ^src/enfuse$
 
-^doc/stamp-(1|vti)$
-^doc/enblend\.html/
-^doc/enblend\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
-^doc/enfuse\.html/
-^doc/enfuse\.(aux|cp|cps|dvi|fn|ky|log|op|ops|pdf|pg|pgs|ps|toc|tp|tpt|vr)$
-^doc/(entropy-cutoff|entropy|gaussian|laplacian-of-gaussian|local-analysis-window|photographic-workflow|sharp-edge|smooth-edge)\.(gp|eps|pdf|png|txt)$
-
 ^[^A-Za-z0-9]?BUILD([-_].*)?/

@@ -188,13 +188,6 @@ Build with support for reading and writing OpenEXR images.  See
 http://www.openexr.com/ for the required libraries.
 
 
-** --with-raster-dir=<DIR>
-
-Set the name of the raster-graphics directory, which always is a
-subdirectory of the XHTML documentation's root directory.  Default:
-"raster".
-
-
 * CMake Specifics
 
 ** Configuration Options
@@ -250,10 +243,6 @@ enfuse                   Create an Enfuse executable.
 man                      Create the manual pages for Enblend and
                          Enfuse.
 
-doc3                     Create the documentation.  This includes
-                         html, info, and pdf documents, if the
-                         cmake-option DOC was set.
-
 install                  Install everything in the proper places.
 
 package                  Create package(s) specified with the
@@ -298,82 +287,6 @@ analogously for profiling analysis
 
 
 ** Documentation Generation
-
-We have introduced the variable
-        EXTRATEXI2DVIFLAGS
-to give the maintainers a tighter control over the generation of the
-hard-copy version of the documentation.  Note that the variable does
-not have an equivalent non-EXTRA sibling in the Automake system.  It
-is particularly useful to supply texi2dvi(1) with "--command"
-parameters that explicitly set the paper size, like, for example,
-        EXTRATEXI2DVIFLAGS="--command=@afourpaper"
-
-    Common paper-size commands are:
-        @smallbook
-        @afivepaper
-        @afourpaper, @afourwide, @afourlatex
-
-Moreover, you can specify the height and (optionally) width of the
-main text area on a page with the
-    @pagesizes HEIGHT [, WIDTH]
-command.  Remember to supply both HEIGHT and WIDTH with appropriate
-units ("mm", "in", ...).
-
-Another useful Texinfo-command at this level is
-    @finalout
-which suppresses the black rectangles marking overfull hboxes.
-
-
-* Documentation
-
-The distribution includes the manual pages in
-        src/enblend.1
-        src/enfuse.1
-
-After the configuration you can build documentation in PostScript,
-PDF, XHTML, and DocBook-XML format.
-        make ps
-        make pdf
-        make xhtml
-        make xml
-
-The make process automatically ensures the validity of the XHTML and
-DocBook-XML documentation.  Additionally, it can be checked with
-        make validate-xhtml
-        make validate-xml
-
-The DocBook-XML format can be processed with, e.g. dblatex(1), like
-        dblatex --type=ps enblend.xml
-        dblatex --type=ps enfuse.xml
-selecting a format with "--type=FORMAT", where FORMAT is "tex", "dvi",
-"ps", or "pdf" (default).  Another possibility is to use xmlto(1):
-        xmlto xhtml-nochunks enblend.xml    # or just "html"
-        xmlto ps enblend.xml
-        xmlto pdf enblend.xml
-
-The number of available output formats vary.  (See, e.g.
-/usr/share/xmlto/format/docbook)
-
-Note that some additional packages are required to build these
-formats:
-        convert        - ImageMagick's swiss army knife of graphics
-                         format conversion found at
-                         http://www.imagemagick.org/.
-        makeinfo       - GNU documentation generator.
-        gnuplot        - Render plots (.gp) in text, PNG, EPS, and PDF
-                         formats.  Check out http://www.gnuplot.info/.
-        freefonts      - Fonts for Gnuplot's PNG format.
-        ghostscript    - Convert EPS to PDF.
-        perl           - Run Perl programs.
-        tetex          - Typeset the Texinfo documents in PS or PDF.
-        texi2html      - Convert Texinfo to HTML.  Find more information
-                         at http://www.nongnu.org/texi2html/.
-        transfig       - Render XFig drawings in PNG, EPS, and PDF.
-                         Check out http://www.xfig.org/ for Transfig.
-        tidy           - Convert HTML to (almost) XHTML.  Tidy is
-                         available at http://tidy.sourceforge.net/.
-        xmllint        - Validate XHTML.  Get Xmllint e.g. from
-                         http://www.xmlsoft.org/.
 
 
 * Operating System Specific Instructions and Hints
