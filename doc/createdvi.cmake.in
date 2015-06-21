@@ -1,0 +1,85 @@
+
+set(MAKEINDEX_COMPILER "@MAKEINDEX_COMPILER@")
+set(MAKEINDEX_FLAGS "@MAKEINDEX_FLAGS@")
+set(INPUT_DIR "@INPUT_DIR@")
+set(DOC_DIR "@OUTPUT_DIR@")
+
+separate_arguments(flags)
+if(WIN32)
+set(ENV{TEXINPUTS} ".;@HEVEA_LIB_DIR@;${INPUT_DIR};")
+else()
+set(ENV{TEXINPUTS} ".:@HEVEA_LIB_DIR@:${INPUT_DIR}//:")
+endif()
+# first latex run
+set($ENV{TEXINPUTS} ${INPUT_DIR})
+message(STATUS "Executing ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex")
+execute_process(
+    COMMAND ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex
+    WORKING_DIRECTORY ${DOC_DIR}
+)
+# now create index
+message(STATUS "Executing ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -s ${INPUT_DIR}/endoc.ist -o ${filename}.gnd ${filename}.gdx")
+execute_process(
+    COMMAND ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -s ${INPUT_DIR}/endoc.ist -o ${filename}.gnd ${filename}.gdx
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${DOC_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+    message(FATAL_ERROR "makeindex failed: ${result}")
+endif()
+message(STATUS "Executing ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.ond ${filename}.odx")
+execute_process(
+    COMMAND ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.ond ${filename}.odx
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${DOC_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+    message(FATAL_ERROR "makeindex failed: ${result}")
+endif()
+message(STATUS "Executing ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.pnd ${filename}.pdx")
+execute_process(
+    COMMAND ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.pnd ${filename}.pdx
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${DOC_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+    message(FATAL_ERROR "makeindex failed: ${result}")
+endif()
+message(STATUS "Executing ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.and ${filename}.adx")
+execute_process(
+    COMMAND ${MAKEINDEX_COMPILER} ${MAKEINDEX_FLAGS} -o ${filename}.and ${filename}.adx
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${DOC_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+    message(FATAL_ERROR "makeindex failed: ${result}")
+endif()
+
+message(STATUS "Executing ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex")
+execute_process(
+    COMMAND ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex
+    WORKING_DIRECTORY ${DOC_DIR}
+)
+# run latex as often as needed to resolve all references
+file(READ ${filename}.log LOGVAR) 
+set(counter 0)
+while(counter LESS 5 AND "${LOGVAR}" MATCHES "LaTeX Warning: There were undefined references")
+    message(STATUS "Executing ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex")
+	message(STATUS "Iteration ${counter}")
+    execute_process(
+        COMMAND ${compiler} ${flags} ${INPUT_DIR}/${filename}.tex
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${DOC_DIR}
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    file(READ ${filename}.log LOGVAR) 
+	math(EXPR counter "${counter}+1")
+endwhile()
+
+if(result)
+    message(FATAL_ERROR "latex failed: ${result}")
+endif()

@@ -105,8 +105,6 @@ IF(NOT WIN32)
 OPTION(ENABLE_DLOPEN "Dlopen Support" ON)
 ENDIF()
 OPTION(DOC "Create Documentation" OFF)
-OPTION(NOSPLIT "Do not split html-documents" OFF)
-OPTION(A4 "Use A4 for pdf-doc's" ON)
 OPTION(PREFER_SEPARATE_OPENCL_SOURCE "Define if you want to access OpenCL files, not compile-in their string equivalents" OFF)
 
 IF(NOT CMAKE_CL_64)
@@ -362,6 +360,58 @@ add_definitions(-DHAVE_CONFIG_H)
 
 include_directories(${CMAKE_BINARY_DIR})
 
+# check dependencies for build doc
+if (PERL_FOUND AND DOC)
+	option(INSTALL_PS_DOC "Install documentation in postscript format" ON)
+	option(INSTALL_PDF_DOC "Install documentation in pdf format" OFF)
+	option(INSTALL_HTML_DOC "Install documentation in html format" OFF)
+	if(NOT INSTALL_PS_DOC AND NOT INSTALL_PDF_DOC AND NOT INSTALL_HTML_DOC)
+	    message(FATAL_ERROR "You selected to build documentation, but selected no format for installation. This is not supported.")
+	endif()
+    find_package(ImageMagick COMPONENTS convert REQUIRED)
+	if(INSTALL_PS_DOC)
+	    if(INSTALL_PDF_DOC)
+		    # PS + PDF
+            find_package(LATEX COMPONENTS DVIPS PDFLATEX MAKEINDEX REQUIRED)
+		else()
+		    # only PS
+            find_package(LATEX COMPONENTS DVIPS MAKEINDEX REQUIRED)
+		endif()
+	else()
+	    if(INSTALL_PDF_DOC)
+		    # only PDF
+			find_package(LATEX COMPONENTS PDFLATEX MAKEINEX REQUIRED)
+		endif()
+	endif()
+    find_package(Gnuplot REQUIRED)
+    find_program(FIG2DEV_EXE fig2dev)
+    if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
+        message(FATAL_ERROR "Program fig2dev not found. This program is required to build the documentation.")
+    endif()
+    find_program(TIFF2PS_EXE tiff2ps)
+    if (${TIFF2PS_EXE} MATCHES "-NOTFOUND")
+        message(FATAL_ERROR "Program tiff2ps not found. This program is required to build the documentation.")
+    endif()
+    find_program(HEVEA_EXE hevea)
+    if (${HEVEA_EXE} MATCHES "-NOTFOUND")
+        message(FATAL_ERROR "Program hevea not found. This program is required to build the documentation.")
+    endif()
+    execute_process(
+      COMMAND ${HEVEA_EXE} -version
+      OUTPUT_VARIABLE _HEVEA_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(${_HEVEA_VERSION} MATCHES "library directory:[ \t]*(.*)$")
+        set(HEVEA_LIB_DIR ${CMAKE_MATCH_1})
+        message(STATUS "Hevea library directory: ${HEVEA_LIB_DIR}")
+    else()
+        message(FATAL_ERROR "Could not retrieve hevea library directory.")
+    endif()
+	set(PAPERSIZE "a4" CACHE STRING "Papersize for some converters: a4, a5, b5, executive, legal, letter")
+    set(PRINTRESOLUTION "600" CACHE STRING "Resolution for some converters in dots-per-inch")
+    set(DYNAMIC_TEX_PREAMBLE "\\overfullrule=2pt\\relax" CACHE STRING "LaTeX commands to add to preamble")
+endif()
+
 MESSAGE(STATUS "")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Enblend-enfuse now configured for ${CMAKE_SYSTEM}")
@@ -403,13 +453,8 @@ MESSAGE(STATUS "")
 
 add_subdirectory(src)
 
-# you really should have perl installed, when creating doc's
+# create doc's
 if (PERL_FOUND AND DOC)
-  FIND_PACKAGE(ImageMagick REQUIRED)
-  # this should be set from comman line
-  # Possible values like described in README: @smallbook @afivepaper @afourpaper @afourwide @afourlatex
-  # @letter is default
-  set(EXTRATEXI2DVIFLAGS "@afourpaper" CACHE STRING "Papersize: @letter @smallbook @afivepaper @afourpaper @afourwide @afourlatex")
   add_subdirectory(doc)
 endif()
 
