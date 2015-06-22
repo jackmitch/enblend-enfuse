@@ -333,7 +333,7 @@ add_custom_target(html
 )
 
 # now build final rules and install targets	
-add_custom_target(doc)
+add_custom_target(doc ALL)
 
 if(INSTALL_PS_DOC)
 add_dependencies(doc ps)
