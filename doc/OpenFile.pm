@@ -21,6 +21,9 @@ use IO::Handle;
 use Quote ();
 
 
+sub quote {Quote::gnu_style @_}
+
+
 sub open_file {
     my ($file, $mode) = @_;
 
@@ -37,11 +40,11 @@ sub open_file {
             $handle->fdopen(fileno(STDOUT), 'w') or
               croak("cannot open standard output: $OS_ERROR");
         } else {
-            croak("internal error, unknown file mode ", Quote::gnu_style($mode));
+            croak("internal error, unknown file mode ", quote($mode));
         }
     } else {
         $handle = new IO::File($file, $mode) or
-          croak("cannot open ", Quote::gnu_style($file), ": $OS_ERROR");
+          croak("cannot open ", quote($file), ": $OS_ERROR");
     }
 
     return $handle;

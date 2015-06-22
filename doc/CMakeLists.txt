@@ -52,7 +52,7 @@ set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\Pass
 file(WRITE "${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" "${_dynamic_preamble}")
 set_source_files_properties("${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" PROPERTIES GENERATED TRUE)
 
-set(DOCSTRING_SOURCE_FILES 
+set(DOCSTRING_SOURCE_FILES
     "${TOP_SRC_DIR}/src/bounds.h"
     "${TOP_SRC_DIR}/src/common.h"
     "${TOP_SRC_DIR}/src/filespec.cc"
@@ -62,14 +62,14 @@ set(DOCSTRING_SOURCE_FILES
 )
 add_custom_command(
     OUTPUT  "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
-    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enblend.cc" ">" "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enblend.cc" ">" "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
     DEPENDS ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enblend.cc"
     COMMENT "Creating enblend-variables.tex"
 )
 
 add_custom_command(
     OUTPUT  "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
-    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enfuse.cc" ">" "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enfuse.cc" ">" "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
     DEPENDS ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enfuse.cc"
     COMMENT "Creating enfuse-variables.tex"
 )
@@ -92,7 +92,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -DINPUT_PATH="${CMAKE_BINARY_DIR}/doc" -DFILENAME=enblend-version.tex -DDATEFILE=enblend_date -P "${CMAKE_CURRENT_SOURCE_DIR}/updateDate.cmake"
     DEPENDS "${CMAKE_BINARY_DIR}/doc/version.in" ${ENBLEND_SOURCE_FILES}
 )
-set(ENBLEND_GENERATED_FILES 
+set(ENBLEND_GENERATED_FILES
     config-h.tex
     dynamic-preamble.tex
     enblend-variables.tex
@@ -108,7 +108,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -DINPUT_PATH="${CMAKE_BINARY_DIR}/doc" -DFILENAME=enfuse-version.tex -DDATEFILE=enfuse_date -P "${CMAKE_CURRENT_SOURCE_DIR}/updateDate.cmake"
     DEPENDS "${CMAKE_BINARY_DIR}/doc/version.in" ${ENFUSE_SOURCE_FILES}
 )
-set(ENFUSE_GENERATED_FILES 
+set(ENFUSE_GENERATED_FILES
     config-h.tex
     dynamic-preamble.tex
     enfuse-variables.tex
@@ -147,7 +147,7 @@ macro(build_pstex _list _depends)
         else()
             # this should never happens
             message(FATAL_ERROR "Unknown extension")
-        endif()        
+        endif()
     endforeach()
 endmacro()
 
@@ -188,7 +188,7 @@ configure_file(createdvi.cmake.in ${CMAKE_BINARY_DIR}/doc/createdvi.cmake @ONLY)
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enblend.dvi"
     COMMAND ${CMAKE_COMMAND} -Dfilename=enblend -Dcompiler=${LATEX_COMPILER} -Dflags=${LATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
-    DEPENDS 
+    DEPENDS
         ${ENBLEND_SOURCE_FILES}
         ${ENBLEND_GENERATED_FILES}
         ${ENBLEND_PSTEXFILES}
@@ -199,7 +199,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enfuse.dvi"
     COMMAND ${CMAKE_COMMAND} -Dfilename=enfuse -Dcompiler=${LATEX_COMPILER} -Dflags=${LATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
-    DEPENDS 
+    DEPENDS
         ${ENFUSE_SOURCE_FILES}
         ${ENFUSE_GENERATED_FILES}
         ${ENFUSE_PSTEXFILES}
@@ -217,7 +217,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enblend.pdf"
     COMMAND ${CMAKE_COMMAND} -Dfilename=enblend -Dcompiler=${PDFLATEX_COMPILER} -Dflags=${PDFLATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
-    DEPENDS 
+    DEPENDS
         ${ENBLEND_SOURCE_FILES}
         ${ENBLEND_GENERATED_FILES}
         ${ENBLEND_PSTEXFILES}
@@ -235,7 +235,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enfuse.pdf"
     COMMAND ${CMAKE_COMMAND} -Dfilename=enfuse -Dcompiler=${PDFLATEX_COMPILER} -Dflags=${PDFLATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
-    DEPENDS 
+    DEPENDS
         ${ENFUSE_SOURCE_FILES}
         ${ENFUSE_GENERATED_FILES}
         ${ENFUSE_PSTEXFILES}
@@ -261,7 +261,7 @@ macro(build_png _list _depends)
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
                 COMMAND ${FIG2DEV_EXE} ${FIG2DEV_FLAGS} -L png ${FIG2DEV_PNG_TERMINAL_OPTIONS} -m 4  ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.fig ${_name}.png
-				COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png		
+				COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png
                 DEPENDS ${_name}.fig
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
@@ -315,7 +315,7 @@ add_custom_command(
 )
 # hold all together
 add_custom_target(ps
-    DEPENDS 
+    DEPENDS
         "${CMAKE_BINARY_DIR}/doc/enblend.ps"
         "${CMAKE_BINARY_DIR}/doc/enfuse.ps"
 )
@@ -327,17 +327,17 @@ add_custom_target(pdf
 )
 
 add_custom_target(html
-    DEPENDS 
+    DEPENDS
         "${CMAKE_BINARY_DIR}/doc/enblend.html"
         "${CMAKE_BINARY_DIR}/doc/enfuse.html"
 )
 
-# now build final rules and install targets	
+# now build final rules and install targets
 add_custom_target(doc ALL)
 
 if(INSTALL_PS_DOC)
 add_dependencies(doc ps)
-install(FILES 
+install(FILES
         "${CMAKE_BINARY_DIR}/doc/enblend.ps"
         "${CMAKE_BINARY_DIR}/doc/enfuse.ps"
     DESTINATION ${DocumentsDirectory}
@@ -346,7 +346,7 @@ endif()
 
 if(INSTALL_PDF_DOC)
 add_dependencies(doc pdf)
-install(FILES 
+install(FILES
         "${CMAKE_BINARY_DIR}/doc/enblend.pdf"
         "${CMAKE_BINARY_DIR}/doc/enfuse.pdf"
     DESTINATION ${DocumentsDirectory}
@@ -355,7 +355,7 @@ endif()
 
 if(INSTALL_HTML_DOC)
 add_dependencies(doc html)
-install(FILES 
+install(FILES
         "${CMAKE_BINARY_DIR}/doc/enblend.html"
         "${CMAKE_BINARY_DIR}/doc/enfuse.html"
         ${ENBLEND_PNGFILES}
@@ -363,4 +363,3 @@ install(FILES
     DESTINATION ${DocumentsDirectory}
 )
 endif()
-

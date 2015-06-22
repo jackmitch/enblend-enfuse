@@ -347,8 +347,9 @@
 \fi
 
 
-% Define a key-value pair with \hashinsert{KEY}{VALUE}.  The reference
-% it like any other label, i.e., say \hashfind{KEY} to get VALUE.
+%% Define a key-value pair with `\hashinsert{KEY}{VALUE}'.  Reference
+%% it like any other label, this is, say `\hashfind{KEY}' to recover
+%% VALUE.
 \def\hashinsert#1{\expandafter\def\csname valuehash(#1)\endcsname}
 \def\hashfind#1{\csname valuehash(#1)\endcsname}
 

@@ -5,6 +5,7 @@
 
 # name:         docstrings
 # synopsis:     extract documentation strings from text files
+#               or produce key/value pairs for TeX
 # author:       Dr. Christoph L. Spiel
 # perl version: 5.20.2
 
@@ -25,6 +26,29 @@ use TexAux ();
 
 
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+
+
+sub quote {Quote::gnu_style @_}
+
+
+sub write_support_code {
+    my ($options) = @_;
+
+    my $insert = $options->{INSERT_MACRO_NAME};
+    my $find = $options->{FIND_MACRO_NAME};
+
+    my @result =
+      (q(%% This piece of TeX-code was automatically generated with ) . COMMAND_NAME . q(.),
+       q(%%),
+       q(%% Define a key-value pair with `) . $insert . q({KEY}{VALUE}'.  Reference),
+       q(%% it like any other label, this is, say `). $find . q({KEY}' to recover),
+       q(%% VALUE.),
+       q(\def) . $insert . q(#1{\expandafter\def\csname valuehash(#1)\endcsname}),
+       q(\def) . $find . q(#1{\csname valuehash(#1)\endcsname}),
+       q());
+
+    print join("\n", @result);
+}
 
 
 my $regexp = qr{
@@ -63,7 +87,7 @@ sub insert_docstring {
     if (exists $docstrings->{$key}) {
         my $previous_file = $docstrings->{$key}{FILENAME};
         my $previous_line = $docstrings->{$key}{LINENUMBER};
-        my $quoted_key = Quote::gnu_style($key);
+        my $quoted_key = quote($key);
 
         warn(COMMAND_NAME,
              qq(: warning: duplicate key $quoted_key at $data->{FILENAME}:$data->{LINENUMBER};\n),
@@ -87,7 +111,7 @@ sub collect_docstrings {
                              {FILENAME => $basename,
                               LINENUMBER => $linenumber,
                               KEY => $1,
-                              VALUE => $2})
+                              VALUE => $2});
         }
         ++$linenumber;
     }
@@ -99,7 +123,7 @@ sub collect_docstrings {
 sub print_docstrings {
     my ($options, $docstrings) = @_;
 
-    print "% This file was automatically generated with @{[COMMAND_NAME]}.\n\n";
+    print "% This TeX-file was automatically generated with @{[COMMAND_NAME]}.\n\n";
 
     foreach my $key (sort keys %$docstrings) {
         my $filename = $docstrings->{$key}{FILENAME};
@@ -108,7 +132,7 @@ sub print_docstrings {
         my $value = TexAux::escape(defined($raw_value) ? $raw_value : $options->{EMPTY_VALUE_SUBSTITUTE});
 
         print("%% $filename:$linenumber\n",
-              "$options->{MACRO_NAME}\{$options->{KEY_PREFIX}$key\}\{$value\}\n",
+              "$options->{INSERT_MACRO_NAME}\{$options->{KEY_PREFIX}$key\}\{$value\}\n",
               "\n");
     }
 }
@@ -122,33 +146,94 @@ sub scan_file {
     collect_docstrings($docstrings, $input_filename, $input_file);
 
     $input_file->close or
-      warn(COMMAND_NAME, ": cannot close input file ", Quote::gnu_style($input_filename), ": $OS_ERROR\n");
+      warn(COMMAND_NAME, ": cannot close input file ", quote($input_filename), ": $OS_ERROR\n");
+}
+
+
+sub collect_pairs {
+    my ($docstrings, @key_value_pairs) = @_;
+
+    if (@key_value_pairs % 2 == 1) {
+        warn(COMMAND_NAME, ": odd number of arguments -- will drop last to form pairs\n");
+        pop @key_value_pairs;
+    }
+
+    my %pairs = @key_value_pairs;
+
+    my $i = 1;
+    while (my ($key, $value) = each %pairs) {
+        insert_docstring($docstrings,
+                         {FILENAME => '<command-line>',
+                          LINENUMBER => $i, # recycle line-number field for pair index
+                          KEY => $key,
+                          VALUE => $value});
+        $i++;
+    }
 }
 
 
 sub show_help {
     my $options = shift;
 
+    my ($quoted_scan_file, $quoted_key_value, $quoted_write_support_code,
+        $quoted_double_slash, $quoted_less_than, $quoted_greater_than,
+        $quoted_begin_comment, $quoted_end_comment,
+        $quoted_insert, $quoted_find, $quoted_prefix) =
+      map
+      {quote $_}
+      ('scan-file', 'key-value', 'write-support-code',
+       '//', '<', '>',
+       '/*', '*/',
+       $options->{INSERT_MACRO_NAME}, $options->{FIND_MACRO_NAME}, $options->{KEY_PREFIX});
+
     print <<END_OF_HELP;
-Usage: @{[COMMAND_NAME]} [OPTION] FILE...
+Usage: @{[COMMAND_NAME]} [OPTION] scan-file FILE ...
+   or: @{[COMMAND_NAME]} [OPTION] key-value KEY VALUE ...
+   or: @{[COMMAND_NAME]} [OPTION] write-support-code
 
-Extract documentation string from FILE and print them on standard output.
+Consistently convert documentation strings found in C- or C++-source
+files or on the command line to hash-like structure in TeX.
 
-Grammar:
-    '//' '<' key value
-  |
-    '/*' '<' key value '>' '*/'
-where key is any non-whitespace string and value is an arbitrary string.
+This tool has several modes of operation.  They all require a MODE as
+their first argument, where MODE either is
+  $quoted_scan_file
+      Extract documentation strings from FILE.  Grammar for
+      documentation strings in FILE:
+          $quoted_double_slash $quoted_less_than KEY VALUE
+        |
+          $quoted_begin_comment $quoted_less_than KEY VALUE $quoted_greater_than $quoted_end_comment
+      where KEY is any non-whitespace string and VALUE is an arbitrary
+      string.
+
+  $quoted_key_value
+      Read KEY VALUE pairs given at the command line, and process them
+      as if coming from a file.
+
+  $quoted_write_support_code
+      Print the TeX support code that is necessary to make the hash
+      lookup work.  Use to get consistent macro definitions.
+
+In modes $quoted_scan_file and $quoted_key_value the data is translated to
+TeX-format and printed on standard output.  Mode $quoted_write_support_code
+writes its text also to standard output.
 
 Options:
-  -m, --macro=NAME      macro name [@{[Quote::gnu_style($options->{MACRO_NAME})]}]; argument \#1
-                        is the key and argument \#2 is the value
-  -p, --prefix=LABEL    prefix each key with PREFIX [@{[Quote::gnu_style($options->{KEY_PREFIX})]}]
+      --insert-macro=NAME
+                Use macro NAME [$quoted_insert] for insertion of
+                a key/value pair; argument \#1 is the key and
+                argument \#2 is the value
+      --find-macro=NAME
+                Use macro NAME [$quoted_find] for retrieving a
+                value by its key; argument \#1 is the key
+      --prefix=LABEL
+                prefix each key with PREFIX [$quoted_prefix]
 
-  -h, --help            show this help screen
+  -h, --help    show this help screen
 
 Examples:
-  @{[COMMAND_NAME]} ../enblend/src/{bounds.h,common.h,global.h,enblend.cc,filespec.cc,opencl.cc}
+  @{[COMMAND_NAME]} key-value UPDATED 2015-6-21
+  @{[COMMAND_NAME]} scan-file ../enblend/src/{common.h,global.h,enblend.cc}
+  @{[COMMAND_NAME]} write-support-code
 END_OF_HELP
 
     exit 0;
@@ -160,8 +245,9 @@ sub get_options {
 
     Getopt::Long::Configure('no_ignore_case');
 
-    Getopt::Long::GetOptions('m|macro=s' => \$options->{MACRO_NAME},
-                             'p|prefix=s' => \$options->{KEY_PREFIX},
+    Getopt::Long::GetOptions('insert-macro=s' => \$options->{INSERT_MACRO_NAME},
+                             'find-macro=s' => \$options->{FIND_MACRO_NAME},
+                             'prefix=s' => \$options->{KEY_PREFIX},
                              'h|help' => sub {show_help($options)}) or
         warn(COMMAND_NAME, ": problems while parsing options\n");
 }
@@ -170,14 +256,28 @@ sub get_options {
 sub main {
     my $options = {EMPTY_VALUE_SUBSTITUTE => 'N/A',
                    KEY_PREFIX => 'val:',
-                   MACRO_NAME => '\\hashinsert'};
+                   INSERT_MACRO_NAME => '\\hashinsert',
+                   FIND_MACRO_NAME => '\\hashfind'};
     my $docstrings = {};
 
     get_options($options);
 
-    push(@ARGV, "-") unless @ARGV;
+    die(COMMAND_NAME, ": missing arguments\n") unless @ARGV;
 
-    scan_file($docstrings, $_) foreach @ARGV;
+    my $mode_argument = shift @ARGV;
+    my $mode = lc $mode_argument;
+    if ($mode =~ m#^keys?-values?$#) {
+        collect_pairs($docstrings, @ARGV);
+    } elsif ($mode =~ m#^scan-files?$#) {
+        push(@ARGV, "-") unless @ARGV;
+        scan_file($docstrings, $_) foreach @ARGV;
+    } elsif ($mode eq 'write-support-code') {
+        write_support_code($options);
+        exit 0;
+    } else {
+        die(COMMAND_NAME, ": unknown operation mode ", quote($mode_argument), "\n");
+    }
+
     print_docstrings($options, $docstrings);
 }
 

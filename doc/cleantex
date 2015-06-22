@@ -3,7 +3,7 @@
 # This file is part of Enblend.
 # Licence details can be found in the file COPYING.
 
-# name:         docstrings
+# name:         cleantex
 # synopsis:     Remove (La)TeX constructs from a file, but in contrast
 #               to detex(1) try to recover as much as possible.
 # author:       Dr. Christoph L. Spiel

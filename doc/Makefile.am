@@ -205,9 +205,10 @@ DVIPDF_FLAGS = -p $(PAPERSIZE) -r $(PRINT_RESOLUTION) -v
 
 
 %-version.tex: FORCE
-	printf '\hashinsert{val:UPDATED}{%s}\n' '$(shell $(UPDATED_ON) $(UPDATED_ON_FLAGS) $(FILES))' > $@
-	printf '\hashinsert{val:VERSION}{%s}\n' '$(VERSION)' >> $@
-	printf '\hashinsert{val:DATAROOTDIR}{%s}\n' `echo $(datarootdir) | sed -e 's#\([$$&%_^{}]\)#\\\\\1#g'` >> $@
+	$(DOCSTRINGS) key-value \
+	    UPDATED '$(shell $(UPDATED_ON) $(UPDATED_ON_FLAGS) $(FILES))' \
+	    VERSION '$(VERSION)' \
+	    DATAROOTDIR '$(datarootdir)' > $@
 
 
 ########################################################################
@@ -303,7 +304,7 @@ enblend.html: \
 
 
 enblend-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enblend.cc
-	$(DOCSTRINGS) $^ > $@
+	$(DOCSTRINGS) scan-files $^ > $@
 
 
 enblend-version.tex: FILES = $(ENBLEND_SOURCE_FILES)
@@ -381,7 +382,7 @@ enfuse.html: \
 
 
 enfuse-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enfuse.cc
-	$(DOCSTRINGS) $^ > $@
+	$(DOCSTRINGS) scan-files $^ > $@
 
 
 enfuse-version.tex: FILES = $(ENFUSE_SOURCE_FILES)

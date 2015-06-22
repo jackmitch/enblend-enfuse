@@ -27,6 +27,9 @@ use TexAux ();
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
+sub quote {Quote::gnu_style @_}
+
+
 my $directive = qr{
     ^                           # at the beginning of the line
     (?:
@@ -57,7 +60,7 @@ sub convert {
     my $linenumber = 0;
 
     $output_file->print("% This file was automatically generated with @{[COMMAND_NAME]}\n");
-    $output_file->print("% from file ", Quote::gnu_style($input_filename), ".\n\n");
+    $output_file->print("% from file ", quote($input_filename), ".\n\n");
 
   LINE: while (my $line = readline $input_file) {
         chomp ($line);
@@ -78,7 +81,7 @@ sub convert {
                     $expansion = $options->{EMPTY_VALUE};
                 }
             } else {
-                die(COMMAND_NAME, ": $input_filename:$linenumber: expecting ", Quote::gnu_style('undef'), "\n")
+                die(COMMAND_NAME, ": $input_filename:$linenumber: expecting ", quote('undef'), "\n")
                   unless $4 eq 'undef';
                 $macro_name = $5;
                 $expansion = $options->{UNDEF_VALUE};
@@ -89,45 +92,45 @@ sub convert {
             my $value = TexAux::lift(TexAux::escape($expansion));
 
             $output_file->print("%% $input_filename:$linenumber\n");
-            $output_file->print("$options->{MACRO_NAME}\{$key\}\{$value\}\n\n");
+            $output_file->print("$options->{INSERT_MACRO_NAME}\{$key\}\{$value\}\n\n");
         }
     }
 
     $input_file->close or
-      warn(COMMAND_NAME, ": cannot close input file ", Quote::gnu_style($input_filename), ": $OS_ERROR\n");
+      warn(COMMAND_NAME, ": cannot close input file ", quote($input_filename), ": $OS_ERROR\n");
     $output_file->close or
-      die(COMMAND_NAME, ": cannot close output file ", Quote::gnu_style($output_filename), ": $OS_ERROR\n");
+      die(COMMAND_NAME, ": cannot close output file ", quote($output_filename), ": $OS_ERROR\n");
 }
 
 
 sub show_help {
     my $options = shift;
 
-    my $all_predefined_patterns = join(', ', map {Quote::gnu_style($_)} @{$options->{EXCLUDE_PATTERNS}});
+    my $all_predefined_patterns = join(', ', map {quote($_)} @{$options->{EXCLUDE_PATTERNS}});
 
     print <<EOF;
 Usage: @{[COMMAND_NAME]} [OPTION] HEADER-FILE [TEX-FILE]
 
-Convert the @{[Quote::gnu_style("#define")]} and @{[Quote::gnu_style("#undef")]} directives the C HEADER-FILE
-to TeX.  If TEX-FILE is omitted or @{[Quote::gnu_style("-")]} the output goes to stdout.
+Convert the @{[quote("#define")]} and @{[quote("#undef")]} directives the C HEADER-FILE
+to TeX.  If TEX-FILE is omitted or @{[quote("-")]} the output goes to stdout.
 
 Translation Rules:
-  #define FOO      ->  $options->{MACRO_NAME}\{FOO\}\{$options->{EMPTY_VALUE}\}
-  #define FOO bar  ->  $options->{MACRO_NAME}\{FOO\}\{bar\}
-  #undef FOO       ->  $options->{MACRO_NAME}\{FOO\}\{$options->{UNDEF_VALUE}\}
+  #define FOO      ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{EMPTY_VALUE}\}
+  #define FOO bar  ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{bar\}
+  #undef FOO       ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{UNDEF_VALUE}\}
 where *only* the preprocessor expansions are mangled for TeX.
 
 Options:
   -f, --force              force expansions of a literal one to
-                           become [@{[Quote::gnu_style($options->{EMPTY_VALUE})]}]; negatable
-  -p, --prefix=LABEL       prefix each key with PREFIX [@{[Quote::gnu_style($options->{KEY_PREFIX})]}]
+                           become [@{[quote($options->{EMPTY_VALUE})]}]; negatable
+  -p, --prefix=LABEL       prefix each key with PREFIX [@{[quote($options->{KEY_PREFIX})]}]
   -x, --exclude=PATTERN    exclude all keys matching PATTERN [$all_predefined_patterns];
                            option can be given multiple times
   -h, --help               show this help screen
 
 Examples:
-    @{[COMMAND_NAME]} config.h config-h.tex
-    @{[COMMAND_NAME]} ../enblend/BUILD-GCC-O0/config.h
+  @{[COMMAND_NAME]} config.h config-h.tex
+  @{[COMMAND_NAME]} ../enblend/BUILD-GCC-O0/config.h
 EOF
 
     exit 0;
@@ -153,7 +156,7 @@ sub main {
                    UNDEF_VALUE => '\\undefinedbypreprocessor',
                    KEY_PREFIX => 'val:',
                    EXCLUDE_PATTERNS => [],
-                   MACRO_NAME => '\\hashinsert'};
+                   INSERT_MACRO_NAME => '\\hashinsert'};
 
     get_options($options);
 
