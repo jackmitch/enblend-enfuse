@@ -33,7 +33,7 @@ AC_ARG_WITH([tcmalloc],
             [],
             [with_tcmalloc=check])
 AS_IF([test "$with_tcmalloc" = check -o "$with_tcmalloc" = yes],
-      [AC_CHECK_HEADERS(tcmalloc.h)
+      [AC_CHECK_HEADERS([gperftools/tcmalloc.h tcmalloc.h], [break])
        if test "$ac_cv_header_tcmalloc_h" = yes -o "$with_tcmalloc" = yes; then
            AC_SEARCH_LIBS(tc_malloc,
                           [tcmalloc, tcmalloc_minimal],

@@ -29,7 +29,9 @@
 
 #include <signal.h>             // sig_atomic_t
 
-#ifdef HAVE_TCMALLOC_H
+#if defined(HAVE_GPERFTOOLS_TCMALLOC_H)
+#include <gperftools/tcmalloc.h>
+#elif defined(HAVE_TCMALLOC_H)
 #include <tcmalloc.h>
 #endif
 
