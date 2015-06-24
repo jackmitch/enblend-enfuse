@@ -4,7 +4,7 @@ project(doc)
 IF(WIN32)
 set(DocumentsDirectory "doc")
 ELSE(WIN32)
-set(DocumentsDirectory "doc/enblend")
+set(DocumentsDirectory "share/doc/enblend")
 ENDIF(WIN32)
 
 # some used flags
