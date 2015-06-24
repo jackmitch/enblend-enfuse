@@ -301,7 +301,7 @@ if test "$ac_found" = no; then
               [Define if Boost is not recent enough to define BOOST_FALLTHROUGH itself])
 fi
 
-AX_WITH_PROG(PERL, perl, false, [])
+AC_PATH_PROG(PERL, perl, false)
 if test "$PERL" = false; then
     AC_MSG_ERROR(cannot find perl)
 fi
@@ -317,50 +317,88 @@ else
     HELP2MAN=:
 fi
 
-can_build_doc=yes
-AX_PROG_PERL_MODULES(File::Basename, [],
-                     [AC_MSG_WARN(missing Perl module File::Basename)
-                      can_build_doc=no
-                      missing_for_doc="$missing_for_doc File::Basename"])
-AX_PROG_PERL_MODULES(FindBin, [],
-                     [AC_MSG_WARN(missing Perl module FindBin)
-                      can_build_doc=no
-                      missing_for_doc="$missing_for_doc FindBin"])
-AX_PROG_PERL_MODULES(Getopt::Long, [],
-                     [AC_MSG_WARN(missing Perl module Getopt::Long)
-                      can_build_doc=no
-                      missing_for_doc="$missing_for_doc Getopt::Long"])
-AX_PROG_PERL_MODULES(IO::File, [],
-                     [AC_MSG_WARN(missing Perl module IO::File)
-                      can_build_doc=no
-                      missing_for_doc="$missing_for_doc IO::File"])
-AX_PROG_PERL_MODULES(IO::Handle, [],
-                     [AC_MSG_WARN(missing Perl module IO::Handle)
-                      can_build_doc=no
-                      missing_for_doc="$missing_for_doc IO::Handle"])
 
-AX_WITH_PROG(MAKEINDEX, makeindex, false, [])
+can_build_doc=yes
+
+AC_PATH_PROGS(LATEX, [latex elatex lambda],
+              [AC_MSG_WARN(missing LaTeX translator)
+               can_build_doc=no
+               missing_for_doc="$missing_for_doc latex"])
+AC_PATH_PROG(PDFLATEX, pdflatex,
+             [AC_MSG_WARN([missing PDFLaTeX translator -- no direct translation of LaTeX to PDF available])
+              missing_for_doc="$missing_for_doc pdflatex"])
+
+if test "$latex" != 'no'
+then
+  AC_LATEX_CLASS(report,report,[],
+                 [AC_MSG_WARN(missing document class report.cls)
+                  can_build_doc=no
+                  missing_for_doc="$missing_for_doc report.cls"])
+  AC_LATEX_CLASS(refrep,refrep,[],
+                 [AC_MSG_WARN([missing document class refrep.cls -- no Reference Manual Style available])
+                  missing_for_doc="$missing_for_doc refrep.cls"])
+
+  m4_foreach([package_name],
+             [amsmath, bold-extra, color, enumitem,
+              footnote, graphicx, hyperref, hyphenat,
+              ifpdf, index, latexsym, listings,
+              microtype, shorttoc, suffix, trivfloat,
+              url, xstring],
+             [AC_LATEX_PACKAGE([package_name],
+                               [report],
+                               [m4_translit(package_name,[-],[_])],
+                               [],
+                               [AC_MSG_WARN(missing LaTeX package package_name)
+                                can_build_doc=no
+                                missing_for_doc="$missing_for_doc package_name.sty"])])
+fi
+
+if test "$PERL" != false; then
+  AX_PROG_PERL_MODULES(File::Basename, [],
+                       [AC_MSG_WARN(missing Perl module File::Basename)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc File::Basename"])
+  AX_PROG_PERL_MODULES(FindBin, [],
+                       [AC_MSG_WARN(missing Perl module FindBin)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc FindBin"])
+  AX_PROG_PERL_MODULES(Getopt::Long, [],
+                       [AC_MSG_WARN(missing Perl module Getopt::Long)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc Getopt::Long"])
+  AX_PROG_PERL_MODULES(IO::File, [],
+                       [AC_MSG_WARN(missing Perl module IO::File)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc IO::File"])
+  AX_PROG_PERL_MODULES(IO::Handle, [],
+                       [AC_MSG_WARN(missing Perl module IO::Handle)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc IO::Handle"])
+fi
+
+AC_PATH_PROG(MAKEINDEX, makeindex, false)
 if test "$MAKEINDEX" = false; then
     AC_MSG_WARN(cannot find makeindex; will not be able to build documentation with index)
     can_build_doc=no
     missing_for_doc="$missing_for_doc makeindex"
 fi
 
-AX_WITH_PROG(DVIPS, dvips, false, [])
+
+AC_PATH_PROG(DVIPS, dvips, false)
 if test "$DVIPS" = false; then
     AC_MSG_WARN(cannot find dvips; will not be able to build PostScript documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc dvips"
 fi
 
-AX_WITH_PROG(CONVERT, convert, false, [])
+AC_PATH_PROG(CONVERT, convert, false)
 if test "$CONVERT" = false; then
     AC_MSG_WARN(cannot find convert; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc convert"
 fi
 
-AX_WITH_PROG(TIFF2PS, tiff2ps, false, [])
+AC_PATH_PROG(TIFF2PS, tiff2ps, false)
 if test "$TIFF2PS" = false; then
     if test "$CONVERT" != false; then
         AC_MSG_WARN(cannot find tiff2ps; will substitute convert)
@@ -392,19 +430,30 @@ else
     fi
 fi
 
-AX_WITH_PROG(GNUPLOT, gnuplot, false, [])
+AC_PATH_PROG(GNUPLOT, gnuplot, false)
 if test "$GNUPLOT" = false; then
     AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc gnuplot"
 fi
 
-AX_WITH_PROG(FIG2DEV, fig2dev, false, [])
+AC_PATH_PROG(FIG2DEV, fig2dev, false)
 if test "$FIG2DEV" = false; then
     AC_MSG_WARN(cannot find fig2dev; will not be able to build documentation)
     can_build_doc=no
     missing_for_doc="$missing_for_doc fig2dev"
 fi
+
+AC_PATH_PROGS(PS2PDF, [ps2pdf ps2pdf14], false)
+if test "$PDFLATEX" = false -a "$PS2PDF" != false; then
+  AC_MSG_NOTICE([Alternative PDF generation via ps2pdf available.])
+fi
+
+AC_PATH_PROGS(DVIPDF, [dvipdfmx dvipdfm dvipdf], false)
+if test "$PDFLATEX" = false -a "$DVIPDF" != false; then
+  AC_MSG_NOTICE([Alternative PDF generation via dvipdf available.])
+fi
+
 
 AM_CONDITIONAL([BUILD_DOC], [test "$can_build_doc" = yes])
 if test "$can_build_doc" = no; then

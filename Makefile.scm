@@ -21,5 +21,4 @@ clean:
 	rm -rf autom4te.cache
 	rm -f INSTALL Makefile.in aclocal.m4 \
 	      config.guess config.h.in config.sub configure \
-	      depcomp install-sh mdate-sh missing \
-	      texinfo.tex
+	      depcomp install-sh mdate-sh missing

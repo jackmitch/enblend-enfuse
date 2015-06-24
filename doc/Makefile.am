@@ -1,8 +1,6 @@
 TEXINPUTS = .:$(LATEX2HTML_LIBDIR):$(srcdir):
 export TEXINPUTS
 
-LATEX = latex
-PDFLATEX = pdflatex
 LATEX_FLAGS = -file-line-error -halt-on-error -interaction nonstopmode
 
 MAKEINDEX_FLAGS =
@@ -118,14 +116,12 @@ distclean-local: clean-local
 
 
 ## Alternative PDF generation: LaTeX -> DVI -> PostScript -> PDF
-PS2PDF = ps2pdf
 PS2PDF_FLAGS = -r$(PRINT_RESOLUTION)
 %.ps.pdf: %.ps
 	$(PS2PDF) $(PS2PDF_FLAGS) $< $@
 
 
 ## Alternative PDF generation: LaTeX -> DVI -> PDF
-DVIPDF = dvipdfmx
 DVIPDF_FLAGS = -p $(PAPERSIZE) -r $(PRINT_RESOLUTION) -v
 %.dvi.pdf: %.dvi
 	$(DVIPDF) $(DVIPDF_FLAGS) -o $@ $<
