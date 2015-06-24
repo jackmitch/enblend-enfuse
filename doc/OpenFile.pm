@@ -21,7 +21,7 @@ use IO::Handle;
 use Quote ();
 
 
-sub quote {Quote::gnu_style @_}
+local *quote = \&Quote::gnu_style;
 
 
 sub open_file {

@@ -16,7 +16,7 @@ use warnings;
 require Exporter;
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(escape lift);
+our @EXPORT = qw(escape lift default_name);
 
 
 sub escape {
@@ -36,6 +36,21 @@ sub lift {
     }
 
     return $string;
+}
+
+
+my %defaults =
+  (EMPTY_MACRO_VALUE => '\\definedbypreprocessor',
+   FIND_MACRO_NAME => '\\hashfind',
+   INSERT_MACRO_NAME => '\\hashinsert',
+   KEY_PREFIX => 'val:',
+   UNDEF_MACRO_VALUE => '\\undefinedbypreprocessor');
+
+
+sub default_name {
+    my $id = shift;
+
+    return $defaults{$id};
 }
 
 

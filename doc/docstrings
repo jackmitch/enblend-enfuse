@@ -28,7 +28,7 @@ use TexAux ();
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
-sub quote {Quote::gnu_style @_}
+local *quote = \&Quote::gnu_style;
 
 
 sub write_support_code {
@@ -180,7 +180,7 @@ sub show_help {
         $quoted_begin_comment, $quoted_end_comment,
         $quoted_insert, $quoted_find, $quoted_prefix) =
       map
-      {quote $_}
+      {quote($_)}
       ('scan-file', 'key-value', 'write-support-code',
        '//', '<', '>',
        '/*', '*/',
@@ -255,9 +255,9 @@ sub get_options {
 
 sub main {
     my $options = {EMPTY_VALUE_SUBSTITUTE => 'N/A',
-                   KEY_PREFIX => 'val:',
-                   INSERT_MACRO_NAME => '\\hashinsert',
-                   FIND_MACRO_NAME => '\\hashfind'};
+                   KEY_PREFIX => TexAux::default_name('KEY_PREFIX'),
+                   INSERT_MACRO_NAME => TexAux::default_name('INSERT_MACRO_NAME'),
+                   FIND_MACRO_NAME => TexAux::default_name('FIND_MACRO_NAME')};
     my $docstrings = {};
 
     get_options($options);

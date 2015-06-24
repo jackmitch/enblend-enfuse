@@ -27,7 +27,7 @@ use TexAux ();
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
-sub quote {Quote::gnu_style @_}
+local *quote = \&Quote::gnu_style;
 
 
 my $directive = qr{
@@ -73,18 +73,18 @@ sub convert {
                 $macro_name = $2;
                 if (defined($3)) {
                     if ($options->{FORCE_ONE_TO_DEFINED} and ($3 eq '1')) {
-                         $expansion = $options->{EMPTY_VALUE};
+                         $expansion = $options->{EMPTY_MACRO_VALUE};
                      } else {
                          $expansion = $3;
                      }
                 } else {
-                    $expansion = $options->{EMPTY_VALUE};
+                    $expansion = $options->{EMPTY_MACRO_VALUE};
                 }
             } else {
                 die(COMMAND_NAME, ": $input_filename:$linenumber: expecting ", quote('undef'), "\n")
                   unless $4 eq 'undef';
                 $macro_name = $5;
-                $expansion = $options->{UNDEF_VALUE};
+                $expansion = $options->{UNDEF_MACRO_VALUE};
             }
             foreach my $regexp (@exclude_patterns) {next LINE if $macro_name =~ m/$regexp/;}
 
@@ -115,14 +115,14 @@ Convert the @{[quote("#define")]} and @{[quote("#undef")]} directives the C HEAD
 to TeX.  If TEX-FILE is omitted or @{[quote("-")]} the output goes to stdout.
 
 Translation Rules:
-  #define FOO      ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{EMPTY_VALUE}\}
+  #define FOO      ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{EMPTY_MACRO_VALUE}\}
   #define FOO bar  ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{bar\}
-  #undef FOO       ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{UNDEF_VALUE}\}
+  #undef FOO       ->  $options->{INSERT_MACRO_NAME}\{FOO\}\{$options->{UNDEF_MACRO_VALUE}\}
 where *only* the preprocessor expansions are mangled for TeX.
 
 Options:
   -f, --force              force expansions of a literal one to
-                           become [@{[quote($options->{EMPTY_VALUE})]}]; negatable
+                           become [@{[quote($options->{EMPTY_MACRO_VALUE})]}]; negatable
   -p, --prefix=LABEL       prefix each key with PREFIX [@{[quote($options->{KEY_PREFIX})]}]
   -x, --exclude=PATTERN    exclude all keys matching PATTERN [$all_predefined_patterns];
                            option can be given multiple times
@@ -152,11 +152,11 @@ sub get_options {
 
 sub main {
     my $options = {FORCE_ONE_TO_DEFINED => 0,
-                   EMPTY_VALUE => '\\definedbypreprocessor',
-                   UNDEF_VALUE => '\\undefinedbypreprocessor',
-                   KEY_PREFIX => 'val:',
+                   EMPTY_MACRO_VALUE => TexAux::default_name('EMPTY_MACRO_VALUE'),
+                   UNDEF_MACRO_VALUE => TexAux::default_name('UNDEF_MACRO_VALUE'),
+                   KEY_PREFIX => TexAux::default_name('KEY_PREFIX'),
                    EXCLUDE_PATTERNS => [],
-                   INSERT_MACRO_NAME => '\\hashinsert'};
+                   INSERT_MACRO_NAME => TexAux::default_name('INSERT_MACRO_NAME')};
 
     get_options($options);
 

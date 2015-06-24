@@ -34,7 +34,7 @@ sub replace {
     while (my $line = readline $file) {
         chomp $line;
 
-        # Tilde chars just represent space
+        # Tilde chars just represent spaces
         $line =~ s/~/ /g;
 
         # TeX inline math demimiters go away

@@ -29,11 +29,11 @@ use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 1};
 
 
-sub quote {Quote::gnu_style @_}
+local *quote = \&Quote::gnu_style;
 
 
 sub quote_list {
-    join(', ', map {quote $_} @_)
+    join(', ', map {quote($_)} @_)
 }
 
 
