@@ -551,12 +551,6 @@ AC_CONFIG_FILES([Makefile
                  src/win32helpers/Makefile])
 AC_OUTPUT
 
-# AC_OUTPUT has created "config.h"
-AC_MSG_NOTICE([creating config-h.texi])
-perl -ne 'if (s/^\s*#define\s+(\S+)\s+"?([^"]*)"?/\@set $1 $2/) {chomp; print "$_\n"}' \
-    < config.h \
-    > config-h.texi
-
 AC_MSG_RESULT([
  enblend-enfuse now configured for ${host}
    Source directory:               ${srcdir}

@@ -12,6 +12,3 @@ SUBDIRS = share src $(MAYBE_DOC)
 DIST_SUBDIRS = share src doc
 
 ACLOCAL_AMFLAGS = -I m4
-
-# created by configure(1)
-DISTCLEANFILES = config-h.texi
