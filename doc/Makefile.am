@@ -43,8 +43,6 @@ FIG2DEV_EPS_TERMINAL_OPTIONS =
 FIG2DEV_PSTEX_TERMINAL_OPTIONS =
 FIG2DEV_PNG_TERMINAL_OPTIONS =
 
-TIFF2PS_FLAGS = -3
-
 CLEANTEX = $(srcdir)/cleantex
 CONFIG2TEX = $(srcdir)/config2tex
 DOCSTRINGS = $(srcdir)/docstrings
@@ -193,7 +191,7 @@ DVIPDF_FLAGS = -p $(PAPERSIZE) -r $(PRINT_RESOLUTION) -v
 
 
 %.eps: $(srcdir)/%.tif
-	$(TIFF2PS) $(TIFF2PS_FLAGS) $< > $@
+	$(CONVERT) $< eps3:$@
 
 
 %.png: $(srcdir)/%.tif

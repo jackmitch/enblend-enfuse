@@ -9,7 +9,6 @@ ENDIF(WIN32)
 
 # some used flags
 set(UPDATED_ON_FLAGS "--database=source-code-manager --override='none:\\datebyunknown' --override='fs:\\datebyfs' --override='scm:\\datebyscm' --format='%Y-%m-%d%q'")
-set(TIFF2PS_FLAGS "-3")
 
 set(GNUPLOT_FLAGS "--default-settings -e 'DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"'")
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
@@ -32,7 +31,6 @@ set(LATEX2HTML_FLAGS "-O -I . -I ${CMAKE_CURRENT_SOURCE_DIR} -fix")
 
 # format arguments for later usage
 separate_arguments(UPDATED_ON_FLAGS)
-separate_arguments(TIFF2PS_FLAGS)
 separate_arguments(GNUPLOT_FLAGS)
 separate_arguments(FIG2DEV_FLAGS)
 separate_arguments(LATEX_FLAGS)
@@ -118,7 +116,7 @@ set(ENFUSE_GENERATED_FILES
 # prepare picture for ps/pdf version
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
-    COMMAND ${TIFF2PS_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/seam-line-visualization.tif $(TIFF2PS_FLAGS) > "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
+    COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/seam-line-visualization.tif "eps3:${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
     DEPENDS seam-line-visualization.tif
 )
 set(ENBLEND_PSTEXFILES "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps")

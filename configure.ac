@@ -398,19 +398,6 @@ if test "$CONVERT" = false; then
     missing_for_doc="$missing_for_doc convert"
 fi
 
-AC_PATH_PROG(TIFF2PS, tiff2ps, false)
-if test "$TIFF2PS" = false; then
-    if test "$CONVERT" != false; then
-        AC_MSG_WARN(cannot find tiff2ps; will substitute convert)
-        TIFF2PS="$CONVERT"
-        TIFF2PS_FLAGS=""
-    else
-        AC_MSG_WARN(cannot find tiff2ps; will not be able to build PostScript documentation)
-        can_build_doc=no
-        missing_for_doc="$missing_for_doc tiff2ps"
-    fi
-fi
-
 AX_WITH_PROG(LATEX2HTML, hevea, false, [])
 if test "$LATEX2HTML" = false; then
     AC_MSG_WARN(cannot find LaTeX to HTML translator; will not be able to build HTML documentation)
