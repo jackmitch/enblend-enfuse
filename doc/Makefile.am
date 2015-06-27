@@ -387,13 +387,13 @@ enfuse-version.tex: FILES = $(ENFUSE_SOURCE_FILES)
 
 .PHONY: install-ps-local
 install-ps-local: ps-local
-	$(MKDIR_P) $(psdir)
+	@ $(MKDIR_P) $(psdir)
 	$(INSTALL_DATA) enblend.ps enfuse.ps $(psdir)
 
 
 .PHONY: install-html-local
 install-html-local: html-local
-	$(MKDIR_P) $(htmldir)
+	@ $(MKDIR_P) $(htmldir)
 	$(INSTALL_DATA) \
 	    $(sort \
 	        enblend.html $(ENBLEND_HTML_SEPARATE_PREREQUISITES) \
@@ -404,13 +404,13 @@ install-html-local: html-local
 
 .PHONY: install-pdf-local
 install-pdf-local: pdf-local
-	$(MKDIR_P) $(pdfdir)
+	@ $(MKDIR_P) $(pdfdir)
 	$(INSTALL_DATA) enblend.pdf enfuse.pdf $(pdfdir)
 
 
 .PHONY: install-dvi-local
 install-dvi-local: dvi-local
-	$(MKDIR_P) $(dvidir)
+	@ $(MKDIR_P) $(dvidir)
 	$(INSTALL_DATA) \
 	    $(sort \
 	    	enblend.dvi $(patsubst %.pstex,%.eps,$(ENBLEND_DVI_SEPARATE_PREREQUISITES)) \

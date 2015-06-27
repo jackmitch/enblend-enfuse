@@ -33,7 +33,7 @@ enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) @EXTRA_LIBS@
 enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                   -I${top_srcdir}/src/layer_selection
+                   -I$(top_srcdir)/src/layer_selection
 
 enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  \
@@ -60,7 +60,7 @@ enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
 enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
-                  -I${top_srcdir}/src/layer_selection
+                  -I$(top_srcdir)/src/layer_selection
 
 EXTRA_DIST = embrace distance_transform_fh.cl \
              enblend.1 enfuse.1 \

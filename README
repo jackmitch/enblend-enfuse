@@ -79,6 +79,12 @@ sequence builds in a separate directory.
         make
         make install
 
+If a less verbose output of the Make-process is desired, pass
+`--enable-silent-rules' to configure(1), or `V=0' to make(1).  As out
+build uses recursion make(1) reports "Entering directory" and "Leaving
+directory" which can only be suppressed with passing option
+`--no-print-directory' to make(1).
+
 
 *** CMake
 
