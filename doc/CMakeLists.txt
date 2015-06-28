@@ -132,16 +132,21 @@ macro(build_pstex _list _depends)
                 DEPENDS ${_name}.fig
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
-			list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.pstex"
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
                 COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \\\"${_name}.tex\\\"\; set terminal epslatex ${GNUPLOT_EPSTEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
-				COMMAND ${CMAKE_COMMAND} -E rename "${_name}.tex" "${_name}.pstex"
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
-			list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.pstex")
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.pstex"
+                COMMAND ${CMAKE_COMMAND} -E copy "${_name}.tex" "${_name}.pstex"
+                DEPENDS "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.pstex")
         else()
             # this should never happens
             message(FATAL_ERROR "Unknown extension")
@@ -259,7 +264,7 @@ macro(build_png _list _depends)
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
                 COMMAND ${FIG2DEV_EXE} ${FIG2DEV_FLAGS} -L png ${FIG2DEV_PNG_TERMINAL_OPTIONS} -m 4  ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.fig ${_name}.png
-				COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png
+                COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png
                 DEPENDS ${_name}.fig
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
