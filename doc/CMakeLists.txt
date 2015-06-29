@@ -20,7 +20,7 @@ set(FIG2DEV_PSTEX_TERMINAL_OPTIONS "")
 set(FIG2DEV_PNG_TERMINAL_OPTIONS "")
 
 set(LATEX_FLAGS "-file-line-error -halt-on-error -interaction nonstopmode")
-set(PDFLATEX_FLAGS "")
+set(PDFLATEX_FLAGS "-file-line-error -halt-on-error -interaction nonstopmode")
 set(MAKEINDEX_FLAGS "")
 set(DVIPS_FLAGS "-q -t ${PAPERSIZE} -D ${PRINTRESOLUTION} -Z")
 
@@ -47,6 +47,9 @@ add_custom_command(
 )
 
 set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\PassOptionsToPackage{${PAPERSIZE}paper}{refrep}\n\\newif\\ifreferencemanual\n\\newif\\ifhyperref\n${DYNAMIC_TEX_PREAMBLE}\n")
+if(INSTALL_PDF_DOC AND NOT ${_dynamic_preamble} MATCHES "\\hyperreftrue")
+  string(REPLACE "\\newif\\ifhyperref\n" "\\newif\\ifhyperref\n\\hyperreftrue\n" _dynamic_preamble "${_dynamic_preamble}")
+endif()
 file(WRITE "${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" "${_dynamic_preamble}")
 set_source_files_properties("${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" PROPERTIES GENERATED TRUE)
 
