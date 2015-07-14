@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __INFO_H__
-#define __INFO_H__
+#ifndef INFO_H_
+#define INFO_H_
 
 
 #include <string>
@@ -95,7 +95,7 @@ private:
 };
 
 
-#endif // __INFO_H__
+#endif // INFO_H_
 
 
 // Local Variables:

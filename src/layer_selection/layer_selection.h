@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __LAYER_SELECTION_H__
-#define __LAYER_SELECTION_H__
+#ifndef LAYER_SELECTION_H_
+#define LAYER_SELECTION_H_
 
 
 #include <map>
@@ -97,7 +97,8 @@ private:
 };
 
 
-#endif /* __LAYER_SELECTION_H__ */
+#endif // LAYER_SELECTION_H_
+
 
 // Local Variables:
 // mode: c++

@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __FILESPEC_H__
-#define __FILESPEC_H__
+#ifndef FILESPEC_H_
+#define FILESPEC_H_
 
 #include <list>
 #include <string>
@@ -84,7 +84,8 @@ namespace enblend
     algorithm_list known_globbing_algorithms();
 }
 
-#endif /* __FILESPEC_H__ */
+#endif // FILESPEC_H_
+
 
 // Local Variables:
 // mode: c++

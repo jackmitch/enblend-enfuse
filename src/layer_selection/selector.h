@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __SELECTOR_H__
-#define __SELECTOR_H__
+#ifndef SELECTOR_H_
+#define SELECTOR_H_
 
 
 #include <list>
@@ -121,7 +121,8 @@ namespace selector
 } // end namespace selector
 
 
-#endif /* __SELECTOR_H__ */
+#endif // SELECTOR_H_
+
 
 // Local Variables:
 // mode: c++
