@@ -283,6 +283,7 @@ unsigned integral'' (\code{uint8}) up to seven:
   %% integers (2 or 4 bytes) and real values (32 bit float and 64 bit
   %% double) without conversion.
   \begin{table}[htbp]
+    \def\avail{$\bullet$}\def\unava{$-$}\def\unkwn{?}%
     \ifreferencemanual\begin{maxipage}\fi
     \centering
     \begin{tabular}{l cc ccccc}
@@ -310,11 +311,11 @@ unsigned integral'' (\code{uint8}) up to seven:
       \multicolumn{1}{c}{\code{double}} \\
 
       \hline\extraheadingsep
-      \acronym{JPEG}  &  $\bullet$  &  $\bullet$  &  $\bullet$  &  $-$        &  $-$        &  $-$        &  $-$ \\
-      \acronym{PNG}   &  $\bullet$  &  ?          &  $\bullet$  &  $\bullet$  &  $-$        &  $-$        &  $-$ \\
-      \acronym{PNM}   &  ?          &  $-$        &  $\bullet$  &  $\bullet$  &  $\bullet$  &  $-$        &  $-$ \\
+      \acronym{JPEG}  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava  &  \unava \\
+      \acronym{PNG}   &  \avail  &  \unkwn  &  \avail  &  \avail  &  \unava  &  \unava  &  \unava \\
+      \acronym{PNM}   &  \unkwn  &  \unava  &  \avail  &  \avail  &  \avail  &  \unava  &  \unava \\
       \optional{\acronym{V}}\acronym{TIFF} &
-      $\bullet$  &  $\bullet$  &  $\bullet$  &  $\bullet$  &  $\bullet$  &  $\bullet$  &  $\bullet$
+                         \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail  &  \avail
     \end{tabular}
     \ifreferencemanual\end{maxipage}\fi
 
