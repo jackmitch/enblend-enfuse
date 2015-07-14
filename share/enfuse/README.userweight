@@ -63,7 +63,8 @@ that all of these are loaded with
     0.0/0.0:0.25/0.125:0.5/1.0:0.75/0.25:1.0/0.0
 
 
-Use "GNUmakefile" as a start to build the examples or your own code.
+Use "Makefile.userweight" as a start to build the examples or your own
+code.
 
 To inspect any exposure-weight function (not just dynamically loaded)
 pass

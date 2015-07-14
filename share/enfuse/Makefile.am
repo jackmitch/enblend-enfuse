@@ -1,7 +1,7 @@
 datadir = $(datarootdir)/enfuse/user-weight
 
 data_DATA = \
-        GNUmakefile \
+        Makefile.userweight \
         ../../src/exposure_weight_base.h \
         fixed_power.cc linear.cc \
         root_finding.hh sinc.cc \
