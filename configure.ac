@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_HEADER([config.h])
 
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign no-installinfo])
 AM_SILENT_RULES()
 
 AC_PROG_CXX
