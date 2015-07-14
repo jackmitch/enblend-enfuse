@@ -387,6 +387,9 @@ formats:
         transfig           - Render XFig drawings in PNG, EPS, and PDF.
                              Check out http://www.xfig.org/ for Transfig.
 
+The tool texloganalyser(1) is optional.  Its sole use is to beautify
+LaTeX output in non-verbose (V=0) mode.
+
 
 * Operating System Specific Instructions and Hints
 

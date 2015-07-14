@@ -3,7 +3,13 @@ export TEXINPUTS
 
 LATEX_FLAGS = -file-line-error -halt-on-error -interaction nonstopmode
 
-MAKEINDEX_FLAGS =
+## Enabled pieces of information in a LaTeX *.log file in non-verbose mode.
+##    h    outputs only warnings about horizontal boxes
+##    r    displays warnings about references
+##    t    displays all *.tex files used
+TEXLOGANALYSER_FLAGS = $(if $(subst cat,,$(TEXLOGANALYSER)),-hrt,)
+
+MAKEINDEX_FLAGS = $(if $(subst false,,$(AM_V_P)),,-q)
 
 ## Papersize for some converters, usually:
 ##    a4
@@ -113,72 +119,140 @@ distclean-local: clean-local
 ########################################################################
 
 
+config2tex_verbose = $(config2tex_verbose_@AM_V@)
+config2tex_verbose_ = $(config2tex_verbose_@AM_DEFAULT_V@)
+config2tex_verbose_0 = @echo "  CONFIG2TEX $@";
+
+convert_verbose = $(convert_verbose_@AM_V@)
+convert_verbose_ = $(convert_verbose_@AM_DEFAULT_V@)
+convert_verbose_0 = @echo "  CONVERT  $@";
+
+docstrings_verbose = $(docstrings_verbose_@AM_V@)
+docstrings_verbose_ = $(docstrings_verbose_@AM_DEFAULT_V@)
+docstrings_verbose_0 = @echo "  DOCSTR   $@";
+
+dvips_verbose = $(dvips_verbose_@AM_V@)
+dvips_verbose_ = $(dvips_verbose_@AM_DEFAULT_V@)
+dvips_verbose_0 = @echo "  DVIPS    $@";
+
+fig2dev_verbose = $(fig2dev_verbose_@AM_V@)
+fig2dev_verbose_ = $(fig2dev_verbose_@AM_DEFAULT_V@)
+fig2dev_verbose_0 = @echo "  FIG2DEV  $@";
+
+gnuplot_verbose = $(gnuplot_verbose_@AM_V@)
+gnuplot_verbose_ = $(gnuplot_verbose_@AM_DEFAULT_V@)
+gnuplot_verbose_0 = @echo "  GNUPLOT  $@";
+
+install_verbose = $(install_verbose_@AM_V@)
+install_verbose_ = $(install_verbose_@AM_DEFAULT_V@)
+install_verbose_0 = @echo "  INSTALL  $@";
+
+latex_verbose = $(call latex_verbose_@AM_V@,$(1))
+latex_verbose_ = $(call latex_verbose_@AM_DEFAULT_V@,$(1))
+latex_verbose_0 = @echo "  LATEX    [pass $(1)] $@";
+
+makeindex_verbose = $(call makeindex_verbose_@AM_V@,$(1))
+makeindex_verbose_ = $(call makeindex_verbose_@AM_DEFAULT_V@,$(1))
+makeindex_verbose_0 = @echo "  MKIDX    [$(1)] $@";
+
+
+########################################################################
+
+
 ## Alternative PDF generation: LaTeX -> DVI -> PostScript -> PDF
 PS2PDF_FLAGS = -r$(PRINT_RESOLUTION)
 %.ps.pdf: %.ps
-	$(PS2PDF) $(PS2PDF_FLAGS) $< $@
+	$(AM_V_GEN)$(PS2PDF) $(PS2PDF_FLAGS) $< $@
 
 
 ## Alternative PDF generation: LaTeX -> DVI -> PDF
 DVIPDF_FLAGS = -p $(PAPERSIZE) -r $(PRINT_RESOLUTION) -v
 %.dvi.pdf: %.dvi
-	$(DVIPDF) $(DVIPDF_FLAGS) -o $@ $<
+	$(AM_V_GEN)$(DVIPDF) $(DVIPDF_FLAGS) -o $@ $<
 
 
 %.ps: %.dvi
-	$(DVIPS) $(DVIPS_FLAGS) -o $@ $<
+	$(dvips_verbose)$(DVIPS) $(DVIPS_FLAGS) -o $@ $<
 
+
+SHOW_LATEX_LOG = \
+    rc=$$?; \
+    if $(AM_V_P) || test $$rc -ne 0; \
+    then \
+      cat $(1); \
+    else \
+      $(TEXLOGANALYSER) $(TEXLOGANALYSER_FLAGS) $(1); \
+    fi; \
+    test $$rc -eq 0
 
 %.dvi %.pdf: $(srcdir)/%.tex $(srcdir)/endoc.ist
-	- rm -f $(foreach ext,aux toc lo[^g] ?nd ?dx,$(basename $@).$(ext))
-	$(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $<
-	$(MAKEINDEX) $(MAKEINDEX_FLAGS) -s $(srcdir)/endoc.ist -o $*.gnd $*.gdx
-	$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.ond $*.odx
-	$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.pnd $*.pdx
-	$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.and $*.adx
-	$(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $<
+	@- rm -f $(foreach ext,aux toc lo[^g] ?nd ?dx,$(basename $@).$(ext))
+	$(call latex_verbose,1)$(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $< >/dev/null; \
+            $(call SHOW_LATEX_LOG,$*.log)
+	$(call makeindex_verbose,general terms)$(MAKEINDEX) $(MAKEINDEX_FLAGS) -s $(srcdir)/endoc.ist -o $*.gnd $*.gdx
+	$(call makeindex_verbose,command-line options)$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.ond $*.odx
+	$(call makeindex_verbose,applications and programs)$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.pnd $*.pdx
+	$(call makeindex_verbose,syntactic comments)$(MAKEINDEX) $(MAKEINDEX_FLAGS) -o $*.and $*.adx
+	$(call latex_verbose,2)$(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $< >/dev/null; \
+            $(call SHOW_LATEX_LOG,$*.log)
 	@ max_iter=5; \
-	  iter=2; \
-	  while [ $$iter -le $$max_iter ] && \
-                grep --quiet '^LaTeX Warning: There were undefined references' $*.log && \
-                grep --quiet '^LaTeX Warning: Label(s) may have changed' $*.log; \
+          iter=2; \
+          while [ $$iter -le $$max_iter ] && \
+                $(GREP) '^LaTeX Warning: There were undefined references' $*.log >/dev/null && \
+                $(GREP) '^LaTeX Warning: Label(s) may have changed' $*.log >/dev/null; \
           do \
-	    $(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $<; \
-	    iter=$$((iter + 1)); \
-	  done; \
-	  if [ $$iter -le $$max_iter ]; \
+            iter=$$((iter + 1)); \
+            if $(AM_V_P); then :; else printf '  LATEX    [pass %d] %s\n' $$iter $@; fi; \
+            $(LATEX_TRANSLATOR) $(LATEX_FLAGS) $(EXTRA_LATEX_FLAGS) $< >/dev/null; \
+                $(call SHOW_LATEX_LOG,$*.log); \
+          done; \
+          if [ $$iter -le $$max_iter ]; \
           then \
-	    printf 'Fixpoint reached in %i step(s)\n' $$iter; \
-	  else \
-	    printf 'Fixpoint NOT reached after %i steps; still undefined or loose labels\n' $$iter; \
-	    grep '^LaTeX Warning: Reference' $*.log; \
-	    false; \
-	  fi
+            printf 'Fixpoint reached in %i step(s)\n' $$iter; \
+          else \
+            printf 'Fixpoint NOT reached after %i steps; still undefined or loose labels\n' $$iter; \
+            $(GREP) '^LaTeX Warning: Reference' $*.log; \
+            false; \
+          fi
 
+
+SHOW_LATEX2HTML_LOG = \
+    rc=$$?; \
+    if $(AM_V_P); \
+    then \
+      cat $(1); \
+    else \
+      $(EGREP) '(Warning:|^Fixpoint)' $(1); \
+    fi; \
+    test $$rc -eq 0
 
 %.html: $(srcdir)/%.tex
-	$(LATEX2HTML) $(LATEX2HTML_FLAGS) $< 2>&1 | tee $*.hlog
+	$(AM_V_GEN)$(LATEX2HTML) $(LATEX2HTML_FLAGS) $< >$*.hlog 2>&1; \
+            $(call SHOW_LATEX2HTML_LOG,$*.hlog)
 
 
 %.cleantex.gp: $(srcdir)/%.gp
-	$(CLEANTEX) $^ > $@
+	$(AM_V_at)$(CLEANTEX) $^ > $@
 
 
 %.png: %.cleantex.gp
-	$(GNUPLOT) $(GNUPLOT_FLAGS) -e 'set output "$@"; set terminal pngcairo $(GNUPLOT_PNG_TERMINAL_OPTIONS)' $<
+	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
+            -e 'set output "$@"; set terminal pngcairo $(GNUPLOT_PNG_TERMINAL_OPTIONS)' $<
 
 
 %.pstex: $(srcdir)/%.gp
-	$(GNUPLOT) $(GNUPLOT_FLAGS) -e 'set output "$*.tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && mv $*.tex $@
+	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
+            -e 'set output "$*.tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && \
+        mv $*.tex $@
 
 
 %.eps: $(srcdir)/%.fig
-	$(FIG2DEV) $(FIG2DEV_FLAGS) -L eps $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $@
+	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L eps $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $@
 
 
 %.pstex: $(srcdir)/%.fig
-	$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $*.eps
-	$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex_t -p $*.eps $(FIG2DEV_PSTEX_TERMINAL_OPTIONS) $< $@
+	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $*.eps
+	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex_t -p $*.eps $(FIG2DEV_PSTEX_TERMINAL_OPTIONS) $< $@
 
 
 # We save at 4x scale to downscale with convert's fine aliasing capabilities.
@@ -186,23 +260,23 @@ DVIPDF_FLAGS = -p $(PAPERSIZE) -r $(PRINT_RESOLUTION) -v
 # part as transparent background and afterwards resize with
 # intermediate gray-values.
 %.png: $(srcdir)/%.fig
-	$(FIG2DEV) $(FIG2DEV_FLAGS) -L png $(FIG2DEV_PNG_TERMINAL_OPTIONS) -m 4 $< | \
-	    $(CONVERT) png:- -transparent white -resize 30% $@
+	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L png $(FIG2DEV_PNG_TERMINAL_OPTIONS) -m 4 $< | \
+            $(CONVERT) png:- -transparent white -resize 30% $@
 
 
 %.eps: $(srcdir)/%.tif
-	$(CONVERT) $< eps3:$@
+	$(convert_verbose)$(CONVERT) $< eps3:$@
 
 
 %.png: $(srcdir)/%.tif
-	$(CONVERT) $< $@
+	$(convert_verbose)$(CONVERT) $< $@
 
 
 %-version.tex: FORCE
-	$(DOCSTRINGS) key-value \
-	    UPDATED '$(shell $(UPDATED_ON) $(UPDATED_ON_FLAGS) $(FILES))' \
-	    VERSION '$(VERSION)' \
-	    DATAROOTDIR '$(datarootdir)' > $@
+	$(docstrings_verbose)$(DOCSTRINGS) key-value \
+            UPDATED '$(shell $(UPDATED_ON) $(UPDATED_ON_FLAGS) $(FILES))' \
+            VERSION '$(VERSION)' \
+            DATAROOTDIR '$(datarootdir)' > $@
 
 
 ########################################################################
@@ -220,17 +294,18 @@ DOCSTRING_SOURCE_FILES = \
 
 
 config-h.tex: ../config.h
-	$(CONFIG2TEX) $< $@
+	$(config2tex_verbose)$(CONFIG2TEX) $< $@
 
 
 dynamic-preamble.tex: FORCE
-	printf '%%%%%% %s\n' '$(basename $@)' > $@
-	printf '\PassOptionsToPackage{%spaper}{report}\n' '$(PAPERSIZE)' >> $@
-	printf '\PassOptionsToPackage{%spaper}{refrep}\n' '$(PAPERSIZE)' >> $@
-	printf '\\newif\ifreferencemanual\n' >> $@
-	printf '\\newif\ifhyperref\n' >> $@
-	printf '%%%% User definitions follow...\n' >> $@
-	printf '%s\n' '$(DYNAMIC_TEX_PREAMBLE)' >> $@
+	$(AM_V_GEN)
+	$(AM_V_at)printf '%%%%%% %s\n' '$(basename $@)' > $@
+	$(AM_V_at)printf '\PassOptionsToPackage{%spaper}{report}\n' '$(PAPERSIZE)' >> $@
+	$(AM_V_at)printf '\PassOptionsToPackage{%spaper}{refrep}\n' '$(PAPERSIZE)' >> $@
+	$(AM_V_at)printf '\\newif\ifreferencemanual\n' >> $@
+	$(AM_V_at)printf '\\newif\ifhyperref\n' >> $@
+	$(AM_V_at)printf '%%%% User definitions follow...\n' >> $@
+	$(AM_V_at)printf '%s\n' '$(DYNAMIC_TEX_PREAMBLE)' >> $@
 
 
 entropy-cutoff.gp entropy.gp exposure-cutoff.gp exposure-weights.gp \
@@ -298,7 +373,7 @@ enblend.html: \
 
 
 enblend-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enblend.cc
-	$(DOCSTRINGS) scan-files $^ > $@
+	$(docstrings_verbose)$(DOCSTRINGS) scan-files $^ > $@
 
 
 enblend-version.tex: FILES = $(ENBLEND_SOURCE_FILES)
@@ -376,7 +451,7 @@ enfuse.html: \
 
 
 enfuse-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enfuse.cc
-	$(DOCSTRINGS) scan-files $^ > $@
+	$(docstrings_verbose)$(DOCSTRINGS) scan-files $^ > $@
 
 
 enfuse-version.tex: FILES = $(ENFUSE_SOURCE_FILES)
@@ -388,35 +463,35 @@ enfuse-version.tex: FILES = $(ENFUSE_SOURCE_FILES)
 .PHONY: install-ps-local
 install-ps-local: ps-local
 	@ $(MKDIR_P) $(psdir)
-	$(INSTALL_DATA) enblend.ps enfuse.ps $(psdir)
+	$(install_verbose)$(INSTALL_DATA) enblend.ps enfuse.ps $(psdir)
 
 
 .PHONY: install-html-local
 install-html-local: html-local
 	@ $(MKDIR_P) $(htmldir)
-	$(INSTALL_DATA) \
-	    $(sort \
-	        enblend.html $(ENBLEND_HTML_SEPARATE_PREREQUISITES) \
-	        enfuse.html $(ENFUSE_HTML_SEPARATE_PREREQUISITES) \
+	$(install_verbose)$(INSTALL_DATA) \
+            $(sort \
+                enblend.html $(ENBLEND_HTML_SEPARATE_PREREQUISITES) \
+                enfuse.html $(ENFUSE_HTML_SEPARATE_PREREQUISITES) \
             ) \
-	    $(htmldir)
+            $(htmldir)
 
 
 .PHONY: install-pdf-local
 install-pdf-local: pdf-local
 	@ $(MKDIR_P) $(pdfdir)
-	$(INSTALL_DATA) enblend.pdf enfuse.pdf $(pdfdir)
+	$(install_verbose)$(INSTALL_DATA) enblend.pdf enfuse.pdf $(pdfdir)
 
 
 .PHONY: install-dvi-local
 install-dvi-local: dvi-local
 	@ $(MKDIR_P) $(dvidir)
-	$(INSTALL_DATA) \
-	    $(sort \
-	    	enblend.dvi $(patsubst %.pstex,%.eps,$(ENBLEND_DVI_SEPARATE_PREREQUISITES)) \
-	    	enfuse.dvi $(patsubst %.pstex,%.eps,$(ENFUSE_DVI_SEPARATE_PREREQUISITES)) \
+	$(install_verbose)$(INSTALL_DATA) \
+            $(sort \
+                enblend.dvi $(patsubst %.pstex,%.eps,$(ENBLEND_DVI_SEPARATE_PREREQUISITES)) \
+                enfuse.dvi $(patsubst %.pstex,%.eps,$(ENFUSE_DVI_SEPARATE_PREREQUISITES)) \
             ) \
-	    $(dvidir)
+            $(dvidir)
 
 
 EXTRA_DIST = \

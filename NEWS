@@ -101,6 +101,10 @@ Unreleased.  Current line of development.
 
 ** Developer Stuff
 
+- The Automake system can be configured to print only terse messages
+  (configure option `--enable-silent-rules'), or when working at
+  command line level, pass `V=0' to make(1).
+
 - A C++11-compatible compiler is required to compile Enblend and
   Enfuse.
 

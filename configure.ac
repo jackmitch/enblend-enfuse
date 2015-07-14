@@ -17,6 +17,8 @@ AX_CXX_COMPILE_STDCXX_11(ext)
 AC_PROG_CC
 AC_PROG_AR
 AM_PROG_AR
+AC_PROG_EGREP
+AC_PROG_GREP
 AC_PROG_RANLIB
 AC_PROG_SED
 AC_LANG(C++)
@@ -377,6 +379,14 @@ if test "$PERL" != false; then
                         can_build_doc=no
                         missing_for_doc="$missing_for_doc IO::Handle"])
 fi
+
+
+AC_PATH_PROG(TEXLOGANALYSER, texloganalyser, cat)
+if test "$TEXLOGANALYSER" = cat; then
+    AC_MSG_WARN([cannot find texloganalyser; will substitute cat(1)])
+    missing_for_doc="$missing_for_doc texloganalyser"
+fi
+
 
 AC_PATH_PROG(MAKEINDEX, makeindex, false)
 if test "$MAKEINDEX" = false; then

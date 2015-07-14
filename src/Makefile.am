@@ -79,7 +79,7 @@ signature.h: $(srcdir)/gen_sig $(srcdir)/DefaultSig.pm $(srcdir)/Sig.pm
 	@ $(PERL) -I$(srcdir) $< --extra=$(VERSION) > $@
 
 distance_transform_fh.icl: distance_transform_fh.cl
-	$(srcdir)/embrace --format=c++ --label=distance_transform_fh_source_code $< > $@
+	$(AM_V_GEN)$(srcdir)/embrace --format=c++ --label=distance_transform_fh_source_code $< > $@
 
 
 # Documentation
@@ -92,7 +92,7 @@ man: enblend.1 enfuse.1
 
 
 enblend.1: enblend
-	$(HELP2MAN) --no-info --output=$@ ./enblend
+	$(AM_V_GEN)$(HELP2MAN) --no-info --output=$@ ./enblend
 
 enfuse.1: enfuse
-	$(HELP2MAN) --no-info --output=$@ ./enfuse
+	$(AM_V_GEN)$(HELP2MAN) --no-info --output=$@ ./enfuse
