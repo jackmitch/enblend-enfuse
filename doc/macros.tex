@@ -292,7 +292,7 @@
 \newenvironment{literal}%
                {\pagebreak[1]\begin{divstyle}{literal}%
                    \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\fi}\item\relax
-                     \raggedright\frenchspacing\ttfamily}%
+                     \RaggedRight\frenchspacing\ttfamily}%
                {\end{trivlist}\end{divstyle}}
 
 
@@ -310,7 +310,7 @@
 \newenvironment{restrictedmaterial}[1]%
 {\begin{savenotes}\begin{divstyle}{restrictedmaterial}\noindent\restrictednote{#1}\begin{quotation}}%
 {\end{quotation}%
-  \ifhevea\relax\else\raggedleft\mbox{$\Box$}\par\fi
+  \ifhevea\relax\else\RaggedLeft\mbox{$\Box$}\par\fi
   \end{divstyle}\end{savenotes}}
 \makesavenoteenv{restrictedmaterial}
 
