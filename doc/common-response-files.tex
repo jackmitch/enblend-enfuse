@@ -8,10 +8,11 @@
   \genidx{file!response}}
 
 A response file contains names of images or other response filenames.
-Introduce response file names at the command line with an
-at-character~\sample{\atsign}.%
-\genidx{\atsign\ (response file prefix)}
-\gensee{response file prefix!\sample{\atsign}}{\sample{\atsign}}
+Introduce response file names at the command line with a
+\code{\val{val:response-file-prefix-char}}~character.%
+\genidx{\val*{val:response-file-prefix-char}\ (response file prefix)}
+\gensee{response file prefix!\sample{\val*{val:response-file-prefix-char}}}%
+       {\sample{\val*{val:response-file-prefix-char}}}
 
 \application{Enblend} and \application{Enfuse} process%
 \genidx{order!of image processing}%
@@ -34,7 +35,7 @@ same.
 
 \item[Single response file.]\itemend Example:
   \begin{literal}
-    enblend \atsign list
+    enblend \val*{val:response-file-prefix-char} list
   \end{literal}
 
   where file~\filename{list} contains
@@ -51,16 +52,16 @@ same.
 
 \item[Mixed literal names and response files.]\itemend Example:
   \begin{literal}
-    enblend \atsign master.list image-09.png image-10.png
+    enblend \val*{val:response-file-prefix-char} master.list image-09.png image-10.png
   \end{literal}
 
   where file~\filename{master.list} comprises of
 
   \begin{literal}
     image-01.png \\
-    \atsign first.list \\
+    \val*{val:response-file-prefix-char} first.list \\
     image-04.png \\
-    \atsign second.list \\
+    \val*{val:response-file-prefix-char} second.list \\
     image-08.png \\
   \end{literal}
 
@@ -93,20 +94,22 @@ same.
   \gensee{format of response file}{response file, format}}
 
 Response files contain one filename per line.  Blank lines or lines
-beginning with a sharp sign~\sample{\#}%
-\genidx{\# (response file comment)}%
-\gensee{response file!comment (\sample{\#})}{\sample{\#}}
+beginning with a \code{\val{val:response-file-comment-char}}~sign%
+\genidx{\val*{val:response-file-comment-char} (response file comment)}%
+\gensee{response file!comment (\sample{\val*{val:response-file-comment-char}})}%
+       {\sample{\val*{val:response-file-comment-char}}}
 are ignored; the latter can serve as comments.  Filenames that begin
-with an at-character~\sample{\atsign}) denote other response files.
-Table~\ref{tab:response-file-format} states a formal grammar of
-response files in \uref{\wikipediaebnf}{\acronym{EBNF}}.
+with a \code{\val{val:response-file-prefix-char}}~character denote
+other response files.  Table~\ref{tab:response-file-format} states a
+formal grammar of response files in
+\uref{\wikipediaebnf}{\acronym{EBNF}}.
 
 \begin{table}[htbp]
   \begin{tabular}{l@{$\quad::=\quad$}l}
     \metavar{response-file} & \metavar{line}* \\
     \metavar{line} & (\metavar{comment} | \metavar{file-spec}) [\sample{\bslash r}] \sample{\bslash n} \\
-    \metavar{comment} & \metavar{space}* \sample{\#} \metavar{text} \\
-    \metavar{file-spec} & \metavar{space}* \sample{\atsign } \metavar{filename} \metavar{space}* \\
+    \metavar{comment} & \metavar{space}* \sample{\val*{val:response-file-comment-char}} \metavar{text} \\
+    \metavar{file-spec} & \metavar{space}* \sample{\val*{val:response-file-prefix-char} } \metavar{filename} \metavar{space}* \\
     \metavar{space} & \sample{\textvisiblespace} $|$ \sample{\bslash t} \\
   \end{tabular}
 
@@ -139,8 +142,8 @@ some ways.
   comments''.  Thus, in
 
   \begin{literal}
-    \# exposure series \\
-    img-0.33ev.tif \# "middle" EV \\
+    \val*{val:response-file-comment-char} exposure series \\
+    img-0.33ev.tif \val*{val:response-file-comment-char} "middle" EV \\
     img-1.33ev.tif \\
     img+0.67ev.tif \\
   \end{literal}
@@ -148,12 +151,14 @@ some ways.
   only the first line contains a comment, whereas the second line
   includes none.  Rather, it refers to a file called
   \begin{literal}
-    img-0.33ev.tif \# "middle" EV
+    img-0.33ev.tif \val*{val:response-file-comment-char} "middle" EV
   \end{literal}
 
-\item[Image filenames cannot start with \sample{\atsign}]\itemend An
-  at-sign invariably introduces a response file, even if the
-  filename's extension hints towards an image.
+\item[Image filenames cannot start with
+  \code{\val{val:response-file-prefix-char}}]\itemend A
+  \code{\val{val:response-file-prefix-char}}~sign invariably
+  introduces a response file, even if the filename's extension hints
+  towards an image.
 \end{description}
 
 If \application{Enblend} or \application{Enfuse} do not recognize a
@@ -173,15 +178,15 @@ file.
 
 \begin{exemplar}[htbp]
   \begin{literal}
-    \# 4\bslash pi panorama! \\
+    \val*{val:response-file-comment-char}~4\bslash pi panorama! \\
     \mbox{} \\
-    \# These pictures were taken with the panorama head. \\
-    \atsign round-shots.list \\
+    \val*{val:response-file-comment-char}~These pictures were taken with the panorama head. \\
+    \val*{val:response-file-prefix-char}~round-shots.list \\
     \mbox{} \\
-    \# Freehand sky shot. \\
+    \val*{val:response-file-comment-char}~Freehand sky shot. \\
     zenith.tif \\
     \mbox{} \\
-    \# "Legs, will you go away?" images. \\
+    \val*{val:response-file-comment-char}~"Legs, will you go away?" images. \\
     nadir-2.tif \\
     nadir-5.tif \\
     nadir.tif \\
@@ -206,7 +211,7 @@ it.
 
 \begin{table}[htbp]
   \begin{tabular}{l@{$\quad::=\quad$}l}
-    \metavar{syntactic-comment} & \metavar{space}* \sample{\#}
+    \metavar{syntactic-comment} & \metavar{space}* \sample{\val*{val:response-file-comment-char}}
     \metavar{space}* \metavar{key}
     \metavar{space}* \sample{:}
     \metavar{space}* \metavar{value} \\
@@ -306,10 +311,10 @@ filename-globbing in a response file.
 
 \begin{exemplar}[htbp]
   \begin{literal}
-    \# Horizontal panorama \\
-    \# 15 images \\
+    \val*{val:response-file-comment-char}~Horizontal panorama \\
+    \val*{val:response-file-comment-char}~15 images \\
     \mbox{} \\
-    \# filename-globbing: wildcard \\
+    \val*{val:response-file-comment-char}~filename-globbing: wildcard \\
     \mbox{} \\
     image\_000[0-9].tif \\
     image\_001[0-4].tif \\

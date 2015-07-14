@@ -26,8 +26,8 @@
 #include "selector.h"
 
 
-#define RESPONSE_FILE_PREFIX_CHAR '@'
-#define RESPONSE_FILE_COMMENT_CHAR '#'
+#define RESPONSE_FILE_PREFIX_CHAR '@'     //< response-file-prefix-char \char64
+#define RESPONSE_FILE_COMMENT_CHAR '#'    //< response-file-comment-char \char35
 #define WHITESPACE_CHARS "\n\r\t "
 
 

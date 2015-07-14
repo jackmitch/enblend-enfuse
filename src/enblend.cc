@@ -2041,14 +2041,6 @@ int main(int argc, char** argv)
     LayerSelection.retrieve_image_information(inputTraceableFileNameList.begin(),
                                               inputTraceableFileNameList.end());
 
-    //if (vigra_ext::CachedFileImageDirector::v()->getManagedBlocks() < 4) {
-    //    // Max simultaneous image access is in:
-    //    // 4 in any of many calls to combineThreeImages
-    //    // 4 gaussian pyramid init (src image layer, src alpha layer, dest pyramid image layer 0, dest pyramid alpha layer 0)
-    //    // 4 in reduce (src image layer N, src alpha layer N, dest image layer N+1, dest alpha layer N+1)
-    //    // FIXME complain or automatically adjust blocksize to get ManagedBlocks above 4?
-    //}
-
     // List of info structures for each input image.
     std::list<vigra::ImageImportInfo*> imageInfoList;
     std::list<vigra::ImageImportInfo*>::iterator imageInfoIterator;

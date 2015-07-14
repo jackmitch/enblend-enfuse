@@ -212,7 +212,7 @@ DOCSTRING_SOURCE_FILES = \
     $(addprefix $(srcdir)/../src/, \
         bounds.h \
         common.h \
-        filespec.cc \
+        filespec.h filespec.cc \
         global.h \
         mga.h \
         opencl.cc \
