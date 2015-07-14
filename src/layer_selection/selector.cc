@@ -59,6 +59,30 @@ namespace selector
 
 
     std::string
+    LastLayer::name() const
+    {
+        return "last-layer";
+    }
+
+
+    std::string
+    LastLayer::description() const
+    {
+        return "select only last layer in each multi-layer image;";
+    }
+
+
+    bool
+    LastLayer::select(const ImageListInformation* an_image_info,
+                      const std::string& a_filename, unsigned a_layer_index)
+    {
+        const ImageInfo* image_info = an_image_info->image_info_on(a_filename);
+
+        return a_layer_index == image_info->number_of_layers();
+    }
+
+
+    std::string
     LargestLayer::name() const
     {
         return "largest-layer";
@@ -142,6 +166,7 @@ namespace selector
             {
                 algorithms.emplace_back(new AllLayers);
                 algorithms.emplace_back(new FirstLayer);
+                algorithms.emplace_back(new LastLayer);
                 algorithms.emplace_back(new LargestLayer);
                 algorithms.emplace_back(new NoLayer);
             }

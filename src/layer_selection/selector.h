@@ -36,6 +36,7 @@ namespace selector
     {
         AllLayersId,
         FirstLayerId,
+        LastLayerId,
         LargestLayerId,
         NoLayerId
     };
@@ -79,6 +80,18 @@ namespace selector
         {
             return a_layer_index == 1;
         }
+    };
+
+
+    class LastLayer : public Abstract
+    {
+    public:
+        id_t id() const {return id_t::LastLayerId;}
+        std::string name() const;
+        std::string description() const;
+
+        bool select(const ImageListInformation* an_image_info,
+                    const std::string& a_filename, unsigned a_layer_index);
     };
 
 
