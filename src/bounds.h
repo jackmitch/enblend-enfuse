@@ -156,7 +156,13 @@ roiBounds(const vigra::Rect2D& inputUnion,
     }
 
     if (Verbose >= VERBOSE_PYRAMID_MESSAGES) {
-        std::cerr << command << ": info: using " << allowableLevels << " blending level(s)" << std::endl;
+        std::cerr << command << ": info: using ";
+        if (allowableLevels == 1) {
+            std::cerr << "single blending level";
+        } else {
+            std::cerr << allowableLevels << " blending levels";
+        }
+        std::cerr << std::endl;
     }
 
     assert(allowableLevels >= minimumPyramidLevels);
