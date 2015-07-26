@@ -96,12 +96,23 @@ sub latest_file_modification_time {
 }
 
 
+sub get_log_date {
+    my $filename = shift;
+
+    if ($OSNAME eq 'MSWin32') {
+        return qx(hg log --limit 1 --template {date} $filename);
+    } else {
+        return qx(hg log --limit 1 --template '{date}' $filename);
+    }
+}
+
+
 # hg help templates
 # hg log --template "{date}\n" ...
 sub scm_modification_time {
     my ($options, $filename) = @_;
 
-    my $log_date = qx(hg log --limit 1 --template '{date}' $filename);
+    my $log_date = get_log_date($filename);
     my ($modification_time, $time_zone) = split(m{[+-]}, $log_date);
     print STDERR (COMMAND_NAME, ": info: SCM modification time of ",
                   quote($filename), " is ",
@@ -111,6 +122,20 @@ sub scm_modification_time {
     return $modification_time;
 }
 
+
+sub is_under_scm {
+    my $directory = shift;
+
+    my $command;
+
+    if ($OSNAME eq 'MSWin32') {
+        $command = qq(cd $directory & hg root >null 2>&1);
+    } else {
+        $command = qq(cd '$directory';  hg root > /dev/null 2> /dev/null);
+    }
+
+    return (system($command) == 0);
+}
 
 sub latest_scm_modification_time {
     my ($options, $filenames) = @_;
@@ -124,7 +149,7 @@ sub latest_scm_modification_time {
         if (exists $is_under_scm{$directory} && $is_under_scm{$directory}) {
             push @modification_times, scm_modification_time($options, $filename);
         } else {
-            if (system("cd $directory;  hg root > /dev/null 2> /dev/null") == 0) {
+            if (is_under_scm($directory)) {
                 print STDERR (COMMAND_NAME, ": info: checking for SCM in directory ",
                               quote($directory), "\n")
                   if $options->{VERBOSE};

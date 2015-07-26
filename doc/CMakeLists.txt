@@ -8,7 +8,11 @@ set(DocumentsDirectory "share/doc/enblend")
 ENDIF(WIN32)
 
 # some used flags
-set(UPDATED_ON_FLAGS "--database=source-code-manager --override='none:\\datebyunknown' --override='fs:\\datebyfs' --override='scm:\\datebyscm' --format='%Y-%m-%d%q'")
+IF(WIN32)
+  set(UPDATED_ON_FLAGS "--database=source-code-manager --override=none:\\datebyunknown --override=fs:\\datebyfs --override=scm:\\datebyscm")
+ELSE()
+  set(UPDATED_ON_FLAGS "--database=source-code-manager --override='none:\\datebyunknown' --override='fs:\\datebyfs' --override='scm:\\datebyscm'")
+ENDIF()
 
 set(GNUPLOT_FLAGS "--default-settings -e 'DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"'")
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
