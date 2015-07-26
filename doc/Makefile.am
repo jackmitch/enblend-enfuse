@@ -57,8 +57,7 @@ UPDATED_ON_FLAGS = \
     --database=source-code-manager \
     --override='none:\datebyunknown' \
     --override='fs:\datebyfs' \
-    --override='scm:\datebyscm' \
-    --format='%B %-m, %Y%q'
+    --override='scm:\datebyscm'
 
 
 VPATH =# must be empty to keep srcdir free of products

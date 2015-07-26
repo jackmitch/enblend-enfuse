@@ -26,7 +26,7 @@ use Quote ();
 
 
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
-use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 1};
+use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 2};
 
 
 local *quote = \&Quote::gnu_style;
@@ -76,8 +76,14 @@ sub filesystem_modification_time {
     my ($options, $filename) = @_;
 
     my $status = stat $filename;
+    my $modification_time = $status->mtime;
 
-    return $status->mtime;
+    print STDERR (COMMAND_NAME, ": info: filesystem modification time of ",
+                  quote($filename), " is ",
+                  POSIX::strftime("%Y-%m-%dT%H%M%S", gmtime($modification_time)),
+                  "\n") if $options->{VERBOSE};
+
+    return $modification_time;
 }
 
 
@@ -119,8 +125,8 @@ sub latest_scm_modification_time {
             push @modification_times, scm_modification_time($options, $filename);
         } else {
             if (system("cd $directory;  hg root > /dev/null 2> /dev/null") == 0) {
-                printf STDERR (COMMAND_NAME, ": info: checking for SCM in directory ",
-                               quote($directory), "\n")
+                print STDERR (COMMAND_NAME, ": info: checking for SCM in directory ",
+                              quote($directory), "\n")
                   if $options->{VERBOSE};
                 push @modification_times, scm_modification_time($options, $filename);
                 $is_under_scm{$directory} = 1;
@@ -134,9 +140,13 @@ sub latest_scm_modification_time {
         }
     }
 
-    my @sorted_modification_times = sort(@modification_times);
+    my @sorted_modification_times = sort(grep {defined $_} @modification_times);
 
-    return ($actual_db, $sorted_modification_times[-1]);
+    if (@sorted_modification_times) {
+        return ($actual_db, $sorted_modification_times[-1]);
+    } else {
+        return (DB_NONE, $options->{DATETIME_FUNCTION}());
+    }
 }
 
 
@@ -203,18 +213,18 @@ Show the date of the most recent update to any FILE with respect to
 GMT unless overridden by @{[quote('--localtime')]}.
 
 Options:
-  -d, --database=SYSTEM    database SYSTEM [@{[quote($options->{DATABASE})]}] to query, where
-                           SYSTEM is either @{[quote_list ('source-code-manager', 'scm', 'file-system', 'fs')]}
+  -d, --database=SYSTEM    database SYSTEM [@{[quote($options->{DATABASE})]}] to query, where SYSTEM
+                           is either @{[quote_list ('source-code-manager', 'scm', 'file-system', 'fs')]}
   -f, --format=FORMAT      strftime(3)-like date FORMAT [@{[quote($options->{DATETIME_FORMAT})]}];
                            in addition @{[quote('%Q')]} expands to the actual database in
-                           long form (file-system, source-code-manager), and @{[quote('%q')]}
-                           to the short form @{[quote_list qw(fs scm)]}
-  -G, --gmtime             use GMT [default]
+                           long form (file-system, source-code-manager),
+                           and @{[quote('%q')]} to the short form @{[quote_list qw(fs scm)]}
+  -G, --gmtime             base time on GMT [default]
   -L, --localtime          use local time
   -O, --override=SPEC      override the output of @{[quote_list('%q', '%Q')]}, where
                            SPEC ::= SYSTEM:[SHORT-FORM],[LONG-FORM]
-                           is a *single* specification; use multiple times to override
-                           multiple specifications
+                           is a *single* specification; use multiple times
+                           to override multiple specifications
 
   -v, --verbose            verbosely report progress
   -h, --help               show this help screen
@@ -258,9 +268,8 @@ sub show_last_update {
         ($actual_db, $latest_time) = latest_scm_modification_time($options, $filenames);
     }
 
-    my $datetime = POSIX::strftime($options->{DATETIME_FORMAT},
+    my $datetime = POSIX::strftime(expand_db_source($actual_db, $options->{DATETIME_FORMAT}),
                                    $options->{DATETIME_FUNCTION}($latest_time));
-    $datetime = expand_db_source($actual_db, $datetime);
 
     print "$datetime\n";
 }
@@ -268,7 +277,7 @@ sub show_last_update {
 
 sub main {
     my $options = {DATABASE => 'file-system',
-                   DATETIME_FORMAT => "%B %d, %Y",
+                   DATETIME_FORMAT => "%Y-%m-%d%q",
                    DATETIME_FUNCTION => \&gm_time,
                    VERBOSE => 0};
 
@@ -279,8 +288,9 @@ sub main {
       unless @ARGV;
     my @filenames = filter_exisiting_files(@ARGV);
     die(COMMAND_NAME, ": none of files given does exist\n") unless @filenames;
-    print STDERR (COMMAND_NAME, ": info: ", scalar @filenames, " of ", scalar @ARGV, " files exist\n")
-      if ($options->{VERBOSE} && @filenames < @ARGV);
+    if ($options->{VERBOSE} && @filenames < @ARGV) {
+        print STDERR (COMMAND_NAME, ": info: ", scalar @filenames, " of ", scalar @ARGV, " files exist\n");
+    }
 
     show_last_update($options, \@filenames);
 }
