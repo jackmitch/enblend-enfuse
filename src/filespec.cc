@@ -56,7 +56,7 @@
 
 
 // Separator of key and value in a syntactic comment
-#define KEY_VALUE_SEPARATOR_CHAR ':'
+#define KEY_VALUE_SEPARATOR_CHAR ':' //< response-file-syntactic-comment-key-value-separator \char58
 
 
 typedef std::pair<std::string, std::string> key_value_pair;
@@ -132,7 +132,7 @@ can_open_file(const std::string& aFilename)
 }
 
 
-/** Convert a_string in a string that is printable.  This is it only
+/** Convert a_string in a string that is printable.  This is, it only
  *  contains printable characters. */
 std::string
 printable_string(const std::string& a_string)
@@ -534,7 +534,8 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             command << ": warning: excessive nesting of " << trace_info.nesting_level <<
             " levels of response files;\n" <<
             command << ": warning: possible infinite recursion in \"" <<
-            printable_string(filename) << "\"\n";
+            printable_string(filename) << "\";\n" <<
+            command << ": warning: skipping further files\n";
         unroll_trace(trace_info.file_position);
         return;
     }
@@ -700,6 +701,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             trace_info.file_position.push_front(std::make_pair(response_filepath, line_number));
             ++trace_info.nesting_level;
             unfold_filename_iter(partial_result, trace_info, line);
+            --trace_info.nesting_level;
 
             for (TraceableFileNameList::const_iterator p = partial_result.begin();
                  p != partial_result.end();
