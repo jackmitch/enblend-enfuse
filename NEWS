@@ -101,6 +101,13 @@ Unreleased.  Current line of development.
 
 ** Developer Stuff
 
+- During configuration the name of Vigra's import-export library can
+  be set with the environment variable VIGRAIMPEX_LIB.  This is to
+  splice in a library compiled with e.g. instrumentation or
+  sanitizers.  If the variable is undefined or empty the default is
+  `-lvigraimpex', which lets most linkers prefer the dynamic library
+  in the standard location if there is any choice.
+
 - The Automake system can be configured to print only terse messages
   (configure option `--enable-silent-rules'), or when working at
   command line level, pass `V=0' to make(1).

@@ -65,24 +65,6 @@ AC_CHECK_LIB(lcms2, cmsCreateTransform,
              [],
              AC_MSG_ERROR([liblcms2 is required to compile Enblend.]), [])
 
-AC_MSG_CHECKING([for Vigra import/export-library])
-LIBS="-lvigraimpex $LIBS"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>]],
-                                [[vigra::impexListFormats()]])],
-               AC_MSG_RESULT(yes),
-               [AC_MSG_RESULT(no)
-                AC_MSG_ERROR([libvigraimpex is required to compile Enblend.])])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
-                                  #include <vigra/impexalpha.hxx>]],
-                                [[vigra::BRGBImage image;
-                                  vigra::BImage alpha;
-                                  vigra::ImageImportInfo info("image.tif");
-                                  info.setImageIndex(99);
-                                  vigra::importImageAlpha(info, destImage(image), destImage(alpha));]])],
-               AC_MSG_RESULT(yes),
-               [AC_MSG_RESULT(no)
-                AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])
-
 AC_MSG_CHECKING([if OpenEXR is wanted])
 AC_ARG_WITH([openexr],
             [AS_HELP_STRING([--with-openexr],
@@ -106,6 +88,29 @@ AS_IF([test "$with_openexr" = no],
           AC_MSG_RESULT(no)
           have_exr=no
        fi])
+
+AC_ARG_VAR([VIGRAIMPEX_LIB], [name of Vigra import/export-library])
+if test -z "$VIGRAIMPEX_LIB"; then
+   VIGRAIMPEX_LIB='-lvigraimpex'
+fi
+
+AC_MSG_CHECKING([for Vigra import/export-library])
+LIBS="$VIGRAIMPEX_LIB $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>]],
+                                [[vigra::impexListFormats()]])],
+               AC_MSG_RESULT(yes),
+               [AC_MSG_RESULT(no)
+                AC_MSG_ERROR([libvigraimpex is required to compile Enblend.])])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <vigra/imageinfo.hxx>
+                                  #include <vigra/impexalpha.hxx>]],
+                                [[vigra::BRGBImage image;
+                                  vigra::BImage alpha;
+                                  vigra::ImageImportInfo info("image.tif");
+                                  info.setImageIndex(99);
+                                  vigra::importImageAlpha(info, destImage(image), destImage(alpha));]])],
+               AC_MSG_RESULT(yes),
+               [AC_MSG_RESULT(no)
+                AC_MSG_ERROR([Vigra was found, but it was not recent enough.])])
 
 # Memory allocation debug support
 AC_MSG_CHECKING([if malloc debugging is wanted])
