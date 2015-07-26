@@ -380,7 +380,7 @@ if (PERL_FOUND AND DOC)
 	else()
 	    if(INSTALL_PDF_DOC)
 		    # only PDF
-			find_package(LATEX COMPONENTS PDFLATEX MAKEINEX REQUIRED)
+			find_package(LATEX COMPONENTS PDFLATEX MAKEINDEX REQUIRED)
 		endif()
 	endif()
     find_package(Gnuplot REQUIRED)
