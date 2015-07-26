@@ -19,11 +19,9 @@
  */
 
 
-#include <stdio.h>
-
+#include <cstdio>              // fflush(), vsnprintf()
 #include <cstring>
 #include <iostream>
-#include <memory>               // std::unique_ptr
 #include <set>
 #include <string>
 
