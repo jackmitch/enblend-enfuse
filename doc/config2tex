@@ -51,7 +51,6 @@ my $directive = qr{
 
 sub convert {
     my ($options, $input_filename, $output_filename) = @_;
-    print STDERR "+ convert: $input_filename -> $output_filename\n";
 
     my @exclude_patterns = map {qr/$_/} @{$options->{EXCLUDE_PATTERNS}};
 
