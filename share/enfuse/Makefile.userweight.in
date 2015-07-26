@@ -1,13 +1,14 @@
-CXX := g++
-#CXX := clang++
-#CXX := icpc #-gxx-name=/usr/bin/g++-4.7
+# -*- makefile -*-
 
-CXXFLAGS := -std=c++11 -O2 -fpic -I../../src -I. -g -Wall -Wextra -Wconversion
-LDFLAGS := -shared -g
+
+CXX := @CXX@
+CXXFLAGS := @CXXFLAGS@ -fpic
+LD := $(CXX)
+LDFLAGS := @LDFLAGS@ -shared
 
 
 SOURCES := linear.cc fixed_power.cc templated_power.cc variable_power.cc sinc.cc
-OBJECTS  := $(patsubst %.cc,%.o,$(SOURCES))
+OBJECTS := $(patsubst %.cc,%.o,$(SOURCES))
 SHARED_OBJECTS := $(patsubst %.cc,%.so,$(SOURCES))
 
 
@@ -26,7 +27,7 @@ distclean: clean
 
 
 %.so: %.o
-	$(CXX) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
+	$(LD) $(LDFLAGS) -Wl,-soname,$@ -o $@ $^
 
 
 %.o: %.cc

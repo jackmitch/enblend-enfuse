@@ -549,6 +549,7 @@ CXXFLAGS="$CXXFLAGS $CL_CFLAGS"
 LIBS="$LIBS $CL_LIBS"
 
 AC_CONFIG_FILES([share/Makefile
+                 share/enfuse/Makefile.userweight
                  share/enfuse/Makefile])
 
 AC_CONFIG_FILES([doc/Makefile])
