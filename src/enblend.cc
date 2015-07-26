@@ -22,6 +22,13 @@
 #include <config.h>
 #endif
 
+#ifndef ENBLEND_SOURCE
+#error trying to compile enblend.cc without having defined ENBLEND_SOURCE
+#endif
+#ifdef ENFUSE_SOURCE
+#error must not define ENFUSE_SOURCE when compiling enblend.cc
+#endif
+
 #ifdef _WIN32
 // Make sure we bring in windows.h the right way
 #define _STLP_VERBOSE_AUTO_LINK
@@ -63,9 +70,6 @@ extern "C" int optind;
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/version.hpp>    // BOOST_VERSION
-
-#include <gsl/gsl_version.h>    // GSL_VERSION
 
 #include <lcms2.h>
 #if !defined(LCMS_VERSION) || LCMS_VERSION < 2050
@@ -182,6 +186,7 @@ LayerSelectionHost LayerSelection;
 
 #include "common.h"
 #include "filespec.h"
+#include "introspection.h"
 #include "enblend.h"
 
 #ifdef DMALLOC
@@ -276,234 +281,6 @@ void dump_global_variables(const char* file, unsigned line,
         "+ OutputPixelType = <" << OutputPixelType << ">, option \"--depth\"\n" <<
         "+ end of global variable dump\n";
 }
-
-
-void
-printVersion(int argc, char** argv)
-{
-    std::cout << "enblend " << VERSION << "\n\n";
-
-    if (Verbose >= VERBOSE_VERSION_REPORTING) {
-        std::cout <<
-            "Extra feature: dmalloc support: " <<
-#ifdef DMALLOC
-            "yes" <<
-#else
-            "no" <<
-#endif
-            "\n";
-
-#ifdef CACHE_IMAGES
-        std::cout << "Extra feature: image cache: yes\n";
-        {
-#ifdef WIN32
-            char lpPathBuffer[MAX_PATH];
-            const DWORD dwRetVal = GetTempPath(MAX_PATH, lpPathBuffer);
-            if (dwRetVal <= MAX_PATH && dwRetVal != 0) {
-                std::cout << "  - cache file located in \"" << lpPathBuffer << "\"\n";
-            }
-#else
-            const char* tmpdir = getenv("TMPDIR");
-            std::cout << "  - environment variable TMPDIR ";
-            if (tmpdir == nullptr) {
-                std::cout << "not set, cache file in default directory \"/tmp\"\n";
-            } else {
-                std::cout << "set, cache file located in \"" << tmpdir << "\"\n";
-            }
-#endif
-        }
-#else
-        std::cout << "Extra feature: image cache: no\n";
-#endif
-
-#ifdef OPENMP
-        const bool have_dynamic = have_openmp_dynamic();
-        std::cout <<
-            "Extra feature: OpenMP: yes\n" <<
-            "  - version " << OPENMP_YEAR << '-' << OPENMP_MONTH << "\n" <<
-            "  - " << (have_dynamic ? "" : "no ") <<
-            "support for dynamic adjustment of the number of threads;\n" <<
-            "    dynamic adjustment " <<
-            (have_dynamic && omp_get_dynamic() ? "enabled" : "disabled") << " by default\n" <<
-            "  - using " <<
-            omp_get_num_procs() << " processor" << (omp_get_num_procs() >= 2 ? "s" : "") << " and up to " <<
-            omp_get_max_threads() << " thread" << (omp_get_max_threads() >= 2 ? "s" : "") << "\n" <<
-            "  - allocating thread-local dynamic memory with " << OMP_MALLOC_FUNCTIONS << "\n";
-#else
-        std::cout << "Extra feature: OpenMP: no\n";
-#endif
-
-#ifdef OPENCL
-        std::cout << "Extra feature: OpenCL: yes\n";
-        ocl::print_opencl_information();
-#else
-        std::cout << "Extra feature: OpenCL: no\n";
-#endif
-        std::cout << "\n";
-    }
-
-    std::cout <<
-        "Copyright (C) 2004-2009 Andrew Mihal.\n" <<
-        "Copyright (C) 2009-2015 Christoph Spiel.\n" <<
-        "\n" <<
-        "License GPLv2+: GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html>\n" <<
-        "This is free software: you are free to change and redistribute it.\n" <<
-        "There is NO WARRANTY, to the extent permitted by law.\n" <<
-        "\n" <<
-        "Written by Andrew Mihal, Christoph Spiel and others." <<
-        std::endl;
-
-    exit(0);
-}
-
-
-// With the exception of TIFF, VIFF, PNG, and PNM all file types
-// store only 1 byte (gray scale and mapped RGB) or 3 bytes (RGB)
-// per pixel.
-//
-// PNG can store UInt8 and UInt16 values, and supports 1 and 3
-// channel images. One additional alpha channel is also supported.
-//
-// PNM can store 1 and 3 channel images with UInt8, UInt16 and
-// UInt32 values in each channel.
-//
-// TIFF and VIFF are additionally able to store short and long
-// integers (2 or 4 bytes) and real values (32 bit float and 64 bit
-// double) without conversion.
-
-void
-printImageFormats()
-{
-    std::string formats(vigra::impexListFormats());
-    std::string extensions(vigra::impexListExtensions());
-
-    boost::replace_all(formats, " ", "\n  ");
-    boost::replace_all(extensions, " ", "\n  ");
-
-    std::cout <<
-        "Enblend supports the following image formats:\n" <<
-        "  " << formats << "\n" <<
-        "It automatically recognizes the image file extensions:\n" <<
-        "  " << extensions << "\n" <<
-        "and -- where supported by the image format -- accepts per-channel depths:\n" <<
-#ifndef DEBUG_8BIT_ONLY
-        "  " << "8 bits unsigned integral\n" <<
-#endif
-        "  " << "16 bits unsigned or signed integral\n" <<
-        "  " << "32 bits unsigned or signed integral\n" <<
-        "  " << "32 bits floating-point\n" <<
-        "  " << "64 bits floating-point\n" <<
-        std::endl;
-
-    exit(0);
-}
-
-
-void
-printSignature()
-{
-    std::cout.flush();
-    std::wcout << sig.message() << L"\n\n";
-    std::wcout.flush();
-
-    exit(0);
-}
-
-
-void
-printGlobbingAlgos()
-{
-    const enblend::algorithm_list algos = enblend::known_globbing_algorithms();
-
-    std::cout << "Enblend supports the following globbing algorithms:\n";
-    for (auto i = algos.begin(); i != algos.end(); ++i) {
-        std::cout <<
-            "  " << i->first << "\n" <<
-            "    " << i->second << "\n";
-    }
-    std::cout << std::endl;
-
-    exit(0);
-}
-
-
-void
-printSoftwareComponents()
-{
-    std::cout << "Compiler\n  " <<
-        // IMPLEMENTATION NOTE: Order matters as both CLang and ICC
-        // identify themselves as GCC, too.
-#if defined(__clang__)
-        "clang++ " << __clang_major__ << '.' << __clang_minor__ << '.' << __clang_patchlevel__ <<
-#elif defined(__ICC) || defined(__INTEL_COMPILER)
-        "icpc " << __GNUC__ << '.' << __GNUC_MINOR__ << '.' << __GNUC_PATCHLEVEL__ <<
-#elif defined(__GNUG__)
-        "g++ " << __GNUC__ << '.' << __GNUC_MINOR__ << '.' << __GNUC_PATCHLEVEL__ <<
-#elif defined(__IBMC__) || defined(__IBMCPP__)
-        "xlc++ " << __IBMCPP__ <<
-#elif defined(_MSC_VER)
-        "MS Visual Studio " << _MSC_FULL_VER <<
-#elif defined(__PGI)
-        "pgcpp " << __PGIC__ << '.' << __PGIC_MINOR__ << '.' << __PGIC_PATCHLEVEL__ <<
-#else
-        "unknown" <<
-#endif
-        "\n" <<
-#ifdef OPENMP
-        "  implementing OpenMP standard of " << _OPENMP / 100 << '-' << _OPENMP % 100 << "\n" <<
-#endif
-        "\n";
-
-#ifdef OPENCL
-    std::cout << "OpenCL APIs\n" <<
-#ifdef CL_VERSION_1_0
-        "  1.0\n" <<
-#endif
-#ifdef CL_VERSION_1_1
-        "  1.1\n" <<
-#endif
-#ifdef CL_VERSION_1_2
-        "  1.2\n" <<
-#endif
-#ifdef CL_VERSION_1_3
-        "  1.3\n" <<
-#endif
-#ifdef CL_VERSION_2_0
-        "  2.0\n" <<
-#endif
-#ifdef CL_VERSION_2_1
-        "  2.1\n" <<
-#endif
-        "\n";
-#endif // OPENCL
-
-    std::cout << "Libraries\n" <<
-        "  Boost:      " << BOOST_VERSION / 100000 << '.' << (BOOST_VERSION / 100) % 1000 << '.' << BOOST_VERSION % 100 << "\n" <<
-        "  GSL:        " << GSL_VERSION << "\n" <<
-        //"  JPEG:       " << "\n" <<
-        "  Little CMS: " << LCMS_VERSION / 1000 << '.' << (LCMS_VERSION / 10) % 100 << '.' << LCMS_VERSION % 10 << "\n" <<
-        //"  PNG:        " << "\n" <<
-        //"  OpenEXR:    " << "\n" <<
-        //"  TIFF:       " << "\n" <<
-        "  Vigra:      " << VIGRA_VERSION << "\n" <<
-        std::endl;
-
-    exit(0);
-}
-
-
-#ifdef OPENCL
-void
-printGPUPreference(size_t a_preferred_platform_id, size_t a_preferred_device_id)
-{
-    std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
-
-    ocl::print_opencl_information();
-    ocl::print_gpu_preference(a_preferred_platform_id, a_preferred_device_id);
-
-    exit(0);
-}
-#endif
 
 
 void
@@ -1861,26 +1638,29 @@ process_options(int argc, char** argv)
     switch (print_only_task)
     {
     case VERSION_ONLY:
-        printVersion(argc, argv);
+        introspection::printVersion(argc, argv);
         break;                  // never reached
     case USAGE_ONLY:
         printUsage(false);
         break;                  // never reached
     case IMAGE_FORMATS_ONLY:
-        printImageFormats();
+        introspection::printImageFormats();
         break;                  // never reached
     case SIGNATURE_ONLY:
-        printSignature();
+        introspection::printSignature();
         break;                  // never reached
     case GLOBBING_ALGOS_ONLY:
-        printGlobbingAlgos();
+        introspection::printGlobbingAlgos();
         break;                  // never reached
     case SOFTWARE_COMPONENTS_ONLY:
-        printSoftwareComponents();
+        introspection::printSoftwareComponents();
         break;                  // never reached
     case GPU_INFO_COMPONENTS_ONLY:
 #ifdef OPENCL
-        printGPUPreference(preferredGPUPlatform, preferredGPUDevice);
+        std::cout << "Available, OpenCL-compatible platform(s) and their device(s)\n";
+        ocl::print_opencl_information();
+        ocl::print_gpu_preference(preferredGPUPlatform, preferredGPUDevice);
+        exit(0);
 #else
         std::cerr <<
             command << ": option \"--show-gpu-info\" is not implemented in this binary,\n" <<

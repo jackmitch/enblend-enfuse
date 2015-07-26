@@ -21,6 +21,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   error_message.h error_message.cc \
                   filenameparse.h filenameparse.cc \
                   filespec.h filespec.cc \
+                  introspection.h introspection.cc \
                   mersenne.h mersenne.cc \
                   parameter.h parameter.cc \
                   self_test.h self_test.cc \
@@ -31,7 +32,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
 enblend_LDFLAGS = $(AM_LDFLAGS)
 enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) @EXTRA_LIBS@
-enblend_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
+enblend_CXXFLAGS = -DENBLEND_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                    -I$(top_srcdir)/src/layer_selection
 
@@ -48,6 +49,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  error_message.h error_message.cc \
                  filenameparse.h filenameparse.cc \
                  filespec.h filespec.cc \
+                 introspection.h introspection.cc \
                  mersenne.h mersenne.cc \
                  parameter.h parameter.cc \
                  self_test.h self_test.cc \
@@ -58,7 +60,7 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
 enfuse_LDFLAGS = $(AM_LDFLAGS)
 enfuse_LDADD = layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
-enfuse_CXXFLAGS = $(AM_CXXFLAGS) $(GSL_CFLAGS) \
+enfuse_CXXFLAGS = -DENFUSE_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
                   -I$(top_srcdir)/src/layer_selection
 
