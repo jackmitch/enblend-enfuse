@@ -60,6 +60,7 @@ set_source_files_properties("${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" PROPE
 set(DOCSTRING_SOURCE_FILES
     "${TOP_SRC_DIR}/src/bounds.h"
     "${TOP_SRC_DIR}/src/common.h"
+    "${TOP_SRC_DIR}/src/filespec.h"
     "${TOP_SRC_DIR}/src/filespec.cc"
     "${TOP_SRC_DIR}/src/global.h"
     "${TOP_SRC_DIR}/src/mga.h"
