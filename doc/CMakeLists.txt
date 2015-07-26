@@ -8,13 +8,9 @@ set(DocumentsDirectory "share/doc/enblend")
 ENDIF(WIN32)
 
 # some used flags
-IF(WIN32)
-  set(UPDATED_ON_FLAGS "--database=source-code-manager --override=none:\\datebyunknown --override=fs:\\datebyfs --override=scm:\\datebyscm")
-ELSE()
-  set(UPDATED_ON_FLAGS "--database=source-code-manager --override='none:\\datebyunknown' --override='fs:\\datebyfs' --override='scm:\\datebyscm'")
-ENDIF()
+set(UPDATED_ON_FLAGS "--database=source-code-manager --override=none:\\datebyunknown --override=fs:\\datebyfs --override=scm:\\datebyscm")
 
-set(GNUPLOT_FLAGS "--default-settings -e 'DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"'")
+set(GNUPLOT_FLAGS "--default-settings -e DATA_DIR='${CMAKE_CURRENT_SOURCE_DIR}'")
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
 set(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS "color size 4.5in,3.375in")
 
@@ -105,8 +101,9 @@ file(GLOB ENBLEND_SOURCE_FILES common-*.tex enblend-*.tex enblend.tex static-pre
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enblend-version.tex" "${CMAKE_BINARY_DIR}/doc/enblend_date"
     COMMAND ${PERL_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/updated-on ${UPDATED_ON_FLAGS} ${ENBLEND_SOURCE_FILES} > ${CMAKE_BINARY_DIR}/doc/enblend_date
-    COMMAND ${CMAKE_COMMAND} -DINPUT_PATH="${CMAKE_BINARY_DIR}/doc" -DFILENAME=enblend-version.tex -DDATEFILE=enblend_date -P "${CMAKE_CURRENT_SOURCE_DIR}/updateDate.cmake"
+    COMMAND ${CMAKE_COMMAND} -DINPUT_PATH=${CMAKE_BINARY_DIR}/doc -DFILENAME=enblend-version.tex -DDATEFILE=enblend_date -P "${CMAKE_CURRENT_SOURCE_DIR}/updateDate.cmake"
     DEPENDS "${CMAKE_BINARY_DIR}/doc/version.in" ${ENBLEND_SOURCE_FILES}
+    VERBATIM
 )
 set(ENBLEND_GENERATED_FILES
     config-h.tex
@@ -132,11 +129,20 @@ set(ENFUSE_GENERATED_FILES
 )
 
 # prepare picture for ps/pdf version
-add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
-    COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/seam-line-visualization.tif "eps3:${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
-    DEPENDS seam-line-visualization.tif
-)
+if(WIN32)
+    # MiKTeX epstopdf does not understand PostscriptLevel 3 file, so fall back to normal eps
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
+        COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/seam-line-visualization.tif "eps:${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
+        DEPENDS seam-line-visualization.tif
+    )
+else()
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
+        COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/seam-line-visualization.tif "eps3:${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps"
+        DEPENDS seam-line-visualization.tif
+    )
+endif()
 set(ENBLEND_PSTEXFILES "${CMAKE_BINARY_DIR}/doc/seam-line-visualization.eps")
 
 macro(build_pstex _list _depends)
@@ -168,9 +174,10 @@ macro(build_pstex _list _depends)
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
-                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \\\"${_name}.tex\\\"\; set terminal epslatex ${GNUPLOT_EPSLATEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
+                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.tex\"; set terminal epslatex ${GNUPLOT_EPSLATEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.pstex"
@@ -299,6 +306,7 @@ macro(build_png _list _depends)
                 COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png
                 DEPENDS ${_name}.fig
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
         elseif(_ext STREQUAL ".dot")
             add_custom_command(
@@ -318,9 +326,10 @@ macro(build_png _list _depends)
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png" "${CMAKE_BINARY_DIR}/doc/${_name}.cleantex.gp"
                 COMMAND ${PERL_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/cleantex" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp > ${_name}.cleantex.gp
-                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \\\"${_name}.png\\\"\; set terminal pngcairo ${GNUPLOT_PNG_TERMINAL_OPTIONS}" ${_name}.cleantex.gp
+                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.png\"; set terminal pngcairo ${GNUPLOT_PNG_TERMINAL_OPTIONS}" ${_name}.cleantex.gp
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
         else()
             # this should never happens

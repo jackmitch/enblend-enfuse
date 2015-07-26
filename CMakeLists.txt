@@ -420,11 +420,23 @@ if (PERL_FOUND AND DOC)
       OUTPUT_VARIABLE _HEVEA_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if(${_HEVEA_VERSION} MATCHES "library directory:[ \t]*(.*)$")
-        set(HEVEA_LIB_DIR ${CMAKE_MATCH_1})
-        message(STATUS "Hevea library directory: ${HEVEA_LIB_DIR}")
-    else()
-        message(FATAL_ERROR "Could not retrieve hevea library directory.")
+    if(WIN32)
+        # on Windows hevea report always c:\hevea as lib dir
+        # so assume the necessary files are beside the executable
+        get_filename_component(HEVEA_LIB_DIR ${HEVEA_EXE} PATH)
+     else()
+        execute_process(
+          COMMAND ${HEVEA_EXE} -version
+          OUTPUT_VARIABLE _HEVEA_VERSION
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(${_HEVEA_VERSION} MATCHES "library directory:[ \t]*(.*)$")
+            set(HEVEA_LIB_DIR ${CMAKE_MATCH_1})
+            string(REGEX REPLACE "\\\\" "/" HEVEA_LIB_DIR ${HEVEA_LIB_DIR}) 
+            message(STATUS "Hevea library directory: ${HEVEA_LIB_DIR}")
+        else()
+            message(FATAL_ERROR "Could not retrieve hevea library directory.")
+        endif()
     endif()
     set(PAPERSIZE "a4" CACHE STRING "Papersize for some converters: a4, a5, b5, executive, legal, letter")
     set(PRINTRESOLUTION "600" CACHE STRING "Resolution for some converters in dots-per-inch")

@@ -129,7 +129,7 @@ sub is_under_scm {
     my $command;
 
     if ($OSNAME eq 'MSWin32') {
-        $command = qq(cd $directory & hg root >null 2>&1);
+        $command = qq(cd $directory & hg root >nul 2>&1);
     } else {
         $command = qq(cd '$directory';  hg root > /dev/null 2> /dev/null);
     }
