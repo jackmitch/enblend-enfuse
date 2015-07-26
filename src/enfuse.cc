@@ -690,8 +690,12 @@ printUsage(const bool error = true)
         "\n" <<
         "Enfuse accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
+#if defined(CACHE_IMAGES) || \
+    defined(OPENMP) || \
+    (defined(OPENCL) && defined(PREFER_SEPARATE_OPENCL_SOURCE))
         "\n" <<
         "Environment:\n" <<
+#endif
 #ifdef CACHE_IMAGES
         "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
         "                         where to store ImageCache files.  If unset Enfuse uses \"/tmp\".\n" <<
