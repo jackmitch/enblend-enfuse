@@ -342,6 +342,10 @@ then
                  [AC_MSG_WARN([missing document class refrep.cls -- no Reference Manual Style available])
                   missing_for_doc="$missing_for_doc refrep.cls"])
 
+dnl  FIXME: We ought to add package `hypcap' to the list, but
+dnl  `AC_LATEX_PACKAGE' does not allow for prerequisite pqckages to be
+dnl  mentioned while testing and `hypcap' needs `hyperref' to be
+dnl  included first.
   m4_foreach([package_name],
              [amsmath, bold-extra, color, enumitem,
               footnote, graphicx, hyperref, hyphenat,
