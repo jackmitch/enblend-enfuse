@@ -1,3 +1,6 @@
+.NOTPARALLEL:
+
+
 TEXINPUTS = .:$(LATEX2HTML_LIBDIR):$(srcdir):
 export TEXINPUTS
 
