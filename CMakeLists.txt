@@ -388,6 +388,29 @@ if (PERL_FOUND AND DOC)
     if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
         message(FATAL_ERROR "Program fig2dev not found. This program is required to build the documentation.")
     endif()
+    set(_x86 "(x86)")
+    file(GLOB _GRAPHVIZ_BIN_DIRS
+        "$ENV{ProgramFiles}/Graphviz*/bin"
+        "$ENV{ProgramFiles${_x86}}/Graphviz*/bin"
+    )
+    unset(_x86)
+    find_program(DOT_EXECUTABLE
+        NAMES dot
+        PATHS
+            ${_GRAPHVIZ_BIN_DIRS}
+            [HKEY_LOCAL_MACHINE\\SOFTWARE\\ATT\\Graphviz;InstallPath]/bin
+            /Applications/Graphviz.app/Contents/MacOS
+            /Applications/Doxygen.app/Contents/Resources
+            /Applications/Doxygen.app/Contents/MacOS
+        DOC "Graphviz Dot tool"
+    )
+    if (${DOT_EXECUTABLE} MATCHES "-NOTFOUND")
+        message(FATAL_ERROR "Program dot from graphviz not found. This program is required to build the documentation.")
+    endif()
+    find_program(M4_EXECUTABLE m4)
+    if(${M4_EXECUTABLE} MATCHES "-NOTFOUND")
+        message(FATAL_ERROR "Program m4 not found. This program is required to build the documentation.")
+    endif()
     find_program(HEVEA_EXE hevea)
     if (${HEVEA_EXE} MATCHES "-NOTFOUND")
         message(FATAL_ERROR "Program hevea not found. This program is required to build the documentation.")

@@ -18,6 +18,12 @@ set(GNUPLOT_FLAGS "--default-settings -e 'DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
 set(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS "color size 4.5in,3.375in")
 
+set(DOTPP_FLAGS "--fatal-warnings --prefix-builtins --synclines ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4")
+set(DOT_FLAGS "-Gratio=auto -Gsplines=ortho -Nfontname=Helvetica -Nfontsize=11 -Efontname=Helvetica -Efontsize=10")
+set(DOT_EPS_FLAGS "-Gsize=4.75,8.5")
+set(DOT_PNG_FLAGS "-Gbgcolor=transparent")
+#set(DOT_PNG_FLAGS "-Gbgcolor=transparent -Gresolution=${PRINTRESOLUTION}")
+
 set(FIG2DEV_FLAGS "")
 set(FIG2DEV_EPS_TERMINAL_OPTIONS "")
 set(FIG2DEV_PSTEX_TERMINAL_OPTIONS "")
@@ -36,6 +42,10 @@ set(LATEX2HTML_FLAGS "-O -I . -I ${CMAKE_CURRENT_SOURCE_DIR} -fix")
 # format arguments for later usage
 separate_arguments(UPDATED_ON_FLAGS)
 separate_arguments(GNUPLOT_FLAGS)
+separate_arguments(DOTPP_FLAGS)
+separate_arguments(DOT_FLAGS)
+separate_arguments(DOT_EPS_FLAGS)
+separate_arguments(DOT_PNG_FLAGS)
 separate_arguments(FIG2DEV_FLAGS)
 separate_arguments(LATEX_FLAGS)
 separate_arguments(PDFLATEX_FLAGS)
@@ -141,10 +151,24 @@ macro(build_pstex _list _depends)
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
+        elseif(_ext STREQUAL ".dot")
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps.dot"
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot >${_name}.eps.dot
+                DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
+                COMMAND ${DOT_EXECUTABLE} ${DOT_FLAGS} -Teps ${DOT_EPS_FLAGS} -o${_name}.eps ${_name}.eps.dot
+                DEPENDS ${_name}.eps.dot 
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
-                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \\\"${_name}.tex\\\"\; set terminal epslatex ${GNUPLOT_EPSTEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
+                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \\\"${_name}.tex\\\"\; set terminal epslatex ${GNUPLOT_EPSLATEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
@@ -163,18 +187,18 @@ macro(build_pstex _list _depends)
 endmacro()
 
 set(ENBLEND_IMAGE_INPUTFILES
-    external-mask-workflow.fig
-    photographic-workflow.fig
+    external-mask-workflow.dot
+    photographic-workflow.dot
     log-transform.gp
 )
 build_pstex("${ENBLEND_IMAGE_INPUTFILES}" ENBLEND_PSTEXFILES)
 
 set(ENFUSE_PSTEXFILES)
 set(ENFUSE_IMAGE_INPUTFILES
-    external-mask-workflow.fig
-    focus-stack-decision-tree.fig
+    external-mask-workflow.dot
+    focus-stack-decision-tree.dot
     local-analysis-window.fig
-    photographic-workflow.fig
+    photographic-workflow.dot
     entropy-cutoff.gp
     entropy.gp
     exposure-cutoff.gp
@@ -276,6 +300,20 @@ macro(build_png _list _depends)
                 DEPENDS ${_name}.fig
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
             )
+        elseif(_ext STREQUAL ".dot")
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png.dot"
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot >${_name}.png.dot
+                DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
+                COMMAND ${DOT_EXECUTABLE} ${DOT_FLAGS} -Tpng ${DOT_PNG_FLAGS} -o${_name}.png ${_name}.png.dot
+                DEPENDS ${_name}.png.dot 
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.png")
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png" "${CMAKE_BINARY_DIR}/doc/${_name}.cleantex.gp"
