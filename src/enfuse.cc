@@ -113,7 +113,7 @@ double WExposure = 1.0;         //< default-weight-exposure 1.0
 double ExposureOptimum = 0.5;   //< default-exposure-optimum 0.5
 double ExposureWidth = 0.2;     //< default-exposure-width 0.2
 std::string ExposureWeightFunctionName("gaussian"); //< exposure-weight-function gaussian
-ExposureWeight* ExposureWeightFunction = new Gaussian(ExposureOptimum, ExposureWidth);
+ExposureWeight* ExposureWeightFunction = new exposure_weight::Gaussian(ExposureOptimum, ExposureWidth);
 ExposureWeight::argument_list_t ExposureWeightFunctionArguments;
 AlternativePercentage ExposureLowerCutoff(0.0, true); //< default-exposure-lower-cutoff 0%
 CompactifiedAlternativePercentage ExposureUpperCutoff(100.0, true); //< default-exposure-upper-cutoff 100%
@@ -793,100 +793,6 @@ fill_mask_templates(const char* an_option_argument,
             std::cerr << command
                       << ": warning: ignoring trailing garbage in \"" << an_option_name << "\"" << std::endl;
         }
-    }
-}
-
-
-#ifdef HAVE_DYNAMICLOADER_IMPL
-class DynamicExposureWeight : public ExposureWeight
-{
-public:
-    DynamicExposureWeight() = delete;
-
-    DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name) :
-        ExposureWeight(0.5, 0.25),
-        library(library_name), symbol(symbol_name),
-        dynamic_loader(DynamicLoader(library_name)),
-        function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
-    {}
-
-    DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name,
-                          double y_optimum, double width) :
-        ExposureWeight(y_optimum, width),
-        library(library_name), symbol(symbol_name),
-        dynamic_loader(DynamicLoader(library_name)),
-        function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
-    {}
-
-    void initialize(double y_optimum, double width_parameter,
-                    const argument_list_t& argument_list = argument_list_t()) override {
-        std::cout << "+ DynamicExposureWeight::initialize\n";
-        function->initialize(y_optimum, width_parameter, argument_list);
-    }
-
-    double weight(double y) override {return function->weight(y);}
-
-private:
-    std::string library;
-    std::string symbol;
-    DynamicLoader dynamic_loader;
-    ExposureWeight* function;
-};
-#endif // HAVE_DYNAMICLOADER_IMPL
-
-
-ExposureWeight*
-make_exposure_weight_function(const std::string& name,
-                              const ExposureWeight::argument_list_t& arguments,
-                              double y_optimum, double width)
-{
-    delete ExposureWeightFunction;
-
-    std::string possible_built_in(name);
-    enblend::to_lower(possible_built_in);
-
-    if (possible_built_in == "gauss" || possible_built_in == "gaussian") {
-        return new Gaussian(y_optimum, width);
-    } else if (possible_built_in == "lorentz" || possible_built_in == "lorentzian") {
-        return new Lorentzian(y_optimum, width);
-    } else if (possible_built_in == "halfsine" || possible_built_in == "half-sine") {
-        return new HalfSinusodial(y_optimum, width);
-    } else if (possible_built_in == "fullsine" || possible_built_in == "full-sine") {
-        return new FullSinusodial(y_optimum, width);
-    } else if (possible_built_in == "bisquare" || possible_built_in == "bi-square") {
-        return new Bisquare(y_optimum, width);
-    } else {
-#ifdef HAVE_DYNAMICLOADER_IMPL
-        if (arguments.empty()) {
-            std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\""
-                      << std::endl;
-            exit(1);
-        } else {
-            const std::string symbol_name(arguments.front());
-            ExposureWeight::argument_list_t user_arguments;
-            std::copy(std::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
-
-            ExposureWeight* weight_object;
-            try {
-                weight_object = new DynamicExposureWeight(name, symbol_name);
-                weight_object->initialize(y_optimum, width, user_arguments);
-            }
-            catch (ExposureWeight::error& exception) {
-                std::cerr << command <<
-                    ": user-defined weight function \"" << symbol_name <<
-                    "\" defined in shared object \"" << name <<
-                    "\" raised exception: " << exception.what() << std::endl;
-                exit(1);
-            }
-
-            return weight_object;
-        }
-#else
-        std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\"\n"
-                  << command << ": note: this binary has no support for dynamic loading of\n"
-                  << command << ": note: exposure weight functions" << std::endl;
-        exit(1);
-#endif // HAVE_DYNAMICLOADER_IMPL
     }
 }
 
@@ -1924,9 +1830,9 @@ process_options(int argc, char** argv)
     if (WExposure > 0.0)
     {
         ExposureWeightFunction =
-            make_exposure_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
-                                          ExposureOptimum, ExposureWidth);
-        if (!enblend::check_exposure_weight_function(ExposureWeightFunction))
+            exposure_weight::make_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
+                                                  ExposureOptimum, ExposureWidth);
+        if (!exposure_weight::check_weight_function(ExposureWeightFunction))
         {
             std::cerr << command
                       << ": unusable exposure weight function \"" << ExposureWeightFunctionName << "\""
@@ -1941,7 +1847,7 @@ process_options(int argc, char** argv)
 
     if (parameter::as_boolean("dump-exposure-weight-function", false)) {
         const int n = parameter::as_integer("exposure-weight-function-points", 21);
-        enblend::dump_exposure_weight_function(ExposureWeightFunction, std::min(std::max(n, 10), 10000));
+        exposure_weight::dump_weight_function(ExposureWeightFunction, std::min(std::max(n, 10), 10000));
         exit(0);
     }
 

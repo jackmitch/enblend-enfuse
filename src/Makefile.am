@@ -39,7 +39,9 @@ enblend_CXXFLAGS = -DENBLEND_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
 enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  \
                  assemble.h blend.h bounds.h common.h \
-                 exposure_weight_base.h exposure_weight.h dynamic_loader.h \
+                 exposure_weight_base.h \
+                 exposure_weight.h exposure_weight.cc \
+                 dynamic_loader.h \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h \
                  opencl.h opencl.cc opencl_vigra.h \

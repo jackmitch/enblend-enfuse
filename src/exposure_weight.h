@@ -26,89 +26,98 @@
 #include "exposure_weight_base.h"
 
 
-struct Gaussian : public ExposureWeight
+namespace exposure_weight
 {
-    Gaussian(double y_optimum, double width_parameter) : ExposureWeight(y_optimum, width_parameter) {}
+    ExposureWeight* make_weight_function(const std::string& name,
+                                         const ExposureWeight::argument_list_t& arguments,
+                                         double y_optimum, double width);
+    void dump_weight_function(ExposureWeight* weight_function, int n);
+    bool check_weight_function(ExposureWeight* weight_function, int n = 65536);
 
-    double weight(double y) override
+    struct Gaussian : public ExposureWeight
     {
-        const double z = normalize(y);
-        return exp(-0.5 * z * z);
-    }
-};
+        Gaussian(double y_optimum, double width_parameter) : ExposureWeight(y_optimum, width_parameter) {}
+
+        double weight(double y) override
+        {
+            const double z = normalize(y);
+            return exp(-0.5 * z * z);
+        }
+    };
 
 
-struct Lorentzian : public ExposureWeight
-{
-    // FWHM = 2 * sqrt(2)
+    struct Lorentzian : public ExposureWeight
+    {
+        // FWHM = 2 * sqrt(2)
 #define FWHM_LORENTZIAN 2.8284271247461900976033774484193961571
 
-    Lorentzian(double y_optimum, double width_parameter) :
-        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_LORENTZIAN) {}
+        Lorentzian(double y_optimum, double width_parameter) :
+            ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_LORENTZIAN) {}
 
-    double weight(double y) override
+        double weight(double y) override
+        {
+            const double z = normalize(y);
+            return 1.0 / (1.0 + 0.5 * z * z);
+        }
+    };
+
+
+    struct HalfSinusodial : public ExposureWeight
     {
-        const double z = normalize(y);
-        return 1.0 / (1.0 + 0.5 * z * z);
-    }
-};
-
-
-struct HalfSinusodial : public ExposureWeight
-{
-    // FWHM = 2 * arccos(1/2)
+        // FWHM = 2 * arccos(1/2)
 #define FWHM_HALFSINUSODIAL 2.0943951023931954923084289221863352561
 
-    HalfSinusodial(double y_optimum, double width_parameter) :
-        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_HALFSINUSODIAL) {}
+        HalfSinusodial(double y_optimum, double width_parameter) :
+            ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_HALFSINUSODIAL) {}
 
-    double weight(double y) override
+        double weight(double y) override
+        {
+            const double z = normalize(y);
+            return fabs(z) <= M_PI_2 ? cos(z) : 0.0;
+        }
+    };
+
+
+    struct FullSinusodial : public ExposureWeight
     {
-        const double z = normalize(y);
-        return fabs(z) <= M_PI_2 ? cos(z) : 0.0;
-    }
-};
-
-
-struct FullSinusodial : public ExposureWeight
-{
-    // FWHM = pi
+        // FWHM = pi
 #define FWHM_FULLSINUSODIAL M_PI
 
-    FullSinusodial(double y_optimum, double width_parameter) :
-        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_FULLSINUSODIAL) {}
+        FullSinusodial(double y_optimum, double width_parameter) :
+            ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_FULLSINUSODIAL) {}
 
-    double weight(double y) override
+        double weight(double y) override
+        {
+            const double z = normalize(y);
+            return fabs(z) <= M_PI ? 0.5 + cos(z) / 2.0 : 0.0;
+        }
+    };
+
+
+    struct Bisquare : public ExposureWeight
     {
-        const double z = normalize(y);
-        return fabs(z) <= M_PI ? 0.5 + cos(z) / 2.0 : 0.0;
-    }
-};
-
-
-struct Bisquare : public ExposureWeight
-{
-    // FWHM = 2 / sqrt(sqrt(2))
+        // FWHM = 2 / sqrt(sqrt(2))
 #define FWHM_BISQUARE 1.6817928305074290860622509524664297901
 
-    Bisquare(double y_optimum, double width_parameter) :
-        ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_BISQUARE) {}
+        Bisquare(double y_optimum, double width_parameter) :
+            ExposureWeight(y_optimum, width_parameter * FWHM_GAUSSIAN / FWHM_BISQUARE) {}
 
-    double weight(double y) override
-    {
-        const double z = normalize(y);
+        double weight(double y) override
+        {
+            const double z = normalize(y);
 
-        if (fabs(z) <= 1.0)
-        {
-            const double z2 = z * z;
-            return (1.0 - z2) * (1.0 + z2);
+            if (fabs(z) <= 1.0)
+            {
+                const double z2 = z * z;
+                return (1.0 - z2) * (1.0 + z2);
+            }
+            else
+            {
+                return 0.0;
+            }
         }
-        else
-        {
-            return 0.0;
-        }
-    }
-};
+    };
+} // namespace exposure_weight
 
 
 #endif // EXPOSURE_WEIGHT_INCLUDED

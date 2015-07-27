@@ -59,46 +59,6 @@ using vigra::functor::Param;
 
 
 namespace enblend {
-void
-dump_exposure_weight_function(ExposureWeight* weight_function, int n)
-{
-    assert(n >= 2);
-
-    for (int i = 0; i < n; ++i)
-    {
-        const double x = static_cast<double>(i) / static_cast<double>(n - 1);
-        const double w = weight_function->weight(x);
-
-        std::cout << i << ' ' << x << ' ' << w << '\n';
-    }
-}
-
-
-bool
-check_exposure_weight_function(ExposureWeight* weight_function, int n = 65536)
-{
-    assert(n >= 2);
-
-    omp::atomic_t number_of_faults = omp::atomic_t();
-
-#ifdef OPENMP
-#pragma omp parallel for
-#endif
-    for (int i = 0; i < n; ++i)
-    {
-        const double y = static_cast<double>(i) / static_cast<double>(n - 1);
-        const double w = weight_function->weight(y);
-
-        if (w < 0.0 || w >= 1.0)
-        {
-            ++number_of_faults;
-        }
-    }
-
-    return number_of_faults == omp::atomic_t();
-}
-
-
 // Keep sum and sum-of-squares together for improved CPU-cache locality.
 template <typename T>
 struct ScratchPad {
