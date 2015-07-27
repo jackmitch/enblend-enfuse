@@ -7,6 +7,10 @@ Unreleased.  Current line of development.
 - All deprecated options and features of version 4.1 have been
   removed.
 
+- Enblend and Enfuse support layer (aka "page", aka "frame") selection
+  in of multi-layer image-files.  This includes processing any layers
+  in user-defined order.
+
 - Both Enblend and Enfuse can now perform all their pyramidal blending
   operations in CIELAB (aka L*a*b*, aka L-star) and CIELUV (aka
   L*u*v*) color spaces, too.  See section "New Commandline Options",

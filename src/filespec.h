@@ -38,33 +38,51 @@ namespace enblend
     typedef std::pair<std::string, unsigned> FilePosition; /** Filename, line number pairs */
     typedef std::list<FilePosition> FilePositionTrace;     /** Traceback to a file position */
 
-    /** Print the (back-)trace of all response files opened so far. */
-    void unroll_trace(const FilePositionTrace& a_trace);
-
 
     class TraceableFileName
     {
     public:
+        TraceableFileName() = delete;
         TraceableFileName(const std::string& a_filename,
                           const FilePositionTrace& a_trace,
-                          selector::Abstract* a_selector) :
-            filename_(a_filename), trace_(a_trace), selector_(a_selector) {}
+                          selector::Abstract* a_selector);
+        virtual ~TraceableFileName();
+        virtual TraceableFileName* clone() const;
 
-        virtual ~TraceableFileName() {}
+        const std::string& filename() const;
+        const FilePositionTrace& trace() const;
+        void unroll_trace() const;
+        selector::Abstract* selector() const;
 
-        const std::string& filename() const {return filename_;}
-        const FilePositionTrace& trace() const {return trace_;}
-        void unroll_trace() const {enblend::unroll_trace(trace_);}
-        selector::Abstract* selector() const {return selector_;}
-
-    private:
+    protected:
+        selector::Abstract* selector_;
         const std::string filename_;
         const FilePositionTrace trace_;
-        selector::Abstract* const selector_;
     };
 
 
-    typedef std::list<TraceableFileName> TraceableFileNameList; /** */
+    class TraceableFileNameAndLayer : public TraceableFileName
+    {
+        typedef TraceableFileName super;
+
+    public:
+        TraceableFileNameAndLayer() = delete;
+        TraceableFileNameAndLayer(const std::string& a_filename,
+                                  const FilePositionTrace& a_trace,
+                                  const std::string& a_layer_specification);
+        TraceableFileNameAndLayer(const TraceableFileNameAndLayer&);
+        TraceableFileNameAndLayer& operator=(const TraceableFileNameAndLayer&) = delete;
+        ~TraceableFileNameAndLayer() override;
+        TraceableFileNameAndLayer* clone() const override;
+
+        std::string layer_spec() const;
+
+    protected:
+        const std::string layer_specification_;
+    };
+
+
+    typedef std::list<TraceableFileName*> TraceableFileNameList; /** */
 
 
     /** Recursively unfold filename which may be a literal name or a

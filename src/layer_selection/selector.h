@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "info.h"
 #include "layer_selection.h"
@@ -38,8 +39,13 @@ namespace selector
         FirstLayerId,
         LastLayerId,
         LargestLayerId,
-        NoLayerId
+        NoLayerId,
+        IndexedLayerId
     };
+
+
+    typedef std::vector<unsigned> layer_ordered_list_t;
+
 
     struct Abstract
     {
@@ -51,7 +57,10 @@ namespace selector
         virtual std::string description() const = 0;
 
         virtual bool select(const ImageListInformation* an_image_info,
-                            const std::string& a_filename, unsigned a_layer_index) = 0;
+                            const std::string& a_filename,
+                            unsigned a_layer_index) = 0;
+        virtual layer_ordered_list_t viable_layers(const ImageListInformation* an_image_info,
+                                                   const std::string& a_filename) = 0;
     };
 
 
@@ -62,10 +71,9 @@ namespace selector
         std::string name() const;
         std::string description() const;
 
-        bool select(const ImageListInformation*, const std::string&, unsigned)
-        {
-            return true;
-        }
+        bool select(const ImageListInformation*, const std::string&, unsigned) {return true;}
+        layer_ordered_list_t viable_layers(const ImageListInformation* an_image_info,
+                                           const std::string& a_filename);
     };
 
 
@@ -80,6 +88,11 @@ namespace selector
         {
             return a_layer_index == 1;
         }
+
+        layer_ordered_list_t viable_layers(const ImageListInformation*, const std::string&)
+        {
+            return layer_ordered_list_t(1, 1);
+        }
     };
 
 
@@ -92,11 +105,16 @@ namespace selector
 
         bool select(const ImageListInformation* an_image_info,
                     const std::string& a_filename, unsigned a_layer_index);
+
+        layer_ordered_list_t viable_layers(const ImageListInformation* an_image_info,
+                                           const std::string& a_filename);
     };
 
 
     class LargestLayer : public Abstract
     {
+        typedef std::map<std::string, unsigned> cache_t;
+
     public:
         id_t id() const {return id_t::LargestLayerId;}
         std::string name() const;
@@ -104,9 +122,10 @@ namespace selector
 
         bool select(const ImageListInformation* an_image_info,
                     const std::string& a_filename, unsigned a_layer_index);
+        layer_ordered_list_t viable_layers(const ImageListInformation* an_image_info,
+                                           const std::string& a_filename);
 
     private:
-        typedef std::map<std::string, unsigned> cache_t;
         cache_t cache_;
     };
 
@@ -118,9 +137,11 @@ namespace selector
         std::string name() const;
         std::string description() const;
 
-        bool select(const ImageListInformation*, const std::string&, unsigned)
+        bool select(const ImageListInformation*, const std::string&, unsigned) {return false;}
+
+        layer_ordered_list_t viable_layers(const ImageListInformation*, const std::string&)
         {
-            return false;
+            return layer_ordered_list_t();
         }
     };
 
@@ -131,6 +152,52 @@ namespace selector
 
     algorithm_list::const_iterator find_by_id(id_t an_id);
     algorithm_list::const_iterator find_by_name(const std::string& a_name);
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+
+    typedef std::vector<int> index_list_t;
+
+    struct Index;               // forward declaration
+
+    class LayerSpecification
+    {
+    public:
+        LayerSpecification() = delete;
+        LayerSpecification(const std::string& a_layer_specification);
+        LayerSpecification(const LayerSpecification&);
+        LayerSpecification& operator=(const LayerSpecification&) = delete;
+        ~LayerSpecification();
+
+        index_list_t values(int a_maximum_index) const;
+        std::string as_string() const;
+
+    private:
+        typedef std::vector<Index*> abstract_index_list_t;
+        abstract_index_list_t indices_;
+    };
+
+
+    class IndexedLayer : public Abstract
+    {
+    public:
+        IndexedLayer() = delete;
+        explicit IndexedLayer(const std::string& a_layer_specification);
+
+        id_t id() const {return id_t::IndexedLayerId;}
+        std::string name() const;
+        std::string description() const;
+        LayerSpecification layer_spec() const;
+
+        bool select(const ImageListInformation* an_image_info,
+                    const std::string& a_filename, unsigned a_layer_index);
+        layer_ordered_list_t viable_layers(const ImageListInformation* an_image_info,
+                                           const std::string& a_filename);
+
+    private:
+        const LayerSpecification layer_spec_;
+    };
 } // end namespace selector
 
 

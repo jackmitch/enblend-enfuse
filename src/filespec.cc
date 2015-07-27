@@ -28,6 +28,7 @@
 #include <unistd.h>
 #endif
 
+#include <cctype>
 #include <cerrno>
 #include <fstream>
 #include <iomanip>
@@ -69,6 +70,102 @@ extern LayerSelectionHost LayerSelection;
 
 namespace enblend
 {
+// Print the (back-)trace of all response files opened so far.
+extern void unroll_trace(const FilePositionTrace& a_trace);
+
+
+TraceableFileName::TraceableFileName(const std::string& a_filename,
+                                     const FilePositionTrace& a_trace,
+                                     selector::Abstract* a_selector) :
+    selector_(a_selector), filename_(a_filename), trace_(a_trace)
+{}
+
+
+TraceableFileName::~TraceableFileName()
+{}
+
+
+TraceableFileName* TraceableFileName::clone() const
+{
+    return new TraceableFileName(*this);
+}
+
+
+const std::string&
+TraceableFileName::filename() const
+{
+    return filename_;
+}
+
+
+const FilePositionTrace&
+TraceableFileName::trace() const
+{
+    return trace_;
+}
+
+
+void
+TraceableFileName::unroll_trace() const
+{
+    enblend::unroll_trace(trace_);
+}
+
+
+selector::Abstract*
+TraceableFileName::selector() const
+{
+    return selector_;
+}
+
+
+TraceableFileNameAndLayer::TraceableFileNameAndLayer(const std::string& a_filename,
+                                                     const FilePositionTrace& a_trace,
+                                                     const std::string& a_layer_specification) :
+    super(a_filename, a_trace, new selector::IndexedLayer(a_layer_specification)),
+    layer_specification_(a_layer_specification)
+{
+#ifdef DEBUG_FILESPEC
+    std::cout <<
+        "+ TraceableFileNameAndLayer(,,,): filename = <" << filename() << ">\n" <<
+        "+ TraceableFileNameAndLayer(,,,): layer_spec = <" << layer_spec() << ">\n" <<
+        "+ TraceableFileNameAndLayer(,,,): selector = <" << selector()->name() << ">\n";
+#endif
+}
+
+
+TraceableFileNameAndLayer::TraceableFileNameAndLayer(const TraceableFileNameAndLayer& another) :
+    super(another.filename(), another.trace(), new selector::IndexedLayer(another.layer_spec())),
+    layer_specification_(another.layer_specification_)
+{
+#ifdef DEBUG_FILESPEC
+    std::cout <<
+        "+ TraceableFileNameAndLayer(const&): filename = <" << filename() << ">\n" <<
+        "+ TraceableFileNameAndLayer(const&): layer_spec = <" << layer_spec() << ">\n" <<
+        "+ TraceableFileNameAndLayer(const&): selector = <" << selector()->name() << ">\n";
+#endif
+}
+
+
+TraceableFileNameAndLayer::~TraceableFileNameAndLayer()
+{
+    delete selector_;
+}
+
+
+TraceableFileNameAndLayer*
+TraceableFileNameAndLayer::clone() const
+{
+    return new TraceableFileNameAndLayer(*this);
+}
+
+
+std::string
+TraceableFileNameAndLayer::layer_spec() const
+{
+    return layer_specification_;
+}
+
 
 #ifdef _WIN32
 /** Add all files which match filename to filelist.  filename can
@@ -523,9 +620,104 @@ struct TraceInfo
 };
 
 
-void
-unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const std::string& filename)
+#define LAYERSPEC_OPEN  "["     //< LAYERSPEC_OPEN \char91
+#define LAYERSPEC_CLOSE "]"     //< LAYERSPEC_CLOSE \char93
+
+
+#ifdef DEBUG_FILESPEC
+static std::string
+pretty_string_of_string_size_type(std::string::size_type a_size)
 {
+    std::ostringstream stream;
+
+    if (a_size == std::string::npos)
+    {
+        stream << "n/pos";
+    }
+    else
+    {
+        stream << a_size;
+    }
+
+    return stream.str();
+}
+#endif
+
+
+bool
+separate_filename_and_optional_layerspec(std::string& filename, std::string& layerspec,
+                                         const std::string& filename_and_optional_layerspec)
+{
+    const std::string::size_type layer_index_begin =
+        filename_and_optional_layerspec.find_last_of(LAYERSPEC_OPEN);
+    const std::string::size_type layer_index_end =
+        filename_and_optional_layerspec.find_last_of(LAYERSPEC_CLOSE);
+    bool has_layerspec;
+
+    if (layer_index_begin != std::string::npos && layer_index_end != std::string::npos &&
+        layer_index_end + 1 == filename_and_optional_layerspec.length())
+    {
+        std::string::size_type filename_end(layer_index_begin - 1);
+        // Allow for whitespace between the filename proper and begin
+        // of the later specification (LAYERSPEC_OPEN).
+        while (std::isspace(filename_and_optional_layerspec[filename_end]))
+        {
+            --filename_end;
+        }
+        filename.assign(filename_and_optional_layerspec, 0, filename_end + 1);
+        layerspec.assign(filename_and_optional_layerspec,
+                         layer_index_begin + 1,
+                         layer_index_end - layer_index_begin - 1);
+        has_layerspec = true;
+    }
+    else
+    {
+        filename.assign(filename_and_optional_layerspec);
+        layerspec.clear();
+        has_layerspec = false;
+    }
+
+#ifdef DEBUG_FILESPEC
+    std::cout <<
+        "+ separate_filename_and_optional_layerspec: layer_index_begin = " <<
+        pretty_string_of_string_size_type(layer_index_begin) <<
+        ", layer_index_end = " <<
+        pretty_string_of_string_size_type(layer_index_end) <<
+        ", length() = " << filename_and_optional_layerspec.length() << "\n" <<
+        "+ separate_filename_and_optional_layerspec: filename = <" << filename <<
+        ">, layerspec = <" << layerspec << ">\n" <<
+        "+ separate_filename_and_optional_layerspec -> " << has_layerspec << "\n";
+#endif
+
+    return has_layerspec;
+}
+
+
+static enblend::TraceableFileName*
+make_traceable_file_name_and_maybe_layer(const std::string& a_filename,
+                                         const FilePositionTrace& a_file_position_trace,
+                                         selector::Abstract* a_selector,
+                                         bool has_layerspec,
+                                         const std::string& a_layer_specification)
+{
+    // We can have an empty layerspec ("[]"): has_layerspec == true && layerspec == "",
+    // in contrast, without layerspec we get: has_layerspec == false && layerspec == "".
+    return
+        has_layerspec ?
+        new enblend::TraceableFileNameAndLayer(a_filename, a_file_position_trace, a_layer_specification) :
+        new enblend::TraceableFileName(a_filename, a_file_position_trace, a_selector);
+}
+
+
+void
+unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info,
+                     const std::string& filename_and_optional_layerspec)
+{
+    std::string filename;
+    std::string layerspec;
+    const bool has_layerspec = separate_filename_and_optional_layerspec(filename, layerspec,
+                                                                        filename_and_optional_layerspec);
+
     // Checking the nesting_lavel acts as an emergency break in the
     // case our usual recursion detection fails.
     if (trace_info.nesting_level > RESPONSE_FILE_MAX_NESTING_LEVEL)
@@ -545,6 +737,10 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
     if (filename.empty())
     {
         std::cerr << command << ": info: empty filename\n";
+        if (!layerspec.empty())
+        {
+            std::cerr << command << ": info: found only layer specification, missing filename\n";
+        }
         unroll_trace(trace_info.file_position);
         return;
     }
@@ -708,7 +904,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                  ++p)
             {
                 const FileNameList expanded_partial_result =
-                    glob.expand(p->filename(), trace_info.file_position);
+                    glob.expand((*p)->filename(), trace_info.file_position);
                 for (FileNameList::const_iterator q = expanded_partial_result.begin();
                      q != expanded_partial_result.end();
                      ++q)
@@ -724,7 +920,9 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                             "+ unfold_filename_iter: path = <" << path << ">\n";
 #endif
                         result.insert(result.end(),
-                                      enblend::TraceableFileName(path, p->trace(), p->selector()));
+                                      make_traceable_file_name_and_maybe_layer(path, (*p)->trace(),
+                                                                               (*p)->selector(),
+                                                                               has_layerspec, layerspec));
                     }
                     else
                     {
@@ -734,9 +932,16 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
                             "+ unfold_filename_iter: q = " << *q << "\n";
 #endif
                         result.insert(result.end(),
-                                      enblend::TraceableFileName(*q, p->trace(), p->selector()));
+                                      make_traceable_file_name_and_maybe_layer(*q, (*p)->trace(),
+                                                                               (*p)->selector(),
+                                                                               has_layerspec, layerspec));
                     }
                 }
+            }
+
+            for (auto x : partial_result)
+            {
+                delete x;
             }
 
             trace_info.file_position.pop_front();
@@ -753,7 +958,9 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
     }
     else
     {
-        result.push_back(enblend::TraceableFileName(filename, trace_info.file_position, selector));
+        result.push_back(make_traceable_file_name_and_maybe_layer(filename, trace_info.file_position,
+                                                                  selector,
+                                                                  has_layerspec, layerspec));
     }
 }
 
@@ -791,9 +998,11 @@ unfold_filename(TraceableFileNameList& result, const std::string& filename)
 #ifdef DEBUG_FILESPEC
     for (TraceableFileNameList::const_iterator i = result.begin(); i != result.end(); ++i)
     {
-        std::cout << "+ unfold_filename: filename: \"" << i->filename() <<
-            "\", selector \"" << i->selector()->name() << "\"\n";
-        for (FilePositionTrace::const_iterator j = i->trace().begin(); j != i->trace().end(); ++j)
+        std::cout <<
+            "+ unfold_filename: filename = <" << (*i)->filename() <<
+            ">, selector = " << (*i)->selector() <<
+            " -> \"" << (*i)->selector()->name() << "\"" << std::endl;
+        for (FilePositionTrace::const_iterator j = (*i)->trace().begin(); j != (*i)->trace().end(); ++j)
         {
             std::cout << "+ unfold_filename: pos = (" << j->first << ", " << j->second << ")\n";
         }
@@ -851,8 +1060,15 @@ maybe_response_file(const std::string& filename)
                 continue;
             }
 
-            if (line[0] == RESPONSE_FILE_PREFIX_CHAR ||
-                is_known_extension_to_vigra(line))
+            if (line[0] == RESPONSE_FILE_PREFIX_CHAR)
+            {
+                score += 2U;
+            }
+
+            std::string filename;
+            std::string layerspec;
+            separate_filename_and_optional_layerspec(filename, layerspec, line);
+            if (is_known_extension_to_vigra(filename))
             {
                 score += 2U;
             }

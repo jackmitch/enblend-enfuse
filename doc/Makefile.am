@@ -312,6 +312,7 @@ DOCSTRING_SOURCE_FILES = \
         global.h \
         mga.h \
         opencl.cc \
+        layer_selection/selector.cc \
     )
 
 

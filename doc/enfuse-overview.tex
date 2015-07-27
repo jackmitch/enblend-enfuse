@@ -112,20 +112,11 @@ assuming all pixels should contribute to the final output.  Any alpha
 value other than zero is interpreted as ``this pixel should contribute
 to the final image''.
 
-\App{} reads all layers of multi-layer images%
-\gensee{multi-layer image}{image, multi-layer}%
-\genidx{image!multi-layer},
-like, for example, multi\hyp{}directory%
-\gensee{multi-directory \acronym{TIFF}}{\acronym{TIFF}, multi-directory}%
-\genidx{TIFF@\acronym{TIFF}!multi-directory}
-\acronym{TIFF} images\footnote{Use utilities like, e.g.,
-  \command{tiffcopy}\prgidx{tiffcopy} and
-  \command{tiffsplit}\prgidx{tiffsplit} of LibTIFF to manipulate
-  multi-directory \acronym{TIFF} images.  See
-  Appendix~\fullref{sec:helpful-programs}.}.  The input images are
-processed in the order they appear on the command line.  Multi-layer
-images are processed from the first layer to the last before \App{}
-considers the next image on the command line.
+The input images are processed in the order they appear on the command
+line.  Multi\hyp{}layer images are processed from the first layer to
+the last before \App{} considers the next image on the command line.
+Consult Section~\ref{sec:layer-selection} on how to change the images'
+order within multi\hyp{}layer image files.
 
 Find out more about \App{} on its
 \uref{\sourceforgenet}{SourceForge}\genidx{SourceForge}

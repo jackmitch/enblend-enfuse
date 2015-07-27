@@ -109,3 +109,10 @@ LayerSelectionHost::accept(const std::string& a_filename, unsigned a_layer_index
 
     return result;
 }
+
+
+selector::layer_ordered_list_t
+LayerSelectionHost::viable_layers(const std::string& a_filename)
+{
+    return selector_->viable_layers(const_cast<const ImageListInformation*>(info_), a_filename);
+}

@@ -1,0 +1,237 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Layer Selection\commonpart]{Layer Selection\commonpart
+  \label{sec:layer-selection}
+  \genidx[\rangebeginlocation]{layer!selection}}
+
+Some image formats, like for example \acronym{TIFF}, allow for storing
+more than one image in a single file, where all the contained images
+can have different sizes, number of channels, resolutions, compression
+schemes, etc.  The file there acts as a container for an
+\emph{ordered} set of images.  In the \acronym{TIFF}-documentation
+these are known as
+``multi-page''\genidx[\defininglocation]{file!multi-page}%
+\gensee{multi-page file}{file, multi-page}\gensea{multi-page
+  file}{layer} files and because the image data in a
+\acronym{TIFF}-file is associated with a
+``directory'',\genidx[\defininglocation]{image!directory} the files
+sometimes are also called ``multi-directory'' files.  In this manual,
+multiple images in a file are called
+``layers''.\genidx[\defininglocation]{layer!image}
+
+The main advantage of multi-layer files over a set of single-layer
+ones is a cleaner work area with less image-files and thus an easier
+handling of the intermediate products which get created when
+generating a panorama or fused image, and in particularly with regard
+to panoramas of fused images.
+
+The difficulty in working with layers is their lack of a possibly
+mnemonic naming scheme.  They do not have telling names like
+\filename{taoth-vaclarush} or \filename{valos-cor}, but only numbers.
+
+
+\subsection[Layer Selection Syntax]{Layer Selection Syntax
+  \label{sec:layer-selection-syntax}
+  \genidx{layer selection syntax}
+  \genidx{syntax!layer selection}}
+
+To give the user the same flexibility in specifying and ordering
+images as with single-layer images, both \App{} and \OtherApp{} offer
+a special syntax to select layers in multi-page files by appending a
+\metavar{layer-specification} to the image file name.
+Table~\ref{tab:layer-selection-grammar} defines the grammar of
+\metavar{layer-specification}\/s.
+
+Selecting a tuple of layers with a \metavar{layer-specification}
+overrides the active layer selection algorithm.  See also
+option~\flexipageref{\option{--layer-selector}}{opt:layer-selector}
+and Section~\fullref{sec:response-files}.
+
+Layer selection works at the command-line as well as in Response
+Files; see Section~\ref{sec:response-files}.
+
+\begin{table}[htbp]
+  \begin{tabular}{l@{$\quad::=\quad$}l}
+    \metavar{layer-specification} &
+    \sample{\val*{val:LAYERSPEC_OPEN}} \metavar{selection-tuple} \sample{\val*{val:LAYERSPEC_CLOSE}} \\
+    \metavar{selection-tuple} & \metavar{selection} [ \sample{:} \metavar{selection} ] \\
+    \metavar{selection} & \{ \metavar{singleton} $|$ \metavar{range} \} \\
+    \metavar{range} & [ \sample{\val*{val:layer-range-reverse-keyword}} ]
+            [ \metavar{range-bound} ] \sample{\val*{val:layer-range-separator}} [ \metavar{range-bound} ] \\
+    \metavar{range-bound} & \metavar{singleton} $|$ \sample{\val*{val:layer-range-empty-index-symbol}} \\
+    \metavar{singleton} & \metavar{index} $|$ \sample{-} \metavar{index} \\
+  \end{tabular}
+
+  where \metavar{index} is an integral layer index starting at one.
+
+  \caption[Grammar of layer specifications]{\acronym{EBNF} definition
+    of the grammar of layer specifications.  In addition to the
+    \metavar{selection} separator~\sample{:} shown all usual
+    numeric-option delimiters
+    (\sample{\val{val:numeric-option-delimiters}}) apply.  The keyword
+    for \metavar{range} reversal,
+    \sample{\val{val:layer-range-reverse-keyword}}, can be abbreviated
+    to any length and is treated case-insensitively.
+    \label{tab:layer-selection-grammar}}
+
+  \genidx{syntax!layer selection!grammar}
+\end{table}
+
+The simplest \metavar{layer-specification} are the
+layer-\metavar{index}es themselves.  The first layer gets index~1, the
+second layer~2, and so on.  Zero never is a valid index!  For
+convenience backwards indexing is also possible.  This means by
+prefixing an index with a minus-sign~(\sample{-}) counting will start
+with the last layer of the \emph{associated} multi-page image, such
+that the last layer always has index~$-1$, the next to last index~$-2$
+and so on.  Out-of-range indexes are silently ignored whether forward
+or backward.
+
+The single layer of a single-layer file always can be accessed either
+with index~\sample{1} or \sample{-1}.
+
+Select a contiguous \metavar{range} of indexes with the range
+operator~\sample{\val{val:layer-range-separator}}, where the
+\metavar{range-bound}\/s are forward or backward indices.  Leaving out
+a bound or substituting the open-range
+indicator~\sample{\val{val:layer-range-empty-index-symbol}} means a
+maximal range into the respective direction.
+
+Layer specifications ignore white space, but usual shells do not.
+This means that at the command-line
+\begin{terminal}
+  \$ \app{} --output=out.tif --verbose multi-layer.tif[2:]
+\end{terminal}
+works, whereas spaced-out out phrase \code{multi-layer.tif [2 : ]}
+must be quoted
+\begin{terminal}
+  \$ \app{} --output=out.tif --verbose 'multi-layer.tif[2 : ]'
+\end{terminal}
+Quoting will also be required if \App's delimiters have special
+meanings to the shell.
+
+Examples for an image with 8~layers.
+
+\begin{codelist}
+  \newcommand*{\lspec}[1]{\mbox{\val*{val:LAYERSPEC_OPEN}{#1}\val*{val:LAYERSPEC_CLOSE}}}%
+\item[\lspec{}] The empty selection selects nothing and in that way
+  works like the layer-selector \sample{no-layer}.
+
+\item[\lspec{2 :\ 4 :\ 5}] Select only layers 2, 4, and 5 in this order.
+
+\item[\lspec{2 :\ -4 :\ -3}] Like before, but with some
+  backwards-counting indices.
+
+\item[\lspec{1 \val*{val:layer-range-separator}\ 4}] Layers 1~to 4,
+  this is 1, 2, 3, and~4 in this order.
+
+\item[\lspec{\val*{val:layer-range-empty-index-symbol}\
+      \val*{val:layer-range-separator}\ 4}] Same as above in
+  open-range notation.
+
+\item[\lspec{\val*{val:layer-range-separator}\ 4}] Same as above in
+  abbreviated, open-range notation.
+
+\item[\lspec{-2 \val*{val:layer-range-separator}\
+      \val*{val:layer-range-empty-index-symbol}}] The last two
+  layers, which are~7 and~8 in our running example.
+
+\item[\lspec{\val*{val:layer-range-empty-index-symbol}\
+      \val*{val:layer-range-separator}\
+      \val*{val:layer-range-empty-index-symbol}}] All layers in their
+  natural order.
+
+\item[\lspec{\val*{val:layer-range-separator}}] All layers in their
+  natural order selected with the abbreviated notation.
+
+\item[\lspec{reverse \val*{val:layer-range-empty-index-symbol}\
+      \val*{val:layer-range-separator}\
+      \val*{val:layer-range-empty-index-symbol}}] All layers in
+  reverse order.  This yields 8, 7, 6, 5, 4, 3, 2, and~1.
+
+\item[\lspec{rev \val*{val:layer-range-separator}}] All layers in
+  reversed order as before selected with the abbreviated notation.
+
+\item[\lspec{r -3 \val*{val:layer-range-separator}}] The last three
+  layers in reverse order, this is 8, 7 and~6 in our running example.
+\end{codelist}
+
+\begin{geeknote}
+  Shell expansion will not work anymore with a file name terminated by
+  a layer specification expression (or anything else), because to the
+  shell it is not a file name anymore.  Work around with, for example,
+
+  \begin{terminal}
+    \$ \app{} `for x in image-??.tif; do echo \$x[2]; done`
+  \end{terminal}
+
+  \noindent or
+
+  \begin{terminal}
+    \$ \app{} \$(ls -1 image-??.tif | sed -e 's/\$/[2]/')
+  \end{terminal}
+
+  The order of the indices determines the order of the layers, this
+  is, the images.  An index can occur multiple times, which causes
+  layer, to be considered \emph{again}.  Consequently, this will lead
+  to an error with \application{Enblend}, but may be desired with
+  \application{Enfuse} in \code{soft-mask}~mode to give the image more
+  weight by mentioning it more than once.
+\end{geeknote}
+
+
+\subsection[Tools for Multi-Page Files]{Tools for Multi-Page Files
+  \label{sec:tools-for-multi-page-files}
+  \genidx{multi-page file!tools}}
+
+Here are some tools that are particularly useful when working with
+multi-page files.
+
+\begin{itemize}
+\item
+  \application{Hugin}'s stitcher, \command{nona} produces
+  multi-page \acronym{TIFF}~file, when called with the \sample{-m
+    TIFF\_multilayer}-option.
+
+\item
+  The utility \command{tiffcp} of the
+  \acronym{TIFF}-\uref{\remotesensingorglibtiff}{LibTIFF tool suite}
+  merges several \acronym{TIFF}-images into a single multi-page
+  file.
+
+\item
+  The sister program \command{tiffsplit} splits a multi-page file
+  into a set of single-page \acronym{TIFF}-images.
+
+\item
+  Another utility of the same origin, \command{tiffinfo}, is very
+  helpful when inquiring the contents of single- or multi-page
+  file \acronym{TIFF}-files.
+
+\item
+  All tools of the \uref{\imagemagickorg}{ImageMagick} suite, like,
+  for example, \command{convert} and \command{display} use a
+  \uref{\imagemagickorgcommandlineprocessinginput}{similar syntax} as
+  \App{} to select layers (which in ImageMagick parlance are called
+  ``frames''\genidx{image!frame}) in multi-page files.  Please
+  note that ImageMagick tools start indexing at zero, whereas we start
+  at one.
+
+\item
+  \App{} and \OtherApp{} by default apply the
+  \sample{\val{val:layer-selector}} selector (see
+  option~\flexipageref{\option{--layer-selector}}{opt:layer-selector})
+  to each of the input images.
+\end{itemize}
+
+Please bear in mind that some image-processing tools -- none of the
+above though -- do \emph{not} handle multi-page files correctly, where
+the most unfruitful ones only take care of the first layer and
+\emph{silently} ignore any further layers.
+
+For more helpful utilities check out
+Appendix~\fullref{sec:helpful-programs}.
+
+\genidx[\rangeendlocation]{layer!selection}

@@ -33,12 +33,16 @@
 
 namespace selector
 {
+    typedef std::vector<unsigned> layer_ordered_list_t;
     struct Abstract; // forward declaration for class in "selector.h"
 }
 
 
 class LayerSelectionHost
 {
+    typedef std::vector<unsigned> layer_tally_t;
+    typedef std::map<std::string, layer_tally_t> file_tally_t;
+
 public:
     LayerSelectionHost();
     LayerSelectionHost(const LayerSelectionHost& a_selection);
@@ -62,8 +66,8 @@ public:
 
         for (const_iterator image = begin; image != end; ++image)
         {
-            ImageInfo image_info(image->filename());
-            vigra::ImageImportInfo file_info(image->filename().c_str());
+            ImageInfo image_info((*image)->filename());
+            vigra::ImageImportInfo file_info((*image)->filename().c_str());
 
             for (int layer = 0; layer < file_info.numImages(); ++layer)
             {
@@ -77,11 +81,13 @@ public:
             }
 
             info_->append(image_info);
-            tally_->insert(file_tally_t::value_type(image->filename(), layer_tally_t(file_info.numImages())));
+            tally_->insert(file_tally_t::value_type((*image)->filename(),
+                                                    layer_tally_t(file_info.numImages())));
         }
     }
 
     virtual bool accept(const std::string& a_filename, unsigned a_layer_index);
+    virtual selector::layer_ordered_list_t viable_layers(const std::string& a_filename);
 
     // query tally
     // std::vector<std::string> unused_files() const;
@@ -91,8 +97,6 @@ private:
     selector::Abstract* selector_;
     ImageListInformation* info_;
 
-    typedef std::vector<unsigned> layer_tally_t;
-    typedef std::map<std::string, layer_tally_t> file_tally_t;
     file_tally_t* tally_;
 };
 

@@ -41,9 +41,9 @@
 #include "error_message.h"
 #include "filenameparse.h"
 
-#define NUMERIC_OPTION_DELIMITERS ";:/"
-#define PATH_OPTION_DELIMITERS ",;:"
-#define ASSIGNMENT_CHARACTERS "="
+#define NUMERIC_OPTION_DELIMITERS ";:/"    //< numeric-option-delimiters ;:/
+#define PATH_OPTION_DELIMITERS ",;:"       //< path-option-delimiters ,;:
+#define ASSIGNMENT_CHARACTERS "="          //< assignment-characters =
 
 #define MASK_COMPRESSION "DEFLATE"
 
