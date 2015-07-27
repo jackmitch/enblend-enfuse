@@ -384,6 +384,8 @@ formats:
                              at http://hevea.inria.fr/.
         latex, pdflatex    - Typeset the LaTeX documents in DVI or PDF.
         makeindex          - Index generation for several typesetters.
+        dot                - Graph generation.  Part of the `GraphViz' suite.
+                             See http://www.graphviz.org/.
         transfig           - Render XFig drawings in PNG, EPS, and PDF.
                              Check out http://www.xfig.org/ for Transfig.
 

@@ -445,6 +445,20 @@ if test "$GNUPLOT" = false; then
     missing_for_doc="$missing_for_doc gnuplot"
 fi
 
+AC_PATH_PROG(M4, m4, false)
+if test "$M4" = false; then
+    AC_MSG_WARN(cannot find m4; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc m4"
+fi
+
+AC_PATH_PROG(DOT, dot, false)
+if test "$DOT" = false; then
+    AC_MSG_WARN(cannot find dot; will not be able to build documentation)
+    can_build_doc=no
+    missing_for_doc="$missing_for_doc dot"
+fi
+
 AC_PATH_PROG(FIG2DEV, fig2dev, false)
 if test "$FIG2DEV" = false; then
     AC_MSG_WARN(cannot find fig2dev; will not be able to build documentation)

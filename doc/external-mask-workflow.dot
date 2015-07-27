@@ -1,0 +1,28 @@
+digraph ExternalMaskWorkflow
+{
+    node [uml_activity]
+    _start [uml_start]
+    generate [label = "Generate Masks"]
+    modify [label = "Modify Masks"]
+    use [label = "Blend or Fuse\nUsing Masks"]
+    _finish [uml_finish]
+
+    node [uml_note]
+    generate_note [label = "Enblend, Enfuse --save-masks"]
+    modify_note [label = "Any image editor"]
+    use_note [label = "Enblend, Enfuse --load-masks"]
+
+    {rank = same; generate; generate_note}
+    {rank = same; modify; modify_note}
+    {rank = same; use; use_note}
+
+    _start -> generate
+    generate -> modify
+    modify -> use
+    use -> _finish
+
+    edge [uml_note_edge]
+    generate -> generate_note
+    modify -> modify_note
+    use -> use_note
+}

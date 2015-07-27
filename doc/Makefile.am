@@ -47,6 +47,15 @@ GNUPLOT_PNG_TERMINAL_OPTIONS = enhanced transparent truecolor size 720,540
 ##     5,3.75
 GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
 
+DOTPP = $(M4)
+DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines $(srcdir)/uml-dot.m4
+DOT_FLAGS = \
+    -Gratio=auto -Gsplines=ortho \
+    -Nfontname=Helvetica -Nfontsize=11 \
+    -Efontname=Helvetica -Efontsize=10
+DOT_EPS_FLAGS = -Gsize=4.75,8.5
+DOT_PNG_FLAGS = -Gbgcolor=transparent #-Gresolution=$(PRINT_RESOLUTION)
+
 FIG2DEV_FLAGS =
 FIG2DEV_EPS_TERMINAL_OPTIONS =
 FIG2DEV_PSTEX_TERMINAL_OPTIONS =
@@ -136,6 +145,10 @@ docstrings_verbose_0 = @echo "  DOCSTR   $@";
 dvips_verbose = $(dvips_verbose_@AM_V@)
 dvips_verbose_ = $(dvips_verbose_@AM_DEFAULT_V@)
 dvips_verbose_0 = @echo "  DVIPS    $@";
+
+dot_verbose = $(dot_verbose_@AM_V@)
+dot_verbose_ = $(dot_verbose_@AM_DEFAULT_V@)
+dot_verbose_0 = @echo "  DOT      $@";
 
 fig2dev_verbose = $(fig2dev_verbose_@AM_V@)
 fig2dev_verbose_ = $(fig2dev_verbose_@AM_DEFAULT_V@)
@@ -248,6 +261,13 @@ SHOW_LATEX2HTML_LOG = \
         mv $*.tex $@
 
 
+%.eps: $(srcdir)/%.dot
+	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | $(DOT) $(DOT_FLAGS) -Teps $(DOT_EPS_FLAGS) -o$@
+
+%.png: $(srcdir)/%.dot
+	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | $(DOT) $(DOT_FLAGS) -Tpng $(DOT_PNG_FLAGS) -o$@
+
+
 %.eps: $(srcdir)/%.fig
 	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L eps $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $@
 
@@ -310,6 +330,9 @@ dynamic-preamble.tex: FORCE
 	$(AM_V_at)printf '%s\n' '$(DYNAMIC_TEX_PREAMBLE)' >> $@
 
 
+external-mask-workflow.eps focus-stack-decision-tree.eps photographic-workflow.eps \
+external-mask-workflow.png focus-stack-decision-tree.png photographic-workflow.png: $(srcdir)/uml-dot.m4
+
 entropy-cutoff.gp entropy.gp exposure-cutoff.gp exposure-weights.gp \
 fullsine.gp gaussian.gp halfsine.gp laplacian-of-gaussian.gp \
 log-transform.gp lorentzian.gp power.gp: colors.gp
@@ -331,13 +354,13 @@ ENBLEND_SOURCE_FILES = \
 
 
 ENBLEND_HYBRID_MATERIAL = \
-    external-mask-workflow.fig \
-    photographic-workflow.fig \
-    \
     log-transform.gp
 
 
 ENBLEND_EXTRA_MATERIAL = \
+    external-mask-workflow.dot \
+    photographic-workflow.dot \
+    \
     seam-line-visualization.tif
 
 
@@ -396,10 +419,7 @@ ENFUSE_SOURCE_FILES = \
     )
 
 ENFUSE_HYBRID_MATERIAL = \
-    external-mask-workflow.fig \
-    focus-stack-decision-tree.fig \
     local-analysis-window.fig \
-    photographic-workflow.fig \
     \
     entropy-cutoff.gp \
     entropy.gp \
@@ -416,7 +436,10 @@ ENFUSE_HYBRID_MATERIAL = \
     smooth-edge.gp
 
 
-ENFUSE_EXTRA_MATERIAL =
+ENFUSE_EXTRA_MATERIAL = \
+    external-mask-workflow.dot \
+    focus-stack-decision-tree.dot \
+    photographic-workflow.dot
 
 
 ENFUSE_GENERATED_FILES = \
@@ -498,12 +521,14 @@ install-dvi-local: dvi-local
 
 EXTRA_DIST = \
     $(wildcard $(srcdir)/*.data) \
+    $(wildcard $(srcdir)/*.dot) \
     $(wildcard $(srcdir)/*.fig) \
     $(wildcard $(srcdir)/*.gp) \
     $(wildcard $(srcdir)/*.pm) \
     $(wildcard $(srcdir)/*.tex) \
     $(wildcard $(srcdir)/*.tif) \
     $(addprefix $(srcdir)/, \
+        uml-dot.m4 \
         endoc.ist exemplar.hva \
         cleantex config2tex docstrings updated-on \
     )
