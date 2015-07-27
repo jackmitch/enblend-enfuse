@@ -36,20 +36,20 @@ public:
     virtual ~AlternativePercentage() {}
 
     virtual double value() const {return value_;}
-    double is_percentage() const {return is_percentage_;}
+    bool is_percentage() const {return is_percentage_;}
 
     virtual void set_value(double a_value);
     void set_percentage(bool is_percentage);
 
     virtual std::string str() const;
 
-    template <class T>
+    template <class t>
     bool is_effective() const
     {
         return
             value_ > 0.0 &&
             ((is_percentage() && value() < 100.0) ||
-             (!is_percentage() && value() < vigra::NumericTraits<T>::max()));
+             (!is_percentage() && value() < vigra::NumericTraits<t>::max()));
     }
 
     template <class t>
