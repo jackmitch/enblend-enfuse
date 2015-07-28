@@ -49,75 +49,117 @@ IF(ENABLE_OPENCL)
 ENDIF()
 
 include_directories(${TOP_SRC_DIR}/src)
-#add_subdirectory(vigra_impex)
-set(_COMMANDS enblend enfuse)
-
-project(enblendenfuse)
-#set(en_libraries vigra_impex ${common_libs})
-set(en_libraries ${common_libs})
-
-file(GLOB all_sources ${TOP_SRC_DIR}/src/*.cc)
-file(GLOB headers ${TOP_SRC_DIR}/src/*.h)
-foreach(_cmd ${_COMMANDS})
-  list(REMOVE_ITEM all_sources "${TOP_SRC_DIR}/src/${_cmd}.cc")
-  list(REMOVE_ITEM headers "${TOP_SRC_DIR}/src/${_cmd}.h")
-endforeach(_cmd)
+set(ENBLEND_SOURCES 
+    fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx 
+    anneal.h assemble.h blend.h bounds.h
+    common.h enblend.h enblend.cc fixmath.h
+    global.h graphcut.h
+    maskcommon.h masktypedefs.h mask.h postoptimizer.h
+    nearest.h numerictraits.h
+    opencl.h opencl.cc opencl_vigra.h
+    openmp_def.h openmp_lock.h openmp_vigra.h
+    path.h pyramid.h
+    alternativepercentage.h alternativepercentage.cc
+    error_message.h error_message.cc
+    filenameparse.h filenameparse.cc
+    filespec.h filespec.cc
+    introspection.h introspection.cc
+    mersenne.h mersenne.cc
+    parameter.h parameter.cc
+    self_test.h self_test.cc
+    tiff_message.h tiff_message.cc
+    timer.h timer.cc
+    minimizer.h minimizer.cc
+    muopt.h
+)
+set(ENFUSE_SOURCES 
+    functoraccessor.hxx rect2d.hxx stride.hxx
+    assemble.h blend.h bounds.h common.h
+    exposure_weight_base.h
+    exposure_weight.h exposure_weight.cc
+    dynamic_loader.h
+    enfuse.h enfuse.cc fixmath.h
+    global.h mga.h numerictraits.h
+    opencl.h opencl.cc opencl_vigra.h
+    openmp_def.h openmp_lock.h openmp_vigra.h
+    pyramid.h
+    alternativepercentage.h alternativepercentage.cc
+    error_message.h error_message.cc
+    filenameparse.h filenameparse.cc
+    filespec.h filespec.cc
+    introspection.h introspection.cc
+    mersenne.h mersenne.cc
+    parameter.h parameter.cc
+    self_test.h self_test.cc
+    tiff_message.h tiff_message.cc
+    timer.h timer.cc
+    minimizer.h minimizer.cc
+    muopt.h
+)
 
 if (WIN32)
-  file(GLOB winhelper_sources ${TOP_SRC_DIR}/src/win32helpers/*.c ${TOP_SRC_DIR}/src/win32helpers/*.h)
-  list(APPEND all_sources ${winhelper_sources})
-endif(WIN32)
+  set(ADDITIONAL_FILES win32helpers/getopt.c win32helpers/getopt.h)
+else()
+  set(ADDITIONAL_FILES)
+endif()
 
-file(GLOB layer_selection ${TOP_SRC_DIR}/src/layer_selection/*.cc ${TOP_SRC_DIR}/src/layer_selection/*.h)
-list(APPEND all_sources ${layer_selection})
+set(LAYER_SELECTION_FILES
+    layer_selection/info.h layer_selection/info.cc
+    layer_selection/layer_selection.h layer_selection/layer_selection.cc
+    layer_selection/selector.h layer_selection/selector.cc
+)
 include_directories(${TOP_SRC_DIR}/src/layer_selection)
-list(APPEND all_sources ${headers})
-list(APPEND all_sources "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-set(depends2)
 message(STATUS "Boost_FOUND = ${Boost_FOUND}")
 message(STATUS "OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
-foreach(_cmd ${_COMMANDS})
-  set(${_cmd}_sources ${all_sources} "${TOP_SRC_DIR}/src/${_cmd}.cc" "${TOP_SRC_DIR}/src/${_cmd}.h")
-  add_executable(${_cmd} ${${_cmd}_sources} )
-  string(TOUPPER ${_cmd} _cmd_def)
-  target_compile_definitions(${_cmd} PUBLIC "-D${_cmd_def}_SOURCE")
-  #message(STATUS "depends of ${_cmd} ${all_sources}")
-  if(OpenMP_CXX_FLAGS AND NOT MSVC)
-    set_target_properties(${_cmd} PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
-    message(STATUS "Adding PROPERTIES LINK_FLAGS to ${_cmd}")
-  endif(OpenMP_CXX_FLAGS AND NOT MSVC)
-  target_link_libraries(${_cmd} ${en_libraries})
-  install(TARGETS ${_cmd} DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
-  #add_dependencies(${_cmd} vigra_impex)
-  IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
-    add_dependencies(${_cmd} cl_sources)
-  ENDIF()
-  list(APPEND depends2 ${_cmd})
-endforeach(_cmd)
-add_custom_target(enblendenfuse ALL DEPENDS ${depends2})
 
-project(man)
-# create enblend.1 and enfuse.1
+add_executable(enblend ${ENBLEND_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES} "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
+add_executable(enfuse ${ENFUSE_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES} "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 
-find_program(HELP2MAN_EXE "help2man")
-set(depends3)
-foreach (_cmd ${_COMMANDS})
-  if (NOT DOC OR ${HELP2MAN_EXE} MATCHES "-NOTFOUND")
-    add_custom_command(
-      OUTPUT "${_cmd}.1"
-      COMMAND ${CMAKE_COMMAND} -E copy "${TOP_SRC_DIR}/src/${_cmd}.1" "${_cmd}.1"
-      DEPENDS "${TOP_SRC_DIR}/src/${_cmd}.1"
-      )
-  else()
-    add_custom_command(
-      OUTPUT "${_cmd}.1"
-      COMMAND "${HELP2MAN_EXE}" "--output=${_cmd}.1" "${CMAKE_BINARY_DIR}/bin/${_cmd}"
-      DEPENDS "${CMAKE_BINARY_DIR}/bin/${_cmd}"
-      )
-  endif()
-  list(APPEND depends3 "${CMAKE_CURRENT_BINARY_DIR}/${_cmd}.1")
-endforeach(_cmd)
-add_custom_target(man ALL DEPENDS ${depends3})
-add_dependencies(man enblendenfuse)
+target_compile_definitions(enblend PUBLIC "-DENBLEND_SOURCE")
+target_compile_definitions(enfuse PUBLIC "-DENFUSE_SOURCE")
+if(OpenMP_CXX_FLAGS AND NOT MSVC)
+    set_target_properties(enblend PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
+    set_target_properties(enfuse PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
+    message(STATUS "Adding PROPERTIES LINK_FLAGS to enblend and enfuse")
+endif(OpenMP_CXX_FLAGS AND NOT MSVC)
+target_link_libraries(enblend ${common_libs})
+target_link_libraries(enfuse ${common_libs})
+install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
+
+IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
+    add_dependencies(enblend cl_sources)
+    add_dependencies(enfuse cl_sources)
+ENDIF()
+
+if(NOT WIN32)
+    # create enblend.1 and enfuse.1
+    if(NOT MANDIR AND NOT $ENV{MANDIR} STREQUAL "")
+        set(MANDIR "$ENV{MANDIR}")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+        set(MANDIR "man")
+    else(NOT MANDIR AND NOT $ENV{MANDIR} STREQUAL "")
+        set(MANDIR "share/man")
+    endif()
+    
+    find_program(HELP2MAN_EXE "help2man")
+    if (NOT DOC OR ${HELP2MAN_EXE} MATCHES "-NOTFOUND")
+        INSTALL(FILES enblend.1 enfuse.1 DESTINATION ${MANDIR}/man1)
+    else()
+        project(man)
+        add_custom_command(
+          OUTPUT "${CMAKE_BINARY_DIR}/src/enblend.1"
+          COMMAND "${HELP2MAN_EXE}" "--output=enblend.1" "${CMAKE_BINARY_DIR}/bin/enblend"
+          DEPENDS "${CMAKE_BINARY_DIR}/bin/enblend"
+          )
+        add_custom_command(
+          OUTPUT "${CMAKE_BINARY_DIR}/src/enfuse.1"
+          COMMAND "${HELP2MAN_EXE}" "--output=enfuse.1" "${CMAKE_BINARY_DIR}/bin/enfuse"
+          DEPENDS "${CMAKE_BINARY_DIR}/bin/enfuse"
+          )
+        add_custom_target(man ALL DEPENDS enblend.1 enfuse.1)
+        add_dependencies(man enblend enfuse)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/src/enblend.1 ${CMAKE_BINARY_DIR}/src/enfuse.1 DESTINATION ${MANDIR}/man1)
+    endif()
+endif()
