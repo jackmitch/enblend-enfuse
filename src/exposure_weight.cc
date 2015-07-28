@@ -26,6 +26,7 @@
 #include "openmp_def.h"         // omp::atomic_t
 
 #include "exposure_weight.h"
+#include "dynamic_loader.h"    // HAVE_DYNAMICLOADER_IMPL
 
 
 extern const std::string command;

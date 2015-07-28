@@ -35,6 +35,7 @@
 #include "filespec.h"
 #include "global.h"
 #include "signature.h"
+#include "dynamic_loader.h"    // HAVE_DYNAMICLOADER_IMPL
 
 #include "introspection.h"
 
