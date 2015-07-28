@@ -20,8 +20,12 @@
 #ifndef EXPOSURE_WEIGHT_INCLUDED
 #define EXPOSURE_WEIGHT_INCLUDED
 
-
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#include <math.h>
+#else
 #include <cmath>
+#endif
 
 #include "exposure_weight_base.h"
 
