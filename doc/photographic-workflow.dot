@@ -1,5 +1,7 @@
 digraph PhotographicWorkflow
 {
+    graph [uml_activity_graph]
+
     node [uml_activity]
     _start [uml_start]
     take [label = "Take Images"]
@@ -22,6 +24,7 @@ digraph PhotographicWorkflow
     {rank = same; combine; combine_note}
     {rank = same; postprocess; postprocess_note}
 
+    edge [uml_edge]
     _start -> take
     take -> if_raw_branch
     if_raw_branch -> convert [taillabel = " [raw] ", weight = 10]

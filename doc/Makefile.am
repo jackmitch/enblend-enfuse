@@ -50,11 +50,11 @@ GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
 DOTPP = $(M4)
 DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines $(srcdir)/uml-dot.m4
 DOT_FLAGS = \
-    -Gratio=auto -Gsplines=ortho \
-    -Nfontname=Helvetica -Nfontsize=11 \
-    -Efontname=Helvetica -Efontsize=10
+    -Gfontname=Helvetica -Gfontsize=10 -Gsplines=ortho \
+    -Nfontname=Helvetica -Nfontsize=9 \
+    -Efontname=Helvetica -Efontsize=8
 DOT_EPS_FLAGS = -Gsize=4.75,8.5
-DOT_PNG_FLAGS = -Gbgcolor=transparent #-Gresolution=$(PRINT_RESOLUTION)
+DOT_PNG_FLAGS = -Gbgcolor=transparent -Gresolution=$(PRINT_RESOLUTION)
 
 FIG2DEV_FLAGS =
 FIG2DEV_EPS_TERMINAL_OPTIONS =
@@ -265,7 +265,9 @@ SHOW_LATEX2HTML_LOG = \
 	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | $(DOT) $(DOT_FLAGS) -Teps $(DOT_EPS_FLAGS) -o$@
 
 %.png: $(srcdir)/%.dot
-	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | $(DOT) $(DOT_FLAGS) -Tpng $(DOT_PNG_FLAGS) -o$@
+	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | \
+            $(DOT) $(DOT_FLAGS) -Tpng $(DOT_PNG_FLAGS) | \
+            $(CONVERT) png:- -transparent white -resize $$(( ((96 * 1000) / $(PRINT_RESOLUTION)) / 10 ))% $@
 
 
 %.eps: $(srcdir)/%.fig
@@ -360,6 +362,8 @@ ENBLEND_HYBRID_MATERIAL = \
 
 ENBLEND_EXTRA_MATERIAL = \
     external-mask-workflow.dot \
+    internal-enblend-flow.dot \
+    internal-optimizer-chain.dot \
     photographic-workflow.dot \
     \
     seam-line-visualization.tif

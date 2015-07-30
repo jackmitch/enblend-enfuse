@@ -1,5 +1,7 @@
 digraph ExternalMaskWorkflow
 {
+    graph [uml_activity_graph]
+
     node [uml_activity]
     _start [uml_start]
     generate [label = "Generate Masks"]
@@ -16,6 +18,7 @@ digraph ExternalMaskWorkflow
     {rank = same; modify; modify_note}
     {rank = same; use; use_note}
 
+    edge [uml_edge]
     _start -> generate
     generate -> modify
     modify -> use

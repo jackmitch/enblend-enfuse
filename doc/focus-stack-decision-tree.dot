@@ -1,5 +1,7 @@
 digraph FocusStackDecisionTree
 {
+    graph [uml_activity_graph]
+
     node [uml_activity]
     _start [uml_start]
     local_contrast_window [label = "Use local contrast window"]
@@ -19,6 +21,7 @@ digraph FocusStackDecisionTree
     {rank = same; if_still_visible_branch; if_still_visible_merge}
     {rank = same; if_loss_branch; if_loss_merge}
 
+    edge [uml_edge]
     _start -> local_contrast_window
     local_contrast_window -> if_visible_seams_branch
     if_visible_seams_branch -> laplacian_of_gaussian [taillabel = " [visible seams] ", weight = 10]
