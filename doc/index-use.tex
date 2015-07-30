@@ -8,39 +8,42 @@
 \cleardoublepage{}
 \RaggedRight
 
-
+\phantomsection
 \addcontentsline{toc}{chapter}{Indices}
 
-
+\phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:syncomm-index}{Syntactic Comment Index}}
-\label{sec:syncomm-index}%
-\printindex[syncomm]
+\printindex[syncomm]%
+\label{sec:syncomm-index}
 
 
 \gensea{helpful programs}{Program/Application Index}
+\phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:program-index}{Program/Application Index}}
-\label{sec:program-index}%
 \printindex[program][If a program belongs to a larger package, it has
-  its association mentioned in parenthesis.\par]
+  its association mentioned in parenthesis.\par]%
+\label{sec:program-index}
 
 
+\phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:option-index}{Option Index}}
-\label{sec:option-index}%
 \ifhevea
-  \printindex[option]
+  \printindex[option]%
 \else
   \printindex[option][Locations marked like \underline{12} indicate
-    the place of the option's genuine description.\par]
+    the place of the option's genuine description.\par]%
 \fi
+\label{sec:option-index}
 
 
+\phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:general-index}{General Index}}
-\label{sec:general-index}%
 \ifhevea
-  \printindex[general]
+  \printindex[general]%
 \else
   \printindex[general][Locations marked like \underline{12} indicate
     the location where a term gets introduced or defined.  Tables,
     lists, etc.\ that summarize material are indicated like
-    \textsl{34}.\par]
+    \textsl{34}.\par]%
 \fi
+\label{sec:general-index}
