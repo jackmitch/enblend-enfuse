@@ -10,4 +10,4 @@ set xtics 0, 1, 4
 set ytics 0, 1, 4
 
 
-splot DATA_DIR . "/sharp-edge.data" matrix title "sharp\\_edge"
+splot DATA_DIR . "/sharp-edge.data" matrix title "sharp edge"
