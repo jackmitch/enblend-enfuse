@@ -15,10 +15,9 @@ set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
 set(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS "color size 4.5in,3.375in")
 
 set(DOTPP_FLAGS "--fatal-warnings --prefix-builtins --synclines ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4")
-set(DOT_FLAGS "-Gratio=auto -Gsplines=ortho -Nfontname=Helvetica -Nfontsize=11 -Efontname=Helvetica -Efontsize=10")
+set(DOT_FLAGS "-Gfontname=Helvetica -Gfontsize=10 -Gsplines=ortho -Nfontname=Helvetica -Nfontsize=9 -Efontname=Helvetica -Efontsize=8")
 set(DOT_EPS_FLAGS "-Gsize=4.75,8.5")
-set(DOT_PNG_FLAGS "-Gbgcolor=transparent")
-#set(DOT_PNG_FLAGS "-Gbgcolor=transparent -Gresolution=${PRINTRESOLUTION}")
+set(DOT_PNG_FLAGS "-Gbgcolor=transparent -Gresolution=${PRINTRESOLUTION}")
 
 set(FIG2DEV_FLAGS "")
 set(FIG2DEV_EPS_TERMINAL_OPTIONS "")
@@ -159,16 +158,11 @@ macro(build_pstex _list _depends)
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".dot")
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps.dot"
-                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot >${_name}.eps.dot
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Teps ${DOT_EPS_FLAGS} -o${_name}.eps
                 DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
-            )
-            add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
-                COMMAND ${DOT_EXECUTABLE} ${DOT_FLAGS} -Teps ${DOT_EPS_FLAGS} -o${_name}.eps ${_name}.eps.dot
-                DEPENDS ${_name}.eps.dot 
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".gp")
@@ -196,6 +190,8 @@ endmacro()
 set(ENBLEND_IMAGE_INPUTFILES
     external-mask-workflow.dot
     photographic-workflow.dot
+    internal-enblend-flow.dot
+    internal-optimizer-chain.dot
     log-transform.gp
 )
 build_pstex("${ENBLEND_IMAGE_INPUTFILES}" ENBLEND_PSTEXFILES)
@@ -309,17 +305,14 @@ macro(build_png _list _depends)
                 VERBATIM
             )
         elseif(_ext STREQUAL ".dot")
-            add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png.dot"
-                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot >${_name}.png.dot
-                DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
-            )
+            math(EXPR _scale_png "9600 / ${PRINTRESOLUTION}")  # in makefile.am (96*1000) / print resolution / 10
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
-                COMMAND ${DOT_EXECUTABLE} ${DOT_FLAGS} -Tpng ${DOT_PNG_FLAGS} -o${_name}.png ${_name}.png.dot
-                DEPENDS ${_name}.png.dot 
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Tpng ${DOT_PNG_FLAGS} -o${_name}.png
+                COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize ${_scale_png}% ${_name}.png 
+                DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4 
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.png")
         elseif(_ext STREQUAL ".gp")
