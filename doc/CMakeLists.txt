@@ -127,6 +127,8 @@ set(ENFUSE_GENERATED_FILES
     enfuse-version.tex
 )
 
+add_custom_target(generated_files_for_doc DEPENDS ${ENBLEND_GENERATED_FILES} ${ENFUSE_GENERATED_FILES})
+
 # prepare picture for ps/pdf version
 if(WIN32)
     # MiKTeX epstopdf does not understand PostscriptLevel 3 file, so fall back to normal eps
@@ -217,6 +219,7 @@ set(ENFUSE_IMAGE_INPUTFILES
     smooth-edge.gp
 )
 build_pstex("${ENFUSE_IMAGE_INPUTFILES}" ENFUSE_PSTEXFILES)
+add_custom_target(eps_figures_doc DEPENDS ${ENBLEND_PSTEXFILES} ${ENFUSE_PSTEXFILES})
 
 set(INPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/doc")
@@ -228,8 +231,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -Dfilename=enblend -Dcompiler=${LATEX_COMPILER} -Dflags=${LATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
     DEPENDS
         ${ENBLEND_SOURCE_FILES}
-        ${ENBLEND_GENERATED_FILES}
-        ${ENBLEND_PSTEXFILES}
+        generated_files_for_doc
+        eps_figures_doc
         endoc.ist
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
 )
@@ -239,8 +242,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -Dfilename=enfuse -Dcompiler=${LATEX_COMPILER} -Dflags=${LATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
     DEPENDS
         ${ENFUSE_SOURCE_FILES}
-        ${ENFUSE_GENERATED_FILES}
-        ${ENFUSE_PSTEXFILES}
+        generated_files_for_doc
+        eps_figures_doc
         endoc.ist
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
 )
@@ -257,8 +260,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -Dfilename=enblend -Dcompiler=${PDFLATEX_COMPILER} -Dflags=${PDFLATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
     DEPENDS
         ${ENBLEND_SOURCE_FILES}
-        ${ENBLEND_GENERATED_FILES}
-        ${ENBLEND_PSTEXFILES}
+        generated_files_for_doc
+        eps_figures_doc
         endoc.ist
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
 )
@@ -275,8 +278,8 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -Dfilename=enfuse -Dcompiler=${PDFLATEX_COMPILER} -Dflags=${PDFLATEX_FLAGS} -P ${CMAKE_BINARY_DIR}/doc/createdvi.cmake
     DEPENDS
         ${ENFUSE_SOURCE_FILES}
-        ${ENFUSE_GENERATED_FILES}
-        ${ENFUSE_PSTEXFILES}
+        generated_files_for_doc
+        eps_figures_doc
         endoc.ist
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
 )
@@ -334,35 +337,24 @@ endmacro()
 build_png("${ENBLEND_IMAGE_INPUTFILES}" ENBLEND_PNGFILES)
 set(ENFUSE_PNGFILES)
 build_png("${ENFUSE_IMAGE_INPUTFILES}" ENFUSE_PNGFILES)
+add_custom_target(png_figures_doc DEPENDS ${ENBLEND_PNGFILES} ${ENFUSE_PNGFILES})
 
 # now build html doc
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enblend.html"
-           "${CMAKE_BINARY_DIR}/doc/enblend.hand"
-           "${CMAKE_BINARY_DIR}/doc/enblend.haux"
-           "${CMAKE_BINARY_DIR}/doc/enblend.hgnd"
-           "${CMAKE_BINARY_DIR}/doc/enblend.hond"
-           "${CMAKE_BINARY_DIR}/doc/enblend.hpnd"
-           "${CMAKE_BINARY_DIR}/doc/enblend.htoc"
     COMMAND ${HEVEA_EXE} ${LATEX2HTML_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/enblend.tex
     DEPENDS
         ${ENBLEND_SOURCE_FILES}
-        ${ENBLEND_GENERATED_FILES}
-        ${ENBLEND_PNGFILES}
+        generated_files_for_doc
+        png_figures_doc
 )
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/doc/enfuse.html"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.hand"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.haux"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.hgnd"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.hond"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.hpnd"
-           "${CMAKE_BINARY_DIR}/doc/enfuse.htoc"
     COMMAND ${HEVEA_EXE} ${LATEX2HTML_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/enfuse.tex
     DEPENDS
         ${ENFUSE_SOURCE_FILES}
-        ${ENFUSE_GENERATED_FILES}
-        ${ENFUSE_PNGFILES}
+        generated_files_for_doc
+        png_figures_doc
 )
 # hold all together
 add_custom_target(ps

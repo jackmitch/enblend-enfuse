@@ -15,7 +15,7 @@ add_custom_command(
   ">" "${CMAKE_CURRENT_BINARY_DIR}/signature.h"
   DEPENDS "${TOP_SRC_DIR}/src/gen_sig" "${TOP_SRC_DIR}/VERSION"
   )
-set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/signature.h" GENERATED)
+add_custom_target(signature DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
 
 IF(ENABLE_OPENCL)
   # prepare all OpenCL sources
@@ -114,9 +114,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 message(STATUS "Boost_FOUND = ${Boost_FOUND}")
 message(STATUS "OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 
-add_executable(enblend ${ENBLEND_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES} "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
-add_executable(enfuse ${ENFUSE_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES} "${CMAKE_CURRENT_BINARY_DIR}/signature.h")
+add_executable(enblend ${ENBLEND_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES})
+add_executable(enfuse ${ENFUSE_SOURCES} ${ADDITIONAL_FILES} ${LAYER_SELECTION_FILES})
 
+add_dependencies(enblend signature)
+add_dependencies(enfuse signature)
 target_compile_definitions(enblend PUBLIC "-DENBLEND_SOURCE")
 target_compile_definitions(enfuse PUBLIC "-DENFUSE_SOURCE")
 if(OpenMP_CXX_FLAGS AND NOT MSVC)
