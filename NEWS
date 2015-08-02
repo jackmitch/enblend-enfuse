@@ -145,6 +145,10 @@ Unreleased.  Current line of development.
 - The documentation no longer uses Texinfo, but LaTeX for PostScript
   generation and Hevea for HTML.
 
+- fig2dev(1) of the XFig suite is no longer needed to build the
+  documentation.  All relevant images were converted to dot(1) or SVG
+  format.
+
 
 * Version 4.1  "Trouble In Paradise"
 

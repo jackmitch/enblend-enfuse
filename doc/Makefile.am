@@ -45,7 +45,7 @@ GNUPLOT_PNG_TERMINAL_OPTIONS = enhanced transparent truecolor size 720,540
 ##     4.0,3.0
 ##     4.5,3.375
 ##     5,3.75
-GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
+GNUPLOT_EPS_TERMINAL_OPTIONS = color size 4.5in,3.375in
 
 DOTPP = $(M4)
 DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines
@@ -54,10 +54,9 @@ DOT_FLAGS =
 DOT_EPS_FLAGS = -Gsize=4.75,8.5
 DOT_PNG_FLAGS = -Gbgcolor=transparent -Gresolution=$(PRINT_RESOLUTION)
 
-FIG2DEV_FLAGS =
-FIG2DEV_EPS_TERMINAL_OPTIONS =
-FIG2DEV_PSTEX_TERMINAL_OPTIONS =
-FIG2DEV_PNG_TERMINAL_OPTIONS =
+SVGCONVERT_FLAGS = --dpi-x=96 --dpi-y=96
+SVGCONVERT_EPS_FLAGS = $(SVGCONVERT_FLAGS) --format=eps
+SVGCONVERT_PNG_FLAGS = $(SVGCONVERT_FLAGS) --format=png
 
 CLEANTEX = $(srcdir)/cleantex
 CONFIG2TEX = $(srcdir)/config2tex
@@ -106,7 +105,7 @@ enfuse: enfuse.ps enfuse.html
 
 .PHONY: clean-local
 clean-local:
-	- rm -f *.eps *.png *.pstex *.gp
+	- rm -f *.eps *.png *.gp
 	- rm -f *.{g,o,p,a}nd *.{g,o,p,a}dx
 	- rm -f *.idx *.ilg *.ind *.lo{a,f,t,x} *.toc
 	- rm -f *.aux *.log *.dvi *.ps *.pdf
@@ -148,9 +147,9 @@ dot_verbose = $(dot_verbose_@AM_V@)
 dot_verbose_ = $(dot_verbose_@AM_DEFAULT_V@)
 dot_verbose_0 = @echo "  DOT      $@";
 
-fig2dev_verbose = $(fig2dev_verbose_@AM_V@)
-fig2dev_verbose_ = $(fig2dev_verbose_@AM_DEFAULT_V@)
-fig2dev_verbose_0 = @echo "  FIG2DEV  $@";
+svgconvert_verbose = $(svgconvert_verbose_@AM_V@)
+svgconvert_verbose_ = $(svgconvert_verbose_@AM_DEFAULT_V@)
+svgconvert_verbose_0 = @echo "  SVGCONV  $@";
 
 gnuplot_verbose = $(gnuplot_verbose_@AM_V@)
 gnuplot_verbose_ = $(gnuplot_verbose_@AM_DEFAULT_V@)
@@ -252,11 +251,9 @@ SHOW_LATEX2HTML_LOG = \
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
             -e 'set output "$@"; set terminal pngcairo $(GNUPLOT_PNG_TERMINAL_OPTIONS)' $<
 
-
-%.pstex: $(srcdir)/%.gp
+%.eps: $(srcdir)/%.gp
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
-            -e 'set output "$*.tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && \
-        mv $*.tex $@
+            -e 'set output "$@"; set terminal eps $(GNUPLOT_EPS_TERMINAL_OPTIONS)' $<
 
 
 %.eps: $(srcdir)/%.dot
@@ -269,27 +266,15 @@ SHOW_LATEX2HTML_LOG = \
             $(CONVERT) png:- -transparent white -resize $$(( ((96 * 1000) / $(PRINT_RESOLUTION)) / 10 ))% $@
 
 
-%.eps: $(srcdir)/%.fig
-	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L eps $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $@
+%.eps: $(srcdir)/%.svg
+	$(svgconvert_verbose)$(SVGCONVERT) $(SVGCONVERT_EPS_FLAGS) --output=$@ $<
 
-
-%.pstex: $(srcdir)/%.fig
-	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex $(FIG2DEV_EPS_TERMINAL_OPTIONS) $< $*.eps
-	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L pstex_t -p $*.eps $(FIG2DEV_PSTEX_TERMINAL_OPTIONS) $< $@
-
-
-# We save at 4x scale to downscale with convert's fine aliasing capabilities.
-# Order of convert options is important: First throw away the white
-# part as transparent background and afterwards resize with
-# intermediate gray-values.
-%.png: $(srcdir)/%.fig
-	$(fig2dev_verbose)$(FIG2DEV) $(FIG2DEV_FLAGS) -L png $(FIG2DEV_PNG_TERMINAL_OPTIONS) -m 4 $< | \
-            $(CONVERT) png:- -transparent white -resize 30% $@
+%.png: $(srcdir)/%.svg
+	$(svgconvert_verbose)$(SVGCONVERT) $(SVGCONVERT_PNG_FLAGS) --output=$@ $<
 
 
 %.eps: $(srcdir)/%.tif
 	$(convert_verbose)$(CONVERT) $< eps3:$@
-
 
 %.png: $(srcdir)/%.tif
 	$(convert_verbose)$(CONVERT) $< $@
@@ -355,15 +340,13 @@ ENBLEND_SOURCE_FILES = \
     )
 
 
-ENBLEND_HYBRID_MATERIAL = \
-    log-transform.gp
-
-
 ENBLEND_EXTRA_MATERIAL = \
     external-mask-workflow.dot \
     internal-enblend-flow.dot \
     internal-optimizer-chain.dot \
     photographic-workflow.dot \
+    \
+    log-transform.gp \
     \
     seam-line-visualization.tif
 
@@ -376,7 +359,6 @@ ENBLEND_GENERATED_FILES = \
 
 
 ENBLEND_DVI_SEPARATE_PREREQUISITES = \
-    $(addsuffix .pstex,$(basename $(ENBLEND_HYBRID_MATERIAL))) \
     $(addsuffix .eps,$(basename $(ENBLEND_EXTRA_MATERIAL)))
 
 
@@ -391,7 +373,6 @@ enblend.pdf enblend.dvi: \
 
 
 ENBLEND_HTML_SEPARATE_PREREQUISITES = \
-    $(addsuffix .png,$(basename $(ENBLEND_HYBRID_MATERIAL))) \
     $(addsuffix .png,$(basename $(ENBLEND_EXTRA_MATERIAL)))
 
 
@@ -422,8 +403,11 @@ ENFUSE_SOURCE_FILES = \
         htmlstyle.tex  url-def.tex \
     )
 
-ENFUSE_HYBRID_MATERIAL = \
-    local-analysis-window.fig \
+
+ENFUSE_EXTRA_MATERIAL = \
+    external-mask-workflow.dot \
+    focus-stack-decision-tree.dot \
+    photographic-workflow.dot \
     \
     entropy-cutoff.gp \
     entropy.gp \
@@ -437,13 +421,9 @@ ENFUSE_HYBRID_MATERIAL = \
     lorentzian.gp \
     power.gp \
     sharp-edge.gp \
-    smooth-edge.gp
-
-
-ENFUSE_EXTRA_MATERIAL = \
-    external-mask-workflow.dot \
-    focus-stack-decision-tree.dot \
-    photographic-workflow.dot
+    smooth-edge.gp \
+    \
+    local-analysis-window.svg
 
 
 ENFUSE_GENERATED_FILES = \
@@ -454,7 +434,6 @@ ENFUSE_GENERATED_FILES = \
 
 
 ENFUSE_DVI_SEPARATE_PREREQUISITES = \
-    $(addsuffix .pstex,$(basename $(ENFUSE_HYBRID_MATERIAL))) \
     $(addsuffix .eps,$(basename $(ENFUSE_EXTRA_MATERIAL)))
 
 
@@ -469,7 +448,6 @@ enfuse.pdf enfuse.dvi: \
 
 
 ENFUSE_HTML_SEPARATE_PREREQUISITES = \
-    $(addsuffix .png,$(basename $(ENFUSE_HYBRID_MATERIAL))) \
     $(addsuffix .png,$(basename $(ENFUSE_EXTRA_MATERIAL)))
 
 
@@ -517,8 +495,8 @@ install-dvi-local: dvi-local
 	@ $(MKDIR_P) $(dvidir)
 	$(install_verbose)$(INSTALL_DATA) \
             $(sort \
-                enblend.dvi $(patsubst %.pstex,%.eps,$(ENBLEND_DVI_SEPARATE_PREREQUISITES)) \
-                enfuse.dvi $(patsubst %.pstex,%.eps,$(ENFUSE_DVI_SEPARATE_PREREQUISITES)) \
+                enblend.dvi $(ENBLEND_DVI_SEPARATE_PREREQUISITES) \
+                enfuse.dvi $(ENFUSE_DVI_SEPARATE_PREREQUISITES) \
             ) \
             $(dvidir)
 
@@ -526,9 +504,9 @@ install-dvi-local: dvi-local
 EXTRA_DIST = \
     $(wildcard $(srcdir)/*.data) \
     $(wildcard $(srcdir)/*.dot) \
-    $(wildcard $(srcdir)/*.fig) \
     $(wildcard $(srcdir)/*.gp) \
     $(wildcard $(srcdir)/*.pm) \
+    $(wildcard $(srcdir)/*.svg) \
     $(wildcard $(srcdir)/*.tex) \
     $(wildcard $(srcdir)/*.tif) \
     $(addprefix $(srcdir)/, \

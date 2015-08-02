@@ -459,11 +459,11 @@ if test "$DOT" = false; then
     missing_for_doc="$missing_for_doc dot"
 fi
 
-AC_PATH_PROG(FIG2DEV, fig2dev, false)
-if test "$FIG2DEV" = false; then
-    AC_MSG_WARN(cannot find fig2dev; will not be able to build documentation)
+AC_PATH_PROG(SVGCONVERT, rsvg-convert, false)
+if test "$SVGCONVERT" = false; then
+    AC_MSG_WARN(cannot find rsvg-convert; will not be able to build documentation)
     can_build_doc=no
-    missing_for_doc="$missing_for_doc fig2dev"
+    missing_for_doc="$missing_for_doc rsvg-convert"
 fi
 
 AC_PATH_PROGS(PS2PDF, [ps2pdf ps2pdf14], false)

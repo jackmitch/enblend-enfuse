@@ -384,10 +384,6 @@ if (PERL_FOUND AND DOC)
         endif()
     endif()
     find_package(Gnuplot REQUIRED)
-    find_program(FIG2DEV_EXE fig2dev)
-    if (${FIG2DEV_EXE} MATCHES "-NOTFOUND")
-        message(FATAL_ERROR "Program fig2dev not found. This program is required to build the documentation.")
-    endif()
     set(_x86 "(x86)")
     file(GLOB _GRAPHVIZ_BIN_DIRS
         "$ENV{ProgramFiles}/Graphviz*/bin"

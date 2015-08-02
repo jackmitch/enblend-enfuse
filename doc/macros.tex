@@ -149,9 +149,7 @@
 {\ifhevea
    \imgsrc{#2.png}%
  \else
-   \IfFileExists{#2.pstex}%
-                {\input{#2.pstex}}% EPS(La)TeX file transporting PostScript inside a LaTeX envelope
-                {\includegraphics[#1]{#2}}% Usually an Encapsulated PostScript file
+   \includegraphics[#1]{#2}% Usually an Encapsulated PostScript file
  \fi}
 
 

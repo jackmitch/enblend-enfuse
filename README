@@ -386,8 +386,9 @@ formats:
         makeindex          - Index generation for several typesetters.
         dot                - Graph generation.  Part of the `GraphViz' suite.
                              See http://www.graphviz.org/.
-        transfig           - Render XFig drawings in PNG, EPS, and PDF.
-                             Check out http://www.xfig.org/ for Transfig.
+        rsvg-convert       - Convert SVG to a variety of other formats, not
+                             only raster images, but also EPS.
+                             Check out http://librsvg.sourceforge.net/.
 
 The tool texloganalyser(1) is optional.  Its sole use is to beautify
 LaTeX output in non-verbose (V=0) mode.
