@@ -12,17 +12,17 @@ set(UPDATED_ON_FLAGS "--database=source-code-manager --override=none:\\datebyunk
 
 set(GNUPLOT_FLAGS "--default-settings -e DATA_DIR='${CMAKE_CURRENT_SOURCE_DIR}'")
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
-set(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS "color size 4.5in,3.375in")
+set(GNUPLOT_EPS_TERMINAL_OPTIONS "color size 4.5in,3.375in")
 
-set(DOTPP_FLAGS "--fatal-warnings --prefix-builtins --synclines ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4")
-set(DOT_FLAGS "-Gfontname=Helvetica -Gfontsize=10 -Gsplines=ortho -Nfontname=Helvetica -Nfontsize=9 -Efontname=Helvetica -Efontsize=8")
+set(DOTPP_FLAGS "--fatal-warnings --prefix-builtins --synclines")
+set(DOTPP_PRELOAD "${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4")
+set(DOT_FLAGS "")
 set(DOT_EPS_FLAGS "-Gsize=4.75,8.5")
 set(DOT_PNG_FLAGS "-Gbgcolor=transparent -Gresolution=${PRINTRESOLUTION}")
 
-set(FIG2DEV_FLAGS "")
-set(FIG2DEV_EPS_TERMINAL_OPTIONS "")
-set(FIG2DEV_PSTEX_TERMINAL_OPTIONS "")
-set(FIG2DEV_PNG_TERMINAL_OPTIONS "")
+set(SVGCONVERT_FLAGS "--dpi-x=96 --dpi-y=96")
+set(SVGCONVERT_EPS_FLAGS "${SVGCONVERT_FLAGS} --format=eps")
+set(SVGCONVERT_PNG_FLAGS "${SVGCONVERT_FLAGS} --format=png")
 
 set(LATEX_FLAGS "-file-line-error -halt-on-error -interaction nonstopmode")
 set(PDFLATEX_FLAGS "-file-line-error -halt-on-error -interaction nonstopmode")
@@ -41,7 +41,8 @@ separate_arguments(DOTPP_FLAGS)
 separate_arguments(DOT_FLAGS)
 separate_arguments(DOT_EPS_FLAGS)
 separate_arguments(DOT_PNG_FLAGS)
-separate_arguments(FIG2DEV_FLAGS)
+separate_arguments(SVGCONVERT_EPS_FLAGS)
+separate_arguments(SVGCONVERT_PNG_FLAGS)
 separate_arguments(LATEX_FLAGS)
 separate_arguments(PDFLATEX_FLAGS)
 separate_arguments(MAKEINDEX_FLAGS)
@@ -150,18 +151,19 @@ macro(build_pstex _list _depends)
     foreach(_file ${_list})
         get_filename_component(_name ${_file} NAME_WE)
         get_filename_component(_ext ${_file} EXT)
-        if(_ext STREQUAL ".fig")
+        if(_ext STREQUAL ".svg")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
-                COMMAND ${FIG2DEV_EXE} ${FIG2DEV_FLAGS} -L eps ${FIG2DEV_EPS_TERMINAL_OPTIONS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.fig ${_name}.eps
-                DEPENDS ${_name}.fig
+                COMMAND ${RSVGCONVERT_EXECUTABLE} ${SVGCONVERT_EPS_FLAGS} --output=${_name}.eps ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.svg
+                DEPENDS ${_name}.svg
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+                VERBATIM
             )
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".dot")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
-                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Teps ${DOT_EPS_FLAGS} -o${_name}.eps
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} "--define=dot_output_type=eps" ${DOTPP_PRELOAD} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Teps ${DOT_EPS_FLAGS} -o${_name}.eps
                 DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
                 VERBATIM
@@ -169,19 +171,13 @@ macro(build_pstex _list _depends)
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
-                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.tex\"; set terminal epslatex ${GNUPLOT_EPSLATEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
+                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.eps\"; set terminal eps ${GNUPLOT_EPS_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
                 VERBATIM
             )
-            add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.pstex"
-                COMMAND ${CMAKE_COMMAND} -E copy "${_name}.tex" "${_name}.pstex"
-                DEPENDS "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
-            )
-            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.pstex")
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         else()
             # this should never happens
             message(FATAL_ERROR "Unknown extension")
@@ -202,7 +198,7 @@ set(ENFUSE_PSTEXFILES)
 set(ENFUSE_IMAGE_INPUTFILES
     external-mask-workflow.dot
     focus-stack-decision-tree.dot
-    local-analysis-window.fig
+    local-analysis-window.svg
     photographic-workflow.dot
     entropy-cutoff.gp
     entropy.gp
@@ -298,12 +294,11 @@ macro(build_png _list _depends)
     foreach(_file ${_list})
         get_filename_component(_name ${_file} NAME_WE)
         get_filename_component(_ext ${_file} EXT)
-        if(_ext STREQUAL ".fig")
+        if(_ext STREQUAL ".svg")
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
-                COMMAND ${FIG2DEV_EXE} ${FIG2DEV_FLAGS} -L png ${FIG2DEV_PNG_TERMINAL_OPTIONS} -m 4  ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.fig ${_name}.png
-                COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize 30% ${_name}.png
-                DEPENDS ${_name}.fig
+                COMMAND ${RSVGCONVERT_EXECUTABLE} ${SVGCONVERT_PNG_FLAGS} --output=${_name}.png ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.svg
+                DEPENDS ${_name}.svg
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
                 VERBATIM
             )
@@ -311,7 +306,7 @@ macro(build_png _list _depends)
             math(EXPR _scale_png "9600 / ${PRINTRESOLUTION}")  # in makefile.am (96*1000) / print resolution / 10
             add_custom_command(
                 OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.png"
-                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Tpng ${DOT_PNG_FLAGS} -o${_name}.png
+                COMMAND ${M4_EXECUTABLE} ${DOTPP_FLAGS} "--define=dot_output_type=png" ${DOTPP_PRELOAD} ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.dot | ${DOT_EXECUTABLE} ${DOT_FLAGS} -Tpng ${DOT_PNG_FLAGS} -o${_name}.png
                 COMMAND ${IMAGEMAGICK_CONVERT_EXECUTABLE} ${_name}.png -transparent white -resize ${_scale_png}% ${_name}.png 
                 DEPENDS ${_name}.dot ${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4 
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
