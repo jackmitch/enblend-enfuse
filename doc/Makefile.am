@@ -49,10 +49,7 @@ GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
 
 DOTPP = $(M4)
 DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines $(srcdir)/uml-dot.m4
-DOT_FLAGS = \
-    -Gfontname=Helvetica -Gfontsize=10 -Gsplines=ortho \
-    -Nfontname=Helvetica -Nfontsize=9 \
-    -Efontname=Helvetica -Efontsize=8
+DOT_FLAGS =
 DOT_EPS_FLAGS = -Gsize=4.75,8.5
 DOT_PNG_FLAGS = -Gbgcolor=transparent -Gresolution=$(PRINT_RESOLUTION)
 

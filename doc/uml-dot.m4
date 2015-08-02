@@ -6,13 +6,23 @@ m4_dnl  Definitions for a common structure and appearance of all
 m4_dnl  flow charts.
 m4_dnl
 m4_dnl  Despite the name of the file and the prefix of all macros
-m4_dnl  (`uml_'), We treat only `Activity Diagrams' here.  We do not
+m4_dnl  (`uml_'), we treat only `Activity Diagrams' here for we do not
 m4_dnl  need more for the Enblend/Enfuse documentation.
+
+
+m4_define(`uml_font', `Helvetica')
 
 
 m4_dnl  Graph Attributes
 
-m4_define(`uml_activity_graph', `forcelabels = true')
+m4_define(`uml_graph_font', `uml_font')
+m4_define(`uml_graph_font_size', `10')
+
+m4_define(`uml_activity_graph',
+          `fontname = uml_graph_font,
+           fontsize = uml_graph_font_size,
+           forcelabels = true,
+           splines = ortho')
 
 
 m4_dnl  Attributes of the `Start' and `Finish' symbols.
@@ -37,32 +47,45 @@ m4_define(`uml_finish',
            width = uml_terminal_size')
 
 
-m4_dnl  Shape of Activity boxes and their associated edges
+m4_dnl  Shape of Activity boxes and the edges that connect them
 
+m4_define(`uml_activity_font', `uml_font')
+m4_define(`uml_activity_font_size', `9')
 m4_define(`uml_activity_penwidth', `0.5')
 m4_define(`uml_arrow_size', `0.667')
+m4_define(`uml_edge_font_size', `8')
 
 m4_define(`uml_activity',
-          `penwidth = uml_activity_penwidth,
+          `fontname = uml_activity_font,
+           fontsize = uml_activity_font_size,
+           penwidth = uml_activity_penwidth,
            shape = box,
            style = rounded')
 m4_define(`uml_edge',
           `arrowsize = uml_arrow_size,
+           fontname = uml_activity_font,
+           fontsize = uml_edge_font_size,
            penwidth = uml_activity_penwidth')
 
 
-m4_dnl  Shape of Notes and their associated edges
+m4_dnl  Shape of Notes and the edges that connect Activity boxes and Notes
 
-m4_define(`uml_note_color', `"0.167,0.4,1.0"') # RGB: 0xffff99
+m4_define(`uml_note_color', `"0.167,0.4,1.0"') # RGB: 0xffff99, "pale yellow"
+m4_define(`uml_note_font', `uml_font')
+m4_define(`uml_note_font_size', `9')
 m4_define(`uml_note_penwidth', `0.35')
 
 m4_define(`uml_note',
           `fillcolor = uml_note_color,
+           fontname = uml_note_font,
+           fontsize = uml_note_font_size,
            penwidth = uml_note_penwidth,
            shape = note,
            style = filled')
 m4_define(`uml_note_edge',
           `dir = none,
+           fontname = uml_note_font,
+           fontsize = uml_edge_size,
            penwidth = uml_note_penwidth,
            style = dashed')
 
