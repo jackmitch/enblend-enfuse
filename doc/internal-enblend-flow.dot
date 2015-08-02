@@ -1,6 +1,6 @@
 digraph InternalEnblendFlow
 {
-    graph [uml_activity_graph, ranksep = 0.5, ratio = compress]
+    graph [uml_activity_graph, uml_compressed_layout]
 
     node [uml_activity]
     _start [uml_start]

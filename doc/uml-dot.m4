@@ -24,8 +24,15 @@ m4_define(`uml_activity_graph',
            forcelabels = true,
            splines = ortho')
 
+m4_dnl _Sometimes we want to fit a larger graph to a printed page.
+m4_dnl  This macro helps while leaving other formats than EPS anone.
+m4_define(`uml_compressed_layout',
+          m4_ifdef(`dot_output_type',
+                   m4_ifelse(dot_output_type, `eps',
+                             `ranksep = 0.375, ratio = compress')))
 
-m4_dnl  Attributes of the `Start' and `Finish' symbols.
+
+m4_dnl  Attributes of the `Start' and `Finish' terminal symbols
 
 m4_define(`uml_terminal_color', `black')
 m4_define(`uml_terminal_size', `0.167')

@@ -1,6 +1,6 @@
 digraph FocusStackDecisionTree
 {
-    graph [uml_activity_graph]
+    graph [uml_activity_graph, uml_compressed_layout]
 
     node [uml_activity]
     _start [uml_start]

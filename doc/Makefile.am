@@ -48,7 +48,8 @@ GNUPLOT_PNG_TERMINAL_OPTIONS = enhanced transparent truecolor size 720,540
 GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
 
 DOTPP = $(M4)
-DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines $(srcdir)/uml-dot.m4
+DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines
+DOTPP_PRELOAD = $(srcdir)/uml-dot.m4
 DOT_FLAGS =
 DOT_EPS_FLAGS = -Gsize=4.75,8.5
 DOT_PNG_FLAGS = -Gbgcolor=transparent -Gresolution=$(PRINT_RESOLUTION)
@@ -259,10 +260,11 @@ SHOW_LATEX2HTML_LOG = \
 
 
 %.eps: $(srcdir)/%.dot
-	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | $(DOT) $(DOT_FLAGS) -Teps $(DOT_EPS_FLAGS) -o$@
+	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) --define='dot_output_type=eps' $(DOTPP_PRELOAD) $< | \
+            $(DOT) $(DOT_FLAGS) -Teps $(DOT_EPS_FLAGS) -o$@
 
 %.png: $(srcdir)/%.dot
-	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) $< | \
+	$(dot_verbose)$(DOTPP) $(DOTPP_FLAGS) --define='dot_output_type=png' $(DOTPP_PRELOAD) $< | \
             $(DOT) $(DOT_FLAGS) -Tpng $(DOT_PNG_FLAGS) | \
             $(CONVERT) png:- -transparent white -resize $$(( ((96 * 1000) / $(PRINT_RESOLUTION)) / 10 ))% $@
 
