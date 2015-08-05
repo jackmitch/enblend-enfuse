@@ -291,15 +291,12 @@ SHOW_LATEX2HTML_LOG = \
 
 
 DOCSTRING_SOURCE_FILES = \
-    $(addprefix $(srcdir)/../src/, \
-        bounds.h \
-        common.h \
-        filespec.h filespec.cc \
-        global.h \
-        mga.h \
-        opencl.cc \
-        layer_selection/selector.cc \
-    )
+    $(wildcard \
+        $(addprefix $(srcdir)/../src/, \
+	    *.h \
+	    *.cc \
+	    layer_selection/*.h \
+	    layer_selection/*.cc))
 
 
 config-h.tex: ../config.h
@@ -382,7 +379,7 @@ enblend.html: \
     $(ENBLEND_HTML_SEPARATE_PREREQUISITES)
 
 
-enblend-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enblend.cc
+enblend-variables.tex: $(filter-out %/enfuse.h %/enfuse.cc,$(DOCSTRING_SOURCE_FILES))
 	$(docstrings_verbose)$(DOCSTRINGS) scan-files $^ > $@
 
 
@@ -457,7 +454,7 @@ enfuse.html: \
     $(ENFUSE_HTML_SEPARATE_PREREQUISITES)
 
 
-enfuse-variables.tex: $(DOCSTRING_SOURCE_FILES) $(srcdir)/../src/enfuse.cc
+enfuse-variables.tex: $(filter-out %/enblend.h %/enblend.cc,$(DOCSTRING_SOURCE_FILES))
 	$(docstrings_verbose)$(DOCSTRINGS) scan-files $^ > $@
 
 
