@@ -264,24 +264,18 @@
 \makesavenoteenv{codelist}
 
 
-%% Material that is not essential, but that we do not want to see as
-%% footnotes.
-\newcommand*{\geeknotemarkup}[1]{\colorbox{\geeknotebackgroundcolor}{\small #1}}
+%% Material that is not essential, but that we do not want to see as footnotes.
+%% Use the macro like `{\geekytext foo\/}'.
+\newcommand{\geekytext}{\small\slshape}
 
 \ifhevea
   \newenvironment{geeknote}%
-                 {\begin{divstyle}{geeknote}\begin{quotation}\small}%
+                 {\begin{divstyle}{geeknote}\begin{quotation}\geekytext}%
                  {\end{quotation}\end{divstyle}}
 \else
   \newenvironment{geeknote}%
-                 {\begin{savenotes}\fboxsep=0pt%
-                  \begin{bgcolor}{\geeknotebackgroundcolor}\rule{\fill}{0pt}%
-                  \begin{quotation}%
-                  \small\vspace*{\smallskipamount}}%
-                 {\vspace*{\smallskipamount}%
-                  \end{quotation}%
-                  \end{bgcolor}%
-                  \end{savenotes}}
+                 {\begin{savenotes}\fboxsep=0pt\begin{quotation}\geekytext}%
+                 {\end{quotation}\end{savenotes}}
   \makesavenoteenv{geeknote}
 \fi
 
