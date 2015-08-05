@@ -483,8 +483,8 @@ if test "$can_build_doc" = no; then
 fi
 
 
-AC_ARG_VAR(DYNAMIC_TEX_PREAMBLE, [LaTeX commands to add to preamble])
-DYNAMIC_TEX_PREAMBLE=\\overfullrule=2pt\\relax
+AC_ARG_VAR(DYNAMIC_TEX_PREAMBLE, [LaTeX commands to add to top of preamble])
+DYNAMIC_TEX_PREAMBLE=\\def\\finishdynamicpreamble{\\overfullrule=2pt\\relax}
 
 
 AC_MSG_CHECKING(whether to enable debugging)

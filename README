@@ -299,12 +299,18 @@ We have introduced the variable
         DYNAMIC_TEX_PREAMBLE
 to give the maintainers and packagers better control over the
 generation of the documentation.  The contents of the variable goes
-between `\documentclass{}' and `\begin{document}'.  Some possibilities
-for `DYNAMIC_TEX_PREAMBLE' are
-        \hyperreftrue,
-        \referencemanualtrue, or
-        \usepackage[showframe]{geometry}.
-`DYNAMIC_TEX_PREAMBLE' defaults to `\relax'.
+_before_ `\documentclass' so that even the document class can be
+selected dynamically.
+
+DYNAMIC_TEX_PREAMBLE can define the argument-less macro
+`\finishdynamicpreamble', which is expanded right before
+`\begin{document}' and thus _after_ all packages have been loaded.
+
+Some possibilities for `DYNAMIC_TEX_PREAMBLE' are
+        \hyperreftrue
+        \referencemanualtrue
+        \usepackage[showframe]{geometry}
+        \def\finishdynamicpreamble{\overfullrule=2pt\relax}
 
 
 * Documentation

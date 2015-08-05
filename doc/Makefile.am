@@ -310,6 +310,7 @@ dynamic-preamble.tex: FORCE
 	$(AM_V_at)printf '\PassOptionsToPackage{%spaper}{refrep}\n' '$(PAPERSIZE)' >> $@
 	$(AM_V_at)printf '\\newif\ifreferencemanual\n' >> $@
 	$(AM_V_at)printf '\\newif\ifhyperref\n' >> $@
+	$(AM_V_at)printf '\\def\\finishdynamicpreamble{}\n' >> $@
 	$(AM_V_at)printf '%%%% User definitions follow...\n' >> $@
 	$(AM_V_at)printf '%s\n' '$(DYNAMIC_TEX_PREAMBLE)' >> $@
 
