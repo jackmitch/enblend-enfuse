@@ -56,33 +56,35 @@ add_custom_command(
     DEPENDS "${CMAKE_BINARY_DIR}/config.h"
 )
 
-set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\PassOptionsToPackage{${PAPERSIZE}paper}{refrep}\n\\newif\\ifreferencemanual\n\\newif\\ifhyperref\n${DYNAMIC_TEX_PREAMBLE}\n")
+set(_dynamic_preamble "\\PassOptionsToPackage{${PAPERSIZE}paper}{report}\n\\PassOptionsToPackage{${PAPERSIZE}paper}{refrep}\n\\newif\\ifreferencemanual\n\\newif\\ifhyperref\n\\def\\finishdynamicpreamble{}\n${DYNAMIC_TEX_PREAMBLE}\n")
 if(INSTALL_PDF_DOC AND NOT ${_dynamic_preamble} MATCHES "\\hyperreftrue")
   string(REPLACE "\\newif\\ifhyperref\n" "\\newif\\ifhyperref\n\\hyperreftrue\n" _dynamic_preamble "${_dynamic_preamble}")
 endif()
 file(WRITE "${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" "${_dynamic_preamble}")
 set_source_files_properties("${CMAKE_BINARY_DIR}/doc/dynamic-preamble.tex" PROPERTIES GENERATED TRUE)
 
-set(DOCSTRING_SOURCE_FILES
-    "${TOP_SRC_DIR}/src/bounds.h"
-    "${TOP_SRC_DIR}/src/common.h"
-    "${TOP_SRC_DIR}/src/filespec.h"
-    "${TOP_SRC_DIR}/src/filespec.cc"
-    "${TOP_SRC_DIR}/src/global.h"
-    "${TOP_SRC_DIR}/src/mga.h"
-    "${TOP_SRC_DIR}/src/opencl.cc"
+file(GLOB DOCSTRING_SOURCE_FILES
+    "${TOP_SRC_DIR}/src/*.h"
+    "${TOP_SRC_DIR}/src/*.cc"
+    "${TOP_SRC_DIR}/src/layer_selection/*.h"
+    "${TOP_SRC_DIR}/src/layer_selection/*.cc"
 )
+set(ENBLEND_DOCSTRING_SOURCE_FILES ${DOCSTRING_SOURCE_FILES})
+list(REMOVE_ITEM ENBLEND_DOCSTRING_SOURCE_FILES "${TOP_SRC_DIR}/src/enfuse.h" "${TOP_SRC_DIR}/src/enfuse.cc")
+set(ENFUSE_DOCSTRING_SOURCE_FILES ${DOCSTRING_SOURCE_FILES})
+list(REMOVE_ITEM ENFUSE_DOCSTRING_SOURCE_FILES "${TOP_SRC_DIR}/src/enblend.h" "${TOP_SRC_DIR}/src/enblend.cc")
+
 add_custom_command(
     OUTPUT  "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
-    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enblend.cc" ">" "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
-    DEPENDS ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enblend.cc"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${ENBLEND_DOCSTRING_SOURCE_FILES} ">" "${CMAKE_BINARY_DIR}/doc/enblend-variables.tex"
+    DEPENDS ${ENBLEND_DOCSTRING_SOURCE_FILES}
     COMMENT "Creating enblend-variables.tex"
 )
 
 add_custom_command(
     OUTPUT  "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
-    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enfuse.cc" ">" "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
-    DEPENDS ${DOCSTRING_SOURCE_FILES} "${TOP_SRC_DIR}/src/enfuse.cc"
+    COMMAND ${PERL_EXECUTABLE} "${TOP_SRC_DIR}/doc/docstrings" "scan-files" ${ENFUSE_DOCSTRING_SOURCE_FILES} ">" "${CMAKE_BINARY_DIR}/doc/enfuse-variables.tex"
+    DEPENDS ${ENFUSE_DOCSTRING_SOURCE_FILES}
     COMMENT "Creating enfuse-variables.tex"
 )
 
