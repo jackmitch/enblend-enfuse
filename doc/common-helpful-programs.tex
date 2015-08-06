@@ -2,193 +2,207 @@
 %% Licence details can be found in the file COPYING.
 
 
-\chapter[Helpful Programs\commonpart]{Helpful Programs And Libraries\commonpart
-  \label{sec:helpful-programs}
-  \genidx[\rangebeginlocation]{helpful programs}}
+\chapter[Helpful Programs\commonpart]{\label{sec:helpful-programs}%
+  \genidx[\rangebeginlocation]{helpful programs}%
+  Helpful Programs And Libraries\commonpart}
 
-Several programs and libraries have proven helpful when working with
-\application{Enblend} and \application{Enfuse}.
+Several programs and libraries have proven helpful when working with \application{Enblend} or
+\application{Enfuse}.
 
 
-\section[Raw Image Conversion]{Raw Image Conversion
-  \label{sec:raw-image-conversion}
-  \genidx{helpful programs!raw image conversion}}
+\section[Raw Image Conversion]{\label{sec:raw-image-conversion}%
+  \genidx{helpful programs!raw image conversion}%
+  Raw Image Conversion}
 
 \begin{itemize}
+  \label{app:darktable}
 \item
-  \uref{\darktableorg}{\application{Darktable}}\appidx{Darktable} is
-  an open source photography workflow application and raw developer.
+  \appidx{Darktable}\uref{\darktableorg}{\application{Darktable}} is an open-source photography
+  workflow application and raw-image developer.
 
+  \label{prg:dcraw}
 \item
-  \uref{\cybercomnetdcraw}{\application{DCRaw}}\prgidx{dcraw} is a
-  universal raw-converter written by \propername{David Coffin}.
+  \prgidx{dcraw}\uref{\cybercomnetdcraw}{\application{DCRaw}} is a universal raw-converter
+  written by \propername{David Coffin}.
 
+  \label{app:rawtherapee}
 \item
-  \uref{\rawtherapeecom}{\application{RawTherapee}}\appidx{RawTherapee}
-  is powerful 64-bit open source raw converter for Win\asterisk, Mac
-  OS~X and Linux.
+  \appidx{RawTherapee}\uref{\rawtherapeecom}{\application{RawTherapee}} is powerful open-source
+  raw converter for Win\asterisk, \mbox{\acronym{MacOS}} and Linux.
 
+  \label{app:ufraw}
 \item
-  \uref{\ufrawsourceforgenet}{\application{UFRaw}} is a raw converter
-  written by \propername{Udi Fuchs} and based on \application{DCRaw} (see
-  right above).  It adds a \acronym{GUI}
-  (\command{ufraw}\prgidx{ufraw}), versatile batch processing
-  (\command{ufraw-batch}\prgidx{ufraw-batch}), and some additional
-  features such as cropping, noise reduction with wavelets, and
-  automatic lens error correction.
+  \appidx{UFRaw}\uref{\ufrawsourceforgenet}{\application{UFRaw}} is a raw-converter written by
+  \propername{Udi Fuchs} and based on \application{DCRaw} (see above).  It adds a \acronym{GUI}
+  (\prgidx{ufraw}\command{ufraw}), versatile batch processing
+  (\prgidx{ufraw-batch}\command{ufraw-batch}), and some additional features such as cropping,
+  noise reduction with wavelets, and automatic lens-error correction.
 \end{itemize}
 
 
-\section[Image Alignment and Rendering]{Image Alignment and Rendering
-  \label{sec:image-alignment-and-rendering}
-  \genidx{helpful programs!image alignment}
-  \genidx{helpful programs!image rendering}}
+\section[Image Alignment and Rendering]{\label{sec:image-alignment-and-rendering}%
+  \genidx{helpful programs!image alignment}%
+  \genidx{helpful programs!image rendering}%
+  Image Alignment and Rendering}
 
 \begin{itemize}
-\item\label{app:hugin}
-  \uref{\huginsourceforgenet}{\application{Hugin}}\appidx{Hugin} is
-  a \acronym{GUI} that aligns and stitches images.
+  \label{app:hugin}
+\item
+  \appidx{Hugin}\uref{\huginsourceforgenet}{\application{Hugin}} is a \acronym{GUI} that aligns
+  and stitches images.
 
-  It comes with several command line tools, like
-  \command{nona}\prgidx{nona \textrm{(Hugin)}} to stitch panorama
-  images, \command{align\_image\_stack}\prgidx{align\_image\_stack
-    \textrm{(Hugin)}} to align overlapping images for \acronym{HDR} or
-  create focus stacks, and \command{fulla}\prgidx{fulla
-    \textrm{(Hugin)}} to correct lens errors.
+  It comes with several command-line tools, like for example \prgidx{nona
+    \textrm{(Hugin)}}\command{nona} to stitch panorama images,
+  \command{align\_image\_stack}\prgidx{align\_image\_stack \textrm{(Hugin)}} to align
+  overlapping images for \acronym{HDR} or create focus stacks, and \prgidx{fulla
+    \textrm{(Hugin)}}\command{fulla} to correct lens errors.
 
-\item\label{app:panotools} \uref{\panotoolssourceforgenet}{PanoTools}
-  the successor of \propername{Helmut Dersch's}
-  \uref{\allinoneeedersch}{original PanoTools} offers a set of
-  command-line driven applications to create panoramas.  Most notable
-  are \application{PTOptimizer}\prgidx{PTOptimizer
-    \textrm{(PanoTools)}} and
-  \application{PTmender}.\prgidx{PTmender \textrm{(PanoTools)}}
+  \label{app:panotools}
+\item
+  \appidx{PanoTools}\uref{\panotoolssourceforgenet}{PanoTools} the successor of
+  \propername{Helmut Dersch's} \uref{\allinoneeedersch}{original PanoTools} offers a set of
+  command-line driven applications to create panoramas.  Most notable are \prgidx{PTOptimizer
+    \textrm{(PanoTools)}}\application{PTOptimizer} for control point optimization and
+  \prgidx{PTmender \textrm{(PanoTools)}}\application{PTmender}, an image stitcher.
 \end{itemize}
 
 
-\section[Image Manipulation]{Image Manipulation
-  \label{sec:image-manipulation}
-  \genidx{helpful programs!image manipulation}}
+\section[Image Manipulation]{\label{sec:image-manipulation}%
+  \genidx{helpful programs!image manipulation}%
+  Image Manipulation}
 
 \begin{itemize}
-\item\label{app:cinepaint}
-  \uref{\cinepaintorg}{\application{CinePaint}}\appidx{CinePaint} is
-  a branch of an early \application{Gimp} forked off at version~1.0.4.
-  It sports much less features than the current \application{Gimp},
-  but offers 8~bit, 16~bit and~32~bit color channels, \acronym{HDR}
-  (for example floating-point \acronym{TIFF}, and \acronym{OpenEXR}),
-  and a tightly integrated color management system.
+  \label{app:cinepaint}
+\item
+  \appidx{CinePaint}\uref{\cinepaintorg}{\application{CinePaint}} is a branch of an early
+  \application{Gimp} forked off at version~1.0.4.  It sports much less features than the current
+  \application{Gimp}, but offers 8~bit, 16~bit and~32~bit color channels, \acronym{HDR} (for
+  example floating-point \acronym{TIFF}, and \acronym{OpenEXR}), and a tightly integrated color
+  management system.
 
-\item\label{app:gimp} \uref{\gimporg}{\application{The
-    Gimp}}\appidx{Gimp} is a general purpose image manipulation
-  program.  At the time of this writing it is still limited to images
-  with only 8~bits per channel.
+  \label{app:gimp}
+\item
+  \appidx{Gimp}\uref{\gimporg}{\application{The Gimp}} is a general purpose image manipulation
+  program.  At the time of this writing it is still limited to images with only 8~bits per
+  channel.
 
-\item\label{app:gmic}
-  \uref{\gmicsourceforgenet}{\application{G'Mic}}\prgidx{gmic} is
-  an open and full-featured framework for image processing, providing
-  several different user interfaces to convert, manipulate, filter,
-  and visualize generic image datasets.
+  \label{app:gmic}
+\item
+  \prgidx{gmic}\uref{\gmicsourceforgenet}{\application{G'Mic}} is an open and full-featured
+  framework for image processing, providing several different user interfaces to convert,
+  manipulate, filter, and visualize generic image datasets.
 
-\item\label{app:imagemagick} Both
-  \uref{\imagemagickorg}{ImageMagick}\appidx{ImageMagick} and
-  \uref{\graphicsmagickorg}{GraphicsMagick}\appidx{GraphicsMagick} are
-  general\hyp{}purpose command\hyp{}line controlled image manipulation
-  programs, for example, \command{convert},\prgidx{convert
-    \textrm{(ImageMagick)}} \command{display},\prgidx{display
-    \textrm{(ImageMagick)}} \command{identify},\prgidx{identify
-    \textrm{(ImageMagick)}} and \command{montage}.\prgidx{montage
-    \textrm{(ImageMagick)}} GraphicsMagick bundles most ImageMagick
-  invocations in the single dispatcher call to \command{gm}.\prgidx{gm
-    \textrm{(GraphicsMagick)}}
+  \label{app:imagemagick}\label{app:graphicsmagick}
+\item
+  Both \appidx{ImageMagick}\uref{\imagemagickorg}{\application{ImageMagick}} and
+  \appidx{GraphicsMagick}\uref{\graphicsmagickorg}{\application{GraphicsMagick}} are
+  general\hyp{}purpose command\hyp{}line controlled image\hyp{}manipulation programs, for
+  example, \prgidx{convert \textrm{(ImageMagick)}}\command{convert}, \prgidx{convert
+    \textrm{(ImageMagick)}}\command{display}, \prgidx{convert
+    \textrm{(ImageMagick)}}\command{identify}, and \prgidx{convert
+    \textrm{(ImageMagick)}}\command{montage}.  \application{GraphicsMagick} bundles most
+  \application{ImageMagick} invocations in the single dispatcher call to \prgidx{gm
+    \textrm{(GraphicsMagick)}}\command{gm}.
 \end{itemize}
 
 
-\section[High Dynamic Range]{High Dynamic Range
-  \label{sec:high-dynamic-range}
-  \genidx{helpful programs!High Dynamic Range}
-  \genidx{helpful programs!\acronym{HDR}}}
+\section[High Dynamic Range]{\label{sec:high-dynamic-range}%
+  \genidx{helpful programs!High Dynamic Range}%
+  \genidx{helpful programs!\acronym{HDR}}%
+  High Dynamic Range}
 
 \begin{itemize}
-\item\label{lib:openexr} \uref{\openexrcom}{OpenEXR} offers libraries
-  and some programs to work with the \acronym{EXR} \acronym{HDR}
-  format, for example the \acronym{EXR} display utility
-  \command{exrdisplay}.\prgidx{exrdisplay \textrm{(OpenEXR)}}
+  \label{lib:openexr}
+\item
+  \genidx{OpenEXR@\acronym{OpenEXR}}\uref{\openexrcom}{OpenEXR} offers libraries and some
+  programs to work with the \genidx{EXR@\acronym{EXR}}\acronym{EXR}
+  \genidx{HDR@\acronym{HDR}}\acronym{HDR} format, for example the \acronym{EXR} display utility
+  \prgidx{exrdisplay \textrm{(OpenEXR)}}\command{exrdisplay}.
 
-\item\label{app:psftools}
-  \uref{\pfstoolssourceforgenet}{PFSTools} read, write,
-  modify, and tonemap high-dynamic range images.
+  \label{app:psftools}
+\item
+  \prgidx{PFSTools}\uref{\pfstoolssourceforgenet}{PFSTools} read, write, modify, and tonemap
+  high-dynamic range images.
 \end{itemize}
 
 
-\section[Libraries]{Major Libraries
-  \label{sec:helpful-libraries}
-  \genidx{helpful programs!libraries}
-  \genidx{helpful libraries}}
+\section[Libraries]{\label{sec:helpful-libraries}%
+  \genidx{helpful programs!libraries}%
+  \genidx{helpful libraries}%
+  Major Libraries}
 
 \begin{itemize}
-\item\label{lib:jpeg} \uref{\ijgorg}{LibJPEG}\genidx{LibJPEG} is a
-  library for handling the \acronym{JPEG} (\acronym{JFIF}) image
-  format.
+  \label{lib:jpeg}
+\item
+  \genidx{LibJPEG}\uref{\ijgorg}{LibJPEG} is a library for handling the
+  \genidx{JPEG@\acronym{JPEG}}\acronym{JPEG}
+  (\gensee{JFIF@\acronym{JFIF}}{\acronym{JPEG}}\acronym{JFIF}) image format.
 
-\item\label{lib:png} \uref{\libpngorg}{LibPNG}\genidx{LibPNG} is a
-  library that handles the Portable Network Graphics (\acronym{PNG})
-  image format.
+  \label{lib:png}
+\item
+  \genidx{LibPNG}\uref{\libpngorg}{LibPNG} is a library that handles the Portable Network
+  Graphics (\genidx{PNG@\acronym{PNG}}\acronym{PNG}) image format.
 
-\item\label{lib:tiff}
-  \uref{\remotesensingorglibtiff}{LibTIFF}\genidx{LibTiff} offers a
-  library and utility programs to manipulate the ubiquitous Tagged
-  Image File Format, \acronym{TIFF}.
+  \label{lib:tiff}
+\item
+  \genidx{LibTiff}\uref{\remotesensingorglibtiff}{LibTIFF} offers a library and utility programs
+  to manipulate the ubiquitous Tagged Image File Format, \genidx{TIFF@\acronym{TIFF}}\acronym{TIFF}.
 
-  The nifty \command{tiffinfo}\prgidx{tiffinfo \textrm{(libtiff)}}
-  command in the LibTIFF distribution quickly inquires the most
-  important properties of \acronym{TIFF} files.
+  The nifty \prgidx{tiffinfo \textrm{(libtiff)}}\command{tiffinfo} command in the LibTIFF
+  distribution quickly inquires the most important properties of \acronym{TIFF} files.
 \end{itemize}
 
 
-\section[Meta-Data Handling]{Meta-Data Handling
-  \label{sec:meta-data-handling}
-  \genidx{helpful programs!meta-data handling}}
+\section[Meta-Data Handling]{\label{sec:meta-data-handling}%
+  \genidx{helpful programs!meta-data handling}%
+  Meta-Data Handling}
 
 \begin{itemize}
-\item\label{app:exiftool}
-  \uref{\snophyqueensucaexiftool}{EXIFTool}\prgidx{exiftool} reads
-  and writes \acronym{EXIF} meta data.  In particular it copies
-  meta-data from one image to another.
+  \label{app:exiftool}
+\item
+  \prgidx{exiftool}\uref{\snophyqueensucaexiftool}{EXIFTool} reads and writes
+  \genidx{EXIF@\acronym{EXIF}}\acronym{EXIF} meta data.  In particular it copies meta-data from
+  one image to another.
 
-\item\label{app:littlecms}
-  \uref{\littlecmscom}{LittleCMS}\prgidx{tifficc
-    \textrm{(LittleCMS)}} is the color management library used by
-  \application{Hugin}, \application{DCRaw}, \application{UFRaw},
-  \application{Enblend}, and \application{Enfuse}.  It supplies some
-  binaries, too.  \command{tifficc}, an \acronym{ICC} color profile
-  applier, is of particular interest.
+  \label{app:littlecms}
+\item
+  \appidx{LittleCMS}\uref{\littlecmscom}{LittleCMS} is the color-management library used by
+  \application{Hugin}, \application{DCRaw}, \application{UFRaw}, \application{Enblend}, and
+  \application{Enfuse}.  It supplies some binaries, too.  \prgidx{tificc
+    \textrm{(LittleCMS)}}\command{tificc}, an \genidx{ICC@\acronym{ICC}}\acronym{ICC} color
+  profile applier, is of particular interest.
 \end{itemize}
 
 
-\section[Camera Firmware Extension]{Camera Firmware Extension
-  \label{sec:camera-firmware-extension}
-  \genidx{helpful programs!camera firmware}}
+\section[Camera Firmware Extension]{\label{sec:camera-firmware-extension}%
+  \genidx{helpful programs!camera firmware}%
+  Camera Firmware Extension}
 
 \begin{itemize}
-\item\label{app:magiclantern} \uref{\magiclanternfm}{Magic
-  Lantern}\appidx{Magic Lantern} is a software add-on that runs from
-  the \acronym{SD}~(Secure Digital) or \acronym{CF}~(Compact Flash)
-  card and adds new features to cameras of a certain Japanese brand as
-  for example
+  \label{app:magiclantern}
+\item
+  \appidx{Magic Lantern}\uref{\magiclanternfm}{Magic Lantern} is a software add-on that runs
+  from the \acronym{SD}~(Secure Digital) or \acronym{CF}~(Compact Flash) card and adds new
+  features to cameras of a certain Japanese brand of cameras as for example
 
   \begin{itemize}
   \item
-    Dual-\acronym{ISO} (more precisely: simultaneous dual sensor
-    speed); this operation mode may in fact obviate the need for
-    \application{Enfuse}.
+    \genidx{dual-ISO@dual-\acronym{ISO}}Dual-\acronym{ISO} (more precisely: simultaneous dual
+    sensor speed); this operation mode may in fact obviate the need for \application{Enfuse}.
 
   \item
     Focus stacking
 
   \item
+    \genidx{bracketing!HDR@\acronym{HDR}}%
+    \gensee{HDR bracketing@\acronym{HDR}-bracketing}{bracketing, \acronym{HDR}}%
     \acronym{HDR}-bracketing
   \end{itemize}
 \end{itemize}
 
 \genidx[\rangeendlocation]{helpful programs}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

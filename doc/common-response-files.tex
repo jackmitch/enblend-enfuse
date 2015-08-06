@@ -2,38 +2,38 @@
 %% Licence details can be found in the file COPYING.
 
 
-\section[Response Files\commonpart]{Response Files\commonpart
-  \label{sec:response-files}
-  \genidx[\rangebeginlocation]{response files}
-  \genidx{file!response}}
+\section[Response Files\commonpart]{\label{sec:response-files}%
+  \genidx[\rangebeginlocation]{response files}%
+  \genidx{file!response}%
+  Response Files\commonpart}
 
 A response file contains names of images or other response filenames.
-Introduce response file names at the command line with a
-\code{\val{val:response-file-prefix-char}}~character.%
-\genidx{\val*{val:response-file-prefix-char}\ (response file prefix)}
+\genidx{\val*{val:response-file-prefix-char}\ (response file prefix)}%
 \gensee{response file prefix!\sample{\val*{val:response-file-prefix-char}}}%
        {\sample{\val*{val:response-file-prefix-char}}}
+Introduce response file names at the command line or in a response file with an
+\code{\val{val:response-file-prefix-char}}~character.
 
-\application{Enblend} and \application{Enfuse} process%
-\genidx{order!of image processing}%
-\gensee{image processing order}{order, of image processing}
-the list \metavar{INPUT} strictly from left to right, expanding
-response files in depth-first order.  Multi-layer files are processed
-from first layer to the last.  The following examples only show
-\application{Enblend}, but \application{Enfuse} works exactly the
-same.
+\genidx{order!of image processing}\gensee{image processing order}{order of image processing}
+\application{Enblend} and \application{Enfuse} process the list \metavar{INPUT} strictly from
+left to right, expanding response files in depth-first order.  Multi-layer files are processed
+from first layer to the last.  The following examples only show \application{Enblend}, but
+\application{Enfuse} works exactly the same.
 
 \begin{description}
-\item[Solely image filenames.]\itemend Example:
+\item[Solely image filenames.]\itemend
+  Example:
+
   \begin{literal}
     enblend image-1.tif image-2.tif image-3.tif
   \end{literal}
 
-  The ultimate order in which the images are processed is:
-  \filename{image-1.tif}, \filename{image-2.tif},
-  \filename{image-3.tif}.
+  The ultimate order in which the images are processed is: \filename{image-1.tif},
+  \filename{image-2.tif}, \filename{image-3.tif}.
 
-\item[Single response file.]\itemend Example:
+\item[Single response file.]\itemend
+  Example:
+
   \begin{literal}
     enblend \val*{val:response-file-prefix-char} list
   \end{literal}
@@ -47,10 +47,12 @@ same.
     img4.exr \\
   \end{literal}
 
-  Ultimate order: \filename{img1.exr}, \filename{img2.exr},
-  \filename{img3.exr}, \filename{img4.exr}.
+  Ultimate order: \filename{img1.exr}, \filename{img2.exr}, \filename{img3.exr},
+  \filename{img4.exr}.
 
-\item[Mixed literal names and response files.]\itemend Example:
+\item[Mixed literal names and response files.]\itemend
+  Example:
+
   \begin{literal}
     enblend \val*{val:response-file-prefix-char} master.list image-09.png image-10.png
   \end{literal}
@@ -80,65 +82,57 @@ same.
     image-07.png \\
   \end{literal}
 
-  Ultimate order: \filename{image-01.png}, \filename{image-02.png},
-  \filename{image-03.png}, \filename{image-04.png},
-  \filename{image-05.png}, \filename{image-06.png},
-  \filename{image-07.png}, \filename{image-08.png},
-  \filename{image-09.png}, \filename{image-10.png},
+  Ultimate order: \filename{image-01.png}, \filename{image-02.png}, \filename{image-03.png},
+  \filename{image-04.png}, \filename{image-05.png}, \filename{image-06.png},
+  \filename{image-07.png}, \filename{image-08.png}, \filename{image-09.png},
+  \filename{image-10.png},
 \end{description}
 
 
-\subsection[Response File Format]{Response File Format
-  \label{sec:response-file-format}
-  \genidx{response file!format}
-  \gensee{format of response file}{response file, format}}
+\subsection[Response File Format]{\label{sec:response-file-format}%
+  \genidx{response file!format}%
+  \gensee{format of response file}{response file format}%
+  Response File Format}
 
-Response files contain one filename per line.  Blank lines or lines
-beginning with a \code{\val{val:response-file-comment-char}}~sign%
 \genidx{\val*{val:response-file-comment-char} (response file comment)}%
 \gensee{response file!comment (\sample{\val*{val:response-file-comment-char}})}%
-       {\sample{\val*{val:response-file-comment-char}}}
-are ignored; the latter can serve as comments.  Filenames that begin
-with a \code{\val{val:response-file-prefix-char}}~character denote
-other response files.  Table~\ref{tab:response-file-format} states a
-formal grammar of response files in
-\uref{\wikipediaebnf}{\acronym{EBNF}}.
+       {\sample{\val*{val:response-file-comment-char}}}%
+Response files contain one filename per line.  Blank lines or lines beginning with a
+\code{\val{val:response-file-comment-char}}~sign are ignored; the latter can serve as comments.
+Filenames that begin with a \code{\val{val:response-file-prefix-char}}~character denote other
+response files.  \tableName~\ref{tab:response-file-format} states a formal grammar of response
+files in \uref{\wikipediaebnf}{\acronym{EBNF}}.
 
 \begin{table}[htbp]
   \begin{tabular}{l@{$\quad::=\quad$}l}
     \metavar{response-file} & \metavar{line}* \\
-    \metavar{line} & (\metavar{comment} | \metavar{file-spec}) [\sample{\bslash r}] \sample{\bslash n} \\
+    \metavar{line} & (\metavar{comment} $|$ \metavar{file-spec}) [\sample{\bslash r}] \sample{\bslash n} \\
     \metavar{comment} & \metavar{space}* \sample{\val*{val:response-file-comment-char}} \metavar{text} \\
     \metavar{file-spec} & \metavar{space}* \sample{\val*{val:response-file-prefix-char} } \metavar{filename} \metavar{space}* \\
     \metavar{space} & \sample{\textvisiblespace} $|$ \sample{\bslash t} \\
   \end{tabular}
 
-  \noindent where \metavar{text} is an arbitrary string and
-  \metavar{filename} is any filename.
+  \noindent where \metavar{text} is an arbitrary string and \metavar{filename} is any filename.
 
-  \caption[Grammar of response files]{\acronym{EBNF} definition of the
-    grammar of response files.\label{tab:response-file-format}}
-
-  \genidx{response file!grammar}
-  \gensee{grammar!response file}{response file, grammar}
+  \caption[Grammar of response files]{\label{tab:response-file-format}%
+    \genidx{response file!grammar}%
+    \gensee{grammar!response file}{response file, grammar}%
+    \acronym{EBNF} definition of the grammar of response files.}
 \end{table}
 
-In a response file relative filenames are used relative the response
-file itself, not relative to the current-working directory of the
-application.
+In a response file relative filenames are used relative the response file itself, not relative
+to the current-working directory of the application.
 
-The above grammar might unpleasantly surprise the user in the
-some ways.
+The above grammar might surprise the user in the some ways.
 
 \begin{description}
-\item[Whitespace trimmed at both line ends]\itemend For convenience,
-  whitespace at the beginning and at the end of each line is ignored.
-  However, this implies that response files cannot represent filenames
-  that start or end with whitespace, as there is no quoting syntax.
-  Filenames with embedded whitespace cause no problems, though.
+\item[Whitespace trimmed at both line ends]\itemend
+  For convenience, whitespace at the beginning and at the end of each line is ignored.  However,
+  this implies that response files cannot represent filenames that start or end with whitespace,
+  as there is no quoting syntax.  Filenames with embedded whitespace cause no problems, though.
 
-\item[Only whole-line comments]\itemend Comments in response files
-  always occupy a complete line.  There are no ``line-ending
+\item[Only whole-line comments]\itemend
+  Comments in response files always occupy a complete line.  There are no ``line-ending
   comments''.  Thus, in
 
   \begin{literal}
@@ -148,24 +142,22 @@ some ways.
     img+0.67ev.tif \\
   \end{literal}
 
-  only the first line contains a comment, whereas the second line
-  includes none.  Rather, it refers to a file called
+  only the first line contains a comment, whereas the second line includes none.  Rather, it
+  refers to a file called
+
   \begin{literal}
     img-0.33ev.tif \val*{val:response-file-comment-char} "middle" EV
   \end{literal}
 
-\item[Image filenames cannot start with
-  \code{\val{val:response-file-prefix-char}}]\itemend A
-  \code{\val{val:response-file-prefix-char}}~sign invariably
-  introduces a response file, even if the filename's extension hints
-  towards an image.
+\item[Image filenames cannot start with \code{\val{val:response-file-prefix-char}}]\itemend
+  A \code{\val{val:response-file-prefix-char}}~sign invariably introduces a response file, even
+  if the filename's extension hints towards an image.
 \end{description}
 
-If \application{Enblend} or \application{Enfuse} do not recognize a
-response file, they will skip the file and issue a warning.  To
-force\genidx{response file!force recognition of} a file being
-recognized as a response file add one of the following syntactic
-comments to the \emph{first} line of the file.
+\genidx{response file!force recognition of}If \application{Enblend} or \application{Enfuse} do
+not recognize a response file, they will skip the file and issue a warning.  To force a file
+being recognized as a response file add one of the following syntactic comments to the
+\emph{first} line of the file.
 
 \begin{literal}
   response-file: true\synidx{response-file} \\
@@ -173,8 +165,7 @@ comments to the \emph{first} line of the file.
   enfuse-response-file: true\synidx{enfuse-response-file} \\
 \end{literal}
 
-Finally, Example~\ref{ex:response-file} shows a complete response
-file.
+Finally, \exampleName~\ref{ex:response-file} shows a complete response file.
 
 \begin{exemplar}[htbp]
   \begin{literal}
@@ -192,22 +183,19 @@ file.
     nadir.tif \\
   \end{literal}
 
-  \caption[Complete response file]{Example of a complete response
-    file.\label{ex:response-file}}
+  \caption[Complete response file]{\label{ex:response-file}Example of a complete response file.}
 \end{exemplar}
 
 
-\subsection[Syntactic Comments]{Syntactic Comments
-  \label{sec:syntactic-comments}
-  \genidx{response file!syntactic comment}
-  \gensee{syntactic comment!response file}{response file, syntactic comment}}
+\subsection[Syntactic Comments]{\label{sec:syntactic-comments}%
+  \genidx{response file!syntactic comment}%
+  \gensee{syntactic comment!response file}{response file, syntactic comment}%
+  Syntactic Comments}
 
 Comments that follow the format described in
-Table~\ref{tab:response-file-syntactic-comment} are treated as
-instructions how to interpret the rest of the response file.  A
-syntactic comment is effective immediately and its effect persists to
-the end of the response file, unless another syntactic comment undoes
-it.
+\tableName~\ref{tab:response-file-syntactic-comment} are treated as instructions how to
+interpret the rest of the response file.  A syntactic comment is effective immediately and its
+effect persists to the end of the response file, unless another syntactic comment undoes it.
 
 \begin{table}[htbp]
   \begin{tabular}{l@{$\quad::=\quad$}l}
@@ -221,23 +209,22 @@ it.
 
   where \metavar{value} is an arbitrary string.
 
-  \caption[Grammar of syntactic comments]{\acronym{EBNF} definition of
-    the grammar of syntactic comments in response
-    files.\label{tab:response-file-syntactic-comment}}
-
-  \genidx{syntactic comment!grammar}
-  \genidx{grammar!syntactic comment}
+  \caption[Grammar of syntactic comments]{\label{tab:response-file-syntactic-comment}%
+  \genidx{syntactic comment!grammar}%
+  \genidx{grammar!syntactic comment}%
+    \acronym{EBNF} definition of the grammar of syntactic comments in response files.}
 \end{table}
 
 Unknown syntactic comments are silently ignored.
 
-A special index for \flexipageref{syntactic
-  comments}{sec:syncomm-index} lists them in alphabetic order.
+A special index for \flexipageref{syntactic comments}{sec:syncomm-index} lists them in
+alphabetic order.
 
 
-\subsection[Globbing Algorithms]{Globbing Algorithms
-  \label{sec:globbing-algorithms}
-  \genidx{globbing algorithm}}
+\subsection[Globbing Algorithms]{\label{sec:globbing-algorithms}%
+  \genidx{globbing algorithm}%
+  \gensee{algorithm}{globbing algorithm}%
+  Globbing Algorithms}
 
 The three equivalent syntactic keys
 
@@ -252,62 +239,61 @@ The three equivalent syntactic keys
   \code{filename-globbing}\synidx{filename-globbing}
 \end{itemize}
 
-control the algorithm that \application{Enblend} or
-\application{Enfuse} use to glob filenames in response files.
+control the algorithm that \application{Enblend} or \application{Enfuse} use to glob filenames
+in response files.
 
-All versions of \application{Enblend} and \application{Enfuse} support
-at least two algorithms: \code{literal},\genidx{globbing
-  algorithm!\code{literal}} which is the default, and
-\code{wildcard}.\genidx{globbing algorithm!\code{wildcard}} See
-Table~\ref{tab:globbing-algorithms} for a list of all possible
-globbing algorithms.  To find out about the algorithms in your version
-of \application{Enblend} or \application{Enfuse} use
-option~\option{--show-globbing-algorithms}.
+\genidx{globbing algorithm!\code{literal}}%
+\genidx{globbing algorithm!\code{wildcard}}%
+All versions of \application{Enblend} and \application{Enfuse} support at least two algorithms:
+\code{literal}, which is the default, and \code{wildcard}.  See
+\tableName~\ref{tab:globbing-algorithms} for a list of all possible globbing algorithms.  To
+find out about the algorithms in your version of \application{Enblend} or \application{Enfuse}
+use option~\option{--show-globbing-algorithms}.
 
 \begin{table}[htbp]
   \begin{minipage}{\linewidth}
     \begin{codelist}
-    \item[literal]\itemend Do not glob.  Interpret all filenames in
-      response files as literals.\genidx{globbing
-        algorithm!\code{literal}} This is the default.
+      \genidx{globbing algorithm!\code{literal}}%
+    \item[literal]\itemend
+      Do not glob.  Interpret all filenames in response files as literals. This is the default.
 
-      Please remember that whitespace at both ends of a line in a
-      response file \emph{always} gets discarded.
+      Please remember that whitespace at both ends of a line in a response file \emph{always}
+      gets discarded.
 
-    \item[wildcard]\itemend Glob using the wildcard
-      characters~\sample{?}, \sample{*}, \sample{[}, and
-        \sample{]}.\genidx{globbing algorithm!\code{wildcard}}
-      \genidx{glob}
+      \genidx{globbing algorithm!\code{wildcard}}%
+      \genidx{glob}%
+    \item[wildcard]\itemend
+      Glob using the wildcard characters~\sample{?}, \sample{*}, \sample{[}, and \sample{]}.
 
-      The \propername{Win32} implementation only globs the filename
-      part of a path, whereas all other implementations perform
-      wildcard expansion in \emph{all} path components.  Also see
+      The \propername{Win32} implementation only globs the filename part of a path, whereas all
+      other implementations perform wildcard expansion in \emph{all} path components.  Also see
       \uref{\kernelorgglob}{glob(7)}.
 
-    \item[none]\itemend Alias for \code{literal}.\genidx{globbing
-      algorithm!\code{none}}
+      \genidx{globbing algorithm!\code{none}}
+    \item[none]\itemend
+      Alias for \code{literal}.
 
-    \item[shell]\itemend The \code{shell} globbing algorithm works as
-      \code{literal} does.  In addition, it interprets the wildcard
-      characters~\sample{\{}, \sample{\atsign}, and
-      \sample{\squiggle}.  This makes the expansion process behave
-      more like common \acronym{UN*X} shells.\genidx{globbing
-        algorithm!\code{shell}}
+      \genidx{globbing algorithm!\code{shell}}
+    \item[shell]\itemend
+      The \code{shell} globbing algorithm works as \code{literal} does.  In addition, it
+      interprets the wildcard characters~\sample{\{}, \sample{\atsign}, and \sample{\squiggle}.
+      This makes the expansion process behave more like common \acronym{UN*X}
+      shells.
 
-    \item[sh]\itemend Alias for \code{shell}.\genidx{globbing
-      algorithm!\code{sh}}
+      \genidx{globbing algorithm!\code{sh}}
+    \item[sh]\itemend
+      Alias for \code{shell}.
     \end{codelist}
   \end{minipage}
 
-  \caption[Globbing algorithms]{Globbing algorithms for the use in
-    response files.\label{tab:globbing-algorithms}}
-
-  \genidx{globbing algorithms}
-  \genidx{algorithms!globbing}
+  \caption[Globbing algorithms]{\label{tab:globbing-algorithms}%
+    \genidx{globbing algorithms}%
+    \genidx{algorithms!globbing}%
+    Globbing algorithms for the use in response files.}
 \end{table}
 
-Example~\ref{ex:globbing-algorithm} gives an example of how to control
-filename-globbing in a response file.
+\exampleName~\ref{ex:globbing-algorithm} gives an example of how to control filename-globbing in
+a response file.
 
 \begin{exemplar}[htbp]
   \begin{literal}
@@ -320,24 +306,26 @@ filename-globbing in a response file.
     image\_001[0-4].tif \\
   \end{literal}
 
-  \caption[Filename-globbing syntactic comment]{Control
-    filename-globbing in a response file with a syntactic
-    comment.\label{ex:globbing-algorithm}}
+  \caption[Filename-globbing syntactic comment]{\label{ex:globbing-algorithm}Control
+    filename-globbing in a response file with a syntactic comment.}
 \end{exemplar}
 
 
-\subsection[Default Layer Selection]{Default Layer Selection
-  \label{sec:default-layer-selection}
-  \genidx{default layer selection}
-  \genidx{layer selection!default}}
+\subsection[Default Layer Selection]{\label{sec:default-layer-selection}%
+  \genidx{default layer selection}%
+  \genidx{layer selection!default}%
+  Default Layer Selection}
 
-The key~\code{layer-selector}\synidx{layer-selector} provides the same
-functionality as does the command\hyp{}line
-option~\option{--layer-selector}, but on a per response\hyp{}file
-basis.  See Section~\ref{sec:common-options}.
+The key~\code{layer-selector}\synidx{layer-selector} provides the same functionality as does the
+command\hyp{}line option~\option{--layer-selector}, but on a per response\hyp{}file basis.  See
+\sectionName~\ref{sec:common-options}.
 
-This syntactic comment affects the layer selection of all images
-listed after it including those in included response files until
-another \code{layer-selector} overrides it.
+This syntactic comment affects the layer selection of all images listed after it including those
+in included response files until another \code{layer-selector} overrides it.
 
 \genidx[\rangeendlocation]{response files}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

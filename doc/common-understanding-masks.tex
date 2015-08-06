@@ -2,39 +2,37 @@
 %% Licence details can be found in the file COPYING.
 
 
-\chapter[Understanding Masks\commonpart]{Understanding Masks\commonpart
-  \label{sec:understanding-masks}
-  \genidx{mask}
-  \genidx[\rangebeginlocation]{understanding masks}}
+\chapter[Understanding Masks\commonpart]{\label{sec:understanding-masks}%
+  \genidx{mask}%
+  \genidx[\rangebeginlocation]{understanding masks}%
+  Understanding Masks\commonpart}
 
-A binary mask\genidx{mask!binary}\gensee{binary mask}{mask, binary}
-indicates for every pixel of an image if this pixel must be considered
-in further processing, or ignored.  For a weight
-mask,\genidx{mask!weight} the value of the mask determines how much
-the pixel contributes, zero again meaning ``no contribution''.
+\genidx{mask!binary}%
+\gensee{binary mask}{mask, binary}%
+\genidx{mask!weight}%
+A binary mask indicates for every pixel of an image if this pixel must be considered in further
+processing, or ignored.  For a weight mask, the value of the mask determines how much the pixel
+contributes, zero again meaning ``no contribution''.
 
-Masks arise in two places: as part of the input files and as separate
-files, showing the actual pixel weights prior to image blendung or
-fusion.  We shall explore both occurrences in the next sections.
+Masks arise in two places: as part of the input files and as separate files, showing the actual
+pixel weights prior to image blendung or fusion.  We shall explore both occurrences in the next
+sections.
 
 
-\section[Masks In Input Files]{Masks In Input Files
-  \label{sec:masks-in-input-files}
-  \genidx{mask!input files}
-  \genidx{input mask}}
+\section[Masks In Input Files]{\label{sec:masks-in-input-files}%
+  \genidx{mask!input files}%
+  \gensee{input mask}{mask, input files}%
+  Masks In Input Files}
 
-Each of the input files for \application{Enfuse} and
-\application{Enblend} can contain its own mask.  Both applications
-interpret them as binary masks no matter how many bits per image pixel
+Each of the input files for \application{Enfuse} and \application{Enblend} can contain its own
+mask.  Both applications interpret them as binary masks no matter how many bits per image pixel
 they contain.
 
-Use ImageMagick's \command{identify}\prgidx{identify
-  \textrm{(ImageMagick)}} (see Example~\ref{ex:using-identify}) or,
-for \acronym{TIFF} files only, \command{tiff\/info}\prgidx{tiffinfo
-  \textrm{(libtiff)}} (see Example~\ref{ex:using-tiffinfo}) to inquire
-quickly whether a file contains a mask.
-Appendix~\fullref{sec:helpful-programs} shows where to find these
-programs on the web.
+Use \application{ImageMagick}'s \prgidx{identify \textrm{(ImageMagick)}}\command{identify} (see
+\exampleName~\ref{ex:using-identify}) or, for \acronym{TIFF} files only, \prgidx{tiffinfo
+  \textrm{(libtiff)}}\command{tiff\/info} (see \exampleName~\ref{ex:using-tiffinfo}) to inquire
+quickly whether a file contains a mask.  \appendixName~\fullref{sec:helpful-programs} shows
+where to find these programs on the web.
 
 \begin{exemplar}[htbp]
   \begin{terminal}
@@ -49,9 +47,9 @@ programs on the web.
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\textit{mask}
   \end{terminal}
 
-  \caption[Using \command{identify}.]{Using \command{identify} to find
-    out about the mask in \filename{image-0000.tif}.  \sample{Matte}
-    indicates the existence of a mask.\label{ex:using-identify}}
+  \caption[Using \command{identify}.]{\label{ex:using-identify}Using \command{identify} to find
+    out about the mask in \filename{image-0000.tif}.  \sample{Matte} indicates the existence of
+    a mask.}
 \end{exemplar}
 
 \begin{exemplar}[htbp]
@@ -82,67 +80,69 @@ programs on the web.
     ~~ImageFullLength: 1187
   \end{terminal}
 
-  \caption[Using \command{tiff\/info}.]{Using \command{tiff\/info} to
-    find out about the mask in \filename{image-0000.tif}.  Here the
-    line \sample{Extra Samples} indicates one extra sample per pixel,
-    which is interpreted as an unassociated alpha-channel;
-    \application{Enblend} and \application{Enfuse} interpret this as
-    mask.  The second hint \command{tiff\/info} gives is in
-    \sample{Samples/Pixel}, where -- for a \acronym{RGB}-image -- the
-    $4 = 3 + 1$ tells about the extra
-    channel.\label{ex:using-tiffinfo}}
+  \caption[Using \command{tiff\/info}.]{\label{ex:using-tiffinfo}Using \command{tiff\/info} to
+    find out about the mask in \filename{image-0000.tif}.  Here the line \sample{Extra Samples}
+    indicates one extra sample per pixel, which is interpreted as an unassociated alpha-channel;
+    \application{Enblend} and \application{Enfuse} interpret this as mask.  The second hint
+    \command{tiff\/info} gives is in \sample{Samples/Pixel}, where -- for a \acronym{RGB}-image
+    -- the $4 = 3 + 1$ tells about the extra channel.}
 \end{exemplar}
 
-The ``Matte'' part of the image class and the ``Extra Samples'' line
-tell us that the file features a mask.  Also, many interactive image
-manipulation programs show the mask as a separate channel, sometimes
-called ``Alpha''.  There, the white (high mask value) parts of the
-mask enable pixels and black (low mask value) parts suppress them.
+\genidx{matte}%
+\genidx{extra samples}%
+\genidx{alpha}%
+The ``Matte'' part of the image class and the ``Extra Samples'' line tell us that the file
+features a mask.  Also, many interactive image manipulation programs show the mask as a separate
+channel, sometimes called ``alpha''.  There, the white (high mask value) parts of the mask
+enable pixels and black (low mask value) parts suppress them.
 
-The multitude of terms all describing the concept of a mask is
-confusing.
+The multitude of terms all describing the concept of a mask is confusing.
 
 \begin{description}
-\item[Mask]\itemend A mask\genidx{mask} defines a selection of pixels.
-  A value of zero represents an unselected pixel.  The maximum value
-  (``white'') represents a selected pixel and the values between zero
-  and the maximum are partially selected pixels.  See
-  \uref{\gimpsavvy}{Gimp-Savy.}
+  \genidx{mask}%
+\item[Mask]\itemend
+  A mask defines a selection of pixels.  A value of zero represents an unselected pixel.  The
+  maximum value (``white'') represents a selected pixel and the values between zero and the
+  maximum are partially selected pixels.  See \uref{\gimpsavvy}{Gimp-Savy.}
 
-\item[Alpha Channel]\itemend \genidx{channel!alpha} The alpha
-  channel\genidx{alpha channel} stores the transpacency value for each
-  pixel, typically in the range from zero to one.  A value of zero
-  means the pixel is completely transparent, thus does not contribute
-  to the image.  A value of one on the other hand means the pixel is
-  completely opaque.
+  \genidx{channel!alpha}%
+  \gensee{alpha channel}{channel, alpha}%
+\item[Alpha Channel]\itemend
+  The alpha channel stores the transpacency value for each pixel, typically in the range from
+  zero to one.  A value of zero means the pixel is completely transparent, thus does not
+  contribute to the image.  A value of one on the other hand means the pixel is completely
+  opaque.
 
-\item[Matte]\itemend The notion ``matte''\genidx{matte} as used by
-  ImageMagick refers to an inverted alpha channel, more precisely: $1
-  - \mbox{alpha}$.  See
-  \uref{\imagemagickorgusagechannelstrans}{ImageMagick} for further
-  explanations.
+  \genidx{matte}%
+\item[Matte]\itemend
+  The notion ``matte'' as used by \application{ImageMagick} refers to an inverted alpha channel,
+  more precisely: $1 - \mbox{alpha}$.  See
+  \uref{\imagemagickorgusagechannelstrans}{\application{ImageMagick}} for further explanations.
 \end{description}
 
-\application{Enblend} and \application{Enfuse} only consider pixels
-that have an associated mask value other than zero.  If an input image
-does not have an alpha channel, \application{Enblend} warns and
-assumes a mask of all non-zero values, that is, it will use every
-pixel of the input image for fusion.
+\application{Enblend} and \application{Enfuse} only consider pixels that have an associated mask
+value other than zero.  If an input image does not have an alpha channel, \application{Enblend}
+warns and assumes a mask of all non-zero values, that is, it will use every pixel of the input
+image for fusion.
 
-Stitchers like \command{nona} add a mask to their output images.
+\prgidx{nona \textrm{(Hugin)}}Stitchers like \command{nona} add a mask to their output images.
 
-Sometimes it is helpful to manually modify a mask before fusion.  For
-example to suppress unwanted objects (insects and cars come into mind)
-that moved across the scene during the exposures.  If the masks of all
-input images are black at a certain position, the output image will
-have a hole in that position.
+Sometimes it is helpful to manually modify a mask before fusion.  For example to suppress
+unwanted objects (insects and cars come into mind) that moved across the scene during the
+exposures.  If the masks of all input images are black at a certain position, the output image
+will have a hole in that position.
 
 
-\section[Weight Mask Files]{Weight Mask Files
-  \label{sec:weight-mask-files}
-  \genidx{mask!weight}
-  \gensee{weight!mask}{mask, weight}}
+\section[Weight Mask Files]{\label{sec:weight-mask-files}%
+  \genidx{mask!weight}%
+  \gensee{weight!mask}{mask, weight}%
+  Weight Mask Files}
 
 \fixme{Show some weight masks and explain them.}
 
 \genidx[\rangeendlocation]{understanding masks}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

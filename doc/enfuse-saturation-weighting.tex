@@ -2,14 +2,14 @@
 %% Licence details can be found in the file COPYING.
 
 
-\section[Saturation Weighting]{Saturation Weighting
-  \label{sec:saturation-weighting}
-  \genidx{weighting!saturation}}
+\section[Saturation Weighting]{\label{sec:saturation-weighting}%
+  \genidx{weighting!saturation}%
+  \gensee{saturation weighting}{weighting, saturation}%
+  Saturation Weighting}
 
 Saturation weighting prefers pixels with a high saturation.
 
-\App{} computes the saturation of a pixel according to the following
-algorithm.
+\App{} computes the saturation of a pixel according to the following algorithm.
 
 \begin{adalisting}
 max := maximum(R, G, B);
@@ -27,14 +27,19 @@ else
 end if;
 \end{adalisting}
 
-Obviously, saturation weighting can only be defined for \acronym{RGB}
-images, not for grayscale ones!  If you need something similar, check
-out Section~\ref{sec:local-entropy-weighting}; entropy weighting works
-for both \acronym{RGB} and grayscale pictures.
+The saturation weighting algorithm only looks at a single pixel at a time; the pixel's
+neighborhood is not taken into account.
 
-The saturation weighting algorithm only looks at a single pixel at a
-time; the pixel's neighborhood is not taken into account.
+\genidx{weighting!entropy}Obviously, saturation weighting can only be defined for
+\acronym{RGB}-images, not for grayscale ones.  If you need something similar, check out
+\sectionName~\ref{sec:local-entropy-weighting} on Entropy Weighting works for both \acronym{RGB}
+and grayscale pictures.
 
 \begin{optionsummary}
-\item[--saturation-weight] Section~\fullref{opt:saturation-weight}
+\item[--saturation-weight] \sectionName~\fullref{opt:saturation-weight}
 \end{optionsummary}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

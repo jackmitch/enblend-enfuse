@@ -4,18 +4,22 @@
 
 %% Words and abbreviations
 
-\newcommand*{\appendixabbr}{App.}
 \newcommand*{\appendixName}{Appendix}
-\newcommand*{\chapterabbr}{Ch.}
+\newcommand*{\appendixabbr}{App.}
 \newcommand*{\chapterName}{Chapter}
-\newcommand*{\equatioabbr}{Eqn.}
-\newcommand*{\equationname}{Equation}
+\newcommand*{\chapterabbr}{Ch.}
+\newcommand*{\equationabbr}{Eqn.}
+\newcommand*{\equationName}{Equation}
 \newcommand*{\exampleabbr}{Ex.}
-\newcommand*{\examplename}{Example}
+\newcommand*{\exampleName}{Example}
+\newcommand*{\figureabbr}{Fig.}
+\newcommand*{\figureName}{Figure}
 \newcommand*{\pageabbr}{p.}
 \newcommand*{\pagename}{page}
 \newcommand*{\sectionabbr}{Sec.}
-\newcommand*{\sectionname}{Section}
+\newcommand*{\sectionName}{Section}
+\newcommand*{\tableabbr}{Tab.}
+\newcommand*{\tableName}{Table}
 
 
 %% Texinfo compatibility macros
@@ -29,9 +33,8 @@
 \newcommand*{\filename}[1]{\textit{#1}}   % Texinfo: `@file'
 \newcommand*{\metavar}[1]{\textsl{#1}}    % Texinfo: `@var'
 \newcommand{\option}[1]{\texttt{%
-    %% We want to make long-name options (implicitly) hyphenatable in
-    %% the printable document, however the initial two dashes must
-    %% never be hyphenation points.
+    %% We want to make long-name options (implicitly) hyphenatable in the printable document,
+    %% however the initial two dashes must never be hyphenation points.
     \ifhevea #1\else
     \IfBeginWith{#1}{--}%
                 {\mbox{--}\begin{makehyphenatable}{\ttfamily}\StrGobbleLeft{#1}{2}\end{makehyphenatable}}%
@@ -70,9 +73,8 @@
  \fi}
 
 
-%% Use `\urlmark{URL}{LABEL}' inside an `\item' of a `description'
-%% list, i.e. inside the square brackets.  Follow with `\urltext'
-%% outside the right square bracket.  Example:
+%% Use `\urlmark{URL}{LABEL}' inside an `\item' of a `description' list, i.e. inside the square
+%% brackets.  Follow with `\urltext' outside the right square bracket.  Example:
 %%         \item[\urlmark{\urloffoo}{Foo}]\urltext
 \newcommand{\urlmark}[2]%
 {\ifhevea
@@ -114,15 +116,17 @@
                        {#1}%
                        \ifhevea\colorbox{\fixmebackgroundcolor}{ME}\else\fbox{ME}\fi}
 \newcommand*{\fourier}[1]{\widehat{#1}}   % fourier transformed variable
-\newcommand{\fullref}[1]{\ifhevea \ref{#1}\else \ref{#1}, \pagename~\pageref{#1}\fi}
+\newcommand{\fullref}[1]{\ifhevea \ref{#1}\else \ref{#1} on \pagename~\pageref{#1}\fi}
 \newcommand*{\guielement}[1]{\textsc{#1}}
 %%\newcommand*{\hangingitem}{\ifhevea\relax\else\hangindent=2em\hangafter=1\fi}
 \newcommand{\itempar}[1]{\ifhevea #1\else \parbox[t]{.98\linewidth}{#1\vspace{.667ex}}\fi}
 \newcommand{\mainpurpose}[1]{\strong{Main Purpose:}~#1}
+\newcommand*{\symmgroup}[1]{\mathsf{#1}}
 \newcommand*{\oldstyleNth}[1]{\mbox{${#1}^{\mathrm{th}}$}}
 \newcommand*{\optional}[1]{$[$#1$]$}
 \newcommand*{\propername}[1]{\textsc{#1}}
-\newcommand{\restrictednote}[1]{\ifhevea\colorbox{\restrictedmaterialbordercolor}{#1}\else\fbox{\textrm{#1}}\fi}
+\newcommand{\restrictednote}[1]%
+           {\ifhevea\colorbox{\restrictedmaterialbordercolor}{#1}\else\fbox{\textrm{#1}}\fi}
 \newcommand{\shifteven}[1]% shift a box down half of \baselineskip
            {\setbox1=\hbox{#1}\raisebox{-.5\rigidbaselineskip}[\ht1][\dp1]{#1}}
 \newcommand*{\transpose}[1]{{#1}^{\mathrm{T}}}         % transposition
@@ -143,8 +147,8 @@
 \newcommand*{\datebyscm}{\footnote{Date reliably determined via source-code management system.}}
 
 
-%% Inclusion of graphics and images.  Argument #1 passes additional
-%% directives to the sub-macro; argument #2 is the image filename.
+%% Inclusion of graphics and images.  Argument #1 passes additional directives to the sub-macro;
+%% argument #2 is the image filename.
 \newcommand{\includeimage}[2][]%
 {\ifhevea
    \imgsrc{#2.png}%
@@ -274,7 +278,7 @@
                  {\end{quotation}\end{divstyle}}
 \else
   \newenvironment{geeknote}%
-                 {\begin{savenotes}\fboxsep=0pt\begin{quotation}\geekytext}%
+                 {\begin{savenotes}\fboxsep=0pt\begin{quotation}\RaggedRight\geekytext}%
                  {\end{quotation}\end{savenotes}}
   \makesavenoteenv{geeknote}
 \fi
@@ -296,9 +300,8 @@
 {\end{list}}
 
 
-%% Markup for material that applies only to a particular application,
-%% this is either Enblend or Enfuse, but not both.  The markup
-%% e.g. applies to different operating systems, too.
+%% Markup for material that applies only to a particular application, this is either Enblend or
+%% Enfuse, but not both.  The markup e.g. applies to different operating systems, too.
 \newenvironment{restrictedmaterial}[1]%
 {\begin{savenotes}\begin{divstyle}{restrictedmaterial}\noindent\restrictednote{#1}\begin{quotation}}%
 {\end{quotation}%
@@ -313,9 +316,8 @@
 {\end{flushleft}\end{divstyle}}
 
 
-%% Overwrite `description' environment, because Hevea's built-in
-%% definition is broken.  Keep `description' for reference manual
-%% styles, but ditch the colon after description items.
+%% Overwrite `description' environment, because Hevea's built-in definition is broken.  Keep
+%% `description' for reference manual styles, but ditch the colon after description items.
 \ifreferencemanual
   \descriptioncolonfalse
 \else
@@ -325,8 +327,8 @@
 \fi
 
 
-%% Extra floating objects: exemplars.  We cannot use `example',
-%% because this name is taken in Reference-Manual style.
+%% Extra floating objects: exemplars.  We cannot use `example', because this name is taken in
+%% Reference-Manual style.
 \ifhevea
   \input{exemplar.hva}
   \renewcommand{\exemplarname}{Example}
@@ -339,12 +341,16 @@
 \fi
 
 
-%% Define a key-value pair with `\hashinsert{KEY}{VALUE}'.  Reference
-%% it like any other label, this is, say `\hashfind{KEY}' to recover
-%% VALUE.
+%% Define a key-value pair with `\hashinsert{KEY}{VALUE}'.  Reference it like any other label,
+%% this is, say `\hashfind{KEY}' to recover VALUE.
 \def\hashinsert#1{\expandafter\def\csname valuehash(#1)\endcsname}
 \def\hashfind#1{\csname valuehash(#1)\endcsname}
 
 \newcommand*{\indicatesourcevalue}[1]{\mbox{$\langle${#1}\/$\rangle$}}
 \newcommand*{\val}[1]{\indicatesourcevalue{\hashfind{#1}}}
 \WithSuffix\newcommand\val*[1]{\hashfind{#1}}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

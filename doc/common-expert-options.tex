@@ -2,10 +2,10 @@
 %% Licence details can be found in the file COPYING.
 
 
-\subsection[Expert Options]{Expert Options% Not a \commonpart!
-  \label{sec:expert-options}
-  \genidx[\rangebeginlocation]{expert options}
-  \genidx{options!expert}}
+\subsection[Expert Options]{\label{sec:expert-options}%
+  \genidx[\rangebeginlocation]{expert options}%
+  \genidx{options!expert}%
+  Expert Options}% Not a \commonpart!
 
 
 %%% IMPLEMENTATION NOTE: This file is included in both manuals, but
@@ -15,64 +15,62 @@
 
 
 \ifenblend
-  Control inner workings of \app{} and in particular the
-  interpretation of images.
+  Control inner workings of \App{} and in particular the interpretation of images.
 \fi
 
 \ifenfuse
-  Control inner workings of \app{} and the reading\slash writing of
-  weight masks.
+  Control inner workings of \App{} and the reading\slash writing of weight masks.
 \fi
 
 
 \begin{codelist}
   \label{opt:fallback-profile}%
   \optidx[\defininglocation]{--fallback-profile}%
-\item[--fallback-profile=\metavar{PROFILE-FILENAME}]\itemend Use the
-  \acronym{ICC} profile in \metavar{PROFILE-FILENAME} instead of the
-  default \acronym{sRGB}.\genidx{profile!fallback}\genidx{fallback
-    profile} This option only is effective if the input images come
-  \emph{without} color profiles \emph{and} blending is not performed
-  in the trivial luminance interval\genidx{luminance interval!trivial}
-  or \acronym{RGB}-cube.\genidx{RGB-cube@\acronym{RGB}-cube}
+\item[--fallback-profile=\metavar{PROFILE-FILENAME}]\itemend
+  Use the \acronym{ICC} profile in \metavar{PROFILE-FILENAME} instead of the default
+  \acronym{sRGB}.\genidx{profile!fallback}\gensee{fallback profile}{profile, fallback} This
+  option only is effective if the input images come \emph{without} color profiles \emph{and}
+  blending is not performed in the trivial luminance interval\genidx{luminance interval!trivial}
+  or \genidx{RGB-cube@\acronym{RGB}-cube}\acronym{RGB}-cube.
 
-  Compare
-  option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace}
-  and Chapter~\fullref{sec:color-profiles} on color profiles.
+  Compare option~\flexipageref{\option{--blend-colorspace}}{opt:blend-colorspace} and
+  \chapterName~\fullref{sec:color-profiles} on color profiles.
 
 
   \label{opt:layer-selector}%
   \optidx[\defininglocation]{--layer-selector}%
   \genidx{layer selection}%
-\item[--layer-selector=\metavar{ALGORITHM}]\itemend Override the
-  standard layer selector algorithm~\sample{\val{val:layer-selector}}.
+\item[--layer-selector=\metavar{ALGORITHM}]\itemend
+  Override the standard layer selector algorithm~\sample{\val{val:layer-selector}}.
 
   \App{} offers the following algorithms:
 
   \begin{codelist}
-  \item[all-layers\genidx{layer selection!all layers}]\itemend Select
-    all layers in all images.
+    \genidx{layer selection!all layers}%
+  \item[all-layers]\itemend
+    Select all layers in all images.
 
-  \item[first-layer\genidx{layer selection!first layer}]\itemend
-    Select only first layer in each multi-layer image.  For
-    single-layer images this is the same as \sample{all-layers}.
+    \genidx{layer selection!first layer}%
+  \item[first-layer]\itemend
+    Select only first layer in each multi-layer image.  For single-layer images this is the same
+    as \sample{all-layers}.
 
-  \item[last-layer\genidx{layer selection!last layer}]\itemend
-    Select only last layer in each multi-layer image.  For
-    single-layer images this is the same as \sample{all-layers}.
+    \genidx{layer selection!last layer}
+  \item[last-layer]\itemend
+    Select only last layer in each multi-layer image.  For single-layer images this is the same
+    as \sample{all-layers}.
 
-  \item[largest-layer\genidx{layer selection!largest-layer}]\itemend
-    Select largest layer in each multi-layer image, where the
-    ``largeness'', this is the size is defined by the product of the
-    layer width and its height.  The channel width of the layer is
-    ignored.  For single-layer images this is the same as
-    \sample{all-layers}.
+    \genidx{layer selection!largest-layer}
+  \item[largest-layer]\itemend
+    Select largest layer in each multi-layer image, where the ``largeness'', this is the size is
+    defined by the product of the layer width and its height.  The channel width of the layer is
+    ignored.  For single-layer images this is the same as \sample{all-layers}.
 
-  \item[no-layer\genidx{layer selection!no layer}]\itemend Do not
-    select any layer in any image.
+    \genidx{layer selection!no layer}
+  \item[no-layer]\itemend
+    Do not select any layer in any image.
 
-    This algorithm is useful to temporarily exclude some images in
-    response files.
+    This algorithm is useful to temporarily exclude some images in response files.
   \end{codelist}
 
 
@@ -83,64 +81,56 @@
       \\ --load-masks=\metavar{SOFT-MASK-TEMPLATE}~\textrm{(\oldstylesecond~form)}
       \\ --load-masks=\metavar{SOFT-MASK-TEMPLATE}:\feasiblebreak
       \metavar{HARD-MASK-TEMPLATE}~\textrm{(\oldstylethird~form)}}]\itemend
-    Load\genidx{mask!loading} \genidx{load mask} masks from images
-    instead of computing them.
+    \genidx{mask!loading}\gensee{load mask}{mask, loading}Load masks from images instead of
+    computing them.
 
-    The masks have to be a grayscale images.
+    The masks must be grayscale images.
 
     \begin{sloppypar}
-      First form: Load all soft-weight masks from files that were
-      previously saved with option~\option{--save-masks}.  If
-      option~\option{--hard-mask} is effective only load hard masks.
-      The respective defaults are
-      \mbox{\code{\val{val:default-soft-mask-template}}} and
-      \mbox{\code{\val{val:default-hard-mask-template}}}.\genidx{filename
-        template} \genidx{mask!filename template} In the second form,
-      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the
-      soft-mask files.  In the third form,
-      \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the
-      names of the hard-mask files.  See option~\option{--save-masks}
-      below for the description of mask templates.
+      First form: Load all soft-weight masks from files that were previously saved with
+      option~\option{--save-masks}.  If option~\option{--hard-mask} is effective only load hard
+      masks.  The respective defaults are \genidx{mask!filename template}\gensee{filename
+        template}{mask, filename template}\mbox{\code{\val{val:default-soft-mask-template}}} and
+      \mbox{\code{\val{val:default-hard-mask-template}}}. In the second form,
+      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the soft-mask files.  In the
+      third form, \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the names of the
+      hard-mask files.  See option~\option{--save-masks} below for the description of mask
+      templates.
     \end{sloppypar}
 
-    Options~\option{--load-masks} and~\option{--save-masks} are
-    mutually exclusive.
+    Options~\option{--load-masks} and~\option{--save-masks} are mutually exclusive.
 \fi
 
 
   \label{opt:parameter}%
   \optidx[\defininglocation]{--parameter}%
 \item[--parameter=\metavar{KEY}\optional{=\metavar{VALUE}}\optional{:\dots}]\itemend
-  Set a \metavar{KEY}-\metavar{VALUE} pair, where \metavar{VALUE} is
-  optional.  This option is cumulative.  Separate multiple pairs with
-  the usual numeric delimiters.
+  Set a \metavar{KEY}-\metavar{VALUE} pair, where \metavar{VALUE} is optional.  This option is
+  cumulative.  Separate multiple pairs with the usual numeric delimiters.
 
-  This option has the negated form
-  \sample{--no-parameter},\optidx[\defininglocation]{--no-parameter}
-  which takes one or more \metavar{KEY}s and removes them from the
-  list of defined parameters.  The special key~\sample{*} deletes all
-  parameters at once.
+  This option has the negated form \optidx[\defininglocation]{--no-parameter}%
+  \sample{--no-parameter}, which takes one or more \metavar{KEY}s and removes them from the list
+  of defined parameters.  The special key~\sample{*} deletes all parameters at once.
 
-  Parameters allow the developers to change the internal workings of
-  \App{} without the need to recompile or relink.
+  Parameters allow the developers to change the internal workings of \App{} without the need to
+  recompile or relink.
 
 
 \ifenblend
-  \label{opt:pre-assemble}%
-  \optidx[\defininglocation]{--pre-assemble}%
-  \shoptidx{-a}{--pre-assemble}%
+    \label{opt:pre-assemble}%
+    \optidx[\defininglocation]{--pre-assemble}%
+    \shoptidx{-a}{--pre-assemble}%
   \item[\itempar{-a \\ --pre-assemble}]\itemend
-    Pre-assemble non-overlapping images before each blending
+    \genidx{preassemble}\gensee{assemble}{preasselble}Pre-assemble non-overlapping images before
+    each blending iteration.
+
+    \genidx{blending!sequential}\gensee{sequential blending}{blending, sequential}This overrides
+    the default behavior which is to blend the images sequentially in the order given on the
+    command line.  \App{} will use fewer blending iterations, but it will do more work in each
     iteration.
 
-    This overrides the default behavior which is to blend the images
-    sequentially in the order given on the command line.  \App{} will
-    use fewer blending iterations, but it will do more work in each
-    iteration.
-
-    This option has the negated form
-    \sample{--no-pre-assemble},\optidx[\defininglocation]{--no-pre-assemble}
-    which restores the default.
+    This option has the negated form \optidx[\defininglocation]{--no-pre-assemble}%
+    \sample{--no-pre-assemble}, which restores the default.
 \fi
 
 
@@ -148,11 +138,13 @@
   \optidx[\defininglocation]{--prefer-gpu}%
 \item[--prefer-gpu=\optional{\metavar{PLATFORM}:}\metavar{DEVICE}
   \restrictednote{\acronym{OpenCL}-enabled versions only.}]\itemend
-  Direct \App{} towards a particular \acronym{OpenCL}\genidx{OpenCL}
-  \metavar{DEVICE}\genidx{OpenCL!device} on the first autodetected
-  \metavar{PLATFORM}\genidx{OpenCL!platform} or directly to the given
-  \metavar{PLATFORM}\slash\metavar{DEVICE} combination.  Use the
-  numbers of platform and device found either with
+
+  Direct \App{} towards a particular \genidx{OpenCL}\acronym{OpenCL}
+  \genidx{OpenCL!device}\metavar{DEVICE} on the first autodetected
+  \genidx{OpenCL!platform}\metavar{PLATFORM} or directly to the given
+  \metavar{PLATFORM}\slash\metavar{DEVICE} combination.  Use the numbers of platform and device
+  found either with
+
   \begin{terminal}
     \$ \app{} --verbose --version
   \end{terminal}
@@ -160,78 +152,65 @@
   \begin{terminal}
     \$ \app{} --show-gpu-info
   \end{terminal}
-  Note that this option only selects \acronym{GPU}-devices; it does
-  not \emph{activate} any, use
+
+  Note that this option only selects \acronym{GPU}-devices; it does not \emph{activate} any, use
   option~\flexipageref{\option{--gpu}}{opt:gpu} for that.
 
-  When told to employ the \acronym{GPU}\genidx{GPU} with
-  \sample{--gpu}, by default \App{} uses the first device on the first
-  autodetected platform it finds via queries of the
-  \acronym{OpenCL}\genidx{GPU} subsystem, where neither the device,
-  nor the platform may be the ones the user wants.  Usually she will
-  select the device with the highest performance, maximum possible
-  number of work-items, and largest associated memory.
+  When told to employ the \acronym{GPU} with \sample{--gpu}, by default \App{} uses the first
+  device on the first autodetected platform it finds via queries of the \acronym{OpenCL}
+  subsystem, where neither the device, nor the platform may be the ones the user wants.  Usually
+  she will select the device with the highest performance, maximum possible number of
+  work-items, and largest associated memory.
 
 
 \ifenblend
-  \label{opt:x}%
-  \optidx[\defininglocation]{-x}%
-  \item[-x] Checkpoint\genidx{checkpoint results}
-    \genidx{result!checkpoint} partial results to the output file
-    after each blending step.
+    \label{opt:x}%
+    \optidx[\defininglocation]{-x}%
+  \item[-x]
+    \genidx{result!checkpoint}Checkpoint\genidx{checkpoint results} partial results to the output
+    file after each blending step.
 \fi
 
 
 \ifenfuse
-  \label{opt:save-masks}%
-  \optidx[\defininglocation]{--save-masks}%
+    \label{opt:save-masks}%
+    \optidx[\defininglocation]{--save-masks}%
   \item[\itempar{--save-masks~\textrm{(\oldstylefirst~form)}
       \\ --save-masks=\metavar{SOFT-MASK-TEMPLATE}~\textrm{(\oldstylesecond~form)}
       \\ --save-masks=\metavar{SOFT-MASK-TEMPLATE}:\feasiblebreak
       \metavar{HARD-MASK-TEMPLATE}~\textrm{(\oldstylethird~form)}}]\itemend
-    Save\genidx{mask!save}\genidx{save mask} the generated weight
-    masks to image files.
+    \genidx{mask!save}\gensee{save mask}{mask, save}Save the generated weight masks to image
+    files.
 
     \begin{sloppypar}
-      First form: Save all soft-weight masks in files.  If
-      option~\option{--hard-mask} is effective also save the hard
-      masks.  The defaults are
-      \code{\val{val:default-soft-mask-template}} and
-      \code{\val{val:default-hard-mask-template}}.\genidx{filename
-        template}\genidx{mask!filename template} In the second form,
-      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the
-      soft-mask files.  In the third form,
-      \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the
-      names of the hard-mask files.
+      First form: Save all soft-weight masks in files.  If option~\option{--hard-mask} is
+      effective also save the hard masks.  The defaults are \genidx{mask!filename
+        template}\gensee{filename template}{mask, filename
+        template}\code{\val{val:default-soft-mask-template}} and
+      \code{\val{val:default-hard-mask-template}}. In the second form,
+      \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} defines the names of the soft-mask files.  In the
+      third form, \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} additionally defines the names of the
+      hard-mask files.
     \end{sloppypar}
 
-    \App{} will stop after saving all masks unless
-    option~\option{--output} is given, too.  With both options given,
-    this is, \sample{--save-masks} and \sample{--output}, \App{} saves
-    all masks and then proceeds to fuse the output image.\genidx{save
-      mask!only}\genidx{only save mask}
+    \genidx{save mask!only}\gensee{only save mask}{save mask only}\App{} will stop after saving
+    all masks unless option~\option{--output} is given, too.  With both options given, this is,
+    \sample{--save-masks} and \sample{--output}, \App{} saves all masks and then proceeds to
+    fuse the output image.
 
-    Both \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} and
-    \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE} define templates that are
-    expanded for each mask file.  In a template a percent sign
-    (\sample{\%}) introduces a variable part.  All other characters
-    are copied literally.  Lowercase letters refer to the name of the
-    respective input file, whereas uppercase ones refer to the name of
-    the output file.  Table~\fullref{tab:mask-template-characters}
+    Both \metavar{SOFT\hyp{}MASK\hyp{}TEMPLATE} and \metavar{HARD\hyp{}MASK\hyp{}TEMPLATE}
+    define templates that are expanded for each mask file.  In a template a percent sign
+    (\sample{\%}) introduces a variable part.  All other characters are copied literally.
+    Lowercase letters refer to the name of the respective input file, whereas uppercase ones
+    refer to the name of the output file.  \tableName~\fullref{tab:mask-template-characters}
     lists all variables.
 
-    A fancy mask filename template could look like this:
-    \begin{literal}
-      \%D/mask-\%02n-\%f.tif
-    \end{literal}
-    It puts the mask files into the same directory as the output file
-    (\sample{\%D}), generates a two-digit index (\sample{\%02n}) to
-    keep the mask files nicely sorted, and decorates the mask filename
-    with the name of the associated input file (\sample{\%f}) for easy
-    recognition.
+    A fancy mask filename template could look like \sample{\%D/mask-\%02n-\%f.tif}.  It puts the
+    mask files into the same directory as the output file (\sample{\%D}), generates a two-digit
+    index (\sample{\%02n}) to keep the mask files nicely sorted, and decorates the mask filename
+    with the name of the associated input file (\sample{\%f}) for easy recognition.
 
-    Options~\option{--load-masks} and~\option{--save-masks} are
-    mutually exclusive.
+    Options~\option{--load-masks} and~\option{--save-masks} are mutually exclusive.
 \fi
 \end{codelist}
 
@@ -241,3 +220,8 @@
 \fi
 
 \genidx[\rangeendlocation]{expert options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

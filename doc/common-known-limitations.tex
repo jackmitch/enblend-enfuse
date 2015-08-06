@@ -2,22 +2,63 @@
 %% Licence details can be found in the file COPYING.
 
 
-\chapter[Known Limitations\commonpart]{Known Limitations\commonpart
-  \label{sec:known-limitations}
-  \genidx[\rangebeginlocation]{known limitations}}
+\chapter[Known Limitations]{\label{sec:known-limitations}%
+  \genidx[\rangebeginlocation]{known limitations}%
+  Known Limitations}
 
-Both applications, \application{Enblend} and \application{Enfuse} have
-limitations.  Some of them are inherent to the programs proper others
-are ``imported'' by using libraries as for example
-\uref{\hciiwrvigra}{\acronym{VIGRA}}.  Here are some of the known
-limitations.
+\App{} has its limitations.  Some of them are inherent to the programs proper others are
+``imported'' by using libraries as for example \uref{\hciiwrvigra}{\acronym{VIGRA}}.  Here are
+some of the known ones.
 
 \begin{itemize}
-  \item The \acronym{BigTIFF}\genidx{BigTIFF@\acronym{BigTIFF}} image
-    format is not supported.
+\item
+  The \genidx{BigTIFF@\acronym{BigTIFF}}\acronym{BigTIFF} image format is not supported.
 
-  \item Total size of \emph{any} (even intermediate) image is limit of
-    to $2^{31}$~pixels, this is two giga-pixels.
+\item
+  Total size of \emph{any} -- even intermediate -- image is limit of to $2^{31}$~pixels, this is
+  two giga-pixels.
+
+\ifenblend
+  \genidx{blending!sequential}
+\item
+  Each ``next'' image must overlap with the result of the blending of all previous images.  In
+  special occasions option~\option{--pre-assemble} can circumvent this sequential-blending
+  restriction.
+
+\item
+  No pair of images must overlap too much.  In particular, no two images must be identical.
+
+  \begin{geeknote}
+    The overlap is exclusively defined by the masks of the overlapping images.  This is exactly
+    what the input masks are built for.  Let $A$ be the number of pixels that overlap in both
+    masks.  We use $A$ as a measure of the overlap area -- something 2-dimensional; technically
+    it is a pixel count.
+
+    Construct the smallest circumscribed, par-axial rectangle of the overlap area.  The
+    rectangle has a circumference~$U = 2 (a + b)$, which is of course 1-dimensional.  Internally
+    $U$ again is a number of pixels just as $A$.
+
+    The threshold when we consider a pair of images sufficiently different is when $A$ is larger
+    than \val{val:overlap-check-threshold}~times the number of pixels on the circumference~$U$
+    \[
+    A > \val{val:overlap-check-threshold} \times U.
+    \]
+    Avoiding the term ``fractal dimension'', we have constructed a simple measure of how
+    2-dimensional the overlap area is.  This way we avoid feeding later processing stages with
+    nearly 1-dimensional overlap regions, something that wreaks havoc on them.
+  \end{geeknote}
+
+  \optidx{--wrap}
+\item
+  Option~\sample{--wrap=both} performs blending in $\symmgroup{E}(1) \times \symmgroup{E}(1)$,
+  which is only \emph{locally} isomorphic to $\symmgroup{S}(2)$.  This will cause artifacts
+  that do not appear in $\symmgroup{S}(2)$.  \App{} cannot blend within $\symmgroup{S}(2)$.
+\fi%enblend
 \end{itemize}
 
 \genidx[\rangeendlocation]{known limitations}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

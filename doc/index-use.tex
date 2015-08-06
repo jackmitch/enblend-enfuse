@@ -1,6 +1,3 @@
-%%%  -*- latex -*-
-
-
 %% This file is part of Enblend.
 %% Licence details can be found in the file COPYING.
 
@@ -13,37 +10,48 @@
 
 \phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:syncomm-index}{Syntactic Comment Index}}
+\label{sec:syncomm-index}%
 \printindex[syncomm]%
-\label{sec:syncomm-index}
 
 
 \gensea{helpful programs}{Program/Application Index}
 \phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:program-index}{Program/Application Index}}
-\printindex[program][If a program belongs to a larger package, it has
-  its association mentioned in parenthesis.\par]%
-\label{sec:program-index}
+\label{sec:program-index}%
+\ifhevea
+  \printindex[program]
+
+  If a program belongs to a larger package, it has its association mentioned in parenthesis.
+\else
+  \printindex[program][If a program belongs to a larger package, it has its association
+    mentioned in parenthesis.\par]%
+\fi
 
 
 \phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:option-index}{Option Index}}
+\label{sec:option-index}
 \ifhevea
   \printindex[option]%
 \else
-  \printindex[option][Locations marked like \underline{12} indicate
-    the place of the option's genuine description.\par]%
+  \printindex[option][Locations marked like \underline{12} indicate the place of the option's
+    genuine description.\par]%
 \fi
-\label{sec:option-index}
 
 
 \phantomsection
 \addcontentsline{toc}{section}{\ahrefloc{sec:general-index}{General Index}}
+\label{sec:general-index}
 \ifhevea
   \printindex[general]%
 \else
-  \printindex[general][Locations marked like \underline{12} indicate
-    the location where a term gets introduced or defined.  Tables,
-    lists, etc.\ that summarize material are indicated like
+  \printindex[general][Locations marked like \underline{12} indicate the location where a term
+    gets introduced or defined.  Tables, lists, etc.\ that summarize material are indicated like
     \textsl{34}.\par]%
 \fi
-\label{sec:general-index}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% mode: latex
+%%% End:

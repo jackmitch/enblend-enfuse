@@ -456,7 +456,7 @@ nearestFeatureTransform(SrcImageIterator src1_upperleft, SrcImageIterator src1_l
         //
         // The current parameter default is two times the
         // circumference of the overlap rectangle.
-        parameter::as_unsigned("overlap-check-threshold", 2U) *
+        parameter::as_unsigned("overlap-check-threshold", 2U) * //< overlap-check-threshold 2
         2U * (static_cast<unsigned>(size.height()) + static_cast<unsigned>(size.width()));
     IMAGETYPE<SrcPixelType> diff12(size);
     vigra::omp::combineTwoImages(src1_upperleft, src1_lowerright, sa1,

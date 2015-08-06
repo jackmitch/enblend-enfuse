@@ -2,41 +2,38 @@
 %% Licence details can be found in the file COPYING.
 
 
-\section[External Masks]{External Masks
-  \label{sec:external-masks}
-  \genidx{external mask}
-  \genidx{mask!external}}
+\section[External Masks]{\label{sec:external-masks}%
+  \genidx{external mask}%
+  \genidx{mask!external}%
+  External Masks}
 
-In the usual workflow \application{Enblend} and \application{Enfuse}
-generate the blending and fusing masks according to the command-line
-options and the input images and then they immediately use these masks
-for blending or fusing the output image.
+In the usual workflow \application{Enblend} and \application{Enfuse} generate the blending and
+fusing masks according to the command-line options and the input images and then they
+immediately use these masks for blending or fusing the output image.
 
-Sometimes more control over the masks is needed or wanted.  To this
-end, both applications provide the option pair \option{--load-masks}
-and \option{--save-masks}.  See Chapter~\fullref{sec:invocation}, for
-detailed explanations of both options.  With the help of these options
-the processing can be broken up into two steps:
+Sometimes more control over the masks is needed or wanted.  To this end, both applications
+provide the option pair \option{--load-masks} and \option{--save-masks}.  See
+\chapterName~\fullref{sec:invocation}, for detailed explanations of both options.  With the help
+of these options the processing can be broken up into two steps:
 
 \begin{enumerate}
+  \optidx{--save-masks}
+  \optidx{--output}
 \item
-  Save masks with \option{--save-masks}.  Generate masks and save them
-  into image files.
+  Save masks with \option{--save-masks}.  Generate masks and save them into image files.
 
-  Avoid option~\option{--output} unless the blended or fused image at
-  this point is necessary.
+  Avoid option~\option{--output} unless the blended or fused image at this point is necessary.
 
+  \optidx{--load-masks}
 \item
-  Load masks with \option{--load-masks}.  Load masks from files and
-  then blend or fuse the final image with the help of the loaded
-  masks.
+  Load masks with \option{--load-masks}.  Load masks from files and then blend or fuse the final
+  image with the help of the loaded masks.
 \end{enumerate}
 
-In between these two steps the user may apply whatever transformation
-to the mask files, as long as their geometries and offsets remain the
-same.  Thus the ``Combine Images'' box of
-Figure~\ref{fig:photographic-workflow} becomes three activities as is
-depicted in Figure~\ref{fig:external-mask-workflow}.
+In between these two steps the user may apply whatever transformation to the mask files, as long
+as their geometries and offsets remain the same.  Thus the ``Combine Images'' box of
+\figureName~\ref{fig:photographic-workflow} becomes three activities as is depicted in
+\figureName~\ref{fig:external-mask-workflow}.
 
 \begin{figure}[htbp]
   \begin{maxipage}
@@ -44,18 +41,20 @@ depicted in Figure~\ref{fig:external-mask-workflow}.
     \includeimage{external-mask-workflow}
   \end{maxipage}
 
-  \caption[External mask workflow]{Workflow for externally modified
-    masks.\label{fig:external-mask-workflow}}
-
-  \genidx{workflow!external mask}
+  \caption[External mask workflow]{\label{fig:external-mask-workflow}%
+    \genidx{workflow!external mask}
+    Workflow for externally modified masks.}
 \end{figure}
 
-To further optimize this kind of workflow, both \application{Enblend}
-and \application{Enfuse} stop after mask generation if
-option~\option{--save-masks} is given, but \emph{no output file} is
-specified with the \option{--output} option.  This way the time for
-pyramid generation, blending, fusing, and writing the final image to
-disk is saved, as well as no output image gets generated.
+To further optimize this kind of workflow, both \application{Enblend} and \application{Enfuse}
+stop after mask generation if option~\option{--save-masks} is given, but \emph{no output file}
+is specified with the \option{--output} option.  This way the time for pyramid generation,
+blending, fusing, and writing the final image to disk is saved, as well as no output image gets
+generated.
 
-Note that options~\option{--save-masks} and \option{--load-masks}
-cannot be used simultaneously.
+Note that options~\option{--save-masks} and \option{--load-masks} cannot be used simultaneously.
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:
