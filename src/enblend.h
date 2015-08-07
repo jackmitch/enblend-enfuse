@@ -167,14 +167,19 @@ void enblendMain(const FileNameList& anInputFileNameList,
             // White image is redundant.
             delete whitePair.first;
             delete whitePair.second;
-            std::cerr << command << ": warning: some images are redundant and will not be blended"
-                      << std::endl;
+            std::cerr << command << ": warning: some images are redundant and will not be blended\n"
+                      << command << ": info: usually this means that at least one of the images\n"
+                      << command << ": info:     does not belong to the set" << std::endl;
             continue;
         } else if (overlap == NoOverlap && ExactLevels == 0) {
             // Images do not actually overlap.
-            std::cerr << command << ": images do not overlap - they will be combined without blending\n"
-                      << command << ": use the \"-l\" flag to force blending with a certain number of levels"
-                      << std::endl;
+            std::cerr << command << "warning: images do not overlap; they will be combined without blending\n"
+                      << command << "info: usually this means that at least one of these images does not\n"
+                      << command << "info:     belong to the set or the order of the images given at the\n"
+                      << command << "info:     command line is wrong; sometimes passing option\n"
+                      << command << "info:     \"--pre-assemble\" resolves the problem; in rare cases using\n"
+                      << command << "info:     option \"--levels=NUMBER\" to force blending with a certain\n"
+                      << command << "info:     NUMBER of levels can help, too" << std::endl;
 
             // Copy white image into black image verbatim.
             vigra::copyImageIf(srcImageRange(*(whitePair.first)),
