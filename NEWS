@@ -16,6 +16,10 @@ Released on ???
 
 - [Enblend] Avoid a division-by-zero in the Annealing Optimizer.
 
+- [Enblend] Fix a bug (#1356551) in the seam-line vectorization code
+  that was there since 2004.  The fix changes the position of almost
+  any coarse-mask seam line vertex by one pixel.
+
 
 Patchlevel 3
 

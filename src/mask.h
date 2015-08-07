@@ -890,6 +890,16 @@ vigra::Rect2D vertexBoundingBox(ContourVector& contours)
 }
 
 
+inline static int
+round_to_nearest_div(int a_numerator, int a_denominator)
+{
+    const std::div_t result(std::div(a_numerator, a_denominator));
+    const int rem2 = 2 * result.rem;
+
+    return rem2 >= a_denominator ? result.quot + 1 : (-rem2 >= a_denominator ? result.quot - 1 : result.quot);
+}
+
+
 /** Calculate a blending mask between whiteImage and blackImage.
  */
 template <typename ImageType, typename AlphaType, typename MaskType>
@@ -1285,21 +1295,22 @@ MaskType* createMask(const ImageType* const white,
         int segmentNumber;
         // Move snake points to mismatchImage-relative coordinates
         for (ContourVector::iterator currentContour = contours.begin();
-                currentContour != contours.end();
-                ++currentContour) {
-                segmentNumber = 0;
-                for (Contour::iterator currentSegment = (*currentContour)->begin();
-                    currentSegment != (*currentContour)->end();
-                    ++currentSegment, ++segmentNumber) {
-                    Segment* snake = *currentSegment;
-                    for (Segment::iterator vertexIterator = snake->begin();
-                        vertexIterator != snake->end();
-                        ++vertexIterator) {
-                        vertexIterator->second =
-                            (vertexIterator->second + uBB.upperLeft() - vBB.upperLeft()) /
-                            mismatchImageStride;
-                    }
+             currentContour != contours.end();
+             ++currentContour) {
+            segmentNumber = 0;
+            for (Contour::iterator currentSegment = (*currentContour)->begin();
+                 currentSegment != (*currentContour)->end();
+                 ++currentSegment, ++segmentNumber) {
+                Segment* snake = *currentSegment;
+                for (Segment::iterator vertexIterator = snake->begin();
+                     vertexIterator != snake->end();
+                     ++vertexIterator) {
+                    const vigra::Point2D shifted(vertexIterator->second + uBB.upperLeft() - vBB.upperLeft());
+                    vertexIterator->second =
+                        vigra::Point2D(round_to_nearest_div(shifted.px(), mismatchImageStride),
+                                       round_to_nearest_div(shifted.py(), mismatchImageStride));
                 }
+            }
         }
 
         std::vector<double> *params = new(std::vector<double>);
