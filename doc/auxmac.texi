@@ -2,16 +2,6 @@
 @c Macro Definitions
 @c
 
-@c redefined commands
-
-@c Get the spacing of dimensions right.
-@ifnottex
-@macro dmn{unit}
-@tie{}\unit\
-@end macro
-@end ifnottex
-
-
 @c extended commands
 
 @c Add a title to a DocBook element.
@@ -80,73 +70,6 @@ not displayed, because of lacking <acronym>SVG</acronym> and
 
 @c Operators
 
-@c Generate a nice representation of base^exponent.
-@macro power{base, exponent}
-@ifinfo
-\base\^\exponent\
-@end ifinfo
-@html
-\base\<sup>\exponent\</sup>
-@end html
-@tex
-$\base\^{\exponent\}$%
-@end tex
-@docbook
-\base\<superscript>\exponent\</superscript>
-@end docbook
-@end macro
-
-
-@macro classictimes
-@ifinfo
-x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
-@end ifinfo
-@html
-&times;
-@end html
-@tex
-\\ifmmode\\times\\else$\\times$\\fi% gobble following newline  -- The Tricks of a TeX Wizard.
-@end tex
-@docbook
-&times;
-@end docbook
-@end macro
-
-
-@c Required for older versions of makeinfo.  The definition of @geq
-@c for TeX lives in auxmac.tex.
-@ifnottex
-@macro geq
-@ifinfo
->=@c
-@end ifinfo
-@html
-&ge;
-@end html
-@docbook
-&ge;
-@end docbook
-@end macro
-@end ifnottex
-
-
-@c Required for older versions of makeinfo.  The definition of @leq
-@c for TeX lives in auxmac.tex.
-@ifnottex
-@macro leq
-@ifinfo
-<=@c
-@end ifinfo
-@html
-&le;
-@end html
-@docbook
-&le;
-@end docbook
-@end macro
-@end ifnottex
-
-
 @macro plusminus
 @ifinfo
 +/-@c
@@ -159,62 +82,6 @@ x@c gobble following newline  -- The Tricks of a Texinfo Wizard.
 @end tex
 @docbook
 &plusmn;
-@end docbook
-@end macro
-
-
-@c Special Characters
-
-@macro inlineomega
-@ifinfo
-@math{omega}@c
-@end ifinfo
-@html
-<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mi>&omega;</mi>
-</mathinline>
-@end html
-@tex
-$\\omega$%
-@end tex
-@docbook
-&omega;
-@end docbook
-@end macro
-
-
-@macro inlinesigma
-@ifinfo
-@math{sigma}@c
-@end ifinfo
-@html
-<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mi>&sigma;</mi>
-</mathinline>
-@end html
-@tex
-$\\sigma$%
-@end tex
-@docbook
-&sigma;
-@end docbook
-@end macro
-
-
-@macro inlinexi
-@ifinfo
-@math{xi}@c
-@end ifinfo
-@html
-<mathinline xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mi>&xi;</mi>
-</mathinline>
-@end html
-@tex
-$\\xi$%
-@end tex
-@docbook
-&xi;
 @end docbook
 @end macro
 
@@ -235,27 +102,4 @@ $\\xi$%
 @need 600          @c ensure we have at least 43pt of vertical space
 @noindent
 @strong{Summary of influential options}
-@end macro
-
-
-@macro semilog{significant, exponent}
-@ifinfo
-\significant\*10^\exponent\@c
-@end ifinfo
-@html
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
-    <mn>\significant\</mn>
-    <mo>&times;</mo>
-    <msup>
-        <mn>10</mn>
-        <mn>\exponent\</mn>
-    </msup>
-</math>
-@end html
-@tex
-\\ifmmode\significant\ \\times 10^{\exponent\}\\else$\significant\ \\times 10^{\exponent\}$\\fi%
-@end tex
-@docbook
-\significant\&times;10<superscript>\exponent\</superscript>
-@end docbook
 @end macro

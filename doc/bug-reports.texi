@@ -77,7 +77,7 @@ this by running it with the options @option{--version} and
 @item
 A complete set of input images that will reproduce the bug.  Strive
 for a minimal set of @emph{small}@footnote{Images of a size less than
-1500@classictimes{}1000 pixels qualify as small.} images.
+1500x1000 pixels qualify as small.} images.
 
 @item
 The type of machine you are using, and the operating system name and

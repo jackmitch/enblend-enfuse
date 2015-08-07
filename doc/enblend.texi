@@ -508,9 +508,9 @@ As a guideline, remember that each new level works on a linear scale
 twice as large as the previous one.  So, the zeroth layer, the
 original image, obviously defines the image at single-pixel scale, the
 first level works at two-pixel scale, and generally, the @math{n}-th
-level contains image data at @power{2, n}-pixel scale.  This is the
+level contains image data at 2^n-pixel scale.  This is the
 reason why an image of
-@math{width}@classictimes{}@/@math{height}@dmn{pixels} cannot be
+@math{width}x@/@math{height}@dmn{pixels} cannot be
 deconstructed into a pyramid of more than
 @ifinfo
 @display
@@ -1194,11 +1194,11 @@ For floating-point format, use
 
 @itemize
 @item
-Minimum normalized value: @semilog{1.2, -38}
+Minimum normalized value: 1.2e-38
 @item
-Epsilon: @semilog{1.2, -7}
+Epsilon: 1.2e-7
 @item
-Maximum finite value: @semilog{3.4, 38}
+Maximum finite value: 3.4e38
 @end itemize
 
 @c IEEE double: 64 bits, n = 53, k = 64 - n - 1 = 10
@@ -1210,11 +1210,11 @@ Maximum finite value: @semilog{3.4, 38}
 
 @itemize
 @item
-Minimum normalized value: @semilog{2.2, -308}
+Minimum normalized value: 2.2e-308
 @item
-Epsilon: @semilog{2.2, -16}
+Epsilon: 2.2e-16
 @item
-Maximum finite value: @semilog{1.8, 308}
+Maximum finite value: 1.8e308
 @end itemize
 @end table
 
@@ -1236,11 +1236,11 @@ floating-point numbers.
 
 @itemize
 @item
-Minimum normalized value: @semilog{9.3, -10}
+Minimum normalized value: 9.3e-10
 @item
-Epsilon: @semilog{2.0, -3}
+Epsilon: 2.0e-3
 @item
-Maximum finite value: @semilog{4.3, 9}
+Maximum finite value: 4.3e9
 @end itemize
 
 @item -f @var{WIDTH}x@var{HEIGHT}
@@ -1250,7 +1250,7 @@ Maximum finite value: @semilog{4.3, 9}
 @cindex canvas size
 @cindex size, canvas
 Ensure that the minimum ``canvas'' size of the output image is at
-least @var{WIDTH}@classictimes{}@/@var{HEIGHT}.  Optionally specify
+least @var{WIDTH}x@/@var{HEIGHT}.  Optionally specify
 the @var{XOFFSET} and @var{YOFFSET}, too.
 
 @pindex nona @r{(Hugin)}
@@ -1572,7 +1572,7 @@ If omitted @var{FACTOR} defaults to
 @value{src::default-coarseness-factor}, this means,
 option@tie{}@option{--coarse-mask} shrinks the overlapping
 @emph{areas} by a factor of
-@math{@value{src::default-coarseness-factor}@classictimes{}@/@value{src::default-coarseness-factor}}.
+@math{@value{src::default-coarseness-factor}x@/@value{src::default-coarseness-factor}}.
 With @var{FACTOR}@tie{}=@tie{}8 the total memory allocated during a
 run of Enblend shrinks approximately by 80% and the maximum amount of
 memory in use at a time is decreased to 60% (Enblend compiled with
@@ -2494,7 +2494,7 @@ option@tie{}@option{--visualize} to directly judge the effect.
 When using this option in conjunction with
 option@tie{}@code{--coarse-mask}=@/@var{FACTOR}, keep in mind that the
 smoothing occurs @emph{after} the overlap regions have been shrunken.
-Thus, blurring affects a @var{FACTOR}@classictimes{}@/@var{FACTOR}
+Thus, blurring affects a @var{FACTOR}x@/@var{FACTOR}
 times larger area in the original images.
 
 Valid range: @var{RADIUS} @geq{} @value{src::minimum-smooth-difference}.
@@ -2606,7 +2606,7 @@ of the image and the final seam-line
 @rimage{seam-line-visualization}
 
 @caption{Seam-line visualization of a simple overlap.  The
-853@classictimes{}238@dmn{pixel} image is shown at a magification of
+853x238@dmn{pixel} image is shown at a magification of
 100%.}
 
 @shortcaption{Seam-line visualization}
@@ -2618,7 +2618,7 @@ of the image and the final seam-line
 @rimage{seam-line-visualization, 15cm}
 
 @caption{Seam-line visualization of a simple overlap.  The
-853@classictimes{}238@dmn{pixel} image has been rescaled to a width of
+853x238@dmn{pixel} image has been rescaled to a width of
 approximately 15@dmn{cm}.}
 
 @shortcaption{Seam-line visualization}
@@ -2629,7 +2629,7 @@ approximately 15@dmn{cm}.}
 @float Figure,Figure:seam-line-visualization
 @rimage{seam-line-visualization, 15cm}
 
-@caption{Seam-line visualization of a simple overlap.  The 853@classictimes{}238@dmn{pixel} image has been rescaled to a width of approximately 15@dmn{cm}.}
+@caption{Seam-line visualization of a simple overlap.  The 853x238@dmn{pixel} image has been rescaled to a width of approximately 15@dmn{cm}.}
 
 @shortcaption{Seam-line visualization}
 @end float

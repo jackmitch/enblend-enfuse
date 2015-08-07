@@ -46,7 +46,7 @@ AM_MAKEINFOHTMLFLAGS = @AM_MAKEINFOHTMLFLAGS@ \
                    -I $(top_builddir) -I $(srcdir) \
                    --css-include=@srcdir@/default.css \
                    $(MAKEINFOHTMLFLAGS)
-export TEXINPUTS=$(top_builddir):$(srcdir)
+export TEXINPUTS = .:$(top_builddir):$(srcdir):
 
 TEXI2DVI = texi2dvi $(TEXI2DVIFLAGS) $(EXTRATEXI2DVIFLAGS)
 
