@@ -11,6 +11,8 @@
 
 ^INSTALL$
 ^aclocal\.m4$
+^ar-lib$
+^compile$
 ^config\.
 ^configure$
 ^depcomp$
