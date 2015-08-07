@@ -837,11 +837,13 @@ lookup_long_option_by_id(struct option* an_option_array, int a_long_option_id)
 bool
 short_option_requires_argument(const char* a_short_option_spec, char a_short_option)
 {
-    const char* c = strchr(a_short_option_spec, a_short_option);
+    if (a_short_option != 0) {
+        const char* c = strchr(a_short_option_spec, a_short_option);
 
-    if (c != NULL) {
-        if (*(c + 1) == ':' && *(c + 2) != ':') {
-            return true;
+        if (c != NULL) {
+            if (*(c + 1) == ':' && *(c + 2) != ':') {
+                return true;
+            }
         }
     }
 
@@ -936,7 +938,7 @@ process_options(int argc, char** argv)
     opterr = 0;       // we have our own "unrecognized option" message
 
     while (true) {
-        int option_index;
+        int option_index = -1;
         const int code = getopt_long(argc, argv, short_options,
                                      long_options, &option_index);
 
@@ -1677,30 +1679,40 @@ process_options(int argc, char** argv)
 
         case '?':
         {
-            const struct option* failing_long_option = lookup_long_option_by_id(long_options, optopt);
+            if (optopt == 0) {
+                const int failing_index = optind - 1;
 
-            if (failing_long_option == NULL) {
-                if (short_option_requires_argument(short_options, optopt)) {
-                    std::cerr << command
-                              << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
-                              << std::endl;
-                } else {
-                    std::cerr << command << ": unknown option ";
-                    if (isprint(optopt)) {
-                        std::cerr << "\"-" << static_cast<char>(optopt) << "\"";
-                    } else {
-                        std::cerr << "character 0x" << std::hex << optopt;
-                    }
-                    std::cerr << std::endl;
+                std::cerr << command << ": unknown long option";
+                if (failing_index >= 0 && failing_index < argc) {
+                    std::cerr << " \"" << argv[failing_index] << "\"";
                 }
+                std::cerr << std::endl;
             } else {
-                assert(failing_long_option->has_arg == required_argument);
-                std::cerr << command
-                          << ": option \"--" << failing_long_option->name << "\" requires an argument"
-                          << endl;
+                const struct option* failing_long_option = lookup_long_option_by_id(long_options, optopt);
+
+                if (failing_long_option == NULL) {
+                    if (short_option_requires_argument(short_options, optopt)) {
+                        std::cerr << command
+                                  << ": option \"-" << static_cast<char>(optopt) << "\" requires an argument"
+                                  << std::endl;
+                    } else {
+                        std::cerr << command << ": unknown option ";
+                        if (isprint(optopt)) {
+                            std::cerr << "\"-" << static_cast<char>(optopt) << "\"";
+                        } else {
+                            std::cerr << "character 0x" << std::hex << optopt;
+                        }
+                        std::cerr << std::endl;
+                    }
+                } else {
+                    assert(failing_long_option->has_arg == required_argument);
+                    std::cerr << command
+                              << ": option \"--" << failing_long_option->name << "\" requires an argument"
+                              << std::endl;
+                }
             }
 
-            std::cerr << "Try \"enfuse --help\" for more information." << endl;
+            std::cerr << "Try \"enfuse --help\" for more information." << std::endl;
             exit(1);
         }
 
