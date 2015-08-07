@@ -430,6 +430,7 @@ void printUsageAndExit(const bool error = true) {
         "INPUT... are image filenames or response filenames.  Response\n" <<
         "filenames start with an \"" << RESPONSE_FILE_PREFIX_CHAR << "\" character.\n"
         "\n" <<
+        "Options:\n" <<
         "Common options:\n" <<
         "  -V, --version          output version information and exit\n" <<
         "  -a                     pre-assemble non-overlapping images\n" <<
@@ -538,6 +539,20 @@ void printUsageAndExit(const bool error = true) {
         VisualizeTemplate << "\"\n" <<
         "Enblend accepts arguments to any option in uppercase as\n" <<
         "well as in lowercase letters.\n" <<
+        "\n" <<
+        "Environment:\n" <<
+#ifdef CACHE_IMAGES
+        "  TMPDIR                 The TMPDIR environment variable points to the directory,\n" <<
+        "                         where to store ImageCache files.  If unset Enblend uses \"/tmp\".\n" <<
+#endif
+#ifdef OPENMP
+        "  OMP_NUM_THREADS        The OMP_NUM_THREADS environment variable sets the number\n" <<
+        "                         of threads to use in OpenMP parallel regions.  If unset\n" <<
+        "                         Enblend uses as many threads as there are CPUs.\n" <<
+        "  OMP_DYNAMIC            The OMP_DYNAMIC environment variable controls dynamic\n" <<
+        "                         adjustment of the number of threads to use in executing\n" <<
+        "                         OpenMP parallel regions.\n" <<
+#endif
         "\n" <<
         "Report bugs at <" PACKAGE_BUGREPORT ">." <<
         std::endl;
