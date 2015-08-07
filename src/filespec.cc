@@ -706,6 +706,7 @@ unfold_filename_iter(TraceableFileNameList& result, TraceInfo& trace_info, const
             trace_info.file_position.push_front(std::make_pair(response_filepath, line_number));
             ++trace_info.nesting_level;
             unfold_filename_iter(partial_result, trace_info, line);
+            --trace_info.nesting_level;
 
             for (TraceableFileNameList::const_iterator p = partial_result.begin();
                  p != partial_result.end();

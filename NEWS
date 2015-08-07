@@ -22,6 +22,10 @@ Released on ???
 
 ** Bug Fixes
 
+- [Enblend and Enfuse] Fix the nesting-depth counter for response
+  files.  This bug prohibited to load more than 20 images in a single
+  response file.
+
 - [Enblend and Enfuse] Allow grayscale images to bring their own
   (grayscale) profiles.  Previously grayscale images with ICC profiles
   were rejected.
