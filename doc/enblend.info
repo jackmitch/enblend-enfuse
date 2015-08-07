@@ -127,7 +127,39 @@ File: enblend.info,  Node: Standard Workflow,  Next: External Mask Manipulation,
 *note Figure 2.1: Figure:photographic-workflow. shows where Enblend and
 Enfuse sit in the tool chain of the standard workflow.
 
-[photographic-workflow]
+                        o
+                        |
+                   _____V_______
+                  /             \
+                  | Take Images |
+                  \_____________/
+                        |
+                        V
+                 /------+----------\
+          [else] |                 | [raw]
+                 |          _______V________
+                 |         /                \
+                 |         | Convert Images |  <-- DCRaw, UFRaw, etc.
+                 |         \________________/
+                 |                 |
+                 \----->+<---------/
+                        |
+                  ______V_______
+                 /              \
+                 | Align Images |              <-- Hugin, Panotools
+                 \______________/
+                        |
+                 _______V________
+                /                \
+                | Combine Images |             <-- Enblend, Enfuse
+                \________________/
+                        |
+                  ______V______
+                 /             \
+                 | Postprocess |               <-- The Gimp, et al.
+                 \_____________/
+                        |
+                        O
 Figure 2.1: Photographic workflow with Enblend and Enfuse.
 
 Take Images
@@ -236,7 +268,25 @@ same.  Thus the "Combine Images" box of *note Figure 2.1:
 Figure:photographic-workflow. becomes three activities as is depicted in
 *note Figure 2.2: Figure:external-mask-workflow.
 
-[external-mask-workflow]
+                        o
+                        |
+                 _______V________
+                /                \
+                | Generate Masks |             <-- Enblend, Enfuse --save-masks
+                \________________/
+                        |
+                 _______V________
+                /                \
+                |  Modify Masks  |             <-- Any tool
+                \________________/
+                        |
+                 _______V________
+                /                \
+                | Blend or Fuse  |
+                |  Using Masks   |             <-- Enblend, Enfuse --load-masks
+                \________________/
+                        |
+                        O
 Figure 2.2: Workflow for externally modified masks.
 
    To further optimize this kind of workflow, both Enblend and Enfuse
@@ -2484,18 +2534,18 @@ Program Index
 * cinepaint:                             Extended Options.    (line 155)
 * cinepaint <1>:                         Helpful Programs.    (line  42)
 * convert (ImageMagick):                 Helpful Programs.    (line  54)
-* dcraw:                                 Standard Workflow.   (line  10)
+* dcraw:                                 Standard Workflow.   (line  42)
 * dcraw <1>:                             Helpful Programs.    (line  11)
 * display (ImageMagick):                 Helpful Programs.    (line  54)
 * exiftool:                              Helpful Programs.    (line  85)
 * exrdisplay (OpenEXR):                  Helpful Programs.    (line  61)
 * fulla (Hugin):                         Helpful Programs.    (line  29)
-* gimp:                                  Standard Workflow.   (line  10)
+* gimp:                                  Standard Workflow.   (line  42)
 * gimp <1>:                              Extended Options.    (line 155)
 * gimp <2>:                              Helpful Programs.    (line  50)
 * gm (GraphicsMagick):                   Helpful Programs.    (line  54)
 * hugin:                                 Overview.            (line  25)
-* hugin <1>:                             Standard Workflow.   (line  10)
+* hugin <1>:                             Standard Workflow.   (line  42)
 * hugin <2>:                             Extended Options.    (line 134)
 * hugin <3>:                             Helpful Programs.    (line  26)
 * identify (ImageMagick):                Understanding Masks. (line  22)
@@ -2504,7 +2554,7 @@ Program Index
 * nona (Hugin):                          Extended Options.    (line 134)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  29)
 * PanoTools:                             Overview.            (line  25)
-* PanoTools <1>:                         Standard Workflow.   (line  10)
+* PanoTools <1>:                         Standard Workflow.   (line  42)
 * pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  64)
 * pfsin (PFSTools):                      Helpful Programs.    (line  64)
 * pfsout (PFSTools):                     Helpful Programs.    (line  64)
@@ -2515,7 +2565,7 @@ Program Index
 * tifficc (LittleCMS):                   Helpful Programs.    (line  89)
 * tiffinfo (libtiff):                    Understanding Masks. (line  22)
 * tiffinfo (libtiff) <1>:                Helpful Programs.    (line  80)
-* ufraw:                                 Standard Workflow.   (line  10)
+* ufraw:                                 Standard Workflow.   (line  42)
 * ufraw <1>:                             Helpful Programs.    (line  14)
 * ufraw-batch:                           Helpful Programs.    (line  14)
 
@@ -2621,11 +2671,11 @@ General Index
 * 360o panoramas:                        Common Options.      (line 215)
 * '@' (response file prefix):            Response Files.      (line   6)
 * 'a.tif':                               Common Options.      (line 156)
-* affine transformation:                 Standard Workflow.   (line  49)
+* affine transformation:                 Standard Workflow.   (line  81)
 * algorithms, globbing:                  Response Files.      (line 148)
 * algorithms, globbing <1>:              Response Files.      (line 192)
 * alpha channel:                         Overview.            (line  18)
-* alpha channel <1>:                     Standard Workflow.   (line  70)
+* alpha channel <1>:                     Standard Workflow.   (line 102)
 * alpha channel, associated:             Extended Options.    (line 151)
 * anneal parameters:                     Mask Generation Options.
                                                               (line   9)
@@ -2671,7 +2721,7 @@ General Index
 * compression, JPEG <1>:                 Common Options.      (line  60)
 * compression, LZW:                      Common Options.      (line  66)
 * compression, packbits:                 Common Options.      (line  70)
-* conversion, raw:                       Standard Workflow.   (line  35)
+* conversion, raw:                       Standard Workflow.   (line  67)
 * D50 white point:                       Color Profiles.      (line  55)
 * default layer selection:               Response Files.      (line 206)
 * default output filename:               Common Options.      (line 156)
@@ -2760,7 +2810,7 @@ General Index
 * layer selection, first layer:          Common Options.      (line  89)
 * layer selection, largest-layer:        Common Options.      (line  93)
 * layer selection, no layer:             Common Options.      (line 100)
-* lens distortion, correction of:        Standard Workflow.   (line  49)
+* lens distortion, correction of:        Standard Workflow.   (line  81)
 * levels, pyramid:                       Common Options.      (line 111)
 * LibJPEG:                               Helpful Programs.    (line  69)
 * LibPNG:                                Helpful Programs.    (line  72)
@@ -2868,9 +2918,9 @@ General Index
 * output image, set size of:             Extended Options.    (line 130)
 * overview:                              Overview.            (line   6)
 * packbits compression:                  Common Options.      (line  70)
-* parallax error:                        Standard Workflow.   (line  59)
+* parallax error:                        Standard Workflow.   (line  91)
 * perceptual rendering intent:           Color Profiles.      (line  53)
-* photometric alignment:                 Standard Workflow.   (line  51)
+* photometric alignment:                 Standard Workflow.   (line  83)
 * primary seam generator:                Mask Generation Options.
                                                               (line 284)
 * primary seam generator <1>:            Primary Seam Generators.
@@ -2890,7 +2940,7 @@ General Index
                                                               (line  94)
 * radius, DIJKSTRA <1>:                  Mask Generation Options.
                                                               (line 404)
-* raw conversion:                        Standard Workflow.   (line  35)
+* raw conversion:                        Standard Workflow.   (line  67)
 * rendering intent, perceptual:          Color Profiles.      (line  53)
 * response file:                         Invocation.          (line  10)
 * response file <1>:                     Response Files.      (line   6)
@@ -2940,7 +2990,7 @@ General Index
 * 'tiffcopy':                            Overview.            (line  39)
 * 'tiffsplit':                           Overview.            (line  39)
 * 'TMPDIR':                              Tuning Memory Usage. (line  20)
-* transformation, affine:                Standard Workflow.   (line  49)
+* transformation, affine:                Standard Workflow.   (line  81)
 * understanding masks:                   Understanding Masks. (line   6)
 * virtual reality:                       Common Options.      (line 225)
 * visualization image:                   Mask Generation Options.
@@ -2959,12 +3009,12 @@ General Index
                                                               (line 256)
 * white point, D50:                      Color Profiles.      (line  55)
 * workflow:                              Workflow.            (line   6)
-* workflow with Enblend:                 Standard Workflow.   (line  10)
-* workflow with Enfuse:                  Standard Workflow.   (line  10)
+* workflow with Enblend:                 Standard Workflow.   (line  42)
+* workflow with Enfuse:                  Standard Workflow.   (line  42)
 * workflow, external mask manipulation:  External Mask Manipulation.
                                                               (line   6)
 * workflow, external masks:              External Mask Manipulation.
-                                                              (line  33)
+                                                              (line  51)
 * workflow, standard:                    Standard Workflow.   (line   6)
 * wrap around:                           Common Options.      (line 215)
 
@@ -2978,38 +3028,38 @@ Ref: Overview-Footnote-24701
 Node: Workflow4843
 Node: Standard Workflow5242
 Ref: Figure:photographic-workflow5513
-Node: External Mask Manipulation8212
-Ref: Figure:external-mask-workflow9538
-Node: Invocation10048
-Node: Image Requirements10752
-Node: Response Files12222
-Ref: Table:response-file-format14257
-Ref: Table:response-file-syntactic-comment16732
-Ref: Table:globbing-algorithms17643
-Node: Common Options19102
-Ref: Common Options-Footnote-128553
-Ref: Common Options-Footnote-228745
-Node: Extended Options28904
-Ref: Extended Options-Footnote-136364
-Node: Mask Generation Options36437
-Ref: Table:mask-generation39097
-Ref: Table:optimizer-strategies46484
-Ref: Table:visualization-colors52688
-Ref: Table:mask-template-characters53611
-Ref: Mask Generation Options-Footnote-155863
-Node: Primary Seam Generators56092
-Node: Color Profiles58981
-Node: Understanding Masks61430
-Node: Tuning Memory Usage65222
-Ref: Table:cache-size-settings67973
-Node: Helpful Programs68408
-Node: Bug Reports72146
-Ref: Bug Reports-Footnote-177795
-Node: Authors77865
-Node: FDL79030
-Node: Program Index99991
-Node: Syntactic-Comment Index102987
-Node: Option Index103676
-Node: General Index108260
+Node: External Mask Manipulation9424
+Ref: Figure:external-mask-workflow10750
+Node: Invocation11958
+Node: Image Requirements12662
+Node: Response Files14132
+Ref: Table:response-file-format16167
+Ref: Table:response-file-syntactic-comment18642
+Ref: Table:globbing-algorithms19553
+Node: Common Options21012
+Ref: Common Options-Footnote-130463
+Ref: Common Options-Footnote-230655
+Node: Extended Options30814
+Ref: Extended Options-Footnote-138274
+Node: Mask Generation Options38347
+Ref: Table:mask-generation41007
+Ref: Table:optimizer-strategies48394
+Ref: Table:visualization-colors54598
+Ref: Table:mask-template-characters55521
+Ref: Mask Generation Options-Footnote-157773
+Node: Primary Seam Generators58002
+Node: Color Profiles60891
+Node: Understanding Masks63340
+Node: Tuning Memory Usage67132
+Ref: Table:cache-size-settings69883
+Node: Helpful Programs70318
+Node: Bug Reports74056
+Ref: Bug Reports-Footnote-179705
+Node: Authors79775
+Node: FDL80940
+Node: Program Index101901
+Node: Syntactic-Comment Index104897
+Node: Option Index105586
+Node: General Index110170
 
 End Tag Table

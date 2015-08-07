@@ -94,10 +94,6 @@ void localStdDevIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
 {
     typedef typename vigra::NumericTraits<typename SrcAccessor::value_type>::RealPromote SrcSumType;
     typedef vigra::NumericTraits<typename DestAccessor::value_type> DestTraits;
-    typedef typename SrcIterator::PixelType SrcPixelType;
-    typedef typename SrcIterator::row_iterator SrcRowIterator;
-    typedef typename MaskIterator::row_iterator MaskRowIterator;
-    typedef typename DestIterator::PixelType DestPixelType;
     typedef ScratchPad<SrcSumType> ScratchPadType;
     typedef std::vector<ScratchPadType> ScratchPadArray;
     typedef typename ScratchPadArray::iterator ScratchPadArrayIterator;
@@ -479,10 +475,7 @@ void localEntropyIf(SrcIterator src_ul, SrcIterator src_lr, SrcAccessor src_acc,
                     DestIterator dest_ul, DestAccessor dest_acc,
                     vigra::Size2D size)
 {
-    typedef vigra::NumericTraits<typename DestAccessor::value_type> DestTraits;
     typedef typename SrcIterator::PixelType SrcPixelType;
-    typedef typename SrcIterator::row_iterator SrcRowIterator;
-    typedef typename MaskIterator::row_iterator MaskRowIterator;
     typedef typename DestIterator::PixelType DestPixelType;
     typedef Histogram<SrcPixelType, DestPixelType> ScratchPadType;
 
@@ -1036,7 +1029,6 @@ void enfuseMask(vigra::triple<typename ImageType::const_traverser, typename Imag
     if (WContrast > 0.0) {
         typedef typename vigra::NumericTraits<ScalarType>::Promote LongScalarType;
         typedef IMAGETYPE<LongScalarType> GradImage;
-        typedef typename GradImage::iterator GradIterator;
 
         GradImage grad(imageSize);
         MultiGrayscaleAccessor<PixelType, LongScalarType> ga(GrayscaleProjector);
@@ -1214,11 +1206,9 @@ void enfuseMain(const FileNameList& anInputFileNameList,
 {
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePixelComponentType ImagePixelComponentType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImageType ImageType;
-    typedef typename EnblendNumericTraits<ImagePixelType>::AlphaPixelType AlphaPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::AlphaType AlphaType;
     typedef IMAGETYPE<float> MaskType;
     typedef typename MaskType::value_type MaskPixelType;
-    typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidPixelType ImagePyramidPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::ImagePyramidType ImagePyramidType;
     typedef typename EnblendNumericTraits<ImagePixelType>::MaskPyramidPixelType MaskPyramidPixelType;
     typedef typename EnblendNumericTraits<ImagePixelType>::MaskPyramidType MaskPyramidType;

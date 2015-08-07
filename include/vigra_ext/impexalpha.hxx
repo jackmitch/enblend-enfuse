@@ -338,10 +338,8 @@ namespace vigra_ext
                                    AlphaIterator alpha_upper_left, AlphaAccessor alpha_accessor)
         {
             typedef typename ImageIterator::row_iterator ImageRowIterator;
-            typedef typename ImageAccessor::value_type ImageValueType;
 
             typedef typename AlphaIterator::row_iterator AlphaRowIterator;
-            typedef typename AlphaAccessor::value_type AlphaValueType;
 
             vigra_precondition(image_lower_right.x >= image_upper_left.x,
                                "vigra_ext::detail::write_image_band_and_alpha: negative width");

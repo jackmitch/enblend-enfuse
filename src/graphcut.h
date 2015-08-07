@@ -1303,7 +1303,6 @@ namespace enblend {
         typedef vigra::UInt8 BasePixelType;
         typedef float GradientPixelType;
         typedef vigra::NumericTraits<BasePixelType> BasePixelTraits;
-        typedef vigra::NumericTraits<GradientPixelType> GradientPixelTraits;
         typedef typename BasePixelTraits::Promote BasePromotePixelType;
         typedef vigra::NumericTraits<BasePromotePixelType> BasePromotePixelTraits;
         typedef typename BasePromotePixelTraits::Promote GraphPixelType;
