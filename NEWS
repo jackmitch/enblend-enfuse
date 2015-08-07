@@ -7,6 +7,10 @@ Released on ???
 
 ** Bug Fixes
 
+- [Enblend and Enfuse] Allow grayscale images to bring their own
+  (grayscale) profiles.  Previously grayscale images with ICC profiles
+  were rejected.
+
 - [Enblend] Fix a possible domain error followed by a division-by-zero
   in the seamline optimizer.
 

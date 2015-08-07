@@ -862,6 +862,16 @@ profileName(cmsHPROFILE profile)
 }
 
 
+inline unsigned
+profileChannels(cmsHPROFILE profile)
+{
+    const cmsColorSpaceSignature signature = cmsGetColorSpace(profile);
+    const unsigned number_of_channels = cmsChannelsOf(signature);
+    assert(number_of_channels == 1U || number_of_channels == 3U);
+    return number_of_channels;
+}
+
+
 namespace parameter
 {
     // Identifier: [A-Za-z][A-Za-z0-9_-]*
