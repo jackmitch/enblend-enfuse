@@ -98,6 +98,26 @@ schraudolph_exp(double x)
 
 namespace enblend {
 
+inline static vigra::Diff2D
+normal_vector(const vigra::Point2D& a_previous_point,
+              const vigra::Point2D& a_current_point,
+              const vigra::Point2D& a_next_point)
+{
+    // vp: vector from a_previous_point to a_current_point
+    const vigra::Diff2D vp(a_current_point.x - a_previous_point.x, a_current_point.y - a_previous_point.y);
+    // vn: vector from a_current_point to a_next_point
+    const vigra::Diff2D vn(a_next_point.x - a_current_point.x, a_next_point.y - a_current_point.y);
+    // np: normal to vp
+    const vigra::Diff2D np(-vp.y, vp.x);
+    // nn: normal to vn
+    const vigra::Diff2D nn(-vn.y, vn.x);
+
+    // Answer normal vector at a_current_point;
+    // normal points to the left of vp and vn.
+    return np + nn;
+}
+
+
 template <typename CostImage, typename VisualizeImage>
 class GDAConfiguration
 {
@@ -130,20 +150,11 @@ public:
             std::vector<int>* stateDistances = new std::vector<int>();
             pointStateDistances.push_back(stateDistances);
 
-            if (currentMoveable) {
-                // vp = std::vector from previousPoint to currentPoint
-                vigra::Diff2D vp(currentPoint.x - previousPoint.x, currentPoint.y - previousPoint.y);
-                // vn = std::vector from currentPoint to nextPoint
-                vigra::Diff2D vn(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
-                // np = normal to vp
-                vigra::Diff2D np(-vp.y, vp.x);
-                // nn = normal to vn
-                vigra::Diff2D nn(-vn.y, vn.x);
+            vigra::Diff2D normal = normal_vector(previousPoint, currentPoint, nextPoint);
+            const double normal_magnitude = normal.magnitude();
 
-                // normal = normal vector at currentPoint
-                // normal points to the left of vp and vn.
-                vigra::Diff2D normal = np + nn;
-                normal *= stateSpaceWidth / normal.magnitude();
+            if (currentMoveable && normal_magnitude > std::numeric_limits<double>::epsilon()) {
+                normal *= stateSpaceWidth / normal_magnitude;
 
                 vigra::Diff2D leftPoint = currentPoint + normal;
                 vigra::Diff2D rightPoint = currentPoint - normal;

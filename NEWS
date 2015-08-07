@@ -10,6 +10,8 @@ Released on ???
 - [Enblend] Fix a non-dereferencable vector iterator which led to a
   segfault.
 
+- [Enblend] Avoid a division-by-zero in the Annealing Optimizer.
+
 
 Patchlevel 3
 
