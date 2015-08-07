@@ -274,7 +274,7 @@ private:
     {
         char* end;
         errno = 0;
-        const int i = strtol(value_as_string.c_str(), &end, 10);
+        const int i = static_cast<int>(strtol(value_as_string.c_str(), &end, 10));
         if (errno == 0 && *end == 0)
         {
             integer = new int;
@@ -286,7 +286,7 @@ private:
     {
         char* end;
         errno = 0;
-        const unsigned u = strtoul(value_as_string.c_str(), &end, 10);
+        const unsigned u = static_cast<unsigned>(strtoul(value_as_string.c_str(), &end, 10));
         if (errno == 0 && *end == 0)
         {
             unsigned_integer = new unsigned;

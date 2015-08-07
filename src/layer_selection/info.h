@@ -58,13 +58,13 @@ class ImageInfo
     typedef std::vector<LayerInfo> layer_list;
 
 public:
-    ImageInfo(const std::string& a_filename) : filename_(a_filename) {};
+    ImageInfo(const std::string& a_filename) : filename_(a_filename) {}
 
     const std::string& filename() const {return filename_;}
     const LayerInfo* layer(unsigned a_layer_index) const {return &layers_[a_layer_index];}
     void append(const LayerInfo& an_info) {layers_.push_back(an_info);}
 
-    unsigned number_of_layers() const {return layers_.size();}
+    unsigned number_of_layers() const {return static_cast<unsigned>(layers_.size());}
 
 private:
     /* const */ std::string filename_;
@@ -84,7 +84,7 @@ public:
 
     void append(const ImageInfo& an_info) {images_.push_back(an_info);}
 
-    unsigned number_of_images() const {return images_.size();}
+    unsigned number_of_images() const {return static_cast<unsigned>(images_.size());}
     const ImageInfo* image_info_on(const std::string& a_filename) const;
     const LayerInfo* layer_info_on(const std::string& a_filename, unsigned a_layer_index) const;
 

@@ -255,7 +255,7 @@ strtoken_r(char* str, const char* delim, char** save_ptr)
     {
         char *token = s;
 
-        while (*s != 0 && !strchr(delim, (int) *s))
+        while (*s != 0 && !strchr(delim, static_cast<int>(*s)))
         {
             s++;
         }
@@ -749,7 +749,7 @@ expandFilenameTemplate(const std::string& aTemplate,
                     {
                         std::ostringstream oss;
                         oss <<
-                            std::setw(width.empty() ? 1 + ilog10(aNumberOfImages - 1) : atoi(width.c_str())) <<
+                            std::setw(width.empty() ? 1U + ilog10(aNumberOfImages - 1U) : atoi(width.c_str())) <<
                             std::setfill(pad == 0 ? '0' : pad) <<
                             aNumber;
                         result.append(oss.str());
