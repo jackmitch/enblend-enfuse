@@ -3,6 +3,7 @@ Enblend/Enfuse developers:
     Mikołaj Leszczyński <rosomack@users.sourceforge.net>
     Max Lyons
     Andrew Mihal <acmihal@users.sourceforge.net>
+    Thomas Modes <tmodes@users.sourceforge.net>
     Christoph Spiel <cspiel@users.sourceforge.net>
     Brent Townshend <btownshend@users.sourceforge.net>
 
@@ -10,9 +11,8 @@ Enblend/Enfuse developers:
 Win32 porting:
     Joe Beda
     Mark - mjz
-    Thomas Modes
-    Ryan Sleevi
+    Ryan Sleevi <ryansleevi@users.sourceforge.net>
 
 
 CMake maintanance:
-    Kornel Benko
+    Kornel Benko <kornelbenko@users.sourceforge.net>
