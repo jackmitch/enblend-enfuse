@@ -22,8 +22,6 @@
 #include <cstring>
 #include <sstream>
 
-#include <boost/scoped_ptr.hpp>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -47,24 +45,27 @@ namespace detail
 std::string
 errorMessage(int anErrorNumber)
 {
-#if defined(HAVE_STRERROR) || defined(HAVE_STRERROR_R)
-    char* message;
-    int return_code;
-#if defined(HAVE_STRERROR_R)
-    const size_t buffer_size = 65536;
-    boost::scoped_ptr<char> message_buffer(new char[buffer_size]);
-#if defined(STRERROR_R_CHAR_P)
-    message = strerror_r(anErrorNumber, message_buffer.get(), buffer_size);
-    return_code = 0;
-#else
-    message = message_buffer.get();
-    return_code = strerror_r(anErrorNumber, message, buffer_size);
-#endif // STRERROR_R_CHAR_P
-#elif defined(HAVE_STRERROR)
-    message = strerror(anErrorNumber);
-    return_code = 0;
-#endif // HAVE_STRERROR_R, HAVE_STRERROR
+#if !defined(HAVE_STRERROR) && !defined(HAVE_STRERROR_R)
+    return detail::noErrorMessageAvailable(anErrorNumber);
+#endif
 
+#if !defined(HAVE_STRERROR_R)
+    std::string message(strerror(anErrorNumber));
+#else
+    const size_t buffer_size = 65536;
+    std::string message(buffer_size, '\0');
+#if defined(STRERROR_R_CHAR_P)
+    char* messageptr = strerror_r(anErrorNumber, &message[0], buffer_size);
+    if (messageptr != &message[0])
+    {
+        message = std::string(messageptr);
+    }
+    else
+    {
+        message.resize(message.find('\0'));
+    }
+#else
+    int return_code = strerror_r(anErrorNumber, &message[0], buffer_size);
     if (return_code != 0)
     {
         std::ostringstream oss;
@@ -73,17 +74,18 @@ errorMessage(int anErrorNumber)
             " to an error message failed with decimal return code " << return_code;
         return oss.str();
     }
-    else if (strlen(message) == 0)
+#endif // STRERROR_R_CHAR_P
+#endif // HAVE_STRERROR_R
+
+    if (message.length() == 0)
     {
         return detail::noErrorMessageAvailable(anErrorNumber);
     }
     else
     {
-        return std::string(message);
+        return message;
     }
-#else
-    return detail::noErrorMessageAvailable(anErrorNumber);
-#endif // HAVE_STRERROR || HAVE_STRERROR_R
 }
 
 }
+

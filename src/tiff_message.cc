@@ -26,8 +26,6 @@
 #include <set>
 #include <string>
 
-#include <boost/scoped_ptr.hpp>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -61,9 +59,8 @@ tiff_message(const char* message_class,
              const char* /*module*/, const char* format, va_list arguments)
 {
     const size_t buffer_size = 4096;
-    boost::scoped_ptr<char> buffer(new char[buffer_size]);
-    vsnprintf(buffer.get(), buffer_size, format, arguments);
-    const std::string message(buffer.get());
+    std::string message(buffer_size, '\0');
+    vsnprintf(&message[0], buffer_size, format, arguments);
 
     if (tiff_messages.count(message) == 0)
     {
