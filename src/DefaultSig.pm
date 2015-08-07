@@ -134,7 +134,7 @@ sub signature {
 sub _login_name {
     my $self = shift;
 
-    return getlogin or 'anonymous';
+    return (getlogin or 'anonymous');
 }
 
 
