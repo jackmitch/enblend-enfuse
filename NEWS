@@ -11,6 +11,9 @@ Released on ???
   colorspaces if they only disagree on their meta-data (e.g. profile
   creation date/time).
 
+- [Enblend] Fix a bug in the Dijkstra Optimizer which could lead to
+  undefined behavior in the placement of the (optimized) seam line.
+
 - [Enblend] Fix a non-dereferencable vector iterator which led to a
   segfault.
 
