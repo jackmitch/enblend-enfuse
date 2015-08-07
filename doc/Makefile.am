@@ -129,7 +129,7 @@ distclean-local: clean-local
 
 config2tex_verbose = $(config2tex_verbose_@AM_V@)
 config2tex_verbose_ = $(config2tex_verbose_@AM_DEFAULT_V@)
-config2tex_verbose_0 = @echo "  CONFIG2TEX $@";
+config2tex_verbose_0 = @echo "  CFG2TEX  $@";
 
 convert_verbose = $(convert_verbose_@AM_V@)
 convert_verbose_ = $(convert_verbose_@AM_DEFAULT_V@)
