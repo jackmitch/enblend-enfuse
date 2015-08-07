@@ -7,6 +7,9 @@ Released on ???
 
 ** Bug Fixes
 
+- [Enblend] Fix a possible domain error followed by a division-by-zero
+  in the seamline optimizer.
+
 - [Enblend and Enfuse] Avoid an undeserved warning about incompatible
   colorspaces if they only disagree on their meta-data (e.g. profile
   creation date/time).

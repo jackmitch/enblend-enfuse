@@ -231,8 +231,13 @@ public:
         deltaEMax = AnnealPara.deltaEMax;
         deltaEMin = AnnealPara.deltaEMin;
         const double kmax = static_cast<double>(kMax);
-        tInitial = ceil(deltaEMax / log(kmax / (kmax - 2.0)));
-        tFinal = deltaEMin / log(kmax * kmax - kmax - 1.0);
+        if (kmax > 2.5) {
+            tInitial = ceil(deltaEMax / log(kmax / (kmax - 2.0)));
+            tFinal = deltaEMin / log(kmax * kmax - kmax - 1.0);
+        } else {
+            tInitial = deltaEMax;
+            tFinal = deltaEMin;
+        }
     }
 
     ~GDAConfiguration() {
