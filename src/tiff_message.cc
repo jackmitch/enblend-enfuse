@@ -19,8 +19,7 @@
  */
 
 
-#include <stdio.h>
-
+#include <cstdio>              // fflush(), vsnprintf()
 #include <cstring>
 #include <iostream>
 #include <set>

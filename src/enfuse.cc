@@ -1836,6 +1836,20 @@ int main(int argc, char** argv)
             i->unroll_trace();
             exit(1);
         }
+
+        if (!vigra::isImage(i->filename().c_str())) {
+            std::cerr <<
+                command << ": cannot process \"" << i->filename() << "\"; not recognized as an image\n" <<
+                command << ": info: possible causes:\n" <<
+                command << ": info: - An underlying image-processing library does not understand the\n" <<
+                command << ": info:   particular compression, sub-format, format extension, ...\n" <<
+                command << ": info: - Enfuse was not compiled with support for this format, which\n" <<
+                command << ": info:   can be checked with \"" << command << " --show-image-formats\".\n" <<
+                command << ": info: - The image is corrupted or it is incomplete/truncated.\n" <<
+                command << ": info: - It really is not an image.  Honesty, huh?\n";
+            i->unroll_trace();
+            exit(1);
+        }
     }
 
     LayerSelection.retrieve_image_information(inputTraceableFileNameList.begin(),
