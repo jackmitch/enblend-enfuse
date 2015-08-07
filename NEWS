@@ -7,6 +7,10 @@ Released on ???
 
 ** Bug Fixes
 
+- [Enblend and Enfuse] Avoid an undeserved warning about incompatible
+  colorspaces if they only disagree on their meta-data (e.g. profile
+  creation date/time).
+
 - [Enblend] Fix a non-dereferencable vector iterator which led to a
   segfault.
 

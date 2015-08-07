@@ -1931,25 +1931,28 @@ int main(int argc, char** argv)
                         }
                     }
 
-                    std::cerr << endl << command << ": warning: input image \""
-                              << inputFileNameIterator->filename()
-                              << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
-                    inputFileNameIterator->unroll_trace();
-                    std::cerr << command << ": warning: has ";
-                    if (newProfile) {
-                        std::cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
-                    } else {
-                        std::cerr << "no ICC profile,\n";
+                    if (InputProfile == NULL || newProfile == NULL ||
+                        enblend::profileDescription(InputProfile) != enblend::profileDescription(newProfile)) {
+                        std::cerr << endl << command << ": warning: input image \""
+                                  << inputFileNameIterator->filename()
+                                  << "\"" << enblend::optional_layer_name(layer, layers) << "\n";
+                        inputFileNameIterator->unroll_trace();
+                        std::cerr << command << ": warning: has ";
+                        if (newProfile) {
+                            std::cerr << "ICC profile \"" << enblend::profileDescription(newProfile) << "\",\n";
+                        } else {
+                            std::cerr << "no ICC profile,\n";
+                        }
+                        std::cerr << command << ": warning: but first image has ";
+                        if (InputProfile) {
+                            std::cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
+                        } else {
+                            std::cerr << "no ICC profile;\n";
+                        }
+                        std::cerr << command << ": warning: blending images with different color spaces\n"
+                                  << command << ": warning: may have unexpected results"
+                                  << endl;
                     }
-                    std::cerr << command << ": warning: but first image has ";
-                    if (InputProfile) {
-                        std::cerr << "ICC profile \"" << enblend::profileDescription(InputProfile) << "\";\n";
-                    } else {
-                        std::cerr << "no ICC profile;\n";
-                    }
-                    std::cerr << command << ": warning: blending images with different color spaces\n"
-                              << command << ": warning: may have unexpected results"
-                              << endl;
                 }
             }
         } else {
