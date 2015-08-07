@@ -1167,31 +1167,55 @@ Note that Enfuse must have been compiled with the image-cache feature
 for this option to be effective.  Find out about extra features with
 @code{enfuse --version --verbose}.
 
+@item --blend-colorspace=@var{COLORSPACE}
+@opindex --blend-colorspace
+@cindex blend colorspace
+@cindex colorspace, blend
+@cindex color appearance model
+
+Force blending in selected @var{COLORSPACE}.  For well matched images
+this option should not change the output image much.  However, if
+Enfuse must blend vastly different colors (as e.g. anti-colors) the
+result image heavily depends on the @var{COLORSPACE}.
+
+Usually, Enfuse chooses defaults depending on the input images:
+@itemize
+@item
+@cindex @acronym{ICC} profile
+@cindex profile, @acronym{ICC}
+        For input images @emph{with} @acronym{ICC} profiles the
+default is to use @acronym{CIECAM} colorspace.
+
+@item
+        Images @emph{without} color profiles and floating-point images
+are blended in the @acronym{RGB}-color cube by default.
+@end itemize
+
+Enfuse supports two blend colorspaces:
+
+@table @asis
+@item @samp{IDENTITY}, @samp{ID}, @samp{UNIT}
+@cindex @acronym{sRGB}
+@cindex @acronym{RGB}-cube
+Naively compute blended colors in the luminance interval (grayscale
+images) or @acronym{RGB}-cube (@acronym{RGB} images) spanned by the
+input @acronym{ICC} profile or @acronym{sRGB} if no profiles are
+present.  Consider option@tie{}@option{--fallback-profile} to force a
+different profile than @acronym{sRGB} on all input images.
+
+@item @samp{CIECAM}, @samp{CIECAM02}, @samp{JCH}
+@cindex @acronym{CIECAM02} colorspace
+Blend pixels in the @acronym{CIECAM02} colorspace.
+@end table
+
 @item -c
 @itemx --ciecam
 @opindex -c
 @opindex --ciecam
 @cindex color appearance model
 @cindex @acronym{CIECAM02}
-Force the use of the @acronym{CIECAM02} color appearance model for
-blending colors instead of blending inside the @acronym{RGB} color
-cube.
-
-@cindex color profile
-@cindex @acronym{ICC} profile
-@cindex profile, @acronym{ICC}
-@cindex @acronym{sRGB} color space
-@cindex color space, @acronym{sRGB}
-All input files should have identical @acronym{ICC} profiles when this
-option is specified.  If no @acronym{ICC} profile is present, Enfuse
-assumes that all images use the @acronym{sRGB} color space.
-@xref{Color Profiles}.
-
-Please keep in mind that using @acronym{CIECAM02} blending may change
-the colors in the output image.
-
-This option can be negated; see option@tie{}@option{--no-ciecam}
-below.
+Use @samp{--blend-colorspace=CIECAM} instead.  To mimic the negated
+option @option{--no-ciecam} use @samp{--blend-colorspace=IDENTITY}.
 
 @item -d
 @itemx --depth=@var{DEPTH}
@@ -1331,8 +1355,8 @@ union of all input images.
 @cindex fallback profile
 @cindex @acronym{CIECAM02}
 Use the @acronym{ICC} profile in @var{PROFILE-FILENAME} instead of the
-default @acronym{sRGB}.  See option@tie{}@option{--ciecam} and
-@ref{Color Profiles}.
+default @acronym{sRGB}.  See option@tie{}@option{--blend-colorspace}
+and @ref{Color Profiles}.
 
 This option only is effective if the input images come without color
 profiles and blending is performed in @acronym{CIECAM02} color
@@ -1374,11 +1398,10 @@ for this option to be effective.  Find out about extra features with
 @opindex --no-ciecam
 @cindex color appearance model
 @cindex @acronym{CIECAM02}
-Disable the use of the @acronym{CIECAM02} color appearance model for
-blending colors.
+Use @samp{--blend-colorspace=IDENTITY} instead.
 
-See option@tie{}@option{--ciecam} for details.  Also see @ref{Color
-Profiles}.
+See option@tie{}@option{--blend-colorspace} for details.  Also see
+@ref{Color Profiles}.
 @end table
 
 

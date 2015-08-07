@@ -65,7 +65,7 @@ extern "C" int optind;
 
 #include <boost/algorithm/string/erase.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/logic/tribool.hpp>
+
 #include <lcms2.h>
 #if !defined(LCMS_VERSION) || LCMS_VERSION < 2050
 #error "Little CMS version 2.5 or later is required"
@@ -107,7 +107,7 @@ int ExactLevels = 0;            // 0 means: automatically calculate maximum
 bool OneAtATime = true;
 boundary_t WrapAround = OpenBoundaries;
 bool GimpAssociatedAlphaHack = false;
-boost::tribool UseCIECAM = boost::indeterminate;
+blend_colorspace_t BlendColorspace = UndeterminedColorspace;
 bool OutputSizeGiven = false;
 int OutputWidthCmdLine = 0;
 int OutputHeightCmdLine = 0;
@@ -223,7 +223,7 @@ void dump_global_variables(const char* file, unsigned line,
         "+ WrapAround = " << enblend::stringOfWraparound(WrapAround) << ", option \"--wrap\"\n" <<
         "+ GimpAssociatedAlphaHack = " << enblend::stringOfBool(GimpAssociatedAlphaHack) <<
         ", option \"-g\"\n" <<
-        "+ UseCIECAM = " << UseCIECAM << ", option \"--ciecam\"\n" <<
+        "+ BlendColorspace = " << BlendColorspace << ", option \"--blend-colorspace\"\n" <<
         "+ FallbackProfile = " << (FallbackProfile ? enblend::profileDescription(FallbackProfile) : "[none]") <<
         ", option \"--fallback-profile\"\n" <<
         "+ OutputSizeGiven = " << enblend::stringOfBool(OutputSizeGiven) << ", option \"-f\"\n" <<
@@ -468,6 +468,10 @@ void printUsageAndExit(const bool error = true) {
         "Extended options:\n" <<
         "  -b BLOCKSIZE           image cache BLOCKSIZE in kilobytes; default: " <<
         (vigra_ext::CachedFileImageDirector::v().getBlockSize() / 1024LL) << "KB\n" <<
+        "  --blend-colorspace=COLORSPACE\n" <<
+        "                         force COLORSPACE for blending operations; Enblend uses\n" <<
+        "                         \"CIECAM\" for images with ICC-profile and \"IDENTITY\" for\n" <<
+        "                         those without and also for all floating-point images;\n" <<
         "  -c, --ciecam           use CIECAM02 to blend colors; disable with\n" <<
         "                         \"--no-ciecam\"\n" <<
         "  --fallback-profile=PROFILE-FILE\n" <<
@@ -495,7 +499,7 @@ void printUsageAndExit(const bool error = true) {
         "                         LUMINANCE-WEIGHT and CHROMINANCE-WEIGHT define the weights\n" <<
         "                         of lightness and color; default: " <<
         stringOfPixelDifferenceFunctor(PixelDifferenceFunctor) << ":" << LuminanceDifferenceWeight <<
-        ": " << ChrominanceDifferenceWeight << "\n" <<
+        ":" << ChrominanceDifferenceWeight << "\n" <<
         "  --coarse-mask[=FACTOR] shrink overlap regions by FACTOR to speedup mask\n" <<
         "                         generation; this is the default; if omitted FACTOR\n" <<
         "                         defaults to " <<
@@ -613,7 +617,7 @@ enum AllPossibleOptions {
     VersionOption, PreAssembleOption /* -a */, HelpOption, LevelsOption,
     OutputOption, VerboseOption, WrapAroundOption /* -w */,
     CheckpointOption /* -x */, CompressionOption, LZWCompressionOption,
-    BlockSizeOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
+    BlockSizeOption, BlendColorspaceOption, CIECAM02Option, NoCIECAM02Option, FallbackProfileOption,
     DepthOption, AssociatedAlphaOption /* -g */, GPUOption,
     SizeAndPositionOption /* -f */, CacheSizeOption,
     VisualizeOption, CoarseMaskOption, FineMaskOption,
@@ -866,6 +870,7 @@ process_options(int argc, char** argv)
         SmoothDifferenceId,
         OptimizerWeightsId,
         LevelsId,
+        BlendColorspaceId,
         CiecamId,
         NoCiecamId,
         FallbackProfileId,
@@ -900,6 +905,8 @@ process_options(int argc, char** argv)
         {"smooth-difference", required_argument, 0, SmoothDifferenceId},
         {"optimizer-weights", required_argument, 0, OptimizerWeightsId},
         {"levels", required_argument, 0, LevelsId},
+        {"blend-colorspace", required_argument, 0, BlendColorspaceId},
+        {"blend-color-space", required_argument, 0, BlendColorspaceId}, // dash form: not documented, not deprecated
         {"ciecam", no_argument, 0, CiecamId},
         {"no-ciecam", no_argument, 0, NoCiecamId},
         {"fallback-profile", required_argument, 0, FallbackProfileId},
@@ -1431,14 +1438,39 @@ process_options(int argc, char** argv)
             optionSet.insert(BlockSizeOption);
             break;
 
+        case BlendColorspaceId:
+            if (optarg != NULL && *optarg != 0) {
+                std::string name(optarg);
+                boost::algorithm::to_upper(name);
+                if (name == "IDENTITY" || name == "ID" || name == "UNIT") {
+                    BlendColorspace = IdentitySpace;
+                } else if (name == "CIECAM" || name == "CIECAM02" || name == "JCH") {
+                    BlendColorspace = CIECAM;
+                } else {
+                    std::cerr << command <<
+                        ": unrecognized argument \"" << optarg << "\" of option \"--blend-colorspace\"" <<
+                        std::endl;
+                    failed = true;
+                }
+            } else {
+                std::cerr << command << ": option \"--blend-colorspace\" requires an argument" << std::endl;
+                failed = true;
+            }
+            optionSet.insert(BlendColorspaceOption);
+            break;
+
         case 'c': // FALLTHROUGH
         case CiecamId:
-            UseCIECAM = true;
+            std::cerr <<
+                command << ": info: prefer option \"--blend-colorspace\" to \"--ciecam\"" << std::endl;
+            BlendColorspace = CIECAM;
             optionSet.insert(CIECAM02Option);
             break;
 
         case NoCiecamId:
-            UseCIECAM = false;
+            std::cerr <<
+                command << ": info: prefer option \"--blend-colorspace\" to \"--no-ciecam\"" << std::endl;
+            BlendColorspace = IdentitySpace;
             optionSet.insert(NoCIECAM02Option);
             break;
 
@@ -2142,8 +2174,17 @@ int main(int argc, char** argv)
         // Set the output image ICC profile
         outputImageInfo.setICCProfile(iccProfile);
 
-        if (UseCIECAM == true || (boost::indeterminate(UseCIECAM) && !iccProfile.empty())) {
-            UseCIECAM = true;
+        if (BlendColorspace == UndeterminedColorspace &&
+            !(iccProfile.empty() || enblend::isFloatingPoint(pixelType))) {
+            BlendColorspace = CIECAM;
+        }
+
+        if (BlendColorspace == CIECAM || BlendColorspace == CIELAB || BlendColorspace == CIELUV) {
+            if (enblend::isFloatingPoint(pixelType)) {
+                std::cerr << command <<
+                    ": warning: blend color space for floating-point images is not \"identity\"" << std::endl;
+            }
+
             if (InputProfile == NULL) {
                 std::cerr << command << ": warning: input images do not have ICC profiles;\n";
                 if (FallbackProfile == NULL) {
@@ -2256,7 +2297,7 @@ int main(int argc, char** argv)
         } else {
             if (FallbackProfile != NULL) {
                 std::cerr << command <<
-                    ": warning: blending in RGB cube; option \"--fallback-profile\" has no effect" <<
+                    ": warning: blending in identity space; option \"--fallback-profile\" has no effect" <<
                     std::endl;
             }
         }

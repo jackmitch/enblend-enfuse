@@ -213,8 +213,6 @@ AC_CHECK_HEADER(boost/lambda/if.hpp, [],
                 AC_MSG_ERROR([Boost "if" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/lambda/lambda.hpp, [],
                 AC_MSG_ERROR([Boost "lambda" header file is required to compile Enblend.]))
-AC_CHECK_HEADER(boost/logic/tribool.hpp, [],
-                AC_MSG_ERROR([Boost "tribool" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/math/special_functions.hpp, [],
                 AC_MSG_ERROR([Boost "special_functions" header file is required to compile Enblend.]))
 AC_CHECK_HEADER(boost/optional.hpp, [],

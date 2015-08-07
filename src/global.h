@@ -147,6 +147,16 @@ enum MainAlgo {
     NFT, GraphCut
 };
 
+// Colorspaces available for pyramidal blending operations
+typedef enum
+{
+    UndeterminedColorspace,    // explicit `not-a-colorspace' value
+    IdentitySpace,             // (1d) luminance interval for grayscale images and (3d) RGB-cube for RGB-images
+    CIELAB,                    // UNAVAILABLE
+    CIELUV,                    // UNAVAILABLE
+    CIECAM
+} blend_colorspace_t;
+
 
 
 //< src::default-tiff-resolution 300@dmn{dpi}

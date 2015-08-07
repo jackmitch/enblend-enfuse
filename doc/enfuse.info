@@ -935,19 +935,36 @@ cropping of the output image.
      feature for this option to be effective.  Find out about extra
      features with 'enfuse --version --verbose'.
 
+'--blend-colorspace=COLORSPACE'
+
+     Force blending in selected COLORSPACE.  For well matched images
+     this option should not change the output image much.  However, if
+     Enfuse must blend vastly different colors (as e.g.  anti-colors)
+     the result image heavily depends on the COLORSPACE.
+
+     Usually, Enfuse chooses defaults depending on the input images:
+        * For input images _with_ ICC profiles the default is to use
+          CIECAM colorspace.
+
+        * Images _without_ color profiles and floating-point images are
+          blended in the RGB-color cube by default.
+
+     Enfuse supports two blend colorspaces:
+
+     'IDENTITY', 'ID', 'UNIT'
+          Naively compute blended colors in the luminance interval
+          (grayscale images) or RGB-cube (RGB images) spanned by the
+          input ICC profile or sRGB if no profiles are present.
+          Consider option '--fallback-profile' to force a different
+          profile than sRGB on all input images.
+
+     'CIECAM', 'CIECAM02', 'JCH'
+          Blend pixels in the CIECAM02 colorspace.
+
 '-c'
 '--ciecam'
-     Force the use of the CIECAM02 color appearance model for blending
-     colors instead of blending inside the RGB color cube.
-
-     All input files should have identical ICC profiles when this option
-     is specified.  If no ICC profile is present, Enfuse assumes that
-     all images use the sRGB color space.  *Note Color Profiles::.
-
-     Please keep in mind that using CIECAM02 blending may change the
-     colors in the output image.
-
-     This option can be negated; see option '--no-ciecam' below.
+     Use '--blend-colorspace=CIECAM' instead.  To mimic the negated
+     option '--no-ciecam' use '--blend-colorspace=IDENTITY'.
 
 '-d'
 '--depth=DEPTH'
@@ -1034,7 +1051,7 @@ cropping of the output image.
 
 '--fallback-profile=PROFILE-FILENAME'
      Use the ICC profile in PROFILE-FILENAME instead of the default
-     sRGB.  See option '--ciecam' and *note Color Profiles::.
+     sRGB.  See option '--blend-colorspace' and *note Color Profiles::.
 
      This option only is effective if the input images come without
      color profiles and blending is performed in CIECAM02 color
@@ -1064,10 +1081,9 @@ cropping of the output image.
      features with 'enfuse --version --verbose'.
 
 '--no-ciecam'
-     Disable the use of the CIECAM02 color appearance model for blending
-     colors.
+     Use '--blend-colorspace=IDENTITY' instead.
 
-     See option '--ciecam' for details.  Also see *note Color
+     See option '--blend-colorspace' for details.  Also see *note Color
      Profiles::.
 
    ---------- Footnotes ----------
@@ -3784,7 +3800,7 @@ Program Index
 
 * ale:                                   Helpful Programs.    (line  22)
 * align_image_stack (Hugin):             Helpful Programs.    (line  29)
-* cinepaint:                             Extended Options.    (line 131)
+* cinepaint:                             Extended Options.    (line 149)
 * cinepaint <1>:                         Helpful Programs.    (line  42)
 * convert (ImageMagick):                 Helpful Programs.    (line  54)
 * dcraw:                                 Standard Workflow.   (line  10)
@@ -3794,17 +3810,17 @@ Program Index
 * exrdisplay (OpenEXR):                  Helpful Programs.    (line  61)
 * fulla (Hugin):                         Helpful Programs.    (line  29)
 * gimp:                                  Standard Workflow.   (line  10)
-* gimp <1>:                              Extended Options.    (line 131)
+* gimp <1>:                              Extended Options.    (line 149)
 * gimp <2>:                              Helpful Programs.    (line  50)
 * gm (GraphicsMagick):                   Helpful Programs.    (line  54)
 * hugin:                                 Standard Workflow.   (line  10)
-* hugin <1>:                             Extended Options.    (line 110)
+* hugin <1>:                             Extended Options.    (line 128)
 * hugin <2>:                             What Images.         (line  12)
 * hugin <3>:                             Helpful Programs.    (line  26)
 * identify (ImageMagick):                Understanding Masks. (line  22)
 * identify (ImageMagick) <1>:            Helpful Programs.    (line  54)
 * montage (ImageMagick):                 Helpful Programs.    (line  54)
-* nona (Hugin):                          Extended Options.    (line 110)
+* nona (Hugin):                          Extended Options.    (line 128)
 * nona (Hugin) <1>:                      Helpful Programs.    (line  29)
 * PanoTools:                             Standard Workflow.   (line  10)
 * pfshdrcalibrate (PFScalibration):      Helpful Programs.    (line  64)
@@ -3847,13 +3863,14 @@ Option Index
  [index ]
 * Menu:
 
-* --ciecam:                              Extended Options.    (line  22)
+* --blend-colorspace:                    Extended Options.    (line  21)
+* --ciecam:                              Extended Options.    (line  49)
 * --compression:                         Common Options.      (line  15)
 * --contrast-edge-scale:                 Expert Options.      (line  11)
 * --contrast-min-curvature:              Expert Options.      (line  31)
 * --contrast-weight:                     Fusion Options.      (line  10)
 * --contrast-window-size:                Expert Options.      (line  45)
-* --depth:                               Extended Options.    (line  36)
+* --depth:                               Extended Options.    (line  54)
 * --entropy-cutoff:                      Expert Options.      (line  63)
 * --entropy-weight:                      Fusion Options.      (line  21)
 * --entropy-window-size:                 Expert Options.      (line  94)
@@ -3861,7 +3878,7 @@ Option Index
 * --exposure-mu:                         Fusion Options.      (line  44)
 * --exposure-sigma:                      Fusion Options.      (line  56)
 * --exposure-weight:                     Fusion Options.      (line  32)
-* --fallback-profile:                    Extended Options.    (line 118)
+* --fallback-profile:                    Extended Options.    (line 136)
 * --gray-projector:                      Expert Options.      (line 192)
 * --hard-mask:                           Expert Options.      (line 271)
 * --hard-mask <1>:                       Disabling Averaging. (line   6)
@@ -3870,7 +3887,7 @@ Option Index
 * --layer-selector:                      Common Options.      (line  73)
 * --levels:                              Common Options.      (line 103)
 * --load-masks:                          Expert Options.      (line 286)
-* --no-ciecam:                           Extended Options.    (line 150)
+* --no-ciecam:                           Extended Options.    (line 168)
 * --no-parameter:                        Common Options.      (line 156)
 * --output:                              Common Options.      (line 146)
 * --saturation-weight:                   Fusion Options.      (line  69)
@@ -3882,13 +3899,13 @@ Option Index
 * -b:                                    Extended Options.    (line  10)
 * -b <1>:                                Tuning Memory Usage. (line   6)
 * -b <2>:                                Tuning Memory Usage. (line  25)
-* -c:                                    Extended Options.    (line  22)
-* -d:                                    Extended Options.    (line  36)
-* -f:                                    Extended Options.    (line 106)
-* -g:                                    Extended Options.    (line 127)
+* -c:                                    Extended Options.    (line  49)
+* -d:                                    Extended Options.    (line  54)
+* -f:                                    Extended Options.    (line 124)
+* -g:                                    Extended Options.    (line 145)
 * -h:                                    Common Options.      (line  99)
 * -l:                                    Common Options.      (line 103)
-* -m:                                    Extended Options.    (line 138)
+* -m:                                    Extended Options.    (line 156)
 * -m <1>:                                Tuning Memory Usage. (line   6)
 * -m <2>:                                Tuning Memory Usage. (line  25)
 * -o:                                    Common Options.      (line 146)
@@ -3922,7 +3939,7 @@ General Index
 * algorithms, globbing <1>:              Response Files.      (line 192)
 * alpha channel:                         Overview.            (line  65)
 * alpha channel <1>:                     Standard Workflow.   (line  70)
-* alpha channel, associated:             Extended Options.    (line 127)
+* alpha channel, associated:             Extended Options.    (line 145)
 * 'anti-value' gray projector:           Expert Options.      (line 202)
 * aperture, sweet spot:                  Why Focus Stacks.    (line  22)
 * applications of enfuse:                Applications.        (line   6)
@@ -3934,31 +3951,33 @@ General Index
 * basic focus stacking:                  Basic Focus Stacking.
                                                               (line   6)
 * binary mask:                           Understanding Masks. (line   6)
-* bits per channel:                      Extended Options.    (line  36)
+* bits per channel:                      Extended Options.    (line  54)
+* blend colorspace:                      Extended Options.    (line  21)
 * blending exposures:                    Exposure Series Misconceptions.
                                                               (line   9)
 * bug database, LaunchPad:               Bug Reports.         (line  12)
 * bug reports:                           Bug Reports.         (line   6)
 * bug reports <1>:                       Bug Reports.         (line   9)
 * Burt-Adelson multiresolution spline:   Overview.            (line  21)
-* canvas size:                           Extended Options.    (line 106)
-* channel width:                         Extended Options.    (line  36)
+* canvas size:                           Extended Options.    (line 124)
+* channel width:                         Extended Options.    (line  54)
 * channel, alpha:                        Overview.            (line  65)
 * 'channel-mixer' gray projector:        Expert Options.      (line 217)
-* CIECAM02:                              Extended Options.    (line  22)
-* CIECAM02 <1>:                          Extended Options.    (line 118)
-* CIECAM02 <2>:                          Extended Options.    (line 150)
+* CIECAM02:                              Extended Options.    (line  49)
+* CIECAM02 <1>:                          Extended Options.    (line 136)
+* CIECAM02 <2>:                          Extended Options.    (line 168)
 * CIECAM02 <3>:                          Color Profiles.      (line  12)
+* CIECAM02 colorspace:                   Extended Options.    (line  45)
 * circle-of-confusion:                   Why Focus Stacks.    (line  10)
-* color appearance model:                Extended Options.    (line  22)
-* color appearance model <1>:            Extended Options.    (line 150)
-* color appearance model <2>:            Color Profiles.      (line  12)
+* color appearance model:                Extended Options.    (line  21)
+* color appearance model <1>:            Extended Options.    (line  49)
+* color appearance model <2>:            Extended Options.    (line 168)
+* color appearance model <3>:            Color Profiles.      (line  12)
 * color cube, RGB:                       Color Profiles.      (line  12)
-* color profile:                         Extended Options.    (line  25)
-* color profile <1>:                     Color Profiles.      (line   6)
-* color profile <2>:                     Color Profiles.      (line   9)
-* color space, sRGB:                     Extended Options.    (line  25)
-* color space, sRGB <1>:                 Color Profiles.      (line  24)
+* color profile:                         Color Profiles.      (line   6)
+* color profile <1>:                     Color Profiles.      (line   9)
+* color space, sRGB:                     Color Profiles.      (line  24)
+* colorspace, blend:                     Extended Options.    (line  21)
 * compression:                           Common Options.      (line  15)
 * compression, arithmetic JPEG:          Common Options.      (line  34)
 * compression, deflate:                  Common Options.      (line  46)
@@ -3996,7 +4015,7 @@ General Index
 * digital blending:                      Exposure Series Misconceptions.
                                                               (line   9)
 * disabling average:                     Disabling Averaging. (line   6)
-* double precision float, IEEE754:       Extended Options.    (line  83)
+* double precision float, IEEE754:       Extended Options.    (line 101)
 * dynamic range increase:                Exposure Series.     (line   6)
 * dynamic range increase <1>:            Flash Exposure Series.
                                                               (line   6)
@@ -4014,7 +4033,7 @@ General Index
                                                               (line   6)
 * exposure series, tips for beginners:   Exposure Series Tips.
                                                               (line   6)
-* fallback profile:                      Extended Options.    (line 118)
+* fallback profile:                      Extended Options.    (line 136)
 * filename template:                     Expert Options.      (line 294)
 * filename template <1>:                 Expert Options.      (line 309)
 * filename, literal:                     Invocation.          (line  10)
@@ -4061,18 +4080,18 @@ General Index
 * gray projector, 'luminance':           Expert Options.      (line 249)
 * gray projector, 'pl-star':             Expert Options.      (line 255)
 * gray projector, 'value':               Expert Options.      (line 266)
-* half precision float, OpenEXR:         Extended Options.    (line  97)
+* half precision float, OpenEXR:         Extended Options.    (line 115)
 * helpful programs:                      Helpful Programs.    (line   6)
 * hot pixels:                            Expert Stacking.     (line  18)
 * Hugin:                                 Bug Reports.         (line  95)
-* ICC profile:                           Extended Options.    (line  25)
+* ICC profile:                           Extended Options.    (line  28)
 * ICC profile <1>:                       Color Profiles.      (line   6)
 * ICC profile <2>:                       Color Profiles.      (line   9)
-* IEEE754 double precision float:        Extended Options.    (line  83)
-* IEEE754 single precision float:        Extended Options.    (line  75)
+* IEEE754 double precision float:        Extended Options.    (line 101)
+* IEEE754 single precision float:        Extended Options.    (line  93)
 * image cache:                           Tuning Memory Usage. (line   9)
 * image cache, block size:               Extended Options.    (line  10)
-* image cache, cache size:               Extended Options.    (line 138)
+* image cache, cache size:               Extended Options.    (line 156)
 * image cache, location:                 Tuning Memory Usage. (line  20)
 * image, multi-layer:                    Overview.            (line  73)
 * images, fusable:                       What Images.         (line   6)
@@ -4152,8 +4171,8 @@ General Index
 * noise reduction:                       Repetition.          (line   6)
 * Octave:                                Bug Reports.         (line   6)
 * only save mask:                        Expert Options.      (line 314)
-* OpenEXR, data format:                  Extended Options.    (line  93)
-* OpenEXR, half precision float:         Extended Options.    (line  97)
+* OpenEXR, data format:                  Extended Options.    (line 111)
+* OpenEXR, half precision float:         Extended Options.    (line 115)
 * option delimiters:                     Option Delimiters.   (line   6)
 * option index:                          Option Index.        (line   6)
 * options, common:                       Common Options.      (line   6)
@@ -4163,7 +4182,7 @@ General Index
 * order, of processing:                  Response Files.      (line   9)
 * output file compression:               Common Options.      (line  15)
 * output filename, default:              Common Options.      (line 148)
-* output image, set size of:             Extended Options.    (line 106)
+* output image, set size of:             Extended Options.    (line 124)
 * overpowering criteria:                 Single Criterion Fusing.
                                                               (line  37)
 * overview:                              Overview.            (line   6)
@@ -4179,8 +4198,8 @@ General Index
 * problem, local contrast:               Local Contrast Problem.
                                                               (line   6)
 * processing order:                      Response Files.      (line   9)
-* profile, fallback:                     Extended Options.    (line 118)
-* profile, ICC:                          Extended Options.    (line  25)
+* profile, fallback:                     Extended Options.    (line 136)
+* profile, ICC:                          Extended Options.    (line  28)
 * profile, ICC <1>:                      Color Profiles.      (line   6)
 * profile, ICC <2>:                      Color Profiles.      (line   9)
 * program index:                         Program Index.       (line   6)
@@ -4197,6 +4216,7 @@ General Index
 * response file, syntactic comment:      Response Files.      (line 128)
 * RGB color cube:                        Color Profiles.      (line  12)
 * RGB'-L*a*b* conversion:                Expert Options.      (line 255)
+* RGB-cube:                              Extended Options.    (line  37)
 * RGB-L*a*b* conversion:                 Expert Options.      (line 233)
 * saturation enhancement:                Polarization Series. (line   6)
 * save mask:                             Expert Options.      (line 305)
@@ -4212,11 +4232,11 @@ General Index
 * simple series:                         Repetition.          (line   6)
 * single criterion fusing:               Single Criterion Fusing.
                                                               (line   6)
-* single precision float, IEEE754:       Extended Options.    (line  75)
-* size, canvas:                          Extended Options.    (line 106)
+* single precision float, IEEE754:       Extended Options.    (line  93)
+* size, canvas:                          Extended Options.    (line 124)
 * SourceForge:                           Overview.            (line  79)
-* sRGB color space:                      Extended Options.    (line  25)
-* sRGB color space <1>:                  Color Profiles.      (line  24)
+* sRGB:                                  Extended Options.    (line  37)
+* sRGB color space:                      Color Profiles.      (line  24)
 * standard deviation:                    Standard Deviation.  (line  51)
 * statistical moments:                   Standard Deviation.  (line  38)
 * subtraction of dark frame:             Expert Stacking.     (line  18)
@@ -4300,70 +4320,70 @@ Node: Common Options23458
 Ref: Common Options-Footnote-132505
 Ref: Common Options-Footnote-232697
 Node: Extended Options32856
-Ref: Extended Options-Footnote-138799
-Node: Fusion Options38872
-Node: Expert Options40880
-Ref: Figure:entropy-cutoff43918
-Ref: Figure:exposure-cutoff47912
-Ref: Table:mask-template-characters55013
-Node: Option Delimiters57229
-Node: Color Profiles58613
-Node: Weighting Functions61048
-Node: Weighting Pixels61716
-Node: Weighted Average63252
-Node: Disabling Averaging63853
-Node: Single Criterion Fusing64833
-Ref: Table:default-weights65579
-Node: Exposure Weighting66363
-Ref: Figure:gaussian67809
-Node: Saturation Weighting68579
-Node: Local Contrast Weighting69694
-Node: Standard Deviation71056
-Ref: Figure:local-analysis-window71516
-Ref: Standard Deviation-Footnote-173609
-Node: Laplacian of Gaussian73760
-Ref: Figure:laplacian-of-gaussian75344
-Node: Blend SDev and LoG76462
-Node: Scaling and Choice of Mode78143
-Node: Local Entropy Weighting78989
-Ref: Figure:entropy79983
-Node: Understanding Masks81600
-Node: Tuning Memory Usage85396
-Ref: Table:cache-size-settings88142
-Node: Applications88577
-Node: What Images89301
-Node: Repetition92493
-Node: Exposure Series93562
-Node: Exposure Series Tips95909
-Node: Exposure Series Misconceptions97020
-Ref: Exposure Series Misconceptions-Footnote-198793
-Node: Flash Exposure Series99006
-Node: Polarization Series99246
-Node: Focus Stacks99641
-Node: Why Focus Stacks100491
-Node: Preparing Focus Stacks101825
-Node: Local Contrast Based Fusing102572
-Node: Basic Focus Stacking103907
-Node: Advanced Focus Stacking105280
-Node: Local Contrast Problem106044
-Ref: Figure:sharp-edge107250
-Ref: Figure:smooth-edge107338
-Node: Laplacian Edge Detection108099
-Node: Local Contrast Enhancement109230
-Node: Suppressing Noise or Recognizing Faint Edges110206
-Node: Focus Stacking Decision Tree112827
-Ref: Figure:focus-stacking-decision-tree113183
-Node: Expert Stacking113995
-Node: Helpful Programs115517
-Node: Bug Reports119247
-Ref: Bug Reports-Footnote-1124895
-Node: Authors124965
-Node: FDL126129
-Node: List of Tables147090
-Node: List of Figures147761
-Node: Program Index148809
-Node: Syntactic-Comment Index151743
-Node: Option Index152431
-Node: General Index156090
+Ref: Extended Options-Footnote-139472
+Node: Fusion Options39545
+Node: Expert Options41553
+Ref: Figure:entropy-cutoff44591
+Ref: Figure:exposure-cutoff48585
+Ref: Table:mask-template-characters55686
+Node: Option Delimiters57902
+Node: Color Profiles59286
+Node: Weighting Functions61721
+Node: Weighting Pixels62389
+Node: Weighted Average63925
+Node: Disabling Averaging64526
+Node: Single Criterion Fusing65506
+Ref: Table:default-weights66252
+Node: Exposure Weighting67036
+Ref: Figure:gaussian68482
+Node: Saturation Weighting69252
+Node: Local Contrast Weighting70367
+Node: Standard Deviation71729
+Ref: Figure:local-analysis-window72189
+Ref: Standard Deviation-Footnote-174282
+Node: Laplacian of Gaussian74433
+Ref: Figure:laplacian-of-gaussian76017
+Node: Blend SDev and LoG77135
+Node: Scaling and Choice of Mode78816
+Node: Local Entropy Weighting79662
+Ref: Figure:entropy80656
+Node: Understanding Masks82273
+Node: Tuning Memory Usage86069
+Ref: Table:cache-size-settings88815
+Node: Applications89250
+Node: What Images89974
+Node: Repetition93166
+Node: Exposure Series94235
+Node: Exposure Series Tips96582
+Node: Exposure Series Misconceptions97693
+Ref: Exposure Series Misconceptions-Footnote-199466
+Node: Flash Exposure Series99679
+Node: Polarization Series99919
+Node: Focus Stacks100314
+Node: Why Focus Stacks101164
+Node: Preparing Focus Stacks102498
+Node: Local Contrast Based Fusing103245
+Node: Basic Focus Stacking104580
+Node: Advanced Focus Stacking105953
+Node: Local Contrast Problem106717
+Ref: Figure:sharp-edge107923
+Ref: Figure:smooth-edge108011
+Node: Laplacian Edge Detection108772
+Node: Local Contrast Enhancement109903
+Node: Suppressing Noise or Recognizing Faint Edges110879
+Node: Focus Stacking Decision Tree113500
+Ref: Figure:focus-stacking-decision-tree113856
+Node: Expert Stacking114668
+Node: Helpful Programs116190
+Node: Bug Reports119920
+Ref: Bug Reports-Footnote-1125568
+Node: Authors125638
+Node: FDL126802
+Node: List of Tables147763
+Node: List of Figures148434
+Node: Program Index149482
+Node: Syntactic-Comment Index152416
+Node: Option Index153104
+Node: General Index156836
 
 End Tag Table

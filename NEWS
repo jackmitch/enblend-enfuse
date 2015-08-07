@@ -5,6 +5,21 @@ Patchlevel 4
 Released on ???
 
 
+** New Commandline Options
+
+- The introduction of additional blend color spaces in the Development
+  Branch requires a new option to select them.  Here, in the Stable
+  Branch, the new option `--blend-colorspace' just duplicates the
+  functionality of `--ciecam' and `--no-ciecam'.  The Stable Branch
+  does *not* provide the additional blend colorspaces of the
+  Development Branch.  The following equivalences hold
+      --ciecam     <=>  --blend-colorspace=ciecam
+      --no-ciecam  <=>  --blend-colorspace=identity
+  Both options `--ciecam' and `--no-ciecam' are deprecated in 4.2 and
+  will be withdrawn in 4.3.  Thus, users should prefer
+  `--blend-colorspace'.
+
+
 ** Bug Fixes
 
 - [Enblend and Enfuse] Allow grayscale images to bring their own

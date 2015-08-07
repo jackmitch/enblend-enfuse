@@ -896,7 +896,16 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
     typedef typename SrcImageType::value_type SrcVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
-    if (UseCIECAM) {
+    switch (BlendColorspace)
+    {
+    case UndeterminedColorspace:
+    case IdentitySpace:
+        transformImageMP(src_upperleft, src_lowerright, sa,
+                         dest_upperleft, da,
+                         ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        break;
+
+    default:
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cerr << command << ": info: CIECAM02 color conversion";
             if (!enblend::profileName(InputProfile).empty()) {
@@ -907,10 +916,6 @@ copyToPyramidImage(typename SrcImageType::const_traverser src_upperleft,
         transformImageMP(src_upperleft, src_lowerright, sa,
                          dest_upperleft, da,
                          ConvertVectorToJCHPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
-    } else {
-        transformImageMP(src_upperleft, src_lowerright, sa,
-                         dest_upperleft, da,
-                         ConvertVectorToPyramidFunctor<SrcVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
 }
 
@@ -990,7 +995,19 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
     typedef typename DestImageType::value_type DestVectorType;
     typedef typename PyramidImageType::value_type PyramidVectorType;
 
-    if (UseCIECAM) {
+    switch (BlendColorspace)
+    {
+    case UndeterminedColorspace:
+    case IdentitySpace:
+        // OpenMP changes the result here!  The maximum absolute
+        // difference is 1 of 255 for 8-bit images.  -- cls
+        transformImageIfMP(src_upperleft, src_lowerright, sa,
+                           mask_upperleft, ma,
+                           dest_upperleft, da,
+                           ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
+        break;
+
+    default:
         if (Verbose >= VERBOSE_COLOR_CONVERSION_MESSAGES) {
             cerr << command << ": info: CIECAM02 color conversion" << endl;
         }
@@ -998,13 +1015,6 @@ copyFromPyramidImageIf(typename PyramidImageType::const_traverser src_upperleft,
                            mask_upperleft, ma,
                            dest_upperleft, da,
                            ConvertJCHPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
-    } else {
-        // OpenMP changes the result here!  The maximum absolute
-        // difference is 1 of 255 for 8-bit images.  -- cls
-        transformImageIfMP(src_upperleft, src_lowerright, sa,
-                           mask_upperleft, ma,
-                           dest_upperleft, da,
-                           ConvertPyramidToVectorFunctor<DestVectorType, PyramidVectorType, PyramidIntegerBits, PyramidFractionBits>());
     }
 }
 
