@@ -7,7 +7,8 @@ Released on ???
 
 ** Bug Fixes
 
-- ???
+- [Enblend] Fix a non-dereferencable vector iterator which led to a
+  segfault.
 
 
 Patchlevel 3
