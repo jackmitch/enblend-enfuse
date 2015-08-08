@@ -8,6 +8,8 @@ ELSE(NOT WIN32)
         /usr
         ${SOURCE_BASE_DIR}
       PATH_SUFFIXES
+        lcms2-2.7
+        lcms2-2.6
         lcms2-2.5
     )
     
