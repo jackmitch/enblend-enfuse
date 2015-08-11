@@ -57,23 +57,32 @@
 
 
 %% Logical Color Definitions
+\newcommand*{\bodybackgroundcolor}{white}
+\newcommand*{\bodyforegroundcolor}{black}
 \newcommand*{\chapterbackgroundcolor}{limegreen}
+\newcommand*{\fixmebackgroundcolor}{\ifhevea rhodamine\else lightgray\fi}
+\newcommand*{\geeknotebackgroundcolor}{\ifhevea springgreen\else lightlightgray\fi}
+\newcommand*{\literalbackgroundcolor}{gray}
+\newcommand*{\restrictedmaterialbordercolor}{dandelion}
 \newcommand*{\sectionbackgroundcolor}{grassgreen}
 \newcommand*{\subsectionbackgroundcolor}{seagreen}
 \newcommand*{\subsubsectionbackgroundcolor}{skyblue}
-\newcommand*{\fixmebackgroundcolor}{\ifhevea rhodamine\else lightgray\fi}
-\newcommand*{\restrictedmaterialbordercolor}{dandelion}
-\newcommand*{\geeknotebackgroundcolor}{\ifhevea springgreen\else lightlightgray\fi}
-\newcommand*{\terminalcolor}{green}
 \newcommand*{\terminalbackgroundcolor}{black}
 \newcommand*{\terminalbordercolor}{gray}
-\newcommand*{\literalbackgroundcolor}{gray}
-\newcommand*{\bodybackgroundcolor}{white}
+\newcommand*{\terminalcolor}{green}
+\newcommand*{\titlebackgroundcolor}{skyblue}
+\newcommand*{\titleforegroundcolor}{black}
+
+
+%% Font Family Definitions
+\newcommand*{\seriffontfamily}{Verdana, sans-serif}% Georgia, serif
+\newcommand*{\sansfontfamily}{Verdana, sans-serif}
+\newcommand*{\fixedfontfamily}{"Andale Mono", Courier, monospace}
 
 
 \newstyle{.adalisting}%
 {%
-  font-family: monospace;
+  font-family: \fixedfontfamily;
   white-space: pre;
 }
 
@@ -81,22 +90,25 @@
 \newstyle{body}%
 {%
   background: \@getcolor{\bodybackgroundcolor};
-  color: black;
-  margin-left: 10\%;
-  margin-right: 10\%;
+  color: \@getcolor{\bodyforegroundcolor};
+  font-family: \seriffontfamily;
+  margin-left: 15\%;
+  margin-right: 15\%;
 }
 
 
 \newstyle{.chapter}%
 {%
   background: \@getcolor{\chapterbackgroundcolor};
+  margin-left: -10\%;
+  margin-right: -10\%;
   padding: 0.75em;
 }
 
 
 \newstyle{.cxxlisting}%
 {%
-  font-family: monospace;
+  font-family: \fixedfontfamily;
   white-space: pre;
 }
 
@@ -143,6 +155,8 @@
 \newstyle{.section}%
 {%
   background: \@getcolor{\sectionbackgroundcolor};
+  margin-left: -10\%;
+  margin-right: -10\%;
   padding: 0.75em;
 }
 
@@ -168,7 +182,30 @@
   border-style: solid;
   border-width: thick;
   color: \@getcolor{\terminalcolor};
+  font-family: \fixedfontfamily;
   padding: 0.25em;
+}
+
+
+\newstyle{.title}
+{
+  font-family: \sansfontfamily;
+}
+
+
+\newstyle{.titlemain}%
+{%
+  background: \@getcolor{\titlebackgroundcolor};
+  color: \@getcolor{\titleforegroundcolor};
+  font-weight: bolder;
+  padding: 1em;
+}
+
+
+\newstyle{.titlerest}%
+{%
+  font-weight: lighter;
+  padding: 0.5em;
 }
 
 
