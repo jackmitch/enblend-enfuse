@@ -172,6 +172,25 @@ sub collect_pairs {
 }
 
 
+sub read_list_from_file {
+    my %args = (SOURCE => '-', SEPARATOR => "\n", @_);
+
+    local $INPUT_RECORD_SEPARATOR = $args{SEPARATOR};
+
+    my @result;
+    my $file = OpenFile::open_file($args{SOURCE});
+
+    while (my $record = readline $file) {
+        chomp $record;
+        push @result, $record;
+    }
+
+    $file->close;
+
+    return @result;
+}
+
+
 sub show_help {
     my $options = shift;
 
@@ -219,14 +238,19 @@ writes its text also to standard output.
 
 Options:
       --insert-macro=NAME
-                Use macro NAME [$quoted_insert] for insertion of
+                use macro NAME [$quoted_insert] for insertion of
                 a key/value pair; argument \#1 is the key and
                 argument \#2 is the value
       --find-macro=NAME
-                Use macro NAME [$quoted_find] for retrieving a
+                use macro NAME [$quoted_find] for retrieving a
                 value by its key; argument \#1 is the key
       --prefix=LABEL
                 prefix each key with PREFIX [$quoted_prefix]
+
+      --xargs[=TERMINATOR]
+                read arguments from STDIN instead of command line;
+                terminate arguments by TERMINATOR [@{[quote('\n')]}];
+                negatable with @{[quote('--no-xargs')]}
 
   -h, --help    show this help screen
 
@@ -240,6 +264,17 @@ END_OF_HELP
 }
 
 
+sub get_terminator {
+    my ($terminator) = @_;
+
+    if (!defined($terminator) || $terminator eq '') {
+        return "\n";
+    } else {
+        return eval qq(\"$terminator\");
+    }
+}
+
+
 sub get_options {
     my $options = shift;
 
@@ -248,29 +283,44 @@ sub get_options {
     Getopt::Long::GetOptions('insert-macro=s' => \$options->{INSERT_MACRO_NAME},
                              'find-macro=s' => \$options->{FIND_MACRO_NAME},
                              'prefix=s' => \$options->{KEY_PREFIX},
+                             'xargs:s' => sub {$options->{READ_FROM_STDIN} = get_terminator($_[1])},
+                             'no-xargs' => sub {$options->{READ_FROM_STDIN} = undef},
                              'h|help' => sub {show_help($options)}) or
         warn(COMMAND_NAME, ": problems while parsing options\n");
 }
 
 
 sub main {
-    my $options = {EMPTY_VALUE_SUBSTITUTE => 'N/A',
+    my $options = {READ_FROM_STDIN => undef,
+                   EMPTY_VALUE_SUBSTITUTE => 'N/A',
                    KEY_PREFIX => TexAux::default_name('KEY_PREFIX'),
                    INSERT_MACRO_NAME => TexAux::default_name('INSERT_MACRO_NAME'),
                    FIND_MACRO_NAME => TexAux::default_name('FIND_MACRO_NAME')};
-    my $docstrings = {};
 
     get_options($options);
 
-    die(COMMAND_NAME, ": missing arguments\n") unless @ARGV;
+    die(COMMAND_NAME, ": missing operation-mode argument\n") unless @ARGV;
+
+    my $docstrings = {};
 
     my $mode_argument = shift @ARGV;
     my $mode = lc $mode_argument;
+    my @arguments = @ARGV;
+
+    if ($options->{READ_FROM_STDIN}) {
+        if (length $options->{READ_FROM_STDIN} >= 2) {
+            warn(COMMAND_NAME,
+                 ": warning: suspicious multi-character terminator ", quote($options->{READ_FROM_STDIN}),
+                 " passed to ", quote('--xargs'), "\n");
+        }
+        @arguments = (@arguments, read_list_from_file(SEPARATOR => $options->{READ_FROM_STDIN}));
+    }
+
     if ($mode =~ m#^keys?-values?$#) {
-        collect_pairs($docstrings, @ARGV);
+        collect_pairs($docstrings, @arguments);
     } elsif ($mode =~ m#^scan-files?$#) {
-        push(@ARGV, "-") unless @ARGV;
-        scan_file($docstrings, $_) foreach @ARGV;
+        push(@arguments, "-") unless @arguments;
+        scan_file($docstrings, $_) foreach @arguments;
     } elsif ($mode eq 'write-support-code') {
         write_support_code($options);
         exit 0;
