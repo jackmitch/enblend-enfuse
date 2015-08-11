@@ -340,6 +340,16 @@ indirectly generated) it must be enabled with
         DYNAMIC_TEX_PREAMBLE=\hyperreftrue
 
 
+** HTML Generation
+
+The default target `html' builds the HTML documentation as monolithic
+files, which means the single HTML file "enblend.html" for Enblend and
+"enfuse.html" for Enfuse.  To build split versions with one chapter
+per file of each of them use the target `split-html', where the root
+files will be `enblend-index.html' and `enfuse-index.html' .  Install
+the broken-down version with `install-split-html'.
+
+
 ** PDF Generation
 
 The canonical way to reach at PDF files i.e.

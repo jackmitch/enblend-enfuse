@@ -33,6 +33,9 @@ DVIPS_FLAGS = -q -t $(PAPERSIZE) -D$(PRINT_RESOLUTION) -Z
 ##     -mathml    enable MathML output
 LATEX2HTML_FLAGS = -O -I . -I $(srcdir) -fix
 
+## Flags for Hacha, see also http://hevea.inria.fr/doc/cutname.html
+SPLITHTML_FLAGS = -tocbis
+
 GNUPLOT_FLAGS = --default-settings -e 'DATA_DIR="$(srcdir)"'
 
 ## Some possible plot sizes (in pixels) with identical aspect ratios:
@@ -113,6 +116,9 @@ clean-local:
 	- rm -f en*.{htoc,hpnd,hond,hgnd,haux,hand,hdgx}
 	- rm -f enblend.out enblend.image.{tex,out} enblend-{variables,version}.tex
 	- rm -f enfuse.out enfuse.image.{tex,out} enfuse-{variables,version}.tex
+	- rm -f *_motif.gif
+	- rm -f enblend{-index.html,.css,[0-9][0-9][0-9].html}
+	- rm -f enfuse{-index.html,.css,[0-9][0-9][0-9].html}
 
 
 .PHONY: distclean-local
@@ -122,6 +128,16 @@ distclean-local: clean-local
 
 
 .PHONY: FORCE
+
+
+.PHONY: split-html
+split-html: split-enblend-html split-enfuse-html
+
+.PHONY: split-enblend-html
+split-enblend-html: enblend-index.html
+
+.PHONY: split-enfuse-html
+split-enfuse-html: enfuse-index.html
 
 
 ########################################################################
@@ -226,6 +242,10 @@ SHOW_LATEX_LOG = \
             $(GREP) '^LaTeX Warning: Reference' $*.log; \
             false; \
           fi
+
+
+%-index.html: %.html
+	$(AM_V_GEN)$(SPLITHTML) $(SPLITHTML_FLAGS) -o $@ $<
 
 
 SHOW_LATEX2HTML_LOG = \
@@ -497,6 +517,22 @@ install-dvi-local: dvi-local
                 enfuse.dvi $(ENFUSE_DVI_SEPARATE_PREREQUISITES) \
             ) \
             $(dvidir)
+
+
+.PHONY: install-split-html
+install-split-html: split-html
+	@ $(MKDIR_P) $(htmldir)
+	$(install_verbose)$(INSTALL_DATA) \
+            $(sort \
+                enblend-index.html enblend.css $(wildcard enblend[0-9][0-9][0-9].html) \
+                $(ENBLEND_HTML_SEPARATE_PREREQUISITES) \
+                enfuse-index.html enfuse.css $(wildcard enfuse[0-9][0-9][0-9].html) \
+                $(ENFUSE_HTML_SEPARATE_PREREQUISITES) \
+                $(wildcard *_motif.gif) \
+            ) \
+            $(htmldir)
+
+
 
 
 EXTRA_DIST = \

@@ -438,6 +438,11 @@ else
     fi
 fi
 
+AC_PATH_PROG(SPLITHTML, hacha, false)
+if test "$SPLITHTML" = false; then
+    AC_MSG_WARN(cannot find hacha; will not be able to split HTML documentation on request)
+fi
+
 AC_PATH_PROG(GNUPLOT, gnuplot, false)
 if test "$GNUPLOT" = false; then
     AC_MSG_WARN(cannot find gnuplot; will not be able to build documentation)
