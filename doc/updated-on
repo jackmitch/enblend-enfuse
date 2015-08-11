@@ -29,7 +29,7 @@ use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 2};
 
 
-local *quote = \&Quote::gnu_style;
+sub quote {Quote::gnu_style(@_)}
 
 
 sub quote_list {

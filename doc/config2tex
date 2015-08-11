@@ -27,7 +27,7 @@ use TexAux ();
 use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
-local *quote = \&Quote::gnu_style;
+sub quote {Quote::gnu_style(@_)}
 
 
 my $directive = qr{
