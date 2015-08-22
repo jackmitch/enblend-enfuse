@@ -10,9 +10,11 @@ halfsine(y, y_opt, width) = \
         0
 
 
+set key bmargin center horizontal
 set samples 1023
-set xlabel "Y"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w$"
 set ytics 0.2
 
 

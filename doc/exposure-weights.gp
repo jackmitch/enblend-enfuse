@@ -25,10 +25,11 @@ power(y, y_opt, width) = \
 
 
 set grid ytics
+set key bmargin center horizontal
 set samples 1023
-set xlabel "Y"
-set ylabel "w"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w$"
 set ytics 0.5
 
 

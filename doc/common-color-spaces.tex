@@ -148,7 +148,7 @@ but this means
   \acronym{VIFF}}\gensee{floating-point \acronym{VIFF} image}{image, floating-point
   \acronym{VIFF}}\gensee{VIFF@\acronym{VIFF} floating-point image}{image, floating-point
   \acronym{VIFF}}\acronym{VIFF}) get a special treatment.  Their values~$L$ are first converted
-by the \genidx{transform!log}\gensee{log-transform}{transform, log}Log-transform.
+by the \genidx{transform!log}\gensee{log-transform}{transform, log}\LogTransform-transform.
 
 \begin{equation}\label{equ:log-transform}
   \mbox{Log}(L) :=
@@ -168,10 +168,9 @@ lower-case initial denotes the natural logarithmic function (i.e.\ to base~$e$).
   \centering
   \includeimage{log-transform}
 
-  \caption[Log-transform]{\label{fig:log-transform}Forward Log-transform shown for the range of
-    $-20 \leq L \leq 100$.  The domain of $\mbox{Log}(L)$ is the whole real axis.}
-
-  \genidx{transform!log}
+  \caption[\LogTransform-transform]{\label{fig:log-transform}\genidx{transform!log}%
+    Forward \LogTransform-transform shown for the range of $-20 \leq L \leq 100$.  The domain of
+    $\LogTransform(L)$ is the whole real axis.}
 \end{figure}
 
 This transform serves two purposes:
@@ -179,11 +178,11 @@ This transform serves two purposes:
 \begin{itemize}
 \item
   During blending, even completely non-negative images can result in negative pixels.  A
-  Log-transform followed by the inverse guarantees all-positive output.
+  \LogTransform-transform followed by the inverse guarantees all-positive output.
 
 \item
-  For \acronym{HDR}~data, the Log-transform puts the samples closer to a perceptual space making
-  the blending a little more pleasing.
+  For \acronym{HDR}~data, the \LogTransform-transform puts the samples closer to a perceptual
+  space making the blending a little more pleasing.
 \end{itemize}
 
 In the current version of \application{Enblend} and \application{Enfuse} it is \emph{strongly

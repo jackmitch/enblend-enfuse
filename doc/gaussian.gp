@@ -7,9 +7,11 @@ default_width = 0.2
 gaussian(y, y_opt, width) = exp(-0.5 * ((y - y_opt) / width)**2)
 
 
+set key bmargin center horizontal
 set samples 1023
-set xlabel "Y"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w$"
 set ytics 0.2
 
 

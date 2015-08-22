@@ -14,6 +14,8 @@ set xtics 0.2
 set ylabel "$H_2(p)$"
 set ytics 0.2
 
+unset key
+
 
 load DATA_DIR . "/colors.gp"
 

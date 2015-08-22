@@ -21,6 +21,8 @@
 \newcommand*{\tableabbr}{Tab.}
 \newcommand*{\tableName}{Table}
 
+\newcommand*{\LogTransform}{\mbox{Log}} % Enblend/Enfuse luminance transform
+
 
 %% Texinfo compatibility macros
 
@@ -153,7 +155,9 @@
 {\ifhevea
    \imgsrc{#2.png}%
  \else
-   \includegraphics[#1]{#2}% Usually an Encapsulated PostScript file
+   \IfFileExists{#2.pstex}%
+                {\input{#2.pstex}}% EPS(La)TeX file transporting PostScript inside a LaTeX envelope
+                {\includegraphics[#1]{#2}}% Usually an Encapsulated PostScript file
  \fi}
 
 

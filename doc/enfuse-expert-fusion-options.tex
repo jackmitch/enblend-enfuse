@@ -17,7 +17,7 @@ cutoffs for entropy and exposure fusion.
 \item[\itempar{--contrast-edge-scale=\metavar{EDGE-SCALE}\optional{:\feasiblebreak
       \metavar{LCE-SCALE}:\feasiblebreak\metavar{LCE-FACTOR}}}]\itemend
   A non-zero value for \metavar{EDGE-SCALE} switches on the
-  \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian}%
+  \propername{Laplacian}\hyp{}of\hyp{}\propername{Gaussian}
   (\acronym{LoG}\gensee{LoG@\acronym{LoG}}{\propername{Laplacian}-of-\propername{Gaussian}})
   edge detection algorithm.  \metavar{EDGE-SCALE} is the radius of the \propername{Gaussian}
   used in the search for edges.  Default: \val{val:default-edge-scale}~pixels.
@@ -83,9 +83,29 @@ enhanced :=
   \genidx{entropy!cutoff}%
   \gensee{cutoff entropy}{entropy, cutoff}%
 \item[--entropy-cutoff=\metavar{LOWER-CUTOFF}\optional{:\metavar{UPPER-CUTOFF}}]\itemend
-  Define the \metavar{LOWER-CUTOFF} value below which pixels are treated as pure black when
-  calculating the local entropy.  Optionally also define the \metavar{UPPER-CUTOFF} value above
-  which pixels are treated as pure white.
+  Define a cutoff function~$Y'$ for the normalized luminance~$Y$ by \metavar{LOWER-CUTOFF} and
+  \metavar{UPPER-CUTOFF}, which gets applied (only) before the local-entropy calculation.
+  \metavar{LOWER-CUTOFF} is the value below which pixels are mapped to pure black when
+  calculating the local entropy of the pixel's surroundings.  Optionally also define the
+  \metavar{UPPER-CUTOFF} value above which pixels are mapped to pure white.
+
+  \begin{equation}\label{equ:luminance-entropy-cutoff}
+  Y' = \left\{
+  \begin{array}{ll}
+    0 & \quad \mbox{for }Y \le \metavar{LOWER-CUTOFF}, \\
+    1 & \quad \mbox{for }Y \ge \metavar{UPPER-CUTOFF}\mbox{ and} \\
+    Y & \quad \mbox{otherwise.}
+  \end{array}
+  \right.
+  \end{equation}
+
+  Also see \sectionName~\fullref{sec:local-entropy-weighting} for an explanation of local
+  entropy.  \figureName~\fullref{fig:entropy-cutoff} shows an example for the luminance mapping.
+
+  Note that the entropy cutoff does not apply directly to the local-entropy~$H$ of a pixel or
+  its weight~$w_H$, but the luminance image that get fed into the local-entropy weight
+  calculation.  However, assigning \emph{constant} values to extreme shadows or highlights
+  in general decreases their local entropy, thereby reducing the pixels' weights.
 
   For color images \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} are applied separately and
   independently to each channel.
@@ -98,8 +118,6 @@ enhanced :=
   \val{val:default-entropy-upper-cutoff} for \metavar{UPPER-CUTOFF}, that is, all pixels' values
   are taken into account.
 
-  \figureName~\fullref{fig:entropy-cutoff} shows an example.
-
   \begin{figure}[htbp]
     \begin{maxipage}
       \centering
@@ -107,19 +125,18 @@ enhanced :=
     \end{maxipage}
 
     \caption[Entropy cutoff function]{\label{fig:entropy-cutoff}%
-      Linear lightness~\metavar{Y} in comparison with an entropy-cutoff function for
+      Modified lightness~$Y'$, \equationabbr~\ref{equ:luminance-entropy-cutoff}, for
       $\metavar{LOWER-CUTOFF} = 5\%$ and $\metavar{UPPER-CUTOFF} = 90\%$, which are rather
-      extreme values.  Please note that we have shifted the original lightness curve up and the
-      cut-off curve down by a very small \metavar{Offset} to emphasize that the proportional
-      part of \metavar{Y} remains unaltered under the cut-off operation.}
+      extreme values.}
   \end{figure}
 
-  Note that a high \metavar{LOWER-CUTOFF} value lightens the resulting image, as dark and
-  presumably noisy pixels are averaged with \emph{equal} weights.  With $\metavar{LOWER-CUTOFF}
-  = 0$, the default, on the other hand, ``noise'' might be interpreted as high entropy and the
-  noisy pixels get a high weight, which in turn renders the resulting image darker.
-  Analogously, a low \metavar{UPPER-CUTOFF} darkens the output image.
-
+  \begin{geeknote}
+    Note that a high \metavar{LOWER-CUTOFF} value lightens the resulting image, as dark and
+    presumably noisy pixels are averaged with \emph{equal} weights.  With
+    $\metavar{LOWER-CUTOFF} = 0$, the default, on the other hand, ``noise'' might be interpreted
+    as high entropy and the noisy pixels get a high weight, which in turn renders the resulting
+    image darker.  Analogously, a low \metavar{UPPER-CUTOFF} darkens the output image.
+  \end{geeknote}
 
   \label{opt:entropy-window-size}%
   \optidx[\defininglocation]{--entropy-window-size}%
@@ -146,9 +163,9 @@ enhanced :=
       \metavar{UPPER\hyp{}CUTOFF}\optional{:\feasiblebreak
         \metavar{LOWER\hyp{}PROJECTOR}:\feasiblebreak
         \metavar{UPPER\hyp{}PROJECTOR}}}}]\itemend
-  Set the \metavar{LOWER-CUTOFF} and the \metavar{UPPER-CUTOFF}.  Pixels below the lower or
-  above the upper cutoff get a weight of exactly zero irrespective of the active exposure-weight
-  function.
+  Define an exposure-cutoff function by the luminances \metavar{LOWER-CUTOFF} and
+  \metavar{UPPER-CUTOFF}.  Pixels below the lower or above the upper cutoff get a weight of
+  exactly zero irrespective of the active exposure-weight function.
 
   For color images the values of \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} refer to the
   gray-scale projection as selected with \metavar{LOWER\hyp{}PROJECTOR} and
@@ -158,40 +175,43 @@ enhanced :=
   image (for example 255 or~65535).  Negative \metavar{UPPER-CUTOFF} values indicate the maximum
   minus the absolute \metavar{UPPER-CUTOFF} value; the same holds for negative percentages.
 
-  The impact of this option is similar, but not identical to transforming \emph{all} input
-  images with \uref{\imagemagickorg}{ImageMagick's}\appidx{ImageMagick}
-  \command{convert}\prgidx{convert} (see \appendixName~\fullref{sec:helpful-programs}) prior to
-  fusing with the commands demonstrated in \exampleName~\ref{ex:imagemagick-convert-cutoff}.
+  \begin{geeknote}
+    The impact of this option is similar, but not identical to transforming \emph{all} input
+    images with \uref{\imagemagickorg}{ImageMagick's}\appidx{ImageMagick}
+    \command{convert}\prgidx{convert} (see \appendixName~\fullref{sec:helpful-programs}) prior
+    to fusing with the commands demonstrated in
+    \exampleName~\ref{ex:imagemagick-convert-cutoff}.
 
-  \begin{exemplar}[htbp]
-    \begin{terminal}
-      \$ convert IMAGE \bslash \\
-      ~~~~~~~~~~~\bslash( +clone -threshold LOWER-CUTOFF \bslash) \bslash \\
-      ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
-      ~~~~~~~~~~~MASKED-IMAGE
-    \end{terminal}
+    \begin{exemplar}[htbp]
+      \begin{terminal}
+        \$ convert IMAGE \bslash \\
+        ~~~~~~~~~~~\bslash( +clone -threshold LOWER-CUTOFF \bslash) \bslash \\
+        ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
+        ~~~~~~~~~~~MASKED-IMAGE
+      \end{terminal}
 
-    \smallskip
+      \smallskip
 
-    \begin{terminal}
-      \$ convert IMAGE \bslash \\
-      ~~~~~~~~~~~\bslash( \bslash \\
-      ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold LOWER-CUTOFF \bslash) \bslash \\
-      ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold UPPER-CUTOFF -negate \bslash) \bslash \\
-      ~~~~~~~~~~~~~~~-compose multiply -composite \bslash \\
-      ~~~~~~~~~~~\bslash) \bslash \\
-      ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
-      ~~~~~~~~~~~MASKED-IMAGE
-    \end{terminal}
+      \begin{terminal}
+        \$ convert IMAGE \bslash \\
+        ~~~~~~~~~~~\bslash( \bslash \\
+        ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold LOWER-CUTOFF \bslash) \bslash \\
+        ~~~~~~~~~~~~~~~\bslash( IMAGE -threshold UPPER-CUTOFF -negate \bslash) \bslash \\
+        ~~~~~~~~~~~~~~~-compose multiply -composite \bslash \\
+        ~~~~~~~~~~~\bslash) \bslash \\
+        ~~~~~~~~~~~-compose copy\_opacity -composite \bslash \\
+        ~~~~~~~~~~~MASKED-IMAGE
+      \end{terminal}
 
-    \caption[\application{ImageMagick} for exposure cutoff]{\label{ex:imagemagick-convert-cutoff}%
-      Using \application{ImageMagick} for exposure cutoff operations.  The first example only
-      applies a lower cutoff, wherease the second one applies both a lower and an upper cutoff
-      to the images.}
-  \end{exemplar}
+      \caption[\application{ImageMagick} for exposure cutoff]{\label{ex:imagemagick-convert-cutoff}%
+        Using \application{ImageMagick} for exposure cutoff operations.  The first example only
+        applies a lower cutoff, wherease the second one applies both a lower and an upper cutoff
+        to the images.}
+    \end{exemplar}
 
-  Transforming some or all input images as shown in the example gives the user more flexibility
-  because the thresholds can be chosen for each image individually.
+    Transforming some or all input images as shown in the example gives the user more
+    flexibility because the thresholds can be chosen for each image individually.
+  \end{geeknote}
 
   The option allows to specify projection operators as in option~\option{--gray-projector} for
   the \metavar{LOWER-CUTOFF} and \metavar{UPPER-CUTOFF} thresholds.
@@ -222,9 +242,9 @@ enhanced :=
     \end{maxipage}
 
     \caption[Exposure cutoff function]{\label{fig:exposure-cutoff}%
-      Exposure weight, a \propername{Gaussian} with the $\metavar{optimum} = 0.5$ and
-      $\metavar{width} = 0.2$ submitted to an exposure-cutoff of $\metavar{LOWER-CUTOFF} = 5\%$
-      and $\metavar{UPPER-CUTOFF} = 97\%$.}
+      Exposure weight~$w_Y$ after an exposure-cutoff of $\metavar{LOWER-CUTOFF} = 5\%$ and
+      $\metavar{UPPER-CUTOFF} = 97\%$ was applied to a \propername{Gaussian} with the
+      $\metavar{optimum} = 0.5$ and $\metavar{width} = 0.2$.}
   \end{figure}
 
   Note that the application of the respective cutoffs is completely independent of the actual

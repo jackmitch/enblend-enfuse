@@ -24,10 +24,13 @@ ExposureCutoff(Y, LowerCutoff, UpperCutoff) = \
 set grid
 set key right bottom
 set samples 1023
-set xlabel "Y"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w_Y$"
 set yrange [-0.1:1.1]
 set ytics 0.2
+
+unset key
 
 
 load DATA_DIR . "/colors.gp"

@@ -6,9 +6,11 @@ fwhm_lorentzian = 2.8284271247461900976033774484193961571
 lorentzian(y, y_opt, width) = 1.0 / (1.0 + ((y - y_opt) / (width * fwhm_gaussian / fwhm_lorentzian))**2 / 2.0)
 
 
+set key bmargin center horizontal
 set samples 1023
-set xlabel "Y"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w$"
 set ytics 0.2
 
 

@@ -10,13 +10,12 @@ LaplacianOfGaussian(R, Sigma) = \
     (pi * Sigma**4)
 
 
-set key bottom right
 set grid
 set samples 1023
-set xlabel "R"
-#set xtics 0.2
-set ylabel "k(R)"
-#set ytics 0.2
+set xlabel "$R$"
+set ylabel "$k(R)$"
+
+unset key
 
 
 load DATA_DIR . "/colors.gp"

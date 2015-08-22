@@ -48,7 +48,7 @@ GNUPLOT_PNG_TERMINAL_OPTIONS = enhanced transparent truecolor size 720,540
 ##     4.0,3.0
 ##     4.5,3.375
 ##     5,3.75
-GNUPLOT_EPS_TERMINAL_OPTIONS = color size 4.5in,3.375in
+GNUPLOT_EPSLATEX_TERMINAL_OPTIONS = color size 4.5in,3.375in
 
 DOTPP = $(M4)
 DOTPP_FLAGS = --fatal-warnings --prefix-builtins --synclines
@@ -108,7 +108,7 @@ enfuse: enfuse.ps enfuse.html
 
 .PHONY: clean-local
 clean-local:
-	- rm -f *.eps *.png *.gp
+	- rm -f *.eps *.png *.pstex *.gp
 	- rm -f *.{g,o,p,a}nd *.{g,o,p,a}dx
 	- rm -f *.idx *.ilg *.ind *.lo{a,f,t,x} *.toc
 	- rm -f *.aux *.log *.dvi *.ps *.pdf
@@ -271,9 +271,12 @@ SHOW_LATEX2HTML_LOG = \
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
             -e 'set output "$@"; set terminal pngcairo $(GNUPLOT_PNG_TERMINAL_OPTIONS)' $<
 
-%.eps: $(srcdir)/%.gp
+# `set output' gets the Encapsulated PostScript file's name right.
+# The `mv' command matches the LaTeX envelope's name to it.
+%.pstex: $(srcdir)/%.gp
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
-            -e 'set output "$@"; set terminal eps $(GNUPLOT_EPS_TERMINAL_OPTIONS)' $<
+            -e 'set output "$*.tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && \
+        mv $*.tex $@
 
 
 %.eps: $(srcdir)/%.dot
@@ -358,13 +361,15 @@ ENBLEND_SOURCE_FILES = \
     )
 
 
+ENBLEND_HYBRID_MATERIAL = \
+    log-transform.gp
+
+
 ENBLEND_EXTRA_MATERIAL = \
     external-mask-workflow.dot \
     internal-enblend-flow.dot \
     internal-optimizer-chain.dot \
     photographic-workflow.dot \
-    \
-    log-transform.gp \
     \
     seam-line-visualization.tif
 
@@ -377,6 +382,7 @@ ENBLEND_GENERATED_FILES = \
 
 
 ENBLEND_DVI_SEPARATE_PREREQUISITES = \
+    $(addsuffix .pstex,$(basename $(ENBLEND_HYBRID_MATERIAL))) \
     $(addsuffix .eps,$(basename $(ENBLEND_EXTRA_MATERIAL)))
 
 
@@ -391,6 +397,7 @@ enblend.pdf enblend.dvi: \
 
 
 ENBLEND_HTML_SEPARATE_PREREQUISITES = \
+    $(addsuffix .png,$(basename $(ENBLEND_HYBRID_MATERIAL))) \
     $(addsuffix .png,$(basename $(ENBLEND_EXTRA_MATERIAL)))
 
 
@@ -422,11 +429,7 @@ ENFUSE_SOURCE_FILES = \
     )
 
 
-ENFUSE_EXTRA_MATERIAL = \
-    external-mask-workflow.dot \
-    focus-stack-decision-tree.dot \
-    photographic-workflow.dot \
-    \
+ENFUSE_HYBRID_MATERIAL = \
     entropy-cutoff.gp \
     entropy.gp \
     exposure-cutoff.gp \
@@ -439,7 +442,13 @@ ENFUSE_EXTRA_MATERIAL = \
     lorentzian.gp \
     power.gp \
     sharp-edge.gp \
-    smooth-edge.gp \
+    smooth-edge.gp
+
+
+ENFUSE_EXTRA_MATERIAL = \
+    external-mask-workflow.dot \
+    focus-stack-decision-tree.dot \
+    photographic-workflow.dot \
     \
     local-analysis-window.svg
 
@@ -452,6 +461,7 @@ ENFUSE_GENERATED_FILES = \
 
 
 ENFUSE_DVI_SEPARATE_PREREQUISITES = \
+    $(addsuffix .pstex,$(basename $(ENFUSE_HYBRID_MATERIAL))) \
     $(addsuffix .eps,$(basename $(ENFUSE_EXTRA_MATERIAL)))
 
 
@@ -466,6 +476,7 @@ enfuse.pdf enfuse.dvi: \
 
 
 ENFUSE_HTML_SEPARATE_PREREQUISITES = \
+    $(addsuffix .png,$(basename $(ENFUSE_HYBRID_MATERIAL))) \
     $(addsuffix .png,$(basename $(ENFUSE_EXTRA_MATERIAL)))
 
 
@@ -513,8 +524,8 @@ install-dvi-local: dvi-local
 	@ $(MKDIR_P) $(dvidir)
 	$(install_verbose)$(INSTALL_DATA) \
             $(sort \
-                enblend.dvi $(ENBLEND_DVI_SEPARATE_PREREQUISITES) \
-                enfuse.dvi $(ENFUSE_DVI_SEPARATE_PREREQUISITES) \
+                enblend.dvi $(patsubst %.pstex,%.eps,$(ENBLEND_DVI_SEPARATE_PREREQUISITES)) \
+                enfuse.dvi $(patsubst %.pstex,%.eps,$(ENFUSE_DVI_SEPARATE_PREREQUISITES)) \
             ) \
             $(dvidir)
 
@@ -531,8 +542,6 @@ install-split-html: split-html
                 $(wildcard *_motif.gif) \
             ) \
             $(htmldir)
-
-
 
 
 EXTRA_DIST = \

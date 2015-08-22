@@ -9,10 +9,11 @@ power(y, y_opt, width) = \
         0.0
 
 
+set key bmargin center horizontal
 set samples 1023
-set xlabel "Normalized luminance~$Y$"
-set ylabel "Weight~$w$"
+set xlabel "$Y$"
 set xtics 0.2
+set ylabel "$w$"
 set ytics 0.2
 
 

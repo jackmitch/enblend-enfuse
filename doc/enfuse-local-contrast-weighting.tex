@@ -162,9 +162,9 @@ operator in \propername{Cartesian} coordinates
 \]
 \noindent to $g(x, y)$, to arrive at a continuous representation of the two-dimensional filter
 kernel
-\[
+\begin{equation}\label{equ:laplacian-of-gaussian}
     k(x, y) = \frac{\xi^2 - 1}{\pi \sigma^4} \exp(-\xi^2),
-\]
+\end{equation}
 \noindent where we have used the dimensionless distance~$\xi$ from the origin
 \[
     \xi^2 = \frac{x^2 + y^2}{2 \sigma^2}.
@@ -182,7 +182,9 @@ radially symmetric with respect to the origin, which is why we can easily plot i
   \ifreferencemanual\end{maxipage}\fi
 
   \caption[\propername{Laplacian}-of-\propername{Gaussian}]{\label{fig:laplacian-of-gaussian}%
-    \propername{Laplacian}-of-\propername{Gaussian} function for $\sigma = 0.5$.}
+    Plot of the \propername{Laplacian}-of-\propername{Gaussian} function~$k(R)$,
+    \equationabbr~\ref{equ:laplacian-of-gaussian}, for $\sigma = 0.5$, using $R = \sqrt{x^2 +
+      y^2}$.}
 \end{figure}
 
 

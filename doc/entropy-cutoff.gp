@@ -3,7 +3,7 @@
 
 Lower = 0.05
 Upper = 0.9
-Offset = 5e-3
+Offset = 0
 
 _Epsilon = 1.0 / 1024.0
 Step(X) = X < 0 ? 0 : (X > _Epsilon ? 1 : 1/0)
@@ -20,14 +20,16 @@ EntropyCutoff(Y, LowerCutoff, UpperCutoff) = \
 set grid
 set key right bottom
 set samples 1023
-set xlabel "Y"
+set xlabel "$Y$"
 set xtics 0.2
-set ylabel "EC"
+set ylabel "$Y'$"
 set yrange [-0.1:1.1]
 set ytics 0.2
+
+unset key
 
 
 load DATA_DIR . "/colors.gp"
 
 
-plot [Y = 0:1] Y + Offset, EntropyCutoff(Y, Lower, Upper) - Offset
+plot [Y = 0:1] EntropyCutoff(Y, Lower, Upper)
