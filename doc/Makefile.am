@@ -271,12 +271,12 @@ SHOW_LATEX2HTML_LOG = \
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
             -e 'set output "$@"; set terminal pngcairo $(GNUPLOT_PNG_TERMINAL_OPTIONS)' $<
 
-# `set output' gets the Encapsulated PostScript file's name right.
-# The `mv' command matches the LaTeX envelope's name to it.
+# NOTE: `set output' gets the Encapsulated PostScript file's name
+# right.  The `mv' command matches the LaTeX envelope's name to it.
 %.pstex: $(srcdir)/%.gp
 	$(gnuplot_verbose)$(GNUPLOT) $(GNUPLOT_FLAGS) \
-            -e 'set output "$*.tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && \
-        mv $*.tex $@
+            -e 'set output "$(basename $@).tex"; set terminal epslatex $(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS)' $< && \
+        mv $(basename $@).tex $@
 
 
 %.eps: $(srcdir)/%.dot
@@ -289,6 +289,13 @@ SHOW_LATEX2HTML_LOG = \
             $(CONVERT) png:- -transparent white -resize $$(( ((96 * 1000) / $(PRINT_RESOLUTION)) / 10 ))% $@
 
 
+# ANTICIPATED CHANGE: Add a path via inkscape(1)
+# INKSCAPE = ...
+# %.pstex: $(srcdir)/%.svg
+#         $(INKSCAPE) --without-gui --export-area-drawing --export-latex --export-eps=$(basename $@).eps --file=$<
+#         mv $(basename $@).eps_tex $@
+# Make the dependence on INKSCAPE optional, i.e. keep SVGCONVERT as
+# mandatory converter.
 %.eps: $(srcdir)/%.svg
 	$(svgconvert_verbose)$(SVGCONVERT) $(SVGCONVERT_EPS_FLAGS) --output=$@ $<
 
