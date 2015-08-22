@@ -35,7 +35,7 @@ m4_define(`uml_compressed_layout',
 m4_dnl  Attributes of the `Start' and `Finish' terminal symbols
 
 m4_define(`uml_terminal_color', `black')
-m4_define(`uml_terminal_size', `0.167')
+m4_define(`uml_terminal_size', `0.125')
 
 m4_define(`uml_start',
           `fillcolor = uml_terminal_color,
@@ -92,7 +92,7 @@ m4_define(`uml_note',
 m4_define(`uml_note_edge',
           `dir = none,
            fontname = uml_note_font,
-           fontsize = uml_edge_size,
+           fontsize = uml_edge_font_size,
            penwidth = uml_note_penwidth,
            style = dashed')
 
