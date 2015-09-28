@@ -2,7 +2,7 @@
 
 Patchlevel 4
 
-Released on ???
+Released on September 28, 2015.
 
 
 ** New Commandline Options
@@ -31,7 +31,7 @@ Released on ???
   were rejected.
 
 - [Enblend] Fix a possible domain error followed by a division-by-zero
-  in the seamline optimizer.
+  in the seam-line optimizer.
 
 - [Enblend and Enfuse] Avoid an undeserved warning about incompatible
   colorspaces if they only disagree on their meta-data (e.g. profile
