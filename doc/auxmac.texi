@@ -1,0 +1,105 @@
+@c
+@c Macro Definitions
+@c
+
+@c extended commands
+
+@c Add a title to a DocBook element.
+@macro dbtitle{title}
+@docbook
+\title\
+@end docbook
+@end macro
+
+
+@c Include a raster image.
+@macro rimage{filename, width}
+@ifinfo
+@image{\filename\, \width\}
+@end ifinfo
+@ifhtml
+@image{\filename\, \width\}
+@end ifhtml
+@iftex
+@center@image{\filename\, \width\}
+@end iftex
+@ifdocbook
+@image{\filename\, \width\}
+@end ifdocbook
+@docbook
+@c Yikes!  The DocBook output of makeinfo 4.13a is so broken that we
+@c must supply the closing tag here.
+</figure>
+@end docbook
+@end macro
+
+
+@c Include a vector image in a variety of ways: 1/ The Info format
+@c includes unchanged.  2/ XHTML first tries SVG then PNG in the
+@c ``raster'' subdirectory; if both fail, we leave a textual
+@c tombstone.  Here, the CSS must take care of centering of the
+@c graphic.  3/ TeX and PDFTeX center the graphic.  4/ DocBook?
+@macro vimage{filename}
+@ifinfo
+@image{\filename\}
+@end ifinfo
+@html
+<object data="\filename\.svg" type="image/svg+xml" width="100%" height="100%">
+  <param name="src" value="\filename\.svg" />
+  <object data="raster/\filename\.png" type="image/png">
+    <param name="src" value="raster/\filename\.png" />
+    <p>[Image "<samp><span class="file">\filename\</span></samp>" is
+not displayed, because of lacking <acronym>SVG</acronym> and
+<acronym>PNG</acronym> support.]</p>
+  </object>
+</object>
+@end html
+@iftex
+@center@image{\filename\}
+@end iftex
+@ifdocbook
+@image{\filename\}
+@end ifdocbook
+@docbook
+@c Yikes!  The DocBook output of makeinfo 4.13a is so broken that we
+@c must supply the closing tag here.
+</figure>
+@end docbook
+@end macro
+
+
+@c Operators
+
+@macro plusminus
+@ifinfo
++/-@c
+@end ifinfo
+@html
+&plusmn;
+@end html
+@tex
+\\ifmmode\\pm\\else$\\pm$\\fi%
+@end tex
+@docbook
+&plusmn;
+@end docbook
+@end macro
+
+
+@c Text Fragments
+
+@macro mainpurpose
+@ifinfo
+@strong{Main Purpose}:
+@end ifinfo
+@ifnotinfo
+@strong{Main Purpose: }
+@end ifnotinfo
+@end macro
+
+
+@macro optionsummaryheading
+@need 600          @c ensure we have at least 43pt of vertical space
+@noindent
+@strong{Summary of influential options}
+@end macro
