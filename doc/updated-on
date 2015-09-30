@@ -1,0 +1,324 @@
+#! /usr/bin/env perl
+
+# This file is part of Enblend.
+# Licence details can be found in the file COPYING.
+
+# name:         updated-on
+# synopsis:     show the date of the most recent update to any of a list of files
+# author:       Dr. Christoph L. Spiel
+# perl version: 5.20.2
+
+
+use strict;
+use warnings;
+
+use Carp ();
+use English;
+use File::Basename ();
+use File::stat;
+use FindBin qw($Bin);
+use Getopt::Long;
+use POSIX;
+
+use lib $Bin;
+
+use Quote ();
+
+
+use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 2};
+
+
+sub quote {Quote::gnu_style(@_)}
+
+
+sub quote_list {
+    join(', ', map {quote($_)} @_)
+}
+
+
+sub gm_time {
+    if ($_[0]) {
+        gmtime $_[0];
+    } else {
+        gmtime;
+    }
+}
+
+
+sub local_time {
+    if ($_[0]) {
+        localtime $_[0];
+    } else {
+        localtime;
+    }
+}
+
+
+sub filter_exisiting_files {
+    my @filenames = @_;
+
+    my @result;
+
+    foreach my $filename (@filenames) {
+        if (-e $filename) {
+            push @result, $filename;
+        } else {
+            warn(COMMAND_NAME, ": warning: file ", quote($filename), " does not exist\n");
+        }
+    }
+
+    return @result;
+}
+
+
+sub filesystem_modification_time {
+    my ($options, $filename) = @_;
+
+    my $status = stat $filename;
+    my $modification_time = $status->mtime;
+
+    print STDERR (COMMAND_NAME, ": info: filesystem modification time of ",
+                  quote($filename), " is ",
+                  POSIX::strftime("%Y-%m-%dT%H%M%S", gmtime($modification_time)),
+                  "\n") if $options->{VERBOSE};
+
+    return $modification_time;
+}
+
+
+sub latest_file_modification_time {
+    my ($options, $filenames) = @_;
+
+    my @modification_times = sort(map {filesystem_modification_time($options, $_)} @$filenames);
+
+    return (DB_FS, $modification_times[-1]);
+}
+
+
+sub get_log_date {
+    my $filename = shift;
+
+    if ($OSNAME eq 'MSWin32') {
+        return qx(hg log --limit 1 --template {date} $filename);
+    } else {
+        return qx(hg log --limit 1 --template '{date}' $filename);
+    }
+}
+
+
+# hg help templates
+# hg log --template "{date}\n" ...
+sub scm_modification_time {
+    my ($options, $filename) = @_;
+
+    my $log_date = get_log_date($filename);
+    my ($modification_time, $time_zone) = split(m{[+-]}, $log_date);
+    print STDERR (COMMAND_NAME, ": info: SCM modification time of ",
+                  quote($filename), " is ",
+                  POSIX::strftime("%Y-%m-%dT%H%M%S", gmtime($modification_time)),
+                  "\n") if $options->{VERBOSE};
+
+    return $modification_time;
+}
+
+
+sub is_under_scm {
+    my $directory = shift;
+
+    my $command;
+
+    if ($OSNAME eq 'MSWin32') {
+        $command = qq(cd $directory & hg root >nul 2>&1);
+    } else {
+        $command = qq(cd '$directory';  hg root > /dev/null 2> /dev/null);
+    }
+
+    return (system($command) == 0);
+}
+
+sub latest_scm_modification_time {
+    my ($options, $filenames) = @_;
+
+    my $actual_db = DB_SCM;
+    my %is_under_scm;
+    my @modification_times;
+
+    foreach my $filename (@$filenames) {
+        my $directory = File::Basename::dirname($filename);
+        if (exists $is_under_scm{$directory} && $is_under_scm{$directory}) {
+            push @modification_times, scm_modification_time($options, $filename);
+        } else {
+            if (is_under_scm($directory)) {
+                print STDERR (COMMAND_NAME, ": info: checking for SCM in directory ",
+                              quote($directory), "\n")
+                  if $options->{VERBOSE};
+                push @modification_times, scm_modification_time($options, $filename);
+                $is_under_scm{$directory} = 1;
+            } else {
+                print STDERR (COMMAND_NAME, ": warning: falling back from SCM to file-system for ",
+                              quote($filename), "\n");
+                $actual_db = DB_FS;
+                push @modification_times, filesystem_modification_time($options, $filename);
+                $is_under_scm{$directory} = 0;
+            }
+        }
+    }
+
+    my @sorted_modification_times = sort(grep {defined $_} @modification_times);
+
+    if (@sorted_modification_times) {
+        return ($actual_db, $sorted_modification_times[-1]);
+    } else {
+        return (DB_NONE, $options->{DATETIME_FUNCTION}());
+    }
+}
+
+
+sub parse_requested_db {
+    my ($a_db_id) = @_;
+
+    my $db = lc $a_db_id;
+
+    if ($db eq 'file-system' || $db eq 'fs') {
+        DB_FS;
+    } elsif ($db eq 'source-code-manager' || $db eq 'scm') {
+        DB_SCM;
+    } elsif ($db eq 'none' || $db eq 'n/a') {
+        DB_NONE;
+    } else {
+        warn(COMMAND_NAME, ": warning: unknown database id ", quote($a_db_id), "\n");
+        DB_NONE;
+    }
+}
+
+
+my %expansions =
+  (DB_NONE, ['-', 'none'],
+   DB_FS, ['fs', 'file-system'],
+   DB_SCM, ['scm', 'source-code-manager']);
+
+
+sub override_expansion {
+    my ($override_spec) = @_;
+
+    my ($db_id, $expansions) = split /:/, $override_spec;
+    my ($short_form, $long_form) = split /,/, $expansions;
+    my $db = parse_requested_db($db_id);
+
+    $short_form ||= $expansions{$db}->[0];
+    $long_form ||= $expansions{$db}->[1];
+
+    $expansions{$db} = [$short_form, $long_form];
+}
+
+
+sub expand_db_source {
+    my ($actual_db, $datetime) = @_;
+
+    $actual_db ||= DB_NONE;
+    Carp::croak("internal error: unknown db") unless exists $expansions{$actual_db};
+
+    my $db = $expansions{$actual_db};
+
+    $datetime =~ s#%q#$db->[0]#g;
+    $datetime =~ s#%Q#$db->[1]#g;
+
+    return $datetime;
+}
+
+
+sub show_help {
+    my $options = shift;
+
+    print <<END_OF_HELP;
+Usage: @{[COMMAND_NAME]} [OPTION] FILE ...
+
+Show the date of the most recent update to any FILE with respect to
+GMT unless overridden by @{[quote('--localtime')]}.
+
+Options:
+  -d, --database=SYSTEM    database SYSTEM [@{[quote($options->{DATABASE})]}] to query, where SYSTEM
+                           is either @{[quote_list ('source-code-manager', 'scm', 'file-system', 'fs')]}
+  -f, --format=FORMAT      strftime(3)-like date FORMAT [@{[quote($options->{DATETIME_FORMAT})]}];
+                           in addition @{[quote('%Q')]} expands to the actual database in
+                           long form (file-system, source-code-manager),
+                           and @{[quote('%q')]} to the short form @{[quote_list qw(fs scm)]}
+  -G, --gmtime             base time on GMT [default]
+  -L, --localtime          use local time
+  -O, --override=SPEC      override the output of @{[quote_list('%q', '%Q')]}, where
+                           SPEC ::= SYSTEM:[SHORT-FORM],[LONG-FORM]
+                           is a *single* specification; use multiple times
+                           to override multiple specifications
+
+  -v, --verbose            verbosely report progress
+  -h, --help               show this help screen
+
+Examples:
+  @{[COMMAND_NAME]} --format='%Y-%m-%dT%H%M%S' --localtime *.tex
+  @{[COMMAND_NAME]} --database=scm --format='%Y-%m-%d\$^{\\textrm{%q}}\$' *.gp
+
+END_OF_HELP
+
+    exit 0;
+}
+
+
+sub get_options {
+    my $options = shift;
+
+    Getopt::Long::Configure('no_ignore_case');
+
+    Getopt::Long::GetOptions('d|database=s' => \$options->{DATABASE},
+                             'f|format=s' => \$options->{DATETIME_FORMAT},
+                             'G|gmtime' => sub {$options->{DATETIME_FUNCTION} = \&gm_time},
+                             'L|localtime|local-time' => sub {$options->{DATETIME_FUNCTION} = \&local_time},
+                             'O|override=s' => sub {override_expansion($_[1])},
+                             'v|verbose' => \$options->{VERBOSE},
+                             'h|help' => sub {show_help($options)}) or
+                               warn(COMMAND_NAME, ": problems while parsing options\n");
+}
+
+
+sub show_last_update {
+    my ($options, $filenames) = @_;
+
+    my $db = parse_requested_db($options->{DATABASE});
+    my $actual_db = DB_NONE;
+    my $latest_time = $options->{DATETIME_FUNCTION}();
+
+    if ($db == DB_FS) {
+        ($actual_db, $latest_time) = latest_file_modification_time($options, $filenames);
+    } elsif ($db == DB_SCM) {
+        ($actual_db, $latest_time) = latest_scm_modification_time($options, $filenames);
+    }
+
+    my $datetime = POSIX::strftime(expand_db_source($actual_db, $options->{DATETIME_FORMAT}),
+                                   $options->{DATETIME_FUNCTION}($latest_time));
+
+    print "$datetime\n";
+}
+
+
+sub main {
+    my $options = {DATABASE => 'file-system',
+                   DATETIME_FORMAT => "%Y-%m-%d%q",
+                   DATETIME_FUNCTION => \&gm_time,
+                   VERBOSE => 0};
+
+    get_options($options);
+
+    die(COMMAND_NAME, ": no files given\n",
+        "Try ", quote(COMMAND_NAME . " --help"), " for more information.\n")
+      unless @ARGV;
+    my @filenames = filter_exisiting_files(@ARGV);
+    die(COMMAND_NAME, ": none of files given does exist\n") unless @filenames;
+    if ($options->{VERBOSE} && @filenames < @ARGV) {
+        print STDERR (COMMAND_NAME, ": info: ", scalar @filenames, " of ", scalar @ARGV, " files exist\n");
+    }
+
+    show_last_update($options, \@filenames);
+}
+
+
+main();

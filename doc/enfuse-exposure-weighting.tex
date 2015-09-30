@@ -1,0 +1,664 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Exposure Weighting]{\label{sec:exposure-weighting}%
+  \genidx{weighting!exposure}%
+  \gensee{exposure weighting}{weighting, exposure}%
+  Exposure Weighting}
+
+\optidx{--exposure-optimum}%
+Exposure weighting prefers pixels with a luminance~$Y$ close to the user-chosen optimum value
+(option~\option{--exposure-optimum}, default: \val{val:default-exposure-optimum}) of the
+normalized, real-valued luminance interval~$(0, 1)$.
+
+\genidx{projector!grayscale}%
+\gensee{grayscale projector}{projector, grayscale}%
+\optidx{--gray-projector}%
+\acronym{RGB}-pixels are converted to luminance before using the grayscale projector given by
+\sample{--gray-projector}, which defaults to \code{average}.  Grayscale pixels are identified
+with luminance.
+
+\genidx{luminance interval!normalized}%
+\gensee{normalized luminance interval}{luminance interval, normalized}%
+In the normalized luminance interval 0.0 represents pure black and 1.0 represents pure white
+independently of the data type of the input image.  This is, for a \acronym{JPEG} image the
+luminance~255 maps to 1.0 in the normalized interval and for a 32~bit \acronym{TIFF} picture the
+highest luminance value~4294967295 also maps to 1.0.  The middle of the luminance interval, 0.5,
+is where a neutral gray tone ends up with every camera that had no exposure correction dialed
+in, for example the image of any gray-card or white-card.
+
+The exposure weighting algorithm only looks at a single pixel at a time; the pixel's
+neighborhood is not taken into account.
+
+
+\subsection[Built-In Functions]{\label{sec:built-in-functions}%
+  \genidx{weighting!exposure!built-in}%
+  Built-In Functions}
+
+\genidx{exposure weight function!\code{gauss}}%
+\genidx{exposure weight function!\propername{Gaussian}}%
+Up to \App{} version~4.1 the only weighting function is the \propername{Gaussian}
+\[
+    w_{\mathrm{exp}}(Y) =
+    \exp\left(-\frac{1}{2}
+              \left( \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}} \right)^2\right),
+\]
+\noindent whose maximum position~$Y_{\mathrm{opt}}$ and $width$ are controlled by the command
+line options \option{--exposure-optimum} and~\option{--exposure-width} respectively, where
+$Y_{\mathrm{opt}}$ defaults to \val{val:default-exposure-optimum} and $width$ defaults to
+\val{val:default-exposure-width}.  \figureName~\ref{fig:gaussian} shows some
+\propername{Gaussians}.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{gaussian}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[\propername{Gaussian} weight function]{\label{fig:gaussian}%
+    \App{}'s \propername{Gaussian} function with the parameters \metavar{optimum} = 0.5 and
+    three different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+The options \option{--exposure-optimum}\optidx{--exposure-optimum}
+and~\option{--exposure-width}\optidx{--exposure-width} serve to fine-tune the final result
+without changing the set of input images.  Option~\option{--exposure-optimum} sets the point of
+optimum exposure.  Increasing the \metavar{optimum} makes \App{} prefer lighter pixels,
+rendering the final image lighter, and vice versa.  Option~\option{--exposure-width} defines the
+\metavar{width} of acceptable exposures.  Small values of \metavar{width} penalize exposures
+that deviate from \metavar{optimum} more, and vice versa.
+
+In \App{} version~4.2 several new exposure weight functions have been added.  Select them with
+option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function}
+
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{p{.28\textwidth}lcc}
+    \hline
+    \multicolumn{1}{c|}{Exposure Weight} &
+    \multicolumn{1}{c|}{\metavar{WEIGHT-FUNC.}} &
+    \multicolumn{1}{c|}{Equ.} &
+    \multicolumn{1}{c}{Chart} \\
+    \hline\extraheadingsep
+    \propername{Gaussian} curve (default)%
+    \genidx{exposure weight function!\code{gauss}}%
+    \genidx{exposure weight function!\propername{Gaussian}}
+    & \code{gauss}, \code{gaussian} &
+    \fullref{equ:weight:gauss} &
+    \fullref{fig:gaussian} \\
+    \propername{Lorentz} curve%
+    \genidx{exposure weight function!\code{lorentz}}%
+    \genidx{exposure weight function!\propername{Lorentz} curve}%
+    \genidx{exposure weight function!\propername{Lorentzian}}
+    & \code{lorentz}, \code{lorentzian} &
+    \fullref{equ:weight:lorentz} &
+    \fullref{fig:lorentzian} \\
+    Upper half-wave of a sine%
+    \genidx{exposure weight function!\code{halfsine}}%
+    \genidx{exposure weight function!\code{half-sine}}
+    & \code{halfsine}, \code{half-sine} &
+    \fullref{equ:weight:halfsine} &
+    \fullref{fig:halfsine} \\
+    Full sine-wave shifted upwards by one%
+    \genidx{exposure weight function!\code{fullsine}}%
+    \genidx{exposure weight function!\code{full-sine}}
+    & \code{fullsine}, \code{full-sine} &
+    \fullref{equ:weight:fullsine} &
+    \fullref{fig:fullsine} \\
+    Quartic, or bi-square function%
+    \genidx{exposure weight function!\code{bisquare}}%
+    \genidx{exposure weight function!\code{bi-square}}
+    & \code{bisquare}, \code{bi-square} &
+    \fullref{equ:weight:bisquare} &
+    \fullref{fig:power}
+  \end{tabular}
+
+  \caption[Exposure weight functions]{\label{tab:weight-functions}%
+    \genidx{exposure weight functions}%
+    Available, compiled-in exposure weight functions.}
+\end{table}
+
+
+\propername{Gaussian} and \propername{Lorentzian} behave like $1 - z^2$ around the optimum.
+However for large $|z|$ the \propername{Gaussian} weight rolls off like $\exp(-z^2/2)$ and the
+\propername{Lorentzian} only as $z^{-2}$.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{lorentzian}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[\propername{Lorentzian} function]{\label{fig:lorentzian}%
+    \App{}'s \propername{Lorentzian} function with the parameters $\metavar{optimum} = 0.5$ and
+    three different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Both, the \propername{Gaussian} and the \propername{Lorentzian} are easy to use, because they do
+not go exactly to zero.  Thus, \App{} can select ``better'' pixels far away from the chosen
+optimum.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{halfsine}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Half-Sine function]{\label{fig:halfsine}%
+    \App{}'s Half-Sine function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{fullsine}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Full-Sine function]{\label{fig:fullsine}%
+    \App{}'s Full-Sine function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Again, Half-Sine and Full-Sine behave like $1 - z^2$ around the optimum, like
+\propername{Gaussian} and \propername{Lorentzian}.  However for large $|z|$ they both are
+exactly zero.  The difference is how they decrease just before they reach zero.  Half-Sine
+behaves like $z - z'$ and Full-Sine like $(z - z'')^2$, where $z'$ and $z''$ are the respective
+zeros.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{power}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Bi-Square function]{\label{fig:power}%
+    \App{}'s Bi-Square function with the parameters $\metavar{optimum} = 0.5$ and three
+    different \metavar{width}s: 0.1, 0.2, and~0.4.}
+\end{figure}
+
+
+Bi-Square is the only predefined function that behaves like $1 - z^4$ around the optimum.
+
+The weight functions Half-Sine, Full-Sine, and Bi-Square are more difficult to use, because they
+yield exactly zero if the normalized luminance of a pixel is far enough away from the optimum.
+This can lead to pathologies if the luminances of the same pixel position in all $N$ input
+images are assigned a weight of zero.  For all-zero weights \App{} falls back to weighing
+equally.  This is, each pixel gets a weight of $\slfrac{1}{N}$, which may or may not be the
+desired result.  However, if the \metavar{width} is chosen so large that the weight never
+vanishes or the imput images span a large enough range of luminances for each and every pixel,
+the problem is circumnavigated.
+
+Another way of cutting off underexposed or overexposed pixels is to use
+option~\option{--exposure-cutoff},\optidx{--exposure-cutoff} which has the additional benefit of
+allowing to choose upper and lower cutoff separately.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{exposure-weights}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Comparison of exposure weight functions]{\label{fig:exposure-weights}%
+    Comparison of all of \App{}'s built-in exposure weight functions~$w(Y)$ for the default
+    values of $\metavar{optimum} = 0.5$ and $\metavar{width} = 0.2$.  Note that all functions
+    intersect at $w = \slfrac{1}{2}$, this is, they share the same \acronym{FWHM}.}
+\end{figure}
+
+
+\figureName~\ref{fig:exposure-weights} compares all available exposure weight functions for the
+same parameters, namely their defaults.  They all intersect at $w = \slfrac{1}{2}$ independently
+of \metavar{optimum} or \metavar{width}, making it simple to just try them out without
+fundamentally changing brightness.
+
+
+\subsection[User-Defined Functions]{\label{sec:user-defined-functions}%
+  \genidx{weighting!exposure!user-defined}%
+  User-Defined Exposure Weighting Functions}
+
+\genidx{loading!dynamic}%
+\gensee{dynamic loading}{loading, dynamic}%
+\genidx{shared object}%
+\gensee{object!shared}{shared object}%
+\genidx{dynamic library}%
+\gensee{library!dynamic}{dynamic library}%
+On operating systems, where dynamic loading of code is possible and for \App{} executables
+compiled with dynamic-linking support (see Section~\fullref{sec:finding-out-details} on how to
+check this feature), \App{} can work with user-defined exposure weighting functions, passed with
+the long form of option~\option{--exposure-weight-function}.  It loads the exposure weight
+function identifed by \metavar{SYMBOL} from a \metavar{SHARED-OBJECT}:
+
+\begin{literal}
+  --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
+  \metavar{SYMBOL}\optional{:\feasiblebreak
+    \metavar{ARGUMENT}\optional{:\dots}}%
+  \optidx{--exposure-weight-function}
+\end{literal}
+
+Notes on the required arguments of the option:
+
+\begin{itemize}
+  \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+  \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
+         {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
+\item
+  \metavar{SHARED-OBJECT} is a file and as such requires a path, unless it resides in the same
+  directory as the \App{} binary.  Neither any system-wide search paths as, for example,
+  \envvar{LD\_LIBRARY\_PATH}, nor any \App-specific one are effective in the search for
+  \metavar{SHARED-OBJECT}.
+
+\item
+  There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable
+  for \metavar{SYMBOL} without knowledge of source code of \metavar{SHARED-OBJECT}.
+\end{itemize}
+
+
+\subsubsection[Prerequisites]{\label{sec:prerequisites}%
+  \genidx{weighting!exposure!prerequisites}%
+  Prerequisites}
+
+To use a home-grown exposure-weight function several prerequisites must be met.  On the software
+side
+
+\begin{enumerate}
+\item
+  The operating system allows loading additional code during the execution of an application.
+
+  \genidx{dynamic linking support}
+\item
+  \App{} is compiled with the extra feature ``dynamic linking support''.
+
+\item
+  Either
+
+  \begin{enumerate}
+  \item
+    The same compiler that compiled \App{} is available or at least
+
+  \item
+    A compiler that produces compatible object code to the compiler that compiled \App{}.
+  \end{enumerate}
+
+  The latter is called \acronym{ABI}-compatible.  An example for a pair of
+  \acronym{ABI}-compatible compilers is \acronym{GNU}'s~\command{g++} and
+  \propername{Intel's}~\command{icpc}.
+
+  To find out which compiler built \emph{your} version of \app{} use
+  option~\option{--show-software-components}.\optidx{--show-software-components}
+
+\item
+  The base-class header file \filename{exposure\_weight\_base.h} is available.
+\end{enumerate}
+
+Between chair and keyboard:
+
+\begin{itemize}
+\item
+  A firm understanding of weighting pixels in the fusion process and in particular in the
+  cumulative ascription of different weights.
+
+\item
+  A basic understanding of object-oriented programming paired with the ability to compile and
+  link single-source C++-files.
+
+\item
+  A realistic expectation of the limitations of tailoring weight functions.
+\end{itemize}
+
+
+\subsubsection[Coding Guidelines]{\label{sec:coding-guidelines}%
+  \genidx{coding guidelines}%
+  Coding Guidelines}
+
+\begin{enumerate}
+\item
+  \begin{sloppypar}
+    Derive the weight function from the supplied C++ base-class~\code{ExposureWeight}, which is
+    defined in header file~\filename{exposure\_weight\_base.h}.  It resides in the
+    \filename{src}~sub-directory of the source distribution and -- for a correctly installed
+    package -- in directory \filename{\val*{val:DATAROOTDIR}/\feasiblebreak
+      enfuse/\feasiblebreak xweight}.
+  \end{sloppypar}
+
+\item
+  At least override method~\code{weight}.
+
+  \begin{itemize}
+  \item
+    Domain: define \code{weight} for normalized luminance values~\metavar{y} from zero to one
+    including both ends.
+
+  \item
+    Image: Let the \code{weight}s fall in the interval from zero to one.
+
+    \App{} checks this property and refuses to continue if the weight is outside the required
+    range.
+
+  \item
+    (Optionally) Rescale the \metavar{WIDTH} of the function to match the \acronym{FWHM} of
+    \App{}'s original Gauss curve.  The macro~\code{FWHM\_GAUSSIAN} is defined exactly to this
+    end.
+  \end{itemize}
+
+\item
+  If necessary, rewrite methods~\code{initialize} and \code{normalize}, too.
+
+\item
+  \App{} never calls \code{initialize} in an \acronym{OpenMP} parallel execution environment.
+  However, \acronym{OpenMP}-enabled versions of \App{} call \code{normalize} and \code{weight}
+  in parallel sections.
+
+  Technically, the functors which the user-defined weight functions are part of are
+  copy-constructed for each \acronym{OpenMP} worker thread.  Thus, there is no contention within
+  the \code{ExposureWeight} sub-classes.  Although, if \code{normalize} or \code{weight} access
+  a shared resource these accesses must be protected by serialization instructions.  One
+  solution is to use \acronym{OpenMP} directives, like for example,
+
+  \begin{cxxlisting}
+#pragma omp critical
+{
+    std::cout << "foobar!" << std::endl;
+}
+  \end{cxxlisting}
+
+  Experienced hackers will recognize occasions when to prefer other constructs, like, for
+  example \code{\#pragma omp atomic} or simply an atomic data-type (e.g.~\code{sig\_atomic\_t}
+  from \filename{signal.h}).
+
+  Remember to compile all modules that use \acronym{OpenMP} directives with the
+  (compiler-specific) flags that turn on \acronym{OpenMP}.  For \command{g++} this is
+  \sample{-fopenmp} and for \command{icpc} it is \sample{-fopenmp} or \sample{-openmp}.
+
+\item
+  To raise an exception associated with the derived, user-defined exposure-weight class, throw
+  \code{ExposureWeight::error}.  \App{} catches these exceptions at an enclosing scope, displays
+  \metavar{a\_message}, and then aborts.
+
+\item
+  Define an object of the derived class.  This creates the \metavar{SYMBOL} to refer to at the
+  \App{} command line.
+
+  The actual signature of the constructor (default, two-argument, \dots) does not matter,
+  because \App{} \emph{always} invokes \code{initialize} before calling any other method of a
+  user-defined \code{ExposureWeight} sub-class.  Method~\code{initialize} sets (read:
+  overwrites) \metavar{optimum} and \metavar{width} and ensures they are within the required
+  parameter range.
+\end{enumerate}
+
+\exampleName~\ref{ex:simple-dynamic-exposure-weight-function} shows the C++-code of a suitable
+extension.  If \App{} has been compiled with support for user-defined weight functions, the
+examples presented here should have been duplicated in
+directory~\filename{\val*{val:DATAROOTDIR}/enfuse/xweight} along with a \acronym{GNU}-Makefile
+called \filename{Makefile.userweight}.
+
+
+\begin{exemplar}[htbp]
+  \begin{maxipage}
+    \begin{cxxlisting}
+#include <cmath>                     // fabs()
+
+#include "exposure_weight_base.h"    // FWHM_GAUSSIAN, ExposureWeight
+
+struct Linear : public ExposureWeight {
+    void initialize(double y_optimum, double width_parameter,
+                    const argument_list_t& argument_list) override {
+        ExposureWeight::initialize(y_optimum,
+                                   width_parameter * FWHM_GAUSSIAN,
+                                   argument_list);
+    }
+
+    double weight(double y) const override {
+        const double z = fabs(normalize(y));
+        return z <= 1.0 ? 1.0 - z : 0.0;
+    }
+};
+
+Linear linear;
+    \end{cxxlisting}
+  \end{maxipage}
+
+  \caption[Simple dynamic exposure weight function]{%
+    \label{ex:simple-dynamic-exposure-weight-function}%
+    A dynamic exposure weight function that defines a ``roof-top''.  The natural width is
+    exactly one, so we override method~\code{initialize} to rescale \metavar{WIDTH}, passed in
+    as \code{width\_parameter}, by multiplying with \code{FWHM\_GAUSSIAN} to get the same width
+    as the Gaussian.}
+\end{exemplar}
+
+
+As the extension language is C++, we can write templated families of functions, like
+\exampleName~\ref{ex:templated-dynamic-exposure-weight-function} demonstrates.
+
+
+\begin{exemplar}[htbp]
+  \begin{maxipage}
+    \begin{cxxlisting}
+#include <algorithm>              // std::max()
+#include <cmath>                  // M_LN2, exp(), fabs()
+
+#include "exposure_weight_base.h" // FWHM_GAUSSIAN, ExposureWeight
+
+template <int n> double ipower(double x) {return x * ipower<n - 1>(x);}
+template <> double ipower<0>(double) {return 1.0;}
+
+template <int n> struct TemplatedPower : public ExposureWeight {
+    void initialize(double y_optimum, double width,
+                    const argument_list_t& argument_list) override {
+        const double fwhm = 2.0 / exp(M_LN2 / static_cast<double>(n));
+        ExposureWeight::initialize(y_optimum,
+                                   width * FWHM_GAUSSIAN / fwhm,
+                                   argument_list);
+    }
+
+    double weight(double y) const override {
+        return std::max(1.0 - ipower<n>(fabs(normalize(y))), 0.0);
+    }
+};
+
+TemplatedPower<2> tpower2;
+TemplatedPower<3> tpower3;
+TemplatedPower<4> tpower4;
+    \end{cxxlisting}
+  \end{maxipage}
+
+  \caption[Templated dynamic exposure weight function]{%
+    \label{ex:templated-dynamic-exposure-weight-function}%
+    The templated class~\code{TemplatedPower} allows to create a weight function for arbitrary
+    positive exponents~\code{n}.  In particular, \code{TemplatedPower<4>} duplicates the
+    built-in exposure-weight function~\code{bisquare}.}
+\end{exemplar}
+
+
+The last example, \ref{ex:variable-dynamic-exposure-weight-function}, shows a weight function
+that accesses an extra \metavar{ARGUMENT} passed in with \option{--exposure-weight-function}.  A
+class like \code{VariablePower} allows full control over the exponent at the command line
+including fractional exponents thereby generalizing both of the previous examples.
+
+
+\begin{exemplar}[htbp]
+  \begin{maxipage}
+    \begin{cxxlisting}
+#include <algorithm>              // std::max()
+#include <cerrno>                 // errno
+#include <cmath>                  // M_LN2, exp(), fabs(), pow()
+
+#include "exposure_weight_base.h" // FWHM_GAUSSIAN, ExposureWeight
+
+
+class VariablePower : public ExposureWeight {
+    typedef ExposureWeight super;
+
+public:
+    void initialize(double y_optimum, double width,
+                    const argument_list_t& argument_list) override {
+        if (argument_list.empty()) {
+            exponent = 2.0;
+        } else {
+            char* tail;
+            errno = 0;
+            exponent = strtod(argument_list[0].c_str(), &tail);
+            if (*tail != 0 || errno != 0) {
+                throw super::error("non-numeric exponent");
+            }
+            if (exponent <= 0.0 || exponent >= 10.0) {
+                throw super::error("exponent out of range ]0, 10]");
+            }
+        }
+
+        const double fwhm = 2.0 / exp(M_LN2 / exponent);
+        super::initialize(y_optimum, width * FWHM_GAUSSIAN / fwhm,
+                          argument_list);
+    }
+
+    double weight(double y) const override {
+        return std::max(1.0 - pow(fabs(normalize(y)), exponent), 0.0);
+    }
+
+private:
+    double exponent;
+};
+
+VariablePower vpower;
+    \end{cxxlisting}
+  \end{maxipage}
+
+  \caption[Dynamic exposure weight function with extra arguments]{%
+    \label{ex:variable-dynamic-exposure-weight-function}%
+    Dynamic exposure weight function that accesses the first extra argument from the tuple of
+    arguments passed with option~\option{--exposure-weight-function}.}
+\end{exemplar}
+
+
+\subsubsection[Performance Considerations]{\label{sec:performance-considerations}%
+  \genidx{performance considerations}%
+  Performance Considerations}
+
+Exposure weighting objects are created and destroyed only $O(1)$~times.  Thus,
+method~\code{initialize} could be used to perform all kinds of computationally expensive tasks.
+However, methods~\code{normalize} and \code{weight} are called for every pixel in each of the
+input images.  Therefore, if performance of the weight function is a problem, these two
+functions are the prime candidates for optimization.
+
+
+\subsubsection[Compiling, Linking, and Loading]{\label{sec:compiling-linking-loading}%
+  Compiling, Linking, and Loading}
+
+\begin{restrictedmaterial}{Linux}
+  \noindent Compile and link using the \acronym{GNU} compiler for example with
+
+  \begin{literal}
+    g++ -std=c++11 \bslash \\
+    ~~~~-O2 -fpic -I<PATH-TO-BASE-CLASS-HEADER> \bslash \\
+    ~~~~-shared -Wl,-soname,dynexp.so \bslash \\
+    ~~~~-o dynexp.so \bslash \\
+    ~~~~dynexp.cc
+  \end{literal}
+
+  The important options are
+
+  \begin{codelist}
+  \item[\option{-fpic}]\itemend
+    Instruct the compiler's code-generator to produce position\hyp{}independent code
+    (\acronym{PIC}), which is suitable for a shared object.  Some systems require \sample{-fPIC}
+    instead of \sample{-fpic}.
+
+  \item[\option{-shared}]\itemend
+    Tell the linker to create a shared object instead of the default executable.  On some
+    systems, the library must be blessed, buy passing an shared-object name (\option{soname})
+    directly to the linker (\option{-Wl}).
+
+    Of course more than one object file can be linked into a single shared object.
+  \end{codelist}
+
+  Finally, the weight function can be selected by its \metavar{SYMBOL}~name in the
+  \metavar{SHARED-OBJECT}.  The function has access to additional \metavar{ARGUMENT}s passed in
+  with the option.\footnote{Build-in weight functions never take additional arguments.}
+
+  \begin{literal}
+    \app{} --exposure-weight-function=dynexp.so:linear\dots
+  \end{literal}
+\end{restrictedmaterial}
+
+\medskip
+
+\begin{restrictedmaterial}{Windows}
+  \noindent On Windows the creation of shared objects -- or dynamic link libraries
+  (\acronym{DLL}~files) as they are called here -- has been tested with the \acronym{MinGW}
+  compiler chain and with MS-Visual~C++~2012.
+
+  \begin{itemize}
+  \item
+    Compile and link using the \acronym{MinGW} compiler with
+
+    \begin{literal}
+      g++ -g -O2 -I<PATH-TO-BASE-CLASS-HEADER> -c dynexp.cc \\
+      g++ -g -shared -Wl,-soname,dynexp.dll -o dynexp.dll dynexp.o
+    \end{literal}
+
+    For details see the explanation for the \acronym{GNU} compiler above.  Windows neither
+    requires options \option{-fpic} nor~\option{-fPIC}.
+
+  \item
+    When using the MS-Visual~C++~compiler, you need to explicitly export \metavar{SYMBOL}.
+    There are two possiblities to achieve this.  Use only one variant, not both at the same
+    time.
+
+    \begin{enumerate}
+    \item
+      Either use \code{"C"}~linkage and define the object using the construction
+      \code{\_\_declspec(dllexport)}.  For
+      \exampleName~\ref{ex:simple-dynamic-exposure-weight-function} the object definition has to
+      be extended to
+
+      \begin{cxxlisting}
+extern "C"
+{
+  __declspec(dllexport) Linear linear;
+}
+      \end{cxxlisting}
+
+    \item
+      Or, alternatively, create a module-definition file (\filename{.def}) and pass this file to
+      the linker (in: \guielement{Project Properties}, \guielement{Linker}, \guielement{Module
+        Definition File}).  For \exampleName~\ref{ex:simple-dynamic-exposure-weight-function},
+      this file would look like
+
+      \begin{literal}
+        LIBRARY dynexp \\
+        EXPORTS \\
+        ~~~~~~~~linear @@1 \\
+      \end{literal}
+    \end{enumerate}
+  \end{itemize}
+
+  Finally, the weight function can be selected by its \metavar{SYMBOL} in the dynamic link
+  library.
+
+  \begin{literal}
+    \app{} --exposure-weight-function=dynexp.dll:linear\dots
+  \end{literal}
+\end{restrictedmaterial}
+
+\begin{optionsummary}
+\item[--exposure-optimum] Section~\fullref{opt:exposure-optimum}
+\item[--exposure-weight-function] Section~\fullref{opt:exposure-weight-function}
+\item[--exposure-weight] Section~\fullref{opt:exposure-weight}
+\item[--exposure-width] Section~\fullref{opt:exposure-width}
+\item[--gray-projector] Section~\fullref{opt:gray-projector}
+\end{optionsummary}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

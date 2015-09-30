@@ -1,0 +1,222 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: fig2dev Version 3.2 Patchlevel 5e -->
+<!-- CreationDate: Wed Jul 29 15:43:45 2015 -->
+<!-- Magnification: 1.050 -->
+<svg	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="4.7in" height="2.7in"
+	viewBox="1331 614 5698 3225">
+<desc> ---BEGIN-TEXT--- </desc>
+<desc>     window size = 3             window size = 5 </desc>
+<desc>  </desc>
+<desc>      |   |   |   |           |   |   |   |   |   | </desc>
+<desc>     -+---+---+---+-         -+---+---+---+---+---+- </desc>
+<desc>      | N | N | N |           | N | N | N | N | N | </desc>
+<desc>     -+---+---+---+-         -+---+---+---+---+---+- </desc>
+<desc>      | N | C | N |           | N | N | N | N | N | </desc>
+<desc>     -+---+---+---+-         -+---+---+---+---+---+- </desc>
+<desc>      | N | N | N |           | N | N | C | N | N | </desc>
+<desc>     -+---+---+---+-         -+---+---+---+---+---+- </desc>
+<desc>      |   |   |   |           | N | N | N | N | N | </desc>
+<desc>                             -+---+---+---+---+---+- </desc>
+<desc>                              | N | N | N | N | N | </desc>
+<desc>                             -+---+---+---+---+---+- </desc>
+<desc>                              |   |   |   |   |   | </desc>
+<desc> ---END-TEXT--- </desc>
+<g style="stroke-width:.025in; fill:none">
+<!-- Line -->
+<polyline points="1343,2323
+3121,2323
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="1343,2732
+3121,2732
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="1343,3143
+3121,3143
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="1343,1912
+3121,1912
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="2437,1639
+2437,3416
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="2847,1639
+2847,3416
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="2027,1639
+2027,3416
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="1616,1639
+1616,3416
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,2323
+7017,2323
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,2732
+7017,2732
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,3143
+7017,3143
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,1912
+7017,1912
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="5513,1229
+5513,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="5923,1229
+5923,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="6333,1229
+6333,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="6744,1229
+6744,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,1502
+7017,1502
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4419,3553
+7017,3553
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="5103,1229
+5103,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Line -->
+<polyline points="4693,1229
+4693,3826
+" style="stroke:#000000;stroke-width:8;
+stroke-linejoin:miter; stroke-linecap:butt;
+"/>
+<!-- Text -->
+<text xml:space="preserve" x="1822" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="1822" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="1822" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2642" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2642" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2642" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="4898" y="1776" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="4898" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="4898" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="4898" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="4898" y="3416" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5309" y="1776" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5309" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5309" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5309" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5309" y="3416" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6129" y="1776" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6129" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6129" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6129" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6129" y="3416" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6538" y="1776" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6538" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6538" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6538" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="6538" y="3416" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2232" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2232" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2232" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">C</text>
+<!-- Text -->
+<text xml:space="preserve" x="5650" y="818" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">window size: 5</text>
+<!-- Text -->
+<text xml:space="preserve" x="5718" y="1776" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5718" y="2185" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5718" y="2596" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">C</text>
+<!-- Text -->
+<text xml:space="preserve" x="5718" y="3006" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="5718" y="3416" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">N</text>
+<!-- Text -->
+<text xml:space="preserve" x="2300" y="818" fill="#000000"  font-family="AvantGarde" font-style="normal" font-weight="normal" font-size="177" text-anchor="middle">window size: 3</text>
+</g>
+</svg>

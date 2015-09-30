@@ -1,0 +1,43 @@
+digraph PhotographicWorkflow
+{
+    graph [uml_activity_graph]
+
+    node [uml_activity]
+    _start [uml_start]
+    take [label = "Take Images"]
+    if_raw_branch [uml_branch]
+    convert [label = "Convert Images"]
+    if_raw_merge [uml_merge]
+    align [label = "Align Images"]
+    combine [label = "Combine Images"]
+    postprocess [label = "Postprocess"]
+    _finish [uml_finish]
+
+    node [uml_note]
+    convert_note [label = "DCRaw, UFRaw, etc."]
+    align_note [label = "Hugin, PanoTools"]
+    combine_note [label = "Enblend, Enfuse"]
+    postprocess_note [label = "The Gimp et al."]
+
+    {rank = same; convert; convert_note}
+    {rank = same; align; align_note}
+    {rank = same; combine; combine_note}
+    {rank = same; postprocess; postprocess_note}
+
+    edge [uml_edge]
+    _start -> take
+    take -> if_raw_branch
+    if_raw_branch -> convert [taillabel = " [raw] ", weight = 10]
+    if_raw_branch -> if_raw_merge [taillabel = " [else] "]
+    convert -> if_raw_merge [weight = 10]
+    if_raw_merge -> align
+    align -> combine
+    combine -> postprocess
+    postprocess -> _finish
+
+    edge [uml_note_edge]
+    convert -> convert_note
+    align -> align_note
+    combine -> combine_note
+    postprocess -> postprocess_note
+}

@@ -1,0 +1,63 @@
+digraph InternalEnblendFlow
+{
+    graph [uml_activity_graph, uml_compressed_layout]
+
+    node [uml_activity]
+    _start [uml_start]
+    load_next_image [label = "Load next image"]
+    if_load_masks_branch [uml_branch]
+    if_coarse_mask_branch [uml_branch]
+    scale_down_mask [label = "Scale down mask"]
+    if_graphcut_branch [uml_branch]
+    compute_nft [label = "Nearest-Feature Transform\n(NFT)"]
+    compute_graphcut [label = "Graph Cut\n(GC)"]
+    if_optimize_branch [uml_branch]
+    run_optimizers [label = "Optimizer Chain..."]
+    if_save_masks_branch [uml_branch]
+    save_mask [label = "Write generated,\npossibly optimized mask"]
+    if_save_mask_and_output_branch [uml_branch]
+    load_mask [label = "Read matching,\nexternal mask"]
+    if_load_masks_AND_optimize_merge [uml_merge]
+    run_blender [label = "Blend using multi-resolution\nspline algorithm;\n--levels"]
+    _finish [uml_finish]
+
+    node [uml_note]
+    load_next_image_note [label = "Image includes its mask"]
+    initial_mask_note [label = "Initial mask"]
+    final_mask_note [label = "Final mask"]
+
+    {rank = same; load_next_image; load_next_image_note}
+    {rank = same; compute_nft; compute_graphcut; initial_mask_note}
+    {rank = same; if_load_masks_AND_optimize_merge; final_mask_note}
+
+    edge [uml_edge]
+    _start -> load_next_image
+    load_next_image -> if_load_masks_branch
+    if_load_masks_branch -> if_coarse_mask_branch [taillabel = " [default] ", weight = 10]
+    if_coarse_mask_branch -> scale_down_mask [taillabel = " [default]\n--coarse-mask ", weight = 10]
+    if_coarse_mask_branch -> if_graphcut_branch [taillabel = " --fine-mask "]
+    scale_down_mask -> if_graphcut_branch [weight = 10]
+    if_load_masks_branch -> load_mask [taillabel = " --load-masks "]
+    load_mask -> if_load_masks_AND_optimize_merge
+    if_graphcut_branch -> compute_nft [taillabel = " --primary-seam-generator=\nnearest-feature-transform "]
+    compute_nft -> if_optimize_branch
+    if_graphcut_branch -> compute_graphcut [taillabel = "[default]\n --primary-seam-generator= \ngraph-cut",
+                                            weight = 10]
+    compute_graphcut -> if_optimize_branch
+    if_optimize_branch -> run_optimizers [taillabel = " [default]\n--optimize ", weight = 10]
+    if_optimize_branch -> if_save_masks_branch [taillabel = " --no-optimize "]
+    run_optimizers -> if_save_masks_branch [weight = 10]
+    if_save_masks_branch -> if_load_masks_AND_optimize_merge [taillabel = " [default] ", weight = 10]
+    if_save_masks_branch -> save_mask [taillabel = " --save-masks "]
+    save_mask -> if_save_mask_and_output_branch
+    if_save_mask_and_output_branch -> run_blender [taillabel = " --output "]
+    if_save_mask_and_output_branch -> _finish
+    if_load_masks_AND_optimize_merge -> run_blender
+    run_blender -> _finish
+
+    edge [uml_note_edge]
+    load_next_image -> load_next_image_note
+    #-- compute_nft -> initial_mask_note
+    compute_graphcut -> initial_mask_note
+    if_load_masks_AND_optimize_merge -> final_mask_note
+}

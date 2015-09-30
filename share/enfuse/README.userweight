@@ -1,0 +1,89 @@
+This directory contains all example exposure weight functions
+mentioned in the User Manual.  Just as a quick refresher, remember
+that all of these are loaded with
+        --exposure-weight-function=SHARED-OBJECT:SYMBOL[:ARGUMENT[:...]]
+
+
+* linear.cc
+  This is a very simple weight function with a roof-like shape.
+  Function "linear" does not take any extra argument.
+
+* fixed_power.cc
+  This module defines three power-weights "power2", "power3" and
+  "power4" in the form (1 - Y^n), where n is 2, 3, and 4.  All are
+  derived from the same template class FixedPower.  None of the
+  functions take any extra argument.
+
+* templated_power.cc
+  This module duplicates the functionality of "fixed_power.cc" to
+  define the weights "tpower2", "tpower3" and "tpower4".  However, it
+  uses a recursively evaluating template class to implement the
+  integral power function.  Again, none of the functions take any
+  extra argument.
+
+* variable_power.cc
+  Here, we define the single weight function "vpower", which
+  implements (1 - Y^N), where N as a free parameter.  Of course the
+  functionality is a super-set of "power#", and "tpower#", allowing
+  even for fractional exponents N.
+
+* sinc.cc
+  This module defines two weight function based on the truncated,
+  scaled sinc function:
+                 / sin(Pi * Y) / (Pi * Y)  for Y <> 0 and |Y| < 1
+      sinc(Y) := |           1             for Y == 0
+                 \           0             for |Y| >= 1
+  The simple weight "sinc" takes no extra parameters.
+
+  The second function, "power_sinc", implements sinc(Y^N)^M, where N
+  and M act as free parameters.
+
+- tabular.cc
+  Linearly interpolate weights between given (Y, w)-pairs.  The pairs
+  are either defined in a file (mode: "file") of one pair per line or
+  directly at the command line (mode: "immediate").
+
+  In "file"-mode, separate (Y, w)-pairs by white-space.  Empty lines,
+  lines of only white-space, and everything after the '#' comment
+  character is skipped.  Example:
+
+    # Trivial example of a weight function defined by isolated data points.
+    0.0     0.0
+    0.25    0.125
+    0.5     1.0
+    0.75    0.25
+    1.0     0.0
+
+  In "immediate"-mode pass one space-separated pair per element like
+    '0.0 0.0 : 0.25 0.125 : 0.5 1.0 : 0.75 0.25 : 1.0 0.0'
+  or slash-separated pairs
+    '0.0/0.0 : 0.25/0.125 : 0.5/1.0 : 0.75/0.25 : 1.0/0.0'
+  Squeezing out the white-space also saves us quoting against Shell
+  processing:
+    0.0/0.0:0.25/0.125:0.5/1.0:0.75/0.25:1.0/0.0
+
+
+Use "Makefile.userweight" as a start to build the examples or your own
+code.
+
+To inspect any exposure-weight function (not just dynamically loaded)
+pass
+        --parameter=dump-exposure-weight-function
+to Enfuse.  This instructs Enfuse to evaluate at 21 [default]
+equidistant points in the interval 0..1, print a three-column report
+to standard output and exit.  Column #1 is the integral point index
+starting at zero, column #2 is the point at which the function was
+evaluated ("normalized luminance coordinate") and the last column
+shows the weight.
+
+Use
+        --parameter=exposure-weight-function-points=101
+
+to set the number N (10 <= N <= 10000) of points in the dump.  As
+`--parameter' options always can be collapsed, the short form is
+        --parameter=dump-exposure-weight-function:exposure-weight-function-points=101
+
+Visualize the weight function e.g. with the help of Gnuplot
+        enfuse --parameter=dump-exposure-weight-function:exposure-weight-function-points=101 > weight.data
+        gnuplot
+gnuplot> plot "weight.data" using 2:3

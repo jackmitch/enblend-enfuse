@@ -1,0 +1,97 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{cp{.8\linewidth}}
+    \hline
+    \multicolumn{1}{c|}{Format} & \multicolumn{1}{c}{Interpretation} \\
+    \hline\extraheadingsep
+    \genidx{mask!template character!\%@\sample{\%}}\code{\%\%} &
+    Produces a literal \sample{\%}-sign. \\
+
+
+    \genidx{mask!template character!i@\sample{i}}\code{\%i} & Expands to the index of the mask
+    file starting at zero.  \sample{\%i} allows for setting a pad character or a width
+    specification:
+
+    \begin{literal}
+      \% \metavar{PAD} \metavar{WIDTH} i
+    \end{literal}
+
+    \metavar{PAD} is either \sample{0} or any punctuation character; the default pad character
+    is \sample{0}.  \metavar{WIDTH} is an integer specifying the minimum width of the number.
+    The default is the smallest width given the number of input images, this is 1 for
+    2--9~images, 2 for 10--99~images, 3 for 100--999~images, and so on.
+
+    Examples: \sample{\%i}, \sample{\%02i}, or \sample{\%\_4i}. \\
+
+
+    \genidx{mask!template character!n@\sample{n}}\code{\%n} & Expands to the number of the mask
+    file starting at one. Otherwise it behaves identically to \sample{\%i}, including pad
+    character and width specification. \\
+
+
+    \genidx{mask!template character!p@\sample{p}}\code{\%p} & This is the full name (path,
+    filename, and extension) of the input file associated with the mask.
+
+    Example: If the input file is called \filename{/home/luser/snap/img.jpg}, \sample{\%p}
+    expands to \filename{/home/luser/snap/img.jpg}, or shorter: \sample{\%p} \result{}
+    \filename{/home/luser/snap/img.jpg}. \\
+
+
+    \genidx{mask!template character!P@\sample{P}}\code{\%P} & This is the full name of the
+    output file. \\
+
+
+    \genidx{mask!template character!d@\sample{d}}\code{\%d} & Is replaced with the directory
+    part of the associated input file.
+
+    Example (cont.): \sample{\%d} \result{} \filename{/home/luser/snap}. \\
+
+
+    \genidx{mask!template character!D@\sample{D}}\code{\%D} & Is replaced with the directory
+    part of the output file. \\
+
+
+    \genidx{mask!template character!b@\sample{b}}\code{\%b} & Is replaced with the non-directory
+    part (often called ``basename'') of the associated input file.
+
+    Example (cont.): \sample{\%b} \result{} \filename{img.jpg}. \\
+
+
+    \genidx{mask!template character!B@\sample{B}}\code{\%B} & Is replaced with the non-directory
+    part of the output file. \\
+
+
+    \genidx{mask!template character!f@\sample{f}}\code{\%f} & Is replaced with the filename
+    without path and extension of the associated input file.
+
+    Example (cont.): \sample{\%f} \result{} \filename{img}. \\
+
+
+    \genidx{mask!template character!F@\sample{F}}\code{\%F} & Is replaced with the filename
+    without path and extension of the output file. \\
+
+
+    \genidx{mask!template character!e@\sample{e}}\code{\%e} & Is replaced with the extension
+    (including the leading dot) of the associated input file.
+
+    Example (cont.): \sample{\%e} \result{} \filename{.jpg}. \\
+
+
+    \genidx{mask!template character!E@\sample{E}}\code{\%E} & Is replaced with the extension of
+    the output file.
+  \end{tabular}
+
+  \caption[Mask template characters]{\label{tab:mask-template-characters}%
+    \genidx[\summarylocation]{mask!template character}%
+    Special format characters to control the generation of mask filenames.  Uppercase letters
+    refer to the output filename and lowercase ones to the input files.}
+\end{table}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

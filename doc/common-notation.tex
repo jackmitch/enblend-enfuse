@@ -1,0 +1,76 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+\ifhevea
+  \let\thesectionoriginal\thesection
+  \renewcommand{\thesection}{Frontmatter \Alph{section}}
+  \section{\label{sec:notation}%
+    \genidx{notation}%
+    \gensee{typographic conventions}{notation}%
+    \gensee{conventions!typographic}{notation}%
+    Notation}
+  \let\thesection\thesectionoriginal
+\else
+  \section*{\label{sec:notation}%
+    \genidx{notation}%
+    \gensee{typographic conventions}{notation}%
+    \gensee{conventions!typographic}{notation}%
+    Notation}
+\fi
+
+This manual uses some typographic conventions to clarify the subject.  The markup of the
+ready-to-print version differs from the web markup.
+
+\begin{center}
+  \begin{tabular}{p{.18\linewidth}p{.39\linewidth}l}
+    \hline
+    \multicolumn{1}{c|}{Category} & \multicolumn{1}{c|}{Description} & \multicolumn{1}{c}{Examples} \\
+    \hline\extraheadingsep
+    Acronym & Common acronym & \acronym{sRGB}, \acronym{OpenMP} \\
+
+    Application & \acronym{GUI} or \acronym{CLI} application & \application{Hugin}, \App \\
+
+    Command & Name of a binary in the running text & \command{convert}, \appcmd \\
+
+    Common part & Chapter, section, or any other part that appears in both manuals & Response
+    Files\commonpart \\
+
+    Default & Value as compiled into the \appcmd{} binary that belongs to this documentation &
+    \indicatesourcevalue{1}, \indicatesourcevalue{\filename{a.tif}} \\
+
+    Environment variable & Variable passed to \app{} by the operating system & \envvar{PATH},
+    \envvar{TMPDIR} \\
+
+    Filename & Name of a file in the filesystem & \filename{a.tif} \\
+
+    Filename extension & Name of a filename extension with or without dots & \filename{.png},
+    \filename{tiff}\\
+
+    Fix me! & Section that needs extending or at least some improvement & \fixme{Explain} \\
+
+    Literal text & Text that (only) makes sense when typed in exactly as shown & \code{uint16}
+    \\
+
+    Option & Command-line option given to \app & \option{--verbose} \\
+
+    Optional part & Optional part of a syntax description in square brackets &
+    \option{--verbose}~\optional{=\metavar{LEVEL}} \\
+
+    Placehoder & Meta-syntactic variable that stands in for the actual text &
+    \metavar{ICC-PROFILE} \\
+
+    Proper name & Name of a person or algorithm & \propername{Dijkstra} \\
+
+    Restricted note & Annotation that applies only to a particular program, configuration,~or
+    operating system & \restrictednote{\App.} \\
+
+    Sample & Literal text in quotes & \sample{\%} or \sample{--prefer-gpu} \\
+
+    Side note & Non-essential or ``geeky'' material & {\geekytext Gory details}
+  \end{tabular}
+\end{center}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

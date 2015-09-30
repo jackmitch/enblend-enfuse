@@ -1,0 +1,66 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Option Delimiters\commonpart]{\label{sec:option-delimiters}%
+  \genidx{options!delimiters}%
+  \gensee{option delimiters}{options, delimiters}%
+  \gensea{delimiters}{options, delimiters}%
+  Option Delimiters\commonpart}
+
+\application{Enblend} and \application{Enfuse} allow the arguments supplied to the programs'
+options to be separated by different separators.  The online documentation and this manual,
+however, exclusively use the colon~\sample{:} in every syntax definition and in all examples.
+
+
+\subsection[Numeric Arguments]{\label{sec:option-delimiters-numeric-arguments}%
+  \genidx{options!delimiters!numeric arguments}%
+  Numeric Arguments}
+
+Valid delimiters are the the semicolon~\sample{;}, the colon~\sample{:}, and the
+slash~\sample{/}.  All delimiters may be mixed within any option that takes numeric arguments.
+
+Examples using some \application{Enfuse} options:
+
+\begin{codelist}
+\item[--contrast-edge-scale=0.667:6.67:3.5]\itemend
+  Separate all arguments with colons.
+
+\item[--contrast-edge-scale=0.667;6.67;3.5]\itemend
+  Use semi-colons.
+
+\item[--contrast-edge-scale=0.667;6.67/3.5]\itemend
+  Mix semicolon and slash in weird ways.
+
+\item[--entropy-cutoff=3\%/99\%]\itemend
+  All delimiters also work in conjunction with percentages.
+
+\item[--gray-projector=channel-mixer:3/6/1]\itemend
+  Separate arguments with a colon and two slashes.
+
+\item[--gray-projector=channel-mixer/30;60:10]\itemend
+  Go wild and \application{Enfuse} will understand.
+\end{codelist}
+
+
+\subsection[Filename Arguments]{\label{sec:option-delimiters-filename-arguments}%
+  \genidx{options!delimiters!filename arguments}%
+  Filename Arguments}
+
+Here, the accepted delimiters are comma~\sample{,}, semicolon~\sample{;}, and colon~\sample{:}.
+Again, all delimiters may be mixed within any option that has filename arguments.
+
+Examples:
+
+\begin{codelist}
+\item[--save-masks=soft-mask-\%03i.tif:hard-mask-03\%i.tif]\itemend
+  Separate all arguments with colons.
+
+\item[--save-masks=\%d/soft-\%n.tif,\%d/hard-\%n.tif]\itemend
+  Use a comma.
+\end{codelist}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

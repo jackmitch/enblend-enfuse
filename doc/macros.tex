@@ -1,0 +1,360 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+%% Words and abbreviations
+
+\newcommand*{\appendixName}{Appendix}
+\newcommand*{\appendixabbr}{App.}
+\newcommand*{\chapterName}{Chapter}
+\newcommand*{\chapterabbr}{Ch.}
+\newcommand*{\equationabbr}{Eqn.}
+\newcommand*{\equationName}{Equation}
+\newcommand*{\exampleabbr}{Ex.}
+\newcommand*{\exampleName}{Example}
+\newcommand*{\figureabbr}{Fig.}
+\newcommand*{\figureName}{Figure}
+\newcommand*{\pageabbr}{p.}
+\newcommand*{\pagename}{page}
+\newcommand*{\sectionabbr}{Sec.}
+\newcommand*{\sectionName}{Section}
+\newcommand*{\tableabbr}{Tab.}
+\newcommand*{\tableName}{Table}
+
+\newcommand*{\LogTransform}{\mbox{Log}} % Enblend/Enfuse luminance transform
+
+
+%% Texinfo compatibility macros
+
+\newcommand*{\acronym}[1]{\textsc{#1}}
+\newcommand*{\code}[1]{\texttt{#1}}
+\newcommand*{\command}[1]% command name in running text; use \code everywhere else
+{\ifhevea\textbf{#1}\else{\fontseries{b}\selectfont #1}\fi}
+\newcommand*{\dmn}[1]{\,#1}
+\newcommand*{\envvar}[1]{\texttt{#1}}     % Texinfo: `@env'
+\newcommand*{\filename}[1]{\textit{#1}}   % Texinfo: `@file'
+\newcommand*{\metavar}[1]{\textsl{#1}}    % Texinfo: `@var'
+\newcommand{\option}[1]{\texttt{%
+    %% We want to make long-name options (implicitly) hyphenatable in the printable document,
+    %% however the initial two dashes must never be hyphenation points.
+    \ifhevea #1\else
+    \IfBeginWith{#1}{--}%
+                {\mbox{--}\begin{makehyphenatable}{\ttfamily}\StrGobbleLeft{#1}{2}\end{makehyphenatable}}%
+                {#1}\fi
+}}
+\WithSuffix\newcommand\option*[1]{\mbox{\texttt{#1}}} % Texinfo: `@option'
+\newcommand*{\sample}[1]{\mbox{`\texttt{#1}'}} % Texinfo: `@samp'
+\newcommand*{\strong}[1]{\textbf{#1}}
+
+
+\newcommand*{\abbreviation}[2][\relax]{\ifx\relax#1{#2}\else{#2~(#1)}\fi}
+
+
+\newif\ifinfootnote
+\ifhevea\relax\else
+  \let\oldfootnote\footnote
+  \renewcommand{\footnote}[2]{\infootnotetrue\oldfootnote{#1}{#2}\infootnotefalse}
+\fi
+
+\newcommand*{\uref}[2]% Texinfo: `@uref{URL, LABEL}'
+{\ifhevea
+   \footahref{#1}{#2}% See: http://hevea.inria.fr/doc/manual018.html#sec65
+ \else
+   \ifinfootnote
+     \ahref{#1}{#2} (#1)% Texinfo's clumsy style
+   \else
+     \footahref{#1}{#2}% Hevea's preferred style
+   \fi
+ \fi}
+
+\newcommand*{\urefval}[2]%
+{\ifhevea
+   \indicatesourcevalue{\uref{\val*{#1}}{#2}}%
+ \else
+   \uref{\indicatesourcevalue{\val*{#1}}}{#2}%
+ \fi}
+
+
+%% Use `\urlmark{URL}{LABEL}' inside an `\item' of a `description' list, i.e. inside the square
+%% brackets.  Follow with `\urltext' outside the right square bracket.  Example:
+%%         \item[\urlmark{\urloffoo}{Foo}]\urltext
+\newcommand{\urlmark}[2]%
+{\ifhevea
+   \footahref{#1}{#2}%
+ \else
+   {#2}\footnotemark\global\def\urlmarkargi{#1}\fi}
+
+\newcommand{\urltext}%
+{\ifhevea\relax
+ \else\footnotetext{\texttt{\urlmarkargi}}\fi}
+
+
+%% Our own markup
+
+\newcommand*{\Ex}{\textsf{Ex}\,}   % expectation value
+\newcommand*{\Var}{\textsf{Var}\,} % variance
+
+\newcommand*{\angulardegree}{\mbox{$^{\circ}$}}
+\newcommand*{\asterisk}{\mbox{$*$}}
+\newcommand*{\atsign}{\char64}
+\newcommand*{\bslash}{\char92}
+\newcommand*{\caret}{\char94}
+\newcommand*{\classictimes}{\mbox{$\times$}}
+\newcommand*{\commonpart}{\texorpdfstring{\mbox{$^{\textsf{c}}$}}{}} % Chapters, sections, etc. occurring on both manuals
+\newcommand*{\extraheadingsep}{\ifhevea\relax\else\rule{0pt}{3ex}\fi} % was: \rigidbaselineskip
+\newcommand*{\feasiblebreak}{\ifhevea\relax\else\discretionary{}{}{}\fi}
+\newcommand*{\itemend}{\ifhevea \relax\else \leavevmode\newline \fi}
+\newcommand*{\oldstylefirst}{\mbox{$1^{\mathrm{st}}$}}
+\newcommand*{\oldstylesecond}{\mbox{$2^{\mathrm{nd}}$}}
+\newcommand*{\oldstylethird}{\mbox{$3^{\mathrm{rd}}$}}
+\newcommand*{\raisedasterisk}{\mbox{${}^{*}$}}
+\newcommand*{\result}{\mbox{$\mapsto$}}
+\newcommand*{\squiggle}{\char126}
+
+\newcommand*{\application}[1]{\mbox{\textsf{#1}}}
+\newcommand*{\conj}[1]{{#1}^\ast}         % complex conjugate
+\newcommand*{\eqnref}[1]{(\ref{#1})}
+\newcommand{\fixme}[1]{\ifhevea\colorbox{\fixmebackgroundcolor}{FIX}\else\fbox{FIX}\fi
+                       {#1}%
+                       \ifhevea\colorbox{\fixmebackgroundcolor}{ME}\else\fbox{ME}\fi}
+\newcommand*{\fourier}[1]{\widehat{#1}}   % fourier transformed variable
+\newcommand{\fullref}[1]{\ifhevea \ref{#1}\else \ref{#1} on \pagename~\pageref{#1}\fi}
+\newcommand*{\guielement}[1]{\textsc{#1}}
+%%\newcommand*{\hangingitem}{\ifhevea\relax\else\hangindent=2em\hangafter=1\fi}
+\newcommand{\itempar}[1]{\ifhevea #1\else \parbox[t]{.98\linewidth}{#1\vspace{.667ex}}\fi}
+\newcommand{\mainpurpose}[1]{\strong{Main Purpose:}~#1}
+\newcommand*{\symmgroup}[1]{\mathsf{#1}}
+\newcommand*{\oldstyleNth}[1]{\mbox{${#1}^{\mathrm{th}}$}}
+\newcommand*{\optional}[1]{$[$#1$]$}
+\newcommand*{\propername}[1]{\textsc{#1}}
+\newcommand{\restrictednote}[1]%
+           {\ifhevea\colorbox{\restrictedmaterialbordercolor}{#1}\else\fbox{\textrm{#1}}\fi}
+\newcommand{\shifteven}[1]% shift a box down half of \baselineskip
+           {\setbox1=\hbox{#1}\raisebox{-.5\rigidbaselineskip}[\ht1][\dp1]{#1}}
+\newcommand*{\transpose}[1]{{#1}^{\mathrm{T}}}         % transposition
+
+\newcommand*{\flexipageref}[2]{\ifhevea\ahrefloc{#2}{#1}\else #1, \pagename~\pageref{#2}\fi}
+\WithSuffix\newcommand\flexipageref*[2]{\ifhevea\ahrefloc{#2}{#1}\else #1 (\pagename~\pageref{#2})\fi}
+\newcommand*{\semilog}[2]{\mbox{${#1}\cdot 10^{#2}$}} % \cdot or \times
+\newcommand*{\slfrac}[2]% Knuth, answer to Question 11.6 rewritten with LaTeX macros
+{\ifhevea #1/#2\else
+  \hspace{.1em}\raisebox{.5ex}{\scriptsize #1}\hspace{-.1em}/%
+  \hspace{-.15em}\raisebox{-.25ex}{\scriptsize #2}%
+ \fi}
+
+
+%% Source-of-document-date on the title page
+\newcommand*{\datebyunknown}{\footnote{Date determined in some unknown, unreliable way.}}
+\newcommand*{\datebyfs}{\footnote{Date determined via file-system -- potentially inaccurate.}}
+\newcommand*{\datebyscm}{\footnote{Date reliably determined via source-code management system.}}
+
+
+%% Inclusion of graphics and images.  Argument #1 passes additional directives to the sub-macro;
+%% argument #2 is the image filename.
+\newcommand{\includeimage}[2][]%
+{\ifhevea
+   \imgsrc{#2.png}%
+ \else
+   \IfFileExists{#2.pstex}%
+                {\input{#2.pstex}}% EPS(La)TeX file transporting PostScript inside a LaTeX envelope
+                {\includegraphics[#1]{#2}}% Usually an Encapsulated PostScript file
+ \fi}
+
+
+%% Pacify Hevea
+\ifhevea
+  \def\WithSuffix{\relax}
+  \def\caption[#1]#2{#2}
+  \def\endappendix{\relax}
+  \def\endexample{\relax}
+  \def\endsavenotes{\relax}
+  \def\example{\relax}
+  \def\floatname{\relax}
+  \def\floatstyle{\relax}
+  \def\fontseries{\relax}
+  \def\hyp{-}
+  \def\listof{\relax}
+  \def\makesavenoteenv{\relax}
+  \def\newfloat{\relax}
+  \def\obeylines{\relax}
+  \def\overfullrule=#1{\relax}
+  \def\savenotes{\relax}
+  \def\selectfont{\relax}
+  \def\slash{/}
+\fi
+
+
+\ifreferencemanual
+  %% Class Refrep (``Reference Manual'') has no twocolumn layout.
+  \def\twocolumn[#1]{#1}
+\fi
+
+
+%% Allow for some hyphenation of typewriter fonts.
+\newenvironment{makehyphenatable}[1]{#1\hyphenchar\the\font=`\-}{}
+
+
+%% Taken from Refman style and adapted.
+\newcommand{\declaremaxipagerule}{\newif\ifmaxipagerule\maxipageruletrue}% See Knuth, p211
+
+\ifreferencemanual
+  \relax
+\else
+  \declaremaxipagerule
+
+  \newlength{\maxipagewidth}
+  \setlength{\maxipagewidth}{\textwidth}
+  \addtolength{\maxipagewidth}{1.9\oddsidemargin}
+
+  \newenvironment{maxipage}%
+  {\par
+    \makebox[-.95\oddsidemargin]{}%
+    \begin{minipage}{\maxipagewidth}%
+    \medskip
+    \ifhevea
+      \begin{divstyle}{maxipage}%
+    \else
+      \ifmaxipagerule \hrule\medskip \fi
+      \parskip=.5\baselineskip
+    \fi
+    \def\marginpar{\typeout{Marginpar not allowed within `maxipage' environment.}}}%
+  {\par
+    % TeX: \vskip\parskip
+    \medskip
+    \ifhevea
+      \end{divstyle}%
+    \else
+      \ifmaxipagerule \hrule\medskip \fi
+    \fi
+    \end{minipage}%
+    \par}%
+\fi
+
+
+%% Program listings
+
+\lstdefinestyle{colors}{}
+
+\lstnewenvironment{cxxlisting}%
+{\setenvclass{lstlisting}{cxxlisting}
+\ifhevea
+  \lstset{language=C++,
+          commentstyle=\color{orangered}\textsl,
+          keywordstyle=\color{violetblue}\textbf,
+          stringstyle=\color{orchid},
+          style=colors}
+\else
+  \lstset{language=C++,
+          basicstyle={\small\ttfamily},
+          commentstyle=\textsl,
+          keywordstyle=\textbf}
+\fi}%
+{}
+
+\lstnewenvironment{adalisting}%
+{\setenvclass{lstlisting}{adalisting}
+\ifhevea
+  \lstset{language=Ada,
+          style=colors}
+\else
+  \lstset{language=Ada,
+          basicstyle={\small\ttfamily},
+          commentstyle=\textsl,
+          keywordstyle=\textbf}
+\fi}%
+{}
+
+
+%% Description list with definitions marked with `\code'.
+\newenvironment{codelist}%
+{\begin{savenotes}\begin{list}{}{\renewcommand{\makelabel}[1]{\code{##1}}}}%
+{\end{list}\end{savenotes}}
+\makesavenoteenv{codelist}
+
+
+%% Material that is not essential, but that we do not want to see as footnotes.
+%% Use the macro like `{\geekytext foo\/}'.
+\newcommand{\geekytext}{\small\slshape}
+
+\ifhevea
+  \newenvironment{geeknote}%
+                 {\begin{divstyle}{geeknote}\begin{quotation}\geekytext}%
+                 {\end{quotation}\end{divstyle}}
+\else
+  \newenvironment{geeknote}%
+                 {\begin{savenotes}\fboxsep=0pt\begin{quotation}\RaggedRight\geekytext}%
+                 {\end{quotation}\end{savenotes}}
+  \makesavenoteenv{geeknote}
+\fi
+
+
+%% Literal text as e.g. the contents of a text file.
+\newenvironment{literal}%
+               {\pagebreak[1]\begin{divstyle}{literal}%
+                   \begin{trivlist}{}{\ifhevea\relax\else\topsep=0pt\fi}\item\relax
+                     \RaggedRight\frenchspacing\ttfamily}%
+               {\end{trivlist}\end{divstyle}}
+
+
+%% Description list for summarizing options.
+\newenvironment{optionsummary}
+{\medskip\pagebreak[1]\par\noindent\strong{Summary of influential options}%
+\begin{list}{}{\ifhevea\relax\else\topsep=0pt\leftmargin=4em\fi
+    \renewcommand{\makelabel}[1]{\option{##1}:\ }}}%
+{\end{list}}
+
+
+%% Markup for material that applies only to a particular application, this is either Enblend or
+%% Enfuse, but not both.  The markup e.g. applies to different operating systems, too.
+\newenvironment{restrictedmaterial}[1]%
+{\begin{savenotes}\begin{divstyle}{restrictedmaterial}\noindent\restrictednote{#1}\begin{quotation}}%
+{\end{quotation}%
+  \ifhevea\relax\else\RaggedLeft\mbox{$\Box$}\par\fi
+  \end{divstyle}\end{savenotes}}
+\makesavenoteenv{restrictedmaterial}
+
+
+%% Simulate terminal output.
+\newenvironment{terminal}%
+{\begin{divstyle}{terminal}\begin{flushleft}\frenchspacing\ttfamily}%
+{\end{flushleft}\end{divstyle}}
+
+
+%% Overwrite `description' environment, because Hevea's built-in definition is broken.  Keep
+%% `description' for reference manual styles, but ditch the colon after description items.
+\ifreferencemanual
+  \descriptioncolonfalse
+\else
+  \renewenvironment{description}%
+  {\begin{list}{}{\renewcommand{\makelabel}[1]{##1}}}%
+  {\end{list}}%
+\fi
+
+
+%% Extra floating objects: exemplars.  We cannot use `example', because this name is taken in
+%% Reference-Manual style.
+\ifhevea
+  \input{exemplar.hva}
+  \renewcommand{\exemplarname}{Example}
+  \newcommand{\listofexemplars}{\relax}
+\else
+  \usepackage{trivfloat}
+  \trivfloat{exemplar}
+  \renewcommand{\exemplarname}{Example}
+  \renewcommand{\listexemplarname}{List of Examples}
+\fi
+
+
+%% Define a key-value pair with `\hashinsert{KEY}{VALUE}'.  Reference it like any other label,
+%% this is, say `\hashfind{KEY}' to recover VALUE.
+\def\hashinsert#1{\expandafter\def\csname valuehash(#1)\endcsname}
+\def\hashfind#1{\csname valuehash(#1)\endcsname}
+
+\newcommand*{\indicatesourcevalue}[1]{\mbox{$\langle${#1}\/$\rangle$}}
+\newcommand*{\val}[1]{\indicatesourcevalue{\hashfind{#1}}}
+\WithSuffix\newcommand\val*[1]{\hashfind{#1}}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

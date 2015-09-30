@@ -1,0 +1,78 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\section[Local Entropy Weighting]{\label{sec:local-entropy-weighting}%
+  \genidx[\rangebeginlocation]{local entropy weighting}%
+  \genidx{weighting!local entropy}%
+  \gensee{entropy}{weighting, local entropy}%
+  \gensee{local entropy}{weighting, local entropy}%
+  Local Entropy Weighting}
+
+Entropy weighting prefers pixels inside a high entropy neighborhood.
+
+\genidx{entropy!definition}Let $S$ be an $n$-ary source.  Watching the output of $S$ an observer
+on average gains the information
+\[
+    H_a(n) := \sum_{x \in S} p(x) \log_a(1 / p(x))
+\]
+\noindent per emitted message, where we assume the knowledge of the probability function~$p(S)$.
+The expectation value~$H_a(n)$ is called entropy of the source~$S$.  Entropy measures our
+uncertainty if we are to guess which message gets chosen by the source in the future.  The unit
+of the entropy depends on the choice of the constant~$a > 1$.  Obviously
+\[
+    H_b(n) = H_a(n) / \log_a(b)
+\]
+\noindent holds for all $b > 1$.  We use $a = 2$ for entropy weighting and set the entropy of
+the ``impossible message'' to zero according to
+\[
+    \lim_{p \rightarrow 0} \, p \, \log_a(1 / p) = 0.
+\]
+
+\figureName~\ref{fig:entropy} shows an entropy function.
+
+
+\begin{figure}[htbp]
+  \ifreferencemanual\begin{maxipage}\fi
+  \centering
+  \includeimage{entropy}
+  \ifreferencemanual\end{maxipage}\fi
+
+  \caption[Entropy function]{\label{fig:entropy}%
+    Entropy function~$H_2(p)$ for an experiment with exactly two outcomes.}
+\end{figure}
+
+
+For more on (information) entropy visit \uref{\wikipediainformationentropy}{Wikipedia}.
+
+\genidx{weighting!local entropy!window size}%
+\App{} computes a pixel's entropy by considering the pixel itself and its surrounding pixels
+quite similar to Local-Contrast Weighting (\fullref{sec:local-contrast-weighting}).  The size of
+the window is set by \sample{--entropy-window-size}.  Choosing the right size is difficult,
+because there is a serious tradeoff between the locality of the data and the size of the sample
+used to compute $H$.  A large window results in a large sample size and therefore in a reliable
+entropy, but considering pixels far away from the center degrades $H$ into a non-local measure.
+For small windows the opposite holds true.
+
+Another difficulty arises from the use of entropy as a weighting function in dark parts of an
+image, that is, in areas where the signal-to-noise ratio is low.  Without any precautions, high
+noise is taken to be high entropy, which might not be desired.  Use
+option~\option{--entropy-cutoff} to control the black level when computing the entropy.
+
+On the other extreme side of lightness, very light parts of an image, the sensor might already
+have overflown without the signal reaching 1.0 in the normalized luminance interval.  For these
+pixels the entropy is zero and \App{} can be told of the threshold by properly setting the
+second argument of \sample{--entropy-cutoff}.
+
+\begin{optionsummary}
+\item[--entropy-cutoff] \sectionName~\fullref{opt:entropy-cutoff}
+\item[--entropy-weight] \sectionName~\fullref{opt:entropy-weight}
+\item[--entropy-window-size] \sectionName~\fullref{opt:entropy-window-size}
+\end{optionsummary}
+
+\genidx[\rangeendlocation]{local entropy weighting}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

@@ -1,0 +1,289 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Expert Mask Generation Options]{\label{sec:expert-mask-generation-options}%
+  \genidx[\rangebeginlocation]{expert mask generation options}%
+  \genidx{options!mask generation for experts}%
+  Expert Mask Generation Options}
+
+These options allow for a detailed control of the seam-line optimizers
+which govern the mask generation.
+
+\begin{codelist}
+  \label{opt:anneal}%
+  \optidx[\defininglocation]{--anneal}%
+  \genidx{optimize!anneal parameters}%
+  \gensee{anneal parameters}{optimize, anneal parameters}%
+  \genidx{optimizer!simulated annealing}%
+  \gensee{simulated annealing optimizer}{optimizer, simulated annealing}%
+\item[--anneal=\metavar{TAU}\optional{:\metavar{DELTA-E-MAX}\optional{:\metavar{DELTA-E-MIN}\optional{:\metavar{K-MAX}}}}]\itemend
+  Set the parameters of the Simulated Annealing optimizer.  See
+  \tableName~\fullref{tab:optimizer-strategies}.
+
+  \begin{codelist}
+  \item[\metavar{TAU}] \metavar{TAU} is the temperature reduction factor in the Simulated
+    Annealing; it also can be thought of as ``cooling factor''.  The closer \metavar{TAU} is to
+    one, the more accurate the annealing run will be, and the longer it will take.
+
+    Append a percent sign (\sample{\%}) to specify \metavar{TAU} as a percentage.
+
+    Valid range: $\val{val:minimum-anneal-tau} < \metavar{TAU} < \val{val:maximum-anneal-tau}$.
+
+    The default is \val{val:default-anneal-tau}; values around 0.95 are reasonable.  Usually,
+    slower cooling results in more converged points.
+
+  \item[\metavar{DELTA-E-MAX}, \metavar{DELTA-E-MIN}]\itemend \metavar{DELTA-E-MAX} and
+    \metavar{DELTA-E-MIN} are the maximum and minimum cost change possible by any single
+    annealing move.
+
+    Valid range: $\val{val:minimum-anneal-deltae-min} < \metavar{DELTA-E-MIN} <
+    \metavar{DELTA-E-MAX}$.
+
+    In particular they determine the initial and final annealing temperatures according to:
+
+    \begin{align*}
+      T_{\mathrm{initial}} &= \frac{\metavar{DELTA-E-MAX}}{\log(\metavar{K-MAX} / (\metavar{K-MAX} - 2))} \\
+      T_{\mathrm{final}} &= \frac{\metavar{DELTA-E-MIN}}{\log(\metavar{K-MAX}^2 - \metavar{K-MAX} - 1)}
+    \end{align*}
+
+    The defaults are: \metavar{DELTA-E-MAX}: \val{val:default-anneal-deltae-max} and
+    \metavar{DELTA-E-MIN}: \val{val:default-anneal-deltae-min}.
+
+  \item[\metavar{K-MAX}]\itemend \metavar{K-MAX} is the maximum number of ``moves'' the
+    optimizer will make for each line segment.  Higher values more accurately sample the state
+    space, at the expense of a higher computation cost.
+
+    Valid range: $\metavar{K-MAX} \geq \val{val:minimum-anneal-kmax}$.
+
+    The default is \val{val:default-anneal-kmax}.  Values around 100 seem reasonable.
+  \end{codelist}
+
+
+  \label{opt:dijkstra}%
+  \optidx[\defininglocation]{--dijkstra}%
+  \genidx{radius!\propername{Dijkstra}}%
+  \gensee{Dijkstra@\propername{Dijkstra} radius}{radius, \propername{Dijkstra}}%
+\item[--dijkstra=\metavar{RADIUS}]\itemend
+  Set the search \metavar{RADIUS} of the \propername{Dijkstra} Shortest Path algorithm used in
+  \propername{Dijkstra} Optimization (see \tableName~\fullref{tab:optimizer-strategies}).
+
+  A small value prefers straight line segments and thus shorter seam lines.  Larger values
+  instruct the optimizer to let the seam line take more detours when searching for the best seam
+  line.
+
+  Valid range: $\metavar{RADIUS} \geq \val{val:minimum-dijkstra-radius}$.
+
+  Default: \val{val:default-dijkstra-radius}~pixels.
+
+
+  \label{opt:image-difference}%
+  \optidx[\defininglocation]{--image-difference}%
+  \genidx{image difference}%
+  \genidx{difference image}%
+\item[\itempar{--image-difference=\metavar{ALGORITHM}\optional{:\feasiblebreak
+      \metavar{LUMINANCE-WEIGHT}\optional{:
+        \feasiblebreak\metavar{CHROMINANCE-WEIGHT}}}}]\itemend
+
+  \App{} calculates the difference of a pair of overlapping color images when it generates the
+  primary seam with a Graph-Cut and also before it optimizes the seams.  It employs a
+  user-selectable \metavar{ALGORITHM} that is controlled by the
+
+  \begin{itemize}
+    \genidx{weight!luminance}%
+    \gensee{luminance weight}{weight, luminance}%
+  \item
+    weights for luminance differences, \metavar{LUMINANCE-WEIGHT},
+    $w_{\mathrm{luma}}$ and
+
+    \genidx{weight!chrominance}%
+    \gensee{chrominance weight}{weight, chrominance}%
+  \item
+    color differences, \metavar{CHROMINANCE-WEIGHT}, $w_{\mathrm{chroma}}$.
+  \end{itemize}
+
+  For black-and-white images the difference is simple the absolute difference of each pair of
+  pixels.
+
+  \begin{codelist}
+    \genidx{maximum hue-luminance}%
+    \genidx{hue-luminance maximum}%
+    \genidx{luminance-hue maximum}%
+  \item[\itempar{maximum-hue-luminance \\ maximum-hue-lum
+      \\ max-hue-luminance \\ max-hue-lum \\ max}]\itemend Calculate
+    the difference~$d$ as the maximum of
+    the differences of the luminances~$l$ and hues~$h$ of each pair
+    of pixels $P_1$ and $P_2$:
+    \[
+    d  = \max\left(w_{\mathrm{luma}} \times |l(P_1) - l(P_2)|,
+    w_{\mathrm{chroma}} \times |h(P_1) - h(P_2)|\right).
+    \]
+
+    This algorithm was the default for \App{} up to version~4.0.
+
+    \genidx{delta-E}%
+    \genidx{colorspace!\acronym{L*a*b*}}%
+  \item[\itempar{delta-e \\ de}]\itemend
+    Calulate the difference~$d$ as the \propername{Euclidean} distance of the pixels in
+    \acronym{L*a*b*} space:
+
+    \begin{align*}
+      d = \Big[ & w_{\mathrm{luma}} \times \left(L(P_1) - L(P_2)\right)^2 + \\
+                & w_{\mathrm{chroma}} \times \left(a(P_1) - a(P_2)\right)^2 + \\
+                & w_{\mathrm{chroma}} \times \left(b(P_1) - b(P_2)\right)^2
+        \Big]^{1/2}
+    \end{align*}
+
+    This is the default in \App{} version~4.1 and later.
+
+    Note that the ``delta-E'' mentioned here has nothing to do with \metavar{DELTA-E-MAX} and
+    \metavar{DELTA-E-MIN} of option~\option{--anneal}.
+  \end{codelist}
+
+  \begin{sloppypar}
+    Both \metavar{LUMINANCE\hyp{}WEIGHT} and \metavar{CHROMINANCE\hyp{}WEIGHT} are non-negative.
+    \App{} automatically normalizes the sum of \metavar{LUMINANCE\hyp{}WEIGHT} and
+    \metavar{CHROMINANCE\hyp{}WEIGHT} to one.  Thus,
+  \end{sloppypar}
+
+  \begin{literal}
+    --image-difference=delta-e:2:1
+  \end{literal}
+
+  and
+
+  \begin{literal}
+    --image-difference=delta-e:0.6667:0.3333
+  \end{literal}
+
+  define the same weighting function.
+
+  The default \metavar{LUMINANCE\hyp{}WEIGHT} is \val{val:default-luminance-difference-weight}
+  and the default \metavar{CHROMINANCE\hyp{}WEIGHT} is
+  \val{val:default-chrominance-difference-weight}.
+
+  \genidx{quality!match}%
+  \gensee{match quality}{quality, match}%
+  \gensee{image match quality}{quality, match}%
+  At higher verbosity levels \App{} computes the true size of the overlap area in pixels and it
+  calculates the average and standard deviation of the difference per pixel in the normalized
+  luminance interval~$(0\dots1)$.  These statistical measures are based on \metavar{ALGORITHM},
+  therefore they should only be compared for identical \metavar{ALGORITHM}s.  The average
+  difference is a rough measure of quality with lower values meaning better matches.
+
+
+  \label{opt:mask-vectorize}%
+  \optidx[\defininglocation]{--mask-vectorize}%
+  \genidx{mask!vectorization distance}%
+  \gensee{vectorization distance}{mask, vectorization distance}%
+\item[--mask-vectorize=\metavar{DISTANCE}]\itemend
+  Set the mask vectorization \metavar{DISTANCE} that \App{} uses to partition each seam.  Thus,
+  break down the seam to segments of length \metavar{DISTANCE} each.
+
+  If \App{} uses a coarse mask (\option{--coarse-mask}) or \App{} optimizes
+  (\option{--optimize}) a mask it vectorizes the initial seam line before performing further
+  operations.  See \tableName~\ref{tab:mask-generation} for the precise conditions.
+  \metavar{DISTANCE} tells \App{} how long to make each of the line segments called vectors
+  here.
+
+  The unit of \metavar{DISTANCE} is pixels unless it is a percentage as explained in the next
+  paragraph.  In fine masks one mask pixel corresponds to one pixel in the input image, whereas
+  in coarse masks one pixel represents for example \val{val:default-coarseness-factor}~pixels in
+  the input image.
+
+  Append a percentage sign (\sample{\%}) to \metavar{DISTANCE} to specify the segment length as
+  a fraction of the diagonal of the rectangle including the overlap region.  Relative measures
+  do not depend on coarse or fine masks, they are recomputed for each mask.  Values around
+  5\%--10\% are good starting points.
+
+  This option strongly influences the mask generation process!  Large \metavar{DISTANCE} values
+  lead to shorter, straighter, less wiggly, less baroque seams that are on the other hand less
+  optimal, because they run through regions of larger image mismatch instead of avoiding them.
+  Small \metavar{DISTANCE} values give the optimizers more possibilities to run the seam around
+  high mismatch areas.
+
+  \genidx{seam line!loops}%
+  \gensee{loops in seam line}{seam line, loops}%
+  What should \emph{never} happen though, are loops or cusps in the seam line.  Counter loops
+  and cusps with higher weights of \metavar{DISTANCE-WEIGHT}
+  (option~\option{--optimizer-weights}), larger vectorization \metavar{DISTANCE}s, and
+  \metavar{TAU}s (option~\option{--anneal}) that are closer to one.  Use
+  option~\option{--visualize} to check the results.
+
+  Valid range: $\metavar{DISTANCE} \geq \val{val:minimum-vectorize-distance}$.
+
+  \App{} limits \metavar{DISTANCE} so that it never gets below
+  \val{val:minimum-vectorize-distance} even if it has been given as a percentage.  The user will
+  be warned in such cases.
+
+  Defaults: \val{val:coarse-mask-vectorize-distance}~pixels for coarse masks and
+  \val{val:fine-mask-vectorize-distance}~pixels for fine masks.
+
+
+  \label{opt:optimizer-weights}%
+  \optidx[\defininglocation]{--optimizer-weights}%
+  \genidx{weight!optimizer}%
+  \gensee{optimizer weights}{weight, optimizer}%
+  \genidx{seam optimization}%
+\item[--optimizer-weights=\metavar{DISTANCE-WEIGHT}\optional{:\metavar{MISMATCH-WEIGHT}}]\itemend
+  Set the weights of the seam-line optimizer.  If omitted, \metavar{MISMATCH-WEIGHT} defaults to
+  1.
+
+  The seam-line optimizer considers two qualities of the seam line:
+
+  \begin{itemize}
+  \item
+    The distance of the seam line from its initial position, which has been determined by
+    \acronym{NFT} (see option~\option{--no-optimize}).
+
+  \item
+    The total ``mismatch'' accumulated along it.
+  \end{itemize}
+
+  \metavar{DISTANCE-WEIGHT} and \metavar{MISMATCH\hyp{}WEIGHT} define how to weight these two
+  criteria.  \App{} up to version~3.2 used 1:1.  This version of \App{} uses
+  \val{val:default-optimizer-weight-distance}:\val{val:default-optimizer-weight-mismatch}.
+
+  A large \metavar{DISTANCE-WEIGHT} pulls the optimized seam line closer to the initial postion.
+  A large \metavar{MISMATCH\hyp{}WEIGHT} makes the seam line go on detours to find a path along
+  which the mismatch between the images is small.  If the optimized seam line shows cusps or
+  loops (see option~\option{--visualize}), reduce \metavar{MISMATCH\hyp{}WEIGHT} or increase
+  \metavar{DISTANCE\hyp{}WEIGHT}.
+
+  Both weights must be non-negative.  They cannot be both zero at the same time.  Otherwise,
+  their absolute values are not important as \App{} normalizes their sum.
+
+
+  \label{opt:primary-seam-generator}%
+  \optidx[\defininglocation]{--primary-seam-generator}%
+  \genidx{generator!seam}%
+  \genidx{seam!primary generator}%
+  \gensee{primary seam generator}{seam, primary generator}%
+\item[--primary-seam-generator=\metavar{ALGORITHM}]\itemend
+  Select the algorithm responsible for generating the general seam route.
+
+  This is the \metavar{ALGORITHM} that produces an initial seam line, which serves as the basis
+  for later, optional optimizations.  Nearest Feature Transform (\acronym{NFT}) is the only
+  algorithm up to and including \App{} version~4.0.  Version~4.1 added a Graph-Cut
+  (\acronym{GC}) algorithm, which is the default for version~4.2 and later.
+
+  Valid \metavar{ALGORITHM} names are:
+
+  \begin{center}
+    \begin{tabular}{p{.45\linewidth}l}
+      \code{nearest-feature-transform}, \code{nft}\genidx{nearest
+        feature transform (\acronym{NFT})} & Nearest Feature Transform \\
+    \code{graph-cut}, \code{gc}\genidx{graph-cut (\acronym{GC})} &
+    Graph-Cut
+    \end{tabular}
+  \end{center}
+
+  See \chapterName~\fullref{sec:seam-generators} for details on \App's primary seam generators.
+\end{codelist}
+
+\genidx[\rangeendlocation]{expert mask generation options}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:

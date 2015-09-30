@@ -1,0 +1,59 @@
+%% This file is part of Enblend.
+%% Licence details can be found in the file COPYING.
+
+
+\subsection[Program Flow Charts]{\label{sec:program-flow-and-option-settings}%
+  \genidx[\rangebeginlocation]{program flow}%
+  \genidx{options!program flow}%
+  \gensee{flow}{program flow}%
+  Program Flow And Option Settings}
+
+\genidx{program flow!internal}\figureName~\ref{fig:internal-enblend-flow} depicts \App's
+internal work flow and shows what option influences which part.  \App{} works incrementally.
+Thus, no matter whether starting with the first image or the result of blending any previous
+images, it loads the next image.  After blending it the result again is a single image, which
+serves as base for the next input image, this is the next iteration.
+
+\begin{figure}[htbp]
+  \begin{maxipage}
+    \centering
+    \includeimage{internal-enblend-flow}
+
+    \caption[Internal work flow]{\label{fig:internal-enblend-flow}\App's internal work flow for
+      the ``next'' image.  The defaults are indicated like \sample{[default]}.  The Optimizer
+      Chain is complicated enough to warrant its own chart in
+      \figureName~\ref{fig:internal-optimizer-chain}.}
+  \end{maxipage}
+\end{figure}
+
+\begin{geeknote}
+  \figureName~\ref{fig:internal-enblend-flow} somewhat simplifies the program flow.
+
+  \begin{itemize}
+  \item
+    The Graph Cut algorithm needs an initial ``guess'' of the seam line.  It gets it by running
+    a Nearest-Feature Transform.
+
+  \item
+    If the overlap between the previous image and the next image is too small, the ``Scale down
+    mask'' step is skipped and \App{} works with the mask in its original size (``fine mask'')
+    no matter what the command-line options specify.
+  \end{itemize}
+\end{geeknote}
+
+\begin{figure}[htbp]
+  \begin{maxipage}
+    \centering
+    \includeimage{internal-optimizer-chain}
+
+    \caption[Optimizer chain]{\label{fig:internal-optimizer-chain}A closer look the Optimizer
+      Chain of \figureName~\ref{fig:internal-enblend-flow}.}
+  \end{maxipage}
+\end{figure}
+
+\genidx[\rangeendlocation]{program flow}
+
+
+%%% Local Variables:
+%%% fill-column: 96
+%%% End:
