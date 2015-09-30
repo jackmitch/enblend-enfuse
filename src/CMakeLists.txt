@@ -96,27 +96,19 @@ set(ENFUSE_SOURCES
     muopt.h
 )
 
+set(additional_libs)
 if (WIN32)
-  add_library(getopt STATIC win32helpers/getopt.c win32helpers/getopt.h)
-  set(additional_libs getopt)
-else()
-  set(additional_libs)
+  add_subdirectory(win32helpers)
+  list(APPEND additional_libs getopt)
 endif()
 
-set(LAYER_SELECTION_FILES
-    layer_selection/info.h layer_selection/info.cc
-    layer_selection/layer_selection.h layer_selection/layer_selection.cc
-    layer_selection/selector.h layer_selection/selector.cc
-)
-add_library(layer_selection STATIC ${LAYER_SELECTION_FILES})
-include_directories(${TOP_SRC_DIR}/src/layer_selection)
+add_subdirectory(layer_selection)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/layer_selection)
+list(APPEND additional_libs layer_selection)
 
-set(DYNAMIC_LOADER_FILES
-    dynamic_loader/dynamic_loader.h
-    dynamic_loader/dynamic_loader.cc
-)
-add_library(dynamic_loader STATIC ${DYNAMIC_LOADER_FILES})
-include_directories(${TOP_SRC_DIR}/src/dynamic_loader)
+add_subdirectory(dynamic_loader)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dynamic_loader)
+list(APPEND additional_libs dynamic_loader)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -135,8 +127,8 @@ if(OpenMP_CXX_FLAGS AND NOT MSVC)
     set_target_properties(enfuse PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
     message(STATUS "Adding PROPERTIES LINK_FLAGS to enblend and enfuse")
 endif(OpenMP_CXX_FLAGS AND NOT MSVC)
-target_link_libraries(enblend ${common_libs} ${additional_libs} layer_selection)
-target_link_libraries(enfuse ${common_libs} ${additional_libs} layer_selection dynamic_loader)
+target_link_libraries(enblend ${common_libs} ${additional_libs})
+target_link_libraries(enfuse ${common_libs} ${additional_libs})
 install(TARGETS enblend enfuse DESTINATION bin CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
 
 IF(ENABLE_OPENCL AND NOT ${PREFER_SEPARATE_OPENCL_SOURCE})
