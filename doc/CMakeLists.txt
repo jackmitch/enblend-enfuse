@@ -12,7 +12,7 @@ set(UPDATED_ON_FLAGS "--database=source-code-manager --override=none:\\datebyunk
 
 set(GNUPLOT_FLAGS "--default-settings -e DATA_DIR='${CMAKE_CURRENT_SOURCE_DIR}'")
 set(GNUPLOT_PNG_TERMINAL_OPTIONS "enhanced transparent truecolor size 720,540")
-set(GNUPLOT_EPS_TERMINAL_OPTIONS "color size 4.5in,3.375in")
+set(GNUPLOT_EPSLATEX_TERMINAL_OPTIONS "color size 4.5in,3.375in")
 
 set(DOTPP_FLAGS "--fatal-warnings --prefix-builtins --synclines")
 set(DOTPP_PRELOAD "${CMAKE_CURRENT_SOURCE_DIR}/uml-dot.m4")
@@ -173,13 +173,19 @@ macro(build_pstex _list _depends)
             list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
         elseif(_ext STREQUAL ".gp")
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.eps"
-                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.eps\"; set terminal eps ${GNUPLOT_EPS_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
+                COMMAND ${GNUPLOT_EXECUTABLE} ${GNUPLOT_FLAGS} -e "set output \"${_name}.tex\"; set terminal epslatex ${GNUPLOT_EPSLATEX_TERMINAL_OPTIONS}" ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.gp
                 DEPENDS ${_name}.gp colors.gp
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
                 VERBATIM
             )
-            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.eps")
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/doc/${_name}.pstex"
+                COMMAND ${CMAKE_COMMAND} -E copy "${_name}.tex" "${_name}.pstex"
+                DEPENDS "${CMAKE_BINARY_DIR}/doc/${_name}.tex"
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
+            )            
+            list(APPEND ${_depends} "${CMAKE_BINARY_DIR}/doc/${_name}.pstex")
         else()
             # this should never happens
             message(FATAL_ERROR "Unknown extension")
