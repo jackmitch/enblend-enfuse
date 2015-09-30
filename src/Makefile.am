@@ -3,7 +3,7 @@ AM_CFLAGS = $(EXTRACFLAGS)
 AM_CXXFLAGS = $(EXTRACXXFLAGS)
 AM_LDFLAGS = $(EXTRALDFLAGS)
 
-SUBDIRS = layer_selection win32helpers
+SUBDIRS = dynamic_loader layer_selection win32helpers
 
 bin_PROGRAMS = enblend enfuse
 
@@ -34,6 +34,7 @@ enblend_LDADD = layer_selection/liblayersel.a \
                 $(GSL_LIBS) @EXTRA_LIBS@
 enblend_CXXFLAGS = -DENBLEND_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                    -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+                   -I$(top_srcdir)/src/dynamic_loader \
                    -I$(top_srcdir)/src/layer_selection
 
 enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
@@ -41,7 +42,6 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  assemble.h blend.h bounds.h common.h \
                  exposure_weight_base.h \
                  exposure_weight.h exposure_weight.cc \
-                 dynamic_loader.h \
                  enfuse.h enfuse.cc fixmath.h \
                  global.h mga.h numerictraits.h \
                  opencl.h opencl.cc opencl_vigra.h \
@@ -60,10 +60,12 @@ enfuse_SOURCES = functoraccessor.hxx rect2d.hxx stride.hxx \
                  minimizer.h minimizer.cc \
                  muopt.h
 enfuse_LDFLAGS = $(AM_LDFLAGS)
-enfuse_LDADD = layer_selection/liblayersel.a \
+enfuse_LDADD = dynamic_loader/libdynamic_loader.a \
+               layer_selection/liblayersel.a \
                $(GSL_LIBS) @EXTRA_LIBS@
 enfuse_CXXFLAGS = -DENFUSE_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+                  -I$(top_srcdir)/src/dynamic_loader \
                   -I$(top_srcdir)/src/layer_selection
 
 EXTRA_DIST = embrace distance_transform_fh.cl \

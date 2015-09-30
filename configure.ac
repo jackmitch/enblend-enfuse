@@ -579,6 +579,7 @@ AC_CONFIG_FILES([doc/Makefile])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 src/dynamic_loader/Makefile
                  src/layer_selection/Makefile
                  src/win32helpers/Makefile])
 AC_OUTPUT
