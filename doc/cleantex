@@ -17,13 +17,14 @@ use English;
 use File::Basename ();
 use FindBin qw($Bin);
 use Getopt::Long;
+use Readonly;
 
 use lib $Bin;
 
 use OpenFile;
 
 
-use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+Readonly my $COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
 sub replace {
@@ -63,7 +64,7 @@ sub show_help {
     my $options = shift;
 
     print <<END_OF_HELP;
-Usage: @{[COMMAND_NAME]} [OPTION] FILE...
+Usage: $COMMAND_NAME [OPTION] FILE...
 
 Read all FILEs and remove (La)TeX constructs from them, but in
 contrast to detex(1) try to recover as much of the constructs as
@@ -84,7 +85,7 @@ sub get_options {
     Getopt::Long::Configure('no_ignore_case');
 
     Getopt::Long::GetOptions('h|help' => sub {show_help($options)}) or
-        warn(COMMAND_NAME, ": problems while parsing options\n");
+        warn "$COMMAND_NAME: problems while parsing options\n";
 }
 
 
@@ -96,6 +97,8 @@ sub main {
     for my $filename (@ARGV) {
         replace($options, $filename);
     }
+
+    return 0;
 }
 
 

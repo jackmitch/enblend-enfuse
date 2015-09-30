@@ -19,13 +19,14 @@ use File::stat;
 use FindBin qw($Bin);
 use Getopt::Long;
 use POSIX;
+use Readonly;
 
 use lib $Bin;
 
 use Quote ();
 
 
-use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+Readonly my $COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 use constant {DB_NONE => 0, DB_FS => 1, DB_SCM => 2};
 
 
@@ -39,18 +40,18 @@ sub quote_list {
 
 sub gm_time {
     if ($_[0]) {
-        gmtime $_[0];
+        return gmtime $_[0];
     } else {
-        gmtime;
+        return gmtime;
     }
 }
 
 
 sub local_time {
     if ($_[0]) {
-        localtime $_[0];
+        return localtime $_[0];
     } else {
-        localtime;
+        return localtime;
     }
 }
 
@@ -64,7 +65,7 @@ sub filter_exisiting_files {
         if (-e $filename) {
             push @result, $filename;
         } else {
-            warn(COMMAND_NAME, ": warning: file ", quote($filename), " does not exist\n");
+            warn "$COMMAND_NAME: warning: file ", quote($filename), " does not exist\n";
         }
     }
 
@@ -78,8 +79,7 @@ sub filesystem_modification_time {
     my $status = stat $filename;
     my $modification_time = $status->mtime;
 
-    print STDERR (COMMAND_NAME, ": info: filesystem modification time of ",
-                  quote($filename), " is ",
+    print STDERR ("$COMMAND_NAME: info: filesystem modification time of ", quote($filename), " is ",
                   POSIX::strftime("%Y-%m-%dT%H%M%S", gmtime($modification_time)),
                   "\n") if $options->{VERBOSE};
 
@@ -114,8 +114,7 @@ sub scm_modification_time {
 
     my $log_date = get_log_date($filename);
     my ($modification_time, $time_zone) = split(m{[+-]}, $log_date);
-    print STDERR (COMMAND_NAME, ": info: SCM modification time of ",
-                  quote($filename), " is ",
+    print STDERR ("$COMMAND_NAME: info: SCM modification time of ", quote($filename), " is ",
                   POSIX::strftime("%Y-%m-%dT%H%M%S", gmtime($modification_time)),
                   "\n") if $options->{VERBOSE};
 
@@ -150,13 +149,12 @@ sub latest_scm_modification_time {
             push @modification_times, scm_modification_time($options, $filename);
         } else {
             if (is_under_scm($directory)) {
-                print STDERR (COMMAND_NAME, ": info: checking for SCM in directory ",
-                              quote($directory), "\n")
+                print STDERR ("$COMMAND_NAME: info: checking for SCM in directory ", quote($directory), "\n")
                   if $options->{VERBOSE};
                 push @modification_times, scm_modification_time($options, $filename);
                 $is_under_scm{$directory} = 1;
             } else {
-                print STDERR (COMMAND_NAME, ": warning: falling back from SCM to file-system for ",
+                print STDERR ("$COMMAND_NAME: warning: falling back from SCM to file-system for ",
                               quote($filename), "\n");
                 $actual_db = DB_FS;
                 push @modification_times, filesystem_modification_time($options, $filename);
@@ -181,14 +179,14 @@ sub parse_requested_db {
     my $db = lc $a_db_id;
 
     if ($db eq 'file-system' || $db eq 'fs') {
-        DB_FS;
+        return DB_FS;
     } elsif ($db eq 'source-code-manager' || $db eq 'scm') {
-        DB_SCM;
+        return DB_SCM;
     } elsif ($db eq 'none' || $db eq 'n/a') {
-        DB_NONE;
+        return DB_NONE;
     } else {
-        warn(COMMAND_NAME, ": warning: unknown database id ", quote($a_db_id), "\n");
-        DB_NONE;
+        warn "$COMMAND_NAME: warning: unknown database id ", quote($a_db_id), "\n";
+        return DB_NONE;
     }
 }
 
@@ -232,7 +230,7 @@ sub show_help {
     my $options = shift;
 
     print <<END_OF_HELP;
-Usage: @{[COMMAND_NAME]} [OPTION] FILE ...
+Usage: $COMMAND_NAME [OPTION] FILE ...
 
 Show the date of the most recent update to any FILE with respect to
 GMT unless overridden by @{[quote('--localtime')]}.
@@ -255,8 +253,8 @@ Options:
   -h, --help               show this help screen
 
 Examples:
-  @{[COMMAND_NAME]} --format='%Y-%m-%dT%H%M%S' --localtime *.tex
-  @{[COMMAND_NAME]} --database=scm --format='%Y-%m-%d\$^{\\textrm{%q}}\$' *.gp
+  $COMMAND_NAME --format='%Y-%m-%dT%H%M%S' --localtime *.tex
+  $COMMAND_NAME --database=scm --format='%Y-%m-%d\$^{\\textrm{%q}}\$' *.gp
 
 END_OF_HELP
 
@@ -276,7 +274,7 @@ sub get_options {
                              'O|override=s' => sub {override_expansion($_[1])},
                              'v|verbose' => \$options->{VERBOSE},
                              'h|help' => sub {show_help($options)}) or
-                               warn(COMMAND_NAME, ": problems while parsing options\n");
+                               warn "$COMMAND_NAME: problems while parsing options\n";
 }
 
 
@@ -308,16 +306,18 @@ sub main {
 
     get_options($options);
 
-    die(COMMAND_NAME, ": no files given\n",
-        "Try ", quote(COMMAND_NAME . " --help"), " for more information.\n")
+    die("$COMMAND_NAME: no files given\n",
+        "Try ", quote("$COMMAND_NAME --help"), " for more information.\n")
       unless @ARGV;
     my @filenames = filter_exisiting_files(@ARGV);
-    die(COMMAND_NAME, ": none of files given does exist\n") unless @filenames;
+    die("$COMMAND_NAME: none of files given does exist\n") unless @filenames;
     if ($options->{VERBOSE} && @filenames < @ARGV) {
-        print STDERR (COMMAND_NAME, ": info: ", scalar @filenames, " of ", scalar @ARGV, " files exist\n");
+        print STDERR ("$COMMAND_NAME: info: ", scalar @filenames, " of ", scalar @ARGV, " files exist\n");
     }
 
     show_last_update($options, \@filenames);
+
+    return 0;
 }
 
 

@@ -387,6 +387,10 @@ if test "$PERL" != false; then
                        [AC_MSG_WARN(missing Perl module IO::Handle)
                         can_build_doc=no
                         missing_for_doc="$missing_for_doc IO::Handle"])
+  AX_PROG_PERL_MODULES(Readonly, [],
+                       [AC_MSG_WARN(missing Perl module Readonly)
+                        can_build_doc=no
+                        missing_for_doc="$missing_for_doc Readonly"])
 fi
 
 

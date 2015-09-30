@@ -17,6 +17,7 @@ use English;
 use File::Basename ();
 use FindBin qw($Bin);
 use Getopt::Long;
+use Readonly;
 
 use lib $Bin;
 
@@ -25,7 +26,7 @@ use Quote ();
 use TexAux ();
 
 
-use constant COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
+Readonly my $COMMAND_NAME => File::Basename::basename($PROGRAM_NAME);
 
 
 sub quote {Quote::gnu_style(@_)}
@@ -38,7 +39,7 @@ sub write_support_code {
     my $find = $options->{FIND_MACRO_NAME};
 
     my @result =
-      (q(%% This piece of TeX-code was automatically generated with ) . COMMAND_NAME . q(.),
+      (qq(%% This piece of TeX-code was automatically generated with $COMMAND_NAME.),
        q(%%),
        q(%% Define a key-value pair with `) . $insert . q({KEY}{VALUE}'.  Reference),
        q(%% it like any other label, this is, say `). $find . q({KEY}' to recover),
@@ -80,19 +81,15 @@ sub insert_docstring {
     my $key = $data->{KEY};
     my $value = $data->{VALUE};
 
-    unless ($key) {
-        die(COMMAND_NAME, ": empty key at $data->{FILENAME}:$data->{LINENUMBER};\n");
-    }
+    die "$COMMAND_NAME: empty key at $data->{FILENAME}:$data->{LINENUMBER};\n" unless $key;
 
     if (exists $docstrings->{$key}) {
         my $previous_file = $docstrings->{$key}{FILENAME};
         my $previous_line = $docstrings->{$key}{LINENUMBER};
         my $quoted_key = quote($key);
 
-        warn(COMMAND_NAME,
-             qq(: warning: duplicate key $quoted_key at $data->{FILENAME}:$data->{LINENUMBER};\n),
-             COMMAND_NAME,
-             qq(: warning:     previous definition at $previous_file:$previous_line\n));
+        warn("$COMMAND_NAME: warning: duplicate key $quoted_key at $data->{FILENAME}:$data->{LINENUMBER};\n",
+             "$COMMAND_NAME: warning:     previous definition at $previous_file:$previous_line\n");
     }
 
     $docstrings->{$key} = $data;
@@ -123,7 +120,7 @@ sub collect_docstrings {
 sub print_docstrings {
     my ($options, $docstrings) = @_;
 
-    print "% This TeX-file was automatically generated with @{[COMMAND_NAME]}.\n\n";
+    print "% This TeX-file was automatically generated with $COMMAND_NAME.\n\n";
 
     foreach my $key (sort keys %$docstrings) {
         my $filename = $docstrings->{$key}{FILENAME};
@@ -146,7 +143,7 @@ sub scan_file {
     collect_docstrings($docstrings, $input_filename, $input_file);
 
     $input_file->close or
-      warn(COMMAND_NAME, ": cannot close input file ", quote($input_filename), ": $OS_ERROR\n");
+      warn("$COMMAND_NAME: cannot close input file ", quote($input_filename), ": $OS_ERROR\n");
 }
 
 
@@ -154,7 +151,7 @@ sub collect_pairs {
     my ($docstrings, @key_value_pairs) = @_;
 
     if (@key_value_pairs % 2 == 1) {
-        warn(COMMAND_NAME, ": odd number of arguments -- will drop last to form pairs\n");
+        warn "$COMMAND_NAME: odd number of arguments -- will drop last to form pairs\n";
         pop @key_value_pairs;
     }
 
@@ -206,9 +203,9 @@ sub show_help {
        $options->{INSERT_MACRO_NAME}, $options->{FIND_MACRO_NAME}, $options->{KEY_PREFIX});
 
     print <<END_OF_HELP;
-Usage: @{[COMMAND_NAME]} [OPTION] scan-file FILE ...
-   or: @{[COMMAND_NAME]} [OPTION] key-value KEY VALUE ...
-   or: @{[COMMAND_NAME]} [OPTION] write-support-code
+Usage: $COMMAND_NAME [OPTION] scan-file FILE ...
+   or: $COMMAND_NAME [OPTION] key-value KEY VALUE ...
+   or: $COMMAND_NAME [OPTION] write-support-code
 
 Consistently convert documentation strings found in C- or C++-source
 files or on the command line to hash-like structure in TeX.
@@ -247,31 +244,20 @@ Options:
       --prefix=LABEL
                 prefix each key with PREFIX [$quoted_prefix]
 
-      --xargs[=TERMINATOR]
+      --xargs, --xargs0
                 read arguments from STDIN instead of command line;
-                terminate arguments by TERMINATOR [@{[quote('\n')]}];
+                terminate arguments by [@{[quote('\n')]}] or null;
                 negatable with @{[quote('--no-xargs')]}
 
   -h, --help    show this help screen
 
 Examples:
-  @{[COMMAND_NAME]} key-value UPDATED 2015-6-21
-  @{[COMMAND_NAME]} scan-file ../enblend/src/{common.h,global.h,enblend.cc}
-  @{[COMMAND_NAME]} write-support-code
+  $COMMAND_NAME key-value UPDATED 2015-6-21
+  $COMMAND_NAME scan-file ../enblend/src/{common.h,global.h,enblend.cc}
+  $COMMAND_NAME write-support-code
 END_OF_HELP
 
     exit 0;
-}
-
-
-sub get_terminator {
-    my ($terminator) = @_;
-
-    if (!defined($terminator) || $terminator eq '') {
-        return "\n";
-    } else {
-        return eval qq(\"$terminator\");
-    }
 }
 
 
@@ -283,10 +269,11 @@ sub get_options {
     Getopt::Long::GetOptions('insert-macro=s' => \$options->{INSERT_MACRO_NAME},
                              'find-macro=s' => \$options->{FIND_MACRO_NAME},
                              'prefix=s' => \$options->{KEY_PREFIX},
-                             'xargs:s' => sub {$options->{READ_FROM_STDIN} = get_terminator($_[1])},
-                             'no-xargs' => sub {$options->{READ_FROM_STDIN} = undef},
+                             'xargs' => sub {$options->{READ_FROM_STDIN} = "\n"},
+                             'xargs0' => sub {$options->{READ_FROM_STDIN} = "\0"},
+                             'no-xargs|no-xargs0' => sub {$options->{READ_FROM_STDIN} = undef},
                              'h|help' => sub {show_help($options)}) or
-        warn(COMMAND_NAME, ": problems while parsing options\n");
+        warn "$COMMAND_NAME: problems while parsing options\n";
 }
 
 
@@ -299,7 +286,7 @@ sub main {
 
     get_options($options);
 
-    die(COMMAND_NAME, ": missing operation-mode argument\n") unless @ARGV;
+    die "$COMMAND_NAME: missing operation-mode argument\n" unless @ARGV;
 
     my $docstrings = {};
 
@@ -308,11 +295,6 @@ sub main {
     my @arguments = @ARGV;
 
     if ($options->{READ_FROM_STDIN}) {
-        if (length $options->{READ_FROM_STDIN} >= 2) {
-            warn(COMMAND_NAME,
-                 ": warning: suspicious multi-character terminator ", quote($options->{READ_FROM_STDIN}),
-                 " passed to ", quote('--xargs'), "\n");
-        }
         @arguments = (@arguments, read_list_from_file(SEPARATOR => $options->{READ_FROM_STDIN}));
     }
 
@@ -325,10 +307,12 @@ sub main {
         write_support_code($options);
         exit 0;
     } else {
-        die(COMMAND_NAME, ": unknown operation mode ", quote($mode_argument), "\n");
+        die("$COMMAND_NAME: unknown operation mode ", quote($mode_argument), "\n");
     }
 
     print_docstrings($options, $docstrings);
+
+    return 0;
 }
 
 
