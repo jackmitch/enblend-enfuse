@@ -36,6 +36,8 @@
 #include "global.h"
 #include "signature.h"
 #include "dynamic_loader.h"    // HAVE_DYNAMICLOADER_IMPL
+#include "openmp_def.h"        // OPENMP
+#include "opencl.h"            // OPENCL
 
 #include "introspection.h"
 
