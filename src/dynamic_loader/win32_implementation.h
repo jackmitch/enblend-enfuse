@@ -29,7 +29,7 @@
 #ifdef WIN32
 
 #define HAVE_DYNAMICLOADER_IMPL
-
+#define NOMINMAX
 #include <Windows.h>
 
 class WinDynamicLoaderImplementation : public DynamicLoaderImplementation
