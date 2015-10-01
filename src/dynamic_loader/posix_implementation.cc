@@ -22,16 +22,16 @@
 // See: http://pubs.opengroup.org/onlinepubs/9699919799/functions/dlopen.html
 
 
-#include "sunny_implementation.h"
+#include "posix_implementation.h"
 
 
-SunnyDynamicLoaderImplementation::SunnyDynamicLoaderImplementation(const std::string& a_library_name) :
+PosixDynamicLoaderImplementation::PosixDynamicLoaderImplementation(const std::string& a_library_name) :
     super(a_library_name), handle_(nullptr)
 {}
 
 
 void
-SunnyDynamicLoaderImplementation::open()
+PosixDynamicLoaderImplementation::open()
 {
     if (handle_)
     {
@@ -46,7 +46,7 @@ SunnyDynamicLoaderImplementation::open()
 
 
 void
-SunnyDynamicLoaderImplementation::close()
+PosixDynamicLoaderImplementation::close()
 {
     if (!handle_)
     {
@@ -60,7 +60,7 @@ SunnyDynamicLoaderImplementation::close()
 
 
 void*
-SunnyDynamicLoaderImplementation::resolve(const std::string& symbol_name) const
+PosixDynamicLoaderImplementation::resolve(const std::string& symbol_name) const
 {
     if (!handle_)
     {

@@ -17,8 +17,8 @@
  * along with Enblend; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef SUNNY_IMPLEMENTATION_H_INCLUDED
-#define SUNNY_IMPLEMENTATION_H_INCLUDED
+#ifndef POSIX_IMPLEMENTATION_H_INCLUDED
+#define POSIX_IMPLEMENTATION_H_INCLUDED
 
 
 #ifdef HAVE_CONFIG_H
@@ -30,24 +30,24 @@
 #include "dynamic_loader_implementation.h"
 
 
-class SunnyDynamicLoaderImplementation : public DynamicLoaderImplementation
+class PosixDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
     typedef DynamicLoaderImplementation super;
 
 public:
-    explicit SunnyDynamicLoaderImplementation(const std::string& a_library_name);
+    explicit PosixDynamicLoaderImplementation(const std::string& a_library_name);
     void open();
     void close();
     void* resolve(const std::string& symbol_name) const;
 
 private:
     void* handle_;
-}; // class SunnyDynamicLoaderImplementation
+}; // class PosixDynamicLoaderImplementation
 
-typedef SunnyDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+typedef PosixDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
 
-#endif // SUNNY_IMPLEMENTATION_H_INCLUDED
+#endif // POSIX_IMPLEMENTATION_H_INCLUDED
 
 
 // Local Variables:

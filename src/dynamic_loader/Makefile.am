@@ -12,7 +12,7 @@ libdynamic_loader_a_SOURCES = \
 
 EXTRA_libdynamic_loader_a_SOURCES = \
         gmodule_implementation.h gmodule_implementation.cc \
-        sunny_implementation.h sunny_implementation.cc \
+        posix_implementation.h posix_implementation.cc \
         win32_implementation.h win32_implementation.cc
 
 EXTRA_libdynamic_loader_a_DEPENDENCIES = $(DL_IMPLEMENTATION)

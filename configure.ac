@@ -154,8 +154,8 @@ AS_IF([test "$with_dl" != no],
                AC_SEARCH_LIBS(dlopen,
                               [dl],
                               [AC_DEFINE(HAVE_DL, 1, [Define if you have support for dynamic loading])
-                               AC_DEFINE(SUNNY_DL, 1, [Use SunOS dl implementation])
-                               DL_IMPLEMENTATION='libdynamic_loader_a-sunny_implementation.o'
+                               AC_DEFINE(POSIX_DL, 1, [Use POSIX dl implementation])
+                               DL_IMPLEMENTATION='libdynamic_loader_a-posix_implementation.o'
                                dynload_implementation='(via dl)'
                                enable_dynload=yes])
            fi

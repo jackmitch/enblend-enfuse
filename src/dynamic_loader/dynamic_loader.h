@@ -31,9 +31,9 @@
 #if defined(GMODULE_DL)
 #define HAVE_DYNAMICLOADER_IMPL
 #include "gmodule_implementation.h"        // g_module_open(3)
-#elif defined(SUNNY_DL)
+#elif defined(POSIX_DL)
 #define HAVE_DYNAMICLOADER_IMPL
-#include "sunny_implementation.h"          // dlopen(3)
+#include "posix_implementation.h"          // dlopen(3)
 #elif defined(WIN32_DL)
 #define HAVE_DYNAMICLOADER_IMPL
 #include "win32_implementation.h"
