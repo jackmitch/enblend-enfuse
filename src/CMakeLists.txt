@@ -108,6 +108,7 @@ list(APPEND additional_libs layer_selection)
 
 add_subdirectory(dynamic_loader)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dynamic_loader)
+add_definitions(${DL_DEFINITION})
 list(APPEND additional_libs dynamic_loader)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
