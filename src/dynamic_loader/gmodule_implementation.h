@@ -21,22 +21,14 @@
 #define GMODULE_IMPLEMENTATION_H_INCLUDED
 
 
-#include "dynamic_loader_implementation.h"
-
-#include "config.h"
-
-
-#ifdef HAVE_GMODULE
-
-// ANTICIPATED CHANGE: Class GLibDynamicLoader is completely untested,
-// but the code looks pretty kosher.  To test use e.g.
-//     EXTRACPPFLAGS="-I/usr/include/glib-2.0 -I/usr/include/glib-2.0/include -I/usr/lib/glib-2.0/include"
-//     EXTRALDFLAGS="-lgmodule-2.0"
-// undefine all relevant prior HAVE_* and define HAVE_GMODULE.
-
-#define HAVE_DYNAMICLOADER_IMPL
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <gmodule.h>
+
+#include "dynamic_loader_implementation.h"
+
 
 class GLibDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
@@ -54,7 +46,6 @@ private:
 
 typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
-#endif // HAVE_GMODULE
 
 #endif // GMODULE_IMPLEMENTATION_H_INCLUDED
 

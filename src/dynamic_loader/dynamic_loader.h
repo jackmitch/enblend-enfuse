@@ -21,22 +21,24 @@
 #define DYNAMIC_LOADER_H_INCLUDED
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <string>
 #include <vector>
 
-#include "config.h"
-
-
-#include "dynamic_loader_implementation.h" // abstract base class
-// One of the following modules defines HAVE_DYNAMICLOADER_IMPL and
-// sets the typedef `ActualDynamicLoaderImplementation'.
+#if defined(GMODULE_DL)
+#define HAVE_DYNAMICLOADER_IMPL
 #include "gmodule_implementation.h"        // g_module_open(3)
+#elif defined(SUNNY_DL)
+#define HAVE_DYNAMICLOADER_IMPL
 #include "sunny_implementation.h"          // dlopen(3)
+#elif defined(WIN32_DL)
+#define HAVE_DYNAMICLOADER_IMPL
 #include "win32_implementation.h"
-
-#ifndef HAVE_DYNAMICLOADER_IMPL
-// This is the fallback class if no implementation class has been
-// selected yet.
+#else
+// This is the fallback class if no implementation class has been selected yet.
 #include "null_implementation.h"
 #endif
 

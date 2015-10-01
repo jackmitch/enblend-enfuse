@@ -21,10 +21,12 @@
 #define DYNAMIC_LOADER_IMPLEMENTATION_H_INCLUDED
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdexcept>
 #include <string>
-
-#include "config.h"
 
 
 class DynamicLoaderImplementation

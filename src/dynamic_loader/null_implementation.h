@@ -21,9 +21,11 @@
 #define NULL_IMPLEMENTATION_H_INCLUDED
 
 
-#include "dynamic_loader_implementation.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-#include "config.h"
+#include "dynamic_loader_implementation.h"
 
 
 class NullDynamicLoaderImplementation : public DynamicLoaderImplementation

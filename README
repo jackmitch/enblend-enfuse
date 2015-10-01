@@ -171,6 +171,13 @@ multi-threaded compilation and "boost_filesystem" for single-thread
 builds.
 
 
+** --with-dl=CHECK/yes/no/dl/gmodule
+
+Enable user-defined exposure weight functions in Enblend.  With
+argument "check", test for POSIX-compatible dynamic-loader (dl) and if
+unsuccessful for GLib implementation (gmodule).
+
+
 ** --with-tcmalloc=CHECK/yes/no
    -DENABLE_TCMALLOC=OFF/on    (CMake)
 

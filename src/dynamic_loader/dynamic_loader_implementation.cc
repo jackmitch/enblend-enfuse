@@ -1,3 +1,9 @@
+/*
+ * This file is part of Enblend.
+ * Licence details can be found in the file COPYING.
+ */
+
+
 #include "dynamic_loader_implementation.h"
 
 

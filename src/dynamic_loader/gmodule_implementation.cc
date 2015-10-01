@@ -1,14 +1,29 @@
+/*
+ * Copyright (C) 2013, 2015 Dr. Christoph L. Spiel
+ *
+ * This file is part of Enblend.
+ *
+ * Enblend is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Enblend is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Enblend; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
+// See: https://developer.gnome.org/glib/unstable/glib-Dynamic-Loading-of-Modules.html
+
+
 #include "gmodule_implementation.h"
 
-
-#ifdef HAVE_GMODULE
-
-
-// ANTICIPATED CHANGE: Class GLibDynamicLoader is completely untested,
-// but the code looks pretty kosher.  To test use e.g.
-//     EXTRACPPFLAGS="-I/usr/include/glib-2.0 -I/usr/include/glib-2.0/include -I/usr/lib/glib-2.0/include"
-//     EXTRALDFLAGS="-lgmodule-2.0"
-// undefine all relevant prior HAVE_* and define HAVE_GMODULE.
 
 GLibDynamicLoaderImplementation::GLibDynamicLoaderImplementation(const std::string& a_library_name) :
     super(a_library_name), module_(nullptr)
@@ -52,6 +67,3 @@ GLibDynamicLoaderImplementation::resolve(const std::string& symbol_name) const
 
     return symbol;
 }
-
-
-#endif // HAVE_GMODULE

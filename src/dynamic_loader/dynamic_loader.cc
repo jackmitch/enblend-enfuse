@@ -87,8 +87,3 @@ DynamicLoader::finalize()
     implementation_->close();
     delete implementation_;
 }
-
-
-// Local Variables:
-// mode: c++
-// End:

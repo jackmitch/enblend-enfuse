@@ -21,16 +21,16 @@
 #define WIN32_IMPLEMENTATION_H_INCLUDED
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#define NOMINMAX
+
+#include <Windows.h>
+
 #include "dynamic_loader_implementation.h"
 
-#include "config.h"
-
-
-#ifdef WIN32
-
-#define HAVE_DYNAMICLOADER_IMPL
-#define NOMINMAX
-#include <Windows.h>
 
 class WinDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
@@ -49,8 +49,6 @@ private:
 }; // class WinDynamicLoaderImplementation
 
 typedef WinDynamicLoaderImplementation ActualDynamicLoaderImplementation;
-
-#endif // WIN32
 
 #endif // WIN32_IMPLEMENTATION_H_INCLUDED
 

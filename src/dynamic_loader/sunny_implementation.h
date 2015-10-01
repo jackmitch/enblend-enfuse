@@ -21,16 +21,14 @@
 #define SUNNY_IMPLEMENTATION_H_INCLUDED
 
 
-#include "dynamic_loader_implementation.h"
-
-#include "config.h"
-
-
-#ifdef HAVE_DL
-
-#define HAVE_DYNAMICLOADER_IMPL
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <dlfcn.h>
+
+#include "dynamic_loader_implementation.h"
+
 
 class SunnyDynamicLoaderImplementation : public DynamicLoaderImplementation
 {
@@ -48,7 +46,6 @@ private:
 
 typedef SunnyDynamicLoaderImplementation ActualDynamicLoaderImplementation;
 
-#endif // HAVE_DL
 
 #endif // SUNNY_IMPLEMENTATION_H_INCLUDED
 

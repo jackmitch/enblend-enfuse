@@ -140,19 +140,39 @@ AC_ARG_WITH(dmalloc,
             [AC_MSG_RESULT(no)
              enable_dmalloc=no])
 
+DL_IMPLEMENTATION=''
+dynload_implementation=''
 enable_dynload=no
 AC_ARG_WITH([dl],
             [AS_HELP_STRING([--with-dl], [add support for dynamic loading @<:@default=check@:>@])],
             [],
             [with_dl=check])
-AS_IF([test "$with_dl" = check -o "$with_dl" = yes],
-      [AC_CHECK_HEADERS(dlfcn.h)
-       if test "$ac_cv_header_dlfcn_h" = yes -o "$with_dl" = yes; then
-           AC_SEARCH_LIBS(dlopen,
-                          [dl],
-                          [AC_DEFINE(HAVE_DL, 1, [Define if you have support for dynamic loading])
-                           enable_dynload=yes])
+AS_IF([test "$with_dl" != no],
+      [if test "$with_dl" = check -o "$with_dl" = yes -o "$with_dl" = dl; then
+           AC_CHECK_HEADERS(dlfcn.h)
+           if test "$ac_cv_header_dlfcn_h" = yes; then
+               AC_SEARCH_LIBS(dlopen,
+                              [dl],
+                              [AC_DEFINE(HAVE_DL, 1, [Define if you have support for dynamic loading])
+                               AC_DEFINE(SUNNY_DL, 1, [Use SunOS dl implementation])
+                               DL_IMPLEMENTATION='libdynamic_loader_a-sunny_implementation.o'
+                               dynload_implementation='(via dl)'
+                               enable_dynload=yes])
+           fi
+       fi
+       if test "$enable_dynload" != yes -a \( "$with_dl" = check -o "$with_dl" = gmodule \); then
+           AC_CHECK_HEADERS(gmodule.h)
+           if test "$ac_cv_header_gmodule_h" = yes; then
+               AC_SEARCH_LIBS(g_module_open,
+                              [gmodule-2.0],
+                              [AC_DEFINE(HAVE_DL, 1, [Define if you have support for dynamic loading])
+                               AC_DEFINE(GMODULE_DL, 1, [Use gmodule-2.0 dl implementation])
+                               DL_IMPLEMENTATION='libdynamic_loader_a-gmodule_implementation.o'
+                               dynload_implementation='(via gmodule-2.0)'
+                               enable_dynload=yes])
+           fi
        fi])
+AC_SUBST(DL_IMPLEMENTATION)
 AM_CONDITIONAL([DYNAMIC_EXPOSURE_WEIGHTS], [test "$with_dl" = yes])
 
 # Checks for header files.
@@ -600,7 +620,7 @@ AC_MSG_RESULT([
  feature selection:
    enable debugging support:       ${enable_debug}
    enable malloc debugging:        ${enable_dmalloc}
-   enable dynamic loading          ${enable_dynload}
+   enable dynamic loading          ${enable_dynload} ${dynload_implementation}
    OpenEXR image format            ${have_exr}
    use image cache:                ${enable_image_cache}
    use OpenMP:                     ${enable_openmp}
