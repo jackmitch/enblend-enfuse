@@ -44,7 +44,14 @@ private:
     void* handle_;
 }; // class PosixDynamicLoaderImplementation
 
-typedef PosixDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+
+class ActualDynamicLoaderImplementation : public PosixDynamicLoaderImplementation
+{
+public:
+    explicit ActualDynamicLoaderImplementation(const std::string& a_library_name) :
+        PosixDynamicLoaderImplementation(a_library_name)
+    {}
+}; // class ActualDynamicLoaderImplementation
 
 
 #endif // POSIX_IMPLEMENTATION_H_INCLUDED

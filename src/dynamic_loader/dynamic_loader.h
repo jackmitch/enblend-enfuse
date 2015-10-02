@@ -28,19 +28,13 @@
 #include <string>
 #include <vector>
 
-#if defined(GMODULE_DL)
+
+#if defined(GMODULE_DL) || defined(POSIX_DL) || defined(WIN32_DL)
 #define HAVE_DYNAMICLOADER_IMPL
-#include "gmodule_implementation.h"        // g_module_open(3)
-#elif defined(POSIX_DL)
-#define HAVE_DYNAMICLOADER_IMPL
-#include "posix_implementation.h"          // dlopen(3)
-#elif defined(WIN32_DL)
-#define HAVE_DYNAMICLOADER_IMPL
-#include "win32_implementation.h"
-#else
-// This is the fallback class if no implementation class has been selected yet.
-#include "null_implementation.h"
 #endif
+
+
+class ActualDynamicLoaderImplementation;
 
 
 class DynamicLoader

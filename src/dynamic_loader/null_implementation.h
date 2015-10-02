@@ -43,7 +43,14 @@ public:
     void* resolve(const std::string&) const {return nullptr;}
 }; // class NullDynamicLoaderImplementation
 
-typedef NullDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+
+class ActualDynamicLoaderImplementation : public NullDynamicLoaderImplementation
+{
+public:
+    explicit ActualDynamicLoaderImplementation(const std::string& a_library_name) :
+        NullDynamicLoaderImplementation(a_library_name)
+    {}
+}; // class ActualDynamicLoaderImplementation
 
 
 #endif // NULL_IMPLEMENTATION_H_INCLUDED

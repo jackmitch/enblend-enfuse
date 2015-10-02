@@ -18,6 +18,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
+#if defined(GMODULE_DL)
+#include "gmodule_implementation.h"        // g_module_open(3)
+#elif defined(POSIX_DL)
+#include "posix_implementation.h"          // dlopen(3)
+#elif defined(WIN32_DL)
+#include "win32_implementation.h"
+#else
+// This is the fallback class if no implementation class has been selected.
+#include "null_implementation.h"
+#endif
+
+
 #include "dynamic_loader.h"
 
 

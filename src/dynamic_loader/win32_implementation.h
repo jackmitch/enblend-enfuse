@@ -48,7 +48,15 @@ private:
     HINSTANCE handle_;
 }; // class WinDynamicLoaderImplementation
 
-typedef WinDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+
+class ActualDynamicLoaderImplementation : public WinDynamicLoaderImplementation
+{
+public:
+    explicit ActualDynamicLoaderImplementation(const std::string& a_library_name) :
+        WinDynamicLoaderImplementation(a_library_name)
+    {}
+}; // class ActualDynamicLoaderImplementation
+
 
 #endif // WIN32_IMPLEMENTATION_H_INCLUDED
 

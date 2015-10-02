@@ -44,7 +44,14 @@ private:
     GModule* module_;
 }; // class GLibDynamicLoaderImplementation
 
-typedef GLibDynamicLoaderImplementation ActualDynamicLoaderImplementation;
+
+class ActualDynamicLoaderImplementation : public GLibDynamicLoaderImplementation
+{
+public:
+    explicit ActualDynamicLoaderImplementation(const std::string& a_library_name) :
+        GLibDynamicLoaderImplementation(a_library_name)
+    {}
+}; // class ActualDynamicLoaderImplementation
 
 
 #endif // GMODULE_IMPLEMENTATION_H_INCLUDED
