@@ -1,21 +1,20 @@
 set(DYNAMIC_LOADER_FILES
     dynamic_loader.h dynamic_loader.cc
     dynamic_loader_implementation.h dynamic_loader_implementation.cc
-    win32_implementation.h posix_implementation.h gmodule_implementation.h
 )
 
 if(WIN32)
-  list(APPEND DYNAMIC_LOADER_FILES win32_implementation.cc)
+  list(APPEND DYNAMIC_LOADER_FILES win32_implementation.h win32_implementation.cc)
   add_definitions(-DWIN32_DL)
   set(DL_DEFINITION -DWIN32_DL PARENT_SCOPE)
 else()
   if(HAVE_DL)
-    list(APPEND DYNAMIC_LOADER_FILES posix_implementation.cc)
+    list(APPEND DYNAMIC_LOADER_FILES posix_implementation.h posix_implementation.cc)
     add_definitions(-DPOSIX_DL)
     set(DL_DEFINITION -DPOSIX_DL PARENT_SCOPE)
   else()
     if(HAVE_GMODULE)
-      list(APPEND DYNAMIC_LOADER_FILES gmodule_implementation.cc)
+      list(APPEND DYNAMIC_LOADER_FILES gmodule_implementation.h gmodule_implementation.cc)
       add_definitions(-DGMODULE_DL)
       set(DL_DEFINITION -DGMODULE_DL PARENT_SCOPE)
     else()
