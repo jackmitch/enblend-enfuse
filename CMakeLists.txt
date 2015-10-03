@@ -438,6 +438,14 @@ if (PERL_FOUND AND DOC)
             message(FATAL_ERROR "Could not retrieve hevea library directory.")
         endif()
     endif()
+    # checking for required Perl module Readonly
+    execute_process(
+        COMMAND "${PERL_EXECUTABLE}" "-e" "use Readonly; print \$INC{\"Readonly\"}"
+        RESULT_VARIABLE readonly_result_code
+    )
+    if(NOT readonly_result_code EQUAL 0)
+        message(FATAL_ERROR "Checking for perl module Readonly - failed")
+    endif()	
     set(PAPERSIZE "a4" CACHE STRING "Papersize for some converters: a4, a5, b5, executive, legal, letter")
     set(PRINTRESOLUTION "600" CACHE STRING "Resolution for some converters in dots-per-inch")
     set(DYNAMIC_TEX_PREAMBLE "\\def\\finishdynamicpreamble{\\overfullrule=2pt\\relax}" CACHE STRING "LaTeX commands to add to preamble")
