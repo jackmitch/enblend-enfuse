@@ -200,6 +200,7 @@ LayerSelectionHost LayerSelection;
 
 #ifdef OPENCL
 namespace GPU {
+    std::unique_ptr<ocl::CalculateStateProbabilities> StateProbabilities = nullptr;
     std::unique_ptr<vigra::ocl::DistanceTransformFH> DistanceTransform = nullptr;
 }
 #endif
@@ -1784,8 +1785,10 @@ int main(int argc, char** argv)
 
 #ifdef OPENCL
     if (GPUContext && UseGPU) {
+        GPU::StateProbabilities = ocl::create_function<ocl::CalculateStateProbabilities>(GPUContext);
         GPU::DistanceTransform = ocl::create_function<vigra::ocl::DistanceTransformFH>(GPUContext);
         if (BatchCompiler) {
+            BatchCompiler->submit(GPU::StateProbabilities.get());
             BatchCompiler->submit(GPU::DistanceTransform.get());
         }
     }

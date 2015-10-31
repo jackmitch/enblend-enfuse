@@ -62,10 +62,11 @@ namespace vigra
                           ValueType background, int norm)
         {
             timer::WallClock wall_clock;
+            const bool enable_kernel = parameter::as_boolean("gpu-kernel-dt", true);
 
             wall_clock.start();
 #ifdef OPENCL
-            if (GPUContext && GPU::DistanceTransform)
+            if (GPUContext && GPU::DistanceTransform && enable_kernel)
             {
 #ifdef DEBUG
                 std::cerr <<
@@ -78,7 +79,7 @@ namespace vigra
             }
             else
             {
-                if (UseGPU)
+                if (UseGPU && enable_kernel)
                 {
                     std::cerr <<
                         command << ": warning: missing GPUContext or OpenCL DistanceTransform\n" <<
@@ -94,8 +95,8 @@ namespace vigra
                                           dest_upperleft, dest_acc,
                                           background, norm);
 #endif // OPENCL
-            wall_clock.stop();
 
+            wall_clock.stop();
             if (parameter::as_boolean("time-distance-transform", false))
             {
                 const std::ios::fmtflags flags(std::cerr.flags());

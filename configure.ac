@@ -524,11 +524,11 @@ AC_ARG_ENABLE(debug,
               [enable_debug=$enableval],
               [enable_debug=$debug_default])
 if test "$enable_debug" = yes; then
-    CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
+    CXXFLAGS="$CXXFLAGS -g -DDEBUG"
     AC_MSG_RESULT(yes)
     enable_debug=yes
 else
-    CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG -Wall"
+    CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG"
     AC_MSG_RESULT(no)
     enable_debug=no
 fi

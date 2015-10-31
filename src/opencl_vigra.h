@@ -230,42 +230,22 @@ namespace vigra
             {
                 if (f_.queue().getInfo<CL_QUEUE_PROPERTIES>() & CL_QUEUE_PROFILING_ENABLE)
                 {
-                    typedef std::pair<std::string, double> pair_t;
-                    std::vector<pair_t> results = {
-                        std::make_pair("map buffer", ::ocl::event_latency(write_buffer_prereq_[0])),
-                        std::make_pair("write buffer", ::ocl::event_latency(column_kernel_prereq_[0])),
-                        std::make_pair("column kernel", ::ocl::event_latency(row_kernel_prereq_[0])),
-                        std::make_pair("row kernel", ::ocl::event_latency(read_buffer_prereq_[0])),
-                        std::make_pair("read buffer", ::ocl::event_latency(unmap_buffer_prereq_[0])),
-                        std::make_pair("unmap buffer", ::ocl::event_latency(done_))
-                    };
-                    auto partial_sum =
-                        [] (double a_partial_sum, const pair_t& a_pair)
-                        {return a_partial_sum + a_pair.second;};
-                    results.push_back(std::make_pair("TOTAL",
-                                                     std::accumulate(results.begin(), results.end(),
-                                                                     double(), partial_sum)));
+                    ::ocl::ShowProfileData show_profile;
 
-                    const std::ios::fmtflags flags(std::cerr.flags());
+                    show_profile.set_device(&f_.device());
+
+                    show_profile.add_event_latency("map buffer", write_buffer_prereq_[0]);
+                    show_profile.add_event_latency("write buffer", column_kernel_prereq_[0]);
+                    show_profile.add_event_latency("column kernel", row_kernel_prereq_[0]);
+                    show_profile.add_event_latency("row kernel", read_buffer_prereq_[0]);
+                    show_profile.add_event_latency("read buffer", unmap_buffer_prereq_[0]);
+                    show_profile.add_event_latency("unmap buffer", done_);
+
                     std::cerr <<
                         "\n" <<
                         command << ": timing: OpenCL latencies of `Distance Transform' for " <<
                         a_size << " = " << a_size.area() << " pixel image\n";
-                    for (auto& r : results)
-                    {
-                        std::cerr <<
-                            command << ": timing:         " <<
-                            std::setw(16) << r.first <<
-                            std::fixed <<
-                            std::setw(10) << std::setprecision(3) << 1000.0 * r.second << " ms    " <<
-                            std::setw(6) << std::setprecision(1) <<
-                            100.0 * r.second / results.back().second << "%\n";
-                    }
-                    std::cerr <<
-                        command << ": timing: device profiling timer resolution " <<
-                        std::setprecision(6) <<
-                        f_.device().getInfo<CL_DEVICE_PROFILING_TIMER_RESOLUTION>() / 1.0e6 << " ms\n";
-                    std::cerr.flags(flags);
+                    show_profile.show_results(std::cerr);
                 }
             }
 
@@ -350,8 +330,8 @@ namespace vigra
 
             size_t work_group_size(size_t a_suggested_work_group_size) const
             {
-                return ::ocl::round_to_next_multiple(a_suggested_work_group_size,
-                                                     preferred_work_group_size_multiple_);
+                return ::ocl::round_up_to_next_multiple(a_suggested_work_group_size,
+                                                        preferred_work_group_size_multiple_);
             }
 
 #ifdef PREFER_SEPARATE_OPENCL_SOURCE

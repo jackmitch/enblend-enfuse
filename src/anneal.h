@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __ANNEAL_H__
-#define __ANNEAL_H__
+#ifndef ANNEAL_H_INCLUDED
+#define ANNEAL_H_INCLUDED
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -41,7 +41,18 @@
 
 #include "masktypedefs.h"
 #include "muopt.h"
+#include "opencl.h"
+#include "opencl_anneal.h"
 #include "openmp_lock.h"
+#include "timer.h"
+
+
+#ifdef OPENCL
+namespace GPU
+{
+    extern std::unique_ptr<ocl::CalculateStateProbabilities> StateProbabilities;
+}
+#endif
 
 
 // Nicol N. Schraudolph
@@ -230,7 +241,7 @@ public:
         }
     }
 
-    ~GDAConfiguration() {
+    virtual ~GDAConfiguration() {
         std::for_each(pointStateSpaces.begin(), pointStateSpaces.end(),
                       [](std::vector<vigra::Point2D>* x) {delete x;});
         std::for_each(pointStateProbabilities.begin(), pointStateProbabilities.end(),
@@ -347,7 +358,7 @@ public:
     }
 
 protected:
-    void calculateStateProbabilities() {
+    virtual void calculateStateProbabilities() {
         const int mf_size = static_cast<int>(mfEstimates.size());
 
 #ifdef OPENMP
@@ -400,6 +411,8 @@ protected:
                     Pi[i] = 0.0;
                 }
 
+                timer::WallClock wall_clock;
+                wall_clock.start();
                 // Calculate new stateProbabilities
                 // An = 1 / (1 + exp((E[j] - E[i]) / tCurrent))
                 // pi[j]' = 1/K * sum_(0)_(k-1) An(i,j) * (pi[i] + pi[j])
@@ -418,6 +431,17 @@ protected:
                         Pi[i] += piT - piTAn;
                     }
                     (*stateProbabilities)[j] = Pi[j] / localK;
+                }
+                wall_clock.stop();
+                if (parameter::as_boolean("time-state-probabilities", false))
+                {
+                    ocl::StowFormatFlags _;
+
+                    std::cerr <<
+                        "\n" <<
+                        command << ": timing: wall-clock runtime of `Calculate New State Probabilities' (CPU): " <<
+                        std::setprecision(3) << 1e6 * wall_clock.value() << " µs\n" <<
+                        std::endl;
                 }
             }
 
@@ -634,7 +658,106 @@ protected:
     double mismatchWeight;
 
     omp::lock cerrLock;
-};
+}; // class GDAConfiguration
+
+
+#ifdef OPENCL
+
+template <typename CostImage, typename VisualizeImage>
+class GDAConfigurationGPU : public GDAConfiguration<CostImage, VisualizeImage>
+{
+    typedef GDAConfiguration<CostImage, VisualizeImage> super;
+
+public:
+    GDAConfigurationGPU(const CostImage* const d, Segment* v, VisualizeImage* const vi) : super(d, v, vi)
+    {
+#ifdef DEBUG
+        std::cerr << command << ": info: choose OpenCL accelaration for Anneal Snake" << std::endl;
+#endif
+    }
+
+protected:
+    void calculateStateProbabilities() override // GPU version
+    {
+        const int mf_size = static_cast<int>(super::mfEstimates.size());
+
+        const size_t maximum_probability_vector_size =
+            (*std::max_element(super::pointStateProbabilities.begin(),
+                               super::pointStateProbabilities.end(),
+                               [] (const std::vector<double>* x, const std::vector<double>* y)
+        {return x->size() < y->size();}))->size();
+
+        // Method GPU::StateProbabilities->setup() allocates space for
+        // `E' and `Pi' for us.  In particular it will use the GPU's
+        // favorite global memory.
+        float* E;
+        float* Pi;
+        GPU::StateProbabilities->setup(maximum_probability_vector_size, static_cast<size_t>(super::kMax),
+                                       E, Pi);
+
+        for (int index = 0; index < mf_size; ++index)
+        {
+            if (super::convergedPoints[index])
+            {
+                continue;
+            }
+
+            const std::vector<vigra::Point2D>* stateSpace = super::pointStateSpaces[index];
+            std::vector<double>* stateProbabilities = super::pointStateProbabilities[index];
+            const std::vector<int>* stateDistances = super::pointStateDistances[index];
+            const int localK = static_cast<int>(stateSpace->size());
+
+            const int lastIndex = (index == 0 ? mf_size : index) - 1;
+            const int nextIndex = (index + 1) % mf_size;
+            const vigra::Point2D lastPointEstimate = super::mfEstimates[lastIndex];
+            const bool lastPointInCostImage = super::costImage->isInside(lastPointEstimate);
+            const vigra::Point2D nextPointEstimate = super::mfEstimates[nextIndex];
+            const bool nextPointInCostImage = super::costImage->isInside(nextPointEstimate);
+
+            // Calculate E values.
+            for (int i = 0; i < localK; ++i)
+            {
+                const vigra::Point2D currentPoint = (*stateSpace)[i];
+                const int distanceCost = (*stateDistances)[i];
+                int mismatchCost = 0;
+                if (lastPointInCostImage)
+                {
+                    mismatchCost += super::costImageCost(lastPointEstimate, currentPoint);
+                }
+                if (nextPointInCostImage)
+                {
+                    mismatchCost += super::costImageCost(currentPoint, nextPointEstimate);
+                }
+
+                const double cost =
+                    super::distanceWeight * static_cast<double>(distanceCost) +
+                    super::mismatchWeight * static_cast<double>(mismatchCost);
+                E[i] = static_cast<float>(cost / super::tCurrent);
+                Pi[i] = 0.0f;
+            } // for i
+
+            timer::WallClock wall_clock;
+            wall_clock.start();
+            GPU::StateProbabilities->run(localK, stateProbabilities, super::kMax, E, Pi);
+            wall_clock.stop();
+
+            if (parameter::as_boolean("time-state-probabilities", false))
+            {
+                ocl::StowFormatFlags _;
+
+                std::cerr <<
+                    "\n" <<
+                    command << ": timing: wall-clock runtime of `Calculate New State Probabilities' (GPU): " <<
+                    std::setprecision(3) << 1e6 * wall_clock.value() << " µs\n" <<
+                    std::endl;
+            }
+        } // for index
+
+        GPU::StateProbabilities->teardown();
+    }
+}; // class GDAConfigurationGPU
+
+#endif // OPENCL
 
 
 template <typename CostImage, typename VisualizeImage>
@@ -643,22 +766,53 @@ void annealSnake(const CostImage* const ci,
                  Segment* snake,
                  VisualizeImage* const vi)
 {
-    GDAConfiguration<CostImage, VisualizeImage> cfg(ci, snake, vi);
+    timer::WallClock wall_clock;
+    const bool enable_kernel = parameter::as_boolean("gpu-kernel-anneal", true);
 
-    cfg.setOptimizerWeights(optimizerWeights.first, optimizerWeights.second);
-    cfg.run();
+    wall_clock.start();
+#ifdef OPENCL
+    std::unique_ptr<GDAConfiguration<CostImage, VisualizeImage> >
+        cfg((GPUContext && enable_kernel) ?
+            new GDAConfigurationGPU<CostImage, VisualizeImage>(ci, snake, vi) :
+            new GDAConfiguration<CostImage, VisualizeImage>(ci, snake, vi));
 
-    std::vector<vigra::Point2D>::const_iterator annealedPoint = cfg.getCurrentPoints().begin();
+    if (GPUContext && enable_kernel)
+    {
+        GPU::StateProbabilities->wait();     // Ensure that kernel was built.
+    }
+#else
+    std::unique_ptr<GDAConfiguration<CostImage, VisualizeImage> >
+        cfg(new GDAConfiguration<CostImage, VisualizeImage>(ci, snake, vi));
+#endif
+
+    cfg->setOptimizerWeights(optimizerWeights.first, optimizerWeights.second);
+    cfg->run();
+
+    std::vector<vigra::Point2D>::const_iterator annealedPoint = cfg->getCurrentPoints().begin();
     for (Segment::iterator snakePoint = snake->begin();
          snakePoint != snake->end();
-         ++snakePoint, ++annealedPoint) {
+         ++snakePoint, ++annealedPoint)
+    {
         snakePoint->second = *annealedPoint;
+    }
+
+    wall_clock.stop();
+    if (parameter::as_boolean("time-anneal-snake", false))
+    {
+        ocl::StowFormatFlags _;
+
+        std::cerr <<
+            "\n" <<
+            command << ": timing: wall-clock runtime of `Anneal Snake': " <<
+            std::setprecision(3) << 1000.0 * wall_clock.value() << " ms\n" <<
+            std::endl;
     }
 }
 
 } // namespace enblend
 
-#endif /* __ANNEAL_H__ */
+#endif // ANNEAL_H_INCLUDED
+
 
 // Local Variables:
 // mode: c++

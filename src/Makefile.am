@@ -14,7 +14,7 @@ enblend_SOURCES = fillpolygon.hxx functoraccessor.hxx rect2d.hxx stride.hxx \
                   global.h graphcut.h \
                   maskcommon.h masktypedefs.h mask.h postoptimizer.h \
                   nearest.h numerictraits.h \
-                  opencl.h opencl.cc opencl_vigra.h \
+                  opencl.h opencl.cc opencl_anneal.h opencl_vigra.h \
                   openmp_def.h openmp_lock.h openmp_vigra.h \
                   path.h pyramid.h \
                   alternativepercentage.h alternativepercentage.cc \
@@ -68,7 +68,7 @@ enfuse_CXXFLAGS = -DENFUSE_SOURCE $(AM_CXXFLAGS) $(GSL_CFLAGS) \
                   -I$(top_srcdir)/src/dynamic_loader \
                   -I$(top_srcdir)/src/layer_selection
 
-EXTRA_DIST = embrace distance_transform_fh.cl \
+EXTRA_DIST = embrace calculate_state_probabilities.cl distance_transform_fh.cl \
              enblend.1 enfuse.1 \
              gen_sig DefaultSig.pm Sig.pm \
              CMakeLists.txt
@@ -78,14 +78,17 @@ DISTCLEANFILES = enblend.1 enfuse.1
 
 # Generated sources
 
-BUILT_SOURCES = signature.h distance_transform_fh.icl
-CLEANFILES = signature.h distance_transform_fh.icl
+BUILT_SOURCES = signature.h calculate_state_probabilities.icl distance_transform_fh.icl
+CLEANFILES = signature.h calculate_state_probabilities.icl distance_transform_fh.icl
+
+%.icl: %.cl
+	$(AM_V_GEN)$(srcdir)/embrace --format=c++ --label=$(basename $(notdir $<))_source_code $< > $@
+
+calculate_state_probabilities.icl: calculate_state_probabilities.cl
+distance_transform_fh.icl: distance_transform_fh.cl
 
 signature.h: $(srcdir)/gen_sig $(srcdir)/DefaultSig.pm $(srcdir)/Sig.pm
 	@ $(PERL) -I$(srcdir) $< --extra=$(VERSION) > $@
-
-distance_transform_fh.icl: distance_transform_fh.cl
-	$(AM_V_GEN)$(srcdir)/embrace --format=c++ --label=distance_transform_fh_source_code $< > $@
 
 
 # Documentation

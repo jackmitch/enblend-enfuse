@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2015 Christoph L. Spiel
+ * Copyright (C) 2013-2015 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -30,6 +30,7 @@
 #include <deque>
 #include <memory>               // std::unique_ptr
 #include <mutex>
+#include <stack>
 #include <stdexcept>            // std::runtime_error
 #include <string>
 #include <thread>
@@ -55,8 +56,152 @@
 #define UNUSEDVAR __attribute__((unused))
 #endif
 
+
+namespace cl
+{
+    // forward declarations
+    class Device;
+    class Event;
+}
+
+
 namespace ocl
 {
+    // Answer whether pointer [x] is aligned to a boundary given by
+    // the size of the pointer's target type.
+    template <typename t>
+    inline static bool
+    is_self_aligned(const t* x)
+    {
+        return reinterpret_cast<off_t>(x) % sizeof(decltype(x)) == off_t();
+    }
+
+
+    // Answer whether pointer [x] is aligned to an [n]-byte boundary.
+    template <typename t>
+    inline static bool
+    is_aligned_to(const t* x, size_t n)
+    {
+        return reinterpret_cast<off_t>(x) % n == off_t();
+    }
+
+
+    template <typename t>
+    inline static t
+    round_up_to_next_multiple(t a_number, t a_multiple)
+    {
+        if (a_multiple == t())
+        {
+            return a_number;
+        }
+        else
+        {
+            const t remainder = a_number % a_multiple;
+
+            if (remainder == t())
+            {
+                return a_number;
+            }
+            else
+            {
+                return a_number + a_multiple - remainder;
+            }
+        }
+    }
+
+
+    template <typename t>
+    inline static t
+    round_up_to_next_power_of_two(t a_number)
+    {
+        static_assert(std::numeric_limits<t>::is_integer::value, "integral-only template");
+
+        assert(a_number >= t());
+
+        if (a_number != t() && (a_number & (a_number - 1)) == t())
+        {
+            return a_number;
+        }
+        else
+        {
+            t result(1);
+
+            while (result < a_number)
+            {
+                result <<= 1U;
+            }
+
+            return result;
+        }
+    }
+
+
+    std::vector<std::string> split_string(const std::string& a_string, char a_delimiter,
+                                          bool keep_empty_tokens = false);
+
+
+    class StowFormatFlags
+    {
+        typedef std::stack<std::ios::fmtflags> flag_stack;
+
+    public:
+        StowFormatFlags();
+        virtual ~StowFormatFlags();
+
+        void push();
+        void pop();
+
+    private:
+        flag_stack cin_flags_;
+        flag_stack cout_flags_;
+        flag_stack cerr_flags_;
+    }; // class StowFormatFlags
+
+
+    class ShowProfileData
+    {
+        struct Measurement
+        {
+            Measurement() = delete;
+            Measurement(const std::string& a_label, double a_latency) :
+                label(a_label), latency(a_latency), multi(false) {}
+
+            std::string label;
+            double latency;
+            bool multi;         // summary of multiple mevents?
+        }; // struct Measurement
+
+        typedef std::vector<Measurement> result_t;
+
+    public:
+        ShowProfileData();
+        virtual ~ShowProfileData();
+
+        // With cl::Device we can augment the event-latencies with the
+        // timer resolution.  If the user does not set the device we
+        // do not print anything related to the resolution.
+        void set_device(const cl::Device* a_device);
+
+        void add_result(const std::string& a_label, double a_latency);
+        void add_event_latency(const std::string& a_label, cl::Event& an_event);
+        template <typename input_iterator>
+        void add_event_latencies(const std::string& a_label, input_iterator a_first, input_iterator a_last);
+
+        void clear_results();
+
+        typedef enum {NANO_SECONDS, MICRO_SECONDS, MILLI_SECONDS, SECONDS} base_unit_t;
+
+        virtual void show_results(std::ostream& an_output_stream,
+                                  base_unit_t a_base_unit = MILLI_SECONDS) const;
+
+    private:
+        double total_latency() const;
+
+        const cl::Device* device_;
+        result_t results_;
+    }; // class ShowProfileData
+
+
 #if defined(_OPENCL) || defined(CL_HPP_)
 
 #define OPENCL
@@ -113,30 +258,6 @@ namespace ocl
 
     // Recover the platform vendor's ID from a_context.
     vendor::id_t derive_vendor_id_from_context(const cl::Context* a_context);
-
-
-    template <typename t>
-    inline static t
-    round_to_next_multiple(t a_number, t a_multiple)
-    {
-        if (a_multiple == t())
-        {
-            return a_number;
-        }
-        else
-        {
-            const t remainder = a_number % a_multiple;
-
-            if (remainder == t())
-            {
-                return a_number;
-            }
-            else
-            {
-                return a_number + a_multiple - remainder;
-            }
-        }
-    }
 
 
     double event_latency(cl::Event& an_event); // latency in seconds
@@ -264,7 +385,7 @@ namespace ocl
 
 
     // Class "Function" is the main helper for constructing
-    // OpenCL-based Vigra extensions.
+    // OpenCL-based functionality.
     //     * It supplies access to cl::Context, one or more
     //     * cl::Device objects, as well as one or more associated
     //       cl::CommandQueue objects.
@@ -312,8 +433,9 @@ namespace ocl
 
         std::string build_options(const std::string& an_extra_build_option) const;
 
+        void add_queue(const cl::Device& a_device);
         const std::vector<cl::CommandQueue>& queues() const {return queues_;}
-        cl::CommandQueue queue() const {return queues_.front();}
+        cl::CommandQueue& queue(int an_index = 0) {return queues_[an_index];}
 
     protected:
         virtual void update_program_from_source(const cl::Program::Sources& a_source);
@@ -407,7 +529,7 @@ namespace ocl
 
         bool build_completed() override;
 
-        void notify(cl_program a_program);
+        void notify(cl_program a_program) override;
 
     private:
         std::mutex build_completed_mutex_;
@@ -476,9 +598,9 @@ namespace ocl
     }; // class BatchBuilder
 
 
-    // This is the most basic implementation of an BatchBuilder.
-    // It does not perform any parallelization or implements a
-    // sophisticated signal/wait logic.  Still the class may be
+    // This is the most basic implementation of a BatchBuilder.  It
+    // does not perform any parallelization nor does it implement a
+    // sophisticated signal/wait logic.  Still, the class may be
     // valuable
     //     (1) for debugging -- in particular the BatchBuilder
     //         itself or

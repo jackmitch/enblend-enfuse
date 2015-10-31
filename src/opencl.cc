@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, 2015 Christoph L. Spiel
+ * Copyright (C) 2013-2015 Christoph L. Spiel
  *
  * This file is part of Enblend.
  *
@@ -23,6 +23,7 @@
 #include <cassert>
 #include <cstdarg>              // va_list
 #include <fstream>              // std::ifstream
+#include <iomanip>
 #include <iostream>
 #include <iterator>             // std::istream_iterator
 #include <sstream>
@@ -33,6 +34,61 @@
 
 namespace ocl
 {
+    StowFormatFlags::StowFormatFlags()
+    {
+        push();
+    }
+
+
+    StowFormatFlags::~StowFormatFlags()
+    {
+        pop();
+    }
+
+
+    void
+    StowFormatFlags::push()
+    {
+        cin_flags_.push(std::cin.flags());
+        cout_flags_.push(std::cout.flags());
+        cerr_flags_.push(std::cerr.flags());
+    }
+
+
+    void
+    StowFormatFlags::pop()
+    {
+        std::cin.flags(cin_flags_.top());
+        cin_flags_.pop();
+        std::cout.flags(cout_flags_.top());
+        cout_flags_.pop();
+        std::cerr.flags(cerr_flags_.top());
+        cerr_flags_.pop();
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+
+    std::vector<std::string>
+    split_string(const std::string& a_string, char a_delimiter, bool keep_empty_tokens)
+    {
+        std::stringstream s(a_string);
+        std::vector<std::string> tokens;
+        std::string t;
+
+        while (std::getline(s, t, a_delimiter))
+        {
+            if (keep_empty_tokens || !t.empty())
+            {
+                tokens.push_back(t);
+            }
+        }
+
+        return tokens;
+    }
+
+
     template <class iterator>
     static std::string
     concatenate(const std::string& a_separator, iterator a_begin, iterator an_end)
@@ -151,6 +207,162 @@ namespace ocl
             return error_code.str();
         }
     }
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+
+    ShowProfileData::ShowProfileData() : device_(nullptr)
+    {}
+
+
+    ShowProfileData::~ShowProfileData()
+    {}
+
+
+    void
+    ShowProfileData::set_device(const cl::Device* a_device)
+    {
+        device_ = a_device;
+    }
+
+
+    void
+    ShowProfileData::add_result(const std::string& a_label, double a_latency)
+    {
+        result_t::iterator existing_label =
+            std::find_if(results_.begin(), results_.end(),
+                         [&] (const Measurement& measurement)
+                         {
+                             return measurement.label == a_label;
+                         });
+
+        if (existing_label == results_.end())
+        {
+            results_.push_back(Measurement(a_label, a_latency));
+        }
+        else
+        {
+            existing_label->latency += a_latency;
+            existing_label->multi = true;
+        }
+    }
+
+
+    void
+    ShowProfileData::add_event_latency(const std::string& a_label, cl::Event& an_event)
+    {
+        add_result(a_label, event_latency(an_event));
+    }
+
+
+    template <typename input_iterator>
+    void
+    ShowProfileData::add_event_latencies(const std::string& a_label,
+                                         input_iterator a_first, input_iterator a_last)
+    {
+        std::for_each(a_first, a_last,
+                      [&] (cl::Event& event)
+                      {
+                          ShowProfileData::add_event_latency(a_label, event);
+                      });
+    }
+
+
+    typedef std::vector<cl::Event> event_list;
+    typedef event_list::iterator event_list_iterator;
+
+    template void ShowProfileData::add_event_latencies<event_list_iterator>
+    (const std::string&, event_list_iterator, event_list_iterator);
+
+
+    void
+    ShowProfileData::clear_results()
+    {
+        results_.clear();
+    }
+
+
+    double
+    ShowProfileData::total_latency() const
+    {
+        return std::accumulate(results_.begin(), results_.end(),
+                               double(),
+                               [] (double partial_sum, const Measurement& measurement)
+                               {
+                                   return partial_sum + measurement.latency;
+                               });
+    }
+
+
+    static double
+    base_unit_factor(ShowProfileData::base_unit_t a_base_unit)
+    {
+        switch(a_base_unit)
+        {
+        case ShowProfileData::NANO_SECONDS: return 1e-9;
+        case ShowProfileData::MICRO_SECONDS: return 1e-6;
+        case ShowProfileData::MILLI_SECONDS: return 1e-3;
+        default: return 1.0;
+        }
+    }
+
+
+    static std::string
+    base_unit_abbreviation(ShowProfileData::base_unit_t a_base_unit)
+    {
+        switch(a_base_unit)
+        {
+        case ShowProfileData::NANO_SECONDS: return "ns";
+        case ShowProfileData::MICRO_SECONDS: return "µs";
+        case ShowProfileData::MILLI_SECONDS: return "ms";
+        default: return "s";
+        }
+    }
+
+
+    void
+    ShowProfileData::show_results(std::ostream& an_output_stream,
+                                  base_unit_t a_base_unit) const
+    {
+        const double total = total_latency();
+        result_t results_and_total(results_);
+
+        results_and_total.push_back(Measurement("TOTAL", total));
+
+        StowFormatFlags _;
+        for (auto& r : results_and_total)
+        {
+            an_output_stream <<
+                "timing:         " <<
+                std::setw(16) << r.label <<
+                (r.multi ? " +  " : "    ") <<
+                std::fixed << std::setw(8) << std::setprecision(1) <<
+                r.latency / base_unit_factor(a_base_unit) << " " <<
+                base_unit_abbreviation(a_base_unit);
+
+            an_output_stream <<
+                "    " <<
+                std::setw(6) << std::setprecision(1) <<
+                100.0 * r.latency / total << "%\n";
+        }
+
+        if (device_)
+        {
+            // Timer resolution is given in nano seconds, therefore we
+            // convert to seconds before applying base_unit_factor().
+            const double resolution = 1e-9 * device_->getInfo<CL_DEVICE_PROFILING_TIMER_RESOLUTION>();
+
+            an_output_stream <<
+                "timing: device profiling timer resolution " <<
+                std::setprecision(3) <<
+                resolution / base_unit_factor(a_base_unit) << " " <<
+                base_unit_abbreviation(a_base_unit) << "\n";
+        }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
 
 
     static void
@@ -648,25 +860,6 @@ namespace ocl
     }
 
 
-    static std::vector<std::string>
-    split_string(const std::string& a_string, char a_delimiter, bool keep_empty_tokens = false)
-    {
-        std::stringstream s(a_string);
-        std::vector<std::string> tokens;
-        std::string t;
-
-        while (std::getline(s, t, a_delimiter))
-        {
-            if (keep_empty_tokens || !t.empty())
-            {
-                tokens.push_back(t);
-            }
-        }
-
-        return tokens;
-    }
-
-
     static std::string
     find_file_in_path(const std::string& a_source_filename, const std::string& a_path,
                       char a_directory_separator = '/', char a_path_separator = ':')
@@ -1119,6 +1312,16 @@ namespace ocl
         }
 
         return options;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
+    void
+    Function<actual_code_policy, default_queue_flags>::add_queue(const cl::Device& a_device)
+    {
+        cl::CommandQueue queue(context_, a_device, default_queue_flags);
+
+        queues_.push_back(queue);
     }
 
 
