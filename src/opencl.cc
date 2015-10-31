@@ -28,6 +28,7 @@
 #include <iterator>             // std::istream_iterator
 #include <sstream>
 #include <stdexcept>
+#include <numeric>              // std::accumulate
 
 #include "opencl.h"
 
