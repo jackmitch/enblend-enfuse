@@ -126,7 +126,15 @@ letters.
 Parallelize parts of Enblend and Enfuse with OpenMP.  See
         http://www.openmp.org/
 
-If OpenMP support has been enabled, the utilization of special
+If auto-detection of OpenMP misfires, set appropriate OPENMP_CXXFLAGS
+during configuration.  For example, CLang++ may need the argument-form
+of option `-fopenmp':
+        -fopenmp=libiomp5
+In addition OpenMP support libraries may live in non-standard places.
+These too can be specified in OPENMP_CXXFLAGS, because the flags will
+be used for compilation and linking.
+
+When OpenMP support has been enabled, the utilization of special
 features of the actual, underlying OpenMP implementation can be
 controlled as usual with the environment variables OMP_NUM_THREADS,
 OMP_NESTED and OMP_DYNAMIC.  See the OpenMP specification for details
