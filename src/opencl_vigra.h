@@ -241,11 +241,37 @@ namespace vigra
                     show_profile.add_event_latency("read buffer", unmap_buffer_prereq_[0]);
                     show_profile.add_event_latency("unmap buffer", done_);
 
-                    std::cerr <<
-                        "\n" <<
-                        command << ": timing: OpenCL latencies of `Distance Transform' for " <<
-                        a_size << " = " << a_size.area() << " pixel image\n";
-                    show_profile.show_results(std::cerr);
+                    const double n = static_cast<double>(a_size.area());
+                    const double delta_t = 1e-3 * f_.device().getInfo<CL_DEVICE_PROFILING_TIMER_RESOLUTION>();
+
+                    {
+                        const double t_column =
+                            show_profile.retrieve_result("column kernel", ::ocl::ShowProfileData::MICRO_SECONDS);
+                        const double t_row =
+                            show_profile.retrieve_result("row kernel", ::ocl::ShowProfileData::MICRO_SECONDS);
+
+                        std::cerr <<
+                            "\n" <<
+                            command << ": timing: OpenCL latencies of `Distance Transform' for\n" <<
+                            command << ": timing: " << a_size << " = " << n / 1028196.0 << " Mpixel image.\n" <<
+                            command << ": timing: Column-kernel performance " << n / t_column <<
+                            "±" << n / t_column * delta_t / t_column << " pixels/µs.\n" <<
+                            command << ": timing: Row-kernel performance " << n / t_row <<
+                            "±" << n / t_row * delta_t / t_row << " pixels/µs.\n";
+                    }
+
+                    {
+                        const double theta = 2.0 * n * sizeof(float) / 1024.0;
+                        const double t =
+                            show_profile.retrieve_result("write buffer", ::ocl::ShowProfileData::MICRO_SECONDS) +
+                            show_profile.retrieve_result("read buffer", ::ocl::ShowProfileData::MICRO_SECONDS);
+
+                        std::cerr <<
+                            command << ": timing: Effective bandwidth " << theta / t <<
+                            "±" << theta / t * delta_t / t << " kB/µs (≙ GB/s).\n";
+                    }
+
+                    show_profile.show_results(std::cerr, command + ": ", ::ocl::ShowProfileData::MICRO_SECONDS);
                 }
             }
 
