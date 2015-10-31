@@ -168,7 +168,7 @@ namespace ocl
 
             std::string label;
             double latency;
-            bool multi;         // summary of multiple mevents?
+            bool multi;         // summary of multiple events?
         }; // struct Measurement
 
         typedef std::vector<Measurement> result_t;
@@ -177,9 +177,10 @@ namespace ocl
         ShowProfileData();
         virtual ~ShowProfileData();
 
-        // With cl::Device we can augment the event-latencies with the
-        // timer resolution.  If the user does not set the device we
-        // do not print anything related to the resolution.
+        // With the help of `cl::Device' we can augment the
+        // event-latencies with the timer resolution.  If the user
+        // does not set the device we do not print anything related to
+        // the resolution.
         void set_device(const cl::Device* a_device);
 
         void add_result(const std::string& a_label, double a_latency);
@@ -191,7 +192,11 @@ namespace ocl
 
         typedef enum {NANO_SECONDS, MICRO_SECONDS, MILLI_SECONDS, SECONDS} base_unit_t;
 
+        virtual double retrieve_result(const std::string& a_label,
+                                       base_unit_t a_base_unit = MILLI_SECONDS) const;
+
         virtual void show_results(std::ostream& an_output_stream,
+                                  const std::string& a_prefix = std::string(),
                                   base_unit_t a_base_unit = MILLI_SECONDS) const;
 
     private:

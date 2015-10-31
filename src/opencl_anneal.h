@@ -25,8 +25,7 @@
     Test
 
     cd ~/photos/multi-image-techniques/hugin-multi-row
-    export ENBLEND_OPENCL_PATH=/home/cspiel/src/enblend/src
-    rm -f vis-?.tif;  /home/cspiel/src/enblend/BUILD-GCC-O0/src/enblend --gpu --primary-seam-generator=nft --fine-mask --visualize --parameter='gpu-kernel-dt=false' --parameter='time-anneal-snake=true:time-state-probabilities=true:profile-state-probabilities=true' remapped-000?-08bit.tif
+    rm -f vis-?.tif;  env ENBLEND_OPENCL_PATH=/home/cspiel/src/enblend/src /home/cspiel/src/enblend/BUILD-GCC-O0/src/enblend --gpu --primary-seam-generator=nft --fine-mask --visualize --parameter='gpu-kernel-dt=false' --parameter='time-anneal-snake=true:time-state-probabilities=true:profile-state-probabilities=true' remapped-000?-08bit.tif
 
 */
 
@@ -35,7 +34,6 @@
 #include <config.h>
 #endif
 
-#include "muopt.h"
 #include "timer.h"
 
 #include "opencl.h"
@@ -291,11 +289,11 @@ namespace ocl
 
             if (parameter::as_boolean("profile-state-probabilities", false))
             {
-                show_profile_data(local_k);
+                show_profile_data(buffer_size, local_k);
             }
         }
 
-        void show_profile_data(int local_k)
+        void show_profile_data(size_t buffer_size, int local_k)
         {
             if (f_.queue().getInfo<CL_QUEUE_PROPERTIES>() & CL_QUEUE_PROFILING_ENABLE)
             {
@@ -309,14 +307,33 @@ namespace ocl
                 show_profile.add_event_latencies("read buffer",
                                                  unmap_buffer_prereq_.begin(), unmap_buffer_prereq_.end());
 
-                std::cerr <<
-                    "\n" <<
-                    command << ": timing: OpenCL latencies of `Calculate State Probabilities' for k = " <<
-                    local_k << "\n" <<
-                    command << ": timing: kernel performance is " <<
-                    0.5e-6 * static_cast<double>(local_k * (local_k + 1)) /
-                    ocl::event_latency(read_buffer_prereq_[0]) << " probabilities/µs\n";
-                show_profile.show_results(std::cerr, ShowProfileData::MICRO_SECONDS);
+                const double delta_t = 1e-3 * f_.device().getInfo<CL_DEVICE_PROFILING_TIMER_RESOLUTION>();
+
+                {
+                    const double n = static_cast<double>(local_k * (local_k + 1));
+                    const double t = show_profile.retrieve_result("kernel", ShowProfileData::MICRO_SECONDS);
+
+                    std::cerr <<
+                        "\n" <<
+                        command << ": timing: OpenCL latencies of `Calculate State Probabilities' for k = " <<
+                        local_k << ".\n" <<
+                        command << ": timing: Kernel performance " << n / t <<
+                        "±" << n / t * delta_t / t << " probabilities/µs.\n";
+                }
+
+                {
+                    const double theta =
+                        static_cast<double>(2 * buffer_size + 3 * local_k * sizeof(float)) / 1024.0;
+                    const double t =
+                        show_profile.retrieve_result("write buffer", ShowProfileData::MICRO_SECONDS) +
+                        show_profile.retrieve_result("read buffer", ShowProfileData::MICRO_SECONDS);
+
+                    std::cerr <<
+                        command << ": timing: Effective bandwidth " << theta / t <<
+                        "±" << theta / t * delta_t / t << " kB/µs (≙ GB/s).\n";
+                }
+
+                show_profile.show_results(std::cerr, command + ": ", ShowProfileData::MICRO_SECONDS);
             }
         }
 

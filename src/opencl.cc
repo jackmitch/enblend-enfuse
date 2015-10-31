@@ -321,8 +321,31 @@ namespace ocl
     }
 
 
+    double
+    ShowProfileData::retrieve_result(const std::string& a_label,
+                                     base_unit_t a_base_unit) const
+    {
+        result_t::const_iterator measurement =
+            std::find_if(results_.begin(), results_.end(),
+                         [&] (const Measurement& measurement)
+                         {
+                             return measurement.label == a_label;
+                         });
+
+        if (measurement == results_.end())
+        {
+            throw std::runtime_error("measurement label not found");
+        }
+        else
+        {
+            return measurement->latency / base_unit_factor(a_base_unit);
+        }
+    }
+
+
     void
     ShowProfileData::show_results(std::ostream& an_output_stream,
+                                  const std::string& a_prefix,
                                   base_unit_t a_base_unit) const
     {
         const double total = total_latency();
@@ -331,21 +354,28 @@ namespace ocl
         results_and_total.push_back(Measurement("TOTAL", total));
 
         StowFormatFlags _;
+
+        an_output_stream <<
+            a_prefix << "timing:               event      m    latency      rel.lat\n" <<
+            a_prefix << "timing:         ---------------- -  -----------    -------\n";
+
         for (auto& r : results_and_total)
         {
             an_output_stream <<
-                "timing:         " <<
+                a_prefix << "timing:         " <<
                 std::setw(16) << r.label <<
                 (r.multi ? " +  " : "    ") <<
                 std::fixed << std::setw(8) << std::setprecision(1) <<
                 r.latency / base_unit_factor(a_base_unit) << " " <<
-                base_unit_abbreviation(a_base_unit);
-
-            an_output_stream <<
+                base_unit_abbreviation(a_base_unit) <<
                 "    " <<
                 std::setw(6) << std::setprecision(1) <<
                 100.0 * r.latency / total << "%\n";
         }
+
+        an_output_stream <<
+            a_prefix << "timing: Plus signs (\"+\") in the m(ulti)-column indicate\n" <<
+            a_prefix << "timing: accumulated results.\n";
 
         if (device_)
         {
@@ -354,10 +384,10 @@ namespace ocl
             const double resolution = 1e-9 * device_->getInfo<CL_DEVICE_PROFILING_TIMER_RESOLUTION>();
 
             an_output_stream <<
-                "timing: device profiling timer resolution " <<
+                a_prefix << "timing: Device profiling timer resolution " <<
                 std::setprecision(3) <<
                 resolution / base_unit_factor(a_base_unit) << " " <<
-                base_unit_abbreviation(a_base_unit) << "\n";
+                base_unit_abbreviation(a_base_unit) << ".\n";
         }
     }
 

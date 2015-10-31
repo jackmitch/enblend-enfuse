@@ -17,34 +17,45 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+#define SCRATCH_SIZE 32
+
+
 inline static
 void
 new_state_probabilities(const int k, local float *sp, constant float *e, local float *pi)
 {
     const int gid = get_global_id(0);
 
-    local float recip_exp_delta_e[32];
+    local float reciprocal_exp_delta_e[SCRATCH_SIZE];
+    local float reduce_scratch[SCRATCH_SIZE];
 
     for (int j = 0; j < k; j++)
     {
-        const float pi_t_j = sp[j];
-        float pi_j = pi_t_j + pi[j];
-
-        recip_exp_delta_e[gid] = native_divide(1.0f, 1.0f + native_exp(e[j] - e[gid]));
+        const float x = native_divide(1.0f, 1.0f + native_exp(e[j] - e[gid]));
+#ifdef __FAST_RELAXED_MATH__
+        reciprocal_exp_delta_e[gid] = x;
+#else
+        reciprocal_exp_delta_e[gid] = isnan(x) ? (e[j] > e[gid] ? 0.0f : 1.0f) : x;
+#endif
         barrier(CLK_LOCAL_MEM_FENCE);
+
+        const float sp_j = sp[j] + sp[gid];
+        reduce_scratch[gid] = (gid <= j || gid >= k) ? 0.0f : sp_j * reciprocal_exp_delta_e[gid];
+        pi[gid] += (gid <= j || gid >= k) ? 0.0f : sp_j - reduce_scratch[gid];
+        barrier(CLK_LOCAL_MEM_FENCE);
+
+        for (int s = SCRATCH_SIZE / 2; s > 0; s >>= 1)
+        {
+            if (gid < s)
+            {
+                reduce_scratch[gid] += reduce_scratch[gid + s];
+            }
+            barrier(CLK_LOCAL_MEM_FENCE);
+        }
 
         if (gid == 0)
         {
-            for (int i = j + 1; i < k; i++)
-            {
-                const float pi_t = sp[i] + pi_t_j;
-                float pi_t_an = pi_t * recip_exp_delta_e[i];
-#ifndef __FAST_RELAXED_MATH__
-                pi_t_an = isnan(pi_t_an) ? (e[j] > e[i] ? 0.0f : pi_t) : pi_t_an;
-#endif
-                pi_j += pi_t_an;
-                pi[i] += pi_t - pi_t_an;
-            }
+            const float pi_j = sp[j] + pi[j] + reduce_scratch[0];
 
             pi[j] = pi_j;
             sp[j] = pi_j / (float) k;
@@ -64,20 +75,19 @@ calculate_state_probabilities(const int k,
 {
     const int gid = get_global_id(0);
 
-    if (gid >= k)
+    if (gid < k)
     {
-        return;
+        sp[gid] = (float) global_sp[gid];
+        pi[gid] = global_pi[gid];
     }
-
-    sp[gid] = (float) global_sp[gid];
-    pi[gid] = global_pi[gid];
-
     barrier(CLK_LOCAL_MEM_FENCE);
 
     new_state_probabilities(k, sp, e, pi);
 
     barrier(CLK_LOCAL_MEM_FENCE);
-
-    global_sp[gid] = (double) sp[gid];
-    global_pi[gid] = pi[gid];
+    if (gid < k)
+    {
+        global_sp[gid] = (double) sp[gid];
+        global_pi[gid] = pi[gid];
+    }
 }
