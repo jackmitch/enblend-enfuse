@@ -46,8 +46,8 @@ namespace ocl
     template <typename floating_point_t>
     inline static void
     let_host_calculate_state_probabilities(int local_k,
-                                           floating_point_t *restrict state_probabilities,
-                                           float *restrict e, float *restrict pi)
+                                           floating_point_t * RESTRICT state_probabilities,
+                                           float * RESTRICT e, float * RESTRICT pi)
     {
         for (int j = 0; j < local_k; j++)
         {
