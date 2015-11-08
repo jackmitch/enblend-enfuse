@@ -30,6 +30,7 @@
 #include <deque>
 #include <memory>               // std::unique_ptr
 #include <mutex>
+#include <sstream>
 #include <stack>
 #include <stdexcept>            // std::runtime_error
 #include <string>
@@ -286,6 +287,24 @@ namespace ocl
 #else
 #define DEBUG_CHECK_OPENCL_EVENT(m_event)
 #endif
+
+
+    template <typename output_iterator>
+    void query_device_extensions(const cl::Device& a_device, output_iterator some_extensions)
+    {
+        std::string device_extensions;
+        a_device.getInfo(CL_DEVICE_EXTENSIONS, &device_extensions);
+        std::stringstream extension_stream(device_extensions);
+        std::string extension;
+
+        while (std::getline(extension_stream, extension, ' '))
+        {
+            if (!extension.empty())
+            {
+                *some_extensions++ = extension;
+            }
+        }
+    }
 
 
     ////////////////////////////////////////////////////////////////////////////

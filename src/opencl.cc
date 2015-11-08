@@ -26,7 +26,6 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>             // std::istream_iterator
-#include <sstream>
 #include <stdexcept>
 #include <numeric>              // std::accumulate
 
@@ -441,6 +440,15 @@ namespace ocl
             "local memory\n" <<
             "                 " << a_device->getInfo<CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE>() / 1024UL <<
             " KB maximum constant memory\n";
+
+        std::vector<std::string> device_extensions;
+        query_device_extensions(*a_device, std::back_inserter(device_extensions));
+        std::sort(device_extensions.begin(), device_extensions.end());
+        std::cout << "                 Extensions:\n";
+        for (auto x : device_extensions)
+        {
+            std::cout << "                     " << x << "\n";
+        }
     }
 
 
@@ -526,8 +534,8 @@ namespace ocl
                 catch (cl::Error& an_error)
                 {
                     // CL_DEVICE_NOT_FOUND is a possible error that
-                    // does not hurt as the variable devices will be
-                    // empty() then, which is checked below.
+                    // does not hurt as the variable `devices' will be
+                    // empty() then, which will be checked below.
                     if (an_error.err() != CL_DEVICE_NOT_FOUND)
                     {
                         throw an_error;
