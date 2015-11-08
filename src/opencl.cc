@@ -1461,8 +1461,47 @@ namespace ocl
         }
         catch (cl::Error& an_error)
         {
-            cl::Program program(program());
-            throw ocl::runtime_error(an_error, program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(super::device()));
+            std::ostringstream message;
+
+#ifdef DEBUG
+            cl_build_status build_status {cl_build_status()};
+
+            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_STATUS, &build_status);
+            message << "build status\n    ";
+            switch (build_status)
+            {
+            case CL_BUILD_NONE: message << "nothing done yet";  break;
+            case CL_BUILD_ERROR: message << "error";  break;
+            case CL_BUILD_SUCCESS: message << "success";  break;
+            case CL_BUILD_IN_PROGRESS: message << "build currently in progress";  break;
+            default: message << "other";  break;
+            }
+            message << " (" << build_status << ")\n";
+#endif
+
+            std::string build_info;
+
+            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_OPTIONS, &build_info);
+            message << "build options\n    " << build_info << "\n";
+            build_info.clear();
+
+            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_LOG, &build_info);
+            message << "build log\n";
+            std::vector<std::string> diagnostics = split_string(build_info, '\n', true);
+            for (auto d : diagnostics)
+            {
+                if (!d.empty() && d[0] == ':')
+                {
+                    message << "    " << code_policy::filename();
+                }
+                else
+                {
+                    message << "        ";
+                }
+                message << d << "\n";
+            }
+
+            throw ocl::runtime_error(an_error, message.str());
         }
     }
 
@@ -1561,8 +1600,18 @@ namespace ocl
     {
         if (a_function)
         {
-            a_function->build(a_build_option);
-            a_function->wait();
+            try
+            {
+                a_function->build(a_build_option);
+                a_function->wait();
+            }
+            catch (ocl::runtime_error& error)
+            {
+                std::cerr <<
+                    "error while compiling OpenCL kernel\n" <<
+                    error.what() << "\n" <<
+                    error.additional_message() << std::endl;
+            }
         }
 #ifdef DEBUG
         else
@@ -1637,8 +1686,19 @@ namespace ocl
         compile_queue_.pop_back();
         queue_mutex_.unlock();
 
-        build_command.function->build(build_command.option);
-        build_command.function->wait();
+        try
+        {
+            build_command.function->build(build_command.option);
+            build_command.function->wait();
+        }
+        catch (ocl::runtime_error& error)
+        {
+            std::cerr <<
+                "error while compiling OpenCL kernel\n" <<
+                error.what() << "\n" <<
+                error.additional_message() << std::endl;
+        }
+
     }
 
 

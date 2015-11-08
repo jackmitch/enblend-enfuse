@@ -320,6 +320,7 @@ namespace ocl
     class SourcePolicy : public CodePolicy
     {
     public:
+        virtual std::string filename() const = 0;
         virtual const std::string& text() = 0;
         std::pair<const char*, size_t> source();
     }; // class SourcePolicy
@@ -341,6 +342,7 @@ namespace ocl
         SourceStringPolicy() = delete;
         explicit SourceStringPolicy(const std::string& a_source_text);
 
+        std::string filename() const override {return "<INTERNAL>";}
         const std::string& text() override;
 
     private:
@@ -354,7 +356,7 @@ namespace ocl
         SourceFilePolicy() = delete;
         explicit SourceFilePolicy(const std::string& a_source_filename);
 
-        std::string filename() const {return filename_;}
+        std::string filename() const override {return filename_;}
         const std::string& text() override;
 
     private:
@@ -480,19 +482,27 @@ namespace ocl
 
     class FunctionOfString : public Function<SourceStringPolicy>
     {
+        typedef Function<SourceStringPolicy> super;
+
     public:
+        typedef SourceStringPolicy source_policy;
+
         FunctionOfString() = delete;
         FunctionOfString(const cl::Context& a_context, const std::string& a_string) :
-            Function<SourceStringPolicy>(a_context, a_string) {}
+            Function<source_policy>(a_context, a_string) {}
     }; // class FunctionOfString
 
 
     class FunctionOfFile : public Function<SourceFilePolicy>
     {
+        typedef Function<SourceFilePolicy> super;
+
     public:
+        typedef SourceFilePolicy source_policy;
+
         FunctionOfFile() = delete;
         FunctionOfFile(const cl::Context& a_context, const std::string& a_source_filename) :
-            Function<SourceFilePolicy>(a_context, a_source_filename) {}
+            Function<source_policy>(a_context, a_source_filename) {}
     }; // class FunctionOfFile
 
 
