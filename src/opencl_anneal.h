@@ -131,25 +131,39 @@ namespace ocl
             }
 
 #ifdef BUILD_EAGERLY
-            f_.build();
-
+            build("");
             initialize();
 #endif
+        }
+
+        void build(const std::string& a_build_option)
+        {
+            try
+            {
+                std::cerr << "\n+ CalculateStateProbabilities::build: by request\n\n";
+                f_.build(a_build_option);
+                std::cerr <<
+                    "+ CalculateStateProbabilities::build: log begin ================\n" <<
+                    f_.build_log() <<
+                    "\n+ CalculateStateProbabilities::build: log end   ================\n";
+            }
+            catch (ocl::runtime_error& an_error)
+            {
+                std::cerr << command << ": " << ocl::string_of_error_code(an_error.error().err()) << "\n";
+
+                std::vector<std::string> messages = split_string(an_error.additional_message(), '\n', true);
+                for (auto m : messages)
+                {
+                    std::cerr << command << ": note: " << m << "\n";
+                }
+
+                exit(1);
+            }
         }
 
         bool has_extension(const std::string& an_extension)
         {
             return std::binary_search(extensions_.begin(), extensions_.end(), an_extension);
-        }
-
-        void build(const std::string& a_build_option)
-        {
-            std::cerr << "\n+ CalculateStateProbabilities::build: by request\n\n";
-            f_.build(a_build_option);
-            std::cerr <<
-                "+ CalculateStateProbabilities::build: log begin ================\n" <<
-                f_.build_log() <<
-                "\n+ CalculateStateProbabilities::build: log end   ================\n";
         }
 
         void wait()

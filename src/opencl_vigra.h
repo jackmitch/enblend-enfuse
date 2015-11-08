@@ -75,20 +75,36 @@ namespace vigra
                 }
 
 #ifdef BUILD_EAGERLY
-                f_.build();
-
+                build("");
                 initialize();
 #endif
             }
 
             void build(const std::string& a_build_option)
             {
-                std::cerr << "\n+ DistanceTransformFH::build: by request\n\n";
-                f_.build(a_build_option);
-                std::cerr <<
-                    "+ DistanceTransformFH::build: log begin ================\n" <<
-                    f_.build_log() <<
-                    "\n+ DistanceTransformFH::build: log end   ================\n";
+                try
+                {
+                    std::cerr << "\n+ DistanceTransformFH::build: by request\n\n";
+                    f_.build(a_build_option);
+                    std::cerr <<
+                        "+ DistanceTransformFH::build: log begin ================\n" <<
+                        f_.build_log() <<
+                        "\n+ DistanceTransformFH::build: log end   ================\n";
+                }
+                catch (::ocl::runtime_error& an_error)
+                {
+                    std::cerr <<
+                        command << ": " << ::ocl::string_of_error_code(an_error.error().err()) << "\n";
+
+                    std::vector<std::string> messages =
+                        ::ocl::split_string(an_error.additional_message(), '\n', true);
+                    for (auto m : messages)
+                    {
+                        std::cerr << command << ": note: " << m << "\n";
+                    }
+
+                    exit(1);
+                }
             }
 
             void wait()
