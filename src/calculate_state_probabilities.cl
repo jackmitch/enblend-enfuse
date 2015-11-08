@@ -17,17 +17,18 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-#define SCRATCH_SIZE 32
-
-
 inline static
 void
-new_state_probabilities(const int k, local float *sp, constant float *e, local float *pi)
+new_state_probabilities(const int k, local float *sp, constant float *e, local float *pi,
+                        const int total_scratch_size, local float *scratch)
 {
     const int gid = get_global_id(0);
 
-    local float reciprocal_exp_delta_e[SCRATCH_SIZE];
-    local float reduce_scratch[SCRATCH_SIZE];
+    // We use `scratch' for two arrays: `reciprocal_exp_delta_e' and
+    // `reduce_scratch'.  Each gets half of the available space.
+    const int scratch_size = total_scratch_size / 2;
+    local float *reciprocal_exp_delta_e = scratch;
+    local float *reduce_scratch = scratch + scratch_size;
 
     for (int j = 0; j < k; j++)
     {
@@ -44,7 +45,7 @@ new_state_probabilities(const int k, local float *sp, constant float *e, local f
         pi[gid] += (gid <= j || gid >= k) ? 0.0f : sp_j - reduce_scratch[gid];
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        for (int s = SCRATCH_SIZE / 2; s > 0; s >>= 1)
+        for (int s = scratch_size / 2; s > 0; s >>= 1)
         {
             if (gid < s)
             {
@@ -71,7 +72,8 @@ kernel void
 calculate_state_probabilities(const int k,
                               global double *restrict global_sp, local float *sp,
                               constant float *e,
-                              global float *restrict global_pi, local float *pi)
+                              global float *restrict global_pi, local float *pi,
+                              const int total_scratch_size, local float *scratch)
 {
     const int gid = get_global_id(0);
 
@@ -82,7 +84,7 @@ calculate_state_probabilities(const int k,
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    new_state_probabilities(k, sp, e, pi);
+    new_state_probabilities(k, sp, e, pi, total_scratch_size, scratch);
 
     barrier(CLK_LOCAL_MEM_FENCE);
     if (gid < k)

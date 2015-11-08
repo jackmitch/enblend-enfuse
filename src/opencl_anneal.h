@@ -198,6 +198,7 @@ namespace ocl
         // elements of any of the `state_probabilities' vectors.
         void setup(size_t size, size_t k_max, float*& e, float*& pi)
         {
+            const size_t scratch_size = ::ocl::round_up_to_next_multiple(size, 64UL);
             const size_t local_k = k_max;
 
             state_probabilities_buffer_ = cl::Buffer(f_.context(), CL_MEM_READ_WRITE, size * sizeof(double));
@@ -210,6 +211,8 @@ namespace ocl
             state_probabilities_kernel_.setArg(3U, e_buffer_);
             state_probabilities_kernel_.setArg(4U, pi_buffer_);
             state_probabilities_kernel_.setArg(5U, cl::Local(k_max * sizeof(float)));
+            state_probabilities_kernel_.setArg(6U, static_cast<cl_int>(scratch_size));
+            state_probabilities_kernel_.setArg(7U, cl::Local(scratch_size * sizeof(float)));
 
             e_begin_ = static_cast<float*>(f_.queue().enqueueMapBuffer(e_buffer_, CL_FALSE,
                                                                        CL_MEM_READ_ONLY,
