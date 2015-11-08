@@ -432,6 +432,7 @@ namespace ocl
 
         Function& add_build_option(const std::string& an_option);
         Function& add_build_option(const char* a_format_string, ...);
+        Function& add_extension_macros_to_build_options(const cl::Device& a_device);
 
         virtual void build(const std::string& an_extra_build_option = std::string());
         virtual void build(const char* a_format_string, ...);

@@ -1204,6 +1204,23 @@ namespace ocl
 
 
     template <class actual_code_policy, int default_queue_flags>
+    Function<actual_code_policy, default_queue_flags>&
+    Function<actual_code_policy, default_queue_flags>::add_extension_macros_to_build_options(const cl::Device& a_device)
+    {
+        std::vector<std::string> device_extensions;
+
+        query_device_extensions(a_device, std::back_inserter(device_extensions));
+        for (auto x : device_extensions)
+        {
+            std::transform(x.begin(), x.end(), x.begin(), ::toupper);
+            add_build_option(std::string("-DHAVE_EXTENSION_") + x);
+        }
+
+        return *this;
+    }
+
+
+    template <class actual_code_policy, int default_queue_flags>
     void
     Function<actual_code_policy, default_queue_flags>::build(const std::string& an_extra_build_option)
     {
