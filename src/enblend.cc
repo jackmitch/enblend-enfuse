@@ -712,6 +712,53 @@ short_option_requires_argument(const char* a_short_option_spec, char a_short_opt
 }
 
 
+#ifdef OPENCL
+void
+initialize_gpu_subsystem(size_t a_preferred_gpu_platform, size_t a_preferred_gpu_device)
+{
+    try {
+        cl::Platform platform = ocl::find_platform(a_preferred_gpu_platform);
+
+        ocl::device_list_t devices;
+        ocl::prefer_device(platform, a_preferred_gpu_platform, a_preferred_gpu_device, devices);
+
+        GPUContext = ocl::create_context(platform, devices);
+
+        if (Verbose >= VERBOSE_OPENCL_MESSAGES) {
+            std::cerr << command << ": info: chose OpenCL platform #" << a_preferred_gpu_platform << ", ";
+
+            std::string info;
+            platform.getInfo(CL_PLATFORM_VENDOR, &info);
+            std::cerr << info << ", ";
+            platform.getInfo(CL_PLATFORM_NAME, &info);
+            std::cerr << info << ", device #" << a_preferred_gpu_device << std::endl;
+        }
+
+#ifdef OPENMP
+        BatchCompiler = new ocl::ThreadedBatchBuilder;
+#else
+        BatchCompiler = new ocl::SerialBatchBuilder;
+#endif
+    } catch (ocl::runtime_error& an_exception) {
+        std::cerr <<
+            command << ": warning: " << an_exception.what() << ";\n" <<
+            command << ": warning: " << "    cannot enable GPU" << std::endl;
+    }
+
+    if (!gpu_is_ok(GPUContext)) {
+        std::cerr <<
+            command << ": warning: at least one of Enfuse's GPU tests has failed\n" <<
+            command << ": note: refusing to activate GPU support" << std::endl;
+
+        delete GPUContext;
+        delete BatchCompiler;
+        GPUContext = nullptr;
+        BatchCompiler = nullptr;
+    }
+}
+#endif // OPENCL
+
+
 int
 process_options(int argc, char** argv)
 {
@@ -1683,45 +1730,7 @@ process_options(int argc, char** argv)
 
 #ifdef OPENCL
     if (UseGPU) {
-        try {
-            cl::Platform platform = ocl::find_platform(preferredGPUPlatform);
-
-            ocl::device_list_t devices;
-            ocl::prefer_device(platform, preferredGPUPlatform, preferredGPUDevice, devices);
-
-            GPUContext = ocl::create_context(platform, devices);
-
-            if (Verbose >= VERBOSE_OPENCL_MESSAGES) {
-                std::cerr << command << ": info: chose OpenCL platform #" << preferredGPUPlatform << ", ";
-
-                std::string info;
-                platform.getInfo(CL_PLATFORM_VENDOR, &info);
-                std::cerr << info << ", ";
-                platform.getInfo(CL_PLATFORM_NAME, &info);
-                std::cerr << info << ", device #" << preferredGPUDevice << std::endl;
-            }
-
-#ifdef OPENMP
-            BatchCompiler = new ocl::ThreadedBatchBuilder;
-#else
-            BatchCompiler = new ocl::SerialBatchBuilder;
-#endif
-        } catch (ocl::runtime_error& an_exception) {
-            std::cerr <<
-                command << ": warning: " << an_exception.what() << ";\n" <<
-                command << ": warning: " << "    cannot enable GPU" << std::endl;
-        }
-
-        if (!gpu_is_ok(GPUContext)) {
-            std::cerr <<
-                command << ": warning: at least one of Enblend's GPU tests has failed\n" <<
-                command << ": note: refusing to activate GPU support" << std::endl;
-
-            delete GPUContext;
-            delete BatchCompiler;
-            GPUContext = nullptr;
-            BatchCompiler = nullptr;
-        }
+        initialize_gpu_subsystem(preferredGPUPlatform, preferredGPUDevice);
     }
 #endif // OPENCL
 
