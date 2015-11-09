@@ -1435,6 +1435,64 @@ namespace ocl
     {}
 
 
+    static std::string
+    format_build_diagnostics(const std::string& a_source_filename,
+                             const cl::Program& a_program, const cl::Device& a_device)
+    {
+        std::ostringstream message;
+
+#ifdef DEBUG
+        cl_build_status build_status {cl_build_status()};
+
+        a_program.getBuildInfo(a_device, CL_PROGRAM_BUILD_STATUS, &build_status);
+        message << "build status\n    ";
+        switch (build_status)
+        {
+        case CL_BUILD_NONE: message << "nothing done yet";  break;
+        case CL_BUILD_ERROR: message << "error";  break;
+        case CL_BUILD_SUCCESS: message << "success";  break;
+        case CL_BUILD_IN_PROGRESS: message << "build currently in progress";  break;
+        default: message << "other";  break;
+        }
+        message << " (status-code = " << build_status << ")\n";
+#endif
+
+        std::string build_info;
+
+        a_program.getBuildInfo(a_device, CL_PROGRAM_BUILD_OPTIONS, &build_info);
+        message << "build options\n    " << build_info << "\n";
+        build_info.clear();
+
+        a_program.getBuildInfo(a_device, CL_PROGRAM_BUILD_LOG, &build_info);
+        message << "build log\n";
+
+        auto is_source_file_location = [](const std::string& s) {return !s.empty() && s[0] == ':';};
+        auto is_internal_location = [](const std::string& s) {return !s.find("<built-in>:");};
+        const std::string indentation(4U, ' ');
+        std::vector<std::string> diagnostics = split_string(build_info, '\n', true);
+
+        for (auto d : diagnostics)
+        {
+            if (is_source_file_location(d))
+            {
+                message << indentation << a_source_filename;
+            }
+            else if (is_internal_location(d))
+            {
+                // Location already carries an "internal"-marker
+                // string in lieu of a source filename.
+                message << indentation;
+            }
+            else
+            {
+                message << indentation << indentation;
+            }
+            message << d << "\n";
+        }
+        return message.str();
+    }
+
+
     template <class actual_code_policy>
     void
     LazyFunction<actual_code_policy>::build(const std::string& an_extra_build_option)
@@ -1461,47 +1519,10 @@ namespace ocl
         }
         catch (cl::Error& an_error)
         {
-            std::ostringstream message;
-
-#ifdef DEBUG
-            cl_build_status build_status {cl_build_status()};
-
-            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_STATUS, &build_status);
-            message << "build status\n    ";
-            switch (build_status)
-            {
-            case CL_BUILD_NONE: message << "nothing done yet";  break;
-            case CL_BUILD_ERROR: message << "error";  break;
-            case CL_BUILD_SUCCESS: message << "success";  break;
-            case CL_BUILD_IN_PROGRESS: message << "build currently in progress";  break;
-            default: message << "other";  break;
-            }
-            message << " (" << build_status << ")\n";
-#endif
-
-            std::string build_info;
-
-            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_OPTIONS, &build_info);
-            message << "build options\n    " << build_info << "\n";
-            build_info.clear();
-
-            program().getBuildInfo(super::device(), CL_PROGRAM_BUILD_LOG, &build_info);
-            message << "build log\n";
-            std::vector<std::string> diagnostics = split_string(build_info, '\n', true);
-            for (auto d : diagnostics)
-            {
-                if (!d.empty() && d[0] == ':')
-                {
-                    message << "    " << code_policy::filename();
-                }
-                else
-                {
-                    message << "        ";
-                }
-                message << d << "\n";
-            }
-
-            throw ocl::runtime_error(an_error, message.str());
+            throw ocl::runtime_error(an_error,
+                                     format_build_diagnostics(code_policy::filename(),
+                                                              program(),
+                                                              super::device()));
         }
     }
 
