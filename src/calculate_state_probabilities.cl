@@ -65,8 +65,9 @@ new_state_probabilities(const int k, local float *sp, constant float *e, local f
 }
 
 
-#pragma OPENCL EXTENSION cl_khr_fp64: enable
+#ifdef HAVE_EXTENSION_CL_KHR_FP64
 
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
 
 kernel void
 calculate_state_probabilities(const int k,
@@ -93,3 +94,33 @@ calculate_state_probabilities(const int k,
         global_pi[gid] = pi[gid];
     }
 }
+
+#else
+
+kernel void
+calculate_state_probabilities(const int k,
+                              global float *restrict global_sp, local float *sp,
+                              constant float *e,
+                              global float *restrict global_pi, local float *pi,
+                              const int total_scratch_size, local float *scratch)
+{
+    const int gid = get_global_id(0);
+
+    if (gid < k)
+    {
+        sp[gid] = global_sp[gid];
+        pi[gid] = global_pi[gid];
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    new_state_probabilities(k, sp, e, pi, total_scratch_size, scratch);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    if (gid < k)
+    {
+        global_sp[gid] = sp[gid];
+        global_pi[gid] = pi[gid];
+    }
+}
+
+#endif // HAVE_EXTENSION_CL_KHR_FP64

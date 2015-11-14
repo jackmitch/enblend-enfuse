@@ -98,7 +98,7 @@ namespace ocl
     public:
         CalculateStateProbabilities() = delete;
 
-        CalculateStateProbabilities(const cl::Context& a_context) :
+        explicit CalculateStateProbabilities(const cl::Context& a_context) :
             immediately_fallback_(false),
 #ifdef PREFER_SEPARATE_OPENCL_SOURCE
             f_(a_context, std::string("calculate_state_probabilities.cl")),
@@ -110,11 +110,15 @@ namespace ocl
             map_complete_(N_MAPPED_), kernel_prereq_(N_WRITTEN_),
             read_buffer_prereq_(1U), unmap_buffer_prereq_(N_UPDATED_)
         {
-            std::string device_extensions;
-            f_.device().getInfo(CL_DEVICE_EXTENSIONS, &device_extensions);
-            extensions_ = split_string(device_extensions, ' ');
-            std::sort(extensions_.begin(), extensions_.end());
+            query_device_extensions(f_.device(), std::back_inserter(extensions_));
+            has_extension_fp64_ =
+                !parameter::as_boolean("force-opencl-anneal-float", false) &&
+                std::find(extensions_.begin(), extensions_.end(), "cl_khr_fp64") != extensions_.end();
 
+            if (has_extension_fp64_)
+            {
+                f_.add_build_option("-DHAVE_EXTENSION_CL_KHR_FP64");
+            }
             f_.add_build_option("-cl-fast-relaxed-math");
             f_.add_build_option("-cl-unsafe-math-optimizations");
 
@@ -159,11 +163,6 @@ namespace ocl
 
                 exit(1);
             }
-        }
-
-        bool has_extension(const std::string& an_extension)
-        {
-            return std::binary_search(extensions_.begin(), extensions_.end(), an_extension);
         }
 
         void wait()
@@ -252,26 +251,70 @@ namespace ocl
         }
 
     private:
+        void write_out_state_probabilities(const std::vector<double>* state_probabilities)
+        {
+            if (has_extension_fp64_)
+            {
+                f_.queue().enqueueWriteBuffer(state_probabilities_buffer_, CL_FALSE,
+                                              0U, state_probabilities->size() * sizeof(double),
+                                              &(*state_probabilities)[0],
+                                              nullptr, // no prerequisite
+                                              &kernel_prereq_[STATE_PROBABILITIES_BUFFER_WRITTEN]);
+            }
+            else
+            {
+                const size_t size = state_probabilities->size();
+                cast_buffer_.resize(size);
+                const double* state_probabilities_begin =
+                    ASSUME_ALIGNED(&(*state_probabilities)[0], sizeof(double));
+
+                for (size_t i = 0U; i != size; ++i)
+                {
+                    cast_buffer_[i] = static_cast<float>(state_probabilities_begin[i]);
+                }
+
+                f_.queue().enqueueWriteBuffer(state_probabilities_buffer_, CL_FALSE,
+                                              0U, size * sizeof(float),
+                                              &cast_buffer_[0],
+                                              nullptr, // no prerequisite
+                                              &kernel_prereq_[STATE_PROBABILITIES_BUFFER_WRITTEN]);
+            }
+        }
+
+        void read_in_state_probabilities(std::vector<double>* state_probabilities)
+        {
+            if (has_extension_fp64_)
+            {
+                f_.queue().enqueueReadBuffer(state_probabilities_buffer_, CL_FALSE,
+                                             0U, state_probabilities->size() * sizeof(double),
+                                             &(*state_probabilities)[0],
+                                             &read_buffer_prereq_,
+                                             &unmap_buffer_prereq_[STATE_PROBABILITIES_BUFFER_UPDATED]);
+            }
+            else
+            {
+                const size_t size = state_probabilities->size();
+                cast_buffer_.resize(size);
+                double* state_probabilities_begin = ASSUME_ALIGNED(&(*state_probabilities)[0], sizeof(double));
+
+                f_.queue().enqueueReadBuffer(state_probabilities_buffer_, CL_FALSE,
+                                             0U, size * sizeof(float),
+                                             &cast_buffer_[0],
+                                             &read_buffer_prereq_,
+                                             &unmap_buffer_prereq_[STATE_PROBABILITIES_BUFFER_UPDATED]);
+
+                for (size_t i = 0U; i != size; ++i)
+                {
+                    state_probabilities_begin[i] = static_cast<double>(cast_buffer_[i]);
+                }
+            }
+        }
+
         void run0(int local_k, std::vector<double>* state_probabilities, int k_max, float* e, float* pi)
         {
-            if (!has_extension("cl_khr_fp64"))
-            {
-                immediately_fallback_ = true;
-                throw ocl::runtime_error(cl::Error(CL_BUILD_PROGRAM_FAILURE),
-                                         "device does not support double-precision floating-point numbers");
-            }
-
-            const int size = static_cast<int>(state_probabilities->size());
-            const size_t buffer_size = size * sizeof(double);
-            double* const state_probabilities_begin = &(*state_probabilities)[0];
-
             state_probabilities_kernel_.setArg(0U, static_cast<cl_int>(local_k));
 
-            f_.queue().enqueueWriteBuffer(state_probabilities_buffer_, CL_FALSE,
-                                          0U, buffer_size,
-                                          state_probabilities_begin,
-                                          nullptr, // no prerequisite
-                                          &kernel_prereq_[STATE_PROBABILITIES_BUFFER_WRITTEN]);
+            write_out_state_probabilities(state_probabilities);
             f_.queue().enqueueWriteBuffer(e_buffer_, CL_FALSE,
                                           0U, local_k * sizeof(float),
                                           e_begin_,
@@ -291,11 +334,7 @@ namespace ocl
                                             &read_buffer_prereq_[0]);
             DEBUG_CHECK_OPENCL_EVENT(read_buffer_prereq_[0]);
 
-            f_.queue().enqueueReadBuffer(state_probabilities_buffer_, CL_FALSE,
-                                         0U, buffer_size,
-                                         state_probabilities_begin,
-                                         &read_buffer_prereq_,
-                                         &unmap_buffer_prereq_[STATE_PROBABILITIES_BUFFER_UPDATED]);
+            read_in_state_probabilities(state_probabilities);
             f_.queue().enqueueReadBuffer(pi_buffer_, CL_FALSE,
                                          0U, local_k * sizeof(float),
                                          pi_begin_,
@@ -306,11 +345,11 @@ namespace ocl
 
             if (parameter::as_boolean("profile-state-probabilities", false))
             {
-                show_profile_data(buffer_size, local_k);
+                show_profile_data(state_probabilities->size(), local_k);
             }
         }
 
-        void show_profile_data(size_t buffer_size, int local_k)
+        void show_profile_data(size_t size, int local_k)
         {
             if (f_.queue().getInfo<CL_QUEUE_PROPERTIES>() & CL_QUEUE_PROFILING_ENABLE)
             {
@@ -340,7 +379,8 @@ namespace ocl
 
                 {
                     const double theta =
-                        static_cast<double>(2 * buffer_size + 3 * local_k * sizeof(float)) / 1024.0;
+                        static_cast<double>(2 * size * (has_extension_fp64_ ? sizeof(double) : sizeof(float)) +
+                                            3 * local_k * sizeof(float)) / 1024.0;
                     const double t =
                         show_profile.retrieve_result("write buffer", ShowProfileData::MICRO_SECONDS) +
                         show_profile.retrieve_result("read buffer", ShowProfileData::MICRO_SECONDS);
@@ -406,6 +446,9 @@ namespace ocl
         std::vector<cl::Event> kernel_prereq_;
         std::vector<cl::Event> read_buffer_prereq_;
         std::vector<cl::Event> unmap_buffer_prereq_;
+
+        bool has_extension_fp64_;
+        std::vector<float> cast_buffer_; // only used if has_extension_fp64_ == false
     }; // class CalculateStateProbabilities
 
 #endif // OPENCL
