@@ -509,11 +509,6 @@ IF(WIN32)
     contrib/enfuse_droplet/enfuse_droplet_360.bat contrib/enfuse_droplet/enfuse_droplet_readme.txt
     contrib/enfuse_droplet/LICENCE.txt)
   INSTALL(FILES ${DROPLETS_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/droplets)
-ELSE(WIN32)
-  foreach(_manual enblend enfuse)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/src/${_manual}.1
-      DESTINATION "share/man/man1" CONFIGURATIONS Release RelWithDebInfo MinSizeRel)
-  endforeach()
 ENDIF(WIN32)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR ${ENBLEND_MAJOR_VERSION})
