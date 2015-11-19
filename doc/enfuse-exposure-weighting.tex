@@ -15,9 +15,9 @@ normalized, real-valued luminance interval~$(0, 1)$.
 \genidx{projector!grayscale}%
 \gensee{grayscale projector}{projector, grayscale}%
 \optidx{--gray-projector}%
-\acronym{RGB}-pixels are converted to luminance before using the grayscale projector given by
-\sample{--gray-projector}, which defaults to \code{average}.  Grayscale pixels are identified
-with luminance.
+\acronym{RGB}-pixels get converted to luminance before using the grayscale projector given by
+\sample{--gray-projector}, which defaults to \code{average}.  Grayscale pixels simply are
+identified with luminance.
 
 \genidx{luminance interval!normalized}%
 \gensee{normalized luminance interval}{luminance interval, normalized}%
@@ -39,11 +39,11 @@ neighborhood is not taken into account.
 \genidx{exposure weight function!\code{gauss}}%
 \genidx{exposure weight function!\propername{Gaussian}}%
 Up to \App{} version~4.1 the only weighting function is the \propername{Gaussian}
-\[
+\begin{equation*}\refrep{equ:weight:gauss}%
     w_{\mathrm{exp}}(Y) =
     \exp\left(-\frac{1}{2}
               \left( \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}} \right)^2\right),
-\]
+\end{equation*}
 \noindent whose maximum position~$Y_{\mathrm{opt}}$ and $width$ are controlled by the command
 line options \option{--exposure-optimum} and~\option{--exposure-width} respectively, where
 $Y_{\mathrm{opt}}$ defaults to \val{val:default-exposure-optimum} and $width$ defaults to
@@ -72,8 +72,12 @@ rendering the final image lighter, and vice versa.  Option~\option{--exposure-wi
 that deviate from \metavar{optimum} more, and vice versa.
 
 In \App{} version~4.2 several new exposure weight functions have been added.  Select them with
-option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function}
-
+option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function} For the following
+presentation we refer to the linear luminance transform
+\begin{equation*}\refrep{equ:linear-luminance-transform}
+  z = \frac{Y - Y_{\mathrm{opt}}}{\mathit{width}}.
+\end{equation*}
+as introduced in \equationabbr~\fullref{equ:linear-luminance-transform}.
 
 \begin{table}[htbp]
   \centering
@@ -123,9 +127,17 @@ option~\option{--exposure-weight-function}.\optidx{--exposure-weight-function}
 \end{table}
 
 
-\propername{Gaussian} and \propername{Lorentzian} behave like $1 - z^2$ around the optimum.
-However for large $|z|$ the \propername{Gaussian} weight rolls off like $\exp(-z^2/2)$ and the
-\propername{Lorentzian} only as $z^{-2}$.
+Functions \propername{Gaussian}
+\begin{equation*}\refrep{equ:weight:gauss}%
+    w_{\mathrm{exp}}(z) = \exp\left(-z^2 / 2\right)
+\end{equation*}
+and \propername{Lorentzian}
+\begin{equation*}\refrep{equ:weight:lorentz}
+  w_{\mathrm{exp}}(z) = \frac{1}{1 + z^2 / 2}
+\end{equation*}
+\noindent behave like $1 - z^2$ around the optimum.  However for large $|z|$ the
+\propername{Gaussian} weight rolls off like $\exp(-z^2/2)$ and the \propername{Lorentzian} only
+as $z^{-2}$.
 
 
 \begin{figure}[htbp]
@@ -141,7 +153,7 @@ However for large $|z|$ the \propername{Gaussian} weight rolls off like $\exp(-z
 
 
 Both, the \propername{Gaussian} and the \propername{Lorentzian} are easy to use, because they do
-not go exactly to zero.  Thus, \App{} can select ``better'' pixels far away from the chosen
+not go exactly to zero.  Thus, \App{} can select ``better'' pixels even far away from the chosen
 optimum.
 
 
@@ -169,11 +181,26 @@ optimum.
 \end{figure}
 
 
-Again, Half-Sine and Full-Sine behave like $1 - z^2$ around the optimum, like
-\propername{Gaussian} and \propername{Lorentzian}.  However for large $|z|$ they both are
-exactly zero.  The difference is how they decrease just before they reach zero.  Half-Sine
-behaves like $z - z'$ and Full-Sine like $(z - z'')^2$, where $z'$ and $z''$ are the respective
-zeros.
+Again, Half-Sine
+\begin{equation}\refrep{equ:weight:halfsine}
+  w_{\mathrm{exp}}(z) =
+  \left\{\begin{array}{cl}
+  \cos(z) & \mbox{if } |z| \leq \pi/2 \\
+  0       & \mbox{otherwise.}
+  \end{array}\right.
+\end{equation}
+and Full-Sine
+\begin{equation}\refrep{equ:weight:fullsine}
+  w_{\mathrm{exp}}(z) =
+  \left\{\begin{array}{cl}
+  (1 + \cos(z)) / 2 & \mbox{if } |z| \leq \pi \\
+  0                 & \mbox{otherwise.}
+  \end{array} \right.
+\end{equation}
+\noindent behave like $1 - z^2$ around the optimum, like \propername{Gaussian} and
+\propername{Lorentzian}.  However for large $|z|$ they both are exactly zero.  The difference is
+how they decrease just before they reach zero.  Half-Sine behaves like $z - z'$ and Full-Sine
+like $(z - z'')^2$, where $z'$ and $z''$ are the respective zeros.
 
 
 \begin{figure}[htbp]
@@ -188,7 +215,17 @@ zeros.
 \end{figure}
 
 
-Bi-Square is the only predefined function that behaves like $1 - z^4$ around the optimum.
+Bi-Square
+\begin{equation}\refrep{equ:weight:bisquare}
+  w_{\mathrm{exp}}(z) =
+  \left\{
+  \begin{array}{cl}
+    1 - z^4 & \mbox{if } |z| \leq 1 \\
+    0       & \mbox{otherwise.}
+  \end{array}
+  \right.
+\end{equation}
+\noindent is the only predefined function that behaves like $1 - z^4$ around the optimum.
 
 The weight functions Half-Sine, Full-Sine, and Bi-Square are more difficult to use, because they
 yield exactly zero if the normalized luminance of a pixel is far enough away from the optimum.
@@ -226,6 +263,8 @@ fundamentally changing brightness.
 \subsection[User-Defined Functions]{\label{sec:user-defined-functions}%
   \genidx{weighting!exposure!user-defined}%
   User-Defined Exposure Weighting Functions}
+
+\restrictednote{\acronym{Dynamic Linking}-enabled versions only.}
 
 \genidx{loading!dynamic}%
 \gensee{dynamic loading}{loading, dynamic}%
@@ -290,11 +329,11 @@ side
     A compiler that produces compatible object code to the compiler that compiled \App{}.
   \end{enumerate}
 
-  The latter is called \acronym{ABI}-compatible.  An example for a pair of
+  The latter is called ``\acronym{ABI}-compatible''.  An example for a pair of
   \acronym{ABI}-compatible compilers is \acronym{GNU}'s~\command{g++} and
   \propername{Intel's}~\command{icpc}.
 
-  To find out which compiler built \emph{your} version of \app{} use
+  To find out which compiler built \emph{your} version of \appcmd{} use
   option~\option{--show-software-components}.\optidx{--show-software-components}
 
 \item
@@ -337,7 +376,7 @@ Between chair and keyboard:
   \begin{itemize}
   \item
     Domain: define \code{weight} for normalized luminance values~\metavar{y} from zero to one
-    including both ends.
+    including both interval ends.
 
   \item
     Image: Let the \code{weight}s fall in the interval from zero to one.
@@ -355,6 +394,8 @@ Between chair and keyboard:
   If necessary, rewrite methods~\code{initialize} and \code{normalize}, too.
 
 \item
+  \restrictednote{\acronym{OpenMP}-enabled versions only.}
+
   \App{} never calls \code{initialize} in an \acronym{OpenMP} parallel execution environment.
   However, \acronym{OpenMP}-enabled versions of \App{} call \code{normalize} and \code{weight}
   in parallel sections.
@@ -382,8 +423,8 @@ Between chair and keyboard:
 
 \item
   To raise an exception associated with the derived, user-defined exposure-weight class, throw
-  \code{ExposureWeight::error}.  \App{} catches these exceptions at an enclosing scope, displays
-  \metavar{a\_message}, and then aborts.
+  \code{ExposureWeight::error(const std::string\& message)}.  \App{} catches these exceptions at
+  an enclosing scope, displays \metavar{message}, and aborts.
 
 \item
   Define an object of the derived class.  This creates the \metavar{SYMBOL} to refer to at the
@@ -546,9 +587,9 @@ VariablePower vpower;
 
 Exposure weighting objects are created and destroyed only $O(1)$~times.  Thus,
 method~\code{initialize} could be used to perform all kinds of computationally expensive tasks.
-However, methods~\code{normalize} and \code{weight} are called for every pixel in each of the
-input images.  Therefore, if performance of the weight function is a problem, these two
-functions are the prime candidates for optimization.
+In contrast, methods~\code{normalize} and \code{weight} are called for \emph{every} pixel in
+\emph{each} of the input images.  Therefore, if performance of the weight function is a problem,
+these two functions are the prime candidates for optimization.
 
 
 \subsubsection[Compiling, Linking, and Loading]{\label{sec:compiling-linking-loading}%
@@ -575,7 +616,7 @@ functions are the prime candidates for optimization.
 
   \item[\option{-shared}]\itemend
     Tell the linker to create a shared object instead of the default executable.  On some
-    systems, the library must be blessed, buy passing an shared-object name (\option{soname})
+    systems, the library must be blessed, by passing the shared-object name (\option{soname})
     directly to the linker (\option{-Wl}).
 
     Of course more than one object file can be linked into a single shared object.
