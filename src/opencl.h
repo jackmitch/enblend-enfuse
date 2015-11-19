@@ -336,6 +336,101 @@ namespace ocl
     ////////////////////////////////////////////////////////////////////////////
 
 
+    class ScopedMap
+    {
+    protected:
+        ScopedMap() = delete;
+
+        ScopedMap(cl::CommandQueue& a_queue, const cl::Buffer& a_buffer,
+                  cl_bool is_blocking, cl_map_flags some_flags,
+                  ::size_t an_offset, ::size_t a_size,
+                  const std::vector<cl::Event>* some_prerequisite_events = nullptr,
+                  cl::Event* a_target_event = nullptr,
+                  cl_int* an_error_code = nullptr) :
+            queue_(a_queue), buffer_(a_buffer),
+            address_(queue_.enqueueMapBuffer(a_buffer, is_blocking, some_flags,
+                                             an_offset, a_size,
+                                             some_prerequisite_events, a_target_event,
+                                             an_error_code)) {}
+
+        // Anticipated Changes: We can implement the copy-constructor
+        // as well as the assignment operator, but current use cases
+        // do not warrant the effort.
+        ScopedMap(const ScopedMap&) = delete;
+        ScopedMap& operator=(const ScopedMap&) = delete;
+
+        virtual ~ScopedMap() {queue_.enqueueUnmapMemObject(buffer_, address_);}
+
+        void* base_address() const {return address_;}
+
+    private:
+        cl::CommandQueue& queue_;
+        const cl::Buffer& buffer_;
+        void* const address_;
+    }; // class ScopedMap
+
+
+    class ScopedReadMap : public ScopedMap
+    {
+        typedef ScopedMap super;
+
+    public:
+        ScopedReadMap() = delete;
+
+        ScopedReadMap(cl::CommandQueue& a_queue, const cl::Buffer& a_buffer,
+                      cl_bool is_blocking,
+                      ::size_t an_offset, ::size_t a_size,
+                      const std::vector<cl::Event>* some_prerequisite_events = nullptr,
+                      cl::Event* a_target_event = nullptr,
+                      cl_int* an_error_code = nullptr) :
+            ScopedMap(a_queue, a_buffer, is_blocking, CL_MAP_READ, an_offset, a_size,
+                      some_prerequisite_events, a_target_event, an_error_code) {}
+
+        // See `Anticipated Changes' of super class.
+        ScopedReadMap(const ScopedReadMap&) = delete;
+        ScopedReadMap& operator=(const ScopedReadMap&) = delete;
+
+        const void* base_address() const {return super::base_address();}
+
+        template <typename t>
+        typename std::add_const<t>::type get() const
+        {
+            return std::as_const(static_cast<t>(super::base_address()));
+        }
+    }; // class ScopedReadMap
+
+
+    class ScopedWriteMap : public ScopedMap
+    {
+        typedef ScopedMap super;
+
+    public:
+        ScopedWriteMap() = delete;
+
+        ScopedWriteMap(cl::CommandQueue& a_queue, const cl::Buffer& a_buffer,
+                       cl_bool is_blocking,
+                       ::size_t an_offset, ::size_t a_size,
+                       const std::vector<cl::Event>* some_prerequisite_events = nullptr,
+                       cl::Event* a_target_event = nullptr,
+                       cl_int* an_error_code = nullptr) :
+            ScopedMap(a_queue, a_buffer, is_blocking, CL_MAP_WRITE, an_offset, a_size,
+                      some_prerequisite_events, a_target_event, an_error_code) {}
+
+        // See `Anticipated Changes' of super class.
+        ScopedWriteMap(const ScopedWriteMap&) = delete;
+        ScopedWriteMap& operator=(const ScopedWriteMap&) = delete;
+
+        template <typename t>
+        t get() const
+        {
+            return static_cast<t>(super::base_address());
+        }
+    }; // class ScopedWriteMap
+
+
+    ////////////////////////////////////////////////////////////////////////////
+
+
     class CodePolicy
     {
     public:
