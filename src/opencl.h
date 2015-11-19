@@ -35,6 +35,7 @@
 #include <stdexcept>            // std::runtime_error
 #include <string>
 #include <thread>
+#include <type_traits>          // std::add_const
 #include <vector>
 
 #define __CL_ENABLE_EXCEPTIONS
@@ -55,6 +56,31 @@
 #else
 #define NOINLINE __attribute__((noinline))
 #define UNUSEDVAR __attribute__((unused))
+#endif
+
+
+#ifndef HAVE_AS_CONST
+namespace std
+{
+    // Available in C++17
+    // See for example: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0007r0.html
+
+    template <typename t>
+    inline static
+    const t&
+    as_const(const t& x) noexcept
+    {
+        return x;
+    }
+
+    template <typename t>
+    inline static
+    const t
+    as_const(t&& x) noexcept(noexcept(t(x)))
+    {
+        return x;
+    }
+}
 #endif
 
 
