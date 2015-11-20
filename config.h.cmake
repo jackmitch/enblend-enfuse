@@ -77,6 +77,9 @@ ${CMAKE_FUNCTION_EXISTS}
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
 
+/* Define to 1 if std::as_const (C++ 17) is available */
+#cmakedefine HAVE_AS_CONST
+
 /* workaround for older boost versions <1.55 */
 #cmakedefine HAVE_BOOST_FALLTHROUGH 1
 #ifndef HAVE_BOOST_FALLTHROUGH

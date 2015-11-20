@@ -187,6 +187,27 @@ check_cxx_source_compiles(
   "
   STRERROR_R_CHAR_P)
 
+SET(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+SET(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+check_cxx_source_compiles(
+  "
+    #include <string>
+    #include <type_traits>
+    #include <utility>
+    
+    int main()
+    {
+      std::string s(\"foo\");
+      const std::string& const_s = std::as_const(s);
+      return 0;
+    }
+  "  
+  
+  HAVE_AS_CONST
+)
+
+SET(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
+  
 # workaround for older boost versions (<1.55)
 set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIR})
 check_cxx_source_compiles(
