@@ -46,21 +46,25 @@
 #define DOT "."
 #define DOTDOT ".."
 
-
+#ifdef HAVE_STD_FILESYSTEM
+#include <filesystem>
+typedef std::tr2::sys::path basic_path;
+#define GETPATHSTRING(x) (x)
+#else
 #ifdef HAVE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
 
 typedef boost::filesystem::path basic_path;
 #define GETPATHSTRING(x) (x).string()
 #endif
-
+#endif
 
 namespace enblend {
 
 bool
 isRelativePath(const std::string& aFilename)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
     return !path.has_root_directory();
 #else
@@ -80,7 +84,7 @@ isRelativePath(const std::string& aFilename)
 std::string
 extractDirname(const std::string& aFilename)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
     const std::string directory(path.branch_path().string());
     return directory.empty() ? DOT : directory;
@@ -94,7 +98,7 @@ extractDirname(const std::string& aFilename)
 std::string
 extractBasename(const std::string& aFilename)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
     return GETPATHSTRING(path.leaf());
 #else
@@ -110,7 +114,7 @@ extractBasename(const std::string& aFilename)
 std::string
 extractFilename(const std::string& aFilename)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
     return basename(path);
 #else
@@ -134,7 +138,7 @@ extractFilename(const std::string& aFilename)
 std::string
 extractExtension(const std::string& aFilename)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path path(aFilename);
     return extension(path);
 #else
@@ -150,7 +154,7 @@ extractExtension(const std::string& aFilename)
 typedef std::list<std::string> list_t;
 
 
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
 
 inline basic_path
 removeDotsBoost(const basic_path& aPath)
@@ -295,7 +299,7 @@ removeDotDotsCxx(const std::string& aPathname)
 std::string
 canonicalizePath(const std::string& aPathname, bool keepDot)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     const basic_path result =
         removeDotDotsBoost(removeDotsBoost(basic_path(aPathname)));
     if (keepDot && result.empty())
@@ -331,7 +335,7 @@ canonicalizePath(const std::string& aPathname, bool keepDot)
 std::string
 concatPath(const std::string& aPathname, const std::string& anotherPathname)
 {
-#ifdef HAVE_BOOST_FILESYSTEM
+#if defined HAVE_STD_FILESYSTEM || defined HAVE_BOOST_FILESYSTEM
     basic_path path(aPathname);
     basic_path leaf(anotherPathname);
     path /= leaf;

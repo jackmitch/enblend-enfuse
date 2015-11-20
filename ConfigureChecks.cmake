@@ -206,6 +206,19 @@ check_cxx_source_compiles(
   HAVE_AS_CONST
 )
 
+check_cxx_source_compiles(
+  "
+    #include <filesystem>
+    
+    int main()
+    {
+      std::tr2::sys::path filepath;
+      return 0;    
+    };
+  "
+  HAVE_STD_FILESYSTEM
+)
+
 SET(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
   
 # workaround for older boost versions (<1.55)

@@ -86,6 +86,9 @@ ${CMAKE_FUNCTION_EXISTS}
 #define BOOST_FALLTHROUGH ((void) 0)
 #endif
 
+/* Define to if <filesystem> is available */
+#cmakedefine HAVE_STD_FILESYSTEM 1
+
 /* Version number of package */
 #define VERSION "${ENBLEND_VERSION_ONLY}"
 

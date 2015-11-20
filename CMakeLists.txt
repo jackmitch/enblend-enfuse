@@ -189,6 +189,9 @@ ELSEIF(WIN32)
   ENDIF(MSVC)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
+#check some header and functions
+include(ConfigureChecks.cmake)
+
 # Required Libraries first
 FIND_PACKAGE(LCMS2 REQUIRED)
 ADD_DEFINITIONS(-DHAVE_LIBLCMS2)
@@ -225,7 +228,9 @@ endif()
 # Boost headers are required
 FIND_PACKAGE(Boost REQUIRED)
 # Boost Filesystem is optional
-FIND_PACKAGE(Boost COMPONENTS filesystem system)
+IF(NOT HAVE_STD_FILESYSTEM)
+  FIND_PACKAGE(Boost COMPONENTS filesystem system)
+ENDIF()
 
 set(Boost_filesystem_FOUND ${Boost_FILESYSTEM_FOUND})
 set(Boost_system_FOUND ${Boost_SYSTEM_FOUND})
@@ -354,7 +359,6 @@ endif()
 set(ENBLEND_VERSION_ONLY "${PACKAGE_VERSION_STRING}")
 set(PACKAGE_STRING "enblend-enfuse ${ENBLEND_VERSION_ONLY}")
 set(ENBLEND_VERSION "${PACKAGE_STRING}")
-include(ConfigureChecks.cmake)
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 
