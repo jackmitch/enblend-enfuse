@@ -469,7 +469,7 @@ namespace ocl
 #define OPENCL_PATH "ENBLEND_OPENCL_PATH" //< opencl-path ENBLEND_OPENCL_PATH
 
 
-    static std::vector<std::string>
+    std::vector<std::string>
     construct_search_path()
     {
         // We _always_ search a_filename along of some explicit, given
@@ -967,6 +967,29 @@ namespace ocl
     }
 
 
+    std::string
+    consult_file(const std::string& a_filename)
+    {
+        typedef std::istreambuf_iterator<char> file_iterator;
+
+        std::ifstream file(find_file(a_filename).c_str());
+
+        if (!file)
+        {
+            std::ostringstream message;
+            message << "file not found; missing \"" << a_filename << "\"";
+            throw ocl::runtime_error(message.str());
+        }
+        else
+        {
+            std::string result;
+            result.assign(file_iterator(file), (file_iterator()));
+            file.close();
+            return result;
+        }
+    }
+
+
     static std::string
     string_of_variable_arguments(const char *a_format_string, va_list a_variable_argument_list)
     {
@@ -1097,19 +1120,7 @@ namespace ocl
     void
     SourceFilePolicy::consult()
     {
-        typedef std::istreambuf_iterator<char> file_iterator;
-
-        std::ifstream file(find_file(filename_).c_str());
-
-        if (!file)
-        {
-            std::ostringstream message;
-            message << "OpenCL source-code file not found; missing \"" << filename_ << "\"";
-            throw ocl::runtime_error(message.str());
-        }
-        text_.assign(file_iterator(file), (file_iterator()));
-
-        file.close();
+        text_ = consult_file(filename_);
     }
 
 
@@ -1489,6 +1500,7 @@ namespace ocl
             }
             message << d << "\n";
         }
+
         return message.str();
     }
 

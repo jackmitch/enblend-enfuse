@@ -166,6 +166,8 @@ namespace ocl
     std::vector<std::string> split_string(const std::string& a_string, char a_delimiter,
                                           bool keep_empty_tokens = false);
 
+    std::string consult_file(const std::string& a_filename);
+
 
     class StowFormatFlags
     {
@@ -262,6 +264,7 @@ namespace ocl
 
 
     std::string string_of_error_code(cl_int error_code);
+    std::vector<std::string> construct_search_path();
 
     void print_opencl_information(bool all_devices = false);
     void print_gpu_preference(size_t a_preferred_platform_id, size_t a_preferred_device_id);
