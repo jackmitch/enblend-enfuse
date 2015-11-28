@@ -49,6 +49,16 @@ namespace exposure_weight
             function_(dynamic_loader_.resolve<ExposureWeight*>(symbol_name))
         {
             assert(function_);
+            if (function_->interface_version() != EXPOSURE_WEIGHT_INTERFACE_VERSION)
+            {
+                std::cerr <<
+                    command << ": user-defined weight function \"" << symbol_name << "\"\n" <<
+                    command << ": defined in shared object \"" << library_name << "\"\n" <<
+                    command << ": matches interface version " << function_->interface_version() <<
+                    ", but " << command << " requires version " << EXPOSURE_WEIGHT_INTERFACE_VERSION <<
+                    std::endl;
+                exit(1);
+            }
         }
 
         void initialize(double y_optimum, double width_parameter,
@@ -100,10 +110,10 @@ namespace exposure_weight
             }
             catch (ExposureWeight::error& exception)
             {
-                std::cerr << command <<
-                    ": user-defined weight function \"" << symbol_name <<
-                    "\" defined in shared object \"" << name <<
-                    "\" raised exception: " << exception.what() << std::endl;
+                std::cerr <<
+                    command << ": user-defined weight function \"" << symbol_name << "\"\n" <<
+                    command << ": defined in shared object \"" << name << "\"\n" <<
+                    command << ": raised exception: " << exception.what() << std::endl;
                 exit(1);
             }
 

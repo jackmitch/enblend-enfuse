@@ -12,6 +12,10 @@
 #include <vector>
 
 
+// Version number of the interface-to-user-weight functions.
+#define EXPOSURE_WEIGHT_INTERFACE_VERSION 2
+
+
 // The full width at half of the maximum of the Gauss-curve we use for
 // exposure weighting is
 //         FWHM = 2 * sqrt(2 * log(2))
@@ -62,6 +66,8 @@ public:
     {
         error(const std::string& message) : std::runtime_error(message) {}
     };
+
+    virtual int interface_version() const {return EXPOSURE_WEIGHT_INTERFACE_VERSION;}
 
 private:
     void check_invariant() const
