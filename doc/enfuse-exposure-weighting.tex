@@ -276,7 +276,7 @@ On operating systems, where dynamic loading of code is possible and for \App{} e
 compiled with dynamic-linking support (see Section~\fullref{sec:finding-out-details} on how to
 check this feature), \App{} can work with user-defined exposure weighting functions, passed with
 the long form of option~\option{--exposure-weight-function}.  It loads the exposure weight
-function identifed by \metavar{SYMBOL} from a \metavar{SHARED-OBJECT}:
+function identifed by \metavar{SYMBOL} from \metavar{SHARED-OBJECT}:
 
 \begin{literal}
   --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
@@ -285,17 +285,34 @@ function identifed by \metavar{SYMBOL} from a \metavar{SHARED-OBJECT}:
   \optidx{--exposure-weight-function}
 \end{literal}
 
-Notes on the required arguments of the option:
+Some notes on the required arguments of this option:
 
 \begin{itemize}
   \genidx{environment variable!LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
   \gensee{LD\_LIBRARY\_PATH@\envvar{LD\_LIBRARY\_PATH}}%
          {environment variable, \envvar{LD\_LIBRARY\_PATH}}%
 \item
-  \metavar{SHARED-OBJECT} is a file and as such requires a path, unless it resides in the same
-  directory as the \App{} binary.  Neither any system-wide search paths as, for example,
-  \envvar{LD\_LIBRARY\_PATH}, nor any \App-specific one are effective in the search for
-  \metavar{SHARED-OBJECT}.
+  \metavar{SHARED-OBJECT} is a filename (typically ending in \filename{.so} or \filename{.dll})
+  and depending on the operating system and the dynamic-loader implementation compiled into
+  \App{}, \metavar{SHARED-OBJECT} may or may not require a path.
+
+  \begin{restrictedmaterial}{Linux}
+    If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader
+    \emph{only} searches along \envvar{LD\_LIBRARY\_PATH} and even ignores the current working
+    directory unless \envvar{LD\_LIBRARY\_PATH} contains a dot (\sample{.}).  So, to use a
+    \metavar{SHARED-OBJECT} living in the current directory either say
+    \begin{literal}
+      env LD\_LIBRARY\_PATH=\$LD\_LIBRARY\_PATH:. \bslash \\
+      ~~~~\app{} --exposure-weight-function=\feasiblebreak SHARED-OBJECT:\dots
+    \end{literal}
+    or
+    \begin{literal}
+      \app{} --exposure-weight-function=\feasiblebreak ./SHARED-OBJECT:\dots
+    \end{literal}
+
+    \genidx{dlopen}%
+    For details of the search algorithm consult the manual page of dlopen(3).
+  \end{restrictedmaterial}
 
 \item
   There is no way knowing which of the symbols inside of \metavar{SHARED-OBJECT} are suitable

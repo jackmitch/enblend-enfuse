@@ -19,6 +19,11 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+
 #if defined(GMODULE_DL)
 #include "gmodule_implementation.h"        // g_module_open(3)
 #elif defined(POSIX_DL)
@@ -50,7 +55,7 @@ DynamicLoader::DynamicLoader(const DynamicLoader& another_dynamic_loader) :
 
 
 DynamicLoader&
-DynamicLoader::operator= (const DynamicLoader& another_dynamic_loader)
+DynamicLoader::operator=(const DynamicLoader& another_dynamic_loader)
 {
     if (this != &another_dynamic_loader)
     {
@@ -92,9 +97,9 @@ DynamicLoader::resolve0(const std::string& a_symbol_name, Teardown* a_teardown_o
 void
 DynamicLoader::finalize()
 {
-    for (observer_list::iterator x = observers_.begin(); x != observers_.end(); ++x)
+    for (auto x : observers_)
     {
-        (*x)->teardown(this);
+        x->teardown(this);
     }
 
     implementation_->close();

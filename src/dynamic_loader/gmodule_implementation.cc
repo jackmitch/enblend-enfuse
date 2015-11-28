@@ -33,10 +33,14 @@ GLibDynamicLoaderImplementation::GLibDynamicLoaderImplementation(const std::stri
 void
 GLibDynamicLoaderImplementation::open()
 {
+    if (module_)
+    {
+        throw super::error("already open");
+    }
     module_ = g_module_open(library_name().c_str(), G_MODULE_BIND_LAZY);
     if (!module_)
     {
-        super::error(static_cast<const char*>(g_module_error()));
+        throw super::error(static_cast<const char*>(g_module_error()));
     }
 }
 
@@ -44,9 +48,13 @@ GLibDynamicLoaderImplementation::open()
 void
 GLibDynamicLoaderImplementation::close()
 {
+    if (!module_)
+    {
+        throw super::error("not open");
+    }
     if (!g_module_close(module_))
     {
-        super::error(static_cast<const char*>(g_module_error()));
+        throw super::error(static_cast<const char*>(g_module_error()));
     }
 }
 
@@ -54,11 +62,15 @@ GLibDynamicLoaderImplementation::close()
 void*
 GLibDynamicLoaderImplementation::resolve(const std::string& symbol_name) const
 {
-    void* symbol;
+    if (!module_)
+    {
+        throw super::error("not open");
+    }
 
+    void* symbol;
     if (!g_module_symbol(module_, symbol_name.c_str(), &symbol))
     {
-        super::error(static_cast<const char*>(g_module_error()));
+        throw super::error(static_cast<const char*>(g_module_error()));
     }
     if (symbol == nullptr)
     {

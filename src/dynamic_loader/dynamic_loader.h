@@ -53,12 +53,13 @@ public:
     // called on un-linking.
     void* resolve0(const std::string& a_symbol_name) const;
 
-    template <typename T>
-    T resolve(const std::string& a_symbol_name) const
+    template <typename t>
+    t resolve(const std::string& a_symbol_name) const
     {
-        return static_cast<T>(resolve0(a_symbol_name));
+        return static_cast<t>(resolve0(a_symbol_name));
     }
 
+    // Interface of clean-up objects.
     class Teardown
     {
     public:
@@ -72,10 +73,10 @@ public:
     // object, which can e.g. run a clean-up function for the symbol.
     void* resolve0(const std::string& a_symbol_name, Teardown* a_teardown_object);
 
-    template <typename T>
-    T resolve(const std::string& a_symbol_name, Teardown* a_teardown_object)
+    template <typename t>
+    t resolve(const std::string& a_symbol_name, Teardown* a_teardown_object)
     {
-        return static_cast<T>(resolve0(a_symbol_name, a_teardown_object));
+        return static_cast<t>(resolve0(a_symbol_name, a_teardown_object));
     }
 
 private:

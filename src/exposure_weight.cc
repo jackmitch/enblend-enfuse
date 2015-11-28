@@ -41,35 +41,32 @@ namespace exposure_weight
     public:
         DynamicExposureWeight() = delete;
 
-        DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name) :
-            ExposureWeight(0.5, 0.25),
-            library(library_name), symbol(symbol_name),
-            dynamic_loader(DynamicLoader(library_name)),
-            function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
-        {}
-
         DynamicExposureWeight(const std::string& library_name, const std::string& symbol_name,
-                              double y_optimum, double width) :
+                              double y_optimum = 0.5, double width = 0.2) :
             ExposureWeight(y_optimum, width),
-            library(library_name), symbol(symbol_name),
-            dynamic_loader(DynamicLoader(library_name)),
-            function(dynamic_loader.resolve<ExposureWeight*>(symbol_name))
-        {}
+            library_(library_name), symbol_(symbol_name),
+            dynamic_loader_(DynamicLoader(library_name)),
+            function_(dynamic_loader_.resolve<ExposureWeight*>(symbol_name))
+        {
+            assert(function_);
+        }
 
         void initialize(double y_optimum, double width_parameter,
                         const argument_list_t& argument_list = argument_list_t()) override
         {
+#ifdef DEBUG
             std::cout << "+ DynamicExposureWeight::initialize\n";
-            function->initialize(y_optimum, width_parameter, argument_list);
+#endif
+            function_->initialize(y_optimum, width_parameter, argument_list);
         }
 
-        double weight(double y) override {return function->weight(y);}
+        double weight(double y) override {return function_->weight(y);}
 
     private:
-        std::string library;
-        std::string symbol;
-        DynamicLoader dynamic_loader;
-        ExposureWeight* function;
+        std::string library_;
+        std::string symbol_;
+        DynamicLoader dynamic_loader_;
+        ExposureWeight* function_;
     };
 
 
@@ -91,6 +88,7 @@ namespace exposure_weight
             std::copy(std::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
 
             ExposureWeight* weight_object;
+
             try
             {
                 weight_object = new DynamicExposureWeight(name, symbol_name);
