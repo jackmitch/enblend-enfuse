@@ -1885,7 +1885,9 @@ process_options(int argc, char** argv)
     if (WExposure > 0.0)
     {
         ExposureWeightFunction =
-            exposure_weight::make_weight_function(ExposureWeightFunctionName, ExposureWeightFunctionArguments,
+            exposure_weight::make_weight_function(ExposureWeightFunctionName,
+                                                  ExposureWeightFunctionArguments.begin(),
+                                                  ExposureWeightFunctionArguments.end(),
                                                   ExposureOptimum, ExposureWidth);
         if (!exposure_weight::check_weight_function(ExposureWeightFunction))
         {

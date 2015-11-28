@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Christoph L. Spiel
+// Copyright (C) 2014-2015 Christoph L. Spiel
 //
 // This file is part of Enblend.
 //
@@ -17,34 +17,34 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-#include <algorithm>            // std::max()
-#include <cassert>
-#include <cctype>               // std::isspace()
-#include <fstream>              // std::ifstream
-#include <iostream>             // std::cerr
-#include <sstream>              // std::istringstream
-#include <string>               // std::string
-#include <unordered_map>        // std::unordered_map
-#include <vector>               // std::vector<>
+#include <algorithm>              // std::max()
+#include <cassert>                // macro assert()
+#include <cctype>                 // std::isspace()
+#include <fstream>                // std::ifstream
+#include <iostream>               // std::cerr
+#include <sstream>                // std::istringstream
+#include <string>                 // std::string
+#include <unordered_map>          // std::unordered_map
+#include <vector>                 // std::vector<>
 
-#include "interpolator.hh"      // class Interpolator
 #include "exposure_weight_base.h" // macro FWHM_GAUSSIAN, class ExposureWeight
+#include "interpolator.hh"        // class Interpolator
 
 
 typedef std::pair<std::vector<double>, std::vector<double> > value_table;
 
 
-__attribute__((unused)) static void
+static void
 dump_value_table(value_table a_value_table)
 {
-    const size_t n {a_value_table.first.size()};
+    const value_table::first_type& ys = a_value_table.first;
+    const value_table::second_type& ws = a_value_table.second;
 
-    for (size_t i = 0U; i != n; ++i)
+    assert(ys.size() == ws.size());
+
+    for (size_t i = 0U; i != ys.size(); ++i)
     {
-        std::cout <<
-            '[' << i << "]    " <<
-            a_value_table.first.at(i) << '\t' << a_value_table.second.at(i) <<
-            '\n';
+        std::cout << '[' << i << "]    " << ys[i] << '\t' << ws[i] << '\n';
     }
 }
 
@@ -96,7 +96,8 @@ read_data_file(const std::string& a_datafile_name)
 
                 error_message <<
                     "data file: \"" << a_datafile_name << "\", line: " << line_number <<
-                    " - failed to parse (Y, w) pair";
+                    " - failed to parse (luminance, weight) pair";
+
                 std::cerr << error_message.str() << std::endl;
             }
             else
@@ -109,26 +110,28 @@ read_data_file(const std::string& a_datafile_name)
         ++line_number;
     }
 
-    return make_pair(xs, ys);
+    return std::make_pair(xs, ys);
 }
 
 
 static value_table
-read_data_arguments(const ExposureWeight::argument_list_t& argument_list)
+read_data_arguments(ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end)
 {
-    unsigned argument_number = 1U;
+    int argument_number = 1;
+    ExposureWeight::argument_const_iterator argument = arguments_begin;
 
     std::vector<double> xs;
     std::vector<double> ys;
 
-    for (const auto& a : argument_list)
+    while (argument != arguments_end) // for (const auto& a : argument_list)
     {
         double x;
         double y;
         char delimiter;
 
-        if (sscanf(a.c_str(), "%lf%lf", &x, &y) == 2 ||
-            (sscanf(a.c_str(), "%lf%c%lf", &x, &delimiter, &y) == 3 && delimiter == '/'))
+        if (sscanf(argument->c_str(), "%lf%lf", &x, &y) == 2 ||
+            (sscanf(argument->c_str(), "%lf%c%lf", &x, &delimiter, &y) == 3 && delimiter == '/'))
         {
             xs.push_back(x);
             ys.push_back(y);
@@ -139,14 +142,16 @@ read_data_arguments(const ExposureWeight::argument_list_t& argument_list)
 
             error_message <<
                 "immediate data #" << argument_number <<
-                " - failed to parse Y/w pair";
+                " - failed to parse (luminance, weight) pair";
+
             std::cerr << error_message.str() << std::endl;
         }
 
+        ++argument;
         ++argument_number;
     }
 
-    return make_pair(xs, ys);
+    return std::make_pair(xs, ys);
 }
 
 
@@ -157,7 +162,9 @@ class Tabular : public ExposureWeight
 public:
     ~Tabular() {delete interpolator;}
 
-    void initialize(double y_optimum, double width_parameter, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width_parameter,
+                    super::argument_const_iterator arguments_begin,
+                    super::argument_const_iterator arguments_end) override
     {
         if (y_optimum != 0.5)
         {
@@ -172,46 +179,38 @@ public:
                 std::endl;
         }
 
-        const size_t number_of_arguments {argument_list.size()};
-
-        if (number_of_arguments == 0U)
+        if (arguments_begin == arguments_end)
         {
             throw super::error("missing data-source parameter");
         }
 
-        if (argument_list[0] == "immediate")
+        const std::string& data_source_tag = *arguments_begin;
+
+        if (data_source_tag == "immediate")
         {
-            if (number_of_arguments <= 1U)
+            super::argument_const_iterator first_data_point = arguments_begin + 1;
+
+            if (first_data_point == arguments_end)
             {
-                throw super::error("missing data pairs");
+                throw super::error("no data supplied");
             }
 
-            // At this point we know that we have a data-specification
-            // given in `argument_list'.  In copying we skip keyword
-            // "immediate".
-            argument_list_t data_list;
-            std::copy(std::next(argument_list.begin()), argument_list.end(), std::back_inserter(data_list));
-
-            value_table data {read_data_arguments(data_list)};
+            value_table data {read_data_arguments(first_data_point, arguments_end)};
             dump_value_table(data);
             interpolator = new Interpolator(data.first, data.second);
-            exit(99);
         }
-        else if (argument_list[0] == "file")
+        else if (data_source_tag == "file")
         {
-            if (number_of_arguments <= 1U)
+            super::argument_const_iterator filename = arguments_begin + 1;
+
+            if (filename == arguments_end)
             {
                 throw super::error("missing data-file name parameter");
             }
 
-            value_table data {read_data_file(argument_list[1])};
+            value_table data {read_data_file(*filename)};
             dump_value_table(data);
             interpolator = new Interpolator(data.first, data.second);
-
-            if (number_of_arguments >= 3U)
-            {
-                std::cerr << "warning: ignoring extra parameters beyond data-file name" << std::endl;
-            }
         }
         else
         {
@@ -246,9 +245,11 @@ class HashedTabular : public Tabular
     typedef Tabular super;
 
 public:
-    void initialize(double y_optimum, double width_parameter, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width_parameter,
+                    super::argument_const_iterator arguments_begin,
+                    super::argument_const_iterator arguments_end) override
     {
-        super::initialize(y_optimum, width_parameter, argument_list);
+        super::initialize(y_optimum, width_parameter, arguments_begin, arguments_end);
     }
 
     double weight(double y) override
@@ -258,7 +259,7 @@ public:
 
 private:
     std::unordered_map<double, double> cache;
-}; //
+}; // HashedTabular
 
 
 Tabular tabular;

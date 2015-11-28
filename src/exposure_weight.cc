@@ -26,7 +26,7 @@
 #include "openmp_def.h"         // omp::atomic_t
 
 #include "exposure_weight.h"
-#include "dynamic_loader.h"    // HAVE_DYNAMICLOADER_IMPL
+#include "dynamic_loader.h"     // HAVE_DYNAMICLOADER_IMPL
 
 
 extern const std::string command;
@@ -52,12 +52,16 @@ namespace exposure_weight
         }
 
         void initialize(double y_optimum, double width_parameter,
-                        const argument_list_t& argument_list = argument_list_t()) override
+                        ExposureWeight::argument_const_iterator user_arguments_begin,
+                        ExposureWeight::argument_const_iterator user_arguments_end) override
         {
 #ifdef DEBUG
             std::cout << "+ DynamicExposureWeight::initialize\n";
+            std::for_each(user_arguments_begin, user_arguments_end,
+                          [](const std::string& x)
+                          {std::cout << "+ DynamicExposureWeight::initialize: <" << x << ">\n";});
 #endif
-            function_->initialize(y_optimum, width_parameter, argument_list);
+            function_->initialize(y_optimum, width_parameter, user_arguments_begin, user_arguments_end);
         }
 
         double weight(double y) override {return function_->weight(y);}
@@ -72,27 +76,27 @@ namespace exposure_weight
 
     static ExposureWeight*
     make_dynamic_weight_function(const std::string& name,
-                                 const ExposureWeight::argument_list_t& arguments,
+                                 ExposureWeight::argument_const_iterator arguments_begin,
+                                 ExposureWeight::argument_const_iterator arguments_end,
                                  double y_optimum, double width)
     {
-        if (arguments.empty())
+        if (arguments_begin == arguments_end)
         {
-            std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\""
-                      << std::endl;
+            // Remember that built-in exposure-weight functions never
+            // take any arguments.
+            std::cerr <<
+                command << ": unknown built-in exposure weight function \"" << name << "\"" << std::endl;
             exit(1);
         }
         else
         {
-            const std::string symbol_name(arguments.front());
-            ExposureWeight::argument_list_t user_arguments;
-            std::copy(std::next(arguments.begin()), arguments.end(), back_inserter(user_arguments));
-
+            const std::string symbol_name = *arguments_begin;
             ExposureWeight* weight_object;
 
             try
             {
                 weight_object = new DynamicExposureWeight(name, symbol_name);
-                weight_object->initialize(y_optimum, width, user_arguments);
+                weight_object->initialize(y_optimum, width, std::next(arguments_begin), arguments_end);
             }
             catch (ExposureWeight::error& exception)
             {
@@ -111,7 +115,8 @@ namespace exposure_weight
 
     ExposureWeight*
     make_weight_function(const std::string& name,
-                         const ExposureWeight::argument_list_t& arguments,
+                         ExposureWeight::argument_const_iterator arguments_begin,
+                         ExposureWeight::argument_const_iterator arguments_end,
                          double y_optimum, double width)
     {
         delete ExposureWeightFunction;
@@ -142,7 +147,7 @@ namespace exposure_weight
         else
         {
 #ifdef HAVE_DYNAMICLOADER_IMPL
-            return make_dynamic_weight_function(name, arguments, y_optimum, width);
+            return make_dynamic_weight_function(name, arguments_begin, arguments_end, y_optimum, width);
 #else
             std::cerr << command << ": unknown built-in exposure weight function \"" << name << "\"\n"
                       << command << ": note: this binary has no support for dynamic loading of\n"

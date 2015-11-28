@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Christoph L. Spiel
+// Copyright (C) 2014-2015 Christoph L. Spiel
 //
 // This file is part of Enblend.
 //
@@ -29,9 +29,11 @@ class VariablePower : public ExposureWeight
     typedef ExposureWeight super;
 
 public:
-    void initialize(double y_optimum, double width, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width,
+                    super::argument_const_iterator arguments_begin,
+                    super::argument_const_iterator arguments_end) override
     {
-        if (argument_list.empty())
+        if (arguments_begin == arguments_end)
         {
             exponent = 2.0;
         }
@@ -40,20 +42,21 @@ public:
             char* tail;
 
             errno = 0;
-            exponent = strtod(argument_list[0].c_str(), &tail);
+            exponent = strtod(arguments_begin->c_str(), &tail);
             if (*tail != 0 || errno != 0)
             {
                 throw super::error("non-numeric exponent");
             }
-            if (exponent <= 0.0 || exponent >= 100.0)
+            if (exponent <= 0.0 || exponent > 10.0)
             {
-                throw super::error("exponent out of range ]0, 100]");
+                throw super::error("exponent out of range ]0, 10]");
             }
         }
 
         const double fwhm = 2.0 / std::exp(M_LN2 / exponent);
 
-        super::initialize(y_optimum, width * FWHM_GAUSSIAN / fwhm, argument_list);
+        super::initialize(y_optimum, width * FWHM_GAUSSIAN / fwhm,
+                          arguments_begin, arguments_end);
     }
 
 

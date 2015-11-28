@@ -25,8 +25,10 @@ class ExposureWeight
 {
 public:
     typedef std::vector<std::string> argument_list_t;
+    typedef argument_list_t::const_iterator argument_const_iterator;
 
-    ExposureWeight() : y_optimum_(0.5), width_(0.25) {}
+    ExposureWeight() : y_optimum_(0.5), width_(0.2) {}
+
     ExposureWeight(double y_optimum, double width_parameter) :
         y_optimum_(y_optimum), width_(width_parameter)
     {
@@ -34,11 +36,14 @@ public:
     }
 
     virtual void initialize(double y_optimum, double width_parameter,
-                            const argument_list_t& argument_list)
+                            argument_const_iterator arguments_begin,
+                            argument_const_iterator arguments_end)
     {
         y_optimum_ = y_optimum;
         width_ = width_parameter;
-        arguments_ = argument_list;
+
+        arguments_.clear();
+        std::copy(arguments_begin, arguments_end, std::back_inserter(arguments_));
 
         check_invariant();
     }
@@ -47,10 +52,7 @@ public:
     double width() const {return width_;}
     const argument_list_t& arguments() const {return arguments_;}
 
-    virtual double normalize(double y) const
-    {
-        return (y - optimum()) / width();
-    }
+    virtual double normalize(double y) const {return (y - optimum()) / width();}
 
     virtual double weight(double) = 0;
 

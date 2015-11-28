@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Christoph L. Spiel
+// Copyright (C) 2014-2015 Christoph L. Spiel
 //
 // This file is part of Enblend.
 //
@@ -25,14 +25,17 @@
 
 struct Linear : public ExposureWeight
 {
-    void initialize(double y_optimum, double width_parameter, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width_parameter,
+                    ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end) override
     {
-        if (!argument_list.empty())
+        if (arguments_begin != arguments_end)
         {
             std::cerr << "warning: weight function \"linear\" does not take any parameters" << std::endl;
         }
 
-        ExposureWeight::initialize(y_optimum, width_parameter * FWHM_GAUSSIAN, argument_list);
+        ExposureWeight::initialize(y_optimum, width_parameter * FWHM_GAUSSIAN,
+                                   arguments_begin, arguments_end);
     }
 
 

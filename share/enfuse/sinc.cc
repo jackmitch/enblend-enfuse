@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Christoph L. Spiel
+// Copyright (C) 2014-2015 Christoph L. Spiel
 //
 // This file is part of Enblend.
 //
@@ -111,14 +111,17 @@ private:
 class SincWeight : public ExposureWeight
 {
 public:
-    void initialize(double y_optimum, double width, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width,
+                    ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end) override
     {
-        if (!argument_list.empty())
+        if (arguments_begin != arguments_end)
         {
             std::cerr << "warning: weight function does not take any parameters" << std::endl;
         }
 
-        ExposureWeight::initialize(y_optimum, width * FWHM_GAUSSIAN / sinc.fwhm(), argument_list);
+        ExposureWeight::initialize(y_optimum, width * FWHM_GAUSSIAN / sinc.fwhm(),
+                                   arguments_begin, arguments_end);
     }
 
     double weight(double y) override
@@ -142,20 +145,23 @@ public:
     ~PowerSincWeight() {delete sinc;}
 
 
-    void initialize(double y_optimum, double width, const argument_list_t& argument_list) override
+    void initialize(double y_optimum, double width,
+                    super::argument_const_iterator arguments_begin,
+                    super::argument_const_iterator arguments_end) override
     {
         std::array<double, 2> exponents = {1.0, 1.0};
+        super::argument_const_iterator argument = arguments_begin;
 
-        for (size_t i = 0U; i != exponents.size(); ++i)
+        for (double e : exponents)
         {
-            if (i >= argument_list.size())
+            if (argument == arguments_end)
             {
                 break;
             }
 
-            std::istringstream iss(argument_list.at(i));
+            std::istringstream iss(*argument++);
 
-            if (!(iss >> exponents.at(i)))
+            if (!(iss >> e))
             {
                 throw super::error("non-numeric exponent");
             }
@@ -163,7 +169,8 @@ public:
 
         sinc = new PowerSinc(exponents.at(0), exponents.at(1));
 
-        ExposureWeight::initialize(y_optimum, width * FWHM_GAUSSIAN / sinc->fwhm(), argument_list);
+        ExposureWeight::initialize(y_optimum, width * FWHM_GAUSSIAN / sinc->fwhm(),
+                                   arguments_begin, arguments_end);
     }
 
 

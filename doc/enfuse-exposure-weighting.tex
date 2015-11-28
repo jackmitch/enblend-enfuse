@@ -266,17 +266,20 @@ fundamentally changing brightness.
 
 \restrictednote{\acronym{Dynamic Linking}-enabled versions only.}
 
+\genidx{linking!dynamic}%
+\gensee{dynamic linking}{linking, dynamic}%
 \genidx{loading!dynamic}%
 \gensee{dynamic loading}{loading, dynamic}%
 \genidx{shared object}%
 \gensee{object!shared}{shared object}%
 \genidx{dynamic library}%
 \gensee{library!dynamic}{dynamic library}%
-On operating systems, where dynamic loading of code is possible and for \App{} executables
-compiled with dynamic-linking support (see Section~\fullref{sec:finding-out-details} on how to
-check this feature), \App{} can work with user-defined exposure weighting functions, passed with
-the long form of option~\option{--exposure-weight-function}.  It loads the exposure weight
-function identifed by \metavar{SYMBOL} from \metavar{SHARED-OBJECT}:
+On operating systems, where dynamic linking (or synonymously: dynamic loading) of code is
+possible, for \App{} executables compiled with dynamic-linking support (see
+Section~\fullref{sec:finding-out-details} on how to check this feature), \App{} can work with
+user-defined exposure weighting functions, passed with the long form of
+option~\option{--exposure-weight-function} and load the exposure weight function identifed by
+\metavar{SYMBOL} from \metavar{SHARED-OBJECT}:
 
 \begin{literal}
   --exposure-weight-function=\metavar{SHARED-OBJECT}:\feasiblebreak
@@ -298,7 +301,7 @@ Some notes on the required arguments of this option:
 
   \begin{restrictedmaterial}{Linux}
     If \metavar{SHARED-OBJECT} does not contain a slash (\sample{/}), the dynamic loader
-    \emph{only} searches along \envvar{LD\_LIBRARY\_PATH} and even ignores the current working
+    \emph{only} searches along \envvar{LD\_LIBRARY\_PATH}; it even ignores the current working
     directory unless \envvar{LD\_LIBRARY\_PATH} contains a dot (\sample{.}).  So, to use a
     \metavar{SHARED-OBJECT} living in the current directory either say
     \begin{literal}
@@ -464,20 +467,22 @@ called \filename{Makefile.userweight}.
 \begin{exemplar}[htbp]
   \begin{maxipage}
     \begin{cxxlisting}
-#include <cmath>                     // fabs()
+#include <cmath>                     // std::fabs()
 
 #include "exposure_weight_base.h"    // FWHM_GAUSSIAN, ExposureWeight
 
 struct Linear : public ExposureWeight {
     void initialize(double y_optimum, double width_parameter,
-                    const argument_list_t& argument_list) override {
+                    ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end)
+        override {
         ExposureWeight::initialize(y_optimum,
                                    width_parameter * FWHM_GAUSSIAN,
-                                   argument_list);
+                                   arguments_begin, arguments_end);
     }
 
     double weight(double y) const override {
-        const double z = fabs(normalize(y));
+        const double z = std::fabs(normalize(y));
         return z <= 1.0 ? 1.0 - z : 0.0;
     }
 };
@@ -491,7 +496,7 @@ Linear linear;
     A dynamic exposure weight function that defines a ``roof-top''.  The natural width is
     exactly one, so we override method~\code{initialize} to rescale \metavar{WIDTH}, passed in
     as \code{width\_parameter}, by multiplying with \code{FWHM\_GAUSSIAN} to get the same width
-    as the Gaussian.}
+    as the predefined Gaussian.}
 \end{exemplar}
 
 
@@ -502,8 +507,8 @@ As the extension language is C++, we can write templated families of functions, 
 \begin{exemplar}[htbp]
   \begin{maxipage}
     \begin{cxxlisting}
-#include <algorithm>              // std::max()
-#include <cmath>                  // M_LN2, exp(), fabs()
+#include <algorithm>    // std::max()
+#include <cmath>        // M_LN2, std::exp(), std::fabs()
 
 #include "exposure_weight_base.h" // FWHM_GAUSSIAN, ExposureWeight
 
@@ -512,15 +517,17 @@ template <> double ipower<0>(double) {return 1.0;}
 
 template <int n> struct TemplatedPower : public ExposureWeight {
     void initialize(double y_optimum, double width,
-                    const argument_list_t& argument_list) override {
-        const double fwhm = 2.0 / exp(M_LN2 / static_cast<double>(n));
+                    ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end)
+        override {
+        const double fwhm = 2.0 / std::exp(M_LN2 / static_cast<double>(n));
         ExposureWeight::initialize(y_optimum,
                                    width * FWHM_GAUSSIAN / fwhm,
-                                   argument_list);
+                                   arguments_begin, arguments_end);
     }
 
     double weight(double y) const override {
-        return std::max(1.0 - ipower<n>(fabs(normalize(y))), 0.0);
+        return std::max(1.0 - ipower<n>(std::fabs(normalize(y))), 0.0);
     }
 };
 
@@ -547,9 +554,9 @@ including fractional exponents thereby generalizing both of the previous example
 \begin{exemplar}[htbp]
   \begin{maxipage}
     \begin{cxxlisting}
-#include <algorithm>              // std::max()
-#include <cerrno>                 // errno
-#include <cmath>                  // M_LN2, exp(), fabs(), pow()
+#include <algorithm>    // std::max()
+#include <cerrno>       // errno
+#include <cmath>        // M_LN2, std::exp(), std::fabs(), std::pow()
 
 #include "exposure_weight_base.h" // FWHM_GAUSSIAN, ExposureWeight
 
@@ -559,28 +566,31 @@ class VariablePower : public ExposureWeight {
 
 public:
     void initialize(double y_optimum, double width,
-                    const argument_list_t& argument_list) override {
-        if (argument_list.empty()) {
+                    ExposureWeight::argument_const_iterator arguments_begin,
+                    ExposureWeight::argument_const_iterator arguments_end)
+        override {
+        if (arguments_begin == arguments_end) {
             exponent = 2.0;
         } else {
             char* tail;
             errno = 0;
-            exponent = strtod(argument_list[0].c_str(), &tail);
+            exponent = strtod(*arguments_begin.c_str(), &tail);
             if (*tail != 0 || errno != 0) {
                 throw super::error("non-numeric exponent");
             }
-            if (exponent <= 0.0 || exponent >= 10.0) {
+            if (exponent <= 0.0 || exponent > 10.0) {
                 throw super::error("exponent out of range ]0, 10]");
             }
         }
 
-        const double fwhm = 2.0 / exp(M_LN2 / exponent);
+        const double fwhm = 2.0 / std::exp(M_LN2 / exponent);
         super::initialize(y_optimum, width * FWHM_GAUSSIAN / fwhm,
-                          argument_list);
+                          arguments_begin, arguments_end);
     }
 
     double weight(double y) const override {
-        return std::max(1.0 - pow(fabs(normalize(y)), exponent), 0.0);
+      return std::max(1.0 - std::pow(std::fabs(normalize(y)), exponent),
+                      0.0);
     }
 
 private:

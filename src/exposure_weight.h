@@ -33,7 +33,8 @@
 namespace exposure_weight
 {
     ExposureWeight* make_weight_function(const std::string& name,
-                                         const ExposureWeight::argument_list_t& arguments,
+                                         ExposureWeight::argument_const_iterator arguments_begin,
+                                         ExposureWeight::argument_const_iterator arguments_end,
                                          double y_optimum, double width);
     void dump_weight_function(ExposureWeight* weight_function, int n);
     bool check_weight_function(ExposureWeight* weight_function, int n = 65536);
