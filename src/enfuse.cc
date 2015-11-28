@@ -836,6 +836,12 @@ short_option_requires_argument(const char* a_short_option_spec, char a_short_opt
 void
 initialize_gpu_subsystem(size_t a_preferred_gpu_platform, size_t a_preferred_gpu_device)
 {
+    static bool is_initialized = false;
+
+    if (is_initialized) {
+        return;
+    }
+
     try {
         cl::Platform platform = ocl::find_platform(a_preferred_gpu_platform);
 
@@ -859,6 +865,8 @@ initialize_gpu_subsystem(size_t a_preferred_gpu_platform, size_t a_preferred_gpu
 #else
         BatchCompiler = new ocl::SerialBatchBuilder;
 #endif
+
+        is_initialized = true;
     } catch (ocl::runtime_error& an_exception) {
         std::cerr <<
             command << ": warning: " << an_exception.what() << ";\n" <<
