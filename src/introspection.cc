@@ -68,15 +68,6 @@ namespace introspection
             }
 #endif // ENFUSE_SOURCE
 
-            std::cout <<
-                "Extra feature: dmalloc support: " <<
-#ifdef DMALLOC
-                "yes" <<
-#else
-                "no" <<
-#endif
-                "\n";
-
 #ifdef CACHE_IMAGES
             std::cout << "Extra feature: image cache: yes\n";
             {

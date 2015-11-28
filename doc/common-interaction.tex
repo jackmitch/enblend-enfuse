@@ -146,39 +146,47 @@ may include more or less of the features displayed there.
     \centering
     \begin{terminal}
       \$ \app{} --version --verbose \\
-      \app{} 4.2-02f8a3f3fff3 \\
-      ~ \\
-      Extra feature: dmalloc support: no \\
-      Extra feature: Cilk: yes \\
-      ~~- version 2.0 \\
-      ~~- "\_Cilk\_for" keyword not implemented \\
-      Extra feature: OpenMP: yes \\
-      ~~- version 2013-7 \\
-      ~~- support for dynamic adjustment of the number of threads; \\
-      ~~~~dynamic adjustment disabled by default \\
-      ~~- using 4 processors and up to 4 threads \\
-      ~~- allocating thread-local dynamic memory with malloc/free \\
-      Extra feature: OpenCL: yes \\
-      ~~- Platform \#1: Advanced Micro Devices, Inc., \bslash \\
-      ~~~~~~~~~~~~~~~~AMD Accelerated Parallel Processing, \bslash \\
-      ~~~~~~~~~~~~~~~~OpenCL 1.2 AMD-APP (938.2) \\
-      ~~~~* no GPU devices found on this platform \\
-      ~~- Platform \#2: NVIDIA Corporation, NVIDIA CUDA, OpenCL 1.1 CUDA 4.2.1 \\
-      ~~~~* Device \#1: max. 1024 work-items \\
-      ~~~~~~~~~~~~~~~~~1047872 KB global memory with 32 KB read/write cache \\
-      ~~~~~~~~~~~~~~~~~48 KB dedicated local memory \\
-      ~~~~~~~~~~~~~~~~~64 KB maximum constant memory \\
-      ~~Search path (expanding ENBLEND\_OPENCL\_PATH and appending built-in path) \\
-      ~~~~/usr/local/share/enblend/kernels:/usr/share/enblend/kernels \\
-      ~ \\
-      Copyright (C) 2004-2009 Andrew Mihal. \\
-      Copyright (C) 2009-2015 Christoph Spiel. \\
-      ~ \\
-      License GPLv2+: GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html> \\
-      This is free software: you are free to change and redistribute it. \\
-      There is NO WARRANTY, to the extent permitted by law. \\
-      ~ \\
-      Written by Andrew Mihal, Christoph Spiel and others.
+        \app{} 4.2-95f1fed2bf2d \\
+        ~ \\
+        Extra feature: dynamic linking support: yes \\
+        Extra feature: image cache: no \\
+        Extra feature: OpenMP: no \\
+        Extra feature: OpenCL: yes \\
+        ~~- Platform \#1:~Advanced Micro Devices, Inc., \\
+        ~~~~~~~~~~~~~~~~~AMD Accelerated Parallel Processing, \\
+        ~~~~~~~~~~~~~~~~~OpenCL 1.2 AMD-APP (1526.3) \\
+        ~~~~* no GPU devices found on this platform \\
+        ~~- Platform \#2:~NVIDIA Corporation, \\
+        ~~~~~~~~~~~~~~~~~NVIDIA CUDA, \\
+        ~~~~~~~~~~~~~~~~~OpenCL 1.1 CUDA 6.5.51 \\
+        ~~~~* Device \#1:~max.~1024 work-items \\
+        ~~~~~~~~~~~~~~~~~1047872 KB global memory with 32 KB read/write cache \\
+        ~~~~~~~~~~~~~~~~~48 KB dedicated local memory \\
+        ~~~~~~~~~~~~~~~~~64 KB maximum constant memory \\
+        ~~~~~~~~~~~~~~~~~Extensions: \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_byte\_addressable\_store \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_fp64 \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_gl\_sharing \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_global\_int32\_base\_atomics \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_global\_int32\_extended\_atomics \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_icd \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_local\_int32\_base\_atomics \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_khr\_local\_int32\_extended\_atomics \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_compiler\_options \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_copy\_opts \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_device\_attribute\_query \\
+        ~~~~~~~~~~~~~~~~~~~~~cl\_nv\_pragma\_unroll \\
+        ~~Search path (expanding ENBLEND\_OPENCL\_PATH and appending built-in path) \\
+        ~~~~/usr/local/share/enblend/kernels:/usr/share/enblend/kernels \\
+        ~ \\
+        Copyright (C) 2004-2009 Andrew Mihal. \\
+        Copyright (C) 2009-2015 Christoph Spiel. \\
+        ~ \\
+        License GPLv2+:~GNU GPL version 2 or later <http://www.gnu.org/licenses/gpl.html> \\
+        This is free software: you are free to change and redistribute it. \\
+        There is NO WARRANTY, to the extent permitted by law. \\
+        ~ \\
+        Written by Andrew Mihal, Christoph Spiel and others.
     \end{terminal}
   \end{maxipage}
 
